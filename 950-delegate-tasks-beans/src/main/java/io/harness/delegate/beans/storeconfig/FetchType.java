@@ -1,10 +1,11 @@
 package io.harness.delegate.beans.storeconfig;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum FetchType {
-  BRANCH("Branch"),
-  COMMIT("Commit");
+  @JsonProperty("Branch") BRANCH("Branch"),
+  @JsonProperty("Commit") COMMIT("Commit");
 
   private final String name;
 

@@ -1,12 +1,16 @@
 package software.wings.service.impl.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.IGOR;
 import static io.harness.rule.OwnerRule.SRINIVAS;
+import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
 
+import static software.wings.beans.trigger.WebhookSource.AZURE_DEVOPS;
 import static software.wings.beans.trigger.WebhookSource.BITBUCKET;
 import static software.wings.beans.trigger.WebhookSource.GITHUB;
 import static software.wings.beans.trigger.WebhookSource.GITLAB;
+import static software.wings.service.impl.trigger.WebhookEventUtils.X_AZURE_DEVOPS_UNIQUE_ID;
 import static software.wings.service.impl.trigger.WebhookEventUtils.X_BIT_BUCKET_EVENT;
 import static software.wings.service.impl.trigger.WebhookEventUtils.X_GIT_HUB_EVENT;
 import static software.wings.service.impl.trigger.WebhookEventUtils.X_GIT_LAB_EVENT;
@@ -14,6 +18,9 @@ import static software.wings.service.impl.trigger.WebhookEventUtils.X_GIT_LAB_EV
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.serializer.JsonUtils;
@@ -21,6 +28,7 @@ import io.harness.shell.AuthenticationScheme;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.trigger.WebhookSource;
+import software.wings.beans.trigger.WebhookSource.AzureDevOpsEventType;
 import software.wings.beans.trigger.WebhookSource.BitBucketEventType;
 import software.wings.beans.trigger.WebhookSource.GitHubEventType;
 import software.wings.beans.trigger.WebhookSource.GitLabEventType;
@@ -38,6 +46,8 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class WebhookEventUtilsTest extends WingsBaseTest {
   @Inject @InjectMocks private WebhookEventUtils webhookEventUtils;
   static final String GH_PUSH_REQ_FILE =
@@ -56,6 +66,13 @@ public class WebhookEventUtilsTest extends WingsBaseTest {
       "400-rest/src/test/resources/software/wings/service/impl/webhook/bitbucket_ref_changes_request.json";
   static final String BITBUCKET_SERVER_PR_OPENED_FILE =
       "400-rest/src/test/resources/software/wings/service/impl/webhook/bitbucket_server_pr_opened.json";
+  private static final String AZURE_DEVOPS_CODE_PUSH_WEBHOOK =
+      "400-rest/src/test/resources/software/wings/service/impl/webhook/azure_code_push_request.json";
+  private static final String AZURE_DEVOPS_MERGE_PULL_REQUEST_COMPLETED_WEBHOOK =
+      "400-rest/src/test/resources/software/wings/service/impl/webhook/azure_merge_pull_completed_request.json";
+  private static final String AZURE_DEVOPS_MERGE_PULL_REQUEST_ACTIVE_WEBHOOK =
+      "400-rest/src/test/resources/software/wings/service/impl/webhook/azure_merge_pull_active_request.json";
+  private static final String VSS_SUBSCRIPTION_ID = "azure_identifier";
 
   @Mock HttpHeaders httpHeaders;
 
@@ -265,6 +282,9 @@ public class WebhookEventUtilsTest extends WingsBaseTest {
     assertThat(internalShouldObtainFullName(BITBUCKET, X_BIT_BUCKET_EVENT,
                    BitBucketEventType.PULL_REQUEST_CREATED.getValue(), BITBUCKET_SERVER_PR_OPENED_FILE))
         .isEqualTo("~harnessadmin/git-sync-igor-bb-server");
+    assertThat(internalShouldObtainFullName(AZURE_DEVOPS, X_AZURE_DEVOPS_UNIQUE_ID,
+                   AzureDevOpsEventType.CODE_PUSH.getValue(), AZURE_DEVOPS_CODE_PUSH_WEBHOOK))
+        .isEqualTo("azuretoharnesssync");
   }
 
   private String internalShouldObtainFullName(
@@ -321,6 +341,37 @@ public class WebhookEventUtilsTest extends WingsBaseTest {
         .isEqualTo("ssh://git@bitbucket.dev.harness.io:7999/~harnessadmin/git-sync-igor-bb-server.git");
   }
 
+  @Test
+  @Owner(developers = VARDAN_BANSAL)
+  @Category(UnitTests.class)
+  public void shouldObtainWebhookSourcefromAzureDevops() {
+    when(httpHeaders.getHeaderString(X_AZURE_DEVOPS_UNIQUE_ID)).thenReturn(VSS_SUBSCRIPTION_ID);
+    assertThat(webhookEventUtils.obtainWebhookSource(httpHeaders)).isEqualTo(AZURE_DEVOPS);
+  }
+
+  @Test
+  @Owner(developers = VARDAN_BANSAL)
+  @Category(UnitTests.class)
+  public void shouldObtainAzureDevopsPushBranchAndCommitId() throws IOException {
+    when(httpHeaders.getHeaderString(X_AZURE_DEVOPS_UNIQUE_ID)).thenReturn(AzureDevOpsEventType.CODE_PUSH.getValue());
+    Map<String, Object> payload = obtainPayload(AZURE_DEVOPS_CODE_PUSH_WEBHOOK);
+    assertThat(webhookEventUtils.obtainBranchName(AZURE_DEVOPS, httpHeaders, payload)).isEqualTo("main");
+    assertThat(webhookEventUtils.obtainCommitId(AZURE_DEVOPS, httpHeaders, payload))
+        .isEqualTo("e50bb12bbedbfa7e13c03f31d0f7f9e7dd84887c");
+  }
+
+  @Test
+  @Owner(developers = VARDAN_BANSAL)
+  @Category(UnitTests.class)
+  public void shouldIgnorePullRequestMergeEventWithActiveStatusFromAzure_Test() throws IOException {
+    assertThat(webhookEventUtils.shouldIgnorePullRequestMergeEventWithActiveStatusFromAzure(
+                   obtainPayloadAsString(AZURE_DEVOPS_MERGE_PULL_REQUEST_COMPLETED_WEBHOOK)))
+        .isEqualTo(false);
+    assertThat(webhookEventUtils.shouldIgnorePullRequestMergeEventWithActiveStatusFromAzure(
+                   obtainPayloadAsString(AZURE_DEVOPS_MERGE_PULL_REQUEST_ACTIVE_WEBHOOK)))
+        .isEqualTo(true);
+  }
+
   private String internalShouldObtainCloneUrl(AuthenticationScheme authenticationScheme, WebhookSource webhookSource,
       String headerKey, String headerValue, String payloadFile) throws IOException {
     when(httpHeaders.getHeaderString(headerKey)).thenReturn(headerValue);
@@ -334,5 +385,10 @@ public class WebhookEventUtilsTest extends WingsBaseTest {
     File file = new File(filePath);
     return JsonUtils.asObject(
         FileUtils.readFileToString(file, Charset.defaultCharset()), new TypeReference<Map<String, Object>>() {});
+  }
+
+  private String obtainPayloadAsString(String filePath) throws IOException {
+    File file = new File(filePath);
+    return FileUtils.readFileToString(file, Charset.defaultCharset());
   }
 }

@@ -1,20 +1,22 @@
 package io.harness.filters;
 
-import io.harness.IdentifierRefProtoUtils;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.SecretRefData;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
 import io.harness.exception.InvalidRequestException;
-import io.harness.pms.sdk.preflight.PreFlightCheckMetadata;
+import io.harness.pms.exception.runtime.InvalidYamlRuntimeException;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
+import io.harness.preflight.PreFlightCheckMetadata;
 import io.harness.utils.IdentifierRefHelper;
+import io.harness.utils.IdentifierRefProtoUtils;
 
 import com.google.common.collect.ImmutableList;
 import java.util.Collections;
@@ -39,7 +41,7 @@ public class FilterCreatorHelper {
         String fqn = YamlUtils.getFullyQualifiedName(uuidNode.getNode());
         errorMsg = errorMsg + ". FQN: " + fqn;
       }
-      throw new InvalidRequestException(errorMsg);
+      throw new InvalidYamlRuntimeException(errorMsg);
     }
   }
 
@@ -55,6 +57,10 @@ public class FilterCreatorHelper {
         new HashMap<>(Collections.singletonMap(PreFlightCheckMetadata.FQN, fullQualifiedDomainName));
     if (!connectorRef.isExpression()) {
       String connectorRefString = connectorRef.getValue();
+      if (EmptyPredicate.isEmpty(connectorRefString)) {
+        throw new InvalidYamlRuntimeException(
+            String.format("Connector ref is not present for property: %s", fullQualifiedDomainName));
+      }
       IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
           connectorRefString, accountIdentifier, orgIdentifier, projectIdentifier, metadata);
       return EntityDetailProtoDTO.newBuilder()
@@ -62,7 +68,12 @@ public class FilterCreatorHelper {
           .setType(entityTypeProtoEnum)
           .build();
     } else {
-      metadata.put(PreFlightCheckMetadata.EXPRESSION, connectorRef.getExpressionValue());
+      String expression = connectorRef.getExpressionValue();
+      if (EmptyPredicate.isEmpty(expression)) {
+        throw new InvalidYamlRuntimeException(
+            String.format("Connector ref is not present for property: %s", fullQualifiedDomainName));
+      }
+      metadata.put(PreFlightCheckMetadata.EXPRESSION, expression);
       IdentifierRef identifierRef = IdentifierRefHelper.createIdentifierRefWithUnknownScope(
           accountIdentifier, orgIdentifier, projectIdentifier, connectorRef.getExpressionValue(), metadata);
       return EntityDetailProtoDTO.newBuilder()
@@ -78,6 +89,9 @@ public class FilterCreatorHelper {
         new HashMap<>(Collections.singletonMap(PreFlightCheckMetadata.FQN, fullQualifiedDomainName));
     if (!secretRef.isExpression()) {
       SecretRefData secretRefData = secretRef.getValue();
+      if (secretRefData.isNull()) {
+        throw new InvalidRequestException("No value for secret provided at " + fullQualifiedDomainName);
+      }
       IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(secretRefData.getScope(),
           secretRefData.getIdentifier(), accountIdentifier, orgIdentifier, projectIdentifier, metadata);
       return EntityDetailProtoDTO.newBuilder()

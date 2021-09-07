@@ -6,6 +6,7 @@ import static io.harness.rule.OwnerRule.ABHINAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.entities.embedded.githubconnector.GithubAppApiAccess;
 import io.harness.connector.entities.embedded.githubconnector.GithubConnector;
@@ -30,7 +31,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 
-public class GithubEntityToDTOTest {
+public class GithubEntityToDTOTest extends CategoryTest {
   @InjectMocks GithubEntityToDTO githubEntityToDTO;
 
   @Before
@@ -49,6 +50,7 @@ public class GithubEntityToDTOTest {
     final String insId = "insId";
     final String tokenRef = "tokenRef";
     final String privateKeyRef = "privateKeyRef";
+    final String validationRepo = "validationRepo";
 
     final GithubAuthenticationDTO githubAuthenticationDTO =
         GithubAuthenticationDTO.builder()
@@ -73,7 +75,8 @@ public class GithubEntityToDTOTest {
             .build();
     final GithubConnectorDTO githubConnectorDTO = GithubConnectorDTO.builder()
                                                       .url(url)
-                                                      .connectionType(GitConnectionType.REPO)
+                                                      .validationRepo(validationRepo)
+                                                      .connectionType(GitConnectionType.ACCOUNT)
                                                       .authentication(githubAuthenticationDTO)
                                                       .apiAccess(githubApiAccessDTO)
                                                       .build();
@@ -82,13 +85,14 @@ public class GithubEntityToDTOTest {
         GithubConnector.builder()
             .hasApiAccess(true)
             .url(url)
+            .validationRepo(validationRepo)
             .githubApiAccess(GithubAppApiAccess.builder()
                                  .applicationId(appId)
                                  .installationId(insId)
                                  .privateKeyRef(privateKeyRef)
                                  .build())
             .apiAccessType(GITHUB_APP)
-            .connectionType(GitConnectionType.REPO)
+            .connectionType(GitConnectionType.ACCOUNT)
             .authType(HTTP)
             .authenticationDetails(
                 GithubHttpAuthentication.builder()

@@ -1,6 +1,8 @@
 package software.wings.graphql.datafetcher.execution;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.graphql.schema.type.aggregation.QLFilterKind;
@@ -13,6 +15,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@OwnedBy(HarnessTeam.DX)
 @Data
 @Builder
 @NoArgsConstructor
@@ -41,7 +44,11 @@ public class DeploymentStatsQueryMetaData {
     ENDTIME("ENDTIME", DataType.TIMESTAMP, QLFilterKind.SIMPLE),
     ROLLBACK_DURATION("ROLLBACK_DURATION", DataType.LONG, QLFilterKind.SIMPLE),
     INSTANCES_DEPLOYED("INSTANCES_DEPLOYED", DataType.INTEGER, QLFilterKind.SIMPLE),
-    TAGS("TAGS", DataType.HSTORE, QLFilterKind.HSTORE);
+    TAGS("TAGS", DataType.HSTORE, QLFilterKind.HSTORE),
+    DEPLOYMENT_TYPE("DEPLOYMENT_TYPE", DataType.STRING, QLFilterKind.ARRAY),
+    WORKFLOW_TYPE("WORKFLOW_TYPE", DataType.STRING, QLFilterKind.ARRAY),
+    ORCHESTRATION_WORKFLOW_TYPE("ORCHESTRATION_WORKFLOW_TYPE", DataType.STRING, QLFilterKind.ARRAY),
+    ROLLBACK_COUNT("ROLLBACK_COUNT", DataType.LONG, QLFilterKind.SIMPLE);
 
     private DataType dataType;
     private String fieldName;

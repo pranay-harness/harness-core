@@ -1,7 +1,7 @@
 package io.harness.pms.pipeline;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
-import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
+import static io.harness.remote.client.NGRestUtils.getResponseWithRetry;
 
 import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
@@ -11,21 +11,27 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
+import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.producer.Message;
 import io.harness.eventsframework.protohelper.IdentifierRefProtoDTOHelper;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
+import io.harness.eventsframework.schemas.entitysetupusage.EntityDetailWithSetupUsageDetailProtoDTO;
+import io.harness.eventsframework.schemas.entitysetupusage.EntityDetailWithSetupUsageDetailProtoDTO.EntityReferredByPipelineDetailProtoDTO;
+import io.harness.eventsframework.schemas.entitysetupusage.EntityDetailWithSetupUsageDetailProtoDTO.PipelineDetailType;
 import io.harness.eventsframework.schemas.entitysetupusage.EntitySetupUsageCreateV2DTO;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
+import io.harness.ng.core.entitysetupusage.dto.SetupUsageDetailType;
 import io.harness.pms.merger.fqn.FQN;
-import io.harness.pms.merger.helpers.FQNUtils;
+import io.harness.pms.merger.helpers.FQNMapGenerator;
 import io.harness.pms.pipeline.observer.PipelineActionObserver;
-import io.harness.pms.sdk.preflight.PreFlightCheckMetadata;
+import io.harness.pms.rbac.InternalReferredEntityExtractor;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlUtils;
+import io.harness.preflight.PreFlightCheckMetadata;
 import io.harness.utils.FullyQualifiedIdentifierHelper;
 import io.harness.utils.IdentifierRefHelper;
 
@@ -39,6 +45,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 
 @Singleton
@@ -48,6 +55,7 @@ public class PipelineSetupUsageHelper implements PipelineActionObserver {
   @Inject @Named(EventsFrameworkConstants.SETUP_USAGE) private Producer eventProducer;
   @Inject private IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper;
   @Inject private EntitySetupUsageClient entitySetupUsageClient;
+  @Inject private InternalReferredEntityExtractor internalReferredEntityExtractor;
   private static final int PAGE = 0;
   private static final int SIZE = 100;
 
@@ -71,21 +79,25 @@ public class PipelineSetupUsageHelper implements PipelineActionObserver {
     Map<String, Object> fqnToObjectMapMergedYaml = new HashMap<>();
     try {
       Map<FQN, Object> fqnObjectMap =
-          FQNUtils.generateFQNMap(YamlUtils.readTree(pipelineYaml).getNode().getCurrJsonNode());
+          FQNMapGenerator.generateFQNMap(YamlUtils.readTree(pipelineYaml).getNode().getCurrJsonNode());
       fqnObjectMap.keySet().forEach(fqn -> fqnToObjectMapMergedYaml.put(fqn.getExpressionFqn(), fqnObjectMap.get(fqn)));
     } catch (IOException e) {
       throw new InvalidRequestException("Invalid merged pipeline yaml");
     }
 
     List<EntitySetupUsageDTO> allReferredUsages =
-        execute(entitySetupUsageClient.listAllReferredUsages(PAGE, SIZE, accountIdentifier,
-            FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
-                accountIdentifier, orgIdentifier, projectIdentifier, pipelineId),
-            entityType, null));
+        getResponseWithRetry(entitySetupUsageClient.listAllReferredUsages(PAGE, SIZE, accountIdentifier,
+                                 FullyQualifiedIdentifierHelper.getFullyQualifiedIdentifier(
+                                     accountIdentifier, orgIdentifier, projectIdentifier, pipelineId),
+                                 entityType, null),
+            "Could not extract setup usage of pipeline with id " + pipelineId + " after {} attempts.");
     List<EntityDetail> entityDetails = new ArrayList<>();
     for (EntitySetupUsageDTO referredUsage : allReferredUsages) {
       IdentifierRef ref = (IdentifierRef) referredUsage.getReferredEntity().getEntityRef();
       Map<String, String> metadata = ref.getMetadata();
+      if (metadata == null) {
+        continue;
+      }
       String fqn = metadata.get(PreFlightCheckMetadata.FQN);
 
       if (!metadata.containsKey(PreFlightCheckMetadata.EXPRESSION)) {
@@ -95,8 +107,11 @@ public class PipelineSetupUsageHelper implements PipelineActionObserver {
         if (NGExpressionUtils.isRuntimeOrExpressionField(finalValue)) {
           continue;
         }
-        IdentifierRef identifierRef =
-            IdentifierRefHelper.getIdentifierRef(finalValue, accountIdentifier, orgIdentifier, projectIdentifier);
+        if (ParameterField.containsInputSetValidator(finalValue)) {
+          finalValue = ParameterField.getValueFromParameterFieldWithInputSetValidator(finalValue);
+        }
+        IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
+            finalValue, accountIdentifier, orgIdentifier, projectIdentifier, metadata);
         entityDetails.add(EntityDetail.builder()
                               .name(referredUsage.getReferredEntity().getName())
                               .type(referredUsage.getReferredEntity().getType())
@@ -104,11 +119,11 @@ public class PipelineSetupUsageHelper implements PipelineActionObserver {
                               .build());
       }
     }
+    entityDetails.addAll(internalReferredEntityExtractor.extractInternalEntities(accountIdentifier, entityDetails));
     return entityDetails;
   }
 
-  public void publishSetupUsageEvent(PipelineEntity pipelineEntity, List<EntityDetailProtoDTO> referredEntities)
-      throws ProducerShutdownException {
+  public void publishSetupUsageEvent(PipelineEntity pipelineEntity, List<EntityDetailProtoDTO> referredEntities) {
     if (EmptyPredicate.isEmpty(referredEntities)) {
       return;
     }
@@ -130,12 +145,17 @@ public class PipelineSetupUsageHelper implements PipelineActionObserver {
     }
 
     for (Map.Entry<String, List<EntityDetailProtoDTO>> entry : referredEntityTypeToReferredEntities.entrySet()) {
-      EntitySetupUsageCreateV2DTO entityReferenceDTO = EntitySetupUsageCreateV2DTO.newBuilder()
-                                                           .setAccountIdentifier(pipelineEntity.getAccountId())
-                                                           .setReferredByEntity(pipelineDetails)
-                                                           .addAllReferredEntities(entry.getValue())
-                                                           .setDeleteOldReferredByRecords(true)
-                                                           .build();
+      List<EntityDetailProtoDTO> entityDetailProtoDTOs = entry.getValue();
+      List<EntityDetailWithSetupUsageDetailProtoDTO> entityDetailWithSetupUsageDetailProtoDTOS =
+          convertToReferredEntityWithSetupUsageDetail(entityDetailProtoDTOs,
+              Objects.requireNonNull(SetupUsageDetailType.getTypeFromEntityTypeProtoEnumName(entry.getKey())).name());
+      EntitySetupUsageCreateV2DTO entityReferenceDTO =
+          EntitySetupUsageCreateV2DTO.newBuilder()
+              .setAccountIdentifier(pipelineEntity.getAccountId())
+              .setReferredByEntity(pipelineDetails)
+              .addAllReferredEntityWithSetupUsageDetail(entityDetailWithSetupUsageDetailProtoDTOS)
+              .setDeleteOldReferredByRecords(true)
+              .build();
       eventProducer.send(
           Message.newBuilder()
               .putAllMetadata(ImmutableMap.of("accountId", pipelineEntity.getAccountId(),
@@ -146,7 +166,38 @@ public class PipelineSetupUsageHelper implements PipelineActionObserver {
     }
   }
 
-  private void deleteSetupUsagesForGivenPipeline(PipelineEntity pipelineEntity) throws ProducerShutdownException {
+  private List<EntityDetailWithSetupUsageDetailProtoDTO> convertToReferredEntityWithSetupUsageDetail(
+      List<EntityDetailProtoDTO> entityDetailProtoDTOs, String setupUsageDetailType) {
+    List<EntityDetailWithSetupUsageDetailProtoDTO> res = new ArrayList<>();
+    for (EntityDetailProtoDTO entityDetailProtoDTO : entityDetailProtoDTOs) {
+      String fqn = entityDetailProtoDTO.getIdentifierRef().getMetadataMap().get(PreFlightCheckMetadata.FQN);
+      EntityReferredByPipelineDetailProtoDTO entityReferredByPipelineDetailProtoDTO = getSetupDetailProtoDTO(fqn);
+      res.add(EntityDetailWithSetupUsageDetailProtoDTO.newBuilder()
+                  .setReferredEntity(entityDetailProtoDTO)
+                  .setType(setupUsageDetailType)
+                  .setEntityInPipelineDetail(entityReferredByPipelineDetailProtoDTO)
+                  .build());
+    }
+    return res;
+  }
+
+  private EntityReferredByPipelineDetailProtoDTO getSetupDetailProtoDTO(String fqn) {
+    String stageIdentifier = YamlUtils.getStageIdentifierFromFqn(fqn);
+    if (stageIdentifier != null) {
+      return EntityReferredByPipelineDetailProtoDTO.newBuilder()
+          .setIdentifier(stageIdentifier)
+          .setType(PipelineDetailType.STAGE_IDENTIFIER)
+          .build();
+    } else {
+      String variableName = Objects.requireNonNull(YamlUtils.getPipelineVariableNameFromFqn(fqn));
+      return EntityReferredByPipelineDetailProtoDTO.newBuilder()
+          .setIdentifier(variableName)
+          .setType(PipelineDetailType.VARIABLE_NAME)
+          .build();
+    }
+  }
+
+  private void deleteSetupUsagesForGivenPipeline(PipelineEntity pipelineEntity) {
     EntityDetailProtoDTO pipelineDetails =
         EntityDetailProtoDTO.newBuilder()
             .setIdentifierRef(identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(pipelineEntity.getAccountId(),
@@ -178,7 +229,7 @@ public class PipelineSetupUsageHelper implements PipelineActionObserver {
   public void onDelete(PipelineEntity pipelineEntity) {
     try {
       deleteSetupUsagesForGivenPipeline(pipelineEntity);
-    } catch (ProducerShutdownException ex) {
+    } catch (EventsFrameworkDownException ex) {
       log.error("Redis Producer shutdown", ex);
     }
   }

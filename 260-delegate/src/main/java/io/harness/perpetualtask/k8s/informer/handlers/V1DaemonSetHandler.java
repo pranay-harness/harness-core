@@ -39,8 +39,10 @@ public class V1DaemonSetHandler extends BaseHandler<V1DaemonSet> {
                               .setWorkloadKind(getKind())
                               .setWorkloadName(daemonSet.getMetadata().getName())
                               .setNamespace(daemonSet.getMetadata().getNamespace())
+                              .setUid(daemonSet.getMetadata().getUid())
                               .addAllContainerSpecs(makeContainerSpecs(containers))
                               .addAllInitContainerSpecs(makeContainerSpecs(initContainers))
+                              .setVersion(VERSION)
                               .build(),
           occurredAt);
     }
@@ -59,9 +61,11 @@ public class V1DaemonSetHandler extends BaseHandler<V1DaemonSet> {
                                      .setWorkloadKind(getKind())
                                      .setWorkloadName(oldDaemonSet.getMetadata().getName())
                                      .setNamespace(oldDaemonSet.getMetadata().getNamespace())
+                                     .setUid(oldDaemonSet.getMetadata().getUid())
                                      .setWorkloadKind(getKind())
                                      .addAllContainerSpecs(makeContainerSpecs(containers))
                                      .addAllInitContainerSpecs(makeContainerSpecs(initContainers))
+                                     .setVersion(VERSION)
                                      .build();
       List<V1Container> newContainers = newDaemonSet.getSpec().getTemplate().getSpec().getContainers();
       List<V1Container> newInitContainers = newDaemonSet.getSpec().getTemplate().getSpec().getInitContainers();
@@ -69,9 +73,11 @@ public class V1DaemonSetHandler extends BaseHandler<V1DaemonSet> {
                                      .setWorkloadKind(getKind())
                                      .setWorkloadName(newDaemonSet.getMetadata().getName())
                                      .setNamespace(newDaemonSet.getMetadata().getNamespace())
+                                     .setUid(newDaemonSet.getMetadata().getUid())
                                      .setWorkloadKind(getKind())
                                      .addAllContainerSpecs(makeContainerSpecs(newContainers))
                                      .addAllInitContainerSpecs(makeContainerSpecs(newInitContainers))
+                                     .setVersion(VERSION)
                                      .build();
       if (!oldSpecs.equals(newSpecs)) {
         publishWorkloadSpec(newSpecs, occurredAt);

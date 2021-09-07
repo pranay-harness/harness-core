@@ -13,6 +13,7 @@ import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import io.harness.CategoryTest;
 import io.harness.azure.AzureEnvironmentType;
 import io.harness.category.element.UnitTests;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.encryptors.clients.AzureVaultEncryptor;
 import io.harness.exception.SecretManagementDelegateException;
@@ -24,7 +25,6 @@ import io.harness.security.encryption.EncryptionType;
 
 import software.wings.beans.AzureVaultConfig;
 
-import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.microsoft.azure.keyvault.KeyVaultClient;
 import com.microsoft.azure.keyvault.models.KeyVaultErrorException;
 import com.microsoft.azure.keyvault.models.SecretBundle;
@@ -51,7 +51,7 @@ public class AzureVaultEncryptorTest extends CategoryTest {
 
   @Before
   public void setup() {
-    azureVaultEncryptor = new AzureVaultEncryptor(new SimpleTimeLimiter());
+    azureVaultEncryptor = new AzureVaultEncryptor(HTimeLimiter.create());
     azureVaultConfig = AzureVaultConfig.builder()
                            .uuid(UUIDGenerator.generateUuid())
                            .name(UUIDGenerator.generateUuid())

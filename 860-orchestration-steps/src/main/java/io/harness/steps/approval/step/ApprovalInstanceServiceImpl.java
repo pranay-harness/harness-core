@@ -4,7 +4,12 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
+import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.exception.InvalidRequestException;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.repositories.ApprovalInstanceRepository;
 import io.harness.steps.approval.step.beans.ApprovalStatus;
 import io.harness.steps.approval.step.beans.ApprovalType;
@@ -42,16 +47,19 @@ public class ApprovalInstanceServiceImpl implements ApprovalInstanceService {
   private final ApprovalInstanceRepository approvalInstanceRepository;
   private final TransactionTemplate transactionTemplate;
   private final WaitNotifyEngine waitNotifyEngine;
+  private final PlanExecutionService planExecutionService;
 
   private final RetryPolicy<Object> transactionRetryPolicy = RetryUtils.getRetryPolicy("[Retrying] attempt: {}",
       "[Failed] attempt: {}", ImmutableList.of(TransactionException.class), Duration.ofSeconds(1), 3, log);
 
   @Inject
   public ApprovalInstanceServiceImpl(ApprovalInstanceRepository approvalInstanceRepository,
-      TransactionTemplate transactionTemplate, WaitNotifyEngine waitNotifyEngine) {
+      TransactionTemplate transactionTemplate, WaitNotifyEngine waitNotifyEngine,
+      PlanExecutionService planExecutionService) {
     this.approvalInstanceRepository = approvalInstanceRepository;
     this.transactionTemplate = transactionTemplate;
     this.waitNotifyEngine = waitNotifyEngine;
+    this.planExecutionService = planExecutionService;
   }
 
   @Override
@@ -66,6 +74,15 @@ public class ApprovalInstanceServiceImpl implements ApprovalInstanceService {
       throw new InvalidRequestException(String.format("Invalid approval instance id: %s", approvalInstanceId));
     }
     return optional.get();
+  }
+
+  @Override
+  public HarnessApprovalInstance getHarnessApprovalInstance(@NotNull String approvalInstanceId) {
+    ApprovalInstance instance = get(approvalInstanceId);
+    if (instance == null || instance.getType() != ApprovalType.HARNESS_APPROVAL) {
+      throw new InvalidRequestException(String.format("Invalid harness approval instance id: %s", approvalInstanceId));
+    }
+    return (HarnessApprovalInstance) instance;
   }
 
   @Override
@@ -89,19 +106,32 @@ public class ApprovalInstanceServiceImpl implements ApprovalInstanceService {
         new Query(Criteria.where(ApprovalInstanceKeys.status).is(ApprovalStatus.WAITING))
             .addCriteria(Criteria.where(ApprovalInstanceKeys.deadline).lt(System.currentTimeMillis())),
         new Update().set(ApprovalInstanceKeys.status, ApprovalStatus.EXPIRED));
-    log.info(String.format("No of approval instance expired: %d", result.getModifiedCount()));
+    log.info(String.format("No. of approval instances expired: %d", result.getModifiedCount()));
   }
 
   @Override
   public void finalizeStatus(@NotNull String approvalInstanceId, ApprovalStatus status) {
+    finalizeStatus(approvalInstanceId, status, null);
+  }
+
+  @Override
+  public void finalizeStatus(@NotNull String approvalInstanceId, ApprovalStatus status, String errorMessage) {
     // Only allow waiting instances to be approved or rejected. This is to prevent race condition between instance
     // expiry and instance approval/rejection.
-    approvalInstanceRepository.updateFirst(
+    Update update = new Update().set(ApprovalInstanceKeys.status, status);
+    if (errorMessage != null) {
+      update.set(ApprovalInstanceKeys.errorMessage, errorMessage);
+    }
+    ApprovalInstance instance = approvalInstanceRepository.updateFirst(
         new Query(Criteria.where(Mapper.ID_KEY).is(approvalInstanceId))
             .addCriteria(Criteria.where(ApprovalInstanceKeys.status).is(ApprovalStatus.WAITING)),
-        new Update().set(ApprovalInstanceKeys.status, status));
-    waitNotifyEngine.doneWith(
-        approvalInstanceId, JiraApprovalResponseData.builder().instanceId(approvalInstanceId).build());
+        update);
+
+    if (status.isFinalStatus()) {
+      waitNotifyEngine.doneWith(
+          approvalInstanceId, JiraApprovalResponseData.builder().instanceId(approvalInstanceId).build());
+    }
+    updatePlanStatus(instance);
   }
 
   @Override
@@ -109,17 +139,18 @@ public class ApprovalInstanceServiceImpl implements ApprovalInstanceService {
       @NotNull EmbeddedUser user, @NotNull @Valid HarnessApprovalActivityRequestDTO request) {
     HarnessApprovalInstance instance =
         doTransaction(status -> addHarnessApprovalActivityInTransaction(approvalInstanceId, user, request));
-    if (instance.getStatus() == ApprovalStatus.APPROVED || instance.getStatus() == ApprovalStatus.REJECTED) {
+    if (instance.getStatus().isFinalStatus()) {
       waitNotifyEngine.doneWith(
           instance.getId(), HarnessApprovalResponseData.builder().approvalInstanceId(instance.getId()).build());
     }
+    updatePlanStatus(instance);
     return instance;
   }
 
   private HarnessApprovalInstance addHarnessApprovalActivityInTransaction(@NotNull String approvalInstanceId,
       @NotNull EmbeddedUser user, @NotNull @Valid HarnessApprovalActivityRequestDTO request) {
     HarnessApprovalInstance instance = fetchWaitingHarnessApproval(approvalInstanceId);
-    if (System.currentTimeMillis() > instance.getDeadline()) {
+    if (instance.hasExpired()) {
       throw new InvalidRequestException("Harness approval instance has already expired");
     }
 
@@ -135,12 +166,7 @@ public class ApprovalInstanceServiceImpl implements ApprovalInstanceService {
   }
 
   private HarnessApprovalInstance fetchWaitingHarnessApproval(String approvalInstanceId) {
-    ApprovalInstance tmpInstance = get(approvalInstanceId);
-    if (tmpInstance == null || tmpInstance.getType() != ApprovalType.HARNESS_APPROVAL) {
-      throw new InvalidRequestException(String.format("Invalid harness approval instance id: %s", approvalInstanceId));
-    }
-
-    HarnessApprovalInstance instance = (HarnessApprovalInstance) tmpInstance;
+    HarnessApprovalInstance instance = getHarnessApprovalInstance(approvalInstanceId);
     if (instance.getStatus() == ApprovalStatus.EXPIRED) {
       throw new InvalidRequestException("Harness approval instance has already expired");
     }
@@ -149,6 +175,20 @@ public class ApprovalInstanceServiceImpl implements ApprovalInstanceService {
           String.format("Harness approval instance has already completed. Status: %s", instance.getStatus()));
     }
     return instance;
+  }
+
+  private void updatePlanStatus(ApprovalInstance instance) {
+    if (instance == null || instance.getStatus() == ApprovalStatus.WAITING) {
+      return;
+    }
+
+    // Update plan status after the completion of the approval step.
+    Ambiance ambiance = instance.getAmbiance();
+    Status planStatus = planExecutionService.calculateStatusExcluding(
+        ambiance.getPlanExecutionId(), AmbianceUtils.obtainCurrentRuntimeId(ambiance));
+    if (!StatusUtils.isFinalStatus(planStatus)) {
+      planExecutionService.updateStatus(ambiance.getPlanExecutionId(), planStatus);
+    }
   }
 
   private <T> T doTransaction(TransactionCallback<T> callback) {

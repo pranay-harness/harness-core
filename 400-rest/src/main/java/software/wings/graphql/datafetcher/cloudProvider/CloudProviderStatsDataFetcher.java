@@ -23,6 +23,7 @@ import software.wings.graphql.schema.type.aggregation.cloudprovider.QLCloudProvi
 import software.wings.graphql.utils.nameservice.NameService;
 
 import com.google.inject.Inject;
+import graphql.schema.DataFetchingEnvironment;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,7 +38,7 @@ public class CloudProviderStatsDataFetcher extends SettingsAttributeStatsDataFet
   @Override
   protected QLData fetch(String accountId, QLNoOpAggregateFunction aggregateFunction,
       List<QLCloudProviderFilter> filters, List<QLCloudProviderAggregation> groupBy,
-      List<QLNoOpSortCriteria> sortCriteria) {
+      List<QLNoOpSortCriteria> sortCriteria, DataFetchingEnvironment dataFetchingEnvironment) {
     final Class entityClass = SettingAttribute.class;
     List<String> groupByList = new ArrayList<>();
     if (isNotEmpty(groupBy)) {

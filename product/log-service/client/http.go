@@ -86,7 +86,7 @@ func (c *HTTPClient) Upload(ctx context.Context, key string, r io.Reader) error 
 func (c *HTTPClient) UploadLink(ctx context.Context, key string) (*Link, error) {
 	path := fmt.Sprintf(uploadLinkEndpoint, c.AccountID, key)
 	out := new(Link)
-	backoff := createInfiniteBackoff()
+	backoff := createBackoff(60 * time.Second)
 	_, err := c.retry(ctx, c.Endpoint+path, "POST", nil, out, false, backoff)
 	return out, err
 }
@@ -101,7 +101,7 @@ func (c *HTTPClient) Download(ctx context.Context, key string) (io.ReadCloser, e
 // UploadUsingLink takes in a reader and a link object and uploads directly to
 // remote storage.
 func (c *HTTPClient) UploadUsingLink(ctx context.Context, link string, r io.Reader) error {
-	backoff := createInfiniteBackoff()
+	backoff := createBackoff(60 * time.Second)
 	_, err := c.retry(ctx, link, "PUT", r, nil, true, backoff)
 	return err
 }
@@ -118,7 +118,7 @@ func (c *HTTPClient) DownloadLink(ctx context.Context, key string) (*Link, error
 // Open opens the data stream.
 func (c *HTTPClient) Open(ctx context.Context, key string) error {
 	path := fmt.Sprintf(streamEndpoint, c.AccountID, key)
-	backoff := createBackoff(60 * time.Second)
+	backoff := createBackoff(10 * time.Second)
 	_, err := c.retry(ctx, c.Endpoint+path, "POST", nil, nil, false, backoff)
 	return err
 }

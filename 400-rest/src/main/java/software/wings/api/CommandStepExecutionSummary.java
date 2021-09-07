@@ -1,5 +1,11 @@
 package software.wings.api;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.api.AwsLambdaContextElement.FunctionMeta;
 import software.wings.beans.Tag;
 import software.wings.beans.command.CodeDeployParams;
@@ -18,6 +24,8 @@ import lombok.EqualsAndHashCode;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @EqualsAndHashCode(callSuper = true)
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class CommandStepExecutionSummary extends StepExecutionSummary {
   private String serviceId;
   private List<ContainerServiceData> newInstanceData = new ArrayList<>();

@@ -3,7 +3,9 @@ package software.wings.api;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.pms.sdk.core.data.Outcome;
 
@@ -21,6 +23,7 @@ import lombok.EqualsAndHashCode;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @JsonTypeName("scriptStateExecutionData")
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ScriptStateExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData, Outcome {
   private String name;
   private String activityId;
@@ -60,10 +63,5 @@ public class ScriptStateExecutionData extends StateExecutionData implements Dele
               .value(removeNullValuesAndMaskSecrets(sweepingOutputEnvVariables, secretOutputVars))
               .build());
     }
-  }
-
-  @Override
-  public String getType() {
-    return "scriptStateExecutionData";
   }
 }

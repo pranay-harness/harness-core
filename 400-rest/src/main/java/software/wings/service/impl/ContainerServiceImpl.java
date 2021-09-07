@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -10,6 +11,7 @@ import static software.wings.beans.infrastructure.instance.info.EcsContainerInfo
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
@@ -45,7 +47,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.hazelcast.util.Preconditions;
 import io.fabric8.kubernetes.api.model.HasMetadata;
-import io.fabric8.kubernetes.api.model.Pod;
+import io.kubernetes.client.openapi.models.V1Pod;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -59,6 +61,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 @Singleton
 @Slf4j
+@OwnedBy(CDP)
 public class ContainerServiceImpl implements ContainerService {
   @Inject private GkeClusterService gkeClusterService;
   @Inject private KubernetesContainerService kubernetesContainerService;
@@ -131,18 +134,20 @@ public class ContainerServiceImpl implements ContainerService {
               kubernetesContainerService.getPodTemplateSpec(controller).getMetadata().getLabels();
           Map<String, String> serviceLabels = new HashMap<>(labels);
           serviceLabels.remove(HARNESS_KUBERNETES_REVISION_LABEL_KEY);
+          // Migrate to K8s Native Java Client
           List<io.fabric8.kubernetes.api.model.Service> services =
               kubernetesContainerService.getServices(kubernetesConfig, serviceLabels);
           String serviceName = services.isEmpty() ? "None" : services.get(0).getMetadata().getName();
           log.info("Got Service {} for controller {} for account {}", serviceName, containerServiceName, accountId);
-          List<Pod> pods = kubernetesContainerService.getPods(kubernetesConfig, labels);
+          List<V1Pod> pods = kubernetesContainerService.getRunningPodsWithLabels(
+              kubernetesConfig, containerServiceParams.getNamespace(), labels);
           log.info("Got {} pods for controller {} for account {}", pods != null ? pods.size() : 0, containerServiceName,
               accountId);
           if (isEmpty(pods)) {
             return result;
           }
 
-          for (Pod pod : pods) {
+          for (V1Pod pod : pods) {
             String phase = pod.getStatus().getPhase();
             log.info("Phase: {} for pod {} for controller {} for account {}", pod.getStatus().getPhase(),
                 pod.getMetadata().getName(), containerServiceName, accountId);
@@ -165,9 +170,9 @@ public class ContainerServiceImpl implements ContainerService {
         if (isEmpty(containerServiceParams.getReleaseName())) {
           return Collections.emptyList();
         }
-        final List<Pod> pods = kubernetesContainerService.getRunningPodsWithLabelsFabric8(kubernetesConfig,
-            containerServiceParams.getNamespace(),
-            ImmutableMap.of(HelmConstants.HELM_RELEASE_LABEL, containerServiceParams.getReleaseName()));
+        final List<V1Pod> pods =
+            kubernetesContainerService.getRunningPodsWithLabels(kubernetesConfig, containerServiceParams.getNamespace(),
+                ImmutableMap.of(HelmConstants.HELM_RELEASE_LABEL, containerServiceParams.getReleaseName()));
         return pods.stream()
             .map(pod
                 -> KubernetesContainerInfo.builder()

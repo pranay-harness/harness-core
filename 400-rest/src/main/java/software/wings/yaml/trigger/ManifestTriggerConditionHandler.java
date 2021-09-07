@@ -3,8 +3,10 @@ package software.wings.yaml.trigger;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 
@@ -18,6 +20,7 @@ import software.wings.service.impl.yaml.handler.trigger.TriggerConditionYamlHand
 import java.util.List;
 
 @OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class ManifestTriggerConditionHandler extends TriggerConditionYamlHandler<ManifestTriggerConditionYaml> {
   @Override
   public ManifestTriggerConditionYaml toYaml(TriggerCondition bean, String appId) {

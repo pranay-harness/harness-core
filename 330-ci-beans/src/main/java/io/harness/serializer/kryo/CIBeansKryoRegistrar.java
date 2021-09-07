@@ -1,6 +1,7 @@
 package io.harness.serializer.kryo;
 
-import io.harness.beans.CIPipelineSetupParameters;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.build.CIPipelineDetails;
 import io.harness.beans.build.PublishedArtifact;
 import io.harness.beans.dependencies.CIServiceInfo;
@@ -16,6 +17,8 @@ import io.harness.beans.execution.CustomExecutionSource;
 import io.harness.beans.execution.ExecutionSource;
 import io.harness.beans.execution.ManualExecutionSource;
 import io.harness.beans.execution.PRWebhookEvent;
+import io.harness.beans.execution.PublishedFileArtifact;
+import io.harness.beans.execution.PublishedImageArtifact;
 import io.harness.beans.execution.Repository;
 import io.harness.beans.execution.WebhookBaseAttributes;
 import io.harness.beans.execution.WebhookEvent;
@@ -25,9 +28,8 @@ import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.inputset.WebhookTriggerExecutionInputSet;
 import io.harness.beans.outcomes.DependencyOutcome;
 import io.harness.beans.outcomes.LiteEnginePodDetailsOutcome;
-import io.harness.beans.stages.IntegrationStage;
-import io.harness.beans.stages.IntegrationStageStepParameters;
-import io.harness.beans.steps.CiStepOutcome;
+import io.harness.beans.steps.outcome.CIStepOutcome;
+import io.harness.beans.steps.outcome.StepArtifacts;
 import io.harness.beans.steps.stepinfo.BuildEnvSetupStepInfo;
 import io.harness.beans.steps.stepinfo.CleanupStepInfo;
 import io.harness.beans.steps.stepinfo.DockerStepInfo;
@@ -53,10 +55,6 @@ import io.harness.beans.sweepingoutputs.StepTaskDetails;
 import io.harness.beans.yaml.extended.CustomSecretVariable;
 import io.harness.beans.yaml.extended.CustomTextVariable;
 import io.harness.beans.yaml.extended.CustomVariable;
-import io.harness.beans.yaml.extended.artifact.DockerHubArtifactStreamYaml;
-import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
-import io.harness.beans.yaml.extended.container.Container;
-import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml.K8sDirectInfraYamlSpec;
@@ -72,15 +70,14 @@ import com.esotericsoftware.kryo.Kryo;
  * Class will register all kryo classes
  */
 
+@OwnedBy(HarnessTeam.CI)
 public class CIBeansKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
     kryo.register(K8PodDetails.class, 100001);
     kryo.register(ContextElement.class, 100002);
     kryo.register(BuildEnvSetupStepInfo.class, 100003);
-    kryo.register(CIPipelineSetupParameters.class, 100004);
     kryo.register(CleanupStepInfo.class, 100005);
-    kryo.register(IntegrationStageStepParameters.class, 100007);
     kryo.register(LiteEngineTaskStepInfo.class, 100008);
     kryo.register(RunStepInfo.class, 100011);
     kryo.register(TestStepInfo.class, 100013);
@@ -88,11 +85,6 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(BuildStandardVariables.class, 100015);
     kryo.register(CIExecutionArgs.class, 100016);
     kryo.register(BuildNumberDetails.class, 100017);
-    kryo.register(IntegrationStage.class, 100018);
-    kryo.register(Container.class, 100019);
-    kryo.register(Container.Resources.class, 100020);
-    kryo.register(Container.Limit.class, 100021);
-    kryo.register(Container.Reserve.class, 100022);
     kryo.register(CustomVariable.class, 100023);
     kryo.register(K8BuildJobEnvInfo.class, 100024);
     kryo.register(K8BuildJobEnvInfo.PodsSetupInfo.class, 100025);
@@ -100,9 +92,6 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(PodSetupInfo.PodSetupParams.class, 100027);
     kryo.register(ContainerDefinitionInfo.class, 100028);
     kryo.register(ContainerImageDetails.class, 100029);
-    kryo.register(GitConnectorYaml.class, 100037);
-    kryo.register(GitConnectorYaml.Spec.class, 100038);
-    kryo.register(GitConnectorYaml.Spec.AuthScheme.class, 100039);
     kryo.register(K8sDirectInfraYaml.class, 100040);
     kryo.register(K8sDirectInfraYamlSpec.class, 100041);
     kryo.register(WebhookExecutionSource.class, 100044);
@@ -113,15 +102,11 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(BranchWebhookEvent.class, 100049);
     kryo.register(CIPipelineDetails.class, 100050);
     kryo.register(PublishedArtifact.class, 100051);
-    kryo.register(DockerHubArtifactStreamYaml.class, 100052);
-    kryo.register(DockerHubArtifactStreamYaml.Spec.class, 100053);
     kryo.register(GitVariables.class, 100054);
     kryo.register(WebhookTriggerExecutionInputSet.class, 100055);
     kryo.register(ExecutionSource.Type.class, 100056);
-    kryo.register(CiStepOutcome.class, 100057);
+    kryo.register(CIStepOutcome.class, 100057);
     kryo.register(PluginStepInfo.class, 100058);
-    kryo.register(ContainerResource.class, 100059);
-    kryo.register(ContainerResource.Limits.class, 100060);
     kryo.register(CustomSecretVariable.class, 100061);
     kryo.register(CustomTextVariable.class, 100062);
     kryo.register(CustomVariable.Type.class, 100063);
@@ -151,5 +136,8 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(CustomExecutionSource.class, 100088);
     kryo.register(LiteEnginePodDetailsOutcome.class, 100089);
     kryo.register(ContainerPortDetails.class, 100090);
+    kryo.register(StepArtifacts.class, 100091);
+    kryo.register(PublishedFileArtifact.class, 100092);
+    kryo.register(PublishedImageArtifact.class, 100093);
   }
 }

@@ -167,8 +167,7 @@
         </dependency>
         <dependency>
             <groupId>com.github.tomakehurst</groupId>
-            <artifactId>wiremock</artifactId>
-            <classifier>standalone</classifier>
+            <artifactId>wiremock-jre8-standalone</artifactId>
         </dependency>
         <dependency>
             <groupId>com.github.zafarkhaja</groupId>
@@ -750,6 +749,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>425-verification-commons</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>430-cv-nextgen-commons</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -770,11 +774,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>835-notification-senders</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>860-orchestration-steps</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -785,7 +784,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>870-cg-yaml-beans</artifactId>
+            <artifactId>865-cg-events</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -855,7 +854,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>950-cg-ng-shared-orchestration-beans</artifactId>
+            <artifactId>948-access-control-sdk</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -865,7 +864,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>950-common-entities</artifactId>
+            <artifactId>959-common-entities</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -900,6 +899,11 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>959-file-service-commons</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>960-continuous-features</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -920,11 +924,6 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>960-recaster</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
             <artifactId>970-api-services-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -936,6 +935,11 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>970-rbac-core</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>980-recaster</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

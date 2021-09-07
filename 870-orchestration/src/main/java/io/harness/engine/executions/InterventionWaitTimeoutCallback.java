@@ -10,22 +10,21 @@ import io.harness.engine.interrupts.InterruptPackage.InterruptPackageBuilder;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
-import io.harness.pms.contracts.advisers.AdviseType;
-import io.harness.pms.contracts.advisers.AdviserIssuer;
-import io.harness.pms.contracts.advisers.InterruptConfig;
 import io.harness.pms.contracts.advisers.InterventionWaitAdvise;
-import io.harness.pms.contracts.advisers.IssuedBy;
-import io.harness.pms.contracts.advisers.RetryInterruptConfig;
 import io.harness.pms.contracts.commons.RepairActionCode;
+import io.harness.pms.contracts.interrupts.InterruptConfig;
 import io.harness.pms.contracts.interrupts.InterruptType;
+import io.harness.pms.contracts.interrupts.IssuedBy;
+import io.harness.pms.contracts.interrupts.RetryInterruptConfig;
+import io.harness.pms.contracts.interrupts.TimeoutIssuer;
 import io.harness.pms.execution.utils.StatusUtils;
+import io.harness.serializer.ProtoUtils;
 import io.harness.timeout.TimeoutCallback;
 import io.harness.timeout.TimeoutDetails;
 import io.harness.timeout.TimeoutInstance;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
-import java.util.Collections;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.annotation.TypeAlias;
 
@@ -52,15 +51,16 @@ public class InterventionWaitTimeoutCallback implements TimeoutCallback {
     InterventionWaitAdvise interventionWaitAdvise = nodeExecution.getAdviserResponse().getInterventionWaitAdvise();
     nodeExecutionService.update(
         nodeExecutionId, ops -> ops.set(NodeExecutionKeys.adviserTimeoutDetails, new TimeoutDetails(timeoutInstance)));
-    interruptManager.register(getInterruptPackage(interventionWaitAdvise));
+    interruptManager.register(getInterruptPackage(interventionWaitAdvise, timeoutInstance.getUuid()));
   }
 
   @VisibleForTesting
-  InterruptPackage getInterruptPackage(InterventionWaitAdvise interventionWaitAdvise) {
+  InterruptPackage getInterruptPackage(InterventionWaitAdvise interventionWaitAdvise, String timeoutInstanceId) {
     RepairActionCode repairActionCode = interventionWaitAdvise.getRepairActionCode();
     InterruptConfig.Builder interruptConfigBuilder = InterruptConfig.newBuilder().setIssuedBy(
         IssuedBy.newBuilder()
-            .setAdviserIssuer(AdviserIssuer.newBuilder().setAdviserType(AdviseType.INTERVENTION_WAIT).build())
+            .setTimeoutIssuer(TimeoutIssuer.newBuilder().setTimeoutInstanceId(timeoutInstanceId).build())
+            .setIssueTime(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()))
             .build());
     InterruptPackageBuilder interruptPackageBuilder =
         InterruptPackage.builder().planExecutionId(planExecutionId).nodeExecutionId(nodeExecutionId);
@@ -79,9 +79,15 @@ public class InterventionWaitTimeoutCallback implements TimeoutCallback {
             .interruptConfig(interruptConfigBuilder.build())
             .build();
       case ON_FAIL:
-        return interruptPackageBuilder.interruptType(InterruptType.NEXT_STEP)
+        return interruptPackageBuilder.interruptType(InterruptType.MARK_FAILED)
             .interruptConfig(interruptConfigBuilder.build())
-            .metadata(Collections.singletonMap(InterruptType.NEXT_STEP.name(), interventionWaitAdvise.getNextNodeId()))
+            .build();
+      case STAGE_ROLLBACK:
+      case STEP_GROUP_ROLLBACK:
+      case CUSTOM_FAILURE:
+        return interruptPackageBuilder.interruptType(InterruptType.CUSTOM_FAILURE)
+            .interruptConfig(interruptConfigBuilder.build())
+            .metadata(interventionWaitAdvise.getMetadataMap())
             .build();
       case UNKNOWN:
       case END_EXECUTION:

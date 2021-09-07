@@ -16,6 +16,7 @@ import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -820,7 +821,13 @@ public class EntityHelper {
           }
         }
       } else if (entity instanceof ApplicationManifest) {
-        finalYaml = format("%s/%s", yamlPrefix, INDEX_YAML);
+        ApplicationManifest appManifest = (ApplicationManifest) entity;
+        if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, appManifest.getAccountId())
+            && isNotBlank(appManifest.getName())) {
+          finalYaml = format("%s/%s%s", yamlPrefix, appManifest.getName(), YAML_EXTENSION);
+        } else {
+          finalYaml = format("%s/%s", yamlPrefix, INDEX_YAML);
+        }
       } else if (entity instanceof ManifestFile) {
         ManifestFile manifestFile = (ManifestFile) entity;
         finalYaml = format("%s/%s", yamlPrefix, manifestFile.getFileName());

@@ -1,7 +1,10 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
+
 import static java.util.Collections.emptyList;
 
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.expression.ExpressionEvaluator;
 
@@ -21,6 +24,7 @@ import lombok.NoArgsConstructor;
  * Created by anubhaw on 1/10/17.
  */
 @JsonTypeName("PHYSICAL_DATA_CENTER")
+@TargetModule(_957_CG_BEANS)
 public class PhysicalDataCenterConfig extends SettingValue {
   /**
    * Instantiates a new setting value.

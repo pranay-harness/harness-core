@@ -1,0 +1,6 @@
+name: Resume Metrics Group
+identifier: resume_event_group
+labels:
+  - accountId
+  - stepType
+  - module

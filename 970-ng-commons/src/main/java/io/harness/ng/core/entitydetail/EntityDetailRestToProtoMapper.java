@@ -1,15 +1,20 @@
 package io.harness.ng.core.entitydetail;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.HarnessStringUtils.nullIfEmpty;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.InputSetReference;
+import io.harness.beans.NGTemplateReference;
 import io.harness.encryption.Scope;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
 import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
 import io.harness.eventsframework.schemas.entity.InputSetReferenceProtoDTO;
 import io.harness.eventsframework.schemas.entity.ScopeProtoEnum;
+import io.harness.eventsframework.schemas.entity.TemplateReferenceProtoDTO;
 import io.harness.exception.UnknownEnumTypeException;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.event.EntityToEntityProtoHelper;
@@ -18,30 +23,42 @@ import com.google.inject.Singleton;
 import com.google.protobuf.StringValue;
 
 @Singleton
+@OwnedBy(DX)
 public class EntityDetailRestToProtoMapper {
   public EntityDetailProtoDTO createEntityDetailDTO(EntityDetail entityDetail) {
     final EntityTypeProtoEnum entityTypeProto =
         EntityToEntityProtoHelper.getEntityTypeFromProto(entityDetail.getType());
     final EntityDetailProtoDTO.Builder entityDetailProtoBuilder =
-        EntityDetailProtoDTO.newBuilder().setName(entityDetail.getName()).setType(entityTypeProto);
+        EntityDetailProtoDTO.newBuilder().setType(entityTypeProto);
+    if (entityDetail.getName() != null) {
+      entityDetailProtoBuilder.setName(entityDetail.getName());
+    }
     if (entityDetail.getEntityRef() instanceof IdentifierRef) {
       return entityDetailProtoBuilder.setIdentifierRef(createIdentifierRef((IdentifierRef) entityDetail.getEntityRef()))
           .build();
-    } else {
+    } else if (entityDetail.getEntityRef() instanceof InputSetReference) {
       return entityDetailProtoBuilder.setInputSetRef(createInputSetRef((InputSetReference) entityDetail.getEntityRef()))
+          .build();
+    } else {
+      return entityDetailProtoBuilder
+          .setTemplateRef(createTemplateRef((NGTemplateReference) entityDetail.getEntityRef()))
           .build();
     }
   }
 
   private IdentifierRefProtoDTO createIdentifierRef(IdentifierRef identifierRef) {
-    return IdentifierRefProtoDTO.newBuilder()
-        .setAccountIdentifier(StringValue.newBuilder().setValue(identifierRef.getAccountIdentifier()).build())
-        .setOrgIdentifier(StringValue.newBuilder().setValue(nullIfEmpty(identifierRef.getOrgIdentifier())).build())
-        .setProjectIdentifier(
-            StringValue.newBuilder().setValue(nullIfEmpty(identifierRef.getProjectIdentifier())).build())
-        .setScope(mapToScopeProtoEnum(identifierRef.getScope()))
-        .setIdentifier(StringValue.newBuilder().setValue(identifierRef.getIdentifier()).build())
-        .build();
+    IdentifierRefProtoDTO.Builder builder =
+        IdentifierRefProtoDTO.newBuilder()
+            .setAccountIdentifier(StringValue.newBuilder().setValue(identifierRef.getAccountIdentifier()).build())
+            .setScope(mapToScopeProtoEnum(identifierRef.getScope()))
+            .setIdentifier(StringValue.of(identifierRef.getIdentifier()));
+    if (isNotEmpty(identifierRef.getOrgIdentifier())) {
+      builder.setOrgIdentifier(StringValue.of(nullIfEmpty(identifierRef.getOrgIdentifier())));
+    }
+    if (isNotEmpty(identifierRef.getProjectIdentifier())) {
+      builder.setProjectIdentifier(StringValue.of(nullIfEmpty(identifierRef.getProjectIdentifier())));
+    }
+    return builder.build();
   }
 
   private ScopeProtoEnum mapToScopeProtoEnum(Scope scope) {
@@ -61,12 +78,27 @@ public class EntityDetailRestToProtoMapper {
 
   private InputSetReferenceProtoDTO createInputSetRef(InputSetReference inputSetReference) {
     return InputSetReferenceProtoDTO.newBuilder()
-        .setAccountIdentifier(StringValue.newBuilder().setValue(inputSetReference.getAccountIdentifier()).build())
-        .setIdentifier(StringValue.newBuilder().setValue(inputSetReference.getIdentifier()).build())
-        .setOrgIdentifier(StringValue.newBuilder().setValue(nullIfEmpty(inputSetReference.getOrgIdentifier())).build())
-        .setProjectIdentifier(
-            StringValue.newBuilder().setValue(nullIfEmpty(inputSetReference.getProjectIdentifier())).build())
-        .setPipelineIdentifier(StringValue.newBuilder().setValue(inputSetReference.getPipelineIdentifier()).build())
+        .setAccountIdentifier(StringValue.of(inputSetReference.getAccountIdentifier()))
+        .setIdentifier(StringValue.of(inputSetReference.getIdentifier()))
+        .setOrgIdentifier(StringValue.of(nullIfEmpty(inputSetReference.getOrgIdentifier())))
+        .setProjectIdentifier(StringValue.of(nullIfEmpty(inputSetReference.getProjectIdentifier())))
+        .setPipelineIdentifier(StringValue.of(inputSetReference.getPipelineIdentifier()))
         .build();
+  }
+
+  private TemplateReferenceProtoDTO createTemplateRef(NGTemplateReference templateReference) {
+    TemplateReferenceProtoDTO.Builder builder =
+        TemplateReferenceProtoDTO.newBuilder()
+            .setAccountIdentifier(StringValue.of(templateReference.getAccountIdentifier()))
+            .setIdentifier(StringValue.of(templateReference.getIdentifier()))
+            .setScope(mapToScopeProtoEnum(templateReference.getScope()))
+            .setVersionLabel(StringValue.of(templateReference.getVersionLabel()));
+    if (isNotEmpty(templateReference.getOrgIdentifier())) {
+      builder.setOrgIdentifier(StringValue.of(nullIfEmpty(templateReference.getOrgIdentifier())));
+    }
+    if (isNotEmpty(templateReference.getProjectIdentifier())) {
+      builder.setProjectIdentifier(StringValue.of(nullIfEmpty(templateReference.getProjectIdentifier())));
+    }
+    return builder.build();
   }
 }

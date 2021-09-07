@@ -1,5 +1,8 @@
 package io.harness.k8s;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.container.ContainerInfo;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
@@ -19,11 +22,13 @@ import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1Service;
+import io.kubernetes.client.openapi.models.V1TokenReviewStatus;
 import io.kubernetes.client.openapi.models.VersionInfo;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import lombok.SneakyThrows;
 import me.snowdrop.istio.api.IstioResource;
 import me.snowdrop.istio.api.networking.v1alpha3.DestinationRule;
 import me.snowdrop.istio.api.networking.v1alpha3.VirtualService;
@@ -31,6 +36,7 @@ import me.snowdrop.istio.api.networking.v1alpha3.VirtualService;
 /**
  * Created by brett on 2/10/17.
  */
+@OwnedBy(CDP)
 public interface KubernetesContainerService {
   HasMetadata createOrReplaceController(KubernetesConfig kubernetesConfig, HasMetadata definition);
 
@@ -40,6 +46,8 @@ public interface KubernetesContainerService {
   List<? extends HasMetadata> getControllers(KubernetesConfig kubernetesConfig, Map<String, String> labels);
 
   void validate(KubernetesConfig kubernetesConfig);
+
+  void validateMasterUrl(KubernetesConfig kubernetesConfig);
 
   @SuppressWarnings("squid:S1452") List<? extends HasMetadata> listControllers(KubernetesConfig kubernetesConfig);
 
@@ -146,9 +154,6 @@ public interface KubernetesContainerService {
   void saveReleaseHistory(
       KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory, boolean storeInSecrets);
 
-  List<Pod> getRunningPodsWithLabelsFabric8(
-      KubernetesConfig kubernetesConfig, String namespace, Map<String, String> labels);
-
   List<V1Pod> getRunningPodsWithLabels(KubernetesConfig kubernetesConfig, String namespace, Map<String, String> labels);
 
   void deleteIstioVirtualService(KubernetesConfig kubernetesConfig, String name);
@@ -172,4 +177,6 @@ public interface KubernetesContainerService {
   CEK8sDelegatePrerequisite.MetricsServerCheck validateMetricsServer(KubernetesConfig kubernetesConfig);
 
   List<CEK8sDelegatePrerequisite.Rule> validateCEResourcePermissions(KubernetesConfig kubernetesConfig);
+
+  @SneakyThrows V1TokenReviewStatus fetchTokenReviewStatus(KubernetesConfig kubernetesConfig);
 }

@@ -1,5 +1,8 @@
 package io.harness.ng;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
@@ -9,6 +12,7 @@ import io.harness.security.encryption.EncryptionType;
 
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(PL)
 @UtilityClass
 public class GcpKmsConfigDTOMapper {
   public static GcpKmsConfigDTO getGcpKmsConfigDTO(
@@ -18,10 +22,11 @@ public class GcpKmsConfigDTOMapper {
         .region(gcpKmsConnectorDTO.getRegion())
         .keyName(gcpKmsConnectorDTO.getKeyName())
         .keyRing(gcpKmsConnectorDTO.getKeyRing())
-        .credentials(gcpKmsConnectorDTO.getCredentials())
+        .credentials(gcpKmsConnectorDTO.getCredentials().getDecryptedValue())
         .projectId(gcpKmsConnectorDTO.getProjectId())
         .isDefault(false)
         .encryptionType(EncryptionType.GCP_KMS)
+        .delegateSelectors(gcpKmsConnectorDTO.getDelegateSelectors())
 
         .name(connector.getName())
         .accountIdentifier(accountIdentifier)
@@ -41,9 +46,10 @@ public class GcpKmsConfigDTOMapper {
         .region(gcpKmsConnectorDTO.getRegion())
         .keyName(gcpKmsConnectorDTO.getKeyName())
         .keyRing(gcpKmsConnectorDTO.getKeyRing())
-        .credentials(gcpKmsConnectorDTO.getCredentials())
+        .credentials(gcpKmsConnectorDTO.getCredentials().getDecryptedValue())
         .projectId(gcpKmsConnectorDTO.getProjectId())
         .isDefault(false)
+        .name(connector.getName())
         .encryptionType(EncryptionType.GCP_KMS)
 
         .tags(connector.getTags())

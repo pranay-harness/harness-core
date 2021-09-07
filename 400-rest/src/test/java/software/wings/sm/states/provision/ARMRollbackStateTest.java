@@ -2,15 +2,22 @@ package software.wings.sm.states.provision;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ANIL;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.ARMResourceType;
 import io.harness.azure.model.ARMScopeType;
 import io.harness.azure.model.AzureDeploymentMode;
@@ -20,6 +27,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.azure.AzureConfigDTO;
 import io.harness.delegate.task.azure.arm.AzureARMPreDeploymentData;
 import io.harness.delegate.task.azure.arm.request.AzureARMDeploymentParameters;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -30,6 +38,7 @@ import software.wings.beans.AzureConfig;
 import software.wings.beans.Environment;
 import software.wings.service.impl.azure.manager.AzureTaskExecutionRequest;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.states.azure.AzureVMSSStateHelper;
@@ -42,11 +51,16 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ARMRollbackStateTest extends WingsBaseTest {
   @Mock private ARMStateHelper helper;
   @Mock private DelegateService delegateService;
   @Mock private ExecutionContextImpl mockContext;
   @Mock private AzureVMSSStateHelper azureVMSSStateHelper;
+  @Mock private StateExecutionService stateExecutionService;
+  @Mock private FeatureFlagService featureFlagService;
+
   @InjectMocks private final ARMRollbackState armRollbackState = new ARMRollbackState("ARM Rollback");
 
   private static final String PROVISIONER_ID = "arm-id";
@@ -150,6 +164,7 @@ public class ARMRollbackStateTest extends WingsBaseTest {
         .when(azureVMSSStateHelper)
         .getEncryptedDataDetails(eq(mockContext), eq(CLOUD_PROVIDER_ID));
     doReturn(azureConfigDTO).when(azureVMSSStateHelper).createAzureConfigDTO(eq(azureConfig));
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
   }
 
   @Test
@@ -336,5 +351,22 @@ public class ARMRollbackStateTest extends WingsBaseTest {
 
   private ARMInfrastructureProvisioner getArmInfrastructureProvisioner() {
     return ARMInfrastructureProvisioner.builder().uuid(PROVISIONER_ID).name("ARM-Provisioner").build();
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testValidation() {
+    // provision state
+    ARMProvisionState armProvisionState = new ARMProvisionState("ARM Provision");
+    assertThat(armProvisionState.validateFields().size()).isEqualTo(1);
+    armProvisionState.setProvisionerId("test provisioner");
+    assertThat(armProvisionState.validateFields().size()).isEqualTo(0);
+
+    // rollback test
+    ARMRollbackState armRollbackState = new ARMRollbackState("ARM Rollback");
+    assertThat(armRollbackState.validateFields().size()).isEqualTo(1);
+    armRollbackState.setProvisionerId("test provisioner");
+    assertThat(armRollbackState.validateFields().size()).isEqualTo(0);
   }
 }

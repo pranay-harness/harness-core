@@ -127,6 +127,14 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
   }
 
   @Override
+  public long updateTasksSchedule(String accountId, String perpetualTaskType, long intervalInMillis) {
+    try (AutoLogContext ignore0 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      log.info("Updating task schedule for perpetual task type: {}", perpetualTaskType);
+      return perpetualTaskRecordDao.updateTasksSchedule(accountId, perpetualTaskType, intervalInMillis);
+    }
+  }
+
+  @Override
   public boolean deleteTask(String accountId, String taskId) {
     try (AutoLogContext ignore0 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore1 = new PerpetualTaskLogContext(taskId, OVERRIDE_ERROR)) {
@@ -190,6 +198,7 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
 
   @Override
   public PerpetualTaskExecutionContext perpetualTaskContext(String taskId) {
+    log.info("Getting perpetual task context for task with id: {}", taskId);
     PerpetualTaskRecord perpetualTaskRecord = perpetualTaskRecordDao.getTask(taskId);
 
     PerpetualTaskExecutionParams params = getTaskParams(perpetualTaskRecord);
@@ -236,8 +245,8 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
   }
 
   @Override
-  public void updateTaskUnassignedReason(String taskId, PerpetualTaskUnassignedReason reason) {
-    perpetualTaskRecordDao.updateTaskUnassignedReason(taskId, reason);
+  public void updateTaskUnassignedReason(String taskId, PerpetualTaskUnassignedReason reason, int assignTryCount) {
+    perpetualTaskRecordDao.updateTaskUnassignedReason(taskId, reason, assignTryCount);
   }
 
   @Override

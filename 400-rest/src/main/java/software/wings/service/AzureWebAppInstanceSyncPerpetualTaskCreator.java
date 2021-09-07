@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 
 import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
@@ -9,10 +10,10 @@ import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
-import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.instancesync.AzureWebAppInstanceSyncPerpetualTaskClientParams;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
@@ -22,11 +23,9 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.info.AzureWebAppInstanceInfo;
 import software.wings.beans.infrastructure.instance.key.deployment.AzureWebAppDeploymentKey;
-import software.wings.service.intfc.instance.InstanceService;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
-import com.google.inject.Inject;
 import com.google.protobuf.util.Durations;
 import java.util.List;
 import java.util.Map;
@@ -39,12 +38,10 @@ import lombok.experimental.FieldDefaults;
 import org.apache.commons.lang3.StringUtils;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class AzureWebAppInstanceSyncPerpetualTaskCreator implements InstanceSyncPerpetualTaskCreator {
+@OwnedBy(CDP)
+public class AzureWebAppInstanceSyncPerpetualTaskCreator extends AbstractInstanceSyncPerpetualTaskCreator {
   private static final String APP_NAME = "appName";
   private static final String SLOT_NAME = "slotName";
-
-  @Inject private InstanceService instanceService;
-  @Inject private PerpetualTaskService perpetualTaskService;
 
   @Override
   public List<String> createPerpetualTasks(InfrastructureMapping infrastructureMapping) {
@@ -114,11 +111,12 @@ public class AzureWebAppInstanceSyncPerpetualTaskCreator implements InstanceSync
                    .appName(getWebAppName(webAppDeploymentKey))
                    .slotName(getWebAppSlotName(webAppDeploymentKey))
                    .build())
-        .map(params -> create(accountId, params))
+        .map(params -> create(params, infrastructureMapping))
         .collect(Collectors.toList());
   }
 
-  private String create(String accountId, AzureWebAppInstanceSyncPerpetualTaskClientParams clientParams) {
+  private String create(
+      AzureWebAppInstanceSyncPerpetualTaskClientParams clientParams, InfrastructureMapping infraMapping) {
     Map<String, String> paramMap = ImmutableMap.of(HARNESS_APPLICATION_ID, clientParams.getAppId(),
         INFRASTRUCTURE_MAPPING_ID, clientParams.getInfraMappingId(), APP_NAME, clientParams.getAppName(), SLOT_NAME,
         clientParams.getSlotName());
@@ -130,8 +128,8 @@ public class AzureWebAppInstanceSyncPerpetualTaskCreator implements InstanceSync
                                          .setTimeout(Durations.fromSeconds(TIMEOUT_SECONDS))
                                          .build();
 
-    return perpetualTaskService.createTask(
-        PerpetualTaskType.AZURE_WEB_APP_INSTANCE_SYNC, accountId, clientContext, schedule, false, "");
+    return perpetualTaskService.createTask(PerpetualTaskType.AZURE_WEB_APP_INSTANCE_SYNC, infraMapping.getAccountId(),
+        clientContext, schedule, false, getTaskDescription(infraMapping));
   }
 
   private Optional<String> getWebAppDeploymentKey(String appName, String slotName) {

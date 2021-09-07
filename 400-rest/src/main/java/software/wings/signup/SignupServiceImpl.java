@@ -15,18 +15,18 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.Level;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.SignupException;
+import io.harness.exception.WeakPasswordException;
 import io.harness.exception.WingsException;
 
 import software.wings.app.MainConfiguration;
 import software.wings.beans.UserInvite;
 import software.wings.beans.UserInvite.UserInviteKeys;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WeakPasswordException;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.SignupService;
-import software.wings.service.intfc.signup.SignupException;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
@@ -404,7 +404,7 @@ public class SignupServiceImpl implements SignupService {
 
     Matcher matcher = NAME_PATTERN.matcher(name);
     if (!matcher.matches()) {
-      throw new InvalidArgumentsException("User name is not valid.", USER);
+      throw new InvalidArgumentsException("Name is not valid.", USER);
     }
   }
 

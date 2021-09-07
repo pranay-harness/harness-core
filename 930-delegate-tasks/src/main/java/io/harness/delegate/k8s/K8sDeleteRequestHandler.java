@@ -22,6 +22,7 @@ import static software.wings.beans.LogWeight.Bold;
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
@@ -106,12 +107,13 @@ public class K8sDeleteRequestHandler extends K8sRequestHandler {
 
   private K8sDeployResponse executeDeleteUsingFiles(K8sDeleteRequest k8sDeleteRequest,
       K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback,
-      ILogStreamingTaskClient logStreamingTaskClient, CommandUnitsProgress commandUnitsProgress) throws Exception {
+      ILogStreamingTaskClient logStreamingTaskClient, CommandUnitsProgress commandUnitsProgress) {
     long steadyStateTimeoutInMillis = getTimeoutMillisFromMinutes(k8sDeleteRequest.getTimeoutIntervalInMin());
 
     boolean success = k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(
         k8sDeleteRequest.getManifestDelegateConfig(), manifestFilesDirectory,
-        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, FetchFiles, true, commandUnitsProgress),
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, FetchFiles,
+            k8sDeleteRequest.isShouldOpenFetchFilesLogStream(), commandUnitsProgress),
         steadyStateTimeoutInMillis, k8sDeleteRequest.getAccountId());
     if (!success) {
       return getGenericFailureResponse(null);
@@ -141,6 +143,9 @@ public class K8sDeleteRequestHandler extends K8sRequestHandler {
   boolean initUsingFilePaths(K8sDeleteRequest k8sDeleteRequest, K8sDelegateTaskParams k8sDelegateTaskParams,
       LogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog("Initializing..\n");
+    if (EmptyPredicate.isNotEmpty(releaseName)) {
+      executionLogCallback.saveExecutionLog(color(String.format("Release Name: [%s]", releaseName), Yellow, Bold));
+    }
 
     try {
       client = Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath());
@@ -210,6 +215,9 @@ public class K8sDeleteRequestHandler extends K8sRequestHandler {
   private boolean init(K8sDeleteRequest k8sDeleteRequest, K8sDelegateTaskParams k8sDelegateTaskParams,
       LogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog("Initializing..\n");
+    if (EmptyPredicate.isNotEmpty(releaseName)) {
+      executionLogCallback.saveExecutionLog(color(String.format("Release Name: [%s]", releaseName), Yellow, Bold));
+    }
     client = Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath());
     kubernetesConfig =
         containerDeploymentDelegateBaseHelper.createKubernetesConfig(k8sDeleteRequest.getK8sInfraDelegateConfig());

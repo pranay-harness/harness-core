@@ -1,6 +1,6 @@
 package io.harness.engine.interrupts.handlers;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.CollectionUtils.isPresent;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -10,37 +10,30 @@ import static io.harness.interrupts.Interrupt.State.DISCARDED;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_UNSUCCESSFULLY;
 import static io.harness.interrupts.Interrupt.State.PROCESSING;
-import static io.harness.pms.contracts.execution.Status.DISCONTINUING;
 
 import io.harness.OrchestrationPublisherName;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.interrupts.InterruptHandler;
 import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.interrupts.helpers.AbortHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
-import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.interrupts.Interrupt;
-import io.harness.interrupts.InterruptEffect;
 import io.harness.pms.contracts.interrupts.InterruptType;
-import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import javax.validation.Valid;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
-@OwnedBy(CDC)
 @Slf4j
-public class AbortAllInterruptHandler implements InterruptHandler {
+@OwnedBy(PIPELINE)
+public class AbortAllInterruptHandler extends InterruptPropagatorHandler implements InterruptHandler {
   @Inject private InterruptService interruptService;
-  @Inject private NodeExecutionService nodeExecutionService;
   @Inject private AbortHelper abortHelper;
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
   @Inject private WaitNotifyEngine waitNotifyEngine;
@@ -83,64 +76,27 @@ public class AbortAllInterruptHandler implements InterruptHandler {
     return interruptService.save(interrupt);
   }
 
+  /**
+   * This method is applicable for parent node i.e stage/stepGroup etc.
+   * For complete pipeline refer Handle interrupt
+   */
   @Override
   public Interrupt handleInterruptForNodeExecution(Interrupt interrupt, String nodeExecutionId) {
-    Interrupt updatedInterrupt = interruptService.markProcessing(interrupt.getUuid());
-    List<NodeExecution> allNodeExecutions = nodeExecutionService.findAllChildrenWithStatusIn(
-        interrupt.getPlanExecutionId(), interrupt.getNodeExecutionId(), StatusUtils.finalizableStatuses(), true);
-    List<String> targetIds = allNodeExecutions.stream().map(NodeExecution::getUuid).collect(Collectors.toList());
-    if (!abortHelper.markAbortingStateForParent(
-            updatedInterrupt, StatusUtils.finalizableStatuses(), allNodeExecutions)) {
-      return updatedInterrupt;
-    }
-
-    List<NodeExecution> discontinuingNodeExecutions = nodeExecutionService.fetchNodeExecutionsByStatusAndIdIn(
-        updatedInterrupt.getPlanExecutionId(), DISCONTINUING, targetIds);
-
-    nodeExecutionService.update(nodeExecutionId,
-        ops
-        -> ops.addToSet(NodeExecutionKeys.interruptHistories,
-            InterruptEffect.builder()
-                .interruptType(interrupt.getType())
-                .tookEffectAt(System.currentTimeMillis())
-                .interruptId(interrupt.getUuid())
-                .interruptConfig(interrupt.getInterruptConfig())
-                .build()));
-
-    if (isEmpty(discontinuingNodeExecutions)) {
-      log.warn(
-          "ABORT_ALL Interrupt being ignored as no running instance found for planExecutionId: {} and nodeExecutionId: {}",
-          updatedInterrupt.getUuid(), nodeExecutionId);
-      return interruptService.markProcessed(updatedInterrupt.getUuid(), PROCESSED_SUCCESSFULLY);
-    }
-    return processDiscontinuedInstances(interrupt, updatedInterrupt, discontinuingNodeExecutions);
+    return handleChildNodes(interrupt, nodeExecutionId);
   }
 
   @Override
   public Interrupt handleInterrupt(@NonNull @Valid Interrupt interrupt) {
-    Interrupt updatedInterrupt = interruptService.markProcessing(interrupt.getUuid());
-    if (!abortHelper.markAbortingState(updatedInterrupt, StatusUtils.finalizableStatuses())) {
-      return updatedInterrupt;
-    }
-
-    List<NodeExecution> discontinuingNodeExecutions =
-        nodeExecutionService.fetchNodeExecutionsByStatus(updatedInterrupt.getPlanExecutionId(), DISCONTINUING);
-
-    if (isEmpty(discontinuingNodeExecutions)) {
-      log.warn("ABORT_ALL Interrupt being ignored as no running instance found for planExecutionId: {}",
-          updatedInterrupt.getUuid());
-      return interruptService.markProcessed(updatedInterrupt.getUuid(), PROCESSED_SUCCESSFULLY);
-    }
-    return processDiscontinuedInstances(interrupt, updatedInterrupt, discontinuingNodeExecutions);
+    return handleAllNodes(interrupt);
   }
 
-  private Interrupt processDiscontinuedInstances(
-      Interrupt interrupt, Interrupt updatedInterrupt, List<NodeExecution> discontinuingNodeExecutions) {
+  protected Interrupt processDiscontinuedInstances(
+      Interrupt updatedInterrupt, List<NodeExecution> discontinuingNodeExecutions) {
     List<String> notifyIds = new ArrayList<>();
     try {
       for (NodeExecution discontinuingNodeExecution : discontinuingNodeExecutions) {
-        abortHelper.discontinueMarkedInstance(discontinuingNodeExecution, updatedInterrupt);
-        notifyIds.add(discontinuingNodeExecution.getUuid() + "|" + interrupt.getUuid());
+        handleMarkedInstance(discontinuingNodeExecution, updatedInterrupt);
+        notifyIds.add(discontinuingNodeExecution.getUuid() + "|" + updatedInterrupt.getUuid());
       }
 
     } catch (Exception ex) {
@@ -151,5 +107,10 @@ public class AbortAllInterruptHandler implements InterruptHandler {
     waitNotifyEngine.waitForAllOnInList(
         publisherName, AbortAllInterruptCallback.builder().interrupt(updatedInterrupt).build(), notifyIds);
     return updatedInterrupt;
+  }
+
+  @Override
+  protected void handleMarkedInstance(NodeExecution nodeExecution, Interrupt interrupt) {
+    abortHelper.discontinueMarkedInstance(nodeExecution, interrupt);
   }
 }

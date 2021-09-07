@@ -1,6 +1,6 @@
 package io.harness.batch.processing.dao.intfc;
 
-import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
+import io.harness.ccm.commons.entities.billing.BillingDataPipelineRecord;
 
 import java.util.List;
 

@@ -130,6 +130,10 @@ public class SMCoreRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin
             .bind(SecretSetupUsageBuilder.class)
             .annotatedWith(Names.named(SecretSetupUsageBuilders.SECRET_MANAGER_CONFIG_SETUP_USAGE_BUILDER.getName()))
             .toInstance(mock(SecretSetupUsageBuilder.class));
+        binder()
+            .bind(SecretSetupUsageBuilder.class)
+            .annotatedWith(Names.named(SecretSetupUsageBuilders.TRIGGER_SETUP_USAGE_BUILDER.getName()))
+            .toInstance(mock(SecretSetupUsageBuilder.class));
 
         binder()
             .bind(VaultEncryptor.class)

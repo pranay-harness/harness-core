@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionInterruptType;
 import io.harness.beans.RepairActionCode;
 import io.harness.exception.FailureType;
@@ -18,6 +20,7 @@ import lombok.Value;
 
 @Value
 @Builder(toBuilder = true)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class FailureStrategy {
   @NotNull @Size(min = 1, message = "should not be empty") private List<FailureType> failureTypes;
   private ExecutionScope executionScope;

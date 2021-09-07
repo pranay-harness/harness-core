@@ -1,8 +1,10 @@
 package software.wings.api;
 
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.utils.ArtifactType;
 
@@ -15,6 +17,7 @@ import java.util.List;
  * Created by rishi on 12/22/16.
  */
 @OwnedBy(CDP)
+@TargetModule(_957_CG_BEANS)
 public enum DeploymentType {
   SSH("Secure Shell (SSH)"),
   AWS_CODEDEPLOY("AWS CodeDeploy"),
@@ -25,7 +28,7 @@ public enum DeploymentType {
   AWS_LAMBDA("AWS Lambda"),
   AMI("AMI"),
   WINRM("Windows Remote Management (WinRM)"),
-  PCF("Pivotal Cloud Foundry"),
+  PCF("Tanzu Application Services"),
   AZURE_VMSS("Azure Virtual Machine Image"),
   AZURE_WEBAPP("Azure Web App"),
   CUSTOM("Custom");

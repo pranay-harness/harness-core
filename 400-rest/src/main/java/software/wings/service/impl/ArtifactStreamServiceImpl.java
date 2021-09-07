@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -37,6 +38,7 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -124,6 +126,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 import javax.ws.rs.NotFoundException;
@@ -141,6 +145,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 @Singleton
 @ValidateOnExecution
 @Slf4j
+@OwnedBy(CDC)
 public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataProvider {
   private static final Integer REFERENCED_ENTITIES_TO_SHOW = 10;
   public static final String ARTIFACT_STREAM_DEBUG_LOG = "ARTIFACT_STREAM_DEBUG_LOG ";
@@ -735,24 +740,44 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
     if (shouldDeleteArtifactsOnSourceChanged(existingArtifactStream, finalArtifactStream)
         || shouldDeleteArtifactsOnServerChanged(existingArtifactStream)) {
-      // Mark the collection status as unstable (for non-custom) because the artifact source has changed. We will again
-      // do a fresh artifact collection.
-      if (!CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
-        updateCollectionStatus(
-            accountId, finalArtifactStream.getUuid(), ArtifactStreamCollectionStatus.UNSTABLE.name());
-      }
-
-      // TODO: This logic has to be moved to Prune event or Queue to ensure guaranteed execution
-      executorService.submit(() -> {
-        artifactService.deleteWhenArtifactSourceNameChanged(existingArtifactStream);
-        // Perpetual task should only be reset after the artifacts are deleted. Otherwise, cache will become invalid.
-        resetPerpetualTask(finalArtifactStream);
-      });
+      deleteArtifacts(accountId, finalArtifactStream);
     } else {
       resetPerpetualTask(finalArtifactStream);
     }
 
     return finalArtifactStream;
+  }
+
+  @Override
+  public void deleteArtifacts(String accountId, ArtifactStream artifactStream) {
+    // Mark the collection status as unstable (for non-custom) because the artifact source has changed. We will again
+    // do a fresh artifact collection.
+    if (!CUSTOM.name().equals(artifactStream.getArtifactStreamType())) {
+      updateCollectionStatus(accountId, artifactStream.getUuid(), ArtifactStreamCollectionStatus.UNSTABLE.name());
+    }
+
+    // TODO: This logic has to be moved to Prune event or Queue to ensure guaranteed execution
+    executorService.submit(() -> {
+      artifactService.deleteByArtifactStreamId(artifactStream.getAppId(), artifactStream.getUuid());
+      // Perpetual task should only be reset after the artifacts are deleted. Otherwise, cache will become invalid.
+      resetPerpetualTask(artifactStream);
+    });
+  }
+
+  @Override
+  public ArtifactStream fetchByArtifactSourceVariableValue(String appId, String variableValue) {
+    Pattern pattern = Pattern.compile("(.+)\\((.+)\\)");
+    Matcher matcher = pattern.matcher(variableValue);
+    if (matcher.find()) {
+      String serviceName = matcher.group(2);
+      Service service = serviceResourceService.getServiceByName(appId, serviceName);
+      notNullCheck("Service with name " + serviceName + " doesn't exist", service);
+      String artifactSourceName = matcher.group(1).trim();
+      return getArtifactStreamByName(appId, service.getUuid(), artifactSourceName);
+    } else {
+      throw new InvalidRequestException(
+          "The Artifact Source variable should be of the format 'artifactSourceName (serviceName)'");
+    }
   }
 
   private void populateCustomArtifactStreamFields(

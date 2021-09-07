@@ -1,17 +1,25 @@
 package io.harness.rule;
 
-import io.harness.eventsframework.EventsFrameworkConstants;
-import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.impl.noop.NoOpProducer;
+import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.lock.DistributedLockImplementation.NOOP;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.cf.AbstractCfModule;
+import io.harness.cf.CfClientConfig;
+import io.harness.cf.CfMigrationConfig;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
+import io.harness.ff.FeatureFlagConfig;
 import io.harness.ff.FeatureFlagModule;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
+import io.harness.lock.DistributedLockImplementation;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.HPersistence;
-import io.harness.serializer.FeatureFlagRegistrars;
+import io.harness.redis.RedisConfig;
+import io.harness.serializer.FeatureFlagBeansRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.testlib.module.MongoRuleMixin;
@@ -20,12 +28,13 @@ import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.name.Names;
+import com.google.inject.name.Named;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -37,6 +46,7 @@ import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
 
+@OwnedBy(PL)
 @Slf4j
 public class FeatureFlagRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
   ClosingFactory closingFactory;
@@ -57,7 +67,7 @@ public class FeatureFlagRule implements MethodRule, InjectorRuleMixin, MongoRule
       @Singleton
       Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
-            .addAll(FeatureFlagRegistrars.kryoRegistrars)
+            .addAll(FeatureFlagBeansRegistrars.kryoRegistrars)
             .build();
       }
 
@@ -65,7 +75,7 @@ public class FeatureFlagRule implements MethodRule, InjectorRuleMixin, MongoRule
       @Singleton
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
-            .addAll(FeatureFlagRegistrars.morphiaRegistrars)
+            .addAll(FeatureFlagBeansRegistrars.morphiaRegistrars)
             .build();
       }
 
@@ -73,6 +83,19 @@ public class FeatureFlagRule implements MethodRule, InjectorRuleMixin, MongoRule
       @Singleton
       Set<Class<? extends TypeConverter>> morphiaConverters() {
         return ImmutableSet.<Class<? extends TypeConverter>>builder().build();
+      }
+
+      @Provides
+      @Named("lock")
+      @Singleton
+      RedisConfig redisLockConfig() {
+        return RedisConfig.builder().build();
+      }
+
+      @Provides
+      @Singleton
+      DistributedLockImplementation distributedLockImplementation() {
+        return NOOP;
       }
     });
 
@@ -85,13 +108,34 @@ public class FeatureFlagRule implements MethodRule, InjectorRuleMixin, MongoRule
       @Override
       protected void configure() {
         bind(HPersistence.class).to(MongoPersistence.class);
-        bind(Producer.class)
-            .annotatedWith(Names.named(EventsFrameworkConstants.FEATURE_FLAG_STREAM))
-            .toInstance(NoOpProducer.of("dummy_topic_name"));
+        bind(TimeLimiter.class).toInstance(HTimeLimiter.create());
+      }
+    });
+
+    modules.add(new AbstractCfModule() {
+      @Override
+      public CfClientConfig cfClientConfig() {
+        return CfClientConfig.builder().build();
+      }
+
+      @Override
+      public CfMigrationConfig cfMigrationConfig() {
+        return CfMigrationConfig.builder().build();
+      }
+
+      @Override
+      public FeatureFlagConfig featureFlagConfig() {
+        return FeatureFlagConfig.builder().build();
       }
     });
 
     return modules;
+  }
+
+  @Provides
+  @Singleton
+  DistributedLockImplementation distributedLockImplementation() {
+    return NOOP;
   }
 
   @Override

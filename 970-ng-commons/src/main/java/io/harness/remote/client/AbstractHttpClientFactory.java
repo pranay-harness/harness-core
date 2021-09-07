@@ -9,8 +9,12 @@ import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKN
 import static org.apache.http.HttpHeaders.AUTHORIZATION;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.context.GlobalContextData;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.gitsync.interceptor.GitEntityInfo;
+import io.harness.gitsync.interceptor.GitSyncBranchContext;
+import io.harness.manage.GlobalContextManager;
 import io.harness.network.Http;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.ServiceTokenGenerator;
@@ -30,9 +34,11 @@ import com.hubspot.jackson.datatype.protobuf.ProtobufModule;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.retrofit.CircuitBreakerCallAdapter;
 import java.time.Duration;
+import java.util.Objects;
 import java.util.function.Supplier;
 import javax.validation.constraints.NotNull;
 import okhttp3.ConnectionPool;
+import okhttp3.HttpUrl;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -64,7 +70,7 @@ public abstract class AbstractHttpClientFactory {
     this.clientMode = ClientMode.NON_PRIVILEGED;
   }
 
-  public AbstractHttpClientFactory(ServiceHttpClientConfig secretManagerConfig, String serviceSecret,
+  protected AbstractHttpClientFactory(ServiceHttpClientConfig secretManagerConfig, String serviceSecret,
       ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory, String clientId,
       boolean enableCircuitBreaker, ClientMode clientMode) {
     this.serviceHttpClientConfig = secretManagerConfig;
@@ -128,6 +134,7 @@ public abstract class AbstractHttpClientFactory {
               .retryOnConnectionFailure(true)
               .addInterceptor(getAuthorizationInterceptor(clientMode))
               .addInterceptor(getCorrelationIdInterceptor())
+              .addInterceptor(getGitContextInterceptor())
               .addInterceptor(getRequestContextInterceptor());
       if (addHttpLogging) {
         HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor();
@@ -147,6 +154,29 @@ public abstract class AbstractHttpClientFactory {
     } catch (Exception e) {
       throw new GeneralException(String.format("error while creating okhttp client for %s service", clientId), e);
     }
+  }
+
+  @NotNull
+  protected Interceptor getGitContextInterceptor() {
+    return chain -> {
+      Request request = chain.request();
+      GlobalContextData globalContextData = GlobalContextManager.get(GitSyncBranchContext.NG_GIT_SYNC_CONTEXT);
+
+      if (globalContextData != null) {
+        final GitEntityInfo gitBranchInfo =
+            ((GitSyncBranchContext) Objects.requireNonNull(globalContextData)).getGitBranchInfo();
+        HttpUrl url = request.url()
+                          .newBuilder()
+                          .addQueryParameter("repoIdentifier", gitBranchInfo.getYamlGitConfigId())
+                          .addQueryParameter("branch", gitBranchInfo.getBranch())
+                          .addQueryParameter(
+                              "getDefaultFromOtherRepo", String.valueOf(gitBranchInfo.isFindDefaultFromOtherRepos()))
+                          .build();
+        return chain.proceed(request.newBuilder().url(url).build());
+      } else {
+        return chain.proceed(request);
+      }
+    };
   }
 
   @NotNull

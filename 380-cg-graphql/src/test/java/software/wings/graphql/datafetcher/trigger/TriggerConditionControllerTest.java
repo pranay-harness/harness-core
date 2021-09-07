@@ -1,10 +1,14 @@
 package software.wings.graphql.datafetcher.trigger;
 
+import static io.harness.beans.FeatureName.WEBHOOK_TRIGGER_AUTHORIZATION;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.MILAN;
 import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
+
+import static software.wings.utils.WingsTestConstants.MANIFEST_ID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -12,18 +16,24 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.configuration.DeployMode;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WebHookToken;
+import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.trigger.ArtifactTriggerCondition;
 import software.wings.beans.trigger.GithubAction;
+import software.wings.beans.trigger.ManifestTriggerCondition;
 import software.wings.beans.trigger.PipelineTriggerCondition;
 import software.wings.beans.trigger.ReleaseAction;
 import software.wings.beans.trigger.ScheduledTriggerCondition;
@@ -42,7 +52,9 @@ import software.wings.graphql.schema.type.trigger.QLGitHubAction;
 import software.wings.graphql.schema.type.trigger.QLGitHubEvent;
 import software.wings.graphql.schema.type.trigger.QLGitHubEventType;
 import software.wings.graphql.schema.type.trigger.QLGitlabEvent;
+import software.wings.graphql.schema.type.trigger.QLManifestConditionInput;
 import software.wings.graphql.schema.type.trigger.QLOnNewArtifact;
+import software.wings.graphql.schema.type.trigger.QLOnNewManifest;
 import software.wings.graphql.schema.type.trigger.QLOnPipelineCompletion;
 import software.wings.graphql.schema.type.trigger.QLOnSchedule;
 import software.wings.graphql.schema.type.trigger.QLOnWebhook;
@@ -51,6 +63,7 @@ import software.wings.graphql.schema.type.trigger.QLScheduleConditionInput;
 import software.wings.graphql.schema.type.trigger.QLTriggerConditionInput;
 import software.wings.graphql.schema.type.trigger.QLWebhookConditionInput;
 import software.wings.graphql.schema.type.trigger.QLWebhookSource;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.SettingsService;
 
@@ -65,6 +78,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(HarnessTeam.CDC)
 public class TriggerConditionControllerTest extends CategoryTest {
   public static final String APP_ID = "appId";
   private static final String BRANCH_REGEX = "regex";
@@ -72,6 +86,8 @@ public class TriggerConditionControllerTest extends CategoryTest {
   @Mock SettingsService settingsService;
   @Mock ArtifactStreamService artifactStreamService;
   @Mock TriggerActionController triggerActionController;
+  @Mock FeatureFlagService featureFlagService;
+  @Mock ApplicationManifestService applicationManifestService;
 
   @InjectMocks TriggerConditionController triggerConditionController = Mockito.spy(new TriggerConditionController());
 
@@ -1526,6 +1542,126 @@ public class TriggerConditionControllerTest extends CategoryTest {
         .isEqualTo(BitBucketEventType.BUILD_STATUS_UPDATED.getValue());
     assertThat(webHookTriggerCondition.getBitBucketEvents().get(0).name())
         .isEqualTo(BitBucketEventType.BUILD_STATUS_UPDATED.name());
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testHeaderForCustomTriggerWithFfEnabled() {
+    String accountId = "1234";
+    PortalConfig portalConfig = Mockito.mock(PortalConfig.class);
+
+    Mockito.when(portalConfig.getUrl()).thenReturn("URL");
+    mainConfiguration.setPortal(portalConfig);
+    Mockito.when(mainConfiguration.getPortal()).thenReturn(portalConfig);
+
+    when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.KUBERNETES_ONPREM);
+
+    WebHookToken webHookToken =
+        WebHookToken.builder().webHookToken("webhookToken").httpMethod("POST").payload("payload").build();
+    StringBuilder webhookURL = new StringBuilder(mainConfiguration.getPortal().getUrl());
+    webhookURL.append("/api/webhooks/").append(webHookToken.getWebHookToken()).append("?accountId=").append(accountId);
+
+    WebHookTriggerCondition webhookTriggerCondition =
+        WebHookTriggerCondition.builder().webHookToken(webHookToken).build();
+    Trigger trigger = Trigger.builder().appId(APP_ID).condition(webhookTriggerCondition).build();
+
+    SettingAttribute gitConfig = new SettingAttribute();
+    gitConfig.setName("gitConnectorName");
+    Mockito.when(settingsService.get(Matchers.anyString())).thenReturn(gitConfig);
+    when(featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, accountId)).thenReturn(true);
+
+    QLOnWebhook qlOnWebhook = (QLOnWebhook) triggerConditionController.populateTriggerCondition(trigger, accountId);
+
+    assertThat(qlOnWebhook).isNotNull();
+    assertThat(qlOnWebhook.getWebhookSource().name()).isEqualTo(QLWebhookSource.CUSTOM.name());
+    assertThat(qlOnWebhook.getTriggerConditionType().name())
+        .isEqualTo(webhookTriggerCondition.getConditionType().name());
+    assertThat(qlOnWebhook.getWebhookDetails()).isNotNull();
+    assertThat(qlOnWebhook.getWebhookDetails().getHeader())
+        .isEqualTo("content-type: application/json, x-api-key: x-api-key_placeholder");
+    assertThat(qlOnWebhook.getWebhookDetails().getMethod()).isEqualTo(webHookToken.getHttpMethod());
+    assertThat(qlOnWebhook.getWebhookDetails().getPayload()).isEqualTo(webHookToken.getPayload());
+    assertThat(qlOnWebhook.getWebhookDetails().getWebhookURL()).isEqualTo(webhookURL.toString());
+    assertThat(qlOnWebhook.getWebhookEvent()).isNull();
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldPopulateNewManifestTriggerCondition() {
+    ManifestTriggerCondition manifestTriggerCondition = ManifestTriggerCondition.builder()
+                                                            .appManifestId("AppManifestId")
+                                                            .serviceId("serviceId")
+                                                            .versionRegex("Filter")
+                                                            .build();
+    manifestTriggerCondition.setConditionType(TriggerConditionType.NEW_MANIFEST);
+    Trigger trigger = Trigger.builder().appId("appId").condition(manifestTriggerCondition).build();
+
+    QLOnNewManifest qlOnNewManifest =
+        (QLOnNewManifest) triggerConditionController.populateTriggerCondition(trigger, null);
+
+    assertThat(qlOnNewManifest).isNotNull();
+    assertThat(qlOnNewManifest.getVersionRegex()).isEqualTo(manifestTriggerCondition.getVersionRegex());
+    assertThat(qlOnNewManifest.getServiceId()).isEqualTo(manifestTriggerCondition.getServiceId());
+    assertThat(qlOnNewManifest.getAppManifestId()).isEqualTo(manifestTriggerCondition.getAppManifestId());
+    assertThat(qlOnNewManifest.getTriggerConditionType().name())
+        .isEqualTo(manifestTriggerCondition.getConditionType().name());
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void resolveTriggerConditionForNewManifest() {
+    QLManifestConditionInput manifestTriggerCondition =
+        QLManifestConditionInput.builder().appManifestId(MANIFEST_ID).versionRegex("filter").build();
+
+    QLTriggerConditionInput qlTriggerConditionInput = QLTriggerConditionInput.builder()
+                                                          .conditionType(QLConditionType.ON_NEW_MANIFEST)
+                                                          .manifestConditionInput(manifestTriggerCondition)
+                                                          .build();
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder().applicationId(APP_ID).condition(qlTriggerConditionInput).build();
+
+    when(applicationManifestService.getById(APP_ID, MANIFEST_ID))
+        .thenReturn(ApplicationManifest.builder().storeType(StoreType.HelmChartRepo).build());
+
+    ManifestTriggerCondition retrievedManifestTriggerCondition =
+        (ManifestTriggerCondition) triggerConditionController.resolveTriggerCondition(qlCreateOrUpdateTriggerInput);
+
+    assertThat(retrievedManifestTriggerCondition.getAppManifestId())
+        .isEqualTo(manifestTriggerCondition.getAppManifestId());
+    assertThat(retrievedManifestTriggerCondition.getVersionRegex())
+        .isEqualTo(manifestTriggerCondition.getVersionRegex());
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldFailForTriggerConditionForNewManifestInvalidCases() {
+    QLManifestConditionInput manifestTriggerCondition =
+        QLManifestConditionInput.builder().appManifestId(MANIFEST_ID).versionRegex("filter").build();
+
+    QLTriggerConditionInput qlTriggerConditionInput =
+        QLTriggerConditionInput.builder().conditionType(QLConditionType.ON_NEW_MANIFEST).build();
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder().applicationId(APP_ID).condition(qlTriggerConditionInput).build();
+
+    assertThatThrownBy(() -> triggerConditionController.resolveTriggerCondition(qlCreateOrUpdateTriggerInput))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("ManifestConditionInput cannot not be null for On New Manifest Trigger");
+
+    qlTriggerConditionInput = QLTriggerConditionInput.builder()
+                                  .conditionType(QLConditionType.ON_NEW_MANIFEST)
+                                  .manifestConditionInput(manifestTriggerCondition)
+                                  .build();
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput2 =
+        QLCreateOrUpdateTriggerInput.builder().applicationId(APP_ID).condition(qlTriggerConditionInput).build();
+    when(applicationManifestService.getById(APP_ID, MANIFEST_ID)).thenReturn(null);
+
+    assertThatThrownBy(() -> triggerConditionController.resolveTriggerCondition(qlCreateOrUpdateTriggerInput2))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Application manifest with id MANIFEST_ID not found in given application " + APP_ID);
   }
 
   private QLCreateOrUpdateTriggerInput getQLCreateOrUpdateTriggerInput(

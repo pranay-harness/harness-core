@@ -1,16 +1,16 @@
 package io.harness.ccm.billing.dao;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
-import static io.harness.ccm.billing.entities.TransferJobRunState.PENDING;
+import static io.harness.ccm.commons.entities.billing.TransferJobRunState.PENDING;
 import static io.harness.rule.OwnerRule.HANTANG;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.billing.entities.CloudBillingTransferRun;
-import io.harness.ccm.billing.entities.CloudBillingTransferRun.CloudBillingTransferRunKeys;
-import io.harness.ccm.billing.entities.TransferJobRunState;
+import io.harness.ccm.commons.entities.billing.CloudBillingTransferRun;
+import io.harness.ccm.commons.entities.billing.CloudBillingTransferRun.CloudBillingTransferRunKeys;
+import io.harness.ccm.commons.entities.billing.TransferJobRunState;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;

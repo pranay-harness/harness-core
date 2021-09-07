@@ -82,7 +82,7 @@ public class ReflectionUtils {
                   Object o1 = objectList.get(i);
                   if (o1 instanceof ExpressionReflectionUtils.NestedAnnotationResolver) {
                     updateAnnotatedField(cls, o1, functor);
-                  } else {
+                  } else if (o1 instanceof String) {
                     objectList.set(i, functor.update(annotation, (String) o1));
                   }
                 }
@@ -92,13 +92,14 @@ public class ReflectionUtils {
                   if (v instanceof ExpressionReflectionUtils.NestedAnnotationResolver) {
                     updateAnnotatedField(cls, v, functor);
                     return v;
-                  } else {
+                  } else if (v instanceof String) {
                     return functor.update(annotation, (String) v);
                   }
+                  return v;
                 });
               } else if (object instanceof ExpressionReflectionUtils.NestedAnnotationResolver) {
                 updateAnnotatedField(cls, object, functor);
-              } else {
+              } else if (object instanceof String) {
                 String value = functor.update(annotation, (String) object);
                 f.set(o, value);
               }

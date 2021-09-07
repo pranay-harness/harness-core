@@ -5,19 +5,24 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.ExceptionUtils;
 import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.expression.ExpressionResolveFunctor;
 import io.harness.expression.ResolveObjectResponse;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.failure.FailureInfo;
+import io.harness.pms.contracts.steps.io.StepResponseProto;
+import io.harness.pms.execution.utils.EngineExceptionUtils;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterDocumentField;
 import io.harness.pms.yaml.ParameterDocumentFieldMapper;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import lombok.experimental.UtilityClass;
-import org.bson.Document;
 
 @OwnedBy(CDC)
 @UtilityClass
@@ -41,18 +46,18 @@ public class NodeExecutionUtils {
     return executableResponses.get(executableResponses.size() - 1);
   }
 
-  public Document extractObject(String json) {
+  public Map<String, Object> extractObject(String json) {
     if (EmptyPredicate.isEmpty(json)) {
       return null;
     }
-    return RecastOrchestrationUtils.toDocumentFromJson(json);
+    return RecastOrchestrationUtils.fromJson(json);
   }
 
-  public Document extractAndProcessObject(String json) {
+  public Map<String, Object> extractAndProcessObject(String json) {
     if (EmptyPredicate.isEmpty(json)) {
       return null;
     }
-    return (Document) resolveObject(RecastOrchestrationUtils.toDocumentFromJson(json));
+    return (Map<String, Object>) resolveObject(RecastOrchestrationUtils.fromJson(json));
   }
 
   public Object resolveObject(Object o) {
@@ -64,6 +69,17 @@ public class NodeExecutionUtils {
     return ExpressionEvaluatorUtils.updateExpressions(o, extractResolveFunctor);
   }
 
+  public static FailureInfo constructFailureInfo(Exception ex) {
+    return FailureInfo.newBuilder()
+        .addAllFailureTypes(EngineExceptionUtils.getOrchestrationFailureTypes(ex))
+        .setErrorMessage(ExceptionUtils.getMessage(ex))
+        .build();
+  }
+
+  public static StepResponseProto constructStepResponse(Exception ex) {
+    return StepResponseProto.newBuilder().setStatus(Status.FAILED).setFailureInfo(constructFailureInfo(ex)).build();
+  }
+
   public static class ExtractResolveFunctorImpl implements ExpressionResolveFunctor {
     @Override
     public String processString(String expression) {
@@ -72,7 +88,7 @@ public class NodeExecutionUtils {
 
     @Override
     public ResolveObjectResponse processObject(Object o) {
-      Optional<ParameterDocumentField> docFieldOptional = ParameterDocumentFieldMapper.fromParameterFieldDocument(o);
+      Optional<ParameterDocumentField> docFieldOptional = ParameterDocumentFieldMapper.fromParameterFieldMap(o);
       if (!docFieldOptional.isPresent()) {
         return new ResolveObjectResponse(false, null);
       }

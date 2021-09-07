@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
@@ -9,12 +11,17 @@ import static software.wings.common.NotificationMessageResolver.NotificationMess
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.persistence.HIterator;
 import io.harness.scheduler.PersistentScheduler;
 
@@ -29,6 +36,7 @@ import software.wings.beans.alert.SSOSyncFailedAlert;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
+import software.wings.beans.sso.SSOSettings.SSOSettingsKeys;
 import software.wings.beans.sso.SSOType;
 import software.wings.beans.sso.SamlSettings;
 import software.wings.dl.WingsPersistence;
@@ -39,7 +47,7 @@ import software.wings.features.api.RestrictedApi;
 import software.wings.features.extractors.LdapSettingsAccountIdExtractor;
 import software.wings.features.extractors.SamlSettingsAccountIdExtractor;
 import software.wings.scheduler.LdapGroupSyncJob;
-import software.wings.security.authentication.AuthenticationMechanism;
+import software.wings.scheduler.LdapGroupSyncJobHelper;
 import software.wings.security.authentication.OauthProviderType;
 import software.wings.security.authentication.oauth.OauthOptions;
 import software.wings.service.intfc.AccountService;
@@ -65,10 +73,13 @@ import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotBlank;
+import org.mongodb.morphia.query.Query;
 
 @ValidateOnExecution
 @Singleton
 @Slf4j
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
+@OwnedBy(HarnessTeam.PL)
 public class SSOSettingServiceImpl implements SSOSettingService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private SecretManager secretManager;
@@ -81,6 +92,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private OauthOptions oauthOptions;
   @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject private LdapGroupSyncJobHelper ldapGroupSyncJobHelper;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   static final int ONE_DAY = 86400000;
 
@@ -216,9 +228,13 @@ public class SSOSettingServiceImpl implements SSOSettingService {
   }
 
   @Override
-  public Iterator<SamlSettings> getSamlSettingsIteratorByOrigin(@NotNull String origin) {
-    return new HIterator(
-        wingsPersistence.createQuery(SamlSettings.class, excludeAuthority).field("origin").equal(origin).fetch());
+  public Iterator<SamlSettings> getSamlSettingsIteratorByOrigin(@NotNull String origin, String accountId) {
+    Query<SamlSettings> query =
+        wingsPersistence.createQuery(SamlSettings.class, excludeAuthority).field("origin").equal(origin);
+    if (isNotEmpty(accountId)) {
+      query.field("accountId").equal(accountId);
+    }
+    return new HIterator(query.fetch());
   }
 
   @Override
@@ -231,6 +247,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
     settings.encryptFields(secretManager);
     LdapSettings savedSettings = wingsPersistence.saveAndGet(LdapSettings.class, settings);
     LdapGroupSyncJob.add(jobScheduler, savedSettings.getAccountId(), savedSettings.getUuid());
+    ldapGroupSyncJobHelper.syncJob(savedSettings);
     auditServiceHelper.reportForAuditingUsingAccountId(settings.getAccountId(), null, settings, Event.Type.CREATE);
     log.info("Auditing creation of LDAP Settings for account={}", settings.getAccountId());
     eventPublishHelper.publishSSOEvent(settings.getAccountId());
@@ -258,6 +275,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
         settings.getAccountId(), oldSettings, savedSettings, Event.Type.UPDATE);
     log.info("Auditing updation of LDAP for account={}", savedSettings.getAccountId());
     LdapGroupSyncJob.add(jobScheduler, savedSettings.getAccountId(), savedSettings.getUuid());
+    ldapGroupSyncJobHelper.syncJob(savedSettings);
     return savedSettings;
   }
 
@@ -287,10 +305,13 @@ public class SSOSettingServiceImpl implements SSOSettingService {
 
   @Override
   public LdapSettings getLdapSettingsByAccountId(@NotBlank String accountId) {
+    if (EmptyPredicate.isEmpty(accountId)) {
+      return null;
+    }
     return wingsPersistence.createQuery(LdapSettings.class)
-        .field(LdapSettings.ACCOUNT_ID_KEY2)
+        .field(SSOSettingsKeys.accountId)
         .equal(accountId)
-        .field("type")
+        .field(SSOSettingsKeys.type)
         .equal(SSOType.LDAP)
         .get();
   }

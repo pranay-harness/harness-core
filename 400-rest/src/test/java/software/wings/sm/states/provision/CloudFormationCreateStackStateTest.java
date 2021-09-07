@@ -1,10 +1,13 @@
 package software.wings.sm.states.provision;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.beans.FeatureName.SKIP_BASED_ON_STACK_STATUSES;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.BOJANA;
+import static io.harness.rule.OwnerRule.PRAKHAR;
+import static io.harness.rule.OwnerRule.RAGHVENDRA;
 import static io.harness.rule.OwnerRule.TMACARI;
 
 import static software.wings.beans.CloudFormationSourceType.GIT;
@@ -23,13 +26,16 @@ import static software.wings.utils.WingsTestConstants.TAG_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_FILE_PATH;
 import static software.wings.utils.WingsTestConstants.UUID;
 
+import static com.amazonaws.services.cloudformation.model.StackStatus.UPDATE_ROLLBACK_COMPLETE;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -42,6 +48,7 @@ import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.GitFile;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
@@ -88,6 +95,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
@@ -132,6 +140,8 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
   @Spy private GitFileConfigHelperService gitFileConfigHelperService;
   @Mock private SweepingOutputService sweepingOutputService;
   @Mock private LogService logService;
+  @Mock private FeatureFlagService featureFlagService;
+  @Mock private StateExecutionService stateExecutionService;
 
   @InjectMocks @Spy private CloudFormationCreateStackState state = new CloudFormationCreateStackState("stateName");
 
@@ -159,6 +169,7 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
 
     SettingAttribute settingAttribute = aSettingAttribute().withValue(awsConfig).build();
     doReturn(settingAttribute).when(settingsService).get(anyString());
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
   }
 
   @Test
@@ -290,6 +301,37 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
     assertThat(request.getData()).isEqualTo(WingsTestConstants.TEMPLATE_BODY);
     assertThat(request.getCreateType()).isEqualTo(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY);
     assertThat(request.getCustomStackName()).isEqualTo("customStackName");
+    assertThat(request.getCapabilities()).isNull();
+    assertThat(request.getTags()).isNull();
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void buildDelegateTaskProvisionByBodyWithStackStatusToIgnore() {
+    when(featureFlagService.isEnabled(SKIP_BASED_ON_STACK_STATUSES, ACCOUNT_ID)).thenReturn(true);
+    CloudFormationInfrastructureProvisioner provisioner = CloudFormationInfrastructureProvisioner.builder()
+                                                              .sourceType(TEMPLATE_BODY.name())
+                                                              .templateBody(WingsTestConstants.TEMPLATE_BODY)
+                                                              .build();
+    state.customStackName = "customStackName";
+    state.useCustomStackName = true;
+    state.setSkipBasedOnStackStatus(true);
+    state.setStackStatusesToMarkAsSuccess(singletonList("UPDATE_ROLLBACK_COMPLETE"));
+    state.buildAndQueueDelegateTask(mockContext, provisioner, awsConfig, ACTIVITY_ID);
+
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(captor.capture());
+
+    DelegateTask delegateTask = captor.getValue();
+    verifyDelegateTask(delegateTask, true);
+
+    CloudFormationCreateStackRequest request =
+        (CloudFormationCreateStackRequest) delegateTask.getData().getParameters()[0];
+    assertThat(request.getData()).isEqualTo(WingsTestConstants.TEMPLATE_BODY);
+    assertThat(request.getCreateType()).isEqualTo(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY);
+    assertThat(request.getCustomStackName()).isEqualTo("customStackName");
+    assertThat(request.getStackStatusesToMarkAsSuccess()).containsExactly(UPDATE_ROLLBACK_COMPLETE);
   }
 
   @Test
@@ -360,13 +402,17 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testHandleResponse() {
     CloudFormationRollbackInfo cloudFormationRollbackInfo =
-        CloudFormationRollbackInfo.builder().url(TEMPLATE_FILE_PATH).build();
+        CloudFormationRollbackInfo.builder()
+            .url(TEMPLATE_FILE_PATH)
+            .skipBasedOnStackStatus(true)
+            .stackStatusesToMarkAsSuccess(singletonList(UPDATE_ROLLBACK_COMPLETE.name()))
+            .build();
     ExistingStackInfo existingStackInfo = ExistingStackInfo.builder().oldStackBody("oldStackBody").build();
     Map<String, Object> cloudFormationOutputMap = new HashMap<>();
     cloudFormationOutputMap.put("key1", CloudFormationOutputInfoElement.builder().build());
     CloudFormationCreateStackResponse createStackResponse =
         new CloudFormationCreateStackResponse(CommandExecutionStatus.SUCCESS, "output", cloudFormationOutputMap,
-            "stackId", existingStackInfo, cloudFormationRollbackInfo);
+            "stackId", existingStackInfo, cloudFormationRollbackInfo, "UPDATE_ROLLBACK_COMPLETE");
 
     TemplateExpression templateExpression = TemplateExpression.builder().build();
     doReturn(SweepingOutputInquiry.builder()).when(mockContext).prepareSweepingOutputInquiryBuilder();
@@ -386,10 +432,14 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
 
     List<CloudFormationElement> cloudFormationElementList = state.handleResponse(createStackResponse, mockContext);
     verifyResponse(cloudFormationElementList, true, UUID);
+    assertThat(((CloudFormationRollbackInfoElement) cloudFormationElementList.get(0)).isSkipBasedOnStackStatus())
+        .isTrue();
+    assertThat(((CloudFormationRollbackInfoElement) cloudFormationElementList.get(0)).getStackStatusesToMarkAsSuccess())
+        .containsExactly(UPDATE_ROLLBACK_COMPLETE.name());
 
     // no outputs
-    createStackResponse = new CloudFormationCreateStackResponse(
-        CommandExecutionStatus.SUCCESS, "output", null, "stackId", existingStackInfo, cloudFormationRollbackInfo);
+    createStackResponse = new CloudFormationCreateStackResponse(CommandExecutionStatus.SUCCESS, "output", null,
+        "stackId", existingStackInfo, cloudFormationRollbackInfo, "UPDATE_ROLLBACK_COMPLETE");
     when(mockContext.getContextElement(ContextElementType.CLOUD_FORMATION_PROVISION))
         .thenReturn(CloudFormationOutputInfoElement.builder().build());
     when(templateExpressionProcessor.getTemplateExpression(anyList(), anyString())).thenReturn(null);
@@ -514,6 +564,8 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
     // no template expressions
     state.setTemplateExpressions(null);
     state.setAwsConfigId("awsConfigId");
+    state.setSkipBasedOnStackStatus(true);
+    state.setStackStatusesToMarkAsSuccess(singletonList(UPDATE_ROLLBACK_COMPLETE.name()));
 
     Map<String, ResponseData> delegateResponse = ImmutableMap.of(ACTIVITY_ID,
         CloudFormationCommandExecutionResponse.builder()
@@ -527,6 +579,10 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
     executionResponse.getContextElements().forEach(
         contextElement -> cloudFormationElementList.add((CloudFormationElement) contextElement));
     verifyResponse(cloudFormationElementList, false, "awsConfigId");
+    assertThat(((CloudFormationRollbackInfoElement) cloudFormationElementList.get(0)).isSkipBasedOnStackStatus())
+        .isTrue();
+    assertThat(((CloudFormationRollbackInfoElement) cloudFormationElementList.get(0)).getStackStatusesToMarkAsSuccess())
+        .containsExactly(UPDATE_ROLLBACK_COMPLETE.name());
     verify(sweepingOutputService).save(any());
   }
 
@@ -626,5 +682,36 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
     assertThat(request.getCommandType()).isEqualTo(CloudFormationCommandRequest.CloudFormationCommandType.CREATE_STACK);
     assertThat(request.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(request.getAwsConfig()).isEqualTo(awsConfig);
+  }
+
+  @Test
+  @Owner(developers = PRAKHAR)
+  @Category(UnitTests.class)
+  public void buildDelegateTaskProvisionByBodyWithTagsAndCapabilities() {
+    CloudFormationInfrastructureProvisioner provisioner = CloudFormationInfrastructureProvisioner.builder()
+                                                              .sourceType(TEMPLATE_BODY.name())
+                                                              .templateBody(WingsTestConstants.TEMPLATE_BODY)
+                                                              .build();
+    state.customStackName = "customStackName";
+    state.useCustomStackName = true;
+    state.setAddTags(true);
+    String tags =
+        "[{\r\n\t\"key\": \"tagKey1\",\r\n\t\"value\": \"tagValue1\"\r\n}, {\r\n\t\"key\": \"tagKey2\",\r\n\t\"value\": \"tagValue2\"\r\n}]";
+    state.setTags(tags);
+    state.setSpecifyCapabilities(true);
+    List<String> capabilities = Collections.singletonList("CAPABILITY_AUTO_EXPAND");
+    state.setCapabilities(capabilities);
+    state.buildAndQueueDelegateTask(mockContext, provisioner, awsConfig, ACTIVITY_ID);
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
+    verifyDelegateTask(delegateTask, true);
+    CloudFormationCreateStackRequest request =
+        (CloudFormationCreateStackRequest) delegateTask.getData().getParameters()[0];
+    assertThat(request.getData()).isEqualTo(WingsTestConstants.TEMPLATE_BODY);
+    assertThat(request.getCreateType()).isEqualTo(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY);
+    assertThat(request.getCustomStackName()).isEqualTo("customStackName");
+    assertThat(request.getCapabilities()).isEqualTo(capabilities);
+    assertThat(request.getTags()).isEqualTo(tags);
   }
 }

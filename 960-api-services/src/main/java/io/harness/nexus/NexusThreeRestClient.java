@@ -8,8 +8,6 @@ import io.harness.nexus.model.DockerImageTagResponse;
 import io.harness.nexus.model.Nexus3AssetResponse;
 import io.harness.nexus.model.Nexus3ComponentResponse;
 import io.harness.nexus.model.Nexus3Repository;
-import io.harness.nexus.model.Nexus3Request;
-import io.harness.nexus.model.Nexus3Response;
 import io.harness.nexus.model.RepositoryRequest;
 import io.harness.nexus.model.RepositoryResponse;
 
@@ -155,12 +153,4 @@ public interface NexusThreeRestClient {
       @Query("maven.groupId") String groupId, @Query("maven.artifactId") String artifactId,
       @Query("version") String version, @Query("maven.extension") String extension,
       @Query("maven.classifier") String classifier);
-
-  @Headers("Accept: application/json")
-  @POST("service/extdirect")
-  Call<Nexus3Response> getGroupIds(@Header("Authorization") String authorization, @Body Nexus3Request nexus3Request);
-
-  @Headers("Accept: application/json")
-  @POST("service/extdirect")
-  Call<Nexus3Response> getGroupIds(@Body Nexus3Request nexus3Request);
 }

@@ -6,6 +6,7 @@ import static io.harness.logging.CommandExecutionStatus.RUNNING;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.CollectionUtils;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
@@ -44,7 +45,7 @@ public class CliHelper {
                                           .timeout(timeoutInMillis, TimeUnit.MILLISECONDS)
                                           .command("/bin/sh", "-c", command)
                                           .readOutput(true)
-                                          .environment(envVariables)
+                                          .environment(CollectionUtils.emptyIfNull(envVariables))
                                           .directory(new File(directory))
                                           .redirectOutput(logOutputStream)
                                           .redirectError(new LogOutputStream() {

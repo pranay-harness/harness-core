@@ -12,6 +12,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.dao.ClusterRecordDao;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
+import io.harness.ccm.commons.entities.k8s.recommendation.PartialRecommendationHistogram;
 import io.harness.histogram.HistogramCheckpoint;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -24,7 +25,6 @@ import software.wings.graphql.datafetcher.ce.recommendation.dto.QLHistogramExp;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLK8SWorkloadHistogramData;
 import software.wings.graphql.datafetcher.ce.recommendation.dto.QLK8sWorkloadParameters;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerCheckpoint;
-import software.wings.graphql.datafetcher.ce.recommendation.entity.PartialRecommendationHistogram;
 import software.wings.security.UserThreadLocal;
 
 import com.google.common.collect.ImmutableMap;

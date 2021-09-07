@@ -3,9 +3,15 @@ package io.serializer.kryo;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.InputSetValidatorType;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.encryption.SecretRefData;
+import io.harness.exception.FilterCreatorException;
+import io.harness.exception.JsonSchemaValidationException;
+import io.harness.exception.PlanCreatorException;
+import io.harness.gitsync.interceptor.GitEntityInfo;
+import io.harness.gitsync.interceptor.GitSyncBranchContext;
 import io.harness.http.HttpHeaderConfig;
 import io.harness.ng.core.AccountScope;
 import io.harness.ng.core.BaseNGAccess;
@@ -19,11 +25,14 @@ import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.ErrorDetail;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.validation.InputSetValidator;
 import io.harness.request.HttpRequestInfo;
 import io.harness.request.RequestContext;
 import io.harness.request.RequestContextData;
 import io.harness.request.RequestMetadata;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.serviceaccount.ServiceAccountDTO;
 
 import com.esotericsoftware.kryo.Kryo;
 
@@ -31,6 +40,11 @@ import com.esotericsoftware.kryo.Kryo;
 public class NGCommonsKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
+    // keeping ids same
+    kryo.register(ParameterField.class, 35001);
+    kryo.register(InputSetValidator.class, 35002);
+    kryo.register(InputSetValidatorType.class, 35008);
+
     kryo.register(NGTag.class, 22001);
     kryo.register(BaseNGAccess.class, 54324);
     kryo.register(SecretRefData.class, 3003);
@@ -54,5 +68,12 @@ public class NGCommonsKryoRegistrar implements KryoRegistrar {
 
     kryo.register(RequestContextData.class, 970001);
     kryo.register(RequestContext.class, 970002);
+    kryo.register(GitSyncBranchContext.class, 970003);
+    kryo.register(GitEntityInfo.class, 970004);
+
+    kryo.register(JsonSchemaValidationException.class, 970005);
+    kryo.register(FilterCreatorException.class, 970006);
+    kryo.register(PlanCreatorException.class, 970007);
+    kryo.register(ServiceAccountDTO.class, 970008);
   }
 }

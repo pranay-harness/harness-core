@@ -2,12 +2,15 @@ package io.harness.steps.barriers.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.distribution.barrier.Barrier.State;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import io.harness.steps.barriers.beans.BarrierPositionInfo.BarrierPosition.BarrierPositionKeys;
@@ -16,6 +19,8 @@ import io.harness.steps.barriers.beans.BarrierSetupInfo.BarrierSetupInfoKeys;
 import io.harness.steps.barriers.beans.StageDetail.StageDetailKeys;
 
 import com.google.common.collect.ImmutableList;
+import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -38,7 +43,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "barrierExecutionInstances")
 @Document("barrierExecutionInstances")
 @TypeAlias("barrierExecutionInstance")
+@StoreIn(DbAliases.PMS)
 public final class BarrierExecutionInstance implements PersistentEntity, UuidAware, PersistentRegularIterable {
+  public static final long TTL = 6;
+
   @Id @org.mongodb.morphia.annotations.Id private String uuid;
 
   @NotNull private String name;
@@ -48,14 +56,14 @@ public final class BarrierExecutionInstance implements PersistentEntity, UuidAwa
   @NotNull private BarrierSetupInfo setupInfo;
   private BarrierPositionInfo positionInfo;
 
-  @Builder.Default private long expiredIn = 600_000; // 10 minutes
-
   private Long nextIteration;
 
   // audit fields
   @Wither @FdIndex @CreatedDate Long createdAt;
   @Wither @LastModifiedDate Long lastUpdatedAt;
   @Version Long version;
+
+  @Builder.Default @FdTtlIndex Date validUntil = Date.from(OffsetDateTime.now().plusMonths(TTL).toInstant());
 
   @Override
   public void updateNextIteration(String fieldName, long nextIteration) {
@@ -89,10 +97,15 @@ public final class BarrierExecutionInstance implements PersistentEntity, UuidAwa
                  .field(BarrierExecutionInstanceKeys.stagesIdentifier)
                  .build())
         .add(CompoundMongoIndex.builder()
-                 .name("identifier_planExecutionId_idx")
+                 .name("unique_identifier_planExecutionId_idx")
                  .field(BarrierExecutionInstanceKeys.identifier)
                  .field(BarrierExecutionInstanceKeys.planExecutionId)
                  .unique(true)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("next_iteration_idx")
+                 .field(BarrierExecutionInstanceKeys.barrierState)
+                 .field(BarrierExecutionInstanceKeys.nextIteration)
                  .build())
         .build();
   }

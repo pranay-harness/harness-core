@@ -19,13 +19,13 @@ import lombok.experimental.Wither;
 @Builder
 public class OrchestrationGraph implements Distributable, Nominal {
   public static final long STRUCTURE_HASH = ObjectStreamClass.lookup(OrchestrationGraph.class).getSerialVersionUID();
-  public static final long ALGORITHM_ID = 2;
+  public static final long ALGORITHM_ID = 3;
 
   // cache variables
   long cacheContextOrder;
   String cacheKey;
   List<String> cacheParams;
-  long lastUpdatedAt = System.currentTimeMillis();
+  @Builder.Default long lastUpdatedAt = System.currentTimeMillis();
 
   String planExecutionId;
   Long startTs;

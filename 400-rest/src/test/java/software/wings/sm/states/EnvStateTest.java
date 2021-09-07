@@ -1,8 +1,8 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.REJECTED;
-import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.PRABU;
@@ -36,6 +36,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
@@ -85,14 +86,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import org.apache.commons.jexl3.JexlException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-@TargetModule(HarnessModule._860_ORCHESTRATION_STEPS)
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class EnvStateTest extends WingsBaseTest {
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private ExecutionContextImpl context;
@@ -148,53 +149,6 @@ public class EnvStateTest extends WingsBaseTest {
     EnvStateExecutionData stateExecutionData = (EnvStateExecutionData) executionResponse.getStateExecutionData();
     assertThat(stateExecutionData.getWorkflowId()).isEqualTo(WORKFLOW_ID);
     assertThat(stateExecutionData.getWorkflowExecutionId()).isEqualTo(WORKFLOW_EXECUTION_ID);
-  }
-
-  @Test
-  @Owner(developers = SRINIVAS)
-  @Category(UnitTests.class)
-  public void shouldSkipDisabledStep() {
-    when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
-    envState.setDisableAssertion("true");
-    when(context.evaluateExpression(eq("true"), any())).thenReturn(true);
-    ExecutionResponse executionResponse = envState.execute(context);
-    verify(workflowExecutionService, times(0))
-        .triggerOrchestrationExecution(
-            eq(APP_ID), eq(null), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any());
-    assertThat(executionResponse.getExecutionStatus()).isEqualTo(SKIPPED);
-    assertThat(executionResponse.getErrorMessage()).isNotEmpty();
-  }
-
-  @Test
-  @Owner(developers = SRINIVAS)
-  @Category(UnitTests.class)
-  public void shouldSkipDisabledStepWithAssertion() {
-    String disableAssertion = "${app.name}==\"APP_NAME\"";
-    when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
-    envState.setDisableAssertion(disableAssertion);
-    when(context.evaluateExpression(eq(disableAssertion), any())).thenReturn(true);
-    ExecutionResponse executionResponse = envState.execute(context);
-    verify(workflowExecutionService, times(0))
-        .triggerOrchestrationExecution(
-            eq(APP_ID), eq(null), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any());
-    assertThat(executionResponse.getExecutionStatus()).isEqualTo(SKIPPED);
-    assertThat(executionResponse.getErrorMessage()).isNotEmpty();
-  }
-
-  @Test
-  @Owner(developers = SRINIVAS)
-  @Category(UnitTests.class)
-  public void shouldFailIfAssertionException() {
-    String disableAssertion = "${app.name]==\"APP_NAME\"";
-    when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
-    envState.setDisableAssertion(disableAssertion);
-    when(context.evaluateExpression(eq(disableAssertion), any())).thenThrow(JexlException.class);
-    ExecutionResponse executionResponse = envState.execute(context);
-    verify(workflowExecutionService, times(0))
-        .triggerOrchestrationExecution(
-            eq(APP_ID), eq(null), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any());
-    assertThat(executionResponse.getExecutionStatus()).isEqualTo(FAILED);
-    assertThat(executionResponse.getErrorMessage()).isNotEmpty();
   }
 
   @Test

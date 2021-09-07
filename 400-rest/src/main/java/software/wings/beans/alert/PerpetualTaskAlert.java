@@ -1,5 +1,7 @@
 package software.wings.beans.alert;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import io.harness.alert.AlertData;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -26,8 +28,8 @@ public class PerpetualTaskAlert implements AlertData {
 
   @Override
   public String buildTitle() {
-    if (StringUtils.isNotBlank(description)) {
-      return message + String.format(" For example %s.", description);
+    if (isNotBlank(description)) {
+      return String.format("%s. %s", message, description);
     }
 
     return message;

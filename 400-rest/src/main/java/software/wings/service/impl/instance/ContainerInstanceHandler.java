@@ -4,6 +4,7 @@ import static io.harness.beans.FeatureName.STOP_INSTANCE_SYNC_VIA_ITERATOR_FOR_C
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -23,11 +24,15 @@ import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
+import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.exception.GeneralException;
 import io.harness.exception.K8sPodSyncException;
 import io.harness.expression.ExpressionEvaluator;
@@ -72,7 +77,6 @@ import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey
 import software.wings.beans.infrastructure.instance.key.deployment.K8sDeploymentKey;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
-import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.k8s.response.K8sInstanceSyncResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.ContainerInstanceSyncPerpetualTaskCreator;
@@ -115,12 +119,11 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
-/**
- * @author rktummala on 02/03/18
- */
 @Singleton
 @Slf4j
 @OwnedBy(HarnessTeam.CDP)
+@TargetModule(HarnessModule._441_CG_INSTANCE_SYNC)
+@BreakDependencyOn("software.wings.dl.WingsPersistence")
 public class ContainerInstanceHandler extends InstanceHandler implements InstanceSyncByPerpetualTaskHandler {
   @Inject private ContainerSync containerSync;
   @Inject private transient K8sStateHelper k8sStateHelper;
@@ -156,8 +159,8 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
         getDeploymentSummaryMap(newDeploymentSummaries, containerMetadataInstanceMap, containerInfraMapping);
 
     loadContainerSvcNameInstanceMap(containerInfraMapping, containerMetadataInstanceMap);
-    log.info("Found {} containerSvcNames for app {} and infraMapping",
-        containerMetadataInstanceMap != null ? containerMetadataInstanceMap.size() : 0, appId);
+    // log.info("Found {} containerSvcNames for app {} and infraMapping",
+    // containerMetadataInstanceMap != null ? containerMetadataInstanceMap.size() : 0, appId);
 
     if (containerMetadataInstanceMap == null) {
       return;
@@ -187,8 +190,8 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
                                                  .collect(toList());
 
         if (containerMetadata.getType() == ContainerMetadataType.K8S) {
-          log.info("Found {} instances in DB for app {} and releaseName {}", instancesInDB.size(), appId,
-              containerMetadata.getReleaseName());
+          // log.info("Found {} instances in DB for app {} and releaseName {}", instancesInDB.size(), appId,
+          //   containerMetadata.getReleaseName());
 
           if (instanceSyncFlow == PERPETUAL_TASK && responseData instanceof K8sTaskExecutionResponse) {
             K8sTaskExecutionResponse k8sTaskExecutionResponse = (K8sTaskExecutionResponse) responseData;
@@ -211,19 +214,37 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
         } else {
           if (responseData != null && instanceSyncFlow == PERPETUAL_TASK) {
             ContainerSyncResponse syncResponse = (ContainerSyncResponse) responseData;
-            if (isNotEmpty(syncResponse.getControllerName())
-                && !syncResponse.getControllerName().equals(containerMetadata.getContainerServiceName())) {
+            if (!responseBelongsToCurrentSetOfContainers(containerMetadata, syncResponse)) {
+              continue;
+            }
+            // don't update ecs instances if delegate response is failure
+            if (syncResponse != null && syncResponse.getCommandExecutionStatus() == FAILURE) {
               continue;
             }
           }
-          log.info("Found {} instances in DB for app {} and containerServiceName {}", instancesInDB.size(), appId,
-              containerMetadata.getContainerServiceName());
+          // log.info("Found {} instances in DB for app {} and containerServiceName {}", instancesInDB.size(), appId,
+          //    containerMetadata.getContainerServiceName());
 
           handleContainerServiceInstances(rollback, responseData, instanceSyncFlow, containerInfraMapping,
               deploymentSummaryMap, containerMetadata, instancesInDB);
         }
       }
     }
+  }
+
+  private boolean responseBelongsToCurrentSetOfContainers(
+      ContainerMetadata containerMetadata, ContainerSyncResponse syncResponse) {
+    final boolean controllerNamePresent = isNotEmpty(syncResponse.getControllerName());
+    final boolean sameControllerName =
+        controllerNamePresent && syncResponse.getControllerName().equals(containerMetadata.getContainerServiceName());
+    final boolean releaseNamePresent = isNotEmpty(syncResponse.getReleaseName());
+    final boolean sameReleaseName =
+        releaseNamePresent && syncResponse.getReleaseName().equals(containerMetadata.getReleaseName());
+    final boolean namespacePresent = isNotEmpty(syncResponse.getNamespace());
+    final boolean sameNamespace =
+        namespacePresent && syncResponse.getNamespace().equals(containerMetadata.getNamespace());
+    return (!controllerNamePresent || sameControllerName) && (!releaseNamePresent || sameReleaseName)
+        && (!namespacePresent || sameNamespace);
   }
 
   /**
@@ -259,8 +280,9 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
     // ECS it is taskDefinition)
     List<ContainerInfo> latestContainerInfoList =
         getContainerInfos(responseData, instanceSyncFlow, containerInfraMapping, containerMetadata);
-    log.info("Found {} instances from remote server for app {} and containerSvcName {}", latestContainerInfoList.size(),
-        containerInfraMapping.getAppId(), containerMetadata.getContainerServiceName());
+    // log.info("Found {} instances from remote server for app {} and containerSvcName {}",
+    // latestContainerInfoList.size(),
+    //    containerInfraMapping.getAppId(), containerMetadata.getContainerServiceName());
     processContainerServiceInstances(rollback, containerInfraMapping, deploymentSummaryMap, containerMetadata,
         instancesInDB, latestContainerInfoList);
   }
@@ -314,15 +336,14 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
       }
     }
 
-    log.info("Instances to be added {}", instancesToBeAdded.size());
-    log.info("Instances to be deleted {}", instanceIdsToBeDeleted.size());
+    if (instancesToBeAdded.size() > 0 || instanceIdsToBeDeleted.size() > 0) {
+      log.info(
+          "Instances to be added {}, to be deleted {}, in DB {}, Running {} for ContainerSvcName: {}, Namespace {} and AppId: {}",
+          instancesToBeAdded.size(), instanceIdsToBeDeleted.size(), instancesInDB.size(),
+          latestContainerInfoMap.keySet().size(), containerMetadata.getContainerServiceName(),
+          containerMetadata.getNamespace(), containerInfraMapping.getAppId());
+    }
 
-    log.info("Total number of Container instances found in DB for ContainerSvcName: {}, Namespace {} and AppId: {}, "
-            + "No of instances in DB: {}, No of Running instances: {}, "
-            + "No of instances to be Added: {}, No of instances to be deleted: {}",
-        containerMetadata.getContainerServiceName(), containerMetadata.getNamespace(), containerInfraMapping.getAppId(),
-        instancesInDB.size(), latestContainerInfoMap.keySet().size(), instancesToBeAdded.size(),
-        instanceIdsToBeDeleted.size());
     if (isNotEmpty(instanceIdsToBeDeleted)) {
       instanceService.delete(instanceIdsToBeDeleted);
     }
@@ -497,14 +518,15 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
     Set<String> instanceIdsToBeDeleted =
         instancesToBeDeleted.stream().map(instancePodName -> dbPodMap.get(instancePodName).getUuid()).collect(toSet());
 
-    log.info(
-        "[InstanceSync for namespace {} release {}] Got {} running Pods. InstancesToBeAdded:{} InstancesToBeDeleted:{}",
-        containerMetadata.getNamespace(), containerMetadata.getReleaseName(), currentPods.size(),
-        instancesToBeAdded.size(), instanceIdsToBeDeleted.size());
+    if (instancesToBeAdded.size() > 0 || instanceIdsToBeDeleted.size() > 0) {
+      log.info(
+          "[InstanceSync for inframapping {} namespace {} release {}] Got {} running Pods. InstancesToBeAdded:{} InstancesToBeDeleted:{}, DBInstances: {}",
+          containerInfraMapping.getUuid(), containerMetadata.getNamespace(), containerMetadata.getReleaseName(),
+          currentPods.size(), instancesToBeAdded.size(), instanceIdsToBeDeleted.size(), instancesInDB.size());
+    }
 
     if (isNotEmpty(instanceIdsToBeDeleted)) {
       instanceService.delete(instanceIdsToBeDeleted);
-      log.info("Instances to be deleted {}", instanceIdsToBeDeleted.size());
     }
 
     DeploymentSummary deploymentSummary = deploymentSummaryMap.get(containerMetadata);
@@ -523,7 +545,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
       instanceService.saveOrUpdate(instance);
     }
 
-    log.info("Instances to be added {}", instancesToBeAdded.size());
+    // log.info("Instances to be added {}", instancesToBeAdded.size());
 
     if (deploymentSummaryMap.get(containerMetadata) != null) {
       deploymentSummary = deploymentSummaryMap.get(containerMetadata);
@@ -604,6 +626,8 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
           namespace = containerDeploymentInfo.getNamespace();
         }
 
+        final List<String> namespaces = containerDeploymentInfo.getNamespaces();
+
         boolean isControllerNamesRetrievable = emptyIfNull(containerDeploymentInfo.getContainerInfoList())
                                                    .stream()
                                                    .map(io.harness.container.ContainerInfo::getWorkloadName)
@@ -629,12 +653,26 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
             containerInstances.put(containerMetadata, null);
           }
         } else {
-          ContainerMetadata containerMetadata = ContainerMetadata.builder()
-                                                    .namespace(namespace)
-                                                    .releaseName(containerDeploymentInfo.getReleaseName())
-                                                    .build();
-          deploymentSummaryMap.put(containerMetadata, deploymentSummary);
-          containerInstances.put(containerMetadata, null);
+          if (isNotEmpty(namespaces)) {
+            namespaces.stream()
+                .map(ns
+                    -> ContainerMetadata.builder()
+                           .releaseName(containerDeploymentInfo.getReleaseName())
+                           .namespace(ns)
+                           .build())
+                .forEach(containerMetadata -> {
+                  deploymentSummaryMap.put(containerMetadata, deploymentSummary);
+                  containerInstances.put(containerMetadata, null);
+                });
+          } else {
+            // should not be called now
+            ContainerMetadata containerMetadata = ContainerMetadata.builder()
+                                                      .namespace(namespace)
+                                                      .releaseName(containerDeploymentInfo.getReleaseName())
+                                                      .build();
+            deploymentSummaryMap.put(containerMetadata, deploymentSummary);
+            containerInstances.put(containerMetadata, null);
+          }
         }
       }
     } else if (newDeploymentSummaries.stream().iterator().next().getDeploymentInfo() instanceof K8sDeploymentInfo) {
@@ -682,7 +720,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
         ? instanceService.getInstancesForAppAndInframappingNotRemovedFully(appId, containerInfraMapping.getUuid())
         : getInstances(appId, containerInfraMapping.getUuid());
 
-    log.info("Found {} instances for app {}", instanceListInDBForInfraMapping.size(), appId);
+    // log.info("Found {} instances for app {}", instanceListInDBForInfraMapping.size(), appId);
     for (Instance instance : instanceListInDBForInfraMapping) {
       InstanceInfo instanceInfo = instance.getInstanceInfo();
       if (instanceInfo instanceof ContainerInfo) {
@@ -934,6 +972,7 @@ public class ContainerInstanceHandler extends InstanceHandler implements Instanc
         .helmChartInfo(helmExecutionSummary.getHelmChartInfo())
         .containerInfoList(helmExecutionSummary.getContainerInfoList())
         .releaseName(helmExecutionSummary.getReleaseName())
+        .namespaces(executionSummary.getNamespaces())
         .build();
   }
 

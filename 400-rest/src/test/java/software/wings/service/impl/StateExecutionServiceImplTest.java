@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.PRASHANT;
@@ -19,11 +20,12 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskDetails;
-import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
@@ -34,7 +36,6 @@ import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder;
 import software.wings.api.SelectNodeStepExecutionSummary;
 import software.wings.beans.ServiceInstance;
-import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionInterruptEffect;
@@ -59,11 +60,10 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.CDC)
 public class StateExecutionServiceImplTest extends WingsBaseTest {
   private static final String RANDOM = "RANDOM";
 
-  @Mock private FeatureFlagService featureFlagService;
-  @Mock private AppService appService;
   @Mock private SweepingOutputService sweepingOutputService;
   @Inject private HPersistence persistence;
 
@@ -71,8 +71,6 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
 
   @Before
   public void setUp() throws Exception {
-    Reflect.on(stateExecutionService).set("featureFlagService", featureFlagService);
-    Reflect.on(stateExecutionService).set("appService", appService);
     Reflect.on(stateExecutionService).set("sweepingOutputService", sweepingOutputService);
     Reflect.on(stateExecutionService).set("wingsPersistence", persistence);
   }
@@ -106,8 +104,6 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
     doReturn(Collections.singletonList(previousStateExecutionInstance))
         .when(stateExecutionService)
         .fetchPreviousPhasesStateExecutionInstances(any(), any(), any(), any());
-    doReturn(ACCOUNT_ID).when(appService).getAccountIdByAppId(any());
-    doReturn(true).when(featureFlagService).isEnabled(any(), any());
 
     List<ServiceInstance> hostExclusionList =
         stateExecutionService.getHostExclusionList(stateExecutionInstance, phaseElement, null);
@@ -124,8 +120,6 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
     doReturn(Collections.emptyList())
         .when(stateExecutionService)
         .fetchPreviousPhasesStateExecutionInstances(any(), any(), any(), any());
-    doReturn(ACCOUNT_ID).when(appService).getAccountIdByAppId(any());
-    doReturn(true).when(featureFlagService).isEnabled(any(), any());
 
     List<ServiceInstance> hostExclusionList =
         stateExecutionService.getHostExclusionList(stateExecutionInstance, phaseElement, null);
@@ -160,8 +154,6 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
     doReturn(Collections.singletonList(previousStateExecutionInstance))
         .when(stateExecutionService)
         .fetchPreviousPhasesStateExecutionInstances(any(), any(), any(), any());
-    doReturn(ACCOUNT_ID).when(appService).getAccountIdByAppId(any());
-    doReturn(false).when(featureFlagService).isEnabled(any(), any());
 
     List<ServiceInstance> hostExclusionList =
         stateExecutionService.getHostExclusionList(stateExecutionInstance, phaseElement, null);
@@ -414,5 +406,21 @@ public class StateExecutionServiceImplTest extends WingsBaseTest {
     instance = stateExecutionService.getStateExecutionInstance(instance.getAppId(), instance.getExecutionUuid(), id);
 
     assertThat(instance.getDelegateTasksDetails()).hasSize(2);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void fetchCurrentPhaseStepStateExecutionInstance() {
+    String uuid1 = generateUuid();
+    String uuid2 = generateUuid();
+    String uuid3 = generateUuid();
+    String uuid4 = generateUuid();
+    setupStateExecutionInstanceData(uuid1, uuid2, uuid3, uuid4);
+    StateExecutionInstance phaseStepState =
+        stateExecutionService.fetchCurrentPhaseStepStateExecutionInstance(APP_ID, WORKFLOW_EXECUTION_ID, uuid1);
+    assertThat(phaseStepState).isNotNull();
+    assertThat(phaseStepState.getUuid()).isEqualTo(uuid2);
+    assertThat(phaseStepState.getStateName()).isEqualTo("Deploy");
   }
 }

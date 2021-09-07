@@ -152,7 +152,8 @@ public class EcsRunTaskFunctionalTest extends AbstractFunctionalTest {
 
   @NotNull
   private Workflow getWorkflow(StoreType storeType, boolean accountConnector) {
-    service = serviceGenerator.ensureEcsRemoteTest(seed, owners, serviceName, storeType, accountConnector);
+    service = serviceGenerator.ensureEcsRemoteTest(seed, owners, serviceName, storeType, accountConnector,
+        "ecsgitops/containerspec_templatized.json", "ecsgitops/servicespec.json");
     assertThat(service).isNotNull();
 
     environment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);

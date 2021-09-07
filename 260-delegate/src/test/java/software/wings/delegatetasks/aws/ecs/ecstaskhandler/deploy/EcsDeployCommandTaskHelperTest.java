@@ -11,7 +11,9 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -202,6 +204,9 @@ public class EcsDeployCommandTaskHelperTest extends WingsBaseTest {
     ScalableTarget value = captor.getValue();
     assertThat(value).isNotNull();
     assertThat(value.getResourceId()).isEqualTo("resId");
+    verify(mockEcsContainerService, times(1))
+        .waitForServiceToReachStableState(
+            anyString(), anyObject(), anyList(), anyString(), anyString(), anyObject(), anyInt());
     verify(mockEcsCommandTaskHelper)
         .upsertScalingPolicyIfRequired(
             anyString(), anyString(), anyString(), anyString(), any(), any(), anyList(), any());

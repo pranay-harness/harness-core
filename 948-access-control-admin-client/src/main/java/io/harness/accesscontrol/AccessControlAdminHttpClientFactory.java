@@ -21,9 +21,9 @@ public class AccessControlAdminHttpClientFactory
     extends AbstractHttpClientFactory implements Provider<AccessControlAdminClient> {
   public AccessControlAdminHttpClientFactory(ServiceHttpClientConfig accessControlAdminClientConfig,
       String serviceSecret, ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory,
-      String clientId) {
+      String clientId, ClientMode clientMode) {
     super(accessControlAdminClientConfig, serviceSecret, tokenGenerator, kryoConverterFactory, clientId, false,
-        ClientMode.PRIVILEGED);
+        clientMode);
   }
 
   @Override

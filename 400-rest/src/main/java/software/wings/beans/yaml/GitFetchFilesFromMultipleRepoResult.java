@@ -1,5 +1,8 @@
 package software.wings.beans.yaml;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
+
 import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
@@ -8,6 +11,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
+@TargetModule(HarnessModule._870_YAML_BEANS)
 public class GitFetchFilesFromMultipleRepoResult extends GitCommandResult {
   Map<String, GitFetchFilesResult> filesFromMultipleRepo;
 

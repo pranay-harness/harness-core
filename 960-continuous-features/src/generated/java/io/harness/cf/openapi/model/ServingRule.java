@@ -22,7 +22,7 @@ import java.util.Objects;
  * ServingRule
  */
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen",
-    date = "2021-03-24T19:32:06.834-07:00[America/Los_Angeles]")
+    date = "2021-05-11T09:07:44.775-07:00[America/Los_Angeles]")
 public class ServingRule {
   public static final String SERIALIZED_NAME_RULE_ID = "ruleId";
   @SerializedName(SERIALIZED_NAME_RULE_ID) private String ruleId;
@@ -31,10 +31,10 @@ public class ServingRule {
   @SerializedName(SERIALIZED_NAME_PRIORITY) private Integer priority;
 
   public static final String SERIALIZED_NAME_CLAUSES = "clauses";
-  @SerializedName(SERIALIZED_NAME_CLAUSES) private List<io.harness.cf.openapi.model.Clause> clauses = new ArrayList<>();
+  @SerializedName(SERIALIZED_NAME_CLAUSES) private List<Clause> clauses = new ArrayList<>();
 
   public static final String SERIALIZED_NAME_SERVE = "serve";
-  @SerializedName(SERIALIZED_NAME_SERVE) private io.harness.cf.openapi.model.Serve serve;
+  @SerializedName(SERIALIZED_NAME_SERVE) private Serve serve;
 
   public ServingRule ruleId(String ruleId) {
     this.ruleId = ruleId;
@@ -74,12 +74,12 @@ public class ServingRule {
     this.priority = priority;
   }
 
-  public ServingRule clauses(List<io.harness.cf.openapi.model.Clause> clauses) {
+  public ServingRule clauses(List<Clause> clauses) {
     this.clauses = clauses;
     return this;
   }
 
-  public ServingRule addClausesItem(io.harness.cf.openapi.model.Clause clausesItem) {
+  public ServingRule addClausesItem(Clause clausesItem) {
     this.clauses.add(clausesItem);
     return this;
   }
@@ -90,7 +90,7 @@ public class ServingRule {
    **/
   @ApiModelProperty(required = true, value = "")
 
-  public List<io.harness.cf.openapi.model.Clause> getClauses() {
+  public List<Clause> getClauses() {
     return clauses;
   }
 
@@ -98,7 +98,7 @@ public class ServingRule {
     this.clauses = clauses;
   }
 
-  public ServingRule serve(io.harness.cf.openapi.model.Serve serve) {
+  public ServingRule serve(Serve serve) {
     this.serve = serve;
     return this;
   }
@@ -109,7 +109,7 @@ public class ServingRule {
    **/
   @ApiModelProperty(required = true, value = "")
 
-  public io.harness.cf.openapi.model.Serve getServe() {
+  public Serve getServe() {
     return serve;
   }
 

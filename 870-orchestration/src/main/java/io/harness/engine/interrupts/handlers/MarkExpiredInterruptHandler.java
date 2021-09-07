@@ -30,7 +30,7 @@ public class MarkExpiredInterruptHandler implements InterruptHandler {
   @Override
   public Interrupt registerInterrupt(Interrupt interrupt) {
     Interrupt savedInterrupt = validateAndSave(interrupt);
-    return handleInterrupt(savedInterrupt);
+    return handleInterruptForNodeExecution(savedInterrupt, interrupt.getNodeExecutionId());
   }
 
   private Interrupt validateAndSave(@Valid @NonNull Interrupt interrupt) {
@@ -50,13 +50,8 @@ public class MarkExpiredInterruptHandler implements InterruptHandler {
 
   @Override
   public Interrupt handleInterruptForNodeExecution(Interrupt interrupt, String nodeExecutionId) {
-    throw new UnsupportedOperationException("MARK_EXPIRED handling Not required for node individually");
-  }
-
-  @Override
-  public Interrupt handleInterrupt(@NonNull @Valid Interrupt interrupt) {
     try {
-      NodeExecution nodeExecution = nodeExecutionService.get(interrupt.getNodeExecutionId());
+      NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
       expiryHelper.expireMarkedInstance(nodeExecution, interrupt);
     } catch (Exception ex) {
       interruptService.markProcessed(interrupt.getUuid(), PROCESSED_UNSUCCESSFULLY);
@@ -64,5 +59,10 @@ public class MarkExpiredInterruptHandler implements InterruptHandler {
     }
 
     return interruptService.markProcessed(interrupt.getUuid(), PROCESSED_SUCCESSFULLY);
+  }
+
+  @Override
+  public Interrupt handleInterrupt(@NonNull @Valid Interrupt interrupt) {
+    throw new UnsupportedOperationException("MARK_EXPIRED handling Not required for node individually");
   }
 }

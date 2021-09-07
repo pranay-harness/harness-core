@@ -1,5 +1,6 @@
 package software.wings.licensing;
 
+import static io.harness.annotations.dev.HarnessTeam.GTM;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.rule.OwnerRule.MEHUL;
 import static io.harness.rule.OwnerRule.RAMA;
@@ -14,11 +15,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
+import io.harness.licensing.beans.response.CheckExpiryResultDTO;
+import io.harness.licensing.remote.NgLicenseHttpClient;
+import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -31,6 +37,7 @@ import software.wings.service.impl.LicenseUtils;
 import software.wings.service.intfc.AccountService;
 
 import com.google.inject.Inject;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -43,15 +50,19 @@ import org.junit.experimental.categories.Category;
 import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import retrofit2.Call;
+import retrofit2.Response;
 
 /**
  * Created by peeyushaggarwal on 10/11/16.
  */
+@OwnedBy(GTM)
 public class LicenseServiceTest extends WingsBaseTest {
   @InjectMocks @Inject private AccountService accountService;
   @InjectMocks @Inject private LicenseServiceImpl licenseService;
 
   @Mock private MainConfiguration mainConfiguration;
+  @Mock private NgLicenseHttpClient ngLicenseHttpClient;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -65,9 +76,14 @@ public class LicenseServiceTest extends WingsBaseTest {
   private static final String TRIAL_EXPIRATION_BEFORE_DELETION_TEMPLATE = "trial_expiration_before_deletion";
 
   @Before
-  public void setup() throws IllegalAccessException {
+  public void setup() throws IllegalAccessException, IOException {
     FieldUtils.writeField(licenseService, "accountService", accountService, true);
     FieldUtils.writeField(accountService, "licenseService", licenseService, true);
+    FieldUtils.writeField(licenseService, "ngLicenseHttpClient", ngLicenseHttpClient, true);
+
+    Call<ResponseDTO<Boolean>> booleanResult = mock(Call.class);
+    when(booleanResult.execute()).thenReturn(Response.success(ResponseDTO.newResponse(true)));
+    when(ngLicenseHttpClient.softDelete(any())).thenReturn(booleanResult);
   }
 
   @Test
@@ -500,13 +516,19 @@ public class LicenseServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = MEHUL)
   @Category(UnitTests.class)
-  public void shouldHandleTrialAccountExpiration() throws InterruptedException {
+  public void shouldHandleTrialAccountExpiration() throws InterruptedException, IOException {
     long currentTime = System.currentTimeMillis();
     long expiryTime = currentTime + 1000;
     LicenseInfo licenseInfo = new LicenseInfo();
     licenseInfo.setAccountType(AccountType.TRIAL);
     licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
     licenseInfo.setExpiryTime(expiryTime);
+
+    Call<ResponseDTO<CheckExpiryResultDTO>> result = mock(Call.class);
+    when(result.execute())
+        .thenReturn(Response.success(
+            ResponseDTO.newResponse(CheckExpiryResultDTO.builder().shouldDelete(true).expiryTime(0).build())));
+    when(ngLicenseHttpClient.checkExpiry(any())).thenReturn(result);
 
     Account account = accountService.save(anAccount()
                                               .withCompanyName(HARNESS_NAME)

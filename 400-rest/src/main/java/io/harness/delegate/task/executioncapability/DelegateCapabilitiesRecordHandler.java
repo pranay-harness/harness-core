@@ -8,6 +8,10 @@ import static io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.capability.CapabilitySubjectPermission;
 import io.harness.capability.CapabilityTaskSelectionDetails;
 import io.harness.capability.service.CapabilityService;
@@ -25,6 +29,7 @@ import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
 import io.harness.persistence.HPersistence;
 
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.DelegateTaskServiceClassic;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -39,6 +44,8 @@ import org.mongodb.morphia.query.Sort;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.DEL)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class DelegateCapabilitiesRecordHandler implements MongoPersistenceIterator.Handler<Delegate> {
   private static final long CAPABILITIES_CHECK_INTERVAL_IN_MINUTES = 10L;
   private static final FindOptions FETCH_LIMIT_OPTIONS = new FindOptions().limit(10);
@@ -48,6 +55,7 @@ public class DelegateCapabilitiesRecordHandler implements MongoPersistenceIterat
   @Inject private DelegateService delegateService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private CapabilityService capabilityService;
+  @Inject private DelegateTaskServiceClassic delegateTaskServiceClassic;
 
   public void registerIterators() {
     PumpExecutorOptions options = PumpExecutorOptions.builder()
@@ -66,7 +74,7 @@ public class DelegateCapabilitiesRecordHandler implements MongoPersistenceIterat
                        .field(DelegateKeys.lastHeartBeat)
                        .greaterThan(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(5)))
             .targetInterval(Duration.ofMinutes(CAPABILITIES_CHECK_INTERVAL_IN_MINUTES))
-            .acceptableNoAlertDelay(Duration.ofMinutes(2))
+            .acceptableNoAlertDelay(Duration.ofMinutes(CAPABILITIES_CHECK_INTERVAL_IN_MINUTES + 2))
             .handler(this)
             .schedulingType(REGULAR)
             .persistenceProvider(persistenceProvider)
@@ -100,7 +108,7 @@ public class DelegateCapabilitiesRecordHandler implements MongoPersistenceIterat
                 .collect(Collectors.toList());
 
         if (isNotEmpty(capabilitySubjectPermissions)) {
-          delegateService.executeBatchCapabilityCheckTask(
+          delegateTaskServiceClassic.executeBatchCapabilityCheckTask(
               delegate.getAccountId(), delegate.getUuid(), capabilitySubjectPermissions, null);
         } else {
           log.warn("No capability records found for delegate.");

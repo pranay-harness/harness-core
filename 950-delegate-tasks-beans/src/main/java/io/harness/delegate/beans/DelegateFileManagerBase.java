@@ -1,5 +1,6 @@
 package io.harness.delegate.beans;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import javax.validation.constraints.NotNull;
@@ -13,4 +14,5 @@ public interface DelegateFileManagerBase {
   InputStream downloadByConfigFileId(String fileId, String accountId, String appId, String activityId)
       throws IOException;
   DelegateFile getMetaInfo(FileBucket fileBucket, String fileId, String accountId) throws IOException;
+  DelegateFile uploadAsFile(DelegateFile delegateFile, File File);
 }

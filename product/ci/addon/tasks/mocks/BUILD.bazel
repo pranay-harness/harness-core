@@ -1,12 +1,15 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
 go_library(
-    name = "go_default_library",
+    name = "mocks",
     srcs = [
         "plugin_mock.go",
         "run_mock.go",
     ],
     importpath = "github.com/wings-software/portal/product/ci/addon/tasks/mocks",
     visibility = ["//visibility:public"],
-    deps = ["@com_github_golang_mock//gomock:go_default_library"],
+    deps = [
+        "//product/ci/engine/proto",
+        "@com_github_golang_mock//gomock",
+    ],
 )

@@ -1,6 +1,11 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.artifact.ArtifactStreamSummary;
 
@@ -12,6 +17,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+@TargetModule(HarnessModule._957_CG_BEANS)
+@OwnedBy(CDC)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

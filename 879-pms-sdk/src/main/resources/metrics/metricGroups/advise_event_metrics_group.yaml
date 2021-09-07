@@ -1,0 +1,6 @@
+name: Advise Metrics Group
+identifier: advise_event_group
+labels:
+  - accountId
+  - stepType
+  - module

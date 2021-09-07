@@ -13,6 +13,9 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.service.DelegateServiceDriverModule;
 import io.harness.testing.DelegateTaskStressTest;
 import io.harness.testing.DelegateTaskStressTestStage;
+import io.harness.waiter.AbstractWaiterModule;
+import io.harness.waiter.WaiterConfiguration;
+import io.harness.waiter.WaiterModule;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
@@ -56,7 +59,7 @@ public class DelegateTaskStressTestApplication extends Application<DelegateTaskS
   public void run(DelegateTaskStressTestConfiguration configuration, Environment environment) throws Exception {
     List<Module> modules = new ArrayList<>();
     modules.add(new io.harness.grpc.DelegateServiceDriverGrpcClientModule(
-        configuration.getServiceSecret(), configuration.getTarget(), configuration.getAuthority()));
+        configuration.getServiceSecret(), configuration.getTarget(), configuration.getAuthority(), false));
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
@@ -86,6 +89,13 @@ public class DelegateTaskStressTestApplication extends Application<DelegateTaskS
         return io.harness.mongo.MongoConfig.builder().build();
       }
     });
+    modules.add(new AbstractWaiterModule() {
+      @Override
+      public WaiterConfiguration waiterConfiguration() {
+        return WaiterConfiguration.builder().persistenceLayer(WaiterConfiguration.PersistenceLayer.MORPHIA).build();
+      }
+    });
+    modules.add(WaiterModule.getInstance());
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {

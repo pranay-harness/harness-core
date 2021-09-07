@@ -1,3 +1,11 @@
 package io.harness.delegate.task.terraform;
 
-public enum TFTaskType { APPLY, DESTROY, PLAN }
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(HarnessTeam.CDP)
+public enum TFTaskType {
+  APPLY,
+  DESTROY,
+  PLAN;
+}

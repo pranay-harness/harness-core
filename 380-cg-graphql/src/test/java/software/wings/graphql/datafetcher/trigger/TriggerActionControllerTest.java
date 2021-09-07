@@ -6,6 +6,7 @@ import static io.harness.rule.OwnerRule.PRABU;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
+import static software.wings.utils.WingsTestConstants.MANIFEST_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
@@ -15,6 +16,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.powermock.api.mockito.PowerMockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
@@ -25,6 +28,8 @@ import software.wings.beans.Service;
 import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.trigger.ArtifactSelection;
 import software.wings.beans.trigger.ArtifactSelection.Type;
+import software.wings.beans.trigger.ManifestSelection;
+import software.wings.beans.trigger.ManifestSelection.ManifestSelectionType;
 import software.wings.beans.trigger.Trigger;
 import software.wings.graphql.schema.mutation.execution.input.QLExecutionType;
 import software.wings.graphql.schema.type.trigger.QLArtifactConditionInput;
@@ -35,9 +40,17 @@ import software.wings.graphql.schema.type.trigger.QLCreateOrUpdateTriggerInput;
 import software.wings.graphql.schema.type.trigger.QLFromTriggeringPipeline;
 import software.wings.graphql.schema.type.trigger.QLFromWebhookPayload;
 import software.wings.graphql.schema.type.trigger.QLLastCollected;
+import software.wings.graphql.schema.type.trigger.QLLastCollectedManifest;
 import software.wings.graphql.schema.type.trigger.QLLastDeployedFromPipeline;
 import software.wings.graphql.schema.type.trigger.QLLastDeployedFromWorkflow;
+import software.wings.graphql.schema.type.trigger.QLLastDeployedManifestFromPipeline;
+import software.wings.graphql.schema.type.trigger.QLLastDeployedManifestFromWorkflow;
+import software.wings.graphql.schema.type.trigger.QLManifestConditionInput;
+import software.wings.graphql.schema.type.trigger.QLManifestFromTriggeringPipeline;
+import software.wings.graphql.schema.type.trigger.QLManifestFromWebhookPayload;
+import software.wings.graphql.schema.type.trigger.QLManifestSelectionInput;
 import software.wings.graphql.schema.type.trigger.QLPipelineAction;
+import software.wings.graphql.schema.type.trigger.QLPipelineConditionInput;
 import software.wings.graphql.schema.type.trigger.QLTriggerActionInput;
 import software.wings.graphql.schema.type.trigger.QLTriggerConditionInput;
 import software.wings.graphql.schema.type.trigger.QLWebhookConditionInput;
@@ -48,6 +61,7 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -61,6 +75,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(HarnessTeam.CDC)
 public class TriggerActionControllerTest extends CategoryTest {
   private static final String PIPELINE_ID = "PIPELINE_ID";
   @Mock PipelineService pipelineService;
@@ -962,7 +977,7 @@ public class TriggerActionControllerTest extends CategoryTest {
 
     Mockito.when(workflowService.readWorkflow(Matchers.anyString(), Matchers.anyString())).thenReturn(null);
 
-    triggerActionController.validateWorkflow(qlCreateOrUpdateTriggerInput);
+    triggerActionController.validateWorkflow(qlCreateOrUpdateTriggerInput, "workflowId");
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -980,7 +995,7 @@ public class TriggerActionControllerTest extends CategoryTest {
     when(workflowService.readWorkflow(Matchers.anyString(), Matchers.anyString()))
         .thenReturn(aWorkflow().appId("appId2").build());
 
-    triggerActionController.validateWorkflow(qlCreateOrUpdateTriggerInput);
+    triggerActionController.validateWorkflow(qlCreateOrUpdateTriggerInput, "workflowId");
   }
 
   @Test
@@ -1319,5 +1334,688 @@ public class TriggerActionControllerTest extends CategoryTest {
                    .get(0))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Artifact Source does not belong to the service. Service: SERVICE_ID");
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void resolveManifestSelectionsShouldThrowInvalidServiceIdException() {
+    QLManifestSelectionInput qlManifestSelectionInput =
+        QLManifestSelectionInput.builder()
+            .manifestSelectionType(ManifestSelectionType.FROM_APP_MANIFEST)
+            .serviceId("S1")
+            .build();
+
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder()
+            .action(QLTriggerActionInput.builder().manifestSelections(asList(qlManifestSelectionInput)).build())
+            .build();
+
+    when(serviceResourceService.get(Matchers.anyString())).thenReturn(null);
+    triggerActionController.resolveManifestSelections(qlCreateOrUpdateTriggerInput, Collections.singletonList("S1"));
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void resolveManifestSelectionsShouldThrowMissingServiceIdException() {
+    QLManifestSelectionInput qlManifestSelectionInput =
+        QLManifestSelectionInput.builder()
+            .manifestSelectionType(ManifestSelectionType.FROM_APP_MANIFEST)
+            .serviceId("S1")
+            .build();
+
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder()
+            .action(QLTriggerActionInput.builder().manifestSelections(asList(qlManifestSelectionInput)).build())
+            .build();
+
+    when(serviceResourceService.get("S1")).thenReturn(Service.builder().uuid("S1").build());
+    triggerActionController.resolveManifestSelections(qlCreateOrUpdateTriggerInput, asList("S1", "S2"));
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void resolveManifestSelectionsShouldReturnEmptyList() {
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder().action(QLTriggerActionInput.builder().build()).build();
+
+    List<ManifestSelection> manifestSelections =
+        triggerActionController.resolveManifestSelections(qlCreateOrUpdateTriggerInput, Collections.emptyList());
+
+    assertThat(manifestSelections).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldResolveManifestSelectionsForTriggeringAppManifest() {
+    QLManifestSelectionInput qlManifestSelectionInput =
+        QLManifestSelectionInput.builder()
+            .manifestSelectionType(ManifestSelectionType.FROM_APP_MANIFEST)
+            .serviceId(SERVICE_ID)
+            .versionRegex("filter")
+            .pipelineId(PIPELINE_ID)
+            .workflowId(WORKFLOW_ID)
+            .build();
+
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder()
+            .action(QLTriggerActionInput.builder().manifestSelections(asList(qlManifestSelectionInput)).build())
+            .condition(
+                QLTriggerConditionInput.builder()
+                    .conditionType(QLConditionType.ON_NEW_MANIFEST)
+                    .manifestConditionInput(QLManifestConditionInput.builder().appManifestId(MANIFEST_ID).build())
+                    .build())
+            .build();
+
+    Mockito.when(serviceResourceService.get(Matchers.anyString(), Matchers.anyString()))
+        .thenReturn(Mockito.mock(Service.class));
+
+    ManifestSelection returnedManifestSelection =
+        triggerActionController.resolveManifestSelections(qlCreateOrUpdateTriggerInput, Collections.singletonList("S1"))
+            .get(0);
+
+    assertThat(returnedManifestSelection).isNotNull();
+    assertThat(returnedManifestSelection.getType()).isEqualByComparingTo(ManifestSelectionType.FROM_APP_MANIFEST);
+    assertThat(returnedManifestSelection.getServiceId()).isEqualTo(qlManifestSelectionInput.getServiceId());
+    assertThat(returnedManifestSelection.getVersionRegex()).isEqualTo(qlManifestSelectionInput.getVersionRegex());
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldResolveManifestSelectionsForTriggeringPipeline() {
+    QLManifestSelectionInput qlManifestSelectionInput =
+        QLManifestSelectionInput.builder()
+            .manifestSelectionType(ManifestSelectionType.PIPELINE_SOURCE)
+            .serviceId(SERVICE_ID)
+            .versionRegex("filter")
+            .pipelineId(PIPELINE_ID)
+            .workflowId(WORKFLOW_ID)
+            .build();
+
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder()
+            .action(QLTriggerActionInput.builder().manifestSelections(asList(qlManifestSelectionInput)).build())
+            .condition(
+                QLTriggerConditionInput.builder()
+                    .conditionType(QLConditionType.ON_PIPELINE_COMPLETION)
+                    .pipelineConditionInput(QLPipelineConditionInput.builder().pipelineId(PIPELINE_ID + 2).build())
+                    .build())
+            .build();
+
+    Mockito.when(serviceResourceService.get(Matchers.anyString(), Matchers.anyString()))
+        .thenReturn(Mockito.mock(Service.class));
+
+    ManifestSelection returnedManifestSelection =
+        triggerActionController.resolveManifestSelections(qlCreateOrUpdateTriggerInput, Collections.singletonList("S1"))
+            .get(0);
+
+    assertThat(returnedManifestSelection).isNotNull();
+    assertThat(returnedManifestSelection.getType()).isEqualByComparingTo(ManifestSelectionType.PIPELINE_SOURCE);
+    assertThat(returnedManifestSelection.getServiceId()).isEqualTo(qlManifestSelectionInput.getServiceId());
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldResolveManifestSelectionsForWebhookSource() {
+    QLManifestSelectionInput qlManifestSelectionInput =
+        QLManifestSelectionInput.builder()
+            .manifestSelectionType(ManifestSelectionType.WEBHOOK_VARIABLE)
+            .serviceId(SERVICE_ID)
+            .versionRegex("filter")
+            .pipelineId(PIPELINE_ID)
+            .workflowId(WORKFLOW_ID)
+            .build();
+
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder()
+            .action(QLTriggerActionInput.builder().manifestSelections(asList(qlManifestSelectionInput)).build())
+            .condition(QLTriggerConditionInput.builder()
+                           .conditionType(QLConditionType.ON_WEBHOOK)
+                           .webhookConditionInput(
+                               QLWebhookConditionInput.builder().webhookSourceType(QLWebhookSource.CUSTOM).build())
+                           .build())
+            .build();
+
+    Mockito.when(serviceResourceService.get(Matchers.anyString(), Matchers.anyString()))
+        .thenReturn(Mockito.mock(Service.class));
+
+    ManifestSelection returnedManifestSelection =
+        triggerActionController.resolveManifestSelections(qlCreateOrUpdateTriggerInput, Collections.singletonList("S1"))
+            .get(0);
+
+    assertThat(returnedManifestSelection).isNotNull();
+    assertThat(returnedManifestSelection.getType()).isEqualByComparingTo(ManifestSelectionType.WEBHOOK_VARIABLE);
+    assertThat(returnedManifestSelection.getServiceId()).isEqualTo(qlManifestSelectionInput.getServiceId());
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void populateManifestSelectionFromTriggeringManifest() {
+    ManifestSelection manifestSelection = ManifestSelection.builder()
+                                              .serviceId("serviceId")
+                                              .serviceName("serviceName")
+                                              .type(ManifestSelectionType.FROM_APP_MANIFEST)
+                                              .build();
+    List<ManifestSelection> manifestSelections = Arrays.asList(manifestSelection);
+    Map<String, String> variables = new HashMap<>();
+    variables.put("variableKey", "variableResult");
+    Trigger trigger = Trigger.builder()
+                          .workflowId("workflowId")
+                          .workflowName("workflowName")
+                          .manifestSelections(manifestSelections)
+                          .workflowVariables(variables)
+                          .build();
+
+    QLPipelineAction qlPipelineAction = (QLPipelineAction) triggerActionController.populateTriggerAction(trigger);
+
+    assertThat(qlPipelineAction).isNotNull();
+    assertThat(qlPipelineAction.getPipelineId()).isEqualTo(trigger.getWorkflowId());
+    assertThat(qlPipelineAction.getPipelineName()).isEqualTo(trigger.getWorkflowName());
+
+    assertThat(qlPipelineAction.getManifestSelections()).isNotNull();
+    assertThat(qlPipelineAction.getManifestSelections().get(0).getServiceId())
+        .isEqualTo(trigger.getManifestSelections().get(0).getServiceId());
+    assertThat(qlPipelineAction.getManifestSelections().get(0).getServiceName())
+        .isEqualTo(trigger.getManifestSelections().get(0).getServiceName());
+
+    assertThat(qlPipelineAction.getVariables()).isNotNull();
+    assertThat(qlPipelineAction.getVariables().get(0).getValue())
+        .isEqualTo(trigger.getWorkflowVariables().get("variableKey"));
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldResolveManifestSelectionsForLastCollected() {
+    QLManifestSelectionInput qlManifestSelectionInput = QLManifestSelectionInput.builder()
+                                                            .manifestSelectionType(ManifestSelectionType.LAST_COLLECTED)
+                                                            .serviceId(SERVICE_ID)
+                                                            .versionRegex("filter")
+                                                            .pipelineId(PIPELINE_ID)
+                                                            .workflowId(WORKFLOW_ID)
+                                                            .build();
+
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder()
+            .action(QLTriggerActionInput.builder().manifestSelections(asList(qlManifestSelectionInput)).build())
+            .condition(QLTriggerConditionInput.builder()
+                           .conditionType(QLConditionType.ON_WEBHOOK)
+                           .webhookConditionInput(
+                               QLWebhookConditionInput.builder().webhookSourceType(QLWebhookSource.CUSTOM).build())
+                           .build())
+            .build();
+
+    Mockito.when(serviceResourceService.get(Matchers.anyString(), Matchers.anyString()))
+        .thenReturn(Mockito.mock(Service.class));
+
+    ManifestSelection returnedManifestSelection =
+        triggerActionController.resolveManifestSelections(qlCreateOrUpdateTriggerInput, Collections.singletonList("S1"))
+            .get(0);
+
+    assertThat(returnedManifestSelection).isNotNull();
+    assertThat(returnedManifestSelection.getType()).isEqualByComparingTo(ManifestSelectionType.LAST_COLLECTED);
+    assertThat(returnedManifestSelection.getServiceId()).isEqualTo(qlManifestSelectionInput.getServiceId());
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void populateManifestSelectionFromLastCollected() {
+    ManifestSelection manifestSelection = ManifestSelection.builder()
+                                              .serviceId("serviceId")
+                                              .serviceName("serviceName")
+                                              .versionRegex("filter")
+                                              .appManifestId("manifestId")
+                                              .type(ManifestSelectionType.LAST_COLLECTED)
+                                              .build();
+    List<ManifestSelection> manifestSelections = Arrays.asList(manifestSelection);
+
+    Map<String, String> variables = new HashMap<>();
+    variables.put("variableKey", "variableResult");
+    Trigger trigger = Trigger.builder()
+                          .workflowId("workflowId")
+                          .workflowName("workflowName")
+                          .manifestSelections(manifestSelections)
+                          .workflowVariables(variables)
+                          .build();
+
+    QLPipelineAction qlPipelineAction = (QLPipelineAction) triggerActionController.populateTriggerAction(trigger);
+
+    assertThat(qlPipelineAction).isNotNull();
+    assertThat(qlPipelineAction.getPipelineId()).isEqualTo(trigger.getWorkflowId());
+    assertThat(qlPipelineAction.getPipelineName()).isEqualTo(trigger.getWorkflowName());
+
+    assertThat(qlPipelineAction.getManifestSelections()).isNotNull();
+    QLLastCollectedManifest qlLastCollected = (QLLastCollectedManifest) qlPipelineAction.getManifestSelections().get(0);
+    assertThat(qlLastCollected.getServiceId()).isEqualTo(trigger.getManifestSelections().get(0).getServiceId());
+    assertThat(qlLastCollected.getServiceName()).isEqualTo(trigger.getManifestSelections().get(0).getServiceName());
+    assertThat(qlLastCollected.getAppManifestId()).isEqualTo(trigger.getManifestSelections().get(0).getAppManifestId());
+    assertThat(qlLastCollected.getVersionRegex()).isEqualTo(trigger.getManifestSelections().get(0).getVersionRegex());
+
+    assertThat(qlPipelineAction.getVariables()).isNotNull();
+    assertThat(qlPipelineAction.getVariables().get(0).getValue())
+        .isEqualTo(trigger.getWorkflowVariables().get("variableKey"));
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldResolveManifestSelectionsForLastDeployedPipeline() {
+    QLManifestSelectionInput qlManifestSelectionInput = QLManifestSelectionInput.builder()
+                                                            .manifestSelectionType(ManifestSelectionType.LAST_DEPLOYED)
+                                                            .serviceId(SERVICE_ID)
+                                                            .versionRegex("filter")
+                                                            .pipelineId(PIPELINE_ID)
+                                                            .workflowId(WORKFLOW_ID)
+                                                            .build();
+
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder()
+            .applicationId(APP_ID)
+            .action(QLTriggerActionInput.builder()
+                        .executionType(QLExecutionType.PIPELINE)
+                        .manifestSelections(asList(qlManifestSelectionInput))
+                        .build())
+            .condition(QLTriggerConditionInput.builder()
+                           .conditionType(QLConditionType.ON_WEBHOOK)
+                           .webhookConditionInput(
+                               QLWebhookConditionInput.builder().webhookSourceType(QLWebhookSource.CUSTOM).build())
+                           .build())
+            .build();
+
+    Mockito.when(serviceResourceService.get(Matchers.anyString(), Matchers.anyString()))
+        .thenReturn(Mockito.mock(Service.class));
+    when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, false)).thenReturn(Pipeline.builder().appId(APP_ID).build());
+
+    ManifestSelection returnedManifestSelection =
+        triggerActionController.resolveManifestSelections(qlCreateOrUpdateTriggerInput, Collections.singletonList("S1"))
+            .get(0);
+
+    assertThat(returnedManifestSelection).isNotNull();
+    assertThat(returnedManifestSelection.getType()).isEqualByComparingTo(ManifestSelectionType.LAST_DEPLOYED);
+    assertThat(returnedManifestSelection.getServiceId()).isEqualTo(qlManifestSelectionInput.getServiceId());
+    assertThat(returnedManifestSelection.getPipelineId()).isEqualTo(qlManifestSelectionInput.getPipelineId());
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void populateManifestSelectionFromLastDeployed() {
+    ManifestSelection manifestSelection = ManifestSelection.builder()
+                                              .serviceId("serviceId")
+                                              .serviceName("serviceName")
+                                              .pipelineId("pipelineId")
+                                              .pipelineName("pipelineName")
+                                              .type(ManifestSelectionType.LAST_DEPLOYED)
+                                              .build();
+    List<ManifestSelection> manifestSelections = Arrays.asList(manifestSelection);
+
+    Map<String, String> variables = new HashMap<>();
+    variables.put("variableKey", "variableResult");
+
+    Trigger trigger = Trigger.builder()
+                          .pipelineId("pipelineId")
+                          .pipelineName("pipelineName")
+                          .manifestSelections(manifestSelections)
+                          .workflowVariables(variables)
+                          .workflowType(WorkflowType.PIPELINE)
+                          .build();
+
+    QLPipelineAction qlPipelineAction = (QLPipelineAction) triggerActionController.populateTriggerAction(trigger);
+
+    assertThat(qlPipelineAction).isNotNull();
+    assertThat(qlPipelineAction.getPipelineId()).isEqualTo(trigger.getWorkflowId());
+    assertThat(qlPipelineAction.getPipelineName()).isEqualTo(trigger.getWorkflowName());
+
+    assertThat(qlPipelineAction.getManifestSelections()).isNotNull();
+    QLLastDeployedManifestFromPipeline qlLastDeployedFromPipeline =
+        (QLLastDeployedManifestFromPipeline) qlPipelineAction.getManifestSelections().get(0);
+    assertThat(qlLastDeployedFromPipeline.getServiceId()).isEqualTo(manifestSelection.getServiceId());
+    assertThat(qlLastDeployedFromPipeline.getServiceName()).isEqualTo(manifestSelection.getServiceName());
+    assertThat(qlLastDeployedFromPipeline.getPipelineId()).isEqualTo(manifestSelection.getPipelineId());
+    assertThat(qlLastDeployedFromPipeline.getPipelineName()).isEqualTo(manifestSelection.getPipelineName());
+
+    assertThat(qlPipelineAction.getVariables()).isNotNull();
+    assertThat(qlPipelineAction.getVariables().get(0).getValue())
+        .isEqualTo(trigger.getWorkflowVariables().get("variableKey"));
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldResolveManifestSelectionsForLastDeployedWorkflow() {
+    QLManifestSelectionInput qlManifestSelectionInput = QLManifestSelectionInput.builder()
+                                                            .manifestSelectionType(ManifestSelectionType.LAST_DEPLOYED)
+                                                            .serviceId(SERVICE_ID)
+                                                            .versionRegex("filter")
+                                                            .pipelineId(PIPELINE_ID)
+                                                            .workflowId(WORKFLOW_ID)
+                                                            .build();
+
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder()
+            .applicationId(APP_ID)
+            .action(QLTriggerActionInput.builder()
+                        .executionType(QLExecutionType.WORKFLOW)
+                        .manifestSelections(asList(qlManifestSelectionInput))
+                        .build())
+            .condition(QLTriggerConditionInput.builder()
+                           .conditionType(QLConditionType.ON_WEBHOOK)
+                           .webhookConditionInput(
+                               QLWebhookConditionInput.builder().webhookSourceType(QLWebhookSource.CUSTOM).build())
+                           .build())
+            .build();
+
+    Mockito.when(serviceResourceService.get(Matchers.anyString(), Matchers.anyString()))
+        .thenReturn(Mockito.mock(Service.class));
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(aWorkflow().appId(APP_ID).build());
+
+    ManifestSelection returnedManifestSelection =
+        triggerActionController.resolveManifestSelections(qlCreateOrUpdateTriggerInput, Collections.singletonList("S1"))
+            .get(0);
+
+    assertThat(returnedManifestSelection).isNotNull();
+    assertThat(returnedManifestSelection.getType()).isEqualByComparingTo(ManifestSelectionType.LAST_DEPLOYED);
+    assertThat(returnedManifestSelection.getServiceId()).isEqualTo(qlManifestSelectionInput.getServiceId());
+    assertThat(returnedManifestSelection.getWorkflowId()).isEqualTo(qlManifestSelectionInput.getWorkflowId());
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void populateManifestSelectionFromLastDeployedWorkflow() {
+    ManifestSelection manifestSelection = ManifestSelection.builder()
+                                              .serviceId("serviceId")
+                                              .serviceName("serviceName")
+                                              .workflowId("workflowId")
+                                              .workflowName("workflowName")
+                                              .type(ManifestSelectionType.LAST_DEPLOYED)
+                                              .build();
+    List<ManifestSelection> manifestSelections = Arrays.asList(manifestSelection);
+
+    Map<String, String> variables = new HashMap<>();
+    variables.put("variableKey", "variableResult");
+
+    Trigger trigger = Trigger.builder()
+                          .workflowId("workflowId")
+                          .workflowName("workflowName")
+                          .manifestSelections(manifestSelections)
+                          .workflowVariables(variables)
+                          .workflowType(WorkflowType.ORCHESTRATION)
+                          .build();
+
+    QLWorkflowAction qlPipelineAction = (QLWorkflowAction) triggerActionController.populateTriggerAction(trigger);
+
+    assertThat(qlPipelineAction).isNotNull();
+    assertThat(qlPipelineAction.getWorkflowId()).isEqualTo(trigger.getWorkflowId());
+    assertThat(qlPipelineAction.getWorkflowName()).isEqualTo(trigger.getWorkflowName());
+
+    assertThat(qlPipelineAction.getManifestSelections()).isNotNull();
+    QLLastDeployedManifestFromWorkflow qlLastDeployedFromPipeline =
+        (QLLastDeployedManifestFromWorkflow) qlPipelineAction.getManifestSelections().get(0);
+    assertThat(qlLastDeployedFromPipeline.getServiceId()).isEqualTo(manifestSelection.getServiceId());
+    assertThat(qlLastDeployedFromPipeline.getServiceName()).isEqualTo(manifestSelection.getServiceName());
+    assertThat(qlLastDeployedFromPipeline.getWorkflowId()).isEqualTo(manifestSelection.getWorkflowId());
+    assertThat(qlLastDeployedFromPipeline.getWorkflowName()).isEqualTo(manifestSelection.getWorkflowName());
+
+    assertThat(qlPipelineAction.getVariables()).isNotNull();
+    assertThat(qlPipelineAction.getVariables().get(0).getValue())
+        .isEqualTo(trigger.getWorkflowVariables().get("variableKey"));
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowErrorOnManifestSelectionsInvalidEntities() {
+    QLManifestSelectionInput qlManifestSelectionInput = QLManifestSelectionInput.builder()
+                                                            .manifestSelectionType(ManifestSelectionType.LAST_DEPLOYED)
+                                                            .serviceId(SERVICE_ID)
+                                                            .versionRegex("filter")
+                                                            .pipelineId(PIPELINE_ID)
+                                                            .workflowId(WORKFLOW_ID)
+                                                            .build();
+
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder()
+            .applicationId(APP_ID)
+            .action(QLTriggerActionInput.builder()
+                        .executionType(QLExecutionType.WORKFLOW)
+                        .manifestSelections(asList(qlManifestSelectionInput))
+                        .build())
+            .condition(QLTriggerConditionInput.builder()
+                           .conditionType(QLConditionType.ON_WEBHOOK)
+                           .webhookConditionInput(
+                               QLWebhookConditionInput.builder().webhookSourceType(QLWebhookSource.CUSTOM).build())
+                           .build())
+            .build();
+
+    Mockito.when(serviceResourceService.get(Matchers.anyString(), Matchers.anyString()))
+        .thenReturn(Mockito.mock(Service.class));
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(null);
+
+    assertThatThrownBy(
+        ()
+            -> triggerActionController
+                   .resolveManifestSelections(qlCreateOrUpdateTriggerInput, Collections.singletonList("S1"))
+                   .get(0))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Workflow doesn't exist");
+
+    qlManifestSelectionInput = QLManifestSelectionInput.builder()
+                                   .manifestSelectionType(ManifestSelectionType.LAST_DEPLOYED)
+                                   .serviceId(SERVICE_ID)
+                                   .versionRegex("filter")
+                                   .pipelineId(PIPELINE_ID)
+                                   .workflowId(WORKFLOW_ID)
+                                   .build();
+
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput2 =
+        QLCreateOrUpdateTriggerInput.builder()
+            .applicationId(APP_ID)
+            .action(QLTriggerActionInput.builder()
+                        .executionType(QLExecutionType.PIPELINE)
+                        .manifestSelections(asList(qlManifestSelectionInput))
+                        .build())
+            .condition(QLTriggerConditionInput.builder()
+                           .conditionType(QLConditionType.ON_WEBHOOK)
+                           .webhookConditionInput(
+                               QLWebhookConditionInput.builder().webhookSourceType(QLWebhookSource.CUSTOM).build())
+                           .build())
+            .build();
+
+    Mockito.when(serviceResourceService.get(Matchers.anyString(), Matchers.anyString()))
+        .thenReturn(Mockito.mock(Service.class));
+    when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, false)).thenReturn(null);
+
+    assertThatThrownBy(
+        ()
+            -> triggerActionController
+                   .resolveManifestSelections(qlCreateOrUpdateTriggerInput2, Collections.singletonList("S1"))
+                   .get(0))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Pipeline doesn't exist");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void populateManifestSelectionFromPipelineCompletion() {
+    ManifestSelection manifestSource = ManifestSelection.builder()
+                                           .serviceId("serviceId")
+                                           .serviceName("serviceName")
+                                           .type(ManifestSelectionType.PIPELINE_SOURCE)
+                                           .build();
+    List<ManifestSelection> manifestSelections = Arrays.asList(manifestSource);
+
+    Map<String, String> variables = new HashMap<>();
+    variables.put("variableKey", "variableResult");
+
+    Trigger trigger = Trigger.builder()
+                          .workflowId("workflowId")
+                          .workflowName("workflowName")
+                          .manifestSelections(manifestSelections)
+                          .workflowVariables(variables)
+                          .workflowType(WorkflowType.PIPELINE)
+                          .build();
+
+    QLPipelineAction qlPipelineAction = (QLPipelineAction) triggerActionController.populateTriggerAction(trigger);
+
+    assertThat(qlPipelineAction).isNotNull();
+    assertThat(qlPipelineAction.getPipelineId()).isEqualTo(trigger.getWorkflowId());
+    assertThat(qlPipelineAction.getPipelineName()).isEqualTo(trigger.getWorkflowName());
+
+    assertThat(qlPipelineAction.getManifestSelections()).isNotNull();
+    QLManifestFromTriggeringPipeline qlFromTriggeringPipeline =
+        (QLManifestFromTriggeringPipeline) qlPipelineAction.getManifestSelections().get(0);
+    assertThat(qlFromTriggeringPipeline.getServiceId())
+        .isEqualTo(trigger.getManifestSelections().get(0).getServiceId());
+    assertThat(qlFromTriggeringPipeline.getServiceName())
+        .isEqualTo(trigger.getManifestSelections().get(0).getServiceName());
+
+    assertThat(qlPipelineAction.getVariables()).isNotNull();
+    assertThat(qlPipelineAction.getVariables().get(0).getValue())
+        .isEqualTo(trigger.getWorkflowVariables().get("variableKey"));
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowErrorOnManifestSelectionsInvalidCombinations() {
+    QLManifestSelectionInput qlManifestSelectionInput =
+        QLManifestSelectionInput.builder()
+            .manifestSelectionType(ManifestSelectionType.WEBHOOK_VARIABLE)
+            .serviceId(SERVICE_ID)
+            .versionRegex("filter")
+            .pipelineId(PIPELINE_ID)
+            .workflowId(WORKFLOW_ID)
+            .build();
+
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput =
+        QLCreateOrUpdateTriggerInput.builder()
+            .action(QLTriggerActionInput.builder().manifestSelections(asList(qlManifestSelectionInput)).build())
+            .condition(QLTriggerConditionInput.builder()
+                           .conditionType(QLConditionType.ON_WEBHOOK)
+                           .webhookConditionInput(
+                               QLWebhookConditionInput.builder().webhookSourceType(QLWebhookSource.GITHUB).build())
+                           .build())
+            .build();
+
+    Mockito.when(serviceResourceService.get(Matchers.anyString(), Matchers.anyString()))
+        .thenReturn(Mockito.mock(Service.class));
+
+    assertThatThrownBy(
+        ()
+            -> triggerActionController
+                   .resolveManifestSelections(qlCreateOrUpdateTriggerInput, Collections.singletonList("S1"))
+                   .get(0))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("WEBHOOK_VARIABLE can be used only with CUSTOM Webhook Event");
+
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput2 =
+        QLCreateOrUpdateTriggerInput.builder()
+            .action(QLTriggerActionInput.builder().manifestSelections(asList(qlManifestSelectionInput)).build())
+            .condition(QLTriggerConditionInput.builder().conditionType(QLConditionType.ON_SCHEDULE).build())
+            .build();
+
+    assertThatThrownBy(
+        ()
+            -> triggerActionController
+                   .resolveManifestSelections(qlCreateOrUpdateTriggerInput2, Collections.singletonList("S1"))
+                   .get(0))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("WEBHOOK_VARIABLE can be used only with ON_WEBHOOK Condition Type");
+
+    qlManifestSelectionInput = QLManifestSelectionInput.builder()
+                                   .manifestSelectionType(ManifestSelectionType.FROM_APP_MANIFEST)
+                                   .serviceId(SERVICE_ID)
+                                   .versionRegex("filter")
+                                   .pipelineId(PIPELINE_ID)
+                                   .workflowId(WORKFLOW_ID)
+                                   .build();
+
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput3 =
+        QLCreateOrUpdateTriggerInput.builder()
+            .action(QLTriggerActionInput.builder().manifestSelections(asList(qlManifestSelectionInput)).build())
+            .condition(QLTriggerConditionInput.builder().conditionType(QLConditionType.ON_SCHEDULE).build())
+            .build();
+
+    assertThatThrownBy(
+        ()
+            -> triggerActionController
+                   .resolveManifestSelections(qlCreateOrUpdateTriggerInput3, Collections.singletonList("S1"))
+                   .get(0))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("FROM_APP_MANIFEST can be used only with ON_NEW_MANIFEST Condition Type");
+
+    qlManifestSelectionInput = QLManifestSelectionInput.builder()
+                                   .manifestSelectionType(ManifestSelectionType.PIPELINE_SOURCE)
+                                   .serviceId(SERVICE_ID)
+                                   .versionRegex("filter")
+                                   .pipelineId(PIPELINE_ID)
+                                   .workflowId(WORKFLOW_ID)
+                                   .build();
+
+    QLCreateOrUpdateTriggerInput qlCreateOrUpdateTriggerInput4 =
+        QLCreateOrUpdateTriggerInput.builder()
+            .action(QLTriggerActionInput.builder().manifestSelections(asList(qlManifestSelectionInput)).build())
+            .condition(QLTriggerConditionInput.builder().conditionType(QLConditionType.ON_SCHEDULE).build())
+            .build();
+
+    assertThatThrownBy(
+        ()
+            -> triggerActionController
+                   .resolveManifestSelections(qlCreateOrUpdateTriggerInput4, Collections.singletonList("S1"))
+                   .get(0))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("PIPELINE_SOURCE can be used only with ON_PIPELINE_COMPLETION Condition Type");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void populateManifestSelectionFromWebhookPayload() {
+    ManifestSelection manifestSource = ManifestSelection.builder()
+                                           .serviceId("serviceId")
+                                           .serviceName("serviceName")
+                                           .appManifestId("appManifestId")
+                                           .type(ManifestSelectionType.WEBHOOK_VARIABLE)
+                                           .build();
+    List<ManifestSelection> manifestSelections = Arrays.asList(manifestSource);
+
+    Map<String, String> variables = new HashMap<>();
+    variables.put("variableKey", "variableResult");
+
+    Trigger trigger = Trigger.builder()
+                          .workflowId("workflowId")
+                          .workflowName("workflowName")
+                          .manifestSelections(manifestSelections)
+                          .workflowVariables(variables)
+                          .workflowType(WorkflowType.ORCHESTRATION)
+                          .build();
+
+    QLWorkflowAction qlWorkflowAction = (QLWorkflowAction) triggerActionController.populateTriggerAction(trigger);
+
+    assertThat(qlWorkflowAction).isNotNull();
+    assertThat(qlWorkflowAction.getWorkflowId()).isEqualTo(trigger.getWorkflowId());
+    assertThat(qlWorkflowAction.getWorkflowName()).isEqualTo(trigger.getWorkflowName());
+
+    assertThat(qlWorkflowAction.getManifestSelections()).isNotNull();
+    QLManifestFromWebhookPayload qlFromWebhookPayload =
+        (QLManifestFromWebhookPayload) qlWorkflowAction.getManifestSelections().get(0);
+    assertThat(qlFromWebhookPayload.getServiceId()).isEqualTo(trigger.getManifestSelections().get(0).getServiceId());
+    assertThat(qlFromWebhookPayload.getServiceName())
+        .isEqualTo(trigger.getManifestSelections().get(0).getServiceName());
+    assertThat(qlFromWebhookPayload.getAppManifestId())
+        .isEqualTo(trigger.getManifestSelections().get(0).getAppManifestId());
+
+    assertThat(qlWorkflowAction.getVariables()).isNotNull();
+    assertThat(qlWorkflowAction.getVariables().get(0).getValue())
+        .isEqualTo(trigger.getWorkflowVariables().get("variableKey"));
   }
 }

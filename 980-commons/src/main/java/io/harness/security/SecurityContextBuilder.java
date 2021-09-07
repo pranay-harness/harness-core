@@ -10,6 +10,7 @@ import io.harness.manage.GlobalContextManager;
 import io.harness.security.dto.ApiKeyPrincipal;
 import io.harness.security.dto.Principal;
 import io.harness.security.dto.PrincipalType;
+import io.harness.security.dto.ServiceAccountPrincipal;
 import io.harness.security.dto.ServicePrincipal;
 import io.harness.security.dto.UserPrincipal;
 
@@ -40,6 +41,9 @@ public class SecurityContextBuilder {
         case SERVICE:
           principal = ServicePrincipal.getPrincipal(claimMap);
           break;
+        case SERVICE_ACCOUNT:
+          principal = ServiceAccountPrincipal.getPrincipal(claimMap);
+          break;
         default:
           Switch.unhandled(type);
       }
@@ -65,10 +69,6 @@ public class SecurityContextBuilder {
       return null;
     }
     return principalContextData.getPrincipal();
-  }
-
-  public void unsetPrincipalContext() {
-    GlobalContextManager.unset(PRINCIPAL_CONTEXT);
   }
 
   public void unsetCompleteContext() {

@@ -1,5 +1,10 @@
 package io.harness.cdng.service.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotation.RecasterAlias;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.ToBeDeleted;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.ngpipeline.artifact.bean.ArtifactOutcome;
 import io.harness.pms.sdk.core.data.Outcome;
@@ -18,6 +23,9 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @TypeAlias("serviceOutcome")
 @JsonTypeName("serviceOutcome")
+@OwnedBy(CDC)
+@ToBeDeleted
+@RecasterAlias("io.harness.cdng.service.beans.ServiceOutcome")
 public class ServiceOutcome implements Outcome {
   String identifier;
   String name;
@@ -40,38 +48,25 @@ public class ServiceOutcome implements Outcome {
 
   StageOverridesOutcome stageOverrides;
 
-  @Override
-  public String getType() {
-    return "serviceOutcome";
-  }
-
   public String getServiceDefinitionType() {
     return type;
-  }
-
-  @Override
-  public String toViewJson() {
-    return null;
   }
 
   @Data
   @Builder
   @TypeAlias("serviceOutcome_artifactsOutcome")
   @JsonTypeName("serviceOutcome_artifactsOutcome")
+  @RecasterAlias("io.harness.cdng.service.beans.ServiceOutcome$ArtifactsOutcome")
   public static class ArtifactsOutcome implements Outcome {
     private ArtifactOutcome primary;
     @Singular private Map<String, ArtifactOutcome> sidecars;
-
-    @Override
-    public String getType() {
-      return "serviceOutcome_artifactsOutcome";
-    }
   }
 
   @Data
   @Builder
   @TypeAlias("serviceOutcome_stageOverridesOutcome")
   @JsonTypeName("serviceOutcome_stageOverridesOutcome")
+  @RecasterAlias("io.harness.cdng.service.beans.ServiceOutcome$StageOverridesOutcome")
   public static class StageOverridesOutcome implements Outcome {
     Map<String, Object> variables;
     ArtifactsOutcome artifacts;
@@ -80,49 +75,32 @@ public class ServiceOutcome implements Outcome {
     ParameterField<List<String>> useVariableOverrideSets;
     ParameterField<List<String>> useArtifactOverrideSets;
     ParameterField<List<String>> useManifestOverrideSets;
-
-    @Override
-    public String getType() {
-      return "serviceOutcome_stageOverridesOutcome";
-    }
   }
 
   @Data
   @Builder
   @TypeAlias("serviceOutcome_artifactsWrapperOutcome")
   @JsonTypeName("serviceOutcome_artifactsWrapperOutcome")
+  @RecasterAlias("io.harness.cdng.service.beans.ServiceOutcome$ArtifactsWrapperOutcome")
   public static class ArtifactsWrapperOutcome implements Outcome {
     ArtifactsOutcome artifacts;
-
-    @Override
-    public String getType() {
-      return "serviceOutcome_artifactsWrapperOutcome";
-    }
   }
 
   @Data
   @Builder
   @TypeAlias("serviceOutcome_manifestsWrapperOutcome")
   @JsonTypeName("serviceOutcome_manifestsWrapperOutcome")
+  @RecasterAlias("io.harness.cdng.service.beans.ServiceOutcome$ManifestsWrapperOutcome")
   public static class ManifestsWrapperOutcome implements Outcome {
     Map<String, ManifestOutcome> manifests;
-
-    @Override
-    public String getType() {
-      return "serviceOutcome_manifestsWrapperOutcome";
-    }
   }
 
   @Data
   @Builder
   @TypeAlias("serviceOutcome_variablesWrapperOutcome")
   @JsonTypeName("serviceOutcome_variablesWrapperOutcome")
+  @RecasterAlias("io.harness.cdng.service.beans.ServiceOutcome$VariablesWrapperOutcome")
   public static class VariablesWrapperOutcome implements Outcome {
     Map<String, Object> variables;
-
-    @Override
-    public String getType() {
-      return "serviceOutcome_variablesWrapperOutcome";
-    }
   }
 }

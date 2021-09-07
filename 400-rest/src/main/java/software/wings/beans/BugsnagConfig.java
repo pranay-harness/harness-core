@@ -9,9 +9,11 @@ import io.harness.expression.ExpressionEvaluator;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
 import software.wings.jersey.JsonViews;
+import software.wings.security.UsageRestrictions;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.utils.Utils;
+import software.wings.yaml.setting.VerificationProviderYaml;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -24,6 +26,7 @@ import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 
@@ -89,5 +92,21 @@ public class BugsnagConfig extends SettingValue implements EncryptableSetting {
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
         Utils.appendPathToBaseUrl(getUrl(), validationUrl), maskingEvaluator));
+  }
+
+  @Data
+  @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends VerificationProviderYaml {
+    private String url;
+    private String authToken;
+
+    @Builder
+    public Yaml(
+        String type, String harnessApiVersion, UsageRestrictions.Yaml usageRestrictions, String url, String authToken) {
+      super(type, harnessApiVersion, usageRestrictions);
+      this.url = url;
+      this.authToken = authToken;
+    }
   }
 }

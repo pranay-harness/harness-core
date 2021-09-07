@@ -1,9 +1,12 @@
 package io.harness.generator.artifactstream;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer;
 import io.harness.generator.Randomizer.Seed;
@@ -20,6 +23,7 @@ import software.wings.beans.artifact.JenkinsArtifactStream.JenkinsArtifactStream
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+@OwnedBy(CDP)
 @Singleton
 public class JenkinsArtifactStreamStreamsGenerator implements ArtifactStreamsGenerator {
   @Inject private SettingGenerator settingGenerator;
@@ -28,6 +32,11 @@ public class JenkinsArtifactStreamStreamsGenerator implements ArtifactStreamsGen
   @Override
   public ArtifactStream ensureArtifactStream(Seed seed, Owners owners) {
     return ensureArtifactStream(seed, owners, false);
+  }
+
+  @Override
+  public ArtifactStream ensureArtifactStream(Seed seed, Owners owners, String serviceName, boolean atConnector) {
+    return null;
   }
 
   @Override

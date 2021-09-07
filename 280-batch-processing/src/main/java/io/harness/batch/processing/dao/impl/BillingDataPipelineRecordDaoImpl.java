@@ -5,8 +5,8 @@ import static io.harness.persistence.HPersistence.returnNewOptions;
 import static java.util.Objects.isNull;
 
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
-import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
-import io.harness.ccm.billing.entities.BillingDataPipelineRecord.BillingDataPipelineRecordKeys;
+import io.harness.ccm.commons.entities.billing.BillingDataPipelineRecord;
+import io.harness.ccm.commons.entities.billing.BillingDataPipelineRecord.BillingDataPipelineRecordKeys;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;

@@ -20,6 +20,8 @@ extend type Query {
 type ExecutionInputs {
   #List of Services that need artifact input
   serviceInputs: [Service]
+  #Beta: List of Services that need manifest input
+  serviceManifestInputs: [Service]
 }
 
 input StartExecutionInput {
@@ -77,6 +79,8 @@ input ServiceInput {
   name: String!
   #artifact inputs fot the service
   artifactValueInput: ArtfifactValueInput
+  #Beta: Manifest inputs for the service
+  manifestValueInput: ManifestValueInput
 }
 
 input ArtfifactValueInput {
@@ -118,6 +122,26 @@ input ParameterizedArtifactSourceInput {
   buildNumber: String!
   #parameters and their runtime values
   parameterValueInputs: [ParameterValueInput]
+}
+
+input ManifestValueInput {
+  valueType: ManifestInputType!
+  #Beta: helm chart id if value type is HELM_CHART_ID
+  helmChartId: String
+  #Beta: Build number input if value type is BUILD_NUMBER
+  versionNumber: VersionNumberInput
+}
+
+input VersionNumberInput {
+  #Beta: Name of the application manifest
+  appManifestName: String!
+  #Beta: helm chart version number to be deployed
+  versionNumber: String!
+}
+
+enum ManifestInputType {
+  HELM_CHART_ID
+  VERSION_NUMBER
 }
 
 input ParameterValueInput {

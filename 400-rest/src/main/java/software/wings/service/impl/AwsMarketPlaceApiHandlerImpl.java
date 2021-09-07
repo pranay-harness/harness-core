@@ -65,6 +65,7 @@ public class AwsMarketPlaceApiHandlerImpl implements AwsMarketPlaceApiHandler {
   private static final String INFO = "INFO";
   private static final String REDIRECT_ACTION_LOGIN = "LOGIN";
   private final String MESSAGESTATUS = "SUCCESS";
+  private final String AWS_FREE_TRIAL_DIMENSION = "AWSMPFreeTrial";
   @Override
   public Response processAWSMarktPlaceOrder(String token) {
     /**
@@ -135,8 +136,10 @@ public class AwsMarketPlaceApiHandlerImpl implements AwsMarketPlaceApiHandler {
 
     GetEntitlementsResult entitlements = oClient.getEntitlements(entitlementRequest);
     log.info("oEntitlementResult=[{}]", entitlements);
-    Integer orderQuantity = getOrderQuantity(entitlements.getEntitlements().get(0).getDimension());
+    String dimension = entitlements.getEntitlements().get(0).getDimension();
+    Integer orderQuantity = getOrderQuantity(dimension);
     Date expirationDate = entitlements.getEntitlements().get(0).getExpirationDate();
+    String licenseType = getLicenseType(dimension);
     Optional<MarketPlace> marketPlaceMaybe =
         marketPlaceService.fetchMarketplace(customerIdentifierCode, MarketPlaceType.AWS);
 
@@ -160,6 +163,7 @@ public class AwsMarketPlaceApiHandlerImpl implements AwsMarketPlaceApiHandler {
                         .orderQuantity(orderQuantity)
                         .expirationDate(expirationDate)
                         .productCode(productCode)
+                        .licenseType(licenseType)
                         .build();
       wingsPersistence.save(marketPlace);
     }
@@ -214,6 +218,14 @@ public class AwsMarketPlaceApiHandlerImpl implements AwsMarketPlaceApiHandler {
     claims.put(MarketPlaceConstants.USERINVITE_ID_CLAIM_KEY, userInvite.getUuid());
     claims.put(MarketPlaceConstants.MARKETPLACE_ID_CLAIM_KEY, marketPlace.getUuid());
     return secretManager.generateJWTToken(claims, JWT_CATEGORY.MARKETPLACE_SIGNUP);
+  }
+
+  private String getLicenseType(String dimension) {
+    String licenseType = "PAID";
+    if (AWS_FREE_TRIAL_DIMENSION.equals(dimension)) {
+      licenseType = "TRIAL";
+    }
+    return licenseType;
   }
 
   private Response generateMessageResponse(String message, String type, String action, String status) {

@@ -2,7 +2,7 @@ package io.harness.gitsync.gitsyncerror.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.gitsync.gitsyncerror.beans.GitSyncError.GitSyncDirection.GIT_TO_HARNESS;
+import static io.harness.gitsync.common.beans.GitSyncDirection.GIT_TO_HARNESS;
 import static io.harness.gitsync.gitsyncerror.utils.GitSyncErrorUtils.getCommitIdOfError;
 
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
@@ -11,11 +11,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.common.helper.GitFileLocationHelper;
-import io.harness.gitsync.common.service.YamlGitConfigService;
-import io.harness.gitsync.core.service.YamlGitService;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivity;
-import io.harness.gitsync.gitfileactivity.service.GitSyncService;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncError;
+import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorType;
 import io.harness.gitsync.gitsyncerror.beans.GitToHarnessErrorDetails;
 import io.harness.gitsync.gitsyncerror.beans.HarnessToGitErrorDetails;
 import io.harness.gitsync.gitsyncerror.service.GitSyncErrorService;
@@ -40,15 +38,12 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
 
   private static final EnumSet<GitFileActivity.Status> TERMINATING_STATUSES =
       EnumSet.of(GitFileActivity.Status.EXPIRED, GitFileActivity.Status.DISCARDED);
-  private YamlGitService yamlGitService;
-  private GitSyncService gitSyncService;
   private GitSyncErrorRepository gitSyncErrorRepository;
-  private YamlGitConfigService yamlGitConfigService;
 
   @Override
   public void deleteByAccountIdOrgIdProjectIdAndFilePath(
       String accountId, String orgId, String projectId, List<String> yamlFilePath) {
-    gitSyncErrorRepository.removeByAccountIdAndOrganizationIdAndProjectIdAndYamlFilePathIn(
+    gitSyncErrorRepository.removeByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndCompleteFilePathIn(
         accountId, orgId, projectId, yamlFilePath);
   }
 
@@ -63,8 +58,9 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     log.info("Upsert git to harness sync issue for file: [{}]", failedGitFileChange.getFilePath());
 
     GitToHarnessErrorDetails gitToHarnessErrorDetails = getGitToHarnessErrorDetails(failedGitFileChange);
-    final GitSyncError previousGitSyncError = gitSyncErrorRepository.findByAccountIdAndYamlFilePathAndGitSyncDirection(
-        failedGitFileChange.getAccountId(), failedGitFileChange.getFilePath(), GIT_TO_HARNESS);
+    final GitSyncError previousGitSyncError =
+        gitSyncErrorRepository.findByAccountIdentifierAndCompleteFilePathAndErrorType(
+            failedGitFileChange.getAccountId(), failedGitFileChange.getFilePath(), GitSyncErrorType.GIT_TO_HARNESS);
     addPreviousCommitDetailsToErrorDetails(failedGitFileChange, gitToHarnessErrorDetails, previousGitSyncError);
     gitSyncErrorRepository.upsertGitError(failedGitFileChange.getAccountId(), failedGitFileChange.getFilePath(),
         GIT_TO_HARNESS, errorMessage != null ? errorMessage : "Reason could not be captured. Logs might have some info",

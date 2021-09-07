@@ -20,6 +20,7 @@ import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import com.google.inject.Inject;
 import com.hazelcast.util.Preconditions;
+import graphql.schema.DataFetchingEnvironment;
 import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Date;
@@ -46,7 +47,8 @@ public class GcpBillingTrendStatsDataFetcher extends AbstractStatsDataFetcher<Cl
 
   @Override
   protected QLData fetch(String accountId, CloudBillingAggregate aggregateFunction, List<CloudBillingFilter> filters,
-      List<CloudBillingGroupBy> groupBy, List<QLBillingSortCriteria> sort) {
+      List<CloudBillingGroupBy> groupBy, List<QLBillingSortCriteria> sort,
+      DataFetchingEnvironment dataFetchingEnvironment) {
     accountChecker.checkIsCeEnabled(accountId);
     Preconditions.checkFalse(isEmpty(filters), "Missing filters.");
     // find the start date from the conditions

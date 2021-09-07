@@ -1,11 +1,13 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.RAMA;
 
 import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.MULTI_SERVICE_INVALID_YAML_CONTENT;
 import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.MULTI_SERVICE_INVALID_YAML_FILE_PATH;
 import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.MULTI_SERVICE_VALID_YAML_CONTENT_RESOURCE_PATH;
 import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.MULTI_SERVICE_VALID_YAML_FILE_PATH;
+import static software.wings.service.impl.yaml.handler.workflow.WorkflowYamlConstant.MULTI_SERVICE_VARIABLE_OVERRIDE_RESOURCE_PATH;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
@@ -19,6 +21,8 @@ import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rule.Owner;
 
+import software.wings.beans.MultiServiceOrchestrationWorkflow;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.Workflow;
 import software.wings.beans.concurrency.ConcurrencyStrategy.UnitType;
 import software.wings.beans.yaml.ChangeContext;
@@ -88,6 +92,37 @@ public class MultiServiceWorkflowYamlHandlerTest extends WorkflowYamlHandlerTest
 
     Workflow deletedWorkflow = yamlHandler.get(ACCOUNT_ID, MULTI_SERVICE_VALID_YAML_FILE_PATH);
     assertThat(deletedWorkflow).isNull();
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testCreateServiceVariableOverride() throws Exception {
+    when(limitCheckerFactory.getInstance(new Action(Mockito.anyString(), ActionType.CREATE_WORKFLOW)))
+        .thenReturn(new MockChecker(true, ActionType.CREATE_WORKFLOW));
+
+    String yamlContentFromFile = readYamlStringInFile(MULTI_SERVICE_VARIABLE_OVERRIDE_RESOURCE_PATH);
+    ChangeContext<MultiServiceWorkflowYaml> changeContext =
+        getChangeContext(yamlContentFromFile, MULTI_SERVICE_VALID_YAML_FILE_PATH, yamlHandler);
+
+    MultiServiceWorkflowYaml yamlObject =
+        (MultiServiceWorkflowYaml) getYaml(yamlContentFromFile, MultiServiceWorkflowYaml.class);
+    changeContext.setYaml(yamlObject);
+
+    Workflow workflow = yamlHandler.upsertFromYaml(changeContext, asList(changeContext));
+    assertThat(workflow).isNotNull();
+    assertThat(workflowName).isEqualTo(workflow.getName());
+    assertThat(workflow.getOrchestrationWorkflow()).isNotNull();
+    MultiServiceOrchestrationWorkflow orchestrationWorkflow =
+        (MultiServiceOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
+    assertThat(orchestrationWorkflow.getWorkflowPhases()).isNotNull().hasSize(2);
+    assertThat(orchestrationWorkflow.getWorkflowPhases().get(0).getVariableOverrides())
+        .isNotNull()
+        .hasSize(3)
+        .containsExactly(NameValuePair.builder().name("Var1").value("").build(),
+            NameValuePair.builder().name("Var2").value("").build(),
+            NameValuePair.builder().name("Var3").value("value").build());
+    assertThat(orchestrationWorkflow.getWorkflowPhases().get(1).getVariableOverrides()).isEmpty();
   }
 
   @Test

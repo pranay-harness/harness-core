@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"time"
 
 	statuspb "github.com/wings-software/portal/910-delegate-task-grpc-service/src/main/proto/io/harness/task/service"
@@ -28,15 +29,20 @@ type StepExecutor interface {
 }
 
 type stepExecutor struct {
-	tmpFilePath string // File path to store generated temporary files
-	log         *zap.SugaredLogger
+	tmpFilePath         string // File path to store generated temporary files
+	delegateSvcEndpoint string // Delegate service endpoint
+	log                 *zap.SugaredLogger
+	procWriter          io.Writer
 }
 
 // NewStepExecutor creates a unit step executor
-func NewStepExecutor(tmpFilePath string, log *zap.SugaredLogger) StepExecutor {
+func NewStepExecutor(tmpFilePath, delegateSvcEndpoint string,
+	log *zap.SugaredLogger, procWriter io.Writer) StepExecutor {
 	return &stepExecutor{
-		tmpFilePath: tmpFilePath,
-		log:         log,
+		tmpFilePath:         tmpFilePath,
+		delegateSvcEndpoint: delegateSvcEndpoint,
+		log:                 log,
+		procWriter:          procWriter,
 	}
 }
 
@@ -45,7 +51,7 @@ func (e *stepExecutor) Run(ctx context.Context, step *pb.UnitStep) error {
 	start := time.Now()
 	e.log.Infow("Step info", "step", step.String(), "step_id", step.GetId())
 
-	stepOutput, err := e.execute(ctx, step)
+	stepOutput, artifact, err := e.execute(ctx, step)
 	// Stops the addon container if step executed successfully.
 	// If step fails, then it can be retried on the same container.
 	// Hence, not stopping failed step containers.
@@ -53,7 +59,7 @@ func (e *stepExecutor) Run(ctx context.Context, step *pb.UnitStep) error {
 		stopAddon(ctx, step.GetId(), step.GetContainerPort(), e.log)
 	}
 
-	statusErr := e.updateStepStatus(ctx, step, stepOutput, err, time.Since(start))
+	statusErr := e.updateStepStatus(ctx, step, stepOutput, artifact, err, time.Since(start))
 	if statusErr != nil {
 		return statusErr
 	}
@@ -89,16 +95,16 @@ func (e *stepExecutor) validate(step *pb.UnitStep) error {
 }
 
 func (e *stepExecutor) execute(ctx context.Context, step *pb.UnitStep) (
-	*output.StepOutput, error) {
+	*output.StepOutput, *pb.Artifact, error) {
 	if err := e.validate(step); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return executeStepOnAddon(ctx, step, e.tmpFilePath, e.log)
+	return executeStepOnAddon(ctx, step, e.tmpFilePath, e.log, e.procWriter)
 }
 
 func (e *stepExecutor) updateStepStatus(ctx context.Context, step *pb.UnitStep,
-	so *output.StepOutput, stepErr error, timeTaken time.Duration) error {
+	so *output.StepOutput, artifact *pb.Artifact, stepErr error, timeTaken time.Duration) error {
 	callbackToken := step.GetCallbackToken()
 	taskID := step.GetTaskId()
 	stepID := step.GetId()
@@ -118,11 +124,11 @@ func (e *stepExecutor) updateStepStatus(ctx context.Context, step *pb.UnitStep,
 		}
 	}
 
-	err := sendStepStatus(ctx, stepID, accountID, callbackToken, taskID, int32(1),
-		timeTaken, stepStatus, errMsg, so, e.log)
+	err := sendStepStatus(ctx, stepID, e.delegateSvcEndpoint, accountID, callbackToken,
+		taskID, int32(1), timeTaken, stepStatus, errMsg, so, artifact, e.log)
 	if err != nil {
 		e.log.Errorw("Failed to send step status. Failing execution of step",
-			"step_id", stepID, zap.Error(err))
+			"step_id", stepID, "endpoint", e.delegateSvcEndpoint, zap.Error(err))
 		return err
 	}
 	return nil

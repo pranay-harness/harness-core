@@ -2,20 +2,18 @@ package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.pipeline.CDStepInfo;
-import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.cdstepinfo.K8sApplyStepInfoVisitorHelper;
 import io.harness.executions.steps.StepSpecTypeConstants;
-import io.harness.plancreator.steps.StepElementConfig;
+import io.harness.plancreator.steps.TaskSelectorYaml;
+import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
-import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
-import io.harness.yaml.core.timeout.TimeoutUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
@@ -34,14 +32,15 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(StepSpecTypeConstants.K8S_APPLY)
 @SimpleVisitorHelper(helperClass = K8sApplyStepInfoVisitorHelper.class)
 @TypeAlias("k8sApplyStepInfo")
+@RecasterAlias("io.harness.cdng.k8s.K8sApplyStepInfo")
 public class K8sApplyStepInfo extends K8sApplyBaseStepInfo implements CDStepInfo, Visitable {
   // For Visitor Framework Impl
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
   @Builder(builderMethodName = "infoBuilder")
   public K8sApplyStepInfo(ParameterField<Boolean> skipDryRun, ParameterField<Boolean> skipSteadyStateCheck,
-      ParameterField<List<String>> filePaths) {
-    super(skipDryRun, skipSteadyStateCheck, filePaths);
+      ParameterField<List<String>> filePaths, ParameterField<List<TaskSelectorYaml>> delegateSelectors) {
+    super(skipDryRun, skipSteadyStateCheck, filePaths, delegateSelectors);
   }
 
   @Override
@@ -55,21 +54,12 @@ public class K8sApplyStepInfo extends K8sApplyBaseStepInfo implements CDStepInfo
   }
 
   @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.K8S_APPLY).build();
-  }
-
-  @Override
-  public StepParameters getStepParametersInfo(StepElementConfig stepElementConfig) {
+  public SpecParameters getSpecParameters() {
     return K8sApplyStepParameters.infoBuilder()
         .filePaths(this.getFilePaths())
         .skipDryRun(this.getSkipDryRun())
         .skipSteadyStateCheck(skipSteadyStateCheck)
-        .timeout(ParameterField.createValueField(TimeoutUtils.getTimeoutString(stepElementConfig.getTimeout())))
-        .name(stepElementConfig.getName())
-        .identifier(stepElementConfig.getIdentifier())
-        .skipCondition(stepElementConfig.getSkipCondition())
-        .description(stepElementConfig.getDescription())
+        .delegateSelectors(delegateSelectors)
         .build();
   }
 }

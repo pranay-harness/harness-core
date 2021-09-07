@@ -26,10 +26,12 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
+import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.ff.FeatureFlagService;
@@ -42,9 +44,11 @@ import software.wings.beans.Activity;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Service;
 import software.wings.beans.container.AwsAutoScalarConfig;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -53,8 +57,14 @@ import org.mockito.Mock;
 public class EcsServiceRollbackTest extends WingsBaseTest {
   @Mock private EcsStateHelper mockEcsStateHelper;
   @Mock private FeatureFlagService mockFeatureFlagService;
+  @Mock private StateExecutionService stateExecutionService;
 
   @InjectMocks private final EcsServiceRollback ecsServiceRollback = new EcsServiceRollback("stateName");
+
+  @Before
+  public void setUp() throws Exception {
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
+  }
 
   @Test
   @Owner(developers = SATYAM)
@@ -113,9 +123,9 @@ public class EcsServiceRollbackTest extends WingsBaseTest {
                 ContainerServiceElement.builder().clusterName(CLUSTER_NAME).serviceSteadyStateTimeout(10).build())
             .build();
     doReturn(dataBag).when(mockEcsStateHelper).prepareBagForEcsDeploy(any(), any(), any(), any(), any(), anyBoolean());
-    doReturn("TASKID")
+    doReturn(DelegateTask.builder().uuid("TASKID").description("desc").build())
         .when(mockEcsStateHelper)
-        .createAndQueueDelegateTaskForEcsServiceDeploy(any(), any(), any(), any());
+        .createAndQueueDelegateTaskForEcsServiceDeploy(any(), any(), any(), any(), eq(true));
     doReturn(false).when(mockFeatureFlagService).isEnabled(any(), anyString());
     ExecutionResponse response = ecsServiceRollback.execute(mockContext);
     assertThat(ecsServiceRollback.isRollbackAllPhases()).isFalse();
@@ -189,9 +199,9 @@ public class EcsServiceRollbackTest extends WingsBaseTest {
                                   .build())
             .build();
     doReturn(dataBag).when(mockEcsStateHelper).prepareBagForEcsDeploy(any(), any(), any(), any(), any(), anyBoolean());
-    doReturn("TASKID")
+    doReturn(DelegateTask.builder().uuid("TASKID").description("desc").build())
         .when(mockEcsStateHelper)
-        .createAndQueueDelegateTaskForEcsServiceDeploy(any(), any(), any(), any());
+        .createAndQueueDelegateTaskForEcsServiceDeploy(any(), any(), any(), any(), eq(true));
     doReturn(false).when(mockFeatureFlagService).isEnabled(any(), anyString());
     ExecutionResponse response = ecsServiceRollback.execute(mockContext);
     assertThat(ecsServiceRollback.isRollbackAllPhases()).isTrue();

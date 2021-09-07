@@ -1,5 +1,7 @@
 package io.harness;
 
+import io.harness.eventsframework.impl.redis.GitAwareRedisProducer;
+import io.harness.eventsframework.impl.redis.RedisProducer;
 import io.harness.lock.redis.RedisPersistentLocker;
 import io.harness.logging.LoggingInitializer;
 import io.harness.maintenance.MaintenanceController;
@@ -72,7 +74,11 @@ public class EventsClientApplication extends Application<EventsClientApplication
     RedisConfig redisConfig = appConfig.getEventsFrameworkConfiguration().getRedisConfig();
 
     /* Push messages to redis channel */
-    new Thread(new MessageProducer(channel, redisConfig, ColorConstants.TEXT_YELLOW)).start();
+    RedisProducer redisProducer = RedisProducer.of(channel, redisConfig, 10000, "dummyMessageProducer");
+    GitAwareRedisProducer gitAwareRedisProducer =
+        GitAwareRedisProducer.of(channel, redisConfig, 10000, "dummyGitAwareMessageProducer");
+    new Thread(new MessageProducer(redisProducer, ColorConstants.TEXT_YELLOW, false)).start();
+    new Thread(new MessageProducer(gitAwareRedisProducer, ColorConstants.TEXT_GREEN, true)).start();
 
     /* Read via Consumer groups - order is important - Sync processing usecase (Gitsync) */
     //    new Thread(new MessageConsumer(

@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.AGORODETKI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -27,7 +28,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(HttpClientBuilder.class)
 @PowerMockIgnore({"javax.net.ssl.*", "javax.security.auth.x500.X500Principal"})
-public class CustomJenkinsHttpClientTest {
+public class CustomJenkinsHttpClientTest extends CategoryTest {
   HttpClientBuilder httpClientBuilder = PowerMockito.mock(HttpClientBuilder.class);
   ArgumentCaptor<HttpHost> proxyHostCaptor = ArgumentCaptor.forClass(HttpHost.class);
   ArgumentCaptor<CredentialsProvider> credsProviderCaptor = ArgumentCaptor.forClass(CredentialsProvider.class);

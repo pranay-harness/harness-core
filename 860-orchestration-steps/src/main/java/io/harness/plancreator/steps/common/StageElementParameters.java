@@ -2,22 +2,33 @@ package io.harness.plancreator.steps.common;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotation.RecasterAlias;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.SkipAutoEvaluation;
+import io.harness.when.beans.StageWhenCondition;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
-import io.harness.yaml.core.variables.NGVariable;
 
 import java.util.List;
+import java.util.Map;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @TypeAlias("stageElementParameters")
 @OwnedBy(CDC)
+// TODO this should go to yaml commons
+@TargetModule(HarnessModule._884_PMS_COMMONS)
+@RecasterAlias("io.harness.plancreator.steps.common.StageElementParameters")
 public class StageElementParameters implements StepParameters {
   String uuid;
   String identifier;
@@ -25,18 +36,19 @@ public class StageElementParameters implements StepParameters {
   ParameterField<String> description;
 
   ParameterField<String> skipCondition;
-  ParameterField<String> when;
+  StageWhenCondition when;
 
   List<FailureStrategyConfig> failureStrategies;
-  List<NGVariable> originalVariables;
+  @SkipAutoEvaluation ParameterField<Map<String, Object>> variables;
+  Map<String, String> tags;
   String type;
-  SpecParameters spec;
+  SpecParameters specConfig;
 
   @Override
   public String toViewJson() {
     StageElementParameters stageElementParameters = cloneParameters();
-    stageElementParameters.setSpec(spec.getViewJsonObject());
-    return RecastOrchestrationUtils.toDocumentJson(stageElementParameters);
+    stageElementParameters.setSpecConfig(specConfig.getViewJsonObject());
+    return RecastOrchestrationUtils.toJson(stageElementParameters);
   }
 
   public StageElementParameters cloneParameters() {
@@ -49,7 +61,8 @@ public class StageElementParameters implements StepParameters {
         .failureStrategies(this.failureStrategies)
         .when(this.when)
         .skipCondition(this.skipCondition)
-        .originalVariables(this.originalVariables)
+        .variables(this.variables)
+        .tags(this.tags)
         .build();
   }
 }

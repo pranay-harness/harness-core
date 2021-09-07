@@ -29,6 +29,9 @@ public class SecretTextSpecDTO extends SecretSpecDTO {
     if (valueType == ValueType.Inline && value != null) {
       return Optional.of("Inline secret text cannot be provided in YAML.");
     }
+    if (valueType == ValueType.Reference && value == null) {
+      return Optional.of("value cannot be empty for reference secret text in YAML.");
+    }
     return Optional.empty();
   }
 

@@ -23,6 +23,7 @@ import io.harness.perpetualtask.instancesync.AzureVmssInstanceSyncPerpetualTaskP
 import io.harness.perpetualtask.instancesync.AzureWebAppInstanceSyncPerpetualProtoTaskParams;
 import io.harness.perpetualtask.instancesync.ContainerInstanceSyncPerpetualTaskParams;
 import io.harness.perpetualtask.instancesync.CustomDeploymentInstanceSyncTaskParams;
+import io.harness.perpetualtask.instancesync.K8sInstanceSyncPerpetualTaskParams;
 import io.harness.perpetualtask.instancesync.PcfInstanceSyncPerpetualTaskParams;
 import io.harness.perpetualtask.instancesync.SpotinstAmiInstanceSyncPerpetualTaskParams;
 import io.harness.perpetualtask.k8s.watch.K8SWatchTaskExecutor;
@@ -33,6 +34,10 @@ import io.harness.perpetualtask.k8s.watch.PodWatcher;
 import io.harness.perpetualtask.k8s.watch.WatcherFactory;
 import io.harness.perpetualtask.manifest.ManifestCollectionTaskParams;
 import io.harness.perpetualtask.manifest.ManifestPerpetualTaskExecutor;
+import io.harness.perpetualtask.polling.ArtifactCollectionTaskParamsNg;
+import io.harness.perpetualtask.polling.ManifestCollectionTaskParamsNg;
+import io.harness.perpetualtask.polling.artifact.ArtifactPerpetualTaskExecutorNg;
+import io.harness.perpetualtask.polling.manifest.ManifestPerpetualTaskExecutorNg;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -82,6 +87,14 @@ public class PerpetualTaskWorkerModule extends AbstractModule {
     mapBinder.addBinding(ManifestCollectionTaskParams.class.getSimpleName()).to(ManifestPerpetualTaskExecutor.class);
     mapBinder.addBinding(ConnectorHeartbeatTaskParams.class.getSimpleName())
         .to(ConnectorHeartbeatPerpetualTaskExecutor.class);
+
+    // NG
+    mapBinder.addBinding(K8sInstanceSyncPerpetualTaskParams.class.getSimpleName())
+        .to(K8sInstanceSyncPerpetualTaskExecutor.class);
+    mapBinder.addBinding(ManifestCollectionTaskParamsNg.class.getSimpleName())
+        .to(ManifestPerpetualTaskExecutorNg.class);
+    mapBinder.addBinding(ArtifactCollectionTaskParamsNg.class.getSimpleName())
+        .to(ArtifactPerpetualTaskExecutorNg.class);
     install(new FactoryModuleBuilder()
                 .implement(PodWatcher.class, PodWatcher.class)
                 .implement(NodeWatcher.class, NodeWatcher.class)

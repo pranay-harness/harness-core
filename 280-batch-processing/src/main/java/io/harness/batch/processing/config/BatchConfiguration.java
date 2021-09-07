@@ -17,14 +17,16 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 @Configuration
 public class BatchConfiguration {
   @Bean
-  public BatchMainConfig batchMainConfig(Environment environment) throws IOException {
+  public static BatchMainConfig batchMainConfig(Environment environment) throws IOException {
     String configFilePath = environment.getProperty("config-file", "batch-processing-config.yml");
+    log.info("batch-processing configFilePath: {}", configFilePath);
+
     File configFile = new File(configFilePath);
     return new YamlUtils().read(FileUtils.readFileToString(configFile, UTF_8), BatchMainConfig.class);
   }
 
   @Bean
-  public ThreadPoolTaskScheduler threadPoolTaskScheduler() {
+  public static ThreadPoolTaskScheduler threadPoolTaskScheduler() {
     ThreadPoolTaskScheduler threadPoolTaskScheduler = new ThreadPoolTaskScheduler();
     threadPoolTaskScheduler.setPoolSize(5);
     return threadPoolTaskScheduler;

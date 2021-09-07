@@ -2,36 +2,28 @@ package io.harness.gitsync.gitsyncerror.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
+import io.harness.EntityType;
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.EmbeddedUser;
-import io.harness.encryption.Scope;
+import io.harness.common.EntityReference;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.gitsyncerror.GitSyncErrorStatus;
 import io.harness.gitsync.gitsyncerror.beans.GitToHarnessErrorDetails.GitToHarnessErrorDetailsKeys;
 import io.harness.gitsync.gitsyncerror.beans.HarnessToGitErrorDetails.HarnessToGitErrorDetailsKeys;
-import io.harness.iterator.PersistentRegularIterable;
-import io.harness.mongo.index.FdIndex;
-import io.harness.ng.core.OrganizationAccess;
-import io.harness.ng.core.ProjectAccess;
-import io.harness.persistence.AccountAccess;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.CreatedAtAware;
-import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
-import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
+import io.harness.security.dto.Principal;
 
-import javax.ws.rs.DefaultValue;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Transient;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
@@ -40,7 +32,7 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
-@NoArgsConstructor
+@Builder
 @EqualsAndHashCode()
 @FieldNameConstants(innerTypeName = "GitSyncErrorKeys")
 @Entity(value = "gitSyncErrorNG")
@@ -48,63 +40,39 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("gitSyncErrorNG")
 @TypeAlias("io.harness.gitsync.gitsyncerror.beans.gitSyncError")
 @OwnedBy(DX)
-public class GitSyncError
-    implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware,
-               AccountAccess, OrganizationAccess, ProjectAccess, PersistentRegularIterable {
+@StoreIn(DbAliases.NG_MANAGER)
+public class GitSyncError implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @org.springframework.data.annotation.Id @org.mongodb.morphia.annotations.Id private String uuid;
-  private String accountId;
-  private String projectId;
-  private String organizationId;
-  private String yamlFilePath;
-  private ChangeType changeType;
-  private String failureReason;
-  @Setter @FdIndex private Long nextIteration;
-  private boolean fullSyncPath;
-  private GitSyncErrorStatus status;
-  private String gitConnectorId;
-  @Transient private String gitConnectorName;
+  // The project details of the file
+  private String accountIdentifier;
+  private String projectIdentifier;
+  private String orgIdentifier;
+
+  // The repo details about the git sync error repo
+  private String yamlGitConfigRef;
   private String branchName;
-  private String repo;
+  private String repoURL;
+
+  // The details about the file in git
+  private ChangeType changeType;
   private String rootFolder;
-  private String yamlGitConfigId;
+  private String filePath;
+  private String completeFilePath;
+
+  // The entity details
+  private EntityType entityType;
+  private EntityReference entityReference;
+
+  // The error details
+  private String failureReason;
+  private GitSyncErrorStatus status;
+  private GitSyncErrorType errorType;
   private GitSyncErrorDetails additionalErrorDetails;
-  private GitSyncDirection gitSyncDirection;
-  private Scope errorEntityType;
-  @Transient @DefaultValue("false") private boolean userDoesNotHavePermForFile;
 
-  @CreatedBy private EmbeddedUser createdBy;
+  @CreatedBy private Principal createdBy;
   @CreatedDate private long createdAt;
-  @LastModifiedBy private EmbeddedUser lastUpdatedBy;
+  @LastModifiedBy private Principal lastUpdatedBy;
   @LastModifiedDate private long lastUpdatedAt;
-
-  @Builder
-  public GitSyncError(String accountId, String organizationId, String projectId, String yamlFilePath,
-      ChangeType changeType, String failureReason, String gitConnectorId, String branchName, String yamlGitConfigId,
-      GitSyncErrorDetails additionalErrorDetails, GitSyncDirection gitSyncDirection, GitSyncErrorStatus status,
-      boolean userDoesNotHavePermForFile, boolean fullSyncPath, Scope errorEntityType, String repo, String rootFolder) {
-    this.accountId = accountId;
-    this.organizationId = organizationId;
-    this.projectId = projectId;
-    this.yamlFilePath = yamlFilePath;
-    this.changeType = changeType;
-    this.failureReason = failureReason;
-    this.gitConnectorId = gitConnectorId;
-    this.branchName = branchName;
-    this.yamlGitConfigId = yamlGitConfigId;
-    this.additionalErrorDetails = additionalErrorDetails;
-    this.gitSyncDirection = gitSyncDirection;
-    this.fullSyncPath = fullSyncPath;
-    this.status = status;
-    this.userDoesNotHavePermForFile = userDoesNotHavePermForFile;
-    this.repo = repo;
-    this.rootFolder = rootFolder;
-    this.errorEntityType = errorEntityType;
-  }
-
-  @Override
-  public void updateNextIteration(String fieldName, long nextIteration) {
-    this.nextIteration = nextIteration;
-  }
 
   @UtilityClass
   public static final class GitSyncErrorKeys {
@@ -114,16 +82,7 @@ public class GitSyncError
         GitSyncErrorKeys.additionalErrorDetails + "." + GitToHarnessErrorDetailsKeys.commitTime;
     public static final String fullSyncPath =
         GitSyncErrorKeys.additionalErrorDetails + "." + HarnessToGitErrorDetailsKeys.fullSyncPath;
-    public static final String previousCommitIds =
-        GitSyncErrorKeys.additionalErrorDetails + "." + GitToHarnessErrorDetailsKeys.previousCommitIdsWithError;
     public static final String commitMessage =
         GitSyncErrorKeys.additionalErrorDetails + "." + GitToHarnessErrorDetailsKeys.commitMessage;
   }
-
-  @Override
-  public Long obtainNextIteration(String fieldName) {
-    return nextIteration;
-  }
-
-  public enum GitSyncDirection { GIT_TO_HARNESS, HARNESS_TO_GIT }
 }

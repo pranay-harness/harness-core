@@ -1,5 +1,7 @@
 package software.wings.sm.states;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.k8s.model.ImageDetails;
 
 import software.wings.beans.Application;
@@ -17,6 +19,7 @@ import lombok.Data;
 
 @Data
 @Builder
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class EcsSetupStateConfig {
   private String serviceName;
   private ImageDetails imageDetails;

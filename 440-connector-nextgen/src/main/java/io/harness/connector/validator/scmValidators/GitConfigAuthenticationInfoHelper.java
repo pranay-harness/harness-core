@@ -1,10 +1,15 @@
 package io.harness.connector.validator.scmValidators;
 
+import static io.harness.connector.helper.GitApiAccessDecryptionHelper.getAPIAccessDecryptableEntity;
+import static io.harness.connector.helper.GitApiAccessDecryptionHelper.hasApiAccess;
 import static io.harness.delegate.beans.connector.scm.GitAuthType.SSH;
+
+import static java.util.Collections.emptyList;
 
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.IdentifierRef;
 import io.harness.connector.helper.EncryptionHelper;
+import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthenticationDTO;
 import io.harness.encryption.SecretRefData;
@@ -35,8 +40,7 @@ public class GitConfigAuthenticationInfoHelper {
       GitConfigDTO gitConfig, SSHKeySpecDTO sshKeySpecDTO, NGAccess ngAccess) {
     switch (gitConfig.getGitAuthType()) {
       case HTTP:
-        return getEncryptionDetail(gitConfig.getGitAuth(), ngAccess.getAccountIdentifier(), ngAccess.getOrgIdentifier(),
-            ngAccess.getProjectIdentifier());
+        return getEncryptionDetail(gitConfig.getGitAuth(), ngAccess);
       case SSH:
         return sshKeySpecDTOHelper.getSSHKeyEncryptionDetails(sshKeySpecDTO, ngAccess);
       default:
@@ -44,10 +48,16 @@ public class GitConfigAuthenticationInfoHelper {
             gitConfig.getGitAuthType() == null ? null : gitConfig.getGitAuthType().getDisplayName());
     }
   }
+  public List<EncryptedDataDetail> getApiAccessEncryptedDataDetail(ScmConnector scmConnector, NGAccess ngAccess) {
+    if (hasApiAccess(scmConnector)) {
+      return getEncryptionDetail(getAPIAccessDecryptableEntity(scmConnector), ngAccess);
+    }
+    return emptyList();
+  }
 
-  private List<EncryptedDataDetail> getEncryptionDetail(
-      DecryptableEntity decryptableEntity, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    return encryptionHelper.getEncryptionDetail(decryptableEntity, accountIdentifier, orgIdentifier, projectIdentifier);
+  private List<EncryptedDataDetail> getEncryptionDetail(DecryptableEntity decryptableEntity, NGAccess ngAccess) {
+    return encryptionHelper.getEncryptionDetail(decryptableEntity, ngAccess.getAccountIdentifier(),
+        ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());
   }
 
   public SSHKeySpecDTO getSSHKey(

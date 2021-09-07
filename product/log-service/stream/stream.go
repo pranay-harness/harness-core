@@ -20,6 +20,9 @@ type Stream interface {
 	// Delete deletes the log stream for the string key.
 	Delete(context.Context, string) error
 
+	// Ping pings the stream backend to see it it's available.
+	Ping(context.Context) error
+
 	// Write writes to the log stream.
 	// TODO(bradrydzewski) change *Line to a proper slice.
 	Write(context.Context, string, ...*Line) error
@@ -32,6 +35,12 @@ type Stream interface {
 
 	// CopyTo copies the contents of the stream to the writer
 	CopyTo(ctx context.Context, key string, rc io.WriteCloser) error
+
+	// Exists checks whether the key is present in the stream or not.
+	Exists(ctx context.Context, key string) error
+
+	// ListPrefix returns a list of keys starting with the given prefix in the stream.
+	ListPrefix(ctx context.Context, prefix string) ([]string, error)
 }
 
 // Line represents a line in the logs.

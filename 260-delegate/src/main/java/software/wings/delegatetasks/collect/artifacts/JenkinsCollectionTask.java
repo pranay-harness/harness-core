@@ -16,6 +16,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
+import software.wings.beans.command.JenkinsTaskParams;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.service.impl.jenkins.JenkinsUtils;
 import software.wings.service.intfc.security.EncryptionService;
@@ -53,8 +54,9 @@ public class JenkinsCollectionTask extends AbstractDelegateRunnableTask {
 
   @Override
   public ListNotifyResponseData run(Object[] parameters) {
-    return run((JenkinsConfig) parameters[0], (List<EncryptedDataDetail>) parameters[1], (String) parameters[2],
-        (List<String>) parameters[3], (Map<String, String>) parameters[4]);
+    JenkinsTaskParams jenkinsTaskParams = (JenkinsTaskParams) parameters[0];
+    return run(jenkinsTaskParams.getJenkinsConfig(), jenkinsTaskParams.getEncryptedDataDetails(),
+        jenkinsTaskParams.getJobName(), jenkinsTaskParams.getArtifactPaths(), jenkinsTaskParams.getMetaData());
   }
 
   public ListNotifyResponseData run(JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptionDetails,

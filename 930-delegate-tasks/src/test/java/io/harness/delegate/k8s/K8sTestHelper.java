@@ -4,6 +4,8 @@ import static io.harness.k8s.manifest.ManifestHelper.getKubernetesResourceFromSp
 
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.Release;
 
@@ -14,18 +16,25 @@ import java.util.Objects;
 import org.zeroturnaround.exec.ProcessOutput;
 import org.zeroturnaround.exec.ProcessResult;
 
+@OwnedBy(HarnessTeam.CDP)
 public class K8sTestHelper {
-  private static final String BASE_PATH = "k8s";
-  private static final String CONFIG_MAP = "configMap.yaml";
-  private static final String DEPLOYMENT_CONFIG = "deployment-config.yaml";
-  private static final String DEPLOYMENT = "deployment.yaml";
-  private static final String SERVICE = "service.yaml";
-  private static final String CRD_OLD = "crd-old.yaml";
-  private static final String CRD_NEW = "crd-new.yaml";
+  public static final String BASE_PATH = "k8s";
+  public static final String CONFIG_MAP = "configMap.yaml";
+  public static final String DEPLOYMENT_CONFIG = "deployment-config.yaml";
+  public static final String DEPLOYMENT = "deployment.yaml";
+  public static final String SERVICE = "service.yaml";
+  public static final String CRD_OLD = "crd-old.yaml";
+  public static final String CRD_NEW = "crd-new.yaml";
+  public static final String EMPTY_RELEASE_HISTORY = "empty-release-history.yaml";
+  public static final String RELEASE_HISTORY = "release-history.yaml";
+  public static final String RELEASE_HISTORY_CANARY = "release-history-canary.yaml";
+  public static final String RELEASE_HISTORY_FAILED_CANARY = "release-history-canary-failed.yaml";
 
   public static KubernetesResource configMap() throws IOException {
     String yamlFileContent = readResourceFileContent(CONFIG_MAP);
-    return getKubernetesResourceFromSpec(yamlFileContent);
+    KubernetesResource kubernetesResource = getKubernetesResourceFromSpec(yamlFileContent);
+    kubernetesResource.getResourceId().setVersioned(true);
+    return kubernetesResource;
   }
 
   public static KubernetesResource deploymentConfig() throws IOException {

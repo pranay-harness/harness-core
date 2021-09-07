@@ -12,5 +12,6 @@ public class EntitySetupUsageDTO {
   String accountIdentifier;
   EntityDetail referredEntity;
   @NotNull EntityDetail referredByEntity;
+  SetupUsageDetail detail;
   Long createdAt;
 }

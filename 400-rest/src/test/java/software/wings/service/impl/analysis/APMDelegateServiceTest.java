@@ -11,6 +11,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -35,7 +36,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import retrofit2.Call;
 
-public class APMDelegateServiceTest {
+public class APMDelegateServiceTest extends CategoryTest {
   @Mock private RequestExecutor mockRequestExecutor;
   @Mock private EncryptionService mockEncryptionService;
   @Captor private ArgumentCaptor<Call<Object>> argumentCaptor;

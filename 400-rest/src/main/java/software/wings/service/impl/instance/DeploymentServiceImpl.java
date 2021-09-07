@@ -150,11 +150,12 @@ public class DeploymentServiceImpl implements DeploymentService {
       return AddDeploymentKeyFilterForContainer(query, deploymentSummary);
     } else if (deploymentSummary.getAwsAmiDeploymentKey() != null) {
       AwsAmiDeploymentKey awsAmiDeploymentKey = deploymentSummary.getAwsAmiDeploymentKey();
-      query.filter("awsAmiDeploymentKey.autoScalingGroupName", awsAmiDeploymentKey.getAutoScalingGroupName());
+      query.filter(
+          DeploymentSummaryKeys.AWS_AMI_DEPLOYMENT_KEY_ASG_NAME, awsAmiDeploymentKey.getAutoScalingGroupName());
       return awsAmiDeploymentKey;
     } else if (deploymentSummary.getAwsCodeDeployDeploymentKey() != null) {
       AwsCodeDeployDeploymentKey awsCodeDeployDeploymentKey = deploymentSummary.getAwsCodeDeployDeploymentKey();
-      query.filter("awsCodeDeployDeploymentKey.key", awsCodeDeployDeploymentKey.getKey());
+      query.filter(DeploymentSummaryKeys.AWS_CODE_DEPLOY_DEPLOYMENT_KEY_KEY, awsCodeDeployDeploymentKey.getKey());
       return awsCodeDeployDeploymentKey;
     } else if (deploymentSummary.getSpotinstAmiDeploymentKey() != null) {
       SpotinstAmiDeploymentKey spotinstAmiDeploymentKey = deploymentSummary.getSpotinstAmiDeploymentKey();

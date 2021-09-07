@@ -128,6 +128,11 @@ public class EcsSetupCommandHandler extends EcsCommandTaskHandler {
       ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder,
       ExecutionLogCallback executionLogCallback, boolean isMultipleLoadBalancersFeatureFlagActive,
       boolean timeoutErrorSupported) {
+    ecsSetupCommandTaskHelper.downsizeOldOrUnhealthy(
+        cloudProviderSetting, setupParams, encryptedDataDetails, executionLogCallback, timeoutErrorSupported);
+
+    ecsSetupCommandTaskHelper.cleanup(cloudProviderSetting, setupParams, encryptedDataDetails, executionLogCallback);
+
     String containerServiceName = ecsSetupCommandTaskHelper.createEcsService(setupParams, taskDefinition,
         cloudProviderSetting, encryptedDataDetails, commandExecutionDataBuilder, executionLogCallback,
         isMultipleLoadBalancersFeatureFlagActive);
@@ -136,12 +141,6 @@ public class EcsSetupCommandHandler extends EcsCommandTaskHandler {
     commandExecutionDataBuilder.awsElbConfigs(setupParams.getAwsElbConfigs());
     commandExecutionDataBuilder.isMultipleLoadBalancersFeatureFlagActive(
         setupParams.isMultipleLoadBalancersFeatureFlagActive());
-
-    ecsSetupCommandTaskHelper.downsizeOldOrUnhealthy(cloudProviderSetting, setupParams, containerServiceName,
-        encryptedDataDetails, executionLogCallback, timeoutErrorSupported);
-
-    ecsSetupCommandTaskHelper.cleanup(cloudProviderSetting, setupParams.getRegion(), containerServiceName,
-        setupParams.getClusterName(), encryptedDataDetails, executionLogCallback);
 
     ecsSetupCommandTaskHelper.backupAutoScalarConfig(setupParams, cloudProviderSetting, encryptedDataDetails,
         containerServiceName, commandExecutionDataBuilder, executionLogCallback);

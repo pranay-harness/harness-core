@@ -8,11 +8,11 @@ import static io.harness.rule.OwnerRule.KANHAIYA;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.VUK;
 
+import static junit.framework.TestCase.assertNotNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -26,6 +26,7 @@ import io.harness.cvng.activity.beans.KubernetesActivityDetailsDTO.KubernetesAct
 import io.harness.cvng.activity.entities.Activity.ActivityKeys;
 import io.harness.cvng.activity.entities.ActivitySource;
 import io.harness.cvng.activity.entities.ActivitySource.ActivitySourceKeys;
+import io.harness.cvng.activity.entities.ActivitySource.ActivitySourceUpdatableEntity;
 import io.harness.cvng.activity.entities.CD10ActivitySource;
 import io.harness.cvng.activity.entities.CDNGActivitySource;
 import io.harness.cvng.activity.entities.KubernetesActivity;
@@ -48,9 +49,9 @@ import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.services.api.CVConfigService;
-import io.harness.cvng.core.services.api.FeatureFlagService;
 import io.harness.cvng.core.services.impl.CVEventServiceImpl;
 import io.harness.cvng.models.VerificationType;
+import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.encryption.Scope;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
@@ -60,6 +61,9 @@ import io.harness.rule.Owner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.name.Names;
 import java.lang.reflect.Field;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -67,6 +71,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -79,12 +84,15 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.UpdateOperations;
+
 @OwnedBy(HarnessTeam.CV)
 public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
   @Inject private HPersistence hPersistence;
   @Inject private KubernetesActivitySourceService kubernetesActivitySourceService;
   @Inject private ActivitySourceService activitySourceService;
   @Inject private CVConfigService cvConfigService;
+  @Inject private VerificationJobService verificationJobService;
+  @Inject Injector injector;
   @Mock private VerificationManagerService verificationManagerService;
   @Mock private CVEventServiceImpl cvEventService;
 
@@ -112,6 +120,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
     FieldUtils.writeField(
         kubernetesActivitySourceService, "verificationManagerService", verificationManagerService, true);
     FieldUtils.writeField(activitySourceService, "cvEventService", cvEventService, true);
+    verificationJobService.createDefaultVerificationJobs(accountId, orgIdentifier, projectIdentifier);
   }
 
   @Test
@@ -197,6 +206,16 @@ public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
         activitySourceService.listActivitySources(accountId, orgIdentifier, projectIdentifier, 0, 10, null)
             .getContent();
     assertThat(activitySourceDTOS.size()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category({UnitTests.class})
+  public void test_ActivitySourceImplementsActivitySourceUpdatableEntity() {
+    EnumSet.allOf(ActivitySourceType.class).forEach(activitySourceType -> {
+      assertNotNull(
+          injector.getInstance(Key.get(ActivitySourceUpdatableEntity.class, Names.named(activitySourceType.name()))));
+    });
   }
 
   @Test
@@ -589,7 +608,8 @@ public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
         hPersistence.createQuery(KubernetesActivity.class, excludeAuthority).asList();
     Set<String> nullableFields = Sets.newHashSet(ActivityKeys.activityName, ActivityKeys.verificationJobRuntimeDetails,
         ActivityKeys.activityEndTime, ActivityKeys.tags, ActivityKeys.verificationSummary,
-        ActivityKeys.verificationIteration);
+        ActivityKeys.verificationIteration, ActivityKeys.verificationJobs, ActivityKeys.changeSourceIdentifier,
+        ActivityKeys.eventTime);
     kubernetesActivities.forEach(activity -> {
       List<Field> fields = ReflectionUtils.getAllDeclaredAndInheritedFields(KubernetesActivity.class);
       fields.stream().filter(field -> !nullableFields.contains(field.getName())).forEach(field -> {
@@ -841,6 +861,8 @@ public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
         KubernetesActivitySourceDTO.builder()
             .identifier(generateUuid())
             .name(generateUuid())
+            .orgIdentifier(orgIdentifier)
+            .projectIdentifier(projectIdentifier)
             .connectorIdentifier(generateUuid())
             .activitySourceConfigs(Sets.newHashSet(KubernetesActivitySourceConfig.builder()
                                                        .serviceIdentifier(generateUuid())
@@ -849,8 +871,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
                                                        .workloadName(workLoadName)
                                                        .build()))
             .build();
-    String kubernetesSourceId = activitySourceService.saveActivitySource(
-        accountId, orgIdentifier, projectIdentifier, kubernetesActivitySourceDTO);
+    String kubernetesSourceId = activitySourceService.create(accountId, kubernetesActivitySourceDTO);
     int numOfEvents = 10;
     ArrayList<KubernetesEventType> kubernetesEventTypes =
         Lists.newArrayList(KubernetesEventType.Normal, KubernetesEventType.Error);
@@ -908,10 +929,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = KAMAL)
   @Category({UnitTests.class})
-  public void testCreateDefaultCDNGActivitySource() throws IllegalAccessException {
-    FeatureFlagService featureFlagService = mock(FeatureFlagService.class);
-    FieldUtils.writeField(activitySourceService, "featureFlagService", featureFlagService, true);
-    when(featureFlagService.isFeatureFlagEnabled(any(), any())).thenReturn(true);
+  public void testCreateDefaultCDNGActivitySource() {
     activitySourceService.createDefaultCDNGActivitySource(accountId, orgIdentifier, projectIdentifier);
     ActivitySourceDTO activitySource = activitySourceService.getActivitySource(
         accountId, orgIdentifier, projectIdentifier, CDNGActivitySource.CDNG_ACTIVITY_SOURCE_IDENTIFIER);
@@ -923,10 +941,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = KAMAL)
   @Category({UnitTests.class})
-  public void testCreateDefaultCONGActivitySource_idempotent() throws IllegalAccessException {
-    FeatureFlagService featureFlagService = mock(FeatureFlagService.class);
-    FieldUtils.writeField(activitySourceService, "featureFlagService", featureFlagService, true);
-    when(featureFlagService.isFeatureFlagEnabled(any(), any())).thenReturn(true);
+  public void testCreateDefaultCDNGActivitySource_idempotent() {
     activitySourceService.createDefaultCDNGActivitySource(accountId, orgIdentifier, projectIdentifier);
     activitySourceService.createDefaultCDNGActivitySource(accountId, orgIdentifier, projectIdentifier);
     ActivitySourceDTO activitySource = activitySourceService.getActivitySource(

@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.gitsync.core.beans.GitCommit;
+import io.harness.gitsync.core.beans.GitCommit.GitCommitProcessingStatus;
 import io.harness.ng.core.OrganizationAccess;
 import io.harness.ng.core.ProjectAccess;
 import io.harness.persistence.AccountAccess;
@@ -44,6 +44,6 @@ public class GitFileActivitySummary implements PersistentEntity, UuidAware, Crea
   private String commitMessage;
   private long lastUpdatedAt;
   private Boolean gitToHarness;
-  private GitCommit.Status status;
+  private GitCommitProcessingStatus status;
   private GitFileProcessingSummary fileProcessingSummary;
 }

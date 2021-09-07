@@ -11,8 +11,10 @@ import (
 	"go.uber.org/zap"
 )
 
+var fileBitbucketCloudToken = os.Getenv("BITBUCKET_CLOUD_TOKEN")
+
 func TestFindFileBitbucketCloud(t *testing.T) {
-	if os.Getenv("BITBUCKET_CLOUD_TOKEN") == "" {
+	if fileBitbucketCloudToken == "" {
 		t.Skip("Skipping, Acceptance test")
 	}
 	in := &pb.GetFileRequest{
@@ -25,7 +27,7 @@ func TestFindFileBitbucketCloud(t *testing.T) {
 			Hook: &pb.Provider_BitbucketCloud{
 				BitbucketCloud: &pb.BitbucketCloudProvider{
 					Username:    "tphoney",
-					AppPassword: os.Getenv("BITBUCKET_CLOUD_TOKEN"),
+					AppPassword: fileBitbucketCloudToken,
 				},
 			},
 			Debug: true,
@@ -40,7 +42,7 @@ func TestFindFileBitbucketCloud(t *testing.T) {
 }
 
 func TestFindThenUpdateFileBitbucketCloud(t *testing.T) {
-	if os.Getenv("BITBUCKET_CLOUD_TOKEN") == "" {
+	if fileBitbucketCloudToken == "" {
 		t.Skip("Skipping, Acceptance test")
 	}
 	in := &pb.GetFileRequest{
@@ -53,7 +55,7 @@ func TestFindThenUpdateFileBitbucketCloud(t *testing.T) {
 			Hook: &pb.Provider_BitbucketCloud{
 				BitbucketCloud: &pb.BitbucketCloudProvider{
 					Username:    "tphoney",
-					AppPassword: os.Getenv("BITBUCKET_CLOUD_TOKEN"),
+					AppPassword: fileBitbucketCloudToken,
 				},
 			},
 			Debug: true,
@@ -79,7 +81,7 @@ func TestFindThenUpdateFileBitbucketCloud(t *testing.T) {
 			Hook: &pb.Provider_BitbucketCloud{
 				BitbucketCloud: &pb.BitbucketCloudProvider{
 					Username:    "tphoney",
-					AppPassword: os.Getenv("BITBUCKET_CLOUD_TOKEN"),
+					AppPassword: fileBitbucketCloudToken,
 				},
 			},
 			Debug: true,
@@ -94,7 +96,7 @@ func TestFindThenUpdateFileBitbucketCloud(t *testing.T) {
 }
 
 func TestFindFilesInCommitBitbucketCloud(t *testing.T) {
-	if os.Getenv("BITBUCKET_CLOUD_TOKEN") == "" {
+	if fileBitbucketCloudToken == "" {
 		t.Skip("Skipping, Acceptance test")
 	}
 	in := &pb.FindFilesInCommitRequest{
@@ -104,7 +106,7 @@ func TestFindFilesInCommitBitbucketCloud(t *testing.T) {
 			Hook: &pb.Provider_BitbucketCloud{
 				BitbucketCloud: &pb.BitbucketCloudProvider{
 					Username:    "tphoney",
-					AppPassword: os.Getenv("BITBUCKET_CLOUD_TOKEN"),
+					AppPassword: fileBitbucketCloudToken,
 				},
 			},
 			Debug: true,
@@ -123,8 +125,10 @@ func TestFindFilesInBranchBitbucketCloud(t *testing.T) {
 		t.Skip("Skipping, Acceptance test")
 	}
 	in := &pb.FindFilesInBranchRequest{
-		Slug:   "tphoney/scm-test",
-		Branch: "main",
+		Slug: "tphoney/scm-test",
+		Type: &pb.FindFilesInBranchRequest_Branch{
+			Branch: "main",
+		},
 		Provider: &pb.Provider{
 			Hook: &pb.Provider_BitbucketCloud{
 				BitbucketCloud: &pb.BitbucketCloudProvider{

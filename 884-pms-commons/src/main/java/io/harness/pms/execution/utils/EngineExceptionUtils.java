@@ -1,14 +1,23 @@
 package io.harness.pms.execution.utils;
 
+import static io.harness.data.structure.HarnessStringUtils.emptyIfNull;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
+import io.harness.eraro.ResponseMessage;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
+import io.harness.pms.contracts.execution.failure.FailureData;
+import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.failure.FailureType;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class EngineExceptionUtils {
@@ -46,10 +55,34 @@ public class EngineExceptionUtils {
     return wingsFailureType;
   }
 
-  private static io.harness.exception.FailureType mapToWingsFailureType(FailureType oFailureType) {
+  public static FailureInfo transformResponseMessagesToFailureInfo(List<ResponseMessage> responseMessages) {
+    List<FailureData> failureDataList =
+        responseMessages.stream()
+            .map(rm
+                -> FailureData.newBuilder()
+                       .setCode(rm.getCode().name())
+                       .setLevel(rm.getLevel().name())
+                       .setMessage(emptyIfNull(rm.getMessage()))
+                       .addAllFailureTypes(transformToOrchestrationFailureTypes(rm.getFailureTypes()))
+                       .build())
+            .collect(Collectors.toList());
+    FailureInfo.Builder failureInfoBuilder = FailureInfo.newBuilder().addAllFailureData(failureDataList);
+    if (!EmptyPredicate.isEmpty(failureDataList)) {
+      FailureData failureData = failureDataList.get(failureDataList.size() - 1);
+      failureInfoBuilder.setErrorMessage(emptyIfNull(failureData.getMessage()))
+          .addAllFailureTypes(failureData.getFailureTypesList());
+    }
+    return failureInfoBuilder.build();
+  }
+
+  @VisibleForTesting
+  static io.harness.exception.FailureType mapToWingsFailureType(FailureType oFailureType) {
     switch (oFailureType) {
       case TIMEOUT_FAILURE:
         return io.harness.exception.FailureType.EXPIRED;
+      case UNRECOGNIZED:
+      case UNKNOWN_FAILURE:
+      case SKIPPING_FAILURE:
       case APPLICATION_FAILURE:
         return io.harness.exception.FailureType.APPLICATION_ERROR;
       case CONNECTIVITY_FAILURE:
@@ -67,7 +100,8 @@ public class EngineExceptionUtils {
     }
   }
 
-  private static FailureType mapToOrchestrationFailureType(io.harness.exception.FailureType hFailureType) {
+  @VisibleForTesting
+  static FailureType mapToOrchestrationFailureType(io.harness.exception.FailureType hFailureType) {
     switch (hFailureType) {
       case DELEGATE_PROVISIONING:
         return FailureType.DELEGATE_PROVISIONING_FAILURE;

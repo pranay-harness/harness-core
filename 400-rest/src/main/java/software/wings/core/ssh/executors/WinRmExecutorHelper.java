@@ -5,7 +5,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static java.lang.String.format;
 import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.core.winrm.executors.WinRmSession;
 
@@ -21,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class WinRmExecutorHelper {
   private static final int SPLITLISTOFCOMMANDSBY = 20;
 
@@ -63,9 +66,11 @@ public class WinRmExecutorHelper {
       // for correct escaping
       commandList.add(format(appendPSInvokeCommandtoCommandString, psScriptFile, commandString + "`r`n"));
     }
-    // last command to run the script we just built - This will execute our command.
-    commandList.add(format("%s -f \"%s\" ", powershell, psScriptFile));
     return Lists.partition(commandList, SPLITLISTOFCOMMANDSBY);
+  }
+
+  public static String getScriptExecutingCommand(String psScriptFile, String powershell) {
+    return format("%s -f \"%s\" ", powershell, psScriptFile);
   }
 
   public static List<String> constructPSScriptWithCommandsBulk(String command, String psScriptFile, String powershell) {
@@ -115,7 +120,7 @@ public class WinRmExecutorHelper {
     command = "$ErrorActionPreference=\"Stop\"\n" + command;
     String base64Command = encodeBase64String(command.getBytes(StandardCharsets.UTF_8));
     String wrappedCommand = format(
-        "$decoded = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(\\\"%s\\\")); Invoke-Expression $decoded",
+        "$decoded = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(\\\"%s\\\")); $expanded = [Environment]::ExpandEnvironmentVariables($decoded); Invoke-Expression $expanded",
         base64Command);
     return format("%s Invoke-Command -command {%s}", powershell, wrappedCommand);
   }

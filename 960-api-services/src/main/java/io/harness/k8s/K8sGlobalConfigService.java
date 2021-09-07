@@ -9,4 +9,5 @@ public interface K8sGlobalConfigService {
   String getChartMuseumPath();
   String getOcPath();
   String getKustomizePath();
+  String getScmPath();
 }

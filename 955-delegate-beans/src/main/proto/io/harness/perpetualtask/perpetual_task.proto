@@ -25,4 +25,6 @@ message PerpetualTaskSchedule {
 message PerpetualTaskExecutionBundle {
   repeated delegate.Capability capabilities = 1;
   google.protobuf.Any task_params = 2;
+  // Intended to be used for providing any kind of task setup abstractions required for building PT validation task
+  map<string, string> setup_abstractions = 3;
 }

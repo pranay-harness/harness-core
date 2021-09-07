@@ -1,5 +1,8 @@
 package io.harness.ci.plan.creator;
 
+import static io.harness.beans.sweepingoutputs.CISweepingOutputNames.CODEBASE;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.git.GitClientHelper.getGitRepo;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -7,24 +10,32 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.execution.ExecutionSource;
 import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
+import io.harness.beans.sweepingoutputs.CodebaseSweepingOutput;
+import io.harness.ci.pipeline.executions.beans.CIBuildAuthor;
+import io.harness.ci.pipeline.executions.beans.CIBuildCommit;
+import io.harness.ci.pipeline.executions.beans.CIBuildPRHook;
+import io.harness.ci.pipeline.executions.beans.CIWebhookInfoDTO;
 import io.harness.ci.plan.creator.execution.CIPipelineModuleInfo;
 import io.harness.ci.plan.creator.execution.CIStageModuleInfo;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.ng.core.BaseNGAccess;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
-import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.plan.TriggerType;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.contracts.triggers.ParsedPayload;
+import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
+import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.execution.ExecutionSummaryModuleInfoProvider;
-import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
+import io.harness.pms.sdk.core.resolver.RefObjectUtils;
+import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.execution.beans.PipelineModuleInfo;
 import io.harness.pms.sdk.execution.beans.StageModuleInfo;
-import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.states.LiteEngineTaskStep;
 import io.harness.stateutils.buildstate.ConnectorUtils;
@@ -32,10 +43,14 @@ import io.harness.util.WebhookTriggerProcessorUtils;
 import io.harness.yaml.extended.ci.codebase.Build;
 import io.harness.yaml.extended.ci.codebase.BuildType;
 import io.harness.yaml.extended.ci.codebase.impl.BranchBuildSpec;
+import io.harness.yaml.extended.ci.codebase.impl.PRBuildSpec;
 import io.harness.yaml.extended.ci.codebase.impl.TagBuildSpec;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,23 +58,28 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(HarnessTeam.CI)
 public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider {
-  @Inject OutcomeService outcomeService;
+  @Inject private ExecutionSweepingOutputService executionSweepingOutputService;
   @Inject private ConnectorUtils connectorUtils;
+
   @Override
-  public PipelineModuleInfo getPipelineLevelModuleInfo(NodeExecutionProto nodeExecutionProto) {
+  public boolean shouldRun(OrchestrationEvent event) {
+    StepType currentStepType = AmbianceUtils.getCurrentStepType(event.getAmbiance());
+    return currentStepType != null && isLiteEngineNode(currentStepType);
+  }
+
+  @Override
+  public PipelineModuleInfo getPipelineLevelModuleInfo(OrchestrationEvent event) {
     String branch = null;
     String tag = null;
+    String prNumber = null;
     String repoName = null;
 
-    if (!isLiteEngineNodeAndCompleted(nodeExecutionProto.getNode())) {
-      return null;
-    }
-
-    Ambiance ambiance = nodeExecutionProto.getAmbiance();
+    Ambiance ambiance = event.getAmbiance();
     BaseNGAccess baseNGAccess = retrieveBaseNGAccess(ambiance);
     try {
-      LiteEngineTaskStepInfo liteEngineTaskStepInfo = RecastOrchestrationUtils.fromDocumentJson(
-          nodeExecutionProto.getResolvedStepParameters(), LiteEngineTaskStepInfo.class);
+      StepElementParameters stepElementParameters = (StepElementParameters) event.getResolvedStepParameters();
+      LiteEngineTaskStepInfo liteEngineTaskStepInfo = (LiteEngineTaskStepInfo) stepElementParameters.getSpec();
+
       if (liteEngineTaskStepInfo == null) {
         return null;
       }
@@ -86,6 +106,10 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
         branch = (String) ((BranchBuildSpec) build.getSpec()).getBranch().fetchFinalValue();
       }
 
+      if (build != null && build.getType().equals(BuildType.PR)) {
+        prNumber = (String) ((PRBuildSpec) build.getSpec()).getNumber().fetchFinalValue();
+      }
+
       if (build != null && build.getType().equals(BuildType.TAG)) {
         tag = (String) ((TagBuildSpec) build.getSpec()).getTag().fetchFinalValue();
       }
@@ -94,28 +118,104 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
     }
     ExecutionSource executionSource = null;
     try {
-      executionSource = getWebhookExecutionSource(nodeExecutionProto.getAmbiance().getMetadata());
+      executionSource = getWebhookExecutionSource(event.getAmbiance().getMetadata(), event.getTriggerPayload());
     } catch (Exception ex) {
       log.error("Failed to retrieve branch and tag for filtering", ex);
     }
+
+    ExecutionTriggerInfo executionTriggerInfo = event.getAmbiance().getMetadata().getTriggerInfo();
+
+    if (executionTriggerInfo.getTriggerType() != TriggerType.WEBHOOK) {
+      // get codebase sweeping output
+      OptionalSweepingOutput optionalSweepingOutput =
+          executionSweepingOutputService.resolveOptional(ambiance, RefObjectUtils.getOutcomeRefObject(CODEBASE));
+      CodebaseSweepingOutput codebaseSweepingOutput = null;
+      if (optionalSweepingOutput.isFound()) {
+        codebaseSweepingOutput = (CodebaseSweepingOutput) optionalSweepingOutput.getOutput();
+      }
+      if (codebaseSweepingOutput != null) {
+        log.info("Codebase sweeping output {}", codebaseSweepingOutput);
+
+        if (isEmpty(branch)) {
+          branch = codebaseSweepingOutput.getBranch();
+        }
+
+        return CIPipelineModuleInfo.builder()
+            .branch(branch)
+            .prNumber(prNumber)
+            .tag(tag)
+            .repoName(repoName)
+            .ciExecutionInfoDTO(getCiExecutionInfoDTO(codebaseSweepingOutput))
+            .build();
+      }
+    }
+
     return CIPipelineModuleInfo.builder()
         .branch(branch)
         .tag(tag)
+        .prNumber(prNumber)
         .repoName(repoName)
         .ciExecutionInfoDTO(CIModuleInfoMapper.getCIBuildResponseDTO(executionSource))
         .build();
   }
 
+  private CIWebhookInfoDTO getCiExecutionInfoDTO(CodebaseSweepingOutput codebaseSweepingOutput) {
+    if (codebaseSweepingOutput == null) {
+      return null;
+    }
+
+    List<CIBuildCommit> ciBuildCommits = new ArrayList<>();
+    if (isNotEmpty(codebaseSweepingOutput.getCommits())) {
+      Collections.reverse(codebaseSweepingOutput.getCommits());
+      for (CodebaseSweepingOutput.CodeBaseCommit commit : codebaseSweepingOutput.getCommits()) {
+        ciBuildCommits.add(CIBuildCommit.builder()
+                               .id(commit.getId())
+                               .link(commit.getLink())
+                               .message(commit.getMessage())
+                               .ownerEmail(commit.getOwnerEmail())
+                               .ownerId(commit.getOwnerId())
+                               .ownerName(commit.getOwnerName())
+                               .timeStamp(commit.getTimeStamp())
+                               .build());
+      }
+    }
+
+    if (isEmpty(codebaseSweepingOutput.getCommits())) {
+      return null;
+    }
+    return CIWebhookInfoDTO.builder()
+        .event("pullRequest")
+        .author(CIBuildAuthor.builder()
+                    .name(codebaseSweepingOutput.getGitUser())
+                    .avatar(codebaseSweepingOutput.getGitUserAvatar())
+                    .email(codebaseSweepingOutput.getGitUserEmail())
+                    .id(codebaseSweepingOutput.getGitUserId())
+                    .build())
+        .pullRequest(CIBuildPRHook.builder()
+                         .id(Long.valueOf(codebaseSweepingOutput.getPrNumber()))
+                         .link(codebaseSweepingOutput.getPullRequestLink())
+                         .title(codebaseSweepingOutput.getPrTitle())
+                         .body(codebaseSweepingOutput.getPullRequestBody())
+                         .sourceBranch(codebaseSweepingOutput.getSourceBranch())
+                         .targetBranch(codebaseSweepingOutput.getTargetBranch())
+                         .state(codebaseSweepingOutput.getState())
+                         .commits(ciBuildCommits)
+                         .build())
+
+        .build();
+  }
+
   @Override
-  public StageModuleInfo getStageLevelModuleInfo(NodeExecutionProto nodeExecutionProto) {
+  public StageModuleInfo getStageLevelModuleInfo(OrchestrationEvent event) {
     return CIStageModuleInfo.builder().build();
   }
 
-  private ExecutionSource getWebhookExecutionSource(ExecutionMetadata executionMetadata) {
+  private ExecutionSource getWebhookExecutionSource(
+      ExecutionMetadata executionMetadata, TriggerPayload triggerPayload) {
     ExecutionTriggerInfo executionTriggerInfo = executionMetadata.getTriggerInfo();
     if (executionTriggerInfo.getTriggerType() == TriggerType.WEBHOOK) {
-      ParsedPayload parsedPayload = executionMetadata.getTriggerPayload().getParsedPayload();
-      if (parsedPayload != null) {
+      if (triggerPayload != null) {
+        ParsedPayload parsedPayload = triggerPayload.getParsedPayload();
         return WebhookTriggerProcessorUtils.convertWebhookResponse(parsedPayload);
       } else {
         throw new CIStageExecutionException("Parsed payload is empty for webhook execution");
@@ -124,8 +224,9 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
     return null;
   }
 
-  private boolean isLiteEngineNodeAndCompleted(PlanNodeProto node) {
-    return Objects.equals(node.getStepType().getType(), LiteEngineTaskStep.STEP_TYPE.getType());
+  // StepType
+  private boolean isLiteEngineNode(StepType stepType) {
+    return Objects.equals(stepType.getType(), LiteEngineTaskStep.STEP_TYPE.getType());
   }
 
   private BaseNGAccess retrieveBaseNGAccess(Ambiance ambiance) {

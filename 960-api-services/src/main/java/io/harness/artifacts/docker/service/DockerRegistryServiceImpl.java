@@ -15,13 +15,20 @@ import io.harness.artifacts.comparator.BuildDetailsInternalComparatorDescending;
 import io.harness.artifacts.docker.DockerRegistryRestClient;
 import io.harness.artifacts.docker.beans.DockerInternalConfig;
 import io.harness.artifacts.docker.client.DockerRestClientFactory;
+import io.harness.context.MdcGlobalContextData;
 import io.harness.exception.ArtifactServerException;
 import io.harness.exception.ExceptionUtils;
-import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidArtifactServerException;
-import io.harness.exception.InvalidCredentialsException;
+import io.harness.exception.NestedExceptionUtils;
 import io.harness.exception.WingsException;
+import io.harness.exception.exceptionmanager.exceptionhandler.ExceptionMetadataKeys;
+import io.harness.exception.runtime.DockerHubInvalidImageRuntimeRuntimeException;
+import io.harness.exception.runtime.DockerHubInvalidTagRuntimeRuntimeException;
+import io.harness.exception.runtime.DockerHubServerRuntimeException;
+import io.harness.exception.runtime.InvalidDockerHubCredentialsRuntimeException;
 import io.harness.expression.RegexFunctor;
+import io.harness.globalcontex.ErrorHandlingGlobalContextData;
+import io.harness.manage.GlobalContextManager;
 import io.harness.network.Http;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -46,7 +53,7 @@ import net.jodah.expiringmap.ExpirationPolicy;
 import net.jodah.expiringmap.ExpiringMap;
 import okhttp3.Credentials;
 import okhttp3.Headers;
-import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.StringUtils;
 import retrofit2.Response;
 
 /**
@@ -75,8 +82,12 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       } else {
         buildDetails = dockerPublicRegistryProcessor.getBuilds(dockerConfig, imageName, maxNumberOfBuilds);
       }
+    } catch (DockerHubServerRuntimeException ex) {
+      throw ex;
     } catch (Exception e) {
-      throw new ArtifactServerException(ExceptionUtils.getMessage(e), e, WingsException.USER);
+      throw NestedExceptionUtils.hintWithExplanationException("Could not fetch tags for the image",
+          "Check if the image exists and if the permissions are scoped for the authenticated user",
+          new ArtifactServerException(ExceptionUtils.getMessage(e), e, WingsException.USER));
     }
     // Sorting at build tag for docker artifacts.
     // Don't change this order.
@@ -90,16 +101,35 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
     List<BuildDetailsInternal> buildDetails = new ArrayList<>();
     String token = null;
     Response<DockerImageTagResponse> response = registryRestClient.listImageTags(basicAuthHeader, imageName).execute();
-    if (response.code() == 401) { // unauthorized
+    if (DockerRegistryUtils.fallbackToTokenAuth(response.code(), dockerConfig)) { // unauthorized
       token = getToken(dockerConfig, response.headers(), registryRestClient);
+      ErrorHandlingGlobalContextData globalContextData =
+          GlobalContextManager.get(ErrorHandlingGlobalContextData.IS_SUPPORTED_ERROR_FRAMEWORK);
+      if (token == null) {
+        if (globalContextData != null && globalContextData.isSupportedErrorFramework()) {
+          throw new InvalidDockerHubCredentialsRuntimeException(
+              "Unable to validate with given credentials. invalid username or password");
+        }
+      }
       response = registryRestClient.listImageTags(BEARER + token, imageName).execute();
       if (response.code() == 401) {
-        throw new InvalidCredentialsException("Invalid Credentials while fetching build details", USER);
+        if (globalContextData != null && globalContextData.isSupportedErrorFramework()) {
+          Map<String, String> imageDataMap = new HashMap<>();
+          imageDataMap.put(ExceptionMetadataKeys.IMAGE_NAME.name(), imageName);
+          imageDataMap.put(ExceptionMetadataKeys.URL.name(), dockerConfig.getDockerRegistryUrl() + imageName);
+          MdcGlobalContextData mdcGlobalContextData = MdcGlobalContextData.builder().map(imageDataMap).build();
+          GlobalContextManager.upsertGlobalContextRecord(mdcGlobalContextData);
+          throw new DockerHubInvalidImageRuntimeRuntimeException(
+              "Docker image [" + imageName + "] not found in registry [" + dockerConfig.getDockerRegistryUrl() + "]");
+        }
+        throw DockerRegistryUtils.unauthorizedException();
       }
     }
 
     if (!isSuccessful(response)) {
-      throw new InvalidArtifactServerException(response.message(), USER);
+      throw NestedExceptionUtils.hintWithExplanationException("Unable to fetch the tags for the image",
+          "Check if the image exists and if the permissions are scoped for the authenticated user",
+          new InvalidArtifactServerException(response.message(), USER));
     }
 
     DockerImageTagResponse dockerImageTagResponse = response.body();
@@ -124,7 +154,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       String nextPageUrl =
           queryParamIndex == -1 ? baseUrl.concat(nextLink) : baseUrl.concat(nextLink.substring(queryParamIndex));
       response = registryRestClient.listImageTagsByUrl(BEARER + token, nextPageUrl).execute();
-      if (response.code() == 401) { // unauthorized
+      if (DockerRegistryUtils.fallbackToTokenAuth(response.code(), dockerConfig)) { // unauthorized
         token = getToken(dockerConfig, response.headers(), registryRestClient);
         response = registryRestClient.listImageTagsByUrl(BEARER + token, nextPageUrl).execute();
       }
@@ -180,7 +210,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
     DockerRegistryRestClient registryRestClient = dockerRestClientFactory.getDockerRegistryRestClient(dockerConfig);
     String authHeader = Credentials.basic(dockerConfig.getUsername(), dockerConfig.getPassword());
     Function<Headers, String> getToken = headers -> getToken(dockerConfig, headers, registryRestClient);
-    return dockerRegistryUtils.getLabels(registryRestClient, getToken, authHeader, imageName, buildNos);
+    return dockerRegistryUtils.getLabels(dockerConfig, registryRestClient, getToken, authHeader, imageName, buildNos);
   }
 
   @Override
@@ -198,8 +228,10 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
                  .collect(Collectors.toList());
 
     if (builds.isEmpty()) {
-      throw new InvalidArtifactServerException(
-          "There are no builds for this image: " + imageName + " and tagRegex: " + tagRegex, USER);
+      throw NestedExceptionUtils.hintWithExplanationException("Could not get the last successful build",
+          "There are probably no successful builds for this image & check if the tag filter regex is correct",
+          new InvalidArtifactServerException(
+              "There are no builds for this image: " + imageName + " and tagRegex: " + tagRegex, USER));
     }
     return builds.get(0);
   }
@@ -220,7 +252,9 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       }
       return getBuildNumber(dockerConfig, imageName, tag);
     } catch (IOException e) {
-      throw new ArtifactServerException(ExceptionUtils.getMessage(e), e, USER);
+      throw NestedExceptionUtils.hintWithExplanationException("Unable to fetch the given tag for the image",
+          "The tag provided for the image may be incorrect.",
+          new ArtifactServerException(ExceptionUtils.getMessage(e), e, USER));
     }
   }
 
@@ -230,17 +264,18 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       String basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), dockerConfig.getPassword());
       Response<DockerImageTagResponse> response =
           registryRestClient.listImageTags(basicAuthHeader, imageName).execute();
-      if (response.code() == 401) { // unauthorized
+      if (DockerRegistryUtils.fallbackToTokenAuth(response.code(), dockerConfig)) { // unauthorized
         String token = getToken(dockerConfig, response.headers(), registryRestClient);
         response = registryRestClient.listImageTags(BEARER + token, imageName).execute();
       }
       if (!isSuccessful(response)) {
         // Image not found or user doesn't have permission to list image tags.
-        throw new InvalidArgumentsException(
-            ImmutablePair.of("code", "Image name [" + imageName + "] does not exist in Docker registry."), null, USER);
+        throw DockerRegistryUtils.imageNotFoundException(imageName);
       }
     } catch (IOException e) {
-      throw new ArtifactServerException(ExceptionUtils.getMessage(e), e, USER);
+      throw NestedExceptionUtils.hintWithExplanationException("The Image was not found.",
+          "Check if the image exists and if the permissions are scoped for the authenticated user",
+          new ArtifactServerException(ExceptionUtils.getMessage(e), e, USER));
     }
     return true;
   }
@@ -251,23 +286,38 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       builds = builds.stream().filter(build -> build.getNumber().equals(tag)).collect(Collectors.toList());
 
       if (builds.size() != 1) {
-        throw new InvalidArtifactServerException("Didn't get build number", USER);
+        Map<String, String> imageDataMap = new HashMap<>();
+        imageDataMap.put(ExceptionMetadataKeys.IMAGE_NAME.name(), imageName);
+        imageDataMap.put(ExceptionMetadataKeys.IMAGE_TAG.name(), tag);
+        String url = dockerConfig.getDockerRegistryUrl() + "/v2/" + imageName + "/" + tag;
+        imageDataMap.put(ExceptionMetadataKeys.URL.name(), url);
+        MdcGlobalContextData mdcGlobalContextData = MdcGlobalContextData.builder().map(imageDataMap).build();
+        GlobalContextManager.upsertGlobalContextRecord(mdcGlobalContextData);
+        throw new DockerHubInvalidTagRuntimeRuntimeException("Could not find tag [" + tag + "] for Docker image ["
+            + imageName + "] on registry [" + dockerConfig.getDockerRegistryUrl() + "]");
       }
       return builds.get(0);
     } catch (IOException e) {
-      throw new ArtifactServerException(ExceptionUtils.getMessage(e), e, USER);
+      throw NestedExceptionUtils.hintWithExplanationException("Unable to fetch the given tag for the image",
+          "The tag provided for the image may be incorrect.",
+          new ArtifactServerException(ExceptionUtils.getMessage(e), e, USER));
     }
   }
 
   @Override
   public boolean validateCredentials(DockerInternalConfig dockerConfig) {
     if (!connectableHttpUrl(dockerConfig.getDockerRegistryUrl())) {
-      throw new InvalidArtifactServerException(
-          "Could not reach Docker Registry at : " + dockerConfig.getDockerRegistryUrl(), USER);
+      throw NestedExceptionUtils.hintWithExplanationException(
+          "Check if the Docker Registry URL is correct & reachable from your delegate(s)",
+          "The given Docker Registry URL may be incorrect or not reachable from your delegate(s)",
+          new InvalidArtifactServerException(
+              "Could not reach Docker Registry at : " + dockerConfig.getDockerRegistryUrl(), USER));
     }
     if (dockerConfig.hasCredentials()) {
       if (isEmpty(dockerConfig.getPassword())) {
-        throw new InvalidArtifactServerException("Password is a required field along with Username", USER);
+        throw NestedExceptionUtils.hintWithExplanationException("Invalid Docker Credentials",
+            "Password field value cannot be empty if username field is not empty",
+            new InvalidArtifactServerException("Password is a required field along with Username", USER));
       }
       DockerRegistryRestClient registryRestClient = null;
       String basicAuthHeader;
@@ -278,9 +328,9 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
         registryRestClient = dockerRestClientFactory.getDockerRegistryRestClient(dockerConfig);
         basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), dockerConfig.getPassword());
         response = registryRestClient.getApiVersion(basicAuthHeader).execute();
-        if (response.code() == 401) { // unauthorized
+        if (DockerRegistryUtils.fallbackToTokenAuth(response.code(), dockerConfig)) { // unauthorized
           authHeaderValue = response.headers().get(AUTHENTICATE_HEADER);
-          dockerRegistryToken = fetchToken(registryRestClient, basicAuthHeader, authHeaderValue);
+          dockerRegistryToken = fetchToken(dockerConfig, registryRestClient, basicAuthHeader, authHeaderValue);
           if (dockerRegistryToken != null) {
             response = registryRestClient.getApiVersion(BEARER + dockerRegistryToken.getToken()).execute();
           }
@@ -304,9 +354,10 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       // registry We get an IO exception with '/v2' path so we are retrying with forward slash API
       String basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), dockerConfig.getPassword());
       Response response = registryRestClient.getApiVersionEndingWithForwardSlash(basicAuthHeader).execute();
-      if (response.code() == 401) { // unauthorized
+      if (DockerRegistryUtils.fallbackToTokenAuth(response.code(), dockerConfig)) { // unauthorized
         String authHeaderValue = response.headers().get(AUTHENTICATE_HEADER);
-        DockerRegistryToken dockerRegistryToken = fetchToken(registryRestClient, basicAuthHeader, authHeaderValue);
+        DockerRegistryToken dockerRegistryToken =
+            fetchToken(dockerConfig, registryRestClient, basicAuthHeader, authHeaderValue);
         if (dockerRegistryToken != null) {
           response =
               registryRestClient.getApiVersionEndingWithForwardSlash(BEARER + dockerRegistryToken.getToken()).execute();
@@ -315,7 +366,9 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       return isSuccessful(response);
     } catch (IOException ioException) {
       Exception exception = new Exception(ioException);
-      throw new InvalidArtifactServerException(ExceptionUtils.getMessage(exception), USER);
+      throw NestedExceptionUtils.hintWithExplanationException("Invalid Credentials",
+          "Check if the provided credentials are correct",
+          new InvalidArtifactServerException(ExceptionUtils.getMessage(exception), USER));
     }
   }
 
@@ -324,7 +377,8 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
     String basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), dockerConfig.getPassword());
     String authHeaderValue = headers.get(AUTHENTICATE_HEADER);
     if (!cachedBearerTokens.containsKey(authHeaderValue)) {
-      DockerRegistryToken dockerRegistryToken = fetchToken(registryRestClient, basicAuthHeader, authHeaderValue);
+      DockerRegistryToken dockerRegistryToken =
+          fetchToken(dockerConfig, registryRestClient, basicAuthHeader, authHeaderValue);
       if (dockerRegistryToken != null) {
         if (dockerRegistryToken.getExpires_in() != null) {
           cachedBearerTokens.put(authHeaderValue, dockerRegistryToken.getToken(), ExpirationPolicy.CREATED,
@@ -337,8 +391,8 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
     return cachedBearerTokens.get(authHeaderValue);
   }
 
-  private DockerRegistryToken fetchToken(
-      DockerRegistryRestClient registryRestClient, String basicAuthHeader, String authHeaderValue) {
+  private DockerRegistryToken fetchToken(DockerInternalConfig config, DockerRegistryRestClient registryRestClient,
+      String basicAuthHeader, String authHeaderValue) {
     try {
       Map<String, String> tokens = DockerRegistryUtils.extractAuthChallengeTokens(authHeaderValue);
       if (tokens != null) {
@@ -350,6 +404,15 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
         if (registryToken != null) {
           tokens.putIfAbsent(authHeaderValue, registryToken.getToken());
           return registryToken;
+        }
+      } else {
+        // Handle Github Container Registry. Refer to https://harness.atlassian.net/browse/CDC-14595 for more details
+        if (DockerRegistryUtils.isGithubContainerRegistry(config)) {
+          DockerRegistryToken registryToken =
+              registryRestClient.getGithubContainerRegistryToken(basicAuthHeader).execute().body();
+          if (registryToken != null) {
+            return registryToken;
+          }
         }
       }
     } catch (IOException e) {
@@ -374,9 +437,12 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       case 400:
         return false;
       case 401:
-        throw new InvalidArtifactServerException("Invalid Docker Registry credentials", USER);
+        throw DockerRegistryUtils.unauthorizedException();
       default:
-        throw new InvalidArtifactServerException(response.message(), USER);
+        throw new InvalidArtifactServerException(StringUtils.isNotBlank(response.message())
+                ? response.message()
+                : String.format("Server responded with the following error code - %d", code),
+            USER);
     }
   }
 

@@ -2,12 +2,19 @@ package io.harness.springdata;
 
 import static java.time.Duration.ofSeconds;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.ExceptionUtils;
 import io.harness.health.HealthMonitor;
+import io.harness.mongo.tracing.TraceMode;
+import io.harness.mongo.tracing.Tracer;
+import io.harness.observer.Subject;
 
 import com.mongodb.MongoSocketOpenException;
 import com.mongodb.MongoSocketReadException;
 import java.time.Duration;
+import java.util.List;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.mongodb.MongoDbFactory;
@@ -20,6 +27,7 @@ import org.springframework.lang.Nullable;
 
 @SuppressWarnings("NullableProblems")
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
 public class HMongoTemplate extends MongoTemplate implements HealthMonitor {
   private static final int RETRIES = 3;
 
@@ -28,13 +36,23 @@ public class HMongoTemplate extends MongoTemplate implements HealthMonitor {
   public static final FindAndModifyOptions upsertReturnOldOptions =
       new FindAndModifyOptions().upsert(true).returnNew(false);
 
+  private final TraceMode traceMode;
+
+  @Getter private final Subject<Tracer> tracerSubject = new Subject<>();
+
   public HMongoTemplate(MongoDbFactory mongoDbFactory, MongoConverter mongoConverter) {
+    this(mongoDbFactory, mongoConverter, TraceMode.DISABLED);
+  }
+
+  public HMongoTemplate(MongoDbFactory mongoDbFactory, MongoConverter mongoConverter, TraceMode traceMode) {
     super(mongoDbFactory, mongoConverter);
+    this.traceMode = traceMode;
   }
 
   @Nullable
   @Override
   public <T> T findAndModify(Query query, Update update, Class<T> entityClass) {
+    traceQuery(query, entityClass);
     return retry(
         () -> findAndModify(query, update, new FindAndModifyOptions(), entityClass, getCollectionName(entityClass)));
   }
@@ -42,6 +60,7 @@ public class HMongoTemplate extends MongoTemplate implements HealthMonitor {
   @Nullable
   @Override
   public <T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass) {
+    traceQuery(query, entityClass);
     return retry(() -> findAndModify(query, update, options, entityClass, getCollectionName(entityClass)));
   }
 
@@ -58,6 +77,24 @@ public class HMongoTemplate extends MongoTemplate implements HealthMonitor {
   @Override
   public void isHealthy() {
     executeCommand("{ buildInfo: 1 }");
+  }
+
+  @Override
+  public <T> List<T> find(Query query, Class<T> entityClass, String collectionName) {
+    traceQuery(query, entityClass);
+    return super.find(query, entityClass, collectionName);
+  }
+
+  @Override
+  public <T> T findOne(Query query, Class<T> entityClass, String collectionName) {
+    traceQuery(query, entityClass);
+    return super.findOne(query, entityClass, collectionName);
+  }
+
+  private <T> void traceQuery(Query query, Class<T> entityClass) {
+    if (traceMode == TraceMode.ENABLED) {
+      tracerSubject.fireInform(Tracer::traceSpringQuery, query, entityClass, this);
+    }
   }
 
   public interface Executor<R> {

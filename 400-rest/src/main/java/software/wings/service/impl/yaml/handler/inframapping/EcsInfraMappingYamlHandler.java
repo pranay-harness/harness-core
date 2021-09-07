@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_YAML;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
@@ -8,6 +10,8 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.HarnessException;
 import io.harness.exception.InvalidArgumentsException;
 
@@ -27,6 +31,8 @@ import org.apache.commons.lang3.StringUtils;
  * @author rktummala on 10/22/17
  */
 @Singleton
+@OwnedBy(CDP)
+@TargetModule(_870_CG_YAML)
 public class EcsInfraMappingYamlHandler
     extends InfraMappingYamlWithComputeProviderHandler<Yaml, EcsInfrastructureMapping> {
   @Override

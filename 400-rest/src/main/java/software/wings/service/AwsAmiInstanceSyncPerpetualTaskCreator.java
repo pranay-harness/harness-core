@@ -13,7 +13,6 @@ import io.harness.perpetualtask.AwsAmiInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.AwsAmiInstanceSyncPerpetualTaskClientParams;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
-import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 
@@ -22,12 +21,10 @@ import software.wings.api.DeploymentSummary;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.info.AutoScalingGroupInstanceInfo;
-import software.wings.service.intfc.instance.InstanceService;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
-import com.google.inject.Inject;
 import com.google.protobuf.util.Durations;
 import java.util.List;
 import java.util.Map;
@@ -40,17 +37,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(CDP)
-public class AwsAmiInstanceSyncPerpetualTaskCreator implements InstanceSyncPerpetualTaskCreator {
-  @Inject private PerpetualTaskService perpetualTaskService;
-  @Inject InstanceService instanceService;
-
+public class AwsAmiInstanceSyncPerpetualTaskCreator extends AbstractInstanceSyncPerpetualTaskCreator {
   public static final String ASG_NAME = "asgName";
 
   @Override
   public List<String> createPerpetualTasks(InfrastructureMapping infrastructureMapping) {
     final Set<String> asgNames = getAsgNames(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
     final String accountId = infrastructureMapping.getAccountId();
-    return createPerpetualTasks(asgNames, accountId, infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
+    return createPerpetualTasks(asgNames, infrastructureMapping);
   }
 
   @Override
@@ -70,7 +64,7 @@ public class AwsAmiInstanceSyncPerpetualTaskCreator implements InstanceSyncPerpe
 
     SetView<String> asgEligibleForPerpetualTask = Sets.difference(asgsFromNewDeployment, asgWithExistingPerpetualTasks);
 
-    return createPerpetualTasks(asgEligibleForPerpetualTask, accountId, appId, infraMappingId);
+    return createPerpetualTasks(asgEligibleForPerpetualTask, infrastructureMapping);
   }
 
   private Set<String> asgWithExistingPerpetualTasks(List<PerpetualTaskRecord> existingPerpetualTasks) {
@@ -79,16 +73,15 @@ public class AwsAmiInstanceSyncPerpetualTaskCreator implements InstanceSyncPerpe
         .collect(Collectors.toSet());
   }
 
-  private List<String> createPerpetualTasks(
-      Set<String> asgNames, String accountId, String appId, String infraMappingId) {
+  private List<String> createPerpetualTasks(Set<String> asgNames, InfrastructureMapping infrastructureMapping) {
     return asgNames.stream()
         .map(asgName
             -> AwsAmiInstanceSyncPerpetualTaskClientParams.builder()
-                   .appId(appId)
+                   .appId(infrastructureMapping.getAppId())
                    .asgName(asgName)
-                   .inframappingId(infraMappingId)
+                   .inframappingId(infrastructureMapping.getUuid())
                    .build())
-        .map(params -> create(accountId, params))
+        .map(params -> create(params, infrastructureMapping))
         .collect(Collectors.toList());
   }
 
@@ -103,7 +96,7 @@ public class AwsAmiInstanceSyncPerpetualTaskCreator implements InstanceSyncPerpe
         .collect(Collectors.toSet());
   }
 
-  private String create(String accountId, AwsAmiInstanceSyncPerpetualTaskClientParams clientParams) {
+  private String create(AwsAmiInstanceSyncPerpetualTaskClientParams clientParams, InfrastructureMapping infraMapping) {
     Map<String, String> paramMap = ImmutableMap.of(HARNESS_APPLICATION_ID, clientParams.getAppId(),
         INFRASTRUCTURE_MAPPING_ID, clientParams.getInframappingId(), ASG_NAME, clientParams.getAsgName());
 
@@ -114,7 +107,7 @@ public class AwsAmiInstanceSyncPerpetualTaskCreator implements InstanceSyncPerpe
                                          .setTimeout(Durations.fromSeconds(TIMEOUT_SECONDS))
                                          .build();
 
-    return perpetualTaskService.createTask(
-        PerpetualTaskType.AWS_AMI_INSTANCE_SYNC, accountId, clientContext, schedule, false, "");
+    return perpetualTaskService.createTask(PerpetualTaskType.AWS_AMI_INSTANCE_SYNC, infraMapping.getAccountId(),
+        clientContext, schedule, false, getTaskDescription(infraMapping));
   }
 }

@@ -24,7 +24,7 @@ import okio.Sink;
 public class ProgressRequestBody extends RequestBody {
   private final RequestBody requestBody;
 
-  private final io.harness.cf.openapi.ApiCallback callback;
+  private final ApiCallback callback;
 
   public ProgressRequestBody(RequestBody requestBody, ApiCallback callback) {
     this.requestBody = requestBody;

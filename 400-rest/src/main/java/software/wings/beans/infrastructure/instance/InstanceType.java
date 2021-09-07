@@ -1,8 +1,16 @@
 package software.wings.beans.infrastructure.instance;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 /**
  * @author rktummala on 09/07/17
  */
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public enum InstanceType {
   PHYSICAL_HOST_INSTANCE,
   EC2_CLOUD_INSTANCE,

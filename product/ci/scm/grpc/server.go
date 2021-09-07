@@ -5,6 +5,8 @@ import (
 	"net"
 	"time"
 
+	"github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	pb "github.com/wings-software/portal/product/ci/scm/proto"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -18,7 +20,7 @@ const (
 
 //go:generate mockgen -source server.go -package=grpc -destination mocks/server_mock.go SCMServer
 
-//SCMServer implements a GRPC server
+// SCMServer implements a GRPC server
 type SCMServer interface {
 	Start()
 	Stop()
@@ -33,7 +35,7 @@ type scmServer struct {
 	stopCh     chan bool
 }
 
-//NewSCMServer constructs a new SCMServer
+// NewSCMServer constructs a new SCMServer
 func NewSCMServer(port uint, unixSocket string, log *zap.SugaredLogger) (SCMServer, error) {
 	var listener net.Listener
 	var err error
@@ -58,12 +60,16 @@ func NewSCMServer(port uint, unixSocket string, log *zap.SugaredLogger) (SCMServ
 		log:        log,
 		stopCh:     stopCh,
 	}
-	server.grpcServer = grpc.NewServer()
+	server.grpcServer = grpc.NewServer(
+		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
+			grpc_recovery.UnaryServerInterceptor(),
+		)),
+	)
 	server.listener = listener
 	return &server, nil
 }
 
-//Start signals the GRPC server to begin serving on the configured port
+// Start signals the GRPC server to begin serving on the configured port
 func (s *scmServer) Start() {
 	healthServer := health.NewServer()
 	healthServer.SetServingStatus("", healthpb.HealthCheckResponse_SERVING)
@@ -76,7 +82,7 @@ func (s *scmServer) Start() {
 	}
 }
 
-//Stop method waits for signal to stop the server and stops GRPC server upon receiving it
+// Stop method waits for signal to stop the server and stops GRPC server upon receiving it
 func (s *scmServer) Stop() {
 	<-s.stopCh
 	s.log.Infow("Initiating shutdown of CI scm server")

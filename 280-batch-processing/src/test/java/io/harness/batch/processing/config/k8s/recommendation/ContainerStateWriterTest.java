@@ -1,5 +1,6 @@
 package io.harness.batch.processing.config.k8s.recommendation;
 
+import static io.harness.ccm.commons.beans.recommendation.ResourceId.NOT_FOUND;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,17 +10,18 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
-import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.commons.entities.InstanceData;
-import io.harness.event.grpc.PublishedMessage;
+import io.harness.ccm.commons.beans.recommendation.ResourceId;
+import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
+import io.harness.ccm.commons.entities.batch.InstanceData;
+import io.harness.ccm.commons.entities.events.PublishedMessage;
+import io.harness.ccm.commons.entities.k8s.recommendation.K8sWorkloadRecommendation;
+import io.harness.ccm.commons.entities.k8s.recommendation.PartialRecommendationHistogram;
 import io.harness.event.payloads.ContainerStateProto;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.rule.Owner;
 
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerCheckpoint;
-import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation;
-import software.wings.graphql.datafetcher.ce.recommendation.entity.PartialRecommendationHistogram;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.RecommenderUtils;
 
 import com.google.common.collect.ImmutableMap;
@@ -99,7 +101,7 @@ public class ContainerStateWriterTest extends CategoryTest {
                                                               .name(POD_NAME)
                                                               .kind("Pod")
                                                               .build()))
-        .isSameAs(ResourceId.NOT_FOUND);
+        .isSameAs(NOT_FOUND);
   }
 
   @Test
@@ -281,6 +283,7 @@ public class ContainerStateWriterTest extends CategoryTest {
 
     K8sWorkloadRecommendation recommendation = captor.getValue();
     assertThat(recommendation.isDirty()).isTrue();
+    assertThat(recommendation.getLastReceivedUtilDataAt()).isNotNull();
     ContainerCheckpoint containerCheckpoint = recommendation.getContainerCheckpoints().get("CONTAINER_NAME");
     assertThat(containerCheckpoint.getTotalSamplesCount()).isEqualTo(originalSamplesCount + msgSamplesCount);
     assertThat(containerCheckpoint.getLastSampleStart()).isEqualTo(msgLastSampleStart);

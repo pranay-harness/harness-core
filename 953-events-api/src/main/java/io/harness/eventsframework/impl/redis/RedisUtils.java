@@ -10,19 +10,26 @@ import static java.lang.Long.parseLong;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.redis.RedisConfig;
+import io.harness.redis.RedisSSLConfig;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Timestamp;
+import java.io.File;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 import org.redisson.Redisson;
 import org.redisson.api.RStream;
 import org.redisson.api.RedissonClient;
 import org.redisson.api.StreamMessageId;
+import org.redisson.client.RedisClient;
+import org.redisson.client.RedisClientConfig;
 import org.redisson.client.codec.StringCodec;
 import org.redisson.config.Config;
 import org.redisson.config.ReadMode;
@@ -30,10 +37,11 @@ import org.redisson.config.SingleServerConfig;
 
 @OwnedBy(PL)
 @UtilityClass
+@Slf4j
 public class RedisUtils {
   // Keeping this as small as possible to save on memory for redis instance
   public static final String REDIS_STREAM_INTERNAL_KEY = "o";
-  public static final int MAX_DEAD_LETTER_QUEUE_SIZE = 1000000;
+  public static final int MAX_DEAD_LETTER_QUEUE_SIZE = 50000;
   public static final int UNACKED_RETRY_COUNT = 10;
 
   public RedissonClient getClient(RedisConfig redisConfig) {
@@ -50,6 +58,20 @@ public class RedisUtils {
       if (isNotEmpty(redisPassword)) {
         serverConfig.setPassword(redisPassword);
       }
+
+      // Default retry interval is 1500 milliseconds
+      serverConfig.setRetryAttempts(10);
+
+      RedisSSLConfig sslConfig = redisConfig.getSslConfig();
+      if (sslConfig != null && sslConfig.isEnabled()) {
+        try {
+          serverConfig.setSslTruststore(new File(sslConfig.getCATrustStorePath()).toURI().toURL());
+          serverConfig.setSslTruststorePassword(sslConfig.getCATrustStorePassword());
+        } catch (MalformedURLException e) {
+          log.error("Malformed URL provided for Redis SSL CA trustStore file", e);
+          return null;
+        }
+      }
     } else {
       config.useSentinelServers().setMasterName(redisConfig.getMasterName());
       for (String sentinelUrl : redisConfig.getSentinelUrls()) {
@@ -60,6 +82,37 @@ public class RedisUtils {
     config.setNettyThreads(redisConfig.getNettyThreads());
     config.setUseScriptCache(redisConfig.isUseScriptCache());
     return Redisson.create(config);
+  }
+
+  public RedisClient getLowLevelClient(RedisConfig redisConfig) {
+    RedisClientConfig config = new RedisClientConfig();
+    if (!redisConfig.isSentinel()) {
+      config = config.setAddress(redisConfig.getRedisUrl());
+      String redisPassword = redisConfig.getPassword();
+      String redisUserName = redisConfig.getUserName();
+
+      if (isNotEmpty(redisUserName)) {
+        config.setUsername(redisUserName);
+      }
+
+      if (isNotEmpty(redisPassword)) {
+        config.setPassword(redisPassword);
+      }
+
+      RedisSSLConfig sslConfig = redisConfig.getSslConfig();
+      if (sslConfig != null && sslConfig.isEnabled()) {
+        try {
+          config.setSslTruststore(new File(sslConfig.getCATrustStorePath()).toURI().toURL());
+          config.setSslTruststorePassword(sslConfig.getCATrustStorePassword());
+        } catch (MalformedURLException e) {
+          log.error("Malformed URL provided for Redis SSL CA trustStore file", e);
+          return null;
+        }
+      }
+    } else {
+      throw new NotImplementedException("Sentinel support is not added for low level redis client");
+    }
+    return RedisClient.create(config);
   }
 
   public Timestamp getMessageTimestamp(String messageId) {

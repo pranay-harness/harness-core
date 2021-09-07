@@ -2,10 +2,9 @@ package io.harness.batch.processing.cloudevents.aws.ecs.service;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 
+import io.harness.ccm.commons.entities.billing.CECluster;
+import io.harness.ccm.commons.entities.billing.CECluster.CEClusterKeys;
 import io.harness.persistence.HPersistence;
-
-import software.wings.beans.ce.CECluster;
-import software.wings.beans.ce.CECluster.CEClusterKeys;
 
 import com.google.inject.Inject;
 import java.util.List;

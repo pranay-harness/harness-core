@@ -2,6 +2,7 @@ package io.harness.ng.accesscontrol.migrations.dao;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
 import io.harness.ng.accesscontrol.migrations.models.AccessControlMigration;
 import io.harness.ng.accesscontrol.migrations.repositories.AccessControlMigrationRepository;
 
@@ -16,5 +17,13 @@ public class AccessControlMigrationDAOImpl implements AccessControlMigrationDAO 
   @Override
   public AccessControlMigration save(AccessControlMigration accessControlMigration) {
     return migrationRepository.save(accessControlMigration);
+  }
+
+  @Override
+  public boolean isMigrated(Scope scope) {
+    return migrationRepository
+        .findByAccountIdentifierAndOrgIdentifierAndProjectIdentifier(
+            scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier())
+        .isPresent();
   }
 }

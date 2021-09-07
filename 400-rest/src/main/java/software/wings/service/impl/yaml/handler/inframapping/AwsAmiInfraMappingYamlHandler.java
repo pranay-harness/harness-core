@@ -1,14 +1,16 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_YAML;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.AmiDeploymentType;
+import software.wings.beans.AwsAmiInfraMappingYaml;
 import software.wings.beans.AwsAmiInfrastructureMapping;
-import software.wings.beans.AwsAmiInfrastructureMapping.Yaml;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.yaml.ChangeContext;
 
@@ -20,11 +22,12 @@ import java.util.List;
  */
 @Singleton
 @OwnedBy(CDP)
+@TargetModule(_870_CG_YAML)
 public class AwsAmiInfraMappingYamlHandler
-    extends InfraMappingYamlWithComputeProviderHandler<Yaml, AwsAmiInfrastructureMapping> {
+    extends InfraMappingYamlWithComputeProviderHandler<AwsAmiInfraMappingYaml, AwsAmiInfrastructureMapping> {
   @Override
-  public Yaml toYaml(AwsAmiInfrastructureMapping bean, String appId) {
-    Yaml yaml = Yaml.builder().build();
+  public AwsAmiInfraMappingYaml toYaml(AwsAmiInfrastructureMapping bean, String appId) {
+    AwsAmiInfraMappingYaml yaml = AwsAmiInfraMappingYaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setType(InfrastructureMappingType.AWS_AMI.name());
     yaml.setRegion(bean.getRegion());
@@ -44,8 +47,8 @@ public class AwsAmiInfraMappingYamlHandler
 
   @Override
   public AwsAmiInfrastructureMapping upsertFromYaml(
-      ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext) {
-    Yaml infraMappingYaml = changeContext.getYaml();
+      ChangeContext<AwsAmiInfraMappingYaml> changeContext, List<ChangeContext> changeSetContext) {
+    AwsAmiInfraMappingYaml infraMappingYaml = changeContext.getYaml();
     String yamlFilePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
     String appId = yamlHelper.getAppId(accountId, yamlFilePath);
@@ -72,9 +75,9 @@ public class AwsAmiInfraMappingYamlHandler
     return upsertInfrastructureMapping(current, previous, changeContext.getChange().isSyncFromGit());
   }
 
-  private void toBean(AwsAmiInfrastructureMapping bean, ChangeContext<Yaml> changeContext, String appId, String envId,
-      String computeProviderId, String serviceId, String spotinstCloudProviderId) {
-    Yaml infraMappingYaml = changeContext.getYaml();
+  private void toBean(AwsAmiInfrastructureMapping bean, ChangeContext<AwsAmiInfraMappingYaml> changeContext,
+      String appId, String envId, String computeProviderId, String serviceId, String spotinstCloudProviderId) {
+    AwsAmiInfraMappingYaml infraMappingYaml = changeContext.getYaml();
 
     super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId, null);
 
@@ -97,6 +100,6 @@ public class AwsAmiInfraMappingYamlHandler
 
   @Override
   public Class getYamlClass() {
-    return Yaml.class;
+    return AwsAmiInfraMappingYaml.class;
   }
 }

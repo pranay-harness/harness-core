@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.UTSAV;
 
@@ -16,6 +17,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.KubernetesContainerService;
@@ -35,9 +37,10 @@ import software.wings.settings.SettingValue;
 import com.google.common.collect.ImmutableMap;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.PodStatus;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
+import io.kubernetes.client.openapi.models.V1ObjectMeta;
+import io.kubernetes.client.openapi.models.V1Pod;
+import io.kubernetes.client.openapi.models.V1PodStatus;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -46,6 +49,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDP)
 public class ContainerServiceImplTest extends WingsBaseTest {
   @Mock private KubernetesContainerService kubernetesContainerService;
   @Mock private EncryptionService encryptionService;
@@ -59,7 +63,7 @@ public class ContainerServiceImplTest extends WingsBaseTest {
         buildContainerSvcParams(null, KubernetesClusterConfig.builder().build());
     doReturn(asList(buildPod("p-1", "i-1"), buildPod("p-2", "i-2")))
         .when(kubernetesContainerService)
-        .getRunningPodsWithLabelsFabric8(
+        .getRunningPodsWithLabels(
             any(KubernetesConfig.class), eq("default"), eq(ImmutableMap.of("release", "release-name")));
 
     final List<ContainerInfo> containerInfos = containerService.getContainerInfos(containerServiceParams, false);
@@ -106,11 +110,11 @@ public class ContainerServiceImplTest extends WingsBaseTest {
         .build();
   }
 
-  private Pod buildPod(String name, String ip) {
-    Pod pod = new Pod();
-    ObjectMeta meta = new ObjectMeta();
+  private V1Pod buildPod(String name, String ip) {
+    V1Pod pod = new V1Pod();
+    V1ObjectMeta meta = new V1ObjectMeta();
     meta.setName(name);
-    PodStatus status = new PodStatus();
+    V1PodStatus status = new V1PodStatus();
     status.setPodIP(ip);
     pod.setMetadata(meta);
     pod.setStatus(status);

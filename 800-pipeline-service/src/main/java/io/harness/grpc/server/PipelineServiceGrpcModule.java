@@ -1,7 +1,9 @@
 package io.harness.grpc.server;
 
+import io.harness.ModuleType;
 import io.harness.PipelineServiceConfiguration;
-import io.harness.engine.executions.node.PmsNodeExecutionGrpcSevice;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.interrupts.InterruptGrpcService;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.pms.contracts.plan.PlanCreationServiceGrpc;
@@ -11,7 +13,6 @@ import io.harness.pms.plan.execution.data.service.outcome.OutcomeServiceGrpcServ
 import io.harness.pms.plan.execution.data.service.outputs.SweepingOutputServiceImpl;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.sdk.service.execution.PmsExecutionGrpcService;
-import io.harness.pms.utils.PmsConstants;
 
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
@@ -24,6 +25,7 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import io.grpc.BindableService;
 import io.grpc.Channel;
+import io.grpc.ServerInterceptor;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.internal.GrpcUtil;
 import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
@@ -31,7 +33,6 @@ import io.grpc.netty.shaded.io.grpc.netty.NettyChannelBuilder;
 import io.grpc.netty.shaded.io.netty.handler.ssl.SslContext;
 import io.grpc.netty.shaded.io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.grpc.services.HealthStatusManager;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -39,6 +40,7 @@ import java.util.Set;
 import javax.net.ssl.SSLException;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Slf4j
 public class PipelineServiceGrpcModule extends AbstractModule {
   private static PipelineServiceGrpcModule instance;
@@ -53,6 +55,10 @@ public class PipelineServiceGrpcModule extends AbstractModule {
 
   @Override
   protected void configure() {
+    Multibinder<ServerInterceptor> serverInterceptorMultibinder =
+        Multibinder.newSetBinder(binder(), ServerInterceptor.class);
+    serverInterceptorMultibinder.addBinding().to(PipelineServiceGrpcErrorHandler.class);
+
     Multibinder<Service> serviceBinder = Multibinder.newSetBinder(binder(), Service.class);
     serviceBinder.addBinding().to(Key.get(Service.class, Names.named("pms-grpc-service")));
     serviceBinder.addBinding().to(Key.get(Service.class, Names.named("pms-grpc-internal-service")));
@@ -66,13 +72,14 @@ public class PipelineServiceGrpcModule extends AbstractModule {
 
   @Provides
   @Singleton
-  public Map<String, PlanCreationServiceBlockingStub> grpcClients(PipelineServiceConfiguration configuration)
+  public Map<ModuleType, PlanCreationServiceBlockingStub> grpcClients(PipelineServiceConfiguration configuration)
       throws SSLException {
-    Map<String, PlanCreationServiceBlockingStub> map = new HashMap<>();
-    map.put(PmsConstants.INTERNAL_SERVICE_NAME,
+    Map<ModuleType, PlanCreationServiceBlockingStub> map = new HashMap<>();
+    map.put(ModuleType.PMS,
         PlanCreationServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName("pmsSdkInternal").build()));
     for (Map.Entry<String, GrpcClientConfig> entry : configuration.getGrpcClientConfigs().entrySet()) {
-      map.put(entry.getKey(), PlanCreationServiceGrpc.newBlockingStub(getChannel(entry.getValue())));
+      map.put(
+          ModuleType.fromString(entry.getKey()), PlanCreationServiceGrpc.newBlockingStub(getChannel(entry.getValue())));
     }
     return map;
   }
@@ -113,29 +120,28 @@ public class PipelineServiceGrpcModule extends AbstractModule {
   @Singleton
   @Named("pms-grpc-service")
   public Service pmsGrpcService(PipelineServiceConfiguration configuration, HealthStatusManager healthStatusManager,
-      Set<BindableService> services) {
-    return new GrpcServer(configuration.getGrpcServerConfig().getConnectors().get(0), services, Collections.emptySet(),
-        healthStatusManager);
+      Set<BindableService> services, Set<ServerInterceptor> serverInterceptors) {
+    return new GrpcServer(
+        configuration.getGrpcServerConfig().getConnectors().get(0), services, serverInterceptors, healthStatusManager);
   }
 
   @Provides
   @Singleton
   @Named("pms-grpc-internal-service")
-  public Service pmsGrpcInternalService(HealthStatusManager healthStatusManager, Set<BindableService> services) {
+  public Service pmsGrpcInternalService(HealthStatusManager healthStatusManager, Set<BindableService> services,
+      Set<ServerInterceptor> serverInterceptors) {
     return new GrpcInProcessServer(
-        PmsConstants.INTERNAL_SERVICE_NAME, services, Collections.emptySet(), healthStatusManager);
+        ModuleType.PMS.name().toLowerCase(), services, serverInterceptors, healthStatusManager);
   }
 
   @Provides
   private Set<BindableService> bindableServices(HealthStatusManager healthStatusManager,
-      PmsSdkInstanceService pmsSdkInstanceService, PmsNodeExecutionGrpcSevice pmsNodeExecutionGrpcSevice,
-      PmsExecutionGrpcService pmsExecutionGrpcService, SweepingOutputServiceImpl sweepingOutputService,
-      OutcomeServiceGrpcServerImpl outcomeServiceGrpcServer,
+      PmsSdkInstanceService pmsSdkInstanceService, PmsExecutionGrpcService pmsExecutionGrpcService,
+      SweepingOutputServiceImpl sweepingOutputService, OutcomeServiceGrpcServerImpl outcomeServiceGrpcServer,
       EngineExpressionGrpcServiceImpl engineExpressionGrpcService, InterruptGrpcService interruptGrpcService) {
     Set<BindableService> services = new HashSet<>();
     services.add(healthStatusManager.getHealthService());
     services.add(pmsSdkInstanceService);
-    services.add(pmsNodeExecutionGrpcSevice);
     services.add(pmsExecutionGrpcService);
     services.add(sweepingOutputService);
     services.add(outcomeServiceGrpcServer);

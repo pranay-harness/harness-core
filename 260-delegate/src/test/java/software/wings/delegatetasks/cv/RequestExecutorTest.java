@@ -252,7 +252,7 @@ public class RequestExecutorTest extends CategoryTest {
     when(call.execute()).thenThrow(new IOException("execute call failed"));
     assertThatThrownBy(() -> requestExecutor.executeRequest(call))
         .isInstanceOf(DataCollectionException.class)
-        .hasMessage("java.io.IOException: execute call failed")
+        .hasMessage("execute call failed")
         .hasCauseInstanceOf(IOException.class);
   }
 

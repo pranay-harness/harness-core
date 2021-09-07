@@ -1,7 +1,9 @@
 package io.harness.manifest;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
 import static io.harness.rule.OwnerRule.ABOSII;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -179,14 +181,49 @@ public class CustomManifestServiceImplTest extends CategoryTest {
     assertThat(result.stream().map(CustomSourceFile::getFileContent)).containsExactly("absolute-content");
   }
 
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void tesExecuteCustomSourceScriptSuccess() throws IOException {
+    CustomManifestSource customManifestSource =
+        CustomManifestSource.builder().script("test script").filePaths(singletonList("file1.yaml")).build();
+    doReturn(ExecuteCommandResponse.builder().status(CommandExecutionStatus.SUCCESS).build())
+        .when(scriptProcessExecutor)
+        .executeCommandString("test script", emptyList());
+    String resultWorkingDir =
+        customManifestService.executeCustomSourceScript(ACTIVITY_ID, logCallback, customManifestSource);
+
+    assertThat(resultWorkingDir).isNotNull();
+    File file = new File(resultWorkingDir);
+    assertThat(file.exists()).isTrue();
+    assertThat(file.toString()).contains("manifestCustomSource");
+    deleteDirectoryAndItsContentIfExists(resultWorkingDir);
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void tesExecuteCustomSourceScriptSFail() throws IOException {
+    CustomManifestSource customManifestSource =
+        CustomManifestSource.builder().script("test script").filePaths(singletonList("file1.yaml")).build();
+    doReturn(ExecuteCommandResponse.builder().status(CommandExecutionStatus.FAILURE).build())
+        .when(scriptProcessExecutor)
+        .executeCommandString("test script", emptyList());
+
+    assertThatThrownBy(
+        () -> customManifestService.executeCustomSourceScript(ACTIVITY_ID, logCallback, customManifestSource))
+        .isInstanceOf(ShellExecutionException.class)
+        .hasMessageContaining("Custom shell script failed");
+  }
+
   @After
   public void cleanup() throws IOException {
     if (isNotEmpty(testOutputDirectory)) {
-      FileUtils.deleteDirectory(new File(testOutputDirectory));
+      deleteDirectoryAndItsContentIfExists(testOutputDirectory);
     }
 
     if (isNotEmpty(shellWorkingDirectory)) {
-      FileUtils.deleteDirectory(new File(shellWorkingDirectory));
+      deleteDirectoryAndItsContentIfExists(shellWorkingDirectory);
     }
   }
 

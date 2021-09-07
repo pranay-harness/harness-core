@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.UNREACHABLE_HOST;
@@ -8,6 +9,7 @@ import static io.harness.exception.WingsException.ADMIN;
 import static io.harness.exception.WingsException.ADMIN_SRE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
+import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.shell.AuthenticationScheme.HTTP_PASSWORD;
 import static io.harness.shell.AuthenticationScheme.KERBEROS;
@@ -17,6 +19,7 @@ import static io.harness.shell.SshSessionFactory.getSSHSession;
 import static software.wings.beans.yaml.YamlConstants.GIT_DEFAULT_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.GIT_HELM_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.GIT_TERRAFORM_LOG_PREFIX;
+import static software.wings.beans.yaml.YamlConstants.GIT_TERRAGRUNT_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.GIT_TRIGGER_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
@@ -28,7 +31,9 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
@@ -129,9 +134,11 @@ import org.eclipse.jgit.util.HttpSupport;
  * Created by anubhaw on 10/16/17.
  */
 
+@OwnedBy(DX)
 @Singleton
 @Slf4j
 @TargetModule(HarnessModule._960_API_SERVICES)
+@BreakDependencyOn("software.wings.beans.GitConfig")
 public class GitClientImpl implements GitClient {
   @Inject GitClientHelper gitClientHelper;
 
@@ -139,7 +146,7 @@ public class GitClientImpl implements GitClient {
       GitConfig gitConfig, String gitRepoDirectory, String branch, boolean noCheckout) {
     try {
       if (new File(gitRepoDirectory).exists()) {
-        FileUtils.deleteDirectory(new File(gitRepoDirectory));
+        deleteDirectoryAndItsContentIfExists(gitRepoDirectory);
       }
     } catch (IOException ioex) {
       log.error(GIT_YAML_LOG_PREFIX + "Exception while deleting repo: ", getMessage(ioex));
@@ -1064,6 +1071,8 @@ public class GitClientImpl implements GitClient {
       case HELM:
         return GIT_HELM_LOG_PREFIX;
 
+      case TERRAGRUNT:
+        return GIT_TERRAGRUNT_LOG_PREFIX;
       default:
         unhandled(repositoryType);
         return GIT_DEFAULT_LOG_PREFIX;

@@ -40,7 +40,6 @@ import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesResource;
-import io.harness.k8s.model.Release;
 import io.harness.k8s.model.ReleaseHistory;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
@@ -51,7 +50,6 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -80,13 +78,10 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
         Paths.get(k8sDelegateTaskParams.getWorkingDirectory(), MANIFEST_FILES_DIR).toString());
     final long timeoutInMillis = getTimeoutMillisFromMinutes(k8sCanaryDeployRequest.getTimeoutIntervalInMin());
 
-    List<String> manifestHelperFiles = isEmpty(k8sCanaryDeployRequest.getValuesYamlList())
-        ? k8sCanaryDeployRequest.getOpenshiftParamList()
-        : k8sCanaryDeployRequest.getValuesYamlList();
     boolean success = k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(
         k8sCanaryDeployRequest.getManifestDelegateConfig(), k8sCanaryHandlerConfig.getManifestFilesDirectory(),
-        k8sTaskHelperBase.getLogCallback(
-            logStreamingTaskClient, FetchFiles, CollectionUtils.isEmpty(manifestHelperFiles), commandUnitsProgress),
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, FetchFiles,
+            k8sCanaryDeployRequest.isShouldOpenFetchFilesLogStream(), commandUnitsProgress),
         timeoutInMillis, k8sCanaryDeployRequest.getAccountId());
     if (!success) {
       return getGenericFailureResponse(getTaskResponseOnFailure());
@@ -134,7 +129,6 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
       k8sCanaryBaseHandler.wrapUp(k8sCanaryHandlerConfig.getClient(), k8sDelegateTaskParams, wrapUpLogCallback);
 
       ReleaseHistory releaseHistory = k8sCanaryHandlerConfig.getReleaseHistory();
-      releaseHistory.setReleaseStatus(Release.Status.Succeeded);
       k8sTaskHelperBase.saveReleaseHistoryInConfigMap(k8sCanaryHandlerConfig.getKubernetesConfig(),
           k8sCanaryDeployRequest.getReleaseName(), releaseHistory.getAsYaml());
       wrapUpLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
@@ -161,6 +155,7 @@ public class K8sCanaryRequestHandler extends K8sRequestHandler {
   boolean init(K8sCanaryDeployRequest request, K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback logCallback)
       throws IOException {
     logCallback.saveExecutionLog("Initializing..\n");
+    logCallback.saveExecutionLog(color(String.format("Release Name: [%s]", request.getReleaseName()), Yellow, Bold));
     k8sCanaryHandlerConfig.setKubernetesConfig(
         containerDeploymentDelegateBaseHelper.createKubernetesConfig(request.getK8sInfraDelegateConfig()));
     k8sCanaryHandlerConfig.setClient(

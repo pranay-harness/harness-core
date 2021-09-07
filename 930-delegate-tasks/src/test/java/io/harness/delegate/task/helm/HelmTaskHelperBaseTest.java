@@ -2,12 +2,15 @@ package io.harness.delegate.task.helm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.chartmuseum.ChartMuseumConstants.CHART_MUSEUM_SERVER_URL;
+import static io.harness.delegate.beans.storeconfig.StoreDelegateConfigType.GCS_HELM;
+import static io.harness.delegate.beans.storeconfig.StoreDelegateConfigType.HTTP_HELM;
 import static io.harness.delegate.task.helm.HelmTaskHelperBase.RESOURCE_DIR_BASE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.helm.HelmConstants.HELM_HOME_PATH_FLAG;
 import static io.harness.k8s.model.HelmVersion.V2;
 import static io.harness.k8s.model.HelmVersion.V3;
 import static io.harness.rule.OwnerRule.ABOSII;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.YOGESH;
 
 import static java.lang.String.format;
@@ -15,9 +18,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -38,6 +43,7 @@ import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
+import io.harness.delegate.beans.storeconfig.StoreDelegateConfigType;
 import io.harness.delegate.chartmuseum.NGChartMuseumService;
 import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
 import io.harness.encryption.SecretRefData;
@@ -52,6 +58,7 @@ import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.TimeoutException;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
@@ -63,6 +70,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessOutput;
 import org.zeroturnaround.exec.ProcessResult;
@@ -104,7 +113,8 @@ public class HelmTaskHelperBaseTest extends CategoryTest {
     doReturn(workingDirectory).when(helmTaskHelperBase).createNewDirectoryAtPath(anyString());
     doReturn(new ProcessResult(0, new ProcessOutput("success".getBytes())))
         .when(helmTaskHelperBase)
-        .executeCommand(expectedInitCommand, workingDirectory, "Initing helm Command " + expectedInitCommand, 9000L);
+        .executeCommand(expectedInitCommand, workingDirectory, "Initing helm Command " + expectedInitCommand, 9000L,
+            HelmCliCommandType.INIT);
     assertThatCode(() -> helmTaskHelperBase.initHelm("/working/directory", V2, 9000L)).doesNotThrowAnyException();
   }
 
@@ -117,7 +127,8 @@ public class HelmTaskHelperBaseTest extends CategoryTest {
     doReturn(workingDirectory).when(helmTaskHelperBase).createNewDirectoryAtPath(anyString());
     doReturn(new ProcessResult(1, new ProcessOutput("something went wrong executing command".getBytes())))
         .when(helmTaskHelperBase)
-        .executeCommand(expectedInitCommand, workingDirectory, "Initing helm Command " + expectedInitCommand, 9000L);
+        .executeCommand(expectedInitCommand, workingDirectory, "Initing helm Command " + expectedInitCommand, 9000L,
+            HelmCliCommandType.INIT);
     assertThatThrownBy(() -> helmTaskHelperBase.initHelm("/working/directory", V2, 9000L))
         .isInstanceOf(HelmClientException.class)
         .hasMessageContaining("Failed to init helm")
@@ -136,7 +147,7 @@ public class HelmTaskHelperBaseTest extends CategoryTest {
   private void testAddRepoIfHelmCommandFailed() {
     doReturn(new ProcessResult(1, new ProcessOutput(new byte[1])))
         .when(helmTaskHelperBase)
-        .executeCommand(anyString(), anyString(), anyString(), anyLong());
+        .executeCommand(anyString(), anyString(), anyString(), anyLong(), eq(HelmCliCommandType.REPO_ADD));
     assertThatExceptionOfType(HelmClientException.class)
         .isThrownBy(()
                         -> helmTaskHelperBase.addRepo("vault", "vault", "https://helm-server", "admin",
@@ -146,9 +157,9 @@ public class HelmTaskHelperBaseTest extends CategoryTest {
   }
 
   private void testAddRepoIfProcessExecException() {
-    doThrow(new HelmClientException("ex"))
+    doThrow(new HelmClientException("ex", HelmCliCommandType.REPO_ADD))
         .when(helmTaskHelperBase)
-        .executeCommand(anyString(), anyString(), anyString(), anyLong());
+        .executeCommand(anyString(), anyString(), anyString(), anyLong(), eq(HelmCliCommandType.REPO_ADD));
 
     assertThatExceptionOfType(HelmClientException.class)
         .isThrownBy(()
@@ -161,12 +172,13 @@ public class HelmTaskHelperBaseTest extends CategoryTest {
 
     doReturn(new ProcessResult(0, new ProcessOutput(new byte[1])))
         .when(helmTaskHelperBase)
-        .executeCommand(anyString(), anyString(), anyString(), anyLong());
+        .executeCommand(anyString(), anyString(), anyString(), anyLong(), eq(HelmCliCommandType.REPO_ADD));
     helmTaskHelperBase.addRepo(
         "vault", "vault", "https://helm-server", "admin", "secret-text".toCharArray(), "/home", V3, 9000L);
 
     verify(helmTaskHelperBase, times(1))
-        .executeCommand(captor.capture(), captor.capture(), captor.capture(), eq(9000L));
+        .executeCommand(
+            captor.capture(), captor.capture(), captor.capture(), eq(9000L), eq(HelmCliCommandType.REPO_ADD));
 
     assertThat(captor.getAllValues().get(0))
         .isEqualTo("v3/helm repo add vault https://helm-server --username admin --password secret-text");
@@ -184,11 +196,12 @@ public class HelmTaskHelperBaseTest extends CategoryTest {
 
     doReturn(new ProcessResult(0, new ProcessOutput(new byte[1])))
         .when(helmTaskHelperBase)
-        .executeCommand(anyString(), anyString(), anyString(), anyLong());
+        .executeCommand(anyString(), anyString(), anyString(), anyLong(), eq(HelmCliCommandType.REPO_ADD));
     helmTaskHelperBase.addRepo("vault", "vault", "https://helm-server", null, null, "/home", V3, 9000L);
 
     verify(helmTaskHelperBase, times(1))
-        .executeCommand(captor.capture(), captor.capture(), captor.capture(), eq(9000L));
+        .executeCommand(
+            captor.capture(), captor.capture(), captor.capture(), eq(9000L), eq(HelmCliCommandType.REPO_ADD));
 
     assertThat(captor.getAllValues().get(0)).isEqualTo("v3/helm repo add vault https://helm-server  ");
     assertThat(captor.getAllValues().get(1)).isEqualTo("/home");
@@ -240,14 +253,15 @@ public class HelmTaskHelperBaseTest extends CategoryTest {
   public void testFetchChartFromRepo() {
     doReturn(new ProcessResult(0, new ProcessOutput(null)))
         .when(helmTaskHelperBase)
-        .executeCommand(anyString(), anyString(), anyString(), anyLong());
+        .executeCommand(anyString(), anyString(), anyString(), anyLong(), eq(HelmCliCommandType.FETCH));
 
     assertThatCode(()
                        -> helmTaskHelperBase.fetchChartFromRepo(
                            "repo", "repo display", "chart", "1.0.0", "/dir", V3, emptyHelmCommandFlag, 90000))
         .doesNotThrowAnyException();
 
-    verify(helmTaskHelperBase, times(1)).executeCommand(anyString(), anyString(), anyString(), anyLong());
+    verify(helmTaskHelperBase, times(1))
+        .executeCommand(anyString(), anyString(), anyString(), anyLong(), eq(HelmCliCommandType.FETCH));
   }
 
   @Test
@@ -258,14 +272,15 @@ public class HelmTaskHelperBaseTest extends CategoryTest {
 
     doReturn(new ProcessResult(123, new ProcessOutput(cliError.getBytes())))
         .when(helmTaskHelperBase)
-        .executeCommand(anyString(), anyString(), anyString(), anyLong());
+        .executeCommand(anyString(), anyString(), anyString(), anyLong(), eq(HelmCliCommandType.FETCH));
 
     assertThatThrownBy(()
                            -> helmTaskHelperBase.fetchChartFromRepo(REPO_NAME, REPO_DISPLAY_NAME, CHART_NAME,
                                CHART_VERSION, "/dir", V3, emptyHelmCommandFlag, 90000))
         .isInstanceOf(InvalidRequestException.class);
 
-    verify(helmTaskHelperBase, times(1)).executeCommand(anyString(), anyString(), anyString(), anyLong());
+    verify(helmTaskHelperBase, times(1))
+        .executeCommand(anyString(), anyString(), anyString(), anyLong(), eq(HelmCliCommandType.FETCH));
   }
 
   @Test
@@ -398,12 +413,14 @@ public class HelmTaskHelperBaseTest extends CategoryTest {
 
     doReturn(new ProcessResult(0, new ProcessOutput(null)))
         .when(helmTaskHelperBase)
-        .executeCommand(anyString(), eq(chartDirectory), anyString(), eq(timeoutInMillis));
+        .executeCommand(
+            anyString(), eq(chartDirectory), anyString(), eq(timeoutInMillis), eq(HelmCliCommandType.REPO_ADD));
 
     helmTaskHelperBase.addChartMuseumRepo(REPO_NAME, REPO_DISPLAY_NAME, port, chartDirectory, V3, timeoutInMillis);
     ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
     verify(helmTaskHelperBase, times(1))
-        .executeCommand(commandCaptor.capture(), eq(chartDirectory), anyString(), eq(timeoutInMillis));
+        .executeCommand(commandCaptor.capture(), eq(chartDirectory), anyString(), eq(timeoutInMillis),
+            eq(HelmCliCommandType.REPO_ADD));
     String executedCommand = commandCaptor.getValue();
     assertThat(executedCommand).contains(CHART_MUSEUM_SERVER_URL.replace("${PORT}", Integer.toString(port)));
   }
@@ -418,7 +435,8 @@ public class HelmTaskHelperBaseTest extends CategoryTest {
 
     doReturn(new ProcessResult(1, new ProcessOutput("Something went wrong".getBytes())))
         .when(helmTaskHelperBase)
-        .executeCommand(anyString(), eq(chartDirectory), anyString(), eq(timeoutInMillis));
+        .executeCommand(
+            anyString(), eq(chartDirectory), anyString(), eq(timeoutInMillis), eq(HelmCliCommandType.REPO_ADD));
 
     assertThatThrownBy(()
                            -> helmTaskHelperBase.addChartMuseumRepo(
@@ -505,29 +523,29 @@ public class HelmTaskHelperBaseTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testExecuteCommand() throws Exception {
     doReturn(new ProcessResult(0, null)).when(processExecutor).execute();
-    helmTaskHelperBase.executeCommand("", ".", "", 9000L);
+    helmTaskHelperBase.executeCommand("", ".", "", 9000L, HelmCliCommandType.INIT);
 
     doThrow(new IOException()).when(processExecutor).execute();
     assertThatExceptionOfType(HelmClientException.class)
-        .isThrownBy(() -> helmTaskHelperBase.executeCommand("", ".", "", 9000L))
+        .isThrownBy(() -> helmTaskHelperBase.executeCommand("", ".", "", 9000L, HelmCliCommandType.INIT))
         .withNoCause()
         .withMessageContaining("[IO exception]");
 
     doThrow(new InterruptedException()).when(processExecutor).execute();
     assertThatExceptionOfType(HelmClientException.class)
-        .isThrownBy(() -> helmTaskHelperBase.executeCommand("", ".", "foo", 9000L))
+        .isThrownBy(() -> helmTaskHelperBase.executeCommand("", ".", "foo", 9000L, HelmCliCommandType.INIT))
         .withNoCause()
         .withMessageContaining("[Interrupted] foo");
 
     doThrow(new TimeoutException()).when(processExecutor).execute();
     assertThatExceptionOfType(HelmClientException.class)
-        .isThrownBy(() -> helmTaskHelperBase.executeCommand("", ".", null, 9000L))
+        .isThrownBy(() -> helmTaskHelperBase.executeCommand("", ".", null, 9000L, HelmCliCommandType.INIT))
         .withNoCause()
         .withMessageContaining("[Timed out]");
 
     doThrow(new RuntimeException("test")).when(processExecutor).execute();
     assertThatExceptionOfType(RuntimeException.class)
-        .isThrownBy(() -> helmTaskHelperBase.executeCommand("", ".", "", 9000L))
+        .isThrownBy(() -> helmTaskHelperBase.executeCommand("", ".", "", 9000L, HelmCliCommandType.INIT))
         .withNoCause()
         .withMessageContaining("test");
   }
@@ -541,7 +559,8 @@ public class HelmTaskHelperBaseTest extends CategoryTest {
     final String expectedRemoveCommand = format("v2/helm repo remove %s --home %s/helm", repoName, workingDirectory);
     doReturn(new ProcessResult(0, new ProcessOutput("success".getBytes())))
         .when(helmTaskHelperBase)
-        .executeCommand(expectedRemoveCommand, null, format("remove helm repo %s", repoName), 9000L);
+        .executeCommand(expectedRemoveCommand, null, format("remove helm repo %s", repoName), 9000L,
+            HelmCliCommandType.REPO_REMOVE);
 
     assertThatCode(() -> helmTaskHelperBase.removeRepo(repoName, workingDirectory, V2, 9000L))
         .doesNotThrowAnyException();
@@ -556,7 +575,8 @@ public class HelmTaskHelperBaseTest extends CategoryTest {
     final String expectedRemoveCommand = format("v2/helm repo remove %s --home %s/helm", repoName, workingDirectory);
     doReturn(new ProcessResult(1, new ProcessOutput("something went wrong executing command".getBytes())))
         .when(helmTaskHelperBase)
-        .executeCommand(expectedRemoveCommand, null, format("remove helm repo %s", repoName), 9000L);
+        .executeCommand(expectedRemoveCommand, null, format("remove helm repo %s", repoName), 9000L,
+            HelmCliCommandType.REPO_REMOVE);
 
     assertThatCode(() -> helmTaskHelperBase.removeRepo(repoName, workingDirectory, V2, 9000L))
         .doesNotThrowAnyException();
@@ -571,7 +591,8 @@ public class HelmTaskHelperBaseTest extends CategoryTest {
     final String expectedRemoveCommand = format("v2/helm repo remove %s --home %s/helm", repoName, workingDirectory);
     doThrow(new InvalidRequestException("Something went wrong", USER))
         .when(helmTaskHelperBase)
-        .executeCommand(expectedRemoveCommand, null, format("remove helm repo %s", repoName), 9000L);
+        .executeCommand(expectedRemoveCommand, null, format("remove helm repo %s", repoName), 9000L,
+            HelmCliCommandType.REPO_REMOVE);
 
     assertThatCode(() -> helmTaskHelperBase.removeRepo(repoName, workingDirectory, V2, 9000L))
         .doesNotThrowAnyException();
@@ -683,5 +704,284 @@ public class HelmTaskHelperBaseTest extends CategoryTest {
     ProcessExecutor executor = helmTaskHelperBase.createProcessExecutor("helm repo add test", "pwd", 9000L);
     assertThat(executor.getCommand()).containsExactly("helm", "repo", "add", "test");
     assertThat(executor.getDirectory().toString()).endsWith("pwd");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testFetchVersionsFromHttp() throws Exception {
+    final String V_3_HELM_SEARCH_REPO_COMMAND = "v3/helm search repo repoName/chartName -l --devel --max-col-width 300";
+    String repoUrl = "https://repo-chart/";
+    String username = "username";
+    char[] password = "password".toCharArray();
+    String directory = "dir";
+    long timeout = 90000L;
+
+    HelmChartManifestDelegateConfig helmChartManifestDelegateConfig =
+        getHelmChartManifestDelegateConfig(repoUrl, username, password, V3, HTTP_HELM);
+    doReturn(new ProcessResult(0, null)).when(processExecutor).execute();
+
+    doAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class))
+        .when(helmTaskHelperBase)
+        .createDirectory(directory);
+    doReturn(new ProcessResult(0, new ProcessOutput(getHelmCollectionResult().getBytes())))
+        .when(helmTaskHelperBase)
+        .executeCommand(
+            eq(V_3_HELM_SEARCH_REPO_COMMAND), eq(directory), anyString(), eq(timeout), any(HelmCliCommandType.class));
+
+    // with username and pass
+    List<String> chartVersions =
+        helmTaskHelperBase.fetchChartVersions(helmChartManifestDelegateConfig, timeout, directory);
+    assertThat(chartVersions.size()).isEqualTo(2);
+    assertThat(chartVersions.get(0)).isEqualTo("1.0.2");
+    assertThat(chartVersions.get(1)).isEqualTo("1.0.1");
+    verify(processExecutor, times(2)).execute();
+
+    // anonymous user
+    List<String> chartVersions2 = helmTaskHelperBase.fetchChartVersions(
+        getHelmChartManifestDelegateConfig(repoUrl, null, null, V3, HTTP_HELM), timeout, directory);
+    assertThat(chartVersions2.size()).isEqualTo(2);
+    assertThat(chartVersions2.get(0)).isEqualTo("1.0.2");
+    assertThat(chartVersions2.get(1)).isEqualTo("1.0.1");
+    verify(processExecutor, times(4)).execute();
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testFetchVersionsFromHttpV2() throws Exception {
+    final String V_2_HELM_SEARCH_REPO_COMMAND =
+        "v2/helm search repoName/chartName -l ${HELM_HOME_PATH_FLAG} --col-width 300";
+    String repoUrl = "https://repo-chart/";
+    String username = "username";
+    char[] password = "password".toCharArray();
+    String directory = "dir";
+    long timeout = 90000L;
+
+    HelmChartManifestDelegateConfig helmChartManifestDelegateConfig =
+        getHelmChartManifestDelegateConfig(repoUrl, username, password, V2, HTTP_HELM);
+    doReturn(new ProcessResult(0, null)).when(processExecutor).execute();
+
+    doAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class))
+        .when(helmTaskHelperBase)
+        .createDirectory(directory);
+    doReturn(new ProcessResult(0, new ProcessOutput(getHelmCollectionResult().getBytes())))
+        .when(helmTaskHelperBase)
+        .executeCommand(
+            eq(V_2_HELM_SEARCH_REPO_COMMAND), eq(directory), anyString(), eq(timeout), any(HelmCliCommandType.class));
+    doAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class))
+        .when(helmTaskHelperBase)
+        .applyHelmHomePath(V_2_HELM_SEARCH_REPO_COMMAND, directory);
+
+    // with username and pass
+    List<String> chartVersions =
+        helmTaskHelperBase.fetchChartVersions(helmChartManifestDelegateConfig, timeout, directory);
+    assertThat(chartVersions.size()).isEqualTo(2);
+    assertThat(chartVersions.get(0)).isEqualTo("1.0.2");
+    assertThat(chartVersions.get(1)).isEqualTo("1.0.1");
+    // For helm version 2, we execute another command for helm init apart from add and update repo
+    verify(processExecutor, times(3)).execute();
+    verify(helmTaskHelperBase, times(1)).initHelm(directory, V2, timeout);
+
+    // anonymous user
+    List<String> chartVersions2 = helmTaskHelperBase.fetchChartVersions(
+        getHelmChartManifestDelegateConfig(repoUrl, null, null, V2, HTTP_HELM), timeout, directory);
+    assertThat(chartVersions2.size()).isEqualTo(2);
+    assertThat(chartVersions2.get(0)).isEqualTo("1.0.2");
+    assertThat(chartVersions2.get(1)).isEqualTo("1.0.1");
+    // For helm version 2, we execute another command for helm init apart from add and update repo
+    verify(processExecutor, times(6)).execute();
+    verify(helmTaskHelperBase, times(2)).initHelm(directory, V2, timeout);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testFetchVersionsFromGcs() throws Exception {
+    final String V_3_HELM_SEARCH_REPO_COMMAND = "v3/helm search repo repoName/chartName -l --devel --max-col-width 300";
+    String repoUrl = "https://localhost:9999/";
+    String directory = "dir";
+    long timeout = 90000L;
+    final ChartMuseumServer chartMuseumServer = ChartMuseumServer.builder().port(9999).build();
+
+    HelmChartManifestDelegateConfig helmChartManifestDelegateConfig =
+        getHelmChartManifestDelegateConfig(repoUrl, null, null, V3, GCS_HELM);
+    doReturn(chartMuseumServer)
+        .when(ngChartMuseumService)
+        .startChartMuseumServer(helmChartManifestDelegateConfig.getStoreDelegateConfig(), RESOURCE_DIR_BASE);
+    doReturn(new ProcessResult(0, null)).when(processExecutor).execute();
+    doAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class))
+        .when(helmTaskHelperBase)
+        .createNewDirectoryAtPath(RESOURCE_DIR_BASE);
+    doAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class))
+        .when(helmTaskHelperBase)
+        .createDirectory(directory);
+    doReturn(new ProcessResult(0, new ProcessOutput(getHelmCollectionResult().getBytes())))
+        .when(helmTaskHelperBase)
+        .executeCommand(
+            eq(V_3_HELM_SEARCH_REPO_COMMAND), eq(directory), anyString(), eq(timeout), any(HelmCliCommandType.class));
+
+    List<String> chartVersions =
+        helmTaskHelperBase.fetchChartVersions(helmChartManifestDelegateConfig, timeout, directory);
+    assertThat(chartVersions.size()).isEqualTo(2);
+    assertThat(chartVersions.get(0)).isEqualTo("1.0.2");
+    assertThat(chartVersions.get(1)).isEqualTo("1.0.1");
+    verify(processExecutor, times(1)).execute();
+    verify(ngChartMuseumService)
+        .startChartMuseumServer(helmChartManifestDelegateConfig.getStoreDelegateConfig(), RESOURCE_DIR_BASE);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testReturnEmptyHelmChartsForEmptyResponse() throws Exception {
+    final String V_3_HELM_SEARCH_REPO_COMMAND = "v3/helm search repo repoName/chartName -l --devel --max-col-width 300";
+    String repoUrl = "https://repo-chart/";
+    String directory = "dir";
+    long timeout = 90000L;
+
+    processExecutor.readOutput(true);
+    doReturn(new ProcessResult(0, null)).when(processExecutor).execute();
+    doAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class))
+        .when(helmTaskHelperBase)
+        .createDirectory(directory);
+    doReturn(new ProcessResult(0, new ProcessOutput("".getBytes())))
+        .when(helmTaskHelperBase)
+        .executeCommand(
+            eq(V_3_HELM_SEARCH_REPO_COMMAND), eq(directory), anyString(), eq(timeout), any(HelmCliCommandType.class));
+
+    assertThatThrownBy(
+        ()
+            -> helmTaskHelperBase.fetchChartVersions(
+                getHelmChartManifestDelegateConfig(repoUrl, null, null, V3, HTTP_HELM), timeout, directory))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("No chart with the given name found. Chart might be deleted at source");
+    verify(processExecutor, times(2)).execute();
+
+    doReturn(new ProcessResult(0, new ProcessOutput("No results Found".getBytes())))
+        .when(helmTaskHelperBase)
+        .executeCommand(
+            eq(V_3_HELM_SEARCH_REPO_COMMAND), eq(directory), anyString(), eq(timeout), any(HelmCliCommandType.class));
+    assertThatThrownBy(
+        ()
+            -> helmTaskHelperBase.fetchChartVersions(
+                getHelmChartManifestDelegateConfig(repoUrl, null, null, V3, HTTP_HELM), timeout, directory))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("No chart with the given name found. Chart might be deleted at source");
+    verify(processExecutor, times(4)).execute();
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testFetchVersionsTimeOut() throws Exception {
+    String repoUrl = "https://localhost:9999/";
+    String directory = "dir";
+    long timeout = 90000L;
+    final ChartMuseumServer chartMuseumServer = ChartMuseumServer.builder().port(9999).build();
+
+    HelmChartManifestDelegateConfig helmChartManifestDelegateConfig =
+        getHelmChartManifestDelegateConfig(repoUrl, null, null, V3, GCS_HELM);
+    doReturn(chartMuseumServer)
+        .when(ngChartMuseumService)
+        .startChartMuseumServer(helmChartManifestDelegateConfig.getStoreDelegateConfig(), RESOURCE_DIR_BASE);
+    doAnswer(new Answer() {
+      private int count = 0;
+      public Object answer(InvocationOnMock invocation) throws TimeoutException {
+        if (count++ == 0) {
+          return new ProcessResult(0, null);
+        }
+        throw new TimeoutException();
+      }
+    })
+        .when(processExecutor)
+        .execute();
+    doAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class))
+        .when(helmTaskHelperBase)
+        .createNewDirectoryAtPath(RESOURCE_DIR_BASE);
+    doAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class))
+        .when(helmTaskHelperBase)
+        .createDirectory(directory);
+
+    assertThatThrownBy(() -> helmTaskHelperBase.fetchChartVersions(helmChartManifestDelegateConfig, timeout, directory))
+        .isInstanceOf(HelmClientException.class)
+        .hasMessageContaining("[Timed out] Helm chart fetch versions command failed ");
+    verify(ngChartMuseumService)
+        .startChartMuseumServer(helmChartManifestDelegateConfig.getStoreDelegateConfig(), RESOURCE_DIR_BASE);
+    verify(ngChartMuseumService).stopChartMuseumServer(chartMuseumServer);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testCleanupAfterCollection() throws Exception {
+    String repoUrl = "https://localhost:9999/";
+    String directory = "dir";
+    long timeout = 90000L;
+    final ChartMuseumServer chartMuseumServer = ChartMuseumServer.builder().port(9999).build();
+
+    HelmChartManifestDelegateConfig helmChartManifestDelegateConfig =
+        getHelmChartManifestDelegateConfig(repoUrl, null, null, V3, GCS_HELM);
+    doNothing().when(ngChartMuseumService).stopChartMuseumServer(chartMuseumServer);
+    doReturn(new ProcessResult(0, null)).when(processExecutor).execute();
+    doNothing().when(helmTaskHelperBase).cleanup(directory);
+
+    helmTaskHelperBase.cleanupAfterCollection(helmChartManifestDelegateConfig, directory, timeout);
+    verify(helmTaskHelperBase).cleanup(directory);
+    verify(processExecutor).execute();
+  }
+
+  private String getHelmCollectionResult() {
+    return "NAME\tCHART VERSION\tAPP VERSION\tDESCRIPTION\n"
+        + "repoName/chartName\t1.0.2\t0\tDeploys harness delegate\n"
+        + "repoName/chartName\t1.0.1\t0\tDeploys harness delegate";
+  }
+
+  private HelmChartManifestDelegateConfig getHelmChartManifestDelegateConfig(String repoUrl, String username,
+      char[] password, HelmVersion helmVersion, StoreDelegateConfigType storeDelegateConfigType) {
+    return HelmChartManifestDelegateConfig.builder()
+        .chartName("chartName")
+        .helmVersion(helmVersion)
+        .helmCommandFlag(emptyHelmCommandFlag)
+        .storeDelegateConfig(getStoreDelegateConfig(repoUrl, username, password, storeDelegateConfigType))
+        .build();
+  }
+
+  private StoreDelegateConfig getStoreDelegateConfig(
+      String repoUrl, String username, char[] password, StoreDelegateConfigType storeDelegateConfigType) {
+    switch (storeDelegateConfigType) {
+      case HTTP_HELM:
+        return getHttpHelmStoreConfig(repoUrl, username, password);
+      case GCS_HELM:
+        return getGcsHelmStoreConfig();
+      default:
+        return null;
+    }
+  }
+
+  private StoreDelegateConfig getGcsHelmStoreConfig() {
+    return GcsHelmStoreDelegateConfig.builder().repoName("repoName").repoDisplayName(REPO_DISPLAY_NAME).build();
+  }
+
+  private HttpHelmStoreDelegateConfig getHttpHelmStoreConfig(String repoUrl, String username, char[] password) {
+    return HttpHelmStoreDelegateConfig.builder()
+        .repoName("repoName")
+        .repoDisplayName(REPO_DISPLAY_NAME)
+        .httpHelmConnector(password == null
+                ? HttpHelmConnectorDTO.builder()
+                      .helmRepoUrl(repoUrl)
+                      .auth(HttpHelmAuthenticationDTO.builder().authType(HttpHelmAuthType.ANONYMOUS).build())
+                      .build()
+                : HttpHelmConnectorDTO.builder()
+                      .helmRepoUrl(repoUrl)
+                      .auth(HttpHelmAuthenticationDTO.builder()
+                                .authType(HttpHelmAuthType.USER_PASSWORD)
+                                .credentials(HttpHelmUsernamePasswordDTO.builder()
+                                                 .username(username)
+                                                 .passwordRef(SecretRefData.builder().decryptedValue(password).build())
+                                                 .build())
+                                .build())
+                      .build())
+        .build();
   }
 }

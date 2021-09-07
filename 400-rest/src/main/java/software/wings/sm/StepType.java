@@ -122,12 +122,22 @@ import software.wings.beans.PhaseStepType;
 import software.wings.common.ProvisionerConstants;
 import software.wings.common.WorkflowConstants;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
-import software.wings.service.impl.yaml.handler.workflow.ApprovalStepCompletionYamlValidator;
-import software.wings.service.impl.yaml.handler.workflow.EmailStepYamlValidator;
-import software.wings.service.impl.yaml.handler.workflow.GcbStepCompletionYamlValidator;
-import software.wings.service.impl.yaml.handler.workflow.ServiceNowStepCompletionYamlValidator;
-import software.wings.service.impl.yaml.handler.workflow.ShellScriptStepYamlValidator;
-import software.wings.service.impl.yaml.handler.workflow.StepCompletionYamlValidator;
+import software.wings.service.impl.yaml.handler.workflow.ApprovalStepYamlBuilder;
+import software.wings.service.impl.yaml.handler.workflow.BambooStepYamlBuilder;
+import software.wings.service.impl.yaml.handler.workflow.BarrierStepYamlBuilder;
+import software.wings.service.impl.yaml.handler.workflow.CloudFormationProvisionStepYamlBuilder;
+import software.wings.service.impl.yaml.handler.workflow.CommandStepYamlBuilder;
+import software.wings.service.impl.yaml.handler.workflow.EmailStepYamlBuilder;
+import software.wings.service.impl.yaml.handler.workflow.GcbStepYamlBuilder;
+import software.wings.service.impl.yaml.handler.workflow.JenkinsStepYamlBuilder;
+import software.wings.service.impl.yaml.handler.workflow.JiraStepYamlBuilder;
+import software.wings.service.impl.yaml.handler.workflow.ResourceConstraintStepYamlBuilder;
+import software.wings.service.impl.yaml.handler.workflow.ServiceNowStepYamlBuilder;
+import software.wings.service.impl.yaml.handler.workflow.ShellScriptProvisionStepYamlBuilder;
+import software.wings.service.impl.yaml.handler.workflow.ShellScriptStepYamlBuilder;
+import software.wings.service.impl.yaml.handler.workflow.StepYamlBuilder;
+import software.wings.service.impl.yaml.handler.workflow.TerraformProvisionStepYamlBuilder;
+import software.wings.service.impl.yaml.handler.workflow.TerragruntProvisionStepYamlBuilder;
 import software.wings.sm.states.APMVerificationState;
 import software.wings.sm.states.AppDynamicsState;
 import software.wings.sm.states.ApprovalState;
@@ -237,6 +247,9 @@ import software.wings.sm.states.provision.CloudFormationRollbackStackState;
 import software.wings.sm.states.provision.DestroyTerraformProvisionState;
 import software.wings.sm.states.provision.ShellScriptProvisionState;
 import software.wings.sm.states.provision.TerraformRollbackState;
+import software.wings.sm.states.provision.TerragruntApplyState;
+import software.wings.sm.states.provision.TerragruntDestroyState;
+import software.wings.sm.states.provision.TerragruntRollbackState;
 import software.wings.sm.states.spotinst.SpotInstDeployState;
 import software.wings.sm.states.spotinst.SpotInstListenerUpdateRollbackState;
 import software.wings.sm.states.spotinst.SpotInstListenerUpdateState;
@@ -259,7 +272,7 @@ import java.util.Map;
 
 @OwnedBy(CDC)
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
-@TargetModule(HarnessModule._860_ORCHESTRATION_STEPS)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public enum StepType {
   // Important: Do not change the order of StepTypes in the enum.
   // The order of StepTypes dictates the order in which Step Types are shown under each Category.
@@ -533,39 +546,53 @@ public enum StepType {
       asList(INFRASTRUCTURE_PROVISIONER), asList(PhaseStepType.values()),
       Lists.newArrayList(DeploymentType.SSH, DeploymentType.AMI, DeploymentType.ECS, DeploymentType.AWS_LAMBDA,
           DeploymentType.AWS_CODEDEPLOY, DeploymentType.WINRM, DeploymentType.CUSTOM),
-      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK), CloudFormationProvisionStepYamlBuilder.class),
   CLOUD_FORMATION_DELETE_STACK(CloudFormationDeleteStackState.class, CF_DELETE_STACK,
       asList(INFRASTRUCTURE_PROVISIONER), asList(PhaseStepType.values()),
       Lists.newArrayList(DeploymentType.SSH, DeploymentType.AMI, DeploymentType.ECS, DeploymentType.AWS_LAMBDA,
           DeploymentType.AWS_CODEDEPLOY, DeploymentType.WINRM, DeploymentType.CUSTOM),
-      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
+      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), CloudFormationProvisionStepYamlBuilder.class),
   CLOUD_FORMATION_ROLLBACK_STACK(CloudFormationRollbackStackState.class, ROLLBACK_CLOUD_FORMATION,
       asList(INFRASTRUCTURE_PROVISIONER), singletonList(PRE_DEPLOYMENT),
       Lists.newArrayList(
           DeploymentType.SSH, DeploymentType.AMI, DeploymentType.ECS, DeploymentType.AWS_LAMBDA, DeploymentType.CUSTOM),
-      asList(PhaseType.ROLLBACK)),
+      asList(PhaseType.ROLLBACK), CloudFormationProvisionStepYamlBuilder.class),
   TERRAFORM_PROVISION(ApplyTerraformProvisionState.class, WorkflowServiceHelper.TERRAFORM_PROVISION,
       asList(INFRASTRUCTURE_PROVISIONER), asList(PRE_DEPLOYMENT, PROVISION_INFRASTRUCTURE),
       Lists.newArrayList(DeploymentType.SSH, DeploymentType.AMI, DeploymentType.ECS, DeploymentType.AWS_LAMBDA,
           DeploymentType.CUSTOM, DeploymentType.AZURE_WEBAPP),
-      asList(PhaseType.NON_ROLLBACK)),
+      asList(PhaseType.NON_ROLLBACK), TerraformProvisionStepYamlBuilder.class),
   TERRAFORM_APPLY(ApplyTerraformState.class, WorkflowServiceHelper.TERRAFORM_APPLY, asList(INFRASTRUCTURE_PROVISIONER),
       asList(PhaseStepType.values()), asList(DeploymentType.values()),
-      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK)),
+      asList(PhaseType.ROLLBACK, PhaseType.NON_ROLLBACK), TerraformProvisionStepYamlBuilder.class),
   TERRAFORM_DESTROY(DestroyTerraformProvisionState.class, WorkflowServiceHelper.TERRAFORM_DESTROY,
       asList(INFRASTRUCTURE_PROVISIONER),
       asList(POST_DEPLOYMENT, WRAP_UP, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP),
       Lists.newArrayList(DeploymentType.SSH, DeploymentType.AMI, DeploymentType.ECS, DeploymentType.AWS_LAMBDA,
           DeploymentType.KUBERNETES, DeploymentType.CUSTOM),
-      asList(PhaseType.NON_ROLLBACK)),
+      asList(PhaseType.NON_ROLLBACK), TerraformProvisionStepYamlBuilder.class),
   TERRAFORM_ROLLBACK(TerraformRollbackState.class, ROLLBACK_TERRAFORM_NAME, asList(INFRASTRUCTURE_PROVISIONER),
       singletonList(PRE_DEPLOYMENT),
       Lists.newArrayList(
           DeploymentType.SSH, DeploymentType.AMI, DeploymentType.ECS, DeploymentType.AWS_LAMBDA, DeploymentType.CUSTOM),
-      asList(PhaseType.ROLLBACK)),
+      asList(PhaseType.ROLLBACK), TerraformProvisionStepYamlBuilder.class),
+  TERRAGRUNT_PROVISION(TerragruntApplyState.class, WorkflowServiceHelper.TERRAGRUNT_PROVISION,
+      asList(INFRASTRUCTURE_PROVISIONER), asList(PhaseStepType.values()), asList(DeploymentType.values()),
+      asList(PhaseType.NON_ROLLBACK), TerragruntProvisionStepYamlBuilder.class),
+  TERRAGRUNT_DESTROY(TerragruntDestroyState.class, WorkflowServiceHelper.TERRAGRUNT_DESTROY,
+      asList(INFRASTRUCTURE_PROVISIONER),
+      asList(POST_DEPLOYMENT, WRAP_UP, K8S_PHASE_STEP, CUSTOM_DEPLOYMENT_PHASE_STEP),
+      Lists.newArrayList(DeploymentType.SSH, DeploymentType.AMI, DeploymentType.ECS, DeploymentType.AWS_LAMBDA,
+          DeploymentType.KUBERNETES, DeploymentType.CUSTOM),
+      asList(PhaseType.NON_ROLLBACK), TerragruntProvisionStepYamlBuilder.class),
+  TERRAGRUNT_ROLLBACK(TerragruntRollbackState.class, WorkflowServiceHelper.TERRAGRUNT_ROLLBACK,
+      asList(INFRASTRUCTURE_PROVISIONER), singletonList(PRE_DEPLOYMENT),
+      Lists.newArrayList(
+          DeploymentType.SSH, DeploymentType.AMI, DeploymentType.ECS, DeploymentType.AWS_LAMBDA, DeploymentType.CUSTOM),
+      asList(PhaseType.ROLLBACK), TerragruntProvisionStepYamlBuilder.class),
   SHELL_SCRIPT_PROVISION(ShellScriptProvisionState.class, PROVISION_SHELL_SCRIPT, asList(INFRASTRUCTURE_PROVISIONER),
       asList(PRE_DEPLOYMENT, PROVISION_INFRASTRUCTURE, CUSTOM_DEPLOYMENT_PHASE_STEP), asList(DeploymentType.values()),
-      asList(PhaseType.NON_ROLLBACK)),
+      asList(PhaseType.NON_ROLLBACK), ShellScriptProvisionStepYamlBuilder.class),
   ARM_CREATE_RESOURCE(ARMProvisionState.class, WorkflowServiceHelper.ARM_CREATE_RESOURCE,
       Collections.singletonList(INFRASTRUCTURE_PROVISIONER),
       asList(PRE_DEPLOYMENT, PROVISION_INFRASTRUCTURE, POST_DEPLOYMENT, WRAP_UP),
@@ -641,40 +668,39 @@ public enum StepType {
 
   // Issue Tracking
   JIRA_CREATE_UPDATE(JiraCreateUpdate.class, JIRA, asList(ISSUE_TRACKING), asList(PhaseStepType.values()),
-      asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
+      asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), JiraStepYamlBuilder.class),
   SERVICENOW_CREATE_UPDATE(ServiceNowCreateUpdateState.class, SERVICENOW, asList(ISSUE_TRACKING),
       asList(PhaseStepType.values()), asList(DeploymentType.values()),
-      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), ServiceNowStepCompletionYamlValidator.class),
+      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), ServiceNowStepYamlBuilder.class),
 
   // Notifications
   EMAIL(EmailState.class, WorkflowServiceHelper.EMAIL, asList(NOTIFICATION), asList(PhaseStepType.values()),
-      asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK),
-      EmailStepYamlValidator.class),
+      asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), EmailStepYamlBuilder.class),
 
   // Flow Control
   BARRIER(BarrierState.class, WorkflowServiceHelper.BARRIER, asList(WorkflowStepType.FLOW_CONTROL),
       asList(PhaseStepType.values()), asList(DeploymentType.values()),
-      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
+      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), BarrierStepYamlBuilder.class),
   RESOURCE_CONSTRAINT(ResourceConstraintState.class, WorkflowServiceHelper.RESOURCE_CONSTRAINT,
       asList(WorkflowStepType.FLOW_CONTROL), asList(PhaseStepType.values()), asList(DeploymentType.values()),
-      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
+      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), ResourceConstraintStepYamlBuilder.class),
   APPROVAL(ApprovalState.class, APPROVAL_NAME, asList(WorkflowStepType.FLOW_CONTROL), asList(PhaseStepType.values()),
       asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK),
-      ApprovalStepCompletionYamlValidator.class),
+      ApprovalStepYamlBuilder.class),
 
   // CI System
   JENKINS(JenkinsState.class, WorkflowServiceHelper.JENKINS, asList(CI_SYSTEM), asList(PhaseStepType.values()),
-      asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
-  GCB(GcbState.class, WorkflowServiceHelper.GCB, singletonList(CI_SYSTEM), asList(PhaseStepType.values()),
       asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK),
-      GcbStepCompletionYamlValidator.class),
+      JenkinsStepYamlBuilder.class),
+  GCB(GcbState.class, WorkflowServiceHelper.GCB, singletonList(CI_SYSTEM), asList(PhaseStepType.values()),
+      asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), GcbStepYamlBuilder.class),
   BAMBOO(BambooState.class, WorkflowServiceHelper.BAMBOO, asList(CI_SYSTEM), asList(PhaseStepType.values()),
-      asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
+      asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), BambooStepYamlBuilder.class),
 
   // Utility
   SHELL_SCRIPT(ShellScriptState.class, WorkflowServiceHelper.SHELL_SCRIPT, asList(UTILITY),
       asList(PhaseStepType.values()), asList(DeploymentType.values()),
-      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), ShellScriptStepYamlValidator.class),
+      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), ShellScriptStepYamlBuilder.class),
   HTTP(HttpState.class, WorkflowServiceHelper.HTTP, asList(UTILITY), asList(PhaseStepType.values()),
       asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), true),
   NEW_RELIC_DEPLOYMENT_MARKER(NewRelicDeploymentMarkerState.class, WorkflowServiceHelper.NEW_RELIC_DEPLOYMENT_MARKER,
@@ -690,7 +716,8 @@ public enum StepType {
 
   // Command
   COMMAND(CommandState.class, COMMAND_NAME, asList(WorkflowStepType.SERVICE_COMMAND), asList(PhaseStepType.values()),
-      Lists.newArrayList(DeploymentType.SSH, DeploymentType.WINRM), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK));
+      Lists.newArrayList(DeploymentType.SSH, DeploymentType.WINRM), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK),
+      CommandStepYamlBuilder.class);
 
   private final Class<? extends State> stateClass;
   private List<String> phaseStepTypes = new ArrayList<>();
@@ -699,7 +726,7 @@ public enum StepType {
   private List<OrchestrationWorkflowType> orchestrationWorkflowTypes = emptyList();
   private List<WorkflowStepType> workflowStepTypes = emptyList();
   private List<PhaseType> phaseTypes = emptyList();
-  private Class<? extends StepCompletionYamlValidator> yamlValidatorClass;
+  private Class<? extends StepYamlBuilder> yamlValidatorClass;
   private boolean supportsTimeoutFailure;
 
   StepType(Class<? extends State> stateClass, String displayName, List<WorkflowStepType> workflowStepTypes,
@@ -726,7 +753,7 @@ public enum StepType {
 
   StepType(Class<? extends State> stateClass, String displayName, List<WorkflowStepType> workflowStepTypes,
       List<PhaseStepType> phaseStepTypes, List<DeploymentType> deploymentTypes, List<PhaseType> phaseTypes,
-      Class<? extends StepCompletionYamlValidator> yamlValidatorClass) {
+      Class<? extends StepYamlBuilder> yamlValidatorClass) {
     this.stateClass = stateClass;
     this.displayName = displayName;
     this.deploymentTypes = deploymentTypes;
@@ -782,7 +809,7 @@ public enum StepType {
     return phaseTypes;
   }
 
-  public Class<? extends StepCompletionYamlValidator> getYamlValidatorClass() {
+  public Class<? extends StepYamlBuilder> getYamlValidatorClass() {
     return yamlValidatorClass;
   }
 

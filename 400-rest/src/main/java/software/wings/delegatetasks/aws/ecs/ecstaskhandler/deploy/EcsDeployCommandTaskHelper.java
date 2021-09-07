@@ -266,12 +266,21 @@ public class EcsDeployCommandTaskHelper {
     executionLogCallback.saveExecutionLog(
         "\nRegistering Scalable Target for Service : " + containerServiceData.getName());
     resizeParams.getAwsAutoScalarConfigForNewService().forEach(awsAutoScalarConfig -> {
+      if (awsAutoScalarConfig == null) {
+        String exceptionMsg =
+            "Aws Auto-scaler config is Invalid.\n Check Aws Autoscaler config, Scalable Target Json and Scaling Policy Json";
+        throw new InvalidRequestException(exceptionMsg);
+      }
       if (StringUtils.isNotBlank(awsAutoScalarConfig.getScalableTargetJson())) {
         ScalableTarget scalableTarget =
             awsAppAutoScalingService.getScalableTargetFromJson(awsAutoScalarConfig.getScalableTargetJson());
         scalableTarget.withResourceId(resourceId);
         ecsCommandTaskHelper.registerScalableTargetForEcsService(awsAppAutoScalingService, resizeParams.getRegion(),
             awsConfig, contextData.getEncryptedDataDetails(), executionLogCallback, scalableTarget);
+
+        ecsContainerService.waitForServiceToReachStableState(resizeParams.getRegion(), awsConfig,
+            contextData.getEncryptedDataDetails(), resizeParams.getClusterName(),
+            resizeParams.getContainerServiceName(), executionLogCallback, resizeParams.getServiceSteadyStateTimeout());
 
         if (isNotEmpty(awsAutoScalarConfig.getScalingPolicyJson())) {
           executionLogCallback.saveExecutionLog(
@@ -323,6 +332,10 @@ public class EcsDeployCommandTaskHelper {
         scalableTarget.withResourceId(resourceId);
         ecsCommandTaskHelper.registerScalableTargetForEcsService(awsAppAutoScalingService, resizeParams.getRegion(),
             awsConfig, contextData.getEncryptedDataDetails(), executionLogCallback, scalableTarget);
+
+        ecsContainerService.waitForServiceToReachStableState(resizeParams.getRegion(), awsConfig,
+            contextData.getEncryptedDataDetails(), resizeParams.getClusterName(),
+            resizeParams.getContainerServiceName(), executionLogCallback, resizeParams.getServiceSteadyStateTimeout());
 
         if (isNotEmpty(awsAutoScalarConfig.getScalingPolicyJson())) {
           executionLogCallback.saveExecutionLog(

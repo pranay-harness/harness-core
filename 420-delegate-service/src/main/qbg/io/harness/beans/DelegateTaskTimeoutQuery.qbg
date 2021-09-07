@@ -1,0 +1,8 @@
+query Timeout for io.harness.beans.DelegateTask {
+  status equal io.harness.beans.DelegateTask.Status;
+  expiry less than long;
+
+  optional clustering {
+    createdAt module remainder is;
+  }
+}

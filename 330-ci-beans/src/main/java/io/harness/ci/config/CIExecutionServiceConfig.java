@@ -1,9 +1,9 @@
 package io.harness.ci.config;
 
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 
-@Value
+@Data
 @Builder
 public class CIExecutionServiceConfig {
   String addonImageTag; // Deprecated
@@ -16,4 +16,5 @@ public class CIExecutionServiceConfig {
   String addonImage;
   String liteEngineImage;
   CIStepConfig stepConfig;
+  boolean isLocal;
 }

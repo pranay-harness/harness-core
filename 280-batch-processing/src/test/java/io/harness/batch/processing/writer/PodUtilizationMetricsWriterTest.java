@@ -13,7 +13,7 @@ import io.harness.batch.processing.billing.timeseries.data.K8sGranularUtilizatio
 import io.harness.batch.processing.billing.timeseries.service.impl.K8sUtilizationGranularDataServiceImpl;
 import io.harness.batch.processing.integration.EcsEventGenerator;
 import io.harness.category.element.UnitTests;
-import io.harness.event.grpc.PublishedMessage;
+import io.harness.ccm.commons.entities.events.PublishedMessage;
 import io.harness.event.payloads.AggregatedUsage;
 import io.harness.event.payloads.PodMetric;
 import io.harness.rule.Owner;

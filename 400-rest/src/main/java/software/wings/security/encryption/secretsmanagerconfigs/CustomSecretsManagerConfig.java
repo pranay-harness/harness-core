@@ -1,16 +1,20 @@
 package software.wings.security.encryption.secretsmanagerconfigs;
 
+import static io.harness.annotations.dev.HarnessModule._440_SECRET_MANAGEMENT_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.SecretManagerCapabilities.CREATE_PARAMETERIZED_SECRET;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.security.encryption.SecretManagerType.CUSTOM;
 
 import static software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerShellScript.ScriptType.POWERSHELL;
 import static software.wings.service.impl.security.customsecretsmanager.CustomSecretsManagerValidationUtils.buildShellScriptParameters;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SecretManagerCapabilities;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.mixin.ProcessExecutorCapabilityGenerator;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
@@ -39,6 +43,7 @@ import lombok.experimental.SuperBuilder;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(PL)
+@TargetModule(_440_SECRET_MANAGEMENT_SERVICE)
 @Data
 @SuperBuilder
 @NoArgsConstructor
@@ -47,9 +52,10 @@ import org.hibernate.validator.constraints.NotEmpty;
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "CustomSecretsManagerConfigKeys")
 public class CustomSecretsManagerConfig extends SecretManagerConfig {
+  private static final String TASK_SELECTORS = "Task Selectors";
   @NonNull @NotEmpty @Attributes(title = "Name") private String name;
   @NonNull @NotEmpty @Attributes(title = "Template Shell Script") private String templateId;
-  @NonNull @Attributes(title = "Delegate Selectors") private List<String> delegateSelectors;
+  @NonNull @Attributes(title = "Delegate Selectors") private Set<String> delegateSelectors;
   @NonNull @Attributes(title = "Test Parameters") private Set<EncryptedDataParams> testVariables;
   @Attributes(title = "Execute on Delegate") private boolean executeOnDelegate;
   @Attributes(title = "Templatize Connector") private boolean isConnectorTemplatized;
@@ -62,11 +68,16 @@ public class CustomSecretsManagerConfig extends SecretManagerConfig {
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     if (executeOnDelegate) {
+      List<ExecutionCapability> executionCapabilities = new ArrayList<>();
+      if (isNotEmpty(getDelegateSelectors())) {
+        executionCapabilities.add(
+            SelectorCapability.builder().selectors(getDelegateSelectors()).selectorOrigin(TASK_SELECTORS).build());
+      }
       if (customSecretsManagerShellScript.getScriptType() == POWERSHELL) {
-        return Collections.singletonList(ProcessExecutorCapabilityGenerator.buildProcessExecutorCapability(
+        executionCapabilities.add(ProcessExecutorCapabilityGenerator.buildProcessExecutorCapability(
             "DELEGATE_POWERSHELL", Arrays.asList("/bin/sh", "-c", "pwsh -Version")));
       }
-      return new ArrayList<>();
+      return executionCapabilities;
     }
 
     return Collections.singletonList(

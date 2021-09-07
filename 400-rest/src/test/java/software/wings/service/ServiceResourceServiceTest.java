@@ -3256,4 +3256,38 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     verify(mockWingsPersistence).createUpdateOperations(Service.class);
     verify(updateOperations).set("isK8sV2", true);
   }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowErrorWhenArtifactFromManifestEnabledForWrongDeploymentType() {
+    Service service =
+        Service.builder().name(SERVICE_NAME).deploymentType(DeploymentType.SSH).artifactFromManifest(true).build();
+    assertThatThrownBy(() -> spyServiceResourceService.save(service, false, false))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Artifact from Manifest flag can be set to true only for kubernetes and helm deployment types");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldReturnOnlyArtifactFromManifestServices() {
+    Service service = Service.builder()
+                          .name(SERVICE_NAME)
+                          .uuid(SERVICE_ID)
+                          .appId(APP_ID)
+                          .deploymentType(DeploymentType.HELM)
+                          .artifactFromManifest(true)
+                          .build();
+    Service service2 = Service.builder()
+                           .name(SERVICE_NAME + 2)
+                           .uuid(SERVICE_ID + 2)
+                           .appId(APP_ID)
+                           .deploymentType(DeploymentType.HELM)
+                           .artifactFromManifest(false)
+                           .build();
+    persistence.save(service);
+    persistence.save(service2);
+    assertThat(spyServiceResourceService.getIdsWithArtifactFromManifest(APP_ID)).hasSize(1).containsExactly(SERVICE_ID);
+  }
 }

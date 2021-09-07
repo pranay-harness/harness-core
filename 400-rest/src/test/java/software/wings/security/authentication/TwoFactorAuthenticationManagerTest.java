@@ -26,9 +26,14 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.ng.core.user.TwoFactorAdminOverrideSettings;
 import io.harness.rule.Owner;
 import io.harness.rule.Repeat;
 
@@ -67,6 +72,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   @Mock UserService userService;
   @Mock AuthService authService;
@@ -193,7 +200,8 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
     Account account = getAccount(AccountType.PAID, false);
     accountService.save(account, false);
 
-    TwoFactorAdminOverrideSettings twoFactorAdminOverrideSettings = new TwoFactorAdminOverrideSettings(true);
+    io.harness.ng.core.user.TwoFactorAdminOverrideSettings twoFactorAdminOverrideSettings =
+        new io.harness.ng.core.user.TwoFactorAdminOverrideSettings(true);
 
     when(userService.overrideTwoFactorforAccount(
              account.getUuid(), twoFactorAdminOverrideSettings.isAdminOverrideTwoFactorEnabled()))
@@ -211,7 +219,8 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
     Account account = getAccount(AccountType.COMMUNITY, false);
     accountService.save(account, false);
 
-    TwoFactorAdminOverrideSettings twoFactorAdminOverrideSettings = new TwoFactorAdminOverrideSettings(true);
+    io.harness.ng.core.user.TwoFactorAdminOverrideSettings twoFactorAdminOverrideSettings =
+        new TwoFactorAdminOverrideSettings(true);
 
     for (String restrictedAccountType : twoFactorAuthenticationFeature.getRestrictedAccountTypes()) {
       LicenseInfo newLicenseInfo = getLicenseInfo();

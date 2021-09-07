@@ -2,7 +2,6 @@ package io.harness.delegate.task.git;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.logging.LogLevel.ERROR;
-import static io.harness.logging.LogLevel.WARN;
 
 import static software.wings.beans.LogColor.White;
 import static software.wings.beans.LogHelper.color;
@@ -67,14 +66,19 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
 
       log.info("Running GitFetchFilesTask for activityId {}", gitFetchRequest.getActivityId());
 
-      LogCallback executionLogCallback = new NGDelegateLogCallback(
-          getLogStreamingTaskClient(), K8sCommandUnitConstants.FetchFiles, true, commandUnitsProgress);
+      LogCallback executionLogCallback = new NGDelegateLogCallback(getLogStreamingTaskClient(),
+          K8sCommandUnitConstants.FetchFiles, gitFetchRequest.isShouldOpenLogStream(), commandUnitsProgress);
 
       Map<String, FetchFilesResult> filesFromMultipleRepo = new HashMap<>();
       List<GitFetchFilesConfig> gitFetchFilesConfigs = gitFetchRequest.getGitFetchFilesConfigs();
 
       for (GitFetchFilesConfig gitFetchFilesConfig : gitFetchFilesConfigs) {
         FetchFilesResult gitFetchFilesResult;
+        if (gitFetchFilesConfig.isSucceedIfFileNotFound()) {
+          executionLogCallback.saveExecutionLog(
+              format("\nTrying to fetch default values yaml file for manifest with identifier: [%s]",
+                  gitFetchFilesConfig.getIdentifier()));
+        }
         executionLogCallback.saveExecutionLog(
             color(format("Fetching %s files with identifier: %s", gitFetchFilesConfig.getManifestType(),
                       gitFetchFilesConfig.getIdentifier()),
@@ -89,7 +93,9 @@ public class GitFetchTaskNG extends AbstractDelegateRunnableTask {
           // Values.yaml in service spec is optional.
           if (ex.getCause() instanceof NoSuchFileException && gitFetchFilesConfig.isSucceedIfFileNotFound()) {
             log.info("file not found. " + exceptionMsg, ex);
-            executionLogCallback.saveExecutionLog(exceptionMsg, WARN);
+            executionLogCallback.saveExecutionLog(color(
+                format("No values.yaml found for manifest with identifier: %s.", gitFetchFilesConfig.getIdentifier()),
+                White));
             continue;
           }
 

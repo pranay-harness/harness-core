@@ -22,7 +22,7 @@ import java.util.Objects;
  * Prerequisite
  */
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen",
-    date = "2021-03-24T19:32:06.834-07:00[America/Los_Angeles]")
+    date = "2021-05-11T09:07:44.775-07:00[America/Los_Angeles]")
 public class Prerequisite {
   public static final String SERIALIZED_NAME_FEATURE = "feature";
   @SerializedName(SERIALIZED_NAME_FEATURE) private String feature;

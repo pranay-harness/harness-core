@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.DEL;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.beans.DelegateInsightsType;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.PersistentEntity;

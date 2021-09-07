@@ -2,29 +2,31 @@ package io.harness.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
+import static lombok.AccessLevel.PRIVATE;
 
 import io.harness.annotations.dev.OwnedBy;
 
+import lombok.Builder;
+import lombok.Data;
+import lombok.experimental.FieldDefaults;
+import lombok.experimental.FieldNameConstants;
+import org.hibernate.validator.constraints.NotEmpty;
+
 @OwnedBy(PL)
-public enum Scope {
-  ACCOUNT("ACCOUNT"),
-  ORGANIZATION("ORGANIZATION"),
-  PROJECT("PROJECT");
-
-  String name;
-
-  Scope(String name) {
-    this.name = name;
-  }
+@Data
+@Builder
+@FieldDefaults(level = PRIVATE, makeFinal = true)
+@FieldNameConstants(innerTypeName = "ScopeKeys")
+public class Scope {
+  @NotEmpty String accountIdentifier;
+  String orgIdentifier;
+  String projectIdentifier;
 
   public static Scope of(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    if (!isBlank(projectIdentifier)) {
-      return Scope.PROJECT;
-    }
-    if (!isBlank(orgIdentifier)) {
-      return Scope.ORGANIZATION;
-    }
-    return Scope.ACCOUNT;
+    return Scope.builder()
+        .accountIdentifier(accountIdentifier)
+        .orgIdentifier(orgIdentifier)
+        .projectIdentifier(projectIdentifier)
+        .build();
   }
 }

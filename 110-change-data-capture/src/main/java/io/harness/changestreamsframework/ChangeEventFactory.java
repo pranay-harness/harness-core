@@ -15,6 +15,7 @@ import org.bson.BsonDocumentReader;
 import org.bson.Document;
 import org.bson.codecs.Codec;
 import org.bson.codecs.DecoderContext;
+import org.bson.types.ObjectId;
 
 @OwnedBy(HarnessTeam.CE)
 class ChangeEventFactory {
@@ -34,7 +35,11 @@ class ChangeEventFactory {
 
   private static String getUuidfromChangeStream(ChangeStreamDocument<DBObject> changeStreamDocument) {
     Document uuidDocument = convertBsonDocumentToDocument(changeStreamDocument.getDocumentKey());
-    return (String) uuidDocument.get("_id");
+    //    return (String) uuidDocument.get("_id");
+    if (uuidDocument.get("_id") instanceof String) {
+      return (String) uuidDocument.get("_id");
+    }
+    return ((ObjectId) uuidDocument.get("_id")).toString();
   }
 
   private static ChangeType getChangeTypefromChangeStream(ChangeStreamDocument<DBObject> changeStreamDocument) {

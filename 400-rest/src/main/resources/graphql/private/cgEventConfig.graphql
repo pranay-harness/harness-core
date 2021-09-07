@@ -1,0 +1,165 @@
+extend type Query {
+  # Get details about a Events Config
+  eventsConfig(appId: String!, eventsConfigId: String!): EventsConfig @dataFetcher(name: eventsConfig)
+
+  # Get details about Events Configs.
+  eventsConfigs(appId: String!): [EventsConfig] @dataFetcher(name: eventsConfigConnection)
+
+  # Fetch details about a Events Config by it's name
+  eventsConfigsByName(appId: String!, name: String!): EventsConfig @dataFetcher(name: eventsConfig)
+}
+
+type EventsConfig {
+  id: String
+  name: String
+  appId: String
+  # Details of the HTTP endpoint along with any custom headers
+  webhookConfig: WebhookConfig
+  # The Event Rule containing the configuration of Pipelines and Events
+  rule: EventRule
+  # The Delegate Selectors
+  delegateSelectors: [String]
+  enabled: Boolean
+}
+
+type WebhookConfig {
+  # HTTP Endpoint
+  url: String!
+  # Custom headers
+  headers: [WebhookHeader]
+}
+
+input WebhookConfigInput {
+  # HTTP Endpoint
+  url: String!
+  # Custom headers
+  headers: [WebhookHeaderInput]
+}
+
+input WebhookHeaderInput {
+  key: String!
+  value: String!
+}
+
+type WebhookHeader {
+  key: String!
+  value: String!
+}
+
+input EventRuleInput {
+  #Allowed values are ALL, PIPELINE
+  type: RuleType!
+  #The Pipeline and Event details. Only applicable when the type is PIPELINE
+  pipelineRule: PipelineRuleInput
+}
+
+type EventRule {
+  #Allowed values are ALL, PIPELINE
+  type: RuleType!
+  #The Pipeline and Event details
+  pipelineRule: PipelineRule
+}
+
+enum RuleType {
+  #Receive all current and future Events that get added
+  ALL
+  #Send for specific Pipelines
+  PIPELINE
+}
+
+enum EventType {
+  pipeline_start
+  pipeline_end
+}
+
+type PipelineRule {
+  #Receive all current and future Pipeline events
+  allEvents: Boolean!
+  #Receive the Events for all the Pipelines in the application
+  allPipelines: Boolean!
+  #Pipeline IDs to receive the events for. Only applicable when allPipelines is false
+  pipelineIds: [String]
+  #The specific events which are configured. Only applicable if allEvents is false
+  events: [EventType]
+}
+
+type WorkflowRule {
+  allEvents: Boolean!
+  allWorkflows: Boolean!
+  workflowIds: [String]
+  events: [EventType]
+}
+
+input PipelineRuleInput {
+  #Receive all current and future Pipeline events
+  allEvents: Boolean!
+  #Receive the events for all the Pipelines in the application
+  allPipelines: Boolean!
+  #Pipeline IDs to receive the events for. Only applicable when allPipelines is false
+  pipelineIds: [String]
+  #The specific events which are configured. Only applicable if allEvents is false
+  events: [EventType]
+}
+
+input WorkflowRuleInput {
+  allEvents: Boolean!
+  allWorkflows: Boolean!
+  workflowIds: [String]
+  events: [EventType]
+}
+
+extend type Mutation {
+  #Creates a new events config and returns it
+  createEventsConfig(input: CreateEventsConfigInput!): CreateEventsConfigPayload @dataFetcher(name: createEventsConfig)
+
+  #Updates an events config and returns it.
+  updateEventsConfig(input: UpdateEventsConfigInput!): UpdateEventsConfigPayload @dataFetcher(name: updateEventsConfig)
+
+  #Deletes an events config.
+  deleteEventsConfig(input: DeleteEventsConfigInput!): DeleteEventsConfigPayload @dataFetcher(name: deleteEventsConfig)
+}
+
+input CreateEventsConfigInput {
+  clientMutationId: String
+  appId: String!
+  name: String!
+  #Details of the HTTP endpoint along with any custom headers
+  webhookConfig: WebhookConfigInput!
+  # The Event Rule containing the configuration of Pipelines and Events
+  rule: EventRuleInput!
+  delegateSelectors: [String]
+  enabled: Boolean!
+}
+
+input UpdateEventsConfigInput {
+  clientMutationId: String
+  appId: String!
+  name: String!
+  #Details of the HTTP endpoint along with any custom headers
+  webhookConfig: WebhookConfigInput!
+  # The Event Rule containing the configuration of Pipelines and Events
+  rule: EventRuleInput!
+  delegateSelectors: [String]
+  enabled: Boolean!
+  eventsConfigId: String!
+}
+
+input DeleteEventsConfigInput {
+  clientMutationId: String
+  appId: String!
+  eventsConfigId: String!
+}
+
+type CreateEventsConfigPayload {
+  clientMutationId: String
+  eventsConfig: EventsConfig
+}
+
+type UpdateEventsConfigPayload {
+  clientMutationId: String
+  eventsConfig: EventsConfig
+}
+
+type DeleteEventsConfigPayload {
+  clientMutationId: String
+}

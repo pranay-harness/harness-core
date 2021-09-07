@@ -13,6 +13,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.cvnglog.ApiCallLogDTO;
+import io.harness.cvng.beans.cvnglog.ApiCallLogDTO.ApiCallLogDTOField;
 import io.harness.cvng.beans.cvnglog.CVNGLogDTO;
 import io.harness.cvng.beans.cvnglog.CVNGLogType;
 import io.harness.cvng.beans.cvnglog.TraceableType;
@@ -30,6 +31,7 @@ import com.google.inject.Inject;
 import java.lang.reflect.Field;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -37,11 +39,13 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 
 @OwnedBy(HarnessTeam.CV)
 public class CVNGLogServiceImplTest extends CvNextGenTestBase {
   @Inject private HPersistence hPersistence;
   @Inject private CVNGLogService cvngLogService;
+  @Mock private VerificationTaskService verificationTaskService;
 
   private String accountId;
   private String traceableId;
@@ -52,7 +56,7 @@ public class CVNGLogServiceImplTest extends CvNextGenTestBase {
   private Instant endTime;
 
   @Before
-  public void setup() {
+  public void setup() throws IllegalAccessException {
     accountId = generateUuid();
     traceableId = generateUuid();
     requestTime = Instant.now();
@@ -60,6 +64,8 @@ public class CVNGLogServiceImplTest extends CvNextGenTestBase {
     startTime = Instant.now().minusSeconds(5);
     endTime = Instant.now();
     createdAt = Instant.now().toEpochMilli();
+    FieldUtils.writeField(cvngLogService, "verificationTaskService", verificationTaskService, true);
+    when(verificationTaskService.get(any())).thenReturn(null);
   }
 
   @Test
@@ -193,6 +199,15 @@ public class CVNGLogServiceImplTest extends CvNextGenTestBase {
         .accountId(accountId)
         .traceableId(traceableId)
         .requestTime(requestTime.toEpochMilli())
+        .requests(Arrays.asList(
+            ApiCallLogDTOField.builder().name("url").value("http:/appd.com").type(ApiCallLogDTO.FieldType.URL).build()))
+        .responses(Arrays.asList(
+            ApiCallLogDTOField.builder().name("Status Code").value("200").type(ApiCallLogDTO.FieldType.NUMBER).build(),
+            ApiCallLogDTOField.builder()
+                .name("response body")
+                .value("success")
+                .type(ApiCallLogDTO.FieldType.JSON)
+                .build()))
         .responseTime(responseTime.toEpochMilli())
         .startTime(startTime.toEpochMilli())
         .endTime(endTime.toEpochMilli())
@@ -209,6 +224,15 @@ public class CVNGLogServiceImplTest extends CvNextGenTestBase {
         .traceableId(traceableId)
         .requestTime(requestTime.toEpochMilli())
         .responseTime(responseTime.toEpochMilli())
+        .requests(Arrays.asList(
+            ApiCallLogDTOField.builder().name("url").value("http:/appd.com").type(ApiCallLogDTO.FieldType.URL).build()))
+        .responses(Arrays.asList(
+            ApiCallLogDTOField.builder().name("Status Code").value("200").type(ApiCallLogDTO.FieldType.NUMBER).build(),
+            ApiCallLogDTOField.builder()
+                .name("response body")
+                .value("success")
+                .type(ApiCallLogDTO.FieldType.JSON)
+                .build()))
         .startTime(startTime.toEpochMilli())
         .endTime(endTime.toEpochMilli())
         .createdAt(createdAt)

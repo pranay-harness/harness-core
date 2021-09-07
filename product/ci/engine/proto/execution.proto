@@ -5,7 +5,12 @@ package io.harness.product.ci.engine.proto;
 option java_multiple_files = true;
 option go_package = "cienginepb";
 
-import "product/ci/engine/proto/artifact.proto";
+import "product/ci/engine/proto/publish_artifact.proto";
+
+enum ShellType {
+  SH = 0;
+  BASH = 1;
+}
 
 message StepContext {
   int32 num_retries = 1;  // Deprecated
@@ -40,18 +45,19 @@ message RunTestsStep {
   string preTestCommand = 10;          // Pre-commands to setup environment before running tests
   string postTestCommand = 11;         // Post commands after running tests
   repeated string envVarOutputs = 12;  // produced output variables
-  // This is added on by the lite engine specifically. Ideally we should just forward
-  // to addon and have it calculate this, this proxy can be added later.
+  // TODO (Vistaar): Proxy this call from addon to LE.
   string diff_files = 13;
+  map<string, string> environment = 14;
 }
 
 message RunStep {
   string command = 1;
   StepContext context = 2;
-  repeated string envVarOutputs = 3;  // output variables to export as step outcome
-  uint32 container_port = 4;          // Deprecated. Port of the container on which run step needs to be executed
+  repeated string env_var_outputs = 3;  // output variables to export as step outcome
+  uint32 container_port = 4;            // Deprecated. Port of the container on which run step needs to be executed
   repeated Report reports = 5;
   map<string, string> environment = 6;
+  ShellType shell_type = 7;
 }
 
 message PluginStep {
@@ -62,6 +68,7 @@ message PluginStep {
   // Optional. Entrypoint for plugin step. If empty, it calls docker registry to retrieve the entrypoint
   repeated string entrypoint = 4;
   map<string, string> environment = 5;
+  string artifact_file_path = 6;  // file path to store generated artifact file
 }
 
 message SaveCacheStep {
@@ -155,6 +162,7 @@ message ExecuteStepRequest {
   string execution_id = 1;
   UnitStep step = 2;
   string tmp_file_path = 3;
+  string delegate_svc_endpoint = 4;
 }
 
 message ExecuteStepResponse {}

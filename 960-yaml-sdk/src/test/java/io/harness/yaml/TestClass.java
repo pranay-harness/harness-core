@@ -1,5 +1,7 @@
 package io.harness.yaml;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.validation.OneOfField;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -7,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -14,6 +17,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
+@OwnedBy(HarnessTeam.DX)
 public class TestClass {
   @JsonSubTypes({
     @JsonSubTypes.Type(value = ClassWithApiModelOverride.class, name = "ClassWithApiModelOverride")
@@ -86,6 +90,7 @@ public class TestClass {
     String type;
     String abc;
   }
+
   @Data
   @NoArgsConstructor
   @AllArgsConstructor
@@ -93,5 +98,16 @@ public class TestClass {
   public static class InterfaceImpl2 {
     String type;
     String xyz;
+  }
+
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @FieldDefaults(level = AccessLevel.PUBLIC)
+  public static class ClassWhichContainsInterfaceWithInternalWithList {
+    String mnop;
+    @JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME, property = "mnop", include = JsonTypeInfo.As.EXISTING_PROPERTY, visible = true)
+    List<TestInterface> testInterface;
   }
 }

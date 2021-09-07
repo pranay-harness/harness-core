@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.ABHINAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketConnector;
 import io.harness.connector.entities.embedded.bitbucketconnector.BitbucketHttpAuthentication;
@@ -30,7 +31,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 
-public class BitbucketEntityToDTOTest {
+public class BitbucketEntityToDTOTest extends CategoryTest {
   @InjectMocks BitbucketEntityToDTO bitbucketEntityToDTO;
 
   @Before
@@ -46,6 +47,7 @@ public class BitbucketEntityToDTOTest {
     final String passwordRef = "passwordRef";
     final String username = "username";
     final String privateKeyRef = "privateKeyRef";
+    final String validationRepo = "validationRepo";
 
     final BitbucketAuthenticationDTO bitbucketAuthenticationDTO =
         BitbucketAuthenticationDTO.builder()
@@ -69,7 +71,8 @@ public class BitbucketEntityToDTOTest {
             .build();
     final BitbucketConnectorDTO bitbucketConnectorDTO = BitbucketConnectorDTO.builder()
                                                             .url(url)
-                                                            .connectionType(GitConnectionType.REPO)
+                                                            .validationRepo(validationRepo)
+                                                            .connectionType(GitConnectionType.ACCOUNT)
                                                             .authentication(bitbucketAuthenticationDTO)
                                                             .apiAccess(bitbucketApiAccessDTO)
                                                             .build();
@@ -78,9 +81,10 @@ public class BitbucketEntityToDTOTest {
         BitbucketConnector.builder()
             .hasApiAccess(true)
             .url(url)
+            .validationRepo(validationRepo)
             .bitbucketApiAccess(
                 BitbucketUsernamePasswordApiAccess.builder().usernameRef(privateKeyRef).tokenRef(privateKeyRef).build())
-            .connectionType(GitConnectionType.REPO)
+            .connectionType(GitConnectionType.ACCOUNT)
             .authType(HTTP)
             .authenticationDetails(
                 BitbucketHttpAuthentication.builder()

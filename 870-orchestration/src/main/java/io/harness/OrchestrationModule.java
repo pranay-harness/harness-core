@@ -1,44 +1,70 @@
 package io.harness;
 
+import static io.harness.OrchestrationPublisherName.PERSISTENCE_LAYER;
+import static io.harness.OrchestrationPublisherName.PUBLISHER_NAME;
+
 import static java.util.Arrays.asList;
 
+import io.harness.account.AccountClientModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.delay.AbstractOrchestrationDelayModule;
 import io.harness.engine.NoopTaskExecutor;
 import io.harness.engine.OrchestrationService;
 import io.harness.engine.OrchestrationServiceImpl;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
+import io.harness.engine.executions.plan.PlanExecutionMetadataService;
+import io.harness.engine.executions.plan.PlanExecutionMetadataServiceImpl;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionServiceImpl;
+import io.harness.engine.executions.plan.PlanService;
+import io.harness.engine.executions.plan.PlanServiceImpl;
 import io.harness.engine.expressions.EngineExpressionServiceImpl;
 import io.harness.engine.expressions.ExpressionEvaluatorProvider;
+import io.harness.engine.facilitation.facilitator.publisher.FacilitateEventPublisher;
+import io.harness.engine.facilitation.facilitator.publisher.RedisFacilitateEventPublisher;
 import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.interrupts.InterruptServiceImpl;
+import io.harness.engine.interrupts.handlers.publisher.InterruptEventPublisher;
+import io.harness.engine.interrupts.handlers.publisher.RedisInterruptEventPublisher;
+import io.harness.engine.pms.advise.publisher.NodeAdviseEventPublisher;
+import io.harness.engine.pms.advise.publisher.RedisNodeAdviseEventPublisher;
 import io.harness.engine.pms.data.PmsEngineExpressionServiceImpl;
 import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.engine.pms.data.PmsOutcomeServiceImpl;
 import io.harness.engine.pms.data.PmsSweepingOutputService;
 import io.harness.engine.pms.data.PmsSweepingOutputServiceImpl;
+import io.harness.engine.pms.resume.publisher.NodeResumeEventPublisher;
+import io.harness.engine.pms.resume.publisher.RedisNodeResumeEventPublisher;
 import io.harness.engine.pms.tasks.NgDelegate2TaskExecutor;
 import io.harness.engine.pms.tasks.TaskExecutor;
+import io.harness.engine.progress.publisher.ProgressEventPublisher;
+import io.harness.engine.progress.publisher.RedisProgressEventPublisher;
+import io.harness.exception.exceptionmanager.ExceptionModule;
 import io.harness.govern.ServersModule;
+import io.harness.pms.NoopFeatureFlagServiceImpl;
+import io.harness.pms.PmsFeatureFlagService;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.expression.PmsEngineExpressionService;
-import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
-import io.harness.pms.sdk.core.registries.registrar.ResolverRegistrar;
+import io.harness.pms.helpers.PmsFeatureFlagHelper;
 import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
 import io.harness.queue.TimerScheduledExecutorService;
-import io.harness.registrars.OrchestrationResolverRegistrar;
+import io.harness.serializer.KryoSerializer;
+import io.harness.testing.TestExecution;
 import io.harness.threading.ThreadPool;
+import io.harness.waiter.AbstractWaiterModule;
 import io.harness.waiter.AsyncWaitEngineImpl;
 import io.harness.waiter.WaitNotifyEngine;
-import io.harness.waiter.WaiterModule;
+import io.harness.waiter.WaiterConfiguration;
+import io.harness.waiter.WaiterConfiguration.PersistenceLayer;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.Provider;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
@@ -66,21 +92,33 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
 
   @Override
   protected void configure() {
-    install(WaiterModule.getInstance());
-    install(OrchestrationDelayModule.getInstance());
+    install(ExceptionModule.getInstance());
+    install(new AbstractWaiterModule() {
+      @Override
+      public WaiterConfiguration waiterConfiguration() {
+        return WaiterConfiguration.builder().persistenceLayer(PersistenceLayer.SPRING).build();
+      }
+    });
+    install(new AbstractOrchestrationDelayModule() {
+      @Override
+      public boolean forNG() {
+        return true;
+      }
+    });
     install(OrchestrationBeansModule.getInstance());
-    install(OrchestrationQueueModule.getInstance(config));
-
+    if (!config.isUseFeatureFlagService()) {
+      bind(PmsFeatureFlagService.class).to(NoopFeatureFlagServiceImpl.class);
+    } else {
+      install(new AccountClientModule(
+          config.getAccountServiceHttpClientConfig(), config.getAccountServiceSecret(), config.getAccountClientId()));
+      bind(PmsFeatureFlagService.class).to(PmsFeatureFlagHelper.class);
+    }
     bind(NodeExecutionService.class).to(NodeExecutionServiceImpl.class).in(Singleton.class);
     bind(PlanExecutionService.class).to(PlanExecutionServiceImpl.class).in(Singleton.class);
-    bind(InterruptService.class).to(InterruptServiceImpl.class);
-    bind(OrchestrationService.class).to(OrchestrationServiceImpl.class);
-    bind(EngineObtainmentHelper.class).in(Singleton.class);
-
-    MapBinder<String, ResolverRegistrar> resolverRegistrarMapBinder =
-        MapBinder.newMapBinder(binder(), String.class, ResolverRegistrar.class);
-    resolverRegistrarMapBinder.addBinding(OrchestrationResolverRegistrar.class.getName())
-        .to(OrchestrationResolverRegistrar.class);
+    bind(PlanService.class).to(PlanServiceImpl.class).in(Singleton.class);
+    bind(InterruptService.class).to(InterruptServiceImpl.class).in(Singleton.class);
+    bind(OrchestrationService.class).to(OrchestrationServiceImpl.class).in(Singleton.class);
+    bind(PlanExecutionMetadataService.class).to(PlanExecutionMetadataServiceImpl.class).in(Singleton.class);
 
     MapBinder<TaskCategory, TaskExecutor> taskExecutorMap =
         MapBinder.newMapBinder(binder(), TaskCategory.class, TaskExecutor.class);
@@ -95,6 +133,25 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
     if (!config.isWithPMS()) {
       bind(EngineExpressionService.class).to(EngineExpressionServiceImpl.class);
     }
+
+    MapBinder<String, TestExecution> testExecutionMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, TestExecution.class);
+    Provider<KryoSerializer> kryoSerializerProvider = getProvider(Key.get(KryoSerializer.class));
+    testExecutionMapBinder.addBinding("Callback Kryo Registration")
+        .toInstance(() -> OrchestrationComponentTester.testKryoRegistration(kryoSerializerProvider));
+
+    install(new OrchestrationEventsFrameworkModule(config.getEventsFrameworkConfiguration()));
+    bind(InterruptEventPublisher.class).to(RedisInterruptEventPublisher.class);
+    bind(FacilitateEventPublisher.class).to(RedisFacilitateEventPublisher.class).in(Singleton.class);
+    bind(ProgressEventPublisher.class).to(RedisProgressEventPublisher.class).in(Singleton.class);
+    bind(NodeAdviseEventPublisher.class).to(RedisNodeAdviseEventPublisher.class).in(Singleton.class);
+    bind(NodeResumeEventPublisher.class).to(RedisNodeResumeEventPublisher.class).in(Singleton.class);
+  }
+
+  @Provides
+  @Named(PERSISTENCE_LAYER)
+  PersistenceLayer usedPersistenceLayer() {
+    return PersistenceLayer.SPRING;
   }
 
   @Provides
@@ -112,7 +169,7 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
   }
 
   @Provides
-  @Named(OrchestrationPublisherName.PUBLISHER_NAME)
+  @Named(PUBLISHER_NAME)
   public String publisherName() {
     return config.getPublisherName();
   }
@@ -120,7 +177,7 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
   @Provides
   @Singleton
   public AsyncWaitEngine asyncWaitEngine(
-      WaitNotifyEngine waitNotifyEngine, @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName) {
+      WaitNotifyEngine waitNotifyEngine, @Named(PUBLISHER_NAME) String publisherName) {
     return new AsyncWaitEngineImpl(waitNotifyEngine, publisherName);
   }
 

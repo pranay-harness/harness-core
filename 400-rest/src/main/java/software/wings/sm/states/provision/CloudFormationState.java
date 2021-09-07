@@ -12,6 +12,7 @@ import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -75,6 +76,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -83,11 +85,14 @@ import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
+import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
 
 @FieldNameConstants(innerTypeName = "CloudFormationStateKeys")
 @OwnedBy(CDP)
+@Slf4j
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public abstract class CloudFormationState extends State {
   @Inject protected transient ActivityService activityService;
   @Inject private transient SettingsService settingsService;
@@ -99,8 +104,7 @@ public abstract class CloudFormationState extends State {
   @Inject protected transient TemplateExpressionProcessor templateExpressionProcessor;
   @Inject protected transient WingsPersistence wingsPersistence;
   @Inject protected SweepingOutputService sweepingOutputService;
-
-  @Attributes(title = "Provisioner") @Getter @Setter protected String provisionerId;
+  @FieldNameConstants.Include @Attributes(title = "Provisioner") @Getter @Setter protected String provisionerId;
   @Attributes(title = "Region")
   @DefaultValue(AWS_DEFAULT_REGION)
   @Getter
@@ -355,6 +359,8 @@ public abstract class CloudFormationState extends State {
                               .cloudFormationRoleArn(rollbackInfo.getCloudFormationRoleArn())
                               .variables(rollbackInfo.getVariables())
                               .workflowExecutionId(context.getWorkflowExecutionId())
+                              .skipBasedOnStackStatus(rollbackInfo.isSkipBasedOnStackStatus())
+                              .stackStatusesToMarkAsSuccess(rollbackInfo.getStackStatusesToMarkAsSuccess())
                               .entityId(getStackNameSuffix(context, provisionerId))
                               .build());
   }
@@ -367,5 +373,15 @@ public abstract class CloudFormationState extends State {
 
   protected String getCompletionStatusFlagSweepingOutputName() {
     return String.format("CloudFormationCompletionFlag %s", provisionerId);
+  }
+
+  @Override
+  public Map<String, String> validateFields() {
+    Map<String, String> results = new HashMap<>();
+    if (isEmpty(provisionerId)) {
+      results.put("Provisioner", "Provisioner must be provided.");
+    }
+    // if more fields need to validated, please make sure templatized fields are not broken.
+    return results;
   }
 }

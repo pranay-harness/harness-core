@@ -20,6 +20,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class PermissionCheckDTO {
   ResourceScope resourceScope;
   @NotEmpty String resourceType;
-  @NotEmpty String resourceIdentifier;
+  String resourceIdentifier;
   @NotEmpty String permission;
 }

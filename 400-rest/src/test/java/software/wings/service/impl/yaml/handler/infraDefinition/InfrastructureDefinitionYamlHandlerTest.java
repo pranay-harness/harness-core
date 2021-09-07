@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler.infraDefinition;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_YAML;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.SATYAM;
@@ -23,6 +25,8 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -37,7 +41,7 @@ import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
 import software.wings.infra.InfraDefinitionTestConstants;
 import software.wings.infra.InfrastructureDefinition;
-import software.wings.infra.InfrastructureDefinition.Yaml;
+import software.wings.infra.InfrastructureDefinitionYaml;
 import software.wings.service.impl.yaml.handler.InfraDefinition.AwsAmiInfrastructureYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.AwsEcsInfrastructureYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.AwsInstanceInfrastructureYamlHandler;
@@ -78,6 +82,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDP)
+@TargetModule(_870_CG_YAML)
 public class InfrastructureDefinitionYamlHandlerTest extends YamlHandlerTestBase {
   @Mock private YamlHelper mockYamlHelper;
   @Mock private SettingsService mockSettingsService;
@@ -330,8 +336,9 @@ public class InfrastructureDefinitionYamlHandlerTest extends YamlHandlerTestBase
 
     assertThat(yamlFile).isNotNull();
     String yamlString = FileUtils.readFileToString(yamlFile, "UTF-8");
-    ChangeContext<Yaml> changeContext = getChangeContext(yamlString);
-    Yaml yaml = (Yaml) getYaml(yamlString, Yaml.class);
+    ChangeContext<InfrastructureDefinitionYaml> changeContext = getChangeContext(yamlString);
+    InfrastructureDefinitionYaml yaml =
+        (InfrastructureDefinitionYaml) getYaml(yamlString, InfrastructureDefinitionYaml.class);
     changeContext.setYaml(yaml);
 
     handler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
@@ -378,14 +385,14 @@ public class InfrastructureDefinitionYamlHandlerTest extends YamlHandlerTestBase
     reset(infrastructureDefinitionService);
   }
 
-  private ChangeContext<Yaml> getChangeContext(String validYamlContent) {
+  private ChangeContext<InfrastructureDefinitionYaml> getChangeContext(String validYamlContent) {
     GitFileChange gitFileChange = GitFileChange.Builder.aGitFileChange()
                                       .withAccountId(ACCOUNT_ID)
                                       .withFilePath(yamlFilePath)
                                       .withFileContent(validYamlContent)
                                       .build();
 
-    ChangeContext<Yaml> changeContext = new ChangeContext<>();
+    ChangeContext<InfrastructureDefinitionYaml> changeContext = new ChangeContext<>();
     changeContext.setChange(gitFileChange);
     changeContext.setYamlType(YamlType.INFRA_DEFINITION);
     changeContext.setYamlSyncHandler(handler);

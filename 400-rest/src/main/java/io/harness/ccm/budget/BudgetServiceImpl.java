@@ -6,6 +6,7 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.budget.dao.BudgetDao;
+import io.harness.ccm.commons.entities.billing.Budget;
 import io.harness.ccm.views.graphql.QLCEViewTimeSeriesData;
 import io.harness.ccm.views.service.CEViewService;
 import io.harness.exception.InvalidRequestException;
@@ -457,6 +458,15 @@ public class BudgetServiceImpl implements BudgetService {
     String[] emailAddresses = ArrayUtils.nullToEmpty(budget.getEmailAddresses());
     String[] uniqueEmailAddresses = new HashSet<>(Arrays.asList(emailAddresses)).toArray(new String[0]);
     budget.setEmailAddresses(uniqueEmailAddresses);
+    AlertThreshold[] alertThresholds = budget.getAlertThresholds();
+    if (alertThresholds != null && alertThresholds.length > 0) {
+      for (AlertThreshold alertThreshold : alertThresholds) {
+        emailAddresses = ArrayUtils.nullToEmpty(alertThreshold.getEmailAddresses());
+        uniqueEmailAddresses = new HashSet<>(Arrays.asList(emailAddresses)).toArray(new String[0]);
+        alertThreshold.setEmailAddresses(uniqueEmailAddresses);
+      }
+      budget.setAlertThresholds(alertThresholds);
+    }
   }
 
   private double computeActualCost(Budget budget) {

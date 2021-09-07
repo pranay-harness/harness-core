@@ -37,4 +37,28 @@ public class ClusterDataToBigQueryConfiguration {
   public Step clusterDataToBigQueryStep(StepBuilderFactory stepBuilderFactory) {
     return stepBuilderFactory.get("clusterDataToBigQueryStep").tasklet(clusterDataToBigQueryTasklet()).build();
   }
+
+  // ------------------------------------------------------------------------------------------
+
+  @Bean
+  public Tasklet clusterDataHourlyToBigQueryTasklet() {
+    return new ClusterDataToBigQueryTasklet();
+  }
+
+  @Bean
+  @Autowired
+  @Qualifier(value = "clusterDataHourlyToBigQueryJob")
+  public Job clusterDataHourlyToBigQueryJob(JobBuilderFactory jobBuilderFactory, Step clusterDataHourlyToBigQueryStep) {
+    return jobBuilderFactory.get(BatchJobType.CLUSTER_DATA_HOURLY_TO_BIG_QUERY.name())
+        .incrementer(new RunIdIncrementer())
+        .start(clusterDataHourlyToBigQueryStep)
+        .build();
+  }
+
+  @Bean
+  public Step clusterDataHourlyToBigQueryStep(StepBuilderFactory stepBuilderFactory) {
+    return stepBuilderFactory.get("clusterDataHourlyToBigQueryStep")
+        .tasklet(clusterDataHourlyToBigQueryTasklet())
+        .build();
+  }
 }

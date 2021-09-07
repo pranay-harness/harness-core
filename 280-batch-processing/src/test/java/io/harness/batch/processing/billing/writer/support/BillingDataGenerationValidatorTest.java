@@ -9,7 +9,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
+import io.harness.ccm.commons.entities.batch.LastReceivedPublishedMessage;
 import io.harness.ccm.health.LastReceivedPublishedMessageDao;
 import io.harness.rule.Owner;
 

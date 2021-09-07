@@ -7,9 +7,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.TimeSeriesMetricType;
-import io.harness.cvng.beans.TimeSeriesThresholdActionType;
-import io.harness.cvng.beans.TimeSeriesThresholdCriteria;
-import io.harness.cvng.beans.TimeSeriesThresholdType;
 import io.harness.cvng.beans.stackdriver.StackDriverMetricDefinition;
 import io.harness.cvng.core.beans.StackdriverDefinition;
 import io.harness.cvng.core.entities.MetricPack.MetricDefinition;
@@ -18,9 +15,7 @@ import io.harness.serializer.JsonUtils;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
-import com.google.gson.Gson;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import lombok.AllArgsConstructor;
@@ -29,11 +24,12 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.SuperBuilder;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @JsonTypeName("STACKDRIVER")
 @Data
-@Builder
+@SuperBuilder
 @FieldNameConstants(innerTypeName = "StackdriverCVConfigKeys")
 @NoArgsConstructor
 @AllArgsConstructor
@@ -52,6 +48,7 @@ public class StackdriverCVConfig extends MetricCVConfig {
     private List<String> tags;
     private TimeSeriesMetricType metricType;
     boolean isManualQuery;
+    private String serviceInstanceField;
   }
 
   @Override
@@ -73,28 +70,6 @@ public class StackdriverCVConfig extends MetricCVConfig {
       StackDriverMetricDefinition.extractFromJson(metricInfo.getJsonMetricDefinition());
       checkNotNull(metricInfo.getMetricType(), generateErrorMessageFromParam("metricType"));
     });
-  }
-
-  public Set<TimeSeriesThreshold> getThresholdsToCreateOnSave(
-      String metricName, TimeSeriesMetricType metricType, List<TimeSeriesThresholdType> thresholdTypes) {
-    Set<TimeSeriesThreshold> thresholds = new HashSet<>();
-    metricType.getThresholds().forEach(threshold -> {
-      thresholdTypes.forEach(type -> {
-        Gson gson = new Gson();
-        TimeSeriesThresholdCriteria criteria = gson.fromJson(gson.toJson(threshold), TimeSeriesThresholdCriteria.class);
-        criteria.setThresholdType(type);
-        thresholds.add(TimeSeriesThreshold.builder()
-                           .accountId(getAccountId())
-                           .projectIdentifier(getProjectIdentifier())
-                           .dataSourceType(DataSourceType.STACKDRIVER)
-                           .metricType(metricType)
-                           .metricName(metricName)
-                           .action(TimeSeriesThresholdActionType.IGNORE)
-                           .criteria(criteria)
-                           .build());
-      });
-    });
-    return thresholds;
   }
 
   public void fromStackdriverDefinitions(
@@ -120,10 +95,11 @@ public class StackdriverCVConfig extends MetricCVConfig {
                              .metricType(metricType)
                              .tags(definition.getMetricTags())
                              .isManualQuery(definition.isManualQuery())
+                             .serviceInstanceField(definition.getServiceInstanceField())
                              .build());
 
       // add this metric to the pack and the corresponding thresholds
-      Set<TimeSeriesThreshold> thresholds = getThresholdsToCreateOnSave(
+      Set<TimeSeriesThreshold> thresholds = getThresholdsToCreateOnSaveForCustomProviders(
           definition.getMetricName(), metricType, definition.getRiskProfile().getThresholdTypes());
       metricPack.addToMetrics(MetricDefinition.builder()
                                   .thresholds(new ArrayList<>(thresholds))

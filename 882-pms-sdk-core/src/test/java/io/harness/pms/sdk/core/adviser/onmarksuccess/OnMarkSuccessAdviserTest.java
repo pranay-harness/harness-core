@@ -5,15 +5,17 @@ import static io.harness.rule.OwnerRule.ALEXEI;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.MarkSuccessAdvise;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
-import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.failure.FailureType;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.PmsSdkCoreTestBase;
 import io.harness.pms.sdk.core.adviser.AdvisingEvent;
@@ -28,11 +30,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class OnMarkSuccessAdviserTest extends PmsSdkCoreTestBase {
   public static final String NODE_EXECUTION_ID = generateUuid();
   public static final String NODE_SETUP_ID = generateUuid();
   public static final String NODE_IDENTIFIER = "DUMMY";
-  public static final StepType DUMMY_STEP_TYPE = StepType.newBuilder().setType(NODE_IDENTIFIER).build();
+  public static final StepType DUMMY_STEP_TYPE =
+      StepType.newBuilder().setStepCategory(StepCategory.STEP).setType(NODE_IDENTIFIER).build();
 
   @Inject OnMarkSuccessAdviser onMarkSuccessAdviser;
   @Inject KryoSerializer kryoSerializer;
@@ -55,10 +59,9 @@ public class OnMarkSuccessAdviserTest extends PmsSdkCoreTestBase {
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldTestOnAdviseEvent() {
-    NodeExecutionProto nodeExecutionProto = NodeExecutionProto.newBuilder().setAmbiance(ambiance).build();
     String nextNodeId = generateUuid();
     AdvisingEvent advisingEvent = AdvisingEvent.builder()
-                                      .nodeExecution(nodeExecutionProto)
+                                      .ambiance(ambiance)
                                       .toStatus(Status.SUCCEEDED)
                                       .adviserParameters(kryoSerializer.asBytes(
                                           OnMarkSuccessAdviserParameters.builder().nextNodeId(nextNodeId).build()))
@@ -73,11 +76,10 @@ public class OnMarkSuccessAdviserTest extends PmsSdkCoreTestBase {
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldTestCanAdvise() {
-    NodeExecutionProto nodeExecutionProto = NodeExecutionProto.newBuilder().setAmbiance(ambiance).build();
     AdvisingEvent advisingEvent =
         AdvisingEvent.builder()
-            .nodeExecution(nodeExecutionProto)
-            .toStatus(Status.ABORTED)
+            .ambiance(ambiance)
+            .toStatus(Status.FAILED)
             .adviserParameters(kryoSerializer.asBytes(OnMarkSuccessAdviserParameters.builder().build()))
             .build();
     boolean canAdvise = onMarkSuccessAdviser.canAdvise(advisingEvent);
@@ -88,20 +90,17 @@ public class OnMarkSuccessAdviserTest extends PmsSdkCoreTestBase {
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldTestCanAdviseWithFailureTypes() {
-    NodeExecutionProto nodeExecutionProto =
-        NodeExecutionProto.newBuilder()
-            .setAmbiance(ambiance)
-            .setFailureInfo(FailureInfo.newBuilder().addFailureTypes(FailureType.DELEGATE_PROVISIONING_FAILURE).build())
-            .build();
     byte[] paramBytes = kryoSerializer.asBytes(
         OnMarkSuccessAdviserParameters.builder()
             .applicableFailureTypes(EnumSet.of(FailureType.CONNECTIVITY_FAILURE, FailureType.AUTHENTICATION_FAILURE))
             .build());
-    AdvisingEvent advisingEvent = AdvisingEvent.builder()
-                                      .nodeExecution(nodeExecutionProto)
-                                      .toStatus(Status.ABORTED)
-                                      .adviserParameters(paramBytes)
-                                      .build();
+    AdvisingEvent advisingEvent =
+        AdvisingEvent.builder()
+            .ambiance(ambiance)
+            .failureInfo(FailureInfo.newBuilder().addFailureTypes(FailureType.DELEGATE_PROVISIONING_FAILURE).build())
+            .toStatus(Status.ABORTED)
+            .adviserParameters(paramBytes)
+            .build();
     boolean canAdvise = onMarkSuccessAdviser.canAdvise(advisingEvent);
     assertThat(canAdvise).isFalse();
   }

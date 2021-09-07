@@ -12,6 +12,11 @@ import static java.util.Arrays.asList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,6 +32,8 @@ import org.mongodb.morphia.annotations.Transient;
  *
  * @author Rishi
  */
+@OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class Graph {
   private static final String DEFAULT_WORKFLOW_NAME = "MAIN";
 

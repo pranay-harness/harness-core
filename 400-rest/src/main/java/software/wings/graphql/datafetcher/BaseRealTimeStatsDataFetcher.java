@@ -52,7 +52,7 @@ public interface BaseRealTimeStatsDataFetcher<F> extends BaseStatsDataFetcher {
     wingsPersistence.getDatastore(query.getEntityClass())
         .createAggregation(entityClass)
         .match(query)
-        .group(Group.id(getFirstLevelGrouping(entityIdColumn), grouping(secondLevelEntityIdColumn)),
+        .group(Group.id(getFirstLevelGrouping(entityIdColumn), getFirstLevelGrouping(secondLevelEntityIdColumn)),
             grouping("count", new Accumulator("$sum", 1)),
             grouping("firstLevelInfo",
                 grouping("$first", projection("id", entityIdColumn), projection("name", entityIdColumn))),
@@ -157,10 +157,12 @@ public interface BaseRealTimeStatsDataFetcher<F> extends BaseStatsDataFetcher {
     List<QLStackedDataPoint> stackedDataPointList = new ArrayList<>();
 
     Set<String> firstLevelIds = aggregatedDataList.stream()
+                                    .filter(aggregationData -> aggregationData.getFirstLevelInfo().getId() != null)
                                     .map(aggregationData -> aggregationData.getFirstLevelInfo().getId())
                                     .collect(Collectors.toSet());
 
     Set<String> secondLevelIds = aggregatedDataList.stream()
+                                     .filter(aggregationData -> aggregationData.getSecondLevelInfo().getId() != null)
                                      .map(aggregationData -> aggregationData.getSecondLevelInfo().getId())
                                      .collect(Collectors.toSet());
 
@@ -179,8 +181,8 @@ public interface BaseRealTimeStatsDataFetcher<F> extends BaseStatsDataFetcher {
       QLDataPoint secondLevelDataPoint =
           QLDataPoint.builder().key(secondLevelRef).value(aggregatedData.getCount()).build();
 
-      boolean sameAsPrevious =
-          prevStackedDataPoint != null && prevStackedDataPoint.getKey().getId().equals(firstLevelInfo.getId());
+      boolean sameAsPrevious = prevStackedDataPoint != null && prevStackedDataPoint.getKey().getId() != null
+          && prevStackedDataPoint.getKey().getId().equals(firstLevelInfo.getId());
       if (sameAsPrevious) {
         prevStackedDataPoint.getValues().add(secondLevelDataPoint);
       } else {

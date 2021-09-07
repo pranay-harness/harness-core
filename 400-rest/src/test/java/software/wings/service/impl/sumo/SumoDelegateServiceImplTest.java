@@ -64,8 +64,7 @@ public class SumoDelegateServiceImplTest extends WingsBaseTest {
     } catch (DataCollectionException e) {
       exceptionMsg = ExceptionUtils.getMessage(e);
     }
-    assertThat(exceptionMsg)
-        .isEqualTo("DataCollectionException: java.net.MalformedURLException: no protocol: htt//localhost:9000/");
+    assertThat(exceptionMsg).isEqualTo("Error: no protocol: htt//localhost:9000/");
   }
 
   @Test(expected = SumoClientException.class)

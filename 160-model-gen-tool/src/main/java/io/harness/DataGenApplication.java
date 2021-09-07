@@ -1,32 +1,41 @@
 package io.harness;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.cache.CacheBackend.NOOP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.stream.AtmosphereBroadcaster.MEMORY;
 
 import static org.mockito.Mockito.mock;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheModule;
 import io.harness.capability.CapabilityModule;
+import io.harness.cf.AbstractCfModule;
+import io.harness.cf.CfClientConfig;
+import io.harness.cf.CfMigrationConfig;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.configuration.DeployMode;
-import io.harness.cvng.client.CVNGClientModule;
+import io.harness.delegate.authenticator.DelegateTokenAuthenticatorImpl;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagConfig;
 import io.harness.govern.ProviderModule;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.manage.GlobalContextManager;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.persistence.UserProvider;
+import io.harness.security.DelegateTokenAuthenticator;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.service.DelegateServiceModule;
+import io.harness.service.impl.DelegateTokenServiceImpl;
+import io.harness.service.intfc.DelegateTokenService;
 import io.harness.springdata.SpringPersistenceModule;
 import io.harness.stream.AtmosphereBroadcaster;
 import io.harness.stream.StreamModule;
@@ -82,6 +91,7 @@ import org.springframework.core.convert.converter.Converter;
 import ru.vyarus.guice.validator.ValidationModule;
 
 @Slf4j
+@OwnedBy(PL)
 public class DataGenApplication extends Application<MainConfiguration> {
   public static void main(String... args) throws Exception {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -170,13 +180,27 @@ public class DataGenApplication extends Application<MainConfiguration> {
         bind(CommandLibraryServiceHttpClient.class).toInstance(mock(CommandLibraryServiceHttpClient.class));
       }
     });
+    modules.add(new AbstractCfModule() {
+      @Override
+      public CfClientConfig cfClientConfig() {
+        return configuration.getCfClientConfig();
+      }
 
+      @Override
+      public CfMigrationConfig cfMigrationConfig() {
+        return configuration.getCfMigrationConfig();
+      }
+
+      @Override
+      public FeatureFlagConfig featureFlagConfig() {
+        return FeatureFlagConfig.builder().build();
+      }
+    });
     modules.add(new ValidationModule(validatorFactory));
     modules.add(new DelegateServiceModule());
     modules.add(new AlertModule());
     modules.add(new CapabilityModule());
     modules.add(new WingsModule(configuration));
-    modules.add(new CVNGClientModule(configuration.getCvngClientConfig()));
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
@@ -187,6 +211,13 @@ public class DataGenApplication extends Application<MainConfiguration> {
             .put(DelegateAsyncTaskResponse.class, "delegateAsyncTaskResponses")
             .put(DelegateTaskProgressResponse.class, "delegateTaskProgressResponses")
             .build();
+      }
+    });
+
+    modules.add(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(DelegateTokenAuthenticator.class).to(DelegateTokenAuthenticatorImpl.class).in(Singleton.class);
       }
     });
 
@@ -259,5 +290,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
     AccountServiceImpl accountService = (AccountServiceImpl) injector.getInstance(Key.get(AccountService.class));
     accountService.getAccountCrudSubject().register(
         (DelegateProfileServiceImpl) injector.getInstance(Key.get(DelegateProfileService.class)));
+    accountService.getAccountCrudSubject().register(
+        (DelegateTokenServiceImpl) injector.getInstance(Key.get(DelegateTokenService.class)));
   }
 }

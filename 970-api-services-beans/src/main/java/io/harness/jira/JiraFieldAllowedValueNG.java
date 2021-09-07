@@ -41,6 +41,10 @@ public class JiraFieldAllowedValueNG {
     return value != null && (value.equals(this.id) || value.equals(this.name) || value.equals(this.value));
   }
 
+  public String displayValue() {
+    return value == null ? (name == null ? id : name) : value;
+  }
+
   public static JiraFieldAllowedValueNG fromStatus(JiraStatusNG status) {
     return JiraFieldAllowedValueNG.builder().id(status.getId()).name(status.getName()).build();
   }

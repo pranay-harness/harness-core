@@ -1,6 +1,7 @@
 package io.harness.plancreator.steps;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.pms.yaml.YAMLFieldNameConstants.EXECUTION;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.FAILURE_STRATEGIES;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.PARALLEL;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.ROLLBACK_STEPS;
@@ -14,7 +15,9 @@ import io.harness.advisers.rollback.OnFailRollbackAdviser;
 import io.harness.advisers.rollback.OnFailRollbackParameters;
 import io.harness.advisers.rollback.OnFailRollbackParameters.OnFailRollbackParametersBuilder;
 import io.harness.advisers.rollback.RollbackStrategy;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.govern.Switch;
@@ -26,7 +29,6 @@ import io.harness.pms.contracts.commons.RepairActionCode;
 import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
-import io.harness.pms.execution.utils.RunInfoUtils;
 import io.harness.pms.execution.utils.SkipInfoUtils;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
 import io.harness.pms.sdk.core.adviser.abort.OnAbortAdviser;
@@ -44,24 +46,25 @@ import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
+import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.timeout.AbsoluteSdkTimeoutTrackerParameters;
+import io.harness.pms.timeout.SdkTimeoutObtainment;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.serializer.KryoSerializer;
-import io.harness.steps.StepOutcomeGroup;
-import io.harness.timeout.TimeoutParameters;
-import io.harness.timeout.contracts.TimeoutObtainment;
-import io.harness.timeout.trackers.absolute.AbsoluteTimeoutParameters;
 import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;
+import io.harness.utils.TimeoutUtils;
+import io.harness.when.utils.RunInfoUtils;
 import io.harness.yaml.core.failurestrategy.FailureStrategyActionConfig;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 import io.harness.yaml.core.failurestrategy.NGFailureActionType;
 import io.harness.yaml.core.failurestrategy.NGFailureTypeConstants;
 import io.harness.yaml.core.failurestrategy.manualintervention.ManualInterventionFailureActionConfig;
 import io.harness.yaml.core.failurestrategy.retry.RetryFailureActionConfig;
-import io.harness.yaml.core.timeout.TimeoutUtils;
+import io.harness.yaml.core.timeout.Timeout;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.inject.Inject;
@@ -79,6 +82,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @OwnedBy(PIPELINE)
+@TargetModule(HarnessModule._882_PMS_SDK_CORE)
 public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<StepElementConfig> {
   @Inject protected KryoSerializer kryoSerializer;
 
@@ -100,8 +104,6 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
 
   @Override
   public PlanCreationResponse createPlanForField(PlanCreationContext ctx, StepElementConfig stepElement) {
-    StepParameters stepParameters = stepElement.getStepSpecType().getStepParameters();
-
     boolean isStepInsideRollback = false;
     if (YamlUtils.findParentNode(ctx.getCurrentField().getNode(), ROLLBACK_STEPS) != null) {
       isStepInsideRollback = true;
@@ -109,11 +111,7 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
 
     List<AdviserObtainment> adviserObtainmentFromMetaData = getAdviserObtainmentFromMetaData(ctx.getCurrentField());
 
-    if (stepElement.getStepSpecType() instanceof WithStepElementParameters) {
-      stepElement.setTimeout(TimeoutUtils.getTimeout(stepElement.getTimeout()));
-      stepParameters = ((WithStepElementParameters) stepElement.getStepSpecType()).getStepParametersInfo(stepElement);
-    }
-
+    StepParameters stepParameters = getStepParameters(ctx, stepElement);
     PlanNode stepPlanNode =
         PlanNode.builder()
             .uuid(ctx.getCurrentField().getNode().getUuid())
@@ -130,27 +128,39 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
             .adviserObtainments(adviserObtainmentFromMetaData)
             .skipCondition(SkipInfoUtils.getSkipCondition(stepElement.getSkipCondition()))
             .whenCondition(isStepInsideRollback ? RunInfoUtils.getRunConditionForRollback(stepElement.getWhen())
-                                                : RunInfoUtils.getRunCondition(stepElement.getWhen(), false))
+                                                : RunInfoUtils.getRunCondition(stepElement.getWhen()))
             .timeoutObtainment(
-                TimeoutObtainment.newBuilder()
-                    .setDimension(AbsoluteTimeoutTrackerFactory.DIMENSION)
-                    .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
-                        AbsoluteTimeoutParameters.builder().timeoutMillis(getTimeoutInMillis(stepElement)).build())))
+                SdkTimeoutObtainment.builder()
+                    .dimension(AbsoluteTimeoutTrackerFactory.DIMENSION)
+                    .parameters(
+                        AbsoluteSdkTimeoutTrackerParameters.builder().timeout(getTimeoutString(stepElement)).build())
                     .build())
+            .skipUnresolvedExpressionsCheck(stepElement.getStepSpecType().skipUnresolvedExpressionsCheck())
             .build();
     return PlanCreationResponse.builder().node(stepPlanNode.getUuid(), stepPlanNode).build();
   }
 
-  public static boolean containsOnlyAnyOtherErrorInSomeConfig(List<FailureStrategyConfig> stageFailureStrategies) {
-    boolean containsOnlyAnyOther = false;
+  public static boolean containsOnlyAllErrorsInSomeConfig(List<FailureStrategyConfig> stageFailureStrategies) {
+    boolean containsOnlyAllErrors = false;
     for (FailureStrategyConfig failureStrategyConfig : stageFailureStrategies) {
       if (failureStrategyConfig.getOnFailure().getErrors().size() == 1
           && failureStrategyConfig.getOnFailure().getErrors().get(0).getYamlName().contentEquals(
-              NGFailureTypeConstants.ANY_OTHER_ERRORS)) {
-        containsOnlyAnyOther = true;
+              NGFailureTypeConstants.ALL_ERRORS)) {
+        containsOnlyAllErrors = true;
       }
     }
-    return containsOnlyAnyOther;
+    return containsOnlyAllErrors;
+  }
+
+  protected StepParameters getStepParameters(PlanCreationContext ctx, StepElementConfig stepElement) {
+    if (stepElement.getStepSpecType() instanceof WithStepElementParameters) {
+      stepElement.setTimeout(TimeoutUtils.getTimeout(stepElement.getTimeout()));
+      return ((WithStepElementParameters) stepElement.getStepSpecType())
+          .getStepParametersInfo(stepElement,
+              getRollbackParameters(ctx.getCurrentField(), Collections.emptySet(), RollbackStrategy.UNKNOWN));
+    }
+
+    return stepElement.getStepSpecType().getStepParameters();
   }
 
   protected String getName(StepElementConfig stepElement) {
@@ -163,14 +173,14 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
     return nodeName;
   }
 
-  protected long getTimeoutInMillis(StepElementConfig stepElement) {
-    long timeoutInMillis;
-    if (ParameterField.isNull(stepElement.getTimeout())) {
-      timeoutInMillis = TimeoutParameters.DEFAULT_TIMEOUT_IN_MILLIS;
+  protected ParameterField<String> getTimeoutString(StepElementConfig stepElement) {
+    ParameterField<Timeout> timeout = TimeoutUtils.getTimeout(stepElement.getTimeout());
+    if (timeout.isExpression()) {
+      return ParameterField.createExpressionField(
+          true, timeout.getExpressionValue(), timeout.getInputSetValidator(), true);
     } else {
-      timeoutInMillis = stepElement.getTimeout().getValue().getTimeoutInMillis();
+      return ParameterField.createValueField(timeout.getValue().getTimeoutString());
     }
-    return timeoutInMillis;
   }
 
   protected List<AdviserObtainment> getAdviserObtainmentFromMetaData(YamlField currentField) {
@@ -368,7 +378,7 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
     return null;
   }
 
-  private OnFailRollbackParameters getRollbackParameters(
+  protected OnFailRollbackParameters getRollbackParameters(
       YamlField currentField, Set<FailureType> failureTypes, RollbackStrategy rollbackStrategy) {
     OnFailRollbackParametersBuilder rollbackParametersBuilder = OnFailRollbackParameters.builder();
     rollbackParametersBuilder.applicableFailureTypes(failureTypes);
@@ -476,5 +486,80 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
       }
     }
     return false;
+  }
+
+  protected String getExecutionStepFqn(YamlField currentField, String stepNodeType) {
+    String stepFqn = null;
+    YamlNode execution = YamlUtils.findParentNode(currentField.getNode(), EXECUTION);
+    List<YamlNode> steps = execution.getField(STEPS).getNode().asArray();
+    for (YamlNode stepsNode : steps) {
+      YamlNode stepGroup = getStepGroup(stepsNode);
+      stepFqn = stepGroup != null ? getStepFqnFromStepGroup(stepGroup, stepNodeType)
+                                  : getStepFqnFromStepNode(stepsNode, stepNodeType);
+      if (stepFqn != null) {
+        return stepFqn;
+      }
+    }
+
+    return stepFqn;
+  }
+
+  private String getStepFqnFromStepGroup(YamlNode stepGroup, String stepNodeType) {
+    String stepFqn = null;
+    List<YamlNode> stepsInsideStepGroup = stepGroup.getField(STEPS).getNode().asArray();
+    for (YamlNode stepsNodeInsideStepGroup : stepsInsideStepGroup) {
+      YamlNode parallelStepNode = getParallelStep(stepsNodeInsideStepGroup);
+      stepFqn = parallelStepNode != null ? getStepFqnFromParallelNode(parallelStepNode, stepNodeType)
+                                         : getFqnFromStepNode(stepsNodeInsideStepGroup, stepNodeType);
+      if (stepFqn != null) {
+        return stepFqn;
+      }
+    }
+
+    return stepFqn;
+  }
+
+  private String getStepFqnFromStepNode(YamlNode stepsNode, String stepNodeType) {
+    YamlNode parallelStepNode = getParallelStep(stepsNode);
+    return parallelStepNode != null ? getStepFqnFromParallelNode(parallelStepNode, stepNodeType)
+                                    : getFqnFromStepNode(stepsNode, stepNodeType);
+  }
+
+  private String getStepFqnFromParallelNode(YamlNode parallelStepNode, String stepNodeType) {
+    String stepFqn = null;
+    List<YamlNode> stepsInParallelNode = parallelStepNode.asArray();
+    for (YamlNode stepInParallelNode : stepsInParallelNode) {
+      stepFqn = getFqnFromStepNode(stepInParallelNode, stepNodeType);
+      if (stepFqn != null) {
+        return stepFqn;
+      }
+    }
+
+    return stepFqn;
+  }
+
+  private String getFqnFromStepNode(YamlNode stepsNode, String stepNodeType) {
+    YamlNode stepNode = stepsNode.getField(STEP).getNode();
+    if (stepNodeType.equals(stepNode.getType())) {
+      return YamlUtils.getFullyQualifiedName(stepNode);
+    }
+
+    return null;
+  }
+
+  private YamlNode getStepGroup(YamlNode stepsNode) {
+    try {
+      return stepsNode.getField(STEP_GROUP).getNode();
+    } catch (Exception ex) {
+      return null;
+    }
+  }
+
+  private YamlNode getParallelStep(YamlNode stepsNode) {
+    try {
+      return stepsNode.getField(PARALLEL).getNode();
+    } catch (Exception ex) {
+      return null;
+    }
   }
 }

@@ -1,15 +1,26 @@
 package io.harness.connector;
 
+import static io.harness.ConnectorConstants.CONNECTOR_DECORATOR_SERVICE;
+import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
+
 import static org.mockito.Mockito.mock;
 
+import io.harness.AccessControlClientConfiguration;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.connector.impl.ConnectorActivityServiceImpl;
 import io.harness.connector.services.ConnectorActivityService;
+import io.harness.connector.services.ConnectorService;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.factory.ClosingFactory;
+import io.harness.gitsync.persistance.GitAwarePersistence;
+import io.harness.gitsync.persistance.GitSyncSdkService;
+import io.harness.gitsync.persistance.testing.GitSyncablePersistenceTestModule;
+import io.harness.gitsync.persistance.testing.NoOpGitAwarePersistenceImpl;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
@@ -20,8 +31,10 @@ import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.ng.core.api.SecretCrudService;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.services.ProjectService;
+import io.harness.outbox.api.OutboxService;
 import io.harness.persistence.HPersistence;
 import io.harness.remote.CEAwsSetupConfig;
+import io.harness.remote.CEAzureSetupConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
@@ -29,11 +42,13 @@ import io.harness.serializer.ConnectorNextGenRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.PersistenceRegistrars;
-import io.harness.springdata.SpringPersistenceTestModule;
+import io.harness.springdata.HTransactionTemplate;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
+
+import software.wings.service.impl.security.NGEncryptorService;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Suppliers;
@@ -60,8 +75,11 @@ import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.mongodb.MongoTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @Slf4j
+@OwnedBy(DX)
 public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMixin {
   ClosingFactory closingFactory;
 
@@ -78,12 +96,17 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
         bind(HPersistence.class).to(MongoPersistence.class);
         bind(ConnectorActivityService.class).to(ConnectorActivityServiceImpl.class);
         bind(ProjectService.class).toInstance(mock(ProjectService.class));
+        bind(ConnectorService.class)
+            .annotatedWith(Names.named(CONNECTOR_DECORATOR_SERVICE))
+            .toInstance(mock(ConnectorService.class));
+        bind(NGEncryptorService.class).toInstance(mock(NGEncryptorService.class));
         bind(OrganizationService.class).toInstance(mock(OrganizationService.class));
         bind(NGActivityService.class).toInstance(mock(NGActivityService.class));
         bind(SecretManagerClientService.class).toInstance(mock(SecretManagerClientService.class));
         bind(DelegateServiceGrpcClient.class).toInstance(mock(DelegateServiceGrpcClient.class));
         bind(SecretCrudService.class).toInstance(mock(SecretCrudService.class));
         bind(NGSecretManagerService.class).toInstance(mock(NGSecretManagerService.class));
+        bind(AccessControlClientConfiguration.class).toInstance(mock(AccessControlClientConfiguration.class));
         bind(Producer.class)
             .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_ACTIVITY))
             .toInstance(mock(NoOpProducer.class));
@@ -92,17 +115,38 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
             .toInstance(mock(NoOpProducer.class));
         bind(new TypeLiteral<Supplier<DelegateCallbackToken>>() {
         }).toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
+        bind(GitAwarePersistence.class).to(NoOpGitAwarePersistenceImpl.class);
+        bind(GitSyncSdkService.class).toInstance(mock(GitSyncSdkService.class));
       }
     });
     modules.add(mongoTypeModule(annotations));
     modules.add(TestMongoModule.getInstance());
-    modules.add(new SpringPersistenceTestModule());
-    modules.add(new ConnectorModule(CEAwsSetupConfig.builder().build()));
+    modules.add(new GitSyncablePersistenceTestModule());
+    modules.add(ConnectorModule.getInstance());
     modules.add(KryoModule.getInstance());
     modules.add(YamlSdkModule.getInstance());
     modules.add(new EntitySetupUsageClientModule(
         ServiceHttpClientConfig.builder().baseUrl("http://localhost:7457/").build(), "test_secret", "Service"));
     modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      OutboxService registerOutboxService() {
+        return mock(OutboxService.class);
+      }
+
+      @Provides
+      @Singleton
+      @Named(OUTBOX_TRANSACTION_TEMPLATE)
+      TransactionTemplate registerTransactionTemplate() {
+        return mock(TransactionTemplate.class);
+      }
+
+      @Provides
+      @Singleton
+      TransactionTemplate getTransactionTemplate(MongoTransactionManager mongoTransactionManager) {
+        return new HTransactionTemplate(mongoTransactionManager, false);
+      }
+
       @Provides
       @Singleton
       Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
@@ -148,6 +192,25 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
       @Singleton
       public ObjectMapper getYamlSchemaObjectMapper() {
         return Jackson.newObjectMapper();
+      }
+
+      @Provides
+      @Singleton
+      CEAwsSetupConfig ceAwsSetupConfig() {
+        return CEAwsSetupConfig.builder().build();
+      }
+
+      @Provides
+      @Singleton
+      CEAzureSetupConfig ceAzureSetupConfig() {
+        return CEAzureSetupConfig.builder().build();
+      }
+
+      @Provides
+      @Named("disableDeserialization")
+      @Singleton
+      public boolean getSerializationForDelegate() {
+        return false;
       }
     });
     return modules;

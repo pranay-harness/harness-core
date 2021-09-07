@@ -186,6 +186,7 @@ public class SecretTextTest extends WingsBaseTest {
   private String kmsId;
   private String envId;
   private String encryptedBy;
+  private PageRequest<EncryptedData> pageRequest;
 
   @Parameters
   public static Collection<Object[]> data() {
@@ -299,6 +300,10 @@ public class SecretTextTest extends WingsBaseTest {
       default:
         throw new IllegalArgumentException("Invalid type " + encryptionType);
     }
+
+    pageRequest = new PageRequest<>();
+    pageRequest.addFilter("accountId", Operator.IN, accountId);
+    pageRequest.addFilter("type", Operator.IN, "SECRET_TEXT");
   }
 
   private String getRandomServiceVariableName() {
@@ -938,10 +943,9 @@ public class SecretTextTest extends WingsBaseTest {
     int numOfVariable = 4;
     int numOfAccess = 3;
     int numOfUpdates = 2;
-    PageResponse<EncryptedData> pageResponse =
-        (PageResponse<EncryptedData>) secretManagementResource
-            .listSecrets(accountId, SECRET_TEXT, null, null, true, aPageRequest().build())
-            .getResource();
+    PageResponse<EncryptedData> pageResponse = (PageResponse<EncryptedData>) secretManagementResource
+                                                   .listSecrets(accountId, SECRET_TEXT, null, null, true, pageRequest)
+                                                   .getResource();
     List<EncryptedData> secrets = pageResponse.getResponse();
 
     assertThat(secrets.isEmpty()).isTrue();
@@ -980,7 +984,7 @@ public class SecretTextTest extends WingsBaseTest {
       }
 
       pageResponse = (PageResponse<EncryptedData>) secretManagementResource
-                         .listSecrets(accountId, SECRET_TEXT, null, null, true, aPageRequest().build())
+                         .listSecrets(accountId, SECRET_TEXT, null, null, true, pageRequest)
                          .getResource();
       secrets = pageResponse.getResponse();
       assertThat(secrets).hasSize(i + 1);
@@ -998,7 +1002,7 @@ public class SecretTextTest extends WingsBaseTest {
     }
 
     pageResponse = (PageResponse<EncryptedData>) secretManagementResource
-                       .listSecrets(accountId, SECRET_TEXT, null, null, true, aPageRequest().build())
+                       .listSecrets(accountId, SECRET_TEXT, null, null, true, pageRequest)
                        .getResource();
     secrets = pageResponse.getResponse();
 
@@ -1018,10 +1022,9 @@ public class SecretTextTest extends WingsBaseTest {
     int numOfVariable = 4;
     int numOfAccess = 3;
     int numOfUpdates = 2;
-    PageResponse<EncryptedData> pageResponse =
-        (PageResponse<EncryptedData>) secretManagementResource
-            .listSecrets(accountId, SECRET_TEXT, null, null, false, aPageRequest().build())
-            .getResource();
+    PageResponse<EncryptedData> pageResponse = (PageResponse<EncryptedData>) secretManagementResource
+                                                   .listSecrets(accountId, SECRET_TEXT, null, null, false, pageRequest)
+                                                   .getResource();
     List<EncryptedData> secrets = pageResponse.getResponse();
 
     assertThat(secrets.isEmpty()).isTrue();
@@ -1060,7 +1063,7 @@ public class SecretTextTest extends WingsBaseTest {
       }
 
       pageResponse = (PageResponse<EncryptedData>) secretManagementResource
-                         .listSecrets(accountId, SECRET_TEXT, null, null, false, aPageRequest().build())
+                         .listSecrets(accountId, SECRET_TEXT, null, null, false, pageRequest)
                          .getResource();
       secrets = pageResponse.getResponse();
       assertThat(secrets).hasSize(i + 1);
@@ -1081,7 +1084,7 @@ public class SecretTextTest extends WingsBaseTest {
     }
 
     pageResponse = (PageResponse<EncryptedData>) secretManagementResource
-                       .listSecrets(accountId, SECRET_TEXT, null, null, false, aPageRequest().build())
+                       .listSecrets(accountId, SECRET_TEXT, null, null, false, pageRequest)
                        .getResource();
     secrets = pageResponse.getResponse();
 

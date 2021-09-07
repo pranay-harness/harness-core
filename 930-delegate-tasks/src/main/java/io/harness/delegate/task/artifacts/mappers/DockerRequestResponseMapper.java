@@ -45,7 +45,7 @@ public class DockerRequestResponseMapper {
         .buildDetails(ArtifactBuildDetailsMapper.toBuildDetailsNG(buildDetailsInternal))
         .imagePath(request.getImagePath())
         .tag(buildDetailsInternal.getNumber())
-        .sourceType(ArtifactSourceType.DOCKER_HUB)
+        .sourceType(ArtifactSourceType.DOCKER_REGISTRY)
         .build();
   }
 
@@ -57,7 +57,7 @@ public class DockerRequestResponseMapper {
                    .buildDetails(
                        ArtifactBuildDetailsMapper.toBuildDetailsNG(labelsList.get(i), request.getTagsList().get(i)))
                    .imagePath(request.getImagePath())
-                   .sourceType(ArtifactSourceType.DOCKER_HUB)
+                   .sourceType(ArtifactSourceType.DOCKER_REGISTRY)
                    .build())
         .collect(Collectors.toList());
   }

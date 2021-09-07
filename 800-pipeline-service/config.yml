@@ -34,6 +34,8 @@ mongo:
   connectionsPerHost: 300
   indexManagerMode: AUTO
   transactionsEnabled: false
+  aliasDBName:  pms-harness
+  traceMode: DISABLED
 
 grpcServerConfig:
   connectors:
@@ -47,7 +49,7 @@ grpcClientConfigs:
   cd:
     target: localhost:12101
     authority: localhost
-  cvng:
+  cv:
     target: localhost:12401
     authority: localhost
   ci:
@@ -65,6 +67,12 @@ yamlSchemaClientConfig:
     cd:
       serviceHttpClientConfig:
         baseUrl: http://localhost:7457/
+        connectTimeOutSeconds: 15
+        readTimeOutSeconds: 15
+      secret: "IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM"
+    cv:
+      serviceHttpClientConfig:
+        baseUrl: http://localhost:6457/cv/api/
         connectTimeOutSeconds: 15
         readTimeOutSeconds: 15
       secret: "IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM"
@@ -88,6 +96,10 @@ eventsFramework:
     useScriptCache: true
     userName: ""
     password: ""
+    sslConfig:
+      enabled: false
+      CATrustStorePath: "/tmp/ca_trust_store"
+      CATrustStorePassword: ""
 
 managerClientConfig:
   baseUrl: http://localhost:3457/api/
@@ -114,7 +126,14 @@ ngManagerServiceHttpClientConfig:
   baseUrl: http://localhost:7457/
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
+
+pipelineServiceClientConfig:
+  baseUrl: http://localhost:12001/api/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
 ngManagerServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+pipelineServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 jwtAuthSecret: dOkdsVqdRPPRJG31XU0qY4MPqmBBMk0PTAGIKM6O7TGqhjyxScIdJe80mwh5Yb5zF3KxYBHw6B3Lfzlq
 jwtIdentityServiceSecret: HVSKUYqD4e5Rxu12hFDdCJKGM64sxgEynvdDhaOHaTHhwwn0K4Ttr0uoOxSsEVYNrUU=
 
@@ -130,17 +149,72 @@ accessControlClient:
   accessControlServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
 pipelineServiceBaseUrl: https://localhost:8181/#
+pmsApiBaseUrl: http://localhost:12001/api/
 
-scmConnectionConfig:
-  url: localhost:8091
+triggerConfig:
+  webhookBaseUrl: http://localhost:7457/api/
+  customBaseUrl: http://localhost:12001/api/
 
 logStreamingServiceConfig:
   baseUrl: http://localhost:8079
   serviceToken: token
+
+opaServerConfig:
+  baseUrl: http://localhost:3000
 
 iteratorsConfig:
   approvalInstanceIteratorConfig:
     enabled: true
     targetIntervalInSeconds: 60
 
-enableAuth: false
+orchestrationStepConfig:
+  ffServerBaseUrl: http://127.0.0.1:3000/api/1.0
+  ffServerApiKey: secret
+
+shouldDeployWithGitSync: true
+
+gitSdkConfiguration:
+  gitSdkGrpcServerConfig:
+    connectors:
+      - port: 14001
+        secure: true
+        keyFilePath: key.pem
+        certFilePath: cert.pem
+      - port: 14002
+  gitManagerGrpcClientConfig:
+    target: localhost:13001
+    authority: localhost
+  scmConnectionConfig:
+    url: localhost:8091
+
+enableDashboardTimescale: false
+
+timescaledb:
+  timescaledbUrl: "jdbc:postgresql://34.83.25.129:5432/harnessdev"
+  timescaledbUsername: "harnessappdev"
+  timescaledbPassword: "harnessappdev"
+  connectTimeout: 10
+  socketTimeout: 30
+  logUnclosedConnections: false
+  loggerLevel: OFF
+
+auditClientConfig:
+  baseUrl: http://localhost:9005/api/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
+enableAudit: false
+
+cacheConfig:
+  cacheBackend: REDIS
+  cacheNamespace: ""
+  disabledCaches: [ ]
+
+hostname: ${HOSTNAME:-localhost}
+
+basePathPrefix: ${BASE_PATH_PREFIX:-}
+
+delegatePollingConfig:
+  syncDelay: 2000
+  asyncDelay: 2000
+  progressDelay: 2000

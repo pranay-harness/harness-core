@@ -11,6 +11,7 @@ import io.harness.product.ci.engine.proto.PingRequest;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.internal.GrpcUtil;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,8 +20,8 @@ public class LiteEngineConnectionCapabilityCheck implements CapabilityCheck, Pro
   @Override
   public CapabilityResponse performCapabilityCheck(ExecutionCapability delegateCapability) {
     LiteEngineConnectionCapability liteEngineConnectionCapability = (LiteEngineConnectionCapability) delegateCapability;
-    boolean valid =
-        isConnectibleLiteEngine(liteEngineConnectionCapability.getIp(), liteEngineConnectionCapability.getPort());
+    boolean valid = isConnectibleLiteEngine(liteEngineConnectionCapability.getIp(),
+        liteEngineConnectionCapability.getPort(), liteEngineConnectionCapability.isLocal());
     return CapabilityResponse.builder().delegateCapability(liteEngineConnectionCapability).validated(valid).build();
   }
 
@@ -33,16 +34,21 @@ public class LiteEngineConnectionCapabilityCheck implements CapabilityCheck, Pro
 
     return builder
         .permissionResult(isConnectibleLiteEngine(parameters.getLiteEngineConnectionParameters().getIp(),
-                              parameters.getLiteEngineConnectionParameters().getPort())
+                              parameters.getLiteEngineConnectionParameters().getPort(),
+                              parameters.getLiteEngineConnectionParameters().getIsLocal())
                 ? CapabilitySubjectPermission.PermissionResult.ALLOWED
                 : CapabilitySubjectPermission.PermissionResult.DENIED)
         .build();
   }
 
-  private boolean isConnectibleLiteEngine(String ip, int port) {
+  private boolean isConnectibleLiteEngine(String ip, int port, boolean isLocal) {
     String target = String.format("%s:%d", ip, port);
 
-    ManagedChannel channel = ManagedChannelBuilder.forTarget(target).usePlaintext().build();
+    ManagedChannelBuilder managedChannelBuilder = ManagedChannelBuilder.forTarget(target).usePlaintext();
+    if (!isLocal) {
+      managedChannelBuilder.proxyDetector(GrpcUtil.NOOP_PROXY_DETECTOR);
+    }
+    ManagedChannel channel = managedChannelBuilder.build();
     try {
       try {
         LiteEngineGrpc.LiteEngineBlockingStub liteEngineBlockingStub = LiteEngineGrpc.newBlockingStub(channel);

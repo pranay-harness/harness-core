@@ -2,7 +2,6 @@ package logger
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/sirupsen/logrus"
@@ -26,13 +25,6 @@ func Middleware(next http.Handler) http.Handler {
 			"remote":    r.RemoteAddr,
 		})
 		ctx = WithContext(ctx, log)
-		start := time.Now()
 		next.ServeHTTP(w, r.WithContext(ctx))
-		end := time.Now()
-		log = log.WithFields(logrus.Fields{
-			"latency": end.Sub(start),
-			"time":    end.Format(time.RFC3339),
-		})
-		log.Infof("Completed request")
 	})
 }

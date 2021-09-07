@@ -1,6 +1,8 @@
 package io.harness.ccm.views.service;
 
+import io.harness.ccm.views.dto.DefaultViewIdDto;
 import io.harness.ccm.views.entities.CEView;
+import io.harness.ccm.views.entities.ViewFieldIdentifier;
 import io.harness.ccm.views.entities.ViewState;
 import io.harness.ccm.views.graphql.QLCEView;
 
@@ -15,6 +17,6 @@ public interface CEViewService {
   boolean delete(String uuid, String accountId);
   List<QLCEView> getAllViews(String accountId, boolean includeDefault);
   List<CEView> getViewByState(String accountId, ViewState viewState);
-  void createDefaultAzureView(String accountId);
-  String getDefaultAzureViewId(String accountId);
+  void createDefaultView(String accountId, ViewFieldIdentifier viewFieldIdentifier);
+  DefaultViewIdDto getDefaultViewIds(String accountId);
 }

@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.ADMIN;
@@ -8,10 +9,14 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
@@ -56,9 +61,11 @@ import org.mongodb.morphia.query.UpdateOperations;
 /**
  * Created by peeyushaggarwal on 5/27/16.
  */
+@OwnedBy(CDC)
 @Singleton
 @ValidateOnExecution
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ActivityServiceImpl implements ActivityService {
   public static final int MAX_ACTIVITY_VERSION_RETRY = 5;
   @Inject private WingsPersistence wingsPersistence;
@@ -150,6 +157,7 @@ public class ActivityServiceImpl implements ActivityService {
         case AZURE_APP_SERVICE_SLOT_SWAP:
         case AZURE_ARM_DEPLOYMENT:
         case AZURE_BLUEPRINT_DEPLOYMENT:
+        case TERRAGRUNT_PROVISION:
         case AWS_AMI_SWITCH_ROUTES:
         case SPOTINST_SETUP:
         case SPOTINST_DEPLOY:
@@ -187,11 +195,23 @@ public class ActivityServiceImpl implements ActivityService {
 
         case PCF_MAP_ROUTE:
         case PCF_BG_SWAP_ROUTE:
-          rv.add(CommandUnitDetails.builder()
-                     .commandExecutionStatus(ExecutionStatus.translateExecutionStatus(activity.getStatus()))
-                     .name(activity.getCommandUnitType().getName())
-                     .commandUnitType(activity.getCommandUnitType())
-                     .build());
+          List<CommandUnit> pcfBgCommandUnits = activity.getCommandUnits();
+          if (EmptyPredicate.isEmpty(pcfBgCommandUnits)) {
+            rv.add(CommandUnitDetails.builder()
+                       .commandExecutionStatus(ExecutionStatus.translateExecutionStatus(activity.getStatus()))
+                       .name(activity.getCommandUnitType().getName())
+                       .commandUnitType(activity.getCommandUnitType())
+                       .build());
+          } else {
+            for (CommandUnit commandUnit : pcfBgCommandUnits) {
+              rv.add(CommandUnitDetails.builder()
+                         .commandExecutionStatus(commandUnit.getCommandExecutionStatus())
+                         .name(commandUnit.getName())
+                         .commandUnitType(activity.getCommandUnitType())
+                         .variables(commandUnit.getVariables())
+                         .build());
+            }
+          }
           break;
         default:
           throw new IllegalStateException("Invalid command type: " + activity.getCommandUnitType());

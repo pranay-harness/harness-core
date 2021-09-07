@@ -24,5 +24,9 @@ public interface EntityTypeConstants {
   String DEPLOYMENT_STEPS = "DeploymentSteps";
   String DEPLOYMENT_STAGE = "DeploymentStage";
   String APPROVAL_STAGE = "ApprovalStage";
+  String FEATURE_FLAG_STAGE = "FeatureFlagStage";
   String TRIGGERS = "Triggers";
+  String MONITORED_SERVICE = "MonitoredService";
+  String TEMPLATE = "Template";
+  String GIT_REPOSITORIES = "GitRepositories";
 }

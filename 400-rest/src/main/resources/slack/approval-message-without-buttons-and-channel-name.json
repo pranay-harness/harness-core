@@ -1,4 +1,6 @@
 {
+  "username" : "Harness",
+  "icon_url" : "https://s3.amazonaws.com/wings-assets/slackicons/logo-slack.png",
   "blocks" : [ {
     "type" : "section",
     "text" : {"type" : "mrkdwn", "text" : "${approvalMessage}"}

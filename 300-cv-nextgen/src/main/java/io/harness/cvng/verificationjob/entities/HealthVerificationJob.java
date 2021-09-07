@@ -1,5 +1,8 @@
 package io.harness.cvng.verificationjob.entities;
 
+import static io.harness.cvng.CVConstants.DEFAULT_HEALTH_JOB_ID;
+import static io.harness.cvng.CVConstants.DEFAULT_HEALTH_JOB_NAME;
+
 import io.harness.cvng.beans.job.HealthVerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobType;
@@ -86,7 +89,7 @@ public class HealthVerificationJob extends VerificationJob {
 
   @Override
   public Instant getAnalysisStartTime(Instant startTime) {
-    return getPreActivityVerificationStartTime(startTime, null);
+    return getPreActivityVerificationStartTime(startTime);
   }
 
   @Override
@@ -104,19 +107,19 @@ public class HealthVerificationJob extends VerificationJob {
     }
   }
 
-  public Instant getPreActivityVerificationStartTime(Instant startTime, Instant preActivityStartTime) {
-    // TODO: migration logic. Remove this after the release
-    if (preActivityStartTime != null) {
-      return preActivityStartTime;
-    }
+  public Instant getPreActivityVerificationStartTime(Instant startTime) {
     return startTime.minus(getDuration());
   }
 
-  public Instant getPostActivityVerificationStartTime(Instant startTime, Instant postActivityStartTime) {
-    // TODO: remove this in the next release
-    if (postActivityStartTime != null) {
-      return postActivityStartTime;
-    }
+  public Instant getPostActivityVerificationStartTime(Instant startTime) {
     return startTime;
+  }
+
+  public static HealthVerificationJob createDefaultJob(
+      String accountId, String orgIdentifier, String projectIdentifier) {
+    HealthVerificationJob verificationJob =
+        HealthVerificationJob.builder().jobName(DEFAULT_HEALTH_JOB_NAME).identifier(DEFAULT_HEALTH_JOB_ID).build();
+    VerificationJob.setDefaultJobCommonParameters(verificationJob, accountId, orgIdentifier, projectIdentifier);
+    return verificationJob;
   }
 }

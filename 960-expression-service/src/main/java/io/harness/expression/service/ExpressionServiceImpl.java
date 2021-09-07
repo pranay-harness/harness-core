@@ -4,6 +4,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.expression.EngineExpressionEvaluator;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -15,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.CI)
 @Slf4j
 public class ExpressionServiceImpl extends ExpressionEvaulatorServiceGrpc.ExpressionEvaulatorServiceImplBase {
   private final EngineExpressionEvaluator expressionEvaluator;
@@ -47,7 +50,7 @@ public class ExpressionServiceImpl extends ExpressionEvaulatorServiceGrpc.Expres
         if (expressionQuery.getIsSkipCondition()) {
           evaluatedExpr = expressionEvaluator.evaluateExpression(originalExpr, context).toString();
         } else {
-          evaluatedExpr = expressionEvaluator.renderExpression(originalExpr, context);
+          evaluatedExpr = expressionEvaluator.renderExpression(originalExpr, context, true);
         }
 
         responseBuilder.addValues(ExpressionValue.newBuilder()

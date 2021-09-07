@@ -8,8 +8,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.ccm.commons.dao.CEMetadataRecordDao;
-import io.harness.ccm.commons.entities.CEMetadataRecord;
+import io.harness.ccm.commons.entities.batch.CEMetadataRecord;
 import io.harness.ccm.setup.graphql.QLCEOverviewStatsData.QLCEOverviewStatsDataBuilder;
+import io.harness.ccm.views.dto.DefaultViewIdDto;
 import io.harness.ccm.views.service.CEViewService;
 import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
@@ -66,8 +67,13 @@ public class OverviewPageStatsDataFetcher
         isApplicationDataPresent = ceMetadataRecord.getApplicationDataPresent();
       }
     }
+    boolean inventoryDashboard = false;
+    if (featureFlagService.isEnabledReloadCache(FeatureName.CE_INVENTORY_DASHBOARD, accountId)) {
+      inventoryDashboard = true;
+    }
 
-    QLCEOverviewStatsDataBuilder overviewStatsDataBuilder = QLCEOverviewStatsData.builder();
+    QLCEOverviewStatsDataBuilder overviewStatsDataBuilder =
+        QLCEOverviewStatsData.builder().inventoryDataPresent(inventoryDashboard);
 
     overviewStatsDataBuilder.cloudConnectorsPresent(
         isAWSConnectorPresent || isGCPConnectorPresent || isAzureConnectorPresent);
@@ -111,10 +117,13 @@ public class OverviewPageStatsDataFetcher
         .gcpConnectorsPresent(isGCPConnectorPresent)
         .azureConnectorsPresent(isAzureConnectorPresent);
 
-    if (overviewStatsDataBuilder.build().getAzureConnectorsPresent() != null
-        && overviewStatsDataBuilder.build().getAzureConnectorsPresent()) {
-      overviewStatsDataBuilder.defaultAzurePerspectiveId(ceViewService.getDefaultAzureViewId(accountId));
-    }
+    DefaultViewIdDto defaultViewIds = ceViewService.getDefaultViewIds(accountId);
+
+    overviewStatsDataBuilder.defaultAzurePerspectiveId(defaultViewIds.getAzureViewId());
+    overviewStatsDataBuilder.defaultAwsPerspectiveId(defaultViewIds.getAwsViewId());
+    overviewStatsDataBuilder.defaultGcpPerspectiveId(defaultViewIds.getGcpViewId());
+    overviewStatsDataBuilder.defaultClusterPerspectiveId(defaultViewIds.getClusterViewId());
+
     log.info("Returning /overviewPageStats ");
     return overviewStatsDataBuilder.build();
   }

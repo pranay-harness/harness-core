@@ -4,17 +4,12 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cf.openapi.ApiClient;
 import io.harness.cf.openapi.api.DefaultApi;
-import io.harness.cf.openapi.api.PatchInstruction;
-import io.harness.cf.openapi.api.PatchInstruction.PatchInstructionBuilder;
-import io.harness.cf.openapi.model.Clause;
 import io.harness.cf.openapi.model.FeatureState;
-import io.harness.cf.openapi.model.Serve;
+import io.harness.cf.openapi.model.PatchInstruction;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.UUID;
 
 @OwnedBy(HarnessTeam.CF)
 public class CFApi extends DefaultApi {
@@ -29,9 +24,9 @@ public class CFApi extends DefaultApi {
     int priority = startPriority;
     List<PatchInstruction> patchInstructions = new ArrayList<>();
     for (String account : accountIDs) {
-      PatchInstruction patchInstruction = PatchInstructionBuilder.aPatchInstruction()
-                                              .withKind("addRule")
-                                              .withParameters(AddRuleParam.getParamsForAccountID(account, priority))
+      PatchInstruction patchInstruction = PatchInstruction.builder()
+                                              .kind("addRule")
+                                              .parameters(AddRuleParam.getParamsForAccountID(account, priority))
                                               .build();
       patchInstructions.add(patchInstruction);
       priority = priority + 100;
@@ -40,10 +35,7 @@ public class CFApi extends DefaultApi {
   }
 
   public PatchInstruction removeRule(String ruleID) {
-    return PatchInstructionBuilder.aPatchInstruction()
-        .withKind("removeRule")
-        .withParameters(new RemoveRuleParam(ruleID))
-        .build();
+    return PatchInstruction.builder().kind("removeRule").parameters(new RemoveRuleParam(ruleID)).build();
   }
 
   public PatchInstruction getFeatureFlagDefaultServePatchInstruction(boolean variation) {
@@ -54,9 +46,9 @@ public class CFApi extends DefaultApi {
       variationString = "false";
     }
 
-    return PatchInstructionBuilder.aPatchInstruction()
-        .withKind("updateDefaultServe")
-        .withParameters(new UpdateDefaultServeParams(variationString))
+    return PatchInstruction.builder()
+        .kind("updateDefaultServe")
+        .parameters(new UpdateDefaultServeParams(variationString))
         .build();
   }
 
@@ -68,53 +60,37 @@ public class CFApi extends DefaultApi {
       stateString = FeatureState.OFF.getValue();
     }
 
-    return PatchInstructionBuilder.aPatchInstruction()
-        .withKind("setFeatureFlagState")
-        .withParameters(new FeatureFlagStateParams(stateString))
+    return PatchInstruction.builder()
+        .kind("setFeatureFlagState")
+        .parameters(new FeatureFlagStateParams(stateString))
         .build();
   }
-}
 
-class FeatureFlagStateParams {
-  String state;
-  FeatureFlagStateParams(String state) {
-    this.state = state;
+  public PatchInstruction getAddTargetToVariationMapParams(String variation, List<String> targets) {
+    return PatchInstruction.builder()
+        .kind("addTargetsToVariationTargetMap")
+        .parameters(new AddTargetToVariationMapParams(variation, targets))
+        .build();
   }
-}
 
-class UpdateDefaultServeParams {
-  String variation;
-
-  UpdateDefaultServeParams(String variation) {
-    this.variation = variation;
+  public PatchInstruction getRemoveTargetToVariationMapParams(String variation, List<String> targets) {
+    return PatchInstruction.builder()
+        .kind("removeTargetsToVariationTargetMap")
+        .parameters(new RemoveTargetToVariationMapParams(variation, targets))
+        .build();
   }
-}
 
-class RemoveRuleParam {
-  String ruleID;
-
-  RemoveRuleParam(String ruleID) {
-    this.ruleID = ruleID;
+  public PatchInstruction getAddSegmentToVariationMapParams(String variation, List<String> segments) {
+    return PatchInstruction.builder()
+        .kind("addSegmentToVariationTargetMap")
+        .parameters(new AddSegmentToVariationMapParams(variation, segments))
+        .build();
   }
-}
 
-class AddRuleParam {
-  List<io.harness.cf.openapi.model.Clause> clauses = new ArrayList<>();
-  int priority;
-  io.harness.cf.openapi.model.Serve serve;
-  String uuid;
-
-  public static AddRuleParam getParamsForAccountID(String accountID, int priority) {
-    AddRuleParam param = new AddRuleParam();
-    param.priority = priority;
-    param.serve = new Serve();
-    param.serve.variation("true");
-    param.uuid = UUID.randomUUID().toString();
-    io.harness.cf.openapi.model.Clause clause = new Clause();
-    clause.attribute("identifier");
-    clause.op("equal");
-    clause.values(Arrays.asList(accountID));
-    param.clauses = Arrays.asList(clause);
-    return param;
+  public PatchInstruction getRemoveSegmentToVariationMapParams(String variation, List<String> segments) {
+    return PatchInstruction.builder()
+        .kind("removeSegmentToVariationTargetMap")
+        .parameters(new RemoveSegmentToVariationMapParams(variation, segments))
+        .build();
   }
 }

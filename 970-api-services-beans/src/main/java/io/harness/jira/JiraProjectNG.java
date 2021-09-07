@@ -69,6 +69,10 @@ public class JiraProjectNG extends JiraProjectBasicNG {
     });
   }
 
+  public void addField(JiraFieldNG field) {
+    this.issueTypes.values().forEach(it -> it.addField(field));
+  }
+
   public void removeField(String fieldName) {
     this.issueTypes.values().forEach(it -> it.removeField(fieldName));
   }

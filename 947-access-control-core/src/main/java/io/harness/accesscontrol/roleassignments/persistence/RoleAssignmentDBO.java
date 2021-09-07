@@ -52,12 +52,21 @@ public class RoleAssignmentDBO implements PersistentEntity, AccessControlEntity 
   @Setter @Id @org.mongodb.morphia.annotations.Id String id;
   @EntityIdentifier final String identifier;
   @NotEmpty final String scopeIdentifier;
+  final String scopeLevel;
   @NotEmpty final String resourceGroupIdentifier;
   @NotEmpty final String roleIdentifier;
   @NotEmpty final String principalIdentifier;
   @NotNull final PrincipalType principalType;
-  final boolean managed;
+  @Getter(value = AccessLevel.NONE) final Boolean managed;
   @Getter(value = AccessLevel.NONE) final Boolean disabled;
+
+  public boolean isManaged() {
+    return managed != null && managed;
+  }
+
+  public Boolean getManaged() {
+    return managed;
+  }
 
   public boolean isDisabled() {
     return disabled != null && disabled;
@@ -79,6 +88,27 @@ public class RoleAssignmentDBO implements PersistentEntity, AccessControlEntity 
                  .name("uniqueIndex")
                  .unique(true)
                  .field(RoleAssignmentDBOKeys.identifier)
+                 .field(RoleAssignmentDBOKeys.scopeIdentifier)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("roleIndex")
+                 .field(RoleAssignmentDBOKeys.roleIdentifier)
+                 .field(RoleAssignmentDBOKeys.scopeIdentifier)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("roleScopeLevelIndex")
+                 .field(RoleAssignmentDBOKeys.roleIdentifier)
+                 .field(RoleAssignmentDBOKeys.scopeLevel)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("resourceGroupIndex")
+                 .field(RoleAssignmentDBOKeys.resourceGroupIdentifier)
+                 .field(RoleAssignmentDBOKeys.scopeIdentifier)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("principalIndex")
+                 .field(RoleAssignmentDBOKeys.principalType)
+                 .field(RoleAssignmentDBOKeys.principalIdentifier)
                  .field(RoleAssignmentDBOKeys.scopeIdentifier)
                  .build())
         .add(CompoundMongoIndex.builder()

@@ -4,7 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import static software.wings.beans.trigger.TriggerConditionType.NEW_ARTIFACT;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
@@ -22,6 +24,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "ArtifactTriggerConditionKeys")
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class ArtifactTriggerCondition extends TriggerCondition {
   @NotEmpty private String artifactStreamId;
   private String artifactSourceName;

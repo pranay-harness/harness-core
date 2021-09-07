@@ -1,5 +1,6 @@
 package software.wings.service.impl.artifact;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.rule.OwnerRule.AADITI;
@@ -40,6 +41,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.FileBucket;
@@ -99,6 +101,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 
+@OwnedBy(CDC)
 @SetupScheduler
 public class ArtifactServiceTest extends WingsBaseTest {
   private static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
@@ -1093,7 +1096,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
     Artifact savedArtifact = artifactService.create(jenkinsArtifact, true);
     assertThat(savedArtifact).isNotNull();
 
-    artifactService.deleteWhenArtifactSourceNameChanged(jenkinsArtifactStream);
+    artifactService.deleteByArtifactStreamId(APP_ID, jenkinsArtifactStreamId);
 
     assertThat(artifactService.listByAppId(APP_ID)).hasSize(0);
   }

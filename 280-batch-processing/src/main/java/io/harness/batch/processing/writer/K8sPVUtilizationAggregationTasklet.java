@@ -11,8 +11,8 @@ import io.harness.batch.processing.billing.timeseries.service.impl.K8sUtilizatio
 import io.harness.batch.processing.billing.timeseries.service.impl.UtilizationDataServiceImpl;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
-import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
-import io.harness.ccm.commons.entities.InstanceData;
+import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
+import io.harness.ccm.commons.entities.batch.InstanceData;
 
 import com.google.inject.Singleton;
 import java.time.Instant;
@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
@@ -36,15 +35,13 @@ public class K8sPVUtilizationAggregationTasklet implements Tasklet {
 
   @Override
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
-    JobParameters parameters = chunkContext.getStepContext().getStepExecution().getJobParameters();
-    Long startTime = CCMJobConstants.getFieldLongValueFromJobParams(parameters, CCMJobConstants.JOB_START_DATE);
-    Long endTime = CCMJobConstants.getFieldLongValueFromJobParams(parameters, CCMJobConstants.JOB_END_DATE);
-    String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
+    final CCMJobConstants jobConstants = new CCMJobConstants(chunkContext);
 
     Map<String, InstanceUtilizationData> instanceUtilizationDataMap =
-        k8sUtilizationGranularDataService.getAggregatedUtilizationDataOfType(accountId, K8S_PVC, startTime, endTime);
-    List<InstanceData> instanceDataList =
-        instanceDataDao.fetchActivePVList(accountId, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime));
+        k8sUtilizationGranularDataService.getAggregatedUtilizationDataOfType(
+            jobConstants.getAccountId(), K8S_PVC, jobConstants.getJobStartTime(), jobConstants.getJobEndTime());
+    List<InstanceData> instanceDataList = instanceDataDao.fetchActivePVList(jobConstants.getAccountId(),
+        Instant.ofEpochMilli(jobConstants.getJobStartTime()), Instant.ofEpochMilli(jobConstants.getJobEndTime()));
 
     List<InstanceUtilizationData> instanceUtilizationDataList =
         instanceDataList.stream()
@@ -56,30 +53,40 @@ public class K8sPVUtilizationAggregationTasklet implements Tasklet {
               String settingId = instanceData.getSettingId();
               String clusterId = instanceData.getClusterId();
 
-              double storageCapacity = instanceData.getStorageResource().getCapacity(); // It is in "MB"
-              double usage = ofNullable(instanceUtilizationDataMap.get(instanceId))
-                                 .map(InstanceUtilizationData::getStorageUsageAvgValue)
-                                 .orElse(0D);
-              double request = ofNullable(instanceUtilizationDataMap.get(instanceId))
-                                   .map(InstanceUtilizationData::getStorageRequestAvgValue)
-                                   .orElse(0D);
+              double storageCapacity = instanceData.getStorageResource().getCapacity(); // It is in "MiB"
+
+              final InstanceUtilizationData instanceUtilizationData = instanceUtilizationDataMap.get(instanceId);
+              double storageUsageAvgValue =
+                  ofNullable(instanceUtilizationData).map(InstanceUtilizationData::getStorageUsageAvgValue).orElse(0D);
+              double storageRequestAvgValue = ofNullable(instanceUtilizationData)
+                                                  .map(InstanceUtilizationData::getStorageRequestAvgValue)
+                                                  .orElse(0D);
+              double storageUsageMaxValue =
+                  ofNullable(instanceUtilizationData).map(InstanceUtilizationData::getStorageUsageMaxValue).orElse(0D);
+
+              double storageRequestMaxValue = ofNullable(instanceUtilizationData)
+                                                  .map(InstanceUtilizationData::getStorageRequestMaxValue)
+                                                  .orElse(0D);
 
               return InstanceUtilizationData.builder()
-                  .accountId(accountId)
+                  .accountId(jobConstants.getAccountId())
                   .clusterId(clusterId)
                   .settingId(settingId)
                   .instanceType(K8S_PV.name())
                   .instanceId(instanceId)
                   .storageCapacityAvgValue(storageCapacity)
-                  .storageRequestAvgValue(request)
-                  .storageUsageAvgValue(usage)
-                  .startTimestamp(startTime)
-                  .endTimestamp(endTime)
+                  .storageRequestAvgValue(storageRequestAvgValue)
+                  .storageUsageAvgValue(storageUsageAvgValue)
+                  .storageRequestMaxValue(storageRequestMaxValue)
+                  .storageUsageMaxValue(storageUsageMaxValue)
+                  .startTimestamp(jobConstants.getJobStartTime())
+                  .endTimestamp(jobConstants.getJobEndTime())
                   .build();
             })
             .collect(Collectors.toList());
 
     utilizationDataService.create(instanceUtilizationDataList);
+
     return null;
   }
 }

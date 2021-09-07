@@ -1,5 +1,6 @@
 package software.wings.graphql.datafetcher.ce.recommendation.entity;
 
+import io.harness.ccm.commons.entities.k8s.recommendation.PartialRecommendationHistogram;
 import io.harness.histogram.Histogram;
 import io.harness.histogram.HistogramCheckpoint;
 

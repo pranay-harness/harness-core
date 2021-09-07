@@ -1,13 +1,19 @@
 package io.harness.batch.processing.schedule;
 
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.config.BatchMainConfig;
+import io.harness.batch.processing.service.impl.BatchJobTimeLogContext;
 import io.harness.batch.processing.service.intfc.BatchJobIntervalService;
 import io.harness.batch.processing.service.intfc.BatchJobScheduledDataService;
 import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
-import io.harness.ccm.cluster.entities.BatchJobInterval;
-import io.harness.ccm.cluster.entities.BatchJobScheduledData;
+import io.harness.ccm.commons.entities.batch.BatchJobInterval;
+import io.harness.ccm.commons.entities.batch.BatchJobScheduledData;
+import io.harness.logging.AutoLogContext;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -33,6 +39,7 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
+@OwnedBy(HarnessTeam.CE)
 public class BatchJobRunner {
   @Autowired private JobLauncher jobLauncher;
   @Autowired private BatchJobIntervalService batchJobIntervalService;
@@ -91,7 +98,8 @@ public class BatchJobRunner {
     while (batchJobScheduleTimeProvider.hasNext()) {
       Instant endInstant = batchJobScheduleTimeProvider.next();
       if (null != endInstant && checkDependentJobFinished(accountId, startInstant, dependentBatchJobs)
-          && checkOutOfClusterDependentJobs(accountId, startInstant, endInstant, batchJobType)) {
+          && checkOutOfClusterDependentJobs(accountId, startInstant, endInstant, batchJobType)
+          && checkClusterToBigQueryJobCompleted(accountId, batchJobType)) {
         if (runningMode) {
           JobParameters params =
               new JobParametersBuilder()
@@ -101,19 +109,22 @@ public class BatchJobRunner {
                   .addString(CCMJobConstants.JOB_END_DATE, String.valueOf(endInstant.toEpochMilli()))
                   .addString(CCMJobConstants.BATCH_JOB_TYPE, batchJobType.name())
                   .toJobParameters();
-          Instant jobStartTime = Instant.now();
-          BatchStatus status = jobLauncher.run(job, params).getStatus();
-          log.info("Job status {}", status);
-          Instant jobStopTime = Instant.now();
+          try (AutoLogContext ignore =
+                   new BatchJobTimeLogContext(String.valueOf(startInstant.toEpochMilli()), OVERRIDE_ERROR)) {
+            Instant jobStartTime = Instant.now();
+            BatchStatus status = jobLauncher.run(job, params).getStatus();
+            log.info("Job status {}", status);
+            Instant jobStopTime = Instant.now();
 
-          if (status == BatchStatus.COMPLETED) {
-            BatchJobScheduledData batchJobScheduledData = new BatchJobScheduledData(accountId, batchJobType.name(),
-                Duration.between(jobStartTime, jobStopTime).toMillis(), startInstant, endInstant);
-            batchJobScheduledDataService.create(batchJobScheduledData);
-            startInstant = endInstant;
-          } else {
-            logJobErrors(accountId, batchJobType, status, startInstant, endInstant);
-            break;
+            if (status == BatchStatus.COMPLETED) {
+              BatchJobScheduledData batchJobScheduledData = new BatchJobScheduledData(accountId, batchJobType.name(),
+                  Duration.between(jobStartTime, jobStopTime).toMillis(), startInstant, endInstant);
+              batchJobScheduledDataService.create(batchJobScheduledData);
+              startInstant = endInstant;
+            } else {
+              logJobErrors(accountId, batchJobType, status, startInstant, endInstant);
+              break;
+            }
           }
         } else {
           logDelayedJobs(accountId, batchJobType, startInstant, endInstant);
@@ -166,6 +177,23 @@ public class BatchJobRunner {
       }
     }
     return true;
+  }
+
+  boolean checkClusterToBigQueryJobCompleted(String accountId, BatchJobType batchJobType) {
+    if (batchJobType != BatchJobType.DATA_CHECK_BIGQUERY_TIMESCALE) {
+      return true;
+    }
+    Instant instant = batchJobScheduledDataService.fetchLastDependentBatchJobCreatedTime(
+        accountId, BatchJobType.CLUSTER_DATA_TO_BIG_QUERY);
+    if (instant != null) {
+      Long timeDifference = Duration.between(instant, Instant.now()).toMinutes();
+      if (timeDifference >= 30) {
+        log.info("It has been greater than 30 mins since CLUSTER_DATA_TO_BIG_QUERY ran");
+        return true;
+      }
+    }
+    log.warn("CLUSTER_DATA_TO_BIG_QUERY hasn't ran yet");
+    return false;
   }
 
   boolean checkOutOfClusterDependentJobs(String accountId, Instant startAt, Instant endAt, BatchJobType batchJobType) {

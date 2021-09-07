@@ -1,0 +1,141 @@
+package io.harness.ng.webhook.services.impl;
+
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
+
+import static java.time.Duration.ofMinutes;
+import static java.time.Duration.ofSeconds;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.eventsframework.api.AbstractProducer;
+import io.harness.eventsframework.api.EventsFrameworkDownException;
+import io.harness.eventsframework.producer.Message;
+import io.harness.eventsframework.webhookpayloads.webhookdata.SourceRepoType;
+import io.harness.eventsframework.webhookpayloads.webhookdata.WebhookDTO;
+import io.harness.iterator.PersistenceIteratorFactory;
+import io.harness.mongo.iterator.MongoPersistenceIterator;
+import io.harness.mongo.iterator.filter.SpringFilterExpander;
+import io.harness.mongo.iterator.provider.SpringPersistenceProvider;
+import io.harness.ng.webhook.WebhookHelper;
+import io.harness.ng.webhook.entities.WebhookEvent;
+import io.harness.ng.webhook.entities.WebhookEvent.WebhookEventsKeys;
+import io.harness.ng.webhook.services.api.WebhookEventProcessingService;
+import io.harness.product.ci.scm.proto.ParseWebhookResponse;
+import io.harness.repositories.ng.webhook.spring.WebhookEventRepository;
+import io.harness.service.WebhookParserSCMService;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.mongodb.core.MongoTemplate;
+
+@Singleton
+@Slf4j
+@OwnedBy(PIPELINE)
+public class WebhookEventProcessingServiceImpl
+    implements WebhookEventProcessingService, MongoPersistenceIterator.Handler<WebhookEvent> {
+  @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
+  @Inject private MongoTemplate mongoTemplate;
+  @Inject private WebhookParserSCMService webhookParserSCMService;
+  @Inject private WebhookHelper webhookHelper;
+  @Inject WebhookEventRepository webhookEventRepository;
+
+  @Override
+  public void registerIterators() {
+    persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
+        PersistenceIteratorFactory.PumpExecutorOptions.builder()
+            .name("WebhookEventProcessor")
+            .poolSize(5)
+            .interval(ofSeconds(5))
+            .build(),
+        WebhookEventProcessingService.class,
+        MongoPersistenceIterator.<WebhookEvent, SpringFilterExpander>builder()
+            .clazz(WebhookEvent.class)
+            .fieldName(WebhookEventsKeys.nextIteration)
+            .targetInterval(ofMinutes(5))
+            .acceptableExecutionTime(ofMinutes(2))
+            .acceptableNoAlertDelay(ofSeconds(30))
+            .handler(this)
+            .schedulingType(REGULAR)
+            .persistenceProvider(new SpringPersistenceProvider<>(mongoTemplate))
+            .redistribute(true));
+  }
+
+  @Override
+  public void handle(WebhookEvent event) {
+    ParseWebhookResponse parseWebhookResponse = null;
+    SourceRepoType sourceRepoType = webhookHelper.getSourceRepoType(event);
+    if (sourceRepoType != SourceRepoType.UNRECOGNIZED) {
+      parseWebhookResponse = invokeScmService(event);
+    }
+
+    try {
+      publishWebhookEvent(event, parseWebhookResponse, sourceRepoType);
+    } catch (Exception e) {
+      log.error(new StringBuilder(128)
+                    .append("Error while publishing Webhook Event: ")
+                    .append(event.getUuid())
+                    .append(", Exception: ")
+                    .append(e)
+                    .toString());
+
+    } finally {
+      webhookEventRepository.delete(event);
+    }
+  }
+
+  public ParseWebhookResponse invokeScmService(WebhookEvent event) {
+    try {
+      return webhookParserSCMService.parseWebhookUsingSCMAPI(event.getHeaders(), event.getPayload());
+    } catch (Exception exception) {
+      logIfScmUnavailableException(event, exception);
+    }
+
+    // This failure could also mean, SCM could not parse payload. This may be some event SCM does not yet support.
+    // We still need to continue, as someone might have configured Custom trigger on this.
+    return null;
+  }
+
+  private void logIfScmUnavailableException(WebhookEvent event, Exception exception) {
+    if (StatusRuntimeException.class.isAssignableFrom(exception.getClass())) {
+      StatusRuntimeException e = (StatusRuntimeException) exception;
+
+      if (e.getStatus().getCode() == Status.Code.UNAVAILABLE) {
+        // SCM service could not be accessed.
+        log.error(new StringBuilder(128)
+                      .append("SCM service unavailable for parsing webhook payload. EventId")
+                      .append(event.getUuid())
+                      .append(", Exception: ")
+                      .append(e)
+                      .toString());
+      }
+    }
+  }
+
+  public void publishWebhookEvent(
+      WebhookEvent event, ParseWebhookResponse parseWebhookResponse, SourceRepoType sourceRepoType) {
+    WebhookDTO webhookDTO = webhookHelper.generateWebhookDTO(event, parseWebhookResponse, sourceRepoType);
+
+    // if publish fails for one of the producers, still continue for rest of the producers.
+    webhookHelper.getProducerListForEvent(webhookDTO).forEach(producer -> {
+      try {
+        producer.send(Message.newBuilder().setData(webhookDTO.toByteString()).build());
+      } catch (EventsFrameworkDownException e) {
+        String topicName =
+            producer instanceof AbstractProducer ? ((AbstractProducer) producer).getTopicName() : StringUtils.EMPTY;
+
+        log.error(new StringBuilder(128)
+                      .append("Error while publishing Webhook Event: ")
+                      .append(webhookDTO.getEventId())
+                      .append(" to Topic")
+                      .append(topicName)
+                      .append(", Exception: ")
+                      .append(e)
+                      .toString());
+      }
+    });
+  }
+}

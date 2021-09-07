@@ -1,7 +1,6 @@
 package io.harness;
 
 import io.harness.eventsframework.api.AbstractConsumer;
-import io.harness.eventsframework.api.ConsumerShutdownException;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.entity_crud.project.ProjectEntityChangeDTO;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
@@ -58,21 +57,16 @@ public class MessageConsumer implements Runnable {
   private void readViaConsumerGroups() throws InterruptedException, InvalidProtocolBufferException {
     List<Message> messages;
     while (true) {
-      try {
-        messages = client.read(Duration.ofSeconds(2));
-        for (Message message : messages) {
-          try {
-            processMessage(message);
-          } catch (Exception e) {
-            //        throw e;
-            e.printStackTrace();
-            log.error("{}Color{} - {}Something is wrong " + e.toString() + "{}", color, ColorConstants.TEXT_RESET,
-                ColorConstants.TEXT_RED, ColorConstants.TEXT_RESET);
-          }
+      messages = client.read(Duration.ofSeconds(2));
+      for (Message message : messages) {
+        try {
+          processMessage(message);
+        } catch (Exception e) {
+          //        throw e;
+          e.printStackTrace();
+          log.error("{}Color{} - {}Something is wrong " + e.toString() + "{}", color, ColorConstants.TEXT_RESET,
+              ColorConstants.TEXT_RED, ColorConstants.TEXT_RESET);
         }
-      } catch (ConsumerShutdownException e) {
-        e.printStackTrace();
-        break;
       }
     }
   }
@@ -98,10 +92,6 @@ public class MessageConsumer implements Runnable {
           }
         }
         Thread.sleep(1000);
-      } catch (ConsumerShutdownException e) {
-        e.printStackTrace();
-        redisLocker.destroy(lock);
-        break;
       } catch (Exception e) {
         log.error("{}Color{} - {}Something is wrong " + e.toString() + "{}", color, ColorConstants.TEXT_RESET,
             ColorConstants.TEXT_RED, ColorConstants.TEXT_RESET);
@@ -112,8 +102,7 @@ public class MessageConsumer implements Runnable {
     }
   }
 
-  private void processMessage(Message message)
-      throws InterruptedException, InvalidProtocolBufferException, ConsumerShutdownException {
+  private void processMessage(Message message) throws InterruptedException, InvalidProtocolBufferException {
     ProjectEntityChangeDTO p = ProjectEntityChangeDTO.parseFrom(message.getMessage().getData());
     if (p.getIdentifier().isEmpty()) {
       throw new IllegalStateException("Bad data sent - " + message.getId());

@@ -12,22 +12,18 @@ limitations under the License.
 */
 package io.harness.k8s.apiclient;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.k8s.model.KubernetesListObject;
 import io.harness.k8s.model.KubernetesObject;
-import io.harness.k8s.model.KubernetesType;
 
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.reflect.TypeToken;
+import io.kubernetes.client.common.KubernetesType;
 import io.kubernetes.client.custom.V1Patch;
-import io.kubernetes.client.extended.generic.KubernetesApiResponse;
-import io.kubernetes.client.extended.generic.options.CreateOptions;
-import io.kubernetes.client.extended.generic.options.DeleteOptions;
-import io.kubernetes.client.extended.generic.options.GetOptions;
-import io.kubernetes.client.extended.generic.options.ListOptions;
-import io.kubernetes.client.extended.generic.options.PatchOptions;
-import io.kubernetes.client.extended.generic.options.UpdateOptions;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.Configuration;
@@ -38,6 +34,13 @@ import io.kubernetes.client.openapi.models.V1Status;
 import io.kubernetes.client.util.PatchUtils;
 import io.kubernetes.client.util.Watch;
 import io.kubernetes.client.util.Watchable;
+import io.kubernetes.client.util.generic.KubernetesApiResponse;
+import io.kubernetes.client.util.generic.options.CreateOptions;
+import io.kubernetes.client.util.generic.options.DeleteOptions;
+import io.kubernetes.client.util.generic.options.GetOptions;
+import io.kubernetes.client.util.generic.options.ListOptions;
+import io.kubernetes.client.util.generic.options.PatchOptions;
+import io.kubernetes.client.util.generic.options.UpdateOptions;
 import java.io.IOException;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -65,6 +68,7 @@ import okhttp3.HttpUrl;
  * @param <ApiListType> the api list type parameter
  */
 @Slf4j
+@OwnedBy(CE)
 public class GenericKubernetesApi<ApiType extends KubernetesObject, ApiListType extends KubernetesListObject> {
   // TODO(yue9944882): supports status operations..
   // TODO(yue9944882): supports generic sub-resource operations..

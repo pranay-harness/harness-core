@@ -1,7 +1,14 @@
 package io.harness.serializer;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.serializer.kryo.CgOrchestrationBeansKryoRegistrar;
+import io.harness.serializer.kryo.CommonEntitiesKryoRegistrar;
 import io.harness.serializer.kryo.DelegateTasksBeansKryoRegister;
+import io.harness.serializer.kryo.RbacCoreKryoRegistrar;
+import io.harness.serializer.morphia.CommonEntitiesMorphiaRegister;
 import io.harness.serializer.morphia.DelegateTasksBeansMorphiaRegistrar;
 import io.harness.serializer.morphia.converters.CapabilityParametersMorphiaConverter;
 import io.harness.serializer.morphia.converters.TestingCapabilityMorphiaConverter;
@@ -10,6 +17,7 @@ import com.google.common.collect.ImmutableSet;
 import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.converters.TypeConverter;
 
+@OwnedBy(DEL)
 @UtilityClass
 public class DelegateTasksBeansRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
@@ -19,7 +27,11 @@ public class DelegateTasksBeansRegistrars {
           .addAll(NGCoreBeansRegistrars.kryoRegistrars)
           .addAll(ScmJavaClientRegistrars.kryoRegistrars)
           .addAll(PersistenceRegistrars.kryoRegistrars)
+          .addAll(FileServiceCommonsRegistrars.kryoRegistrars)
+          .add(RbacCoreKryoRegistrar.class)
           .add(DelegateTasksBeansKryoRegister.class)
+          .add(CgOrchestrationBeansKryoRegistrar.class)
+          .add(CommonEntitiesKryoRegistrar.class)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -28,6 +40,8 @@ public class DelegateTasksBeansRegistrars {
           .addAll(PersistenceRegistrars.morphiaRegistrars)
           .add(DelegateTasksBeansMorphiaRegistrar.class)
           .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
+          .addAll(FileServiceCommonsRegistrars.morphiaRegistrars)
+          .add(CommonEntitiesMorphiaRegister.class)
           .build();
 
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =

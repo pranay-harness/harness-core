@@ -4,7 +4,6 @@ import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentAggregateResponseDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentCreateRequestDTO;
-import io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentFilterDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
 import io.harness.accesscontrol.roles.api.RoleResponseDTO;
@@ -16,7 +15,6 @@ import io.harness.ng.core.dto.ResponseDTO;
 import java.util.List;
 import retrofit2.Call;
 import retrofit2.http.Body;
-import retrofit2.http.DELETE;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
@@ -27,13 +25,7 @@ import retrofit2.http.Query;
 public interface AccessControlAdminClient {
   String ROLE_ASSIGNMENTS_API = "roleassignments";
   String ROLE_API = "roles";
-
-  @GET(ROLE_ASSIGNMENTS_API)
-  Call<ResponseDTO<PageResponse<RoleAssignmentResponseDTO>>> getRoleAssignments(
-      @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @Query(NGResourceFilterConstants.PAGE_KEY) int page, @Query(NGResourceFilterConstants.SIZE_KEY) int size);
+  String ACL_PREFERENCES_API = "aclPreferences";
 
   @POST(ROLE_ASSIGNMENTS_API + "/filter")
   Call<ResponseDTO<PageResponse<RoleAssignmentResponseDTO>>> getFilteredRoleAssignments(
@@ -50,31 +42,12 @@ public interface AccessControlAdminClient {
       @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @Body RoleAssignmentFilterDTO roleAssignmentFilterDTO);
 
-  @POST(ROLE_ASSIGNMENTS_API)
-  Call<ResponseDTO<RoleAssignmentResponseDTO>> createRoleAssignment(
-      @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier, @Body RoleAssignmentDTO roleAssignmentDTO);
-
-  @POST(ROLE_ASSIGNMENTS_API + "/multi")
+  @POST(ROLE_ASSIGNMENTS_API + "/multi/internal")
   Call<ResponseDTO<List<RoleAssignmentResponseDTO>>> createMultiRoleAssignment(
       @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier, @Query("managed") Boolean managed,
       @Body RoleAssignmentCreateRequestDTO roleAssignmentCreateRequestDTO);
-
-  @PUT(ROLE_ASSIGNMENTS_API + "/{identifier}")
-  Call<ResponseDTO<RoleAssignmentResponseDTO>> updateRoleAssignment(
-      @Path(value = NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
-      @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier, @Body RoleAssignmentDTO roleAssignmentDTO);
-
-  @DELETE(ROLE_ASSIGNMENTS_API + "/{identifier}")
-  Call<ResponseDTO<RoleAssignmentResponseDTO>> deleteRoleAssignment(@Path("identifier") String identifier,
-      @Query(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
-      @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier);
 
   @GET(ROLE_API)
   Call<ResponseDTO<PageResponse<RoleResponseDTO>>> getRoles(
@@ -89,4 +62,8 @@ public interface AccessControlAdminClient {
       @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier);
+
+  @PUT(ACL_PREFERENCES_API)
+  Call<ResponseDTO<Boolean>> updateAccessControlPreference(
+      @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier, @Query("enabled") boolean enabled);
 }

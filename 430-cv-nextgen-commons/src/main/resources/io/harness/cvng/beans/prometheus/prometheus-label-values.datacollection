@@ -1,0 +1,7 @@
+Var validateQuery = concat("api/v1/label/", Env:labelName, "/values")
+Var fullQuery = concat(Env:baseUrl, Var:validateQuery)
+Var result = sync-call(url=Var:fullQuery, header=Env:commonHeaders)
+print Var:fullQuery
+print Var:result
+Var metricList = extract(Var:result, $.data)
+return Var:metricList

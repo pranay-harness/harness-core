@@ -10,14 +10,19 @@ import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.query.Criteria;
 
 @OwnedBy(PL)
 public interface MockRoleAssignmentService {
   List<RoleAssignmentResponseDTO> createMulti(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      List<RoleAssignmentDTO> filteredRoleAssignments);
+      List<RoleAssignmentDTO> filteredRoleAssignments, Boolean managed);
 
   PageResponse<RoleAssignmentResponseDTO> list(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       RoleAssignmentFilterDTO roleAssignmentFilter, PageRequest pageRequest);
+
+  Page<RoleAssignmentResponseDTO> list(Criteria criteria, Pageable pageable);
 
   RoleAssignmentResponseDTO create(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, RoleAssignmentDTO roleAssignmentDTO);

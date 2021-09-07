@@ -12,7 +12,6 @@ import io.harness.batch.processing.billing.timeseries.data.InstanceUtilizationDa
 import io.harness.batch.processing.billing.timeseries.service.impl.UtilizationDataServiceImpl;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.ClusterType;
-import io.harness.batch.processing.ccm.InstanceCategory;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.CEClusterDao;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.support.intfc.AwsEC2HelperService;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.support.intfc.AwsECSHelperService;
@@ -20,16 +19,20 @@ import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.E
 import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.response.EcsUtilizationData;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.response.MetricValue;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
-import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.service.intfc.InstanceResourceService;
+import io.harness.batch.processing.support.ActiveInstanceIterator;
 import io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils;
-import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.ccm.commons.beans.InstanceState;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.Resource;
-import io.harness.ccm.commons.entities.InstanceData;
+import io.harness.ccm.commons.beans.billing.InstanceCategory;
+import io.harness.ccm.commons.constants.CloudProvider;
+import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
+import io.harness.ccm.commons.entities.batch.InstanceData;
+import io.harness.ccm.commons.entities.billing.CECloudAccount;
+import io.harness.ccm.commons.entities.billing.CECluster;
 import io.harness.ccm.health.LastReceivedPublishedMessageDao;
 import io.harness.ccm.setup.CECloudAccountDao;
 import io.harness.exception.InvalidRequestException;
@@ -39,8 +42,6 @@ import software.wings.api.DeploymentSummary;
 import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.ce.CEAwsConfig;
-import software.wings.beans.ce.CECloudAccount;
-import software.wings.beans.ce.CECluster;
 import software.wings.beans.infrastructure.instance.key.deployment.ContainerDeploymentKey;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
@@ -211,6 +212,9 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
         long startTime = startTimestampList.get(metricIndex).toInstant().toEpochMilli();
         long oneHourMillis = Duration.ofHours(1).toMillis();
 
+        if (null == settingId) {
+          settingId = clusterId;
+        }
         InstanceUtilizationData utilizationData =
             InstanceUtilizationData.builder()
                 .accountId(accountId)
@@ -315,20 +319,23 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
               harnessServiceInfo = getHarnessServiceInfo(accountId, clusterName, serviceName);
             }
 
-            InstanceData instanceData = InstanceData.builder()
-                                            .accountId(accountId)
-                                            .instanceId(taskId)
-                                            .clusterName(clusterName)
-                                            .clusterId(clusterId)
-                                            .settingId(settingId)
-                                            .instanceType(instanceType)
-                                            .usageStartTime(task.getPullStartedAt().toInstant())
-                                            .instanceState(InstanceState.RUNNING)
-                                            .totalResource(resource)
-                                            .allocatableResource(resource)
-                                            .metaData(metaData)
-                                            .harnessServiceInfo(harnessServiceInfo)
-                                            .build();
+            Instant startInstant = task.getPullStartedAt().toInstant();
+            InstanceData instanceData =
+                InstanceData.builder()
+                    .accountId(accountId)
+                    .instanceId(taskId)
+                    .clusterName(clusterName)
+                    .clusterId(clusterId)
+                    .settingId(settingId)
+                    .instanceType(instanceType)
+                    .usageStartTime(startInstant)
+                    .activeInstanceIterator(ActiveInstanceIterator.getActiveInstanceIteratorFromStartTime(startInstant))
+                    .instanceState(InstanceState.RUNNING)
+                    .totalResource(resource)
+                    .allocatableResource(resource)
+                    .metaData(metaData)
+                    .harnessServiceInfo(harnessServiceInfo)
+                    .build();
 
             updateInstanceStopTimeForTask(instanceData, task);
             log.debug("Creating task {} ", taskId);
@@ -341,6 +348,8 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
     if (null != task.getStoppedAt()) {
       Instant usageStopInstant = task.getStoppedAt().toInstant();
       instanceData.setUsageStopTime(usageStopInstant);
+      instanceData.setActiveInstanceIterator(
+          ActiveInstanceIterator.getActiveInstanceIteratorFromStopTime(usageStopInstant));
       instanceData.setInstanceState(InstanceState.STOPPED);
       instanceData.setTtl(new Date(usageStopInstant.plus(30, ChronoUnit.DAYS).toEpochMilli()));
       return true;
@@ -454,19 +463,23 @@ public class AwsECSClusterDataSyncTasklet implements Tasklet {
                 InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.REGION, metaData),
                 CloudProvider.AWS);
             if (null != totalResource) {
-              InstanceData instanceData = InstanceData.builder()
-                                              .accountId(accountId)
-                                              .instanceId(containerInstanceId)
-                                              .clusterName(getIdFromArn(clusterArn))
-                                              .clusterId(clusterId)
-                                              .settingId(settingId)
-                                              .instanceType(InstanceType.ECS_CONTAINER_INSTANCE)
-                                              .instanceState(InstanceState.RUNNING)
-                                              .usageStartTime(containerInstance.getRegisteredAt().toInstant())
-                                              .totalResource(totalResource)
-                                              .allocatableResource(resource)
-                                              .metaData(metaData)
-                                              .build();
+              Instant startInstant = containerInstance.getRegisteredAt().toInstant();
+              InstanceData instanceData =
+                  InstanceData.builder()
+                      .accountId(accountId)
+                      .instanceId(containerInstanceId)
+                      .clusterName(getIdFromArn(clusterArn))
+                      .clusterId(clusterId)
+                      .settingId(settingId)
+                      .instanceType(InstanceType.ECS_CONTAINER_INSTANCE)
+                      .instanceState(InstanceState.RUNNING)
+                      .usageStartTime(startInstant)
+                      .activeInstanceIterator(
+                          ActiveInstanceIterator.getActiveInstanceIteratorFromStartTime(startInstant))
+                      .totalResource(totalResource)
+                      .allocatableResource(resource)
+                      .metaData(metaData)
+                      .build();
               log.debug("Creating container instance {} ", containerInstanceId);
               instanceDataService.create(instanceData);
             }

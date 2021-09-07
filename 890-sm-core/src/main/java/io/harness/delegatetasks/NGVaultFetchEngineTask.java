@@ -1,0 +1,111 @@
+package io.harness.delegatetasks;
+
+import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.eraro.ErrorCode.VAULT_OPERATION_ERROR;
+import static io.harness.exception.WingsException.USER;
+import static io.harness.helpers.NGVaultTaskHelper.getToken;
+import static io.harness.helpers.NGVaultTaskHelper.getVaultAppRoleLoginResult;
+import static io.harness.helpers.NGVaultTaskHelper.logAndThrowVaultError;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.beans.DelegateResponseData;
+import io.harness.delegate.beans.DelegateTaskPackage;
+import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
+import io.harness.delegate.task.AbstractDelegateRunnableTask;
+import io.harness.delegate.task.TaskParameters;
+import io.harness.exception.SecretManagementDelegateException;
+import io.harness.helpers.ext.vault.SecretEngineSummary;
+import io.harness.helpers.ext.vault.SysMount;
+import io.harness.helpers.ext.vault.SysMountsResponse;
+import io.harness.helpers.ext.vault.VaultAppRoleLoginResult;
+import io.harness.helpers.ext.vault.VaultRestClientFactory;
+import io.harness.helpers.ext.vault.VaultSysAuthRestClient;
+
+import software.wings.beans.BaseVaultConfig;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import retrofit2.Response;
+
+@OwnedBy(PL)
+@Slf4j
+public class NGVaultFetchEngineTask extends AbstractDelegateRunnableTask {
+  public NGVaultFetchEngineTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
+      Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
+    super(delegateTaskPackage, logStreamingTaskClient, consumer, preExecute);
+  }
+
+  @Override
+  public DelegateResponseData run(Object[] parameters) {
+    return run((NGVaultRenewalTaskParameters) parameters[0]);
+  }
+
+  @Override
+  public DelegateResponseData run(TaskParameters parameters) {
+    return run((NGVaultRenewalTaskParameters) parameters);
+  }
+
+  private NGVaultFetchEngineTaskResponse run(NGVaultRenewalTaskParameters ngVaultRenewalTaskParameters) {
+    return runInternal(ngVaultRenewalTaskParameters);
+  }
+
+  protected static NGVaultFetchEngineTaskResponse runInternal(
+      NGVaultRenewalTaskParameters ngVaultRenewalTaskParameters) {
+    BaseVaultConfig vaultConfig = ngVaultRenewalTaskParameters.getEncryptionConfig();
+    log.info("Executing NGVaultFetchEngineTask for: " + vaultConfig.getName());
+    List<SecretEngineSummary> secretEngineSummaries = new ArrayList<>();
+    try {
+      String vaultToken = getToken(vaultConfig);
+      if (isEmpty(vaultToken)) {
+        VaultAppRoleLoginResult loginResult = getVaultAppRoleLoginResult(vaultConfig);
+        if (loginResult != null) {
+          vaultToken = loginResult.getClientToken();
+          vaultConfig.setAuthToken(vaultToken);
+        }
+      }
+
+      VaultSysAuthRestClient restClient =
+          VaultRestClientFactory.getVaultRetrofit(vaultConfig.getVaultUrl(), vaultConfig.isCertValidationRequired())
+              .create(VaultSysAuthRestClient.class);
+      Response<SysMountsResponse> response =
+          restClient.getAllMounts(vaultConfig.getAuthToken(), vaultConfig.getNamespace()).execute();
+      if (response.isSuccessful()) {
+        Map<String, SysMount> sysMountMap = response.body().getData();
+        log.info("NG: Found Vault sys mount points: {}", sysMountMap.keySet());
+
+        for (Entry<String, SysMount> entry : sysMountMap.entrySet()) {
+          String secretEngineName = StringUtils.removeEnd(entry.getKey(), "/");
+          SysMount sysMount = entry.getValue();
+          Integer version = sysMount.getOptions() == null ? null : sysMount.getOptions().getVersion();
+          SecretEngineSummary secretEngineSummary = SecretEngineSummary.builder()
+                                                        .name(secretEngineName)
+                                                        .description(sysMount.getDescription())
+                                                        .type(sysMount.getType())
+                                                        .version(version)
+                                                        .build();
+          secretEngineSummaries.add(secretEngineSummary);
+        }
+      } else {
+        // Throw error when sys mount fails.
+        logAndThrowVaultError(vaultConfig, response, "listSecretEngines");
+      }
+    } catch (IOException e) {
+      String message =
+          String.format("Failed to list secret engines for %s due to unexpected network error. Please try again.",
+              vaultConfig.getVaultUrl());
+      log.error(message, e);
+      throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, USER);
+    }
+
+    return NGVaultFetchEngineTaskResponse.builder().secretEngineSummaryList(secretEngineSummaries).build();
+  }
+}

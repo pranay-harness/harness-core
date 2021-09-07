@@ -2,11 +2,14 @@ package io.harness.pms.sdk;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
-import io.harness.PmsSdkCoreModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.exception.exceptionmanager.ExceptionHandler;
 import io.harness.exception.exceptionmanager.ExceptionManager;
+import io.harness.exception.exceptionmanager.exceptionhandler.ExceptionHandler;
+import io.harness.pms.sdk.core.PmsSdkCoreConfig;
+import io.harness.pms.sdk.core.PmsSdkCoreModule;
+import io.harness.pms.sdk.execution.PmsSdkEventsFrameworkModule;
 import io.harness.pms.sdk.registries.PmsSdkRegistryModule;
+import io.harness.testing.TestExecution;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
@@ -44,20 +47,32 @@ public class PmsSdkModule extends AbstractModule {
     MapBinder<Class<? extends Exception>, ExceptionHandler> exceptionHandlerMapBinder = MapBinder.newMapBinder(
         binder(), new TypeLiteral<Class<? extends Exception>>() {}, new TypeLiteral<ExceptionHandler>() {});
     requireBinding(ExceptionManager.class);
+
+    MapBinder<String, TestExecution> testExecutionMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, TestExecution.class);
+    //    testExecutionMapBinder.addBinding("RecasterAlias Registration")
+    //        .toInstance(PmsSdkComponentTester::testRecasterAlias);
+    testExecutionMapBinder.addBinding("RecasterAlias Immutablity")
+        .toInstance(PmsSdkComponentTester::ensureRecasterAliasImmutability);
   }
 
   @NotNull
   private List<Module> getModules() {
     List<Module> modules = new ArrayList<>();
-    modules.add(PmsSdkCoreModule.getInstance());
+    modules.add(PmsSdkCoreModule.getInstance(PmsSdkCoreConfig.builder()
+                                                 .serviceName(config.getServiceName())
+                                                 .grpcClientConfig(config.getPmsGrpcClientConfig())
+                                                 .grpcServerConfig(config.getGrpcServerConfig())
+                                                 .sdkDeployMode(config.getDeploymentMode())
+                                                 .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
+                                                 .executionPoolConfig(config.getExecutionPoolConfig())
+                                                 .orchestrationEventPoolConfig(config.getOrchestrationEventPoolConfig())
+                                                 .build()));
+    modules.add(
+        PmsSdkEventsFrameworkModule.getInstance(config.getEventsFrameworkConfiguration(), config.getServiceName()));
     modules.add(PmsSdkRegistryModule.getInstance(config));
     modules.add(PmsSdkProviderModule.getInstance(config));
-    modules.add(PmsSdkQueueModule.getInstance(config));
-    if (config.getDeploymentMode().isNonLocal()) {
-      modules.add(PmsSdkGrpcModule.getInstance(config));
-    } else {
-      modules.add(PmsSdkDummyGrpcModule.getInstance());
-    }
+    modules.add(SdkMonitoringModule.getInstance());
     return modules;
   }
 }

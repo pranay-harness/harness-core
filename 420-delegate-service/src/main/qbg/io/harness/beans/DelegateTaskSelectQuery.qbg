@@ -1,0 +1,4 @@
+query Select for io.harness.beans.DelegateTask {
+  accountId equal String;
+  uuid equal String;
+}

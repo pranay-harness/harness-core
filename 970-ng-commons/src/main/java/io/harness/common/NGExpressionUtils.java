@@ -41,6 +41,6 @@ public class NGExpressionUtils {
   }
 
   public boolean isRuntimeOrExpressionField(String fieldValue) {
-    return matchesInputSetPattern(fieldValue) || EngineExpressionEvaluator.matchesVariablePattern(fieldValue);
+    return matchesInputSetPattern(fieldValue) || EngineExpressionEvaluator.hasExpressions(fieldValue);
   }
 }

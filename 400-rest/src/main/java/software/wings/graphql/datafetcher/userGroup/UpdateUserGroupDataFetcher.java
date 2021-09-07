@@ -1,10 +1,12 @@
 package software.wings.graphql.datafetcher.userGroup;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
@@ -27,6 +29,7 @@ import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
+@OwnedBy(DX)
 @Slf4j
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class UpdateUserGroupDataFetcher
@@ -51,6 +54,8 @@ public class UpdateUserGroupDataFetcher
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.USER_PERMISSION_MANAGEMENT)
   protected QLUpdateUserGroupPayload mutateAndFetch(QLUpdateUserGroupInput parameter, MutationContext mutationContext) {
+    log.info("Testing: Updating user group {} for account {} from graphql", parameter.getUserGroupId(),
+        mutationContext.getAccountId());
     String userGroupId = parameter.getUserGroupId();
     UserGroup existingUserGroup = userGroupService.get(mutationContext.getAccountId(), userGroupId);
 
@@ -95,6 +100,10 @@ public class UpdateUserGroupDataFetcher
           userGroupInput.getPermissions().getValue().orElse(null)));
       existingUserGroup.setAppPermissions(userGroupPermissionsController.populateUserGroupAppPermissionEntity(
           userGroupInput.getPermissions().getValue().orElse(null)));
+      log.info("Testing: Setting app permissions {} of user group {} for account {} from graphql",
+          existingUserGroup.getAppPermissions(), parameter.getUserGroupId(), mutationContext.getAccountId());
+      log.info("Testing: Setting account permissions {} of user group {} for account {} from graphql",
+          existingUserGroup.getAccountPermissions(), parameter.getUserGroupId(), mutationContext.getAccountId());
       userGroupService.updatePermissions(existingUserGroup);
     }
 
@@ -108,11 +117,15 @@ public class UpdateUserGroupDataFetcher
       if (existingUserGroup.getNotificationSettings() != null) {
         sendNotification = existingUserGroup.getNotificationSettings().isSendMailToNewMembers();
       }
+      log.info("Testing: Updating members of user group {} for account {} from graphql to {}",
+          parameter.getUserGroupId(), mutationContext.getAccountId(), existingUserGroup.getMemberIds());
       userGroupService.updateMembers(existingUserGroup, sendNotification, true);
     }
 
     // Update SSOSettings
     if (userGroupInput.getSsoSetting().isPresent()) {
+      log.info("Testing: Updating ssoSettings of user group {} for account {} from graphql", parameter.getUserGroupId(),
+          mutationContext.getAccountId());
       QLSSOSettingInput ssoProvider = userGroupInput.getSsoSetting().getValue().orElse(null);
       UserGroupSSOSettings ssoSettings = userGroupController.populateUserGroupSSOSettings(ssoProvider);
       if (ssoProvider.getLdapSettings() == null && ssoProvider.getSamlSettings() == null) {
@@ -129,6 +142,8 @@ public class UpdateUserGroupDataFetcher
           userGroupInput.getNotificationSettings().getValue().orElse(null)));
       userGroupService.updateNotificationSettings(
           mutationContext.getAccountId(), userGroupId, existingUserGroup.getNotificationSettings());
+      log.info("Testing: Updating NotificationSettings of user group {} for account {} from graphql to {}", userGroupId,
+          mutationContext.getAccountId(), existingUserGroup.getNotificationSettings());
     }
 
     UserGroup updatedUserGroup = userGroupService.get(mutationContext.getAccountId(), userGroupId);

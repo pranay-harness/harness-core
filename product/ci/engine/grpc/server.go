@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"fmt"
+	"io"
 	"net"
 	"time"
 
@@ -27,11 +28,12 @@ type engineServer struct {
 	listener   net.Listener
 	grpcServer *grpc.Server
 	log        *zap.SugaredLogger
+	procWriter io.Writer
 	stopCh     chan bool
 }
 
 //NewEngineServer constructs a new EngineServer
-func NewEngineServer(port uint, log *zap.SugaredLogger) (EngineServer, error) {
+func NewEngineServer(port uint, log *zap.SugaredLogger, procWriter io.Writer) (EngineServer, error) {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		return nil, err
@@ -39,9 +41,10 @@ func NewEngineServer(port uint, log *zap.SugaredLogger) (EngineServer, error) {
 
 	stopCh := make(chan bool, 1)
 	server := engineServer{
-		port:   port,
-		log:    log,
-		stopCh: stopCh,
+		port:       port,
+		log:        log,
+		stopCh:     stopCh,
+		procWriter: procWriter,
 	}
 	server.grpcServer = grpc.NewServer()
 	server.listener = listener
@@ -50,7 +53,7 @@ func NewEngineServer(port uint, log *zap.SugaredLogger) (EngineServer, error) {
 
 //Start signals the GRPC server to begin serving on the configured port
 func (s *engineServer) Start() error {
-	pb.RegisterLiteEngineServer(s.grpcServer, NewEngineHandler(s.log))
+	pb.RegisterLiteEngineServer(s.grpcServer, NewEngineHandler(s.log, s.procWriter))
 	pb.RegisterLogProxyServer(s.grpcServer, NewLogProxyHandler(s.log))
 	pb.RegisterTiProxyServer(s.grpcServer, NewTiProxyHandler(s.log))
 	err := s.grpcServer.Serve(s.listener)

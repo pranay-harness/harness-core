@@ -3,6 +3,7 @@ package io.harness.audit.api.impl;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.audit.mapper.AuditEventMapper.fromDTO;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_POLICY;
 import static io.harness.utils.PageUtils.getPageRequest;
 
 import static java.lang.System.currentTimeMillis;
@@ -18,41 +19,40 @@ import io.harness.audit.beans.Resource;
 import io.harness.audit.beans.ResourceDTO;
 import io.harness.audit.beans.ResourceScope;
 import io.harness.audit.beans.ResourceScopeDTO;
+import io.harness.audit.beans.YamlDiffRecordDTO;
 import io.harness.audit.entities.AuditEvent;
 import io.harness.audit.entities.AuditEvent.AuditEventKeys;
 import io.harness.audit.entities.YamlDiffRecord;
 import io.harness.audit.mapper.ResourceMapper;
 import io.harness.audit.mapper.ResourceScopeMapper;
 import io.harness.audit.repositories.AuditRepository;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.common.beans.KeyValuePair;
 import io.harness.ng.core.common.beans.KeyValuePair.KeyValuePairKeys;
-import io.harness.utils.RetryUtils;
 
-import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
-import com.mongodb.DuplicateKeyException;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.support.TransactionTemplate;
 
 @OwnedBy(PL)
 @Slf4j
 public class AuditServiceImpl implements AuditService {
+  private static final long MAXIMUM_ALLOWED_YAML_SIZE = 512L * 512;
   private final TransactionTemplate transactionTemplate;
 
-  private final RetryPolicy<Object> transactionRetryPolicy = RetryUtils.getRetryPolicy("[Retrying] attempt: {}",
-      "[Failed] attempt: {}", ImmutableList.of(TransactionException.class), Duration.ofSeconds(1), 3, log);
+  private final RetryPolicy<Object> transactionRetryPolicy = DEFAULT_TRANSACTION_RETRY_POLICY;
 
   private final AuditRepository auditRepository;
   private final AuditYamlService auditYamlService;
@@ -69,14 +69,18 @@ public class AuditServiceImpl implements AuditService {
 
   @Override
   public Boolean create(AuditEventDTO auditEventDTO) {
+    validate(auditEventDTO);
     AuditEvent auditEvent = fromDTO(auditEventDTO);
     try {
-      return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      long startTime = System.currentTimeMillis();
+      Boolean result = Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
         AuditEvent savedAuditEvent = auditRepository.save(auditEvent);
         saveYamlDiff(auditEventDTO, savedAuditEvent.getId());
         return true;
       }));
-
+      log.info(String.format("Took %d milliseconds for create audit db operation for insertId %s.",
+          System.currentTimeMillis() - startTime, auditEventDTO.getInsertId()));
+      return result;
     } catch (DuplicateKeyException ex) {
       log.info("Audit for this entry already exists with id {} and account identifier {}", auditEvent.getInsertId(),
           auditEvent.getResourceScope().getAccountIdentifier());
@@ -88,13 +92,27 @@ public class AuditServiceImpl implements AuditService {
     }
   }
 
+  private void validate(AuditEventDTO auditEventDTO) {
+    if (auditEventDTO.getYamlDiffRecord() != null) {
+      YamlDiffRecordDTO yamlDiffRecordDTO = auditEventDTO.getYamlDiffRecord();
+      if (isNotEmpty(yamlDiffRecordDTO.getNewYaml())
+          && yamlDiffRecordDTO.getNewYaml().length() > MAXIMUM_ALLOWED_YAML_SIZE) {
+        throw new InvalidRequestException("New Yaml size exceeds the maximum allowed limit.");
+      }
+      if (isNotEmpty(yamlDiffRecordDTO.getOldYaml())
+          && yamlDiffRecordDTO.getOldYaml().length() > MAXIMUM_ALLOWED_YAML_SIZE) {
+        throw new InvalidRequestException("Old Yaml size exceeds the maximum allowed limit.");
+      }
+    }
+  }
+
   private void saveYamlDiff(AuditEventDTO auditEventDTO, String auditId) {
-    if (auditEventDTO.getYamlDiffRecordDTO() != null) {
+    if (auditEventDTO.getYamlDiffRecord() != null) {
       YamlDiffRecord yamlDiffRecord = YamlDiffRecord.builder()
                                           .auditId(auditId)
                                           .accountIdentifier(auditEventDTO.getResourceScope().getAccountIdentifier())
-                                          .oldYaml(auditEventDTO.getYamlDiffRecordDTO().getOldYaml())
-                                          .newYaml(auditEventDTO.getYamlDiffRecordDTO().getNewYaml())
+                                          .oldYaml(auditEventDTO.getYamlDiffRecord().getOldYaml())
+                                          .newYaml(auditEventDTO.getYamlDiffRecord().getNewYaml())
                                           .timestamp(Instant.ofEpochMilli(auditEventDTO.getTimestamp()))
                                           .build();
       auditYamlService.save(yamlDiffRecord);
@@ -102,11 +120,22 @@ public class AuditServiceImpl implements AuditService {
   }
 
   @Override
+  public Optional<AuditEvent> get(String accountIdentifier, String auditId) {
+    Criteria criteria =
+        Criteria.where(AuditEventKeys.id).is(auditId).and(AuditEventKeys.ACCOUNT_IDENTIFIER_KEY).is(accountIdentifier);
+    return Optional.ofNullable(auditRepository.get(criteria));
+  }
+
+  @Override
   public Page<AuditEvent> list(
       String accountIdentifier, PageRequest pageRequest, AuditFilterPropertiesDTO auditFilterPropertiesDTO) {
+    long startTime = System.currentTimeMillis();
     auditFilterPropertiesValidator.validate(accountIdentifier, auditFilterPropertiesDTO);
     Criteria criteria = getFilterCriteria(accountIdentifier, auditFilterPropertiesDTO);
-    return auditRepository.findAll(criteria, getPageRequest(pageRequest));
+    Page<AuditEvent> result = auditRepository.findAll(criteria, getPageRequest(pageRequest));
+    log.info(
+        String.format("Took %d milliseconds for list audit db operation.", System.currentTimeMillis() - startTime));
+    return result;
   }
 
   private Criteria getFilterCriteria(String accountIdentifier, AuditFilterPropertiesDTO auditFilterPropertiesDTO) {

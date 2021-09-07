@@ -12,4 +12,5 @@ import lombok.Value;
 public class GitFilePathDetails {
   private String filePath;
   private String branch;
+  private String ref;
 }

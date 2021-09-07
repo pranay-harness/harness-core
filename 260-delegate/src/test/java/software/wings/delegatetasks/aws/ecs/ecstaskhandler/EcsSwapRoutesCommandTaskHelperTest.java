@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.SATYAM;
 
 import static java.util.Collections.emptyList;
@@ -14,6 +15,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -33,6 +35,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class EcsSwapRoutesCommandTaskHelperTest extends WingsBaseTest {
   @Mock private AwsHelperService mockAwsHelperService;
   @Mock private EcsContainerService mockEcsContainerService;
@@ -49,7 +52,7 @@ public class EcsSwapRoutesCommandTaskHelperTest extends WingsBaseTest {
         .when(mockAwsHelperService)
         .describeServices(anyString(), any(), anyList(), any());
     taskHelper.upsizeOlderService(
-        AwsConfig.builder().build(), emptyList(), "us-east-1", "cluster", 1, "foo_1", mockCallback, 20);
+        AwsConfig.builder().build(), emptyList(), "us-east-1", "cluster", 1, "foo_1", mockCallback, 20, false);
     verify(mockEcsContainerService).updateServiceCount(any());
     verify(mockEcsContainerService).waitForTasksToBeInRunningStateWithHandledExceptions(any());
     verify(mockEcsContainerService).waitForServiceToReachSteadyState(eq(20), any());

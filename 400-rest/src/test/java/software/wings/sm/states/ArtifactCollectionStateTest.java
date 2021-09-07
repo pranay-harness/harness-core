@@ -1,8 +1,10 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 
@@ -29,6 +31,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
@@ -41,10 +46,12 @@ import software.wings.api.WorkflowElement;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.Application;
+import software.wings.beans.TemplateExpression;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
+import software.wings.common.TemplateExpressionProcessor;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.jenkins.BuildDetails;
@@ -63,9 +70,12 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.WorkflowStandardParams.Builder;
+import software.wings.sm.states.ArtifactCollectionState.ArtifactCollectionStateKeys;
 
 import com.google.common.collect.ImmutableMap;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -79,6 +89,8 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ArtifactCollectionStateTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Mock private ArtifactStreamService artifactStreamService;
@@ -95,6 +107,7 @@ public class ArtifactCollectionStateTest extends CategoryTest {
   @Mock private ArtifactStreamHelper artifactStreamHelper;
   @Mock private BuildSourceService buildSourceService;
   @Mock private ArtifactCollectionUtils artifactCollectionUtils;
+  @Mock private TemplateExpressionProcessor templateExpressionProcessor;
 
   private ManagerExpressionEvaluator expressionEvaluator = new ManagerExpressionEvaluator();
 
@@ -347,5 +360,70 @@ public class ArtifactCollectionStateTest extends CategoryTest {
     ExecutionResponse executionResponse = artifactCollectionState.execute(executionContext);
     assertThat(executionResponse).isNotNull();
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldExecuteForTemplatizedArtifactStream() {
+    List<TemplateExpression> templateExpressions =
+        Collections.singletonList(TemplateExpression.builder()
+                                      .fieldName(ArtifactCollectionStateKeys.artifactStreamId)
+                                      .expression("${ArtifactStream}")
+                                      .build());
+    artifactCollectionState.setTemplateExpressions(templateExpressions);
+    artifactCollectionState.setBuildNo("${workflow.variables.buildNo}");
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(nexusArtifactStream);
+
+    nexusArtifactStream.setArtifactStreamParameterized(false);
+    when(templateExpressionProcessor.getTemplateExpression(
+             templateExpressions, ArtifactCollectionStateKeys.artifactStreamId))
+        .thenReturn(templateExpressions.get(0));
+    when(templateExpressionProcessor.resolveTemplateExpression(executionContext, templateExpressions.get(0)))
+        .thenReturn(ARTIFACT_STREAM_ID);
+    when(artifactService.fetchLastCollectedApprovedArtifactForArtifactStream(nexusArtifactStream))
+        .thenReturn(Artifact.Builder.anArtifact().build());
+    Map<String, String> map = new HashMap<>();
+    map.put("buildNo", "1.1");
+    Artifact artifact = Artifact.Builder.anArtifact().withMetadata(map).withUuid(ARTIFACT_ID).build();
+    when(artifactCollectionUtils.getArtifact(any(), any())).thenReturn(artifact);
+
+    ExecutionResponse executionResponse = artifactCollectionState.execute(executionContext);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldExecuteForTemplatizedArtifactStreamByName() {
+    List<TemplateExpression> templateExpressions =
+        Collections.singletonList(TemplateExpression.builder()
+                                      .fieldName(ArtifactCollectionStateKeys.artifactStreamId)
+                                      .expression("${ArtifactStream}")
+                                      .build());
+    artifactCollectionState.setTemplateExpressions(templateExpressions);
+    artifactCollectionState.setBuildNo("${workflow.variables.buildNo}");
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(nexusArtifactStream);
+
+    when(templateExpressionProcessor.getTemplateExpression(
+             templateExpressions, ArtifactCollectionStateKeys.artifactStreamId))
+        .thenReturn(templateExpressions.get(0));
+    when(templateExpressionProcessor.resolveTemplateExpression(executionContext, templateExpressions.get(0)))
+        .thenReturn(ARTIFACT_SOURCE_NAME);
+    when(artifactStreamService.fetchByArtifactSourceVariableValue(APP_ID, ARTIFACT_SOURCE_NAME))
+        .thenReturn(nexusArtifactStream);
+
+    when(artifactService.fetchLastCollectedApprovedArtifactForArtifactStream(nexusArtifactStream))
+        .thenReturn(Artifact.Builder.anArtifact().build());
+    Map<String, String> map = new HashMap<>();
+    map.put("buildNo", "1.1");
+    Artifact artifact = Artifact.Builder.anArtifact().withMetadata(map).withUuid(ARTIFACT_ID).build();
+    when(artifactCollectionUtils.getArtifact(any(), any())).thenReturn(artifact);
+
+    ExecutionResponse executionResponse = artifactCollectionState.execute(executionContext);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+    assertThat(executionResponse.getErrorMessage())
+        .isEqualTo(
+            "Parameterized Artifact Source testNexus cannot be used as a value for templatized artifact variable");
   }
 }

@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CE;
 import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ccm.commons.entities.billing.CECloudAccount;
 import io.harness.ccm.setup.service.CEInfraSetupHandler;
 import io.harness.ccm.setup.service.intfc.AWSAccountService;
 import io.harness.ccm.setup.service.intfc.AwsEKSClusterService;
@@ -12,7 +13,6 @@ import io.harness.ccm.setup.service.support.intfc.AwsEKSHelperService;
 
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.ce.CEAwsConfig;
-import software.wings.beans.ce.CECloudAccount;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

@@ -8,6 +8,10 @@ import static software.wings.beans.TaskType.AZURE_ARM_TASK;
 
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.ARMResourceType;
 import io.harness.azure.model.ARMScopeType;
 import io.harness.azure.model.AzureDeploymentMode;
@@ -35,6 +39,8 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+@OwnedBy(HarnessTeam.CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ARMRollbackState extends ARMProvisionState {
   public ARMRollbackState(String name) {
     super(name);
@@ -70,6 +76,7 @@ public class ARMRollbackState extends ARMProvisionState {
             .rollback(true)
             .build();
 
+    cloudProviderId = context.renderExpression(cloudProviderId);
     AzureConfig azureConfig = azureVMSSStateHelper.getAzureConfig(cloudProviderId);
     List<EncryptedDataDetail> azureEncryptionDetails =
         azureVMSSStateHelper.getEncryptedDataDetails(context, cloudProviderId);
@@ -88,6 +95,8 @@ public class ARMRollbackState extends ARMProvisionState {
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, context.getAppId())
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, context.fetchRequiredEnvironment().getUuid())
             .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, context.getEnvType())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("ARM rollback task execution")
             .data(TaskData.builder()
                       .async(true)
                       .taskType(AZURE_ARM_TASK.name())
@@ -96,6 +105,7 @@ public class ARMRollbackState extends ARMProvisionState {
                       .build())
             .build();
     delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(singletonList(delegateTask.getUuid()))
@@ -233,5 +243,10 @@ public class ARMRollbackState extends ARMProvisionState {
   @SchemaIgnore
   public GitFileConfig getParametersGitFileConfig() {
     return super.getParametersGitFileConfig();
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

@@ -13,23 +13,32 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.delay.DelayEventHelper;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.ff.FeatureFlagService;
+import io.harness.logging.AutoLogContext;
+import io.harness.logging.AutoLogContext.OverrideBehavior;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.ArtifactCollectionExecutionData;
 import software.wings.beans.BuildExecutionSummary;
 import software.wings.beans.EntityType;
+import software.wings.beans.TemplateExpression;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.common.TemplateExpressionProcessor;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.ArtifactStreamHelper;
+import software.wings.service.impl.WorkflowExecutionLogContext;
 import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -49,18 +58,20 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(CDC)
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@FieldNameConstants(innerTypeName = "ArtifactCollectionStateKeys")
 public class ArtifactCollectionState extends State {
   @Attributes(title = "Entity Type") @Getter @Setter private EntityType entityType;
   @Attributes(title = "Entity") @Getter @Setter private String entityId;
   @Attributes(title = "Service") @Getter @Setter private String serviceId;
   @Attributes(title = "Artifact Variable Name") @Getter @Setter private String artifactVariableName;
 
-  @Attributes(title = "Artifact Source") @NotEmpty @Getter @Setter private String artifactStreamId;
+  @Attributes(title = "Artifact Source") @Getter @Setter private String artifactStreamId;
 
   @Attributes(title = "Regex") @Getter @Setter private boolean regex;
   @Attributes(title = "Build / Tag") @Getter @Setter private String buildNo;
@@ -76,6 +87,7 @@ public class ArtifactCollectionState extends State {
   @Inject private transient ExecutorService executorService;
   @Inject private transient BuildSourceService buildSourceService;
   @Inject private transient ArtifactCollectionUtils artifactCollectionUtils;
+  @Inject private transient TemplateExpressionProcessor templateExpressionProcessor;
 
   private static int DELAY_TIME_IN_SEC = 60;
   public static final long DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS = 5L * 60L * 1000L; // 5 minutes
@@ -86,7 +98,34 @@ public class ArtifactCollectionState extends State {
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
+    try (AutoLogContext ignore =
+             new WorkflowExecutionLogContext(context.getWorkflowExecutionId(), OverrideBehavior.OVERRIDE_ERROR)) {
+      return executeInternal(context);
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
+    }
+  }
+
+  private ExecutionResponse executeInternal(ExecutionContext context) {
+    if (isNotEmpty(getTemplateExpressions())) {
+      resolveArtifactStreamId(context);
+    }
+
     ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
+    if (artifactStream == null) {
+      artifactStream = artifactStreamService.fetchByArtifactSourceVariableValue(context.getAppId(), artifactStreamId);
+      if (artifactStream != null && artifactStream.isArtifactStreamParameterized()
+          && isNotEmpty(getTemplateExpressions())) {
+        log.info("Artifact Stream {} is Parameterized", artifactStreamId);
+        return ExecutionResponse.builder()
+            .executionStatus(ExecutionStatus.FAILED)
+            .errorMessage("Parameterized Artifact Source " + artifactStream.getName()
+                + " cannot be used as a value for templatized artifact variable")
+            .build();
+      }
+    }
     if (artifactStream == null) {
       log.info("Artifact Stream {} might have been deleted", artifactStreamId);
       return ExecutionResponse.builder()
@@ -178,8 +217,19 @@ public class ArtifactCollectionState extends State {
         .build();
   }
 
+  private void resolveArtifactStreamId(ExecutionContext context) {
+    TemplateExpression artifactStreamExp = templateExpressionProcessor.getTemplateExpression(
+        getTemplateExpressions(), ArtifactCollectionStateKeys.artifactStreamId);
+    if (artifactStreamExp != null) {
+      artifactStreamId = templateExpressionProcessor.resolveTemplateExpression(context, artifactStreamExp);
+    }
+  }
+
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+    if (isNotEmpty(getTemplateExpressions())) {
+      resolveArtifactStreamId(context);
+    }
     ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
     notNullCheck("ArtifactStream was deleted", artifactStream);
 
@@ -275,10 +325,18 @@ public class ArtifactCollectionState extends State {
   @Override
   public Map<String, String> validateFields() {
     Map<String, String> invalidFields = new HashMap<>();
-    if (isBlank(artifactStreamId)) {
+    if (isBlank(artifactStreamId) && artifactStreamNotTemplatized()) {
       invalidFields.put("artifactSource", "Artifact Source should not be empty");
     }
     return invalidFields;
+  }
+
+  private boolean artifactStreamNotTemplatized() {
+    return isEmpty(getTemplateExpressions())
+        || getTemplateExpressions()
+               .stream()
+               .map(TemplateExpression::getFieldName)
+               .noneMatch(ArtifactCollectionStateKeys.artifactStreamId::equals);
   }
 
   @Attributes(title = "Timeout (ms)")

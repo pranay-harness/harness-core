@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.container;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -7,6 +8,9 @@ import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.container.ContainerInfo;
 import io.harness.container.ContainerInfo.Status;
@@ -56,6 +60,8 @@ import org.mongodb.morphia.Key;
  * Created by anubhaw on 4/6/18.
  */
 @Singleton
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ContainerDeploymentManagerHelper {
   @Inject private SettingsService settingsService;
   @Inject private ArtifactStreamService artifactStreamService;
@@ -100,6 +106,7 @@ public class ContainerDeploymentManagerHelper {
         .serviceTemplateElement(serviceTemplateElement)
         .displayName(containerInfo.getContainerId())
         .podName(containerInfo.getPodName())
+        .namespace(containerInfo.getNamespace())
         .workloadName(containerInfo.getWorkloadName())
         .ecsContainerDetails(containerInfo.getEcsContainerDetails())
         .newInstance(containerInfo.isNewContainer())

@@ -11,6 +11,7 @@ import static io.harness.mongo.IndexManagerSession.Type.NORMAL_INDEX;
 import static io.harness.mongo.IndexManagerSession.Type.SPARSE_INDEX;
 import static io.harness.mongo.IndexManagerSession.Type.UNIQUE_INDEX;
 
+import static com.google.common.base.MoreObjects.firstNonNull;
 import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.lang.System.currentTimeMillis;
@@ -30,6 +31,7 @@ import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.migrator.Migrator;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.Store;
 import io.harness.threading.Morpheus;
 
@@ -150,6 +152,16 @@ public class IndexManagerSession {
 
   public static Set<String> processIndexes(
       AdvancedDatastore datastore, Morphia morphia, Store store, IndexesProcessor processor) {
+    return processIndexesInternal(datastore, morphia, store, true, processor);
+  }
+
+  public static Set<String> processIndexes(AdvancedDatastore datastore, Morphia morphia, Store store,
+      boolean includeUnannotatedStoreIn, IndexesProcessor processor) {
+    return processIndexesInternal(datastore, morphia, store, includeUnannotatedStoreIn, processor);
+  }
+
+  private static Set<String> processIndexesInternal(AdvancedDatastore datastore, Morphia morphia, Store store,
+      boolean includeUnannotatedStoreIn, IndexesProcessor processor) {
     Set<String> processedCollections = new HashSet<>();
     Collection<MappedClass> mappedClasses = morphia.getMapper().getMappedClasses();
     mappedClasses.forEach(mc -> {
@@ -161,7 +173,11 @@ public class IndexManagerSession {
       DBCollection collection = datastore.getCollection(mc.getClazz());
 
       StoreIn storeIn = mc.getClazz().getAnnotation(StoreIn.class);
-      if (storeIn != null && (store == null || !store.getName().equals(storeIn.value()))) {
+      if (storeIn != null) {
+        if (!DbAliases.ALL.equals(storeIn.value()) && (store == null || !store.getName().equals(storeIn.value()))) {
+          return;
+        }
+      } else if (!includeUnannotatedStoreIn) {
         return;
       }
 
@@ -186,10 +202,12 @@ public class IndexManagerSession {
     return processedCollections;
   }
 
-  public static List<IndexCreator> allIndexes(AdvancedDatastore datastore, Morphia morphia, Store store) {
+  // TODO(KARAN): clean includeUnannotatedStoreIn variable after all collections have @StoreIn annotations
+  public static List<IndexCreator> allIndexes(
+      AdvancedDatastore datastore, Morphia morphia, Store store, Boolean includeUnannotatedStoreIn) {
     List<IndexCreator> result = new ArrayList<>();
-    processIndexes(
-        datastore, morphia, store, (mc, collection) -> result.addAll(indexCreators(mc, collection).values()));
+    processIndexes(datastore, morphia, store, firstNonNull(includeUnannotatedStoreIn, true),
+        (mc, collection) -> result.addAll(indexCreators(mc, collection).values()));
     return result;
   }
 

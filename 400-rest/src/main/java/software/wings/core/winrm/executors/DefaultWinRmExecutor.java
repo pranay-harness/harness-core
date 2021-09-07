@@ -1,5 +1,6 @@
 package software.wings.core.winrm.executors;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
@@ -11,10 +12,14 @@ import static software.wings.beans.LogColor.Gray;
 import static software.wings.beans.LogColor.White;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
+import static software.wings.core.ssh.executors.WinRmExecutorHelper.getScriptExecutingCommand;
 import static software.wings.sm.StateExecutionData.SECRET_MASK;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ResponseMessage;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
@@ -41,6 +46,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 
 @Slf4j
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class DefaultWinRmExecutor implements WinRmExecutor {
   public static final String HARNESS_FILENAME_PREFIX = "\\harness-";
   public static final String WINDOWS_TEMPFILE_LOCATION = "%TEMP%";
@@ -106,7 +113,7 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
         psScriptFile = getPSScriptFile();
         exitCode = session.executeCommandsList(
             WinRmExecutorHelper.constructPSScriptWithCommands(command, psScriptFile, powershell), outputWriter,
-            errorWriter, false);
+            errorWriter, false, getScriptExecutingCommand(psScriptFile, powershell));
       } else {
         exitCode = session.executeCommandString(
             WinRmExecutorHelper.psWrappedCommandWithEncoding(command, powershell), outputWriter, errorWriter, false);
@@ -191,7 +198,7 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
 
         exitCode = session.executeCommandsList(
             WinRmExecutorHelper.constructPSScriptWithCommands(command, psScriptFile, powershell), outputWriter,
-            errorWriter, false);
+            errorWriter, false, getScriptExecutingCommand(psScriptFile, powershell));
       } else {
         exitCode = session.executeCommandString(
             WinRmExecutorHelper.psWrappedCommandWithEncoding(command, powershell), outputWriter, errorWriter, false);
@@ -245,7 +252,7 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
         psScriptFile = getPSScriptFile();
         exitCode = session.executeCommandsList(
             WinRmExecutorHelper.constructPSScriptWithCommands(commandWithoutEncoding, psScriptFile, powershell),
-            outputAccumulator, errorAccumulator, true);
+            outputAccumulator, errorAccumulator, true, getScriptExecutingCommand(psScriptFile, powershell));
       } else {
         exitCode = session.executeCommandString(WinRmExecutorHelper.psWrappedCommandWithEncoding(command, powershell),
             outputAccumulator, errorAccumulator, true);

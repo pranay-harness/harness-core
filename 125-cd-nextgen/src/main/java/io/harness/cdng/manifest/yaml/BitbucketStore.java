@@ -1,22 +1,31 @@
 package io.harness.cdng.manifest.yaml;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.runtime;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.SwaggerConstants;
 import io.harness.cdng.manifest.ManifestStoreType;
-import io.harness.cdng.visitor.helper.BitbucketStoreVisitorHelper;
-import io.harness.common.SwaggerConstants;
+import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
+import io.harness.common.ParameterFieldHelper;
 import io.harness.delegate.beans.storeconfig.FetchType;
+import io.harness.filters.ConnectorRefExtractorHelper;
+import io.harness.filters.WithConnectorRef;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.validation.OneOfField;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
+import io.harness.yaml.YamlSchemaTypes;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -29,16 +38,21 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(ManifestStoreType.BITBUCKET)
 @OneOfField(fields = {"paths", "folderPath"})
 @OneOfField(fields = {"branch", "commitId"})
-@SimpleVisitorHelper(helperClass = BitbucketStoreVisitorHelper.class)
+@SimpleVisitorHelper(helperClass = ConnectorRefExtractorHelper.class)
 @TypeAlias("bitbucketStore")
 @OwnedBy(CDP)
-public class BitbucketStore implements GitStoreConfig, Visitable {
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> connectorRef;
+@RecasterAlias("io.harness.cdng.manifest.yaml.BitbucketStore")
+public class BitbucketStore implements GitStoreConfig, Visitable, WithConnectorRef {
+  @NotNull
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
+  @Wither
+  private ParameterField<String> connectorRef;
 
-  @Wither private FetchType gitFetchType;
+  @NotNull @Wither private FetchType gitFetchType;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> branch;
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither private ParameterField<String> commitId;
 
+  @YamlSchemaTypes(value = {runtime})
   @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
   @Wither
   private ParameterField<List<String>> paths;
@@ -51,6 +65,11 @@ public class BitbucketStore implements GitStoreConfig, Visitable {
   @Override
   public String getKind() {
     return ManifestStoreType.BITBUCKET;
+  }
+
+  @Override
+  public ParameterField<String> getConnectorReference() {
+    return connectorRef;
   }
 
   public BitbucketStore cloneInternal() {
@@ -82,10 +101,10 @@ public class BitbucketStore implements GitStoreConfig, Visitable {
       resultantBitbucketStore = resultantBitbucketStore.withGitFetchType(bitbucketStore.getGitFetchType());
     }
     if (!ParameterField.isNull(bitbucketStore.getBranch())) {
-      resultantBitbucketStore = resultantBitbucketStore.withBranch(bitbucketStore.getBranch());
+      resultantBitbucketStore = resultantBitbucketStore.withBranch(bitbucketStore.getBranch()).withCommitId(null);
     }
     if (!ParameterField.isNull(bitbucketStore.getCommitId())) {
-      resultantBitbucketStore = resultantBitbucketStore.withCommitId(bitbucketStore.getCommitId());
+      resultantBitbucketStore = resultantBitbucketStore.withCommitId(bitbucketStore.getCommitId()).withBranch(null);
     }
     if (!ParameterField.isNull(bitbucketStore.getRepoName())) {
       resultantBitbucketStore = resultantBitbucketStore.withRepoName(bitbucketStore.getRepoName());
@@ -100,7 +119,22 @@ public class BitbucketStore implements GitStoreConfig, Visitable {
   }
 
   @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName("spec").isPartOfFQN(false).build();
+  public GitStoreConfigDTO toGitStoreConfigDTO() {
+    return BitBucketStoreDTO.builder()
+        .branch(ParameterFieldHelper.getParameterFieldValue(branch))
+        .commitId(ParameterFieldHelper.getParameterFieldValue(commitId))
+        .connectorRef(ParameterFieldHelper.getParameterFieldValue(connectorRef))
+        .folderPath(ParameterFieldHelper.getParameterFieldValue(folderPath))
+        .gitFetchType(gitFetchType)
+        .paths(ParameterFieldHelper.getParameterFieldValue(paths))
+        .repoName(ParameterFieldHelper.getParameterFieldValue(repoName))
+        .build();
+  }
+
+  @Override
+  public Map<String, ParameterField<String>> extractConnectorRefs() {
+    Map<String, ParameterField<String>> connectorRefMap = new HashMap<>();
+    connectorRefMap.put(YAMLFieldNameConstants.CONNECTOR_REF, connectorRef);
+    return connectorRefMap;
   }
 }

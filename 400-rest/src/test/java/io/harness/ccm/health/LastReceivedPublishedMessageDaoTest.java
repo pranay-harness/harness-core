@@ -7,7 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
+import io.harness.ccm.commons.entities.batch.LastReceivedPublishedMessage;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;

@@ -21,6 +21,7 @@ import static software.wings.utils.WingsTestConstants.BUCKET_NAME;
 import static software.wings.utils.WingsTestConstants.BUILD_NO;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
+import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.S3_URL;
 import static software.wings.utils.WingsTestConstants.SECRET_KEY;
@@ -29,8 +30,11 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -64,6 +68,7 @@ import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.command.AwsLambdaCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.service.impl.aws.model.AwsLambdaExecuteWfRequest;
 import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -73,6 +78,7 @@ import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.WorkflowStandardParams;
@@ -80,6 +86,7 @@ import software.wings.utils.WingsTestConstants;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
@@ -87,6 +94,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
@@ -102,6 +110,7 @@ public class AwsLambdaStateTest extends CategoryTest {
   @Mock private ServiceTemplateHelper serviceTemplateHelper;
   @Mock private ServiceTemplateService serviceTemplateService;
   @Mock private DelegateService delegateService;
+  @Mock private StateExecutionService stateExecutionService;
 
   @Spy @InjectMocks AwsLambdaState awsLambdaState;
   private SettingAttribute awsSetting =
@@ -113,6 +122,7 @@ public class AwsLambdaStateTest extends CategoryTest {
   @Before
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -151,13 +161,14 @@ public class AwsLambdaStateTest extends CategoryTest {
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testExecute() {
-    when(infrastructureMappingService.get(anyString(), anyString()))
-        .thenReturn(AwsLambdaInfraStructureMapping.builder()
-                        .uuid(INFRA_MAPPING_ID)
-                        .appId(APP_ID)
-                        .computeProviderSettingId(SETTING_ID)
-                        .envId(ENV_ID)
-                        .build());
+    AwsLambdaInfraStructureMapping mapping = AwsLambdaInfraStructureMapping.builder()
+                                                 .uuid(INFRA_MAPPING_ID)
+                                                 .appId(APP_ID)
+                                                 .computeProviderSettingId(SETTING_ID)
+                                                 .envId(ENV_ID)
+                                                 .build();
+    mapping.setInfrastructureDefinitionId(INFRA_DEFINITION_ID);
+    when(infrastructureMappingService.get(anyString(), anyString())).thenReturn(mapping);
     when(settingsService.get(SETTING_ID))
         .thenReturn(SettingAttribute.Builder.aSettingAttribute().withValue(AwsConfig.builder().build()).build());
 
@@ -205,13 +216,17 @@ public class AwsLambdaStateTest extends CategoryTest {
     when(mockDockerArtifactStream.getSettingId()).thenReturn(SETTING_ID);
     when(serviceResourceService.getFlattenCommandUnitList(APP_ID, SERVICE_ID, ENV_ID, null))
         .thenReturn(asList(new AwsLambdaCommandUnit()));
-    when(activityService.save(any())).thenReturn(Activity.builder().build());
+    ArgumentCaptor<Activity> activityCaptor = ArgumentCaptor.forClass(Activity.class);
+    when(activityService.save(activityCaptor.capture())).thenReturn(Activity.builder().build());
     when(serviceResourceService.getLambdaSpecification(APP_ID, SERVICE_ID))
         .thenReturn(LambdaSpecification.builder()
                         .functions(asList(
                             LambdaSpecification.FunctionSpecification.builder().functionName("functionName").build()))
                         .build());
     when(mockContext.renderExpression("functionName")).thenReturn("functionName");
+    List<String> aliases = Mockito.mock(List.class);
+    doReturn(true).when(aliases).isEmpty();
+    on(awsLambdaState).set("aliases", aliases);
 
     awsLambdaState.execute(mockContext);
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
@@ -221,6 +236,11 @@ public class AwsLambdaStateTest extends CategoryTest {
     assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.ENV_ID_FIELD)).isEqualTo(ENV_ID);
     assertThat(delegateTask.getSetupAbstractions().get(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD))
         .isEqualTo(INFRA_MAPPING_ID);
+    Activity activity = activityCaptor.getValue();
+    assertThat(activity.getInfrastructureDefinitionId()).isEqualTo(INFRA_DEFINITION_ID);
+    verify(aliases, atLeastOnce()).isEmpty();
+    AwsLambdaExecuteWfRequest parameter = (AwsLambdaExecuteWfRequest) delegateTask.getData().getParameters()[0];
+    assertThat(parameter.getEvaluatedAliases()).isEmpty();
   }
 
   private Map<String, String> mockMetadata(ArtifactStreamType artifactStreamType) {

@@ -1,29 +1,38 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.FeatureName.GITHUB_WEBHOOK_AUTHENTICATION;
 import static io.harness.beans.FeatureName.WEBHOOK_TRIGGER_AUTHORIZATION;
 import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
 
+import static software.wings.beans.TaskType.WEBHOOK_TRIGGER_TASK;
 import static software.wings.beans.trigger.WebhookSource.BITBUCKET;
 import static software.wings.beans.trigger.WebhookSource.GITHUB;
 import static software.wings.security.AuthenticationFilter.API_KEY_HEADER;
+import static software.wings.service.impl.trigger.WebhookEventUtils.X_HUB_SIGNATURE_256;
 
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.DelegateTask;
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
+import io.harness.beans.SecretUsageLog;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.logging.ExceptionLogger;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
 
 import software.wings.app.MainConfiguration;
@@ -32,26 +41,32 @@ import software.wings.beans.Service;
 import software.wings.beans.WebHookRequest;
 import software.wings.beans.WebHookResponse;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.appmanifest.ManifestSummary;
 import software.wings.beans.instance.dashboard.ArtifactSummary;
 import software.wings.beans.trigger.GithubAction;
 import software.wings.beans.trigger.ReleaseAction;
 import software.wings.beans.trigger.Trigger;
+import software.wings.beans.trigger.TriggerConditionType;
 import software.wings.beans.trigger.TriggerExecution;
 import software.wings.beans.trigger.TriggerExecution.Status;
 import software.wings.beans.trigger.TriggerExecution.TriggerExecutionBuilder;
 import software.wings.beans.trigger.TriggerExecution.WebhookEventDetails;
 import software.wings.beans.trigger.WebHookTriggerCondition;
+import software.wings.beans.trigger.WebHookTriggerResponseData;
 import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookSource;
 import software.wings.beans.trigger.WebhookSource.BitBucketEventType;
+import software.wings.beans.trigger.WebhookTriggerParameters;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.service.impl.trigger.WebhookEventUtils;
 import software.wings.service.impl.trigger.WebhookTriggerProcessor;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WebHookService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.trigger.TriggerExecutionService;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -62,6 +77,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import javax.validation.executable.ValidateOnExecution;
 import javax.ws.rs.core.HttpHeaders;
@@ -90,6 +106,9 @@ public class WebHookServiceImpl implements WebHookService {
   @Inject private TriggerExecutionService triggerExecutionService;
   @Inject private ServiceResourceService serviceResourceService;
   @Transient @Inject protected FeatureFlagService featureFlagService;
+  @Inject private SecretManager secretManager;
+  @Inject private DelegateServiceImpl delegateService;
+  @Inject private ApplicationManifestService applicationManifestService;
 
   private String getBaseUrlUI() {
     String baseUrl = configuration.getPortal().getUrl().trim();
@@ -166,7 +185,7 @@ public class WebHookServiceImpl implements WebHookService {
           && Boolean.TRUE.equals(app.getIsManualTriggerAuthorized())
           && isEmpty(httpHeaders.getHeaderString(API_KEY_HEADER))) {
         WebHookResponse webHookResponse = WebHookResponse.builder().error("Api Key cannot be empty").build();
-        return prepareResponse(webHookResponse, Response.Status.BAD_REQUEST);
+        return prepareResponse(webHookResponse, Response.Status.UNAUTHORIZED);
       }
 
       return executeTriggerWebRequest(trigger.getAppId(), token, app, webHookRequest);
@@ -186,7 +205,7 @@ public class WebHookServiceImpl implements WebHookService {
       String appId, String token, Application app, WebHookRequest webHookRequest) {
     Map<String, ArtifactSummary> serviceBuildNumbers = new HashMap<>();
     try {
-      Map<String, String> serviceManifestMapping =
+      Map<String, ManifestSummary> serviceManifestMapping =
           featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, app.getAccountId())
           ? resolveServiceHelmChartVersion(appId, webHookRequest)
           : new HashMap<>();
@@ -304,6 +323,11 @@ public class WebHookServiceImpl implements WebHookService {
     log.info("Trigger execution for the trigger {}", trigger.getUuid());
     WorkflowExecution workflowExecution =
         triggerService.triggerExecutionByWebHook(trigger, resolvedParameters, triggerExecution);
+
+    String accountId = isEmpty(trigger.getAccountId()) ? getAccountId(trigger) : trigger.getAccountId();
+    if (featureFlagService.isEnabled(GITHUB_WEBHOOK_AUTHENTICATION, accountId)) {
+      updateRuntimeUsageForSecret(trigger, workflowExecution.getUuid(), accountId);
+    }
     if (webhookTriggerProcessor.checkFileContentOptionSelected(trigger)) {
       WebHookResponse webHookResponse =
           WebHookResponse.builder()
@@ -319,6 +343,28 @@ public class WebHookServiceImpl implements WebHookService {
                                             .build();
 
       return prepareResponse(webHookResponse, Response.Status.OK);
+    }
+  }
+
+  private void updateRuntimeUsageForSecret(Trigger trigger, String workflowExecutionId, String accountId) {
+    if (trigger.getCondition().getConditionType() == TriggerConditionType.WEBHOOK) {
+      WebHookTriggerCondition webHookTriggerCondition = (WebHookTriggerCondition) trigger.getCondition();
+      if (isNotEmpty(webHookTriggerCondition.getWebHookSecret()) && isNotEmpty(workflowExecutionId)) {
+        WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, workflowExecutionId);
+        if (workflowExecution == null) {
+          log.warn("No workflow execution with id {} found.", workflowExecutionId);
+        } else {
+          SecretUsageLog usageLog = SecretUsageLog.builder()
+                                        .encryptedDataId(webHookTriggerCondition.getWebHookSecret())
+                                        .workflowExecutionId(workflowExecutionId)
+                                        .accountId(accountId)
+                                        .appId(workflowExecution.getAppId())
+                                        .envId(workflowExecution.getEnvId())
+                                        .pipelineExecution(workflowExecution.getWorkflowType() == PIPELINE)
+                                        .build();
+          wingsPersistence.save(usageLog);
+        }
+      }
     }
   }
 
@@ -369,20 +415,22 @@ public class WebHookServiceImpl implements WebHookService {
     return null;
   }
 
-  Map<String, String> resolveServiceHelmChartVersion(String appId, WebHookRequest webHookRequest) {
-    Map<String, String> serviceManifestMapping = new HashMap<>();
+  Map<String, ManifestSummary> resolveServiceHelmChartVersion(String appId, WebHookRequest webHookRequest) {
+    Map<String, ManifestSummary> serviceManifestMapping = new HashMap<>();
     List<Map<String, Object>> manifests = webHookRequest.getManifests();
     if (manifests != null) {
       for (Map<String, Object> manifest : manifests) {
         String serviceName = (String) manifest.get("service");
         String versionNumber = (String) manifest.get("versionNumber");
+        String appManifestName = (String) manifest.get("appManifestName");
         log.info("WebHook params Service name {} and Versions Number {}", serviceName, versionNumber);
         if (serviceName != null) {
           Service service = serviceResourceService.getServiceByName(appId, serviceName, false);
           if (service == null) {
             throw new InvalidRequestException("Service Name [" + serviceName + "] does not exist");
           }
-          serviceManifestMapping.put(service.getUuid(), versionNumber);
+          serviceManifestMapping.put(service.getUuid(),
+              ManifestSummary.builder().appManifestName(appManifestName).versionNo(versionNumber).build());
         }
       }
     }
@@ -424,7 +472,7 @@ public class WebHookServiceImpl implements WebHookService {
     if (EmptyPredicate.isNotEmpty(storedBranchRegex) && EmptyPredicate.isNotEmpty(branchName)) {
       validateBranchWithRegex(storedBranchRegex, branchName);
     }
-    validateWebHook(webhookSource, trigger, webhookTriggerCondition, payLoadMap, httpHeaders);
+    validateWebHook(webhookSource, trigger, webhookTriggerCondition, payLoadMap, httpHeaders, payload);
     webhookEventDetails.setPayload(payload);
     webhookEventDetails.setBranchName(branchName);
     webhookEventDetails.setCommitId(webhookEventUtils.obtainCommitId(webhookSource, httpHeaders, payLoadMap));
@@ -457,12 +505,72 @@ public class WebHookServiceImpl implements WebHookService {
 
   @VisibleForTesting
   void validateWebHook(WebhookSource webhookSource, Trigger trigger, WebHookTriggerCondition triggerCondition,
-      Map<String, Object> payLoadMap, HttpHeaders httpHeaders) {
+      Map<String, Object> payLoadMap, HttpHeaders httpHeaders, String payload) {
     if (WebhookSource.GITHUB == webhookSource) {
       validateGitHubWebhook(trigger, triggerCondition, payLoadMap, httpHeaders);
+
+      String accountId = getAccountId(trigger);
+      if (featureFlagService.isEnabled(GITHUB_WEBHOOK_AUTHENTICATION, accountId)) {
+        String gitHubHashedPayload = httpHeaders == null ? null : httpHeaders.getHeaderString(X_HUB_SIGNATURE_256);
+        validateWebHookSecret(webhookSource, triggerCondition, gitHubHashedPayload, payload, accountId);
+      }
     } else if (WebhookSource.BITBUCKET == webhookSource) {
       validateBitBucketWebhook(trigger, triggerCondition, httpHeaders);
     }
+  }
+
+  private void validateWebHookSecret(WebhookSource webhookSource, WebHookTriggerCondition triggerCondition,
+      String hashedPayload, String payLoad, String accountId) {
+    String webHookSecret = triggerCondition.getWebHookSecret();
+    if (isEmpty(webHookSecret) && isEmpty(hashedPayload)) {
+      return;
+    }
+    if (isNotEmpty(webHookSecret) && isEmpty(hashedPayload)) {
+      throw new InvalidRequestException("Harness trigger has webhook secret but its not present in " + webhookSource);
+    }
+    if (isEmpty(webHookSecret) && isNotEmpty(hashedPayload)) {
+      throw new InvalidRequestException(
+          "Webhook secret is present in " + webhookSource + " but harness trigger doesn't have it");
+    }
+
+    Optional<EncryptedDataDetail> encryptedDataDetail =
+        secretManager.encryptedDataDetails(accountId, null, webHookSecret, null);
+    if (!encryptedDataDetail.isPresent()) {
+      throw new InvalidRequestException("Error fetching the secret from database");
+    }
+
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .accountId(accountId)
+            .data(TaskData.builder()
+                      .async(false)
+                      .taskType(WEBHOOK_TRIGGER_TASK.name())
+                      .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                      .parameters(new Object[] {WebhookTriggerParameters.builder()
+                                                    .eventPayload(payLoad)
+                                                    .webhookSource(webhookSource)
+                                                    .encryptedDataDetail(encryptedDataDetail.get())
+                                                    .hashedPayload(hashedPayload)
+                                                    .build()})
+                      .build())
+            .build();
+
+    WebHookTriggerResponseData webHookTriggerResponseData = null;
+    try {
+      webHookTriggerResponseData = delegateService.executeTask(delegateTask);
+    } catch (InterruptedException e) {
+      log.error("Delegate Service executre task : validateWebHookSecret" + e);
+    }
+
+    if (ExecutionStatus.FAILED.equals(webHookTriggerResponseData.getExecutionStatus())) {
+      throw new InvalidRequestException(
+          "Error in webhook authentication: " + webHookTriggerResponseData.getErrorMessage());
+    }
+    if (!webHookTriggerResponseData.isWebhookAuthenticated()) {
+      throw new InvalidRequestException(
+          "Webhook secret present in Harness and " + webhookSource + " might be different");
+    }
+    log.info("Webhook is Authenticated");
   }
 
   private void validateBranchWithRegex(String storedBranch, String inputBranchName) {

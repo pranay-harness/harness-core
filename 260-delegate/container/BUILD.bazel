@@ -1,0 +1,37 @@
+load("@rules_pkg//:pkg.bzl", "pkg_tar")
+load("@io_bazel_rules_docker//container:container.bzl", "container_image", "container_push")
+load("@io_bazel_rules_docker//docker/util:run.bzl", "container_run_and_commit")
+
+exports_files(["delegatelocal.txt"])
+
+container_run_and_commit(
+    name = "delegate_layer_1_image",
+    commands = [
+        "apt-get update",
+        "apt-get -y install apt-utils curl unzip apt-transport-https gnupg2 vim",
+        "curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -",
+        "echo \"deb http://apt.kubernetes.io/ kubernetes-xenial main\" > /etc/apt/sources.list.d/kubernetes.list",
+        "apt-get -y install kubectl",
+        "apt-get clean",
+    ],
+    image = "@platform_ubuntu//image",
+    tags = [
+        "manual",
+        "no-cache",
+        "no-ide",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+pkg_tar(
+    name = "delegate_scripts_tar",
+    srcs = glob(["scripts/*"]),
+    mode = "0755",
+    package_dir = "/opt/harness-delegate",
+    tags = [
+        "manual",
+        "no-cache",
+        "no-ide",
+    ],
+    visibility = ["//visibility:public"],
+)

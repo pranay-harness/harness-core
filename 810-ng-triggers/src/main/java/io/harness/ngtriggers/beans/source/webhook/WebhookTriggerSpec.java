@@ -25,6 +25,7 @@ public interface WebhookTriggerSpec {
   WebhookEvent getEvent();
   List<WebhookAction> getActions();
   List<WebhookCondition> getPayloadConditions();
+  String getJexlCondition();
   List<String> getPathFilters();
   WebhookSourceRepo getType();
 

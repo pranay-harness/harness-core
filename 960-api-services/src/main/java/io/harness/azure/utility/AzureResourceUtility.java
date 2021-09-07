@@ -22,6 +22,8 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.azure.model.blueprint.ResourceScopeType;
 import io.harness.azure.model.blueprint.assignment.Assignment;
 import io.harness.exception.InvalidArgumentsException;
@@ -47,6 +49,7 @@ import lombok.experimental.UtilityClass;
 import org.jetbrains.annotations.NotNull;
 
 @UtilityClass
+@OwnedBy(HarnessTeam.CDP)
 public class AzureResourceUtility {
   private final String DELIMITER = "__";
   private final String ISO_8601_BASIC_FORMAT = "yyyyMMdd'T'HHmmss'Z'";
@@ -148,7 +151,11 @@ public class AzureResourceUtility {
     return deploymentSlotName.replace(format(DEPLOYMENT_SLOT_NAME_PREFIX_PATTERN, appName), EMPTY);
   }
 
-  public String generateAssignmentName(final String blueprintName) {
+  public String generateAssignmentNameIfBlank(final String assignmentName, final String blueprintName) {
+    if (isNoneBlank(assignmentName)) {
+      return assignmentName;
+    }
+
     return String.format(ASSIGNMENT_NAME_PATTERN, blueprintName, System.currentTimeMillis());
   }
 

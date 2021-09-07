@@ -85,4 +85,6 @@ public class SecretUsageLog implements PersistentEntity, UuidAware, CreatedAtAwa
   @FdTtlIndex
   @Builder.Default
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
+
+  boolean pipelineExecution;
 }

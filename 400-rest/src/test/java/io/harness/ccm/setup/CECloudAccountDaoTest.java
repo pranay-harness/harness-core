@@ -8,11 +8,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.entities.billing.CECloudAccount;
+import io.harness.ccm.commons.entities.billing.CECloudAccount.AccountStatus;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
-import software.wings.beans.ce.CECloudAccount;
-import software.wings.beans.ce.CECloudAccount.AccountStatus;
 
 import com.google.inject.Inject;
 import java.util.List;

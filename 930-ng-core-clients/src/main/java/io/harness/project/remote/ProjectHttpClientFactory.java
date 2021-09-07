@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.remote.client.AbstractHttpClientFactory;
+import io.harness.remote.client.ClientMode;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
@@ -18,8 +19,9 @@ import lombok.experimental.FieldDefaults;
 @Singleton
 public class ProjectHttpClientFactory extends AbstractHttpClientFactory implements Provider<ProjectClient> {
   public ProjectHttpClientFactory(ServiceHttpClientConfig projectManagerClientConfig, String serviceSecret,
-      ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory, String clientId) {
-    super(projectManagerClientConfig, serviceSecret, tokenGenerator, kryoConverterFactory, clientId);
+      ServiceTokenGenerator tokenGenerator, KryoConverterFactory kryoConverterFactory, String clientId,
+      ClientMode clientMode) {
+    super(projectManagerClientConfig, serviceSecret, tokenGenerator, kryoConverterFactory, clientId, false, clientMode);
   }
 
   @Override

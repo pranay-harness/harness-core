@@ -4,18 +4,23 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.AbstractConsumer;
-import io.harness.eventsframework.api.ConsumerShutdownException;
+import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.redis.RedisConfig;
 
+import io.github.resilience4j.core.IntervalFunction;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
+import io.vavr.control.Try;
 import java.time.Duration;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.RedissonShutdownException;
 import org.redisson.api.PendingEntry;
 import org.redisson.api.RStream;
 import org.redisson.api.RedissonClient;
@@ -30,26 +35,31 @@ public abstract class RedisAbstractConsumer extends AbstractConsumer {
   protected RedissonClient redissonClient;
   protected Duration maxProcessingTime;
   protected int batchSize;
+  private Retry retry;
 
   public RedisAbstractConsumer(
       String topicName, String groupName, @NotNull RedisConfig redisConfig, Duration maxProcessingTime, int batchSize) {
     super(topicName, groupName);
-    initConsumerGroup(redisConfig, maxProcessingTime, batchSize);
+    initConsumerGroup(topicName, redisConfig, maxProcessingTime, batchSize);
   }
 
   public RedisAbstractConsumer(String topicName, String groupName, String consumerName, RedisConfig redisConfig,
       Duration maxProcessingTime, int batchSize) {
     super(topicName, groupName, consumerName);
-    initConsumerGroup(redisConfig, maxProcessingTime, batchSize);
+    initConsumerGroup(topicName, redisConfig, maxProcessingTime, batchSize);
   }
 
-  private void initConsumerGroup(RedisConfig redisConfig, Duration maxProcessingTime, int batchSize) {
+  private void initConsumerGroup(String topicName, RedisConfig redisConfig, Duration maxProcessingTime, int batchSize) {
     this.redissonClient = RedisUtils.getClient(redisConfig);
     this.stream = RedisUtils.getStream(getTopicName(), redissonClient, redisConfig.getEnvNamespace());
     this.deadLetterQueue =
         RedisUtils.getDeadLetterStream(getTopicName(), redissonClient, redisConfig.getEnvNamespace());
     this.maxProcessingTime = maxProcessingTime;
     this.batchSize = batchSize;
+    RetryConfig retryConfig =
+        RetryConfig.custom().intervalFunction(IntervalFunction.ofExponentialBackoff(1000, 1.5)).maxAttempts(5).build();
+
+    this.retry = Retry.of("redisConsumer:" + topicName, retryConfig);
     createConsumerGroup();
   }
 
@@ -64,72 +74,93 @@ public abstract class RedisAbstractConsumer extends AbstractConsumer {
 
   private void moveMessageToDeadLetterQueue(
       StreamMessageId messageId, String groupName, Map<StreamMessageId, Map<String, String>> messages) {
-    Map<String, String> messageData = messages.get(messageId);
+    Map<String, String> messageData = messages.getOrDefault(messageId, new HashMap<>());
     messageData.put("prevMessageId", messageId.toString());
     deadLetterQueue.addAll(messageData, RedisUtils.MAX_DEAD_LETTER_QUEUE_SIZE, false);
     stream.ack(groupName, messageId);
     log.warn("Pushed {} to dead letter queue as max retries exceeded. Message data: {}", messageId, messageData);
   }
 
-  private List<PendingEntry> getPendingEntries() throws ConsumerShutdownException {
-    while (true) {
-      try {
-        return stream.listPending(getGroupName(), StreamMessageId.MIN, StreamMessageId.MAX, batchSize);
-      } catch (RedissonShutdownException e) {
-        throw new ConsumerShutdownException("Consumer " + getName() + " is shutdown.");
-      } catch (RedisException e) {
-        log.warn("Consumer " + getName() + " failed getPendingDetails", e);
-        waitForRedisToComeUp();
-      }
-    }
+  private List<PendingEntry> getPendingEntries() {
+    Supplier<List<PendingEntry>> getPendingEntriesSupplier = () -> getPendingEntriesInternal();
+
+    Supplier<List<PendingEntry>> retryingGetPendingEntries = Retry.decorateSupplier(retry, getPendingEntriesSupplier);
+    return Try.ofSupplier(retryingGetPendingEntries)
+        .recover(throwable -> {
+          createConsumerGroupIfNotPresent(throwable);
+          // Exhausted exponential backoff to try operating on redis
+          throw new EventsFrameworkDownException(throwable.getMessage());
+        })
+        .get();
   }
 
-  private List<Message> claimEntries(List<PendingEntry> pendingEntries) throws ConsumerShutdownException {
+  private List<PendingEntry> getPendingEntriesInternal() {
+    return stream.listPending(getGroupName(), StreamMessageId.MIN, StreamMessageId.MAX, batchSize);
+  }
+
+  private List<Message> claimEntries(List<PendingEntry> pendingEntries) {
+    Supplier<List<Message>> getClaimEntriesSupplier = () -> claimEntriesInternal(pendingEntries);
+
+    Supplier<List<Message>> retryingClaimEntries = Retry.decorateSupplier(retry, getClaimEntriesSupplier);
+    return Try.ofSupplier(retryingClaimEntries)
+        .recover(throwable -> {
+          createConsumerGroupIfNotPresent(throwable);
+          // Exhausted exponential backoff to try operating on redis
+          throw new EventsFrameworkDownException(throwable.getMessage());
+        })
+        .get();
+  }
+
+  private List<Message> claimEntriesInternal(List<PendingEntry> pendingEntries) {
     String groupName = getGroupName();
-    while (true) {
-      try {
-        if (pendingEntries.isEmpty()) {
-          return Collections.emptyList();
-        } else {
-          StreamMessageId[] messageIds =
-              pendingEntries.stream().map(PendingEntry::getId).toArray(StreamMessageId[] ::new);
-          Map<StreamMessageId, Map<String, String>> messages =
-              stream.claim(groupName, getName(), maxProcessingTime.toMillis(), TimeUnit.MILLISECONDS, messageIds);
-
-          for (PendingEntry entry : pendingEntries) {
-            StreamMessageId messageId = entry.getId();
-            if (messages.containsKey(messageId) && entry.getLastTimeDelivered() >= RedisUtils.UNACKED_RETRY_COUNT) {
-              moveMessageToDeadLetterQueue(messageId, groupName, messages);
-            }
-          }
-          return RedisUtils.getMessageObject(messages);
+    if (pendingEntries.isEmpty()) {
+      return Collections.emptyList();
+    } else {
+      Map<StreamMessageId, Map<String, String>> messages = executeClaimCommand(pendingEntries);
+      for (PendingEntry entry : pendingEntries) {
+        StreamMessageId messageId = entry.getId();
+        if (entry.getLastTimeDelivered() >= RedisUtils.UNACKED_RETRY_COUNT) {
+          moveMessageToDeadLetterQueue(messageId, groupName, messages);
         }
-      } catch (RedissonShutdownException e) {
-        throw new ConsumerShutdownException("Consumer " + getName() + " is shutdown.");
-      } catch (RedisException e) {
-        log.warn("Consumer " + getName() + " failed getPendingDetails", e);
-        waitForRedisToComeUp();
       }
+      return RedisUtils.getMessageObject(messages);
     }
   }
 
-  private List<Message> getNewMessages(Duration maxWaitTime) throws ConsumerShutdownException {
-    while (true) {
-      try {
-        Map<StreamMessageId, Map<String, String>> result =
-            stream.readGroup(getGroupName(), getName(), batchSize, maxWaitTime.toMillis(), TimeUnit.MILLISECONDS);
-        return RedisUtils.getMessageObject(result);
-      } catch (RedissonShutdownException e) {
-        throw new ConsumerShutdownException("Consumer " + getName() + " is shutdown.");
-      } catch (RedisException e) {
-        log.warn("Consumer " + getName() + " failed getNewMessages", e);
-        waitForRedisToComeUp();
+  private Map<StreamMessageId, Map<String, String>> executeClaimCommand(List<PendingEntry> pendingEntries) {
+    StreamMessageId[] messageIds = pendingEntries.stream().map(PendingEntry::getId).toArray(StreamMessageId[] ::new);
+    Map<StreamMessageId, Map<String, String>> messages = Collections.emptyMap();
+    try {
+      messages =
+          stream.claim(getGroupName(), getName(), maxProcessingTime.toMillis(), TimeUnit.MILLISECONDS, messageIds);
+    } catch (RedisException e) {
+      if (e.getMessage().matches("(.*)Unexpected exception while processing command(.*)")) {
+        log.warn("Claim called with messageIds which were not present - {}", messageIds);
       }
     }
+    return messages;
   }
 
-  protected List<Message> getMessages(boolean processUnackedMessagesBeforeNewMessages, Duration maxWaitTime)
-      throws ConsumerShutdownException {
+  private List<Message> getNewMessages(Duration maxWaitTime) {
+    Supplier<List<Message>> getNewMessagesSupplier = () -> getNewMessagesInternal(maxWaitTime);
+
+    Supplier<List<Message>> retryingGetNewMessages = Retry.decorateSupplier(retry, getNewMessagesSupplier);
+    return Try.ofSupplier(retryingGetNewMessages)
+        .recover(throwable -> {
+          createConsumerGroupIfNotPresent(throwable);
+          // Exhausted exponential backoff to try operating on redis
+          throw new EventsFrameworkDownException(throwable.getMessage());
+        })
+        .get();
+  }
+
+  private List<Message> getNewMessagesInternal(Duration maxWaitTime) {
+    Map<StreamMessageId, Map<String, String>> result =
+        stream.readGroup(getGroupName(), getName(), batchSize, maxWaitTime.toMillis(), TimeUnit.MILLISECONDS);
+    return RedisUtils.getMessageObject(result);
+  }
+
+  protected List<Message> getMessages(boolean processUnackedMessagesBeforeNewMessages, Duration maxWaitTime) {
     List<PendingEntry> pendingEntries = getPendingEntries();
     if (pendingEntries.isEmpty()) {
       return getNewMessages(maxWaitTime);
@@ -148,31 +179,36 @@ public abstract class RedisAbstractConsumer extends AbstractConsumer {
   }
 
   @Override
-  public void acknowledge(String messageId) throws ConsumerShutdownException {
-    while (true) {
-      try {
-        stream.ack(getGroupName(), RedisUtils.getStreamId(messageId));
-        return;
-      } catch (RedissonShutdownException e) {
-        throw new ConsumerShutdownException("Consumer " + getName() + " failed acknowledge - Consumer shutdown.");
-      } catch (RedisException e) {
-        log.warn("Redis is not up for acknowledge", e);
-        waitForRedisToComeUp();
-      }
+  public void acknowledge(String messageId) {
+    Supplier<Void> acknowledgeSupplier = () -> {
+      acknowledgeInternal(messageId);
+      return null;
+    };
+
+    Supplier<Void> retryingAckMessage = Retry.decorateSupplier(retry, acknowledgeSupplier);
+    Try.ofSupplier(retryingAckMessage)
+        .recover(throwable -> {
+          createConsumerGroupIfNotPresent(throwable);
+          // Exhausted exponential backoff to try operating on redis
+          throw new EventsFrameworkDownException(throwable.getMessage());
+        })
+        .get();
+  }
+
+  private void acknowledgeInternal(String messageId) {
+    stream.ack(getGroupName(), RedisUtils.getStreamId(messageId));
+  }
+
+  private void createConsumerGroupIfNotPresent(Throwable e) {
+    if (e.getMessage().matches("(.*)NOGROUP No such key(.*)or consumer group(.*)")) {
+      log.info("Key or consumer group not present, attempting to create consumer group {} for {}", getGroupName(),
+          getTopicName());
+      createConsumerGroup();
     }
   }
 
   @Override
   public void shutdown() {
     redissonClient.shutdown();
-  }
-
-  protected void waitForRedisToComeUp() {
-    try {
-      TimeUnit.MILLISECONDS.sleep(500);
-    } catch (InterruptedException e) {
-      log.error("Polling to redis was interrupted, shutting down consumer", e);
-      shutdown();
-    }
   }
 }

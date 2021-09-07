@@ -32,6 +32,8 @@ public class ConnectorNextGenRegistrars {
           .add(ConnectorNextGenKryoRegistrar.class)
           .addAll(PmsCommonsModuleRegistrars.kryoRegistrars)
           .addAll(GitSyncSdkRegistrar.kryoRegistrars)
+          .addAll(NGAuditCommonsRegistrars.kryoRegistrars)
+          .addAll(PmsSdkCoreModuleRegistrars.kryoRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -47,10 +49,15 @@ public class ConnectorNextGenRegistrars {
           .add(PmsSdkCoreMorphiaRegistrar.class)
           .addAll(PmsCommonsModuleRegistrars.morphiaRegistrars)
           .addAll(GitSyncSdkRegistrar.morphiaRegistrars)
+          .addAll(NGAuditCommonsRegistrars.morphiaRegistrars)
+          .addAll(OutboxEventRegistrars.morphiaRegistrars)
+          .addAll(PmsSdkCoreModuleRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableList<Class<? extends Converter<?, ?>>> springConverters =
-      ImmutableList.<Class<? extends Converter<?, ?>>>builder().build();
+      ImmutableList.<Class<? extends Converter<?, ?>>>builder()
+          .addAll(PmsSdkCoreModuleRegistrars.springConverters)
+          .build();
 
   public static final ImmutableList<YamlSchemaRootClass> yamlSchemaRegistrars =
       ImmutableList.<YamlSchemaRootClass>builder()

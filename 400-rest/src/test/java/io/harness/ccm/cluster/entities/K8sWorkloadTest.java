@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.entities.k8s.K8sWorkload;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableMap;

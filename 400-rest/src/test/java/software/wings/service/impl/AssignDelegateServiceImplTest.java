@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.beans.EnvironmentType.NON_PROD;
 import static io.harness.beans.EnvironmentType.PROD;
+import static io.harness.beans.FeatureName.NG_CG_TASK_ASSIGNMENT_ISOLATION;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.DelegateInstanceStatus.ENABLED;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
@@ -28,14 +29,6 @@ import static software.wings.service.impl.AssignDelegateServiceImpl.SCOPE_WILDCA
 import static software.wings.service.impl.AssignDelegateServiceImpl.WHITELIST_TTL;
 import static software.wings.service.impl.AssignDelegateServiceImplTest.CriteriaType.MATCHING_CRITERIA;
 import static software.wings.service.impl.AssignDelegateServiceImplTest.CriteriaType.NOT_MATCHING_CRITERIA;
-import static software.wings.service.impl.instance.InstanceSyncTestConstants.COMPUTE_PROVIDER_SETTING_ID;
-import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_ID;
-import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_ID;
-import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
-import static software.wings.utils.WingsTestConstants.APP_ID;
-import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
-import static software.wings.utils.WingsTestConstants.ENV_ID;
-import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -52,18 +45,19 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
-import io.harness.beans.shared.tasks.Cd2SetupFields;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateBuilder;
 import io.harness.delegate.beans.DelegateActivity;
+import io.harness.delegate.beans.DelegateEntityOwner;
 import io.harness.delegate.beans.DelegateInstanceStatus;
-import io.harness.delegate.beans.DelegateOwner;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
 import io.harness.delegate.beans.DelegateScope;
@@ -89,7 +83,6 @@ import software.wings.beans.TaskType;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.delegatetasks.validation.DelegateConnectionResult.DelegateConnectionResultBuilder;
 import software.wings.delegatetasks.validation.DelegateConnectionResult.DelegateConnectionResultKeys;
-import software.wings.service.impl.instance.InstanceSyncTestConstants;
 import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
@@ -129,6 +122,15 @@ import org.mockito.Mockito;
 import org.mongodb.morphia.query.Query;
 
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+@OwnedBy(HarnessTeam.DEL)
+@BreakDependencyOn("software.wings.WingsBaseTest")
+@BreakDependencyOn("software.wings.beans.AwsAmiInfrastructureMapping")
+@BreakDependencyOn("software.wings.beans.Environment")
+@BreakDependencyOn("software.wings.beans.InfrastructureMapping")
+@BreakDependencyOn("software.wings.beans.InfrastructureMappingType")
+@BreakDependencyOn("software.wings.service.intfc.InfrastructureMappingService")
+@BreakDependencyOn("software.wings.beans.GcpKubernetesInfrastructureMapping")
+@BreakDependencyOn("software.wings.service.intfc.EnvironmentService")
 public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Mock private EnvironmentService environmentService;
   @Mock private DelegateService delegateService;
@@ -151,8 +153,8 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
   @Before
   public void setUp() throws IllegalAccessException, ExecutionException {
-    Environment environment = anEnvironment().uuid(ENV_ID).appId(APP_ID).environmentType(PROD).build();
-    when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(environment);
+    Environment environment = anEnvironment().uuid("ENV_ID").appId("APP_ID").environmentType(PROD).build();
+    when(environmentService.get("APP_ID", "ENV_ID", false)).thenReturn(environment);
     when(delegateConnectionResultCache.get(any(ImmutablePair.class))).thenReturn(Optional.empty());
     when(accountDelegatesCache.get(anyString())).thenReturn(Collections.emptyList());
   }
@@ -238,21 +240,21 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     DelegateTaskBuilder delegateTaskBuilder =
         DelegateTask.builder()
-            .accountId(ACCOUNT_ID)
-            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
-            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
+            .accountId("ACCOUNT_ID")
+            .setupAbstraction("appId", "APP_ID")
+            .setupAbstraction("envId", "ENV_ID")
             .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build());
 
-    DelegateBuilder delegateBuilder = Delegate.builder().accountId(ACCOUNT_ID).uuid(DELEGATE_ID);
+    DelegateBuilder delegateBuilder = Delegate.builder().accountId("ACCOUNT_ID").uuid("DELEGATE_ID");
 
     for (DelegateScopeTestData test : tests) {
       Delegate delegate =
           delegateBuilder.includeScopes(test.getIncludeScopes()).excludeScopes(test.getExcludeScopes()).build();
-      when(delegateCache.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
+      when(delegateCache.get("ACCOUNT_ID", "DELEGATE_ID", false)).thenReturn(delegate);
 
       BatchDelegateSelectionLog batch =
           BatchDelegateSelectionLog.builder().taskId(delegateTaskBuilder.build().getUuid()).build();
-      assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTaskBuilder.build()))
+      assertThat(assignDelegateService.canAssign(batch, "DELEGATE_ID", delegateTaskBuilder.build()))
           .isEqualTo(test.isAssignable());
 
       verify(delegateSelectionLogsService, Mockito.times(test.getNumOfNoIncludeScopeMatchedInvocations()))
@@ -268,34 +270,34 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   public void testAssignByDelegateIncludeScopesWithWildcard() {
     DelegateTaskBuilder delegateTaskBuilder =
         DelegateTask.builder()
-            .accountId(ACCOUNT_ID)
-            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, SCOPE_WILDCARD)
-            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
+            .accountId("ACCOUNT_ID")
+            .setupAbstraction("appId", SCOPE_WILDCARD)
+            .setupAbstraction("envId", "ENV_ID")
             .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build());
 
-    DelegateBuilder delegateBuilder = Delegate.builder().accountId(ACCOUNT_ID).uuid(DELEGATE_ID);
+    DelegateBuilder delegateBuilder = Delegate.builder().accountId("ACCOUNT_ID").uuid("DELEGATE_ID");
 
     Delegate delegate = delegateBuilder
                             .includeScopes(ImmutableList.of(
                                 DelegateScope.builder().applications(ImmutableList.of("APPLICATION_ID")).build()))
                             .build();
-    when(delegateCache.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
+    when(delegateCache.get("ACCOUNT_ID", "DELEGATE_ID", false)).thenReturn(delegate);
     when(featureFlagService.isEnabled(any(), anyString())).thenReturn(true);
 
     BatchDelegateSelectionLog batch =
         BatchDelegateSelectionLog.builder().taskId(delegateTaskBuilder.build().getUuid()).build();
-    assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTaskBuilder.build())).isEqualTo(true);
+    assertThat(assignDelegateService.canAssign(batch, "DELEGATE_ID", delegateTaskBuilder.build())).isEqualTo(true);
 
     delegate = delegateBuilder
                    .includeScopes(ImmutableList.of(
                        DelegateScope.builder().environments(ImmutableList.of("ENVIRONMENT_ID")).build()))
                    .build();
-    when(delegateCache.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
+    when(delegateCache.get("ACCOUNT_ID", "DELEGATE_ID", false)).thenReturn(delegate);
 
-    delegateTaskBuilder.setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, SCOPE_WILDCARD);
+    delegateTaskBuilder.setupAbstraction("envId", SCOPE_WILDCARD);
 
     batch = BatchDelegateSelectionLog.builder().taskId(delegateTaskBuilder.build().getUuid()).build();
-    assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTaskBuilder.build())).isEqualTo(true);
+    assertThat(assignDelegateService.canAssign(batch, "DELEGATE_ID", delegateTaskBuilder.build())).isEqualTo(true);
   }
 
   @Test
@@ -304,34 +306,34 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   public void testAssignByDelegateExcludeScopesWithWildcard() {
     DelegateTaskBuilder delegateTaskBuilder =
         DelegateTask.builder()
-            .accountId(ACCOUNT_ID)
-            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, SCOPE_WILDCARD)
-            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
+            .accountId("ACCOUNT_ID")
+            .setupAbstraction("appId", SCOPE_WILDCARD)
+            .setupAbstraction("envId", "ENV_ID")
             .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build());
 
-    DelegateBuilder delegateBuilder = Delegate.builder().accountId(ACCOUNT_ID).uuid(DELEGATE_ID);
+    DelegateBuilder delegateBuilder = Delegate.builder().accountId("ACCOUNT_ID").uuid("DELEGATE_ID");
 
     Delegate delegate = delegateBuilder
                             .excludeScopes(ImmutableList.of(
                                 DelegateScope.builder().applications(ImmutableList.of("APPLICATION_ID")).build()))
                             .build();
-    when(delegateCache.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
+    when(delegateCache.get("ACCOUNT_ID", "DELEGATE_ID", false)).thenReturn(delegate);
     when(featureFlagService.isEnabled(any(), anyString())).thenReturn(true);
 
     BatchDelegateSelectionLog batch =
         BatchDelegateSelectionLog.builder().taskId(delegateTaskBuilder.build().getUuid()).build();
-    assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTaskBuilder.build())).isEqualTo(true);
+    assertThat(assignDelegateService.canAssign(batch, "DELEGATE_ID", delegateTaskBuilder.build())).isEqualTo(true);
 
     delegate = delegateBuilder
                    .excludeScopes(ImmutableList.of(
                        DelegateScope.builder().environments(ImmutableList.of("ENVIRONMENT_ID")).build()))
                    .build();
-    when(delegateCache.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
+    when(delegateCache.get("ACCOUNT_ID", "DELEGATE_ID", false)).thenReturn(delegate);
 
-    delegateTaskBuilder.setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, SCOPE_WILDCARD);
+    delegateTaskBuilder.setupAbstraction("enviId", SCOPE_WILDCARD);
 
     batch = BatchDelegateSelectionLog.builder().taskId(delegateTaskBuilder.build().getUuid()).build();
-    assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTaskBuilder.build())).isEqualTo(true);
+    assertThat(assignDelegateService.canAssign(batch, "DELEGATE_ID", delegateTaskBuilder.build())).isEqualTo(true);
   }
 
   @Value
@@ -366,8 +368,8 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     // Test for temporary workaround, until all tasks start sending envType and serviceId
     Map<String, Set<String>> scopingRulesWorkaroundMap5 = new HashMap<>();
-    scopingRulesWorkaroundMap5.put(Cd1SetupFields.ENV_TYPE_FIELD, new HashSet<>(singletonList(PROD.name())));
-    scopingRulesWorkaroundMap5.put(Cd1SetupFields.SERVICE_ID_FIELD, new HashSet<>(singletonList("s1")));
+    scopingRulesWorkaroundMap5.put("envType", new HashSet<>(singletonList(PROD.name())));
+    scopingRulesWorkaroundMap5.put("serviceId", new HashSet<>(singletonList("s1")));
 
     Environment env = new Environment();
     env.setName("test environment");
@@ -396,8 +398,8 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                      .task(DelegateTask.builder()
                                .uuid(generateUuid())
                                .accountId(accountId)
-                               .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
-                               .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infraMappingId)
+                               .setupAbstraction("envId", envId)
+                               .setupAbstraction("infrastructureMappingId", infraMappingId)
                                .data(TaskData.builder()
                                          .taskType(TaskType.HTTP.name())
                                          .async(true)
@@ -571,11 +573,13 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                    .accountId(accountId)
                                    .uuid(generateUuid())
                                    .delegateProfileId(generateUuid())
+                                   .ng(true)
                                    .build())
                      .task(DelegateTask.builder()
                                .uuid(generateUuid())
                                .accountId(accountId)
                                .setupAbstraction("k1", "v13")
+                               .setupAbstraction("ng", "TRUE")
                                .data(TaskData.builder()
                                          .taskType(TaskType.HTTP.name())
                                          .async(true)
@@ -782,8 +786,8 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
             .build();
 
     DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder()
-                                                  .accountId(ACCOUNT_ID)
-                                                  .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
+                                                  .accountId("ACCOUNT_ID")
+                                                  .setupAbstraction("appId", "APP_ID")
                                                   .data(TaskData.builder()
                                                             .async(true)
                                                             .taskType(TaskType.SCRIPT.name())
@@ -791,11 +795,11 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                                             .build());
 
     DelegateProfile delegateProfile =
-        DelegateProfile.builder().uuid(generateUuid()).accountId(ACCOUNT_ID).name("testProfileName").build();
+        DelegateProfile.builder().uuid(generateUuid()).accountId("ACCOUNT_ID").name("testProfileName").build();
 
     DelegateBuilder delegateBuilder = Delegate.builder()
-                                          .accountId(ACCOUNT_ID)
-                                          .uuid(DELEGATE_ID)
+                                          .accountId("ACCOUNT_ID")
+                                          .uuid("DELEGATE_ID")
                                           .hostName("a.b.c.")
                                           .delegateName("testDelegateName")
                                           .delegateProfileId(delegateProfile.getUuid())
@@ -804,33 +808,33 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     for (TagTestData test : tests) {
       Delegate delegate = delegateBuilder.tags(test.getDelegateTags()).build();
-      when(delegateCache.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
+      when(delegateCache.get("ACCOUNT_ID", "DELEGATE_ID", false)).thenReturn(delegate);
       when(delegateService.retrieveDelegateSelectors(delegate))
           .thenReturn(delegate.getTags() == null ? new HashSet<>() : new HashSet<>(test.getDelegateTags()));
 
       DelegateTask delegateTask = delegateTaskBuilder.executionCapabilities(test.getExecutionCapabilities()).build();
       BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
-      assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask)).isEqualTo(test.isAssignable());
+      assertThat(assignDelegateService.canAssign(batch, "DELEGATE_ID", delegateTask)).isEqualTo(test.isAssignable());
 
       verify(delegateSelectionLogsService, Mockito.times(test.getNumOfMissingAllSelectorsInvocations()))
-          .logMissingAllSelectors(batch, ACCOUNT_ID, DELEGATE_ID);
+          .logMissingAllSelectors(batch, "ACCOUNT_ID", "DELEGATE_ID");
       verify(delegateSelectionLogsService, Mockito.times(test.getNumOfMissingSelectorInvocations()))
-          .logMissingSelector(eq(batch), eq(ACCOUNT_ID), eq(DELEGATE_ID), anyString(), anyString());
+          .logMissingSelector(eq(batch), eq("ACCOUNT_ID"), eq("DELEGATE_ID"), anyString(), anyString());
     }
 
-    delegateTaskBuilder.setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID);
+    delegateTaskBuilder.setupAbstraction("envId", "ENV_ID");
     delegateBuilder.excludeScopes(
         ImmutableList.of(DelegateScope.builder().environmentTypes(ImmutableList.of(PROD)).build()));
 
     for (TagTestData test : tests) {
       Delegate delegate = delegateBuilder.tags(test.getDelegateTags()).build();
-      when(delegateCache.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
+      when(delegateCache.get("ACCOUNT_ID", "DELEGATE_ID", false)).thenReturn(delegate);
       when(delegateService.retrieveDelegateSelectors(delegate))
           .thenReturn(delegate.getTags() == null ? new HashSet<>() : new HashSet<>(test.getDelegateTags()));
 
       DelegateTask delegateTask = delegateTaskBuilder.executionCapabilities(test.getExecutionCapabilities()).build();
       BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
-      assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask)).isFalse();
+      assertThat(assignDelegateService.canAssign(batch, "DELEGATE_ID", delegateTask)).isFalse();
     }
   }
 
@@ -882,8 +886,8 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                    .build();
 
     DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder()
-                                                  .accountId(ACCOUNT_ID)
-                                                  .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
+                                                  .accountId("ACCOUNT_ID")
+                                                  .setupAbstraction("appId", "APP_ID")
                                                   .data(TaskData.builder()
                                                             .async(true)
                                                             .taskType(TaskType.SCRIPT.name())
@@ -891,18 +895,18 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                                             .build());
 
     DelegateBuilder delegateBuilder = Delegate.builder()
-                                          .accountId(ACCOUNT_ID)
-                                          .uuid(DELEGATE_ID)
+                                          .accountId("ACCOUNT_ID")
+                                          .uuid("DELEGATE_ID")
                                           .includeScopes(emptyList())
                                           .excludeScopes(emptyList());
 
     for (NameTestData test : tests) {
       Delegate delegate = delegateBuilder.delegateName(test.getDelegateName()).hostName(test.getHostName()).build();
-      when(delegateCache.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
+      when(delegateCache.get("ACCOUNT_ID", "DELEGATE_ID", false)).thenReturn(delegate);
 
       DelegateTask delegateTask = delegateTaskBuilder.executionCapabilities(test.getExecutionCapabilities()).build();
       BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
-      assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask)).isEqualTo(test.isAssignable());
+      assertThat(assignDelegateService.canAssign(batch, "DELEGATE_ID", delegateTask)).isEqualTo(test.isAssignable());
     }
   }
 
@@ -911,8 +915,8 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldSaveConnectionResults() {
     List<DelegateConnectionResult> results = singletonList(DelegateConnectionResult.builder()
-                                                               .accountId(ACCOUNT_ID)
-                                                               .delegateId(DELEGATE_ID)
+                                                               .accountId("ACCOUNT_ID")
+                                                               .delegateId("DELEGATE_ID")
                                                                .criteria("criteria")
                                                                .validated(true)
                                                                .build());
@@ -930,15 +934,15 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldUpdateConnectionResults() {
     persistence.save(DelegateConnectionResult.builder()
-                         .accountId(ACCOUNT_ID)
-                         .delegateId(DELEGATE_ID)
+                         .accountId("ACCOUNT_ID")
+                         .delegateId("DELEGATE_ID")
                          .criteria("criteria")
                          .validated(false)
                          .build());
 
     List<DelegateConnectionResult> results = singletonList(DelegateConnectionResult.builder()
-                                                               .accountId(ACCOUNT_ID)
-                                                               .delegateId(DELEGATE_ID)
+                                                               .accountId("ACCOUNT_ID")
+                                                               .delegateId("DELEGATE_ID")
                                                                .criteria("criteria")
                                                                .validated(true)
                                                                .build());
@@ -946,7 +950,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     assignDelegateService.saveConnectionResults(results);
 
     List<DelegateConnectionResult> saved = persistence.createQuery(DelegateConnectionResult.class)
-                                               .filter(DelegateConnectionResultKeys.accountId, ACCOUNT_ID)
+                                               .filter(DelegateConnectionResultKeys.accountId, "ACCOUNT_ID")
                                                .asList();
     assertThat(saved).isNotNull();
     assertThat(saved.size()).isEqualTo(1);
@@ -959,8 +963,8 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldBeWhitelisted() {
     persistence.save(DelegateConnectionResult.builder()
-                         .accountId(ACCOUNT_ID)
-                         .delegateId(DELEGATE_ID)
+                         .accountId("ACCOUNT_ID")
+                         .delegateId("DELEGATE_ID")
                          .criteria("criteria")
                          .validated(true)
                          .build());
@@ -968,7 +972,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     Object[] params = {HttpTaskParameters.builder().url("criteria").build()};
 
     DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(ACCOUNT_ID)
+                                    .accountId("ACCOUNT_ID")
                                     .data(TaskData.builder()
                                               .async(true)
                                               .taskType(TaskType.HTTP.name())
@@ -977,7 +981,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                               .build())
                                     .build();
 
-    assertThat(assignDelegateService.isWhitelisted(delegateTask, DELEGATE_ID)).isTrue();
+    assertThat(assignDelegateService.isWhitelisted(delegateTask, "DELEGATE_ID")).isTrue();
   }
 
   @Test
@@ -985,7 +989,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldNotBeWhitelistedDiffCriteria() throws ExecutionException {
     DelegateTask delegateTask = createDelegateTask(true, NOT_MATCHING_CRITERIA);
-    assertThat(assignDelegateService.isWhitelisted(delegateTask, DELEGATE_ID)).isFalse();
+    assertThat(assignDelegateService.isWhitelisted(delegateTask, "DELEGATE_ID")).isFalse();
   }
 
   @Test
@@ -993,7 +997,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldNotBeWhitelistedWhenNotValidated() throws ExecutionException {
     DelegateTask delegateTask = createDelegateTask(false, MATCHING_CRITERIA);
-    assertThat(assignDelegateService.isWhitelisted(delegateTask, DELEGATE_ID)).isFalse();
+    assertThat(assignDelegateService.isWhitelisted(delegateTask, "DELEGATE_ID")).isFalse();
   }
 
   @Test
@@ -1004,27 +1008,27 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     List<String> delegateIds = assignDelegateService.connectedWhitelistedDelegates(delegateTask);
 
     assertThat(delegateIds.size()).isEqualTo(1);
-    assertThat(delegateIds.get(0)).isEqualTo(DELEGATE_ID);
+    assertThat(delegateIds.get(0)).isEqualTo("DELEGATE_ID");
   }
 
   enum CriteriaType { MATCHING_CRITERIA, NOT_MATCHING_CRITERIA }
 
   private DelegateTask createDelegateTask(boolean validated, CriteriaType criteria) throws ExecutionException {
     Delegate delegate = Delegate.builder()
-                            .accountId(ACCOUNT_ID)
-                            .uuid(DELEGATE_ID)
+                            .accountId("ACCOUNT_ID")
+                            .uuid("DELEGATE_ID")
                             .status(ENABLED)
                             .lastHeartBeat(clock.millis())
                             .build();
 
-    when(accountDelegatesCache.get(ACCOUNT_ID)).thenReturn(asList(delegate));
+    when(accountDelegatesCache.get("ACCOUNT_ID")).thenReturn(asList(delegate));
 
     HttpConnectionExecutionCapability matchingExecutionCapability =
         buildHttpConnectionExecutionCapability("http//www.matching.com", null);
 
     DelegateConnectionResult connectionResult = DelegateConnectionResult.builder()
-                                                    .accountId(ACCOUNT_ID)
-                                                    .delegateId(DELEGATE_ID)
+                                                    .accountId("ACCOUNT_ID")
+                                                    .delegateId("DELEGATE_ID")
                                                     .criteria(matchingExecutionCapability.fetchCapabilityBasis())
                                                     .validated(validated)
                                                     .build();
@@ -1032,7 +1036,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     when(delegateConnectionResultCache.get(ImmutablePair.of(delegate.getUuid(), connectionResult.getCriteria())))
         .thenReturn(of(connectionResult));
 
-    when(delegateCache.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
+    when(delegateCache.get("ACCOUNT_ID", "DELEGATE_ID", false)).thenReturn(delegate);
 
     HttpConnectionExecutionCapability executionCapability = criteria == MATCHING_CRITERIA
         ? matchingExecutionCapability
@@ -1040,7 +1044,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     Object[] params = {HttpTaskParameters.builder().url(executionCapability.getUrl()).build()};
     return DelegateTask.builder()
-        .accountId(ACCOUNT_ID)
+        .accountId("ACCOUNT_ID")
         .data(TaskData.builder()
                   .async(true)
                   .taskType(TaskType.HTTP.name())
@@ -1067,23 +1071,23 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldNotGetConnectedWhitelistedDelegatesOldHeartbeat() {
     Delegate delegate = Delegate.builder()
-                            .accountId(ACCOUNT_ID)
-                            .uuid(DELEGATE_ID)
+                            .accountId("ACCOUNT_ID")
+                            .uuid("DELEGATE_ID")
                             .status(ENABLED)
                             .lastHeartBeat(clock.millis() - MAX_DELEGATE_LAST_HEARTBEAT - 1000)
                             .build();
     persistence.save(delegate);
     persistence.save(DelegateConnectionResult.builder()
-                         .accountId(ACCOUNT_ID)
-                         .delegateId(DELEGATE_ID)
+                         .accountId("ACCOUNT_ID")
+                         .delegateId("DELEGATE_ID")
                          .criteria("criteria")
                          .validated(true)
                          .build());
-    when(delegateCache.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
+    when(delegateCache.get("ACCOUNT_ID", "DELEGATE_ID", false)).thenReturn(delegate);
 
     Object[] params = {HttpTaskParameters.builder().url("criteria").build()};
     DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(ACCOUNT_ID)
+                                    .accountId("ACCOUNT_ID")
                                     .data(TaskData.builder()
                                               .async(true)
                                               .taskType(TaskType.HTTP.name())
@@ -1114,15 +1118,15 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   public void shouldGetWhitelistedDelegatesWithoutCriteriaCapabilityFramework() throws ExecutionException {
     TaskData taskData = TaskData.builder().taskType(TaskType.SPOTINST_COMMAND_TASK.name()).build();
     DelegateTask delegateTask =
-        DelegateTask.builder().accountId(ACCOUNT_ID).data(taskData).executionCapabilities(emptyList()).build();
+        DelegateTask.builder().accountId("ACCOUNT_ID").data(taskData).executionCapabilities(emptyList()).build();
     Delegate delegate = Delegate.builder()
-                            .accountId(ACCOUNT_ID)
-                            .uuid(DELEGATE_ID)
+                            .accountId("ACCOUNT_ID")
+                            .uuid("DELEGATE_ID")
                             .status(ENABLED)
                             .lastHeartBeat(clock.millis())
                             .build();
-    when(accountDelegatesCache.get(ACCOUNT_ID)).thenReturn(asList(delegate));
-    when(delegateCache.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
+    when(accountDelegatesCache.get("ACCOUNT_ID")).thenReturn(asList(delegate));
+    when(delegateCache.get("ACCOUNT_ID", "DELEGATE_ID", false)).thenReturn(delegate);
     List<String> delegateIds = assignDelegateService.connectedWhitelistedDelegates(delegateTask);
     assertThat(delegateIds).containsExactly(delegate.getUuid());
   }
@@ -1133,7 +1137,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   public void shouldGetNullFirstAttemptDelegate() {
     Object[] params = {HttpTaskParameters.builder().url("criteria-other").build()};
     DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(ACCOUNT_ID)
+                                    .accountId("ACCOUNT_ID")
                                     .data(TaskData.builder()
                                               .async(true)
                                               .taskType(TaskType.HTTP.name())
@@ -1155,7 +1159,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     String delegateId = assignDelegateService.pickFirstAttemptDelegate(delegateTask);
 
-    assertThat(delegateId).isEqualTo(DELEGATE_ID);
+    assertThat(delegateId).isEqualTo("DELEGATE_ID");
   }
 
   @Test
@@ -1163,20 +1167,20 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testAssignDelegateWithNullIncludeScope() {
     DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(ACCOUNT_ID)
-                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
-                                    .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
+                                    .accountId("ACCOUNT_ID")
+                                    .setupAbstraction("appId", "APP_ID")
+                                    .setupAbstraction("envId", "ENV_ID")
                                     .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
                                     .build();
     Delegate delegate = Delegate.builder()
-                            .accountId(ACCOUNT_ID)
-                            .uuid(DELEGATE_ID)
+                            .accountId("ACCOUNT_ID")
+                            .uuid("DELEGATE_ID")
                             .includeScopes(singletonList(null))
                             .excludeScopes(emptyList())
                             .build();
     BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
-    when(delegateCache.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
-    assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask)).isTrue();
+    when(delegateCache.get("ACCOUNT_ID", "DELEGATE_ID", false)).thenReturn(delegate);
+    assertThat(assignDelegateService.canAssign(batch, "DELEGATE_ID", delegateTask)).isTrue();
   }
 
   @Test
@@ -1184,21 +1188,21 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testAssignDelegateWithNullExcludeScope() {
     DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(ACCOUNT_ID)
-                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
-                                    .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
+                                    .accountId("ACCOUNT_ID")
+                                    .setupAbstraction("appId", "APP_ID")
+                                    .setupAbstraction("envId", "ENV_ID")
                                     .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
                                     .build();
 
     Delegate delegate = Delegate.builder()
-                            .accountId(ACCOUNT_ID)
-                            .uuid(DELEGATE_ID)
+                            .accountId("ACCOUNT_ID")
+                            .uuid("DELEGATE_ID")
                             .includeScopes(emptyList())
                             .excludeScopes(singletonList(null))
                             .build();
     BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
-    when(delegateCache.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
-    assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask)).isTrue();
+    when(delegateCache.get("ACCOUNT_ID", "DELEGATE_ID", false)).thenReturn(delegate);
+    assertThat(assignDelegateService.canAssign(batch, "DELEGATE_ID", delegateTask)).isTrue();
   }
 
   @Test
@@ -1206,9 +1210,9 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testAssignDelegateWithMultipleIncludeScopes() {
     DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(ACCOUNT_ID)
-                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
-                                    .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
+                                    .accountId("ACCOUNT_ID")
+                                    .setupAbstraction("appId", "APP_ID")
+                                    .setupAbstraction("envId", "ENV_ID")
                                     .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
                                     .build();
 
@@ -1217,14 +1221,14 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     includeScopes.add(DelegateScope.builder().environmentTypes(ImmutableList.of(PROD)).build());
 
     Delegate delegate = Delegate.builder()
-                            .accountId(ACCOUNT_ID)
-                            .uuid(DELEGATE_ID)
+                            .accountId("ACCOUNT_ID")
+                            .uuid("DELEGATE_ID")
                             .includeScopes(includeScopes)
                             .excludeScopes(emptyList())
                             .build();
     BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
-    when(delegateCache.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
-    assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask)).isTrue();
+    when(delegateCache.get("ACCOUNT_ID", "DELEGATE_ID", false)).thenReturn(delegate);
+    assertThat(assignDelegateService.canAssign(batch, "DELEGATE_ID", delegateTask)).isTrue();
   }
 
   @Test
@@ -1233,54 +1237,52 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   public void shouldAssignDelegateWithInfrastructureMappingScope() {
     InfrastructureMapping infrastructureMapping =
         aGcpKubernetesInfrastructureMapping()
-            .withAppId(APP_ID)
-            .withComputeProviderSettingId(COMPUTE_PROVIDER_SETTING_ID)
-            .withUuid(INFRA_MAPPING_ID)
+            .withAppId("APP_ID")
+            .withComputeProviderSettingId("computeProviderSetting_Id")
+            .withUuid("infraMapping_Id")
             .withClusterName("k")
             .withNamespace("default")
-            .withEnvId(InstanceSyncTestConstants.ENV_ID)
+            .withEnvId("env_Id")
             .withInfraMappingType(InfrastructureMappingType.GCP_KUBERNETES.getName())
-            .withServiceId(SERVICE_ID)
-            .withUuid(INFRA_MAPPING_ID)
-            .withAccountId(InstanceSyncTestConstants.ACCOUNT_ID)
+            .withServiceId("serviceId")
+            .withUuid("infraMapping_Id")
+            .withAccountId("account_id")
             .build();
-    infrastructureMapping.setInfrastructureDefinitionId(INFRA_DEFINITION_ID);
+    infrastructureMapping.setInfrastructureDefinitionId("INFRA_DEFINITION_ID");
 
     List<DelegateScope> scopes = new ArrayList<>();
     scopes.add(DelegateScope.builder()
-                   .infrastructureDefinitions(ImmutableList.of(INFRA_DEFINITION_ID))
-                   .services(ImmutableList.of(SERVICE_ID))
+                   .infrastructureDefinitions(ImmutableList.of("INFRA_DEFINITION_ID"))
+                   .services(ImmutableList.of("serviceId"))
                    .build());
 
-    DelegateTask delegateTask =
-        DelegateTask.builder()
-            .accountId(ACCOUNT_ID)
-            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
-            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
-            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMapping.getUuid())
-            .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-            .build();
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .accountId("ACCOUNT_ID")
+                                    .setupAbstraction("appId", "APP_ID")
+                                    .setupAbstraction("envId", "ENV_ID")
+                                    .setupAbstraction("infrastructureMappingId", infrastructureMapping.getUuid())
+                                    .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                                    .build();
 
-    DelegateTask delegateTask2 =
-        DelegateTask.builder()
-            .accountId(ACCOUNT_ID)
-            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, APP_ID)
-            .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, ENV_ID)
-            .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, WRONG_INFRA_MAPPING_ID)
-            .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
-            .build();
+    DelegateTask delegateTask2 = DelegateTask.builder()
+                                     .accountId("ACCOUNT_ID")
+                                     .setupAbstraction("appId", "APP_ID")
+                                     .setupAbstraction("envId", "ENV_ID")
+                                     .setupAbstraction("infrastructureMappingId", WRONG_INFRA_MAPPING_ID)
+                                     .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                                     .build();
     Delegate delegate = Delegate.builder()
-                            .accountId(ACCOUNT_ID)
-                            .uuid(DELEGATE_ID)
+                            .accountId("ACCOUNT_ID")
+                            .uuid("DELEGATE_ID")
                             .includeScopes(scopes)
                             .excludeScopes(emptyList())
                             .build();
     BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(infrastructureMapping);
-    when(delegateCache.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
-    assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask)).isTrue();
+    when(infrastructureMappingService.get("APP_ID", "infraMapping_Id")).thenReturn(infrastructureMapping);
+    when(delegateCache.get("ACCOUNT_ID", "DELEGATE_ID", false)).thenReturn(delegate);
+    assertThat(assignDelegateService.canAssign(batch, "DELEGATE_ID", delegateTask)).isTrue();
 
-    assertThat(assignDelegateService.canAssign(batch, DELEGATE_ID, delegateTask2)).isFalse();
+    assertThat(assignDelegateService.canAssign(batch, "DELEGATE_ID", delegateTask2)).isFalse();
   }
 
   @Test
@@ -1296,7 +1298,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     List<ExecutionCapability> executionCapabilityList = asList(selectorCapability1, selectorCapability2);
 
     DelegateTask delegateTask =
-        DelegateTask.builder().accountId(ACCOUNT_ID).executionCapabilities(executionCapabilityList).build();
+        DelegateTask.builder().accountId("ACCOUNT_ID").executionCapabilities(executionCapabilityList).build();
 
     List<String> extractSelectorsList = assignDelegateService.extractSelectors(delegateTask);
 
@@ -1315,7 +1317,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     List<ExecutionCapability> executionCapabilityList = asList(httpConnectionExecutionCapability);
 
     DelegateTask delegateTask =
-        DelegateTask.builder().accountId(ACCOUNT_ID).executionCapabilities(executionCapabilityList).build();
+        DelegateTask.builder().accountId("ACCOUNT_ID").executionCapabilities(executionCapabilityList).build();
 
     List<String> extractSelectorsList = assignDelegateService.extractSelectors(delegateTask);
 
@@ -1328,7 +1330,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   public void shouldExtractSelectorFromTaskSelectors() {
     List<String> tagsList = asList("a", "b", "c");
 
-    DelegateTask delegateTask = DelegateTask.builder().accountId(ACCOUNT_ID).tags(tagsList).build();
+    DelegateTask delegateTask = DelegateTask.builder().accountId("ACCOUNT_ID").tags(tagsList).build();
 
     List<String> extractSelectorsList = assignDelegateService.extractSelectors(delegateTask);
 
@@ -1349,7 +1351,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     List<ExecutionCapability> executionCapabilityList = asList(selectorCapability);
 
     DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(ACCOUNT_ID)
+                                    .accountId("ACCOUNT_ID")
                                     .tags(tagsList)
                                     .executionCapabilities(executionCapabilityList)
                                     .build();
@@ -1434,6 +1436,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
         .thenReturn(asList(activeDelegate1, activeDelegate2, disconnectedDelegate, wapprDelegate, deletedDelegate,
             delegateInScalingGroup));
 
+    // Test with FF NG_CG_TASK_ASSIGNMENT_ISOLATION disabled
     BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(generateUuid()).build();
 
     List<String> activeDelegates = assignDelegateService.retrieveActiveDelegates(accountId, batch);
@@ -1449,6 +1452,16 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     disconnectedScalingGroup.add(delegateInScalingGroup.getDelegateGroupName());
     verify(delegateSelectionLogsService)
         .logDisconnectedScalingGroup(eq(batch), eq(accountId), eq(disconnectedScalingGroup), eq(groupName));
+
+    // Test with FF NG_CG_TASK_ASSIGNMENT_ISOLATION enabled
+    activeDelegate1.setNg(true);
+    when(featureFlagService.isEnabled(NG_CG_TASK_ASSIGNMENT_ISOLATION, accountId)).thenReturn(true);
+    batch = BatchDelegateSelectionLog.builder().taskId(generateUuid()).build();
+
+    activeDelegates = assignDelegateService.retrieveActiveDelegates(accountId, batch);
+    assertThat(activeDelegates).isNotNull();
+    assertThat(activeDelegates.size()).isEqualTo(1);
+    assertThat(activeDelegates).containsExactly(activeDelegate2Id);
   }
 
   @Test
@@ -1750,7 +1763,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     List<ExecutionCapability> executionCapabilityList = asList(selectorCapability, connectionExecutionCapability);
 
     DelegateTask delegateTask =
-        DelegateTask.builder().accountId(ACCOUNT_ID).executionCapabilities(executionCapabilityList).build();
+        DelegateTask.builder().accountId("ACCOUNT_ID").executionCapabilities(executionCapabilityList).build();
 
     List<String> criteria = assignDelegateService.fetchCriteria(delegateTask);
 
@@ -1938,6 +1951,58 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testCanAssignCgNg() {
+    String accountId = generateUuid();
+    String delegateId = generateUuid();
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .accountId(accountId)
+                                    .data(TaskData.builder().build())
+                                    .executionCapabilities(emptyList())
+                                    .build();
+    Delegate delegate =
+        Delegate.builder().accountId(accountId).uuid(delegateId).status(ENABLED).lastHeartBeat(clock.millis()).build();
+
+    BatchDelegateSelectionLog batch = Mockito.mock(BatchDelegateSelectionLog.class);
+    when(delegateCache.get(accountId, delegateId, false)).thenReturn(delegate);
+
+    // Test FF disabled
+    when(featureFlagService.isNotEnabled(NG_CG_TASK_ASSIGNMENT_ISOLATION, accountId)).thenReturn(true);
+    canAssignCgNgAssert(delegateTask, batch, delegate, true, null, true);
+
+    // Test FF disabled
+    when(featureFlagService.isNotEnabled(NG_CG_TASK_ASSIGNMENT_ISOLATION, accountId)).thenReturn(false);
+
+    // Test delegate cg and task cg
+    canAssignCgNgAssert(delegateTask, batch, delegate, false, null, true);
+    canAssignCgNgAssert(delegateTask, batch, delegate, false, ImmutableMap.of(), true);
+    canAssignCgNgAssert(delegateTask, batch, delegate, false, ImmutableMap.of("k1", "v1"), true);
+    canAssignCgNgAssert(delegateTask, batch, delegate, false, ImmutableMap.of("ng", "FALSE"), true);
+    canAssignCgNgAssert(delegateTask, batch, delegate, false, ImmutableMap.of("ng", "false"), true);
+    canAssignCgNgAssert(delegateTask, batch, delegate, false, ImmutableMap.of("ng", "invalidValue"), true);
+
+    // Test delegate ng and task ng
+    canAssignCgNgAssert(delegateTask, batch, delegate, true, ImmutableMap.of("ng", "TRUE"), true);
+    canAssignCgNgAssert(delegateTask, batch, delegate, true, ImmutableMap.of("ng", "true"), true);
+
+    // Test other non-matching cases
+    canAssignCgNgAssert(delegateTask, batch, delegate, true, null, false);
+    canAssignCgNgAssert(delegateTask, batch, delegate, true, ImmutableMap.of(), false);
+    canAssignCgNgAssert(delegateTask, batch, delegate, true, ImmutableMap.of("k1", "v1"), false);
+    canAssignCgNgAssert(delegateTask, batch, delegate, false, ImmutableMap.of("ng", "TRUE"), false);
+    canAssignCgNgAssert(delegateTask, batch, delegate, false, ImmutableMap.of("ng", "true"), false);
+    canAssignCgNgAssert(delegateTask, batch, delegate, true, ImmutableMap.of("ng", "invalidValue"), false);
+  }
+
+  private void canAssignCgNgAssert(DelegateTask delegateTask, BatchDelegateSelectionLog batch, Delegate delegate,
+      boolean isDelegateNg, Map<String, String> setupAbstractions, boolean canAssign) {
+    delegate.setNg(isDelegateNg);
+    delegateTask.setSetupAbstractions(setupAbstractions);
+    assertThat(assignDelegateService.canAssign(batch, delegate.getUuid(), delegateTask)).isEqualTo(canAssign);
+  }
+
+  @Test
   @Owner(developers = ARVIND)
   @Category(UnitTests.class)
   public void testCanAssignOwner() {
@@ -1953,47 +2018,43 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     // Test matching mustExecuteOnDelegateId
     when(delegateCache.get(accountId, delegateId, false)).thenReturn(delegate);
 
-    DelegateOwner projectOwner =
-        DelegateOwner.builder().entityType(Cd2SetupFields.PROJECT_ID_FIELD).entityId("p1").build();
-    DelegateOwner orgOwner = DelegateOwner.builder().entityType(Cd2SetupFields.ORG_ID_FIELD).entityId("o1").build();
-
-    List<DelegateOwner> orgOwners = asList(orgOwner);
-    List<DelegateOwner> orgProjectOwners = asList(projectOwner, orgOwner);
-    List<DelegateOwner> noOwners = asList();
+    DelegateEntityOwner orgOwner = DelegateEntityOwner.builder().identifier("o1").build();
+    DelegateEntityOwner projectOwner = DelegateEntityOwner.builder().identifier("o1/p1").build();
 
     Map<String, String> noSetupAbstractions = ImmutableMap.of();
-    Map<String, String> orgSetupAbstractions = ImmutableMap.of(Cd2SetupFields.ORG_ID_FIELD, "o1");
-    Map<String, String> projectSetupAbstractions = ImmutableMap.of(Cd2SetupFields.PROJECT_ID_FIELD, "p1");
-    Map<String, String> orgProjectSetupAbstractions =
-        ImmutableMap.of(Cd2SetupFields.ORG_ID_FIELD, "o1", Cd2SetupFields.PROJECT_ID_FIELD, "p1");
+    Map<String, String> orgSetupAbstractions = ImmutableMap.of("owner", "o1");
+    Map<String, String> orgLikeSetupAbstractions = ImmutableMap.of("owner", "o1like");
 
-    canAssignOwnerAssert(delegateTask, batch, delegate, noOwners, noSetupAbstractions, true);
-    canAssignOwnerAssert(delegateTask, batch, delegate, noOwners, orgSetupAbstractions, true);
-    canAssignOwnerAssert(delegateTask, batch, delegate, noOwners, projectSetupAbstractions, true);
-    canAssignOwnerAssert(delegateTask, batch, delegate, noOwners, orgProjectSetupAbstractions, true);
+    Map<String, String> projectSetupAbstractions = ImmutableMap.of("owner", "o1/p1");
+    Map<String, String> projectLikeSetupAbstractions = ImmutableMap.of("owner", "o1/p1like");
 
-    canAssignOwnerAssert(delegateTask, batch, delegate, orgOwners, noSetupAbstractions, false);
-    canAssignOwnerAssert(delegateTask, batch, delegate, orgOwners, orgSetupAbstractions, true);
-    canAssignOwnerAssert(delegateTask, batch, delegate, orgOwners, projectSetupAbstractions, false);
-    canAssignOwnerAssert(delegateTask, batch, delegate, orgOwners, orgProjectSetupAbstractions, true);
+    canAssignOwnerAssert(delegateTask, batch, delegate, null, null, true);
+    canAssignOwnerAssert(delegateTask, batch, delegate, null, noSetupAbstractions, true);
+    canAssignOwnerAssert(delegateTask, batch, delegate, null, orgSetupAbstractions, true);
+    canAssignOwnerAssert(delegateTask, batch, delegate, null, projectSetupAbstractions, true);
 
-    canAssignOwnerAssert(delegateTask, batch, delegate, orgProjectOwners, noSetupAbstractions, false);
-    canAssignOwnerAssert(delegateTask, batch, delegate, orgProjectOwners, orgSetupAbstractions, false);
-    canAssignOwnerAssert(delegateTask, batch, delegate, orgProjectOwners, projectSetupAbstractions, false);
-    canAssignOwnerAssert(delegateTask, batch, delegate, orgProjectOwners, orgProjectSetupAbstractions, true);
+    canAssignOwnerAssert(delegateTask, batch, delegate, orgOwner, null, false);
+    canAssignOwnerAssert(delegateTask, batch, delegate, orgOwner, noSetupAbstractions, false);
+    canAssignOwnerAssert(delegateTask, batch, delegate, orgOwner, orgSetupAbstractions, true);
+    canAssignOwnerAssert(delegateTask, batch, delegate, orgOwner, projectSetupAbstractions, true);
+    canAssignOwnerAssert(delegateTask, batch, delegate, orgOwner, orgLikeSetupAbstractions, false);
+
+    canAssignOwnerAssert(delegateTask, batch, delegate, projectOwner, null, false);
+    canAssignOwnerAssert(delegateTask, batch, delegate, projectOwner, noSetupAbstractions, false);
+    canAssignOwnerAssert(delegateTask, batch, delegate, projectOwner, orgSetupAbstractions, false);
+    canAssignOwnerAssert(delegateTask, batch, delegate, projectOwner, projectSetupAbstractions, true);
+    canAssignOwnerAssert(delegateTask, batch, delegate, projectOwner, projectLikeSetupAbstractions, false);
 
     // testing above valid scenarios with wrong values of project / org
-    Map<String, String> invalidOrgSetupAbstractions = ImmutableMap.of(Cd2SetupFields.ORG_ID_FIELD, "o2");
-    Map<String, String> invalidOrgProjectSetupAbstractions =
-        ImmutableMap.of(Cd2SetupFields.ORG_ID_FIELD, "o2", Cd2SetupFields.PROJECT_ID_FIELD, "p2");
-    canAssignOwnerAssert(delegateTask, batch, delegate, orgOwners, invalidOrgSetupAbstractions, false);
-    canAssignOwnerAssert(delegateTask, batch, delegate, orgOwners, invalidOrgProjectSetupAbstractions, false);
-    canAssignOwnerAssert(delegateTask, batch, delegate, orgProjectOwners, invalidOrgProjectSetupAbstractions, false);
+    Map<String, String> invalidOrgSetupAbstractions = ImmutableMap.of("owner", "o2");
+    Map<String, String> invalidProjectSetupAbstractions = ImmutableMap.of("owner", "o2/p2");
+    canAssignOwnerAssert(delegateTask, batch, delegate, orgOwner, invalidOrgSetupAbstractions, false);
+    canAssignOwnerAssert(delegateTask, batch, delegate, projectOwner, invalidProjectSetupAbstractions, false);
   }
 
   private void canAssignOwnerAssert(DelegateTask delegateTask, BatchDelegateSelectionLog batch, Delegate delegate,
-      List<DelegateOwner> delegateOwners, Map<String, String> setupAbstractions, boolean canAssign) {
-    delegate.setOwners(delegateOwners);
+      DelegateEntityOwner delegateEntityOwner, Map<String, String> setupAbstractions, boolean canAssign) {
+    delegate.setOwner(delegateEntityOwner);
     delegateTask.setSetupAbstractions(setupAbstractions);
     assertThat(assignDelegateService.canAssign(batch, delegate.getUuid(), delegateTask)).isEqualTo(canAssign);
   }
@@ -2032,16 +2093,16 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     alreadyTriedDelegates.add("DELEGATE_ID_2");
 
     DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId(ACCOUNT_ID)
+                                    .accountId("ACCOUNT_ID")
                                     .data(taskData)
                                     .executionCapabilities(executionCapabilityList)
-                                    .mustExecuteOnDelegateId(DELEGATE_ID)
+                                    .mustExecuteOnDelegateId("DELEGATE_ID")
                                     .alreadyTriedDelegates(alreadyTriedDelegates)
                                     .build();
 
     Delegate delegate = Delegate.builder()
-                            .accountId(ACCOUNT_ID)
-                            .uuid(DELEGATE_ID)
+                            .accountId("ACCOUNT_ID")
+                            .uuid("DELEGATE_ID")
                             .status(ENABLED)
                             .lastHeartBeat(clock.millis())
                             .build();
@@ -2049,13 +2110,13 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     Optional<DelegateConnectionResult> trueResult =
         Optional.of(DelegateConnectionResult.builder().validated(true).lastUpdatedAt(10).build());
 
-    when(accountDelegatesCache.get(ACCOUNT_ID)).thenReturn(asList(delegate));
-    when(delegateCache.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
+    when(accountDelegatesCache.get("ACCOUNT_ID")).thenReturn(asList(delegate));
+    when(delegateCache.get("ACCOUNT_ID", "DELEGATE_ID", false)).thenReturn(delegate);
     when(delegateSelectionLogsService.createBatch(delegateTask)).thenReturn(batch);
-    when(delegateConnectionResultCache.get(ImmutablePair.of(DELEGATE_ID, any()))).thenReturn(trueResult);
+    when(delegateConnectionResultCache.get(ImmutablePair.of("DELEGATE_ID", any()))).thenReturn(trueResult);
 
     Query<DelegateTask> taskQuery =
-        persistence.createQuery(DelegateTask.class).filter("accountId", ACCOUNT_ID).filter("uuid", "TASK_ID_1");
+        persistence.createQuery(DelegateTask.class).filter("accountId", "ACCOUNT_ID").filter("uuid", "TASK_ID_1");
 
     RetryDelegate retryDelegate = RetryDelegate.builder()
                                       .delegateId("DELEGATE_ID_2")

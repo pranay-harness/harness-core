@@ -1,5 +1,7 @@
 package io.harness.governance;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.governance.EnvironmentFilter.EnvironmentFilterType;
 import io.harness.yaml.BaseYaml;
 
@@ -21,6 +23,7 @@ import lombok.NoArgsConstructor;
       @JsonSubTypes.Type(value = AllProdEnvFilter.Yaml.class, name = "ALL_PROD"),
       @JsonSubTypes.Type(value = AllNonProdEnvFilter.Yaml.class, name = "ALL_NON_PROD")
 })
+@OwnedBy(HarnessTeam.CDC)
 public abstract class EnvironmentFilterYaml extends BaseYaml {
   private EnvironmentFilterType filterType;
 

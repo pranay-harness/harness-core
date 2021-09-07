@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.marketplace.gcp.GcpMarketPlaceConstants.SERVICE_ACCOUNT_INTEGRATION_PATH;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.event.handler.impl.segment.SegmentHelper;
 import io.harness.exception.GcpMarketplaceException;
 import io.harness.marketplace.gcp.procurement.GcpMarketplaceMessageReceiver;
 import io.harness.marketplace.gcp.procurement.GcpProcurementService;
@@ -50,6 +51,7 @@ public class GcpMarketplaceTopicSubscriber {
   @Inject private AccountService accountService;
   @Inject private GcpProductsRegistry gcpProductsRegistry;
   @Inject private MainConfiguration configuration;
+  @Inject private SegmentHelper segmentHelper;
 
   public void subscribeAsync() throws IOException {
     String gcpSubscriptionName = configuration.getGcpMarketplaceConfig().getSubscriptionName();
@@ -72,8 +74,8 @@ public class GcpMarketplaceTopicSubscriber {
     ProjectSubscriptionName projectSubscriptionName = ProjectSubscriptionName.of(GCP_PROJECT_ID, gcpSubscriptionName);
     subscriber = Subscriber
                      .newBuilder(projectSubscriptionName,
-                         new GcpMarketplaceMessageReceiver(
-                             gcpProcurementService, wingsPersistence, accountService, gcpProductsRegistry))
+                         new GcpMarketplaceMessageReceiver(gcpProcurementService, wingsPersistence, accountService,
+                             gcpProductsRegistry, segmentHelper))
                      .setCredentialsProvider(credentialsProvider)
                      .build();
 

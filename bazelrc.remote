@@ -1,8 +1,12 @@
 import bazelrc.common
+import bazelrc.coverage
 
 # Add properties that are specific for ci build system
 
-startup --output_base=/tmp --max_idle_secs 5
+startup --output_base=/tmp
+startup --max_idle_secs 5
+
+build --announce_rc
 
 # TODO: remove from here when remote cache is enabled for developers
 build --remote_cache=https://storage.googleapis.com/harness-bazel-cache
@@ -10,8 +14,4 @@ build --experimental_inmemory_dotd_files
 build --experimental_inmemory_jdeps_files
 build --nobuild_runfile_links
 
-# This value is to reset the cache if we suspect that the cache got poisoned
-build --action_env=CACHE_RESET=1
-
-build --javacopt="-Xlint:deprecation"
-build --experimental_replay_action_out_err
+test --flaky_test_attempts=3

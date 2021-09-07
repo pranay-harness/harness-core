@@ -9,6 +9,10 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.WorkflowType;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
@@ -35,11 +39,15 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+@OwnedBy(HarnessTeam.CDP)
 @Singleton
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class HelmHelper {
   private static final int RELEASE_NAME_LENGTH_WITHOUT_SHORT_ID = 46;
   private static final String RELEASE_NAME_FORMAT = "%s-${infra.helm.shortId}";
@@ -52,6 +60,7 @@ public class HelmHelper {
       + "${HELM_CLI} ${PURGE_ACTION} ${RELEASE_NAME} ${OPTS}";
   private static final String HELM3_CLIENT_TOOLS_PATH = "client-tools/helm/v3.1.2/helm";
   private static final String CLEANUP_WORKFLOW_PREFIX = "Cleanup ";
+  private static final String JENKINS_WORKSPACE = "cd-deployment-functional-tests";
 
   @Inject private WorkflowGenerator workflowGenerator;
   @Inject private WorkflowService workflowService;
@@ -182,7 +191,7 @@ public class HelmHelper {
     return format(RELEASE_NAME_FORMAT, baseName);
   }
 
-  private GraphNode createShellScriptNode(String name, String script) {
+  public GraphNode createShellScriptNode(String name, String script) {
     return GraphNode.builder()
         .name(name)
         .type("SHELL_SCRIPT")
@@ -191,7 +200,7 @@ public class HelmHelper {
         .build();
   }
 
-  private String getCleanupScript(HelmVersion helmVersion, String releaseName) {
+  public String getCleanupScript(HelmVersion helmVersion, String releaseName) {
     String helmCliPath = "helm";
     String helmPurgeAction = "delete";
     String opts = "--purge";
@@ -208,16 +217,15 @@ public class HelmHelper {
   }
 
   private String getHelm3ClientToolsPath() {
-    File relativeToCurrentLocation = new File("../" + HELM3_CLIENT_TOOLS_PATH);
-    // Checks for path on jenkins
-    if (relativeToCurrentLocation.exists()) {
-      return relativeToCurrentLocation.getAbsolutePath();
+    String home = System.getProperty("user.home");
+    if (home.contains("root")) {
+      home = "/home/jenkins";
     }
 
-    // Checks for path locally
-    File localDelegateModuleLocation = new File("../260-delegate/" + HELM3_CLIENT_TOOLS_PATH);
-    if (localDelegateModuleLocation.exists()) {
-      return localDelegateModuleLocation.getAbsolutePath();
+    Path path = Paths.get(home, "/.bazel-dirs/bin/260-delegate/" + HELM3_CLIENT_TOOLS_PATH);
+    File delegateModuleLocation = new File(path.toString());
+    if (delegateModuleLocation.exists()) {
+      return path.toString();
     }
 
     throw new IllegalStateException("Unable to get Helm v3 client tools path");

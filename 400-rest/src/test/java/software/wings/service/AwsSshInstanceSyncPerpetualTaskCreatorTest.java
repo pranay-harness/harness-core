@@ -4,15 +4,20 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACCOUNT_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_NAME;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.ENV_NAME;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.PERPETUAL_TASK_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_NAME;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
@@ -22,12 +27,16 @@ import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
-import software.wings.WingsBaseTest;
+import software.wings.beans.Application;
 import software.wings.beans.AwsInfrastructureMapping;
+import software.wings.beans.Environment;
+import software.wings.beans.Service;
 import software.wings.service.impl.instance.InstanceSyncTestConstants;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.ServiceResourceService;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
 import com.google.protobuf.util.Durations;
 import java.util.Collections;
 import org.junit.Before;
@@ -36,17 +45,30 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 
 @OwnedBy(CDP)
-public class AwsSshInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest {
+public class AwsSshInstanceSyncPerpetualTaskCreatorTest extends CategoryTest {
   @Mock private PerpetualTaskService perpetualTaskService;
-  @InjectMocks @Inject private AwsSshInstanceSyncPerpetualTaskCreator perpetualTaskController;
+  @InjectMocks private AwsSshInstanceSyncPerpetualTaskCreator perpetualTaskController;
+  @Mock private AppService appService;
+  @Mock private EnvironmentService environmentService;
+  @Mock private ServiceResourceService serviceResourceService;
+  private AwsInfrastructureMapping infrastructureMapping;
 
   @Before
   public void setup() {
+    MockitoAnnotations.initMocks(this);
     doReturn(PERPETUAL_TASK_ID)
         .when(perpetualTaskService)
         .createTask(eq(PerpetualTaskType.AWS_SSH_INSTANCE_SYNC), anyString(), any(), any(), eq(false), eq(""));
+    infrastructureMapping = getInfraMapping();
+    when(environmentService.get(any(), any()))
+        .thenReturn(Environment.Builder.anEnvironment().accountId(ACCOUNT_ID).appId(APP_ID).name(ENV_NAME).build());
+    when(serviceResourceService.get(any(), any()))
+        .thenReturn(Service.builder().accountId(ACCOUNT_ID).appId(APP_ID).name(SERVICE_NAME).build());
+    when(appService.get(any()))
+        .thenReturn(Application.Builder.anApplication().appId(APP_ID).accountId(ACCOUNT_ID).name(APP_NAME).build());
   }
 
   @Test
@@ -62,6 +84,8 @@ public class AwsSshInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest {
     infrastructureMapping.setAccountId(ACCOUNT_ID);
     infrastructureMapping.setAppId(APP_ID);
     infrastructureMapping.setUuid(INFRA_MAPPING_ID);
+    infrastructureMapping.setDisplayName("infraName");
+    infrastructureMapping.setAccountId(ACCOUNT_ID);
     return infrastructureMapping;
   }
 
@@ -70,7 +94,7 @@ public class AwsSshInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void createPerpetualTasksForNewDeployment() {
     perpetualTaskController.createPerpetualTasksForNewDeployment(
-        Collections.emptyList(), Collections.emptyList(), getInfraMapping());
+        Collections.emptyList(), Collections.emptyList(), infrastructureMapping);
 
     verifyCreatePerpetualTaskInternal();
   }
@@ -86,6 +110,7 @@ public class AwsSshInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest {
                     .setInterval(Durations.fromMinutes(InstanceSyncConstants.INTERVAL_MINUTES))
                     .setTimeout(Durations.fromSeconds(InstanceSyncConstants.TIMEOUT_SECONDS))
                     .build()),
-            eq(false), eq(""));
+            eq(false),
+            eq("Application: [appName], Service: [serviceName], Environment: [envName], Infrastructure: [infraName]"));
   }
 }

@@ -67,6 +67,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.url.SubdomainUrlHelper;
 import software.wings.scheduler.ScheduledTriggerJob;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.PipelineService;
@@ -81,6 +82,7 @@ import com.cronutils.parser.CronParser;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -102,7 +104,7 @@ import org.quartz.CronScheduleBuilder;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
-@TargetModule(HarnessModule._960_API_SERVICES)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class TriggerServiceHelper {
   public static final String EXECUTION_TYPE = "EXECUTION_TYPE";
   public static final String TRIGGER_NAME = "TRIGGER_NAME";
@@ -117,6 +119,7 @@ public class TriggerServiceHelper {
   @Inject private AppService appService;
   @Inject private WorkflowService workflowService;
   @Inject private PipelineService pipelineService;
+  @Inject @Named("ArtifactCollectionService") private ArtifactCollectionService artifactCollectionService;
 
   public List<Trigger> getPipelineCompletionTriggers(String appId, String pipelineId) {
     return getMatchedSourcePipelineTriggers(appId, pipelineId).collect(toList());
@@ -369,6 +372,7 @@ public class TriggerServiceHelper {
         artifacts.put("buildNumber", service + "_BUILD_NUMBER_PLACE_HOLDER");
         helmCharts.put("versionNumber", service + "_VERSION_NUMBER_PLACE_HOLDER");
         artifacts.put("artifactSourceName", service + "_ARTIFACT_SOURCE_NAME_PLACE_HOLDER");
+        helmCharts.put("appManifestName", service + "_APPLICATION_MANIFEST_NAME_PLACE_HOLDER");
         manifestList.add(helmCharts);
         artifactList.add(artifacts);
       }
@@ -567,5 +571,9 @@ public class TriggerServiceHelper {
     placeholderValues.put(EXECUTION_TYPE, workflowType == ORCHESTRATION ? "Workflow" : "Pipeline");
     placeholderValues.put(TRIGGER_URL, getTriggersUrl(accountId, appId));
     return placeholderValues;
+  }
+
+  public void collectArtifactsForSelection(ArtifactSelection artifactSelection, String appId) {
+    artifactCollectionService.collectNewArtifacts(appId, artifactSelection.getArtifactStreamId());
   }
 }

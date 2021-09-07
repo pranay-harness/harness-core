@@ -8,7 +8,7 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.cluster.entities.K8sWorkload;
+import io.harness.ccm.commons.entities.k8s.K8sWorkload;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableList;

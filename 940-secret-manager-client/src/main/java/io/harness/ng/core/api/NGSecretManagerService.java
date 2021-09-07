@@ -9,8 +9,6 @@ import io.harness.secretmanagerclient.dto.SecretManagerConfigUpdateDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerMetadataDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerMetadataRequestDTO;
 
-import java.util.List;
-
 @OwnedBy(PL)
 public interface NGSecretManagerService {
   SecretManagerConfigDTO createSecretManager(SecretManagerConfigDTO secretManagerConfigDTO);
@@ -21,11 +19,8 @@ public interface NGSecretManagerService {
   boolean deleteSecretManager(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
 
-  List<SecretManagerConfigDTO> listSecretManagers(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier);
-
   SecretManagerConfigDTO getSecretManager(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, boolean maskSecrets);
 
   ConnectorValidationResult validate(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier);

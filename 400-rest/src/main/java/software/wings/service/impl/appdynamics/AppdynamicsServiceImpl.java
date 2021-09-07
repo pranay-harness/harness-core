@@ -2,7 +2,6 @@ package software.wings.service.impl.appdynamics;
 
 import static io.harness.annotations.dev.HarnessTeam.CV;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
@@ -13,15 +12,9 @@ import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.cvng.beans.AppdynamicsValidationResponse;
-import io.harness.cvng.beans.appd.AppDynamicsApplication;
-import io.harness.cvng.beans.appd.AppDynamicsTier;
-import io.harness.cvng.beans.appd.AppdynamicsMetricPackDataValidationRequest;
-import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
-import io.harness.ng.core.BaseNGAccess;
-import io.harness.ng.core.NGAccess;
+import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.annotation.EncryptableSetting;
@@ -36,16 +29,12 @@ import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
-import software.wings.service.intfc.security.NGSecretService;
 import software.wings.service.intfc.security.SecretManager;
 
-import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.time.Instant;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
 
@@ -62,7 +51,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private SecretManager secretManager;
   @Inject private MLServiceUtils mlServiceUtils;
-  @Inject private NGSecretService ngSecretService;
+  @Inject private SecretManagerClientService ngSecretService;
   @Override
   public List<NewRelicApplication> getApplications(final String settingId) {
     return this.getApplications(settingId, null, null);
@@ -81,26 +70,6 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
         secretManager.getEncryptionDetails(appDynamicsConfig, appId, workflowExecutionId);
     return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
         .getAllApplications(appDynamicsConfig, encryptionDetails);
-  }
-
-  @Override
-  public List<AppDynamicsApplication> getApplications(
-      AppDynamicsConnectorDTO appDynamicsConnector, String orgIdentifier, String projectIdentifier) {
-    NGAccess basicNGAccessObject = BaseNGAccess.builder()
-                                       .accountIdentifier(appDynamicsConnector.getAccountId())
-                                       .orgIdentifier(orgIdentifier)
-                                       .projectIdentifier(projectIdentifier)
-                                       .build();
-    List<EncryptedDataDetail> encryptedDataDetails =
-        ngSecretService.getEncryptionDetails(basicNGAccessObject, appDynamicsConnector);
-
-    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
-                                          .accountId(appDynamicsConnector.getAccountId())
-                                          .appId(GLOBAL_APP_ID)
-                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
-                                          .build();
-    return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
-        .getApplications(appDynamicsConnector, encryptedDataDetails);
   }
 
   @Override
@@ -128,26 +97,6 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
         secretManager.getEncryptionDetails(appDynamicsConfig, appId, workflowExecutionId);
     return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
         .getTiers(appDynamicsConfig, appdynamicsAppId, encryptionDetails, apiCallLog);
-  }
-
-  @Override
-  public Set<AppDynamicsTier> getTiers(AppDynamicsConnectorDTO appDynamicsConnector, String orgIdentifier,
-      String projectIdentifier, long appDynamicsAppId) {
-    NGAccess basicNGAccessObject = BaseNGAccess.builder()
-                                       .accountIdentifier(appDynamicsConnector.getAccountId())
-                                       .orgIdentifier(orgIdentifier)
-                                       .projectIdentifier(projectIdentifier)
-                                       .build();
-    List<EncryptedDataDetail> encryptedDataDetails =
-        ngSecretService.getEncryptionDetails(basicNGAccessObject, appDynamicsConnector);
-
-    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
-                                          .accountId(appDynamicsConnector.getAccountId())
-                                          .appId(GLOBAL_APP_ID)
-                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
-                                          .build();
-    return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
-        .getTiers(appDynamicsConnector, encryptedDataDetails, appDynamicsAppId);
   }
 
   @Override
@@ -265,29 +214,5 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
     } catch (Exception ex) {
       throw new WingsException(ex.getMessage());
     }
-  }
-
-  @Override
-  public Set<AppdynamicsValidationResponse> getMetricPackData(String accountId, String orgIdentifier,
-      String projectIdentifier, String appName, String tierName, String requestGuid,
-      AppdynamicsMetricPackDataValidationRequest validationRequest) {
-    log.info("for {} getting data for {}", projectIdentifier, validationRequest);
-    Preconditions.checkState(isNotEmpty(validationRequest.getMetricPacks()),
-        "No metric packs found for project {} with the name {}", projectIdentifier, validationRequest.getMetricPacks());
-    NGAccess basicNGAccessObject = BaseNGAccess.builder()
-                                       .accountIdentifier(validationRequest.getConnector().getAccountId())
-                                       .orgIdentifier(orgIdentifier)
-                                       .projectIdentifier(projectIdentifier)
-                                       .build();
-    List<EncryptedDataDetail> encryptedDataDetails =
-        ngSecretService.getEncryptionDetails(basicNGAccessObject, validationRequest.getConnector());
-    SyncTaskContext syncTaskContext = SyncTaskContext.builder()
-                                          .accountId(validationRequest.getConnector().getAccountId())
-                                          .appId(GLOBAL_APP_ID)
-                                          .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
-                                          .build();
-    return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
-        .getMetricPackData(validationRequest.getConnector(), encryptedDataDetails, appName, tierName, requestGuid,
-            validationRequest.getMetricPacks(), Instant.now().minusSeconds(TimeUnit.HOURS.toSeconds(1)), Instant.now());
   }
 }

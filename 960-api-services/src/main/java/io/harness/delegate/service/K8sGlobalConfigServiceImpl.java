@@ -55,4 +55,9 @@ public class K8sGlobalConfigServiceImpl implements K8sGlobalConfigService {
   public String getKustomizePath() {
     return InstallUtils.getKustomizePath();
   }
+
+  @Override
+  public String getScmPath() {
+    return InstallUtils.getScmPath();
+  }
 }

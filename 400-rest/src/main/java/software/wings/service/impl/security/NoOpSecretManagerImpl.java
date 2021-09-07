@@ -2,7 +2,9 @@ package software.wings.service.impl.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -20,6 +22,7 @@ import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.SecretManagerRuntimeParameters;
 import software.wings.beans.SettingAttribute;
 import software.wings.security.UsageRestrictions;
+import software.wings.service.intfc.security.EncryptedSettingAttributes;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingVariableTypes;
 
@@ -35,7 +38,8 @@ import java.util.Set;
  * Created by rsingh on 9/7/18.
  */
 @OwnedBy(PL)
-public class NoOpSecretManagerImpl implements SecretManager {
+@TargetModule(HarnessModule._440_SECRET_MANAGEMENT_SERVICE)
+public class NoOpSecretManagerImpl implements SecretManager, EncryptedSettingAttributes {
   @Override
   public List<SecretManagerConfig> listSecretManagers(String accountId) {
     throw new UnsupportedOperationException();
@@ -96,6 +100,12 @@ public class NoOpSecretManagerImpl implements SecretManager {
   @Override
   public Optional<EncryptedDataDetail> encryptedDataDetails(
       String accountId, String fieldName, String refId, String workflowExecutionId) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Optional<EncryptedDataDetail> getEncryptedDataDetails(
+      String accountId, String fieldName, EncryptedData encryptedData, String workflowExecutionId) {
     throw new UnsupportedOperationException();
   }
 
@@ -169,6 +179,11 @@ public class NoOpSecretManagerImpl implements SecretManager {
 
   @Override
   public String saveSecretText(String accountId, SecretText secretText, boolean validateScopes) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public EncryptedData encryptSecret(String accountId, SecretText secretText, boolean validateScopes) {
     throw new UnsupportedOperationException();
   }
 

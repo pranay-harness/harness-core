@@ -5,11 +5,14 @@ import static io.harness.waiter.TestNotifyEventListener.TEST_PUBLISHER;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.config.PublisherConfiguration;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
+import io.harness.metrics.MetricRegistryModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.mongo.queue.QueueFactory;
 import io.harness.morphia.MorphiaRegistrar;
@@ -22,20 +25,26 @@ import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.PersistenceRegistrars;
 import io.harness.serializer.WaitEngineRegistrars;
+import io.harness.springdata.HTransactionTemplate;
+import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.version.VersionInfoManager;
 import io.harness.version.VersionModule;
+import io.harness.waiter.AbstractWaiterModule;
 import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
 import io.harness.waiter.ProgressUpdateService;
 import io.harness.waiter.TestNotifyEventListener;
-import io.harness.waiter.WaiterModule;
+import io.harness.waiter.WaiterConfiguration;
+import io.harness.waiter.WaiterRuleMixin;
 
+import com.codahale.metrics.MetricRegistry;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -58,9 +67,13 @@ import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 import org.mongodb.morphia.converters.TypeConverter;
+import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.mongodb.MongoTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @Slf4j
-public class WaitEngineRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin {
+@OwnedBy(HarnessTeam.DEL)
+public class WaitEngineRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin, WaiterRuleMixin {
   ClosingFactory closingFactory;
 
   public WaitEngineRule(ClosingFactory closingFactory) {
@@ -80,6 +93,7 @@ public class WaitEngineRule implements MethodRule, InjectorRuleMixin, MongoRuleM
       Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
             .addAll(WaitEngineRegistrars.kryoRegistrars)
+            .add(WaitEngineTestRegistrar.class)
             .build();
       }
 
@@ -98,11 +112,24 @@ public class WaitEngineRule implements MethodRule, InjectorRuleMixin, MongoRuleM
             .addAll(PersistenceRegistrars.morphiaConverters)
             .build();
       }
+
+      @Provides
+      @Singleton
+      List<Class<? extends Converter<?, ?>>> springConverters() {
+        return ImmutableList.<Class<? extends Converter<?, ?>>>builder()
+            .addAll(WaitEngineRegistrars.springConverters)
+            .build();
+      }
     });
 
     modules.add(mongoTypeModule(annotations));
 
-    modules.add(WaiterModule.getInstance());
+    modules.add(new AbstractWaiterModule() {
+      @Override
+      public WaiterConfiguration waiterConfiguration() {
+        return WaiterConfiguration.builder().persistenceLayer(obtainPersistenceLayer(annotations)).build();
+      }
+    });
 
     modules.add(new AbstractModule() {
       @Override
@@ -129,6 +156,7 @@ public class WaitEngineRule implements MethodRule, InjectorRuleMixin, MongoRuleM
     });
 
     modules.add(TestMongoModule.getInstance());
+    modules.add(new SpringPersistenceTestModule());
     modules.add(VersionModule.getInstance());
     modules.add(new ProviderModule() {
       @Provides
@@ -138,8 +166,14 @@ public class WaitEngineRule implements MethodRule, InjectorRuleMixin, MongoRuleM
         return QueueFactory.createQueueConsumer(injector, NotifyEvent.class, ofSeconds(5),
             asList(asList(versionInfoManager.getVersionInfo().getVersion()), asList(TEST_PUBLISHER)), config);
       }
-    });
 
+      @Provides
+      @Singleton
+      TransactionTemplate getTransactionTemplate(MongoTransactionManager mongoTransactionManager) {
+        return new HTransactionTemplate(mongoTransactionManager, false);
+      }
+    });
+    modules.add(new MetricRegistryModule(new MetricRegistry()));
     return modules;
   }
 

@@ -9,6 +9,7 @@ import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.git.GitCommandExecutionResponse;
@@ -57,31 +58,24 @@ public class NGGitCommandTask extends AbstractDelegateRunnableTask {
         gitCommandParams.getSshKeySpecDTO(), gitCommandParams.getEncryptionDetails());
     GitCommandType gitCommandType = gitCommandParams.getGitCommandType();
     GitBaseRequest gitCommandRequest = gitCommandParams.getGitCommandRequest();
+    ScmConnector scmConnector = gitCommandParams.getScmConnector();
+    gitDecryptionHelper.decryptApiAccessConfig(scmConnector, gitCommandParams.getEncryptionDetails());
 
-    try {
-      switch (gitCommandType) {
-        case VALIDATE:
-          GitCommandExecutionResponse delegateResponseData =
-              (GitCommandExecutionResponse) gitCommandTaskHandler.handleValidateTask(
-                  gitConfig, getAccountId(), sshSessionConfig);
-          delegateResponseData.setDelegateMetaInfo(DelegateMetaInfo.builder().id(getDelegateId()).build());
-          return delegateResponseData;
-        case COMMIT_AND_PUSH:
-          return handleCommitAndPush(gitCommandParams, gitConfig, sshSessionConfig);
-        default:
-          return GitCommandExecutionResponse.builder()
-              .gitCommandStatus(GitCommandStatus.FAILURE)
-              .gitCommandRequest(gitCommandRequest)
-              .errorMessage(GIT_YAML_LOG_PREFIX + "Git Operation not supported")
-              .build();
-      }
-    } catch (Exception ex) {
-      return GitCommandExecutionResponse.builder()
-          .gitCommandRequest(gitCommandRequest)
-          .errorMessage(ex.getMessage())
-          .errorCode(getErrorCode(ex))
-          .gitCommandStatus(GitCommandStatus.FAILURE)
-          .build();
+    switch (gitCommandType) {
+      case VALIDATE:
+        GitCommandExecutionResponse delegateResponseData =
+            (GitCommandExecutionResponse) gitCommandTaskHandler.handleValidateTask(
+                gitConfig, scmConnector, getAccountId(), sshSessionConfig);
+        delegateResponseData.setDelegateMetaInfo(DelegateMetaInfo.builder().id(getDelegateId()).build());
+        return delegateResponseData;
+      case COMMIT_AND_PUSH:
+        return handleCommitAndPush(gitCommandParams, gitConfig, sshSessionConfig);
+      default:
+        return GitCommandExecutionResponse.builder()
+            .gitCommandStatus(GitCommandStatus.FAILURE)
+            .gitCommandRequest(gitCommandRequest)
+            .errorMessage(GIT_YAML_LOG_PREFIX + "Git Operation not supported")
+            .build();
     }
   }
 
@@ -114,5 +108,10 @@ public class NGGitCommandTask extends AbstractDelegateRunnableTask {
       }
     }
     return null;
+  }
+
+  @Override
+  public boolean isSupportingErrorFramework() {
+    return true;
   }
 }

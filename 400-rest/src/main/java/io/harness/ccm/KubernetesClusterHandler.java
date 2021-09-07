@@ -42,7 +42,7 @@ public class KubernetesClusterHandler implements DelegateObserver {
                                               .put("accountId", delegate.getAccountId())
                                               .put("delegateId", delegate.getUuid())
                                               .put("delegateName", delegate.getDelegateName())
-                                              .put("product", "Continuous Efficiency")
+                                              .put("product", "Cloud Cost Management")
                                               .build())
                               .anonymousId(delegate.getAccountId()));
   }

@@ -10,7 +10,9 @@ import static java.lang.String.format;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.ff.FeatureFlagService;
 
@@ -30,6 +32,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @JsonTypeName("AMI")
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -60,6 +63,22 @@ public class AmiArtifactStream extends ArtifactStream {
   @Override
   public String fetchArtifactDisplayName(String amiName) {
     return isEmpty(tags) ? format("%s_%s", getRegion(), amiName) : format("%s_%s", getSourceName(), amiName);
+  }
+
+  @Override
+  public ArtifactStream cloneInternal() {
+    return builder()
+        .appId(getAppId())
+        .accountId(getAccountId())
+        .name(getName())
+        .sourceName(getSourceName())
+        .settingId(getSettingId())
+        .keywords(getKeywords())
+        .region(region)
+        .platform(platform)
+        .tags(tags)
+        .filters(filters)
+        .build();
   }
 
   @Override

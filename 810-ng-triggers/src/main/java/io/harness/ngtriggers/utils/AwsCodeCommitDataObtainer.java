@@ -1,9 +1,11 @@
 package io.harness.ngtriggers.utils;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CommitDetails;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.IdentifierRef;
@@ -33,17 +35,18 @@ import io.harness.tasks.ErrorResponseData;
 import io.harness.tasks.ResponseData;
 import io.harness.utils.ConnectorUtils;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.time.Duration;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.assertj.core.util.VisibleForTesting;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
+@OwnedBy(CI)
 public class AwsCodeCommitDataObtainer implements GitProviderBaseDataObtainer {
   private final TaskExecutionUtils taskExecutionUtils;
   private final ConnectorUtils connectorUtils;
@@ -51,16 +54,16 @@ public class AwsCodeCommitDataObtainer implements GitProviderBaseDataObtainer {
   private final WebhookEventPayloadParser webhookEventPayloadParser;
 
   @Override
-  public void acquireProviderData(FilterRequestData filterRequestData) {
+  public void acquireProviderData(FilterRequestData filterRequestData, List<TriggerDetails> triggers) {
     WebhookPayloadData webhookPayloadData = filterRequestData.getWebhookPayloadData();
 
-    if (webhookPayloadData.getWebhookEvent().getType() != WebhookEvent.Type.BRANCH) {
+    if (webhookPayloadData.getWebhookEvent().getType() != WebhookEvent.Type.PUSH) {
       throw new TriggerException(String.format("Unsupported web hook event type:[%s] for aws codecommit",
                                      webhookPayloadData.getWebhookEvent().getType()),
           WingsException.SRE);
     }
 
-    for (TriggerDetails details : filterRequestData.getDetails()) {
+    for (TriggerDetails details : triggers) {
       try {
         String connectorIdentifier =
             details.getNgTriggerEntity().getMetadata().getWebhook().getGit().getConnectorIdentifier();
@@ -78,7 +81,7 @@ public class AwsCodeCommitDataObtainer implements GitProviderBaseDataObtainer {
         }
       } catch (Exception e) {
         log.error("Failed while fetching additional information from aws codecommit for branch webhook event"
-                + "Project : " + filterRequestData.getProjectFqn() + ", with Exception" + e.getMessage(),
+                + "Project : " + filterRequestData.getAccountId() + ", with Exception" + e.getMessage(),
             e);
       }
     }

@@ -1,17 +1,23 @@
 package software.wings.graphql.datafetcher.secrets;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.exception.InvalidRequestException;
+import io.harness.utils.RequestField;
 
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.schema.mutation.secrets.input.QLUpdateSecretInput;
 import software.wings.graphql.schema.mutation.secrets.payload.QLUpdateSecretPayload;
+import software.wings.graphql.schema.type.secrets.QLEncryptedFileUpdate;
 import software.wings.graphql.schema.type.secrets.QLEncryptedTextUpdate;
 import software.wings.graphql.schema.type.secrets.QLSSHCredentialUpdate;
 import software.wings.graphql.schema.type.secrets.QLSecret;
@@ -21,14 +27,18 @@ import software.wings.service.impl.security.auth.SecretAuthHandler;
 import software.wings.service.intfc.security.SecretManager;
 
 import com.google.inject.Inject;
+import graphql.GraphQLContext;
+import graphql.schema.DataFetchingEnvironment;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(PL)
 @Slf4j
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class UpdateSecretDataFetcher extends BaseMutatorDataFetcher<QLUpdateSecretInput, QLUpdateSecretPayload> {
   @Inject private SecretManager secretManager;
   @Inject private WinRMCredentialController winRMCredentialController;
   @Inject private EncryptedTextController encryptedTextController;
+  @Inject private EncryptedFileController encryptedFileController;
   @Inject private SSHCredentialController sshCredentialController;
   @Inject private SecretAuthHandler secretAuthHandler;
 
@@ -101,10 +111,36 @@ public class UpdateSecretDataFetcher extends BaseMutatorDataFetcher<QLUpdateSecr
         break;
       case ENCRYPTED_FILE:
         secretAuthHandler.authorize();
-        throw new InvalidRequestException("Encrypted file secret cannot be updated through API.");
+        DataFetchingEnvironment dataFetchingEnvironment = mutationContext.getDataFetchingEnvironment();
+        GraphQLContext context = dataFetchingEnvironment.getContext();
+        byte[] bytes = context.get("file");
+        EncryptedData encryptedData = updateEncryptedFile(updateSecretInput, mutationContext.getAccountId(), bytes);
+        secret = encryptedFileController.populateEncryptedFile(encryptedData);
+        break;
       default:
         throw new InvalidRequestException("Invalid Secret Type");
     }
     return QLUpdateSecretPayload.builder().clientMutationId(mutationContext.getAccountId()).secret(secret).build();
+  }
+
+  private EncryptedData updateEncryptedFile(QLUpdateSecretInput updateSecretInput, String accountId, byte[] bytes) {
+    if (!updateSecretInput.getEncryptedFile().isPresent()) {
+      throw new InvalidRequestException(String.format(
+          "No encrypted file input provided with the request with secretType %s", updateSecretInput.getSecretType()));
+    }
+
+    final QLEncryptedFileUpdate encryptedFileUpdateUpdate = updateSecretInput.getEncryptedFile().getValue().orElseThrow(
+        ()
+            -> new InvalidRequestException(
+                String.format("No encrypted file input provided with the request with secretType %s",
+                    updateSecretInput.getSecretType())));
+
+    RequestField<byte[]> fileContent = RequestField.absent();
+    if (isNotEmpty(bytes)) {
+      fileContent = RequestField.ofNullable(bytes);
+    }
+    encryptedFileUpdateUpdate.setFileContent(fileContent);
+    encryptedFileController.updateEncryptedFile(encryptedFileUpdateUpdate, updateSecretInput.getSecretId(), accountId);
+    return secretManager.getSecretById(accountId, updateSecretInput.getSecretId());
   }
 }

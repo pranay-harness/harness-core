@@ -51,6 +51,7 @@ public class PermissionDBO implements PersistentEntity {
   @FdUniqueIndex @PermissionIdentifier final String identifier;
   @NGEntityName final String name;
   @NotNull final PermissionStatus status;
+  final Boolean includeInAllRoles;
   @NotEmpty final Set<String> allowedScopeLevels;
 
   @Setter @CreatedDate Long createdAt;

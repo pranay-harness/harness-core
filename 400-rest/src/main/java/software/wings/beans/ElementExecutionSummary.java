@@ -1,5 +1,9 @@
 package software.wings.beans;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 
 import software.wings.sm.ContextElement;
@@ -15,6 +19,8 @@ import java.util.Set;
 /**
  * Created by rishi on 8/15/16.
  */
+@OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class ElementExecutionSummary {
   private ContextElement contextElement;
   private List<InstanceStatusSummary> instanceStatusSummaries;

@@ -1,5 +1,9 @@
 package io.harness.k8s.model;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -11,6 +15,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@OwnedBy(CDP)
 public class Release {
   public enum Status { InProgress, Succeeded, Failed }
 
@@ -22,6 +27,7 @@ public class Release {
 
   @Builder.Default private List<KubernetesResourceIdRevision> managedWorkloads = new ArrayList();
   @Builder.Default private List<KubernetesResource> customWorkloads = new ArrayList<>();
+  @Builder.Default private List<KubernetesResource> resourcesWithSpec = new ArrayList<>();
 
   @Data
   @Builder

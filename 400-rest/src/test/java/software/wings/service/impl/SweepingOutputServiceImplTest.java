@@ -38,6 +38,7 @@ import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.beans.Environment;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
+import software.wings.expression.MapTestSweepingOutput;
 import software.wings.expression.SweepingOutputData;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
@@ -63,6 +64,7 @@ import org.mockito.InjectMocks;
 
 public class SweepingOutputServiceImplTest extends WingsBaseTest {
   private static final String SWEEPING_OUTPUT_NAME = "SWEEPING_OUTPUT_NAME";
+  private static final String MAP_SWEEPING_OUTPUT_NAME = "MAP_SWEEPING_OUTPUT_NAME";
   private static final String SWEEPING_OUTPUT_CONTENT = "SWEEPING_OUTPUT_CONTENT";
 
   private final String infraDefinitionId = generateUuid();
@@ -126,10 +128,49 @@ public class SweepingOutputServiceImplTest extends WingsBaseTest {
 
     assertThat(((SweepingOutputData) savedSweepingOutputInstance.getValue()).getText())
         .isEqualTo(SWEEPING_OUTPUT_CONTENT);
+
+    assertThat(savedSweepingOutputInstance.getValueOutput()).isNotEmpty();
+    SweepingOutput sweepingOutput =
+        (SweepingOutput) kryoSerializer.asObject(savedSweepingOutputInstance.getValueOutput());
+    assertThat(sweepingOutput).isNotNull();
+    assertThat(sweepingOutput).isInstanceOf(SweepingOutputData.class);
+    assertThat(((SweepingOutputData) sweepingOutput).getText()).isEqualTo(SWEEPING_OUTPUT_CONTENT);
   }
 
   @Test
-  @Owner(developers = GEORGE)
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void testSweepingOutputObtainValueForMap() {
+    String phaseExecutionId = workflowExecutionUuid + phaseElementId + "Phase 1";
+    SweepingOutputInstanceBuilder sweepingOutputBuilder = SweepingOutputServiceImpl.prepareSweepingOutputBuilder(appId,
+        pipelineExecutionUuid, workflowExecutionUuid, phaseExecutionId, stateExecutionInstanceId, Scope.WORKFLOW);
+    MapTestSweepingOutput mapSweepingOutput = new MapTestSweepingOutput();
+    mapSweepingOutput.put("testKey1", "testValue1");
+    mapSweepingOutput.put("testKey2", SweepingOutputData.builder().text(SWEEPING_OUTPUT_CONTENT).build());
+    SweepingOutputInstance mapSweepingOutputInstance = sweepingOutputService.save(
+        sweepingOutputBuilder.name(MAP_SWEEPING_OUTPUT_NAME).value(mapSweepingOutput).build());
+    SweepingOutputInstance savedSweepingOutputInstance =
+        sweepingOutputService.find(SweepingOutputInquiry.builder()
+                                       .name(MAP_SWEEPING_OUTPUT_NAME)
+                                       .appId(mapSweepingOutputInstance.getAppId())
+                                       .phaseExecutionId(mapSweepingOutputInstance.getPipelineExecutionId())
+                                       .workflowExecutionId(mapSweepingOutputInstance.getWorkflowExecutionIds().get(0))
+                                       .build());
+
+    assertThat(savedSweepingOutputInstance.getValue()).isInstanceOf(MapTestSweepingOutput.class);
+    assertThat(((MapTestSweepingOutput) savedSweepingOutputInstance.getValue()).get("testKey1"))
+        .isEqualTo("testValue1");
+
+    assertThat(((MapTestSweepingOutput) savedSweepingOutputInstance.getValue()).get("testKey2"))
+        .isInstanceOf(SweepingOutputData.class);
+
+    assertThat(((SweepingOutputData) ((MapTestSweepingOutput) savedSweepingOutputInstance.getValue()).get("testKey2"))
+                   .getText())
+        .isEqualTo(SWEEPING_OUTPUT_CONTENT);
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void testCopyOutputsForAnotherWorkflowExecution() {
     final String anotherWorkflowId = generateUuid();

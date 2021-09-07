@@ -4,6 +4,8 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.gitsync.interceptor.GitSyncConstants;
+import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.dto.GraphLayoutNodeDTO;
@@ -16,7 +18,9 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 @OwnedBy(PIPELINE)
 public class PipelineExecutionSummaryDtoMapper {
-  public PipelineExecutionSummaryDTO toDto(PipelineExecutionSummaryEntity pipelineExecutionSummaryEntity) {
+  public PipelineExecutionSummaryDTO toDto(
+      PipelineExecutionSummaryEntity pipelineExecutionSummaryEntity, EntityGitDetails entityGitDetails) {
+    entityGitDetails = updateEntityGitDetails(entityGitDetails);
     Map<String, GraphLayoutNodeDTO> layoutNodeDTOMap = pipelineExecutionSummaryEntity.getLayoutNodeMap();
     String startingNodeId = pipelineExecutionSummaryEntity.getStartingNodeId();
     return PipelineExecutionSummaryDTO.builder()
@@ -41,6 +45,7 @@ public class PipelineExecutionSummaryDtoMapper {
         .modules(EmptyPredicate.isEmpty(pipelineExecutionSummaryEntity.getModules())
                 ? new ArrayList<>()
                 : pipelineExecutionSummaryEntity.getModules())
+        .gitDetails(entityGitDetails)
         .build();
   }
 
@@ -80,5 +85,24 @@ public class PipelineExecutionSummaryDtoMapper {
       return count;
     }
     return count + getStagesCount(layoutNodeDTOMap, nodeDTO.getEdgeLayoutList().getNextIds().get(0));
+  }
+
+  private EntityGitDetails updateEntityGitDetails(EntityGitDetails entityGitDetails) {
+    if (entityGitDetails == null) {
+      return null;
+    }
+    String rootFolder = entityGitDetails.getRootFolder();
+    String filePath = entityGitDetails.getFilePath();
+    if (rootFolder == null && filePath == null) {
+      return entityGitDetails;
+    } else if (rootFolder == null || filePath == null || rootFolder.equals(GitSyncConstants.DEFAULT)
+        || filePath.equals(GitSyncConstants.DEFAULT)) {
+      return EntityGitDetails.builder()
+          .branch(entityGitDetails.getBranch())
+          .repoIdentifier(entityGitDetails.getRepoIdentifier())
+          .objectId(entityGitDetails.getObjectId())
+          .build();
+    }
+    return entityGitDetails;
   }
 }

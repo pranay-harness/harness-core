@@ -28,6 +28,7 @@ public class MultiServiceWorkflowYamlHandler extends WorkflowYamlHandler<MultiSe
             .withNotificationRules(workflowInfo.getNotificationRules())
             .withPostDeploymentSteps(workflowInfo.getPostDeploymentSteps())
             .withPreDeploymentSteps(workflowInfo.getPreDeploymentSteps())
+            .withRollbackProvisioners(workflowInfo.getRollbackProvisioners())
             .withRollbackWorkflowPhaseIdMap(workflowInfo.getRollbackPhaseMap())
             .withUserVariables(workflowInfo.getUserVariables())
             .withWorkflowPhases(workflowInfo.getPhaseList());

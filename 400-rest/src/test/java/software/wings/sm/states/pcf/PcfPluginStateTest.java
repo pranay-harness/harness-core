@@ -64,6 +64,8 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.task.pcf.response.CfCommandExecutionResponse;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
@@ -106,7 +108,6 @@ import software.wings.common.InfrastructureConstants;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
-import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.PcfInfraStructure;
@@ -125,6 +126,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
@@ -177,6 +179,7 @@ public class PcfPluginStateTest extends WingsBaseTest {
   @Mock private transient ServiceTemplateHelper serviceTemplateHelper;
   @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
   @Mock private TemplateUtils templateUtils;
+  @Mock private StateExecutionService stateExecutionService;
   @InjectMocks @Spy private PcfStateHelper pcfStateHelper;
   @Mock private MainConfiguration configuration;
   @Spy @InjectMocks private PcfPluginState pcfPluginState = new PcfPluginState("name");
@@ -323,6 +326,7 @@ public class PcfPluginStateTest extends WingsBaseTest {
     when(configuration.getPortal()).thenReturn(portalConfig);
     doNothing().when(serviceHelper).addPlaceholderTexts(any());
     when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn("baseUrl");
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
   }
 
   @Test
@@ -340,10 +344,14 @@ public class PcfPluginStateTest extends WingsBaseTest {
   @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_executeGitTask() {
-    final DelegateTask delegateTask = DelegateTask.builder().build();
+    final DelegateTask delegateTask =
+        DelegateTask.builder()
+            .data(TaskData.builder().parameters(new Object[] {GitFetchFilesTaskParams.builder().build()}).build())
+            .description("desc")
+            .build();
     doReturn(delegateTask)
         .when(pcfStateHelper)
-        .createGitFetchFileAsyncTask(any(ExecutionContext.class), anyMap(), anyString());
+        .createGitFetchFileAsyncTask(any(ExecutionContext.class), anyMap(), anyString(), eq(true));
     when(applicationManifestUtils.createGitFetchFilesTaskParams(any(), any(), any()))
         .thenReturn(GitFetchFilesTaskParams.builder().build());
     final ApplicationManifest applicationManifest =
@@ -372,10 +380,14 @@ public class PcfPluginStateTest extends WingsBaseTest {
   @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_executeGitTaskForLinkedCommand() {
-    final DelegateTask delegateTask = DelegateTask.builder().build();
+    final DelegateTask delegateTask =
+        DelegateTask.builder()
+            .data(TaskData.builder().parameters(new Object[] {GitFetchFilesTaskParams.builder().build()}).build())
+            .description("desc")
+            .build();
     doReturn(delegateTask)
         .when(pcfStateHelper)
-        .createGitFetchFileAsyncTask(any(ExecutionContext.class), anyMap(), anyString());
+        .createGitFetchFileAsyncTask(any(ExecutionContext.class), anyMap(), anyString(), eq(true));
     when(applicationManifestUtils.createGitFetchFilesTaskParams(any(), any(), any()))
         .thenReturn(GitFetchFilesTaskParams.builder().build());
     final ApplicationManifest applicationManifest =
@@ -400,7 +412,8 @@ public class PcfPluginStateTest extends WingsBaseTest {
         (PcfPluginStateExecutionData) (executionResponse.getStateExecutionData());
 
     assertThat(stateExecutionData.getRepoRoot()).isEqualTo("/app/sample_application");
-    assertThat(stateExecutionData.getFilePathsInScript()).contains("/app/sample_application/manifest.yml");
+    // now we render all the variables on the delegate side
+    assertThat(stateExecutionData.getFilePathsInScript()).contains("/app/sample_application/${manifest}");
     assertThat(stateExecutionData.getFilePathsInScript()).isNotEmpty();
     assertThat(stateExecutionData.getRenderedScriptString()).isNotEmpty();
     verify(delegateService, times(1)).queueTask(delegateTask);
@@ -491,8 +504,8 @@ public class PcfPluginStateTest extends WingsBaseTest {
   @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_handleAsyncResponseForPluginTask() {
-    final PcfCommandExecutionResponse commandExecutionResponse =
-        PcfCommandExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
+    final CfCommandExecutionResponse commandExecutionResponse =
+        CfCommandExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
 
     Map<String, ResponseData> response = new HashMap<>();
     response.put("response", commandExecutionResponse);

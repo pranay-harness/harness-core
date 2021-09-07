@@ -34,9 +34,10 @@ public class PmsMSTeamChannel extends PmsNotificationChannel {
         .team(Team.PIPELINE)
         .templateData(templateData)
         .templateId(templateId)
-        .userGroups(userGroups.stream()
-                        .map(e -> NotificationChannelUtils.getUserGroups(e, orgIdentifier, projectIdentifier))
-                        .collect(Collectors.toList()))
+        .userGroups(
+            userGroups.stream()
+                .map(e -> NotificationChannelUtils.getUserGroups(e, accountId, orgIdentifier, projectIdentifier))
+                .collect(Collectors.toList()))
         .build();
   }
 }

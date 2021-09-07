@@ -64,14 +64,6 @@ public class DSConfigResource {
     return new RestResponse<>(dsConfigService.list(accountId, connectorIdentifier, productName));
   }
 
-  @PUT
-  @Timed
-  @ExceptionMetered
-  @ApiOperation(value = "saves a data source config", nickname = "saveDataSourceCVConfig")
-  public void saveDataSourceCVConfig(@QueryParam("accountId") @Valid final String accountId, @Body DSConfig dsConfig) {
-    dsConfigService.upsert(dsConfig);
-  }
-
   @POST
   @Timed
   @ExceptionMetered

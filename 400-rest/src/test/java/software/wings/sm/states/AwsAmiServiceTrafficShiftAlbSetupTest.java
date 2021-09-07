@@ -23,6 +23,7 @@ import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -40,6 +41,7 @@ import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceBuilder;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -57,6 +59,7 @@ import software.wings.service.impl.aws.model.AwsAmiServiceTrafficShiftAlbSetupRe
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionResponse;
@@ -81,6 +84,8 @@ public class AwsAmiServiceTrafficShiftAlbSetupTest extends WingsBaseTest {
   @Mock private AwsAmiServiceStateHelper awsAmiServiceHelper;
   @Mock private SweepingOutputService sweepingOutputService;
   @Mock private AwsStateHelper awsStateHelper;
+  @Mock private StateExecutionService stateExecutionService;
+  @Mock private FeatureFlagService featureFlagService;
   @Captor private ArgumentCaptor<SweepingOutputInstance> sweepingOutputInstanceArgumentCaptor;
 
   @Test
@@ -182,6 +187,8 @@ public class AwsAmiServiceTrafficShiftAlbSetupTest extends WingsBaseTest {
     on(state).set("delegateService", delegateService);
     on(state).set("awsAmiServiceHelper", awsAmiServiceHelper);
     on(state).set("awsStateHelper", awsStateHelper);
+    on(state).set("stateExecutionService", stateExecutionService);
+    on(state).set("featureFlagService", featureFlagService);
 
     when(mockContext.renderExpression(anyString())).thenAnswer((Answer<String>) invocation -> {
       Object[] args = invocation.getArguments();
@@ -213,6 +220,8 @@ public class AwsAmiServiceTrafficShiftAlbSetupTest extends WingsBaseTest {
         .when(serviceResourceService)
         .getCommandByName(any(), any(), any(), any());
     doReturn(emptyList()).when(serviceResourceService).getFlattenCommandUnitList(any(), any(), any(), any());
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
+    doReturn(false).when(featureFlagService).isEnabled(any(), anyString());
     if (!isSuccess) {
       doThrow(Exception.class).when(delegateService).queueTask(any());
     }
@@ -248,6 +257,8 @@ public class AwsAmiServiceTrafficShiftAlbSetupTest extends WingsBaseTest {
     SpotInstStateHelper mockSpotinstStateHelper = mock(SpotInstStateHelper.class);
     on(state).set("activityService", mockActivityService);
     on(state).set("spotinstStateHelper", mockSpotinstStateHelper);
+    on(state).set("featureFlagService", featureFlagService);
+
     doReturn(10).when(mockSpotinstStateHelper).renderCount(anyString(), any(), anyInt());
 
     AwsAmiServiceTrafficShiftAlbSetupResponse delegateResponse =
@@ -264,6 +275,7 @@ public class AwsAmiServiceTrafficShiftAlbSetupTest extends WingsBaseTest {
             .build();
 
     doReturn(awsAmiExecutionData).when(mockContext).getStateExecutionData();
+    doReturn(false).when(featureFlagService).isEnabled(any(), anyString());
 
     when(mockContext.renderExpression(anyString())).thenAnswer((Answer<String>) invocation -> {
       Object[] args = invocation.getArguments();

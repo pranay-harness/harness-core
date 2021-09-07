@@ -44,6 +44,7 @@ import software.wings.beans.command.CommandUnit;
 import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.states.ManagerExecutionLogCallback;
@@ -72,6 +73,7 @@ public class AzureWebAppSlotRollbackTest extends WingsBaseTest {
   @Mock protected transient AzureVMSSStateHelper azureVMSSStateHelper;
   @Mock protected transient AzureSweepingOutputServiceHelper azureSweepingOutputServiceHelper;
   @Mock protected ActivityService activityService;
+  @Mock protected StateExecutionService stateExecutionService;
   @Spy @InjectMocks private ServiceTemplateHelper serviceTemplateHelper;
   @Spy @InjectMocks AzureWebAppSlotRollback state = new AzureWebAppSlotRollback("Web app slot rollback state");
 
@@ -234,6 +236,7 @@ public class AzureWebAppSlotRollbackTest extends WingsBaseTest {
     doReturn(appServiceStateData).when(azureVMSSStateHelper).populateAzureAppServiceData(eq(mockContext));
     doReturn("service-template-id").when(serviceTemplateHelper).fetchServiceTemplateId(any());
     doReturn(delegateResult).when(delegateService).queueTask(any());
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
 
     when(mockContext.renderExpression(anyString())).thenAnswer((Answer<String>) invocation -> {
       Object[] args = invocation.getArguments();

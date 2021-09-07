@@ -7,16 +7,15 @@ import io.harness.k8s.model.KubernetesConfig;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import io.harness.perpetualtask.k8s.informer.SharedInformerFactoryFactory;
 import io.harness.perpetualtask.k8s.metrics.client.impl.DefaultK8sMetricsClient;
-import io.harness.perpetualtask.k8s.utils.K8sClusterHelper;
 import io.harness.serializer.KryoSerializer;
 
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
-import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import io.kubernetes.client.common.KubernetesObject;
 import io.kubernetes.client.informer.SharedInformer;
 import io.kubernetes.client.informer.SharedInformerFactory;
 import io.kubernetes.client.informer.cache.Store;
@@ -42,14 +41,15 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class K8sWatchServiceDelegate {
-  private static final Map<String, Class<?>> KNOWN_WORKLOAD_TYPES = ImmutableMap.<String, Class<?>>builder()
-                                                                        .put("Deployment", V1Deployment.class)
-                                                                        .put("ReplicaSet", V1ReplicaSet.class)
-                                                                        .put("DaemonSet", V1DaemonSet.class)
-                                                                        .put("StatefulSet", V1StatefulSet.class)
-                                                                        .put("Job", V1Job.class)
-                                                                        .put("CronJob", V1beta1CronJob.class)
-                                                                        .build();
+  private static final Map<String, Class<? extends KubernetesObject>> KNOWN_WORKLOAD_TYPES =
+      ImmutableMap.<String, Class<? extends KubernetesObject>>builder()
+          .put("Deployment", V1Deployment.class)
+          .put("ReplicaSet", V1ReplicaSet.class)
+          .put("DaemonSet", V1DaemonSet.class)
+          .put("StatefulSet", V1StatefulSet.class)
+          .put("Job", V1Job.class)
+          .put("CronJob", V1beta1CronJob.class)
+          .build();
 
   private final WatcherFactory watcherFactory;
   private final SharedInformerFactoryFactory sharedInformerFactoryFactory;
@@ -88,28 +88,24 @@ public class K8sWatchServiceDelegate {
     return watchMap.keySet();
   }
 
-  public String create(K8sWatchTaskParams params) {
+  public String create(K8sWatchTaskParams params, KubernetesConfig kubernetesConfig) {
     String watchId = params.getClusterId();
     watchMap.computeIfAbsent(watchId, id -> {
       log.info("Creating watch with id: {}", id);
-
-      K8sClusterConfig k8sClusterConfig =
-          (K8sClusterConfig) kryoSerializer.asObject(params.getK8SClusterConfig().toByteArray());
-      KubernetesConfig kubernetesConfig =
-          containerDeploymentDelegateHelper.getKubernetesConfig(k8sClusterConfig, false);
 
       ApiClient apiClient = apiClientFactory.getClient(kubernetesConfig);
       DefaultK8sMetricsClient k8sMetricsClient = new DefaultK8sMetricsClient(apiClient);
 
       String kubeSystemUid = getKubeSystemUid(k8sMetricsClient);
 
-      ClusterDetails clusterDetails = ClusterDetails.builder()
-                                          .cloudProviderId(params.getCloudProviderId())
-                                          .clusterId(params.getClusterId())
-                                          .clusterName(params.getClusterName())
-                                          .kubeSystemUid(kubeSystemUid)
-                                          .isSeen(K8sClusterHelper.isSeen(params.getClusterId()))
-                                          .build();
+      ClusterDetails clusterDetails =
+          ClusterDetails.builder()
+              .cloudProviderId(params.getCloudProviderId())
+              .clusterId(params.getClusterId())
+              .clusterName(params.getClusterName())
+              .kubeSystemUid(kubeSystemUid)
+              .isSeen(false) // TODO(UTSAV): [TEMP] K8sClusterHelper.isSeen(params.getClusterId(), kubeSystemUid)
+              .build();
 
       SharedInformerFactory sharedInformerFactory =
           sharedInformerFactoryFactory.createSharedInformerFactory(apiClient, clusterDetails);
@@ -142,7 +138,7 @@ public class K8sWatchServiceDelegate {
       sharedInformerFactory.startAllRegisteredInformers();
 
       // cluster is seen/old now, any new onAdd event older than 2 hours will be ignored.
-      K8sClusterHelper.setAsSeen(params.getClusterId());
+      // TODO(UTSAV): TEMP K8sClusterHelper.setAsSeen(params.getClusterId(), kubeSystemUid);
       return WatcherGroup.builder().watchId(id).sharedInformerFactory(sharedInformerFactory).build();
     });
 

@@ -9,6 +9,7 @@ import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 
 import static java.util.Collections.singletonList;
 
+import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.eraro.ErrorCode;
@@ -133,14 +134,15 @@ public class EcsSetupRollback extends State {
                                              TIMEOUT_FAILURE_SUPPORT, dataBag.getApplication().getAccountId()))
                                          .build();
 
-    String delegateTaskId =
-        ecsStateHelper.createAndQueueDelegateTaskForEcsServiceSetUp(request, dataBag, activity, delegateService);
+    DelegateTask delegateTask = ecsStateHelper.createAndQueueDelegateTaskForEcsServiceSetUp(
+        request, dataBag, activity, delegateService, isSelectionLogsTrackingForTasksEnabled());
+    appendDelegateTaskDetails(context, delegateTask);
 
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(singletonList(activity.getUuid()))
         .stateExecutionData(stateExecutionData)
-        .delegateTaskId(delegateTaskId)
+        .delegateTaskId(delegateTask.getUuid())
         .build();
   }
 
@@ -211,5 +213,10 @@ public class EcsSetupRollback extends State {
       serviceElementBuilder.name(setupExecutionData.getContainerServiceName());
     }
     return serviceElementBuilder.build();
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

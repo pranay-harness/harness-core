@@ -12,7 +12,6 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.utils.ConstraintViolationHandlerUtils;
 
-import software.wings.beans.Application;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.datafetcher.BaseMutatorDataFetcher;
 import software.wings.graphql.datafetcher.MutationContext;
@@ -78,14 +77,13 @@ public class UpdateConnectorDataFetcher
     connector.updateSettingAttribute(settingAttribute, input);
 
     try {
-      settingsService.saveWithPruning(settingAttribute, Application.GLOBAL_APP_ID, mutationContext.getAccountId());
+      settingAttribute =
+          settingsService.updateWithSettingFields(settingAttribute, settingAttribute.getUuid(), GLOBAL_APP_ID);
     } catch (ConstraintViolationException exception) {
       String errorMessages = String.join(", ", ConstraintViolationHandlerUtils.getErrorMessages(exception));
       throw new InvalidRequestException(errorMessages, exception);
     }
 
-    settingAttribute =
-        settingsService.updateWithSettingFields(settingAttribute, settingAttribute.getUuid(), GLOBAL_APP_ID);
     settingServiceHelper.updateSettingAttributeBeforeResponse(settingAttribute, false);
 
     QLConnectorBuilder qlConnectorBuilder = connectorsController.getConnectorBuilder(settingAttribute);

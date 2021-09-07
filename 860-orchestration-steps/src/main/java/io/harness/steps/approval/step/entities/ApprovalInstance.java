@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.iterator.PersistentRegularIterable;
@@ -11,16 +12,18 @@ import io.harness.logging.AutoLogContext;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.steps.approval.step.ApprovalStepParameters;
 import io.harness.steps.approval.step.beans.ApprovalStatus;
 import io.harness.steps.approval.step.beans.ApprovalType;
 import io.harness.timeout.TimeoutParameters;
 import io.harness.yaml.core.timeout.Timeout;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
 import java.util.HashMap;
@@ -51,6 +54,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("approvalInstances")
 @Entity(value = "approvalInstances", noClassnameStored = true)
 @Persistent
+@StoreIn(DbAliases.PMS)
 public abstract class ApprovalInstance implements PersistentEntity, PersistentRegularIterable {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
@@ -75,6 +79,7 @@ public abstract class ApprovalInstance implements PersistentEntity, PersistentRe
 
   @NotNull ApprovalType type;
   @NotNull ApprovalStatus status;
+  String errorMessage;
   long deadline;
 
   @CreatedDate Long createdAt;
@@ -82,6 +87,11 @@ public abstract class ApprovalInstance implements PersistentEntity, PersistentRe
   @Version Long version;
 
   long nextIteration;
+
+  @JsonIgnore
+  public boolean hasExpired() {
+    return deadline < System.currentTimeMillis();
+  }
 
   public AutoLogContext autoLogContext() {
     return new AutoLogContext(logContextMap(), OVERRIDE_NESTS);
@@ -95,7 +105,7 @@ public abstract class ApprovalInstance implements PersistentEntity, PersistentRe
     return logContext;
   }
 
-  protected void updateFromStepParameters(Ambiance ambiance, ApprovalStepParameters stepParameters) {
+  protected void updateFromStepParameters(Ambiance ambiance, StepElementParameters stepParameters) {
     if (stepParameters == null) {
       return;
     }
@@ -103,7 +113,7 @@ public abstract class ApprovalInstance implements PersistentEntity, PersistentRe
     setId(generateUuid());
     setAmbiance(ambiance);
     setNodeExecutionId(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
-    setType(stepParameters.getApprovalType());
+    setType(ApprovalType.fromName(stepParameters.getType()));
     setStatus(ApprovalStatus.WAITING);
     setDeadline(calculateDeadline(stepParameters.getTimeout()));
   }

@@ -1,11 +1,12 @@
 package io.harness.pms.sdk.core.steps.executables;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
 import io.harness.pms.sdk.core.steps.Step;
+import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
@@ -27,9 +28,16 @@ import java.util.Map;
  * supplied as parameter in responseDataMap. The key is the callbackId supplied in method above
  *
  */
-@OwnedBy(CDC)
-public interface AsyncExecutable<T extends StepParameters> extends Step<T>, Abortable<T, AsyncExecutableResponse> {
-  AsyncExecutableResponse executeAsync(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage);
+@OwnedBy(PIPELINE)
+public interface AsyncExecutable<T extends StepParameters>
+    extends Step<T>, Abortable<T, AsyncExecutableResponse>, Failable<T>, Progressable<T> {
+  AsyncExecutableResponse executeAsync(
+      Ambiance ambiance, T stepParameters, StepInputPackage inputPackage, PassThroughData passThroughData);
 
   StepResponse handleAsyncResponse(Ambiance ambiance, T stepParameters, Map<String, ResponseData> responseDataMap);
+
+  @Override
+  default void handleFailureInterrupt(Ambiance ambiance, T stepParameters, Map<String, String> metadata) {
+    // NOOP : By default this is noop as task failure is handled by the PMS but you are free to override it
+  }
 }

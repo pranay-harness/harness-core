@@ -5,6 +5,7 @@ import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.rule.OwnerRule.ABOSII;
 
+import static java.util.Collections.emptySet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -92,7 +93,7 @@ public class K8sRollingRollbackRequestHandlerTest extends CategoryTest {
     doReturn(true).when(k8sRollingRollbackBaseHandler).init(rollbackHandlerConfig, releaseName, logCallback);
     doReturn(true)
         .when(k8sRollingRollbackBaseHandler)
-        .rollback(rollbackHandlerConfig, k8sDelegateTaskParams, releaseNumber, logCallback);
+        .rollback(rollbackHandlerConfig, k8sDelegateTaskParams, releaseNumber, logCallback, emptySet());
     K8sDeployResponse response = k8sRollingRollbackRequestHandler.executeTaskInternal(
         k8sRollingRollbackDeployRequest, k8sDelegateTaskParams, logStreamingTaskClient, null);
 
@@ -101,7 +102,7 @@ public class K8sRollingRollbackRequestHandlerTest extends CategoryTest {
     assertThat(rollbackHandlerConfig.getClient()).isNotNull();
     verify(k8sRollingRollbackBaseHandler).init(rollbackHandlerConfig, releaseName, logCallback);
     verify(k8sRollingRollbackBaseHandler)
-        .rollback(rollbackHandlerConfig, k8sDelegateTaskParams, releaseNumber, logCallback);
+        .rollback(rollbackHandlerConfig, k8sDelegateTaskParams, releaseNumber, logCallback, emptySet());
     verify(k8sRollingRollbackBaseHandler)
         .steadyStateCheck(rollbackHandlerConfig, k8sDelegateTaskParams, timeoutIntervalInMin, logCallback);
     verify(k8sRollingRollbackBaseHandler).postProcess(rollbackHandlerConfig, releaseName);
@@ -121,7 +122,7 @@ public class K8sRollingRollbackRequestHandlerTest extends CategoryTest {
     assertThat(rollbackHandlerConfig.getClient()).isNotNull();
     verify(k8sRollingRollbackBaseHandler).init(rollbackHandlerConfig, releaseName, logCallback);
     verify(k8sRollingRollbackBaseHandler, never())
-        .rollback(rollbackHandlerConfig, k8sDelegateTaskParams, releaseNumber, logCallback);
+        .rollback(rollbackHandlerConfig, k8sDelegateTaskParams, releaseNumber, logCallback, emptySet());
     verify(k8sRollingRollbackBaseHandler, never())
         .steadyStateCheck(rollbackHandlerConfig, k8sDelegateTaskParams, timeoutIntervalInMin, logCallback);
     verify(k8sRollingRollbackBaseHandler, never()).postProcess(rollbackHandlerConfig, releaseName);
@@ -151,7 +152,7 @@ public class K8sRollingRollbackRequestHandlerTest extends CategoryTest {
     doReturn(true).when(k8sRollingRollbackBaseHandler).init(rollbackHandlerConfig, releaseName, logCallback);
     doReturn(false)
         .when(k8sRollingRollbackBaseHandler)
-        .rollback(rollbackHandlerConfig, k8sDelegateTaskParams, releaseNumber, logCallback);
+        .rollback(rollbackHandlerConfig, k8sDelegateTaskParams, releaseNumber, logCallback, emptySet());
 
     K8sDeployResponse response = k8sRollingRollbackRequestHandler.executeTaskInternal(
         k8sRollingRollbackDeployRequest, k8sDelegateTaskParams, logStreamingTaskClient, null);
@@ -161,7 +162,7 @@ public class K8sRollingRollbackRequestHandlerTest extends CategoryTest {
     assertThat(rollbackHandlerConfig.getClient()).isNotNull();
     verify(k8sRollingRollbackBaseHandler).init(rollbackHandlerConfig, releaseName, logCallback);
     verify(k8sRollingRollbackBaseHandler)
-        .rollback(rollbackHandlerConfig, k8sDelegateTaskParams, releaseNumber, logCallback);
+        .rollback(rollbackHandlerConfig, k8sDelegateTaskParams, releaseNumber, logCallback, emptySet());
     verify(k8sRollingRollbackBaseHandler, never())
         .steadyStateCheck(rollbackHandlerConfig, k8sDelegateTaskParams, timeoutIntervalInMin, logCallback);
     verify(k8sRollingRollbackBaseHandler, never()).postProcess(rollbackHandlerConfig, releaseName);
@@ -188,7 +189,7 @@ public class K8sRollingRollbackRequestHandlerTest extends CategoryTest {
     doReturn(true).when(k8sRollingRollbackBaseHandler).init(rollbackHandlerConfig, releaseName, logCallback);
     doReturn(true)
         .when(k8sRollingRollbackBaseHandler)
-        .rollback(rollbackHandlerConfig, k8sDelegateTaskParams, releaseNumber, logCallback);
+        .rollback(rollbackHandlerConfig, k8sDelegateTaskParams, releaseNumber, logCallback, emptySet());
 
     doThrow(thrownException).when(k8sRollingRollbackBaseHandler).postProcess(rollbackHandlerConfig, releaseName);
 

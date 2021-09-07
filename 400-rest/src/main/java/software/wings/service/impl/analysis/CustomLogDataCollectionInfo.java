@@ -14,6 +14,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.states.CustomLogVerificationState.ResponseMapper;
 import software.wings.utils.Utils;
 
+import com.google.common.collect.Maps;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -77,5 +78,24 @@ public class CustomLogDataCollectionInfo extends LogDataCollectionInfo {
     executionCapabilities.addAll(EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
         encryptedDataDetails, maskingEvaluator));
     return executionCapabilities;
+  }
+
+  public CustomLogDataCollectionInfo clone() {
+    CustomLogDataCollectionInfo clone = CustomLogDataCollectionInfo.builder().build();
+    super.copy(clone);
+    clone.setBaseUrl(baseUrl);
+    clone.setValidationUrl(validationUrl);
+    clone.setDataUrl(dataUrl);
+    clone.setLogResponseDefinition(
+        logResponseDefinition == null ? null : Maps.newHashMap(logResponseDefinition)); // note: NOT A DEEPCOPY
+    clone.setHeaders(headers == null ? null : Maps.newHashMap(headers));
+    clone.setOptions(options == null ? null : Maps.newHashMap(options));
+    clone.setBody(body == null ? null : Maps.newHashMap(body));
+    clone.setCollectionFrequency(collectionFrequency);
+    clone.setHostnameSeparator(hostnameSeparator);
+    clone.setShouldDoHostBasedFiltering(shouldDoHostBasedFiltering);
+    clone.setFixedHostName(fixedHostName);
+
+    return clone;
   }
 }

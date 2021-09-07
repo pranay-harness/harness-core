@@ -10,6 +10,10 @@ import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.AZ
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.AzureConstants;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
@@ -67,6 +71,8 @@ import org.apache.commons.lang3.StringUtils;
 
 @Slf4j
 @Singleton
+@OwnedBy(HarnessTeam.CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ARMStateHelper {
   public static final String AZURE_ARM_COMMAND_UNIT_TYPE = "ARM Deployment";
   public static final String AZURE_BLUEPRINT_COMMAND_UNIT_TYPE = "Blueprint Deployment";

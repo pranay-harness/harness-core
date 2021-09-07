@@ -1,4 +1,4 @@
-<#include "common.sh.ftl">
+<#include "common.start.sh.ftl">
 
 if [ -z "$1" ]; then
   echo "This script is not meant to be executed directly. The watcher uses it to manage delegate processes."
@@ -89,10 +89,6 @@ fi
 
 export DEPLOY_MODE=${deployMode}
 
-if [[ -z "$MANAGER_SERVICE_SECRET" || "$MANAGER_SERVICE_SECRET" == "null" ]]; then
-  export MANAGER_SERVICE_SECRET=${managerServiceSecret}
-fi
-
 if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
   echo "Checking Delegate latest version..."
   DELEGATE_STORAGE_URL=${delegateStorageUrl}
@@ -104,14 +100,23 @@ if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
     echo "Downloading Delegate $REMOTE_DELEGATE_VERSION ..."
     curl $MANAGER_PROXY_CURL -#k $REMOTE_DELEGATE_URL -o delegate.jar
   else
-    CURRENT_VERSION=$(unzip -c delegate.jar META-INF/MANIFEST.MF | grep Application-Version | cut -d "=" -f2 | tr -d " " | tr -d "\r" | tr -d "\n")
-    if [[ $REMOTE_DELEGATE_VERSION != $CURRENT_VERSION ]]; then
+    DELEGATE_CURRENT_VERSION=$(jar_app_version delegate.jar)
+    if [[ $REMOTE_DELEGATE_VERSION != $DELEGATE_CURRENT_VERSION ]]; then
+      echo "The current version $DELEGATE_CURRENT_VERSION is not the same as the expected remote version $REMOTE_DELEGATE_VERSION"
       echo "Downloading Delegate $REMOTE_DELEGATE_VERSION ..."
-      mkdir -p backup.$CURRENT_VERSION
-      cp delegate.jar backup.$CURRENT_VERSION
+      mkdir -p backup.$DELEGATE_CURRENT_VERSION
+      cp delegate.jar backup.$DELEGATE_CURRENT_VERSION
       curl $MANAGER_PROXY_CURL -#k $REMOTE_DELEGATE_URL -o delegate.jar
     fi
   fi
+fi
+
+if [ -z $CLIENT_TOOLS_DOWNLOAD_DISABLED ]; then
+  export CLIENT_TOOLS_DOWNLOAD_DISABLED=false
+fi
+
+if [ -z $INSTALL_CLIENT_TOOLS_IN_BACKGROUND ]; then
+  export INSTALL_CLIENT_TOOLS_IN_BACKGROUND=true
 fi
 
 if [ ! -e config-delegate.yml ]; then
@@ -168,6 +173,19 @@ else
   sed -i.bak "s|^cdnUrl:.*$|cdnUrl: ${cdnUrl}|" config-delegate.yml
 fi
 
+<#if managerTarget??>
+if ! `grep managerTarget config-delegate.yml > /dev/null`; then
+  echo "managerTarget: ${managerTarget}" >> config-delegate.yml
+else
+  sed -i.bak "s|^managerTarget:.*$|managerTarget: ${managerTarget}|" config-delegate.yml
+fi
+if ! `grep managerAuthority config-delegate.yml > /dev/null`; then
+  echo "managerAuthority: ${managerAuthority}" >> config-delegate.yml
+else
+  sed -i.bak "s|^managerAuthority:.*$|managerAuthority: ${managerAuthority}|" config-delegate.yml
+fi
+</#if>
+
 if ! `grep grpcServiceEnabled config-delegate.yml > /dev/null`; then
   echo "grpcServiceEnabled: $GRPC_SERVICE_ENABLED" >> config-delegate.yml
 else
@@ -180,16 +198,18 @@ else
   sed -i.bak "s|^grpcServiceConnectorPort:.*$|grpcServiceConnectorPort: $GRPC_SERVICE_CONNECTOR_PORT|" config-delegate.yml
 fi
 
-if ! `grep managerServiceSecret config-delegate.yml > /dev/null`; then
-  echo "managerServiceSecret: $MANAGER_SERVICE_SECRET" >> config-delegate.yml
-else
-  sed -i.bak "s|^managerServiceSecret:.*$|managerServiceSecret: $MANAGER_SERVICE_SECRET|" config-delegate.yml
-fi
-
 if ! `grep logStreamingServiceBaseUrl config-delegate.yml > /dev/null`; then
   echo "logStreamingServiceBaseUrl: ${logStreamingServiceBaseUrl}" >> config-delegate.yml
 else
   sed -i.bak "s|^logStreamingServiceBaseUrl:.*$|logStreamingServiceBaseUrl: ${logStreamingServiceBaseUrl}|" config-delegate.yml
+fi
+
+if ! `grep clientToolsDownloadDisabled config-delegate.yml > /dev/null`; then
+  echo "clientToolsDownloadDisabled: $CLIENT_TOOLS_DOWNLOAD_DISABLED" >> config-delegate.yml
+fi
+
+if ! `grep installClientToolsInBackground config-delegate.yml > /dev/null`; then
+  echo "installClientToolsInBackground: $INSTALL_CLIENT_TOOLS_IN_BACKGROUND" >> config-delegate.yml
 fi
 
 if [ ! -z "$KUSTOMIZE_PATH" ] && ! `grep kustomizePath config-delegate.yml > /dev/null` ; then
@@ -204,9 +224,19 @@ if [ ! -z "$KUBECTL_PATH" ] && ! `grep kubectlPath config-delegate.yml > /dev/nu
   echo "kubectlPath: $KUBECTL_PATH" >> config-delegate.yml
 fi
 
+if [ ! -z "$CF_CLI6_PATH" ] && ! `grep cfCli6Path config-delegate.yml > /dev/null` ; then
+  echo "cfCli6Path: $CF_CLI6_PATH" >> config-delegate.yml
+fi
+
+if [ ! -z "$CF_CLI7_PATH" ] && ! `grep cfCli7Path config-delegate.yml > /dev/null` ; then
+  echo "cfCli7Path: $CF_CLI7_PATH" >> config-delegate.yml
+fi
+
 rm -f -- *.bak
 
 export KUBECTL_VERSION=${kubectlVersion}
+
+export SCM_VERSION=${scmVersion}
 
 <#if delegateName??>
 export DELEGATE_NAME=${delegateName}
@@ -225,12 +255,16 @@ if [[ ! -z $INSTRUMENTATION ]]; then
   export JRE_BINARY=$JDK_BINARY
 fi
 
+if [ ! -e alpn-boot-8.1.13.v20181017.jar ]; then
+  curl $MANAGER_PROXY_CURL -ks $ALPN_BOOT_JAR_URL -o alpn-boot-8.1.13.v20181017.jar
+fi
+
 if [[ $DEPLOY_MODE == "KUBERNETES" ]]; then
   echo "Starting delegate - version $2 with java $JRE_BINARY"
-  $JRE_BINARY $INSTRUMENTATION $PROXY_SYS_PROPS $OVERRIDE_TMP_PROPS -Ddelegatesourcedir="$DIR" ${delegateXmx} -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Dfile.encoding=UTF-8 -Dcom.sun.jndi.ldap.object.disableEndpointIdentification=true -jar $2/delegate.jar config-delegate.yml watched $1
+  $JRE_BINARY $JAVA_OPTS $INSTRUMENTATION $PROXY_SYS_PROPS $OVERRIDE_TMP_PROPS -Ddelegatesourcedir="$DIR" ${delegateXmx} -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Dfile.encoding=UTF-8 -Dcom.sun.jndi.ldap.object.disableEndpointIdentification=true -DLANG=en_US.UTF-8 -Xbootclasspath/p:alpn-boot-8.1.13.v20181017.jar -jar $2/delegate.jar config-delegate.yml watched $1
 else
   echo "Starting delegate - version $REMOTE_DELEGATE_VERSION with java $JRE_BINARY"
-  $JRE_BINARY $INSTRUMENTATION $PROXY_SYS_PROPS $OVERRIDE_TMP_PROPS -Ddelegatesourcedir="$DIR" ${delegateXmx} -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Dfile.encoding=UTF-8 -Dcom.sun.jndi.ldap.object.disableEndpointIdentification=true -jar delegate.jar config-delegate.yml watched $1
+  $JRE_BINARY $JAVA_OPTS $INSTRUMENTATION $PROXY_SYS_PROPS $OVERRIDE_TMP_PROPS -Ddelegatesourcedir="$DIR" ${delegateXmx} -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Dfile.encoding=UTF-8 -Dcom.sun.jndi.ldap.object.disableEndpointIdentification=true -DLANG=en_US.UTF-8 -Xbootclasspath/p:alpn-boot-8.1.13.v20181017.jar -jar delegate.jar config-delegate.yml watched $1
 fi
 
 sleep 3

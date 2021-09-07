@@ -22,6 +22,7 @@ import software.wings.graphql.schema.type.aggregation.application.QLApplicationT
 import software.wings.graphql.utils.nameservice.NameService;
 
 import com.google.inject.Inject;
+import graphql.schema.DataFetchingEnvironment;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +38,8 @@ public class ApplicationStatsDataFetcher
 
   @Override
   protected QLData fetch(String accountId, QLNoOpAggregateFunction aggregateFunction, List<QLApplicationFilter> filters,
-      List<QLApplicationAggregation> groupByList, List<QLNoOpSortCriteria> sortCriteria) {
+      List<QLApplicationAggregation> groupByList, List<QLNoOpSortCriteria> sortCriteria,
+      DataFetchingEnvironment dataFetchingEnvironment) {
     final Class entityClass = Application.class;
     final List<String> groupByEntityList = new ArrayList<>();
     if (isNotEmpty(groupByList)) {

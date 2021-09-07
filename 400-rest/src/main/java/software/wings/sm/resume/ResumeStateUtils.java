@@ -5,7 +5,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notNullCheck;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.persistence.HIterator;
@@ -30,10 +32,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
+import org.mongodb.morphia.query.FindOptions;
 
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ResumeStateUtils {
   public static final Integer RESUME_STATE_TIMEOUT_MILLIS = 60 * 1000;
 
@@ -88,7 +92,7 @@ public class ResumeStateUtils {
     try (
         HIterator<SweepingOutputInstance> instancesHIterator = new HIterator<>(
             sweepingOutputService.prepareApprovalStateOutputsQuery(appId, fromPipelineExecutionId, fromStateExecutionId)
-                .fetch())) {
+                .fetch(new FindOptions().modifier("$hint", "pipelineStateExecution")))) {
       for (SweepingOutputInstance instance : instancesHIterator) {
         instances.add(instance);
       }

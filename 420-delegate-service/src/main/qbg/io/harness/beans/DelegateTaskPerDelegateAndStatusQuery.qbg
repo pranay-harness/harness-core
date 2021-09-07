@@ -1,0 +1,9 @@
+query PerDelegateAndStatus for io.harness.beans.DelegateTask {
+  accountId equal String;
+  uuid in list of String;
+  delegateId equal String;
+  status equal io.harness.beans.DelegateTask.Status;
+
+  project uuid;
+  project data_timeout;
+}

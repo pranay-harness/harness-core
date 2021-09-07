@@ -6,6 +6,10 @@ import static io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.IRREGULAR_SKIP_MISSED;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.capability.CapabilitySubjectPermission;
 import io.harness.capability.CapabilitySubjectPermission.PermissionResult;
 import io.harness.capability.CapabilitySubjectPermissionCrudObserver;
@@ -26,6 +30,7 @@ import io.harness.persistence.HPersistence;
 import software.wings.service.impl.DelegateObserver;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.DelegateTaskServiceClassic;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -39,6 +44,8 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.DEL)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class BlockingCapabilityPermissionsRecordHandler
     implements MongoPersistenceIterator.Handler<CapabilityTaskSelectionDetails>,
                CapabilitySubjectPermissionCrudObserver, DelegateObserver {
@@ -51,6 +58,7 @@ public class BlockingCapabilityPermissionsRecordHandler
   @Inject private AssignDelegateService assignDelegateService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private CapabilityService capabilityService;
+  @Inject private DelegateTaskServiceClassic delegateTaskServiceClassic;
 
   PersistenceIterator<CapabilityTaskSelectionDetails> capSubjectPermissionIterator;
 
@@ -113,7 +121,7 @@ public class BlockingCapabilityPermissionsRecordHandler
                 persistence.findAndModify(query, updateOperations, HPersistence.returnNewOptions);
 
             if (processingPermission != null) {
-              delegateService.executeBatchCapabilityCheckTask(taskSelectionDetails.getAccountId(),
+              delegateTaskServiceClassic.executeBatchCapabilityCheckTask(taskSelectionDetails.getAccountId(),
                   capabilitySubjectPermission.getDelegateId(), Arrays.asList(capabilitySubjectPermission),
                   taskSelectionDetails.getUuid());
 

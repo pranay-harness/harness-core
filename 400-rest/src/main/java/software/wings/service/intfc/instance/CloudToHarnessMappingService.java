@@ -7,8 +7,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.cluster.entities.CEUserInfo;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
-import io.harness.ccm.commons.entities.CEMetadataRecord;
+import io.harness.ccm.commons.entities.batch.CEMetadataRecord;
 import io.harness.ccm.config.GcpBillingAccount;
+import io.harness.ccm.config.GcpServiceAccount;
 
 import software.wings.api.DeploymentSummary;
 import software.wings.beans.Account;
@@ -60,7 +61,9 @@ public interface CloudToHarnessMappingService {
   List<SettingAttribute> listSettingAttributesCreatedInDuration(
       String accountId, SettingCategory category, SettingVariableTypes valueType, long startTime, long endTime);
 
-  List<GcpBillingAccount> listGcpBillingAccountUpdatedInDuration(String accountId, long startTime, long endTime);
+  List<GcpBillingAccount> listGcpBillingAccountUpdatedInDuration(String accountId);
+
+  GcpServiceAccount getGcpServiceAccount(String accountId);
 
   String getEntityName(BillingDataQueryMetadata.BillingDataMetaDataFields field, String entityId);
 

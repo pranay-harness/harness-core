@@ -14,7 +14,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.budget.entities.BudgetAlertsData;
-import io.harness.ccm.commons.utils.DataUtils;
+import io.harness.ccm.commons.utils.TimeUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -52,7 +52,7 @@ import org.mockito.stubbing.Answer;
 @OwnedBy(CE)
 public class BudgetTimescaleQueryHelperTest extends AbstractDataFetcherTestBase {
   @Mock TimeScaleDBService timeScaleDBService;
-  @Mock private DataUtils utils;
+  @Mock private TimeUtils utils;
   @Inject @InjectMocks BudgetTimescaleQueryHelper queryHelper;
 
   @Mock Statement statement;

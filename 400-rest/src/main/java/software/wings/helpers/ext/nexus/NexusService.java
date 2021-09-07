@@ -2,12 +2,13 @@ package software.wings.helpers.ext.nexus;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.ListNotifyResponseData;
-import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.nexus.NexusRequest;
 
 import software.wings.beans.artifact.ArtifactStreamAttributes;
-import software.wings.beans.config.NexusConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
 import java.io.InputStream;
@@ -19,29 +20,15 @@ import org.apache.commons.lang3.tuple.Pair;
  * Created by srinivas on 3/28/17.
  */
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._960_API_SERVICES)
 public interface NexusService {
-  /**
-   * Get Repositories
-   *
-   * @return map RepoId and Name
-   */
-  Map<String, String> getRepositories(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails);
-
-  /**
-   * Get Repositories
-   *
-   * @return map RepoId and Name
-   */
-  Map<String, String> getRepositories(
-      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repositoryFormat);
-
   /**
    * Get Artifact paths under repository
    *
    * @param repoId
    * @return List&lt;String&gt; artifact paths
    */
-  List<String> getArtifactPaths(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId);
+  List<String> getArtifactPaths(NexusRequest nexusConfig, String repoId);
 
   /**
    * Get Artifact paths for a given repo from the given relative path
@@ -49,10 +36,9 @@ public interface NexusService {
    * @param repoId
    * @return List&lt;String&gt; artifact paths
    */
-  List<String> getArtifactPaths(
-      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId, String name);
+  List<String> getArtifactPaths(NexusRequest nexusConfig, String repoId, String name);
 
-  Pair<String, InputStream> downloadArtifacts(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
+  Pair<String, InputStream> downloadArtifacts(NexusRequest nexusConfig,
       ArtifactStreamAttributes artifactStreamAttributes, Map<String, String> metadata, String delegateId, String taskId,
       String accountId, ListNotifyResponseData res);
 
@@ -62,11 +48,7 @@ public interface NexusService {
    * @param repoId
    * @return
    */
-  List<String> getGroupIdPaths(
-      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId, String repositoryFormat);
-
-  List<String> getGroupIdPathsUsingPrivateApis(
-      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId, String repositoryFormat);
+  List<String> getGroupIdPaths(NexusRequest nexusConfig, String repoId, String repositoryFormat);
 
   /***
    *
@@ -75,19 +57,7 @@ public interface NexusService {
    * @param path the path
    * @return
    */
-  List<String> getArtifactNames(
-      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId, String path);
-
-  /***
-   *
-   * @param nexusConfig
-   * @param repoId the repoId
-   * @param path the path
-   * @param repositoryFormat the repositoryFormat
-   * @return
-   */
-  List<String> getArtifactNames(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId,
-      String path, String repositoryFormat);
+  List<String> getArtifactNames(NexusRequest nexusConfig, String repoId, String path);
 
   /***
    *
@@ -97,8 +67,7 @@ public interface NexusService {
    * @param repositoryFormat the repositoryFormat
    * @return
    */
-  List<String> getArtifactNamesUsingPrivateApis(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
-      String repoId, String path, String repositoryFormat);
+  List<String> getArtifactNames(NexusRequest nexusConfig, String repoId, String path, String repositoryFormat);
 
   /**
    * @param nexusConfig
@@ -109,20 +78,17 @@ public interface NexusService {
    * @param classifier   classifier
    * @return list of versions
    */
-  List<BuildDetails> getVersions(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId,
-      String groupId, String artifactName, String extension, String classifier,
-      boolean supportForNexusGroupReposEnabled);
+  List<BuildDetails> getVersions(NexusRequest nexusConfig, String repoId, String groupId, String artifactName,
+      String extension, String classifier);
 
-  List<BuildDetails> getVersions(String repositoryFormat, NexusConfig nexusConfig,
-      List<EncryptedDataDetail> encryptionDetails, String repoId, String packageName,
-      boolean supportForNexusGroupReposEnabled);
+  List<BuildDetails> getVersions(String repositoryFormat, NexusRequest nexusConfig, String repoId, String packageName);
 
   @SuppressWarnings("squid:S00107")
-  List<BuildDetails> getVersion(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId,
-      String groupId, String artifactName, String extension, String classifier, String buildNo);
+  List<BuildDetails> getVersion(NexusRequest nexusConfig, String repoId, String groupId, String artifactName,
+      String extension, String classifier, String buildNo);
 
-  List<BuildDetails> getVersion(String repositoryFormat, NexusConfig nexusConfig,
-      List<EncryptedDataDetail> encryptionDetails, String repoId, String packageName, String buildNo);
+  List<BuildDetails> getVersion(
+      String repositoryFormat, NexusRequest nexusConfig, String repoId, String packageName, String buildNo);
 
   /**
    * Gets the latest version of the given artifact
@@ -133,27 +99,16 @@ public interface NexusService {
    * @param artifactName
    * @return
    */
-  BuildDetails getLatestVersion(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId,
-      String groupId, String artifactName);
+  BuildDetails getLatestVersion(NexusRequest nexusConfig, String repoId, String groupId, String artifactName);
 
   /**
-   *
    * @param nexusConfig
-   * @param encryptionDetails
    * @param artifactStreamAttributes
    * @param maxNumberOfBuilds
    * @return
    */
-  List<BuildDetails> getBuilds(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
-      ArtifactStreamAttributes artifactStreamAttributes, int maxNumberOfBuilds);
-
-  /**
-   *  Checks if it is connectable and valid credentials
-   * @param nexusConfig
-   * @param encryptionDetails
-   * @return
-   */
-  boolean isRunning(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails);
+  List<BuildDetails> getBuilds(
+      NexusRequest nexusConfig, ArtifactStreamAttributes artifactStreamAttributes, int maxNumberOfBuilds);
 
   /**
    * @param nexusConfig
@@ -164,12 +119,10 @@ public interface NexusService {
    * @param classifier   classifier
    * @return true if versions exist
    */
-  boolean existsVersion(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId,
-      String groupId, String artifactName, String extension, String classifier);
+  boolean existsVersion(NexusRequest nexusConfig, String repoId, String groupId, String artifactName, String extension,
+      String classifier);
 
-  Pair<String, InputStream> downloadArtifactByUrl(
-      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String artifactName, String artifactUrl);
+  Pair<String, InputStream> downloadArtifactByUrl(NexusRequest nexusConfig, String artifactName, String artifactUrl);
 
-  long getFileSize(
-      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String artifactName, String artifactUrl);
+  long getFileSize(NexusRequest nexusConfig, String artifactName, String artifactUrl);
 }

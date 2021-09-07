@@ -1,9 +1,12 @@
 package io.harness.ccm.views.entities;
 
 import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
@@ -31,9 +34,10 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "CEReportScheduleKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity(value = "ceReportSchedule", noClassnameStored = true)
-@StoreIn("events")
-public class CEReportSchedule implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess,
-                                         CreatedByAware, UpdatedByAware {
+@StoreIn(DbAliases.CENG)
+@OwnedBy(HarnessTeam.CE)
+public final class CEReportSchedule implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware,
+                                               AccountAccess, CreatedByAware, UpdatedByAware {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -62,6 +66,7 @@ public class CEReportSchedule implements PersistentEntity, UuidAware, CreatedAtA
   String accountId;
   long createdAt;
   long lastUpdatedAt;
+  @Builder.Default String userCronTimeZone = "UTC";
   EmbeddedUser createdBy;
   EmbeddedUser lastUpdatedBy;
   Date nextExecution;

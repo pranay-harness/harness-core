@@ -5,6 +5,7 @@ import static io.harness.AuthorizationServiceHeader.BEARER;
 import static io.harness.AuthorizationServiceHeader.CI_MANAGER;
 import static io.harness.AuthorizationServiceHeader.CV_NEXT_GEN;
 import static io.harness.AuthorizationServiceHeader.DEFAULT;
+import static io.harness.AuthorizationServiceHeader.DELEGATE_SERVICE;
 import static io.harness.AuthorizationServiceHeader.IDENTITY_SERVICE;
 import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
@@ -17,29 +18,51 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.stream.Collectors.toSet;
 
+import io.harness.Microservice;
 import io.harness.accesscontrol.commons.bootstrap.AccessControlManagementJob;
 import io.harness.accesscontrol.commons.events.EntityCrudEventListenerService;
-import io.harness.accesscontrol.commons.events.FeatureFlagEventListenerService;
+import io.harness.accesscontrol.commons.events.UserMembershipEventListenerService;
+import io.harness.accesscontrol.commons.migration.AccessControlMigrationProvider;
+import io.harness.accesscontrol.principals.serviceaccounts.iterators.ServiceAccountReconciliationIterator;
 import io.harness.accesscontrol.principals.usergroups.iterators.UserGroupReconciliationIterator;
+import io.harness.accesscontrol.principals.users.iterators.UserReconciliationIterator;
 import io.harness.accesscontrol.resources.resourcegroups.iterators.ResourceGroupReconciliationIterator;
-import io.harness.aggregator.AggregatorApplication;
+import io.harness.accesscontrol.scopes.harness.iterators.ScopeReconciliationIterator;
+import io.harness.accesscontrol.support.reconciliation.SupportPreferenceReconciliationIterator;
+import io.harness.accesscontrol.support.reconciliation.SupportRoleAssignmentsReconciliationService;
+import io.harness.aggregator.AggregatorService;
+import io.harness.aggregator.MongoOffsetCleanupJob;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.exception.ConstraintViolationExceptionMapper;
+import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.metrics.jobs.RecordMetricsJob;
+import io.harness.metrics.service.api.MetricService;
+import io.harness.migration.MigrationProvider;
+import io.harness.migration.NGMigrationSdkInitHelper;
+import io.harness.migration.beans.NGMigrationConfiguration;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.exceptionmappers.GenericExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
+import io.harness.outbox.OutboxEventPollService;
 import io.harness.persistence.HPersistence;
 import io.harness.remote.CharsetResponseFilter;
+import io.harness.request.RequestContextFilter;
+import io.harness.resource.VersionInfoResource;
+import io.harness.security.InternalApiAuthFilter;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.PublicApi;
+import io.harness.token.remote.TokenClient;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.name.Names;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
@@ -49,6 +72,7 @@ import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -88,6 +112,7 @@ public class AccessControlApplication extends Application<AccessControlConfigura
   @Override
   public void initialize(Bootstrap<AccessControlConfiguration> bootstrap) {
     initializeLogging();
+    bootstrap.addCommand(new InspectCommand<>(this));
     bootstrap.addBundle(new SwaggerBundle<AccessControlConfiguration>() {
       @Override
       protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(AccessControlConfiguration appConfig) {
@@ -106,26 +131,56 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     Injector injector =
         Guice.createInjector(AccessControlModule.getInstance(appConfig), new MetricRegistryModule(metricRegistry));
     injector.getInstance(HPersistence.class);
-    AggregatorApplication aggregatorApplication = injector.getInstance(AggregatorApplication.class);
-    aggregatorApplication.run();
     registerCorsFilter(appConfig, environment);
     registerResources(environment, injector);
     registerJerseyProviders(environment);
     registerJerseyFeatures(environment);
     registerCharsetResponseFilter(environment, injector);
     registerCorrelationFilter(environment, injector);
-    registerIterators(injector);
-    registerManagedBeans(appConfig, environment, injector);
+    registerRequestContextFilter(environment);
     registerAuthFilters(appConfig, environment, injector);
+    registerHealthCheck(environment, injector);
+    registerManagedBeans(appConfig, environment, injector);
+    registerMigrations(injector);
+    registerIterators(injector);
+    registerScheduledJobs(injector);
     AccessControlManagementJob accessControlManagementJob = injector.getInstance(AccessControlManagementJob.class);
     accessControlManagementJob.run();
 
+    if (appConfig.getAggregatorConfiguration().isEnabled()) {
+      environment.lifecycle().manage(injector.getInstance(AggregatorService.class));
+      environment.lifecycle().manage(injector.getInstance(MongoOffsetCleanupJob.class));
+    }
+
+    if (appConfig.getAggregatorConfiguration().isExportMetricsToStackDriver()) {
+      initializeMonitoring(injector);
+    }
+
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void initializeMonitoring(Injector injector) {
+    injector.getInstance(MetricService.class).initializeMetrics();
+    injector.getInstance(RecordMetricsJob.class).scheduleMetricsTasks();
+  }
+
+  private void registerHealthCheck(Environment environment, Injector injector) {
+    final HealthService healthService = injector.getInstance(HealthService.class);
+    environment.healthChecks().register("Access Control Service", healthService);
+    healthService.registerMonitor(injector.getInstance(HPersistence.class));
   }
 
   public void registerIterators(Injector injector) {
     injector.getInstance(ResourceGroupReconciliationIterator.class).registerIterators();
     injector.getInstance(UserGroupReconciliationIterator.class).registerIterators();
+    injector.getInstance(UserReconciliationIterator.class).registerIterators();
+    injector.getInstance(ServiceAccountReconciliationIterator.class).registerIterators();
+    injector.getInstance(SupportPreferenceReconciliationIterator.class).registerIterators();
+    injector.getInstance(ScopeReconciliationIterator.class).registerIterators();
+  }
+
+  public void registerScheduledJobs(Injector injector) {
+    injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
   }
 
   private void registerJerseyFeatures(Environment environment) {
@@ -147,20 +202,24 @@ public class AccessControlApplication extends Application<AccessControlConfigura
         environment.jersey().register(injector.getInstance(resource));
       }
     }
+    environment.jersey().register(injector.getInstance(VersionInfoResource.class));
   }
 
   private void registerManagedBeans(
       AccessControlConfiguration configuration, Environment environment, Injector injector) {
     if (configuration.getEventsConfig().isEnabled()) {
       environment.lifecycle().manage(injector.getInstance(EntityCrudEventListenerService.class));
+      environment.lifecycle().manage(injector.getInstance(UserMembershipEventListenerService.class));
     }
-    environment.lifecycle().manage(injector.getInstance(FeatureFlagEventListenerService.class));
+    environment.lifecycle().manage(injector.getInstance(OutboxEventPollService.class));
+    environment.lifecycle().manage(injector.getInstance(SupportRoleAssignmentsReconciliationService.class));
   }
 
   private void registerJerseyProviders(Environment environment) {
     environment.jersey().register(EarlyEofExceptionMapper.class);
     environment.jersey().register(ConstraintViolationExceptionMapper.class);
     environment.jersey().register(JerseyViolationExceptionMapperV2.class);
+    environment.jersey().register(NGAccessDeniedExceptionMapper.class);
     environment.jersey().register(WingsExceptionMapperV2.class);
     environment.jersey().register(GenericExceptionMapperV2.class);
   }
@@ -173,10 +232,15 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     environment.jersey().register(injector.getInstance(CorrelationFilter.class));
   }
 
+  private void registerRequestContextFilter(Environment environment) {
+    environment.jersey().register(new RequestContextFilter());
+  }
+
   private void registerAuthFilters(
       AccessControlConfiguration configuration, Environment environment, Injector injector) {
     if (configuration.isAuthEnabled()) {
-      registerAccessControlAuthFilter(configuration, environment);
+      registerAccessControlAuthFilter(configuration, environment, injector);
+      registerInternalApiAuthFilter(configuration, environment);
     }
   }
 
@@ -189,7 +253,8 @@ public class AccessControlApplication extends Application<AccessControlConfigura
                     "/swagger.json"));
   }
 
-  private void registerAccessControlAuthFilter(AccessControlConfiguration configuration, Environment environment) {
+  private void registerAccessControlAuthFilter(
+      AccessControlConfiguration configuration, Environment environment, Injector injector) {
     Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate =
         (getAuthenticationExemptedRequestsPredicate().negate())
             .and((getAuthFilterPredicate(InternalApi.class)).negate());
@@ -200,11 +265,20 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     serviceToSecretMapping.put(NG_MANAGER.getServiceId(), configuration.getDefaultServiceSecret());
     serviceToSecretMapping.put(CI_MANAGER.getServiceId(), configuration.getDefaultServiceSecret());
     serviceToSecretMapping.put(CV_NEXT_GEN.getServiceId(), configuration.getDefaultServiceSecret());
+    serviceToSecretMapping.put(DELEGATE_SERVICE.getServiceId(), configuration.getDefaultServiceSecret());
     serviceToSecretMapping.put(NOTIFICATION_SERVICE.getServiceId(), configuration.getDefaultServiceSecret());
     serviceToSecretMapping.put(PIPELINE_SERVICE.getServiceId(), configuration.getDefaultServiceSecret());
     serviceToSecretMapping.put(ACCESS_CONTROL_SERVICE.getServiceId(), configuration.getDefaultServiceSecret());
     serviceToSecretMapping.put(IDENTITY_SERVICE.getServiceId(), configuration.getIdentityServiceSecret());
-    environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping));
+    environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping,
+        injector.getInstance(Key.get(TokenClient.class, Names.named("PRIVILEGED")))));
+  }
+
+  private void registerInternalApiAuthFilter(AccessControlConfiguration configuration, Environment environment) {
+    Map<String, String> serviceToSecretMapping = new HashMap<>();
+    serviceToSecretMapping.put(DEFAULT.getServiceId(), configuration.getDefaultServiceSecret());
+    environment.jersey().register(
+        new InternalApiAuthFilter(getAuthFilterPredicate(InternalApi.class), null, serviceToSecretMapping));
   }
 
   private Predicate<Pair<ResourceInfo, ContainerRequestContext>> getAuthFilterPredicate(
@@ -216,7 +290,7 @@ public class AccessControlApplication extends Application<AccessControlConfigura
             && resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(annotation) != null);
   }
 
-  public SwaggerBundleConfiguration getSwaggerConfiguration() {
+  private SwaggerBundleConfiguration getSwaggerConfiguration() {
     SwaggerBundleConfiguration defaultSwaggerBundleConfiguration = new SwaggerBundleConfiguration();
     Collection<Class<?>> classes = getResourceClasses();
     classes.add(AccessControlSwaggerListener.class);
@@ -232,5 +306,19 @@ public class AccessControlApplication extends Application<AccessControlConfigura
 
   private static Set<String> getUniquePackages(Collection<Class<?>> classes) {
     return classes.stream().map(aClass -> aClass.getPackage().getName()).collect(toSet());
+  }
+
+  private void registerMigrations(Injector injector) {
+    NGMigrationConfiguration config = getMigrationSdkConfiguration();
+    NGMigrationSdkInitHelper.initialize(injector, config);
+  }
+
+  private NGMigrationConfiguration getMigrationSdkConfiguration() {
+    return NGMigrationConfiguration.builder()
+        .microservice(Microservice.ACCESSCONTROL) // this is only for locking purpose
+        .migrationProviderList(new ArrayList<Class<? extends MigrationProvider>>() {
+          { add(AccessControlMigrationProvider.class); }
+        })
+        .build();
   }
 }

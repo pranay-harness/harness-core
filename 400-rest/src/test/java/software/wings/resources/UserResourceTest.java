@@ -29,6 +29,7 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.authenticationservice.recaptcha.ReCaptchaVerifier;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
@@ -44,12 +45,10 @@ import software.wings.beans.ErrorData;
 import software.wings.beans.LoginRequest;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
-import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.scheduler.AccountPasswordExpirationJob;
 import software.wings.security.authentication.AuthenticationManager;
 import software.wings.security.authentication.TwoFactorAuthenticationManager;
-import software.wings.service.impl.ReCaptchaVerifier;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.HarnessUserGroupService;
@@ -94,7 +93,6 @@ public class UserResourceTest extends WingsBaseTest {
   public static final AccountPasswordExpirationJob ACCOUNT_PASSWORD_EXPIRATION_JOB =
       mock(AccountPasswordExpirationJob.class);
   public static final ReCaptchaVerifier RE_CAPTCHA_VERIFIER = mock(ReCaptchaVerifier.class);
-  public static final LoginSettingsService LOGIN_SETTINGS_SERVICE = mock(LoginSettingsService.class);
   public static final TwoFactorAuthenticationManager TWO_FACTOR_AUTHENTICATION_MANAGER =
       mock(TwoFactorAuthenticationManager.class);
   static final AccountPermissionUtils ACCOUNT_PERMISSION_UTILS = mock(AccountPermissionUtils.class);
@@ -111,8 +109,7 @@ public class UserResourceTest extends WingsBaseTest {
       ResourceTestRule.builder()
           .instance(new UserResource(USER_SERVICE, AUTH_SERVICE, ACCOUNT_SERVICE, ACCOUNT_PERMISSION_UTILS,
               AUTHENTICATION_MANAGER, TWO_FACTOR_AUTHENTICATION_MANAGER, CACHES, HARNESS_USER_GROUP_SERVICE,
-              USER_GROUP_SERVICE, MAIN_CONFIGURATION, ACCOUNT_PASSWORD_EXPIRATION_JOB, RE_CAPTCHA_VERIFIER,
-              LOGIN_SETTINGS_SERVICE))
+              USER_GROUP_SERVICE, MAIN_CONFIGURATION, ACCOUNT_PASSWORD_EXPIRATION_JOB, RE_CAPTCHA_VERIFIER))
           .type(WingsExceptionMapper.class)
           .type(MultiPartFeature.class)
           .build();
@@ -134,7 +131,7 @@ public class UserResourceTest extends WingsBaseTest {
     PageRequest pageRequest = mock(PageRequest.class);
     when(pageRequest.getOffset()).thenReturn("0");
     when(pageRequest.getPageSize()).thenReturn(30);
-    when(USER_SERVICE.listUsers(any(), any(), any(), anyInt(), anyInt(), anyBoolean()))
+    when(USER_SERVICE.listUsers(any(), any(), any(), anyInt(), anyInt(), anyBoolean(), anyBoolean()))
         .thenReturn(aPageResponse().withResponse(asList(anUser().build())).build());
     userResource.list(pageRequest, UUIDGenerator.generateUuid(), null, false);
     verify(USER_SERVICE).getTotalUserCount(any(), anyBoolean());

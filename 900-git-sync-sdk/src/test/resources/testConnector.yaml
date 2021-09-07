@@ -1,0 +1,7 @@
+connector:
+  name: connector
+  identifier: identifier
+  type: K8sCluster
+  spec:
+    credential:
+      type: InheritFromDelegate

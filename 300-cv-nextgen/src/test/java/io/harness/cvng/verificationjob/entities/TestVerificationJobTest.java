@@ -74,6 +74,33 @@ public class TestVerificationJobTest extends CategoryTest {
   @Test
   @Owner(developers = KAMAL)
   @Category({UnitTests.class})
+  public void testGetDTO_ignoreCasesInSensitivity() {
+    TestVerificationJob testVerificationJob = createTestVerificationJob();
+    testVerificationJob.setSensitivity("High", false);
+    String baseline = generateUuid();
+    testVerificationJob.setBaselineVerificationJobInstanceId(baseline);
+    TestVerificationJobDTO testVerificationJobDTO =
+        (TestVerificationJobDTO) testVerificationJob.getVerificationJobDTO();
+    assertThat(testVerificationJobDTO.getSensitivity()).isEqualTo("HIGH");
+    assertThat(testVerificationJob.getSensitivity()).isEqualTo(Sensitivity.HIGH);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category({UnitTests.class})
+  public void testGetDTO_ignoreCasesInSensitivityInvalid() {
+    TestVerificationJob testVerificationJob = createTestVerificationJob();
+    testVerificationJob.setSensitivity("HigH", false);
+    assertThatThrownBy(() -> testVerificationJob.getVerificationJobDTO())
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("No enum mapping found for HigH");
+    assertThatThrownBy(() -> testVerificationJob.getSensitivity())
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("No enum mapping found for HigH");
+  }
+  @Test
+  @Owner(developers = KAMAL)
+  @Category({UnitTests.class})
   public void testGetDTO_validBaseline() {
     TestVerificationJob testVerificationJob = createTestVerificationJob();
     String baseline = generateUuid();

@@ -3,6 +3,8 @@ package io.harness.ng.core.services;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.beans.PageRequest;
+import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ProjectFilterDTO;
 import io.harness.ng.core.entities.Project;
@@ -22,10 +24,21 @@ public interface ProjectService {
 
   Project update(String accountIdentifier, String orgIdentifier, String identifier, ProjectDTO project);
 
-  Page<Project> list(String accountIdentifier, Pageable pageable, ProjectFilterDTO projectFilterDTO);
+  PageResponse<ProjectDTO> listProjectsForUser(String userId, String accountId, PageRequest pageRequest);
 
+  /**
+   * Use this method with caution, verify that the pageable sort is able to make use of the indexes.
+   */
+  Page<Project> listPermittedProjects(String accountIdentifier, Pageable pageable, ProjectFilterDTO projectFilterDTO);
+
+  /**
+   * Use this method with caution, verify that the criteria and pageable sort is able to make use of the indexes.
+   */
   Page<Project> list(Criteria criteria, Pageable pageable);
 
+  /**
+   * Use this method with caution, verify that the criteria is able to make use of the indexes.
+   */
   List<Project> list(Criteria criteria);
 
   boolean delete(String accountIdentifier, String orgIdentifier, String identifier, Long version);

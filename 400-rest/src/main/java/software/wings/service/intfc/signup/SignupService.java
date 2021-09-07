@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.GTM;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.exception.SignupException;
 
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;

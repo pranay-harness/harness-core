@@ -1,10 +1,15 @@
 package io.harness.rule;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.cache.CacheBackend.CAFFEINE;
+import static io.harness.cache.CacheBackend.NOOP;
 
 import static org.mockito.Mockito.mock;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cache.CacheConfig;
+import io.harness.cache.CacheConfig.CacheConfigBuilder;
+import io.harness.cache.CacheModule;
 import io.harness.connector.gitsync.ConnectorGitSyncHelper;
 import io.harness.factory.ClosingFactory;
 import io.harness.gitsync.branching.GitBranchingHelper;
@@ -19,7 +24,6 @@ import io.harness.ng.userprofile.entities.BitbucketSCM.BitbucketSCMMapper;
 import io.harness.ng.userprofile.entities.GithubSCM.GithubSCMMapper;
 import io.harness.ng.userprofile.entities.GitlabSCM.GitlabSCMMapper;
 import io.harness.ng.userprofile.entities.SourceCodeManager.SourceCodeManagerMapper;
-import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.serializer.KryoModule;
@@ -30,6 +34,7 @@ import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
+import io.harness.utils.NGObjectMapperHelper;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
@@ -47,6 +52,7 @@ import io.dropwizard.jackson.Jackson;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -87,6 +93,17 @@ public class NgManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
         sourceCodeManagerMapBinder.addBinding(SCMType.AZURE_DEV_OPS).to(AzureDevOpsSCMMapper.class);
       }
     });
+
+    CacheConfigBuilder cacheConfigBuilder =
+        CacheConfig.builder().disabledCaches(new HashSet<>()).cacheNamespace("harness-cache");
+    if (annotations.stream().anyMatch(annotation -> annotation instanceof Cache)) {
+      cacheConfigBuilder.cacheBackend(CAFFEINE);
+    } else {
+      cacheConfigBuilder.cacheBackend(NOOP);
+    }
+    CacheModule cacheModule = new CacheModule(cacheConfigBuilder.build());
+    modules.add(cacheModule);
+
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
@@ -118,7 +135,7 @@ public class NgManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
       @Singleton
       public ObjectMapper getYamlSchemaObjectMapper() {
         ObjectMapper objectMapper = Jackson.newObjectMapper();
-        NGPipelineObjectMapperHelper.configureNGObjectMapper(objectMapper);
+        NGObjectMapperHelper.configureNGObjectMapper(objectMapper);
         objectMapper.registerModule(new PmsBeansJacksonModule());
         return objectMapper;
       }

@@ -5,19 +5,21 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.plancreator.beans.OrchestrationConstants;
+import io.harness.plancreator.utils.CommonPlanCreatorUtils;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
-import io.harness.pms.contracts.steps.SkipType;
+import io.harness.pms.contracts.facilitators.FacilitatorType;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
-import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
+import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
-import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.common.NGSectionStep;
 import io.harness.steps.common.NGSectionStepParameters;
 
@@ -41,15 +43,16 @@ public class ExecutionPmsPlanCreator extends ChildrenPlanCreator<ExecutionElemen
     for (YamlField stepYamlField : stepYamlFields) {
       Map<String, YamlField> stepYamlFieldMap = new HashMap<>();
       stepYamlFieldMap.put(stepYamlField.getNode().getUuid(), stepYamlField);
-      responseMap.put(
-          stepYamlField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(stepYamlFieldMap).build());
+      responseMap.put(stepYamlField.getNode().getUuid(),
+          PlanCreationResponse.builder().dependencies(DependenciesUtils.toDependenciesProto(stepYamlFieldMap)).build());
     }
 
     // Add Steps Node
     if (EmptyPredicate.isNotEmpty(stepYamlFields)) {
       YamlField stepsField =
           Preconditions.checkNotNull(ctx.getCurrentField().getNode().getField(YAMLFieldNameConstants.STEPS));
-      PlanNode stepsNode = getStepsPlanNode(stepsField, stepYamlFields.get(0).getNode().getUuid());
+      PlanNode stepsNode = CommonPlanCreatorUtils.getStepsPlanNode(
+          stepsField.getNode().getUuid(), stepYamlFields.get(0).getNode().getUuid(), "Steps Element");
       responseMap.put(stepsNode.getUuid(), PlanCreationResponse.builder().node(stepsNode.getUuid(), stepsNode).build());
     }
     return responseMap;
@@ -71,7 +74,10 @@ public class ExecutionPmsPlanCreator extends ChildrenPlanCreator<ExecutionElemen
         .group(StepOutcomeGroup.EXECUTION.name())
         .name(OrchestrationConstants.EXECUTION_NODE_NAME)
         .stepParameters(stepParameters)
-        .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
+        .facilitatorObtainment(
+            FacilitatorObtainment.newBuilder()
+                .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+                .build())
         .skipExpressionChain(false)
         .build();
   }
@@ -109,19 +115,5 @@ public class ExecutionPmsPlanCreator extends ChildrenPlanCreator<ExecutionElemen
       }
     });
     return stepFields;
-  }
-
-  PlanNode getStepsPlanNode(YamlField stepsYamlField, String childNodeId) {
-    StepParameters stepParameters =
-        NGSectionStepParameters.builder().childNodeId(childNodeId).logMessage("Steps Element").build();
-    return PlanNode.builder()
-        .uuid(stepsYamlField.getNode().getUuid())
-        .identifier(YAMLFieldNameConstants.STEPS)
-        .stepType(NGSectionStep.STEP_TYPE)
-        .name(YAMLFieldNameConstants.STEPS)
-        .stepParameters(stepParameters)
-        .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
-        .skipGraphType(SkipType.SKIP_NODE)
-        .build();
   }
 }

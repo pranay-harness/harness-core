@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.service.InstanceSyncConstants.INTERVAL_MINUTES;
@@ -8,9 +9,9 @@ import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
-import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 
@@ -18,7 +19,6 @@ import software.wings.api.DeploymentSummary;
 import software.wings.beans.InfrastructureMapping;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
 import com.google.protobuf.util.Durations;
 import java.util.Collections;
 import java.util.List;
@@ -26,8 +26,8 @@ import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class CustomDeploymentInstanceSyncPTCreator implements InstanceSyncPerpetualTaskCreator {
-  @Inject PerpetualTaskService perpetualTaskService;
+@OwnedBy(CDP)
+public class CustomDeploymentInstanceSyncPTCreator extends AbstractInstanceSyncPerpetualTaskCreator {
   @Override
   public List<String> createPerpetualTasks(InfrastructureMapping infrastructureMapping) {
     return asList(createPerpetualTask(infrastructureMapping));
@@ -65,7 +65,8 @@ public class CustomDeploymentInstanceSyncPTCreator implements InstanceSyncPerpet
                                                .setInterval(Durations.fromMinutes(INTERVAL_MINUTES))
                                                .setTimeout(Durations.fromSeconds(TIMEOUT_SECONDS))
                                                .build();
+
     return perpetualTaskService.createTask(PerpetualTaskType.CUSTOM_DEPLOYMENT_INSTANCE_SYNC,
-        infraMapping.getAccountId(), clientContext, schedule, false, "Instance Sync Task For Custom Deployment");
+        infraMapping.getAccountId(), clientContext, schedule, false, getTaskDescription(infraMapping));
   }
 }

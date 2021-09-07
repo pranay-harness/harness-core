@@ -1,15 +1,25 @@
 package io.harness.pms.sdk;
 
+import static io.harness.cache.CacheBackend.CAFFEINE;
+import static io.harness.cache.CacheBackend.NOOP;
+
+import io.harness.ModuleType;
 import io.harness.PmsCommonsModule;
-import io.harness.PmsSdkCoreModule;
+import io.harness.cache.CacheConfig;
+import io.harness.cache.CacheConfig.CacheConfigBuilder;
+import io.harness.cache.CacheModule;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.pms.sdk.core.PmsSdkCoreConfig;
+import io.harness.pms.sdk.core.PmsSdkCoreModule;
+import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.pms.sdk.registries.PmsSdkRegistryModule;
 import io.harness.pms.serializer.kryo.PmsContractsKryoRegistrar;
 import io.harness.queue.QueueController;
+import io.harness.rule.Cache;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
@@ -28,6 +38,7 @@ import com.google.inject.Singleton;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -47,13 +58,23 @@ public class PmsSdkRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin
   @Override
   public List<Module> modules(List<Annotation> annotations) throws Exception {
     ExecutorModule.getInstance().setExecutorService(new CurrentThreadExecutor());
-
+    PmsSdkConfiguration sdkConfiguration =
+        PmsSdkConfiguration.builder().deploymentMode(SdkDeployMode.LOCAL).moduleType(ModuleType.PMS).build();
     List<Module> modules = new ArrayList<>();
+    CacheConfigBuilder cacheConfigBuilder =
+        CacheConfig.builder().disabledCaches(new HashSet<>()).cacheNamespace("harness-cache");
+    if (annotations.stream().anyMatch(annotation -> annotation instanceof Cache)) {
+      cacheConfigBuilder.cacheBackend(CAFFEINE);
+    } else {
+      cacheConfigBuilder.cacheBackend(NOOP);
+    }
+    CacheModule cacheModule = new CacheModule(cacheConfigBuilder.build());
+    modules.add(cacheModule);
     modules.add(new ClosingFactoryModule(closingFactory));
-    modules.add(PmsSdkModule.getInstance(PmsSdkConfiguration.builder().build()));
-    modules.add(PmsSdkCoreModule.getInstance());
+    modules.add(PmsSdkModule.getInstance(sdkConfiguration));
+    modules.add(PmsSdkCoreModule.getInstance(PmsSdkCoreConfig.builder().sdkDeployMode(SdkDeployMode.LOCAL).build()));
     modules.add(PmsCommonsModule.getInstance());
-    modules.add(PmsSdkRegistryModule.getInstance(PmsSdkConfiguration.builder().build()));
+    modules.add(PmsSdkRegistryModule.getInstance(sdkConfiguration));
     modules.add(mongoTypeModule(annotations));
     modules.add(KryoModule.getInstance());
 

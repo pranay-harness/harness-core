@@ -1,8 +1,7 @@
 package io.harness.cdng.visitor.helpers.serviceconfig;
 
-import static io.harness.yaml.core.LevelNodeQualifierName.PATH_CONNECTOR;
+import static io.harness.walktree.visitor.utilities.VisitorParentPathUtils.PATH_CONNECTOR;
 
-import io.harness.IdentifierRefProtoUtils;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
@@ -11,9 +10,10 @@ import io.harness.cdng.service.beans.ServiceYaml;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
-import io.harness.pms.sdk.preflight.PreFlightCheckMetadata;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.preflight.PreFlightCheckMetadata;
 import io.harness.utils.IdentifierRefHelper;
+import io.harness.utils.IdentifierRefProtoUtils;
 import io.harness.walktree.visitor.entityreference.EntityReferenceExtractor;
 import io.harness.walktree.visitor.utilities.VisitorParentPathUtils;
 import io.harness.walktree.visitor.validation.ConfigValidator;
@@ -78,8 +78,8 @@ public class ServiceConfigVisitorHelper implements ConfigValidator, EntityRefere
     Set<EntityDetailProtoDTO> result = new HashSet<>();
     if (serviceConfig.getService() != null) {
       ServiceYaml serviceYaml = serviceConfig.getService();
-      String fullQualifiedDomainName =
-          VisitorParentPathUtils.getFullQualifiedDomainName(contextMap) + PATH_CONNECTOR + YamlTypes.SERVICE_REF;
+      String fullQualifiedDomainName = VisitorParentPathUtils.getFullQualifiedDomainName(contextMap) + PATH_CONNECTOR
+          + YamlTypes.SERVICE_ENTITY + PATH_CONNECTOR + "identifier";
       Map<String, String> metadata =
           new HashMap<>(Collections.singletonMap(PreFlightCheckMetadata.FQN, fullQualifiedDomainName));
       metadata.put("new", "true");

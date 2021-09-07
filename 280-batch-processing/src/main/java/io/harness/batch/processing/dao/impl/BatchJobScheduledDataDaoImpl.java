@@ -2,9 +2,9 @@ package io.harness.batch.processing.dao.impl;
 
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.dao.intfc.BatchJobScheduledDataDao;
-import io.harness.ccm.cluster.entities.BatchJobScheduledData;
-import io.harness.ccm.cluster.entities.BatchJobScheduledData.BatchJobScheduledDataKeys;
-import io.harness.ccm.commons.entities.CEDataCleanupRequest;
+import io.harness.ccm.commons.entities.batch.BatchJobScheduledData;
+import io.harness.ccm.commons.entities.batch.BatchJobScheduledData.BatchJobScheduledDataKeys;
+import io.harness.ccm.commons.entities.batch.CEDataCleanupRequest;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;
@@ -66,7 +66,7 @@ public class BatchJobScheduledDataDaoImpl implements BatchJobScheduledDataDao {
                                              .field(BatchJobScheduledDataKeys.batchJobType)
                                              .in(batchJobTypes)
                                              .field(BatchJobScheduledDataKeys.startAt)
-                                             .greaterThan(instant);
+                                             .greaterThanOrEq(instant);
 
     UpdateOperations<BatchJobScheduledData> updateOperations =
         hPersistence.createUpdateOperations(BatchJobScheduledData.class);

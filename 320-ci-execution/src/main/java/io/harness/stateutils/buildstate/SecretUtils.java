@@ -7,6 +7,7 @@ import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.DecryptableEntity;
 import io.harness.beans.IdentifierRef;
 import io.harness.delegate.beans.ci.pod.SSHKeyDetails;
 import io.harness.delegate.beans.ci.pod.SecretVariableDTO;
@@ -34,6 +35,7 @@ import io.harness.yaml.core.variables.SecretNGVariable;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.time.Duration;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -48,11 +50,11 @@ public class SecretUtils {
   private final SecretManagerClientService secretManagerClientService;
 
   private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(2);
-  private final int MAX_ATTEMPTS = 3;
+  private final int MAX_ATTEMPTS = 6;
 
   @Inject
-  public SecretUtils(
-      SecretNGManagerClient secretNGManagerClient, SecretManagerClientService secretManagerClientService) {
+  public SecretUtils(@Named("PRIVILEGED") SecretNGManagerClient secretNGManagerClient,
+      @Named("PRIVILEGED") SecretManagerClientService secretManagerClientService) {
     this.secretNGManagerClient = secretNGManagerClient;
     this.secretManagerClientService = secretManagerClientService;
   }
@@ -66,7 +68,7 @@ public class SecretUtils {
     }
 
     if (secretRefData == null && secretVariable.getDefaultValue() != null) {
-      secretIdentifier = secretVariable.getDefaultValue();
+      secretIdentifier = secretVariable.getDefaultValue().getIdentifier();
     }
 
     if (secretIdentifier == null || secretRefData == null) {
@@ -82,7 +84,7 @@ public class SecretUtils {
     SecretVariableDTO secret =
         SecretVariableDTO.builder().name(secretVariable.getName()).secret(secretRefData).type(secretType).build();
     log.info("Getting secret variable encryption details for secret type:[{}] ref:[{}]", secretType, secretIdentifier);
-    List<EncryptedDataDetail> encryptionDetails = secretManagerClientService.getEncryptionDetails(ngAccess, secret);
+    List<EncryptedDataDetail> encryptionDetails = getEncryptionDetails(ngAccess, secret);
     if (isEmpty(encryptionDetails)) {
       throw new InvalidArgumentsException("Secret encrypted details can't be empty or null", WingsException.USER);
     }
@@ -99,7 +101,7 @@ public class SecretUtils {
     }
 
     if (secretRefData == null && secretVariable.getDefaultValue() != null) {
-      secretIdentifier = secretVariable.getDefaultValue();
+      secretIdentifier = secretVariable.getDefaultValue().getIdentifier();
     }
 
     if (secretIdentifier == null || secretRefData == null) {
@@ -121,7 +123,8 @@ public class SecretUtils {
             .build();
 
     log.info("Getting secret variable encryption details for secret type:[{}] ref:[{}]", secretType, secretIdentifier);
-    List<EncryptedDataDetail> encryptionDetails = secretManagerClientService.getEncryptionDetails(ngAccess, secret);
+
+    List<EncryptedDataDetail> encryptionDetails = getEncryptionDetails(ngAccess, secret);
     if (isEmpty(encryptionDetails)) {
       throw new InvalidArgumentsException("Secret encrypted details can't be empty or null", WingsException.USER);
     }
@@ -173,13 +176,22 @@ public class SecretUtils {
 
     log.info(
         "Getting secret encryption details for secret type:[{}] ref:[{}]", secretDTOV2.getType(), secretIdentifier);
-    List<EncryptedDataDetail> encryptionDetails =
-        secretManagerClientService.getEncryptionDetails(ngAccess, credentialSpecDTO);
+    List<EncryptedDataDetail> encryptionDetails = getEncryptionDetails(ngAccess, credentialSpecDTO);
     if (isEmpty(encryptionDetails)) {
       throw new InvalidArgumentsException("Secret encrypted details can't be empty or null", WingsException.USER);
     }
 
     return SSHKeyDetails.builder().encryptedDataDetails(encryptionDetails).sshKeyReference(credentialSpecDTO).build();
+  }
+
+  private List<EncryptedDataDetail> getEncryptionDetails(NGAccess ngAccess, DecryptableEntity consumer) {
+    RetryPolicy<Object> retryPolicy =
+        getRetryPolicy(format("[Retrying failed call to fetch secret Encryption details attempt: {}"),
+            format("Failed to fetch secret encryption details after retrying {} times"));
+
+    return Failsafe.with(retryPolicy).get(() -> {
+      return secretManagerClientService.getEncryptionDetails(ngAccess, consumer);
+    });
   }
 
   private SecretDTOV2 getSecret(IdentifierRef identifierRef) {

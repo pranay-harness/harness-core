@@ -5,6 +5,28 @@ xxxxxxxx
   adminConnectors:
     - type: http
       port: 8191
+      
+logging:
+  level: INFO
+  loggers:
+    org.glassfish.jersey: INFO
+    allbegray.slack: WARN
+    org.glassfish.jersey.server.ServerRuntime.Responder: "OFF"
+  appenders:
+    - type: console
+      threshold: TRACE
+      target: STDOUT
+      logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %yellow(%replace(%mdc){'(.+)', '[$1]'}) %n"
+    - type: gke-console
+      threshold: TRACE
+      target: STDOUT
+      stackdriverLogEnabled: false
+
+mongotags:
+  tagKey: none
+  tagValue: none
+
+gcp-project-id: "ce-qa-274307"
 
 harness-mongo:
   uri: mongodb://localhost:30001/harness
@@ -30,8 +52,24 @@ cdc-mongo:
   connectionsPerHost: 300
   indexManagerMode: AUTO
 
+pms-harness:
+  uri: mongodb://localhost:30001/pms-harness
+  connectTimeout: 30000
+  serverSelectionTimeout: 90000
+  maxConnectionIdleTime: 600000
+  connectionsPerHost: 300
+  indexManagerMode: AUTO
+
+ng-harness:
+  uri: mongodb://localhost:30001/ng-harness
+  connectTimeout: 30000
+  serverSelectionTimeout: 90000
+  maxConnectionIdleTime: 600000
+  connectionsPerHost: 300
+  indexManagerMode: AUTO
+
 timescaledb:
-  timescaledbUrl: "jdbc:postgresql://34.83.25.129:5432/harnessccmdev"
+  timescaledbUrl: "jdbc:postgresql://34.83.25.129:5432/harnessdev"
   timescaledbUsername: "harnessappdev"
   timescaledbPassword: "harnessappdev"
   connectTimeout: 10

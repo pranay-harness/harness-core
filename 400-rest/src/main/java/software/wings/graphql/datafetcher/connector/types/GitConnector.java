@@ -55,6 +55,9 @@ public class GitConnector extends Connector {
       gitConnectorInput.getCustomCommitDetails().getValue().ifPresent(
           customCommitDetailsInput -> setCustomCommitDetails(gitConfig, customCommitDetailsInput));
     }
+    if (gitConnectorInput.getDelegateSelectors().isPresent()) {
+      gitConnectorInput.getDelegateSelectors().getValue().ifPresent(gitConfig::setDelegateSelectors);
+    }
 
     SettingAttribute.Builder settingAttributeBuilder =
         SettingAttribute.Builder.aSettingAttribute().withValue(gitConfig).withAccountId(accountId).withCategory(
@@ -96,11 +99,14 @@ public class GitConnector extends Connector {
       gitConnectorInput.getCustomCommitDetails().getValue().ifPresent(
           customCommitDetailsInput -> setCustomCommitDetails(gitConfig, customCommitDetailsInput));
     }
+    if (gitConnectorInput.getDelegateSelectors().isPresent()) {
+      gitConnectorInput.getDelegateSelectors().getValue().ifPresent(gitConfig::setDelegateSelectors);
+    }
 
     settingAttribute.setValue(gitConfig);
 
-    if (gitConnectorInput.getSshSettingId().isPresent() && gitConnectorInput.getSshSettingId().getValue().isPresent()
-        && gitConnectorInput.getUsageScope().isPresent() && gitConnectorInput.getUsageScope().getValue().isPresent()) {
+    if ((gitConfig.getSshSettingId() != null || isSshSettingIdPresent(gitConnectorInput))
+        && isUsageScopePresent(gitConnectorInput)) {
       settingAttribute.setUsageRestrictions(usageScopeController.populateUsageRestrictions(
           gitConnectorInput.getUsageScope().getValue().get(), settingAttribute.getAccountId()));
     }
@@ -108,6 +114,15 @@ public class GitConnector extends Connector {
     if (gitConnectorInput.getName().isPresent()) {
       gitConnectorInput.getName().getValue().ifPresent(settingAttribute::setName);
     }
+  }
+
+  private boolean isUsageScopePresent(QLUpdateGitConnectorInput gitConnectorInput) {
+    return gitConnectorInput.getUsageScope().isPresent() && gitConnectorInput.getUsageScope().getValue().isPresent();
+  }
+
+  private boolean isSshSettingIdPresent(QLUpdateGitConnectorInput gitConnectorInput) {
+    return gitConnectorInput.getSshSettingId().isPresent()
+        && gitConnectorInput.getSshSettingId().getValue().isPresent();
   }
 
   @Override

@@ -1,0 +1,67 @@
+extend type Query {
+  # Get statistics about continuous verification.
+  verificationStats(filters: [VerificationResultFilter], groupBy: [VerificationAggregation]): Data
+    @dataFetcher(name: verificationStats)
+}
+
+input VerificationResultFilter {
+  application: IdFilter
+  service: IdFilter
+  environment: IdFilter
+  tag: CVWorkflowTagFilter
+  rollback: Boolean
+  analyzed: Boolean
+  endTime: TimeFilter
+  startTime: TimeFilter
+  type: VerificationTypeFilter
+}
+
+input VerificationAggregation {
+  entityAggregation: CVEntityAggregation
+  timeAggregation: TimeSeriesAggregation
+  tagAggregation: CVTagAggregation
+}
+
+input CVTagAggregation {
+  entityType: CVWorkflowTagType
+  tagName: String
+}
+
+enum CVEntityAggregation {
+  Application
+  Service
+}
+
+input VerificationTypeFilter {
+  operator: EnumOperator
+  values: [CVVerificationProviders]
+}
+
+input CVWorkflowTagFilter {
+  entityType: CVWorkflowTagType
+  tags: [TagInput]
+}
+
+enum CVWorkflowTagType {
+  APPLICATION
+  SERVICE
+  ENVIRONMENT
+}
+
+enum CVVerificationProviders {
+  APP_DYNAMICS
+  NEW_RELIC
+  DATA_DOG
+  SPLUNK
+  SUMO
+  ELK
+  APM_VERIFICATION
+  LOG_VERIFICATION
+  CLOUD_WATCH
+  PROMETHEUS
+  STACKDRIVER
+  STACKDRIVER_LOG
+  DYNA_TRACE
+  BUG_SNAG
+  DATA_DOG_LOG
+}

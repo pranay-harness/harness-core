@@ -6,17 +6,23 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.exception.InvalidRequestException;
+import io.harness.exception.JiraClientException;
 
 import com.google.common.base.Splitter;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
@@ -41,16 +47,46 @@ public class JiraIssueUtilsNG {
     return values;
   }
 
-  public void updateFieldValues(
-      Map<String, Object> currFieldValues, Map<String, JiraFieldNG> issueTypeFields, Map<String, String> fields) {
-    if (EmptyPredicate.isEmpty(issueTypeFields) || EmptyPredicate.isEmpty(fields)) {
-      return;
+  public String prepareIssueUrl(String baseUrl, String key) {
+    try {
+      URL issueUrl = new URL(baseUrl + (baseUrl.endsWith("/") ? "" : "/") + "browse/" + key);
+      return issueUrl.toString();
+    } catch (MalformedURLException e) {
+      throw new JiraClientException(String.format("Invalid jira base url: %s", baseUrl), true);
+    }
+  }
+
+  public void updateFieldValues(Map<String, Object> currFieldValues, Map<String, JiraFieldNG> issueTypeFields,
+      Map<String, String> fields, boolean checkRequiredFields) {
+    if (issueTypeFields == null) {
+      issueTypeFields = new HashMap<>();
+    }
+    if (fields == null) {
+      fields = new HashMap<>();
     }
 
+    Map<String, JiraFieldNG> finalIssueTypeFields = issueTypeFields;
     Set<String> invalidFields =
-        fields.keySet().stream().filter(k -> !issueTypeFields.containsKey(k)).collect(Collectors.toSet());
+        fields.keySet().stream().filter(k -> !finalIssueTypeFields.containsKey(k)).collect(Collectors.toSet());
     if (EmptyPredicate.isNotEmpty(invalidFields)) {
-      throw new InvalidRequestException(String.format("Some fields are invalid: %s", String.join(", ", invalidFields)));
+      throw new JiraClientException(
+          String.format("Some fields are invalid for this jira issue type: %s", String.join(", ", invalidFields)),
+          true);
+    }
+
+    Map<String, String> finalFields = fields;
+    if (checkRequiredFields) {
+      Set<String> requiredFieldsNotPresent = issueTypeFields.entrySet()
+                                                 .stream()
+                                                 .filter(e -> e.getValue().isRequired())
+                                                 .map(Map.Entry::getKey)
+                                                 .filter(f -> !finalFields.containsKey(f))
+                                                 .collect(Collectors.toSet());
+      if (EmptyPredicate.isNotEmpty(requiredFieldsNotPresent)) {
+        throw new JiraClientException(String.format("Some required fields for this jira issue type are missing: %s",
+                                          String.join(", ", requiredFieldsNotPresent)),
+            true);
+      }
     }
 
     Set<String> fieldKeys = new HashSet<>(fields.keySet());
@@ -58,13 +94,12 @@ public class JiraIssueUtilsNG {
     // Remove time tracking user facing fields from fieldKeys. If they are present do special handling for them.
     fieldKeys.remove(JiraConstantsNG.ORIGINAL_ESTIMATE_NAME);
     fieldKeys.remove(JiraConstantsNG.REMAINING_ESTIMATE_NAME);
-    addTimeTrackingField(currFieldValues, issueTypeFields, fields);
+    addTimeTrackingField(currFieldValues, fields);
 
-    fieldKeys.forEach(key -> addKey(currFieldValues, key, issueTypeFields.get(key), fields.get(key)));
+    fieldKeys.forEach(key -> addKey(currFieldValues, key, finalIssueTypeFields.get(key), finalFields.get(key)));
   }
 
-  private void addTimeTrackingField(
-      Map<String, Object> currFieldValues, Map<String, JiraFieldNG> issueTypeFields, Map<String, String> fields) {
+  private void addTimeTrackingField(Map<String, Object> currFieldValues, Map<String, String> fields) {
     String originalEstimate = fields.get(JiraConstantsNG.ORIGINAL_ESTIMATE_NAME);
     String remainingEstimate = fields.get(JiraConstantsNG.REMAINING_ESTIMATE_NAME);
     if (EmptyPredicate.isEmpty(originalEstimate) && EmptyPredicate.isEmpty(remainingEstimate)) {
@@ -109,23 +144,26 @@ public class JiraIssueUtilsNG {
       case DATE:
         return parseDate(name, value);
       case DATETIME:
-        return tryParseDateTime(name, value);
+        return parseDateTime(name, value);
       case OPTION:
-        Object optionValue = convertOptionToFinalValue(field, value);
-        if (optionValue == null) {
-          throw new InvalidRequestException(String.format("Field [%s] value is not in the allowed values", name));
-        }
-        return optionValue;
+        return convertOptionToFinalValue(field, name, value);
       default:
-        throw new InvalidRequestException(String.format("Unsupported field type: %s", field.getSchema().getType()));
+        throw new JiraClientException(String.format("Unsupported field type: %s", field.getSchema().getType()), true);
     }
   }
 
-  private Object convertOptionToFinalValue(JiraFieldNG field, String value) {
-    if (EmptyPredicate.isEmpty(field.getAllowedValues())) {
-      return null;
+  private Object convertOptionToFinalValue(JiraFieldNG field, String name, String value) {
+    List<JiraFieldAllowedValueNG> allowedValuesList =
+        field.getAllowedValues() == null ? Collections.emptyList() : field.getAllowedValues();
+    Optional<JiraFieldAllowedValueNG> allowedValues =
+        allowedValuesList.stream().filter(av -> av.matchesValue(value)).findFirst();
+    if (!allowedValues.isPresent()) {
+      throw new JiraClientException(
+          String.format("Value [%s] is not allowed for field [%s]. Allowed values: [%s]", value, name,
+              allowedValuesList.stream().map(JiraFieldAllowedValueNG::displayValue).collect(Collectors.joining(", "))),
+          true);
     }
-    return field.getAllowedValues().stream().filter(av -> av.matchesValue(value)).findFirst().orElse(null);
+    return allowedValues.get();
   }
 
   private Long tryParseLong(String value) {
@@ -140,7 +178,7 @@ public class JiraIssueUtilsNG {
     try {
       return Double.parseDouble(value);
     } catch (NumberFormatException ignored) {
-      throw new InvalidRequestException(String.format("Field [%s] expects a number value", name));
+      throw new JiraClientException(String.format("Invalid number value for field [%s]", name), true);
     }
   }
 
@@ -148,21 +186,21 @@ public class JiraIssueUtilsNG {
     for (DateTimeFormatter formatter : JiraConstantsNG.DATE_FORMATTERS) {
       try {
         return LocalDate.parse(value, formatter).format(JiraConstantsNG.DATE_FORMATTER);
-      } catch (NumberFormatException ignored) {
+      } catch (DateTimeParseException ignored) {
         // ignored
       }
     }
-    throw new InvalidRequestException(String.format("Field [%s] expects a date value", name));
+    throw new JiraClientException(String.format("Invalid date value for field [%s]", name), true);
   }
 
-  private String tryParseDateTime(String name, String value) {
+  private String parseDateTime(String name, String value) {
     for (DateTimeFormatter formatter : JiraConstantsNG.DATETIME_FORMATTERS) {
       try {
         return ZonedDateTime.parse(value, formatter).format(JiraConstantsNG.DATETIME_FORMATTER);
-      } catch (NumberFormatException ignored) {
+      } catch (DateTimeParseException ignored) {
         // ignored
       }
     }
-    throw new InvalidRequestException(String.format("Field [%s] expects a datetime value", name));
+    throw new JiraClientException(String.format("Invalid datetime value for field [%s]", name), true);
   }
 }

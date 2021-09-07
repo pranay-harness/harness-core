@@ -51,7 +51,7 @@ serviceScheduler:
 
 enableIterators: true
 trialRegistrationAllowed: true
-ngManagerAvailable: true
+eventsFrameworkAvailableInOnPrem: false
 trialRegistrationAllowedForBugathon: false
 blacklistedEmailDomainsAllowed: true
 pwnedPasswordsAllowed: true
@@ -59,6 +59,7 @@ executionLogStorageMode: MONGO
 #                        GOOGLE_CLOUD_DATA_STORE
 fileStorageMode: MONGO
 clusterName: ""
+deploymentClusterName: ""
 bugsnagApiKey: ""
 numberOfRemindersBeforeAccountDeletion: 3
 
@@ -217,7 +218,7 @@ logging:
       threshold: TRACE
       currentLogFilename: portal.log
       archive: true
-      archivedFileCount: 15
+      archivedFileCount: 5
       maxFileSize: 150MB
       archivedLogFilenamePattern: portal.%d.%i.log
       logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %yellow(%replace(%mdc){'(.+)', '[$1]'}) %n"
@@ -254,6 +255,17 @@ grpcClientConfig:
   target: localhost:9980
   authority: localhost
 
+#This will be used only by OnPrem delegates for grpc communication
+grpcOnpremDelegateClientConfig:
+  target: localhost:9880
+  authority: localhost
+
+grpcDMSClientConfig:
+  target: localhost:15011
+  authority: localhost
+
+dmsSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+
 
 mongo:
   uri: mongodb://localhost:27017/harness
@@ -264,6 +276,11 @@ mongo:
   maxConnectionIdleTime: 600000
   connectionsPerHost: 300
   indexManagerMode: AUTO
+  traceMode: DISABLED
+  mongoSSLConfig:
+    mongoSSLEnabled: false
+    mongoTrustStorePath:
+    mongoTrustStorePassword:
 
 events-mongo:
   uri: mongodb://localhost:27017/events
@@ -290,9 +307,14 @@ deployMode: KUBERNETES
 envPath: ""
 
 kubectlVersion: v1.13.2
+scmVersion: b276dd03
+
+ngAuthUIEnabled: false
 
 portal:
   url: https://localhost:8000
+  zendeskBaseUrl: "https://harnesssupport.zendesk.com"
+  gatewayPathPrefix: "gateway/"
   allowedOrigins: http://localhost:8000, https://localhost:8000, https://127.0.0.1:8000, https://localhost:8181, https://127.0.0.1:8181, http://127.0.0.1:8000
   companyName: Harness Inc
   authTokenExpiryInMillis: 86400000
@@ -324,6 +346,15 @@ gcpMarketplaceConfig:
 
 cfClientConfig:
   apiKey: ""
+  configUrl: "https://config.feature-flags.uat.harness.io/api/1.0"
+  eventUrl: "https://event.feature-flags.uat.harness.io/api/1.0"
+  analyticsEnabled: true
+  connectionTimeout: 10000
+  readTimeout: 30000
+
+featureFlagConfig:
+  featureFlagSystem: LOCAL
+  syncFeaturesToCF: false
 
 cfMigrationConfig:
   enabled: false
@@ -333,6 +364,8 @@ cfMigrationConfig:
   org: "default_org"
   project: "project1"
   environment: "environment1"
+  connectionTimeout: 10000
+  readTimeout: 30000
 
 featuresEnabled: ""
 
@@ -516,11 +549,13 @@ jreConfigs:
     jreDirectory: jre1.8.0_191
     jreMacDirectory: jre1.8.0_191.jre
     jreTarPath: jre/8u191/jre-8u191-${OS}-x64.tar.gz
+    alpnJarPath: tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar
   openjdk8u242:
     version: 1.8.0_242
     jreDirectory: jdk8u242-b08-jre
     jreMacDirectory: jdk8u242-b08-jre
     jreTarPath: jre/openjdk-8u242/jre_x64_${OS}_8u242b08.tar.gz
+    alpnJarPath: tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar
 
 cdnConfig:
   url: https://qa.harness.io
@@ -530,6 +565,7 @@ cdnConfig:
   watcherJarBasePath: public/shared/watchers/builds
   watcherJarPath: oracle-8u191/%s/watcher.jar
   watcherMetaDataFilePath: public/%s/%s/watchers/current.version
+  alpnJarPath: public/shared/tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar
   cdnJreTarPaths:
     oracle8u191: public/shared/jre/oracle-8u191/jre-8u191-${OS}-x64.tar.gz
     openjdk8u242: public/shared/jre/openjdk-8u242/jre_x64_${OS}_8u242b08.tar.gz
@@ -546,9 +582,6 @@ ngManagerServiceHttpClientConfig:
   readTimeOutSeconds: 15
   enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
 
-cvngClientConfig:
-  baseUrl: https://localhost:6060/cv/
-  cvNgServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
 eventsFramework:
   redis:
@@ -575,3 +608,26 @@ delegateGrpcServicePort: 8080
 logStreamingServiceConfig:
   baseUrl: http://localhost:8079
   serviceToken: token
+
+accessControlClient:
+  enableAccessControl: false
+  accessControlServiceConfig:
+    baseUrl: http://localhost:9006/api/
+    connectTimeOutSeconds: 15
+    readTimeOutSeconds: 15
+  accessControlServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+
+exportAccountDataBatchSize: 1000
+
+auditClientConfig:
+  baseUrl: http://localhost:9005/api/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
+enableAudit: false
+
+disableDelegateMgmtInManager: false
+
+ldapSyncJobConfig:
+  poolSize: 3
+  syncInterval: 15

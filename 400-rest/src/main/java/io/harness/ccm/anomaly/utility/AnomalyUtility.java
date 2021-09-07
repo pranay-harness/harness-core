@@ -68,11 +68,11 @@ public class AnomalyUtility {
     return getAnomalousCost(anomaly.getActualCost(), anomaly.getExpectedCost(), true);
   }
 
-  public Double getPercentageRaise(double actualcost, double expectedCost, boolean rounded) {
+  public Double getPercentageRaise(double actualCost, double expectedCost, boolean rounded) {
     if (rounded) {
-      return getRoundedDoubleValue((actualcost - expectedCost) / actualcost * 100);
+      return getRoundedDoubleValue((actualCost - expectedCost) / expectedCost * 100);
     } else {
-      return (actualcost - expectedCost) / actualcost * 100;
+      return (actualCost - expectedCost) / expectedCost * 100;
     }
   }
 

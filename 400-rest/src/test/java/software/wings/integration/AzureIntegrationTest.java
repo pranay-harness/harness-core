@@ -1,9 +1,11 @@
 package software.wings.integration;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.PUNEET;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.azure.AzureEnvironmentType;
 import io.harness.category.element.DeprecatedIntegrationTests;
 import io.harness.ccm.config.CCMConfig;
@@ -35,6 +37,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(CDC)
 @Integration
 @Slf4j
 public class AzureIntegrationTest extends WingsBaseTest {
@@ -86,7 +89,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
 
     for (Map.Entry<String, String> entry : subscriptions.entrySet()) {
       String subscriptionId = entry.getKey();
-      registries.addAll(azureHelperService.listContainerRegistryNames(config, Collections.emptyList(), subscriptionId));
+      registries.addAll(azureHelperService.listContainerRegistryNames(config, subscriptionId));
     }
     assertThat(registries).isNotEmpty();
 
@@ -195,12 +198,10 @@ public class AzureIntegrationTest extends WingsBaseTest {
     subscriptions.forEach((subId, Desc) -> log.info(subId + Desc));
     for (Map.Entry<String, String> entry : subscriptions.entrySet()) {
       String subscriptionId = entry.getKey();
-      List<String> registries =
-          azureHelperService.listContainerRegistryNames(config, Collections.emptyList(), subscriptionId);
+      List<String> registries = azureHelperService.listContainerRegistryNames(config, subscriptionId);
       for (String registry : registries) {
         if (registry.equals("harnessexample")) {
-          List<String> repositories =
-              azureHelperService.listRepositories(config, Collections.emptyList(), subscriptionId, registry);
+          List<String> repositories = azureHelperService.listRepositories(config, subscriptionId, registry);
           for (String repository : repositories) {
             List<String> tags = azureHelperService.listRepositoryTags(
                 config, Collections.emptyList(), subscriptionId, registry, repository);

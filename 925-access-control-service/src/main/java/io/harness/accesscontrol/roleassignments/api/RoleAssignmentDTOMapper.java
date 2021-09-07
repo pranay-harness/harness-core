@@ -9,12 +9,13 @@ import io.harness.accesscontrol.commons.validation.ValidationResultMapper;
 import io.harness.accesscontrol.principals.Principal;
 import io.harness.accesscontrol.principals.PrincipalDTO;
 import io.harness.accesscontrol.roleassignments.RoleAssignment;
+import io.harness.accesscontrol.roleassignments.RoleAssignment.RoleAssignmentBuilder;
 import io.harness.accesscontrol.roleassignments.RoleAssignmentFilter;
 import io.harness.accesscontrol.roleassignments.validator.RoleAssignmentValidationRequest;
 import io.harness.accesscontrol.roleassignments.validator.RoleAssignmentValidationResult;
 import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.accesscontrol.scopes.core.ScopeService;
-import io.harness.accesscontrol.scopes.harness.ScopeDTOMapper;
+import io.harness.accesscontrol.scopes.harness.ScopeMapper;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.utils.CryptoUtils;
 
@@ -47,7 +48,7 @@ public class RoleAssignmentDTOMapper {
                             .roleIdentifier(object.getRoleIdentifier())
                             .disabled(object.isDisabled())
                             .build())
-        .scope(ScopeDTOMapper.toDTO(scope))
+        .scope(ScopeMapper.toDTO(scope))
         .harnessManaged(object.isManaged())
         .createdAt(object.getCreatedAt())
         .lastModifiedAt(object.getLastModifiedAt())
@@ -62,22 +63,29 @@ public class RoleAssignmentDTOMapper {
         .resourceGroupIdentifier(object.getResourceGroupIdentifier())
         .roleIdentifier(object.getRoleIdentifier())
         .disabled(object.isDisabled())
+        .managed(object.isManaged())
         .build();
   }
 
-  public static RoleAssignment fromDTO(String scopeIdentifier, RoleAssignmentDTO object) {
-    return RoleAssignment.builder()
-        .identifier(isEmpty(object.getIdentifier())
-                ? "role_assignment_".concat(CryptoUtils.secureRandAlphaNumString(20))
-                : object.getIdentifier())
-        .scopeIdentifier(scopeIdentifier)
-        .principalIdentifier(object.getPrincipal().getIdentifier())
-        .principalType(object.getPrincipal().getType())
-        .resourceGroupIdentifier(object.getResourceGroupIdentifier())
-        .roleIdentifier(object.getRoleIdentifier())
-        .managed(false)
-        .disabled(object.isDisabled())
-        .build();
+  public static RoleAssignment fromDTO(Scope scope, RoleAssignmentDTO object) {
+    return fromDTO(scope, object, false);
+  }
+
+  public static RoleAssignment fromDTO(Scope scope, RoleAssignmentDTO object, boolean managed) {
+    RoleAssignmentBuilder roleAssignmentBuilder =
+        RoleAssignment.builder()
+            .identifier(isEmpty(object.getIdentifier())
+                    ? "role_assignment_".concat(CryptoUtils.secureRandAlphaNumString(20))
+                    : object.getIdentifier())
+            .principalIdentifier(object.getPrincipal().getIdentifier())
+            .principalType(object.getPrincipal().getType())
+            .resourceGroupIdentifier(object.getResourceGroupIdentifier())
+            .roleIdentifier(object.getRoleIdentifier())
+            .disabled(object.isDisabled())
+            .managed(managed)
+            .scopeIdentifier(scope.toString())
+            .scopeLevel(scope.getLevel().toString());
+    return roleAssignmentBuilder.build();
   }
 
   public static RoleAssignmentFilter fromDTO(String scopeIdentifier, RoleAssignmentFilterDTO object) {
@@ -106,10 +114,9 @@ public class RoleAssignmentDTOMapper {
         .build();
   }
 
-  public static RoleAssignmentValidationRequest fromDTO(
-      String scopeIdentifier, RoleAssignmentValidationRequestDTO object) {
+  public static RoleAssignmentValidationRequest fromDTO(Scope scope, RoleAssignmentValidationRequestDTO object) {
     return RoleAssignmentValidationRequest.builder()
-        .roleAssignment(fromDTO(scopeIdentifier, object.getRoleAssignment()))
+        .roleAssignment(fromDTO(scope, object.getRoleAssignment()))
         .validatePrincipal(object.isValidatePrincipal())
         .validateResourceGroup(object.isValidateResourceGroup())
         .validateRole(object.isValidateRole())

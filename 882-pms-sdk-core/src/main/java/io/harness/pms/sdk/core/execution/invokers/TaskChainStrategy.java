@@ -1,150 +1,138 @@
 package io.harness.pms.sdk.core.execution.invokers;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.pms.sdk.core.execution.invokers.StrategyHelper.buildResponseDataSupplier;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ExecutableResponse;
-import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.TaskChainExecutableResponse;
-import io.harness.pms.contracts.execution.events.AddExecutableResponseRequest;
 import io.harness.pms.contracts.execution.events.QueueTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
-import io.harness.pms.contracts.plan.PlanNodeProto;
-import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
-import io.harness.pms.sdk.core.execution.ExecuteStrategy;
+import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.sdk.core.execution.ChainDetails;
 import io.harness.pms.sdk.core.execution.InvokerPackage;
-import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
+import io.harness.pms.sdk.core.execution.ProgressableStrategy;
 import io.harness.pms.sdk.core.execution.ResumePackage;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.executables.TaskChainExecutable;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
-import io.harness.pms.sdk.core.steps.io.PassThroughData;
-import io.harness.pms.sdk.core.steps.io.StepInputPackage;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
-import io.harness.serializer.KryoSerializer;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
-import java.util.Collections;
-import java.util.Objects;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
-@OwnedBy(CDC)
-public class TaskChainStrategy implements ExecuteStrategy {
+@OwnedBy(PIPELINE)
+@Slf4j
+public class TaskChainStrategy extends ProgressableStrategy {
   @Inject private SdkNodeExecutionService sdkNodeExecutionService;
   @Inject private StepRegistry stepRegistry;
-  @Inject private EngineObtainmentHelper engineObtainmentHelper;
-  @Inject private KryoSerializer kryoSerializer;
   @Inject private StrategyHelper strategyHelper;
 
   @Override
   public void start(InvokerPackage invokerPackage) {
-    NodeExecutionProto nodeExecution = invokerPackage.getNodeExecution();
-    TaskChainExecutable taskChainExecutable = extractTaskChainExecutable(nodeExecution);
-    Ambiance ambiance = nodeExecution.getAmbiance();
-    TaskChainResponse taskChainResponse;
-    taskChainResponse = taskChainExecutable.startChainLink(ambiance,
-        sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution), invokerPackage.getInputPackage());
-    handleResponse(ambiance, nodeExecution, taskChainResponse);
+    Ambiance ambiance = invokerPackage.getAmbiance();
+    TaskChainExecutable taskChainExecutable = extractStep(ambiance);
+
+    TaskChainResponse taskChainResponse = taskChainExecutable.startChainLink(
+        ambiance, invokerPackage.getStepParameters(), invokerPackage.getInputPackage());
+    handleResponse(ambiance, invokerPackage.getStepParameters(), taskChainResponse);
   }
 
   @Override
   public void resume(ResumePackage resumePackage) {
-    NodeExecutionProto nodeExecution = resumePackage.getNodeExecution();
-    Ambiance ambiance = nodeExecution.getAmbiance();
-    TaskChainExecutable taskChainExecutable = extractTaskChainExecutable(nodeExecution);
-    TaskChainExecutableResponse lastLinkResponse =
-        Objects.requireNonNull(NodeExecutionUtils.obtainLatestExecutableResponse(nodeExecution)).getTaskChain();
-    if (lastLinkResponse.getChainEnd()) {
-      StepResponse stepResponse = null;
+    Ambiance ambiance = resumePackage.getAmbiance();
+    ChainDetails chainDetails = resumePackage.getChainDetails();
+    String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
+    TaskChainExecutable taskChainExecutable = extractStep(ambiance);
+    StepParameters stepParameters = resumePackage.getStepParameters();
+    if (chainDetails.isShouldEnd()) {
+      StepResponse stepResponse;
       try {
-        stepResponse = taskChainExecutable.finalizeExecution(ambiance,
-            sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution),
-            (PassThroughData) kryoSerializer.asObject(lastLinkResponse.getPassThroughData().toByteArray()),
-            buildResponseDataSupplier(resumePackage.getResponseDataMap()));
+        log.info("Chain end true: Calling finalizeExecution, nodeExecutionId: {}", nodeExecutionId);
+        stepResponse = taskChainExecutable.finalizeExecution(ambiance, stepParameters,
+            chainDetails.getPassThroughData(), buildResponseDataSupplier(resumePackage.getResponseDataMap()));
       } catch (Exception e) {
+        log.error("Exception occurred while calling finalizeExecution, nodeExecutionId: {}", nodeExecutionId, e);
         stepResponse = strategyHelper.handleException(e);
       }
       sdkNodeExecutionService.handleStepResponse(
-          nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
+          ambiance.getPlanExecutionId(), nodeExecutionId, StepResponseMapper.toStepResponseProto(stepResponse), null);
     } else {
-      StepInputPackage inputPackage =
-          engineObtainmentHelper.obtainInputPackage(ambiance, nodeExecution.getNode().getRebObjectsList());
-      TaskChainResponse chainResponse = null;
       try {
-        chainResponse = taskChainExecutable.executeNextLink(ambiance,
-            sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution), inputPackage,
-            (PassThroughData) kryoSerializer.asObject(lastLinkResponse.getPassThroughData().toByteArray()),
-            buildResponseDataSupplier(resumePackage.getResponseDataMap()));
-        handleResponse(ambiance, nodeExecution, chainResponse);
+        TaskChainResponse chainResponse =
+            taskChainExecutable.executeNextLink(ambiance, stepParameters, resumePackage.getStepInputPackage(),
+                chainDetails.getPassThroughData(), buildResponseDataSupplier(resumePackage.getResponseDataMap()));
+        handleResponse(ambiance, stepParameters, chainResponse);
       } catch (Exception e) {
-        sdkNodeExecutionService.handleStepResponse(
-            nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(strategyHelper.handleException(e)));
+        log.error("Exception occurred while calling executeNextLink, nodeExecutionId: {}", nodeExecutionId, e);
+        sdkNodeExecutionService.handleStepResponse(ambiance.getPlanExecutionId(), nodeExecutionId,
+            StepResponseMapper.toStepResponseProto(strategyHelper.handleException(e)));
       }
     }
   }
 
-  private TaskChainExecutable extractTaskChainExecutable(NodeExecutionProto nodeExecution) {
-    PlanNodeProto node = nodeExecution.getNode();
-    return (TaskChainExecutable) stepRegistry.obtain(node.getStepType());
-  }
-
   private void handleResponse(
-      @NonNull Ambiance ambiance, NodeExecutionProto nodeExecution, @NonNull TaskChainResponse taskChainResponse) {
+      @NonNull Ambiance ambiance, StepParameters stepParameters, @NonNull TaskChainResponse taskChainResponse) {
+    String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
     if (taskChainResponse.isChainEnd() && taskChainResponse.getTaskRequest() == null) {
-      TaskChainExecutable taskChainExecutable = extractTaskChainExecutable(nodeExecution);
-      sdkNodeExecutionService.addExecutableResponse(nodeExecution.getUuid(), Status.NO_OP,
+      TaskChainExecutable taskChainExecutable = extractStep(ambiance);
+      StepResponse stepResponse = null;
+      try {
+        stepResponse = taskChainExecutable.finalizeExecution(
+            ambiance, stepParameters, taskChainResponse.getPassThroughData(), () -> null);
+      } catch (Exception e) {
+        log.error("Exception occurred while calling finalizeExecution, nodeExecutionId: {}", nodeExecutionId, e);
+        stepResponse = strategyHelper.handleException(e);
+      }
+      sdkNodeExecutionService.handleStepResponse(ambiance.getPlanExecutionId(), nodeExecutionId,
+          StepResponseMapper.toStepResponseProto(stepResponse),
           ExecutableResponse.newBuilder()
               .setTaskChain(TaskChainExecutableResponse.newBuilder()
                                 .setChainEnd(true)
-                                .setPassThroughData(
-                                    ByteString.copyFrom(kryoSerializer.asBytes(taskChainResponse.getPassThroughData())))
+                                .setPassThroughData(ByteString.copyFrom(
+                                    RecastOrchestrationUtils.toBytes(taskChainResponse.getPassThroughData())))
                                 .addAllLogKeys(CollectionUtils.emptyIfNull(taskChainResponse.getLogKeys()))
                                 .addAllUnits(CollectionUtils.emptyIfNull(taskChainResponse.getUnits()))
                                 .build())
-              .build(),
-          Collections.emptyList());
-      StepResponse stepResponse = null;
-      try {
-        stepResponse = taskChainExecutable.finalizeExecution(ambiance,
-            sdkNodeExecutionService.extractResolvedStepParameters(nodeExecution),
-            taskChainResponse.getPassThroughData(), () -> null);
-      } catch (Exception e) {
-        stepResponse = strategyHelper.handleException(e);
-      }
-      sdkNodeExecutionService.handleStepResponse(
-          nodeExecution.getUuid(), StepResponseMapper.toStepResponseProto(stepResponse));
+              .build());
       return;
     }
     TaskRequest taskRequest = taskChainResponse.getTaskRequest();
 
-    AddExecutableResponseRequest addExecutableResponseRequest = strategyHelper.getAddExecutableResponseRequest(
-        nodeExecution.getUuid(), Status.TASK_WAITING,
+    ExecutableResponse executableResponse =
         ExecutableResponse.newBuilder()
             .setTaskChain(
                 TaskChainExecutableResponse.newBuilder()
                     .setTaskCategory(taskChainResponse.getTaskRequest().getTaskCategory())
                     .setChainEnd(taskChainResponse.isChainEnd())
                     .setPassThroughData(
-                        ByteString.copyFrom(kryoSerializer.asBytes(taskChainResponse.getPassThroughData())))
+                        ByteString.copyFrom(RecastOrchestrationUtils.toBytes(taskChainResponse.getPassThroughData())))
                     .addAllLogKeys(CollectionUtils.emptyIfNull(taskRequest.getDelegateTaskRequest().getLogKeysList()))
                     .addAllUnits(CollectionUtils.emptyIfNull(taskRequest.getDelegateTaskRequest().getUnitsList()))
                     .setTaskName(taskRequest.getDelegateTaskRequest().getTaskName())
                     .build())
-            .build(),
-        Collections.emptyList());
+            .build();
     QueueTaskRequest queueTaskRequest = QueueTaskRequest.newBuilder()
-                                            .setNodeExecutionId(nodeExecution.getUuid())
                                             .putAllSetupAbstractions(ambiance.getSetupAbstractionsMap())
-                                            .setTaskRequest(taskChainResponse.getTaskRequest())
+                                            .setTaskRequest(taskRequest)
+                                            .setExecutableResponse(executableResponse)
+                                            .setStatus(Status.TASK_WAITING)
                                             .build();
-    sdkNodeExecutionService.queueTaskAndAddExecutableResponse(queueTaskRequest, addExecutableResponseRequest);
+    sdkNodeExecutionService.queueTaskRequest(ambiance.getPlanExecutionId(), nodeExecutionId, queueTaskRequest);
+  }
+
+  @Override
+  public TaskChainExecutable extractStep(Ambiance ambiance) {
+    return (TaskChainExecutable) stepRegistry.obtain(AmbianceUtils.getCurrentStepType(ambiance));
   }
 }

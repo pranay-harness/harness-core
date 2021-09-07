@@ -17,4 +17,6 @@ public class BillingExportDetails {
   @NotNull String storageAccountName;
   @NotNull String containerName;
   @NotNull String directoryName;
+  @NotNull String reportName;
+  @NotNull String subscriptionId;
 }

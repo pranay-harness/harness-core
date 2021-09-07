@@ -25,6 +25,7 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.service.intfc.ce.CeAccountExpirationChecker;
 
 import com.google.inject.Inject;
+import graphql.schema.DataFetchingEnvironment;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -45,7 +46,8 @@ public class BudgetNotificationsDataFetcher extends AbstractStatsDataFetcher<QLC
   @Override
   @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
   protected QLData fetch(String accountId, QLCCMAggregationFunction aggregateFunction,
-      List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sort) {
+      List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sort,
+      DataFetchingEnvironment dataFetchingEnvironment) {
     accountChecker.checkIsCeEnabled(accountId);
     try {
       if (timeScaleDBService.isValid()) {

@@ -20,4 +20,5 @@ public class LevelDTO {
   String identifier;
   String stepType;
   String group;
+  boolean skipExpressionChain;
 }

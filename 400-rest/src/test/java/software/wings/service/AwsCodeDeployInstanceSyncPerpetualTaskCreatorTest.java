@@ -5,9 +5,15 @@ import static io.harness.rule.OwnerRule.ABOSII;
 
 import static software.wings.beans.CodeDeployInfrastructureMapping.CodeDeployInfrastructureMappingBuilder.aCodeDeployInfrastructureMapping;
 import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
+import static software.wings.service.InstanceSyncConstants.INTERVAL_MINUTES;
+import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACCOUNT_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_NAME;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.ENV_NAME;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_NAME;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_NAME;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -19,21 +25,29 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.perpetualtask.AwsCodeDeployInstanceSyncPerpetualTaskClient;
-import io.harness.perpetualtask.AwsCodeDeployInstanceSyncPerpetualTaskClientParams;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
+import io.harness.perpetualtask.PerpetualTaskSchedule;
+import io.harness.perpetualtask.PerpetualTaskService;
+import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.rule.Owner;
 
-import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentSummary;
+import software.wings.beans.Application;
 import software.wings.beans.CodeDeployInfrastructureMapping;
+import software.wings.beans.Environment;
+import software.wings.beans.Service;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.ServiceResourceService;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.Inject;
+import com.google.protobuf.util.Durations;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,36 +55,50 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 @OwnedBy(CDP)
-public class AwsCodeDeployInstanceSyncPerpetualTaskCreatorTest extends WingsBaseTest {
-  @Mock AwsCodeDeployInstanceSyncPerpetualTaskClient perpetualTaskClient;
-
-  @InjectMocks @Inject AwsCodeDeployInstanceSyncPerpetualTaskCreator taskCreator;
+public class AwsCodeDeployInstanceSyncPerpetualTaskCreatorTest extends CategoryTest {
+  public static final PerpetualTaskSchedule SCHEDULE = PerpetualTaskSchedule.newBuilder()
+                                                           .setInterval(Durations.fromMinutes(INTERVAL_MINUTES))
+                                                           .setTimeout(Durations.fromSeconds(TIMEOUT_SECONDS))
+                                                           .build();
+  @Mock private PerpetualTaskService perpetualTaskService;
+  @Mock private AppService appService;
+  @Mock private EnvironmentService environmentService;
+  @InjectMocks AwsCodeDeployInstanceSyncPerpetualTaskCreator taskCreator;
+  @Mock private ServiceResourceService serviceResourceService;
+  private CodeDeployInfrastructureMapping infrastructureMapping;
 
   @Before
   public void setup() {
+    MockitoAnnotations.initMocks(this);
     doReturn("task-id")
-        .when(perpetualTaskClient)
-        .create(anyString(), any(AwsCodeDeployInstanceSyncPerpetualTaskClientParams.class));
+        .when(perpetualTaskService)
+        .createTask(
+            eq(PerpetualTaskType.AWS_CODE_DEPLOY_INSTANCE_SYNC), anyString(), any(), any(), eq(false), anyString());
+    infrastructureMapping = getInfrastructureMapping();
+    when(environmentService.get(any(), any()))
+        .thenReturn(Environment.Builder.anEnvironment().accountId(ACCOUNT_ID).appId(APP_ID).name(ENV_NAME).build());
+    when(serviceResourceService.get(any(), any()))
+        .thenReturn(Service.builder().accountId(ACCOUNT_ID).appId(APP_ID).name(SERVICE_NAME).build());
+    when(appService.get(any()))
+        .thenReturn(Application.Builder.anApplication().appId(APP_ID).accountId(ACCOUNT_ID).name(APP_NAME).build());
   }
 
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testCreateTasks() {
-    CodeDeployInfrastructureMapping infrastructureMapping = getInfrastructureMapping();
-
     List<String> taskIds = taskCreator.createPerpetualTasks(infrastructureMapping);
 
-    ArgumentCaptor<AwsCodeDeployInstanceSyncPerpetualTaskClientParams> paramsCaptor =
-        ArgumentCaptor.forClass(AwsCodeDeployInstanceSyncPerpetualTaskClientParams.class);
-    verify(perpetualTaskClient, times(1)).create(eq(ACCOUNT_ID), paramsCaptor.capture());
+    ArgumentCaptor<PerpetualTaskClientContext> captor = ArgumentCaptor.forClass(PerpetualTaskClientContext.class);
+    verify(perpetualTaskService, times(1))
+        .createTask(eq(PerpetualTaskType.AWS_CODE_DEPLOY_INSTANCE_SYNC), eq(ACCOUNT_ID), captor.capture(), eq(SCHEDULE),
+            eq(false),
+            eq("Application: [appName], Service: [serviceName], Environment: [envName], Infrastructure: [infraName]"));
 
-    AwsCodeDeployInstanceSyncPerpetualTaskClientParams params = paramsCaptor.getValue();
     assertThat(taskIds).containsExactlyInAnyOrder("task-id");
-    assertThat(params.getAppId()).isEqualTo(APP_ID);
-    assertThat(params.getInframmapingId()).isEqualTo(INFRA_MAPPING_ID);
   }
 
   @Test
@@ -80,19 +108,17 @@ public class AwsCodeDeployInstanceSyncPerpetualTaskCreatorTest extends WingsBase
     List<DeploymentSummary> deploymentSummaries = singletonList(
         DeploymentSummary.builder().accountId(ACCOUNT_ID).appId(APP_ID).infraMappingId(INFRA_MAPPING_ID).build());
     List<PerpetualTaskRecord> existingTasks = emptyList();
-    CodeDeployInfrastructureMapping infrastructureMapping = getInfrastructureMapping();
 
     List<String> taskIds =
         taskCreator.createPerpetualTasksForNewDeployment(deploymentSummaries, existingTasks, infrastructureMapping);
 
-    ArgumentCaptor<AwsCodeDeployInstanceSyncPerpetualTaskClientParams> paramsCaptor =
-        ArgumentCaptor.forClass(AwsCodeDeployInstanceSyncPerpetualTaskClientParams.class);
-    verify(perpetualTaskClient, times(1)).create(eq(ACCOUNT_ID), paramsCaptor.capture());
+    ArgumentCaptor<PerpetualTaskClientContext> captor = ArgumentCaptor.forClass(PerpetualTaskClientContext.class);
+    verify(perpetualTaskService, times(1))
+        .createTask(eq(PerpetualTaskType.AWS_CODE_DEPLOY_INSTANCE_SYNC), eq(ACCOUNT_ID), captor.capture(), eq(SCHEDULE),
+            eq(false),
+            eq("Application: [appName], Service: [serviceName], Environment: [envName], Infrastructure: [infraName]"));
 
-    AwsCodeDeployInstanceSyncPerpetualTaskClientParams params = paramsCaptor.getValue();
     assertThat(taskIds).containsExactlyInAnyOrder("task-id");
-    assertThat(params.getAppId()).isEqualTo(APP_ID);
-    assertThat(params.getInframmapingId()).isEqualTo(INFRA_MAPPING_ID);
   }
 
   @Test
@@ -107,22 +133,25 @@ public class AwsCodeDeployInstanceSyncPerpetualTaskCreatorTest extends WingsBase
                                              .clientParams(ImmutableMap.of(HARNESS_APPLICATION_ID, APP_ID))
                                              .build())
                           .build());
-    CodeDeployInfrastructureMapping infrastructureMapping = getInfrastructureMapping();
 
     List<String> taskIds =
         taskCreator.createPerpetualTasksForNewDeployment(deploymentSummaries, existingTasks, infrastructureMapping);
 
-    verify(perpetualTaskClient, never())
-        .create(eq(ACCOUNT_ID), any(AwsCodeDeployInstanceSyncPerpetualTaskClientParams.class));
+    verify(perpetualTaskService, never())
+        .createTask(eq(PerpetualTaskType.AWS_CODE_DEPLOY_INSTANCE_SYNC), eq(ACCOUNT_ID), any(), eq(SCHEDULE), eq(false),
+            eq("Application: [appName], Service: [serviceName], Environment: [envName], Infrastructure: [infraName]"));
 
     assertThat(taskIds).isEmpty();
   }
 
   private CodeDeployInfrastructureMapping getInfrastructureMapping() {
-    return aCodeDeployInfrastructureMapping()
-        .withAccountId(ACCOUNT_ID)
-        .withAppId(APP_ID)
-        .withUuid(INFRA_MAPPING_ID)
-        .build();
+    CodeDeployInfrastructureMapping infrastructureMapping = aCodeDeployInfrastructureMapping()
+                                                                .withAccountId(ACCOUNT_ID)
+                                                                .withAppId(APP_ID)
+                                                                .withUuid(INFRA_MAPPING_ID)
+                                                                .withName(INFRA_MAPPING_NAME)
+                                                                .build();
+    infrastructureMapping.setDisplayName("infraName");
+    return infrastructureMapping;
   }
 }

@@ -48,12 +48,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HIterator;
 import io.harness.queue.QueuePublisher;
-import io.harness.scheduler.PersistentScheduler;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 
@@ -85,7 +84,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import com.mongodb.BasicDBObject;
 import java.io.File;
 import java.util.ArrayList;
@@ -135,13 +133,6 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Inject private ArtifactCollectionUtils artifactCollectionUtils;
   @Inject private SettingsService settingsService;
   @Inject private FeatureFlagService featureFlagService;
-
-  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
-
-  @Override
-  public PageResponse<Artifact> listUnsorted(PageRequest<Artifact> pageRequest) {
-    return wingsPersistence.query(Artifact.class, pageRequest);
-  }
 
   @Override
   public PageResponse<Artifact> listArtifactsForService(PageRequest<Artifact> pageRequest) {
@@ -210,7 +201,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   public Artifact create(Artifact artifact, ArtifactStream concreteArtifactStream, boolean skipDuplicateCheck) {
     String appId = artifact.fetchAppId();
     if (appId != null && !appId.equals(GLOBAL_APP_ID) && !appService.exist(appId)) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER).addParam("args", "App does not exist: " + appId);
+      throw new InvalidArgumentsException("App does not exist: " + appId, USER);
     }
     ArtifactStream artifactStream;
     if (concreteArtifactStream == null) {
@@ -891,6 +882,14 @@ public class ArtifactServiceImpl implements ArtifactService {
                                .project(ArtifactKeys.artifactFiles, true)
                                .filter(ArtifactKeys.artifactStreamId, artifactStream.getUuid())
                                .filter(ArtifactKeys.artifactSourceName, artifactStream.getSourceName()));
+  }
+
+  @Override
+  public void deleteByArtifactStreamId(String appId, String artifactStreamId) {
+    deleteArtifactsByQuery(wingsPersistence.createQuery(Artifact.class, excludeAuthority)
+                               .project(ArtifactKeys.artifactFiles, true)
+                               .filter(ArtifactKeys.artifactStreamId, artifactStreamId)
+                               .filter(ArtifactKeys.appId, appId));
   }
 
   @Override

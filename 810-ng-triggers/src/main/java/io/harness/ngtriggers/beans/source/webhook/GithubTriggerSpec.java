@@ -18,7 +18,9 @@ public class GithubTriggerSpec implements WebhookTriggerSpec {
   GitRepoSpec gitRepoSpec;
   WebhookEvent event;
   List<WebhookAction> actions;
+  List<WebhookCondition> headerConditions;
   List<WebhookCondition> payloadConditions;
+  String jexlCondition;
   List<String> pathFilters;
 
   @Override

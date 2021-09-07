@@ -4,12 +4,15 @@ import static io.harness.testframework.framework.utils.ExecutorUtils.addConfig;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addGCVMOptions;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addJacocoAgentVM;
 import static io.harness.testframework.framework.utils.ExecutorUtils.addJar;
+import static io.harness.testframework.framework.utils.ExecutorUtils.getConfig;
+import static io.harness.testframework.framework.utils.ExecutorUtils.getJar;
 
 import static io.restassured.config.HttpClientConfig.httpClientConfig;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
 import io.harness.filesystem.FileIo;
+import io.harness.project.Alpn;
 import io.harness.resource.Project;
 import io.harness.threading.Poller;
 
@@ -19,7 +22,6 @@ import io.restassured.config.RestAssuredConfig;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,19 +36,16 @@ import org.zeroturnaround.exec.ProcessExecutor;
 public class CIManagerExecutor {
   public static final String MODULE = "310-ci-manager";
   public static final String CONFIG_YML = "ci-manager-config.yml";
-  public static final String CAPSULE_JAR = "ci-manager-capsule.jar";
-  public static final String TARGET = "target";
   private static boolean failedAlready;
   private static final Duration waiting = ofMinutes(5);
 
-  public static void ensureCIManager(Class<?> clazz, String alpnPath, String alpnJarPath) throws IOException {
+  public static void ensureCIManager(Class<?> clazz) throws IOException {
     if (!isHealthy()) {
-      executeLocalManager("server", clazz, alpnPath, alpnJarPath);
+      executeLocalManager("server", clazz);
     }
   }
 
-  public static void executeLocalManager(String verb, Class<?> clazz, String alpnPath, String alpnJarPath)
-      throws IOException {
+  public static void executeLocalManager(String verb, Class<?> clazz) throws IOException {
     if (failedAlready) {
       return;
     }
@@ -59,7 +58,7 @@ public class CIManagerExecutor {
         if (isHealthy()) {
           return;
         }
-        ProcessExecutor processExecutor = managerProcessExecutor(clazz, verb, alpnPath, alpnJarPath);
+        ProcessExecutor processExecutor = managerProcessExecutor(clazz, verb);
         processExecutor.start();
 
         Poller.pollFor(waiting, ofSeconds(2), CIManagerExecutor::isHealthy);
@@ -72,25 +71,15 @@ public class CIManagerExecutor {
     }
   }
 
-  public static ProcessExecutor managerProcessExecutor(
-      Class<?> clazz, String verb, String alpnPath, String alpnJarPath) {
+  public static ProcessExecutor managerProcessExecutor(Class<?> clazz, String verb) {
     String directoryPath = Project.rootDirectory(clazz);
     final File directory = new File(directoryPath);
 
     log.info("Execute the manager from {}", directory);
 
-    final Path jar = Paths.get("/home/jenkins"
-        + "/.bazel-dirs/bin/310-ci-manager/module_deploy.jar");
-    final Path config = Paths.get(directory.getPath(), MODULE, CONFIG_YML);
-    String alpn = System.getProperty("user.home") + "/.m2/repository/" + alpnJarPath;
-
-    if (!new File(alpn).exists()) {
-      // if maven repo is not in the home dir, this might be a jenkins job, check in the special location.
-      alpn = alpnPath + alpnJarPath;
-      if (!new File(alpn).exists()) {
-        throw new RuntimeException("Missing alpn file");
-      }
-    }
+    final Path jar = getJar(MODULE);
+    final Path config = getConfig(directory.getAbsolutePath(), MODULE, CONFIG_YML);
+    String alpn = Alpn.location();
 
     for (int i = 0; i < 10; i++) {
       log.info("***");

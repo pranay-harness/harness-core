@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.ANKUSH;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.notification.remote.dto.NotificationSettingDTO;
 import io.harness.notification.remote.dto.SlackSettingDTO;
@@ -17,7 +18,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class ChannelResourceTest {
+public class ChannelResourceTest extends CategoryTest {
   @Mock private ChannelService channelService;
 
   private ChannelResource channelResource;

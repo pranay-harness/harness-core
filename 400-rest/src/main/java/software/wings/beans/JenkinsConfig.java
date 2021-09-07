@@ -4,7 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
@@ -35,6 +37,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(CDC)
@@ -42,6 +45,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Data
 @ToString(exclude = {"password", "token"})
 @EqualsAndHashCode(callSuper = false)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class JenkinsConfig extends SettingValue
     implements EncryptableSetting, ArtifactSourceable, TaskParameters, ExecutionCapabilityDemander {
   public static final String USERNAME_DEFAULT_TEXT = "UserName/Password";
@@ -98,6 +102,15 @@ public class JenkinsConfig extends SettingValue
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return Arrays.asList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
         jenkinsUrl, maskingEvaluator));
+  }
+
+  @Override
+  public boolean shouldDeleteArtifact(SettingValue prev) {
+    if (!(prev instanceof JenkinsConfig)) {
+      return true;
+    }
+    JenkinsConfig prevConfig = (JenkinsConfig) prev;
+    return !StringUtils.equals(prevConfig.getJenkinsUrl(), jenkinsUrl);
   }
 
   @Override

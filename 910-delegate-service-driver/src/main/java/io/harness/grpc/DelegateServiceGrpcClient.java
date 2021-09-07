@@ -5,6 +5,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.System.currentTimeMillis;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
@@ -49,6 +51,7 @@ import io.harness.service.intfc.DelegateSyncService;
 import io.harness.tasks.ResponseData;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.util.Durations;
 import com.google.protobuf.util.Timestamps;
@@ -56,8 +59,11 @@ import io.fabric8.utils.Strings;
 import io.grpc.StatusRuntimeException;
 import java.time.Duration;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
@@ -65,20 +71,23 @@ import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
+@OwnedBy(HarnessTeam.DEL)
 public class DelegateServiceGrpcClient {
   private final DelegateServiceBlockingStub delegateServiceBlockingStub;
   private final DelegateAsyncService delegateAsyncService;
   private final KryoSerializer kryoSerializer;
   private final DelegateSyncService delegateSyncService;
+  private final boolean isDriverInstalledInNgService;
 
   @Inject
   public DelegateServiceGrpcClient(DelegateServiceBlockingStub delegateServiceBlockingStub,
-      DelegateAsyncService delegateAsyncService, KryoSerializer kryoSerializer,
-      DelegateSyncService delegateSyncService) {
+      DelegateAsyncService delegateAsyncService, KryoSerializer kryoSerializer, DelegateSyncService delegateSyncService,
+      @Named("driver-installed-in-ng-service") BooleanSupplier isDriverInstalledInNgService) {
     this.delegateServiceBlockingStub = delegateServiceBlockingStub;
     this.delegateAsyncService = delegateAsyncService;
     this.kryoSerializer = kryoSerializer;
     this.delegateSyncService = delegateSyncService;
+    this.isDriverInstalledInNgService = isDriverInstalledInNgService.getAsBoolean();
   }
 
   public String submitAsyncTask(
@@ -93,7 +102,6 @@ public class DelegateServiceGrpcClient {
     final SubmitTaskResponse submitTaskResponse =
         submitTaskInternal(TaskMode.SYNC, taskRequest, delegateCallbackToken, Duration.ZERO);
     final String taskId = submitTaskResponse.getTaskId().getId();
-    log.info("sync task id created =[{}]", taskId);
     return delegateSyncService.waitForTask(taskId,
         Strings.defaultIfEmpty(taskRequest.getTaskDescription(), taskRequest.getTaskType()),
         Duration.ofMillis(HTimestamps.toMillis(submitTaskResponse.getTotalExpiry()) - currentTimeMillis()));
@@ -120,7 +128,6 @@ public class DelegateServiceGrpcClient {
     final SubmitTaskResponse submitTaskResponse =
         submitTaskInternal(TaskMode.SYNC, taskRequest, delegateCallbackToken, Duration.ZERO);
     final String taskId = submitTaskResponse.getTaskId().getId();
-    log.info("ID for Sync Task =[{}]", taskId);
     return delegateSyncService.waitForTask(taskId,
         Strings.defaultIfEmpty(taskRequest.getTaskDescription(), taskRequest.getTaskType()),
         Duration.ofMillis(HTimestamps.toMillis(submitTaskResponse.getTotalExpiry()) - currentTimeMillis()));
@@ -130,6 +137,20 @@ public class DelegateServiceGrpcClient {
       TaskSetupAbstractions taskSetupAbstractions, TaskLogAbstractions taskLogAbstractions, TaskDetails taskDetails,
       List<ExecutionCapability> capabilities, List<String> taskSelectors, Duration holdFor, boolean forceExecute) {
     try {
+      if (taskSetupAbstractions == null || taskSetupAbstractions.getValuesCount() == 0) {
+        Map<String, String> setupAbstractions = new HashMap<>();
+        setupAbstractions.put("ng", String.valueOf(isDriverInstalledInNgService));
+
+        taskSetupAbstractions = TaskSetupAbstractions.newBuilder().putAllValues(setupAbstractions).build();
+      } else if (taskSetupAbstractions.getValuesMap().get("ng") == null) {
+        // This should allow a consumer of the client to override the value, if the one provided by this client is not
+        // appropriate
+        taskSetupAbstractions = TaskSetupAbstractions.newBuilder()
+                                    .putAllValues(taskSetupAbstractions.getValuesMap())
+                                    .putValues("ng", String.valueOf(isDriverInstalledInNgService))
+                                    .build();
+      }
+
       SubmitTaskRequest.Builder submitTaskRequestBuilder = SubmitTaskRequest.newBuilder()
                                                                .setCallbackToken(delegateCallbackToken)
                                                                .setAccountId(accountId)
@@ -231,6 +252,26 @@ public class DelegateServiceGrpcClient {
                                                  .createPerpetualTask(CreatePerpetualTaskRequest.newBuilder()
                                                                           .setAccountId(accountId)
                                                                           .setType(type)
+                                                                          .setSchedule(schedule)
+                                                                          .setContext(context)
+                                                                          .setAllowDuplicate(allowDuplicate)
+                                                                          .setTaskDescription(taskDescription)
+                                                                          .build());
+
+      return response.getPerpetualTaskId();
+    } catch (StatusRuntimeException ex) {
+      throw new DelegateServiceDriverException("Unexpected error occurred while creating perpetual task.", ex);
+    }
+  }
+
+  public PerpetualTaskId createPerpetualTask(AccountId accountId, String type, PerpetualTaskSchedule schedule,
+      PerpetualTaskClientContextDetails context, boolean allowDuplicate, String taskDescription, String clientTaskId) {
+    try {
+      CreatePerpetualTaskResponse response = delegateServiceBlockingStub.withDeadlineAfter(30, TimeUnit.SECONDS)
+                                                 .createPerpetualTask(CreatePerpetualTaskRequest.newBuilder()
+                                                                          .setAccountId(accountId)
+                                                                          .setType(type)
+                                                                          .setClientTaskId(clientTaskId)
                                                                           .setSchedule(schedule)
                                                                           .setContext(context)
                                                                           .setAllowDuplicate(allowDuplicate)

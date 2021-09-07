@@ -1,6 +1,9 @@
 package software.wings.verification.cloudwatch;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
+
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
@@ -17,12 +20,13 @@ import lombok.EqualsAndHashCode;
 /**
  * The type Yaml.
  */
-@TargetModule(HarnessModule._870_CG_YAML_BEANS)
+@TargetModule(HarnessModule._870_CG_YAML)
 @Data
 @JsonPropertyOrder({"type", "harnessApiVersion"})
 @Builder
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@OwnedBy(CV)
 public final class CloudWatchCVConfigurationYaml extends CVConfigurationYaml {
   private Map<String, List<CloudWatchMetric>> loadBalancerMetrics;
   private Map<String, List<CloudWatchMetric>> ecsMetrics;

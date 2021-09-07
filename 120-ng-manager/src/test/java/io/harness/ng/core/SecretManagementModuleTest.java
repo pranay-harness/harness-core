@@ -1,6 +1,8 @@
 package io.harness.ng.core;
 
+import static io.harness.ConnectorConstants.CONNECTOR_DECORATOR_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.rule.OwnerRule.VIKAS;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -8,28 +10,35 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.CategoryTest;
+import io.harness.account.AccountClient;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
+import io.harness.connector.impl.DefaultConnectorServiceImpl;
+import io.harness.connector.services.ConnectorService;
+import io.harness.connector.services.NGConnectorSecretManagerService;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
+import io.harness.ff.FeatureFlagService;
 import io.harness.govern.ProviderModule;
+import io.harness.ng.ConnectorServiceImpl;
 import io.harness.ng.core.activityhistory.service.NGActivityService;
 import io.harness.ng.core.api.NGSecretManagerService;
-import io.harness.ng.core.api.NGSecretService;
 import io.harness.ng.core.api.impl.NGSecretManagerServiceImpl;
-import io.harness.ng.core.api.impl.NGSecretServiceImpl;
+import io.harness.ng.core.entitysetupusage.service.EntitySetupUsageService;
 import io.harness.ng.eventsframework.EventsFrameworkModule;
 import io.harness.outbox.api.OutboxService;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
+import io.harness.repositories.ConnectorRepository;
+import io.harness.repositories.NGEncryptedDataRepository;
 import io.harness.repositories.ng.core.spring.SecretRepository;
 import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
-import io.harness.secretmanagerclient.services.SecretManagerClientServiceImpl;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.NextGenRegistrars;
 import io.harness.service.DelegateGrpcClientWrapper;
+
+import software.wings.service.intfc.FileService;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -50,8 +59,11 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class SecretManagementModuleTest extends CategoryTest {
   private SecretManagementModule secretManagementModule;
   private SecretManagementClientModule secretManagementClientModule;
-  private EntitySetupUsageClientModule entityReferenceClientModule;
   @Mock private SecretRepository secretRepository;
+  @Mock private ConnectorRepository connectorRepository;
+  @Mock private ConnectorService connectorService;
+  @Mock private AccountClient accountClient;
+  @Mock private NGConnectorSecretManagerService ngConnectorSecretManagerService;
   public static final String OUTBOX_TRANSACTION_TEMPLATE = "OUTBOX_TRANSACTION_TEMPLATE";
 
   @Before
@@ -65,14 +77,10 @@ public class SecretManagementModuleTest extends CategoryTest {
   public void testSecretManagementModule() {
     ServiceHttpClientConfig secretManagerClientConfig =
         ServiceHttpClientConfig.builder().baseUrl("http://localhost:7143").build();
-    ServiceHttpClientConfig ngManagerClientConfig =
-        ServiceHttpClientConfig.builder().baseUrl("http://localhost:3457").build();
     String serviceSecret = "test_secret";
     secretManagementModule = new SecretManagementModule();
     secretManagementClientModule =
         new SecretManagementClientModule(secretManagerClientConfig, serviceSecret, "NextGenManager");
-    entityReferenceClientModule =
-        new EntitySetupUsageClientModule(ngManagerClientConfig, serviceSecret, "NextGenManager");
 
     List<Module> modules = new ArrayList<>();
     modules.add(new ProviderModule() {
@@ -92,6 +100,41 @@ public class SecretManagementModuleTest extends CategoryTest {
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
+      ConnectorRepository connectorRepository() {
+        return mock(ConnectorRepository.class);
+      }
+    });
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      AccountClient getAccountClient() {
+        return mock(AccountClient.class);
+      }
+    });
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      NGEncryptedDataRepository ngEncryptedDataRepository() {
+        return mock(NGEncryptedDataRepository.class);
+      }
+    });
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      EntitySetupUsageService entitySetupUsageService() {
+        return mock(EntitySetupUsageService.class);
+      }
+    });
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      FileService fileService() {
+        return mock(FileService.class);
+      }
+    });
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
       DelegateGrpcClientWrapper registerDelegateGrpcClientWrapper() {
         return mock(DelegateGrpcClientWrapper.class);
       }
@@ -101,6 +144,20 @@ public class SecretManagementModuleTest extends CategoryTest {
       @Singleton
       NGActivityService registerNGActivityService() {
         return mock(NGActivityService.class);
+      }
+    });
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      SecretManagerClientService registerNGSecretManagerClientService() {
+        return mock(SecretManagerClientService.class);
+      }
+    });
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      FeatureFlagService registerFeatureFlagService() {
+        return mock(FeatureFlagService.class);
       }
     });
     modules.add(new EventsFrameworkModule(EventsFrameworkConfiguration.builder()
@@ -121,21 +178,28 @@ public class SecretManagementModuleTest extends CategoryTest {
         return mock(TransactionTemplate.class);
       }
     });
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      @Named(DEFAULT_CONNECTOR_SERVICE)
+      ConnectorService registerConnecterService() {
+        return mock(DefaultConnectorServiceImpl.class);
+      }
+    });
+    modules.add(new ProviderModule() {
+      @Provides
+      @Singleton
+      @Named(CONNECTOR_DECORATOR_SERVICE)
+      ConnectorService registerConnecterService() {
+        return mock(ConnectorServiceImpl.class);
+      }
+    });
     modules.add(secretManagementModule);
     modules.add(secretManagementClientModule);
-    modules.add(entityReferenceClientModule);
     Injector injector = Guice.createInjector(modules);
 
     NGSecretManagerService ngSecretManagerService = injector.getInstance(NGSecretManagerService.class);
     assertThat(ngSecretManagerService).isNotNull();
     assertThat(ngSecretManagerService).isInstanceOf(NGSecretManagerServiceImpl.class);
-
-    NGSecretService ngSecretService = injector.getInstance(NGSecretService.class);
-    assertThat(ngSecretService).isNotNull();
-    assertThat(ngSecretService).isInstanceOf(NGSecretServiceImpl.class);
-
-    SecretManagerClientService secretManagerClientService = injector.getInstance(SecretManagerClientService.class);
-    assertThat(secretManagerClientService).isNotNull();
-    assertThat(secretManagerClientService).isInstanceOf(SecretManagerClientServiceImpl.class);
   }
 }

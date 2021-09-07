@@ -6,7 +6,7 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.budget.entities.BudgetAlertsData;
-import io.harness.ccm.commons.utils.DataUtils;
+import io.harness.ccm.commons.utils.TimeUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -51,7 +51,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CE)
 public class BudgetTimescaleQueryHelper {
   @Inject private TimeScaleDBService timeScaleDBService;
-  @Inject private DataUtils utils;
+  @Inject private TimeUtils utils;
   private BudgetAlertsTableSchema schema = new BudgetAlertsTableSchema();
   private BillingDataTableSchema billingDataTableSchema = new BillingDataTableSchema();
   private static final int MAX_RETRY = 3;

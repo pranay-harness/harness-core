@@ -4,7 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SftpCapability;
 import io.harness.encryption.Encrypted;
@@ -36,6 +38,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 @ToString(exclude = {"password"})
 @EqualsAndHashCode(callSuper = false)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class SftpConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "SFTP URL", required = true) @NotEmpty private String sftpUrl;
   @Attributes(title = "Domain") private String domain;

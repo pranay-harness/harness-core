@@ -2,23 +2,22 @@ package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.pipeline.CDStepInfo;
-import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.cdstepinfo.K8sScaleStepInfoVisitorHelper;
 import io.harness.executions.steps.StepSpecTypeConstants;
-import io.harness.plancreator.steps.StepElementConfig;
+import io.harness.plancreator.steps.TaskSelectorYaml;
+import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
-import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
-import io.harness.yaml.core.timeout.TimeoutUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -33,14 +32,16 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(StepSpecTypeConstants.K8S_SCALE)
 @SimpleVisitorHelper(helperClass = K8sScaleStepInfoVisitorHelper.class)
 @TypeAlias("k8sScale")
+@RecasterAlias("io.harness.cdng.k8s.K8sScaleStepInfo")
 public class K8sScaleStepInfo extends K8sScaleBaseStepInfo implements CDStepInfo, Visitable {
   // For Visitor Framework Impl
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
   @Builder(builderMethodName = "infoBuilder")
   public K8sScaleStepInfo(ParameterField<Boolean> skipDryRun, ParameterField<Boolean> skipSteadyStateCheck,
-      InstanceSelectionWrapper instanceSelection, ParameterField<String> workload) {
-    super(instanceSelection, workload, skipDryRun, skipSteadyStateCheck);
+      InstanceSelectionWrapper instanceSelection, ParameterField<String> workload,
+      ParameterField<List<TaskSelectorYaml>> delegateSelectors) {
+    super(instanceSelection, workload, skipDryRun, skipSteadyStateCheck, delegateSelectors);
   }
 
   @Override
@@ -54,22 +55,13 @@ public class K8sScaleStepInfo extends K8sScaleBaseStepInfo implements CDStepInfo
   }
 
   @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.K8S_SCALE).build();
-  }
-
-  @Override
-  public StepParameters getStepParametersInfo(StepElementConfig stepElementConfig) {
+  public SpecParameters getSpecParameters() {
     return K8sScaleStepParameter.infoBuilder()
         .instanceSelection(instanceSelection)
         .workload(workload)
         .skipDryRun(skipDryRun)
         .skipSteadyStateCheck(skipSteadyStateCheck)
-        .timeout(ParameterField.createValueField(TimeoutUtils.getTimeoutString(stepElementConfig.getTimeout())))
-        .name(stepElementConfig.getName())
-        .identifier(stepElementConfig.getIdentifier())
-        .skipCondition(stepElementConfig.getSkipCondition())
-        .description(stepElementConfig.getDescription())
+        .delegateSelectors(delegateSelectors)
         .build();
   }
 }

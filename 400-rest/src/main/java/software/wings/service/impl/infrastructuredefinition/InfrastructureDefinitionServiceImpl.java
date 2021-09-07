@@ -54,6 +54,10 @@ import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Projection.projection;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.SubscriptionData;
 import io.harness.azure.model.VirtualMachineScaleSetData;
 import io.harness.beans.ExecutionStatus;
@@ -239,6 +243,8 @@ import org.mongodb.morphia.query.Query;
 @Singleton
 @ValidateOnExecution
 @Slf4j
+@OwnedBy(HarnessTeam.CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class InfrastructureDefinitionServiceImpl implements InfrastructureDefinitionService {
   public static final String NULL = "null";
   public static final String DEFAULT = "default";
@@ -546,6 +552,12 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @VisibleForTesting
   public void validateAndPrepareInfraDefinition(@Valid InfrastructureDefinition infraDefinition) {
     validateCloudProviderAndDeploymentType(infraDefinition.getCloudProviderType(), infraDefinition.getDeploymentType());
+    if (infraDefinition.getCloudProviderType() != CloudProviderType.CUSTOM
+        && settingsService.getByAccountAndId(
+               infraDefinition.getAccountId(), infraDefinition.getInfrastructure().getCloudProviderId())
+            == null) {
+      throw new InvalidRequestException("Invalid Cloud Provider Id", USER);
+    }
     if (infraDefinition.getDeploymentType() == DeploymentType.SSH
         && infraDefinition.getInfrastructure() instanceof SshBasedInfrastructure) {
       notEmptyCheck("Connection Attributes can't be empty",
@@ -575,6 +587,10 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       }
     }
     if (isNotEmpty(infraDefinition.getProvisionerId())) {
+      if (infrastructureProvisionerService.get(infraDefinition.getAppId(), infraDefinition.getProvisionerId())
+          == null) {
+        throw new InvalidRequestException("ProvisionerId is Invaild", USER);
+      }
       ProvisionerAware provisionerAwareInfra = (ProvisionerAware) infraDefinition.getInfrastructure();
       Map<String, String> expressions = provisionerAwareInfra.getExpressions();
       if (isEmpty(expressions)) {

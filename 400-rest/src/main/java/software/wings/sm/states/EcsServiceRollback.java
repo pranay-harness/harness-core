@@ -14,6 +14,7 @@ import static software.wings.sm.states.EcsServiceDeploy.ECS_SERVICE_DEPLOY;
 
 import static java.util.Collections.singletonList;
 
+import io.harness.beans.DelegateTask;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
@@ -156,14 +157,15 @@ public class EcsServiceRollback extends State {
                                               TIMEOUT_FAILURE_SUPPORT, deployDataBag.getApp().getAccountId()))
                                           .build();
 
-    String delegateTaskId =
-        ecsStateHelper.createAndQueueDelegateTaskForEcsServiceDeploy(deployDataBag, request, activity, delegateService);
+    DelegateTask delegateTask = ecsStateHelper.createAndQueueDelegateTaskForEcsServiceDeploy(
+        deployDataBag, request, activity, delegateService, isSelectionLogsTrackingForTasksEnabled());
+    appendDelegateTaskDetails(context, delegateTask);
 
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(singletonList(activity.getUuid()))
         .stateExecutionData(executionData)
-        .delegateTaskId(delegateTaskId)
+        .delegateTaskId(delegateTask.getUuid())
         .build();
   }
 
@@ -192,5 +194,10 @@ public class EcsServiceRollback extends State {
       }
       return rollbackAllPhases;
     }
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

@@ -6,6 +6,10 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AzureConfig;
+import software.wings.beans.AzureContainerRegistry;
+import software.wings.beans.AzureImageDefinition;
+import software.wings.beans.AzureImageGallery;
+import software.wings.beans.AzureResourceGroup;
 import software.wings.beans.TaskType;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.delegatetasks.DelegateTaskType;
@@ -34,4 +38,38 @@ public interface AcrBuildService extends BuildService<AzureConfig> {
   @DelegateTaskType(TaskType.ACR_GET_ARTIFACT_PATHS)
   List<String> getArtifactPaths(
       String subscriptionId, String groupId, AzureConfig config, List<EncryptedDataDetail> encryptionDetails);
+
+  @Override
+  @DelegateTaskType(TaskType.ACR_GET_REGISTRIES)
+  List<AzureContainerRegistry> listContainerRegistries(
+      AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails, String subscriptionId);
+
+  @Override
+  @DelegateTaskType(TaskType.ACR_GET_REGISTRY_NAMES)
+  List<String> listContainerRegistryNames(
+      AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails, String subscriptionId);
+
+  @Override
+  @DelegateTaskType(TaskType.ACR_GET_REPOSITORIES)
+  List<String> listRepositories(
+      AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails, String subscriptionId, String registryName);
+
+  @Override
+  @DelegateTaskType(TaskType.AZURE_MACHINE_IMAGE_GET_IMAGE_GALLERIES)
+  List<AzureImageGallery> listImageGalleries(
+      AzureConfig config, List<EncryptedDataDetail> encryptionDetails, String subscriptionId, String resourceGroupName);
+
+  @Override
+  @DelegateTaskType(TaskType.AZURE_MACHINE_IMAGE_GET_IMAGE_DEFINITIONS)
+  List<AzureImageDefinition> listImageDefinitions(AzureConfig config, List<EncryptedDataDetail> encryptionDetails,
+      String subscriptionId, String resourceGroupName, String galleryName);
+
+  @Override
+  @DelegateTaskType(TaskType.AZURE_MACHINE_IMAGE_GET_RESOURCE_GROUPS)
+  List<AzureResourceGroup> listResourceGroups(
+      AzureConfig config, List<EncryptedDataDetail> encryptionDetails, String subscriptionId);
+
+  @Override
+  @DelegateTaskType(TaskType.AZURE_GET_SUBSCRIPTIONS)
+  Map<String, String> listSubscriptions(AzureConfig config, List<EncryptedDataDetail> encryptionDetails);
 }

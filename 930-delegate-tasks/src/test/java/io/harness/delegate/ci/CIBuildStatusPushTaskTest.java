@@ -106,7 +106,7 @@ public class CIBuildStatusPushTaskTest extends CategoryTest {
     githubServiceImpl = spy(new GithubServiceImpl());
     gitlabServiceImpl = spy(new GitlabServiceImpl());
     bitbucketServiceImpl = spy(new BitbucketServiceImpl());
-    doReturn(githubRestClient).when(githubServiceImpl).getGithubClient(any(), any());
+    doReturn(githubRestClient).when(githubServiceImpl).getGithubClient(any());
     doReturn(gitlabRestClient).when(gitlabServiceImpl).getGitlabRestClient(any(), any());
     doReturn(bitbucketRestClient).when(bitbucketServiceImpl).getBitbucketClient(any(), any());
     on(ciBuildStatusPushTask).set("githubService", githubServiceImpl);

@@ -5,12 +5,12 @@ import io.harness.batch.processing.cloudevents.aws.ecs.service.support.intfc.AWS
 import io.harness.batch.processing.cloudevents.aws.ecs.service.support.intfc.AwsECSHelperService;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.support.intfc.AwsHelperResourceService;
 import io.harness.batch.processing.config.BatchMainConfig;
+import io.harness.ccm.commons.entities.billing.CECloudAccount;
 import io.harness.ccm.setup.CECloudAccountDao;
 import io.harness.ccm.setup.util.InfraSetUpUtils;
 
 import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.beans.ce.CEAwsConfig;
-import software.wings.beans.ce.CECloudAccount;
 
 import com.amazonaws.services.organizations.model.Account;
 import java.util.ArrayList;

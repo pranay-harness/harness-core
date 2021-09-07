@@ -16,12 +16,15 @@ import javax.validation.constraints.NotNull;
 public interface ApprovalInstanceService {
   ApprovalInstance save(@NotNull ApprovalInstance instance);
   ApprovalInstance get(@NotNull String approvalInstanceId);
+  HarnessApprovalInstance getHarnessApprovalInstance(@NotNull String approvalInstanceId);
+
   void delete(@NotNull String approvalInstanceId);
 
   void expireByNodeExecutionId(@NotNull String approvalInstanceId);
   void markExpiredInstances();
 
   void finalizeStatus(@NotNull String approvalInstanceId, ApprovalStatus status);
+  void finalizeStatus(@NotNull String approvalInstanceId, ApprovalStatus status, String errorMessage);
   HarnessApprovalInstance addHarnessApprovalActivity(@NotNull String approvalInstanceId, @NotNull EmbeddedUser user,
       @NotNull @Valid HarnessApprovalActivityRequestDTO request);
 }

@@ -4,13 +4,16 @@ import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.SettingAttribute.SettingCategory.AZURE_ARTIFACTS;
 import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
 import static software.wings.beans.SettingAttribute.SettingCategory.HELM_REPO;
 import static software.wings.security.PermissionAttribute.PermissionType;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CLOUD_PROVIDERS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CONNECTORS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SSH_AND_WINRM;
 import static software.wings.settings.SettingVariableTypes.AMAZON_S3_HELM_REPO;
 import static software.wings.settings.SettingVariableTypes.APM_VERIFICATION;
 import static software.wings.settings.SettingVariableTypes.APP_DYNAMICS;
@@ -50,16 +53,17 @@ import static software.wings.settings.SettingVariableTypes.SPOT_INST;
 import static software.wings.settings.SettingVariableTypes.SUMO;
 import static software.wings.settings.SettingVariableTypes.WINRM_CONNECTION_ATTRIBUTES;
 
-import io.harness.beans.Encryptable;
-import io.harness.data.structure.EmptyPredicate;
-import io.harness.encryption.EncryptionReflectUtils;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedUsageRestrictionsException;
 import io.harness.exception.WingsException;
-import io.harness.reflection.ReflectionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.security.UsageRestrictions;
 import software.wings.service.intfc.AccountService;
@@ -74,14 +78,13 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.apache.commons.lang3.StringUtils;
 
 @Singleton
+@OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._445_CG_CONNECTORS)
 public class SettingServiceHelper {
   private static final String REFERENCED_SECRET_ERROR_MSG = "Unable to copy encryption details";
   private static final String USE_ENCRYPTED_VALUE_FLAG_FIELD_BASE = "useEncrypted";
@@ -262,54 +265,6 @@ public class SettingServiceHelper {
     }
   }
 
-  public static List<Field> getAllEncryptedFields(SettingValue obj) {
-    if (!(obj instanceof EncryptableSetting)) {
-      return Collections.emptyList();
-    }
-
-    return EncryptionReflectUtils.getEncryptedFields(obj.getClass())
-        .stream()
-        .filter(field -> {
-          if (EncryptionReflectUtils.isSecretReference(field)) {
-            String flagFiledName = USE_ENCRYPTED_VALUE_FLAG_FIELD_BASE + StringUtils.capitalize(field.getName());
-
-            List<Field> declaredAndInheritedFields =
-                ReflectionUtils.getDeclaredAndInheritedFields(obj.getClass(), f -> f.getName().equals(flagFiledName));
-            if (isNotEmpty(declaredAndInheritedFields)) {
-              Object flagFieldValue = ReflectionUtils.getFieldValue(obj, declaredAndInheritedFields.get(0));
-              return flagFieldValue != null && (Boolean) flagFieldValue;
-            }
-          }
-
-          return true;
-        })
-        .collect(Collectors.toList());
-  }
-
-  public static List<String> getAllEncryptedSecrets(SettingValue obj) {
-    if (!(obj instanceof EncryptableSetting)) {
-      return Collections.emptyList();
-    }
-
-    List<Field> encryptedFields = SettingServiceHelper.getAllEncryptedFields(obj);
-    if (EmptyPredicate.isEmpty(encryptedFields)) {
-      return Collections.emptyList();
-    }
-
-    List<String> encryptedSecrets = new ArrayList<>();
-    for (Field encryptedField : encryptedFields) {
-      Field encryptedRefField = EncryptionReflectUtils.getEncryptedRefField(encryptedField, (Encryptable) obj);
-      encryptedRefField.setAccessible(true);
-      try {
-        String encryptedValue = (String) encryptedRefField.get(obj);
-        encryptedSecrets.add(encryptedValue);
-      } catch (IllegalAccessException e) {
-        throw new InvalidRequestException("Unable to access encrypted field", e);
-      }
-    }
-    return encryptedSecrets;
-  }
-
   public void updateUsageRestrictions(SettingAttribute settingAttribute) {
     if (isNotEmpty(getUsedSecretIds(settingAttribute))) {
       settingAttribute.setUsageRestrictions(null);
@@ -390,6 +345,17 @@ public class SettingServiceHelper {
       case CLOUD_PROVIDER: {
         return MANAGE_CLOUD_PROVIDERS;
       }
+      case SETTING: {
+        if (!SettingVariableTypes.STRING.equals(SettingVariableTypes.valueOf(settingAttribute.getValue().getType()))) {
+          return MANAGE_SSH_AND_WINRM;
+        } else {
+          if (GLOBAL_APP_ID.equals(settingAttribute.getAppId())) {
+            return ACCOUNT_MANAGEMENT;
+          } else {
+            return MANAGE_APPLICATIONS;
+          }
+        }
+      }
       default: {
         return ACCOUNT_MANAGEMENT;
       }
@@ -405,6 +371,13 @@ public class SettingServiceHelper {
   public void setCertValidationRequired(String accountId, SettingValue settingValue) {
     if (settingValue != null) {
       settingValue.setCertValidationRequired(accountService.isCertValidationRequired(accountId));
+    }
+  }
+
+  public void resetTransientFields(SettingValue settingValue) {
+    if (null != settingValue && SettingVariableTypes.GIT.name().equals(settingValue.getType())) {
+      GitConfig gitConfig = (GitConfig) settingValue;
+      gitConfig.setSshSettingAttribute(null);
     }
   }
 }

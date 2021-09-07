@@ -56,6 +56,7 @@ public class ManagerVaultEncryptor implements VaultEncryptor {
                                                 .encryptionConfig(encryptionConfig)
                                                 .taskType(CREATE)
                                                 .build();
+
     return upsertSecret(accountId, parameters);
   }
 
@@ -85,15 +86,18 @@ public class ManagerVaultEncryptor implements VaultEncryptor {
   }
 
   private EncryptedRecord upsertSecret(String accountId, UpsertSecretTaskParameters parameters) {
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .data(TaskData.builder()
-                                              .async(false)
-                                              .taskType(UPSERT_SECRET.name())
-                                              .parameters(new Object[] {parameters})
-                                              .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
-                                              .build())
-                                    .accountId(accountId)
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .data(TaskData.builder()
+                      .async(false)
+                      .taskType(UPSERT_SECRET.name())
+                      .parameters(new Object[] {parameters})
+                      .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
+                      .build())
+            .accountId(accountId)
+            .setupAbstractions(managerEncryptorHelper.buildAbstractions(parameters.getEncryptionConfig()))
+            .build();
+
     try {
       DelegateResponseData delegateResponseData = delegateService.executeTask(delegateTask);
       DelegateTaskUtils.validateDelegateTaskResponse(delegateResponseData);
@@ -115,15 +119,17 @@ public class ManagerVaultEncryptor implements VaultEncryptor {
     DeleteSecretTaskParameters parameters =
         DeleteSecretTaskParameters.builder().existingRecord(existingRecord).encryptionConfig(encryptionConfig).build();
 
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .data(TaskData.builder()
-                                              .async(false)
-                                              .taskType(DELETE_SECRET.name())
-                                              .parameters(new Object[] {parameters})
-                                              .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
-                                              .build())
-                                    .accountId(accountId)
-                                    .build();
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .data(TaskData.builder()
+                      .async(false)
+                      .taskType(DELETE_SECRET.name())
+                      .parameters(new Object[] {parameters})
+                      .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
+                      .build())
+            .accountId(accountId)
+            .setupAbstractions(managerEncryptorHelper.buildAbstractions(parameters.getEncryptionConfig()))
+            .build();
     try {
       DelegateResponseData delegateResponseData = delegateService.executeTask(delegateTask);
       DelegateTaskUtils.validateDelegateTaskResponse(delegateResponseData);

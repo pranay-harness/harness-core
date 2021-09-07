@@ -1,5 +1,6 @@
 package software.wings.yaml.handler.inframappings;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_YAML;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.GEORGE;
 
@@ -11,11 +12,12 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
+import software.wings.beans.AwsAmiInfraMappingYaml;
 import software.wings.beans.AwsAmiInfrastructureMapping;
-import software.wings.beans.AwsAmiInfrastructureMapping.Yaml;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.yaml.ChangeContext;
@@ -29,6 +31,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 
 @OwnedBy(CDP)
+@TargetModule(_870_CG_YAML)
 public class AwsAmiInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandlerTestBase {
   private String validYamlContent = "harnessApiVersion: '1.0'\n"
       + "type: AWS_AMI\n"
@@ -60,9 +63,11 @@ public class AwsAmiInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandl
   @Owner(developers = GEORGE)
   @Category(UnitTests.class)
   public void testCRUDAndGet() throws Exception {
-    ChangeContext<Yaml> changeContext = getChangeContext(validYamlContent, validYamlFilePath, yamlHandler);
+    ChangeContext<AwsAmiInfraMappingYaml> changeContext =
+        getChangeContext(validYamlContent, validYamlFilePath, yamlHandler);
 
-    Yaml yamlObject = (Yaml) getYaml(validYamlContent, Yaml.class);
+    AwsAmiInfraMappingYaml yamlObject =
+        (AwsAmiInfraMappingYaml) getYaml(validYamlContent, AwsAmiInfraMappingYaml.class);
     changeContext.setYaml(yamlObject);
 
     AwsAmiInfrastructureMapping infrastructureMapping =
@@ -70,7 +75,7 @@ public class AwsAmiInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandl
     assertThat(infrastructureMapping).isNotNull();
     assertThat(infraMappingName).isEqualTo(infrastructureMapping.getName());
 
-    Yaml yaml = yamlHandler.toYaml(infrastructureMapping, APP_ID);
+    AwsAmiInfraMappingYaml yaml = yamlHandler.toYaml(infrastructureMapping, APP_ID);
     assertThat(yaml).isNotNull();
     assertThat(yaml.getType()).isEqualTo(InfrastructureMappingType.AWS_AMI.name());
 

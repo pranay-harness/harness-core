@@ -1,24 +1,25 @@
 package io.harness.app;
 
-import io.harness.pms.sdk.PmsSdkPersistenceConfig;
+import io.harness.mongo.MongoConfig;
+import io.harness.springdata.HTransactionTemplate;
 import io.harness.springdata.SpringPersistenceConfig;
 import io.harness.springdata.SpringPersistenceModule;
 
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import org.springframework.data.mongodb.MongoTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
+
 public class CIPersistenceModule extends SpringPersistenceModule {
-  private final boolean withPMS;
-
-  public CIPersistenceModule(boolean withPMS) {
-    this.withPMS = withPMS;
-  }
-
   @Override
   protected Class<?>[] getConfigClasses() {
-    Class<?>[] resultClasses;
-    if (withPMS) {
-      resultClasses = new Class<?>[] {SpringPersistenceConfig.class, PmsSdkPersistenceConfig.class};
-    } else {
-      resultClasses = new Class<?>[] {SpringPersistenceConfig.class};
-    }
-    return resultClasses;
+    return new Class<?>[] {SpringPersistenceConfig.class};
+  }
+
+  @Provides
+  @Singleton
+  protected TransactionTemplate getTransactionTemplate(
+      MongoTransactionManager mongoTransactionManager, MongoConfig mongoConfig) {
+    return new HTransactionTemplate(mongoTransactionManager, mongoConfig.isTransactionsEnabled());
   }
 }

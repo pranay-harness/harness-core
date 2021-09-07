@@ -1,14 +1,15 @@
 package io.harness.repositories.pipeline;
 
-import io.harness.annotation.HarnessRepo;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.gitsync.persistance.GitSyncableHarnessRepo;
 import io.harness.pms.pipeline.PipelineEntity;
 
-import java.util.Optional;
-import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.repository.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
-@HarnessRepo
-public interface PMSPipelineRepository
-    extends PagingAndSortingRepository<PipelineEntity, String>, PMSPipelineRepositoryCustom {
-  Optional<PipelineEntity> findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(
-      String accountId, String orgIdentifier, String projectIdentifier, String identifier, boolean notDeleted);
-}
+@GitSyncableHarnessRepo
+@Transactional
+@OwnedBy(PIPELINE)
+public interface PMSPipelineRepository extends Repository<PipelineEntity, String>, PMSPipelineRepositoryCustom {}

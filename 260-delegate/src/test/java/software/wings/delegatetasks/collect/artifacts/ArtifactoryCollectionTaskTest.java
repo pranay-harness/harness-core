@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.artifactory.ArtifactoryConfigRequest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
@@ -22,6 +23,7 @@ import io.harness.rule.Owner;
 import software.wings.beans.TaskType;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.helpers.ext.artifactory.ArtifactoryService;
+import software.wings.service.intfc.security.EncryptionService;
 
 import com.google.common.collect.ImmutableMap;
 import org.junit.Rule;
@@ -40,6 +42,7 @@ public class ArtifactoryCollectionTaskTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   @Mock ArtifactoryService artifactoryService;
+  @Mock EncryptionService encryptionService;
 
   String url = "http://localhost:8881/artifactory/";
 
@@ -65,7 +68,7 @@ public class ArtifactoryCollectionTaskTest extends CategoryTest {
   public void shouldCollectNoMavenStyleFiles() {
     ListNotifyResponseData res = ListNotifyResponseData.Builder.aListNotifyResponseData().build();
     when(artifactoryService.downloadArtifacts(
-             any(ArtifactoryConfig.class), any(), anyString(), anyMap(), anyString(), anyString(), anyString()))
+             any(ArtifactoryConfigRequest.class), anyString(), anyMap(), anyString(), anyString(), anyString()))
         .thenReturn(res);
     res = artifactoryCollectionTask.run(taskData.getParameters());
     assertThat(res).isNotNull();

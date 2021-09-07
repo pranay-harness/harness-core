@@ -9,13 +9,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.Arrays;
 
+// TODO: We need to adopt the interrupt type itself and remove this enum
+@Deprecated
 @OwnedBy(HarnessTeam.PIPELINE)
 public enum PlanExecutionInterruptType {
   /**
    * Abort all state event.
    */
-  @JsonProperty("Abort")
-  ABORT("Abort execution of all nodes for the current workflow", InterruptType.ABORT_ALL, "Abort"),
+  @JsonProperty("AbortAll")
+  ABORTALL("Abort execution of all nodes for the current workflow", InterruptType.ABORT_ALL, "AbortAll"),
+
+  @JsonProperty("Abort") ABORT("Abort execution of given node for the current workflow", InterruptType.ABORT, "Abort"),
   /**
    * Pause all state event.
    */
@@ -29,15 +33,23 @@ public enum PlanExecutionInterruptType {
 
   @JsonProperty("Ignore") IGNORE("Ignore execution of  nodes in the current workflow", InterruptType.IGNORE, "Ignore"),
 
-  @JsonProperty("MarkSuccess")
-  MARKSUCCESS(
-      "MarkSuccess execution of paused node in the current workflow", InterruptType.MARK_SUCCESS, "MarkSuccess"),
+  @JsonProperty("StageRollback")
+  STAGEROLLBACK("Do stage rollback of the execution", InterruptType.CUSTOM_FAILURE, "StageRollback"),
+
+  @JsonProperty("StepGroupRollback")
+  STEPGROUPROLLBACK("Do stage rollback of the execution", InterruptType.CUSTOM_FAILURE, "StepGroupRollback"),
+
+  @JsonProperty("MarkAsSuccess")
+  MARKASSUCCESS(
+      "MarkSuccess execution of paused node in the current workflow", InterruptType.MARK_SUCCESS, "MarkAsSuccess"),
+
+  @JsonProperty("ExpireAll") EXPIREALL("Expire Pipeline", InterruptType.EXPIRE_ALL, "ExpireAll"),
 
   @JsonProperty("Retry") RETRY("Retry execution of  paused node in the current workflow", InterruptType.RETRY, "Retry");
 
   private String description;
   private InterruptType executionInterruptType;
-  private String displayName;
+  private String displayName; // DO NOT CHANGE THESE, AS THEY ARE SAME AS FailureTypes.
 
   PlanExecutionInterruptType(String description, InterruptType executionInterruptType, String displayName) {
     this.description = description;

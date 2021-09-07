@@ -8,9 +8,8 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.billing.RawBillingTableSchema;
 import io.harness.ccm.billing.bigquery.BigQueryService;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
+import io.harness.ccm.commons.entities.billing.CECloudAccount;
 import io.harness.ccm.setup.CECloudAccountDao;
-
-import software.wings.beans.ce.CECloudAccount;
 
 import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.TableResult;

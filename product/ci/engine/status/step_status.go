@@ -17,6 +17,7 @@ import (
 	"github.com/wings-software/portal/commons/go/lib/delegate-task-grpc-service/grpc"
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	"github.com/wings-software/portal/product/ci/engine/output"
+	enginepb "github.com/wings-software/portal/product/ci/engine/proto"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -37,11 +38,11 @@ var (
 )
 
 // SendStepStatus sends the step status to delegate task service.
-func SendStepStatus(ctx context.Context, stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
-	status pb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) error {
+func SendStepStatus(ctx context.Context, stepID, endpoint, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
+	status pb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, artifact *enginepb.Artifact, log *zap.SugaredLogger) error {
 	start := time.Now()
-	arg := getRequestArg(stepID, accountID, callbackToken, taskID, numRetries, timeTaken, status, errMsg, stepOutput, log)
-	err := sendStatusWithRetries(ctx, arg, log)
+	arg := getRequestArg(stepID, accountID, callbackToken, taskID, numRetries, timeTaken, status, errMsg, stepOutput, artifact, log)
+	err := sendStatusWithRetries(ctx, endpoint, arg, log)
 	if err != nil {
 		log.Errorw(
 			"Failed to send/execute delegate task status",
@@ -61,11 +62,12 @@ func SendStepStatus(ctx context.Context, stepID, accountID, callbackToken, taskI
 
 // getRequestArg returns arguments for send status rpc
 func getRequestArg(stepID, accountID, callbackToken, taskID string, numRetries int32, timeTaken time.Duration,
-	status pb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, log *zap.SugaredLogger) *pb.SendTaskStatusRequest {
+	status pb.StepExecutionStatus, errMsg string, stepOutput *output.StepOutput, artifact *enginepb.Artifact, log *zap.SugaredLogger) *pb.SendTaskStatusRequest {
 	var stepOutputMap map[string]string
 	if stepOutput != nil {
 		stepOutputMap = stepOutput.Output.Variables
 	}
+
 	req := &pb.SendTaskStatusRequest{
 		AccountId: &delegatepb.AccountId{
 			Id: accountID,
@@ -88,6 +90,7 @@ func getRequestArg(stepID, accountID, callbackToken, taskID string, numRetries i
 							Output: stepOutputMap,
 						},
 					},
+					Artifact: artifact,
 				},
 			},
 		},
@@ -96,13 +99,15 @@ func getRequestArg(stepID, accountID, callbackToken, taskID string, numRetries i
 	return req
 }
 
-func sendStatusWithRetries(ctx context.Context, request *pb.SendTaskStatusRequest, log *zap.SugaredLogger) error {
+func sendStatusWithRetries(ctx context.Context, endpoint string, request *pb.SendTaskStatusRequest,
+	log *zap.SugaredLogger) error {
 	statusUpdater := func() error {
 		start := time.Now()
-		err := sendRequest(ctx, request, log)
+		err := sendRequest(ctx, endpoint, request, log)
 		if err != nil {
 			log.Errorw(
 				"failed to send step status",
+				"endpoint", endpoint,
 				"elapsed_time_ms", utils.TimeSince(start),
 				zap.Error(err),
 			)
@@ -119,14 +124,19 @@ func sendStatusWithRetries(ctx context.Context, request *pb.SendTaskStatusReques
 }
 
 // sendRequest sends the step status to delegate service
-func sendRequest(ctx context.Context, request *pb.SendTaskStatusRequest, log *zap.SugaredLogger) error {
+func sendRequest(ctx context.Context, endpoint string, request *pb.SendTaskStatusRequest, log *zap.SugaredLogger) error {
 	ctx, cancel := context.WithTimeout(ctx, time.Second*time.Duration(timeoutSecs))
 	defer cancel()
 
-	endpoint, ok := os.LookupEnv(delegateSvcEndpointEnv)
-	if !ok {
-		return backoff.Permanent(errors.New(fmt.Sprintf("%s environment variable is not set", delegateSvcEndpointEnv)))
+	// If endpoint passed is empty, use the endpoint from environment variable
+	if endpoint == "" {
+		var ok bool
+		endpoint, ok = os.LookupEnv(delegateSvcEndpointEnv)
+		if !ok {
+			return backoff.Permanent(errors.New(fmt.Sprintf("%s environment variable is not set", delegateSvcEndpointEnv)))
+		}
 	}
+
 	token, ok := os.LookupEnv(delegateSvcTokenEnv)
 	if !ok {
 		return backoff.Permanent(errors.New(fmt.Sprintf("%s token is not set", delegateSvcTokenEnv)))
@@ -138,7 +148,7 @@ func sendRequest(ctx context.Context, request *pb.SendTaskStatusRequest, log *za
 
 	c, err := newTaskServiceClient(endpoint, log)
 	if err != nil {
-		return backoff.Permanent(errors.Wrap(err, "Could not create delegate task service client"))
+		return backoff.Permanent(errors.Wrap(err, fmt.Sprintf("Could not create delegate task service client for %s", endpoint)))
 	}
 	defer c.CloseConn()
 
@@ -156,7 +166,7 @@ func sendRequest(ctx context.Context, request *pb.SendTaskStatusRequest, log *za
 	}
 
 	if !response.GetSuccess() {
-		return fmt.Errorf("failed to update step status at delegate agent side")
+		return fmt.Errorf("failed to update step status at delegate agent side: %s", endpoint)
 	}
 	return nil
 }

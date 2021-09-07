@@ -1,17 +1,24 @@
 package software.wings.resources.graphql;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.SRE;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static software.wings.graphql.utils.GraphQLConstants.GRAPHQL_QUERY_STRING;
 import static software.wings.graphql.utils.GraphQLConstants.HTTP_SERVLET_REQUEST;
 import static software.wings.security.AuthenticationFilter.API_KEY_HEADER;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
+import io.harness.exception.GraphQLException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
+import io.harness.secrets.validation.BaseSecretValidator;
+import io.harness.serializer.JsonUtils;
 
+import software.wings.app.MainConfiguration;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.User;
 import software.wings.features.RestApiFeature;
@@ -28,6 +35,7 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.service.intfc.ApiKeyService;
 
+import com.google.common.io.ByteStreams;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -37,6 +45,8 @@ import graphql.GraphQL;
 import graphql.GraphQLContext;
 import graphql.GraphQLContext.Builder;
 import io.swagger.annotations.Api;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
@@ -53,7 +63,9 @@ import javax.ws.rs.core.MediaType;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.glassfish.jersey.media.multipart.FormDataParam;
 
+@OwnedBy(PL)
 @Api("/graphql")
 @Path("/graphql")
 @Produces("application/json")
@@ -68,6 +80,8 @@ public class GraphQLResource {
   PremiumFeature restApiFeature;
   DataLoaderRegistryHelper dataLoaderRegistryHelper;
   GraphQLUtils graphQLUtils;
+  MainConfiguration configuration;
+
   private interface Constants {
     String QUERY = "query";
     String EMPTY_BRACKET = "{";
@@ -77,7 +91,8 @@ public class GraphQLResource {
   public GraphQLResource(@NotNull QueryLanguageProvider<GraphQL> queryLanguageProvider,
       @NotNull FeatureFlagService featureFlagService, @NotNull ApiKeyService apiKeyService,
       DataLoaderRegistryHelper dataLoaderRegistryHelper,
-      @Named(RestApiFeature.FEATURE_NAME) PremiumFeature restApiFeature, GraphQLUtils graphQLUtils) {
+      @Named(RestApiFeature.FEATURE_NAME) PremiumFeature restApiFeature, GraphQLUtils graphQLUtils,
+      MainConfiguration configuration) {
     this.privateGraphQL = queryLanguageProvider.getPrivateGraphQL();
     this.publicGraphQL = queryLanguageProvider.getPublicGraphQL();
     this.featureFlagService = featureFlagService;
@@ -85,6 +100,7 @@ public class GraphQLResource {
     this.dataLoaderRegistryHelper = dataLoaderRegistryHelper;
     this.restApiFeature = restApiFeature;
     this.graphQLUtils = graphQLUtils;
+    this.configuration = configuration;
   }
 
   @POST
@@ -96,7 +112,22 @@ public class GraphQLResource {
       log.info("Executing graphql query");
       GraphQLQuery graphQLQuery = new GraphQLQuery();
       graphQLQuery.setQuery(query);
-      return executeExternal(accountId, apiKey, graphQLQuery, httpServletRequest);
+      return executeExternal(accountId, apiKey, graphQLQuery, httpServletRequest, null);
+    }
+  }
+
+  @POST
+  @Consumes(MediaType.MULTIPART_FORM_DATA)
+  @ExternalFacingApiAuth
+  public Map<String, Object> execute(@HeaderParam(API_KEY_HEADER) String apiKey,
+      @QueryParam("accountId") String accountId, @FormDataParam("query") String query,
+      @FormDataParam("file") InputStream uploadedInputStream, @Context HttpServletRequest httpServletRequest) {
+    GraphQLQuery graphQLQuery = JsonUtils.asObject(query, GraphQLQuery.class);
+    try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      log.info("Executing graphql query for file");
+      BaseSecretValidator.validateFileWithinSizeLimit(
+          httpServletRequest.getContentLengthLong(), configuration.getFileUploadLimits().getEncryptedFileLimit());
+      return executeExternal(accountId, apiKey, graphQLQuery, httpServletRequest, uploadedInputStream);
     }
   }
 
@@ -116,7 +147,7 @@ public class GraphQLResource {
       @Context HttpServletRequest httpServletRequest) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       log.info("Executing graphql query");
-      return executeExternal(accountId, apiKey, graphQLQuery, httpServletRequest);
+      return executeExternal(accountId, apiKey, graphQLQuery, httpServletRequest, null);
     }
   }
 
@@ -146,8 +177,8 @@ public class GraphQLResource {
     return executeInternal(graphQLQuery, httpServletRequest);
   }
 
-  private Map<String, Object> executeExternal(
-      String accountIdFromQueryParam, String apiKey, GraphQLQuery graphQLQuery, HttpServletRequest httpServletRequest) {
+  private Map<String, Object> executeExternal(String accountIdFromQueryParam, String apiKey, GraphQLQuery graphQLQuery,
+      HttpServletRequest httpServletRequest, InputStream uploadedInputStream) {
     String accountId;
     boolean hasUserContext = false;
     UserRequestContext userRequestContext = null;
@@ -195,7 +226,7 @@ public class GraphQLResource {
       if (hasUserContext) {
         final Builder contextBuilder = populateContextBuilder(GraphQLContext.newContext(),
             userRequestContext.getUserPermissionInfo(), userRequestContext.getUserRestrictionInfo(), accountId,
-            user.getUuid(), TriggeredByType.USER, httpServletRequest, query);
+            user.getUuid(), TriggeredByType.USER, httpServletRequest, query, uploadedInputStream);
         executionResult = graphQL.execute(getExecutionInput(contextBuilder, graphQLQuery, dataLoaderRegistryHelper));
       } else {
         ApiKeyEntry apiKeyEntry = apiKeyService.getByKey(apiKey, accountId, true);
@@ -206,7 +237,8 @@ public class GraphQLResource {
           UserRestrictionInfo apiKeyRestrictions =
               apiKeyService.getApiKeyRestrictions(apiKeyEntry, apiKeyPermissions, accountId);
           final Builder contextBuilder = populateContextBuilder(GraphQLContext.newContext(), apiKeyPermissions,
-              apiKeyRestrictions, accountId, apiKeyEntry.getUuid(), TriggeredByType.API_KEY, httpServletRequest, query);
+              apiKeyRestrictions, accountId, apiKeyEntry.getUuid(), TriggeredByType.API_KEY, httpServletRequest, query,
+              uploadedInputStream, apiKeyEntry);
           executionResult = graphQL.execute(getExecutionInput(contextBuilder, graphQLQuery, dataLoaderRegistryHelper));
         }
       }
@@ -245,7 +277,7 @@ public class GraphQLResource {
       if (hasUserContext && userRequestContext != null) {
         final Builder contextBuilder = populateContextBuilder(GraphQLContext.newContext(),
             userRequestContext.getUserPermissionInfo(), userRequestContext.getUserRestrictionInfo(), accountId,
-            user.getUuid(), TriggeredByType.USER, httpServletRequest, graphQLQuery.getQuery());
+            user.getUuid(), TriggeredByType.USER, httpServletRequest, graphQLQuery.getQuery(), null);
         executionResult = graphQL.execute(getExecutionInput(contextBuilder, graphQLQuery, dataLoaderRegistryHelper));
       } else {
         throw graphQLUtils.getInvalidTokenException();
@@ -268,12 +300,37 @@ public class GraphQLResource {
         .build();
   }
 
-  private GraphQLContext.Builder populateContextBuilder(GraphQLContext.Builder builder,
-      UserPermissionInfo permissionInfo, UserRestrictionInfo restrictionInfo, String accountId, String triggeredById,
-      TriggeredByType triggeredByType, HttpServletRequest httpServletRequest, String graphqlQueryString) {
+  private GraphQLContext.Builder populateContextBuilder(Builder builder, UserPermissionInfo permissionInfo,
+      UserRestrictionInfo restrictionInfo, String accountId, String triggeredById, TriggeredByType triggeredByType,
+      HttpServletRequest httpServletRequest, String graphqlQueryString, InputStream uploadedInputStream) {
     builder.of("accountId", accountId, "permissions", permissionInfo, "restrictions", restrictionInfo,
         HTTP_SERVLET_REQUEST, httpServletRequest, GRAPHQL_QUERY_STRING, graphqlQueryString);
     builder.of("triggeredById", triggeredById, "triggeredByType", triggeredByType);
+    if (null != uploadedInputStream) {
+      builder.of("file", getInputBytes(uploadedInputStream));
+    }
+    return builder;
+  }
+
+  private byte[] getInputBytes(InputStream inputStream) {
+    byte[] inputBytes = new byte[0];
+    if (inputStream != null) {
+      try {
+        inputBytes = ByteStreams.toByteArray(inputStream);
+      } catch (IOException exception) {
+        throw new GraphQLException("Unable to convert input stream to bytes", SRE);
+      }
+    }
+    return inputBytes;
+  }
+
+  private GraphQLContext.Builder populateContextBuilder(GraphQLContext.Builder builder,
+      UserPermissionInfo permissionInfo, UserRestrictionInfo restrictionInfo, String accountId, String triggeredById,
+      TriggeredByType triggeredByType, HttpServletRequest httpServletRequest, String graphqlQueryString,
+      InputStream uploadedInputStream, ApiKeyEntry apiKeyEntry) {
+    populateContextBuilder(builder, permissionInfo, restrictionInfo, accountId, triggeredById, triggeredByType,
+        httpServletRequest, graphqlQueryString, uploadedInputStream);
+    builder.of("apiKeyEntry", apiKeyEntry);
     return builder;
   }
 }

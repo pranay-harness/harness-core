@@ -10,6 +10,8 @@ import static software.wings.utils.WingsTestConstants.PATH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -34,6 +36,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.CDC)
 public class SftpHelperServiceTest extends WingsBaseTest {
   public static final String ACCOUNT_ID = "ACCOUNT_ID";
 

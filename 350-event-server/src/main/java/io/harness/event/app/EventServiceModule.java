@@ -1,6 +1,10 @@
 package io.harness.event.app;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.event.MessageProcessorType;
+import io.harness.event.grpc.DelegateTokenEventServerAuthenticatorImpl;
 import io.harness.event.grpc.EventPublisherServerImpl;
 import io.harness.event.grpc.MessageProcessor;
 import io.harness.event.service.impl.LastReceivedPublishedMessageRepositoryImpl;
@@ -11,12 +15,12 @@ import io.harness.grpc.exception.WingsExceptionGrpcMapper;
 import io.harness.grpc.server.GrpcServerExceptionHandler;
 import io.harness.grpc.server.GrpcServerModule;
 import io.harness.persistence.HPersistence;
-import io.harness.security.KeySource;
+import io.harness.security.DelegateTokenAuthenticator;
 
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
-import software.wings.security.AccountKeySource;
 import software.wings.service.impl.security.NoOpSecretManagerImpl;
+import software.wings.service.intfc.security.EncryptedSettingAttributes;
 import software.wings.service.intfc.security.SecretManager;
 
 import com.google.common.util.concurrent.Service;
@@ -35,6 +39,7 @@ import io.grpc.ServerInterceptor;
 import java.util.Collections;
 import java.util.Set;
 
+@OwnedBy(PL)
 public class EventServiceModule extends AbstractModule {
   private final EventServiceConfig eventServiceConfig;
 
@@ -47,8 +52,9 @@ public class EventServiceModule extends AbstractModule {
     bind(EventServiceConfig.class).toInstance(eventServiceConfig);
     bind(HPersistence.class).to(WingsMongoPersistence.class).in(Singleton.class);
     bind(WingsPersistence.class).to(WingsMongoPersistence.class).in(Singleton.class);
-    bind(KeySource.class).to(AccountKeySource.class).in(Singleton.class);
+    bind(DelegateTokenAuthenticator.class).to(DelegateTokenEventServerAuthenticatorImpl.class).in(Singleton.class);
     bind(SecretManager.class).to(NoOpSecretManagerImpl.class);
+    bind(EncryptedSettingAttributes.class).to(NoOpSecretManagerImpl.class);
     bind(LastReceivedPublishedMessageRepository.class).to(LastReceivedPublishedMessageRepositoryImpl.class);
 
     Multibinder<BindableService> bindableServiceMultibinder = Multibinder.newSetBinder(binder(), BindableService.class);

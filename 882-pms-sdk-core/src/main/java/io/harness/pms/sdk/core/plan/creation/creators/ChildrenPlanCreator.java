@@ -1,5 +1,8 @@
 package io.harness.pms.sdk.core.plan.creation.creators;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.GraphLayoutResponse;
@@ -11,6 +14,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+@OwnedBy(PIPELINE)
 public abstract class ChildrenPlanCreator<T> implements PartialPlanCreator<T> {
   public String getStartingNodeId(T field) {
     return null;

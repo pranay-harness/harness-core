@@ -1,8 +1,14 @@
 package io.harness.git;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(CDP)
 public interface Constants {
   String GIT_YAML_LOG_PREFIX = "GIT_YAML_LOG_ENTRY: ";
   String GIT_TERRAFORM_LOG_PREFIX = "GIT_TERRAFORM_LOG_ENTRY: ";
+  String GIT_TERRAGRUNT_LOG_PREFIX = "GIT_TERRAGRUNT_LOG_ENTRY: ";
   String GIT_TRIGGER_LOG_PREFIX = "GIT_TRIGGER_LOG_PREFIX: ";
   String GIT_DEFAULT_LOG_PREFIX = "GIT_DEFAULT_LOG_PREFIX: ";
   String GIT_HELM_LOG_PREFIX = "GIT_HELM_LOG_ENTRY: ";

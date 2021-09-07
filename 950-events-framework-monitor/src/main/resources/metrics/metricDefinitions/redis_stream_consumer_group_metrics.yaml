@@ -1,0 +1,12 @@
+name: Get stats of redis stream consumer groups
+identifier: redis_stream_consumer_group_metrics
+metricGroup: redis_streams_consumer_groups
+metrics:
+  - metricName: redis_streams_consumer_group_pending_count
+    metricDefinition: Pending count for a particular consumer group of a stream
+    type: LastValue
+    unit: "1"
+  - metricName: redis_streams_consumer_group_behind_by_count
+    metricDefinition: How much behind is consumer group behind from the last generated message
+    type: LastValue
+    unit: "1"

@@ -1,5 +1,6 @@
 package io.harness.cvng.dashboard.beans;
 
+import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.entities.LogAnalysisResult.LogAnalysisTag;
 
 import java.util.List;
@@ -24,6 +25,8 @@ public class AnalyzedLogDataDTO implements Comparable<AnalyzedLogDataDTO> {
     String text;
     Long label;
     int count;
+    double riskScore;
+    Risk riskStatus;
     List<FrequencyDTO> trend;
     LogAnalysisTag tag;
   }
@@ -37,6 +40,10 @@ public class AnalyzedLogDataDTO implements Comparable<AnalyzedLogDataDTO> {
 
   @Override
   public int compareTo(@NotNull AnalyzedLogDataDTO o) {
-    return logData.getLabel().compareTo(o.getLogData().getLabel());
+    int result = o.getLogData().getTag().compareTo(logData.getTag());
+    if (result == 0) {
+      result = Integer.valueOf(o.getLogData().getCount()).compareTo(Integer.valueOf(logData.getCount()));
+    }
+    return result;
   }
 }

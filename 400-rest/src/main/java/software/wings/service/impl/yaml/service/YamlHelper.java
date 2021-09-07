@@ -6,11 +6,13 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
+import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
 import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.AZURE_APP_SETTINGS_OVERRIDES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.AZURE_CONN_STRINGS_OVERRIDES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.HELM_CHART_OVERRIDE_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.INDEX;
 import static software.wings.beans.yaml.YamlConstants.OC_PARAMS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlConstants.PCF_OVERRIDES_FOLDER;
@@ -324,6 +326,14 @@ public class YamlHelper {
 
     String serviceId = (service == null) ? null : service.getUuid();
     String envId = (environment == null) ? null : environment.getUuid();
+    String accountId = appService.getAccountIdByAppId(appId);
+
+    if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, accountId)) {
+      String appManifestName = getNameFromYamlFilePath(yamlFilePath);
+      if (isNotBlank(appManifestName) && !INDEX.equals(appManifestName) && K8S_MANIFEST.equals(kind)) {
+        return applicationManifestService.getAppManifestByName(appId, envId, serviceId, appManifestName);
+      }
+    }
 
     return applicationManifestService.getAppManifest(appId, envId, serviceId, kind);
   }

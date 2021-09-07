@@ -1,9 +1,11 @@
 package io.harness.cvng.core.services.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.ANJAN;
 import static io.harness.rule.OwnerRule.KAMAL;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
@@ -73,6 +75,7 @@ public class OnboardingServiceImplTest extends CvNextGenTestBase {
             .dataCollectionRequest(SplunkSavedSearchRequest.builder().tracingId(tracingId).build())
             .connectorIdentifier(connectorIdentifier)
             .orgIdentifier(orgIdentifier)
+            .tracingId(generateUuid())
             .projectIdentifier(projectIdentifier)
             .build());
     assertThat(onboardingResponseDTO.getAccountId()).isEqualTo(accountId);
@@ -80,5 +83,33 @@ public class OnboardingServiceImplTest extends CvNextGenTestBase {
     assertThat(onboardingResponseDTO.getProjectIdentifier()).isEqualTo(projectIdentifier);
     assertThat(onboardingResponseDTO.getConnectorIdentifier()).isEqualTo(connectorIdentifier);
     assertThat(onboardingResponseDTO.getResult()).isEqualTo(Collections.singletonMap("a", 1));
+  }
+
+  @Test
+  @Owner(developers = ANJAN)
+  @Category(UnitTests.class)
+  public void testGetOnboardingResponse_missingTracingId() {
+    ConnectorConfigDTO connectorConfigDTO =
+        SplunkConnectorDTO.builder()
+            .splunkUrl("https://splunk.dev.harness.io:8089/")
+            .username("harnessadmin")
+            .passwordRef(SecretRefData.builder().decryptedValue("123".toCharArray()).build())
+            .build();
+    when(nextGenService.get(eq(accountId), eq(connectorIdentifier), eq(orgIdentifier), eq(projectIdentifier)))
+        .thenReturn(Optional.of(ConnectorInfoDTO.builder().connectorConfig(connectorConfigDTO).build()));
+    when(verificationManagerService.getDataCollectionResponse(
+             eq(accountId), eq(orgIdentifier), eq(projectIdentifier), any()))
+        .thenReturn("{\"a\": 1}");
+    assertThatThrownBy(
+        ()
+            -> onboardingService.getOnboardingResponse(accountId,
+                OnboardingRequestDTO.builder()
+                    .dataCollectionRequest(SplunkSavedSearchRequest.builder().tracingId(generateUuid()).build())
+                    .connectorIdentifier(connectorIdentifier)
+                    .orgIdentifier(orgIdentifier)
+                    .projectIdentifier(projectIdentifier)
+                    .build()))
+        .isInstanceOf(NullPointerException.class)
+        .hasMessage("Missing tracingId/requestGuid in request");
   }
 }

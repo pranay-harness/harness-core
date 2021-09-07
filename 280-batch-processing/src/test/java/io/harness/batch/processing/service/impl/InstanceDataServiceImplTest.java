@@ -5,11 +5,12 @@ import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.batch.processing.billing.timeseries.data.PrunedInstanceData;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.beans.Resource;
-import io.harness.ccm.commons.entities.InstanceData;
+import io.harness.ccm.commons.entities.batch.InstanceData;
 import io.harness.rule.Owner;
 
 import org.junit.Test;
@@ -20,7 +21,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class InstanceDataServiceImplTest {
+public class InstanceDataServiceImplTest extends CategoryTest {
   @InjectMocks InstanceDataServiceImpl instanceDataService;
   @Mock InstanceDataDao instanceDataDao;
 

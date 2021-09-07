@@ -1,5 +1,10 @@
 package software.wings.api.customdeployment;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.pms.sdk.core.data.Outcome;
 
 import software.wings.api.ExecutionDataValue;
@@ -19,6 +24,8 @@ import lombok.EqualsAndHashCode;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @JsonTypeName("instanceFetchStateExecutionData")
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class InstanceFetchStateExecutionData extends StateExecutionData implements Outcome {
   private String activityId;
   private String hostObjectArrayPath;
@@ -55,10 +62,5 @@ public class InstanceFetchStateExecutionData extends StateExecutionData implemen
         .scriptOutput(scriptOutput)
         .tags(tags)
         .build();
-  }
-
-  @Override
-  public String getType() {
-    return "instanceFetchStateExecutionData";
   }
 }

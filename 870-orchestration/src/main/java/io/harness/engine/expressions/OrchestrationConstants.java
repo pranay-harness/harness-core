@@ -1,5 +1,10 @@
 package io.harness.engine.expressions;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(PIPELINE)
 public interface OrchestrationConstants {
   String STAGE_SUCCESS = "OnStageSuccess";
   String STAGE_FAILURE = "OnStageFailure";

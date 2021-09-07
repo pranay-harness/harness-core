@@ -1,5 +1,10 @@
 package software.wings.beans.command;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.yaml.BaseYaml;
@@ -23,6 +28,8 @@ import lombok.EqualsAndHashCode;
 /**
  * Created by anubhaw on 5/25/16.
  */
+@OwnedBy(CDP)
+@TargetModule(_930_DELEGATE_TASKS)
 public abstract class AbstractCommandUnit implements CommandUnit {
   @SchemaIgnore private String name;
   private CommandUnitType commandUnitType;

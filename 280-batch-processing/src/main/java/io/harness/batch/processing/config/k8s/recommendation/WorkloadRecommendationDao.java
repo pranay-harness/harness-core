@@ -1,11 +1,11 @@
 package io.harness.batch.processing.config.k8s.recommendation;
 
+import io.harness.ccm.commons.beans.recommendation.ResourceId;
+import io.harness.ccm.commons.entities.k8s.recommendation.K8sWorkloadRecommendation;
+import io.harness.ccm.commons.entities.k8s.recommendation.K8sWorkloadRecommendation.K8sWorkloadRecommendationKeys;
+import io.harness.ccm.commons.entities.k8s.recommendation.PartialRecommendationHistogram;
+import io.harness.ccm.commons.entities.k8s.recommendation.PartialRecommendationHistogram.PartialRecommendationHistogramKeys;
 import io.harness.persistence.HPersistence;
-
-import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation;
-import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation.K8sWorkloadRecommendationKeys;
-import software.wings.graphql.datafetcher.ce.recommendation.entity.PartialRecommendationHistogram;
-import software.wings.graphql.datafetcher.ce.recommendation.entity.PartialRecommendationHistogram.PartialRecommendationHistogramKeys;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -49,8 +49,8 @@ public class WorkloadRecommendationDao {
                               .build());
   }
 
-  void save(K8sWorkloadRecommendation recommendation) {
-    hPersistence.save(recommendation);
+  String save(K8sWorkloadRecommendation recommendation) {
+    return hPersistence.save(recommendation);
   }
 
   @NotNull

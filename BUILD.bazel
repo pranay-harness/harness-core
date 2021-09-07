@@ -1,3 +1,16 @@
+exports_files([
+    "tools/bazel/signer.sh",
+])
+
+filegroup(
+    name = "container_common_files",
+    srcs = glob([
+        "AppServerAgent-20.8.0.30686.zip",
+        "protocol.info",
+    ]),
+    visibility = ["//visibility:public"],
+)
+
 ########################################################################################################
 ####################################################  Go Starts Here    ####################################################
 ########################################################################################################
@@ -7,7 +20,7 @@
 # gazelle:exclude vendor
 # gazelle:exclude build
 # gazelle:exclude */target
-# gazelle:exclude {990-commons-test,980-commons,970-grpc,970-api-services-beans,965-git-sync-commons,960-notification-beans,950-timeout-engine,950-delegate-tasks-beans,22-ng-delegate-service-beans,24-manager-delegate-service-beans,24-ng-manager-service-beans,890-pms-contracts,400-rest,460-capability,160-stress-tester}
+# gazelle:exclude {990-commons-test,970-grpc,970-api-services-beans,960-notification-beans,959-timeout-engine,953-git-sync-commons,959-timeout-engine,950-timeout-engine,950-delegate-tasks-beans,950-wait-engine,867-polling-contracts,22-ng-delegate-service-beans,24-manager-delegate-service-beans,24-ng-manager-service-beans,890-pms-contracts,400-rest,460-capability,160-stress-tester}
 
 # gazelle:exclude .git/
 # gazelle:exclude pkg/
@@ -35,9 +48,6 @@ nogo(
 ####################################################  JAVA Starts Here    ####################################################
 ########################################################################################################
 
-load("//tools/bazel/sonarqube:defs.bzl", "sonarqube")
-load("//tools/bazel/sonarqube:defs.bzl", "get_sonar_targets")
-
 java_plugin(
     name = "lombok_plugin",
     processor_class = "lombok.launch.AnnotationProcessorHider$AnnotationProcessor",
@@ -52,90 +62,11 @@ java_library(
     exports = ["@maven//:org_projectlombok_lombok"],
 )
 
-modules = [
-    "//120-ng-manager",
-    "//125-cd-nextgen",
-    "//130-resource-group",
-    "//136-git-sync-manager",
-    "//190-deployment-functional-tests",
-    "//200-functional-test",
-    "//160-model-gen-tool",
-    "//160-stress-test",
-    "//210-command-library-server",
-    "//220-graphql-test",
-    "//230-model-test",
-    "//250-watcher",
-    "//260-delegate",
-    "//270-verification",
-    "//310-ci-manager",
-    "//320-ci-execution",
-    "//330-ci-beans",
-    "//340-ce-nextgen",
-    "//360-cg-manager",
-    "//375-ce-graphql",
-    "//380-cg-graphql",
-    "//400-rest",
-    "//420-delegate-agent",
-    "//420-delegate-service",
-    "//430-cv-nextgen-commons",
-    "//440-connector-nextgen",
-    "//445-cg-connectors",
-    "//450-ce-views",
-    "//460-capability",
-    "//490-ce-commons",
-    "//830-notification-service",
-    "//850-execution-plan",
-    "//850-ng-pipeline-commons",
-    "//860-orchestration-steps",
-    "//860-orchestration-visualization",
-    "//870-orchestration",
-    "//870-yaml-beans",
-    "//870-yaml-beans",
-    "//876-orchestration-beans",
-    "//878-pipeline-service-utilities",
-    "//879-pms-sdk",
-    "//882-pms-sdk-core",
-    "//884-pms-commons",
-    "//890-pms-contracts",
-    "//890-sm-core",
-    "//910-delegate-service-driver",
-    "//910-delegate-task-grpc-service",
-    "//920-delegate-agent-beans",
-    "//920-delegate-service-beans",
-    "//930-ng-core-clients",
-    "//940-resource-group-beans",
-    "//940-secret-manager-client",
-    "//940-ng-audit-service",
-    "//945-ng-audit-client",
-    "//950-cg-ng-shared-orchestration-beans",
-    "//950-command-library-common",
-    "//950-common-entities",
-    "//950-delegate-tasks-beans",
-    "//950-events-framework",
-    "//950-ng-audit-commons",
-    "//950-ng-core",
-    "//950-ng-project-n-orgs",
-    "//950-timeout-engine",
-    "//950-wait-engine",
-    "//950-walktree-visitor",
-    "//955-filters-sdk",
-    "//960-api-services",
-    "//960-continuous-features",
-    "//960-expression-service",
-    "//960-ng-core-beans",
-    "//960-persistence",
-    "//960-recaster",
-    "//970-api-services-beans",
-    "//970-grpc",
-    "//970-ng-commons",
-    "//980-commons",
-    "//990-commons-test",
-]
-
 filegroup(
     name = "git",
     srcs = glob(
         [".git/**/*"],
+        exclude = [".git/**/*[*"],  # gitk creates temp files with []
     ),
     tags = ["manual"],
 )
@@ -154,11 +85,14 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
+load("//tools/bazel/sonarqube:defs.bzl", "sonarqube")
+load("//project/flags:sonarqube_targets.bzl", "get_sonarqube_targets")
+
 sonarqube(
     name = "sq",
     srcs = [],
     coverage_report = ":coverage_report",
-    modules = get_sonar_targets(modules),
+    modules = get_sonarqube_targets(),
     project_key = "portal_bazel",
     project_name = "Bazel Portal",
     scm_info = [":git"],
@@ -172,6 +106,45 @@ filegroup(
         "cert.pem",
         "key.pem",
         "keystore.jks",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+load("@rules_python//python:defs.bzl", "py_runtime", "py_runtime_pair")
+
+py_runtime(
+    name = "python3_runtime",
+    files = ["@python_interpreter//:files"],
+    interpreter = "@python_interpreter//:python_bin",
+    python_version = "PY3",
+    visibility = ["//visibility:public"],
+)
+
+py_runtime_pair(
+    name = "py_runtime_pair",
+    py2_runtime = None,
+    py3_runtime = ":python3_runtime",
+)
+
+toolchain(
+    name = "py_toolchain",
+    toolchain = ":py_runtime_pair",
+    toolchain_type = "@bazel_tools//tools/python:toolchain_type",
+)
+
+load("@rules_pkg//:pkg.bzl", "pkg_tar")
+
+pkg_tar(
+    name = "alpn_boot_8.1.13.v20181017_tar",
+    files = {
+        "@alpn_boot_8.1.13.v20181017//file": "alpn-boot-8.1.13.v20181017.jar",
+    },
+    mode = "0644",
+    package_dir = "/opt/harness-delegate",
+    tags = [
+        "manual",
+        "no-cache",
+        "no-ide",
     ],
     visibility = ["//visibility:public"],
 )

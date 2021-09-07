@@ -1,8 +1,10 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.delegate.beans.pcf.ResizeStrategy.RESIZE_NEW_FIRST;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.TATHAGAT;
@@ -12,7 +14,6 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.CloudFormationSourceType.TEMPLATE_BODY;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.command.Command.Builder.aCommand;
@@ -36,6 +37,7 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.STATE_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
+import static com.amazonaws.services.cloudformation.model.StackStatus.ROLLBACK_COMPLETE;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
@@ -49,7 +51,6 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
@@ -118,6 +119,7 @@ import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
@@ -146,7 +148,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@TargetModule(_870_CG_ORCHESTRATION)
 public class CloudFormationStateTest extends WingsBaseTest {
   private static final String BASE_URL = "https://env.harness.io/";
   public static final String ENV_ID_CF = "abcdefgh";
@@ -178,6 +180,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
   @Mock private FeatureFlagService featureFlagService;
   @Mock private SweepingOutputService sweepingOutputService;
   @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
+  @Mock private StateExecutionService stateExecutionService;
 
   @InjectMocks
   private CloudFormationCreateStackState cloudFormationCreateStackState = new CloudFormationCreateStackState("name");
@@ -357,7 +360,9 @@ public class CloudFormationStateTest extends WingsBaseTest {
     when(configuration.getPortal()).thenReturn(portalConfig);
     doNothing().when(serviceHelper).addPlaceholderTexts(any());
     when(featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, ACCOUNT_ID)).thenReturn(false);
+    when(featureFlagService.isEnabled(FeatureName.SKIP_BASED_ON_STACK_STATUSES, ACCOUNT_ID)).thenReturn(true);
     when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn("baseUrl");
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
   }
 
   @Test
@@ -366,6 +371,8 @@ public class CloudFormationStateTest extends WingsBaseTest {
   public void testExecute_createStackState() {
     cloudFormationCreateStackState.setRegion(Regions.US_EAST_1.name());
     cloudFormationCreateStackState.setTimeoutMillis(1000);
+    cloudFormationCreateStackState.setSkipBasedOnStackStatus(true);
+    cloudFormationCreateStackState.setStackStatusesToMarkAsSuccess(singletonList("ROLLBACK_COMPLETE"));
     verifyCreateStackRequest();
   }
 
@@ -421,8 +428,11 @@ public class CloudFormationStateTest extends WingsBaseTest {
                    .build()));
 
     when(settingsService.get(SETTING_ID)).thenReturn(null);
+
     when(settingsService.fetchSettingAttributeByName(ACCOUNT_ID, SETTING_ID, SettingVariableTypes.AWS))
         .thenReturn(awsConfig);
+    cloudFormationCreateStackState.setSkipBasedOnStackStatus(true);
+    cloudFormationCreateStackState.setStackStatusesToMarkAsSuccess(singletonList("ROLLBACK_COMPLETE"));
 
     verifyCreateStackRequest();
     verify(settingsService).fetchSettingAttributeByName(ACCOUNT_ID, SETTING_ID, SettingVariableTypes.AWS);
@@ -444,6 +454,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
     assertThat(cloudFormationCreateStackRequest.getAppId()).isEqualTo(APP_ID);
     assertThat(cloudFormationCreateStackRequest.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(cloudFormationCreateStackRequest.getCommandName()).isEqualTo("Create Stack");
+    assertThat(cloudFormationCreateStackRequest.getStackStatusesToMarkAsSuccess()).containsExactly(ROLLBACK_COMPLETE);
     assertThat(cloudFormationCreateStackRequest.getCreateType())
         .isEqualTo(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY);
     assertThat(cloudFormationCreateStackRequest.getData()).isEqualTo("Template Body");
@@ -501,5 +512,20 @@ public class CloudFormationStateTest extends WingsBaseTest {
     assertThat(cloudFormationDeleteStackRequest.getCommandName()).isEqualTo("Delete Stack");
     assertThat(cloudFormationDeleteStackRequest.getStackNameSuffix()).isEqualTo(EXPECTED_SUFFIX);
     assertThat(cloudFormationDeleteStackRequest.getTimeoutInMs()).isEqualTo(1000);
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testValidation() {
+    // create stack
+    assertThat(cloudFormationCreateStackState.validateFields().size()).isEqualTo(1);
+    cloudFormationCreateStackState.setProvisionerId("test provisioner");
+    assertThat(cloudFormationCreateStackState.validateFields().size()).isEqualTo(0);
+
+    // delete stack
+    assertThat(cloudFormationDeleteStackState.validateFields().size()).isEqualTo(1);
+    cloudFormationDeleteStackState.setProvisionerId("test provisioner");
+    assertThat(cloudFormationDeleteStackState.validateFields().size()).isEqualTo(0);
   }
 }

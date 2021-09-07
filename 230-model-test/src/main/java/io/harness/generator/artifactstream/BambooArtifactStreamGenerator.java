@@ -1,9 +1,12 @@
 package io.harness.generator.artifactstream;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
 import io.harness.generator.SettingGenerator;
@@ -19,6 +22,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+@OwnedBy(CDP)
 @Singleton
 public class BambooArtifactStreamGenerator implements ArtifactStreamsGenerator {
   @Inject private ArtifactStreamGeneratorHelper artifactStreamGeneratorHelper;
@@ -27,6 +31,12 @@ public class BambooArtifactStreamGenerator implements ArtifactStreamsGenerator {
   @Override
   public ArtifactStream ensureArtifactStream(Randomizer.Seed seed, OwnerManager.Owners owners) {
     return ensureArtifactStream(seed, owners, false);
+  }
+
+  @Override
+  public ArtifactStream ensureArtifactStream(
+      Randomizer.Seed seed, OwnerManager.Owners owners, String serviceName, boolean atConnector) {
+    return null;
   }
 
   @Override

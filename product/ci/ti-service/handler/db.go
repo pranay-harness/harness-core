@@ -8,17 +8,20 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/wings-software/portal/product/ci/ti-service/config"
 	"github.com/wings-software/portal/product/ci/ti-service/db"
+	"github.com/wings-software/portal/product/ci/ti-service/logger"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 )
 
 // HandleWrite returns an http.HandlerFunc that writes test information to the DB
-func HandleWrite(db db.Db, config config.Config, log *zap.SugaredLogger) http.HandlerFunc {
+func HandleWrite(db db.Db) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		st := time.Now()
-		ctx := r.Context()
-		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam, stageIdParam, stepIdParam, reportParam)
+
+		log := logger.FromContext(r.Context())
+		err := validate(r, accountIDParam, orgIdParam, projectIdParam,
+			pipelineIdParam, buildIdParam, stageIdParam,
+			stepIdParam, reportParam)
 		if err != nil {
 			WriteInternalError(w, err)
 			return
@@ -32,6 +35,8 @@ func HandleWrite(db db.Db, config config.Config, log *zap.SugaredLogger) http.Ha
 		stageId := r.FormValue(stageIdParam)
 		stepId := r.FormValue(stepIdParam)
 		report := r.FormValue(reportParam)
+		repo := r.FormValue(repoParam)
+		sha := r.FormValue(shaParam)
 
 		var in []*types.TestCase
 		if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
@@ -41,7 +46,7 @@ func HandleWrite(db db.Db, config config.Config, log *zap.SugaredLogger) http.Ha
 			return
 		}
 
-		if err := db.Write(ctx, config.TimeScaleDb.HyperTableName, accountId, orgId, projectId, pipelineId, buildId, stageId, stepId, report, in...); err != nil {
+		if err := db.Write(r.Context(), accountId, orgId, projectId, pipelineId, buildId, stageId, stepId, report, repo, sha, in...); err != nil {
 			WriteInternalError(w, err)
 			log.Errorw("api: cannot write to db", "account_id", accountId, "org_id", orgId,
 				"project_id", projectId, "build_id", buildId, zap.Error(err))
@@ -56,11 +61,13 @@ func HandleWrite(db db.Db, config config.Config, log *zap.SugaredLogger) http.Ha
 }
 
 // HandleSummary returns an http.HandlerFunc that summarises test reports.
-func HandleSummary(adb db.Db, config config.Config, log *zap.SugaredLogger) http.HandlerFunc {
+func HandleSummary(adb db.Db) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
 		ctx := r.Context()
+		log := logger.FromContext(ctx)
 		st := time.Now()
-		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam, reportParam)
+		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam, reportParam, stepIdParam, stageIdParam)
 		if err != nil {
 			WriteInternalError(w, err)
 			return
@@ -72,10 +79,12 @@ func HandleSummary(adb db.Db, config config.Config, log *zap.SugaredLogger) http
 		pipelineId := r.FormValue(pipelineIdParam)
 		buildId := r.FormValue(buildIdParam)
 		report := r.FormValue(reportParam)
+		stageId := r.FormValue(stageIdParam)
+		stepId := r.FormValue(stepIdParam)
 
 		var resp types.SummaryResponse
 
-		resp, err = adb.Summary(ctx, config.TimeScaleDb.HyperTableName, accountId, orgId, projectId, pipelineId, buildId, report)
+		resp, err = adb.Summary(ctx, accountId, orgId, projectId, pipelineId, buildId, stepId, stageId, report)
 		if err != nil {
 			WriteInternalError(w, err)
 			log.Errorw("api: cannot get summary from DB", "account_id", accountId, "org_id", orgId,
@@ -90,11 +99,13 @@ func HandleSummary(adb db.Db, config config.Config, log *zap.SugaredLogger) http
 }
 
 // HandleTestCases returns an http.HandlerFunc that returns test case information.
-func HandleTestCases(adb db.Db, config config.Config, log *zap.SugaredLogger) http.HandlerFunc {
+func HandleTestCases(adb db.Db) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
 		ctx := r.Context()
+		log := logger.FromContext(ctx)
 		st := time.Now()
-		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam, suiteNameParam, reportParam)
+		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam, stepIdParam, stageIdParam, suiteNameParam, reportParam)
 		if err != nil {
 			WriteInternalError(w, err)
 			return
@@ -112,6 +123,8 @@ func HandleTestCases(adb db.Db, config config.Config, log *zap.SugaredLogger) ht
 		pageIndex := r.FormValue(pageIndexParam)
 		order := r.FormValue(orderParam)
 		report := r.FormValue(reportParam)
+		stageId := r.FormValue(stageIdParam)
+		stepId := r.FormValue(stepIdParam)
 
 		if pageSize == "" {
 			pageSize = "10"
@@ -133,8 +146,8 @@ func HandleTestCases(adb db.Db, config config.Config, log *zap.SugaredLogger) ht
 			return
 		}
 
-		resp, err := adb.GetTestCases(ctx, config.TimeScaleDb.HyperTableName, accountId, orgId, projectId, pipelineId,
-			buildId, report, suite, sort, status, order, pageSize, strconv.Itoa(pi*ps))
+		resp, err := adb.GetTestCases(ctx, accountId, orgId, projectId, pipelineId,
+			buildId, stepId, stageId, report, suite, sort, status, order, pageSize, strconv.Itoa(pi*ps))
 		if err != nil {
 			WriteInternalError(w, err)
 			log.Errorw("api: cannot get test cases from DB", "account_id", accountId, "org_id", orgId,
@@ -149,11 +162,13 @@ func HandleTestCases(adb db.Db, config config.Config, log *zap.SugaredLogger) ht
 }
 
 // HandleTestSuites returns an http.HandlerFunc that return test suite information.
-func HandleTestSuites(adb db.Db, config config.Config, log *zap.SugaredLogger) http.HandlerFunc {
+func HandleTestSuites(adb db.Db) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
 		ctx := r.Context()
+		log := logger.FromContext(ctx)
 		st := time.Now()
-		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam, reportParam)
+		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam, reportParam, stepIdParam, stageIdParam)
 		if err != nil {
 			WriteInternalError(w, err)
 			return
@@ -170,6 +185,8 @@ func HandleTestSuites(adb db.Db, config config.Config, log *zap.SugaredLogger) h
 		pageIndex := r.FormValue(pageIndexParam)
 		order := r.FormValue(orderParam)
 		report := r.FormValue(reportParam)
+		stageId := r.FormValue(stageIdParam)
+		stepId := r.FormValue(stepIdParam)
 
 		if pageSize == "" {
 			pageSize = defaultPageSize
@@ -191,8 +208,8 @@ func HandleTestSuites(adb db.Db, config config.Config, log *zap.SugaredLogger) h
 			return
 		}
 
-		resp, err := adb.GetTestSuites(ctx, config.TimeScaleDb.HyperTableName, accountId, orgId, projectId, pipelineId,
-			buildId, report, sort, status, order, pageSize, strconv.Itoa(pi*ps))
+		resp, err := adb.GetTestSuites(ctx, accountId, orgId, projectId, pipelineId,
+			buildId, stepId, stageId, report, sort, status, order, pageSize, strconv.Itoa(pi*ps))
 		if err != nil {
 			WriteInternalError(w, err)
 			log.Errorw("api: cannot get test suite information from DB", "account_id", accountId, "org_id", orgId,

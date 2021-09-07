@@ -9,13 +9,12 @@ import static java.time.Duration.ofSeconds;
 
 import io.harness.filesystem.FileIo;
 import io.harness.resource.Project;
+import io.harness.testframework.framework.utils.ExecutorUtils;
 import io.harness.threading.Poller;
 
 import com.google.inject.Singleton;
 import io.fabric8.utils.Strings;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -30,21 +29,25 @@ import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 @Singleton
 @Slf4j
 public class BatchProcessingExecutor {
+  public static final String MODULE = "280-batch-processing";
+  public static final String CONFIG_YML = "batch-processing-config.yml";
+
   private boolean failedAlready;
   private Path livenessMarker;
+  private String directoryPath;
 
-  public void ensureBatchProcessing(Class<?> clazz, String alpnPath, String alpnJarPath) throws IOException {
+  public void ensureBatchProcessing(Class<?> clazz) throws IOException {
     if (!isHealthy()) {
-      executeLocalBatchProcessing(clazz, alpnPath, alpnJarPath);
+      executeLocalBatchProcessing(clazz);
     }
   }
 
-  private void executeLocalBatchProcessing(Class<?> clazz, String alpnPath, String alpnJarPath) throws IOException {
+  private void executeLocalBatchProcessing(Class<?> clazz) throws IOException {
     if (failedAlready) {
       return;
     }
+    directoryPath = Project.rootDirectory(clazz);
 
-    String directoryPath = Project.rootDirectory(clazz);
     final File directory = new File(directoryPath);
     final File lockfile = new File(directoryPath, "batch-processing");
 
@@ -53,22 +56,14 @@ public class BatchProcessingExecutor {
         if (isHealthy()) {
           return;
         }
-        log.info("Execute the batch-processing from {}", directory);
-        Path jar = Paths.get(directory.getPath(), "280-batch-processing", "target", "batch-processing-capsule.jar");
-        Path config = Paths.get(directory.getPath(), "280-batch-processing", "batch-processing-config.yml");
-        String alpn = System.getProperty("user.home") + "/.m2/repository/" + alpnJarPath;
+        log.info("Execute the batch-processing from {}", directoryPath);
 
-        if (!new File(alpn).exists()) {
-          // if maven repo is not in the home dir, this might be a jenkins job, check in the special location.
-          alpn = alpnPath + alpnJarPath;
-          if (!new File(alpn).exists()) {
-            throw new FileNotFoundException("Missing alpn file");
-          }
-        }
+        final Path jar = ExecutorUtils.getJar(MODULE);
+        log.info("The batch-processing jar path is: {}", jar.toAbsolutePath().toString());
 
-        createConfigFile(directory.getPath());
+        ensureConfigFileExists();
 
-        livenessMarker = Paths.get(directory.getPath(), "batch-processing-up");
+        livenessMarker = getPathFromContext("batch-processing-up");
         // ensure liveness file is deleted.
         FileUtils.deleteQuietly(livenessMarker.toFile());
 
@@ -83,13 +78,12 @@ public class BatchProcessingExecutor {
         addGCVMOptions(command);
 
         command.add("-Dfile.encoding=UTF-8");
-        command.add("-Xbootclasspath/p:" + alpn);
 
         addJacocoAgentVM(jar, command);
 
         addJar(jar, command);
-        command.add("--config-file=" + config.toString());
         command.add("--ensure-timescale=false");
+        // yaml config file is read from the root directory, '--config-file' param doesn't make any difference.
 
         log.info(Strings.join(command, " "));
 
@@ -107,7 +101,8 @@ public class BatchProcessingExecutor {
         failedAlready = true;
         throw exception;
       } finally {
-        deleteConfigFile(directory.getPath());
+        deleteCreatedConfigFile();
+        FileUtils.deleteQuietly(livenessMarker.toFile());
         FileIo.releaseLock(lockfile);
       }
     }
@@ -122,30 +117,38 @@ public class BatchProcessingExecutor {
     return livenessFile.exists();
   }
 
-  private void createConfigFile(String directory) {
-    try {
-      File config = new File(directory + "/batch-processing-config.yml");
-      if (!config.exists() && config.createNewFile()) {
-        FileWriter writer = new FileWriter(directory + "/batch-processing-config.yml");
-        writer.write(
-            "scheduler-jobs-config:\n  budgetAlertsJobCron: \"0 30 14 * * ?\"\n  weeklyReportsJobCron: \"0 0 14 * * MON\"");
-        writer.close();
+  private void ensureConfigFileExists() {
+    Path existingConfigPath = ExecutorUtils.getConfig(directoryPath, MODULE, CONFIG_YML);
+    Path expectedConfigPath = getBatchProccessingConfig();
+
+    if (!expectedConfigPath.toFile().exists()) {
+      try {
+        FileUtils.copyFile(existingConfigPath.toFile(), expectedConfigPath.toFile());
+      } catch (IOException e) {
+        log.error("Error copying file from {} to dir {}", existingConfigPath.toAbsolutePath(),
+            expectedConfigPath.toAbsolutePath(), e);
       }
-    } catch (IOException e) {
-      log.info("Error while creating config file for batch processing functional test");
     }
   }
 
-  private void deleteConfigFile(String directory) {
-    File config = new File(directory + "/batch-processing-config.yml");
+  private void deleteCreatedConfigFile() {
+    Path expectedConfigPath = getBatchProccessingConfig();
+
+    File config = expectedConfigPath.toFile();
     if (config.exists()) {
       config.delete();
     }
   }
 
+  private Path getBatchProccessingConfig() {
+    return getPathFromContext(CONFIG_YML);
+  }
+
+  private Path getPathFromContext(String... filename) {
+    return Paths.get(directoryPath, filename);
+  }
+
   public static void main(String[] args) throws IOException {
-    final String alpnJar = "org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar";
-    String alpn = "/home/jenkins/maven-repositories/0/";
-    new BatchProcessingExecutor().ensureBatchProcessing(BatchProcessingExecutor.class, alpn, alpnJar);
+    new BatchProcessingExecutor().ensureBatchProcessing(BatchProcessingExecutor.class);
   }
 }

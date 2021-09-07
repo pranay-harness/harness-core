@@ -314,6 +314,10 @@ public class PermissionAttribute {
      */
     EXECUTE_PIPELINE,
     /**
+     * Execute Workflow Rollback
+     */
+    EXECUTE_WORKFLOW_ROLLBACK,
+    /**
      * default action.
      */
     DEFAULT
@@ -490,6 +494,11 @@ public class PermissionAttribute {
     MANAGE_DEPLOYMENT_FREEZES,
 
     /**
+     * Deploy during Deployment Freezes
+     */
+    ALLOW_DEPLOYMENTS_DURING_FREEZE,
+
+    /**
      * Manage Pipeline Governance Standards
      */
     MANAGE_PIPELINE_GOVERNANCE_STANDARDS,
@@ -512,6 +521,11 @@ public class PermissionAttribute {
     /**
      * Create custom dashboard
      */
-    CREATE_CUSTOM_DASHBOARDS;
+    CREATE_CUSTOM_DASHBOARDS,
+
+    /**
+     * Manage Restricted Access
+     */
+    MANAGE_RESTRICTED_ACCESS;
   }
 }

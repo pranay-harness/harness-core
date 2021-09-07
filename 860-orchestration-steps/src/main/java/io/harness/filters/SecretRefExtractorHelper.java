@@ -1,7 +1,9 @@
 package io.harness.filters;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.yaml.ParameterField;
@@ -19,6 +21,7 @@ import lombok.experimental.UtilityClass;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @UtilityClass
+@TargetModule(HarnessModule._882_PMS_SDK_CORE)
 public class SecretRefExtractorHelper {
   public Map<String, ParameterField<SecretRefData>> extractSecretRefsFromVariables(YamlField variablesField) {
     try {

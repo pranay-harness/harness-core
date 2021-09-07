@@ -1,16 +1,17 @@
 package software.wings.api.k8s;
 
-import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
+import io.harness.delegate.task.helm.HelmChartInfo;
+import io.harness.k8s.model.KubernetesResourceId;
 
 import software.wings.api.ExecutionDataValue;
 import software.wings.beans.TaskType;
 import software.wings.beans.appmanifest.ApplicationManifest;
-import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionData;
@@ -33,7 +34,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@TargetModule(_870_CG_ORCHESTRATION)
+@TargetModule(_957_CG_BEANS)
 @OwnedBy(CDP)
 public class K8sStateExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData {
   private String activityId;
@@ -53,6 +54,7 @@ public class K8sStateExecutionData extends StateExecutionData implements Delegat
   private HelmChartInfo helmChartInfo;
   private String blueGreenStageColor;
   private Set<String> delegateSelectors;
+  private List<KubernetesResourceId> prunedResourcesIds;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
@@ -99,6 +101,7 @@ public class K8sStateExecutionData extends StateExecutionData implements Delegat
         .helmChartInfo(helmChartInfo)
         .blueGreenStageColor(blueGreenStageColor)
         .delegateSelectors(delegateSelectors)
+        .prunedResourcesIds(prunedResourcesIds)
         .build();
   }
 }

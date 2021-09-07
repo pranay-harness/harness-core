@@ -27,10 +27,18 @@ public class HttpTaskParameters implements TaskParameters, ExecutionCapabilityDe
   int socketTimeoutMillis;
   boolean useProxy;
   boolean isCertValidationRequired;
+  boolean useHeaderForCapabilityCheck;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    return Collections.singletonList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
-        url, QUERY, maskingEvaluator));
+    if (useHeaderForCapabilityCheck) {
+      return Collections.singletonList(
+          HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+              url, headers, QUERY, maskingEvaluator));
+    } else {
+      return Collections.singletonList(
+          HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+              url, QUERY, maskingEvaluator));
+    }
   }
 }

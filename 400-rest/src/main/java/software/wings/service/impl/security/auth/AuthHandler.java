@@ -1,5 +1,6 @@
 package software.wings.service.impl.security.auth;
 
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -36,8 +37,10 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DEPLOYMENT_FREEZES;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_IP_WHITELIST;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_PIPELINE_GOVERNANCE_STANDARDS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_RESTRICTED_ACCESS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRETS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRET_MANAGERS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SSH_AND_WINRM;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_TAGS;
 import static software.wings.security.PermissionAttribute.PermissionType.PIPELINE;
 import static software.wings.security.PermissionAttribute.PermissionType.PROVISIONER;
@@ -52,6 +55,7 @@ import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -143,6 +147,7 @@ import org.apache.commons.lang3.tuple.Pair;
  * @author rktummala on 3/7/18
  */
 @OwnedBy(PL)
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
 @Singleton
 @Slf4j
 public class AuthHandler {
@@ -341,8 +346,8 @@ public class AuthHandler {
   private void attachPermission(Map<String, AppPermissionSummary> appPermissionMap,
       Map<PermissionType, Map<String, List<Base>>> permissionTypeAppIdEntityMap, Set<String> appIds,
       PermissionType permissionType, Filter entityFilter, Set<Action> actions) {
-    final HashSet<Action> fixedEntityActions =
-        Sets.newHashSet(Action.READ, Action.UPDATE, Action.DELETE, Action.EXECUTE_PIPELINE, Action.EXECUTE_WORKFLOW);
+    final HashSet<Action> fixedEntityActions = Sets.newHashSet(Action.READ, Action.UPDATE, Action.DELETE,
+        Action.EXECUTE_PIPELINE, Action.EXECUTE_WORKFLOW, Action.EXECUTE_WORKFLOW_ROLLBACK);
     appIds.forEach(appId -> {
       AppPermissionSummary appPermissionSummary = appPermissionMap.get(appId);
       if (appPermissionSummary == null) {
@@ -414,49 +419,88 @@ public class AuthHandler {
           break;
         }
         case WORKFLOW: {
-          Set<String> envIdSet = null;
-          if (actions.contains(Action.CREATE)) {
-            appPermissionSummary.setCanCreateWorkflow(true);
-            envIdSet = getEnvIdsByFilter(permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter);
-            Set<String> updatedEnvIdSet =
-                addToExistingEntityIdSet(finalAppPermissionSummary.getWorkflowCreatePermissionsForEnvs(), envIdSet);
-            finalAppPermissionSummary.setWorkflowCreatePermissionsForEnvs(updatedEnvIdSet);
+          if (entityFilter instanceof GenericEntityFilter) {
+            // Workflow Permissions given per workflow basis
+            Set<String> workflowIdSet = null;
+            if (actions.contains(Action.CREATE)) {
+              appPermissionSummary.setCanCreateWorkflow(true);
+              workflowIdSet = getWorkflowIdsByEntityFilter(
+                  permissionTypeAppIdEntityMap.get(permissionType).get(appId), (GenericEntityFilter) entityFilter);
+            }
 
-            if (!finalAppPermissionSummary.isCanCreateTemplatizedWorkflow()) {
-              WorkflowFilter workflowFilter = getDefaultWorkflowFilterIfNull((WorkflowFilter) entityFilter);
-              Set<String> filterTypes = workflowFilter.getFilterTypes();
-              if (isNotEmpty(filterTypes)) {
-                boolean hasTemplateFilterType = filterTypes.contains(WorkflowFilter.FilterType.TEMPLATES);
-                finalAppPermissionSummary.setCanCreateTemplatizedWorkflow(hasTemplateFilterType);
+            if (isEmpty(entityActions)) {
+              break;
+            }
+
+            if (entityActions.contains(Action.UPDATE)) {
+              if (workflowIdSet == null) {
+                workflowIdSet = getWorkflowIdsByEntityFilter(
+                    permissionTypeAppIdEntityMap.get(permissionType).get(appId), (GenericEntityFilter) entityFilter);
+              }
+
+              Set<String> updatedWorkflowIdSet = addToExistingEntityIdSet(
+                  finalAppPermissionSummary.getWorkflowUpdatePermissionsForEnvs(), workflowIdSet);
+              // Maintain list of workflows with access given directly so that RBAC check on env basis is not done
+              finalAppPermissionSummary.setWorkflowUpdatePermissionsByEntity(updatedWorkflowIdSet);
+            }
+
+            Set<String> entityIds = getWorkflowIdsByEntityFilter(
+                permissionTypeAppIdEntityMap.get(permissionType).get(appId), (GenericEntityFilter) entityFilter);
+
+            if (isEmpty(entityIds)) {
+              break;
+            }
+            Map<Action, Set<String>> actionEntityIdMap =
+                buildActionEntityMap(finalAppPermissionSummary.getWorkflowPermissions(), entityIds, entityActions);
+            finalAppPermissionSummary.setWorkflowPermissions(actionEntityIdMap);
+            break;
+          } else {
+            // Workflow Permissions given via Environment
+            Set<String> envIdSet = null;
+            if (actions.contains(Action.CREATE)) {
+              appPermissionSummary.setCanCreateWorkflow(true);
+              envIdSet = getEnvIdsByFilter(permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter);
+              Set<String> updatedEnvIdSet =
+                  addToExistingEntityIdSet(finalAppPermissionSummary.getWorkflowCreatePermissionsForEnvs(), envIdSet);
+              finalAppPermissionSummary.setWorkflowCreatePermissionsForEnvs(updatedEnvIdSet);
+
+              if (!finalAppPermissionSummary.isCanCreateTemplatizedWorkflow()) {
+                WorkflowFilter workflowFilter = getDefaultWorkflowFilterIfNull((WorkflowFilter) entityFilter);
+                Set<String> filterTypes = workflowFilter.getFilterTypes();
+                if (isNotEmpty(filterTypes)) {
+                  boolean hasTemplateFilterType = filterTypes.contains(WorkflowFilter.FilterType.TEMPLATES);
+                  finalAppPermissionSummary.setCanCreateTemplatizedWorkflow(hasTemplateFilterType);
+                }
               }
             }
-          }
 
-          if (isEmpty(entityActions)) {
-            break;
-          }
-
-          if (entityActions.contains(Action.UPDATE)) {
-            if (envIdSet == null) {
-              envIdSet = getEnvIdsByFilter(permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter);
+            if (isEmpty(entityActions)) {
+              break;
             }
 
-            Set<String> updatedEnvIdSet =
-                addToExistingEntityIdSet(finalAppPermissionSummary.getWorkflowUpdatePermissionsForEnvs(), envIdSet);
-            finalAppPermissionSummary.setWorkflowUpdatePermissionsForEnvs(updatedEnvIdSet);
-          }
+            if (entityActions.contains(Action.UPDATE)) {
+              if (envIdSet == null) {
+                envIdSet =
+                    getEnvIdsByFilter(permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter);
+              }
 
-          Set<String> entityIds = getWorkflowIdsByFilter(permissionTypeAppIdEntityMap.get(permissionType).get(appId),
-              permissionTypeAppIdEntityMap.get(ENV).get(appId), (WorkflowFilter) entityFilter);
+              Set<String> updatedEnvIdSet =
+                  addToExistingEntityIdSet(finalAppPermissionSummary.getWorkflowUpdatePermissionsForEnvs(), envIdSet);
+              finalAppPermissionSummary.setWorkflowUpdatePermissionsForEnvs(updatedEnvIdSet);
+            }
 
-          if (isEmpty(entityIds)) {
+            Set<String> entityIds = getWorkflowIdsByFilter(permissionTypeAppIdEntityMap.get(permissionType).get(appId),
+                permissionTypeAppIdEntityMap.get(ENV).get(appId), (WorkflowFilter) entityFilter);
+
+            if (isEmpty(entityIds)) {
+              break;
+            }
+
+            Map<Action, Set<String>> actionEntityIdMap =
+                buildActionEntityMap(finalAppPermissionSummary.getWorkflowPermissions(), entityIds, entityActions);
+            finalAppPermissionSummary.setWorkflowPermissions(actionEntityIdMap);
             break;
           }
-
-          Map<Action, Set<String>> actionEntityIdMap =
-              buildActionEntityMap(finalAppPermissionSummary.getWorkflowPermissions(), entityIds, entityActions);
-          finalAppPermissionSummary.setWorkflowPermissions(actionEntityIdMap);
-          break;
         }
         case DEPLOYMENT: {
           if (isEmpty(entityActions)) {
@@ -485,6 +529,11 @@ public class AuthHandler {
             Set<String> updatedEnvIdSet =
                 addToExistingEntityIdSet(finalAppPermissionSummary.getPipelineExecutePermissionsForEnvs(), envIdSet);
             finalAppPermissionSummary.setPipelineExecutePermissionsForEnvs(updatedEnvIdSet);
+          }
+          if (entityActions.contains(Action.EXECUTE_WORKFLOW_ROLLBACK)) {
+            Set<String> updatedEnvIdSet = addToExistingEntityIdSet(
+                finalAppPermissionSummary.getRollbackWorkflowExecutePermissionsForEnvs(), envIdSet);
+            finalAppPermissionSummary.setRollbackWorkflowExecutePermissionsForEnvs(updatedEnvIdSet);
           }
           break;
         }
@@ -537,8 +586,8 @@ public class AuthHandler {
       Map<String, AppPermissionSummary> appPermissionMap,
       Map<PermissionType, Map<String, List<Base>>> permissionTypeAppIdEntityMap, Set<String> appIds,
       PermissionType permissionType, Filter entityFilter, Set<Action> actions) {
-    final HashSet<Action> fixedEntityActions =
-        Sets.newHashSet(Action.READ, Action.UPDATE, Action.DELETE, Action.EXECUTE_PIPELINE, Action.EXECUTE_WORKFLOW);
+    final HashSet<Action> fixedEntityActions = Sets.newHashSet(Action.READ, Action.UPDATE, Action.DELETE,
+        Action.EXECUTE_PIPELINE, Action.EXECUTE_WORKFLOW, Action.EXECUTE_WORKFLOW_ROLLBACK);
     appIds.forEach(appId -> {
       AppPermissionSummary appPermissionSummary = appPermissionMap.get(appId);
       if (appPermissionSummary == null) {
@@ -553,36 +602,69 @@ public class AuthHandler {
       Multimap<String, Action> pipelineIdActionMap;
       switch (permissionType) {
         case PIPELINE:
-          Set<String> envIdSet = null;
-          if (actions.contains(Action.CREATE)) {
-            appPermissionSummary.setCanCreatePipeline(true);
-            envIdSet = getEnvIdsByFilter(permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter);
-            Set<String> updatedEnvIdSet =
-                addToExistingEntityIdSet(finalAppPermissionSummary.getPipelineCreatePermissionsForEnvs(), envIdSet);
-            finalAppPermissionSummary.setPipelineCreatePermissionsForEnvs(updatedEnvIdSet);
-          }
+          if (entityFilter instanceof GenericEntityFilter) {
+            Set<String> pipelineIdSet = null;
+            if (actions.contains(Action.CREATE)) {
+              appPermissionSummary.setCanCreatePipeline(true);
+              pipelineIdSet = getPipelineIdsByEntityFilter(
+                  permissionTypeAppIdEntityMap.get(PIPELINE).get(appId), (GenericEntityFilter) entityFilter);
+            }
 
-          if (isEmpty(entityActions)) {
+            if (isEmpty(entityActions)) {
+              break;
+            }
+
+            if (entityActions.contains(Action.UPDATE)) {
+              if (pipelineIdSet == null) {
+                pipelineIdSet = getPipelineIdsByEntityFilter(
+                    permissionTypeAppIdEntityMap.get(PIPELINE).get(appId), (GenericEntityFilter) entityFilter);
+              }
+              Set<String> updatedPipelineIdSet = addToExistingEntityIdSet(
+                  finalAppPermissionSummary.getPipelineUpdatePermissionsByEntity(), pipelineIdSet);
+              finalAppPermissionSummary.setPipelineUpdatePermissionsByEntity(updatedPipelineIdSet);
+            }
+
+            pipelineIdActionMap =
+                getPipelineActionMapByEntityFilter(permissionTypeAppIdEntityMap.get(PIPELINE).get(appId),
+                    (GenericEntityFilter) entityFilter, entityActions);
+
+            Map<Action, Set<String>> actionEntityIdMap =
+                buildActionPipelineMap(finalAppPermissionSummary.getPipelinePermissions(), pipelineIdActionMap);
+            finalAppPermissionSummary.setPipelinePermissions(actionEntityIdMap);
+            break;
+          } else {
+            Set<String> envIdSet = null;
+            if (actions.contains(Action.CREATE)) {
+              appPermissionSummary.setCanCreatePipeline(true);
+              envIdSet = getEnvIdsByFilter(permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter);
+              Set<String> updatedEnvIdSet =
+                  addToExistingEntityIdSet(finalAppPermissionSummary.getPipelineCreatePermissionsForEnvs(), envIdSet);
+              finalAppPermissionSummary.setPipelineCreatePermissionsForEnvs(updatedEnvIdSet);
+            }
+
+            if (isEmpty(entityActions)) {
+              break;
+            }
+
+            if (entityActions.contains(Action.UPDATE)) {
+              if (envIdSet == null) {
+                envIdSet =
+                    getEnvIdsByFilter(permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter);
+              }
+              Set<String> updatedEnvIdSet =
+                  addToExistingEntityIdSet(finalAppPermissionSummary.getPipelineUpdatePermissionsForEnvs(), envIdSet);
+              finalAppPermissionSummary.setPipelineUpdatePermissionsForEnvs(updatedEnvIdSet);
+            }
+
+            pipelineIdActionMap = getPipelineIdsByFilter(permissionTypeAppIdEntityMap.get(PIPELINE).get(appId),
+                permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter, envActionMap, entityActions,
+                workflowCache);
+
+            Map<Action, Set<String>> actionEntityIdMap =
+                buildActionPipelineMap(finalAppPermissionSummary.getPipelinePermissions(), pipelineIdActionMap);
+            finalAppPermissionSummary.setPipelinePermissions(actionEntityIdMap);
             break;
           }
-
-          if (entityActions.contains(Action.UPDATE)) {
-            if (envIdSet == null) {
-              envIdSet = getEnvIdsByFilter(permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter);
-            }
-            Set<String> updatedEnvIdSet =
-                addToExistingEntityIdSet(finalAppPermissionSummary.getPipelineUpdatePermissionsForEnvs(), envIdSet);
-            finalAppPermissionSummary.setPipelineUpdatePermissionsForEnvs(updatedEnvIdSet);
-          }
-
-          pipelineIdActionMap = getPipelineIdsByFilter(permissionTypeAppIdEntityMap.get(PIPELINE).get(appId),
-              permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter, envActionMap, entityActions,
-              workflowCache);
-
-          Map<Action, Set<String>> actionEntityIdMap =
-              buildActionPipelineMap(finalAppPermissionSummary.getPipelinePermissions(), pipelineIdActionMap);
-          finalAppPermissionSummary.setPipelinePermissions(actionEntityIdMap);
-          break;
 
         case DEPLOYMENT:
           if (isEmpty(entityActions)) {
@@ -593,7 +675,7 @@ public class AuthHandler {
               permissionTypeAppIdEntityMap.get(ENV).get(appId), (EnvFilter) entityFilter, envActionMap, entityActions,
               workflowCache);
 
-          actionEntityIdMap =
+          Map<Action, Set<String>> actionEntityIdMap =
               buildActionPipelineMap(finalAppPermissionSummary.getDeploymentPermissions(), pipelineIdActionMap);
           finalAppPermissionSummary.setDeploymentPermissions(actionEntityIdMap);
           break;
@@ -1126,6 +1208,54 @@ public class AuthHandler {
         .collect(Collectors.toSet());
   }
 
+  private Set<String> getWorkflowIdsByEntityFilter(List<Base> workflows, GenericEntityFilter workflowFilter) {
+    if (isEmpty(workflows)) {
+      return new HashSet<>();
+    }
+    if (workflowFilter == null) {
+      workflowFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
+    }
+
+    if (FilterType.ALL.equals(workflowFilter.getFilterType())) {
+      return workflows.stream().map(Base::getUuid).collect(Collectors.toSet());
+    } else if (SELECTED.equals(workflowFilter.getFilterType())) {
+      GenericEntityFilter finalServiceFilter = workflowFilter;
+      return workflows.stream()
+          .filter(workflow -> finalServiceFilter.getIds().contains(workflow.getUuid()))
+          .map(Base::getUuid)
+          .collect(Collectors.toSet());
+    } else {
+      String msg = "Unknown workflow filter type: " + workflowFilter.getFilterType();
+      log.error(msg);
+      throw new InvalidRequestException(msg);
+    }
+  }
+
+  private Set<String> getPipelineIdsByEntityFilter(List<Base> pipelines, GenericEntityFilter pipelineFilter) {
+    if (isEmpty(pipelines)) {
+      return new HashSet<>();
+    }
+
+    // why do this for other filters
+    if (pipelineFilter == null) {
+      pipelineFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
+    }
+
+    if (FilterType.ALL.equals(pipelineFilter.getFilterType())) {
+      return pipelines.stream().map(Base::getUuid).collect(Collectors.toSet());
+    } else if (SELECTED.equals(pipelineFilter.getFilterType())) {
+      GenericEntityFilter finalPipelineFilter = pipelineFilter;
+      return pipelines.stream()
+          .filter(pipeline -> finalPipelineFilter.getIds().contains(pipeline.getUuid()))
+          .map(Base::getUuid)
+          .collect(Collectors.toSet());
+    } else {
+      String msg = "Unknown pipeline filter type: " + pipelineFilter.getFilterType();
+      log.error(msg);
+      throw new InvalidRequestException(msg);
+    }
+  }
+
   private Set<String> getDeploymentIdsByFilter(
       List<Base> workflows, List<Base> environments, EnvFilter envFilter, String appId) {
     WorkflowFilter workflowFilter = getWorkflowFilterFromEnvFilter(envFilter);
@@ -1262,6 +1392,30 @@ public class AuthHandler {
         pipelineActionMap.putAll(pipeline.getUuid(), entityActions);
       }
     });
+    return pipelineActionMap;
+  }
+
+  private Multimap<String, Action> getPipelineActionMapByEntityFilter(
+      List<Base> pipelines, GenericEntityFilter pipelineFilter, Set<Action> entityActions) {
+    Multimap<String, Action> pipelineActionMap = HashMultimap.create();
+    if (isEmpty(pipelines)) {
+      return pipelineActionMap;
+    }
+
+    if (FilterType.ALL.equals(pipelineFilter.getFilterType())) {
+      pipelines.forEach(p -> { pipelineActionMap.putAll(p.getUuid(), entityActions); });
+    } else if (SELECTED.equals(pipelineFilter.getFilterType())) {
+      pipelines.forEach(p -> {
+        if (pipelineFilter.getIds().contains(p.getUuid())) {
+          pipelineActionMap.putAll(p.getUuid(), entityActions);
+        }
+      });
+    } else {
+      String msg = "Unknown pipeline filter type: " + pipelineFilter.getFilterType();
+      log.error(msg);
+      throw new InvalidRequestException(msg);
+    }
+
     return pipelineActionMap;
   }
 
@@ -1527,7 +1681,8 @@ public class AuthHandler {
 
     AppPermission deploymentPermission =
         AppPermission.builder()
-            .actions(Sets.newHashSet(Action.READ, Action.EXECUTE_WORKFLOW, Action.EXECUTE_PIPELINE))
+            .actions(Sets.newHashSet(
+                Action.READ, Action.EXECUTE_WORKFLOW, Action.EXECUTE_PIPELINE, Action.EXECUTE_WORKFLOW_ROLLBACK))
             .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
             .entityFilter(new EnvFilter(null, Sets.newHashSet(envFilterType)))
             .permissionType(PermissionType.DEPLOYMENT)
@@ -1569,12 +1724,12 @@ public class AuthHandler {
         MANAGE_APPLICATION_STACKS, MANAGE_DELEGATES, MANAGE_ALERT_NOTIFICATION_RULES, MANAGE_DELEGATE_PROFILES,
         MANAGE_CONFIG_AS_CODE, MANAGE_SECRETS, MANAGE_SECRET_MANAGERS, MANAGE_AUTHENTICATION_SETTINGS,
         MANAGE_IP_WHITELIST, MANAGE_DEPLOYMENT_FREEZES, MANAGE_PIPELINE_GOVERNANCE_STANDARDS, MANAGE_API_KEYS,
-        MANAGE_CUSTOM_DASHBOARDS, CREATE_CUSTOM_DASHBOARDS);
+        MANAGE_CUSTOM_DASHBOARDS, CREATE_CUSTOM_DASHBOARDS, MANAGE_SSH_AND_WINRM, MANAGE_RESTRICTED_ACCESS);
   }
 
   private Set<Action> getAllActions() {
-    return Sets.newHashSet(
-        Action.CREATE, Action.READ, Action.UPDATE, Action.DELETE, Action.EXECUTE_WORKFLOW, Action.EXECUTE_PIPELINE);
+    return Sets.newHashSet(Action.CREATE, Action.READ, Action.UPDATE, Action.DELETE, Action.EXECUTE_WORKFLOW,
+        Action.EXECUTE_WORKFLOW_ROLLBACK, Action.EXECUTE_PIPELINE);
   }
 
   private Set<Action> getAllNonDeploymentActions() {

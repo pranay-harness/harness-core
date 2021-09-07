@@ -120,7 +120,7 @@ function setupDelegateJars(){
 
       done
 
-      for version in v0.1-dev v0.2-dev v0.3-dev; do
+      for version in v0.1-dev v0.2-dev v0.3-dev v0.4-dev; do
 
         echo "Copying harness-pywinrm  ${version} binaries for ${platform}"
 
@@ -178,7 +178,7 @@ function setupDelegateJars(){
 
       done
 
-      for version in v1.0; do
+      for version in v1.0 v1.1; do
 
         echo "Copying terraform-config-inspect v${version} binaries for ${platform}"
 
@@ -203,6 +203,20 @@ function setupDelegateJars(){
         echo $(ls -sh oc  | cut -d ' ' -f1)
 
         sudo cp oc ${STORAGE_DIR}/harness-download/harness-oc/release/${version}/bin/${platform}/amd64/
+
+      done
+
+      for version in b276dd03; do
+
+        echo "Copying scm ${version} binaries for ${platform}"
+
+        sudo mkdir -p ${STORAGE_DIR}/harness-download/harness-scm/release/${version}/bin/${platform}/amd64/
+
+        curl  -s -L -o scm https://app.harness.io/storage/harness-download/harness-scm/release/${version}/bin/${platform}/amd64/scm
+
+        echo $(ls -sh scm  | cut -d ' ' -f1)
+
+        sudo cp scm ${STORAGE_DIR}/harness-download/harness-scm/release/${version}/bin/${platform}/amd64/
 
       done
 

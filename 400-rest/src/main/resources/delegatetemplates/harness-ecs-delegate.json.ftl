@@ -91,6 +91,14 @@
           "value": ""
         },
         {
+          "name": "CF_CLI6_PATH",
+          "value": ""
+        },
+        {
+          "name": "CF_CLI7_PATH",
+          "value": ""
+        },
+        {
           "name": "KUSTOMIZE_PATH",
           "value": ""
         },
@@ -103,8 +111,8 @@
            "value": ""
         },
         {
-          "name": "MANAGER_SERVICE_SECRET",
-          "value": "${managerServiceSecret}"
+          "name": "INSTALL_CLIENT_TOOLS_IN_BACKGROUND",
+          "value": "true"
         }
       ],
       "memory": 6144,

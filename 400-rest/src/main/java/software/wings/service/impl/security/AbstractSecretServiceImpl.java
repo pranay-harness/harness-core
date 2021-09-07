@@ -6,13 +6,16 @@ import static io.harness.exception.WingsException.USER_SRE;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
 import io.harness.expression.SecretString;
+import io.harness.secretmanagerclient.NGEncryptedDataMetadata;
 import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.EncryptionType;
@@ -39,6 +42,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @OwnedBy(PL)
 @Slf4j
+@TargetModule(HarnessModule._890_SM_CORE)
 public abstract class AbstractSecretServiceImpl {
   static final String SECRET_MASK = SecretString.SECRET_MASK;
   protected static final String ID_KEY = "_id";
@@ -61,6 +65,19 @@ public abstract class AbstractSecretServiceImpl {
         .encryptedValue(encryptChars)
         .encryptionType(EncryptionType.LOCAL)
         .build();
+  }
+
+  static NGEncryptedDataMetadata getNgEncryptedDataMetadata(SecretManagerConfig secretManagerConfig) {
+    NGEncryptedDataMetadata metadata = null;
+    if (secretManagerConfig != null && secretManagerConfig.getNgMetadata() != null) {
+      metadata = NGEncryptedDataMetadata.builder()
+                     .identifier(secretManagerConfig.getNgMetadata().getIdentifier())
+                     .accountIdentifier(secretManagerConfig.getNgMetadata().getAccountIdentifier())
+                     .orgIdentifier(secretManagerConfig.getNgMetadata().getOrgIdentifier())
+                     .projectIdentifier(secretManagerConfig.getNgMetadata().getProjectIdentifier())
+                     .build();
+    }
+    return metadata;
   }
 
   static char[] decryptLocal(EncryptedData data) {

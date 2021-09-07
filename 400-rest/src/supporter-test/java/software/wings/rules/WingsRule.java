@@ -17,6 +17,7 @@ import static java.lang.System.setProperty;
 import static java.util.Arrays.asList;
 import static org.mockito.Mockito.mock;
 
+import io.harness.AccessControlClientConfiguration;
 import io.harness.NoopStatement;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -24,15 +25,19 @@ import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheConfig.CacheConfigBuilder;
 import io.harness.cache.CacheModule;
 import io.harness.capability.CapabilityModule;
+import io.harness.cf.AbstractCfModule;
+import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.config.PublisherConfiguration;
+import io.harness.delegate.authenticator.DelegateTokenAuthenticatorImpl;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
+import io.harness.ff.FeatureFlagConfig;
 import io.harness.globalcontex.AuditGlobalContextData;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
@@ -52,6 +57,7 @@ import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.Cache;
 import io.harness.rule.InjectorRuleMixin;
+import io.harness.security.DelegateTokenAuthenticator;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
@@ -71,6 +77,7 @@ import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
 import io.harness.waiter.OrchestrationNotifyEventListener;
 
+import software.wings.DataStorageMode;
 import software.wings.WingsTestModule;
 import software.wings.app.AuthModule;
 import software.wings.app.GcpMarketplaceIntegrationModule;
@@ -220,6 +227,22 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
       }
     });
     addQueueModules(modules);
+    modules.add(new AbstractCfModule() {
+      @Override
+      public CfClientConfig cfClientConfig() {
+        return CfClientConfig.builder().build();
+      }
+
+      @Override
+      public CfMigrationConfig cfMigrationConfig() {
+        return CfMigrationConfig.builder().build();
+      }
+
+      @Override
+      public FeatureFlagConfig featureFlagConfig() {
+        return FeatureFlagConfig.builder().build();
+      }
+    });
 
     CacheConfigBuilder cacheConfigBuilder =
         CacheConfig.builder().disabledCaches(new HashSet<>()).cacheNamespace("harness-cache");
@@ -288,11 +311,26 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
 
     configuration.setGrpcDelegateServiceClientConfig(
         GrpcClientConfig.builder().target("localhost:9880").authority("localhost").build());
+    configuration.setGrpcDMSClientConfig(
+        GrpcClientConfig.builder().target("localhost:15011").authority("localhost").build());
+    configuration.setDmsSecret("dummy_key");
+
     configuration.setGrpcClientConfig(
         GrpcClientConfig.builder().target("localhost:9880").authority("localhost").build());
 
     configuration.setLogStreamingServiceConfig(
         LogStreamingServiceConfig.builder().baseUrl("http://localhost:8079").serviceToken("token").build());
+
+    configuration.setAccessControlClientConfiguration(
+        AccessControlClientConfiguration.builder()
+            .enableAccessControl(false)
+            .accessControlServiceSecret("token")
+            .accessControlServiceConfig(ServiceHttpClientConfig.builder()
+                                            .baseUrl("http://localhost:9006/api/")
+                                            .readTimeOutSeconds(15)
+                                            .connectTimeOutSeconds(15)
+                                            .build())
+            .build());
 
     MarketPlaceConfig marketPlaceConfig =
         MarketPlaceConfig.builder().azureMarketplaceAccessKey("qwertyu").azureMarketplaceSecretKey("qwertyu").build();
@@ -329,6 +367,10 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
             .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
             .build());
 
+    configuration.setFileStorageMode(DataStorageMode.MONGO);
+    configuration.setClusterName("");
+
+    configuration.setCfClientConfig(CfClientConfig.builder().build());
     configuration.setTimeScaleDBConfig(TimeScaleDBConfig.builder().build());
     configuration.setCfMigrationConfig(CfMigrationConfig.builder()
                                            .account("testAccount")
@@ -360,6 +402,13 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
         bind(BroadcasterFactory.class).toInstance(mock(BroadcasterFactory.class));
         bind(MetricRegistry.class);
         bind(CommandLibraryServiceHttpClient.class).toInstance(mock(CommandLibraryServiceHttpClient.class));
+      }
+    });
+
+    modules.add(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(DelegateTokenAuthenticator.class).to(DelegateTokenAuthenticatorImpl.class).in(Singleton.class);
       }
     });
 

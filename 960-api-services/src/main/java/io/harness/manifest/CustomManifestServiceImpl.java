@@ -1,6 +1,7 @@
 package io.harness.manifest;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
 
 import static java.util.Collections.emptyList;
 
@@ -57,6 +58,15 @@ public class CustomManifestServiceImpl implements CustomManifestService {
     return Files.createTempDirectory(SHELL_SCRIPT_TEMP_DIRECTORY_PREFIX).toString();
   }
 
+  @Override
+  @NotNull
+  public String executeCustomSourceScript(String activityId, LogCallback logCallback,
+      @NotNull CustomManifestSource customManifestSource) throws IOException {
+    String defaultSourceWorkingDirectory = getWorkingDirectory();
+    executeScript(customManifestSource.getScript(), defaultSourceWorkingDirectory, activityId, logCallback);
+    return defaultSourceWorkingDirectory;
+  }
+
   private void downloadCustomSource(CustomManifestSource source, String outputDirectory, String workingDirectory,
       LogCallback logCallback) throws IOException {
     if (isNotEmpty(source.getScript())) {
@@ -83,7 +93,7 @@ public class CustomManifestServiceImpl implements CustomManifestService {
   private void cleanup(String path) {
     if (isNotEmpty(path)) {
       try {
-        FileUtils.deleteDirectory(new File(path));
+        deleteDirectoryAndItsContentIfExists(path);
       } catch (IOException e) {
         log.error("Failed to delete file " + path, e);
       }
@@ -103,7 +113,8 @@ public class CustomManifestServiceImpl implements CustomManifestService {
     }
   }
 
-  private Collection<CustomSourceFile> readFilesContent(String parentDirectory, List<String> filesPath)
+  @Override
+  public Collection<CustomSourceFile> readFilesContent(String parentDirectory, List<String> filesPath)
       throws IOException {
     List<CustomSourceFile> filesContentList = new ArrayList<>();
     for (String filePath : filesPath) {

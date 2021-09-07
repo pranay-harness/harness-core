@@ -7,21 +7,27 @@ import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
 import io.harness.annotations.dev.OwnedBy;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import lombok.AccessLevel;
+import javax.validation.constraints.NotNull;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.experimental.FieldDefaults;
 
 @OwnedBy(CDP)
 @Data
 @NoArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE)
 public class TerraformVarFile {
-  String type;
+  @NotNull String type;
+  @NotNull String identifier;
 
-  @JsonProperty("spec")
+  @NotNull
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
-  TerraformVarFileSpec terraformVarFileSpec;
+  TerraformVarFileSpec spec;
+
+  @Builder
+  public TerraformVarFile(String type, TerraformVarFileSpec spec, String identifier) {
+    this.type = type;
+    this.spec = spec;
+    this.identifier = identifier;
+  }
 }

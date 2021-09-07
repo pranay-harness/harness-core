@@ -2,9 +2,9 @@ package io.harness.pms.approval.notification;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.util.Objects.isNull;
-import static org.apache.commons.lang3.time.DurationFormatUtils.formatDuration;
 
 import io.harness.Team;
 import io.harness.annotations.dev.OwnedBy;
@@ -25,6 +25,7 @@ import io.harness.notification.notificationclient.NotificationClient;
 import io.harness.notification.templates.PredefinedTemplate;
 import io.harness.pms.approval.notification.ApprovalSummary.ApprovalSummaryBuilder;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.StatusUtils;
@@ -40,21 +41,26 @@ import io.harness.utils.IdentifierRefHelper;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
-import java.text.SimpleDateFormat;
+import com.google.inject.name.Named;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j
 public class ApprovalNotificationHandlerImpl implements ApprovalNotificationHandler {
-  public static final String DISPLAY_TIME_FORMAT = "MMM dd' 'hh:mm a z";
+  public static final DateTimeFormatter DISPLAY_TIME_FORMAT = DateTimeFormatter.ofPattern("MMM dd, hh:mm a z");
   public static final String STAGE_IDENTIFIER = "STAGE";
 
   private final UserGroupClient userGroupClient;
@@ -63,8 +69,9 @@ public class ApprovalNotificationHandlerImpl implements ApprovalNotificationHand
   private final PMSExecutionService pmsExecutionService;
 
   @Inject
-  public ApprovalNotificationHandlerImpl(UserGroupClient userGroupClient, NotificationClient notificationClient,
-      NotificationHelper notificationHelper, PMSExecutionService pmsExecutionService) {
+  public ApprovalNotificationHandlerImpl(@Named("PRIVILEGED") UserGroupClient userGroupClient,
+      NotificationClient notificationClient, NotificationHelper notificationHelper,
+      PMSExecutionService pmsExecutionService) {
     this.userGroupClient = userGroupClient;
     this.notificationClient = notificationClient;
     this.notificationHelper = notificationHelper;
@@ -87,19 +94,22 @@ public class ApprovalNotificationHandlerImpl implements ApprovalNotificationHand
 
       ApprovalSummary approvalSummary =
           approvalSummaryBuilder.pipelineName(pipelineExecutionSummaryEntity.getPipelineIdentifier())
-              .projectName(pipelineExecutionSummaryEntity.getProjectIdentifier())
+              .orgIdentifier(pipelineExecutionSummaryEntity.getOrgIdentifier())
+              .projectIdentifier(pipelineExecutionSummaryEntity.getProjectIdentifier())
               .approvalMessage(approvalInstance.getApprovalMessage())
-              .startedAt(new SimpleDateFormat(DISPLAY_TIME_FORMAT).format(new Date(approvalInstance.getCreatedAt())))
+              .startedAt(formatTime(approvalInstance.getCreatedAt()))
+              .expiresAt(formatTime(approvalInstance.getDeadline()))
               .triggeredBy(getUser(ambiance))
-              .runningStages(new HashSet<>())
-              .upcomingStages(new HashSet<>())
-              .finishedStages(new HashSet<>())
+              .runningStages(new LinkedHashSet<>())
+              .upcomingStages(new LinkedHashSet<>())
+              .finishedStages(new LinkedHashSet<>())
               .pipelineExecutionLink(notificationHelper.generateUrl(ambiance))
-              .timeRemainingForApproval(formatDuration(approvalInstance.getDeadline() - System.currentTimeMillis(),
-                  "d' days 'H' hours 'm' minutes 's' seconds'"))
+              .timeRemainingForApproval(formatDuration(approvalInstance.getDeadline() - System.currentTimeMillis()))
               .build();
-      generateModuleSpecificSummary(approvalSummary, pipelineExecutionSummaryEntity);
-      sendNotification(userGroups, approvalSummary.toParams());
+      if (approvalInstance.isIncludePipelineExecutionHistory()) {
+        generateModuleSpecificSummary(approvalSummary, pipelineExecutionSummaryEntity);
+      }
+      sendNotificationInternal(approvalInstance, userGroups, approvalSummary.toParams());
     } catch (Exception e) {
       log.error("Error while sending notification for harness approval", e);
     }
@@ -115,7 +125,7 @@ public class ApprovalNotificationHandlerImpl implements ApprovalNotificationHand
       ApprovalSummary approvalSummary, Map<String, GraphLayoutNodeDTO> layoutNodeMap, String currentNodeId) {
     GraphLayoutNodeDTO node = layoutNodeMap.get(currentNodeId);
     if (node.getNodeGroup().matches(STAGE_IDENTIFIER)) {
-      if (node.getStatus() == ExecutionStatus.NOT_STARTED) {
+      if (node.getStatus() == ExecutionStatus.NOTSTARTED) {
         approvalSummary.getUpcomingStages().add(node.getName());
       } else if (StatusUtils.finalStatuses().stream().anyMatch(
                      status -> ExecutionStatus.getExecutionStatus(status) == node.getStatus())) {
@@ -132,11 +142,12 @@ public class ApprovalNotificationHandlerImpl implements ApprovalNotificationHand
     }
   }
 
-  private void sendNotification(List<UserGroupDTO> userGroups, Map<String, String> templateData) {
+  private void sendNotificationInternal(
+      HarnessApprovalInstance instance, List<UserGroupDTO> userGroups, Map<String, String> templateData) {
     for (UserGroupDTO userGroup : userGroups) {
       for (NotificationSettingConfigDTO notificationSettingConfig : userGroup.getNotificationConfigs()) {
         NotificationChannel notificationChannel =
-            getNotificationChannel(notificationSettingConfig, userGroup, templateData);
+            getNotificationChannel(instance, notificationSettingConfig, userGroup, templateData);
         if (notificationChannel != null) {
           notificationClient.sendNotificationAsync(notificationChannel);
         } else {
@@ -146,29 +157,32 @@ public class ApprovalNotificationHandlerImpl implements ApprovalNotificationHand
     }
   }
 
-  private NotificationChannel getNotificationChannel(NotificationSettingConfigDTO notificationSettingConfig,
-      UserGroupDTO userGroup, Map<String, String> templateData) {
+  private NotificationChannel getNotificationChannel(HarnessApprovalInstance instance,
+      NotificationSettingConfigDTO notificationSettingConfig, UserGroupDTO userGroup,
+      Map<String, String> templateData) {
     switch (notificationSettingConfig.getType()) {
       case SLACK:
-        String slackTemplateId = PredefinedTemplate.HARNESS_APPROVAL_NOTIFICATION_SLACK.getIdentifier();
+        String slackTemplateId = instance.isIncludePipelineExecutionHistory()
+            ? PredefinedTemplate.HARNESS_APPROVAL_EXECUTION_NOTIFICATION_SLACK.getIdentifier()
+            : PredefinedTemplate.HARNESS_APPROVAL_NOTIFICATION_SLACK.getIdentifier();
         SlackConfigDTO slackConfig = (SlackConfigDTO) notificationSettingConfig;
         return SlackChannel.builder()
             .accountId(userGroup.getAccountIdentifier())
             .team(Team.PIPELINE)
             .templateId(slackTemplateId)
             .templateData(templateData)
-            .userGroupIds(Collections.singletonList(userGroup.getIdentifier()))
             .webhookUrls(Collections.singletonList(slackConfig.getSlackWebhookUrl()))
             .build();
       case EMAIL:
-        String emailTemplateId = PredefinedTemplate.HARNESS_APPROVAL_NOTIFICATION_EMAIL.getIdentifier();
+        String emailTemplateId = instance.isIncludePipelineExecutionHistory()
+            ? PredefinedTemplate.HARNESS_APPROVAL_EXECUTION_NOTIFICATION_EMAIL.getIdentifier()
+            : PredefinedTemplate.HARNESS_APPROVAL_NOTIFICATION_EMAIL.getIdentifier();
         EmailConfigDTO emailConfigDTO = (EmailConfigDTO) notificationSettingConfig;
         return EmailChannel.builder()
             .accountId(userGroup.getAccountIdentifier())
             .team(Team.PIPELINE)
             .templateId(emailTemplateId)
             .templateData(templateData)
-            .userGroupIds(Collections.singletonList(userGroup.getIdentifier()))
             .recipients(Collections.singletonList(emailConfigDTO.getGroupEmail()))
             .build();
       default:
@@ -177,12 +191,20 @@ public class ApprovalNotificationHandlerImpl implements ApprovalNotificationHand
   }
 
   private String getUser(Ambiance ambiance) {
-    if (isNull(ambiance.getMetadata()) || isNull(ambiance.getMetadata().getTriggerInfo())
-        || isNull(ambiance.getMetadata().getTriggerInfo().getTriggeredBy())) {
-      log.warn("Error while getting triggeredBy user.");
-      return "";
+    ExecutionTriggerInfo triggerInfo = ambiance.getMetadata().getTriggerInfo();
+    String triggeredBy = triggerInfo.getTriggeredBy().getIdentifier();
+    if (EmptyPredicate.isEmpty(triggeredBy)) {
+      triggeredBy = "Unknown";
     }
-    return ambiance.getMetadata().getTriggerInfo().getTriggeredBy().getIdentifier();
+    switch (triggerInfo.getTriggerType()) {
+      case WEBHOOK:
+      case WEBHOOK_CUSTOM:
+        return triggeredBy + " (Webhook trigger)";
+      case SCHEDULER_CRON:
+        return triggeredBy + " (Scheduled trigger)";
+      default:
+        return triggeredBy;
+    }
   }
 
   private List<UserGroupDTO> getUserGroups(HarnessApprovalInstance instance) {
@@ -257,6 +279,54 @@ public class ApprovalNotificationHandlerImpl implements ApprovalNotificationHand
     String orgId = AmbianceUtils.getOrgIdentifier(ambiance);
     String projectId = AmbianceUtils.getProjectIdentifier(ambiance);
 
-    return pmsExecutionService.getPipelineExecutionSummaryEntity(accountId, orgId, projectId, planExecutionId);
+    return pmsExecutionService.getPipelineExecutionSummaryEntity(accountId, orgId, projectId, planExecutionId, false);
+  }
+
+  private static String formatTime(long epochMillis) {
+    ZonedDateTime time = ZonedDateTime.ofInstant(Instant.ofEpochMilli(epochMillis), ZoneId.of("GMT"));
+    return DISPLAY_TIME_FORMAT.format(time);
+  }
+
+  private static String formatDuration(long durationMillis) {
+    long elapsedDays = durationMillis / TimeUnit.DAYS.toMillis(1);
+    durationMillis = durationMillis % TimeUnit.DAYS.toMillis(1);
+
+    long elapsedHours = durationMillis / TimeUnit.HOURS.toMillis(1);
+    durationMillis = durationMillis % TimeUnit.HOURS.toMillis(1);
+
+    long elapsedMinutes = durationMillis / TimeUnit.MINUTES.toMillis(1);
+    durationMillis = durationMillis % TimeUnit.MINUTES.toMillis(1);
+
+    long elapsedSeconds = durationMillis / TimeUnit.SECONDS.toMillis(1);
+
+    StringBuilder elapsed = new StringBuilder();
+
+    if (elapsedDays > 0) {
+      elapsed.append(elapsedDays).append('d');
+    }
+    if (elapsedHours > 0) {
+      if (isNotEmpty(elapsed.toString())) {
+        elapsed.append(' ');
+      }
+      elapsed.append(elapsedHours).append('h');
+    }
+    if (elapsedMinutes > 0) {
+      if (isNotEmpty(elapsed.toString())) {
+        elapsed.append(' ');
+      }
+      elapsed.append(elapsedMinutes).append('m');
+    }
+    if (elapsedSeconds > 0) {
+      if (isNotEmpty(elapsed.toString())) {
+        elapsed.append(' ');
+      }
+      elapsed.append(elapsedSeconds).append('s');
+    }
+
+    if (isEmpty(elapsed.toString())) {
+      elapsed.append("0s");
+    }
+
+    return elapsed.toString();
   }
 }

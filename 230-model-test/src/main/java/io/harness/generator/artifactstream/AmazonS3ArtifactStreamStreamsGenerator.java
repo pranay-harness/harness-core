@@ -1,7 +1,10 @@
 package io.harness.generator.artifactstream;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer;
 import io.harness.generator.Randomizer.Seed;
@@ -19,6 +22,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.Collections;
 
+@OwnedBy(CDP)
 @Singleton
 public class AmazonS3ArtifactStreamStreamsGenerator implements ArtifactStreamsGenerator {
   @Inject private SettingGenerator settingGenerator;
@@ -27,6 +31,11 @@ public class AmazonS3ArtifactStreamStreamsGenerator implements ArtifactStreamsGe
   @Override
   public ArtifactStream ensureArtifactStream(Seed seed, Owners owners) {
     return ensureArtifactStream(seed, owners, false);
+  }
+
+  @Override
+  public ArtifactStream ensureArtifactStream(Seed seed, Owners owners, String serviceName, boolean atConnector) {
+    return null;
   }
 
   @Override

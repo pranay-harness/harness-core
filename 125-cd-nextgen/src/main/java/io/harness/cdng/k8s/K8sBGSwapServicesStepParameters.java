@@ -2,14 +2,13 @@ package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.common.SwaggerConstants;
 import io.harness.k8s.K8sCommandUnitConstants;
-import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
+import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.swagger.annotations.ApiModelProperty;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -24,35 +23,16 @@ import org.springframework.data.annotation.TypeAlias;
 @NoArgsConstructor
 @EqualsAndHashCode
 @TypeAlias("k8sBGSwapServicesStepParameters")
-public class K8sBGSwapServicesStepParameters implements K8sStepParameters {
-  String name;
-  String identifier;
-  String description;
-  ParameterField<String> skipCondition;
-
-  @Override
-  public String toViewJson() {
-    return RecastOrchestrationUtils.toDocumentJson(K8sBGSwapServicesStepParameters.infoBuilder()
-                                                       .timeout(timeout)
-                                                       .name(name)
-                                                       .identifier(identifier)
-                                                       .description(description)
-                                                       .skipCondition(skipCondition)
-                                                       .build());
-  }
-
-  @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH) ParameterField<Boolean> skipDryRun;
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> timeout;
-
+@RecasterAlias("io.harness.cdng.k8s.K8sBGSwapServicesStepParameters")
+public class K8sBGSwapServicesStepParameters extends K8sBGSwapServicesStepInfo implements K8sSpecParameters {
   @Builder(builderMethodName = "infoBuilder")
-  public K8sBGSwapServicesStepParameters(String name, String identifier, String description,
-      ParameterField<String> skipCondition, ParameterField<String> timeout, ParameterField<Boolean> skipDryRun) {
-    this.name = name;
-    this.identifier = identifier;
-    this.timeout = timeout;
-    this.description = description;
-    this.skipCondition = skipCondition;
+  public K8sBGSwapServicesStepParameters(ParameterField<Boolean> skipDryRun,
+      ParameterField<List<TaskSelectorYaml>> delegateSelectors, String blueGreenStepFqn,
+      String blueGreenSwapServicesFqn) {
     this.skipDryRun = skipDryRun;
+    this.delegateSelectors = delegateSelectors;
+    this.blueGreenStepFqn = blueGreenStepFqn;
+    this.blueGreenSwapServicesStepFqn = blueGreenSwapServicesFqn;
   }
 
   @Nonnull

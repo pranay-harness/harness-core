@@ -33,6 +33,7 @@ public class TriggerWebhookEvent implements PersistentEntity, UuidAccess, Persis
   @Id @org.mongodb.morphia.annotations.Id String uuid;
   String payload;
   List<HeaderConfig> headers;
+  String pipelineIdentifier;
   String triggerIdentifier;
   String accountId;
   String orgIdentifier;

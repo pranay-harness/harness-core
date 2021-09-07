@@ -34,6 +34,6 @@ public class JiraUpdateIssueRequestNG {
     }
 
     fields = new HashMap<>(fields);
-    JiraIssueUtilsNG.updateFieldValues(this.fields, updateMetadata.getFields(), fields);
+    JiraIssueUtilsNG.updateFieldValues(this.fields, updateMetadata.getFields(), fields, false);
   }
 }

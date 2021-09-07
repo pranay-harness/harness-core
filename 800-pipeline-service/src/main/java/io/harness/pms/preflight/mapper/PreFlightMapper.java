@@ -1,6 +1,9 @@
 package io.harness.pms.preflight.mapper;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.preflight.PreFlightDTO;
+import io.harness.pms.preflight.PreFlightErrorInfo;
 import io.harness.pms.preflight.PreFlightStatus;
 import io.harness.pms.preflight.connector.ConnectorCheckResponse;
 import io.harness.pms.preflight.connector.ConnectorWrapperResponse;
@@ -8,11 +11,15 @@ import io.harness.pms.preflight.entity.PreFlightEntity;
 import io.harness.pms.preflight.inputset.PipelineInputResponse;
 import io.harness.pms.preflight.inputset.PipelineWrapperResponse;
 
+import java.sql.Date;
+import java.time.Duration;
+import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @UtilityClass
 public class PreFlightMapper {
   public PreFlightEntity toEmptyEntity(@NotNull String accountId, @NotNull String orgIdentifier,
@@ -24,6 +31,7 @@ public class PreFlightMapper {
         .pipelineIdentifier(pipelineIdentifier)
         .pipelineYaml(pipelineYaml)
         .pipelineInputResponse(Collections.emptyList())
+        .validUntil(Date.from(OffsetDateTime.now().plus(Duration.ofDays(1)).toInstant()))
         .connectorCheckResponse(Collections.emptyList())
         .build();
   }
@@ -43,7 +51,10 @@ public class PreFlightMapper {
     return PreFlightDTO.builder()
         .pipelineInputWrapperResponse(pipelineWrapperResponse)
         .connectorWrapperResponse(connectorWrapperResponse)
-        .status(getOverallStatus(pipelineInputStatus, connectorCheckStatus))
+        .status(entity.getPreFlightStatus())
+        .errorInfo(entity.getErrorInfo() != null
+                ? PreFlightErrorInfo.builder().message(entity.getErrorInfo().getDescription()).build()
+                : null)
         .build();
   }
 

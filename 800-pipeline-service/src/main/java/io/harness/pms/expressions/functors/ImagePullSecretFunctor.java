@@ -1,8 +1,10 @@
 package io.harness.pms.expressions.functors;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.expression.ExpressionFunctor;
-import io.harness.ngpipeline.artifact.bean.ArtifactOutcome;
+import io.harness.ngpipeline.artifact.bean.ArtifactsOutcome;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.expressions.utils.ImagePullSecretUtils;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
@@ -11,12 +13,14 @@ import io.harness.pms.sdk.core.resolver.outcome.mapper.PmsOutcomeMapper;
 import lombok.Builder;
 import lombok.Value;
 
+@OwnedBy(HarnessTeam.CDC)
 @Value
 @Builder
 public class ImagePullSecretFunctor implements ExpressionFunctor {
-  public static String IMAGE_PULL_SECRET = "imagePullSecret";
-  public static String SIDECAR_IMAGE_PULL_SECRET = "sidecarImagePullSecret";
-  String PRIMARY_ARTIFACT = "primary";
+  public static final String IMAGE_PULL_SECRET = "imagePullSecret";
+
+  private static final String PRIMARY_ARTIFACT = "primary";
+  private static final String SIDECAR_ARTIFACTS = "sidecars";
 
   ImagePullSecretUtils imagePullSecretUtils;
   PmsOutcomeService pmsOutcomeService;
@@ -24,14 +28,24 @@ public class ImagePullSecretFunctor implements ExpressionFunctor {
 
   public Object get(String artifactIdentifier) {
     if (artifactIdentifier.equals(PRIMARY_ARTIFACT)) {
-      ArtifactOutcome artifact = (ArtifactOutcome) PmsOutcomeMapper.convertJsonToOutcome(
-          pmsOutcomeService.resolve(ambiance, RefObjectUtils.getOutcomeRefObject("service.artifactsResult.primary")));
-      if (artifact == null) {
+      ArtifactsOutcome artifactsOutcome = fetchArtifactsOutcome();
+      if (artifactsOutcome == null || artifactsOutcome.getPrimary() == null) {
         return null;
       }
-      return imagePullSecretUtils.getImagePullSecret(artifact, ambiance);
+      return imagePullSecretUtils.getImagePullSecret(artifactsOutcome.getPrimary(), ambiance);
+    } else if (artifactIdentifier.equals(SIDECAR_ARTIFACTS)) {
+      return SidecarImagePullSecretFunctor.builder()
+          .imagePullSecretUtils(imagePullSecretUtils)
+          .ambiance(ambiance)
+          .artifactsOutcome(fetchArtifactsOutcome())
+          .build();
     } else {
-      return SIDECAR_IMAGE_PULL_SECRET;
+      return null;
     }
+  }
+
+  private ArtifactsOutcome fetchArtifactsOutcome() {
+    return (ArtifactsOutcome) PmsOutcomeMapper.convertJsonToOutcome(
+        pmsOutcomeService.resolve(ambiance, RefObjectUtils.getOutcomeRefObject("artifacts")));
   }
 }

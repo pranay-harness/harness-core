@@ -1,11 +1,16 @@
 package software.wings.sm.states.k8s;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.sm.StateType.K8S_APPLY;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.validator.Trimmed;
 import io.harness.delegate.task.k8s.K8sTaskType;
@@ -42,6 +47,8 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@TargetModule(_870_CG_ORCHESTRATION)
+@OwnedBy(CDP)
 public class K8sApplyState extends AbstractK8sState {
   @Inject private AppService appService;
   @Inject private ActivityService activityService;
@@ -61,6 +68,7 @@ public class K8sApplyState extends AbstractK8sState {
   private String stateTimeoutInMinutes;
   @Getter @Setter @Attributes(title = "Skip steady state check") private boolean skipSteadyStateCheck;
   @Getter @Setter @Attributes(title = "Skip Dry Run") private boolean skipDryRun;
+  @Getter @Setter @Attributes(title = "Skip manifest rendering") private boolean skipRendering;
 
   @Override
   public Integer getTimeoutMillis() {
@@ -126,9 +134,10 @@ public class K8sApplyState extends AbstractK8sState {
                                                   context, appManifestMap.get(K8sValuesLocation.Service)))
                                               .valuesYamlList(fetchRenderedValuesFiles(appManifestMap, context))
                                               .skipDryRun(skipDryRun)
+                                              .skipRendering(skipRendering)
                                               .build();
 
-    return queueK8sDelegateTask(context, k8sTaskParameters);
+    return queueK8sDelegateTask(context, k8sTaskParameters, appManifestMap);
   }
 
   @Override
@@ -154,7 +163,7 @@ public class K8sApplyState extends AbstractK8sState {
   public void handleAbortEvent(ExecutionContext context) {}
 
   @Override
-  public List<CommandUnit> commandUnitList(boolean remoteStoreType) {
+  public List<CommandUnit> commandUnitList(boolean remoteStoreType, String accountId) {
     List<CommandUnit> applyCommandUnits = new ArrayList<>();
 
     if (remoteStoreType) {

@@ -16,7 +16,7 @@ import lombok.experimental.FieldDefaults;
 
 @OwnedBy(PL)
 @Value
-@Builder
+@Builder(toBuilder = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class NotificationServiceConfiguration {
   @JsonProperty("mongo") MongoConfig mongoConfig;

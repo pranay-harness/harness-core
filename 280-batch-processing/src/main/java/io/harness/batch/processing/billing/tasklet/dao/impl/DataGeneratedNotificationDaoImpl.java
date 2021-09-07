@@ -1,8 +1,8 @@
 package io.harness.batch.processing.billing.tasklet.dao.impl;
 
 import io.harness.batch.processing.billing.tasklet.dao.intfc.DataGeneratedNotificationDao;
-import io.harness.batch.processing.billing.tasklet.entities.DataGeneratedNotification;
-import io.harness.batch.processing.billing.tasklet.entities.DataGeneratedNotification.DataGeneratedNotificationKeys;
+import io.harness.ccm.commons.entities.batch.DataGeneratedNotification;
+import io.harness.ccm.commons.entities.batch.DataGeneratedNotification.DataGeneratedNotificationKeys;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;

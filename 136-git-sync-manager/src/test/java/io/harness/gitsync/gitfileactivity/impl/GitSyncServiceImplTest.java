@@ -1,8 +1,8 @@
 package io.harness.gitsync.gitfileactivity.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.gitsync.core.beans.GitCommit.Status.COMPLETED;
-import static io.harness.gitsync.core.beans.GitCommit.Status.QUEUED;
+import static io.harness.gitsync.core.beans.GitCommit.GitCommitProcessingStatus.COMPLETED;
+import static io.harness.gitsync.core.beans.GitCommit.GitCommitProcessingStatus.QUEUED;
 import static io.harness.rule.OwnerRule.ABHINAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -224,7 +224,8 @@ public class GitSyncServiceImplTest extends GitSyncTestBase {
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
   public void testCreateGitFileSummaryForFailedOrSkippedCommit() {
-    final GitCommit gitCommit = GitCommit.builder().repo(repo).branchName(branchName).accountId(accountId).build();
+    final GitCommit gitCommit =
+        GitCommit.builder().repoURL(repo).branchName(branchName).accountIdentifier(accountId).build();
     gitSyncService.createGitFileSummaryForFailedOrSkippedCommit(gitCommit, true);
     List<GitFileActivitySummary> gitFileActivities = new ArrayList<>();
     gitFileActivitySummaryRepository.findAll().forEach(gitFileActivities::add);

@@ -1,10 +1,19 @@
 package software.wings.service.impl.yaml.handler.infraprovisioner;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
+import static software.wings.beans.Application.GLOBAL_APP_ID;
+
 import static java.util.stream.Collectors.toList;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.Application;
 import software.wings.beans.BlueprintProperty;
@@ -13,6 +22,7 @@ import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.InfrastructureProvisioner.InfraProvisionerYaml;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlType;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
@@ -22,6 +32,7 @@ import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.utils.Utils;
 
 import com.google.inject.Inject;
@@ -29,6 +40,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_YAML)
 public abstract class InfrastructureProvisionerYamlHandler<Y extends InfraProvisionerYaml, B
                                                                extends InfrastructureProvisioner>
     extends BaseYamlHandler<Y, B> {
@@ -37,6 +50,7 @@ public abstract class InfrastructureProvisionerYamlHandler<Y extends InfraProvis
   @Inject ServiceResourceService serviceResourceService;
   @Inject YamlHandlerFactory yamlHandlerFactory;
   @Inject private AppService appService;
+  @Inject SettingsService settingsService;
 
   protected NameValuePairYamlHandler getNameValuePairYamlHandler() {
     return yamlHandlerFactory.getYamlHandler(YamlType.NAME_VALUE_PAIR);
@@ -157,6 +171,30 @@ public abstract class InfrastructureProvisionerYamlHandler<Y extends InfraProvis
     if (infrastructureProvisioner != null) {
       infrastructureProvisionerService.delete(optionalApplication.get().getUuid(), infrastructureProvisioner.getUuid(),
           changeContext.getChange().isSyncFromGit());
+    }
+  }
+
+  protected String getSourceRepoSettingId(String appId, String sourceRepoSettingName) {
+    Application application = appService.get(appId);
+
+    SettingAttribute settingAttribute =
+        settingsService.getSettingAttributeByName(application.getAccountId(), sourceRepoSettingName);
+    notNullCheck("Invalid Source Repo Setting:" + sourceRepoSettingName, settingAttribute, USER);
+    return settingAttribute.getUuid();
+  }
+
+  protected String getSourceRepoSettingName(String appId, String sourceRepoSettingId) {
+    SettingAttribute settingAttribute = settingsService.get(GLOBAL_APP_ID, sourceRepoSettingId);
+    notNullCheck("Invalid Source Repo Setting:" + sourceRepoSettingId, settingAttribute, USER);
+    return settingAttribute.getName();
+  }
+
+  protected void validateBranchCommitId(String sourceRepoBranch, String commitId) {
+    if (isEmpty(sourceRepoBranch) && isEmpty(commitId)) {
+      throw new InvalidRequestException("Either sourceRepoBranch or commitId should be specified", USER);
+    }
+    if (isNotEmpty(sourceRepoBranch) && isNotEmpty(commitId)) {
+      throw new InvalidRequestException("Cannot specify both sourceRepoBranch and commitId", USER);
     }
   }
 }

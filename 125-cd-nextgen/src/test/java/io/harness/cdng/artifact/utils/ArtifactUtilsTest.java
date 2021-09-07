@@ -6,13 +6,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
-import io.harness.cdng.artifact.bean.ArtifactSpecWrapper;
-import io.harness.cdng.artifact.bean.SidecarArtifactWrapper;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
+import io.harness.cdng.artifact.bean.yaml.PrimaryArtifact;
 import io.harness.cdng.artifact.bean.yaml.SidecarArtifact;
+import io.harness.cdng.artifact.bean.yaml.SidecarArtifactWrapper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ngpipeline.artifact.bean.ArtifactOutcome;
 import io.harness.ngpipeline.artifact.bean.DockerArtifactOutcome;
@@ -23,6 +25,7 @@ import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.CDC)
 public class ArtifactUtilsTest extends CategoryTest {
   @Test
   @Owner(developers = ARCHIT)
@@ -111,9 +114,9 @@ public class ArtifactUtilsTest extends CategoryTest {
         DockerHubArtifactConfig.builder().primaryArtifact(false).identifier("ARTIFACT2").build();
     ArtifactListConfig artifactListConfig =
         ArtifactListConfig.builder()
-            .primary(ArtifactSpecWrapper.builder().artifactConfig(primaryArtifact).build())
+            .primary(PrimaryArtifact.builder().spec(primaryArtifact).build())
             .sidecar(SidecarArtifactWrapper.builder()
-                         .sidecar(SidecarArtifact.builder().artifactConfig(sidecarArtifact).build())
+                         .sidecar(SidecarArtifact.builder().spec(sidecarArtifact).build())
                          .build())
             .build();
     List<ArtifactConfig> artifactsList = ArtifactUtils.convertArtifactListIntoArtifacts(artifactListConfig, null);

@@ -61,7 +61,7 @@ public class DelegateTaskServiceImpl implements DelegateTaskService {
       return;
     }
 
-    log.info("Updating tasks");
+    log.debug("Updating tasks");
 
     Query<DelegateTask> delegateTaskQuery = persistence.createQuery(DelegateTask.class)
                                                 .filter(DelegateTaskKeys.accountId, accountId)
@@ -90,7 +90,7 @@ public class DelegateTaskServiceImpl implements DelegateTaskService {
       throw new InvalidArgumentsException(Pair.of("args", "response cannot be null"));
     }
 
-    log.info("Response received for task with responseCode [{}]", response.getResponseCode());
+    log.debug("Response received for task with responseCode [{}]", response.getResponseCode());
 
     Query<DelegateTask> taskQuery = persistence.createQuery(DelegateTask.class)
                                         .filter(DelegateTaskKeys.accountId, response.getAccountId())
@@ -151,26 +151,28 @@ public class DelegateTaskServiceImpl implements DelegateTaskService {
       return;
     }
 
-    DelegateCallbackService delegateCallbackService =
-        delegateCallbackRegistry.obtainDelegateCallbackService(delegateTask.getDriverId());
-    if (delegateCallbackService == null) {
-      return;
-    }
-
     try (DelegateDriverLogContext driverLogContext =
              new DelegateDriverLogContext(delegateTask.getDriverId(), OVERRIDE_ERROR);
          TaskLogContext taskLogContext = new TaskLogContext(delegateTask.getUuid(), OVERRIDE_ERROR)) {
+      log.debug("Processing task response...");
+
+      DelegateCallbackService delegateCallbackService =
+          delegateCallbackRegistry.obtainDelegateCallbackService(delegateTask.getDriverId());
+      if (delegateCallbackService == null) {
+        log.info(
+            "Failed to obtain Delegate callback service for the given task. Skipping processing of task response.");
+        return;
+      }
+
       if (delegateTask.getData().isAsync()) {
-        log.info("Publishing async task response...");
         delegateCallbackService.publishAsyncTaskResponse(
             delegateTask.getUuid(), kryoSerializer.asDeflatedBytes(response.getResponse()));
       } else {
-        log.info("Publishing sync task response...");
         delegateCallbackService.publishSyncTaskResponse(
             delegateTask.getUuid(), kryoSerializer.asDeflatedBytes(response.getResponse()));
       }
     } catch (Exception ex) {
-      log.error("Failed publishing task response for task", ex);
+      log.error("Failed publishing task response", ex);
     }
   }
 

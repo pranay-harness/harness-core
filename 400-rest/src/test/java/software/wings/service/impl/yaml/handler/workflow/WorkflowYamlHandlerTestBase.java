@@ -6,6 +6,7 @@ import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
@@ -22,6 +23,8 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.WingsException;
 import io.harness.yaml.BaseYaml;
 
@@ -34,6 +37,7 @@ import software.wings.beans.NotificationGroup;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.GcrArtifactStream;
+import software.wings.beans.security.UserGroup;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
@@ -59,6 +63,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.utils.ArtifactType;
@@ -75,6 +80,7 @@ import org.mockito.Mock;
 /**
  * @author rktummala on 1/11/18
  */
+@OwnedBy(HarnessTeam.CDC)
 public abstract class WorkflowYamlHandlerTestBase extends YamlHandlerTestBase {
   protected InfrastructureMapping infrastructureMapping = getInfraMapping();
   protected InfrastructureDefinition infrastructureDefinition = getInfraDefinition();
@@ -96,6 +102,8 @@ public abstract class WorkflowYamlHandlerTestBase extends YamlHandlerTestBase {
   @Mock protected NotificationSetupService notificationSetupService;
   @Mock protected YamlPushService yamlPushService;
   @Mock protected HarnessTagYamlHelper harnessTagYamlHelper;
+  @Mock protected UserGroupService userGroupService;
+  @Mock protected StepYamlBuilderFactory stepYamlBuilderFactory;
 
   //  @InjectMocks @Inject YamlHelper yamlHelper;
   @InjectMocks @Inject protected WorkflowService workflowService;
@@ -157,6 +165,10 @@ public abstract class WorkflowYamlHandlerTestBase extends YamlHandlerTestBase {
     when(yamlHandlerFactory.getYamlHandler(YamlType.NAME_VALUE_PAIR)).thenReturn(nameValuePairYamlHandler);
 
     when(serviceResourceService.getDeploymentType(any(), any(), any())).thenReturn(DeploymentType.KUBERNETES);
+    when(userGroupService.fetchUserGroupByName(anyString(), any()))
+        .thenAnswer(invocation -> UserGroup.builder().uuid(invocation.getArgumentAt(1, String.class)).build());
+    when(userGroupService.get(anyString()))
+        .thenAnswer(invocation -> UserGroup.builder().name(invocation.getArgumentAt(0, String.class)).build());
   }
 
   private InfrastructureMapping getInfraMapping() {
@@ -204,6 +216,7 @@ public abstract class WorkflowYamlHandlerTestBase extends YamlHandlerTestBase {
         .dockerImageName("testDockerImageName")
         .sourceName("gcr.io_exploration-161417_todolist")
         .name("gcr.io_exploration-161417_todolist")
+        .uuid(ARTIFACT_STREAM_ID)
         .build();
   }
 

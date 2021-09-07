@@ -1,8 +1,8 @@
 package io.harness.batch.processing.entities;
 
-import io.harness.ccm.cluster.entities.BatchJobScheduledData;
-import io.harness.ccm.commons.entities.InstanceData;
-import io.harness.event.grpc.PublishedMessage;
+import io.harness.ccm.commons.entities.batch.BatchJobScheduledData;
+import io.harness.ccm.commons.entities.batch.InstanceData;
+import io.harness.ccm.commons.entities.events.PublishedMessage;
 
 import com.google.common.collect.ImmutableSet;
 import java.util.Set;

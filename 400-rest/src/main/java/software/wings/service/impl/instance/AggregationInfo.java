@@ -1,7 +1,11 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.task.helm.HelmChartInfo;
+
 import software.wings.beans.instance.dashboard.EntitySummary;
-import software.wings.helpers.ext.helm.response.HelmChartInfo;
 
 import java.util.List;
 import lombok.Data;
@@ -10,6 +14,7 @@ import org.mongodb.morphia.annotations.Id;
 
 @Data
 @NoArgsConstructor
+@OwnedBy(DX)
 public final class AggregationInfo {
   @Id private ID _id;
   private long count;

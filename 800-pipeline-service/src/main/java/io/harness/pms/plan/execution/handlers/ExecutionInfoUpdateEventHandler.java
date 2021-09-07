@@ -1,6 +1,7 @@
 package io.harness.pms.plan.execution.handlers;
 
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.observers.PlanStatusUpdateObserver;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.execution.ExecutionStatus;
@@ -9,8 +10,6 @@ import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.pipeline.ExecutionSummaryInfo;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
-import io.harness.pms.sdk.core.events.OrchestrationEvent;
-import io.harness.pms.sdk.core.events.SyncOrchestrationEventHandler;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -20,13 +19,19 @@ import java.util.Map;
 import java.util.Optional;
 
 @Singleton
-public class ExecutionInfoUpdateEventHandler implements SyncOrchestrationEventHandler {
-  @Inject PMSPipelineService pmsPipelineService;
-  @Inject PlanExecutionService planExecutionService;
+public class ExecutionInfoUpdateEventHandler implements PlanStatusUpdateObserver {
+  private final PMSPipelineService pmsPipelineService;
+  private final PlanExecutionService planExecutionService;
+
+  @Inject
+  public ExecutionInfoUpdateEventHandler(
+      PMSPipelineService pmsPipelineService, PlanExecutionService planExecutionService) {
+    this.pmsPipelineService = pmsPipelineService;
+    this.planExecutionService = planExecutionService;
+  }
 
   @Override
-  public void handleEvent(OrchestrationEvent event) {
-    Ambiance ambiance = event.getAmbiance();
+  public void onPlanStatusUpdate(Ambiance ambiance) {
     String accountId = AmbianceUtils.getAccountId(ambiance);
     String projectId = AmbianceUtils.getProjectIdentifier(ambiance);
     String orgId = AmbianceUtils.getOrgIdentifier(ambiance);

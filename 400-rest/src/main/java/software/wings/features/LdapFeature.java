@@ -1,12 +1,15 @@
 package software.wings.features;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.ng.core.account.AuthenticationMechanism;
+
 import software.wings.beans.AccountType;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.features.api.AbstractPremiumFeature;
 import software.wings.features.api.ComplianceByRemovingUsage;
 import software.wings.features.api.FeatureRestrictions;
 import software.wings.features.api.Usage;
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.OauthProviderType;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.SSOService;
@@ -19,6 +22,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 
 @Singleton
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class LdapFeature extends AbstractPremiumFeature implements ComplianceByRemovingUsage {
   public static final String FEATURE_NAME = "LDAP";
 

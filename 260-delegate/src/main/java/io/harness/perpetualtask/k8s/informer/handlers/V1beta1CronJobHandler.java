@@ -42,6 +42,8 @@ public class V1beta1CronJobHandler extends BaseHandler<V1beta1CronJob> {
               .setWorkloadKind(getKind())
               .setWorkloadName(cronJob.getMetadata().getName())
               .setNamespace(cronJob.getMetadata().getNamespace())
+              .setUid(cronJob.getMetadata().getUid())
+              .setVersion(VERSION)
               .addAllContainerSpecs(WorkloadSpecUtils.makeContainerSpecs(containers))
               .addAllInitContainerSpecs(makeContainerSpecs(
                   cronJob.getSpec().getJobTemplate().getSpec().getTemplate().getSpec().getInitContainers()))
@@ -70,6 +72,8 @@ public class V1beta1CronJobHandler extends BaseHandler<V1beta1CronJob> {
                                      .setWorkloadKind(getKind())
                                      .addAllContainerSpecs(makeContainerSpecs(containers))
                                      .addAllInitContainerSpecs(makeContainerSpecs(initContainers))
+                                     .setUid(oldCronJob.getMetadata().getUid())
+                                     .setVersion(VERSION)
                                      .build();
       List<V1Container> newContainers =
           newCronJob.getSpec().getJobTemplate().getSpec().getTemplate().getSpec().getContainers();
@@ -82,6 +86,8 @@ public class V1beta1CronJobHandler extends BaseHandler<V1beta1CronJob> {
                                      .setWorkloadKind(getKind())
                                      .addAllContainerSpecs(makeContainerSpecs(newContainers))
                                      .addAllInitContainerSpecs(makeContainerSpecs(newInitContainers))
+                                     .setUid(newCronJob.getMetadata().getUid())
+                                     .setVersion(VERSION)
                                      .build();
       if (!oldSpecs.equals(newSpecs)) {
         publishWorkloadSpec(newSpecs, occurredAt);

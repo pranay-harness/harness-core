@@ -1,6 +1,7 @@
 package io.harness.cdng.infra.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.cdng.pipeline.NGStepType.SHELL_SCRIPT;
 import static io.harness.cdng.pipeline.NGStepType.TERRAFORM_APPLY;
 import static io.harness.cdng.pipeline.NGStepType.TERRAFORM_DESTROY;
 import static io.harness.cdng.pipeline.NGStepType.TERRAFORM_PLAN;
@@ -20,11 +21,11 @@ public enum ProvisionerType {
   TERRAFORM("Terraform"),
   CLOUD_FORMATION("CloudFormation"),
   AZURE_ARM("ARM"),
-  SHELL_SCRIPT("Script");
+  SHELL_SCRIPT_PROVISIONER("Script");
 
   private static final Set<ProvisionerType> supportedTypes = ImmutableSet.of(TERRAFORM);
   private static final List<NGStepType> supportedSteps =
-      Arrays.asList(TERRAFORM_APPLY, TERRAFORM_PLAN, TERRAFORM_DESTROY, TERRAFORM_ROLLBACK);
+      Arrays.asList(TERRAFORM_APPLY, TERRAFORM_PLAN, TERRAFORM_DESTROY, TERRAFORM_ROLLBACK, SHELL_SCRIPT);
 
   @Getter private final String displayName;
   ProvisionerType(String displayName) {

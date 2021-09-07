@@ -71,7 +71,7 @@ public class GcpBillingTrendStatsDataFetcherTest extends AbstractDataFetcherTest
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void testFetch() {
-    QLData result = trendStatsDataFetcher.fetch(accountId, aggregate, filters, groupBy, Collections.emptyList());
+    QLData result = trendStatsDataFetcher.fetch(accountId, aggregate, filters, groupBy, Collections.emptyList(), null);
     assertThat(result instanceof QLBillingTrendStats).isTrue();
   }
 }

@@ -1,13 +1,16 @@
 package software.wings.service.impl.aws.manager;
 
+import static io.harness.annotations.dev.HarnessModule._410_CG_REST;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.service.impl.AssignDelegateServiceImpl.SCOPE_WILDCARD;
 
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -34,6 +37,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 @OwnedBy(CDP)
+@TargetModule(_410_CG_REST)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class AwsS3HelperServiceManagerImpl implements AwsS3HelperServiceManager {
   private static final long TIME_OUT_IN_MINUTES = 2;
   @Inject private DelegateService delegateService;
@@ -50,7 +55,7 @@ public class AwsS3HelperServiceManagerImpl implements AwsS3HelperServiceManager 
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(accountId)
-            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, GLOBAL_APP_ID)
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, SCOPE_WILDCARD)
             .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
             .data(TaskData.builder()
                       .async(false)

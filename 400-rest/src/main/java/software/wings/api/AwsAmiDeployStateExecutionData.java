@@ -4,9 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
+import io.harness.delegate.beans.pcf.ResizeStrategy;
 
 import software.wings.beans.InstanceUnitType;
-import software.wings.beans.ResizeStrategy;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StepExecutionSummary;

@@ -1,5 +1,7 @@
 package software.wings.service.impl.security;
 
+import static io.harness.annotations.dev.HarnessModule._890_SM_CORE;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.PHOENIKX;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -15,10 +17,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
+import io.harness.encryption.Scope;
+import io.harness.encryption.SecretRefData;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
@@ -41,7 +47,9 @@ import software.wings.beans.GcpKmsConfig;
 import software.wings.beans.LocalEncryptionConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.security.AzureSecretsManagerService;
 import software.wings.service.intfc.security.GcpSecretsManagerService;
+import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.LocalSecretManagerService;
 import software.wings.service.intfc.security.VaultService;
 
@@ -53,11 +61,15 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
+@OwnedBy(PL)
+@TargetModule(_890_SM_CORE)
 @Slf4j
 public class NGSecretManagerServiceImplTest extends CategoryTest {
   private VaultService vaultService;
+  @Mock private AzureSecretsManagerService azureSecretsManagerService;
   @Mock private LocalSecretManagerService localSecretManagerService;
   @Mock private GcpSecretsManagerService gcpSecretsManagerService;
+  @Mock private KmsService kmsService;
   @Mock private SecretManagerConfigService secretManagerConfigService;
   @Mock private WingsPersistence wingsPersistence;
   private NGSecretManagerServiceImpl ngSecretManagerService;
@@ -66,12 +78,13 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
   @Before
   public void doSetup() {
     vaultService = mock(VaultService.class);
+    azureSecretsManagerService = mock(AzureSecretsManagerService.class);
     localSecretManagerService = mock(LocalSecretManagerService.class);
     gcpSecretsManagerService = mock(GcpSecretsManagerService.class);
     secretManagerConfigService = mock(SecretManagerConfigService.class);
     wingsPersistence = mock(WingsPersistence.class);
-    ngSecretManagerServiceTest = new NGSecretManagerServiceImpl(vaultService, localSecretManagerService,
-        gcpSecretsManagerService, secretManagerConfigService, wingsPersistence);
+    ngSecretManagerServiceTest = new NGSecretManagerServiceImpl(vaultService, azureSecretsManagerService,
+        localSecretManagerService, gcpSecretsManagerService, kmsService, secretManagerConfigService, wingsPersistence);
     ngSecretManagerService = spy(ngSecretManagerServiceTest);
   }
 
@@ -83,7 +96,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
     when(vaultService.saveOrUpdateVaultConfig(any(), any(), anyBoolean())).thenReturn("abcde");
 
     SecretManagerConfig secretManagerConfig = ngSecretManagerService.create(
-        VaultConfig.builder().ngMetadata(NGSecretManagerMetadata.builder().build()).build());
+        VaultConfig.builder().ngMetadata(NGSecretManagerMetadata.builder().build()).authToken("abd").build());
     assertThat(secretManagerConfig).isNotNull();
     assertThat(secretManagerConfig.getEncryptionType()).isEqualTo(EncryptionType.VAULT);
 
@@ -274,6 +287,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
         .when(ngSecretManagerService)
         .get(any(), any(), any(), any(), eq(true));
     when(vaultService.listSecretEngines(any())).thenReturn(new ArrayList<>());
+    SecretRefData authToken = new SecretRefData("dummy", Scope.ACCOUNT, "authToken".toCharArray());
     SecretManagerMetadataDTO secretManagerMetadataDTO = ngSecretManagerService.getMetadata("account",
         SecretManagerMetadataRequestDTO.builder()
             .encryptionType(EncryptionType.VAULT)
@@ -281,7 +295,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
             .spec(VaultMetadataRequestSpecDTO.builder()
                       .url("url")
                       .accessType(AccessType.TOKEN)
-                      .spec(VaultAuthTokenCredentialDTO.builder().authToken("authToken").build())
+                      .spec(VaultAuthTokenCredentialDTO.builder().authToken(authToken).build())
                       .build())
             .build());
     assertThat(secretManagerMetadataDTO).isNotNull();
@@ -298,6 +312,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
         .when(ngSecretManagerService)
         .get(any(), any(), any(), any(), eq(true));
     when(vaultService.listSecretEngines(any())).thenReturn(new ArrayList<>());
+    SecretRefData secretId = new SecretRefData("dummy", Scope.ACCOUNT, "secretId".toCharArray());
     SecretManagerMetadataDTO secretManagerMetadataDTO = ngSecretManagerService.getMetadata("account",
         SecretManagerMetadataRequestDTO.builder()
             .encryptionType(EncryptionType.VAULT)
@@ -305,7 +320,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
             .spec(VaultMetadataRequestSpecDTO.builder()
                       .url("url")
                       .accessType(AccessType.APP_ROLE)
-                      .spec(VaultAppRoleCredentialDTO.builder().appRoleId("appRoleId").secretId("secretId").build())
+                      .spec(VaultAppRoleCredentialDTO.builder().appRoleId("appRoleId").secretId(secretId).build())
                       .build())
             .build());
     assertThat(secretManagerMetadataDTO).isNotNull();
@@ -320,6 +335,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
   public void testGetMetadata_ForNewVault() {
     doReturn(Optional.empty()).when(ngSecretManagerService).get(any(), any(), any(), any(), eq(true));
     when(vaultService.listSecretEngines(any())).thenReturn(new ArrayList<>());
+    SecretRefData secretId = new SecretRefData("dummy", Scope.ACCOUNT, "secretId".toCharArray());
     SecretManagerMetadataDTO secretManagerMetadataDTO = ngSecretManagerService.getMetadata("account",
         SecretManagerMetadataRequestDTO.builder()
             .encryptionType(EncryptionType.VAULT)
@@ -327,7 +343,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
             .spec(VaultMetadataRequestSpecDTO.builder()
                       .url("url")
                       .accessType(AccessType.APP_ROLE)
-                      .spec(VaultAppRoleCredentialDTO.builder().appRoleId("appRoleId").secretId("secretId").build())
+                      .spec(VaultAppRoleCredentialDTO.builder().appRoleId("appRoleId").secretId(secretId).build())
                       .build())
             .build());
     assertThat(secretManagerMetadataDTO).isNotNull();

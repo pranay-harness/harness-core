@@ -95,7 +95,9 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.AzureConstants;
 import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
@@ -184,6 +186,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class WorkflowServiceHelper {
   public static final String RUNTIME = "RUNTIME";
   public static final String DISABLE_SERVICE = "Disable Service";
@@ -318,6 +321,10 @@ public class WorkflowServiceHelper {
   public static final String TERRAFORM_PROVISION = "Terraform Provision";
   public static final String ARM_CREATE_RESOURCE = "ARM/Blueprint Create Resource";
   public static final String TERRAFORM_DESTROY = "Terraform Destroy";
+  public static final String TERRAGRUNT_PROVISION = "Terragrunt Provision";
+  public static final String TERRAGRUNT_DESTROY = "Terragrunt Destroy";
+  public static final String TERRAGRUNT_ROLLBACK = "Terragrunt Rollback";
+
   public static final String SERVICENOW = "ServiceNow";
   public static final String EMAIL = "Email";
   public static final String BARRIER = "Barrier";
@@ -2753,7 +2760,7 @@ public class WorkflowServiceHelper {
   }
 
   public static void checkWorkflowVariablesOverrides(PipelineStageElement stageElement, List<Variable> variables,
-      Map<String, String> workflowStepVariables, Map<String, String> pipelineVariables, boolean isRuntimeEnabled) {
+      Map<String, String> workflowStepVariables, Map<String, String> pipelineVariables) {
     if (isEmpty(variables) || stageElement.checkDisableAssertion()) {
       return;
     }
@@ -2771,7 +2778,7 @@ public class WorkflowServiceHelper {
       boolean isEntity = variable.obtainEntityType() != null;
       String workflowVariableValue = extractMapValue(workflowStepVariables, variable.getName());
       String finalValue;
-      boolean isRuntimeVar = isRuntimeEnabled && isNotEmpty(runtimeVars) && runtimeVars.contains(variable.getName());
+      boolean isRuntimeVar = isNotEmpty(runtimeVars) && runtimeVars.contains(variable.getName());
       if (isEmpty(workflowVariableValue)) {
         finalValue = extractMapValue(pipelineVariables, variable.getName());
       } else {

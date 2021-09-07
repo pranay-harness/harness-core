@@ -13,10 +13,10 @@
 # Please refer to {https://docs.harness.io} for details about using manifest.yml.
 
 # Define the default name, memory limit, and number of instances.
-# You can override variable values such as ((PCF_APP_NAME)), ((APP_MEMORY)), and ((INSTANCES)) in the vars.yml file.
+# You can override variable values such as ((APP_NAME)), ((APP_MEMORY)), and ((INSTANCES)) in the vars.yml file.
 # Use random-route to generate a unique route and avoid name collisions.
 applications:
-- name: ((PCF_APP_NAME))
-  memory: ((PCF_APP_MEMORY))
+- name: ((APP_NAME))
+  memory: ((APP_MEMORY))
   instances : ((INSTANCES))
   random-route: true

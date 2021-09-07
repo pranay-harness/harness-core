@@ -5,7 +5,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static software.wings.security.JWT_CATEGORY.EXTERNAL_SERVICE_SECRET;
 import static software.wings.sm.states.ApprovalState.JSON;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.rest.RestResponse;
 import io.harness.serializer.JsonUtils;
@@ -44,6 +46,7 @@ import org.apache.commons.text.StrSubstitutor;
 import org.json.JSONObject;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @Slf4j
 @Singleton
 public class SlackApprovalUtils {

@@ -17,14 +17,26 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public interface OrganizationService {
   Organization create(String accountIdentifier, OrganizationDTO organization);
 
+  List<String> getDistinctAccounts();
+
   Optional<Organization> get(String accountIdentifier, String identifier);
 
   Organization update(String accountIdentifier, String identifier, OrganizationDTO organization);
 
-  Page<Organization> list(String accountIdentifier, Pageable pageable, OrganizationFilterDTO organizationFilterDTO);
+  /**
+   * Use this method with caution, verify that the pageable sort is able to make use of the indexes.
+   */
+  Page<Organization> listPermittedOrgs(
+      String accountIdentifier, Pageable pageable, OrganizationFilterDTO organizationFilterDTO);
 
+  /**
+   * Use this method with caution, verify that the criteria and pageable sort is able to make use of the indexes.
+   */
   Page<Organization> list(Criteria criteria, Pageable pageable);
 
+  /**
+   * Use this method with caution, verify that the criteria is able to make use of the indexes.
+   */
   List<Organization> list(Criteria criteria);
 
   boolean delete(String accountIdentifier, String identifier, Long version);

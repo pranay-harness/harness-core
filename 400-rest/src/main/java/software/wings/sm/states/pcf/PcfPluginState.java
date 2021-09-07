@@ -4,17 +4,17 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.IGNORE_PCF_CONNECTION_CONTEXT_CACHE;
 import static io.harness.beans.FeatureName.LIMIT_PCF_THREADS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.pcf.CfCommandUnitConstants.FetchFiles;
+import static io.harness.pcf.CfCommandUnitConstants.Pcfplugin;
 import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 
 import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
 import static software.wings.beans.TaskType.PCF_COMMAND_TASK;
-import static software.wings.beans.command.PcfDummyCommandUnit.FetchFiles;
-import static software.wings.beans.command.PcfDummyCommandUnit.Pcfplugin;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -25,6 +25,11 @@ import io.harness.context.ContextElementType;
 import io.harness.data.algorithm.HashGenerator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.ListUtils;
+import io.harness.delegate.beans.pcf.CfInternalConfig;
+import io.harness.delegate.task.pcf.CfCommandRequest;
+import io.harness.delegate.task.pcf.CfCommandRequest.PcfCommandType;
+import io.harness.delegate.task.pcf.request.CfRunPluginCommandRequest;
+import io.harness.delegate.task.pcf.response.CfCommandExecutionResponse;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -61,10 +66,6 @@ import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
 import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
-import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
-import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
-import software.wings.helpers.ext.pcf.request.PcfRunPluginCommandRequest;
-import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -73,6 +74,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.mappers.artifact.CfConfigToInternalMapper;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.State;
@@ -95,7 +97,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -109,6 +110,7 @@ import org.apache.commons.collections4.MapUtils;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @OwnedBy(CDP)
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class PcfPluginState extends State {
   @Inject private transient DelegateService delegateService;
   @Inject private transient InfrastructureMappingService infrastructureMappingService;
@@ -172,8 +174,6 @@ public class PcfPluginState extends State {
 
     // render script
     String rawScript = pcfStateHelper.removeCommentedLineFromScript(scriptString);
-    final String renderedScript = renderedScript(
-        rawScript, context, StateExecutionContext.builder().stateExecutionData(pcfPluginStateExecutionData).build());
     // find out the paths from the script
     final ApplicationManifest serviceManifest = applicationManifestUtils.getApplicationManifestForService(context);
     final boolean serviceManifestRemote = isServiceManifestRemote(serviceManifest);
@@ -181,9 +181,9 @@ public class PcfPluginState extends State {
     final Activity activity = createActivity(context, serviceManifestRemote);
     String repoRoot = "/";
     if (serviceManifestRemote) {
-      repoRoot = context.renderExpression(getRepoRoot(serviceManifest));
+      repoRoot = getRepoRoot(serviceManifest);
     }
-    final List<String> pathsFromScript = findPathFromScript(renderedScript, repoRoot);
+    final List<String> pathsFromScript = findPathFromScript(rawScript, repoRoot);
 
     if (!pathsFromScript.isEmpty() && serviceManifestRemote) {
       //  fire task to fetch remote files
@@ -196,11 +196,6 @@ public class PcfPluginState extends State {
   private String getRepoRoot(ApplicationManifest serviceManifest) {
     final GitFileConfig gitFileConfig = serviceManifest.getGitFileConfig();
     return "/" + toRelativePath(defaultIfEmpty(gitFileConfig.getFilePath(), "/").trim());
-  }
-
-  private String renderedScript(
-      String scriptString, ExecutionContext context, StateExecutionContext stateExecutionContext) {
-    return context.renderExpression(scriptString, stateExecutionContext);
   }
 
   @VisibleForTesting
@@ -251,10 +246,12 @@ public class PcfPluginState extends State {
 
   private ExecutionResponse executeGitTask(ExecutionContext context, ApplicationManifest serviceManifest,
       String activityId, List<String> pathsFromScript, String rawScriptString, String repoRoot) {
+    int expressionFunctorToken = HashGenerator.generateIntegerHash();
     final Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
         prepareManifestForGitFetchTask(serviceManifest, pathsFromScript);
-    final DelegateTask gitFetchFileTask =
-        pcfStateHelper.createGitFetchFileAsyncTask(context, appManifestMap, activityId);
+    final DelegateTask gitFetchFileTask = pcfStateHelper.createGitFetchFileAsyncTask(
+        context, appManifestMap, activityId, isSelectionLogsTrackingForTasksEnabled());
+    gitFetchFileTask.getData().setExpressionFunctorToken(expressionFunctorToken);
     gitFetchFileTask.setTags(resolveTags(getTags(), null));
 
     PcfPluginStateExecutionData stateExecutionData =
@@ -269,11 +266,18 @@ public class PcfPluginState extends State {
             .tagList(getTags())
             .repoRoot(repoRoot)
             .build();
-
+    StateExecutionContext stateExecutionContext = StateExecutionContext.builder()
+                                                      .stateExecutionData(stateExecutionData)
+                                                      .adoptDelegateDecryption(true)
+                                                      .expressionFunctorToken(expressionFunctorToken)
+                                                      .build();
+    renderDelegateTask(context, gitFetchFileTask, stateExecutionContext);
     // resolve template variables
     stateExecutionData.setTemplateVariable(templateUtils.processTemplateVariables(context, getTemplateVariables()));
 
     final String delegateTaskId = delegateService.queueTask(gitFetchFileTask);
+    appendDelegateTaskDetails(context, gitFetchFileTask);
+
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(Collections.singletonList(gitFetchFileTask.getWaitId()))
@@ -287,7 +291,8 @@ public class PcfPluginState extends State {
     List<String> gitFiles = pathsFromScript.stream().map(this::toRelativePath).collect(Collectors.toList());
     // in case root folder is accessed, remove all the file paths
     if (gitFiles.contains("")) {
-      gitFiles = Collections.singletonList("");
+      gitFiles = new ArrayList<>();
+      gitFiles.add("");
     }
     serviceManifest.getGitFileConfig().setFilePathList(gitFiles);
     serviceManifest.getGitFileConfig().setFilePath(null);
@@ -329,7 +334,7 @@ public class PcfPluginState extends State {
 
     final PcfInfrastructureMapping pcfInfrastructureMapping = getPcfInfrastructureMapping(context, app);
     SettingAttribute settingAttribute = settingsService.get(pcfInfrastructureMapping.getComputeProviderSettingId());
-    PcfConfig pcfConfig = (PcfConfig) settingAttribute.getValue();
+    CfInternalConfig pcfConfig = CfConfigToInternalMapper.toCfInternalConfig((PcfConfig) settingAttribute.getValue());
     List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(
         (EncryptableSetting) settingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
 
@@ -358,8 +363,8 @@ public class PcfPluginState extends State {
     // resolve template variables
     stateExecutionData.setTemplateVariable(templateUtils.processTemplateVariables(context, getTemplateVariables()));
 
-    PcfCommandRequest commandRequest =
-        PcfRunPluginCommandRequest.builder()
+    CfCommandRequest commandRequest =
+        CfRunPluginCommandRequest.builder()
             .activityId(activityId)
             .appId(app.getUuid())
             .accountId(app.getAccountId())
@@ -378,6 +383,7 @@ public class PcfPluginState extends State {
             .limitPcfThreads(featureFlagService.isEnabled(LIMIT_PCF_THREADS, pcfConfig.getAccountId()))
             .ignorePcfConnectionContextCache(
                 featureFlagService.isEnabled(IGNORE_PCF_CONNECTION_CONTEXT_CACHE, pcfConfig.getAccountId()))
+            .cfCliVersion(pcfStateHelper.getCfCliVersionOrDefault(app.getAppId(), serviceElement.getUuid()))
             .build();
 
     stateExecutionData.setPcfCommandRequest(commandRequest);
@@ -397,6 +403,8 @@ public class PcfPluginState extends State {
                                            .timeout(timeoutIntervalInMin)
                                            .tagList(renderedTags)
                                            .serviceTemplateId(getServiceTemplateId(pcfInfrastructureMapping))
+                                           .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+                                           .taskDescription("PCF Plugin task execution")
                                            .build());
     delegateTask.getData().setExpressionFunctorToken(expressionFunctorToken);
     StateExecutionContext stateExecutionContext = StateExecutionContext.builder()
@@ -407,6 +415,7 @@ public class PcfPluginState extends State {
     renderDelegateTask(context, delegateTask, stateExecutionContext);
 
     delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
 
     return ExecutionResponse.builder()
         .correlationIds(Collections.singletonList(activityId))
@@ -436,7 +445,7 @@ public class PcfPluginState extends State {
   private List<FileData> prepareFilesForTransfer(
       ApplicationManifest serviceManifest, List<String> pathsFromScript, ExecutionContext context) {
     if (EmptyPredicate.isEmpty(pathsFromScript)) {
-      return Collections.emptyList();
+      return new ArrayList<>();
     }
     Map<String, String> pathToContentMap;
     if (isServiceManifestRemote(serviceManifest)) {
@@ -444,16 +453,13 @@ public class PcfPluginState extends State {
     } else {
       pathToContentMap = getLocalFilesForTransfer(serviceManifest, pathsFromScript);
     }
-    // once file string are available, render them
-    final Map<String, String> renderedContentMap =
-        MapUtils.emptyIfNull(pathToContentMap)
-            .entrySet()
-            .stream()
-            .collect(Collectors.toMap(Entry::getKey, entry -> context.renderExpression(entry.getValue())));
-    // create the file data out of it
-    return renderedContentMap.entrySet()
+    if (EmptyPredicate.isEmpty(pathToContentMap)) {
+      return new ArrayList<>();
+    }
+
+    return pathToContentMap.entrySet()
         .stream()
-        .map(entry -> FileData.builder().filePath(entry.getKey()).fileBytes(entry.getValue().getBytes(UTF_8)).build())
+        .map(entry -> FileData.builder().filePath(entry.getKey()).fileContent(entry.getValue()).build())
         .collect(Collectors.toList());
   }
 
@@ -589,7 +595,7 @@ public class PcfPluginState extends State {
       ExecutionContext context, Map<String, ResponseData> response) {
     final String activityId = getActivityId(context);
 
-    PcfCommandExecutionResponse executionResponse = (PcfCommandExecutionResponse) response.values().iterator().next();
+    CfCommandExecutionResponse executionResponse = (CfCommandExecutionResponse) response.values().iterator().next();
     ExecutionStatus executionStatus = executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS
         ? ExecutionStatus.SUCCESS
         : ExecutionStatus.FAILED;
@@ -632,5 +638,10 @@ public class PcfPluginState extends State {
 
   private String getActivityId(ExecutionContext context) {
     return ((PcfPluginStateExecutionData) context.getStateExecutionData()).getActivityId();
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

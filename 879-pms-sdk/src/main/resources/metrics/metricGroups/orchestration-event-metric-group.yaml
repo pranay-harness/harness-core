@@ -1,0 +1,6 @@
+name: OrchestrationEvent Metrics Group
+identifier: orchestration_event_group
+labels:
+  - accountId
+  - module
+  - eventType

@@ -1,5 +1,9 @@
 package io.harness.security.encryption;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
+
+@TargetModule(HarnessModule._980_COMMONS)
 public interface EncryptionConfig {
   /**
    * Return the UUID of this secret manager

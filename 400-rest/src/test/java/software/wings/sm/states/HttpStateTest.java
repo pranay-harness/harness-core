@@ -45,6 +45,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -109,7 +110,8 @@ import org.mockito.Mock;
  * The Class HttpStateTest.
  */
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._860_ORCHESTRATION_STEPS)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class HttpStateTest extends WingsBaseTest {
   private static final HttpState.Builder httpStateBuilder =
       aHttpState()
@@ -689,11 +691,13 @@ public class HttpStateTest extends WingsBaseTest {
     assertThat(response.getStateExecutionData())
         .isNotNull()
         .isInstanceOf(HttpStateExecutionData.class)
-        .isEqualToComparingOnlyGivenFields(HttpStateExecutionData.builder()
-                                               .assertionStatus("FAILED")
-                                               .httpResponseCode(500)
-                                               .httpResponseBody("MalformedChunkCodingException: Bad chunk header")
-                                               .build(),
+        .isEqualToComparingOnlyGivenFields(
+            HttpStateExecutionData.builder()
+                .assertionStatus("FAILED")
+                .httpResponseCode(500)
+                .httpResponseBody(
+                    "MalformedChunkCodingException: Bad chunk header: lskdu018973t09sylgasjkfg1][]'./.sdlv")
+                .build(),
             "httpUrl", "assertionStatus", "httpResponseCode", "httpResponseBody");
     verify(activityHelperService).createAndSaveActivity(any(), any(), any(), any(), any());
     verify(activityHelperService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.FAILED);

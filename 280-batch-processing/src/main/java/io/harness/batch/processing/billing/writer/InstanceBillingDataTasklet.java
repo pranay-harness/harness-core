@@ -1,13 +1,21 @@
 package io.harness.batch.processing.billing.writer;
 
 import static io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData;
+import static io.harness.ccm.commons.beans.InstanceType.ECS_CONTAINER_INSTANCE;
+import static io.harness.ccm.commons.beans.InstanceType.ECS_TASK_EC2;
+import static io.harness.ccm.commons.beans.InstanceType.ECS_TASK_FARGATE;
+import static io.harness.ccm.commons.beans.InstanceType.K8S_NODE;
 import static io.harness.ccm.commons.beans.InstanceType.K8S_POD;
 import static io.harness.ccm.commons.beans.InstanceType.K8S_POD_FARGATE;
 import static io.harness.ccm.commons.beans.InstanceType.K8S_PV;
+import static io.harness.ccm.commons.beans.InstanceType.K8S_PVC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.batch.processing.billing.reader.InstanceDataReader;
 import io.harness.batch.processing.billing.service.BillingCalculationService;
 import io.harness.batch.processing.billing.service.BillingData;
 import io.harness.batch.processing.billing.service.UtilizationData;
@@ -19,17 +27,18 @@ import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
-import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.pricing.service.intfc.AwsCustomBillingService;
+import io.harness.batch.processing.pricing.service.intfc.AzureCustomBillingService;
 import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils;
-import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.batch.processing.writer.constants.K8sCCMConstants;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.Resource;
-import io.harness.ccm.commons.entities.InstanceData;
+import io.harness.ccm.commons.constants.CloudProvider;
+import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
+import io.harness.ccm.commons.entities.batch.InstanceData;
 import io.harness.persistence.HPersistence;
 
 import com.google.common.collect.ImmutableList;
@@ -39,7 +48,6 @@ import com.google.inject.Singleton;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -57,6 +65,7 @@ import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 
+@OwnedBy(HarnessTeam.CE)
 @Slf4j
 @Singleton
 public class InstanceBillingDataTasklet implements Tasklet {
@@ -66,6 +75,7 @@ public class InstanceBillingDataTasklet implements Tasklet {
   @Autowired private BillingDataGenerationValidator billingDataGenerationValidator;
   @Autowired private InstanceDataService instanceDataService;
   @Autowired private AwsCustomBillingService awsCustomBillingService;
+  @Autowired private AzureCustomBillingService azureCustomBillingService;
   @Autowired private CustomBillingMetaDataService customBillingMetaDataService;
   @Autowired private InstanceDataDao instanceDataDao;
   @Autowired private HPersistence persistence;
@@ -84,8 +94,6 @@ public class InstanceBillingDataTasklet implements Tasklet {
     Instant startTime = getFieldValueFromJobParams(CCMJobConstants.JOB_START_DATE);
     Instant endTime = getFieldValueFromJobParams(CCMJobConstants.JOB_END_DATE);
     batchJobType = CCMJobConstants.getBatchJobTypeFromJobParams(parameters, CCMJobConstants.BATCH_JOB_TYPE);
-    // Instant of 1-1-2018
-    Instant seekingDate = Instant.ofEpochMilli(1514764800000l);
     // bill PV first
     List<InstanceBillingData> pvInstanceBillingDataList = billPVInstances(accountId, startTime, endTime);
     Map<String, InstanceBillingData> claimRefToPVInstanceBillingData =
@@ -95,18 +103,13 @@ public class InstanceBillingDataTasklet implements Tasklet {
 
     Map<String, MutableInt> pvcClaimCount = getPvcClaimCount(accountId, startTime, endTime);
     List<InstanceData> instanceDataLists;
+    InstanceDataReader instanceDataReader = new InstanceDataReader(instanceDataDao, accountId,
+        ImmutableList.of(
+            ECS_TASK_FARGATE, ECS_TASK_EC2, ECS_CONTAINER_INSTANCE, K8S_POD, K8S_POD_FARGATE, K8S_NODE, K8S_PVC),
+        startTime, endTime, batchSize);
+
     do {
-      instanceDataLists =
-          instanceDataDao.getInstanceDataListsOtherThanPV(accountId, batchSize, startTime, endTime, seekingDate);
-      if (!instanceDataLists.isEmpty()) {
-        Instant lastUsageStartTime = instanceDataLists.get(instanceDataLists.size() - 1).getUsageStartTime();
-        seekingDate = instanceDataLists.get(instanceDataLists.size() - 1).getUsageStartTime();
-        if (instanceDataLists.get(0).getUsageStartTime().equals(lastUsageStartTime)) {
-          log.info("Incrementing Seeking Date by 1ms {} {} {} {}", instanceDataLists.size(), startTime, endTime,
-              parameters.toString());
-          seekingDate = seekingDate.plus(1, ChronoUnit.MILLIS);
-        }
-      }
+      instanceDataLists = instanceDataReader.getNext();
       try {
         createBillingData(accountId, startTime, endTime, batchJobType, instanceDataLists,
             claimRefToPVInstanceBillingData, pvcClaimCount);
@@ -119,22 +122,13 @@ public class InstanceBillingDataTasklet implements Tasklet {
   }
 
   private Map<String, MutableInt> getPvcClaimCount(String accountId, Instant startTime, Instant endTime) {
-    Instant seekingDate = Instant.ofEpochMilli(1514764800000l);
     List<InstanceData> instanceDataLists;
     Map<String, MutableInt> result = new HashMap<>();
+    InstanceDataReader instanceDataReader =
+        new InstanceDataReader(instanceDataDao, accountId, ImmutableList.of(K8S_POD), startTime, endTime, batchSize);
     do {
       // TODO change here
-      instanceDataLists =
-          instanceDataDao.getInstanceDataListsOfType(accountId, batchSize, startTime, endTime, seekingDate, K8S_POD);
-      if (!instanceDataLists.isEmpty()) {
-        Instant lastUsageStartTime = instanceDataLists.get(instanceDataLists.size() - 1).getUsageStartTime();
-        seekingDate = instanceDataLists.get(instanceDataLists.size() - 1).getUsageStartTime();
-        if (instanceDataLists.get(0).getUsageStartTime().equals(lastUsageStartTime)) {
-          log.info("Incrementing Seeking Date by 1ms {} {} {} {}", instanceDataLists.size(), startTime, endTime,
-              parameters.toString());
-          seekingDate = seekingDate.plus(1, ChronoUnit.MILLIS);
-        }
-      }
+      instanceDataLists = instanceDataReader.getNext();
       for (InstanceData instanceData : instanceDataLists) {
         List<String> pvcClaimNames = firstNonNull(instanceData.getPvcClaimNames(), Collections.emptyList());
         String namespace = getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.NAMESPACE, instanceData);
@@ -151,20 +145,11 @@ public class InstanceBillingDataTasklet implements Tasklet {
 
   private List<InstanceBillingData> billPVInstances(String accountId, Instant startTime, Instant endTime) {
     List<InstanceBillingData> instanceBillingDataList = new ArrayList<>();
-    Instant seekingDate = Instant.ofEpochMilli(1514764800000l);
     List<InstanceData> instanceDataLists;
+    InstanceDataReader instanceDataReader =
+        new InstanceDataReader(instanceDataDao, accountId, ImmutableList.of(K8S_PV), startTime, endTime, batchSize);
     do {
-      instanceDataLists =
-          instanceDataDao.getInstanceDataListsOfType(accountId, batchSize, startTime, endTime, seekingDate, K8S_PV);
-      if (!instanceDataLists.isEmpty()) {
-        Instant lastUsageStartTime = instanceDataLists.get(instanceDataLists.size() - 1).getUsageStartTime();
-        seekingDate = instanceDataLists.get(instanceDataLists.size() - 1).getUsageStartTime();
-        if (instanceDataLists.get(0).getUsageStartTime().equals(lastUsageStartTime)) {
-          log.info("Incrementing Seeking Date by 1ms {} {} {} {}", instanceDataLists.size(), startTime, endTime,
-              parameters.toString());
-          seekingDate = seekingDate.plus(1, ChronoUnit.MILLIS);
-        }
-      }
+      instanceDataLists = instanceDataReader.getNext();
       try {
         instanceBillingDataList.addAll(createBillingData(
             accountId, startTime, endTime, batchJobType, instanceDataLists, ImmutableMap.of(), ImmutableMap.of()));
@@ -181,6 +166,13 @@ public class InstanceBillingDataTasklet implements Tasklet {
       Map<String, InstanceBillingData> claimRefToPVInstanceBillingData, Map<String, MutableInt> pvcClaimCount) {
     log.info("Instance data list new {} {} {} {}", instanceDataLists.size(), startTime, endTime, parameters.toString());
 
+    Set<String> parentInstanceIds = new HashSet<>();
+    instanceDataLists.forEach(instanceData -> {
+      if (null == instanceData.getActiveInstanceIterator() && null == instanceData.getUsageStopTime()) {
+        instanceDataDao.updateInstanceActiveIterationTime(instanceData);
+      }
+    });
+
     Map<String, List<InstanceData>> instanceDataGroupedCluster =
         instanceDataLists.stream()
             .filter(this::validInstanceForBilling)
@@ -191,6 +183,7 @@ public class InstanceBillingDataTasklet implements Tasklet {
       Set<String> resourceIds = new HashSet<>();
       Set<String> eksFargateResourceIds = new HashSet<>();
       instanceDataLists.forEach(instanceData -> {
+        addParentInstanceId(instanceData, parentInstanceIds);
         String resourceId =
             getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.CLOUD_PROVIDER_INSTANCE_ID, instanceData);
         String cloudProvider =
@@ -220,6 +213,26 @@ public class InstanceBillingDataTasklet implements Tasklet {
       }
     }
 
+    String azureDataSetId = customBillingMetaDataService.getAzureDataSetId(accountId);
+    log.info("Azure data set {}", azureDataSetId);
+    if (azureDataSetId != null) {
+      Set<String> resourceIds = new HashSet<>();
+      instanceDataLists.forEach(instanceData -> {
+        addParentInstanceId(instanceData, parentInstanceIds);
+        String resourceId =
+            getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.CLOUD_PROVIDER_INSTANCE_ID, instanceData);
+        String cloudProvider =
+            getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.CLOUD_PROVIDER, instanceData);
+        if (null != resourceId && cloudProvider.equals(CloudProvider.AZURE.name())) {
+          resourceIds.add(resourceId.toLowerCase());
+        }
+      });
+      if (isNotEmpty(resourceIds)) {
+        azureCustomBillingService.updateAzureVMBillingDataCache(
+            new ArrayList<>(resourceIds), startTime, endTime, azureDataSetId);
+      }
+    }
+
     List<InstanceBillingData> instanceBillingDataList = new ArrayList<>();
     instanceDataGroupedCluster.forEach((clusterRecordId, instanceDataList) -> {
       InstanceData firstInstanceData = instanceDataList.get(0);
@@ -227,12 +240,22 @@ public class InstanceBillingDataTasklet implements Tasklet {
           instanceDataList, startTime.toString(), endTime.toString(), firstInstanceData.getAccountId(),
           firstInstanceData.getSettingId(), firstInstanceData.getClusterId());
 
+      List<InstanceData> parentInstanceDataList = instanceDataDao.fetchInstanceData(parentInstanceIds);
+      Map<String, Double> parentInstanceActiveSecondMap =
+          billingCalculationService.getInstanceActiveSeconds(parentInstanceDataList, startTime, endTime);
+
       for (InstanceData instanceData : instanceDataList) {
         if (instanceData.getInstanceType() != null
             && billingDataGenerationValidator.shouldGenerateBillingData(
                 instanceData.getAccountId(), instanceData.getClusterId(), startTime)) {
+          Double parentInstanceActiveSecond = null;
+          String parentInstanceId = getParentInstanceId(instanceData);
+          if (null != parentInstanceId) {
+            parentInstanceActiveSecond = parentInstanceActiveSecondMap.getOrDefault(
+                billingCalculationService.getInstanceClusterIdKey(parentInstanceId, instanceData.getClusterId()), null);
+          }
           InstanceBillingData instanceBillingData = getInstanceBillingData(instanceData, utilizationDataForInstances,
-              startTime, endTime, claimRefToPVInstanceBillingData, pvcClaimCount);
+              startTime, endTime, claimRefToPVInstanceBillingData, pvcClaimCount, parentInstanceActiveSecond);
           instanceBillingDataList.add(instanceBillingData);
         }
       }
@@ -242,12 +265,18 @@ public class InstanceBillingDataTasklet implements Tasklet {
     return instanceBillingDataList;
   }
 
+  private void addParentInstanceId(InstanceData instanceData, Set<String> parentInstanceIds) {
+    if (ImmutableSet.of(InstanceType.K8S_POD).contains(instanceData.getInstanceType())) {
+      parentInstanceIds.add(getParentInstanceId(instanceData));
+    }
+  }
+
   private boolean validInstanceForBilling(InstanceData instanceData) {
     String computeType = InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData(
         InstanceMetaDataConstants.COMPUTE_TYPE, instanceData.getMetaData());
     boolean validInstance = true;
     if ((instanceData.getInstanceType() == null)
-        || (instanceData.getInstanceType() == InstanceType.K8S_NODE
+        || (instanceData.getInstanceType() == K8S_NODE
             && K8sCCMConstants.AWS_FARGATE_COMPUTE_TYPE.equals(computeType))) {
       validInstance = false;
     }
@@ -256,7 +285,8 @@ public class InstanceBillingDataTasklet implements Tasklet {
 
   private InstanceBillingData getInstanceBillingData(final InstanceData instanceData,
       Map<String, UtilizationData> utilizationDataForInstances, Instant startTime, Instant endTime,
-      Map<String, InstanceBillingData> claimRefToPVInstanceBillingData, Map<String, MutableInt> pvcClaimCount) {
+      Map<String, InstanceBillingData> claimRefToPVInstanceBillingData, Map<String, MutableInt> pvcClaimCount,
+      Double parentInstanceActiveSecond) {
     InstanceType instanceType = instanceData.getInstanceType();
     String computeType = InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData(
         InstanceMetaDataConstants.COMPUTE_TYPE, instanceData.getMetaData());
@@ -265,8 +295,8 @@ public class InstanceBillingDataTasklet implements Tasklet {
       instanceData.setInstanceType(instanceType);
     }
     UtilizationData utilizationData = utilizationDataForInstances.get(instanceData.getInstanceId());
-    BillingData billingData =
-        billingCalculationService.getInstanceBillingAmount(instanceData, utilizationData, startTime, endTime);
+    BillingData billingData = billingCalculationService.getInstanceBillingAmount(
+        instanceData, utilizationData, parentInstanceActiveSecond, startTime, endTime);
 
     log.trace("Instance detail {} :: {} ", instanceData.getInstanceId(), billingData.getBillingAmountBreakup());
 
@@ -276,6 +306,8 @@ public class InstanceBillingDataTasklet implements Tasklet {
     if (instanceType == InstanceType.EC2_INSTANCE) {
       settingId = null;
       clusterId = null;
+    } else if (settingId == null) {
+      settingId = clusterId;
     }
     String instanceName =
         (instanceData.getInstanceName() == null) ? instanceData.getInstanceId() : instanceData.getInstanceName();
@@ -297,8 +329,12 @@ public class InstanceBillingDataTasklet implements Tasklet {
     BigDecimal storageActualIdleCost = billingData.getIdleCostData().getStorageIdleCost();
     BigDecimal storageUnallocatedCost = getStorageUnallocatedCost(billingData, utilizationData, instanceData);
 
-    double storageRequest = utilizationData.getAvgStorageRequestValue();
-    double storageUtilization = utilizationData.getAvgStorageUsageValue();
+    double maxStorageRequest = utilizationData.getMaxStorageRequestValue();
+    double maxStorageUtilization = utilizationData.getMaxStorageUsageValue();
+
+    double avgStorageRequest = utilizationData.getAvgStorageRequestValue();
+    double avgStorageUtilization = utilizationData.getAvgStorageUsageValue();
+
     double storageMBSeconds = billingData.getStorageMbSeconds();
 
     if (K8S_PV == instanceType) {
@@ -324,8 +360,12 @@ public class InstanceBillingDataTasklet implements Tasklet {
               storageUnallocatedCost.add(storageInstanceBillingData.getStorageUnallocatedCost().divide(
                   BigDecimal.valueOf(claimCount), MathContext.DECIMAL128));
 
-          storageRequest += storageInstanceBillingData.getStorageRequest();
-          storageUtilization += storageInstanceBillingData.getStorageUtilizationValue();
+          avgStorageRequest += storageInstanceBillingData.getStorageRequest();
+          avgStorageUtilization += storageInstanceBillingData.getStorageUtilizationValue();
+
+          maxStorageRequest += storageInstanceBillingData.getMaxStorageRequest();
+          maxStorageUtilization += storageInstanceBillingData.getMaxStorageUtilizationValue();
+
           storageMBSeconds += storageInstanceBillingData.getStorageMbSeconds();
         }
       }
@@ -395,9 +435,11 @@ public class InstanceBillingDataTasklet implements Tasklet {
         .storageBillingAmount(storageBillingAmount)
         .storageActualIdleCost(storageActualIdleCost)
         .storageUnallocatedCost(storageUnallocatedCost)
-        .storageUtilizationValue(storageUtilization)
-        .storageRequest(storageRequest)
+        .storageUtilizationValue(avgStorageUtilization)
+        .storageRequest(avgStorageRequest)
         .storageMbSeconds(storageMBSeconds)
+        .maxStorageRequest(maxStorageRequest)
+        .maxStorageUtilizationValue(maxStorageUtilization)
         .build();
   }
 
@@ -446,8 +488,7 @@ public class InstanceBillingDataTasklet implements Tasklet {
     String cloudServiceName =
         getValueForKeyFromInstanceMetaData(InstanceMetaDataConstants.ECS_SERVICE_NAME, instanceData);
     InstanceType instanceType = instanceData.getInstanceType();
-    if (null == cloudServiceName
-        && ImmutableSet.of(InstanceType.ECS_TASK_FARGATE, InstanceType.ECS_TASK_EC2).contains(instanceType)) {
+    if (null == cloudServiceName && ImmutableSet.of(ECS_TASK_FARGATE, ECS_TASK_EC2).contains(instanceType)) {
       cloudServiceName = "none";
     }
     return cloudServiceName;

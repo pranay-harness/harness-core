@@ -4,10 +4,12 @@ import static io.harness.rule.OwnerRule.AVMOHAN;
 import static io.harness.rule.OwnerRule.UTSAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.data.Offset.offset;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -15,17 +17,20 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.batch.processing.service.intfc.WorkloadRepository;
 import io.harness.batch.processing.tasklet.support.K8sLabelServiceInfoFetcher;
+import io.harness.batch.processing.tasklet.util.ClusterHelper;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.cluster.entities.K8sWorkload;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
+import io.harness.ccm.commons.beans.recommendation.ResourceId;
+import io.harness.ccm.commons.dao.recommendation.RecommendationCrudService;
+import io.harness.ccm.commons.entities.k8s.K8sWorkload;
+import io.harness.ccm.commons.entities.k8s.recommendation.K8sWorkloadRecommendation;
+import io.harness.ccm.commons.entities.k8s.recommendation.PartialRecommendationHistogram;
 import io.harness.histogram.HistogramCheckpoint;
 import io.harness.rule.Owner;
 
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerCheckpoint;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerRecommendation;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.Cost;
-import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation;
-import software.wings.graphql.datafetcher.ce.recommendation.entity.PartialRecommendationHistogram;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement;
 
 import com.google.common.collect.ImmutableList;
@@ -38,6 +43,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.assertj.core.data.Offset;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -46,9 +52,11 @@ import org.mockito.ArgumentCaptor;
 public class ComputedRecommendationWriterTest extends CategoryTest {
   public static final String ACCOUNT_ID = "ACCOUNT_ID";
   public static final String CLUSTER_ID = "CLUSTER_ID";
+  public static final String CLUSTER_NAME = "CLUSTER_NAME";
   public static final String NAMESPACE = "NAMESPACE";
   public static final String WORKLOAD_NAME = "WORKLOAD_NAME";
   public static final String WORKLOAD_TYPE = "WORKLOAD_TYPE";
+  private static final String UUID = "UUID";
 
   public static final Instant JOB_START_DATE = Instant.now().truncatedTo(ChronoUnit.DAYS).minus(Duration.ofDays(1));
 
@@ -58,8 +66,11 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
   private WorkloadRecommendationDao workloadRecommendationDao;
 
   private ArgumentCaptor<K8sWorkloadRecommendation> captor;
+  private ArgumentCaptor<String> stringCaptor;
   private WorkloadRepository workloadRepository;
   private K8sLabelServiceInfoFetcher k8sLabelServiceInfoFetcher;
+  private RecommendationCrudService recommendationCrudService;
+  private ClusterHelper clusterHelper;
 
   @Before
   public void setUp() throws Exception {
@@ -67,12 +78,20 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
     workloadRecommendationDao = mock(WorkloadRecommendationDao.class);
     workloadRepository = mock(WorkloadRepository.class);
     k8sLabelServiceInfoFetcher = mock(K8sLabelServiceInfoFetcher.class);
+    recommendationCrudService = mock(RecommendationCrudService.class);
+    clusterHelper = mock(ClusterHelper.class);
+
+    when(workloadRecommendationDao.save(any(K8sWorkloadRecommendation.class))).thenReturn(UUID);
     when(workloadRepository.getWorkload(any())).thenReturn(Optional.empty());
     when(k8sLabelServiceInfoFetcher.fetchHarnessServiceInfoFromCache(anyString(), anyMap()))
         .thenReturn(Optional.empty());
-    computedRecommendationWriter = new ComputedRecommendationWriter(
-        workloadRecommendationDao, workloadCostService, workloadRepository, k8sLabelServiceInfoFetcher, JOB_START_DATE);
+    doNothing().when(recommendationCrudService).upsertWorkloadRecommendation(any(), any(), any(), any());
+    when(clusterHelper.fetchClusterName(eq(CLUSTER_ID))).thenReturn(CLUSTER_NAME);
+
+    computedRecommendationWriter = new ComputedRecommendationWriter(workloadRecommendationDao, workloadCostService,
+        workloadRepository, k8sLabelServiceInfoFetcher, recommendationCrudService, clusterHelper, JOB_START_DATE);
     captor = ArgumentCaptor.forClass(K8sWorkloadRecommendation.class);
+    stringCaptor = ArgumentCaptor.forClass(String.class);
   }
 
   @Test
@@ -250,6 +269,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
                              .workloadType(WORKLOAD_TYPE)
                              .namespace(NAMESPACE)
                              .workloadName(WORKLOAD_NAME)
+                             .lastReceivedUtilDataAt(Instant.EPOCH)
                              .containerRecommendation("harness-example",
                                  ContainerRecommendation.builder()
                                      .current(ResourceRequirement.builder()
@@ -286,6 +306,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
                 .build()));
 
     computedRecommendationWriter.write(recommendations);
+
     verify(workloadRecommendationDao).save(captor.capture());
 
     assertThat(captor.getAllValues()).hasSize(1);
@@ -297,6 +318,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
     assertThat(recommendation.getWorkloadType()).isEqualTo(WORKLOAD_TYPE);
     assertThat(recommendation.getNamespace()).isEqualTo(NAMESPACE);
     assertThat(recommendation.getWorkloadName()).isEqualTo(WORKLOAD_NAME);
+    assertThat(recommendation.getLastReceivedUtilDataAt()).isNotNull();
 
     Map<String, ContainerRecommendation> containerRecommendations = recommendation.getContainerRecommendations();
     assertThat(containerRecommendations).hasSize(1);
@@ -364,6 +386,10 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
 
     assertThat(recommendation.getEstimatedSavings()).isEqualByComparingTo(BigDecimal.valueOf(189.52));
     assertThat(recommendation.isLastDayCostAvailable()).isTrue();
+
+    verify(recommendationCrudService).upsertWorkloadRecommendation(stringCaptor.capture(), any(), any(), any());
+    assertThat(stringCaptor.getAllValues()).hasSize(1);
+    assertThat(stringCaptor.getValue()).isEqualTo(UUID);
   }
 
   @Test
@@ -378,6 +404,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
                              .workloadType(WORKLOAD_TYPE)
                              .namespace(NAMESPACE)
                              .workloadName(WORKLOAD_NAME)
+                             .lastReceivedUtilDataAt(Instant.EPOCH)
                              .containerRecommendation("harness-example",
                                  ContainerRecommendation.builder()
                                      .current(ResourceRequirement.builder()
@@ -415,6 +442,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
     assertThat(recommendation.getWorkloadType()).isEqualTo(WORKLOAD_TYPE);
     assertThat(recommendation.getNamespace()).isEqualTo(NAMESPACE);
     assertThat(recommendation.getWorkloadName()).isEqualTo(WORKLOAD_NAME);
+    assertThat(recommendation.getLastReceivedUtilDataAt()).isNotNull();
 
     Map<String, ContainerRecommendation> containerRecommendations = recommendation.getContainerRecommendations();
     assertThat(containerRecommendations).hasSize(1);
@@ -460,6 +488,115 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
 
     assertThat(recommendation.getEstimatedSavings()).isEqualByComparingTo(BigDecimal.valueOf(183.80));
     assertThat(recommendation.isLastDayCostAvailable()).isTrue();
+
+    verify(recommendationCrudService).upsertWorkloadRecommendation(stringCaptor.capture(), any(), any(), any());
+    assertThat(stringCaptor.getAllValues()).hasSize(1);
+    assertThat(stringCaptor.getValue()).isEqualTo(UUID);
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testSetContainerLevelCost() {
+    Map<String, ContainerRecommendation> containerRecommendationMap = ImmutableMap.of("c1",
+        ContainerRecommendation.builder()
+            .current(ResourceRequirement.builder().request("cpu", "15m").request("memory", "20M").build())
+            .build(),
+        "c2",
+        ContainerRecommendation.builder()
+            .current(ResourceRequirement.builder().request("cpu", "30m").request("memory", "80M").build())
+            .build());
+
+    Cost lastDayCost = Cost.builder().cpu(BigDecimal.valueOf(100)).memory(BigDecimal.valueOf(100)).build();
+    computedRecommendationWriter.setContainerLevelCost(containerRecommendationMap, lastDayCost);
+
+    final Offset<BigDecimal> costOffset = offset(BigDecimal.valueOf(0.09D));
+
+    assertThat(containerRecommendationMap.get("c1").getLastDayCost().getCpu())
+        // (15 / (15 + 30)) * 100 = 0.33 * 100
+        .isCloseTo(BigDecimal.valueOf(33.3333D), costOffset);
+    assertThat(containerRecommendationMap.get("c1").getLastDayCost().getMemory())
+        // (20 / (20 + 80)) * 100 = 0.20 * 100
+        .isCloseTo(BigDecimal.valueOf(20), costOffset);
+
+    assertThat(containerRecommendationMap.get("c2").getLastDayCost().getCpu())
+        .isCloseTo(BigDecimal.valueOf(66.6667D), costOffset);
+    assertThat(containerRecommendationMap.get("c2").getLastDayCost().getMemory())
+        .isCloseTo(BigDecimal.valueOf(80), costOffset);
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testSetContainerLevelCostWithNullCurrentResource() {
+    Map<String, ContainerRecommendation> containerRecommendationMap =
+        ImmutableMap.of("c1", ContainerRecommendation.builder().build(), "c2",
+            ContainerRecommendation.builder()
+                .current(ResourceRequirement.builder().request("cpu", "30m").request("memory", "80M").build())
+                .build());
+
+    Cost lastDayCost = Cost.builder().cpu(BigDecimal.valueOf(100)).memory(BigDecimal.valueOf(100)).build();
+    computedRecommendationWriter.setContainerLevelCost(containerRecommendationMap, lastDayCost);
+
+    final Offset<BigDecimal> costOffset = offset(BigDecimal.valueOf(0.09D));
+
+    assertThat(containerRecommendationMap.get("c1").getLastDayCost().getCpu())
+        // (0 / 30) * 100 = 0 * 100
+        .isCloseTo(BigDecimal.valueOf(0), costOffset);
+    assertThat(containerRecommendationMap.get("c1").getLastDayCost().getMemory())
+        // (0 / 80) * 100 = 0 * 100
+        .isCloseTo(BigDecimal.valueOf(0), costOffset);
+
+    assertThat(containerRecommendationMap.get("c2").getLastDayCost().getCpu())
+        .isCloseTo(BigDecimal.valueOf(100), costOffset);
+    assertThat(containerRecommendationMap.get("c2").getLastDayCost().getMemory())
+        .isCloseTo(BigDecimal.valueOf(100), costOffset);
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testSetContainerLevelCostWithExplicitZeroCurrentResource() {
+    Map<String, ContainerRecommendation> containerRecommendationMap = ImmutableMap.of("c1",
+        ContainerRecommendation.builder()
+            .current(ResourceRequirement.builder().request("cpu", "0m").request("memory", "0M").build())
+            .build());
+
+    Cost lastDayCost = Cost.builder().cpu(BigDecimal.valueOf(100)).memory(BigDecimal.valueOf(100)).build();
+    computedRecommendationWriter.setContainerLevelCost(containerRecommendationMap, lastDayCost);
+
+    assertThat(containerRecommendationMap.get("c1").getLastDayCost()).isNull();
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testSetContainerLevelCostWithZeroLastDayCost() {
+    Map<String, ContainerRecommendation> containerRecommendationMap = ImmutableMap.of("c1",
+        ContainerRecommendation.builder()
+            .current(ResourceRequirement.builder().request("cpu", "15m").request("memory", "20M").build())
+            .build(),
+        "c2",
+        ContainerRecommendation.builder()
+            .current(ResourceRequirement.builder().request("cpu", "30m").request("memory", "80M").build())
+            .build());
+
+    Cost lastDayCost = Cost.builder().cpu(BigDecimal.valueOf(0)).memory(BigDecimal.valueOf(0)).build();
+    computedRecommendationWriter.setContainerLevelCost(containerRecommendationMap, lastDayCost);
+
+    final Offset<BigDecimal> costOffset = offset(BigDecimal.valueOf(0.09D));
+
+    assertThat(containerRecommendationMap.get("c1").getLastDayCost().getCpu())
+        // (15 / (15 + 30)) * 0 = 0.33 * 0
+        .isCloseTo(BigDecimal.valueOf(0), costOffset);
+    assertThat(containerRecommendationMap.get("c1").getLastDayCost().getMemory())
+        // (20 / (20 + 80)) * 0 = 0.20 * 0
+        .isCloseTo(BigDecimal.valueOf(0), costOffset);
+
+    assertThat(containerRecommendationMap.get("c2").getLastDayCost().getCpu())
+        .isCloseTo(BigDecimal.valueOf(0), costOffset);
+    assertThat(containerRecommendationMap.get("c2").getLastDayCost().getMemory())
+        .isCloseTo(BigDecimal.valueOf(0), costOffset);
   }
 
   @Test
@@ -474,6 +611,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
                              .workloadType(WORKLOAD_TYPE)
                              .namespace(NAMESPACE)
                              .workloadName(WORKLOAD_NAME)
+                             .lastReceivedUtilDataAt(Instant.EPOCH)
                              .containerRecommendation("harness-example",
                                  ContainerRecommendation.builder()
                                      .current(ResourceRequirement.builder()
@@ -509,8 +647,13 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
     assertThat(recommendation.getWorkloadType()).isEqualTo(WORKLOAD_TYPE);
     assertThat(recommendation.getNamespace()).isEqualTo(NAMESPACE);
     assertThat(recommendation.getWorkloadName()).isEqualTo(WORKLOAD_NAME);
+    assertThat(recommendation.getLastReceivedUtilDataAt()).isNotNull();
 
     assertThat(recommendation.isLastDayCostAvailable()).isFalse();
+
+    verify(recommendationCrudService).upsertWorkloadRecommendation(stringCaptor.capture(), any(), any(), any());
+    assertThat(stringCaptor.getAllValues()).hasSize(1);
+    assertThat(stringCaptor.getValue()).isEqualTo(UUID);
   }
 
   @Test
@@ -525,6 +668,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
             .workloadType(WORKLOAD_TYPE)
             .namespace(NAMESPACE)
             .workloadName(WORKLOAD_NAME)
+            .lastReceivedUtilDataAt(Instant.EPOCH)
             .containerRecommendation("harness-example",
                 ContainerRecommendation.builder()
                     .current(ResourceRequirement.builder()
@@ -568,6 +712,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
     assertThat(recommendation.getWorkloadType()).isEqualTo(WORKLOAD_TYPE);
     assertThat(recommendation.getNamespace()).isEqualTo(NAMESPACE);
     assertThat(recommendation.getWorkloadName()).isEqualTo(WORKLOAD_NAME);
+    assertThat(recommendation.getLastReceivedUtilDataAt()).isNotNull();
 
     Map<String, ContainerRecommendation> containerRecommendations = recommendation.getContainerRecommendations();
     assertThat(containerRecommendations).hasSize(1);
@@ -593,6 +738,10 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
                        .request("memory", "20M")
                        .limit("memory", "20M")
                        .build());
+
+    verify(recommendationCrudService).upsertWorkloadRecommendation(stringCaptor.capture(), any(), any(), any());
+    assertThat(stringCaptor.getAllValues()).hasSize(1);
+    assertThat(stringCaptor.getValue()).isEqualTo(UUID);
   }
 
   @Test
@@ -607,6 +756,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
             .workloadType(WORKLOAD_TYPE)
             .namespace(NAMESPACE)
             .workloadName(WORKLOAD_NAME)
+            .lastReceivedUtilDataAt(Instant.EPOCH)
             .containerRecommendation("harness-example",
                 ContainerRecommendation.builder()
                     .current(ResourceRequirement.builder()
@@ -650,6 +800,7 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
     assertThat(recommendation.getWorkloadType()).isEqualTo(WORKLOAD_TYPE);
     assertThat(recommendation.getNamespace()).isEqualTo(NAMESPACE);
     assertThat(recommendation.getWorkloadName()).isEqualTo(WORKLOAD_NAME);
+    assertThat(recommendation.getLastReceivedUtilDataAt()).isNotNull();
 
     Map<String, ContainerRecommendation> containerRecommendations = recommendation.getContainerRecommendations();
     assertThat(containerRecommendations).hasSize(1);
@@ -676,6 +827,10 @@ public class ComputedRecommendationWriterTest extends CategoryTest {
                        .request("memory", "250M")
                        .limit("memory", "250M")
                        .build());
+
+    verify(recommendationCrudService).upsertWorkloadRecommendation(stringCaptor.capture(), any(), any(), any());
+    assertThat(stringCaptor.getAllValues()).hasSize(1);
+    assertThat(stringCaptor.getValue()).isEqualTo(UUID);
   }
 
   @Test

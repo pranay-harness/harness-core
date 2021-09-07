@@ -1,16 +1,18 @@
 package io.harness.cvng.activity.entities;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.activity.ActivitySourceDTO;
 import io.harness.cvng.beans.activity.ActivitySourceDTO.ActivitySourceDTOBuilder;
 import io.harness.cvng.beans.activity.ActivitySourceType;
-import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
+import io.harness.cvng.core.services.api.UpdatableEntity;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -31,6 +33,7 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Data
 @NoArgsConstructor
@@ -43,6 +46,7 @@ import org.mongodb.morphia.annotations.Id;
 @HarnessEntity(exportable = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXISTING_PROPERTY)
 @OwnedBy(HarnessTeam.CV)
+@StoreIn(DbAliases.CVNG)
 public abstract class ActivitySource
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, PersistentRegularIterable {
   public static List<MongoIndex> mongoIndexes() {
@@ -74,7 +78,7 @@ public abstract class ActivitySource
 
   @Override
   public void updateNextIteration(String fieldName, long nextIteration) {
-    if (CVConfigKeys.dataCollectionTaskIteration.equals(fieldName)) {
+    if (ActivitySourceKeys.dataCollectionTaskIteration.equals(fieldName)) {
       this.dataCollectionTaskIteration = nextIteration;
       return;
     }
@@ -83,7 +87,7 @@ public abstract class ActivitySource
 
   @Override
   public Long obtainNextIteration(String fieldName) {
-    if (CVConfigKeys.dataCollectionTaskIteration.equals(fieldName)) {
+    if (ActivitySourceKeys.dataCollectionTaskIteration.equals(fieldName)) {
       return this.dataCollectionTaskIteration;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
@@ -109,6 +113,15 @@ public abstract class ActivitySource
     activitySourceDTOBuilder.name(name);
     activitySourceDTOBuilder.orgIdentifier(orgIdentifier);
     activitySourceDTOBuilder.projectIdentifier(projectIdentifier);
+    activitySourceDTOBuilder.lastUpdatedAt(lastUpdatedAt);
+    activitySourceDTOBuilder.createdAt(createdAt);
     return activitySourceDTOBuilder;
+  }
+
+  public abstract static class ActivitySourceUpdatableEntity<T extends ActivitySource, D extends ActivitySourceDTO>
+      implements UpdatableEntity<T, D> {
+    public void setCommonOperations(UpdateOperations<T> updateOperations, D dto) {
+      updateOperations.set(ActivitySourceKeys.name, dto.getName()).unset(ActivitySourceKeys.dataCollectionTaskId);
+    }
   }
 }

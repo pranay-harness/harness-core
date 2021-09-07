@@ -1,5 +1,7 @@
 package io.harness.ff;
 
+import io.harness.lock.PersistentLockModule;
+
 import com.google.inject.AbstractModule;
 
 public class FeatureFlagModule extends AbstractModule {
@@ -17,6 +19,7 @@ public class FeatureFlagModule extends AbstractModule {
 
   @Override
   protected void configure() {
+    install(PersistentLockModule.getInstance());
     bind(FeatureFlagService.class).to(FeatureFlagServiceImpl.class);
   }
 }

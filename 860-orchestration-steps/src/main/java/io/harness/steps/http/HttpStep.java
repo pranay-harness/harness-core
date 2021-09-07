@@ -12,14 +12,17 @@ import io.harness.delegate.task.http.HttpTaskParametersNg.HttpTaskParametersNgBu
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.http.HttpHeaderConfig;
+import io.harness.logstreaming.LogStreamingStepClientFactory;
+import io.harness.logstreaming.NGLogCallback;
 import io.harness.plancreator.steps.TaskSelectorYaml;
 import io.harness.plancreator.steps.common.StepElementParameters;
+import io.harness.plancreator.steps.common.rollback.TaskExecutableWithRollback;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
@@ -33,7 +36,6 @@ import io.harness.supplier.ThrowingSupplier;
 
 import software.wings.beans.TaskType;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -43,14 +45,21 @@ import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Slf4j
-public class HttpStep implements TaskExecutable<StepElementParameters, HttpStepResponse> {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(StepSpecTypeConstants.HTTP).build();
+public class HttpStep extends TaskExecutableWithRollback<HttpStepResponse> {
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(StepSpecTypeConstants.HTTP).setStepCategory(StepCategory.STEP).build();
 
   @Inject private KryoSerializer kryoSerializer;
+  @Inject private LogStreamingStepClientFactory logStreamingStepClientFactory;
 
   @Override
   public Class<StepElementParameters> getStepParametersClass() {
     return StepElementParameters.class;
+  }
+
+  private NGLogCallback getNGLogCallback(LogStreamingStepClientFactory logStreamingStepClientFactory, Ambiance ambiance,
+      String logFix, boolean openStream) {
+    return new NGLogCallback(logStreamingStepClientFactory, ambiance, logFix, openStream);
   }
 
   @Override
@@ -85,6 +94,7 @@ public class HttpStep implements TaskExecutable<StepElementParameters, HttpStepR
             .taskType(TaskType.HTTP_TASK_NG.name())
             .parameters(new Object[] {httpTaskParametersNgBuilder.build()})
             .build();
+
     return StepUtils.prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
         TaskSelectorYaml.toTaskSelector(httpStepParameters.delegateSelectors.getValue()));
   }
@@ -92,15 +102,22 @@ public class HttpStep implements TaskExecutable<StepElementParameters, HttpStepR
   @Override
   public StepResponse handleTaskResult(Ambiance ambiance, StepElementParameters stepParameters,
       ThrowingSupplier<HttpStepResponse> responseSupplier) throws Exception {
+    NGLogCallback logCallback = getNGLogCallback(logStreamingStepClientFactory, ambiance, null, true);
+
     StepResponseBuilder responseBuilder = StepResponse.builder();
     HttpStepResponse httpStepResponse = responseSupplier.get();
 
     HttpStepParameters httpStepParameters = (HttpStepParameters) stepParameters.getSpec();
-    Map<String, Object> outputVariables = httpStepParameters.getOutputVariables();
+
+    logCallback.saveExecutionLog(
+        String.format("Successfully executed the http request %s .", httpStepParameters.url.getValue()));
+
+    Map<String, Object> outputVariables =
+        httpStepParameters.getOutputVariables() == null ? null : httpStepParameters.getOutputVariables().getValue();
     Map<String, String> outputVariablesEvaluated = evaluateOutputVariables(outputVariables, httpStepResponse);
 
+    logCallback.saveExecutionLog("Validating the assertions...");
     boolean assertionSuccessful = validateAssertions(httpStepResponse, httpStepParameters);
-
     HttpOutcome executionData = HttpOutcome.builder()
                                     .httpUrl(httpStepParameters.getUrl().getValue())
                                     .httpMethod(httpStepParameters.getMethod().getValue())
@@ -111,17 +128,17 @@ public class HttpStep implements TaskExecutable<StepElementParameters, HttpStepR
                                     .outputVariables(outputVariablesEvaluated)
                                     .build();
 
-    // Just Place holder for now till we have assertions
-    if (httpStepResponse.getHttpResponseCode() == 500 || !assertionSuccessful) {
+    if (!assertionSuccessful) {
       responseBuilder.status(Status.FAILED);
-      if (!assertionSuccessful) {
-        responseBuilder.failureInfo(FailureInfo.newBuilder().setErrorMessage("assertion failed").build());
-      }
+      responseBuilder.failureInfo(FailureInfo.newBuilder().setErrorMessage("assertion failed").build());
+      logCallback.saveExecutionLog("Assertions failed");
     } else {
       responseBuilder.status(Status.SUCCEEDED);
+      logCallback.saveExecutionLog("Assertions passed");
     }
     responseBuilder.stepOutcome(
         StepOutcome.builder().name(YAMLFieldNameConstants.OUTPUT).outcome(executionData).build());
+
     return responseBuilder.build();
   }
 
@@ -130,17 +147,14 @@ public class HttpStep implements TaskExecutable<StepElementParameters, HttpStepR
       return true;
     }
 
-    HttpExpressionEvaluator evaluator = new HttpExpressionEvaluator(httpStepResponse.getHttpResponseCode());
+    HttpExpressionEvaluator evaluator = new HttpExpressionEvaluator(httpStepResponse);
     String assertion = (String) stepParameters.getAssertion().fetchFinalValue();
     if (assertion == null || EmptyPredicate.isEmpty(assertion.trim())) {
       return true;
     }
 
     try {
-      Map<String, Object> context = ImmutableMap.<String, Object>builder()
-                                        .put("httpResponseBody", httpStepResponse.getHttpResponseBody())
-                                        .build();
-      Object value = evaluator.evaluateExpression(assertion, context);
+      Object value = evaluator.evaluateExpression(assertion);
       if (!(value instanceof Boolean)) {
         throw new InvalidRequestException(String.format(
             "Expected boolean assertion, got %s value", value == null ? "null" : value.getClass().getSimpleName()));
@@ -155,19 +169,18 @@ public class HttpStep implements TaskExecutable<StepElementParameters, HttpStepR
       Map<String, Object> outputVariables, HttpStepResponse httpStepResponse) {
     Map<String, String> outputVariablesEvaluated = new LinkedHashMap<>();
     if (outputVariables != null) {
-      Map<String, Object> context = ImmutableMap.<String, Object>builder()
-                                        .put("httpResponseBody", httpStepResponse.getHttpResponseBody())
-                                        .build();
-      EngineExpressionEvaluator expressionEvaluator = new EngineExpressionEvaluator(null);
+      EngineExpressionEvaluator expressionEvaluator = new HttpExpressionEvaluator(httpStepResponse);
       outputVariables.keySet().forEach(name -> {
         Object expression = outputVariables.get(name);
         if (expression instanceof ParameterField) {
           ParameterField<?> expr = (ParameterField<?>) expression;
           if (expr.isExpression()) {
-            Object evaluatedValue = expressionEvaluator.evaluateExpression(expr.getExpressionValue(), context);
+            Object evaluatedValue = expressionEvaluator.evaluateExpression(expr.getExpressionValue());
             if (evaluatedValue != null) {
               outputVariablesEvaluated.put(name, evaluatedValue.toString());
             }
+          } else if (expr.getValue() != null) {
+            outputVariablesEvaluated.put(name, expr.getValue().toString());
           }
         }
       });

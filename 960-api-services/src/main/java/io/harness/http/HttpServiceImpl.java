@@ -10,9 +10,13 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.KeyValuePair;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.exception.runtime.AuthenticationRuntimeException;
+import io.harness.exception.runtime.AuthorizationRuntimeException;
+import io.harness.globalcontex.ErrorHandlingGlobalContextData;
 import io.harness.http.beans.HttpInternalConfig;
 import io.harness.http.beans.HttpInternalResponse;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.manage.GlobalContextManager;
 import io.harness.network.Http;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -60,7 +64,7 @@ public class HttpServiceImpl implements HttpService {
   private static final Splitter HEADER_SPLITTER = Splitter.on(":").trimResults();
 
   @Override
-  public HttpInternalResponse executeUrl(HttpInternalConfig httpInternalConfig) {
+  public HttpInternalResponse executeUrl(HttpInternalConfig httpInternalConfig) throws IOException {
     HttpInternalResponse httpInternalResponse = new HttpInternalResponse();
 
     SSLContextBuilder builder = new SSLContextBuilder();
@@ -127,18 +131,43 @@ public class HttpServiceImpl implements HttpService {
     }
 
     httpInternalResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
-    try {
-      HttpResponse httpResponse = httpclient.execute(httpUriRequest);
-      httpInternalResponse.setHeader(httpInternalConfig.getHeader());
-      httpInternalResponse.setHttpResponseCode(httpResponse.getStatusLine().getStatusCode());
-      HttpEntity entity = httpResponse.getEntity();
-      httpInternalResponse.setHttpResponseBody(
-          entity != null ? EntityUtils.toString(entity, StandardCharsets.UTF_8) : "");
-    } catch (SocketTimeoutException | ConnectTimeoutException | HttpHostConnectException e) {
-      handleException(httpInternalResponse, e, true);
-    } catch (IOException e) {
-      handleException(httpInternalResponse, e, false);
+
+    ErrorHandlingGlobalContextData globalContextData =
+        GlobalContextManager.get(ErrorHandlingGlobalContextData.IS_SUPPORTED_ERROR_FRAMEWORK);
+    if (globalContextData != null && globalContextData.isSupportedErrorFramework()) {
+      return executeHttpStep(httpclient, httpInternalResponse, httpUriRequest, httpInternalConfig, true);
+    } else {
+      try {
+        executeHttpStep(httpclient, httpInternalResponse, httpUriRequest, httpInternalConfig, false);
+      } catch (SocketTimeoutException | ConnectTimeoutException | HttpHostConnectException e) {
+        handleException(httpInternalResponse, e, true);
+      } catch (IOException e) {
+        handleException(httpInternalResponse, e, false);
+      }
+
+      return httpInternalResponse;
     }
+  }
+
+  private HttpInternalResponse executeHttpStep(CloseableHttpClient httpclient,
+      HttpInternalResponse httpInternalResponse, HttpUriRequest httpUriRequest, HttpInternalConfig httpInternalConfig,
+      boolean isSupportingErrorFramework) throws IOException {
+    HttpResponse httpResponse = httpclient.execute(httpUriRequest);
+    if (isSupportingErrorFramework) {
+      if (httpResponse.getStatusLine().getStatusCode() == 401) {
+        throw new AuthenticationRuntimeException(httpUriRequest.getURI().toString());
+      }
+
+      if (httpResponse.getStatusLine().getStatusCode() == 403) {
+        throw new AuthorizationRuntimeException(httpUriRequest.getURI().toString());
+      }
+    }
+
+    httpInternalResponse.setHeader(httpInternalConfig.getHeader());
+    httpInternalResponse.setHttpResponseCode(httpResponse.getStatusLine().getStatusCode());
+    HttpEntity entity = httpResponse.getEntity();
+    httpInternalResponse.setHttpResponseBody(
+        entity != null ? EntityUtils.toString(entity, StandardCharsets.UTF_8) : "");
 
     return httpInternalResponse;
   }

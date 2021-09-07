@@ -5,8 +5,8 @@ import static io.harness.annotations.dev.HarnessTeam.CE;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.ccm.commons.entities.billing.CECloudAccount;
 
-import software.wings.beans.ce.CECloudAccount;
 import software.wings.graphql.datafetcher.AbstractConnectionV2DataFetcher;
 import software.wings.graphql.schema.query.QLPageQueryParameters;
 import software.wings.security.PermissionAttribute;

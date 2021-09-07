@@ -2,13 +2,16 @@ package software.wings.expression;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.ExpressionFunctor;
 import io.harness.expression.ImageSecretFunctor;
 import io.harness.ff.FeatureFlagService;
+import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.SimpleEncryption;
 
 import software.wings.expression.NgSecretManagerFunctor.NgSecretManagerFunctorBuilder;
@@ -16,7 +19,6 @@ import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
-import software.wings.service.intfc.security.NGSecretService;
 import software.wings.service.intfc.security.SecretManager;
 
 import java.util.Map;
@@ -24,6 +26,7 @@ import lombok.Value;
 
 @OwnedBy(CDC)
 @Value
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ManagerPreExecutionExpressionEvaluator extends ExpressionEvaluator {
   private final ExpressionFunctor secretManagerFunctor;
   private final ExpressionFunctor ngSecretManagerFunctor;
@@ -33,7 +36,7 @@ public class ManagerPreExecutionExpressionEvaluator extends ExpressionEvaluator 
       ConfigService configService, ArtifactCollectionUtils artifactCollectionUtils,
       FeatureFlagService featureFlagService, ManagerDecryptionService managerDecryptionService,
       SecretManager secretManager, String accountId, String workflowExecutionId, int expressionFunctorToken,
-      NGSecretService ngSecretService, Map<String, String> taskSetupAbstractions) {
+      SecretManagerClientService ngSecretService, Map<String, String> taskSetupAbstractions) {
     String appId = taskSetupAbstractions == null ? null : taskSetupAbstractions.get(Cd1SetupFields.APP_ID_FIELD);
     String envId = taskSetupAbstractions == null ? null : taskSetupAbstractions.get(Cd1SetupFields.ENV_ID_FIELD);
     String serviceTemplateId =

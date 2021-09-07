@@ -67,7 +67,7 @@ public class YamlSchemaProvider {
         }
       }
     } catch (Exception e) {
-      log.error("Exception im adding scope to schema.", e);
+      log.info("Exception in adding scope to schema. {}", e.getLocalizedMessage());
     }
 
     // returning original snippet in worst case.

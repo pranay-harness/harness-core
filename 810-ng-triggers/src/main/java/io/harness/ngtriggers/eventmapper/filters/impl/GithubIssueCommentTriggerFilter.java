@@ -1,13 +1,15 @@
 package io.harness.ngtriggers.eventmapper.filters.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
-import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.EXCEPTION_WHILE_PROCESSING;
-import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.FAILED_TO_FETCH_PR_DETAILS;
+import static io.harness.ngtriggers.beans.response.TriggerEventResponse.FinalStatus.EXCEPTION_WHILE_PROCESSING;
+import static io.harness.ngtriggers.beans.response.TriggerEventResponse.FinalStatus.FAILED_TO_FETCH_PR_DETAILS;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.IssueCommentWebhookEvent;
@@ -26,7 +28,7 @@ import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse.
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.ngtriggers.eventmapper.filters.TriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.dto.FilterRequestData;
-import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
+import io.harness.ngtriggers.helpers.TriggerEventResponseHelper;
 import io.harness.ngtriggers.utils.TaskExecutionUtils;
 import io.harness.ngtriggers.utils.WebhookEventPayloadParser;
 import io.harness.product.ci.scm.proto.ParseWebhookResponse;
@@ -53,6 +55,7 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @Singleton
+@OwnedBy(PIPELINE)
 public class GithubIssueCommentTriggerFilter implements TriggerFilter {
   private TaskExecutionUtils taskExecutionUtils;
   private ConnectorUtils connectorUtils;
@@ -63,11 +66,11 @@ public class GithubIssueCommentTriggerFilter implements TriggerFilter {
 
   @Override
   public WebhookEventMappingResponse applyFilter(FilterRequestData filterRequestData) {
-    WebhookEventMappingResponseBuilder mappingResponseBuilder = WebhookEventMappingResponse.builder();
+    WebhookEventMappingResponseBuilder mappingResponseBuilder = initWebhookEventMappingResponse(filterRequestData);
     String prJson = fetchPrDetailsFromGithub(filterRequestData);
     if (isBlank(prJson)) {
       return mappingResponseBuilder.failedToFindTrigger(true)
-          .webhookEventResponse(WebhookEventResponseHelper.toResponse(FAILED_TO_FETCH_PR_DETAILS,
+          .webhookEventResponse(TriggerEventResponseHelper.toResponse(FAILED_TO_FETCH_PR_DETAILS,
               filterRequestData.getWebhookPayloadData().getOriginalEvent(), null, null, "Failed to fetch PR Details",
               null))
           .build();
@@ -79,14 +82,14 @@ public class GithubIssueCommentTriggerFilter implements TriggerFilter {
     } catch (Exception e) {
       String errorMsg = new StringBuilder(128)
                             .append("Failed  while deserializing PR details for IssueComment event. ")
-                            .append("Project : ")
-                            .append(filterRequestData.getProjectFqn())
+                            .append("Account : ")
+                            .append(filterRequestData.getAccountId())
                             .append(", with Exception")
                             .append(e.getMessage())
                             .toString();
       log.error(errorMsg);
       return mappingResponseBuilder.failedToFindTrigger(true)
-          .webhookEventResponse(WebhookEventResponseHelper.toResponse(EXCEPTION_WHILE_PROCESSING,
+          .webhookEventResponse(TriggerEventResponseHelper.toResponse(EXCEPTION_WHILE_PROCESSING,
               filterRequestData.getWebhookPayloadData().getOriginalEvent(), null, null,
               "Failed to fetch PR Details: " + e, null))
           .build();
@@ -185,8 +188,8 @@ public class GithubIssueCommentTriggerFilter implements TriggerFilter {
       } catch (Exception e) {
         log.error(new StringBuilder(128)
                       .append("Failed  while deserializing PR details for IssueComment event. ")
-                      .append("Project : ")
-                      .append(filterRequestData.getProjectFqn())
+                      .append("Account : ")
+                      .append(filterRequestData.getAccountId())
                       .append(", with Exception")
                       .append(e.getMessage())
                       .toString(),

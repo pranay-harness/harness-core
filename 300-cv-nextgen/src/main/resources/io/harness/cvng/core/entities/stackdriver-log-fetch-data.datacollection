@@ -1,0 +1,35 @@
+Var header = {}
+Var headerVal = concat("Bearer ", Env:accessToken)
+Var:header.put("Authorization", Var:headerVal)
+
+Var myEndTime = time-to-string(Env:endTimeMillis)
+Var myStartTime = time-to-string(Env:startTimeMillis)
+Var queryFilter = concat("timestamp >= \"", Var:myStartTime, "\" AND timestamp <= \"", Var:myEndTime, "\" AND ", Env:query)
+
+Var body = {}
+Var projects = []
+Var:projects.append(Env:project)
+Var:body.put("projectIds", Var:projects)
+Var:body.put("filter", Var:queryFilter)
+Var:body.put("pageSize", "1000")
+Var:body.put("orderBy", "timestamp desc")
+
+Var url = concat(Env:baseUrl, "entries:list")
+
+Var logsResponse = sync-call(url=Var:url, header=Var:header, body=Var:body)
+Var logs = extract(Var:logsResponse, $.entries)
+
+Var responseList = []
+Var nullObject
+if Var:logs != Var:nullObject {
+    foreach log in Var:logs {
+      Var message = extract(Var:log, Env:messageField)
+      Var host = extract(Var:log, Env:hostField)
+      Var timestamp = extract(Var:log, $.timestamp)
+      Var timeStampVal = string-to-time(Var:timestamp)
+
+      Var logToReturn = new LogDataRecord(log=Var:message, timestamp=Var:timeStampVal, host=Var:host)
+      Var:responseList.append(Var:logToReturn)
+    }
+}
+return Var:responseList

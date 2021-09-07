@@ -6,8 +6,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.secretmanagerclient.remote.SecretManagerClient;
 import io.harness.secretmanagerclient.remote.SecretManagerHttpClientFactory;
-import io.harness.secretmanagerclient.services.SecretManagerClientServiceImpl;
-import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
 
@@ -36,7 +34,6 @@ public class SecretManagementClientModule extends AbstractModule {
 
   @Override
   protected void configure() {
-    bind(SecretManagerClientService.class).to(SecretManagerClientServiceImpl.class);
     bind(SecretManagerClient.class).toProvider(SecretManagerHttpClientFactory.class).in(Scopes.SINGLETON);
   }
 }

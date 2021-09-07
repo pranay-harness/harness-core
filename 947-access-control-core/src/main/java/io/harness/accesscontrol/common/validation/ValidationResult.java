@@ -10,6 +10,7 @@ import lombok.Value;
 @Value
 @Builder
 public class ValidationResult {
+  public static final ValidationResult VALID = ValidationResult.builder().valid(true).build();
   boolean valid;
   String errorMessage;
 }

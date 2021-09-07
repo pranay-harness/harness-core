@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.beans.FeatureName.USE_CREDENTIALS_AUTH_NEXUS_2;
 import static io.harness.beans.PageRequest.DEFAULT_UNLIMITED;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
@@ -59,7 +58,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SecretMetadata;
 import io.harness.beans.SecretState;
 import io.harness.ccm.commons.dao.CEMetadataRecordDao;
-import io.harness.ccm.commons.entities.CEMetadataRecord;
+import io.harness.ccm.commons.entities.batch.CEMetadataRecord;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.ccm.config.CloudCostAware;
 import io.harness.ccm.license.CeLicenseInfo;
@@ -658,6 +657,7 @@ public class SettingsServiceImpl implements SettingsService {
         && settingAttribute.getValue().getSettingType() == SettingVariableTypes.APM_VERIFICATION) {
       apmVerificationService.addParents(settingAttribute);
     }
+    settingServiceHelper.resetTransientFields(settingAttribute.getValue());
     return settingAttribute;
   }
 
@@ -901,7 +901,7 @@ public class SettingsServiceImpl implements SettingsService {
         log.info("Did not save Setting Attribute of type {} for account ID {} because usage limit exceeded",
             settingAttribute.getValue().getType(), settingAttribute.getAccountId());
         throw new InvalidRequestException(String.format(
-            "Cannot enable continuous efficiency for more than %d cloud accounts", maxCloudAccountsAllowed));
+            "Cannot enable Cloud Cost Management for more than %d cloud accounts", maxCloudAccountsAllowed));
       }
 
       if (settingAttribute.getValue() instanceof CEAwsConfig) {
@@ -909,7 +909,7 @@ public class SettingsServiceImpl implements SettingsService {
         if (isAwsConnectorPresent && isSave) {
           log.info("Did not save Setting Attribute of type {} for account ID {} because AWS connector exists already",
               settingAttribute.getValue().getType(), settingAttribute.getAccountId());
-          throw new InvalidRequestException("Cannot enable continuous efficiency for more than 1 AWS cloud account");
+          throw new InvalidRequestException("Cannot enable Cloud Cost Management for more than 1 AWS cloud account");
         }
 
         // Extract AWS Master AccountId
@@ -936,7 +936,7 @@ public class SettingsServiceImpl implements SettingsService {
         if (isGCPConnectorPresent && isSave) {
           log.info("Did not save Setting Attribute of type {} for account ID {} because GCP connector exists already",
               settingAttribute.getValue().getType(), settingAttribute.getAccountId());
-          throw new InvalidRequestException("Cannot enable continuous efficiency for more than 1 GCP cloud account");
+          throw new InvalidRequestException("Cannot enable Cloud Cost Management for more than 1 GCP cloud account");
         }
       }
 
@@ -946,7 +946,7 @@ public class SettingsServiceImpl implements SettingsService {
         if (isAzureConnectorPresent && isSave) {
           log.info("Did not save Setting Attribute of type {} for account ID {} because Azure connector exists already",
               settingAttribute.getValue().getType(), settingAttribute.getAccountId());
-          throw new InvalidRequestException("Cannot enable continuous efficiency for more than 1 Azure cloud account");
+          throw new InvalidRequestException("Cannot enable Cloud Cost Management for more than 1 Azure cloud account");
         }
         CEAzureConfig azureConfig = (CEAzureConfig) settingAttribute.getValue();
         azureCEConfigValidationService.verifyCrossAccountAttributes(azureConfig);
@@ -1050,11 +1050,6 @@ public class SettingsServiceImpl implements SettingsService {
     if (settingAttribute != null && settingAttribute.getValue() instanceof GitConfig) {
       GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
       gitConfigHelperService.setSshKeySettingAttributeIfNeeded(gitConfig);
-    }
-    if (settingAttribute != null && settingAttribute.getValue() instanceof NexusConfig) {
-      NexusConfig nexusConfig = (NexusConfig) settingAttribute.getValue();
-      nexusConfig.setUseCredentialsWithAuth(
-          featureFlagService.isEnabled(USE_CREDENTIALS_AUTH_NEXUS_2, nexusConfig.getAccountId()));
     }
   }
 

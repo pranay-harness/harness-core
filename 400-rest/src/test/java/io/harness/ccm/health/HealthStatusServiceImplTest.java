@@ -22,12 +22,13 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.dao.BillingDataPipelineRecordDao;
-import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
-import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
+import io.harness.ccm.commons.entities.batch.LastReceivedPublishedMessage;
+import io.harness.ccm.commons.entities.billing.BillingDataPipelineRecord;
+import io.harness.ccm.commons.entities.events.CeExceptionRecord;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.perpetualtask.PerpetualTaskService;
@@ -163,12 +164,13 @@ public class HealthStatusServiceImplTest extends WingsBaseTest {
   public void shouldParseMetricsServerRelatedCEExceptionRecord() {
     final String nodesForbiddenMesage =
         "code=[403] {\"kind\":\"Status\",\"apiVersion\":\"v1\",\"metadata\":{},\"status\":\"Failure\",\"message\":\"nodes is forbidden: User \\\"system:serviceaccount:default:ce-readonly\\\" cannot list resource \\\"nodes\\\" in API group \\\"\\\" at the cluster scope\",\"reason\":\"Forbidden\",\"details\":{\"kind\":\"nodes\"},\"code\":403}\n";
-    final CeExceptionRecord ceExceptionRecord = CeExceptionRecord.builder()
-                                                    .accountId(accountId)
-                                                    .clusterId(clusterId)
-                                                    .createdAt(Instant.now().toEpochMilli())
-                                                    .message(nodesForbiddenMesage)
-                                                    .build();
+    final io.harness.ccm.commons.entities.events.CeExceptionRecord ceExceptionRecord =
+        CeExceptionRecord.builder()
+            .accountId(accountId)
+            .clusterId(clusterId)
+            .createdAt(Instant.now().toEpochMilli())
+            .message(nodesForbiddenMesage)
+            .build();
 
     when(ceExceptionRecordDao.getRecentException(eq(accountId), eq(clusterRecord.getUuid()), anyInt()))
         .thenReturn(ceExceptionRecord);

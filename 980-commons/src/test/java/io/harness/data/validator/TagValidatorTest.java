@@ -8,6 +8,7 @@ import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -20,7 +21,7 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class TagValidatorTest {
+public class TagValidatorTest extends CategoryTest {
   @Builder
   static class TagValidatorTestStructure {
     @Tag String identifier;

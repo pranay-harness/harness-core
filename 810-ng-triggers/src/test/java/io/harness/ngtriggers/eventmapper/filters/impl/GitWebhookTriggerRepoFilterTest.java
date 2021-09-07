@@ -37,6 +37,7 @@ import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -53,8 +54,8 @@ public class GitWebhookTriggerRepoFilterTest extends CategoryTest {
   private static List<ConnectorResponseDTO> connectors;
   private static Repository repository1 = Repository.builder()
                                               .httpURL("https://github.com/owner1/repo1.git")
-                                              .sshURL("git@github.com:owner1/repo1")
-                                              .link("https://github.com/owner1/repo1")
+                                              .sshURL("git@github.com:owner1/repo1.git")
+                                              .link("https://github.com/owner1/repo1/b")
                                               .build();
 
   private static Repository repository2 = Repository.builder()
@@ -173,7 +174,7 @@ public class GitWebhookTriggerRepoFilterTest extends CategoryTest {
 
     FilterRequestData filterRequestData =
         FilterRequestData.builder()
-            .projectFqn("p")
+            .accountId("p")
             .webhookPayloadData(
                 WebhookPayloadData.builder()
                     .originalEvent(TriggerWebhookEvent.builder().accountId("acc").sourceRepoType("GITHUB").build())
@@ -190,7 +191,7 @@ public class GitWebhookTriggerRepoFilterTest extends CategoryTest {
 
     filterRequestData =
         FilterRequestData.builder()
-            .projectFqn("p")
+            .accountId("p")
             .webhookPayloadData(
                 WebhookPayloadData.builder()
                     .originalEvent(TriggerWebhookEvent.builder().accountId("acc").sourceRepoType("GITHUB").build())
@@ -207,7 +208,7 @@ public class GitWebhookTriggerRepoFilterTest extends CategoryTest {
 
     filterRequestData =
         FilterRequestData.builder()
-            .projectFqn("p")
+            .accountId("p")
             .webhookPayloadData(
                 WebhookPayloadData.builder()
                     .originalEvent(TriggerWebhookEvent.builder().accountId("acc").sourceRepoType("GITHUB").build())
@@ -273,7 +274,7 @@ public class GitWebhookTriggerRepoFilterTest extends CategoryTest {
 
     FilterRequestData filterRequestData =
         FilterRequestData.builder()
-            .projectFqn("acc/org/proj")
+            .accountId("acc")
             .webhookPayloadData(WebhookPayloadData.builder()
                                     .originalEvent(TriggerWebhookEvent.builder()
                                                        .accountId("acc")
@@ -293,5 +294,14 @@ public class GitWebhookTriggerRepoFilterTest extends CategoryTest {
     assertThat(triggerDetails)
         .containsOnly(
             NgTriggersTestHelper.getAwsRepoTriggerDetails(), NgTriggersTestHelper.getAwsRegionTriggerDetails());
+  }
+
+  @Test
+  @Owner(developers = ADWAIT)
+  @Category(UnitTests.class)
+  public void testGetUrls() {
+    HashSet<String> urls = filter.getUrls(repository1, "Github");
+    assertThat(urls).containsExactlyInAnyOrder("https://github.com/owner1/repo1.git", "https://github.com/owner1/repo1",
+        "git@github.com:owner1/repo1.git", "git@github.com:owner1/repo1", "https://github.com/owner1/repo1/b");
   }
 }

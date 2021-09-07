@@ -1,5 +1,7 @@
 package software.wings.resources;
 
+import static io.harness.annotations.dev.HarnessModule._955_ACCOUNT_MGMT;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.FeatureName.SEND_SLACK_NOTIFICATION_FROM_DELEGATE;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.UTKARSH;
@@ -12,6 +14,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureFlag;
 import io.harness.beans.FeatureFlag.FeatureFlagKeys;
 import io.harness.beans.FeatureName;
@@ -23,6 +27,7 @@ import io.harness.rule.Owner;
 import io.harness.scheduler.PersistentScheduler;
 
 import software.wings.WingsBaseTest;
+import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.dl.WingsMongoPersistence;
@@ -57,6 +62,9 @@ import org.mongodb.morphia.mapping.MapperOptions;
 /**
  * @author marklu on 2019-03-01
  */
+
+@OwnedBy(PL)
+@TargetModule(_955_ACCOUNT_MGMT)
 @Slf4j
 public class AccountExportImportResourceTest extends WingsBaseTest {
   @Mock private WingsMongoPersistence wingsMongoPersistence;
@@ -69,6 +77,7 @@ public class AccountExportImportResourceTest extends WingsBaseTest {
   @Mock private UserService userService;
   @Mock private AuthService authService;
   @Mock private AccountPermissionUtils accountPermissionUtils;
+  @Mock private MainConfiguration mainConfiguration;
   @Mock private PersistentScheduler persistentScheduler;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private HPersistence persistence;
@@ -92,13 +101,14 @@ public class AccountExportImportResourceTest extends WingsBaseTest {
 
     accountExportImportResource = new AccountExportImportResource(wingsMongoPersistence, morphia,
         wingsMongoExportImport, accountService, licenseService, appService, authService, userService,
-        accountPermissionUtils, persistentScheduler, featureFlagService);
+        accountPermissionUtils, persistentScheduler, featureFlagService, mainConfiguration);
 
     accountId = UUIDGenerator.generateUuid();
     userId = UUIDGenerator.generateUuid();
 
     String email = "user@harness.io";
 
+    when(mainConfiguration.getExportAccountDataBatchSize()).thenReturn(1000);
     JsonObject userObject = new JsonObject();
     userObject.add("_id", new JsonPrimitive(userId));
     userObject.add("name", new JsonPrimitive("Harness User"));

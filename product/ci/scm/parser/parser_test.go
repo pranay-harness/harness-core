@@ -5,8 +5,8 @@ import (
 	"io/ioutil"
 	"testing"
 
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/proto"
+	"github.com/golang/protobuf/jsonpb" //nolint:staticcheck //only used in test
+	"github.com/golang/protobuf/proto"  //nolint:staticcheck //only used in test
 	"github.com/stretchr/testify/assert"
 	"github.com/wings-software/portal/commons/go/lib/logs"
 	pb "github.com/wings-software/portal/product/ci/scm/proto"
@@ -145,6 +145,38 @@ func TestParseCommentWebhookSuccess(t *testing.T) {
 
 	if !proto.Equal(got, want) {
 		t.Errorf("Unexpected Results")
+		t.Log(got)
+		t.Log(want)
+	}
+}
+
+func TestParseCreateBranch(t *testing.T) {
+	data, _ := ioutil.ReadFile("testdata/branch_create.json")
+	in := &pb.ParseWebhookRequest{
+		Body: string(data),
+		Header: &pb.Header{
+			Fields: []*pb.Header_Pair{
+				{
+					Key:    "X-Github-Event",
+					Values: []string{"create"},
+				},
+			},
+		},
+		Secret:   "",
+		Provider: pb.GitProvider_GITHUB,
+	}
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	got, err := ParseWebhook(context.Background(), in, log.Sugar())
+	assert.Nil(t, err)
+	assert.NotNil(t, got.GetBranch())
+
+	want := &pb.ParseWebhookResponse{}
+	raw, _ := ioutil.ReadFile("testdata/branch_create.json.golden")
+	err = jsonpb.UnmarshalString(string(raw), want)
+
+	if !proto.Equal(got, want) {
+		t.Errorf("Unexpected Results error: %s", err)
 		t.Log(got)
 		t.Log(want)
 	}

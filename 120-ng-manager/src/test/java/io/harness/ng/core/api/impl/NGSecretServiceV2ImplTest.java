@@ -17,6 +17,7 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.secrets.SSHConfigValidationTaskResponse;
+import io.harness.delegate.utils.TaskSetupAbstractionHelper;
 import io.harness.encryption.SecretRefData;
 import io.harness.ng.core.api.NGSecretActivityService;
 import io.harness.ng.core.dto.secrets.SSHCredentialType;
@@ -39,12 +40,10 @@ import io.harness.rule.Owner;
 import io.harness.secretmanagerclient.SSHAuthScheme;
 import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.services.SshKeySpecDTOHelper;
-import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.service.DelegateGrpcClientWrapper;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import java.util.ArrayList;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
@@ -56,26 +55,26 @@ import org.springframework.transaction.support.TransactionTemplate;
 @OwnedBy(PL)
 public class NGSecretServiceV2ImplTest extends CategoryTest {
   private SecretRepository secretRepository;
-  private SecretManagerClientService secretManagerClientService;
   private SshKeySpecDTOHelper sshKeySpecDTOHelper;
   private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
   private NGSecretServiceV2Impl secretServiceV2;
   private NGSecretServiceV2Impl secretServiceV2Spy;
   private NGSecretActivityService ngSecretActivityService;
   private OutboxService outboxService;
+  private TaskSetupAbstractionHelper taskSetupAbstractionHelper;
   private TransactionTemplate transactionTemplate;
 
   @Before
   public void setup() {
     secretRepository = mock(SecretRepository.class);
-    secretManagerClientService = mock(SecretManagerClientService.class);
     delegateGrpcClientWrapper = mock(DelegateGrpcClientWrapper.class);
     sshKeySpecDTOHelper = mock(SshKeySpecDTOHelper.class);
     ngSecretActivityService = mock(NGSecretActivityService.class);
     outboxService = mock(OutboxService.class);
     transactionTemplate = mock(TransactionTemplate.class);
-    secretServiceV2 = new NGSecretServiceV2Impl(secretRepository, secretManagerClientService, delegateGrpcClientWrapper,
-        sshKeySpecDTOHelper, ngSecretActivityService, outboxService, transactionTemplate);
+    taskSetupAbstractionHelper = new TaskSetupAbstractionHelper();
+    secretServiceV2 = new NGSecretServiceV2Impl(secretRepository, delegateGrpcClientWrapper, sshKeySpecDTOHelper,
+        ngSecretActivityService, outboxService, transactionTemplate, taskSetupAbstractionHelper);
     secretServiceV2Spy = spy(secretServiceV2);
   }
 
@@ -195,7 +194,6 @@ public class NGSecretServiceV2ImplTest extends CategoryTest {
                                        .build())
                              .build());
     doReturn(Optional.of(secret)).when(secretServiceV2Spy).get(any(), any(), any(), any());
-    when(secretManagerClientService.getEncryptionDetails(any(), any())).thenReturn(new ArrayList<>());
     when(delegateGrpcClientWrapper.executeSyncTask(any()))
         .thenReturn(SSHConfigValidationTaskResponse.builder().connectionSuccessful(true).build());
     SecretValidationResultDTO resultDTO =
@@ -222,7 +220,6 @@ public class NGSecretServiceV2ImplTest extends CategoryTest {
                                        .build())
                              .build());
     doReturn(Optional.of(secret)).when(secretServiceV2Spy).get(any(), any(), any(), any());
-    when(secretManagerClientService.getEncryptionDetails(any(), any())).thenReturn(new ArrayList<>());
     when(delegateGrpcClientWrapper.executeSyncTask(any()))
         .thenReturn(SSHConfigValidationTaskResponse.builder().connectionSuccessful(true).build());
     SecretValidationResultDTO resultDTO =
@@ -247,7 +244,6 @@ public class NGSecretServiceV2ImplTest extends CategoryTest {
                       .build())
             .build());
     doReturn(Optional.of(secret)).when(secretServiceV2Spy).get(any(), any(), any(), any());
-    when(secretManagerClientService.getEncryptionDetails(any(), any())).thenReturn(new ArrayList<>());
     when(delegateGrpcClientWrapper.executeSyncTask(any()))
         .thenReturn(SSHConfigValidationTaskResponse.builder().connectionSuccessful(true).build());
     SecretValidationResultDTO resultDTO =
@@ -273,7 +269,6 @@ public class NGSecretServiceV2ImplTest extends CategoryTest {
                                        .build())
                              .build());
     doReturn(Optional.of(secret)).when(secretServiceV2Spy).get(any(), any(), any(), any());
-    when(secretManagerClientService.getEncryptionDetails(any(), any())).thenReturn(new ArrayList<>());
     when(delegateGrpcClientWrapper.executeSyncTask(any()))
         .thenReturn(SSHConfigValidationTaskResponse.builder().connectionSuccessful(true).build());
     SecretValidationResultDTO resultDTO =

@@ -18,9 +18,14 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static org.mongodb.morphia.query.Sort.descending;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.context.GlobalContextData;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.exception.WingsException;
@@ -80,6 +85,7 @@ import com.mongodb.BasicDBObject;
 import io.fabric8.utils.Lists;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -106,6 +112,8 @@ import org.mongodb.morphia.query.UpdateOperations;
  */
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._360_CG_MANAGER)
+@OwnedBy(HarnessTeam.PL)
 public class AuditServiceImpl implements AuditService {
   @Inject private FileService fileService;
   @Inject private TimeLimiter timeLimiter;
@@ -366,7 +374,7 @@ public class AuditServiceImpl implements AuditService {
     log.info("Start: Deleting audit records older than {} time", currentTimeMillis() - retentionMillis);
     try {
       log.info("Start: Deleting audit records older than {} days", days);
-      timeLimiter.callWithTimeout(() -> {
+      HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(10), () -> {
         while (true) {
           List<AuditHeader> auditHeaders = wingsPersistence.createQuery(AuditHeader.class, excludeAuthority)
                                                .field(AuditHeaderKeys.createdAt)
@@ -415,7 +423,7 @@ public class AuditServiceImpl implements AuditService {
           }
           sleep(ofSeconds(2L));
         }
-      }, 10L, TimeUnit.MINUTES, true);
+      });
     } catch (Exception ex) {
       log.warn("Failed to delete audit records older than last {} days within 10 minutes.", days, ex);
     }
@@ -497,9 +505,12 @@ public class AuditServiceImpl implements AuditService {
         case UNSUCCESSFUL_LOGIN:
         case LOGIN_2FA:
         case DELEGATE_APPROVAL:
+        case DELEGATE_REJECTION:
+        case DELEGATE_REGISTRATION:
         case NON_WHITELISTED:
         case INVOKED:
         case REMOVE:
+        case APPLY:
           entityToQuery = (UuidAccess) newEntity;
           break;
         case DELETE:
@@ -532,12 +543,15 @@ public class AuditServiceImpl implements AuditService {
         case ADD:
         case REMOVE:
         case DELEGATE_APPROVAL:
+        case DELEGATE_REJECTION:
+        case DELEGATE_REGISTRATION:
         case LOGIN:
         case UNSUCCESSFUL_LOGIN:
         case LOGIN_2FA:
         case NON_WHITELISTED:
         case INVOKED:
-        case CREATE: {
+        case CREATE:
+        case APPLY: {
           if (!(newEntity instanceof ServiceVariable) || !((ServiceVariable) newEntity).isSyncFromGit()) {
             saveEntityYamlForAudit(newEntity, record, accountId);
           }

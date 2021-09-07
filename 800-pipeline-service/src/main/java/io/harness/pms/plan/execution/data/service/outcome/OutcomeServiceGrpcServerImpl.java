@@ -39,8 +39,8 @@ public class OutcomeServiceGrpcServerImpl extends OutcomeProtoServiceImplBase {
 
   @Override
   public void consume(OutcomeConsumeBlobRequest request, StreamObserver<OutcomeConsumeBlobResponse> responseObserver) {
-    String consume = pmsOutcomeService.consume(
-        request.getAmbiance(), request.getName(), request.getValue(), request.getGroupName(), false);
+    String consume =
+        pmsOutcomeService.consume(request.getAmbiance(), request.getName(), request.getValue(), request.getGroupName());
     responseObserver.onNext(OutcomeConsumeBlobResponse.newBuilder().setResponse(consume).build());
     responseObserver.onCompleted();
   }

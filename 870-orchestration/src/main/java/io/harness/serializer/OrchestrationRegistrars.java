@@ -7,7 +7,7 @@ import io.harness.delegate.serializer.DelegateTasksRegistrars;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.CommonEntitiesKryoRegistrar;
 import io.harness.serializer.kryo.DelegateServiceBeansKryoRegistrar;
-import io.harness.serializer.kryo.OrchestrationKryoRegister;
+import io.harness.serializer.kryo.OrchestrationKryoRegistrar;
 import io.harness.serializer.morphia.OrchestrationMorphiaRegistrar;
 import io.harness.serializer.morphia.converters.AdviserObtainmentMorphiaConverter;
 import io.harness.serializer.morphia.converters.AdviserTypeMorphiaConverter;
@@ -20,10 +20,11 @@ import io.harness.serializer.morphia.converters.FacilitatorObtainmentMorphiaConv
 import io.harness.serializer.morphia.converters.FacilitatorTypeMorphiaConverter;
 import io.harness.serializer.morphia.converters.FailureInfoMorphiaConverter;
 import io.harness.serializer.morphia.converters.InterruptConfigMorphiaConverter;
+import io.harness.serializer.morphia.converters.InterruptEffectMorphiaConverter;
 import io.harness.serializer.morphia.converters.LevelMorphiaConverter;
 import io.harness.serializer.morphia.converters.RefObjectMorphiaConverter;
 import io.harness.serializer.morphia.converters.RefTypeMorphiaConverter;
-import io.harness.serializer.morphia.converters.SdkResponseEventRequestMorphiaConverter;
+import io.harness.serializer.morphia.converters.SdkModuleInfoMorphiaConverter;
 import io.harness.serializer.morphia.converters.StepTypeMorphiaConverter;
 import io.harness.serializer.morphia.converters.TriggerPayloadMorphiaConverter;
 import io.harness.serializer.morphia.converters.TriggeredByMorphiaConverter;
@@ -35,6 +36,8 @@ import io.harness.serializer.spring.converters.advisers.type.AdviserTypeReadConv
 import io.harness.serializer.spring.converters.advisers.type.AdviserTypeWriteConverter;
 import io.harness.serializer.spring.converters.ambiance.AmbianceReadConverter;
 import io.harness.serializer.spring.converters.ambiance.AmbianceWriteConverter;
+import io.harness.serializer.spring.converters.consumerconfig.ConsumerConfigReadConverter;
+import io.harness.serializer.spring.converters.consumerconfig.ConsumerConfigWriteConverter;
 import io.harness.serializer.spring.converters.errorInfo.ExecutionErrorInfoReadConverter;
 import io.harness.serializer.spring.converters.errorInfo.ExecutionErrorInfoWriteConverter;
 import io.harness.serializer.spring.converters.executableresponse.ExecutableResponseReadConverter;
@@ -57,12 +60,20 @@ import io.harness.serializer.spring.converters.graphlayout.LayoutNodeInfoReadCon
 import io.harness.serializer.spring.converters.graphlayout.LayoutNodeInfoWriteConverter;
 import io.harness.serializer.spring.converters.interrupt.InterruptConfigReadConverter;
 import io.harness.serializer.spring.converters.interrupt.InterruptConfigWriteConverter;
+import io.harness.serializer.spring.converters.interrupt.InterruptEffectReadConverter;
+import io.harness.serializer.spring.converters.interrupt.InterruptEffectWriteConverter;
 import io.harness.serializer.spring.converters.level.LevelReadConverter;
 import io.harness.serializer.spring.converters.level.LevelWriteConverter;
 import io.harness.serializer.spring.converters.logging.UnitProgressReadConverter;
 import io.harness.serializer.spring.converters.logging.UnitProgressWriteConverter;
 import io.harness.serializer.spring.converters.nodeexecution.NodeExecutionReadConverter;
 import io.harness.serializer.spring.converters.nodeexecution.NodeExecutionWriteConverter;
+import io.harness.serializer.spring.converters.orchestrationMap.OrchestrationMapReadConverter;
+import io.harness.serializer.spring.converters.orchestrationMap.OrchestrationMapWriteConverter;
+import io.harness.serializer.spring.converters.outcomes.PmsOutcomeReadConverter;
+import io.harness.serializer.spring.converters.outcomes.PmsOutcomeWriteConverter;
+import io.harness.serializer.spring.converters.outputs.PmsSweepingOutputReadConverter;
+import io.harness.serializer.spring.converters.outputs.PmsSweepingOutputWriteConverter;
 import io.harness.serializer.spring.converters.plannode.PlanNodeProtoReadConverter;
 import io.harness.serializer.spring.converters.plannode.PlanNodeProtoWriteConverter;
 import io.harness.serializer.spring.converters.principal.ExecutionPrincipalInfoReadConverter;
@@ -73,12 +84,18 @@ import io.harness.serializer.spring.converters.reftype.RefTypeReadConverter;
 import io.harness.serializer.spring.converters.reftype.RefTypeWriteConverter;
 import io.harness.serializer.spring.converters.run.NodeRunInfoReadConverter;
 import io.harness.serializer.spring.converters.run.NodeRunInfoWriteConverter;
+import io.harness.serializer.spring.converters.sdk.SdkModuleInfoReadConverter;
+import io.harness.serializer.spring.converters.sdk.SdkModuleInfoWriteConverter;
 import io.harness.serializer.spring.converters.skip.SkipInfoReadConverter;
 import io.harness.serializer.spring.converters.skip.SkipInfoWriteConverter;
+import io.harness.serializer.spring.converters.stepdetails.PmsStepDetailsReadConverter;
+import io.harness.serializer.spring.converters.stepdetails.PmsStepDetailsWriteConverter;
 import io.harness.serializer.spring.converters.stepoutcomeref.StepOutcomeRefReadConverter;
 import io.harness.serializer.spring.converters.stepoutcomeref.StepOutcomeRefWriteConverter;
-import io.harness.serializer.spring.converters.steps.SdkResponseEventRequestReadConverter;
-import io.harness.serializer.spring.converters.steps.SdkResponseEventRequestWriteConverter;
+import io.harness.serializer.spring.converters.stepparameters.PmsStepParametersReadConverter;
+import io.harness.serializer.spring.converters.stepparameters.PmsStepParametersWriteConverter;
+import io.harness.serializer.spring.converters.steps.SdkStepReadConverter;
+import io.harness.serializer.spring.converters.steps.SdkStepWriteConverter;
 import io.harness.serializer.spring.converters.steps.StepInfoReadConverter;
 import io.harness.serializer.spring.converters.steps.StepInfoWriteConverter;
 import io.harness.serializer.spring.converters.steptype.StepTypeReadConverter;
@@ -108,7 +125,7 @@ public class OrchestrationRegistrars {
           .addAll(WaitEngineRegistrars.kryoRegistrars)
           .addAll(OrchestrationBeansRegistrars.kryoRegistrars)
           .addAll(OrchestrationDelayRegistrars.kryoRegistrars)
-          .add(OrchestrationKryoRegister.class)
+          .add(OrchestrationKryoRegistrar.class)
           .add(DelegateServiceBeansKryoRegistrar.class)
           .add(CommonEntitiesKryoRegistrar.class)
           .build();
@@ -127,6 +144,7 @@ public class OrchestrationRegistrars {
       ImmutableSet.<Class<? extends TypeConverter>>builder()
           .addAll(OrchestrationBeansRegistrars.morphiaConverters)
           .add(AmbianceMorphiaConverter.class)
+          .add(SdkModuleInfoMorphiaConverter.class)
           .add(LevelMorphiaConverter.class)
           .add(StepTypeMorphiaConverter.class)
           .add(RefObjectMorphiaConverter.class)
@@ -139,15 +157,14 @@ public class OrchestrationRegistrars {
           .add(ExecutableResponseMorphiaConverter.class)
           .add(ExecutionTriggerInfoMorphiaConverter.class)
           .add(ExecutionPrincipalInfoMorphiaConverter.class)
-
+          .add(InterruptEffectMorphiaConverter.class)
           .add(TriggeredByMorphiaConverter.class)
           .add(ExecutionMetadataMorphiaConverter.class)
           .add(TriggerPayloadMorphiaConverter.class)
-          .add(SdkResponseEventRequestMorphiaConverter.class)
           .add(InterruptConfigMorphiaConverter.class)
           .build();
 
-  public static final List<Class<? extends Converter<?, ?>>> springConverters = ImmutableList.of(
+  public static final List<Class<? extends Converter<?, ?>>> orchestrationConverters = ImmutableList.of(
       SweepingOutputReadMongoConverter.class, SweepingOutputWriteMongoConverter.class, AmbianceReadConverter.class,
       AmbianceWriteConverter.class, LevelReadConverter.class, LevelWriteConverter.class, AdviserTypeReadConverter.class,
       AdviserTypeWriteConverter.class, AdviserObtainmentReadConverter.class, AdviserObtainmentWriteConverter.class,
@@ -167,8 +184,19 @@ public class OrchestrationRegistrars {
       TriggerPayloadWriteConverter.class, SkipInfoReadConverter.class, SkipInfoWriteConverter.class,
       TimeoutObtainmentReadConverter.class, TimeoutObtainmentWriteConverter.class, AdviserResponseReadConverter.class,
       AdviserResponseWriteConverter.class, UnitProgressReadConverter.class, UnitProgressWriteConverter.class,
-      InterruptConfigReadConverter.class, InterruptConfigWriteConverter.class,
-      SdkResponseEventRequestReadConverter.class, SdkResponseEventRequestWriteConverter.class,
-      NodeRunInfoReadConverter.class, NodeRunInfoWriteConverter.class, ExecutionPrincipalInfoReadConverter.class,
-      ExecutionPrincipalInfoWriteConverter.class);
+      InterruptConfigReadConverter.class, InterruptConfigWriteConverter.class, NodeRunInfoReadConverter.class,
+      NodeRunInfoWriteConverter.class, ExecutionPrincipalInfoReadConverter.class,
+      ExecutionPrincipalInfoWriteConverter.class, InterruptEffectReadConverter.class,
+      InterruptEffectWriteConverter.class, SdkModuleInfoReadConverter.class, SdkModuleInfoWriteConverter.class,
+      ConsumerConfigReadConverter.class, ConsumerConfigWriteConverter.class, OrchestrationMapReadConverter.class,
+      OrchestrationMapWriteConverter.class, SdkStepWriteConverter.class, SdkStepReadConverter.class,
+      PmsOutcomeReadConverter.class, PmsOutcomeWriteConverter.class, PmsSweepingOutputReadConverter.class,
+      PmsSweepingOutputWriteConverter.class, PmsStepParametersReadConverter.class,
+      PmsStepParametersWriteConverter.class, PmsStepDetailsReadConverter.class, PmsStepDetailsWriteConverter.class);
+
+  public static final List<Class<? extends Converter<?, ?>>> springConverters =
+      ImmutableList.<Class<? extends Converter<?, ?>>>builder()
+          .addAll(orchestrationConverters)
+          .addAll(WaitEngineRegistrars.springConverters)
+          .build();
 }

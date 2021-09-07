@@ -1,103 +1,38 @@
 package io.harness.ci.serializer;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
+import static io.harness.beans.serializer.RunTimeInputHandler.resolveBooleanParameter;
+import static io.harness.beans.serializer.RunTimeInputHandler.resolveMapParameter;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.serializer.RunTimeInputHandler;
-import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.RunTestsStepInfo;
 import io.harness.beans.yaml.extended.reports.JUnitTestReport;
 import io.harness.beans.yaml.extended.reports.UnitTestReport;
 import io.harness.beans.yaml.extended.reports.UnitTestReportType;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.exception.ngexception.CIStageExecutionException;
-import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.product.ci.engine.proto.Report;
 import io.harness.product.ci.engine.proto.RunTestsStep;
 import io.harness.product.ci.engine.proto.StepContext;
 import io.harness.product.ci.engine.proto.UnitStep;
+import io.harness.utils.TimeoutUtils;
 import io.harness.yaml.core.timeout.Timeout;
-import io.harness.yaml.core.timeout.TimeoutUtils;
+import io.harness.yaml.core.variables.OutputNGVariable;
 
 import com.google.inject.Inject;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 
 @OwnedBy(CI)
 public class RunTestsStepProtobufSerializer implements ProtobufStepSerializer<RunTestsStepInfo> {
   @Inject private Supplier<DelegateCallbackToken> delegateCallbackTokenSupplier;
-
-  public UnitStep serializeStep(StepElementConfig step, Integer port, String callbackId, String logKey) {
-    CIStepInfo ciStepInfo = (CIStepInfo) step.getStepSpecType();
-    RunTestsStepInfo runTestsStepInfo = (RunTestsStepInfo) ciStepInfo;
-
-    long timeout = TimeoutUtils.getTimeoutInSeconds(step.getTimeout(), ciStepInfo.getDefaultTimeout());
-
-    if (callbackId == null) {
-      throw new CIStageExecutionException("CallbackId can not be null");
-    }
-
-    if (port == null) {
-      throw new CIStageExecutionException("Port can not be null");
-    }
-
-    RunTestsStep.Builder runTestsStepBuilder = RunTestsStep.newBuilder();
-
-    String preTestCommand = RunTimeInputHandler.resolveStringParameter(
-        "Command", "RunTests", step.getIdentifier(), runTestsStepInfo.getPreCommand(), false);
-    if (StringUtils.isNotEmpty(preTestCommand)) {
-      runTestsStepBuilder.setPreTestCommand(preTestCommand);
-    }
-    String postTestCommand = RunTimeInputHandler.resolveStringParameter(
-        "Command", "RunTests", step.getIdentifier(), runTestsStepInfo.getPostCommand(), false);
-    if (StringUtils.isNotEmpty(postTestCommand)) {
-      runTestsStepBuilder.setPostTestCommand(postTestCommand);
-    }
-    runTestsStepBuilder.setArgs(runTestsStepInfo.getArgs());
-    runTestsStepBuilder.setContainerPort(port);
-    runTestsStepBuilder.setLanguage(runTestsStepInfo.getLanguage());
-    runTestsStepBuilder.setBuildTool(runTestsStepInfo.getBuildTool());
-    runTestsStepBuilder.setRunOnlySelectedTests(runTestsStepInfo.isRunOnlySelectedTests());
-    runTestsStepBuilder.setPackages(runTestsStepInfo.getPackages());
-
-    List<String> output = RunTimeInputHandler.resolveListParameter(
-        "OutputVariables", "RunTests", step.getIdentifier(), runTestsStepInfo.getOutputVariables(), false);
-    if (isNotEmpty(output)) {
-      runTestsStepBuilder.addAllEnvVarOutputs(output);
-    }
-
-    if (runTestsStepInfo.getTestAnnotations() != null) {
-      runTestsStepBuilder.setTestAnnotations(runTestsStepInfo.getTestAnnotations());
-    }
-
-    UnitTestReport reports = runTestsStepInfo.getReports();
-    if (reports != null) {
-      if (reports.getType() == UnitTestReportType.JUNIT) {
-        JUnitTestReport junitTestReport = (JUnitTestReport) reports.getSpec();
-        List<String> resolvedReport = junitTestReport.resolve(step.getIdentifier(), "runtests");
-        Report report = Report.newBuilder().setType(Report.Type.JUNIT).addAllPaths(resolvedReport).build();
-        runTestsStepBuilder.addReports(report);
-      }
-    }
-
-    runTestsStepBuilder.setContext(
-        StepContext.newBuilder().setNumRetries(runTestsStepInfo.getRetry()).setExecutionTimeoutSecs(timeout).build());
-
-    String skipCondition = SkipConditionUtils.getSkipCondition(step);
-    return UnitStep.newBuilder()
-        .setId(step.getIdentifier())
-        .setTaskId(callbackId)
-        .setCallbackToken(delegateCallbackTokenSupplier.get().getToken())
-        .setDisplayName(Optional.ofNullable(step.getName()).orElse(""))
-        .setRunTests(runTestsStepBuilder.build())
-        .setSkipCondition(Optional.ofNullable(skipCondition).orElse(""))
-        .setLogKey(logKey)
-        .build();
-  }
 
   public UnitStep serializeStepWithStepParameters(RunTestsStepInfo runTestsStepInfo, Integer port, String callbackId,
       String logKey, String identifier, ParameterField<Timeout> parameterFieldTimeout, String accountId,
@@ -122,21 +57,42 @@ public class RunTestsStepProtobufSerializer implements ProtobufStepSerializer<Ru
     if (StringUtils.isNotEmpty(postTestCommand)) {
       runTestsStepBuilder.setPostTestCommand(postTestCommand);
     }
-    runTestsStepBuilder.setArgs(runTestsStepInfo.getArgs());
+    runTestsStepBuilder.setArgs(
+        RunTimeInputHandler.resolveStringParameter("Args", "RunTests", identifier, runTestsStepInfo.getArgs(), true));
     runTestsStepBuilder.setContainerPort(port);
-    runTestsStepBuilder.setLanguage(runTestsStepInfo.getLanguage());
-    runTestsStepBuilder.setBuildTool(runTestsStepInfo.getBuildTool());
-    runTestsStepBuilder.setRunOnlySelectedTests(runTestsStepInfo.isRunOnlySelectedTests());
-    runTestsStepBuilder.setPackages(runTestsStepInfo.getPackages());
 
-    List<String> output = RunTimeInputHandler.resolveListParameter(
-        "OutputVariables", "RunTests", identifier, runTestsStepInfo.getOutputVariables(), false);
-    if (isNotEmpty(output)) {
-      runTestsStepBuilder.addAllEnvVarOutputs(output);
+    String buildTool = RunTimeInputHandler.resolveBuildTool(runTestsStepInfo.getBuildTool());
+    if (buildTool == null) {
+      throw new CIStageExecutionException("Build tool cannot be null");
+    }
+    String language = RunTimeInputHandler.resolveLanguage(runTestsStepInfo.getLanguage());
+    if (language == null) {
+      throw new CIStageExecutionException("language cannot be null");
+    }
+    runTestsStepBuilder.setLanguage(language.toLowerCase());
+    runTestsStepBuilder.setBuildTool(buildTool.toLowerCase());
+
+    runTestsStepBuilder.setRunOnlySelectedTests(
+        resolveBooleanParameter(runTestsStepInfo.getRunOnlySelectedTests(), true));
+    runTestsStepBuilder.setPackages(RunTimeInputHandler.resolveStringParameter(
+        "Packages", "RunTests", identifier, runTestsStepInfo.getPackages(), true));
+
+    if (isNotEmpty(runTestsStepInfo.getOutputVariables())) {
+      List<String> outputVarNames =
+          runTestsStepInfo.getOutputVariables().stream().map(OutputNGVariable::getName).collect(Collectors.toList());
+      runTestsStepBuilder.addAllEnvVarOutputs(outputVarNames);
     }
 
-    if (runTestsStepInfo.getTestAnnotations() != null) {
-      runTestsStepBuilder.setTestAnnotations(runTestsStepInfo.getTestAnnotations());
+    Map<String, String> envvars =
+        resolveMapParameter("envVariables", "RunTests", identifier, runTestsStepInfo.getEnvVariables(), false);
+    if (!isEmpty(envvars)) {
+      runTestsStepBuilder.putAllEnvironment(envvars);
+    }
+
+    String testAnnotations = RunTimeInputHandler.resolveStringParameter(
+        "TestAnnotations", "RunTests", identifier, runTestsStepInfo.getTestAnnotations(), false);
+    if (StringUtils.isNotEmpty(testAnnotations)) {
+      runTestsStepBuilder.setTestAnnotations(testAnnotations);
     }
 
     UnitTestReport reports = runTestsStepInfo.getReports();

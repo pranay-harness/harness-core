@@ -5,15 +5,17 @@ import static io.harness.rule.OwnerRule.ALEXEI;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
-import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.failure.FailureType;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.AmbianceTestUtils;
 import io.harness.pms.sdk.core.PmsSdkCoreTestBase;
@@ -27,11 +29,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class OnAbortAdviserTest extends PmsSdkCoreTestBase {
   public static final String NODE_EXECUTION_ID = generateUuid();
   public static final String NODE_SETUP_ID = generateUuid();
   public static final String NODE_IDENTIFIER = "DUMMY";
-  public static final StepType DUMMY_STEP_TYPE = StepType.newBuilder().setType(NODE_IDENTIFIER).build();
+  public static final StepType DUMMY_STEP_TYPE =
+      StepType.newBuilder().setStepCategory(StepCategory.STEP).setType(NODE_IDENTIFIER).build();
 
   @Inject OnAbortAdviser onAbortAdviser;
   @Inject KryoSerializer kryoSerializer;
@@ -55,9 +59,7 @@ public class OnAbortAdviserTest extends PmsSdkCoreTestBase {
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldTestOnAdviseEvent() {
-    NodeExecutionProto nodeExecutionProto = NodeExecutionProto.newBuilder().setAmbiance(ambiance).build();
-    AdvisingEvent advisingEvent =
-        AdvisingEvent.builder().nodeExecution(nodeExecutionProto).toStatus(Status.FAILED).build();
+    AdvisingEvent advisingEvent = AdvisingEvent.builder().ambiance(ambiance).toStatus(Status.FAILED).build();
     AdviserResponse adviserResponse = onAbortAdviser.onAdviseEvent(advisingEvent);
     assertThat(adviserResponse.getType()).isEqualTo(AdviseType.END_PLAN);
   }
@@ -67,12 +69,8 @@ public class OnAbortAdviserTest extends PmsSdkCoreTestBase {
   @Category(UnitTests.class)
   public void shouldTestCanAdvise() {
     byte[] paramBytes = kryoSerializer.asBytes(OnAbortAdviserParameters.builder().build());
-    NodeExecutionProto nodeExecutionProto = NodeExecutionProto.newBuilder().setAmbiance(ambiance).build();
-    AdvisingEvent advisingEvent = AdvisingEvent.builder()
-                                      .nodeExecution(nodeExecutionProto)
-                                      .toStatus(Status.ABORTED)
-                                      .adviserParameters(paramBytes)
-                                      .build();
+    AdvisingEvent advisingEvent =
+        AdvisingEvent.builder().ambiance(ambiance).toStatus(Status.ABORTED).adviserParameters(paramBytes).build();
     boolean canAdvise = onAbortAdviser.canAdvise(advisingEvent);
     assertThat(canAdvise).isTrue();
   }
@@ -81,20 +79,17 @@ public class OnAbortAdviserTest extends PmsSdkCoreTestBase {
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldTestCanAdviseWithFailureTypes() {
-    NodeExecutionProto nodeExecutionProto =
-        NodeExecutionProto.newBuilder()
-            .setAmbiance(ambiance)
-            .setFailureInfo(FailureInfo.newBuilder().addFailureTypes(FailureType.TIMEOUT_FAILURE).build())
-            .build();
     byte[] paramBytes = kryoSerializer.asBytes(
         OnAbortAdviserParameters.builder()
             .applicableFailureTypes(EnumSet.of(FailureType.CONNECTIVITY_FAILURE, FailureType.AUTHENTICATION_FAILURE))
             .build());
-    AdvisingEvent advisingEvent = AdvisingEvent.builder()
-                                      .nodeExecution(nodeExecutionProto)
-                                      .toStatus(Status.ABORTED)
-                                      .adviserParameters(paramBytes)
-                                      .build();
+    AdvisingEvent advisingEvent =
+        AdvisingEvent.builder()
+            .ambiance(ambiance)
+            .failureInfo(FailureInfo.newBuilder().addFailureTypes(FailureType.TIMEOUT_FAILURE).build())
+            .toStatus(Status.ABORTED)
+            .adviserParameters(paramBytes)
+            .build();
     boolean canAdvise = onAbortAdviser.canAdvise(advisingEvent);
     assertThat(canAdvise).isFalse();
   }

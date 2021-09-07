@@ -29,14 +29,14 @@ public class CeAccountExpirationCheckerImpl implements CeAccountExpirationChecke
   private static final long CACHE_SIZE = 1000;
 
   private final LoadingCache<String, Boolean> accountIdToIsCeEnabled = Caffeine.newBuilder()
-                                                                           .expireAfterWrite(1, TimeUnit.DAYS)
+                                                                           .expireAfterWrite(1, TimeUnit.HOURS)
                                                                            .maximumSize(CACHE_SIZE)
                                                                            .build(this::isCeEnabledForAccount);
 
   @Override
   public void checkIsCeEnabled(String accountId) {
     if (!accountIdToIsCeEnabled.get(accountId)) {
-      throw new InvalidRequestException("Continuous Efficiency is not enabled on account: " + accountId);
+      throw new InvalidRequestException("Cloud Cost Management is not enabled on account: " + accountId);
     }
   }
 

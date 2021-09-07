@@ -19,7 +19,7 @@ import io.harness.serializer.KryoSerializer;
 
 import com.google.inject.Inject;
 
-@OwnedBy(HarnessTeam.CDC)
+@OwnedBy(HarnessTeam.PIPELINE)
 public class RollbackCustomAdviser implements Adviser {
   @Inject ExecutionSweepingOutputService executionSweepingOutputService;
 
@@ -53,7 +53,7 @@ public class RollbackCustomAdviser implements Adviser {
 
   private OnFailRollbackOutput getRollbackOutput(AdvisingEvent advisingEvent) {
     OptionalSweepingOutput optionalSweepingOutput =
-        executionSweepingOutputService.resolveOptional(advisingEvent.getNodeExecution().getAmbiance(),
+        executionSweepingOutputService.resolveOptional(advisingEvent.getAmbiance(),
             RefObjectUtils.getSweepingOutputRefObject(YAMLFieldNameConstants.USE_ROLLBACK_STRATEGY));
     if (!optionalSweepingOutput.isFound()) {
       return null;

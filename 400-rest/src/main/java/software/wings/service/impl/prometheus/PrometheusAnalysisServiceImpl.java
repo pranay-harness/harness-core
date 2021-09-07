@@ -39,6 +39,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,7 +56,7 @@ import lombok.extern.slf4j.Slf4j;
 public class PrometheusAnalysisServiceImpl implements PrometheusAnalysisService {
   private static final String START_TIME_PLACE_HOLDER = "${start_time_seconds}";
   private static final String END_TIME_PLACE_HOLDER = "${end_time_seconds}";
-  private static final String HOST_NAME_PLACE_HOLDER = "${host}";
+  public static final String HOST_NAME_PLACE_HOLDER = "${host}";
 
   @Inject private SettingsService settingsService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
@@ -203,11 +205,20 @@ public class PrometheusAnalysisServiceImpl implements PrometheusAnalysisService 
                 "api/v1/query_range?start=${start_time_seconds}&end=${end_time_seconds}&step=60s&query="
                 + timeSeries.getUrl()));
 
-    timeSeriesToAnalyze.forEach(timeSeries
-        -> timeSeries.setUrl(timeSeries.getUrl()
-                                 .replace("$startTime", "${start_time_seconds}")
-                                 .replace("$endTime", "${end_time_seconds}")
-                                 .replace("$hostName", "${host}")));
+    timeSeriesToAnalyze.forEach(timeSeries -> {
+      try {
+        String url = timeSeries.getUrl();
+        url = url.replace(" ", URLEncoder.encode(" ", StandardCharsets.UTF_8.name()));
+        url = url.replace("\r", URLEncoder.encode("\r", StandardCharsets.UTF_8.name()));
+        url = url.replace("\t", URLEncoder.encode("\t", StandardCharsets.UTF_8.name()));
+
+        timeSeries.setUrl(url.replace("$startTime", "${start_time_seconds}")
+                              .replace("$endTime", "${end_time_seconds}")
+                              .replace("$hostName", "${host}"));
+      } catch (Exception e) {
+        throw new DataCollectionException(e);
+      }
+    });
   }
 
   public Map<String, List<APMMetricInfo>> apmMetricEndPointsFetchInfo(List<TimeSeries> timeSeriesInfos) {

@@ -4,27 +4,36 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.ListUtils.trimStrings;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
+import io.harness.beans.ShellScriptProvisionOutputVariables;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.data.algorithm.HashGenerator;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionReflectionUtils;
+import io.harness.ff.FeatureFlagService;
 import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ResponseData;
 
@@ -71,12 +80,15 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 
+@FieldNameConstants(onlyExplicitlyIncluded = true, innerTypeName = "ShellScriptProvisionStateKeys")
 @OwnedBy(CDP)
 @Slf4j
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class ShellScriptProvisionState extends State implements SweepingOutputStateMixin {
   private static final int TIMEOUT_IN_MINUTES = 20;
   private static final String COMMAND_UNIT = "Shell Script Provision";
@@ -85,8 +97,9 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
   @Inject private ActivityService activityService;
   @Inject private DelegateService delegateService;
   @Inject private SweepingOutputService sweepingOutputService;
-  @Getter @Setter private String provisionerId;
-  @Getter @Setter private List<NameValuePair> variables;
+  @Inject protected FeatureFlagService featureFlagService;
+  @FieldNameConstants.Include @Getter @Setter private String provisionerId;
+  @FieldNameConstants.Include @Getter @Setter private List<NameValuePair> variables;
   @Getter @Setter private String sweepingOutputName;
   @Getter @Setter private SweepingOutputInstance.Scope sweepingOutputScope;
   @Getter @Setter private List<String> delegateSelectors;
@@ -118,7 +131,7 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
                 provisionerId, Objects.requireNonNull(((ExecutionContextImpl) context).getEnv()).getUuid()))
             .workflowExecutionId(context.getWorkflowExecutionId())
             .outputPathKey(PROVISIONER_OUTPUT_PATH_KEY)
-            .delegateSelectors(delegateSelectors)
+            .delegateSelectors(getRenderedAndTrimmedSelectors(context))
             .build();
 
     int expressionFunctorToken = HashGenerator.generateIntegerHash();
@@ -128,6 +141,8 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
                                     .accountId(context.getAccountId())
                                     .waitId(activityId)
                                     .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, context.getAppId())
+                                    .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+                                    .description("Shell script provision task")
                                     .data(TaskData.builder()
                                               .async(true)
                                               .taskType(TaskType.SHELL_SCRIPT_PROVISION_TASK.toString())
@@ -138,6 +153,7 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
                                     .build();
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(Collections.singletonList(activityId))
@@ -162,12 +178,22 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
     if (executionData.getExecutionStatus() == ExecutionStatus.SUCCESS) {
       String output = executionData.getOutput();
       Map<String, Object> outputMap = parseOutput(output);
-      outputInfoElement.addOutPuts(outputMap);
+
+      boolean isSavingOutputToSweepingOutput = featureFlagService.isEnabled(
+          FeatureName.SAVE_SHELL_SCRIPT_PROVISION_OUTPUTS_TO_SWEEPING_OUTPUT, context.getAccountId());
+      validateReserveNameForProvisionerOutput(isSavingOutputToSweepingOutput);
+
+      handleSweepingOutput(sweepingOutputService, context, outputMap);
+
+      if (isSavingOutputToSweepingOutput) {
+        saveOutputs(context, outputMap);
+      } else {
+        outputInfoElement.addOutPuts(outputMap);
+      }
       ManagerExecutionLogCallback managerExecutionCallback =
           infrastructureProvisionerService.getManagerExecutionCallback(context.getAppId(), activityId, COMMAND_UNIT);
       infrastructureProvisionerService.regenerateInfrastructureMappings(
           provisionerId, context, outputMap, Optional.of(managerExecutionCallback), Optional.empty());
-      handleSweepingOutput(sweepingOutputService, context, outputMap);
     }
 
     activityService.updateStatus(activityId, context.getAppId(), executionData.getExecutionStatus());
@@ -178,6 +204,43 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
         .executionStatus(executionData.getExecutionStatus())
         .errorMessage(executionData.getErrorMsg())
         .build();
+  }
+
+  private void validateReserveNameForProvisionerOutput(boolean isSavingOutputToSweepingOutput) {
+    if (isSavingOutputToSweepingOutput
+        && ShellScriptProvisionOutputVariables.SWEEPING_OUTPUT_NAME.equals(getSweepingOutputName())) {
+      throw new InvalidArgumentsException(
+          format("Output variables can not be exported in context with reserved name: %s ",
+              ShellScriptProvisionOutputVariables.SWEEPING_OUTPUT_NAME));
+    }
+  }
+
+  private void saveOutputs(ExecutionContext context, Map<String, Object> outputMap) {
+    ShellScriptProvisionerOutputElement outputInfoElement =
+        context.getContextElement(ContextElementType.SHELL_SCRIPT_PROVISION);
+    SweepingOutputInstance instance =
+        sweepingOutputService.find(context.prepareSweepingOutputInquiryBuilder()
+                                       .name(ShellScriptProvisionOutputVariables.SWEEPING_OUTPUT_NAME)
+                                       .build());
+    ShellScriptProvisionOutputVariables scriptProvisionOutputVariables = instance != null
+        ? (ShellScriptProvisionOutputVariables) instance.getValue()
+        : new ShellScriptProvisionOutputVariables();
+
+    scriptProvisionOutputVariables.putAll(outputMap);
+    if (outputInfoElement != null && outputInfoElement.getOutputVariables() != null) {
+      // Ensure that we're not missing any variables during migration from context element to sweeping output
+      // can be removed with the next releases
+      scriptProvisionOutputVariables.putAll(outputInfoElement.getOutputVariables());
+    }
+
+    if (instance != null) {
+      sweepingOutputService.deleteById(context.getAppId(), instance.getUuid());
+    }
+
+    sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+                                   .name(ShellScriptProvisionOutputVariables.SWEEPING_OUTPUT_NAME)
+                                   .value(scriptProvisionOutputVariables)
+                                   .build());
   }
 
   @VisibleForTesting
@@ -239,10 +302,9 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
   public Map<String, String> validateFields() {
     Map<String, String> results = new HashMap<>();
     if (isEmpty(provisionerId)) {
-      results.put("Required Fields missing", "Provision must be provided.");
-      return results;
+      results.put("Provisioner", "Provisioner must be provided.");
     }
-    log.info("Shell Script Provision State Validated");
+    // if more fields need to validated, please make sure templatized fields are not broken.
     return results;
   }
 
@@ -259,5 +321,17 @@ public class ShellScriptProvisionState extends State implements SweepingOutputSt
                     .adoptDelegateDecryption(true)
                     .expressionFunctorToken(expressionFunctorToken)
                     .build()));
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
+  }
+
+  private List<String> getRenderedAndTrimmedSelectors(ExecutionContext context) {
+    if (isEmpty(delegateSelectors)) {
+      return emptyList();
+    }
+    return trimStrings(delegateSelectors.stream().map(context::renderExpression).collect(toList()));
   }
 }

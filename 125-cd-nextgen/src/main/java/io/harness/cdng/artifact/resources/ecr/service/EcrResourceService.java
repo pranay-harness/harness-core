@@ -1,10 +1,15 @@
 package io.harness.cdng.artifact.resources.ecr.service;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.cdng.artifact.resources.ecr.dtos.EcrBuildDetailsDTO;
+import io.harness.cdng.artifact.resources.ecr.dtos.EcrListImagesDTO;
 import io.harness.cdng.artifact.resources.ecr.dtos.EcrRequestDTO;
 import io.harness.cdng.artifact.resources.ecr.dtos.EcrResponseDTO;
 
+@OwnedBy(PIPELINE)
 public interface EcrResourceService {
   EcrResponseDTO getBuildDetails(
       IdentifierRef ecrConnectorRef, String imagePath, String region, String orgIdentifier, String projectIdentifier);
@@ -17,4 +22,7 @@ public interface EcrResourceService {
 
   boolean validateArtifactSource(
       String imagePath, IdentifierRef ecrConnectorRef, String region, String orgIdentifier, String projectIdentifier);
+
+  EcrListImagesDTO getImages(
+      IdentifierRef ecrConnectorRef, String region, String orgIdentifier, String projectIdentifier);
 }

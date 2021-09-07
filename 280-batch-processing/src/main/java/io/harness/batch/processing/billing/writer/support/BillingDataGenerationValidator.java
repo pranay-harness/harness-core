@@ -1,6 +1,6 @@
 package io.harness.batch.processing.billing.writer.support;
 
-import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
+import io.harness.ccm.commons.entities.batch.LastReceivedPublishedMessage;
 import io.harness.ccm.health.LastReceivedPublishedMessageDao;
 
 import com.github.benmanes.caffeine.cache.Caffeine;

@@ -17,6 +17,8 @@ public class ResourceScope {
   private String orgIdentifier;
   private String projectIdentifier;
 
+  public static ResourceScope NONE = ResourceScope.of(null, null, null);
+
   public static ResourceScope of(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     return ResourceScope.builder()
         .accountIdentifier(accountIdentifier)

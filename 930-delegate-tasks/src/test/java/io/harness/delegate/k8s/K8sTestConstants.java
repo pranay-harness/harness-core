@@ -1,7 +1,7 @@
 package io.harness.delegate.k8s;
 
-public interface K8sTestConstants {
-  String DEPLOYMENT_DIRECT_APPLY_YAML = "apiVersion: apps/v1\n"
+public final class K8sTestConstants {
+  public static String DEPLOYMENT_DIRECT_APPLY_YAML = "apiVersion: apps/v1\n"
       + "kind: Deployment\n"
       + "metadata:\n"
       + "  name: deployment\n"
@@ -25,7 +25,7 @@ public interface K8sTestConstants {
       + "        ports:\n"
       + "        - containerPort: 80";
 
-  String DEPLOYMENT_YAML = "apiVersion: apps/v1\n"
+  public static String DEPLOYMENT_YAML = "apiVersion: apps/v1\n"
       + "kind: Deployment\n"
       + "metadata:\n"
       + "  name: deployment\n"
@@ -47,14 +47,14 @@ public interface K8sTestConstants {
       + "        ports:\n"
       + "        - containerPort: 80";
 
-  String DAEMON_SET_YAML = "apiVersion: apps/v1\n"
+  public static String DAEMON_SET_YAML = "apiVersion: apps/v1\n"
       + "kind: DaemonSet\n"
       + "metadata:\n"
       + "  name: daemonSet\n"
       + "spec:\n"
       + "  replicas: 1";
 
-  String STATEFUL_SET_YAML = "apiVersion: apps/v1\n"
+  public static String STATEFUL_SET_YAML = "apiVersion: apps/v1\n"
       + "kind: StatefulSet\n"
       + "metadata:\n"
       + "  name: statefulSet\n"
@@ -86,4 +86,67 @@ public interface K8sTestConstants {
       + "      resources:\n"
       + "        requests:\n"
       + "          storage: 1Gi\n";
+
+  public static String SERVICE_YAML = "apiVersion: v1\n"
+      + "kind: Service\n"
+      + "metadata:\n"
+      + "  name: servicename\n"
+      + "spec:\n"
+      + "  type: ClusterIp\n"
+      + "  ports:\n"
+      + "  - port: 80\n"
+      + "    targetPort: 8080\n"
+      + "    protocol: TCP\n"
+      + "  selector:\n"
+      + "    app: test";
+
+  public static String PRIMARY_SERVICE_YAML = "apiVersion: v1\n"
+      + "kind: Service\n"
+      + "metadata:\n"
+      + "  name: primary-service\n"
+      + "  annotations:\n"
+      + "    harness.io/primary-service: true\n"
+      + "spec:\n"
+      + "  type: ClusterIp\n"
+      + "  ports:\n"
+      + "  - port: 80\n"
+      + "    targetPort: 8080\n"
+      + "    protocol: TCP\n"
+      + "  selector:\n"
+      + "    app: test";
+
+  public static String STAGE_SERVICE_YAML = "apiVersion: v1\n"
+      + "kind: Service\n"
+      + "metadata:\n"
+      + "  name: primary-service\n"
+      + "  annotations:\n"
+      + "    harness.io/stage-service: true\n"
+      + "spec:\n"
+      + "  type: ClusterIp\n"
+      + "  ports:\n"
+      + "  - port: 80\n"
+      + "    targetPort: 8080\n"
+      + "    protocol: TCP\n"
+      + "  selector:\n"
+      + "    app: test";
+
+  public static String CONFIG_MAP_YAML = "apiVersion: v1\n"
+      + "kind: ConfigMap\n"
+      + "metadata:\n"
+      + "  name: mycm\n"
+      + "data:\n"
+      + "  hello: world";
+
+  public static String SECRET_YAML = "apiVersion: v1\n"
+      + "kind: Secret\n"
+      + "metadata:\n"
+      + "  name: mysecret\n"
+      + "type: Opaque\n"
+      + "data:\n"
+      + "  username: YWRtaW4=\n"
+      + "  password: MWYyZDFlMmU2N2Rm";
+
+  private K8sTestConstants() {
+    throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
+  }
 }

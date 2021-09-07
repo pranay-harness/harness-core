@@ -7,15 +7,20 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE;
 
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.artifact.ArtifactCollectionResponseHandler;
 import io.harness.beans.DelegateHeartbeatResponse;
+import io.harness.beans.DelegateTaskEventsResponse;
+import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateConfiguration;
+import io.harness.delegate.beans.DelegateConfiguration.Action;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateParams;
 import io.harness.delegate.beans.DelegateProfileParams;
@@ -29,6 +34,8 @@ import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.delegate.task.TaskLogContext;
 import io.harness.delegate.task.validation.DelegateConnectionResultDetail;
+import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.managerclient.AccountPreference;
@@ -40,9 +47,12 @@ import io.harness.managerclient.GetDelegatePropertiesResponse;
 import io.harness.managerclient.HttpsCertRequirement;
 import io.harness.managerclient.HttpsCertRequirementQuery;
 import io.harness.manifest.ManifestCollectionResponseHandler;
+import io.harness.network.SafeHttpCall;
 import io.harness.perpetualtask.PerpetualTaskLogContext;
 import io.harness.perpetualtask.connector.ConnectorHearbeatPublisher;
+import io.harness.perpetualtask.instancesync.InstanceSyncResponsePublisher;
 import io.harness.persistence.HPersistence;
+import io.harness.polling.client.PollingResourceClient;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.DelegateAuth;
 import io.harness.serializer.KryoSerializer;
@@ -59,6 +69,7 @@ import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.instance.InstanceHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.DelegateTaskServiceClassic;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
@@ -80,6 +91,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.jetbrains.annotations.NotNull;
 
@@ -90,6 +103,7 @@ import org.jetbrains.annotations.NotNull;
 @Slf4j
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @OwnedBy(DEL)
+@BreakDependencyOn("software.wings.service.impl.instance.InstanceHelper")
 public class DelegateAgentResource {
   private DelegateService delegateService;
   private AccountService accountService;
@@ -102,6 +116,10 @@ public class DelegateAgentResource {
   private ConnectorHearbeatPublisher connectorHearbeatPublisher;
   private KryoSerializer kryoSerializer;
   private ConfigurationController configurationController;
+  private FeatureFlagService featureFlagService;
+  private DelegateTaskServiceClassic delegateTaskServiceClassic;
+  private InstanceSyncResponsePublisher instanceSyncResponsePublisher;
+  private PollingResourceClient pollingResourceClient;
 
   @Inject
   public DelegateAgentResource(DelegateService delegateService, AccountService accountService, HPersistence persistence,
@@ -109,7 +127,9 @@ public class DelegateAgentResource {
       ArtifactCollectionResponseHandler artifactCollectionResponseHandler, InstanceHelper instanceHelper,
       ManifestCollectionResponseHandler manifestCollectionResponseHandler,
       ConnectorHearbeatPublisher connectorHearbeatPublisher, KryoSerializer kryoSerializer,
-      ConfigurationController configurationController) {
+      ConfigurationController configurationController, FeatureFlagService featureFlagService,
+      DelegateTaskServiceClassic delegateTaskServiceClassic, PollingResourceClient pollingResourceClient,
+      InstanceSyncResponsePublisher instanceSyncResponsePublisher) {
     this.instanceHelper = instanceHelper;
     this.delegateService = delegateService;
     this.accountService = accountService;
@@ -121,6 +141,10 @@ public class DelegateAgentResource {
     this.connectorHearbeatPublisher = connectorHearbeatPublisher;
     this.kryoSerializer = kryoSerializer;
     this.configurationController = configurationController;
+    this.featureFlagService = featureFlagService;
+    this.delegateTaskServiceClassic = delegateTaskServiceClassic;
+    this.pollingResourceClient = pollingResourceClient;
+    this.instanceSyncResponsePublisher = instanceSyncResponsePublisher;
   }
 
   @DelegateAuth
@@ -139,6 +163,12 @@ public class DelegateAgentResource {
         configuration.getDelegateVersions().add(primaryDelegateVersion);
       }
       return new RestResponse<>(configuration);
+    } catch (InvalidRequestException ex) {
+      if (isNotBlank(ex.getMessage()) && ex.getMessage().startsWith("Deleted AccountId")) {
+        return new RestResponse<>(DelegateConfiguration.builder().action(Action.SELF_DESTRUCT).build());
+      }
+
+      return null;
     }
   }
 
@@ -260,7 +290,7 @@ public class DelegateAgentResource {
       if (delegateRequestRateLimiter.isOverRateLimit(accountId, delegateId)) {
         return null;
       }
-      return delegateService.acquireDelegateTask(accountId, delegateId, taskId);
+      return delegateTaskServiceClassic.acquireDelegateTask(accountId, delegateId, taskId);
     }
   }
 
@@ -276,7 +306,7 @@ public class DelegateAgentResource {
     try (AutoLogContext ignore1 = new TaskLogContext(taskId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore3 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      return delegateService.reportConnectionResults(
+      return delegateTaskServiceClassic.reportConnectionResults(
           accountId, delegateId, taskId, getDelegateConnectionResults(results));
     }
   }
@@ -305,12 +335,13 @@ public class DelegateAgentResource {
   @Path("{delegateId}/tasks/{taskId}/fail")
   @Timed
   @ExceptionMetered
-  public void failIfAllDelegatesFailed(@PathParam("delegateId") String delegateId, @PathParam("taskId") String taskId,
-      @QueryParam("accountId") @NotEmpty String accountId) {
+  public void failIfAllDelegatesFailed(@PathParam("delegateId") final String delegateId,
+      @PathParam("taskId") final String taskId, @QueryParam("accountId") @NotEmpty final String accountId,
+      @QueryParam("areClientToolsInstalled") final boolean areClientToolsInstalled) {
     try (AutoLogContext ignore1 = new TaskLogContext(taskId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore3 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      delegateService.failIfAllDelegatesFailed(accountId, delegateId, taskId);
+      delegateTaskServiceClassic.failIfAllDelegatesFailed(accountId, delegateId, taskId, areClientToolsInstalled);
     }
   }
 
@@ -334,11 +365,12 @@ public class DelegateAgentResource {
   @ExceptionMetered
   public RestResponse<DelegateScripts> checkForUpgrade(@Context HttpServletRequest request,
       @HeaderParam("Version") String version, @PathParam("delegateId") @NotEmpty String delegateId,
-      @QueryParam("accountId") @NotEmpty String accountId) throws IOException {
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("delegateName") String delegateName)
+      throws IOException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      return new RestResponse<>(delegateService.getDelegateScripts(
-          accountId, version, subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request)));
+      return new RestResponse<>(delegateService.getDelegateScripts(accountId, version,
+          subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request), delegateName));
     }
   }
 
@@ -350,9 +382,11 @@ public class DelegateAgentResource {
   public RestResponse<DelegateScripts> getDelegateScriptsNg(@Context HttpServletRequest request,
       @QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("delegateVersion") @NotEmpty String delegateVersion,
-      @QueryParam("delegateSize") @javax.validation.constraints.NotNull DelegateSize delegateSize) throws IOException {
+      @QueryParam("delegateSize") @javax.validation.constraints.NotNull DelegateSize delegateSize,
+      @QueryParam("patchVersion") String patchVersion) throws IOException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      return new RestResponse<>(delegateService.getDelegateScriptsNg(accountId, delegateVersion,
+      String fullVersion = isNotEmpty(patchVersion) ? delegateVersion + "-" + patchVersion : delegateVersion;
+      return new RestResponse<>(delegateService.getDelegateScriptsNg(accountId, fullVersion,
           subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request), delegateSize));
     }
   }
@@ -364,10 +398,12 @@ public class DelegateAgentResource {
   @ExceptionMetered
   public RestResponse<DelegateScripts> getDelegateScripts(@Context HttpServletRequest request,
       @QueryParam("accountId") @NotEmpty String accountId,
-      @QueryParam("delegateVersion") @NotEmpty String delegateVersion) throws IOException {
+      @QueryParam("delegateVersion") @NotEmpty String delegateVersion, @QueryParam("patchVersion") String patchVersion,
+      @QueryParam("delegateName") String delegateName) throws IOException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      return new RestResponse<>(delegateService.getDelegateScripts(accountId, delegateVersion,
-          subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request)));
+      String fullVersion = isNotEmpty(patchVersion) ? delegateVersion + "-" + patchVersion : delegateVersion;
+      return new RestResponse<>(delegateService.getDelegateScripts(accountId, fullVersion,
+          subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request), delegateName));
     }
   }
 
@@ -376,11 +412,18 @@ public class DelegateAgentResource {
   @Path("{delegateId}/task-events")
   @Timed
   @ExceptionMetered
-  public List<DelegateTaskEvent> getDelegateTaskEvents(@PathParam("delegateId") @NotEmpty String delegateId,
+  public DelegateTaskEventsResponse getDelegateTaskEvents(@PathParam("delegateId") @NotEmpty String delegateId,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("syncOnly") boolean syncOnly) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      return delegateService.getDelegateTaskEvents(accountId, delegateId, syncOnly);
+      boolean processDelegateTaskEventsAsyncEnabled =
+          featureFlagService.isEnabled(FeatureName.PROCESS_DELEGATE_TASK_EVENTS_ASYNC, accountId);
+      List<DelegateTaskEvent> delegateTaskEvents =
+          delegateTaskServiceClassic.getDelegateTaskEvents(accountId, delegateId, syncOnly);
+      return DelegateTaskEventsResponse.builder()
+          .delegateTaskEvents(delegateTaskEvents)
+          .processTaskEventsAsync(processDelegateTaskEventsAsyncEnabled)
+          .build();
     }
   }
 
@@ -414,9 +457,9 @@ public class DelegateAgentResource {
       @PathParam("delegateId") String delegateId, @QueryParam("accountId") String accountId, byte[] logsBlob) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      log.info("About to convert logsBlob byte array into ThirdPartyApiCallLog.");
+      log.debug("About to convert logsBlob byte array into ThirdPartyApiCallLog.");
       List<ThirdPartyApiCallLog> logs = (List<ThirdPartyApiCallLog>) kryoSerializer.asObject(logsBlob);
-      log.info("LogsBlob byte array converted successfully into ThirdPartyApiCallLog.");
+      log.debug("LogsBlob byte array converted successfully into ThirdPartyApiCallLog.");
 
       persistence.save(logs);
     }
@@ -439,7 +482,7 @@ public class DelegateAgentResource {
       BuildSourceExecutionResponse executionResponse = (BuildSourceExecutionResponse) kryoSerializer.asObject(response);
 
       if (executionResponse.getBuildSourceResponse() != null) {
-        log.info("Received artifact collection {}", executionResponse.getBuildSourceResponse().getBuildDetails());
+        log.debug("Received artifact collection {}", executionResponse.getBuildSourceResponse().getBuildDetails());
       }
       artifactCollectionResponseHandler.processArtifactCollectionResult(accountId, perpetualTaskId, executionResponse);
     }
@@ -462,6 +505,22 @@ public class DelegateAgentResource {
 
   @DelegateAuth
   @POST
+  @Path("instance-sync-ng/{perpetualTaskId}")
+  public RestResponse<Boolean> processInstanceSyncNGResult(
+      @PathParam("perpetualTaskId") @NotEmpty String perpetualTaskId,
+      @QueryParam("accountId") @NotEmpty String accountId, DelegateResponseData response) {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new PerpetualTaskLogContext(perpetualTaskId, OVERRIDE_ERROR)) {
+      instanceSyncResponsePublisher.publishInstanceSyncResponseToNG(
+          accountId, perpetualTaskId.replaceAll("[\r\n]", ""), response);
+    } catch (Exception e) {
+      log.error("Failed to process results for perpetual task: [{}]", perpetualTaskId.replaceAll("[\r\n]", ""), e);
+    }
+    return new RestResponse<>(true);
+  }
+
+  @DelegateAuth
+  @POST
   @Path("manifest-collection/{perpetualTaskId}")
   public RestResponse<Boolean> processManifestCollectionResult(
       @PathParam("perpetualTaskId") @NotEmpty String perpetualTaskId,
@@ -472,7 +531,7 @@ public class DelegateAgentResource {
           (ManifestCollectionExecutionResponse) kryoSerializer.asObject(serializedExecutionResponse);
 
       if (executionResponse.getManifestCollectionResponse() != null) {
-        log.info("Received manifest collection {}", executionResponse.getManifestCollectionResponse().getHelmCharts());
+        log.debug("Received manifest collection {}", executionResponse.getManifestCollectionResponse().getHelmCharts());
       }
       manifestCollectionResponseHandler.handleManifestCollectionResponse(accountId, perpetualTaskId, executionResponse);
     }
@@ -490,6 +549,19 @@ public class DelegateAgentResource {
       connectorHearbeatPublisher.pushConnectivityCheckActivity(accountId, validationResult);
     }
     return new RestResponse<>(true);
+  }
+
+  @DelegateAuth
+  @POST
+  @Path("polling/{perpetualTaskId}")
+  public RestResponse<Boolean> processPollingResultNg(@PathParam("perpetualTaskId") @NotEmpty String perpetualTaskId,
+      @QueryParam("accountId") @NotEmpty String accountId, byte[] serializedExecutionResponse) throws IOException {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
+         AutoLogContext ignore2 = new PerpetualTaskLogContext(perpetualTaskId, OVERRIDE_ERROR)) {
+      SafeHttpCall.executeWithExceptions(pollingResourceClient.processPolledResult(perpetualTaskId, accountId,
+          RequestBody.create(MediaType.parse("application/octet-stream"), serializedExecutionResponse)));
+    }
+    return new RestResponse<>(Boolean.TRUE);
   }
 
   private DelegateHeartbeatResponse buildDelegateHBResponse(Delegate delegate) {

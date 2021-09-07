@@ -1,6 +1,7 @@
 package software.wings.service.intfc.signup;
 
-import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.annotations.dev.HarnessModule._940_MARKETPLACE_INTEGRATIONS;
+import static io.harness.annotations.dev.HarnessTeam.GTM;
 
 import static software.wings.sm.states.ApprovalState.JSON;
 
@@ -10,6 +11,8 @@ import static javax.ws.rs.core.MediaType.APPLICATION_FORM_URLENCODED;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.exception.SignupException;
 
 import software.wings.app.MainConfiguration;
 import software.wings.beans.MarketPlace;
@@ -33,7 +36,8 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpStatus;
 import org.json.JSONObject;
 
-@OwnedBy(PL)
+@OwnedBy(GTM)
+@TargetModule(_940_MARKETPLACE_INTEGRATIONS)
 @Slf4j
 public class AzureMarketplaceIntegrationService {
   private OkHttpClient client;
@@ -88,7 +92,7 @@ public class AzureMarketplaceIntegrationService {
     JSONObject jsonObject = getResolveTokenResponse(authenticationToken, azureToken);
     if (!jsonObject.getString(OFFER_ID_KEY).equals(HARNESS_OFFER_ID)) {
       log.error("The offerId received in the Azure marketplace is not expected {}", jsonObject.toString());
-      throw new SignupException("Failed to validate the azure marketplace token");
+      throw new io.harness.exception.SignupException("Failed to validate the azure marketplace token");
     }
   }
 
@@ -107,7 +111,7 @@ public class AzureMarketplaceIntegrationService {
 
     } catch (IOException e) {
       log.error("Failed to process Azure marketplace signup", e);
-      throw new SignupException("Failed to process azure signup token");
+      throw new io.harness.exception.SignupException("Failed to process azure signup token");
     }
   }
 
@@ -124,7 +128,7 @@ public class AzureMarketplaceIntegrationService {
       return getAuthToken(jsonObject);
     } catch (Exception ex) {
       log.error("Getting azure authentication token failed", ex);
-      throw new SignupException("Failed to signup for azure marketplace");
+      throw new io.harness.exception.SignupException("Failed to signup for azure marketplace");
     }
   }
 
@@ -141,7 +145,7 @@ public class AzureMarketplaceIntegrationService {
     try (okhttp3.Response response = client.newCall(request).execute()) {
       if (response.code() != HttpStatus.SC_OK) {
         log.info("Failed to activate azure subscription: {}", response.toString());
-        throw new SignupException("Azure activate API failed");
+        throw new io.harness.exception.SignupException("Azure activate API failed");
       }
       log.info("Azure subscription successful for subscriptionId: {}", subscriptionId);
     } catch (IOException ex) {

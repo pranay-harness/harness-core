@@ -3,7 +3,8 @@ package io.harness.ccm.health;
 import static io.harness.annotations.dev.HarnessTeam.CE;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ccm.health.CeExceptionRecord.CeExceptionRecordKeys;
+import io.harness.ccm.commons.entities.events.CeExceptionRecord;
+import io.harness.ccm.commons.entities.events.CeExceptionRecord.CeExceptionRecordKeys;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;
@@ -17,11 +18,12 @@ import org.mongodb.morphia.query.Sort;
 public class CeExceptionRecordDao {
   @Inject private HPersistence persistence;
 
-  public String save(CeExceptionRecord exception) {
+  public String save(io.harness.ccm.commons.entities.events.CeExceptionRecord exception) {
     return persistence.save(exception);
   }
 
-  public CeExceptionRecord getRecentException(String accountId, String clusterId, long recentTimestamp) {
+  public io.harness.ccm.commons.entities.events.CeExceptionRecord getRecentException(
+      String accountId, String clusterId, long recentTimestamp) {
     return persistence.createQuery(CeExceptionRecord.class)
         .field(CeExceptionRecordKeys.accountId)
         .equal(accountId)

@@ -166,6 +166,7 @@ input CEViewTimeTruncGroupBy {
 enum ViewTimeGroupType {
   DAY
   MONTH
+  WEEK
 }
 
 input CEViewSortCriteria {

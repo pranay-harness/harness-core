@@ -14,7 +14,7 @@ public class EventProtoToEntityHelper {
   public static Map<EntityTypeProtoEnum, EntityType> getEntityTypeProtoEnumToRestEnumMap() {
     Map<EntityTypeProtoEnum, EntityType> mappingBetweenProtoAndActualEnum = new EnumMap<>(EntityTypeProtoEnum.class);
     for (EntityTypeProtoEnum entityTypeProtoEnum : EntityTypeProtoEnum.values()) {
-      // Handle any seprate enum here.
+      // Handle any separate enum here.
       if (entityTypeProtoEnum == UNRECOGNIZED) {
         continue;
       }

@@ -32,6 +32,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
@@ -170,6 +174,8 @@ import org.mongodb.morphia.query.Query;
  * Created by rsingh on 9/29/17.
  */
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 public class KmsTest extends WingsBaseTest {
   @Inject private KmsResource kmsResource;
   @Mock private AccountService accountService;
@@ -281,7 +287,8 @@ public class KmsTest extends WingsBaseTest {
     testUserProvider.setActiveUser(EmbeddedUser.builder().uuid(user.getUuid()).name(userName).email(userEmail).build());
 
     // Add current user to harness user group so that save-global-kms operation can succeed
-    HarnessUserGroup harnessUserGroup = HarnessUserGroup.builder().memberIds(Sets.newHashSet(userId)).build();
+    HarnessUserGroup harnessUserGroup =
+        HarnessUserGroup.builder().memberIds(Sets.newHashSet(userId)).accountIds(Sets.newHashSet(accountId)).build();
     harnessUserGroupService.save(harnessUserGroup);
   }
 

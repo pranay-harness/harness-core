@@ -15,6 +15,9 @@ type Application {
   description: String
   createdAt: DateTime
   createdBy: User
+  # Beta: When this is set to true, all manual triggers will require API Key authorization.
+  # Doc link: https://docs.harness.io/article/mc2lxsas4c-trigger-a-deployment-using-c-url#option_enforce_api_keys_for_manual_triggers
+  isManualTriggerAuthorized: Boolean
 
   services(limit: Int!, offset: Int): ServiceConnection
     @dataFetcher(name: serviceConnection, contextFieldArgsMap: "{ \"Application\": \"id\"}")

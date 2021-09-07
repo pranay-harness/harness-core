@@ -1,10 +1,13 @@
 package io.harness.functional.workflow;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.rule.OwnerRule.PRAKHAR;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.YOGESH;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.CDFunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -41,9 +44,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import java.util.List;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(CDP)
 public class AmiWorkflowFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
   @Inject private ServiceGenerator serviceGenerator;
@@ -123,6 +128,65 @@ public class AmiWorkflowFunctionalTest extends AbstractFunctionalTest {
     assertThat(amiInfraMapping.getSpotinstElastiGroupJson()).isEqualTo(amiInfrastructure.getSpotinstElastiGroupJson());
 
     assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertInstanceCount(workflowExecution.getStatus(), appId, infrastructureMappings.get(0).getUuid(),
+        amiInfrastructureDefinition.getUuid());
+    // TODO: delete ASG
+  }
+
+  @Test
+  @Owner(developers = PRAKHAR)
+  @Category(CDFunctionalTests.class)
+  @Ignore("TODO: please provide clear motivation why this test is ignored")
+  public void shouldRunAwsAmiRollbackWorkflow() {
+    service = serviceGenerator.ensureAmiGenericTest(seed, owners, "aws-ami");
+    final String accountId = service.getAccountId();
+    final String appId = service.getAppId();
+
+    resetCache(service.getAccountId());
+
+    InfrastructureDefinition amiInfrastructureDefinition =
+        infrastructureDefinitionGenerator.ensurePredefined(seed, owners, InfrastructureType.AWS_AMI, bearerToken);
+    ensureInfraMapping(service, amiInfrastructureDefinition);
+    final String envId = amiInfrastructureDefinition.getEnvId();
+
+    Workflow bgWorkflow = workflowUtils.createAwsAmiBGRollbackWorkflow("ami-bg-", service, amiInfrastructureDefinition);
+
+    bgWorkflow =
+        WorkflowRestUtils.createWorkflow(bearerToken, application.getAccountId(), application.getUuid(), bgWorkflow);
+
+    resetCache(service.getAccountId());
+
+    Artifact artifact = ArtifactRestUtils.waitAndFetchArtifactByArtfactStream(
+        bearerToken, appId, service.getArtifactStreamIds().get(0), 0);
+
+    AwsAsgGetRunningCountData runningCountData = InfrastructureDefinitionRestUtils.amiRunningInstances(
+        bearerToken, accountId, appId, service.getUuid(), amiInfrastructureDefinition.getUuid());
+
+    assertThat(runningCountData).isNotNull();
+
+    final WorkflowExecution workflowExecution =
+        runWorkflow(bearerToken, appId, envId, bgWorkflow.getUuid(), ImmutableList.of(artifact));
+
+    List<InfrastructureMapping> infrastructureMappings =
+        infrastructureMappingService.getInfraMappingLinkedToInfraDefinition(
+            appId, amiInfrastructureDefinition.getUuid());
+
+    assertThat(infrastructureMappings).hasSize(1);
+    AwsAmiInfrastructureMapping amiInfraMapping = (AwsAmiInfrastructureMapping) infrastructureMappings.get(0);
+    AwsAmiInfrastructure amiInfrastructure = (AwsAmiInfrastructure) amiInfrastructureDefinition.getInfrastructure();
+    assertThat(amiInfraMapping.getRegion()).isEqualTo(amiInfrastructure.getRegion());
+    assertThat(amiInfraMapping.getAutoScalingGroupName()).isEqualTo(amiInfrastructure.getAutoScalingGroupName());
+    assertThat(amiInfraMapping.getClassicLoadBalancers()).isEqualTo(amiInfrastructure.getClassicLoadBalancers());
+    assertThat(amiInfraMapping.getTargetGroupArns()).isEqualTo(amiInfrastructure.getTargetGroupArns());
+    assertThat(amiInfraMapping.getHostNameConvention()).isEqualTo(amiInfrastructure.getHostNameConvention());
+    assertThat(amiInfraMapping.getStageClassicLoadBalancers())
+        .isEqualTo(amiInfrastructure.getStageClassicLoadBalancers());
+    assertThat(amiInfraMapping.getStageTargetGroupArns()).isEqualTo(amiInfrastructure.getStageTargetGroupArns());
+    assertThat(amiInfraMapping.getAmiDeploymentType()).isEqualTo(amiInfrastructure.getAmiDeploymentType());
+    assertThat(amiInfraMapping.getSpotinstCloudProvider()).isEqualTo(amiInfrastructure.getSpotinstCloudProvider());
+    assertThat(amiInfraMapping.getSpotinstElastiGroupJson()).isEqualTo(amiInfrastructure.getSpotinstElastiGroupJson());
+
+    workflowUtils.assertRollbackInWorkflowExecution(workflowExecution);
     assertInstanceCount(workflowExecution.getStatus(), appId, infrastructureMappings.get(0).getUuid(),
         amiInfrastructureDefinition.getUuid());
     // TODO: delete ASG

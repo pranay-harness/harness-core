@@ -3,12 +3,12 @@ package software.wings.sm.states;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.pcf.ResizeStrategy.RESIZE_NEW_FIRST;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.logging.Misc.normalizeExpression;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.Log.Builder.aLog;
-import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.service.impl.aws.model.AwsConstants.AMI_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
 import static software.wings.service.impl.aws.model.AwsConstants.AMI_SETUP_COMMAND_NAME;
 import static software.wings.service.impl.aws.model.AwsConstants.DEFAULT_AMI_ASG_DESIRED_INSTANCES;
@@ -24,13 +24,16 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.pcf.ResizeStrategy;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -51,7 +54,6 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
 import software.wings.beans.Log.Builder;
-import software.wings.beans.ResizeStrategy;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
@@ -107,6 +109,7 @@ public class AwsAmiServiceSetup extends State {
   @Inject private AwsAmiServiceStateHelper awsAmiServiceStateHelper;
   @Inject private AwsStateHelper awsStateHelper;
   @Inject private transient WorkflowExecutionService workflowExecutionService;
+  @Inject private FeatureFlagService featureFlagService;
 
   private String commandName = AMI_SETUP_COMMAND_NAME;
 
@@ -161,6 +164,10 @@ public class AwsAmiServiceSetup extends State {
             .commandName(commandName)
             .oldAsgNames(amiServiceSetupResponse.getOldAsgNames())
             .preDeploymentData(amiServiceSetupResponse.getPreDeploymentData())
+            .baseAsgScheduledActionJSONs(
+                featureFlagService.isEnabled(FeatureName.AMI_ASG_CONFIG_COPY, context.getAccountId())
+                    ? amiServiceSetupResponse.getBaseAsgScheduledActionJSONs()
+                    : null)
             .build();
 
     sweepingOutputService.save(
@@ -296,7 +303,11 @@ public class AwsAmiServiceSetup extends State {
               .infraMappingTargetGroupArns(targetGroupARNs)
               .artifactRevision(artifact.getRevision())
               .blueGreen(blueGreen)
-              .userData(awsStateHelper.getEncodedUserData(app.getUuid(), serviceId, context));
+              .userData(awsStateHelper.getEncodedUserData(app.getUuid(), serviceId, context))
+              .amiInServiceHealthyStateFFEnabled(
+                  featureFlagService.isEnabled(FeatureName.AMI_IN_SERVICE_HEALTHY_WAIT, activity.getAccountId()))
+              .amiAsgConfigCopyEnabled(
+                  featureFlagService.isEnabled(FeatureName.AMI_ASG_CONFIG_COPY, activity.getAccountId()));
 
       String asgNamePrefix = isNotEmpty(autoScalingGroupName)
           ? normalizeExpression(context.renderExpression(autoScalingGroupName))
@@ -340,8 +351,11 @@ public class AwsAmiServiceSetup extends State {
                         .build())
               .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, env.getUuid())
               .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
+              .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+              .description("Aws Ami service setup task execution")
               .build();
       delegateService.queueTask(delegateTask);
+      appendDelegateTaskDetails(context, delegateTask);
     } catch (Exception exception) {
       log.error("Ami setup step failed with error ", exception);
       executionStatus = ExecutionStatus.FAILED;
@@ -437,5 +451,10 @@ public class AwsAmiServiceSetup extends State {
 
   public void setDesiredInstances(String desiredInstances) {
     this.desiredInstances = desiredInstances;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

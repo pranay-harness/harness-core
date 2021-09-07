@@ -1,10 +1,14 @@
 package software.wings.settings;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import lombok.Getter;
 
-/**
- * The Enum SettingVariableTypes.
- */
+@OwnedBy(HarnessTeam.DEL)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public enum SettingVariableTypes {
   /**
    * Host connection attributes setting variable types.
@@ -134,9 +138,9 @@ public enum SettingVariableTypes {
   AZURE("Microsoft Azure"),
 
   /**
-   * Pivotal Cloud Foundry
+   * Tanzu Application Services
    */
-  PCF("Pivotal Cloud Foundry"),
+  PCF("Tanzu Application Services"),
 
   /**
    * Direct connection setting variable types.
@@ -265,11 +269,11 @@ public enum SettingVariableTypes {
 
   CUSTOM("Custom Artifact Source"),
 
-  CE_AWS("Continuous Efficiency AWS"),
+  CE_AWS("Cloud Cost Management AWS"),
 
-  CE_GCP("Continuous Efficiency GCP"),
+  CE_GCP("Cloud Cost Management GCP"),
 
-  CE_AZURE("Continuous Efficiency AZURE"),
+  CE_AZURE("Cloud Cost Management AZURE"),
 
   AZURE_VAULT("Azure Vault Secrets Manager"),
 
@@ -277,7 +281,9 @@ public enum SettingVariableTypes {
 
   GIT_NG("Git Ng"),
 
-  GCP_SECRETS_MANAGER;
+  GCP_SECRETS_MANAGER,
+
+  TRIGGER;
 
   @Getter private String displayName;
 

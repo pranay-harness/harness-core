@@ -2,7 +2,11 @@ package io.harness.pms.variables;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.plan.VariablesCreationBlobResponse;
+import io.harness.pms.contracts.plan.YamlOutputProperties;
+import io.harness.pms.variables.VariableMergeServiceResponse.ServiceExpressionProperties;
 import io.harness.pms.variables.VariableMergeServiceResponse.VariableResponseMapValue;
 
 import java.util.ArrayList;
@@ -11,12 +15,25 @@ import java.util.List;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @UtilityClass
 public class VariableCreationBlobResponseUtils {
-  public VariableMergeServiceResponse getMergeServiceResponse(String yaml, VariablesCreationBlobResponse response) {
+  public VariableMergeServiceResponse getMergeServiceResponse(
+      String yaml, VariablesCreationBlobResponse response, Map<String, List<String>> serviceExpressionMap) {
     Map<String, VariableResponseMapValue> metadataMap = new LinkedHashMap<>();
+    // Add Yaml Properties
     response.getYamlPropertiesMap().forEach(
         (k, v) -> metadataMap.put(k, VariableResponseMapValue.builder().yamlProperties(v).build()));
+
+    // Add Yaml Output Properties
+    response.getYamlOutputPropertiesMap().keySet().forEach(uuid -> {
+      YamlOutputProperties yamlOutputProperties = response.getYamlOutputPropertiesMap().get(uuid);
+      if (metadataMap.containsKey(uuid)) {
+        metadataMap.get(uuid).setYamlOutputProperties(yamlOutputProperties);
+      } else {
+        metadataMap.put(uuid, VariableResponseMapValue.builder().yamlOutputProperties(yamlOutputProperties).build());
+      }
+    });
     List<String> errorMessages = new ArrayList<>();
     response.getErrorResponseList().forEach(error -> {
       int messagesCount = error.getMessagesCount();
@@ -28,6 +45,7 @@ public class VariableCreationBlobResponseUtils {
         .yaml(yaml)
         .metadataMap(metadataMap)
         .errorResponses(isNotEmpty(errorMessages) ? errorMessages : null)
+        .serviceExpressionPropertiesList(getExpressionsFromMap(serviceExpressionMap))
         .build();
   }
 
@@ -38,6 +56,7 @@ public class VariableCreationBlobResponseUtils {
     }
 
     mergeYamlProperties(builder, otherResponse);
+    mergeYamlOutputProperties(builder, otherResponse);
     mergeResolvedDependencies(builder, otherResponse);
     mergeDependencies(builder, otherResponse);
     mergeErrorResponses(builder, otherResponse);
@@ -55,6 +74,24 @@ public class VariableCreationBlobResponseUtils {
     if (isNotEmpty(otherResponse.getYamlPropertiesMap())) {
       otherResponse.getYamlPropertiesMap().forEach(builder::putYamlProperties);
     }
+  }
+
+  public void mergeYamlOutputProperties(
+      VariablesCreationBlobResponse.Builder builder, VariablesCreationBlobResponse otherResponse) {
+    if (isNotEmpty(otherResponse.getYamlOutputPropertiesMap())) {
+      otherResponse.getYamlOutputPropertiesMap().forEach(builder::putYamlOutputProperties);
+    }
+  }
+
+  public List<ServiceExpressionProperties> getExpressionsFromMap(Map<String, List<String>> serviceExpressionMap) {
+    List<ServiceExpressionProperties> serviceExpressionProperties = new ArrayList<>();
+    for (Map.Entry<String, List<String>> entry : serviceExpressionMap.entrySet()) {
+      entry.getValue()
+          .stream()
+          .map(e -> ServiceExpressionProperties.builder().serviceName(entry.getKey()).expression(e).build())
+          .forEachOrdered(serviceExpressionProperties::add);
+    }
+    return serviceExpressionProperties;
   }
 
   public void mergeResolvedDependencies(

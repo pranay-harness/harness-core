@@ -1,7 +1,12 @@
 package software.wings.beans.command;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static org.joor.Reflect.on;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
 
@@ -19,6 +24,8 @@ import java.util.Optional;
 /**
  * Created by peeyushaggarwal on 6/2/16.
  */
+@OwnedBy(CDP)
+@TargetModule(_930_DELEGATE_TASKS)
 public enum CommandUnitType implements CommandUnitDescriptor {
   EXEC(ExecCommandUnit.class, "Exec", StencilCategory.SCRIPTS, DEFAULT_DISPLAY_ORDER),
   SCP(ScpCommandUnit.class, "Copy", StencilCategory.COPY, DEFAULT_DISPLAY_ORDER),
@@ -59,7 +66,9 @@ public enum CommandUnitType implements CommandUnitDescriptor {
       AzureWebAppCommandUnit.class, "Azure WebApp Command Unit", StencilCategory.AZURE_WEBAPP, DEFAULT_DISPLAY_ORDER),
   FETCH_INSTANCES_DUMMY(
       FetchInstancesCommandUnit.class, "Fetch Instances", StencilCategory.COMMANDS, DEFAULT_DISPLAY_ORDER),
-  AZURE_ARM(AzureARMCommandUnit.class, "Azure ARM Command Unit", StencilCategory.AZURE_ARM, DEFAULT_DISPLAY_ORDER);
+  AZURE_ARM(AzureARMCommandUnit.class, "Azure ARM Command Unit", StencilCategory.AZURE_ARM, DEFAULT_DISPLAY_ORDER),
+  TERRAGRUNT_PROVISION(TerragruntDummyCommandUnit.class, "Terragrunt Provision", StencilCategory.TERRAGRUNT_PROVISION,
+      DEFAULT_DISPLAY_ORDER);
   private static final String stencilsPath = "/templates/commandstencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";
 

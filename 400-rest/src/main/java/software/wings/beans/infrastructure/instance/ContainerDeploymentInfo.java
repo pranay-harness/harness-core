@@ -1,6 +1,11 @@
 package software.wings.beans.infrastructure.instance;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.FdIndex;
 
@@ -21,6 +26,8 @@ import org.mongodb.morphia.annotations.Entity;
 @EqualsAndHashCode(callSuper = true)
 @Entity(value = "containerDeploymentInfo", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class ContainerDeploymentInfo extends Base {
   private String accountId;
   private String serviceId;

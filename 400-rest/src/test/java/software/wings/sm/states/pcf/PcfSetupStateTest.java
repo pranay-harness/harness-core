@@ -4,27 +4,31 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.FeatureName.CF_CUSTOM_EXTRACTION;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.delegate.beans.pcf.ResizeStrategy.RESIZE_NEW_FIRST;
+import static io.harness.pcf.CfCommandUnitConstants.CheckExistingApps;
+import static io.harness.pcf.CfCommandUnitConstants.FetchCustomFiles;
+import static io.harness.pcf.CfCommandUnitConstants.FetchGitFiles;
+import static io.harness.pcf.CfCommandUnitConstants.PcfSetup;
+import static io.harness.pcf.CfCommandUnitConstants.Wrapup;
 import static io.harness.pcf.model.PcfConstants.INFRA_ROUTE;
 import static io.harness.pcf.model.PcfConstants.PCF_INFRA_ROUTE;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.TMACARI;
 
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.beans.TaskType.CUSTOM_MANIFEST_FETCH_TASK;
 import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
 import static software.wings.beans.TaskType.PCF_COMMAND_TASK;
+import static software.wings.beans.appmanifest.StoreType.CUSTOM;
 import static software.wings.beans.appmanifest.StoreType.Local;
 import static software.wings.beans.appmanifest.StoreType.Remote;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.command.Command.Builder.aCommand;
-import static software.wings.beans.command.PcfDummyCommandUnit.CheckExistingApps;
-import static software.wings.beans.command.PcfDummyCommandUnit.FetchFiles;
-import static software.wings.beans.command.PcfDummyCommandUnit.PcfSetup;
-import static software.wings.beans.command.PcfDummyCommandUnit.Wrapup;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.MASKED;
 import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.OBTAIN_VALUE;
@@ -60,6 +64,7 @@ import static org.assertj.core.api.Assertions.fail;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyObject;
@@ -80,7 +85,13 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.task.manifests.request.CustomManifestValuesFetchParams;
+import io.harness.delegate.task.manifests.response.CustomManifestValuesFetchResponse;
+import io.harness.delegate.task.pcf.CfCommandRequest.PcfCommandType;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
+import io.harness.delegate.task.pcf.response.CfCommandExecutionResponse;
+import io.harness.delegate.task.pcf.response.CfSetupCommandResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.ff.FeatureFlagService;
@@ -107,6 +118,7 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.TaskType;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
@@ -125,10 +137,7 @@ import software.wings.common.InfrastructureConstants;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
-import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
-import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
-import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
-import software.wings.helpers.ext.pcf.response.PcfSetupCommandResponse;
+import software.wings.helpers.ext.pcf.request.CfCommandSetupRequest;
 import software.wings.helpers.ext.url.SubdomainUrlHelperIntfc;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.PcfInfraStructure;
@@ -146,6 +155,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
@@ -157,6 +167,7 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.ApplicationManifestUtils;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -209,6 +220,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
   @Mock private ApplicationManifestUtils applicationManifestUtils;
   @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
   @Mock private SubdomainUrlHelperIntfc subdomainUrlHelper;
+  @Mock private StateExecutionService stateExecutionService;
   @InjectMocks @Spy private PcfStateHelper pcfStateHelper;
 
   private PcfStateTestHelper pcfStateTestHelper = new PcfStateTestHelper();
@@ -376,6 +388,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
 
     doReturn("artifact-name").when(pcfSetupState).artifactFileNameForSource(any(), any());
     doReturn("artifact-path").when(pcfSetupState).artifactPathForSource(any(), any());
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
   }
 
   @Test
@@ -385,12 +398,13 @@ public class PcfSetupStateTest extends WingsBaseTest {
     on(context).set("serviceTemplateService", serviceTemplateService);
     pcfSetupState.setUseCurrentRunningCount(false);
     pcfSetupState.setMaxInstances(2);
+    pcfSetupState.setTags(singletonList("tag1"));
 
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     // With workflowV2 flag = true
     doReturn(PcfManifestsPackage.builder().manifestYml(MANIFEST_YAML_CONTENT).build())
         .when(pcfStateHelper)
-        .generateManifestMap(any(), anyMap(), any(), any());
+        .generateManifestMap(any(), anyMap(), any(), anyString());
 
     ExecutionResponse executionResponse = pcfSetupState.execute(context);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
@@ -398,14 +412,15 @@ public class PcfSetupStateTest extends WingsBaseTest {
     PcfSetupStateExecutionData stateExecutionData =
         (PcfSetupStateExecutionData) executionResponse.getStateExecutionData();
     assertThat(stateExecutionData.getCommandName()).isEqualTo("PCF Setup");
-    PcfCommandSetupRequest pcfCommandSetupRequest = (PcfCommandSetupRequest) stateExecutionData.getPcfCommandRequest();
-    assertThat(pcfCommandSetupRequest.getReleaseNamePrefix()).isEqualTo("appName");
-    assertThat(pcfCommandSetupRequest.getPcfCommandType()).isEqualTo(PcfCommandType.SETUP);
-    assertThat(pcfCommandSetupRequest.getPcfConfig().getEndpointUrl()).isEqualTo(URL);
-    assertThat(pcfCommandSetupRequest.getPcfConfig().getUsername()).isEqualTo(USER_NAME_DECRYPTED);
-    assertThat(pcfCommandSetupRequest.getOrganization()).isEqualTo(ORG);
-    assertThat(pcfCommandSetupRequest.getSpace()).isEqualTo(SPACE);
-    assertThat(pcfCommandSetupRequest.getMaxCount()).isEqualTo(3);
+    CfCommandSetupRequest cfCommandSetupRequest = (CfCommandSetupRequest) stateExecutionData.getPcfCommandRequest();
+    assertThat(cfCommandSetupRequest.getReleaseNamePrefix()).isEqualTo("appName");
+    assertThat(cfCommandSetupRequest.getPcfCommandType()).isEqualTo(PcfCommandType.SETUP);
+    assertThat(cfCommandSetupRequest.getPcfConfig().getEndpointUrl()).isEqualTo(URL);
+    assertThat(cfCommandSetupRequest.getPcfConfig().getUsername()).isEqualTo(USER_NAME_DECRYPTED);
+    assertThat(cfCommandSetupRequest.getOrganization()).isEqualTo(ORG);
+    assertThat(cfCommandSetupRequest.getSpace()).isEqualTo(SPACE);
+    assertThat(cfCommandSetupRequest.getMaxCount()).isEqualTo(3);
+    assertThat(stateExecutionData.getTags()).isEqualTo(singletonList("tag1"));
   }
 
   @Test
@@ -422,7 +437,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
 
     doReturn(PcfManifestsPackage.builder().manifestYml(MANIFEST_YAML_CONTENT).build())
         .when(pcfStateHelper)
-        .generateManifestMap(any(), anyMap(), any(), any());
+        .generateManifestMap(any(), anyMap(), any(), anyString());
 
     doReturn(DockerArtifactStream.builder().build()).when(artifactStreamService).get(any());
 
@@ -445,16 +460,18 @@ public class PcfSetupStateTest extends WingsBaseTest {
 
     doReturn(PcfManifestsPackage.builder().manifestYml(MANIFEST_YAML_CONTENT).build())
         .when(pcfStateHelper)
-        .generateManifestMap(any(), anyMap(), any(), any());
+        .generateManifestMap(any(), anyMap(), any(), anyString());
 
     ExecutionResponse executionResponse = pcfSetupState.execute(context);
+
+    verify(activityService, times(1)).save(any());
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
 
     PcfSetupStateExecutionData stateExecutionData =
         (PcfSetupStateExecutionData) executionResponse.getStateExecutionData();
     assertThat(stateExecutionData.getCommandName()).isEqualTo("PCF Setup");
-    PcfCommandSetupRequest pcfCommandSetupRequest = (PcfCommandSetupRequest) stateExecutionData.getPcfCommandRequest();
-    assertThat(pcfCommandSetupRequest.getArtifactProcessingScript()).isEqualTo("script");
+    CfCommandSetupRequest cfCommandSetupRequest = (CfCommandSetupRequest) stateExecutionData.getPcfCommandRequest();
+    assertThat(cfCommandSetupRequest.getArtifactProcessingScript()).isEqualTo("script");
   }
 
   @Test
@@ -477,6 +494,37 @@ public class PcfSetupStateTest extends WingsBaseTest {
         (PcfSetupStateExecutionData) executionResponse.getStateExecutionData();
     assertThat(stateExecutionData.getCommandName()).isEqualTo("PCF Setup");
     assertThat(stateExecutionData.getTaskType()).isEqualTo(GIT_FETCH_FILES_TASK);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testExecuteCustomFetchValuesTask() {
+    on(context).set("serviceTemplateService", serviceTemplateService);
+
+    Map<K8sValuesLocation, ApplicationManifest> applicationManifestMap = new HashMap<>();
+    applicationManifestMap.put(K8sValuesLocation.Service, ApplicationManifest.builder().storeType(CUSTOM).build());
+    when(applicationManifestUtils.getApplicationManifests(context, AppManifestKind.PCF_OVERRIDE))
+        .thenReturn(applicationManifestMap);
+
+    DelegateTask task = DelegateTask.builder()
+                            .data(TaskData.builder()
+                                      .async(true)
+                                      .taskType(TaskType.CUSTOM_MANIFEST_FETCH_TASK.name())
+                                      .parameters(new Object[] {CustomManifestValuesFetchParams.builder().build()})
+                                      .build())
+                            .build();
+    doReturn(task)
+        .when(pcfStateHelper)
+        .createCustomFetchValuesTask(any(), eq(applicationManifestMap), anyString(), anyBoolean(), anyInt());
+
+    ExecutionResponse executionResponse = pcfSetupState.execute(context);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+
+    PcfSetupStateExecutionData stateExecutionData =
+        (PcfSetupStateExecutionData) executionResponse.getStateExecutionData();
+    assertThat(stateExecutionData.getCommandName()).isEqualTo("PCF Setup");
+    assertThat(stateExecutionData.getTaskType()).isEqualTo(CUSTOM_MANIFEST_FETCH_TASK);
   }
 
   @Test
@@ -506,7 +554,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
 
     doReturn(PcfManifestsPackage.builder().manifestYml(MANIFEST_YAML_CONTENT).build())
         .when(pcfStateHelper)
-        .generateManifestMap(any(), any(), any(), any());
+        .generateManifestMap(any(), any(), any(), anyString());
 
     pcfSetupState.handleAsyncInternal(context, response);
     verify(activityService, times(0)).updateStatus("activityId", APP_ID, FAILED);
@@ -516,6 +564,70 @@ public class PcfSetupStateTest extends WingsBaseTest {
         (Map<K8sValuesLocation, ApplicationManifest>) appManifestMapCaptor.getValue();
     assertThat(capturedValue).isNotEmpty();
     assertThat(capturedValue).containsKey(K8sValuesLocation.Service);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseForCustomFetchValuesTaskWrapper() {
+    doReturn(InfrastructureDefinition.builder().name(INFRA_DEFINITION_ID).build())
+        .when(infrastructureDefinitionService)
+        .get(anyString(), anyString());
+
+    CustomManifestValuesFetchResponse fetchResponse =
+        CustomManifestValuesFetchResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
+
+    Map<String, ResponseData> response = new HashMap<>();
+    response.put("activityId", fetchResponse);
+
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
+    appManifestMap.put(K8sValuesLocation.Service, ApplicationManifest.builder().storeType(CUSTOM).build());
+    PcfSetupStateExecutionData pcfSetupStateExecutionData =
+        (PcfSetupStateExecutionData) context.getStateExecutionData();
+    pcfSetupStateExecutionData.setTaskType(CUSTOM_MANIFEST_FETCH_TASK);
+    pcfSetupStateExecutionData.setAppManifestMap(appManifestMap);
+    pcfSetupStateExecutionData.setActivityId("activityId");
+
+    doReturn(MANIFEST_YAML_CONTENT).when(pcfStateHelper).fetchManifestYmlString(any(), any());
+    on(context).set("serviceTemplateService", serviceTemplateService);
+
+    doReturn(PcfManifestsPackage.builder().manifestYml(MANIFEST_YAML_CONTENT).build())
+        .when(pcfStateHelper)
+        .generateManifestMap(any(), any(), any(), anyString());
+
+    Map<K8sValuesLocation, Collection<String>> valuesFiles = new HashMap<>();
+    valuesFiles.put(K8sValuesLocation.Service, Arrays.asList("Content"));
+    doReturn(valuesFiles)
+        .when(applicationManifestUtils)
+        .getValuesFilesFromCustomFetchValuesResponse(any(), any(), any(), anyString());
+
+    pcfSetupState.handleAsyncInternal(context, response);
+    verify(activityService, times(0)).updateStatus("activityId", APP_ID, FAILED);
+    ArgumentCaptor<HashMap> appManifestMapCaptor = ArgumentCaptor.forClass(HashMap.class);
+    verify(pcfSetupState, times(1)).executePcfTask(any(), any(), appManifestMapCaptor.capture());
+    Map<K8sValuesLocation, ApplicationManifest> capturedValue =
+        (Map<K8sValuesLocation, ApplicationManifest>) appManifestMapCaptor.getValue();
+    assertThat(capturedValue).isNotEmpty();
+    assertThat(capturedValue).containsKey(K8sValuesLocation.Service);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseForCustomFetchValuesTaskWrapperInErrorCase() {
+    CustomManifestValuesFetchResponse fetchResponse =
+        CustomManifestValuesFetchResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
+
+    Map<String, ResponseData> response = new HashMap<>();
+    response.put("activityId", fetchResponse);
+
+    PcfSetupStateExecutionData pcfSetupStateExecutionData =
+        (PcfSetupStateExecutionData) context.getStateExecutionData();
+    pcfSetupStateExecutionData.setTaskType(CUSTOM_MANIFEST_FETCH_TASK);
+    pcfSetupStateExecutionData.setActivityId("activityId");
+
+    pcfSetupState.handleAsyncInternal(context, response);
+    verify(activityService, times(1)).updateStatus("activityId", APP_ID, FAILED);
   }
 
   @Test
@@ -541,11 +653,11 @@ public class PcfSetupStateTest extends WingsBaseTest {
   @Owner(developers = TMACARI)
   @Category(UnitTests.class)
   public void testHandleAsyncResponseForPcfTaskInErrorCase() {
-    PcfCommandExecutionResponse pcfCommandExecutionResponse =
-        PcfCommandExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
+    CfCommandExecutionResponse cfCommandExecutionResponse =
+        CfCommandExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
 
     Map<String, ResponseData> response = new HashMap<>();
-    response.put("activityId", pcfCommandExecutionResponse);
+    response.put("activityId", cfCommandExecutionResponse);
 
     PcfSetupStateExecutionData pcfSetupStateExecutionData =
         (PcfSetupStateExecutionData) context.getStateExecutionData();
@@ -560,17 +672,25 @@ public class PcfSetupStateTest extends WingsBaseTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGetCommandUnitList() {
-    List<CommandUnit> commandUnits = pcfSetupState.getCommandUnitList(true);
-    List<String> commandUnitNames = commandUnits.stream().map(commandUnit -> commandUnit.getName()).collect(toList());
+    List<CommandUnit> commandUnits = pcfSetupState.getCommandUnitList(true, false);
+    List<String> commandUnitNames = commandUnits.stream().map(CommandUnit::getName).collect(toList());
     assertThat(commandUnits).isNotNull();
     assertThat(commandUnits.size()).isEqualTo(4);
-    assertThat(commandUnitNames).containsExactly(FetchFiles, CheckExistingApps, PcfSetup, Wrapup);
+    assertThat(commandUnitNames).containsExactly(FetchGitFiles, CheckExistingApps, PcfSetup, Wrapup);
 
-    commandUnits = pcfSetupState.getCommandUnitList(false);
-    commandUnitNames = commandUnits.stream().map(commandUnit -> commandUnit.getName()).collect(toList());
+    commandUnits = pcfSetupState.getCommandUnitList(false, false);
+    commandUnitNames = commandUnits.stream().map(CommandUnit::getName).collect(toList());
     assertThat(commandUnits).isNotNull();
     assertThat(commandUnits.size()).isEqualTo(3);
     assertThat(commandUnitNames).containsExactly(CheckExistingApps, PcfSetup, Wrapup);
+
+    commandUnits = pcfSetupState.getCommandUnitList(false, true);
+    commandUnitNames = commandUnits.stream().map(CommandUnit::getName).collect(toList());
+    assertThat(commandUnitNames).containsExactly(FetchCustomFiles, CheckExistingApps, PcfSetup, Wrapup);
+
+    commandUnits = pcfSetupState.getCommandUnitList(true, true);
+    commandUnitNames = commandUnits.stream().map(CommandUnit::getName).collect(toList());
+    assertThat(commandUnitNames).containsExactly(FetchGitFiles, FetchCustomFiles, CheckExistingApps, PcfSetup, Wrapup);
   }
 
   @Test
@@ -579,15 +699,15 @@ public class PcfSetupStateTest extends WingsBaseTest {
   public void testGenerateCurrentRunningCount() {
     pcfSetupState.setMaxInstances(2);
     assertThat(pcfSetupState.generateCurrentRunningCount(
-                   PcfSetupCommandResponse.builder().instanceCountForMostRecentVersion(3).build()))
+                   CfSetupCommandResponse.builder().instanceCountForMostRecentVersion(3).build()))
         .isEqualTo(3);
 
     assertThat(pcfSetupState.generateCurrentRunningCount(
-                   PcfSetupCommandResponse.builder().instanceCountForMostRecentVersion(0).build()))
+                   CfSetupCommandResponse.builder().instanceCountForMostRecentVersion(0).build()))
         .isEqualTo(0);
 
     assertThat(pcfSetupState.generateCurrentRunningCount(
-                   PcfSetupCommandResponse.builder().instanceCountForMostRecentVersion(null).build()))
+                   CfSetupCommandResponse.builder().instanceCountForMostRecentVersion(null).build()))
         .isEqualTo(0);
 
     assertThat(pcfSetupState.generateCurrentRunningCount(null)).isEqualTo(0);
@@ -597,22 +717,22 @@ public class PcfSetupStateTest extends WingsBaseTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testGetActualDesiredCount() {
-    PcfSetupCommandResponse pcfSetupCommandResponse =
-        PcfSetupCommandResponse.builder().instanceCountForMostRecentVersion(null).build();
+    CfSetupCommandResponse cfSetupCommandResponse =
+        CfSetupCommandResponse.builder().instanceCountForMostRecentVersion(null).build();
 
     PcfSetupStateExecutionData stateExecutionData =
         PcfSetupStateExecutionData.builder().useCurrentRunningInstanceCount(true).maxInstanceCount(2).build();
-    assertThat(pcfSetupState.getActualDesiredCount(stateExecutionData, pcfSetupCommandResponse)).isEqualTo(2);
+    assertThat(pcfSetupState.getActualDesiredCount(stateExecutionData, cfSetupCommandResponse)).isEqualTo(2);
 
-    pcfSetupCommandResponse.setInstanceCountForMostRecentVersion(0);
-    assertThat(pcfSetupState.getActualDesiredCount(stateExecutionData, pcfSetupCommandResponse)).isEqualTo(2);
+    cfSetupCommandResponse.setInstanceCountForMostRecentVersion(0);
+    assertThat(pcfSetupState.getActualDesiredCount(stateExecutionData, cfSetupCommandResponse)).isEqualTo(2);
 
-    pcfSetupCommandResponse.setInstanceCountForMostRecentVersion(3);
-    assertThat(pcfSetupState.getActualDesiredCount(stateExecutionData, pcfSetupCommandResponse)).isEqualTo(3);
+    cfSetupCommandResponse.setInstanceCountForMostRecentVersion(3);
+    assertThat(pcfSetupState.getActualDesiredCount(stateExecutionData, cfSetupCommandResponse)).isEqualTo(3);
 
-    pcfSetupCommandResponse.setInstanceCountForMostRecentVersion(3);
+    cfSetupCommandResponse.setInstanceCountForMostRecentVersion(3);
     stateExecutionData.setUseCurrentRunningInstanceCount(false);
-    assertThat(pcfSetupState.getActualDesiredCount(stateExecutionData, pcfSetupCommandResponse)).isEqualTo(2);
+    assertThat(pcfSetupState.getActualDesiredCount(stateExecutionData, cfSetupCommandResponse)).isEqualTo(2);
   }
 
   @Test

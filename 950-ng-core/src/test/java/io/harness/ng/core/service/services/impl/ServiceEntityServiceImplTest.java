@@ -2,17 +2,20 @@ package io.harness.ng.core.service.services.impl;
 
 import static io.harness.rule.OwnerRule.ARCHIT;
 import static io.harness.rule.OwnerRule.DEEPAK;
+import static io.harness.rule.OwnerRule.MOHIT_GARG;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.NGCoreTestBase;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.mappers.ServiceElementMapper;
-import io.harness.ng.core.service.mappers.ServiceFilterHelper;
+import io.harness.ng.core.utils.CoreCriteriaUtils;
 import io.harness.rule.Owner;
 import io.harness.utils.PageUtils;
 
@@ -27,9 +30,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+@OwnedBy(HarnessTeam.CDC)
 public class ServiceEntityServiceImplTest extends NGCoreTestBase {
   @Inject ServiceEntityServiceImpl serviceEntityService;
   private static final String ACCOUNT_ID = "ACCOUNT_ID";
+  private static final String ORG_ID = "ORG_ID";
+  private static final String PROJECT_ID = "PROJECT_ID";
 
   @Test
   @Owner(developers = ARCHIT)
@@ -110,7 +116,7 @@ public class ServiceEntityServiceImplTest extends NGCoreTestBase {
 
     // List services operations.
     Criteria criteriaFromServiceFilter =
-        ServiceFilterHelper.createCriteriaForGetList("ACCOUNT_ID", "ORG_ID", "PROJECT_ID", false);
+        CoreCriteriaUtils.createCriteriaForGetList("ACCOUNT_ID", "ORG_ID", "PROJECT_ID", false);
     Pageable pageRequest = PageUtils.getPageRequest(0, 10, null);
     Page<ServiceEntity> list = serviceEntityService.list(criteriaFromServiceFilter, pageRequest);
     assertThat(list.getContent()).isNotNull();
@@ -118,7 +124,7 @@ public class ServiceEntityServiceImplTest extends NGCoreTestBase {
     assertThat(ServiceElementMapper.writeDTO(list.getContent().get(0)))
         .isEqualTo(ServiceElementMapper.writeDTO(updatedServiceResponse));
 
-    criteriaFromServiceFilter = ServiceFilterHelper.createCriteriaForGetList("ACCOUNT_ID", "ORG_ID", null, false);
+    criteriaFromServiceFilter = CoreCriteriaUtils.createCriteriaForGetList("ACCOUNT_ID", "ORG_ID", null, false);
 
     list = serviceEntityService.list(criteriaFromServiceFilter, pageRequest);
     assertThat(list.getContent()).isNotNull();
@@ -152,18 +158,61 @@ public class ServiceEntityServiceImplTest extends NGCoreTestBase {
     for (int i = 0; i < 5; i++) {
       String serviceIdentifier = "identifier " + i;
       Optional<ServiceEntity> serviceEntitySaved =
-          serviceEntityService.get(ACCOUNT_ID, "ORG_ID", "PROJECT_ID", serviceIdentifier, false);
+          serviceEntityService.get(ACCOUNT_ID, ORG_ID, PROJECT_ID, serviceIdentifier, false);
       assertThat(serviceEntitySaved.isPresent()).isTrue();
     }
+  }
+
+  @Test
+  @Owner(developers = MOHIT_GARG)
+  @Category(UnitTests.class)
+  public void testGetAllServices() {
+    List<ServiceEntity> serviceEntities = new ArrayList<>();
+    int pageSize = 1000;
+    int numOfServices = pageSize * 2 + 100; // creating adhoc num of services, not in multiples of page size
+    for (int i = 0; i < numOfServices; i++) {
+      String serviceIdentifier = "identifier " + i;
+      String serviceName = "serviceName " + i;
+      ServiceEntity serviceEntity = createServiceEntity(serviceIdentifier, serviceName);
+      serviceEntities.add(serviceEntity);
+    }
+    serviceEntityService.bulkCreate(ACCOUNT_ID, serviceEntities);
+
+    List<ServiceEntity> serviceEntityList =
+        serviceEntityService.getAllServices(ACCOUNT_ID, ORG_ID, PROJECT_ID, pageSize);
+    assertThat(serviceEntityList.size()).isEqualTo(numOfServices);
+  }
+
+  @Test
+  @Owner(developers = MOHIT_GARG)
+  @Category(UnitTests.class)
+  public void testGetActiveServiceCount() {
+    List<ServiceEntity> serviceEntities = new ArrayList<>();
+    for (int i = 1; i <= 20; i++) {
+      String serviceIdentifier = "identifier " + i;
+      String serviceName = "serviceName " + i;
+      ServiceEntity serviceEntity = createServiceEntity(serviceIdentifier, serviceName);
+      serviceEntity.setCreatedAt((long) i);
+      if (i % 5 == 0) {
+        serviceEntity.setDeleted(true);
+        serviceEntity.setDeletedAt((long) (i + 5));
+      }
+      serviceEntities.add(serviceEntity);
+    }
+    serviceEntityService.bulkCreate(ACCOUNT_ID, serviceEntities);
+    Integer activeServiceCount =
+        serviceEntityService.findActiveServicesCountAtGivenTimestamp(ACCOUNT_ID, ORG_ID, PROJECT_ID, 16);
+    assertThat(activeServiceCount).isEqualTo(16 - 2);
   }
 
   private ServiceEntity createServiceEntity(String identifier, String name) {
     return ServiceEntity.builder()
         .accountId(ACCOUNT_ID)
         .identifier(identifier)
-        .orgIdentifier("ORG_ID")
-        .projectIdentifier("PROJECT_ID")
+        .orgIdentifier(ORG_ID)
+        .projectIdentifier(PROJECT_ID)
         .name(name)
+        .deleted(false)
         .build();
   }
 

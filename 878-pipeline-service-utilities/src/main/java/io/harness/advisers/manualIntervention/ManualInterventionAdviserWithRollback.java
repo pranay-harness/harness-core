@@ -6,6 +6,8 @@ import static io.harness.pms.contracts.execution.Status.INTERVENTION_WAITING;
 import io.harness.advisers.CommonAdviserTypes;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.rollback.NGFailureActionTypeConstants;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.AdviserType;
@@ -20,8 +22,9 @@ import io.harness.serializer.KryoSerializer;
 import com.google.inject.Inject;
 import com.google.protobuf.Duration;
 import java.util.Collections;
+import java.util.Map;
 
-@OwnedBy(HarnessTeam.CDC)
+@OwnedBy(HarnessTeam.PIPELINE)
 public class ManualInterventionAdviserWithRollback implements Adviser {
   public static final AdviserType ADVISER_TYPE =
       AdviserType.newBuilder().setType(CommonAdviserTypes.MANUAL_INTERVENTION_WITH_ROLLBACK.name()).build();
@@ -35,14 +38,15 @@ public class ManualInterventionAdviserWithRollback implements Adviser {
     if (parameters != null && parameters.getTimeout() != null) {
       timeout = Duration.newBuilder().setSeconds(parameters.getTimeout()).build();
     }
-    String nextNodeId = parameters == null ? null : parameters.getNextNodeId();
     RepairActionCode repairActionCode = parameters == null ? null : parameters.getTimeoutAction();
     return AdviserResponse.newBuilder()
         .setInterventionWaitAdvise(
             InterventionWaitAdvise.newBuilder()
                 .setTimeout(timeout)
-                .setRepairActionCode(repairActionCode == null ? RepairActionCode.UNKNOWN : repairActionCode)
-                .setNextNodeId(nextNodeId == null ? "" : nextNodeId)
+                .setRepairActionCode(
+                    repairActionCode == null ? RepairActionCode.UNKNOWN : getReformedRepairActionCode(repairActionCode))
+                .putAllMetadata(getRollbackMetadataMap(repairActionCode))
+                .setFromStatus(advisingEvent.getToStatus())
                 .build())
         .setType(AdviseType.INTERVENTION_WAIT)
         .build();
@@ -50,10 +54,13 @@ public class ManualInterventionAdviserWithRollback implements Adviser {
 
   @Override
   public boolean canAdvise(AdvisingEvent advisingEvent) {
+    if (advisingEvent.isPreviousAdviserExpired()) {
+      return false;
+    }
     boolean canAdvise = StatusUtils.brokeStatuses().contains(advisingEvent.getToStatus())
         && advisingEvent.getFromStatus() != INTERVENTION_WAITING;
     ManualInterventionAdviserRollbackParameters parameters = extractParameters(advisingEvent);
-    FailureInfo failureInfo = advisingEvent.getNodeExecution().getFailureInfo();
+    FailureInfo failureInfo = advisingEvent.getFailureInfo();
     if (failureInfo != null && parameters != null && !isEmpty(failureInfo.getFailureTypesList())) {
       return canAdvise
           && !Collections.disjoint(parameters.getApplicableFailureTypes(), failureInfo.getFailureTypesList());
@@ -67,5 +74,34 @@ public class ManualInterventionAdviserWithRollback implements Adviser {
       return null;
     }
     return (ManualInterventionAdviserRollbackParameters) kryoSerializer.asObject(adviserParameters);
+  }
+
+  private RepairActionCode getReformedRepairActionCode(RepairActionCode repairActionCode) {
+    switch (repairActionCode) {
+      case STAGE_ROLLBACK:
+      case STEP_GROUP_ROLLBACK:
+        return RepairActionCode.CUSTOM_FAILURE;
+      default:
+        return repairActionCode;
+    }
+  }
+
+  private String getRollbackStrategy(RepairActionCode repairActionCode) {
+    switch (repairActionCode) {
+      case STEP_GROUP_ROLLBACK:
+        return NGFailureActionTypeConstants.STEP_GROUP_ROLLBACK;
+      case STAGE_ROLLBACK:
+        return NGFailureActionTypeConstants.STAGE_ROLLBACK;
+      default:
+        return "";
+    }
+  }
+
+  private Map<String, String> getRollbackMetadataMap(RepairActionCode repairActionCode) {
+    String rollbackStrategy = getRollbackStrategy(repairActionCode);
+    if (EmptyPredicate.isNotEmpty(rollbackStrategy)) {
+      return Collections.singletonMap("ROLLBACK", rollbackStrategy);
+    }
+    return Collections.emptyMap();
   }
 }

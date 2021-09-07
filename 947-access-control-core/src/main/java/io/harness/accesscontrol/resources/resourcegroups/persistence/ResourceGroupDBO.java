@@ -9,6 +9,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 
 import com.google.common.collect.ImmutableList;
@@ -41,7 +42,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @AllArgsConstructor
 @ToString
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @FieldNameConstants(innerTypeName = "ResourceGroupDBOKeys")
 @Entity(value = "resourcegroups", noClassnameStored = true)
 @Document("resourcegroups")
@@ -49,12 +50,12 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @StoreIn(ACCESS_CONTROL)
 public class ResourceGroupDBO implements PersistentRegularIterable, AccessControlEntity {
   @Setter @Id @org.mongodb.morphia.annotations.Id String id;
-  @NotEmpty final String scopeIdentifier;
-  @NotEmpty final String identifier;
-  @NotEmpty final String name;
-  @NotNull final Set<String> resourceSelectors;
-  @NotNull @Builder.Default final Boolean fullScopeSelected = Boolean.FALSE;
-  @NotNull @Builder.Default final Boolean managed = Boolean.FALSE;
+  @EqualsAndHashCode.Include @NotEmpty final String scopeIdentifier;
+  @EqualsAndHashCode.Include @NotEmpty final String identifier;
+  @EqualsAndHashCode.Include @NotEmpty final String name;
+  @EqualsAndHashCode.Include @NotNull final Set<String> resourceSelectors;
+  @EqualsAndHashCode.Include @NotNull @Builder.Default final Boolean fullScopeSelected = Boolean.FALSE;
+  @EqualsAndHashCode.Include @NotNull @Builder.Default final Boolean managed = Boolean.FALSE;
 
   @Setter @CreatedDate Long createdAt;
   @Setter @LastModifiedDate Long lastModifiedAt;
@@ -62,14 +63,22 @@ public class ResourceGroupDBO implements PersistentRegularIterable, AccessContro
   @Setter @LastModifiedBy EmbeddedUser lastUpdatedBy;
   @Setter @Version Long version;
 
-  @Setter Long nextReconciliationIterationAt;
+  @FdIndex @Setter Long nextReconciliationIterationAt;
+
+  public boolean isFullScopeSelected() {
+    return fullScopeSelected != null && fullScopeSelected;
+  }
+
+  public boolean isManaged() {
+    return managed != null && managed;
+  }
 
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
                  .name("uniqueResourceGroupPrimaryKey")
-                 .field(ResourceGroupDBOKeys.scopeIdentifier)
                  .field(ResourceGroupDBOKeys.identifier)
+                 .field(ResourceGroupDBOKeys.scopeIdentifier)
                  .unique(true)
                  .build())
         .build();

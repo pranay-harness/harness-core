@@ -1,18 +1,19 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:tools/bazel/macros.bzl", "run_analysis")
 
 shared_dependencies = [
     "//400-rest:module",
+    "//940-primary-version-manager:module",
     "//960-persistence:module",
+    "//960-continuous-features:module",
     "//970-rbac-core:module",
     "//:lombok",
 ]
 
 java_binary(
     name = "module",
-    srcs = glob(["src/main/**/*.java"]),
+    srcs = glob(["src/main/java/**/*.java"]),
     data = ["//:resource"],
     main_class = "io.harness.commandlibrary.server.app.CommandLibraryServerApplication",
     resources = [
@@ -58,6 +59,9 @@ java_library(
 
 run_tests()
 
-checkstyle()
+run_analysis()
 
-pmd()
+exports_files([
+    "keystore.jks",
+    "command-library-server-config.yml",
+])

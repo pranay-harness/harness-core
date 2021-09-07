@@ -16,7 +16,7 @@ import io.harness.CategoryTest;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.dao.CEMetadataRecordDao;
-import io.harness.ccm.commons.entities.CEMetadataRecord;
+import io.harness.ccm.commons.entities.batch.CEMetadataRecord;
 import io.harness.ccm.setup.config.CESetUpConfig;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;

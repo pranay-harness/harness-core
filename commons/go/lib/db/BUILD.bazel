@@ -1,7 +1,7 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
-    name = "go_default_library",
+    name = "db",
     srcs = [
         "connection_info.go",
         "db.go",
@@ -13,31 +13,32 @@ go_library(
     importpath = "github.com/wings-software/portal/commons/go/lib/db",
     visibility = ["//visibility:public"],
     deps = [
-        "@com_github_go_sql_driver_mysql//:go_default_library",
-        "@com_github_lib_pq//:go_default_library",
-        "@com_github_opentracing_opentracing_go//:go_default_library",
-        "@com_github_opentracing_opentracing_go//ext:go_default_library",
-        "@com_github_satori_go_uuid//:go_default_library",
-        "@in_gopkg_data_dog_go_sqlmock_v1//:go_default_library",
-        "@org_uber_go_zap//:go_default_library",
+        "//product/ci/ti-service/logger",
+        "@com_github_go_sql_driver_mysql//:mysql",
+        "@com_github_lib_pq//:pq",
+        "@com_github_opentracing_opentracing_go//:opentracing-go",
+        "@com_github_opentracing_opentracing_go//ext",
+        "@com_github_satori_go_uuid//:go_uuid",
+        "@in_gopkg_data_dog_go_sqlmock_v1//:go-sqlmock_v1",
+        "@org_uber_go_zap//:zap",
     ],
 )
 
 go_test(
-    name = "go_default_test",
+    name = "db_test",
     srcs = [
         "db_test.go",
         "stmt_test.go",
         "tx_test.go",
         "utils_test.go",
     ],
-    embed = [":go_default_library"],
+    embed = [":db"],
     deps = [
-        "@com_github_stretchr_testify//assert:go_default_library",
-        "@com_github_stretchr_testify//require:go_default_library",
-        "@in_gopkg_data_dog_go_sqlmock_v1//:go_default_library",
-        "@org_uber_go_zap//:go_default_library",
-        "@org_uber_go_zap//zapcore:go_default_library",
-        "@org_uber_go_zap//zaptest/obxxxxxxxxgo_default_library",
+        "@com_github_stretchr_testify//assert",
+        "@com_github_stretchr_testify//require",
+        "@in_gopkg_data_dog_go_sqlmock_v1//:go-sqlmock_v1",
+        "@org_uber_go_zap//:zap",
+        "@org_uber_go_zap//zapcore",
+        "@org_uber_go_zap//zaptest/observer",
     ],
 )

@@ -104,7 +104,7 @@ public class Constraint {
     }
   }
 
-  public State calculateConsumerState(List<Consumer> consumers, int permits, int usedPermits) {
+  private State calculateConsumerState(List<Consumer> consumers, int permits, int usedPermits) {
     State state = null;
     final Strategy strategy = getSpec().getStrategy();
     switch (strategy) {

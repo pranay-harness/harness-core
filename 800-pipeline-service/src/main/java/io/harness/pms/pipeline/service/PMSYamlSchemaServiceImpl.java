@@ -1,237 +1,253 @@
 package io.harness.pms.pipeline.service;
 
-import static io.harness.yaml.schema.beans.SchemaConstants.ANY_OF_NODE;
-import static io.harness.yaml.schema.beans.SchemaConstants.DEFINITIONS_NAMESPACE_STRING_PATTERN;
+import static io.harness.yaml.schema.beans.SchemaConstants.ALL_OF_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.DEFINITIONS_NODE;
-import static io.harness.yaml.schema.beans.SchemaConstants.PROPERTIES_NODE;
-import static io.harness.yaml.schema.beans.SchemaConstants.REF_NODE;
 
 import static java.lang.String.format;
 
 import io.harness.EntityType;
+import io.harness.ModuleType;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.encryption.Scope;
+import io.harness.exception.InvalidYamlException;
+import io.harness.exception.JsonSchemaException;
+import io.harness.exception.JsonSchemaValidationException;
 import io.harness.jackson.JsonNodeUtils;
-import io.harness.network.SafeHttpCall;
-import io.harness.plancreator.stages.parallel.ParallelStageElementConfig;
+import io.harness.manage.ManagedExecutorService;
+import io.harness.ng.core.dto.ProjectResponse;
 import io.harness.plancreator.stages.stage.StageElementConfig;
-import io.harness.plancreator.steps.ParallelStepElementConfig;
-import io.harness.plancreator.steps.StepElementConfig;
+import io.harness.pms.merger.helpers.FQNMapGenerator;
+import io.harness.pms.pipeline.service.yamlschema.PmsYamlSchemaHelper;
+import io.harness.pms.pipeline.service.yamlschema.SchemaFetcher;
+import io.harness.pms.pipeline.service.yamlschema.approval.ApprovalYamlSchemaService;
+import io.harness.pms.pipeline.service.yamlschema.featureflag.FeatureFlagYamlService;
 import io.harness.pms.sdk.PmsSdkInstanceService;
-import io.harness.pms.utils.PmsConstants;
-import io.harness.steps.approval.stage.ApprovalStageConfig;
-import io.harness.yaml.schema.SchemaGeneratorUtils;
+import io.harness.pms.utils.CompletableFutures;
+import io.harness.pms.yaml.YamlUtils;
+import io.harness.project.remote.ProjectClient;
+import io.harness.remote.client.NGRestUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
 import io.harness.yaml.schema.YamlSchemaProvider;
-import io.harness.yaml.schema.beans.FieldEnumData;
-import io.harness.yaml.schema.beans.FieldSubtypeData;
 import io.harness.yaml.schema.beans.PartialSchemaDTO;
-import io.harness.yaml.schema.beans.SchemaConstants;
-import io.harness.yaml.schema.beans.SubtypeClassMap;
-import io.harness.yaml.schema.beans.SwaggerDefinitionsMetaInfo;
-import io.harness.yaml.schema.client.YamlSchemaClient;
+import io.harness.yaml.utils.JsonPipelineUtils;
 import io.harness.yaml.utils.YamlSchemaUtils;
+import io.harness.yaml.validator.YamlSchemaValidator;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
-import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
-import javax.ws.rs.NotFoundException;
-import lombok.AllArgsConstructor;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
+@OwnedBy(HarnessTeam.PIPELINE)
 @Slf4j
 public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
+  private final Executor executor = new ManagedExecutorService(Executors.newFixedThreadPool(4));
+
   public static final String STAGE_ELEMENT_CONFIG = YamlSchemaUtils.getSwaggerName(StageElementConfig.class);
   public static final Class<StageElementConfig> STAGE_ELEMENT_CONFIG_CLASS = StageElementConfig.class;
 
-  private static final String APPROVAL_STAGE_CONFIG = YamlSchemaUtils.getSwaggerName(ApprovalStageConfig.class);
-  private static final String STEP_ELEMENT_CONFIG = YamlSchemaUtils.getSwaggerName(StepElementConfig.class);
-  private static final Class<StepElementConfig> STEP_ELEMENT_CONFIG_CLASS = StepElementConfig.class;
-  private static final String APPROVAL_NAMESPACE = "approval";
-  private static final String APPROVAL_INSTANCE_NAME = "approval";
-
   private final YamlSchemaProvider yamlSchemaProvider;
   private final YamlSchemaGenerator yamlSchemaGenerator;
-  private final Map<String, YamlSchemaClient> yamlSchemaClientMapper;
-
+  private final YamlSchemaValidator yamlSchemaValidator;
   private final PmsSdkInstanceService pmsSdkInstanceService;
+  private final PmsYamlSchemaHelper pmsYamlSchemaHelper;
+  private final ApprovalYamlSchemaService approvalYamlSchemaService;
+  private final FeatureFlagYamlService featureFlagYamlService;
+  private final SchemaFetcher schemaFetcher;
+  private final ProjectClient projectClient;
 
-  public JsonNode getPipelineYamlSchema(String projectIdentifier, String orgIdentifier, Scope scope) {
+  @Inject
+  public PMSYamlSchemaServiceImpl(YamlSchemaProvider yamlSchemaProvider, YamlSchemaGenerator yamlSchemaGenerator,
+      YamlSchemaValidator yamlSchemaValidator, PmsSdkInstanceService pmsSdkInstanceService,
+      PmsYamlSchemaHelper pmsYamlSchemaHelper, ApprovalYamlSchemaService approvalYamlSchemaService,
+      FeatureFlagYamlService featureFlagYamlService, SchemaFetcher schemaFetcher, ProjectClient projectClient) {
+    this.yamlSchemaProvider = yamlSchemaProvider;
+    this.yamlSchemaGenerator = yamlSchemaGenerator;
+    this.yamlSchemaValidator = yamlSchemaValidator;
+    this.pmsSdkInstanceService = pmsSdkInstanceService;
+    this.pmsYamlSchemaHelper = pmsYamlSchemaHelper;
+    this.approvalYamlSchemaService = approvalYamlSchemaService;
+    this.featureFlagYamlService = featureFlagYamlService;
+    this.schemaFetcher = schemaFetcher;
+    this.projectClient = projectClient;
+  }
+
+  @Override
+  public JsonNode getPipelineYamlSchema(
+      String accountIdentifier, String projectIdentifier, String orgIdentifier, Scope scope) {
+    try {
+      return getPipelineYamlSchemaInternal(accountIdentifier, projectIdentifier, orgIdentifier, scope);
+    } catch (Exception e) {
+      log.error("[PMS] Failed to get pipeline yaml schema");
+      throw new JsonSchemaException(e.getMessage());
+    }
+  }
+
+  @Override
+  public void validateYamlSchema(String accountId, String orgId, String projectId, String yaml) {
+    validateYamlSchemaInternal(accountId, orgId, projectId, yaml);
+  }
+
+  private void validateYamlSchemaInternal(String accountIdentifier, String orgId, String projectId, String yaml) {
+    try {
+      JsonNode schema = getPipelineYamlSchema(accountIdentifier, projectId, orgId, Scope.PROJECT);
+      String schemaString = JsonPipelineUtils.writeJsonString(schema);
+      Set<String> errors = yamlSchemaValidator.validate(yaml, schemaString);
+      if (!errors.isEmpty()) {
+        throw new JsonSchemaValidationException(String.join("\n", errors));
+      }
+    } catch (Exception ex) {
+      log.error(ex.getMessage(), ex);
+      throw new JsonSchemaValidationException(ex.getMessage(), ex);
+    }
+  }
+
+  @Override
+  public void validateUniqueFqn(String yaml) {
+    try {
+      FQNMapGenerator.generateFQNMap(YamlUtils.readTree(yaml).getNode().getCurrJsonNode());
+    } catch (IOException ex) {
+      log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+      throw new InvalidYamlException(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+    }
+  }
+
+  @Override
+  public void invalidateAllCache() {
+    schemaFetcher.invalidateAllCache();
+  }
+
+  private JsonNode getPipelineYamlSchemaInternal(
+      String accountIdentifier, String projectIdentifier, String orgIdentifier, Scope scope) {
     JsonNode pipelineSchema =
         yamlSchemaProvider.getYamlSchema(EntityType.PIPELINES, orgIdentifier, projectIdentifier, scope);
 
+    JsonNode pipelineSteps =
+        yamlSchemaProvider.getYamlSchema(EntityType.PIPELINE_STEPS, orgIdentifier, projectIdentifier, scope);
     ObjectNode pipelineDefinitions = (ObjectNode) pipelineSchema.get(DEFINITIONS_NODE);
-    ObjectNode stageElementConfig = (ObjectNode) pipelineDefinitions.remove(STAGE_ELEMENT_CONFIG);
+    ObjectNode pipelineStepsDefinitions = (ObjectNode) pipelineSteps.get(DEFINITIONS_NODE);
 
-    JsonNode jsonNode = pipelineDefinitions.get(ParallelStageElementConfig.class.getSimpleName());
-    if (jsonNode.isObject()) {
-      flattenParallelStepElementConfig((ObjectNode) jsonNode);
+    ObjectNode mergedDefinitions = (ObjectNode) JsonNodeUtils.merge(pipelineDefinitions, pipelineStepsDefinitions);
+
+    ObjectNode stageElementConfig = (ObjectNode) pipelineDefinitions.get(STAGE_ELEMENT_CONFIG);
+
+    PmsYamlSchemaHelper.flattenParallelElementConfig(pipelineDefinitions);
+
+    List<ModuleType> enabledModules = obtainEnabledModules(projectIdentifier, accountIdentifier, orgIdentifier);
+
+    CompletableFutures<PartialSchemaDTO> completableFutures = new CompletableFutures<>(executor);
+    for (ModuleType enabledModule : enabledModules) {
+      completableFutures.supplyAsync(() -> schemaFetcher.fetchSchema(enabledModule));
     }
 
-    Set<String> instanceNames = pmsSdkInstanceService.getInstanceNames();
-    Set<String> refs = new HashSet<>();
-    for (String instanceName : instanceNames) {
-      if (instanceName.equals(PmsConstants.INTERNAL_SERVICE_NAME)) {
-        continue;
-      }
-      PartialSchemaDTO partialSchemaDTO = getStage(instanceName, projectIdentifier, orgIdentifier, scope);
-      processPartialStageSchema(pipelineDefinitions, stageElementConfig, refs, instanceName, partialSchemaDTO);
-    }
-    processPartialStageSchema(pipelineDefinitions, stageElementConfig, refs, APPROVAL_INSTANCE_NAME,
-        getApprovalStage(projectIdentifier, orgIdentifier, scope));
+    try {
+      List<PartialSchemaDTO> partialSchemaDTOS = completableFutures.allOf().get(2, TimeUnit.MINUTES);
+      Map<ModuleType, PartialSchemaDTO> partialSchemaDtoMap =
+          partialSchemaDTOS.stream()
+              .filter(Objects::nonNull)
+              .collect(Collectors.toMap(PartialSchemaDTO::getModuleType, Function.identity()));
+      mergeCVIntoCDIfPresent(partialSchemaDtoMap);
 
-    ObjectNode stageElementWrapperConfig = (ObjectNode) pipelineDefinitions.get("StageElementWrapperConfig");
-    modifyStageElementWrapperConfig(stageElementWrapperConfig, refs);
+      partialSchemaDtoMap.values().forEach(partialSchemaDTO
+          -> pmsYamlSchemaHelper.processPartialStageSchema(
+              mergedDefinitions, pipelineStepsDefinitions, stageElementConfig, partialSchemaDTO));
+    } catch (Exception e) {
+      log.error(format("[PMS] Exception while merging yaml schema: %s", e.getMessage()), e);
+    }
+
+    pmsYamlSchemaHelper.processPartialStageSchema(mergedDefinitions, pipelineStepsDefinitions, stageElementConfig,
+        approvalYamlSchemaService.getApprovalYamlSchema(projectIdentifier, orgIdentifier, scope));
+
+    pmsYamlSchemaHelper.processPartialStageSchema(mergedDefinitions, pipelineStepsDefinitions, stageElementConfig,
+        featureFlagYamlService.getFeatureFlagYamlSchema(projectIdentifier, orgIdentifier, scope));
+
     return ((ObjectNode) pipelineSchema).set(DEFINITIONS_NODE, pipelineDefinitions);
   }
 
-  private void processPartialStageSchema(ObjectNode pipelineDefinitions, ObjectNode stageElementConfig,
-      Set<String> refs, String instanceName, PartialSchemaDTO partialSchemaDTO) {
-    SubtypeClassMap subtypeClassMap =
-        SubtypeClassMap.builder()
-            .subTypeDefinitionKey(partialSchemaDTO.getNamespace() + "/" + partialSchemaDTO.getNodeName())
-            .subtypeEnum(partialSchemaDTO.getNodeType())
-            .build();
-    ObjectNode stageDefinitionsNode = moveRootNodeToDefinitions(
-        partialSchemaDTO.getNodeName(), (ObjectNode) partialSchemaDTO.getSchema(), partialSchemaDTO.getNamespace());
-    ObjectNode stageElementCopy = stageElementConfig.deepCopy();
-    modifyStageElementConfig(stageElementCopy, subtypeClassMap,
-        instanceName.equals("ci")                         ? Arrays.asList("rollbackSteps", "failureStrategies")
-            : instanceName.equals(APPROVAL_INSTANCE_NAME) ? Collections.singletonList("rollbackSteps")
-                                                          : Collections.emptyList());
-
-    ObjectNode namespaceNode = (ObjectNode) stageDefinitionsNode.get(partialSchemaDTO.getNamespace());
-    namespaceNode.set(STAGE_ELEMENT_CONFIG, stageElementCopy);
-    refs.add(format(DEFINITIONS_NAMESPACE_STRING_PATTERN, partialSchemaDTO.getNamespace(), STAGE_ELEMENT_CONFIG));
-    JsonNodeUtils.merge(pipelineDefinitions, stageDefinitionsNode);
-  }
-
-  private void modifyStageElementWrapperConfig(ObjectNode node, Set<String> refs) {
-    ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();
-    ArrayNode refsArray = mapper.createArrayNode();
-    refs.forEach(s -> refsArray.add(mapper.createObjectNode().put(REF_NODE, s)));
-    ObjectNode stage = mapper.createObjectNode();
-    stage.set(ANY_OF_NODE, refsArray);
-    node.remove("stage");
-    ObjectNode properties = (ObjectNode) node.get(PROPERTIES_NODE);
-    properties.set("stage", stage);
-  }
-
-  private ObjectNode moveRootNodeToDefinitions(String nodeName, ObjectNode nodeSchema, String namespace) {
-    ObjectNode definitions = (ObjectNode) nodeSchema.remove(DEFINITIONS_NODE);
-    ObjectNode namespaceNode = (ObjectNode) definitions.get(namespace);
-    namespaceNode.set(nodeName, nodeSchema);
-    return definitions;
-  }
-
-  private void modifyStageElementConfig(
-      ObjectNode stageElementConfig, SubtypeClassMap subtypeClassMap, List<String> unwantedNodes) {
-    ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();
-    Map<String, SwaggerDefinitionsMetaInfo> swaggerDefinitionsMetaInfoMap = new HashMap<>();
-    Set<FieldSubtypeData> classFieldSubtypeData = new HashSet<>();
-    Field field = YamlSchemaUtils.getTypedField(STAGE_ELEMENT_CONFIG_CLASS);
-    classFieldSubtypeData.add(YamlSchemaUtils.getFieldSubtypeData(field, ImmutableSet.of(subtypeClassMap)));
-    Set<FieldEnumData> fieldEnumData = getFieldEnumData(subtypeClassMap);
-    swaggerDefinitionsMetaInfoMap.put(STAGE_ELEMENT_CONFIG,
-        SwaggerDefinitionsMetaInfo.builder()
-            .fieldEnumData(fieldEnumData)
-            .subtypeClassMap(classFieldSubtypeData)
-            .build());
-    yamlSchemaGenerator.convertSwaggerToJsonSchema(
-        swaggerDefinitionsMetaInfoMap, mapper, STAGE_ELEMENT_CONFIG, stageElementConfig);
-    JsonNode propertiesNode = stageElementConfig.get(PROPERTIES_NODE);
-    if (propertiesNode.isObject()) {
-      unwantedNodes.forEach(((ObjectNode) propertiesNode)::remove);
+  private void mergeCVIntoCDIfPresent(Map<ModuleType, PartialSchemaDTO> partialSchemaDTOMap) {
+    if (!partialSchemaDTOMap.containsKey(ModuleType.CD) || !partialSchemaDTOMap.containsKey(ModuleType.CV)) {
+      partialSchemaDTOMap.remove(ModuleType.CV);
+      return;
     }
+
+    PartialSchemaDTO cdPartialSchemaDTO = partialSchemaDTOMap.get(ModuleType.CD);
+    PartialSchemaDTO cvPartialSchemaDTO = partialSchemaDTOMap.get(ModuleType.CV);
+
+    JsonNode cvDefinitions =
+        cvPartialSchemaDTO.getSchema().get(DEFINITIONS_NODE).get(cvPartialSchemaDTO.getNamespace());
+    yamlSchemaGenerator.modifyRefsNamespace(cvDefinitions, cdPartialSchemaDTO.getNamespace());
+
+    JsonNode cdDefinitions =
+        cdPartialSchemaDTO.getSchema().get(DEFINITIONS_NODE).get(cdPartialSchemaDTO.getNamespace());
+
+    JsonNode cdDefinitionsCopy = cdDefinitions.deepCopy();
+
+    JsonNodeUtils.merge(cdDefinitions, cvDefinitions);
+
+    // TODO(Alexei) This is SOOOO ugly, find better way to do it
+    populateAllOfForCD(cdDefinitions, cdDefinitionsCopy);
+
+    partialSchemaDTOMap.remove(ModuleType.CV);
   }
 
-  private Set<FieldEnumData> getFieldEnumData(SubtypeClassMap subtypeClassMap) {
-    return ImmutableSet.of(FieldEnumData.builder()
-                               .fieldName("type")
-                               .enumValues(ImmutableSet.of(subtypeClassMap.getSubtypeEnum()))
-                               .build());
-  }
+  private void populateAllOfForCD(JsonNode cdDefinitions, JsonNode cdDefinitionsCopy) {
+    ArrayNode cdDefinitionsAllOfNode =
+        (ArrayNode) cdDefinitions.get(PmsYamlSchemaHelper.STEP_ELEMENT_CONFIG).get(ALL_OF_NODE);
+    ArrayNode cdDefinitionsCopyAllOfNode =
+        (ArrayNode) cdDefinitionsCopy.get(PmsYamlSchemaHelper.STEP_ELEMENT_CONFIG).get(ALL_OF_NODE);
 
-  private void flattenParallelStepElementConfig(ObjectNode objectNode) {
-    JsonNode sections = objectNode.get(PROPERTIES_NODE).get("sections");
-    if (sections.isObject()) {
-      objectNode.removeAll();
-      objectNode.setAll((ObjectNode) sections);
-      objectNode.put(SchemaConstants.SCHEMA_NODE, SchemaConstants.JSON_SCHEMA_7);
+    for (int i = 0; i < cdDefinitionsCopyAllOfNode.size(); i++) {
+      cdDefinitionsAllOfNode.add(cdDefinitionsCopyAllOfNode.get(i));
     }
+    JsonNodeUtils.removeDuplicatesFromArrayNode(cdDefinitionsAllOfNode);
   }
 
-  private PartialSchemaDTO getStage(String instanceName, String projectIdentifier, String orgIdentifier, Scope scope) {
+  @SuppressWarnings("unchecked")
+  private List<ModuleType> obtainEnabledModules(
+      String projectIdentifier, String accountIdentifier, String orgIdentifier) {
     try {
-      return SafeHttpCall.execute(obtainYamlSchemaClient(instanceName).get(projectIdentifier, orgIdentifier, scope))
-          .getData();
+      Optional<ProjectResponse> resp =
+          NGRestUtils.getResponse(projectClient.getProject(projectIdentifier, accountIdentifier, orgIdentifier));
+      if (!resp.isPresent()) {
+        log.warn(
+            "[PMS] Cannot obtain project details for projectIdentifier : {}, accountIdentifier: {}, orgIdentifier: {}",
+            projectIdentifier, accountIdentifier, orgIdentifier);
+        return new ArrayList<>();
+      }
+
+      List<ModuleType> projectModuleTypes = resp.get()
+                                                .getProject()
+                                                .getModules()
+                                                .stream()
+                                                .filter(moduleType -> !moduleType.isInternal())
+                                                .collect(Collectors.toList());
+
+      List<ModuleType> instanceModuleTypes = pmsSdkInstanceService.getActiveInstanceNames()
+                                                 .stream()
+                                                 .map(ModuleType::fromString)
+                                                 .collect(Collectors.toList());
+
+      return (List<ModuleType>) CollectionUtils.intersection(projectModuleTypes, instanceModuleTypes);
     } catch (Exception e) {
-      throw new NotFoundException(
-          format("Unable to get %s schema information for projectIdentifier: [%s], orgIdentifier: [%s], scope: [%s]",
-              instanceName, projectIdentifier, orgIdentifier, scope),
-          e);
+      log.warn(
+          "[PMS] Cannot obtain enabled module details for projectIdentifier : {}, accountIdentifier: {}, orgIdentifier: {}",
+          projectIdentifier, accountIdentifier, orgIdentifier, e);
+      return new ArrayList<>();
     }
-  }
-
-  public PartialSchemaDTO getApprovalStage(String projectIdentifier, String orgIdentifier, Scope scope) {
-    JsonNode approvalStageSchema =
-        yamlSchemaProvider.getYamlSchema(EntityType.APPROVAL_STAGE, orgIdentifier, projectIdentifier, scope);
-
-    JsonNode definitions = approvalStageSchema.get(DEFINITIONS_NODE);
-
-    JsonNode jsonNode = definitions.get(StepElementConfig.class.getSimpleName());
-    modifyStepElementSchema((ObjectNode) jsonNode);
-
-    jsonNode = definitions.get(ParallelStepElementConfig.class.getSimpleName());
-    if (jsonNode.isObject()) {
-      flattenParallelStepElementConfig((ObjectNode) jsonNode);
-    }
-
-    yamlSchemaGenerator.modifyRefsNamespace(approvalStageSchema, APPROVAL_NAMESPACE);
-    ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();
-    JsonNode node = mapper.createObjectNode().set(APPROVAL_NAMESPACE, definitions);
-
-    JsonNode partialCdSchema = ((ObjectNode) approvalStageSchema).set(DEFINITIONS_NODE, node);
-
-    return PartialSchemaDTO.builder()
-        .namespace(APPROVAL_NAMESPACE)
-        .nodeName(APPROVAL_STAGE_CONFIG)
-        .schema(partialCdSchema)
-        .nodeType(getApprovalStageTypeName())
-        .build();
-  }
-
-  private void modifyStepElementSchema(ObjectNode jsonNode) {
-    ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();
-    Map<String, SwaggerDefinitionsMetaInfo> swaggerDefinitionsMetaInfoMap = new HashMap<>();
-    Field typedField = YamlSchemaUtils.getTypedField(STEP_ELEMENT_CONFIG_CLASS);
-    Set<SubtypeClassMap> mapOfSubtypes = YamlSchemaUtils.getMapOfSubtypesUsingReflection(typedField);
-    Set<FieldSubtypeData> classFieldSubtypeData = new HashSet<>();
-    classFieldSubtypeData.add(YamlSchemaUtils.getFieldSubtypeData(typedField, mapOfSubtypes));
-    swaggerDefinitionsMetaInfoMap.put(
-        STEP_ELEMENT_CONFIG, SwaggerDefinitionsMetaInfo.builder().subtypeClassMap(classFieldSubtypeData).build());
-    yamlSchemaGenerator.convertSwaggerToJsonSchema(
-        swaggerDefinitionsMetaInfoMap, mapper, STEP_ELEMENT_CONFIG, jsonNode);
-  }
-
-  private String getApprovalStageTypeName() {
-    JsonTypeName annotation = ApprovalStageConfig.class.getAnnotation(JsonTypeName.class);
-    return annotation.value();
-  }
-
-  private YamlSchemaClient obtainYamlSchemaClient(String instanceName) {
-    return yamlSchemaClientMapper.get(instanceName);
   }
 }

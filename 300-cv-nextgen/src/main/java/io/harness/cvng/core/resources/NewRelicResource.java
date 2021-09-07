@@ -61,7 +61,7 @@ public class NewRelicResource {
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier, @QueryParam("pageSize") @NotNull int pageSize,
       @QueryParam("offset") @NotNull int offset, @QueryParam("filter") @DefaultValue("") String filter,
-      @QueryParam("tracingId") String tracingId) {
+      @NotNull @QueryParam("tracingId") String tracingId) {
     return ResponseDTO.newResponse(newRelicService.getNewRelicApplications(
         accountId, connectorIdentifier, orgIdentifier, projectIdentifier, filter, tracingId));
   }
@@ -76,9 +76,8 @@ public class NewRelicResource {
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
       @QueryParam("connectorIdentifier") @NotNull String connectorIdentifier,
       @QueryParam("appName") @NotNull String appName, @QueryParam("appId") @NotNull String appId,
-      @QueryParam("requestGuid") @NotNull String requestGuid, @NotNull @Valid @Body List<MetricPackDTO> metricPacks,
-      @QueryParam("tracingId") String tracingId) {
+      @QueryParam("requestGuid") @NotNull String requestGuid, @NotNull @Valid @Body List<MetricPackDTO> metricPacks) {
     return ResponseDTO.newResponse(newRelicService.validateData(
-        accountId, connectorIdentifier, orgIdentifier, projectIdentifier, appName, appId, metricPacks, tracingId));
+        accountId, connectorIdentifier, orgIdentifier, projectIdentifier, appName, appId, metricPacks, requestGuid));
   }
 }

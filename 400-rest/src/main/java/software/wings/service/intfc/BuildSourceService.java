@@ -1,9 +1,15 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
+import software.wings.beans.AzureContainerRegistry;
+import software.wings.beans.AzureImageDefinition;
+import software.wings.beans.AzureImageGallery;
+import software.wings.beans.AzureResourceGroup;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
@@ -26,6 +32,7 @@ import org.hibernate.validator.constraints.NotEmpty;
  * Created by anubhaw on 8/18/16.
  */
 @OwnedBy(CDC)
+@TargetModule(_870_CG_ORCHESTRATION)
 public interface BuildSourceService {
   /**
    * Gets jobs.
@@ -128,12 +135,12 @@ public interface BuildSourceService {
   /**
    * Gets artifact paths.
    *
-   * @param appId     the app id
-   * @param jobName   the job name
-   * @param settingId the setting id
-   * @param groupId   the group id
+   * @param appId              the app id
+   * @param jobName            the job name
+   * @param settingId          the setting id
+   * @param groupId            the group id
    * @param artifactStreamType artifact stream type
-   * @param repositoryFormat repository format
+   * @param repositoryFormat   repository format
    * @return the artifact paths
    */
   default Set<String> getArtifactPaths(@NotEmpty String appId, @NotEmpty String jobName, @NotEmpty String settingId,
@@ -167,6 +174,10 @@ public interface BuildSourceService {
    * @return
    */
   default List<BuildDetails> getBuilds(String appId, String artifactStreamId, String settingId, int limit) {
+    throw new UnsupportedOperationException();
+  }
+
+  default List<BuildDetails> getNewBuilds(String appId, String artifactStreamId, String settingId) {
     throw new UnsupportedOperationException();
   }
 
@@ -205,9 +216,9 @@ public interface BuildSourceService {
   /**
    * Gets group Id paths.
    *
-   * @param appId     the app id
-   * @param jobName   the job name
-   * @param settingId the setting id
+   * @param appId            the app id
+   * @param jobName          the job name
+   * @param settingId        the setting id
    * @param repositoryFormat the repositoryFormat
    * @return the groupId paths
    */
@@ -240,8 +251,8 @@ public interface BuildSourceService {
   /**
    * Gets group Id paths.
    *
-   * @param jobName   the job name
-   * @param settingId the setting id
+   * @param jobName          the job name
+   * @param settingId        the setting id
    * @param repositoryFormat the repositoryFormat
    * @return the groupId paths
    */
@@ -474,6 +485,36 @@ public interface BuildSourceService {
   }
 
   default List<String> getGcbTriggers(String settingId) {
+    throw new UnsupportedOperationException();
+  }
+
+  default List<String> listAcrRepositories(String cloudProviderId, String subscriptionId, String registryName) {
+    throw new UnsupportedOperationException();
+  }
+
+  default List<AzureContainerRegistry> listAzureContainerRegistries(String cloudProviderId, String subscriptionId) {
+    throw new UnsupportedOperationException();
+  }
+
+  default List<String> listAzureContainerRegistryNames(String cloudProviderId, String subscriptionId) {
+    throw new UnsupportedOperationException();
+  }
+
+  default Map<String, String> listSubscriptions(String settingId) {
+    throw new UnsupportedOperationException();
+  }
+
+  default List<AzureImageGallery> listImageGalleries(
+      String cloudProviderId, String subscriptionId, String resourceGroupName) {
+    throw new UnsupportedOperationException();
+  }
+
+  default List<AzureImageDefinition> listImageDefinitions(
+      String cloudProviderId, String subscriptionId, String resourceGroupName, String galleryName) {
+    throw new UnsupportedOperationException();
+  }
+
+  default List<AzureResourceGroup> listResourceGroups(String cloudProviderId, String subscriptionId) {
     throw new UnsupportedOperationException();
   }
 }

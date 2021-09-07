@@ -25,12 +25,14 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.verify;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.delegate.beans.pcf.ResizeStrategy;
 import io.harness.delegate.task.azure.response.AzureVMInstanceData;
 import io.harness.delegate.task.azure.response.AzureVMSSDeployTaskResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSTaskExecutionResponse;
@@ -51,7 +53,6 @@ import software.wings.beans.AzureVMSSInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InstanceUnitType;
-import software.wings.beans.ResizeStrategy;
 import software.wings.beans.Service;
 import software.wings.beans.VMSSAuthType;
 import software.wings.beans.VMSSDeploymentType;
@@ -59,6 +60,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandUnit;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionContextImpl;
@@ -82,6 +84,7 @@ public class AzureVMSSDeployStateTest extends WingsBaseTest {
   @Mock private DelegateService delegateService;
   @Mock private InfrastructureMappingService infrastructureMappingService;
   @Mock private SweepingOutputService sweepingOutputService;
+  @Mock private StateExecutionService stateExecutionService;
   @Spy @InjectMocks private AzureVMSSStateHelper azureVMSSStateHelper;
   @Spy @InjectMocks private AzureVMSSDeployState state = new AzureVMSSDeployState("Azure VMSS Deploy State");
 
@@ -164,6 +167,7 @@ public class AzureVMSSDeployStateTest extends WingsBaseTest {
         .when(azureVMSSStateHelper)
         .getVMSSIdFromName(eq("subscriptionId"), eq("resourceGroupName"), eq("oldVirtualMachineScaleSetName"));
     doReturn(60000).when(azureVMSSStateHelper).getAzureVMSSStateTimeoutFromContext(context);
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
 
     ExecutionResponse result = state.execute(context);
     state.handleAbortEvent(context);
@@ -199,6 +203,8 @@ public class AzureVMSSDeployStateTest extends WingsBaseTest {
     assertThat(deployExecutionSummary.getOldVirtualMachineScaleSetName()).isEqualTo("oldVirtualMachineScaleSetName");
     assertThat(deployExecutionSummary.getOldVirtualMachineScaleSetId()).isEqualTo("oldVirtualMachineScaleSetName-id");
     assertThat(deployExecutionSummary.toString()).isNotNull();
+
+    verify(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
   }
 
   private AzureVMSSInfrastructureMapping getInfrastructureMapping() {

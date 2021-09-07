@@ -6,7 +6,9 @@ package software.wings.api;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.pms.sdk.core.data.Outcome;
 
 import software.wings.sm.StateExecutionData;
@@ -21,6 +23,7 @@ import java.util.Map;
  */
 @OwnedBy(CDC)
 @JsonTypeName("waitStateExecutionData")
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class WaitStateExecutionData extends StateExecutionData implements Outcome {
   private long duration;
   private long wakeupTs;
@@ -94,10 +97,5 @@ public class WaitStateExecutionData extends StateExecutionData implements Outcom
     putNotNull(executionDetails, "duration",
         ExecutionDataValue.builder().displayName("Duration (In Seconds)").value(duration).build());
     return executionDetails;
-  }
-
-  @Override
-  public String getType() {
-    return "waitStateExecutionData";
   }
 }

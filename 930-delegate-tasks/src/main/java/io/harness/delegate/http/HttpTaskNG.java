@@ -13,6 +13,7 @@ import io.harness.http.beans.HttpInternalConfig;
 import io.harness.http.beans.HttpInternalResponse;
 
 import com.google.inject.Inject;
+import java.io.IOException;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -29,7 +30,12 @@ public class HttpTaskNG extends AbstractDelegateRunnableTask {
   }
 
   @Override
-  public HttpStepResponse run(TaskParameters parameters) {
+  public boolean isSupportingErrorFramework() {
+    return true;
+  }
+
+  @Override
+  public HttpStepResponse run(TaskParameters parameters) throws IOException {
     HttpTaskParametersNg httpTaskParametersNg = (HttpTaskParametersNg) parameters;
     // Todo: Need to look into useProxy and isCertValidationRequired Field.
     HttpInternalResponse httpInternalResponse =

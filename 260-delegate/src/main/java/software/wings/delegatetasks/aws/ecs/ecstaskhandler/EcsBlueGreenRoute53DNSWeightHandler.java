@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
@@ -7,8 +8,10 @@ import static io.harness.logging.LogLevel.ERROR;
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.TimeoutException;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.command.ExecutionLogCallback;
@@ -25,6 +28,7 @@ import com.google.inject.Singleton;
 import java.util.List;
 
 @Singleton
+@OwnedBy(CDP)
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class EcsBlueGreenRoute53DNSWeightHandler extends EcsCommandTaskHandler {
   @Inject private EcsContainerService ecsContainerService;
@@ -63,7 +67,8 @@ public class EcsBlueGreenRoute53DNSWeightHandler extends EcsCommandTaskHandler {
             request.getServiceNameDownsized(), request.getServiceCountDownsized()));
         ecsSwapRoutesCommandTaskHelper.upsizeOlderService(request.getAwsConfig(), encryptedDataDetails,
             request.getRegion(), request.getCluster(), request.getServiceCountDownsized(),
-            request.getServiceNameDownsized(), executionLogCallback, request.getTimeout());
+            request.getServiceNameDownsized(), executionLogCallback, request.getTimeout(),
+            request.isTimeoutErrorSupported());
         blueServiceWeight = 100;
         blueServiceValue = oldServiceValue;
         greenServiceWeight = 0;
@@ -98,6 +103,20 @@ public class EcsBlueGreenRoute53DNSWeightHandler extends EcsCommandTaskHandler {
       return EcsCommandExecutionResponse.builder()
           .commandExecutionStatus(SUCCESS)
           .ecsCommandResponse(EcsBGRoute53DNSWeightUpdateResponse.builder().commandExecutionStatus(SUCCESS).build())
+          .build();
+    } catch (TimeoutException ex) {
+      String errorMessage = ExceptionUtils.getMessage(ex);
+      executionLogCallback.saveExecutionLog(errorMessage, ERROR);
+      EcsBGRoute53DNSWeightUpdateResponse response =
+          EcsBGRoute53DNSWeightUpdateResponse.builder().commandExecutionStatus(FAILURE).build();
+      if (ecsCommandRequest.isTimeoutErrorSupported()) {
+        response.setTimeoutFailure(true);
+      }
+
+      return EcsCommandExecutionResponse.builder()
+          .commandExecutionStatus(FAILURE)
+          .errorMessage(errorMessage)
+          .ecsCommandResponse(response)
           .build();
     } catch (Exception ex) {
       String errorMessage = ExceptionUtils.getMessage(ex);

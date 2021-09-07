@@ -18,6 +18,4 @@ public class ManualInterventionAdviserParameters implements WithFailureTypes {
 
   // Config only used when timeoutAction is Retry.
   RetryAdviserParameters retryAdviserParameters;
-  // Only applicable if the timeout action is set to IGNORE
-  String nextNodeId;
 }

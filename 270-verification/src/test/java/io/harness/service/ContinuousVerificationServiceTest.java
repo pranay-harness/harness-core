@@ -867,6 +867,43 @@ public class ContinuousVerificationServiceTest extends VerificationBase {
   }
 
   @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testTriggerDatadogLogsCollection_moreThan10Hosts() throws IOException {
+    Call<RestResponse<Boolean>> managerCall = mock(Call.class);
+    when(managerCall.clone()).thenReturn(managerCall);
+    when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    when(verificationManagerClient.isStateValid(anyString(), anyString())).thenReturn(managerCall);
+    AnalysisContext context =
+        createDatadogLogAnalysisContext((int) TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()));
+    Map<String, String> hostNameMap = new HashMap<>();
+    for (int i = 0; i < 12; i++) {
+      hostNameMap.put("host-" + i, "default");
+    }
+    context.setTestNodes(hostNameMap);
+    wingsPersistence.save(context);
+    continuousVerificationService.triggerWorkflowDataCollection(context);
+    List<DelegateTask> delegateTasks =
+        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTaskKeys.accountId, accountId).asList();
+    assertThat(delegateTasks).hasSize(3);
+    DelegateTask delegateTask = delegateTasks.get(0);
+
+    assertThat(delegateTask.getAccountId()).isEqualTo(accountId);
+    assertThat(TaskType.valueOf(delegateTask.getData().getTaskType())).isEqualTo(TaskType.CUSTOM_LOG_COLLECTION_TASK);
+    CustomLogDataCollectionInfo customLogDataCollectionInfo =
+        (CustomLogDataCollectionInfo) delegateTask.getData().getParameters()[0];
+    assertThat(customLogDataCollectionInfo.getApplicationId()).isEqualTo(appId);
+    assertThat(customLogDataCollectionInfo.getAccountId()).isEqualTo(accountId);
+    assertThat(customLogDataCollectionInfo.getServiceId()).isEqualTo(serviceId);
+    assertThat(customLogDataCollectionInfo.getHosts().size()).isEqualTo(5);
+
+    customLogDataCollectionInfo = (CustomLogDataCollectionInfo) delegateTasks.get(1).getData().getParameters()[0];
+    assertThat(customLogDataCollectionInfo.getHosts().size()).isEqualTo(5);
+    customLogDataCollectionInfo = (CustomLogDataCollectionInfo) delegateTasks.get(2).getData().getParameters()[0];
+    assertThat(customLogDataCollectionInfo.getHosts().size()).isEqualTo(2);
+  }
+
+  @Test
   @Owner(developers = PRANJAL)
   @Category(UnitTests.class)
   public void testTriggerLogsCollectionInvalidState() throws IOException {

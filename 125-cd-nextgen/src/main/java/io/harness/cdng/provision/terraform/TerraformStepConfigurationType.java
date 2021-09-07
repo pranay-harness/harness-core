@@ -5,14 +5,16 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
 
 @OwnedBy(CDP)
 public enum TerraformStepConfigurationType {
-  INLINE("Inline"),
-  INHERIT_FROM_PLAN("InheritFromPlan"),
-  INHERIT_FROM_APPLY("InheritFromApply");
+  @JsonProperty("Inline") INLINE("Inline"),
+  @JsonProperty("InheritFromPlan") INHERIT_FROM_PLAN("InheritFromPlan"),
+  @JsonProperty("InheritFromApply") INHERIT_FROM_APPLY("InheritFromApply");
 
-  private final String displayName;
+  @Getter private final String displayName;
   TerraformStepConfigurationType(String displayName) {
     this.displayName = displayName;
   }

@@ -1,6 +1,8 @@
 package resolver
 
 import (
+	"fmt"
+	"os"
 	"reflect"
 	"testing"
 
@@ -8,6 +10,13 @@ import (
 )
 
 func TestResolveSecretInString(t *testing.T) {
+	secret1 := "admin"
+	secret2 := "password"
+	secret3 := "helloworld"
+	os.Setenv("HARNESS_account_secret", secret1)
+	os.Setenv("HARNESS_org_secret", secret2)
+	os.Setenv("HARNESS_project_secret", secret3)
+
 	tests := []struct {
 		name        string
 		expr        string
@@ -17,19 +26,19 @@ func TestResolveSecretInString(t *testing.T) {
 		{
 			name:        "account secret",
 			expr:        `hello ${ngSecretManager.obtain("account.secret", 1234)}`,
-			response:    "hello $HARNESS_account_secret",
+			response:    fmt.Sprintf("hello %s", secret1),
 			expectedErr: false,
 		},
 		{
 			name:        "org secret",
 			expr:        `hello ${ngSecretManager.obtain("org.secret", 1234)}`,
-			response:    "hello $HARNESS_org_secret",
+			response:    fmt.Sprintf("hello %s", secret2),
 			expectedErr: false,
 		},
 		{
 			name:        "project secret",
 			expr:        `hello ${ngSecretManager.obtain("secret", 1234)}`,
-			response:    "hello $HARNESS_project_secret",
+			response:    fmt.Sprintf("hello %s", secret3),
 			expectedErr: false,
 		},
 		{
@@ -60,9 +69,19 @@ func TestResolveSecretInString(t *testing.T) {
 
 		assert.Equal(t, r, tc.response)
 	}
+	os.Unsetenv("HARNESS_account_secret")
+	os.Unsetenv("HARNESS_org_secret")
+	os.Unsetenv("HARNESS_project_secret")
 }
 
 func TestResolveSecretInList(t *testing.T) {
+	secret1 := "admin"
+	secret2 := "password"
+	secret3 := "helloworld"
+	os.Setenv("HARNESS_account_secret", secret1)
+	os.Setenv("HARNESS_org_secret", secret2)
+	os.Setenv("HARNESS_project_secret", secret3)
+
 	tests := []struct {
 		name        string
 		expr        []string
@@ -77,9 +96,9 @@ func TestResolveSecretInList(t *testing.T) {
 				`hello ${ngSecretManager.obtain("secret", 1234)}`,
 			},
 			response: []string{
-				"hello $HARNESS_account_secret",
-				"hello $HARNESS_org_secret",
-				"hello $HARNESS_project_secret",
+				fmt.Sprintf("hello %s", secret1),
+				fmt.Sprintf("hello %s", secret2),
+				fmt.Sprintf("hello %s", secret3),
 			},
 			expectedErr: false,
 		},
@@ -99,9 +118,19 @@ func TestResolveSecretInList(t *testing.T) {
 
 		assert.Equal(t, r, tc.response)
 	}
+	os.Unsetenv("HARNESS_account_secret")
+	os.Unsetenv("HARNESS_org_secret")
+	os.Unsetenv("HARNESS_project_secret")
 }
 
 func TestResolveSecretInMapValues(t *testing.T) {
+	secret1 := "admin"
+	secret2 := "password"
+	secret3 := "helloworld"
+	os.Setenv("HARNESS_account_secret", secret1)
+	os.Setenv("HARNESS_org_secret", secret2)
+	os.Setenv("HARNESS_project_secret", secret3)
+
 	tests := []struct {
 		name        string
 		expr        map[string]string
@@ -116,9 +145,9 @@ func TestResolveSecretInMapValues(t *testing.T) {
 				"foo3": `hello ${ngSecretManager.obtain("secret", 1234)}`,
 			},
 			response: map[string]string{
-				"foo1": "hello $HARNESS_account_secret",
-				"foo2": "hello $HARNESS_org_secret",
-				"foo3": "hello $HARNESS_project_secret",
+				"foo1": fmt.Sprintf("hello %s", secret1),
+				"foo2": fmt.Sprintf("hello %s", secret2),
+				"foo3": fmt.Sprintf("hello %s", secret3),
 			},
 			expectedErr: false,
 		},
@@ -140,4 +169,7 @@ func TestResolveSecretInMapValues(t *testing.T) {
 		eq := reflect.DeepEqual(r, tc.response)
 		assert.Equal(t, eq, true)
 	}
+	os.Unsetenv("HARNESS_account_secret")
+	os.Unsetenv("HARNESS_org_secret")
+	os.Unsetenv("HARNESS_project_secret")
 }

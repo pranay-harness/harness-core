@@ -1,10 +1,12 @@
 package software.wings.resources.secretsmanagement;
 
+import static io.harness.annotations.dev.HarnessModule._360_CG_MANAGER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRET_MANAGERS;
 import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
 
+import io.harness.annotations.dev.TargetModule;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.rest.RestResponse;
@@ -25,6 +27,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import lombok.extern.slf4j.Slf4j;
 
+@TargetModule(_360_CG_MANAGER)
 @Api("azure-secrets-manager")
 @Path("/azure-secrets-manager")
 @Produces("application/json")

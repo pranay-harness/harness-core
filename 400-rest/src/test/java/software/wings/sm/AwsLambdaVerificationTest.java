@@ -17,6 +17,7 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -41,6 +42,7 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.WingsTestConstants;
 
@@ -57,6 +59,7 @@ public class AwsLambdaVerificationTest extends WingsBaseTest {
   @Mock private ActivityService activityService;
   @Mock private SecretManager secretManager;
   @Mock private DelegateService delegateService;
+  @Mock private StateExecutionService stateExecutionService;
 
   @InjectMocks private AwsLambdaVerification awsLambdaVerification;
 
@@ -90,6 +93,7 @@ public class AwsLambdaVerificationTest extends WingsBaseTest {
                         .functionArn(AwsLambdaContextElement.FunctionMeta.builder().build())
                         .build());
     when(context.getAppId()).thenReturn(APP_ID);
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
 
     awsLambdaVerification.execute(context);
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);

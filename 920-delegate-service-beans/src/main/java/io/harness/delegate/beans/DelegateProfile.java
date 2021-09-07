@@ -1,7 +1,10 @@
 package io.harness.delegate.beans;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
+import io.harness.data.validator.EntityIdentifier;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
@@ -22,6 +25,7 @@ import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
@@ -32,6 +36,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "delegateProfiles", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "DelegateProfileKeys")
+@OwnedBy(HarnessTeam.DEL)
 public final class DelegateProfile implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
                                               UpdatedAtAware, UpdatedByAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
@@ -39,8 +44,22 @@ public final class DelegateProfile implements PersistentEntity, UuidAware, Creat
         .add(CompoundMongoIndex.builder()
                  .field(DelegateProfileKeys.accountId)
                  .field(DelegateProfileKeys.name)
+                 .field(DelegateProfileKeys.owner)
                  .unique(true)
                  .name("uniqueName")
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .field(DelegateProfileKeys.accountId)
+                 .field(DelegateProfileKeys.ng)
+                 .field(DelegateProfileKeys.owner)
+                 .name("byAcctNgOwner")
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("unique_identification")
+                 .unique(true)
+                 .field(DelegateProfileKeys.accountId)
+                 .field(DelegateProfileKeys.owner)
+                 .field(DelegateProfileKeys.identifier)
                  .build())
         .build();
   }
@@ -68,5 +87,17 @@ public final class DelegateProfile implements PersistentEntity, UuidAware, Creat
   @SchemaIgnore private EmbeddedUser lastUpdatedBy;
   @SchemaIgnore @NotNull private long lastUpdatedAt;
 
-  private String identifier;
+  @EntityIdentifier private String identifier;
+
+  // Will be used for NG to hold information about who owns the record, Org or Project or account, if the field is
+  // empty
+  private DelegateEntityOwner owner;
+
+  // Will be used for segregation of CG vs. NG records.
+  private boolean ng;
+
+  @UtilityClass
+  public static final class DelegateProfileKeys {
+    public static final String searchTermFilter = "searchTermFilter";
+  }
 }

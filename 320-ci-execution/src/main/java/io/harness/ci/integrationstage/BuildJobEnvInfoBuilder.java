@@ -6,17 +6,22 @@ import static io.harness.beans.serializer.RunTimeInputHandler.resolveIntegerPara
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveMapParameter;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveStringParameter;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveStringParameterWithDefaultValue;
-import static io.harness.common.CICommonPodConstants.MOUNT_PATH;
-import static io.harness.common.CICommonPodConstants.STEP_EXEC;
+import static io.harness.common.CIExecutionConstants.ADDON_VOLUME;
+import static io.harness.common.CIExecutionConstants.ADDON_VOL_MOUNT_PATH;
 import static io.harness.common.CIExecutionConstants.PLUGIN_ENV_PREFIX;
 import static io.harness.common.CIExecutionConstants.PORT_STARTING_RANGE;
 import static io.harness.common.CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS;
 import static io.harness.common.CIExecutionConstants.SHARED_VOLUME_PREFIX;
+import static io.harness.common.CIExecutionConstants.STEP_MOUNT_PATH;
 import static io.harness.common.CIExecutionConstants.STEP_PREFIX;
 import static io.harness.common.CIExecutionConstants.STEP_REQUEST_MEMORY_MIB;
 import static io.harness.common.CIExecutionConstants.STEP_REQUEST_MILLI_CPU;
+import static io.harness.common.CIExecutionConstants.STEP_VOLUME;
+import static io.harness.common.CIExecutionConstants.STEP_WORK_DIR;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -28,20 +33,19 @@ import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.environment.pod.container.ContainerImageDetails;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
+import io.harness.beans.quantity.unit.DecimalQuantityUnit;
+import io.harness.beans.quantity.unit.MemoryQuantityUnit;
+import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoUtils;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.RunTestsStepInfo;
-import io.harness.beans.yaml.extended.container.ContainerResource;
-import io.harness.beans.yaml.extended.container.quantity.unit.DecimalQuantityUnit;
-import io.harness.beans.yaml.extended.container.quantity.unit.MemoryQuantityUnit;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure.Type;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.ci.utils.QuantityUtils;
-import io.harness.common.CICommonPodConstants;
 import io.harness.delegate.beans.ci.pod.CIContainerType;
 import io.harness.delegate.beans.ci.pod.ContainerResourceParams;
 import io.harness.delegate.beans.ci.pod.EnvVariableEnum;
@@ -57,10 +61,11 @@ import io.harness.stateutils.buildstate.PluginSettingUtils;
 import io.harness.stateutils.buildstate.providers.StepContainerUtils;
 import io.harness.util.ExceptionUtility;
 import io.harness.util.PortFinder;
-import io.harness.yaml.core.timeout.TimeoutUtils;
+import io.harness.utils.TimeoutUtils;
 import io.harness.yaml.core.variables.NGVariableType;
 import io.harness.yaml.core.variables.SecretNGVariable;
 import io.harness.yaml.core.variables.StringNGVariable;
+import io.harness.yaml.extended.ci.container.ContainerResource;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -103,7 +108,7 @@ public class BuildJobEnvInfoBuilder {
         || infrastructure.getType() == Type.USE_FROM_STAGE) {
       return K8BuildJobEnvInfo.builder()
           .podsSetupInfo(getCIPodsSetupInfo(stageElementConfig, ciExecutionArgs, steps, isFirstPod, podName))
-          .workDir(CICommonPodConstants.STEP_EXEC_WORKING_DIR)
+          .workDir(STEP_WORK_DIR)
           .stepConnectorRefs(getStepConnectorRefs(stageElementConfig))
           .build();
     } else {
@@ -117,7 +122,7 @@ public class BuildJobEnvInfoBuilder {
 
     Set<Integer> usedPorts = new HashSet<>();
     PortFinder portFinder = PortFinder.builder().startingPort(PORT_STARTING_RANGE).usedPorts(usedPorts).build();
-    String workDirPath = getWorkingDirectoryPath(CICommonPodConstants.STEP_EXEC_WORKING_DIR);
+    String workDirPath = STEP_WORK_DIR;
     List<ContainerDefinitionInfo> serviceContainerDefinitionInfos =
         CIServiceBuilder.createServicesContainerDefinition(stageElementConfig, portFinder, ciExecutionServiceConfig);
     List<ContainerDefinitionInfo> stepContainerDefinitionInfos =
@@ -159,7 +164,7 @@ public class BuildJobEnvInfoBuilder {
     List<PVCParams> pvcParamsList = new ArrayList<>();
 
     for (String volumeName : volumeToMountPath.keySet()) {
-      String claimName = String.format("%s-%s", podName, volumeName);
+      String claimName = format("%s-%s", podName, volumeName);
       pvcParamsList.add(PVCParams.builder()
                             .claimName(claimName)
                             .volumeName(volumeName)
@@ -173,7 +178,8 @@ public class BuildJobEnvInfoBuilder {
 
   private Map<String, String> getVolumeToMountPath(List<String> sharedPaths) {
     Map<String, String> volumeToMountPath = new HashMap<>();
-    volumeToMountPath.put(STEP_EXEC, MOUNT_PATH);
+    volumeToMountPath.put(STEP_VOLUME, STEP_MOUNT_PATH);
+    volumeToMountPath.put(ADDON_VOLUME, ADDON_VOL_MOUNT_PATH);
 
     if (sharedPaths != null) {
       int index = 0;
@@ -182,7 +188,10 @@ public class BuildJobEnvInfoBuilder {
           continue;
         }
 
-        String volumeName = String.format("%s%d", SHARED_VOLUME_PREFIX, index);
+        String volumeName = format("%s%d", SHARED_VOLUME_PREFIX, index);
+        if (path.equals(STEP_MOUNT_PATH) || path.equals(ADDON_VOL_MOUNT_PATH)) {
+          throw new InvalidRequestException(format("Shared path: %s is a reserved keyword ", path));
+        }
         volumeToMountPath.put(volumeName, path);
         index++;
       }
@@ -277,7 +286,7 @@ public class BuildJobEnvInfoBuilder {
       String identifier, String stepName, String stepType, long timeout) {
     Integer port = portFinder.getNextPort();
 
-    String containerName = String.format("%s%d", STEP_PREFIX, stepIndex);
+    String containerName = format("%s%d", STEP_PREFIX, stepIndex);
     Map<String, String> envVarMap = new HashMap<>();
     envVarMap.putAll(getEnvVariables(integrationStage));
     envVarMap.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
@@ -294,6 +303,7 @@ public class BuildJobEnvInfoBuilder {
                                    .imageDetails(IntegrationStageUtils.getImageInfo(
                                        CIStepInfoUtils.getPluginCustomStepImage(stepInfo, ciExecutionServiceConfig)))
                                    .build())
+        .isHarnessManagedImage(true)
         .containerResourceParams(getStepContainerResource(stepInfo.getResources(), stepType, identifier))
         .ports(Collections.singletonList(port))
         .containerType(CIContainerType.PLUGIN)
@@ -308,7 +318,7 @@ public class BuildJobEnvInfoBuilder {
       String identifier, String name) {
     Integer port = portFinder.getNextPort();
 
-    String containerName = String.format("%s%d", STEP_PREFIX, stepIndex);
+    String containerName = format("%s%d", STEP_PREFIX, stepIndex);
     Map<String, String> stepEnvVars = new HashMap<>();
     stepEnvVars.putAll(getEnvVariables(integrationStage));
     stepEnvVars.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
@@ -339,6 +349,7 @@ public class BuildJobEnvInfoBuilder {
         .stepName(name)
         .privileged(privileged)
         .runAsUser(runAsUser)
+        .imagePullPolicy(RunTimeInputHandler.resolveImagePullPolicy(runStepInfo.getImagePullPolicy()))
         .build();
   }
 
@@ -347,7 +358,7 @@ public class BuildJobEnvInfoBuilder {
       String identifier) {
     Integer port = portFinder.getNextPort();
 
-    String containerName = String.format("%s%d", STEP_PREFIX, stepIndex);
+    String containerName = format("%s%d", STEP_PREFIX, stepIndex);
     Map<String, String> stepEnvVars = new HashMap<>();
     stepEnvVars.putAll(getEnvVariables(integrationStage));
     stepEnvVars.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
@@ -367,14 +378,17 @@ public class BuildJobEnvInfoBuilder {
         .stepIdentifier(identifier)
         .secretVariables(getSecretVariables(integrationStage))
         .containerImageDetails(ContainerImageDetails.builder()
-                                   .imageDetails(IntegrationStageUtils.getImageInfo(runTestsStepInfo.getImage()))
-                                   .connectorIdentifier(runTestsStepInfo.getConnector())
+                                   .imageDetails(IntegrationStageUtils.getImageInfo(resolveStringParameter(
+                                       "Image", "RunTest", identifier, runTestsStepInfo.getImage(), true)))
+                                   .connectorIdentifier(resolveStringParameter(
+                                       "connectorRef", "RunTest", identifier, runTestsStepInfo.getConnectorRef(), true))
                                    .build())
         .containerResourceParams(getStepContainerResource(runTestsStepInfo.getResources(), "RunTests", identifier))
         .ports(Collections.singletonList(port))
         .containerType(CIContainerType.TEST_INTELLIGENCE)
         .privileged(privileged)
         .runAsUser(runAsUser)
+        .imagePullPolicy(RunTimeInputHandler.resolveImagePullPolicy(runTestsStepInfo.getImagePullPolicy()))
         .build();
   }
 
@@ -383,7 +397,7 @@ public class BuildJobEnvInfoBuilder {
       String identifier, String name) {
     Integer port = portFinder.getNextPort();
 
-    String containerName = String.format("%s%d", STEP_PREFIX, stepIndex);
+    String containerName = format("%s%d", STEP_PREFIX, stepIndex);
     Map<String, String> envVarMap = new HashMap<>();
     envVarMap.putAll(getEnvVariables(integrationStage));
     envVarMap.putAll(BuildEnvironmentUtils.getBuildEnvironmentVariables(ciExecutionArgs));
@@ -395,6 +409,10 @@ public class BuildJobEnvInfoBuilder {
         envVarMap.put(key, entry.getValue());
       }
     }
+    if (!isEmpty(pluginStepInfo.getEnvVariables())) {
+      envVarMap.putAll(pluginStepInfo.getEnvVariables());
+    }
+
     boolean privileged = resolveBooleanParameter(pluginStepInfo.getPrivileged(), false);
     Integer runAsUser = resolveIntegerParameter(pluginStepInfo.getRunAsUser(), null);
 
@@ -412,11 +430,13 @@ public class BuildJobEnvInfoBuilder {
                                        "connectorRef", "Plugin", identifier, pluginStepInfo.getConnectorRef(), true))
                                    .build())
         .containerResourceParams(getStepContainerResource(pluginStepInfo.getResources(), "Plugin", identifier))
+        .isHarnessManagedImage(pluginStepInfo.isHarnessManagedImage())
         .ports(Collections.singletonList(port))
         .containerType(CIContainerType.PLUGIN)
         .stepName(name)
         .privileged(privileged)
         .runAsUser(runAsUser)
+        .imagePullPolicy(RunTimeInputHandler.resolveImagePullPolicy(pluginStepInfo.getImagePullPolicy()))
         .build();
   }
 
@@ -706,9 +726,5 @@ public class BuildJobEnvInfoBuilder {
       default:
         return zeroCpu;
     }
-  }
-
-  private String getWorkingDirectoryPath(String workingDirectory) {
-    return String.format("/%s/%s", STEP_EXEC, workingDirectory);
   }
 }

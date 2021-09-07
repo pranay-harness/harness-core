@@ -1,5 +1,6 @@
 package io.harness.cvng;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.perpetualtask.PerpetualTaskType.DATA_COLLECTION_TASK;
 import static io.harness.perpetualtask.PerpetualTaskType.K8_ACTIVITY_COLLECTION_TASK;
@@ -9,8 +10,12 @@ import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.VUK;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.cvng.beans.CVNGPerpetualTaskDTO;
@@ -28,6 +33,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesServiceAccountD
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.grpc.utils.AnyUtils;
+import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskExecutionBundle;
 import io.harness.perpetualtask.PerpetualTaskService;
@@ -38,23 +44,34 @@ import io.harness.perpetualtask.datacollection.K8ActivityCollectionPerpetualTask
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.perpetualtask.internal.PerpetualTaskRecordDao;
 import io.harness.rule.Owner;
+import io.harness.secrets.remote.SecretNGManagerClient;
+import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.WingsBaseTest;
 
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
+import java.io.IOException;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import okhttp3.Request;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
+import retrofit2.Call;
+import retrofit2.Response;
 
+@OwnedBy(CV)
 public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
   @Inject private CVDataCollectionTaskService dataCollectionTaskService;
   @Inject private PerpetualTaskService perpetualTaskService;
   @Inject private PerpetualTaskRecordDao perpetualTaskRecordDao;
+  @Mock private SecretNGManagerClient secretNGManagerClient;
   private String accountId;
   private String cvConfigId;
   private String connectorIdentifier;
@@ -62,7 +79,7 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
   private String projectIdentifier;
   private String dataCollectionWorkerId;
   @Before
-  public void setup() throws IllegalAccessException {
+  public void setup() throws IllegalAccessException, IOException {
     initMocks(this);
     accountId = generateUuid();
     cvConfigId = generateUuid();
@@ -70,6 +87,15 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
     orgIdentifier = generateUuid();
     projectIdentifier = generateUuid();
     dataCollectionWorkerId = generateUuid();
+    FieldUtils.writeField(dataCollectionTaskService, "secretNGManagerClient", secretNGManagerClient, true);
+    Request request = new Request.Builder().url("http://example.com/test").build();
+    Call<ResponseDTO<List<EncryptedDataDetail>>> call = mock(Call.class);
+    when(call.clone()).thenReturn(call);
+    when(call.request()).thenReturn(request);
+    ResponseDTO<List<EncryptedDataDetail>> responseDTO = ResponseDTO.newResponse(Collections.emptyList());
+    Response<ResponseDTO<List<EncryptedDataDetail>>> response = Response.success(responseDTO);
+    when(call.execute()).thenReturn(response);
+    when(secretNGManagerClient.getEncryptionDetails(any())).thenReturn(call);
   }
 
   @Test
@@ -78,7 +104,6 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
   public void testCreateCVTask() throws InvalidProtocolBufferException {
     SecretRefData secretRefData = SecretRefData.builder().scope(Scope.ACCOUNT).identifier("secret").build();
     AppDynamicsConnectorDTO appDynamicsConnectorDTO = AppDynamicsConnectorDTO.builder()
-                                                          .accountId(accountId)
                                                           .accountname("accountName")
                                                           .username("username")
                                                           .controllerUrl("controllerUrl")
@@ -166,7 +191,6 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
     String dataCollectionWorkerId = generateUuid();
     SecretRefData secretRefData = SecretRefData.builder().scope(Scope.ACCOUNT).identifier("secret").build();
     AppDynamicsConnectorDTO appDynamicsConnectorDTO = AppDynamicsConnectorDTO.builder()
-                                                          .accountId(accountId)
                                                           .accountname("accountName")
                                                           .username("username")
                                                           .controllerUrl("controllerUrl")
@@ -184,7 +208,6 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
     String taskId = dataCollectionTaskService.create(accountId, orgIdentifier, projectIdentifier, bundle);
 
     AppDynamicsConnectorDTO appDynamicsConnectorDTO2 = AppDynamicsConnectorDTO.builder()
-                                                           .accountId(accountId)
                                                            .accountname("accountName2")
                                                            .username("username2")
                                                            .controllerUrl("controllerUrl2")
@@ -213,7 +236,6 @@ public class CVDataCollectionTaskServiceImplTest extends WingsBaseTest {
     params.put("dataCollectionWorkerId", dataCollectionWorkerId);
     SecretRefData secretRefData = SecretRefData.builder().scope(Scope.ACCOUNT).identifier("secret").build();
     AppDynamicsConnectorDTO appDynamicsConnectorDTO = AppDynamicsConnectorDTO.builder()
-                                                          .accountId(accountId)
                                                           .accountname("accountName")
                                                           .username("username")
                                                           .controllerUrl("controllerUrl")

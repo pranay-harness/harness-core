@@ -1,8 +1,11 @@
 package software.wings.verification;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
+
 import static java.lang.Boolean.parseBoolean;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.yaml.YamlConstants;
@@ -15,10 +18,11 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-@TargetModule(HarnessModule._870_CG_YAML_BEANS)
+@TargetModule(HarnessModule._870_CG_YAML)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@OwnedBy(CV)
 public abstract class CVConfigurationYaml extends BaseEntityYaml {
   private String connectorName;
   private String serviceName;

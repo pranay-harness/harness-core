@@ -6,9 +6,9 @@ import static io.harness.batch.processing.service.impl.BillingDataPipelineServic
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
-import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.service.intfc.BillingDataPipelineService;
-import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
+import io.harness.ccm.commons.constants.CloudProvider;
+import io.harness.ccm.commons.entities.billing.BillingDataPipelineRecord;
 
 import software.wings.beans.Account;
 import software.wings.beans.SettingAttribute;
@@ -46,9 +46,7 @@ public class AwsBillingDataPipelineTasklet implements Tasklet {
     String accountName = account.getAccountName();
 
     List<SettingAttribute> ceConnectorsList = cloudToHarnessMappingService.listSettingAttributesCreatedInDuration(
-        accountId, SettingCategory.CE_CONNECTOR, SettingVariableTypes.CE_AWS,
-        CCMJobConstants.getFieldValueFromJobParams(parameters, CCMJobConstants.JOB_START_DATE).toEpochMilli(),
-        CCMJobConstants.getFieldValueFromJobParams(parameters, CCMJobConstants.JOB_END_DATE).toEpochMilli());
+        accountId, SettingCategory.CE_CONNECTOR, SettingVariableTypes.CE_AWS);
 
     boolean awsUseNewPipeline = mainConfig.getBillingDataPipelineConfig().isAwsUseNewPipeline();
     ceConnectorsList.forEach(settingAttribute -> {

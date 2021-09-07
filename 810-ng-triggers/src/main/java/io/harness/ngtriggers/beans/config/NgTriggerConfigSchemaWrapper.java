@@ -14,5 +14,5 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(PIPELINE)
 public class NgTriggerConfigSchemaWrapper {
-  NGTriggerConfig trigger;
+  NGTriggerConfigV2 trigger;
 }

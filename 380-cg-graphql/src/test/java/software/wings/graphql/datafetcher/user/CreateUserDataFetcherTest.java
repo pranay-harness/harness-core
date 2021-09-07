@@ -60,7 +60,7 @@ public class CreateUserDataFetcherTest extends CategoryTest {
         .getArguments();
     doReturn("accountId1").when(utils).getAccountId(dataFetchingEnvironment);
     final User savedUser = User.Builder.anUser().name("userName").email("userEmail").build();
-    doReturn(savedUser).when(userService).save(any(User.class), any());
+    doReturn(savedUser).when(userService).createUser(any(User.class), any());
 
     final QLCreateUserPayload qlCreateUserPayload = createUserDataFetcher.get(dataFetchingEnvironment);
     final QLUser user = qlCreateUserPayload.getUser();

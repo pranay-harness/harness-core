@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.INDER;
+import static io.harness.rule.OwnerRule.IVAN;
 import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.YOGESH;
 
@@ -28,6 +29,7 @@ import static org.mockito.Mockito.when;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.model.HelmVersion;
+import io.harness.pcf.model.CfCliVersion;
 import io.harness.rule.Owner;
 
 import software.wings.api.DeploymentType;
@@ -232,6 +234,48 @@ public class ServiceYamlHandlerTest extends YamlHandlerTestBase {
     Service sshService = Service.builder().deploymentType(DeploymentType.SSH).artifactType(ArtifactType.JAR).build();
     yaml = serviceYamlHandler.toYaml(sshService, APP_ID);
     assertThat(yaml.getHelmVersion()).isNull();
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testUpdateCfCliVersionFromYaml() {
+    Service.Yaml yaml = Service.Yaml.builder().cfCliVersion("V6").deploymentType(DeploymentType.PCF.toString()).build();
+    Service service = new Service();
+    serviceYamlHandler.setCfCliVersion(yaml, service);
+    assertThat(service.getCfCliVersion()).isEqualTo(CfCliVersion.V6);
+
+    yaml.setCfCliVersion("V7");
+    service.setCfCliVersion(null);
+    serviceYamlHandler.setCfCliVersion(yaml, service);
+    assertThat(service.getCfCliVersion()).isEqualTo(CfCliVersion.V7);
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testUpdateCfCliVersionFromYamlWithInvalidVersion() {
+    Service.Yaml yaml =
+        Service.Yaml.builder().cfCliVersion("invalid-version").deploymentType(DeploymentType.PCF.toString()).build();
+    Service service = new Service();
+
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> serviceYamlHandler.setCfCliVersion(yaml, service))
+        .withMessageContaining("cfCliVersion");
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testGetYamlFromServiceWithCfCliVersion() {
+    Service pcfService =
+        Service.builder().appId(APP_ID).cfCliVersion(CfCliVersion.V6).artifactType(ArtifactType.DOCKER).build();
+    Yaml yaml = serviceYamlHandler.toYaml(pcfService, APP_ID);
+    assertThat(yaml.getCfCliVersion()).isEqualTo(CfCliVersion.V6.toString());
+
+    Service sshService = Service.builder().deploymentType(DeploymentType.SSH).artifactType(ArtifactType.JAR).build();
+    yaml = serviceYamlHandler.toYaml(sshService, APP_ID);
+    assertThat(yaml.getCfCliVersion()).isNull();
   }
 
   private ChangeContext<Yaml> getChangeContext(Yaml yaml) {

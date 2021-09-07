@@ -10,9 +10,9 @@ import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.r
 import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.response.EcsUtilizationData;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.response.EcsUtilizationData.EcsUtilizationDataBuilder;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.response.MetricValue;
+import io.harness.ccm.commons.entities.billing.CECluster;
 
 import software.wings.beans.AwsCrossAccountAttributes;
-import software.wings.beans.ce.CECluster;
 
 import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.Metric;

@@ -10,4 +10,5 @@ message EntityScopeInfo {
   string account_id = 1;
   google.protobuf.StringValue org_id = 2;
   google.protobuf.StringValue project_id = 3;
+  string identifier = 4;
 }

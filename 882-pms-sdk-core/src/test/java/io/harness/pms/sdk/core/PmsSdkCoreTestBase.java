@@ -9,6 +9,8 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
 public abstract class PmsSdkCoreTestBase extends CategoryTest implements MockableTestMixin {
+  public static final String PMS_SDK_CORE_SERVICE_NAME = "PMS_SDK_CORE_SERVICE_NAME";
+
   @Rule public LifecycleRule lifecycleRule = new LifecycleRule();
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Rule public PmsSdkCoreRule orchestrationRule = new PmsSdkCoreRule(lifecycleRule.getClosingFactory());

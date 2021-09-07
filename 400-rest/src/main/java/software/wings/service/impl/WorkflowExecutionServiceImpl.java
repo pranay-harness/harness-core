@@ -75,6 +75,7 @@ import static software.wings.sm.StateType.PHASE_STEP;
 
 import static io.fabric8.utils.Lists.isNullOrEmpty;
 import static java.lang.String.format;
+import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofDays;
 import static java.time.Duration.ofMillis;
 import static java.time.Duration.ofMinutes;
@@ -82,6 +83,7 @@ import static java.util.Arrays.asList;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -95,6 +97,8 @@ import io.harness.beans.ApiKeyInfo;
 import io.harness.beans.CreatedByType;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EnvironmentType;
+import io.harness.beans.EventPayload;
+import io.harness.beans.EventType;
 import io.harness.beans.ExecutionInterruptType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
@@ -102,11 +106,18 @@ import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
+import io.harness.beans.ResourceConstraint;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.WorkflowType;
-import io.harness.beans.shared.ResourceConstraint;
+import io.harness.beans.event.cg.CgPipelineStartPayload;
+import io.harness.beans.event.cg.application.ApplicationEventData;
+import io.harness.beans.event.cg.entities.EnvironmentEntity;
+import io.harness.beans.event.cg.entities.InfraDefinitionEntity;
+import io.harness.beans.event.cg.entities.ServiceEntity;
+import io.harness.beans.event.cg.pipeline.ExecutionArgsEventData;
+import io.harness.beans.event.cg.pipeline.PipelineEventData;
 import io.harness.cache.MongoStore;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.CollectionUtils;
@@ -129,6 +140,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueuePublisher;
 import io.harness.serializer.KryoSerializer;
 import io.harness.serializer.MapperUtils;
+import io.harness.service.EventService;
 import io.harness.state.inspection.StateInspectionService;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.WaitNotifyEngine;
@@ -161,6 +173,7 @@ import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.Application;
 import software.wings.beans.ApprovalAuthorization;
 import software.wings.beans.ApprovalDetails;
+import software.wings.beans.ArtifactStreamMetadata;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.AwsLambdaExecutionSummary;
 import software.wings.beans.Base;
@@ -241,6 +254,7 @@ import software.wings.service.impl.workflow.queuing.WorkflowConcurrencyHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.ApiKeyService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
@@ -313,6 +327,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.mongodb.ReadPreference;
+import com.sun.istack.internal.NotNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -339,7 +355,6 @@ import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -411,12 +426,16 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private KryoSerializer kryoSerializer;
   @Inject private HelmChartService helmChartService;
   @Inject private StateInspectionService stateInspectionService;
+  @Inject private ApplicationManifestService applicationManifestService;
 
   @Inject @RateLimitCheck private PreDeploymentChecker deployLimitChecker;
   @Inject @ServiceInstanceUsage private PreDeploymentChecker siUsageChecker;
   @Inject @AccountExpiryCheck private PreDeploymentChecker accountExpirationChecker;
   @Inject private WorkflowStatusPropagatorFactory workflowStatusPropagatorFactory;
   @Inject private WorkflowExecutionUpdate executionUpdate;
+  private static final long SIXTY_DAYS_IN_MILLIS = 60 * 24 * 60 * 60 * 1000L;
+
+  @Inject private EventService eventService;
 
   @Override
   public HIterator<WorkflowExecution> executions(
@@ -543,13 +562,31 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   @Override
+  public boolean approveOrRejectExecution(
+      String appId, List<String> userGroupIds, ApprovalDetails approvalDetails, ApiKeyEntry apiEntryKey) {
+    if (apiEntryKey == null) {
+      return approveOrRejectExecution(appId, userGroupIds, approvalDetails);
+    }
+    if (apiEntryKey != null && isNotEmpty(userGroupIds)
+        && !verifyAuthorizedToAcceptOrReject(userGroupIds, apiEntryKey.getUserGroupIds(), appId, null)) {
+      throw new InvalidRequestException("User not authorized to accept or reject the approval");
+    }
+
+    return approveOrRejectExecution(appId, approvalDetails);
+  }
+
+  @Override
   public boolean approveOrRejectExecution(String appId, List<String> userGroupIds, ApprovalDetails approvalDetails) {
     if (isNotEmpty(userGroupIds) && !verifyAuthorizedToAcceptOrReject(userGroupIds, appId, null)) {
       throw new InvalidRequestException("User not authorized to accept or reject the approval");
     }
 
+    return approveOrRejectExecution(appId, approvalDetails);
+  }
+
+  private boolean approveOrRejectExecution(String appId, ApprovalDetails approvalDetails) {
     User user = UserThreadLocal.get();
-    if (user != null) {
+    if (user != null && approvalDetails.getApprovedBy() == null) {
       approvalDetails.setApprovedBy(
           EmbeddedUser.builder().uuid(user.getUuid()).email(user.getEmail()).name(user.getName()).build());
     }
@@ -563,11 +600,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                    .approvedBy(approvalDetails.getApprovedBy())
                                                    .comments(approvalDetails.getComments())
                                                    .approvalFromSlack(approvalDetails.isApprovalFromSlack())
+                                                   .approvalFromGraphQL(approvalDetails.isApprovalFromGraphQL())
+                                                   .approvalViaApiKey(approvalDetails.isApprovalViaApiKey())
                                                    .variables(approvalDetails.getVariables())
                                                    .build();
 
     if (approvalDetails.getAction() == APPROVE) {
-      executionData.setStatus(ExecutionStatus.SUCCESS);
+      executionData.setStatus(SUCCESS);
     } else if (approvalDetails.getAction() == REJECT) {
       executionData.setStatus(ExecutionStatus.REJECTED);
     }
@@ -588,6 +627,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     notNullCheck("workflowExecutionId", workflowExecutionId, USER);
     WorkflowExecution workflowExecution = getWorkflowExecution(appId, workflowExecutionId);
+    if (workflowExecution == null) {
+      throw new InvalidRequestException(
+          "No Execution found for given appId [" + appId + "] and executionId [" + workflowExecutionId + "]", USER);
+    }
+    if (workflowExecution.getWorkflowType() == PIPELINE) {
+      refreshPipelineExecution(workflowExecution);
+    }
+
     notNullCheck("workflowExecution", workflowExecution, USER);
 
     ApprovalStateExecutionData approvalStateExecutionData = null;
@@ -614,6 +661,46 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     return approvalStateExecutionData;
+  }
+
+  @Override
+  public List<ApprovalStateExecutionData> fetchApprovalStateExecutionsDataFromWorkflowExecution(
+      String appId, String workflowExecutionId) {
+    notNullCheck("appId", appId, USER);
+
+    notNullCheck("workflowExecutionId", workflowExecutionId, USER);
+
+    WorkflowExecution workflowExecution = getWorkflowExecution(appId, workflowExecutionId);
+    if (workflowExecution == null) {
+      throw new InvalidRequestException(
+          "No Execution found for given appId [" + appId + "] and executionId [" + workflowExecutionId + "]", USER);
+    }
+    if (workflowExecution.getWorkflowType() == PIPELINE) {
+      refreshPipelineExecution(workflowExecution);
+    }
+
+    notNullCheck("workflowExecution", workflowExecution, USER);
+
+    List<ApprovalStateExecutionData> approvalStateExecutionsData = new LinkedList<>();
+    String workflowType = "";
+
+    // Pipeline approval
+    if (workflowExecution.getWorkflowType() == WorkflowType.PIPELINE) {
+      workflowType = "Pipeline";
+      approvalStateExecutionsData = fetchPipelineWaitingApprovalStateExecutionsData(workflowExecution);
+    }
+
+    // Workflow approval
+    if (workflowExecution.getWorkflowType() == WorkflowType.ORCHESTRATION) {
+      workflowType = "Workflow";
+      approvalStateExecutionsData = fetchWorkflowWaitingApprovalStateExecutionsData(workflowExecution);
+    }
+
+    if (isEmpty(approvalStateExecutionsData)) {
+      throw new InvalidRequestException("No Approval found for execution [" + workflowExecutionId + "]", USER);
+    }
+
+    return approvalStateExecutionsData;
   }
 
   private ApprovalStateExecutionData fetchPipelineWaitingApprovalStateExecutionData(
@@ -667,7 +754,84 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return null;
   }
 
-  private void refreshPipelineExecution(WorkflowExecution workflowExecution) {
+  private List<ApprovalStateExecutionData> fetchPipelineWaitingApprovalStateExecutionsData(
+      WorkflowExecution pipelineWorkflowExecution) {
+    PipelineExecution pipelineExecution = pipelineWorkflowExecution.getPipelineExecution();
+    if (pipelineExecution == null || pipelineExecution.getPipelineStageExecutions() == null) {
+      return null;
+    }
+
+    List<ApprovalStateExecutionData> approvalStateExecutionsData = new LinkedList<>();
+
+    for (PipelineStageExecution pe : pipelineExecution.getPipelineStageExecutions()) {
+      if (pe.getStateExecutionData() instanceof ApprovalStateExecutionData) {
+        ApprovalStateExecutionData approvalStateExecutionData = (ApprovalStateExecutionData) pe.getStateExecutionData();
+
+        if (pe.getStatus() == ExecutionStatus.PAUSED
+            && approvalStateExecutionData.getStatus() == ExecutionStatus.PAUSED) {
+          approvalStateExecutionData.setStageName(
+              getStageNameForApprovalStateExecutionData(pipelineExecution, pe.getPipelineStageElementId()));
+          approvalStateExecutionData.setExecutionUuid(pipelineWorkflowExecution.getUuid());
+          approvalStateExecutionsData.add(approvalStateExecutionData);
+        }
+      } else {
+        List<WorkflowExecution> workflowExecutions = pe.getWorkflowExecutions();
+        for (WorkflowExecution workflowExecution : workflowExecutions) {
+          if (RUNNING.equals(workflowExecution.getStatus()) || PAUSED.equals(workflowExecution.getStatus())) {
+            List<ApprovalStateExecutionData> approvalStateExecutionDataList =
+                fetchWorkflowWaitingApprovalStateExecutionsData(workflowExecution);
+            approvalStateExecutionDataList.forEach(approvalStateExecutionData
+                -> approvalStateExecutionData.setStageName(workflowExecution.getStageName()));
+            approvalStateExecutionsData.addAll(approvalStateExecutionDataList);
+          }
+        }
+      }
+    }
+
+    return approvalStateExecutionsData;
+  }
+
+  public String getStageNameForApprovalStateExecutionData(
+      PipelineExecution pipelineExecution, String pipelineStageElementId) {
+    List<PipelineStage> pipelineStages = pipelineExecution.getPipeline().getPipelineStages();
+    if (pipelineStages == null) {
+      return null;
+    }
+
+    for (PipelineStage pipelineStage : pipelineStages) {
+      String stageName = pipelineStage.getName();
+      for (PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
+        if (pipelineStageElement != null && pipelineStageElement.getUuid().equals(pipelineStageElementId)) {
+          return stageName;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  private List<ApprovalStateExecutionData> fetchWorkflowWaitingApprovalStateExecutionsData(
+      WorkflowExecution workflowExecution) {
+    List<ApprovalStateExecutionData> approvalStateExecutionsData = new LinkedList<>();
+
+    List<StateExecutionInstance> stateExecutionInstances = getStateExecutionInstances(workflowExecution);
+    for (StateExecutionInstance stateExecutionInstance : stateExecutionInstances) {
+      if (stateExecutionInstance.fetchStateExecutionData() instanceof ApprovalStateExecutionData) {
+        ApprovalStateExecutionData approvalStateExecutionData =
+            (ApprovalStateExecutionData) stateExecutionInstance.fetchStateExecutionData();
+        // Check for Approval Id in PAUSED status
+        if (approvalStateExecutionData != null && approvalStateExecutionData.getStatus() == ExecutionStatus.PAUSED) {
+          approvalStateExecutionData.setExecutionUuid(workflowExecution.getUuid());
+          approvalStateExecutionsData.add(approvalStateExecutionData);
+        }
+      }
+    }
+
+    return approvalStateExecutionsData;
+  }
+
+  @VisibleForTesting
+  void refreshPipelineExecution(WorkflowExecution workflowExecution) {
     if (workflowExecution == null || workflowExecution.getPipelineExecution() == null) {
       return;
     }
@@ -753,10 +917,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                 || ENV_RESUME_STATE.name().equals(stateExecutionInstance.getStateType())) {
               if (stateExecutionData instanceof EnvStateExecutionData) {
                 EnvStateExecutionData envStateExecutionData = (EnvStateExecutionData) stateExecutionData;
-                if (featureFlagService.isEnabled(
-                        FeatureName.RUNTIME_INPUT_PIPELINE, workflowExecution.getAccountId())) {
-                  setWaitingForInputFlag(stateExecutionInstance, stageExecution);
-                }
+                setWaitingForInputFlag(stateExecutionInstance, stageExecution);
                 if (envStateExecutionData.getWorkflowExecutionId() != null) {
                   WorkflowExecution workflowExecution2 = getExecutionDetailsWithoutGraph(
                       workflowExecution.getAppId(), envStateExecutionData.getWorkflowExecutionId());
@@ -770,9 +931,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
               stageExecutionDataList.add(stageExecution);
             } else if (ENV_LOOP_STATE.name().equals(stateExecutionInstance.getStateType())
                 || ENV_LOOP_RESUME_STATE.name().equals(stateExecutionInstance.getStateType())) {
-              if (featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, workflowExecution.getAccountId())) {
-                setWaitingForInputFlag(stateExecutionInstance, stageExecution);
-              }
+              setWaitingForInputFlag(stateExecutionInstance, stageExecution);
               if (stateExecutionData instanceof ForkStateExecutionData) {
                 handleEnvLoopStateExecutionData(workflowExecution.getAppId(), stateExecutionInstanceMap,
                     stageExecutionDataList, (ForkStateExecutionData) stateExecutionData, pipelineStageElement,
@@ -839,7 +998,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
   }
 
-  private void handleEnvLoopStateExecutionData(String appId,
+  @VisibleForTesting
+  void handleEnvLoopStateExecutionData(String appId,
       ImmutableMap<String, StateExecutionInstance> stateExecutionInstanceMap,
       List<PipelineStageExecution> stageExecutionDataList, ForkStateExecutionData envStateExecutionData,
       PipelineStageElement pipelineStageElement, String stateExecutionInstanceId) {
@@ -872,6 +1032,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
             stageExecution.setWorkflowExecutions(asList(workflowExecution2));
             stageExecution.setStatus(workflowExecution2.getStatus());
+            stageExecution.setTriggeredBy(workflowExecution2.getTriggeredBy());
           }
           stageExecution.setMessage(envStateExecutionDataLooped.getErrorMsg());
         }
@@ -1325,6 +1486,29 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return triggerOrchestrationWorkflowExecution(appId, envId, workflowId, null, executionArgs, null, trigger);
   }
 
+  @Override
+  public int getActiveServiceCount(String accountId) {
+    long sixtyDays = currentTimeMillis() - SIXTY_DAYS_IN_MILLIS;
+    Query query = wingsPersistence.createQuery(WorkflowExecution.class, excludeAuthority);
+    query.filter(WorkflowExecutionKeys.accountId, accountId);
+    query.field(WorkflowExecutionKeys.startTs).greaterThanOrEq(sixtyDays);
+    query.project("serviceIds", true);
+    FindOptions findOptions = new FindOptions();
+    findOptions.modifier("$hint", "accountId_startTs_serviceIds");
+    findOptions.readPreference(ReadPreference.secondaryPreferred());
+    List<WorkflowExecution> workflowExecutions = query.asList(findOptions);
+    Set<String> flattenedSvcSet = new HashSet<>();
+    if (isNotEmpty(workflowExecutions)) {
+      workflowExecutions.forEach(workflowExecution -> {
+        List<String> serviceIdList = workflowExecution.getServiceIds();
+        if (isNotEmpty(serviceIdList)) {
+          serviceIdList.forEach(serviceId -> flattenedSvcSet.add(serviceId));
+        }
+      });
+    }
+    return flattenedSvcSet.size();
+  }
+
   /**
    * {@inheritDoc}
    */
@@ -1440,12 +1624,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   private WorkflowExecution triggerExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,
       WorkflowExecutionUpdate workflowExecutionUpdate, WorkflowStandardParams stdParams, Trigger trigger,
       Pipeline pipeline, Workflow workflow, ContextElement... contextElements) {
-    if (featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, pipeline.getAccountId())) {
-      return triggerExecution(workflowExecution, stateMachine, new PipelineStageExecutionAdvisor(),
-          workflowExecutionUpdate, stdParams, trigger, pipeline, workflow, contextElements);
-    }
-    return triggerExecution(workflowExecution, stateMachine, null, workflowExecutionUpdate, stdParams, trigger,
-        pipeline, workflow, contextElements);
+    return triggerExecution(workflowExecution, stateMachine, new PipelineStageExecutionAdvisor(),
+        workflowExecutionUpdate, stdParams, trigger, pipeline, workflow, contextElements);
   }
 
   private WorkflowExecution triggerExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,
@@ -1492,10 +1672,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecution.setReleaseNo(String.valueOf(entityVersion.getVersion()));
     workflowExecution.setAccountId(app.getAccountId());
     wingsPersistence.save(workflowExecution);
+    sendEvent(app, executionArgs, workflowExecution);
     log.info("Created workflow execution {}", workflowExecution.getUuid());
     WorkflowExecution finalWorkflowExecution = workflowExecution;
     if (parameterizedArtifactStreamsPresent(executionArgs.getArtifactVariables())) {
-      if (!executionArgs.isTriggeredFromPipeline() || executionArgs.getWorkflowType() != ORCHESTRATION) {
+      boolean allArtifactsAlreadyCollected = parameterizedArtifactsCollectedInWorkflowExecution(
+          workflowExecution.getArtifacts(), executionArgs.getArtifactVariables());
+      if (!executionArgs.isTriggeredFromPipeline() || executionArgs.getWorkflowType() != ORCHESTRATION
+          || !allArtifactsAlreadyCollected) {
         workflowExecution.setStatus(PREPARING);
         updateStatus(
             workflowExecution.getAppId(), workflowExecution.getUuid(), PREPARING, "Starting artifact collection");
@@ -1503,12 +1687,75 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             ()
                 -> collectArtifactsAndStartExecution(finalWorkflowExecution, stateMachine, workflowExecutionAdvisor,
                     workflowExecutionUpdate, stdParams, app, workflow, pipeline, executionArgs, contextElements));
+      } else if (executionArgs.isTriggeredFromPipeline() && executionArgs.getWorkflowType() == ORCHESTRATION) {
+        workflowExecution = continueWorkflowExecution(workflowExecution, stateMachine, workflowExecutionAdvisor,
+            workflowExecutionUpdate, stdParams, app, workflow, pipeline, executionArgs, contextElements);
       }
     } else {
       workflowExecution = continueWorkflowExecution(workflowExecution, stateMachine, workflowExecutionAdvisor,
           workflowExecutionUpdate, stdParams, app, workflow, pipeline, executionArgs, contextElements);
     }
     return workflowExecution;
+  }
+
+  private void sendEvent(Application app, ExecutionArgs executionArgs, WorkflowExecution execution) {
+    if (!featureFlagService.isEnabled(FeatureName.APP_TELEMETRY, app.getAccountId())) {
+      return;
+    }
+    if (PIPELINE.equals(executionArgs.getWorkflowType())) {
+      PipelineSummary summary = execution.getPipelineSummary();
+      if (summary != null) {
+        eventService.deliverEvent(app.getAccountId(), app.getUuid(),
+            EventPayload.builder()
+                .eventType(EventType.PIPELINE_START.getEventValue())
+                .data(CgPipelineStartPayload.builder()
+                          .application(ApplicationEventData.builder().id(app.getAppId()).name(app.getName()).build())
+                          .executionId(execution.getUuid())
+                          .services(isEmpty(execution.getServiceIds())
+                                  ? Collections.emptyList()
+                                  : execution.getServiceIds()
+                                        .stream()
+                                        .map(id -> ServiceEntity.builder().id(id).build())
+                                        .collect(Collectors.toList()))
+                          .infraDefinitions(isEmpty(execution.getInfraDefinitionIds())
+                                  ? Collections.emptyList()
+                                  : execution.getInfraDefinitionIds()
+                                        .stream()
+                                        .map(id -> InfraDefinitionEntity.builder().id(id).build())
+                                        .collect(Collectors.toList()))
+                          .environments(isEmpty(execution.getEnvIds())
+                                  ? Collections.emptyList()
+                                  : execution.getEnvIds()
+                                        .stream()
+                                        .map(id -> EnvironmentEntity.builder().id(id).build())
+                                        .collect(Collectors.toList()))
+                          .pipeline(PipelineEventData.builder()
+                                        .id(summary.getPipelineId())
+                                        .name(summary.getPipelineName())
+                                        .build())
+                          .startedAt(execution.getCreatedAt())
+                          .triggeredByType(execution.getCreatedByType())
+                          .triggeredBy(execution.getCreatedBy())
+                          .executionArgs(ExecutionArgsEventData.builder().notes(executionArgs.getNotes()).build())
+                          .build())
+                .build());
+      }
+    }
+  }
+
+  @VisibleForTesting
+  boolean parameterizedArtifactsCollectedInWorkflowExecution(
+      List<Artifact> artifacts, List<ArtifactVariable> artifactVariables) {
+    if (isEmpty(artifacts)) {
+      return false;
+    }
+    List<String> parameterizedArtifactStreamIds = artifactVariables.stream()
+                                                      .map(ArtifactVariable::getArtifactStreamMetadata)
+                                                      .filter(Objects::nonNull)
+                                                      .map(ArtifactStreamMetadata::getArtifactStreamId)
+                                                      .collect(toList());
+    List<String> artifactStreamIdsInExecution = artifacts.stream().map(Artifact::getArtifactStreamId).collect(toList());
+    return artifactStreamIdsInExecution.containsAll(parameterizedArtifactStreamIds);
   }
 
   private boolean parameterizedArtifactStreamsPresent(List<ArtifactVariable> artifactVariables) {
@@ -1536,6 +1783,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       addArtifactsToWorkflowExecution(workflowExecution, stdParams, executionArgs, artifacts);
       updateWorkflowExecutionArtifacts(workflowExecution.getAppId(), workflowExecution.getUuid(),
           workflowExecution.getArtifacts(), executionArgs.getArtifacts());
+      if (workflowExecution.getPipelineExecutionId() != null) {
+        WorkflowExecution pipelineExecution =
+            getWorkflowExecution(workflowExecution.getAppId(), workflowExecution.getPipelineExecutionId());
+        addArtifactsToExecutionAndExecutionArgs(pipelineExecution, pipelineExecution.getExecutionArgs(), artifacts);
+        updateWorkflowExecutionArtifacts(workflowExecution.getAppId(), workflowExecution.getPipelineExecutionId(),
+            pipelineExecution.getArtifacts(), pipelineExecution.getExecutionArgs().getArtifacts());
+      }
     }
     WorkflowExecution savedWorkflowExecution = wingsPersistence.getWithAppId(
         WorkflowExecution.class, workflowExecution.getAppId(), workflowExecution.getUuid());
@@ -1655,51 +1909,48 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    * @param stdParams
    * @param executionArgs
    * @param newArtifacts
-   * @param newArtifactVariables
    */
   private void addArtifactsToRuntimeWorkflowExecution(WorkflowExecution workflowExecution,
-      WorkflowStandardParams stdParams, ExecutionArgs executionArgs, List<Artifact> newArtifacts,
-      List<ArtifactVariable> newArtifactVariables) {
+      WorkflowStandardParams stdParams, ExecutionArgs executionArgs, List<Artifact> newArtifacts) {
     newArtifacts = isEmpty(newArtifacts) ? new ArrayList<>() : newArtifacts;
-    newArtifactVariables = isEmpty(newArtifactVariables) ? new ArrayList<>() : newArtifactVariables;
     List<Artifact> existingArtifacts = isNotEmpty(workflowExecution.getArtifacts())
         ? new ArrayList<>(workflowExecution.getArtifacts())
         : new ArrayList<>();
+
+    List<Artifact> artifacts = new ArrayList<>(existingArtifacts);
+    newArtifacts.forEach(newArtifact -> {
+      if (newArtifact.getUuid() == null) {
+        artifacts.add(newArtifact);
+      } else {
+        if (artifacts.stream().map(Base::getUuid).noneMatch(newArtifact.getUuid()::equals)) {
+          artifacts.add(newArtifact);
+        }
+      }
+    });
+
+    workflowExecution.setArtifacts(artifacts);
+    executionArgs.setArtifacts(artifacts);
+    List<String> artifactIds = artifacts.stream().map(Base::getUuid).collect(toList());
+    stdParams.setArtifactIds(artifactIds);
+  }
+
+  @VisibleForTesting
+  List<ArtifactVariable> getMergedArtifactVariableList(
+      WorkflowExecution workflowExecution, List<ArtifactVariable> newArtifactVariables) {
     List<ArtifactVariable> existingArtifactVariables =
         isNotEmpty(workflowExecution.getExecutionArgs().getArtifactVariables())
         ? new ArrayList<>(workflowExecution.getExecutionArgs().getArtifactVariables())
         : new ArrayList<>();
-
-    List<Artifact> artifacts = new ArrayList<>(existingArtifacts);
-    artifacts.addAll(newArtifacts);
-
+    newArtifactVariables = isEmpty(newArtifactVariables) ? new ArrayList<>() : newArtifactVariables;
     List<ArtifactVariable> artifactVariables = new ArrayList<>(existingArtifactVariables);
     artifactVariables.addAll(newArtifactVariables);
-
-    workflowExecution.setArtifacts(artifacts);
-    executionArgs.setArtifacts(artifacts);
-    executionArgs.setArtifactVariables(artifactVariables);
-    List<String> artifactIds = artifacts.stream().map(Base::getUuid).collect(toList());
-    stdParams.setArtifactIds(artifactIds);
+    return artifactVariables;
   }
 
   private void addArtifactsToWorkflowExecution(WorkflowExecution workflowExecution, WorkflowStandardParams stdParams,
       ExecutionArgs executionArgs, List<Artifact> artifacts) {
     if (isNotEmpty(artifacts)) {
-      if (isNotEmpty(workflowExecution.getArtifacts())) {
-        List<Artifact> workflowExecutionArtifacts = workflowExecution.getArtifacts();
-        workflowExecutionArtifacts.addAll(artifacts);
-        workflowExecution.setArtifacts(workflowExecutionArtifacts);
-      } else {
-        workflowExecution.setArtifacts(artifacts);
-      }
-      if (isNotEmpty(executionArgs.getArtifacts())) {
-        List<Artifact> executionArgsArtifacts = executionArgs.getArtifacts();
-        executionArgsArtifacts.addAll(artifacts);
-        executionArgs.setArtifacts(executionArgsArtifacts);
-      } else {
-        executionArgs.setArtifacts(artifacts);
-      }
+      addArtifactsToExecutionAndExecutionArgs(workflowExecution, executionArgs, artifacts);
       List<String> artifactIds = new ArrayList<>();
       if (isNotEmpty(artifacts)) {
         for (Artifact artifact : artifacts) {
@@ -1713,6 +1964,24 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       } else {
         stdParams.setArtifactIds(artifactIds);
       }
+    }
+  }
+
+  private void addArtifactsToExecutionAndExecutionArgs(
+      WorkflowExecution workflowExecution, ExecutionArgs executionArgs, List<Artifact> artifacts) {
+    if (isNotEmpty(workflowExecution.getArtifacts())) {
+      List<Artifact> workflowExecutionArtifacts = workflowExecution.getArtifacts();
+      workflowExecutionArtifacts.addAll(artifacts);
+      workflowExecution.setArtifacts(workflowExecutionArtifacts);
+    } else {
+      workflowExecution.setArtifacts(artifacts);
+    }
+    if (isNotEmpty(executionArgs.getArtifacts())) {
+      List<Artifact> executionArgsArtifacts = executionArgs.getArtifacts();
+      executionArgsArtifacts.addAll(artifacts);
+      executionArgs.setArtifacts(executionArgsArtifacts);
+    } else {
+      executionArgs.setArtifacts(artifacts);
     }
   }
 
@@ -1769,6 +2038,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         workflowExecution.setStatus(FAILED);
         workflowExecution.setMessage(message);
         updateStatus(workflowExecution.getAppId(), workflowExecution.getUuid(), FAILED, message);
+        if (workflowExecution.getPipelineExecutionId() != null) {
+          markRunningFailed(workflowExecution.getAppId(), workflowExecution.getPipelineExecutionId());
+        }
       }
     }
     return artifacts;
@@ -2076,6 +2348,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                     .collect(toList());
 
     List<HelmChart> helmCharts = helmChartService.listByIds(accountId, helmChartIds);
+    helmCharts.forEach(helmChart
+        -> helmChart.setMetadata(applicationManifestService.fetchAppManifestProperties(
+            helmChart.getAppId(), helmChart.getApplicationManifestId())));
 
     if (helmCharts == null || helmChartIds.size() != helmCharts.size()) {
       log.error("helmChartIds from executionArgs contains invalid helmCharts");
@@ -2218,12 +2493,26 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                          .filter(WorkflowExecutionKeys.appId, appId)
                                          .filter(WorkflowExecutionKeys.uuid, workflowExecutionId)
                                          .field(WorkflowExecutionKeys.status)
-                                         .in(asList(NEW, QUEUED, PREPARING));
+                                         .in(asList(NEW, QUEUED, PREPARING, PAUSED));
 
     UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
                                                         .set(WorkflowExecutionKeys.status, status)
                                                         .set(WorkflowExecutionKeys.startTs, System.currentTimeMillis())
                                                         .set(WorkflowExecutionKeys.message, message);
+
+    wingsPersistence.update(query, updateOps);
+  }
+
+  private void markRunningFailed(String appId, String workflowExecutionId) {
+    Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
+                                         .filter(WorkflowExecutionKeys.appId, appId)
+                                         .filter(WorkflowExecutionKeys.uuid, workflowExecutionId)
+                                         .field(WorkflowExecutionKeys.status)
+                                         .in(asList(RUNNING));
+
+    UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
+                                                        .set(WorkflowExecutionKeys.status, FAILED)
+                                                        .set(WorkflowExecutionKeys.endTs, System.currentTimeMillis());
 
     wingsPersistence.update(query, updateOps);
   }
@@ -2253,9 +2542,15 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     UpdateOperations<WorkflowExecution> updateOps =
         wingsPersistence.createUpdateOperations(WorkflowExecution.class)
             .set(WorkflowExecutionKeys.startTs, System.currentTimeMillis())
-            .set(WorkflowExecutionKeys.artifacts, workflowExecutionArtifacts)
-            .set(WorkflowExecutionKeys.executionArgs_artifact_variables, executionArgsArtifactVariables)
-            .set(WorkflowExecutionKeys.executionArgs_artifacts, executionArgsArtifacts);
+            .set(WorkflowExecutionKeys.executionArgs_artifact_variables, executionArgsArtifactVariables);
+
+    if (isNotEmpty(workflowExecutionArtifacts)) {
+      updateOps = updateOps.set(WorkflowExecutionKeys.artifacts, workflowExecutionArtifacts);
+    }
+
+    if (isNotEmpty(executionArgsArtifacts)) {
+      updateOps = updateOps.set(WorkflowExecutionKeys.executionArgs_artifacts, executionArgsArtifacts);
+    }
 
     wingsPersistence.update(query, updateOps);
   }
@@ -2748,6 +3043,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Override
   public ExecutionInterrupt triggerExecutionInterrupt(ExecutionInterrupt executionInterrupt) {
+    // TODO: @deepakputhraya Handle events
     String executionUuid = executionInterrupt.getExecutionUuid();
     WorkflowExecution workflowExecution =
         wingsPersistence.getWithAppId(WorkflowExecution.class, executionInterrupt.getAppId(), executionUuid);
@@ -3062,6 +3358,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       executionArgs.setArtifacts(executionArgs.getArtifacts()
                                      .stream()
                                      .map(t -> artifactService.get(pipelineExecution.getAccountId(), t.getUuid()))
+                                     .filter(Objects::nonNull)
                                      .collect(toList()));
     }
     Map<String, String> wfVariables =
@@ -3078,12 +3375,16 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     notNullCheck("Couldnt continue thie pipelineStage, might be expired", workflowStandardParams);
     List<Artifact> artifacts = executionArgs.getArtifacts();
-    if (isNotEmpty(artifacts)) {
-      addArtifactsToRuntimeWorkflowExecution(
-          pipelineExecution, workflowStandardParams, executionArgs, artifacts, executionArgs.getArtifactVariables());
+    List<ArtifactVariable> artifactVariables = executionArgs.getArtifactVariables();
+    if (isNotEmpty(artifactVariables)) {
+      if (isNotEmpty(artifacts)) {
+        addArtifactsToRuntimeWorkflowExecution(pipelineExecution, workflowStandardParams, executionArgs, artifacts);
+      }
+      executionArgs.setArtifactVariables(getMergedArtifactVariableList(pipelineExecution, artifactVariables));
       updateWorkflowExecutionArtifactsAndArtifactVariables(appId, pipelineExecutionId, pipelineExecution.getArtifacts(),
           executionArgs.getArtifacts(), executionArgs.getArtifactVariables());
     }
+    addParameterizedArtifactVariableToContext(executionArgs.getArtifactVariables(), workflowStandardParams);
 
     LinkedList<ContextElement> contextElements = stateExecutionInstance.getContextElements();
     contextElements.push(workflowStandardParams);
@@ -3102,6 +3403,25 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             stateExecutionInstance.getPipelineStageElementId(), stateExecutionInstance.getExecutionUuid()),
         responseData);
     return true;
+  }
+
+  @VisibleForTesting
+  void addParameterizedArtifactVariableToContext(
+      List<ArtifactVariable> artifactVariables, WorkflowStandardParams stdParams) {
+    List<ArtifactVariable> parameterizedArtifactVariables =
+        artifactVariables.stream()
+            .filter(artifactVariable -> artifactVariable.getArtifactStreamMetadata() != null)
+            .collect(toList());
+    if (isEmpty(parameterizedArtifactVariables)) {
+      return;
+    }
+    if (stdParams.getWorkflowElement() != null) {
+      if (isNotEmpty(stdParams.getWorkflowElement().getArtifactVariables())) {
+        stdParams.getWorkflowElement().getArtifactVariables().addAll(parameterizedArtifactVariables);
+      } else {
+        stdParams.getWorkflowElement().setArtifactVariables(parameterizedArtifactVariables);
+      }
+    }
   }
 
   private List<String> getWFVarNamesFromPipelineVar(
@@ -3279,8 +3599,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     if (existingArtifacts.stream()
             .map(Artifact::getUuid)
-            .collect(Collectors.toSet())
-            .containsAll(newArtifacts.stream().map(Artifact::getUuid).collect(Collectors.toSet()))) {
+            .collect(toSet())
+            .containsAll(newArtifacts.stream().map(Artifact::getUuid).collect(toSet()))) {
       return;
     }
     // Read from DB
@@ -4095,7 +4415,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         } else if (nextStateType == PCF_RESIZE) {
           PcfDeployStateExecutionData pcfDeployStateExecutionData =
               (PcfDeployStateExecutionData) next.fetchStateExecutionData();
-          instanceStatusSummaries.addAll(pcfDeployStateExecutionData.getNewInstanceStatusSummaries());
+          if (isNotEmpty(pcfDeployStateExecutionData.getNewInstanceStatusSummaries())) {
+            instanceStatusSummaries.addAll(pcfDeployStateExecutionData.getNewInstanceStatusSummaries());
+          }
         } else if (nextStateType == CUSTOM_DEPLOYMENT_FETCH_INSTANCES) {
           StateExecutionData stateExecutionData = next.fetchStateExecutionData();
           if (stateExecutionData instanceof InstanceFetchStateExecutionData) {
@@ -4599,7 +4921,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     addressInefficientQueries(workflowExecutionQuery);
 
     if (isNotEmpty(workflowExecution.getInfraMappingIds())) {
-      findOptions.modifier("$hint", "appid_workflowid_infraMappingIds_status_createdat");
+      findOptions.modifier("$hint", "appid_status_workflowid_infraMappingIds_createdat");
     } else {
       findOptions.modifier("$hint", "appid_workflowid_status_createdat");
     }
@@ -4622,7 +4944,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     addressInefficientQueries(workflowExecutionQuery);
 
     if (isNotEmpty(infraMappingList)) {
-      findOptions.modifier("$hint", "appid_workflowid_infraMappingIds_status_createdat");
+      findOptions.modifier("$hint", "appid_status_workflowid_infraMappingIds_createdat");
     } else {
       findOptions.modifier("$hint", "appid_workflowid_status_createdat");
     }
@@ -4689,6 +5011,28 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       }
     } else {
       return userGroupService.verifyUserAuthorizedToAcceptOrRejectApproval(null, userGroupIds);
+    }
+  }
+
+  @Override
+  public boolean verifyAuthorizedToAcceptOrReject(
+      List<String> userGroupIds, List<String> apiKeysUserGroupIds, String appId, String workflowId) {
+    if (isEmpty(apiKeysUserGroupIds)) {
+      return true;
+    }
+
+    if (isEmpty(userGroupIds)) {
+      try {
+        if (isBlank(appId) || isBlank(workflowId)) {
+          return true;
+        }
+        deploymentAuthHandler.authorizeWorkflowOrPipelineForExecution(appId, workflowId);
+        return true;
+      } catch (WingsException e) {
+        return false;
+      }
+    } else {
+      return userGroupService.verifyApiKeyAuthorizedToAcceptOrRejectApproval(apiKeysUserGroupIds, userGroupIds);
     }
   }
 
@@ -4794,8 +5138,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       collectedArtifacts = pipelineWorkflowExecution.getArtifacts();
     }
 
-    Set<String> collectedArtifactIds = collectedArtifacts.stream().map(Artifact::getUuid).collect(Collectors.toSet());
-    Set<String> artifactIds = artifacts.stream().map(Artifact::getUuid).collect(Collectors.toSet());
+    Set<String> collectedArtifactIds = collectedArtifacts.stream().map(Artifact::getUuid).collect(toSet());
+    Set<String> artifactIds = artifacts.stream().map(Artifact::getUuid).collect(toSet());
     if (collectedArtifactIds.containsAll(artifactIds)) {
       return;
     }
@@ -5293,7 +5637,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     List<WorkflowExecution> workflowExecutions = query.project("_id", true).asList();
-    return workflowExecutions.stream().map(WorkflowExecution::getUuid).collect(Collectors.toSet());
+    return workflowExecutions.stream().map(WorkflowExecution::getUuid).collect(toSet());
   }
 
   /**

@@ -4,7 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.WebHookToken;
 import software.wings.beans.trigger.WebhookSource.BitBucketEventType;
@@ -22,11 +24,14 @@ import lombok.EqualsAndHashCode;
  */
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 @JsonTypeName("WEBHOOK")
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
 public class WebHookTriggerCondition extends TriggerCondition {
+  public static final String WEBHOOK_SECRET = "webhookSecret";
+
   private WebHookToken webHookToken;
   private String artifactStreamId;
   @Builder.Default private Map<String, String> parameters = new HashMap<>();
@@ -41,6 +46,7 @@ public class WebHookTriggerCondition extends TriggerCondition {
   private String branchName;
   private String branchRegex;
   private boolean checkFileContentChanged;
+  private String webHookSecret;
 
   public WebHookTriggerCondition() {
     super(WEBHOOK);
@@ -49,7 +55,8 @@ public class WebHookTriggerCondition extends TriggerCondition {
   public WebHookTriggerCondition(WebHookToken webHookToken, String artifactStreamId, Map<String, String> parameters,
       WebhookSource webhookSource, List<WebhookEventType> eventTypes, List<GithubAction> actions,
       List<ReleaseAction> releaseActions, List<BitBucketEventType> bitBucketEvents, List<String> filePaths,
-      String gitConnectorId, String repoName, String branchName, String branchRegex, boolean checkFileContentChanged) {
+      String gitConnectorId, String repoName, String branchName, String branchRegex, boolean checkFileContentChanged,
+      String webHookSecret) {
     this();
     this.webHookToken = webHookToken;
     this.artifactStreamId = artifactStreamId;
@@ -65,5 +72,6 @@ public class WebHookTriggerCondition extends TriggerCondition {
     this.branchName = branchName;
     this.branchRegex = branchRegex;
     this.checkFileContentChanged = checkFileContentChanged;
+    this.webHookSecret = webHookSecret;
   }
 }

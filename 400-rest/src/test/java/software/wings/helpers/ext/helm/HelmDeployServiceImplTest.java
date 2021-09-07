@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.helm;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.helm.HelmSubCommandType.TEMPLATE;
@@ -10,6 +11,7 @@ import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 
@@ -49,14 +51,18 @@ import static org.powermock.api.mockito.PowerMockito.doReturn;
 import static org.powermock.api.mockito.PowerMockito.spy;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
+import io.harness.concurent.HTimeLimiterMocker;
 import io.harness.container.ContainerInfo;
+import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.filesystem.FileIo;
 import io.harness.git.model.GitFile;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.KubernetesContainerService;
@@ -69,6 +75,7 @@ import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.Release.Status;
 import io.harness.k8s.model.ReleaseHistory;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.manifest.CustomManifestSource;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -91,7 +98,6 @@ import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmReleaseHistoryCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
-import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.helm.response.HelmCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmListReleasesCommandResponse;
@@ -109,14 +115,15 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FakeTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import org.junit.Before;
@@ -129,6 +136,7 @@ import org.mockito.Mock;
 import wiremock.com.google.common.collect.ImmutableMap;
 
 @OwnedBy(CDP)
+@TargetModule(_930_DELEGATE_TASKS)
 public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Mock private HelmClient helmClient;
   @Mock private GitService gitService;
@@ -345,9 +353,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     when(helmClient.upgrade(any())).thenReturn(helmInstallCommandResponse);
     when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
 
-    doThrow(new UncheckedTimeoutException("Timed out"))
-        .when(mockTimeLimiter)
-        .callWithTimeout(any(Callable.class), anyLong(), any(TimeUnit.class), anyBoolean());
+    HTimeLimiterMocker.mockCallInterruptible(mockTimeLimiter).thenThrow(new UncheckedTimeoutException("Timed out"));
 
     HelmCommandResponse helmCommandResponse = helmDeployService.deploy(helmInstallCommandRequest);
     assertThat(helmCommandResponse.getCommandExecutionStatus()).isEqualTo(FAILURE);
@@ -1043,9 +1049,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     on(helmDeployService).set("timeLimiter", mockTimeLimiter);
     HelmRollbackCommandRequest request = HelmRollbackCommandRequest.builder().build();
 
-    doThrow(new UncheckedTimeoutException("Timed out"))
-        .when(mockTimeLimiter)
-        .callWithTimeout(any(Callable.class), anyLong(), any(TimeUnit.class), anyBoolean());
+    HTimeLimiterMocker.mockCallInterruptible(mockTimeLimiter).thenThrow(new UncheckedTimeoutException("Timed out"));
     doReturn(
         HelmInstallCommandResponse.builder().output("Rollback was a success.").commandExecutionStatus(SUCCESS).build())
         .when(helmClient)
@@ -1629,5 +1633,73 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
         (HelmInstallCommandResponse) helmDeployService.deploy(helmInstallCommandRequest);
     assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
     assertThat(response.getOutput()).contains("Unable to do something");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testFetchCustomSourceHandleException() throws Exception {
+    HelmInstallCommandRequest request =
+        HelmInstallCommandRequest.builder()
+            .executionLogCallback(executionLogCallback)
+            .sourceRepoConfig(K8sDelegateManifestConfig.builder()
+                                  .customManifestEnabled(false)
+                                  .customManifestSource(CustomManifestSource.builder()
+                                                            .script("script")
+                                                            .filePaths(singletonList("file1"))
+                                                            .zippedManifestFileId("fileId")
+                                                            .build())
+                                  .build())
+            .build();
+
+    assertThatThrownBy(() -> helmDeployService.fetchCustomSourceManifest(request))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Can not use store type: CUSTOM, with feature flag off");
+
+    request.setRepoConfig(null);
+    assertThatThrownBy(() -> helmDeployService.fetchCustomSourceManifest(request))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Source Config can not be null");
+
+    request.setRepoConfig(K8sDelegateManifestConfig.builder().customManifestEnabled(true).build());
+    assertThatThrownBy(() -> helmDeployService.fetchCustomSourceManifest(request))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Custom Manifest Source can not be null");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testFetchCustomSource() throws Exception {
+    final String workingDirPath = "./repository/helm/source/ACTIVITY_ID";
+    final String manifestDirPath = format("%s/manifestDir", workingDirPath);
+    HelmInstallCommandRequest request =
+        HelmInstallCommandRequest.builder()
+            .executionLogCallback(executionLogCallback)
+            .activityId("ACTIVITY_ID")
+            .accountId("ACCOUNT_ID")
+            .sourceRepoConfig(K8sDelegateManifestConfig.builder()
+                                  .customManifestEnabled(true)
+                                  .customManifestSource(CustomManifestSource.builder()
+                                                            .script("script")
+                                                            .filePaths(singletonList("file1"))
+                                                            .zippedManifestFileId("fileId")
+                                                            .build())
+                                  .build())
+            .build();
+
+    FileIo.createDirectoryIfDoesNotExist(workingDirPath);
+    FileIo.createDirectoryIfDoesNotExist(manifestDirPath);
+    Files.createFile(Paths.get(manifestDirPath, "test.yaml"));
+    doNothing().when(helmTaskHelper).downloadAndUnzipCustomSourceManifestFiles(anyString(), anyString(), anyString());
+
+    helmDeployService.fetchCustomSourceManifest(request);
+
+    verify(helmTaskHelper, times(1)).downloadAndUnzipCustomSourceManifestFiles(anyString(), anyString(), anyString());
+    File workingDir = new File(workingDirPath);
+    assertThat(workingDir.exists());
+    assertThat(workingDir.list()).hasSize(1);
+    assertThat(workingDir.list()).contains("test.yaml");
+    FileIo.deleteDirectoryAndItsContentIfExists(workingDirPath);
   }
 }

@@ -5,6 +5,8 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidArgumentsException;
@@ -38,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CDP)
 public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, ApplicationManifest> {
   @Inject YamlHelper yamlHelper;
   @Inject ApplicationManifestService applicationManifestService;
@@ -57,9 +60,9 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
         .helmChartConfig(getHelmChartConfigForToYaml(applicationManifest))
         .kustomizeConfig(applicationManifest.getKustomizeConfig())
         .customSourceConfig(applicationManifest.getCustomSourceConfig())
-        .pollForChanges(applicationManifest.getPollForChanges())
         .skipVersioningForAllK8sObjects(applicationManifest.getSkipVersioningForAllK8sObjects())
         .helmCommandFlag(applicationManifest.getHelmCommandFlag())
+        .helmValuesYamlFilePaths(applicationManifest.getHelmValuesYamlFilePaths())
         .build();
   }
 
@@ -88,6 +91,7 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
 
   private ApplicationManifest toBean(ChangeContext<Yaml> changeContext) {
     Yaml yaml = changeContext.getYaml();
+    String name = yamlHelper.getNameFromYamlFilePath(changeContext.getChange().getFilePath());
 
     String filePath = changeContext.getChange().getFilePath();
     String accountId = changeContext.getChange().getAccountId();
@@ -102,6 +106,9 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
       serviceId = (service == null) ? null : service.getUuid();
     }
 
+    if (yaml.getStoreType() == null) {
+      throw new InvalidRequestException("StoreType field should not be null for helm chart");
+    }
     StoreType storeType = Enum.valueOf(StoreType.class, yaml.getStoreType());
     AppManifestKind kind = yamlHelper.getAppManifestKindFromPath(filePath);
     GitFileConfig gitFileConfig = getGitFileConfigFromYaml(accountId, appId, yaml, storeType);
@@ -116,6 +123,7 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
     }
 
     ApplicationManifest manifest = ApplicationManifest.builder()
+                                       .name(name)
                                        .serviceId(serviceId)
                                        .envId(envId)
                                        .storeType(storeType)
@@ -124,9 +132,9 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
                                        .kind(kind)
                                        .kustomizeConfig(kustomizeConfig)
                                        .customSourceConfig(customSourceConfig)
-                                       .pollForChanges(yaml.getPollForChanges())
                                        .skipVersioningForAllK8sObjects(yaml.getSkipVersioningForAllK8sObjects())
                                        .helmCommandFlag(yaml.getHelmCommandFlag())
+                                       .helmValuesYamlFilePaths(yaml.getHelmValuesYamlFilePaths())
                                        .build();
 
     manifest.setAppId(appId);
@@ -164,7 +172,8 @@ public class ApplicationManifestYamlHandler extends BaseYamlHandler<Yaml, Applic
     }
 
     // Dont delete the appManifest if coming from git for service.
-    if (isBlank(applicationManifest.getEnvId()) && applicationManifest.getKind() == AppManifestKind.K8S_MANIFEST) {
+    if (isBlank(applicationManifest.getEnvId()) && applicationManifest.getKind() == AppManifestKind.K8S_MANIFEST
+        && !Boolean.TRUE.equals(applicationManifest.getPollForChanges())) {
       log.info("Deleting the application manifest for service from git is not allowed");
       return;
     }

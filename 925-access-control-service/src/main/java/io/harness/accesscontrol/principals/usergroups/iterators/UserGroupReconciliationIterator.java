@@ -20,6 +20,7 @@ import io.harness.mongo.iterator.provider.SpringPersistenceProvider;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.time.Duration;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -36,7 +37,7 @@ public class UserGroupReconciliationIterator implements Handler<UserGroupDBO> {
 
   @Inject
   public UserGroupReconciliationIterator(AccessControlIteratorsConfig iteratorsConfig,
-      PersistenceIteratorFactory persistenceIteratorFactory, MongoTemplate mongoTemplate,
+      PersistenceIteratorFactory persistenceIteratorFactory, @Named("mongoTemplate") MongoTemplate mongoTemplate,
       HarnessUserGroupService harnessUserGroupService, ScopeService scopeService) {
     this.iteratorConfig = iteratorsConfig.getUserGroupIteratorConfig();
     this.persistenceIteratorFactory = persistenceIteratorFactory;

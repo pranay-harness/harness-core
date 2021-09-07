@@ -1,6 +1,11 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -9,6 +14,8 @@ import org.apache.commons.lang3.StringUtils;
  * @author rktummala on 08/30/18
  */
 // Note: This is intentionally not made enum
+@OwnedBy(DX)
+@TargetModule(HarnessModule._955_ACCOUNT_MGMT)
 public interface AccountStatus {
   String ACTIVE = "ACTIVE";
   String EXPIRED = "EXPIRED";

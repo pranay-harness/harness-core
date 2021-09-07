@@ -13,7 +13,9 @@ import static software.wings.sm.StateType.PHASE;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.NullSafeImmutableMap;
 import io.harness.persistence.UuidAccess;
 
@@ -38,6 +40,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.mongodb.morphia.annotations.Transient;
 
+@TargetModule(HarnessModule._957_CG_BEANS)
 @OwnedBy(CDC)
 public class WorkflowPhase implements UuidAccess {
   private String uuid = generateUuid();

@@ -2,7 +2,9 @@ package software.wings.beans.settings.azureartifacts;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
@@ -26,6 +28,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(CDC)
@@ -34,6 +37,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 @ToString(exclude = {"pat"})
 @EqualsAndHashCode(callSuper = false)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class AzureArtifactsPATConfig extends SettingValue implements AzureArtifactsConfig {
   @SchemaIgnore @NotEmpty private String accountId;
 
@@ -62,6 +66,15 @@ public class AzureArtifactsPATConfig extends SettingValue implements AzureArtifa
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return Collections.singletonList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
         azureDevopsUrl, maskingEvaluator));
+  }
+
+  @Override
+  public boolean shouldDeleteArtifact(SettingValue prev) {
+    if (!(prev instanceof AzureArtifactsPATConfig)) {
+      return true;
+    }
+    AzureArtifactsPATConfig prevConfig = (AzureArtifactsPATConfig) prev;
+    return !StringUtils.equals(prevConfig.getAzureDevopsUrl(), azureDevopsUrl);
   }
 
   @Data

@@ -13,6 +13,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.artifactory.ArtifactoryConfigRequest;
 import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.task.ListNotifyResponseData;
@@ -43,6 +44,8 @@ import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.service.impl.jenkins.JenkinsUtils;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.mappers.artifact.ArtifactoryConfigToArtifactoryRequestMapper;
+import software.wings.service.mappers.artifact.NexusConfigToNexusRequestMapper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -151,10 +154,10 @@ public class ArtifactCollectionTaskHelper {
         saveExecutionLog("Metadata only option set for ARTIFACTORY. Starting download of artifact: "
                 + metadata.get(ArtifactMetadataKeys.artifactPath),
             RUNNING, accountId, appId, activityId, commandUnitName, hostName);
-        pair = artifactoryService.downloadArtifact(
-            (ArtifactoryConfig) artifactStreamAttributes.getServerSetting().getValue(),
-            artifactStreamAttributes.getArtifactServerEncryptedDataDetails(), artifactStreamAttributes.getJobName(),
-            metadata);
+        ArtifactoryConfigRequest artifactoryRequest = ArtifactoryConfigToArtifactoryRequestMapper.toArtifactoryRequest(
+            (ArtifactoryConfig) artifactStreamAttributes.getServerSetting().getValue(), encryptionService,
+            artifactStreamAttributes.getArtifactServerEncryptedDataDetails());
+        pair = artifactoryService.downloadArtifact(artifactoryRequest, artifactStreamAttributes.getJobName(), metadata);
         if (pair != null) {
           saveExecutionLog(
               "ARTIFACTORY: Download complete for artifact: " + metadata.get(ArtifactMetadataKeys.artifactFileName),
@@ -245,8 +248,10 @@ public class ArtifactCollectionTaskHelper {
         saveExecutionLog("Metadata only option set for NEXUS. Starting download of artifact: "
                 + metadata.get(ArtifactMetadataKeys.artifactFileName) + ON_DELEGATE,
             RUNNING, accountId, appId, activityId, commandUnitName, hostName);
-        pair = nexusService.downloadArtifactByUrl((NexusConfig) artifactStreamAttributes.getServerSetting().getValue(),
-            artifactStreamAttributes.getArtifactServerEncryptedDataDetails(),
+        pair = nexusService.downloadArtifactByUrl(
+            NexusConfigToNexusRequestMapper.toNexusRequest(
+                (NexusConfig) artifactStreamAttributes.getServerSetting().getValue(), encryptionService,
+                artifactStreamAttributes.getArtifactServerEncryptedDataDetails()),
             metadata.get(ArtifactMetadataKeys.artifactFileName), metadata.get(ArtifactMetadataKeys.artifactPath));
         if (pair != null) {
           saveExecutionLog("NEXUS: Download complete for artifact: "
@@ -277,9 +282,10 @@ public class ArtifactCollectionTaskHelper {
             metadata.get(ArtifactMetadataKeys.bucketName), metadata.get(ArtifactMetadataKeys.key));
       case ARTIFACTORY:
         log.info(ARTIFACT_FILE_SIZE_MESSAGE + metadata.get(ArtifactMetadataKeys.artifactPath));
-        return artifactoryService.getFileSize(
-            (ArtifactoryConfig) artifactStreamAttributes.getServerSetting().getValue(),
-            artifactStreamAttributes.getArtifactServerEncryptedDataDetails(), artifactStreamAttributes.getMetadata());
+        ArtifactoryConfigRequest artifactoryRequest = ArtifactoryConfigToArtifactoryRequestMapper.toArtifactoryRequest(
+            (ArtifactoryConfig) artifactStreamAttributes.getServerSetting().getValue(), encryptionService,
+            artifactStreamAttributes.getArtifactServerEncryptedDataDetails());
+        return artifactoryService.getFileSize(artifactoryRequest, artifactStreamAttributes.getMetadata());
       case AZURE_ARTIFACTS:
         log.info(ARTIFACT_FILE_SIZE_MESSAGE + metadata.get(ArtifactMetadataKeys.version));
         if (!metadata.containsKey(ArtifactMetadataKeys.artifactFileName)
@@ -336,8 +342,10 @@ public class ArtifactCollectionTaskHelper {
           throw new InvalidArgumentsException(ImmutablePair.of(ArtifactMetadataKeys.artifactFileName, "not found"));
         }
         log.info(ARTIFACT_FILE_SIZE_MESSAGE + metadata.get(ArtifactMetadataKeys.artifactFileName));
-        return nexusService.getFileSize((NexusConfig) artifactStreamAttributes.getServerSetting().getValue(),
-            artifactStreamAttributes.getArtifactServerEncryptedDataDetails(),
+        return nexusService.getFileSize(
+            NexusConfigToNexusRequestMapper.toNexusRequest(
+                (NexusConfig) artifactStreamAttributes.getServerSetting().getValue(), encryptionService,
+                artifactStreamAttributes.getArtifactServerEncryptedDataDetails()),
             metadata.get(ArtifactMetadataKeys.artifactFileName), metadata.get(ArtifactMetadataKeys.artifactPath));
       default:
         throw new UnknownArtifactStreamTypeException(artifactStreamType.name());

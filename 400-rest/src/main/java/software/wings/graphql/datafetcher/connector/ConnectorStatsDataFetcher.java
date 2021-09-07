@@ -24,6 +24,7 @@ import software.wings.graphql.utils.nameservice.NameService;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import graphql.schema.DataFetchingEnvironment;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -38,7 +39,8 @@ public class ConnectorStatsDataFetcher extends SettingsAttributeStatsDataFetcher
 
   @Override
   protected QLData fetch(String accountId, QLNoOpAggregateFunction aggregateFunction, List<QLConnectorFilter> filters,
-      List<QLConnectorAggregation> groupBy, List<QLNoOpSortCriteria> sortCriteria) {
+      List<QLConnectorAggregation> groupBy, List<QLNoOpSortCriteria> sortCriteria,
+      DataFetchingEnvironment dataFetchingEnvironment) {
     final Class entityClass = SettingAttribute.class;
     List<String> groupByList = new ArrayList<>();
     if (isNotEmpty(groupBy)) {

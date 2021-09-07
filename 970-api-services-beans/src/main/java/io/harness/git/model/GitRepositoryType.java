@@ -1,3 +1,7 @@
 package io.harness.git.model;
 
-public enum GitRepositoryType { YAML, TERRAFORM, TRIGGER, HELM }
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(CDP) public enum GitRepositoryType { YAML, TERRAFORM, TRIGGER, HELM, TERRAGRUNT }

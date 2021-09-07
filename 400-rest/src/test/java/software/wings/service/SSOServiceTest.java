@@ -15,9 +15,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
@@ -37,7 +40,6 @@ import software.wings.beans.sso.SamlSettings;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.helpers.ext.ldap.LdapConstants;
 import software.wings.helpers.ext.ldap.LdapResponse;
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.SSOConfig;
 import software.wings.security.saml.SamlClientService;
 import software.wings.service.intfc.AccountService;
@@ -65,6 +67,7 @@ import org.ldaptive.ResultCode;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class SSOServiceTest extends WingsBaseTest {
   @Mock private AccountService ACCOUNT_SERVICE;
   @Mock private SSOSettingService SSO_SETTING_SERVICE;

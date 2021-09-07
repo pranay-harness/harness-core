@@ -1,22 +1,36 @@
 package io.harness.cvng.core.entities.cvnglogs;
 
+import static io.harness.cvng.CVConstants.TAG_ACCOUNT_ID;
+import static io.harness.cvng.CVConstants.TAG_DATA_SOURCE;
+import static io.harness.cvng.CVConstants.TAG_VERIFICATION_TYPE;
+import static io.harness.cvng.metrics.CVNGMetricsUtils.API_CALL_EXECUTION_TIME;
+import static io.harness.cvng.metrics.CVNGMetricsUtils.API_CALL_RESPONSE_SIZE;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.cvnglog.ApiCallLogDTO;
 import io.harness.cvng.beans.cvnglog.ApiCallLogDTO.ApiCallLogDTOField;
 import io.harness.cvng.beans.cvnglog.CVNGLogDTO;
+import io.harness.cvng.metrics.CVNGMetricsUtils;
+import io.harness.cvng.metrics.beans.ApiCallLogMetricContext;
+import io.harness.metrics.AutoMetricContext;
+import io.harness.metrics.service.api.MetricService;
 
 import com.google.common.base.Preconditions;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 @Data
 @Builder
 @OwnedBy(HarnessTeam.CV)
+@Slf4j
 public class ApiCallLogRecord extends CVNGLogRecord {
   private List<ApiCallLogField> requests;
   private List<ApiCallLogField> responses;
@@ -119,4 +133,16 @@ public class ApiCallLogRecord extends CVNGLogRecord {
     @Builder.Default private ApiCallLogRecord.FieldType type = ApiCallLogRecord.FieldType.TEXT;
   }
   public enum FieldType { JSON, XML, NUMBER, URL, TEXT, TIMESTAMP }
+
+  @Override
+  public void recordsMetrics(MetricService metricService, Map<String, String> tags) {
+    try (AutoMetricContext cvngLogMetricContext = new ApiCallLogMetricContext(
+             tags.get(TAG_ACCOUNT_ID), tags.get(TAG_DATA_SOURCE).toLowerCase(), tags.get(TAG_VERIFICATION_TYPE))) {
+      metricService.recordDuration(
+          API_CALL_EXECUTION_TIME, Duration.between(this.getRequestTime(), this.getResponseTime()));
+      metricService.recordMetric(API_CALL_RESPONSE_SIZE, this.getResponses().get(1).getValue().getBytes().length);
+      metricService.incCounter(
+          CVNGMetricsUtils.getApiCallLogResponseCodeMetricName(this.getResponses().get(0).getValue()));
+    }
+  }
 }

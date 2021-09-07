@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.workflow;
 
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.MILOS;
 
@@ -25,14 +26,19 @@ import io.harness.limits.ActionType;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.rule.Owner;
 
+import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.Event.Type;
+import software.wings.beans.PhaseStep;
+import software.wings.beans.PhaseStepType;
 import software.wings.beans.Workflow;
+import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.concurrency.ConcurrencyStrategy;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.common.InfrastructureConstants;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
+import software.wings.service.impl.yaml.handler.workflow.WorkflowYamlHandler.WorkflowInfo;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.utils.WingsTestConstants;
 import software.wings.yaml.workflow.BasicWorkflowYaml;
@@ -487,5 +493,57 @@ public class WorkflowYamlHandlerTest extends WorkflowYamlHandlerTestBase {
     when(yamlHelper.getWorkflowByAppIdYamlPath(APP_ID, yamlFilePath)).thenReturn(workflow);
     basicWorkflowYamlHandler.delete(changeContext);
     verify(yamlPushService).pushYamlChangeSet(ACCOUNT_ID, workflow, null, Type.DELETE, true, false);
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldSetRollbackProvisionersCanary() {
+    testSetRollbackProvisionersFor(new CanaryWorkflowYamlHandler());
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldSetRollbackProvisionersBuild() {
+    testSetRollbackProvisionersFor(new BuildWorkflowYamlHandler());
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldSetRollbackProvisionersMultiService() {
+    testSetRollbackProvisionersFor(new MultiServiceWorkflowYamlHandler());
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldSetRollbackProvisionersBasic() {
+    testSetRollbackProvisionersFor(new BasicWorkflowYamlHandler());
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldSetRollbackProvisionersRolling() {
+    testSetRollbackProvisionersFor(new RollingWorkflowYamlHandler());
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldSetRollbackProvisionersBG() {
+    testSetRollbackProvisionersFor(new BlueGreenWorkflowYamlHandler());
+  }
+
+  private void testSetRollbackProvisionersFor(WorkflowYamlHandler yamlHandler) {
+    PhaseStep rollbackProvisioners = new PhaseStep(PhaseStepType.ROLLBACK_PROVISIONERS);
+    rollbackProvisioners.setName("Rollback Provisioners");
+    WorkflowInfo workflowInfo = WorkflowInfo.builder().rollbackProvisioners(rollbackProvisioners).build();
+    WorkflowBuilder workflow = WorkflowBuilder.aWorkflow();
+    yamlHandler.setOrchestrationWorkflow(workflowInfo, workflow);
+    assertThat(((CanaryOrchestrationWorkflow) workflow.build().getOrchestrationWorkflow()).getRollbackProvisioners())
+        .isEqualTo(rollbackProvisioners);
   }
 }

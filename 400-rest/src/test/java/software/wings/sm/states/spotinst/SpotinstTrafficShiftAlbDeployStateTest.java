@@ -21,11 +21,14 @@ import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.task.spotinst.response.SpotInstTaskExecutionResponse;
@@ -44,6 +47,7 @@ import software.wings.beans.SpotInstConfig;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionData;
@@ -71,6 +75,8 @@ public class SpotinstTrafficShiftAlbDeployStateTest extends WingsBaseTest {
     SpotInstStateHelper mockSpotinstStateHelper = mock(SpotInstStateHelper.class);
     on(state).set("spotinstStateHelper", mockSpotinstStateHelper);
     InfrastructureMappingService mockInfrastructureMappingService = mock(InfrastructureMappingService.class);
+    StateExecutionService mockStateExecutionService = mock(StateExecutionService.class);
+    on(state).set("stateExecutionService", mockStateExecutionService);
     on(state).set("infrastructureMappingService", mockInfrastructureMappingService);
     SpotinstTrafficShiftDataBag dataBag =
         SpotinstTrafficShiftDataBag.builder()
@@ -88,6 +94,11 @@ public class SpotinstTrafficShiftAlbDeployStateTest extends WingsBaseTest {
     ExecutionContext mockContext = mock(ExecutionContext.class);
     doReturn(mockPhaseElement).when(mockContext).getContextElement(any(), anyString());
     doReturn(ServiceElement.builder().uuid(SERVICE_ID).build()).when(mockPhaseElement).getServiceElement();
+    doNothing().when(mockStateExecutionService).appendDelegateTaskDetails(anyString(), any());
+    doReturn(DelegateTask.builder().description("desc").build())
+        .when(mockSpotinstStateHelper)
+        .getDelegateTask(anyString(), anyString(), any(), anyString(), anyString(), anyString(), any(), any(),
+            anyString(), eq(true));
     doReturn(SpotinstTrafficShiftAlbSetupElement.builder()
                  .oldElastiGroupOriginalConfig(ElastiGroup.builder().id("oldId").name("oldName").build())
                  .newElastiGroupOriginalConfig(ElastiGroup.builder().id("newId").name("newName").build())

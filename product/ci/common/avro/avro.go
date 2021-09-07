@@ -1,10 +1,11 @@
 package avro
 
 import (
+	"fmt"
 	"github.com/linkedin/goavro/v2"
 	"github.com/pkg/errors"
 
-	"github.com/wings-software/portal/product/ci/common/avro/schema"
+	cg "github.com/wings-software/portal/product/ci/common/avro/schema/callgraph"
 )
 
 //Serialzer is the interface for encoding and decoding structs
@@ -20,10 +21,24 @@ type CgphSerialzer struct {
 	codec *goavro.Codec
 }
 
+const (
+	cgType    = "callgraph"
+	vgType    = "visgraph"
+	cgSrcFile = "callgraph.avsc"
+	vgSrcFile = "visgraph.avsc"
+)
+
 // NewCgphSerialzer returns new CgphSerialzer object with the codec
 // based on the schema received in the input
-func NewCgphSerialzer(file string) (*CgphSerialzer, error) {
-	schema, err := schema.Asset(file)
+func NewCgphSerialzer(typ string) (*CgphSerialzer, error) {
+	var schema []byte
+	var err error
+	switch typ {
+	case cgType:
+		schema, err = cg.Asset(cgSrcFile)
+	default:
+		return nil, fmt.Errorf("type %s is not supported", typ)
+	}
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read schema file")
 	}

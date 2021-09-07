@@ -16,6 +16,7 @@ import io.harness.exception.SecretManagementException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 
+import software.wings.annotation.EncryptableSetting;
 import software.wings.service.intfc.security.EncryptionService;
 
 import com.google.inject.Inject;
@@ -63,5 +64,11 @@ public class SecretDecryptionServiceImpl implements SecretDecryptionService {
   @Override
   public char[] getDecryptedValue(EncryptedDataDetail encryptedDataDetail) {
     return encryptionService.getDecryptedValue(encryptedDataDetail, false);
+  }
+
+  @Override
+  public EncryptableSetting decrypt(
+      EncryptableSetting object, List<EncryptedDataDetail> encryptedDataDetails, boolean fromCache) {
+    return encryptionService.decrypt(object, encryptedDataDetails, fromCache);
   }
 }

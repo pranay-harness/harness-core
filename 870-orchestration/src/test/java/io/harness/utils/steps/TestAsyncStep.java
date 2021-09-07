@@ -7,8 +7,10 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.AsyncExecutableResponse;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.executables.AsyncExecutable;
+import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.tasks.ResponseData;
@@ -20,7 +22,8 @@ import java.util.Map;
 
 @OwnedBy(PIPELINE)
 public class TestAsyncStep implements AsyncExecutable<TestStepParameters> {
-  public static final StepType ASYNC_STEP_TYPE = StepType.newBuilder().setType("TEST_STATE_PLAN_ASYNC").build();
+  public static final StepType ASYNC_STEP_TYPE =
+      StepType.newBuilder().setType("TEST_STATE_PLAN_ASYNC").setStepCategory(StepCategory.STEP).build();
 
   @Inject private transient WaitNotifyEngine waitNotifyEngine;
 
@@ -30,8 +33,8 @@ public class TestAsyncStep implements AsyncExecutable<TestStepParameters> {
   }
 
   @Override
-  public AsyncExecutableResponse executeAsync(
-      Ambiance ambiance, TestStepParameters stepParameters, StepInputPackage inputPackage) {
+  public AsyncExecutableResponse executeAsync(Ambiance ambiance, TestStepParameters stepParameters,
+      StepInputPackage inputPackage, PassThroughData passThroughData) {
     String resumeId = generateUuid();
     waitNotifyEngine.doneWith(resumeId, StringNotifyResponseData.builder().data("SUCCESS").build());
     return AsyncExecutableResponse.newBuilder().addCallbackIds(resumeId).build();

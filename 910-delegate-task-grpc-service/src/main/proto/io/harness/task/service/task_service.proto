@@ -11,6 +11,8 @@ import "920-delegate-service-beans/src/main/proto/io/harness/delegate/task.proto
 
 import "920-delegate-service-beans/src/main/proto/io/harness/callback/callback.proto";
 
+import "product/ci/engine/proto/artifact.proto";
+
 import "google/protobuf/duration.proto";
 
 message TaskProgressRequest {
@@ -87,6 +89,7 @@ message StepStatus {
     StepMapOutput step_output = 4;
   }
   string error_message = 5;
+  io.harness.product.ci.engine.proto.Artifact artifact = 6;
 }
 
 enum StepExecutionStatus {

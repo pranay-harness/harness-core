@@ -116,6 +116,21 @@ public class RedisPersistentLocker implements PersistentLocker, HealthMonitor, M
   }
 
   @Override
+  public AcquiredLock tryToAcquireInfiniteLockWithPeriodicRefresh(String name, Duration waitTime) {
+    try {
+      name = getLockName(name);
+      RLock lock = client.getLock(name);
+      boolean locked = lock.tryLock(waitTime.toMillis(), -1, TimeUnit.MILLISECONDS);
+      if (locked) {
+        return RedisAcquiredLock.builder().lock(lock).build();
+      }
+    } catch (Exception ex) {
+      throw new UnexpectedException(format(ERROR_MESSAGE, name), ex);
+    }
+    throw new PersistentLockException(format(ERROR_MESSAGE, name), FAILED_TO_ACQUIRE_PERSISTENT_LOCK, SRE);
+  }
+
+  @Override
   public AcquiredLock tryToAcquireEphemeralLock(String name, Duration timeout) {
     return tryToAcquireLock(name, timeout);
   }

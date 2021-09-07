@@ -1,7 +1,9 @@
 package io.harness.waiter;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.mongo.index.FdUniqueIndex;
+import io.harness.ng.DbAliases;
 import io.harness.queue.Queuable;
 
 import com.google.common.base.MoreObjects;
@@ -10,12 +12,15 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "notifyQueue", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@Document("notifyQueue")
 @FieldNameConstants(innerTypeName = "NotifyEventKeys")
+@StoreIn(DbAliases.ALL)
 public class NotifyEvent extends Queuable {
   @FdUniqueIndex private String waitInstanceId;
   @Override

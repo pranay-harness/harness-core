@@ -4,7 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.eraro.ErrorCode.SERVICENOW_ERROR;
 import static io.harness.exception.WingsException.USER;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
@@ -23,6 +26,7 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.servicenow.ServiceNowDelegateService;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
@@ -50,13 +54,24 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@BreakDependencyOn("software.wings.service.impl.servicenow.ServiceNowServiceImpl")
 public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService {
+  private static final String LABEL = "label";
+  private static final String STATE = "state";
+  private static final String VALUE = "value";
   @Inject private EncryptionService encryptionService;
+  private static final String NO_ACCESS_SYS_CHOICE =
+      "Can not read field: %s. User might not have explicit read access to sys_choice table";
+  static final long TIME_OUT = 60;
 
   @Override
   public boolean validateConnector(ServiceNowTaskParameters taskParameters) {
     ServiceNowConfig config = taskParameters.getServiceNowConfig();
     final Call<JsonNode> request;
+    if (config.getPassword() == null) {
+      throw new ServiceNowException("Could not decrypt password. Secret might be deleted", SERVICENOW_ERROR, USER);
+    }
     request = getRestClient(taskParameters)
                   .validateConnection(Credentials.basic(config.getUsername(), new String(config.getPassword())));
     Response<JsonNode> response = null;
@@ -132,8 +147,8 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
       if (responseObj != null && responseObj.isArray()) {
         for (JsonNode stateObj : responseObj) {
           ServiceNowMetaDTO serviceNowMetaDTO = ServiceNowMetaDTO.builder()
-                                                    .id(stateObj.get("value").textValue())
-                                                    .displayName(stateObj.get("label").textValue())
+                                                    .displayName(getTextValue(stateObj, LABEL, STATE))
+                                                    .id(getTextValue(stateObj, VALUE, STATE))
                                                     .build();
           responseStates.add(serviceNowMetaDTO);
         }
@@ -148,6 +163,15 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
     } catch (Exception e) {
       String errorMsg = "Error in fetching states from serviceNow";
       throw new ServiceNowException(errorMsg + ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);
+    }
+  }
+
+  @VisibleForTesting
+  String getTextValue(JsonNode element, String property, String field) {
+    if (element.get(property) != null) {
+      return element.get(property).textValue();
+    } else {
+      throw new ServiceNowException(String.format(NO_ACCESS_SYS_CHOICE, field), SERVICENOW_ERROR, USER);
     }
   }
 
@@ -284,10 +308,10 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
       JsonNode responseObj = response.body().get("result");
       List<ServiceNowMetaDTO> fields = new ArrayList<>();
       if (responseObj.isArray()) {
-        for (JsonNode impactObj : responseObj) {
+        for (JsonNode fieldObj : responseObj) {
           ServiceNowMetaDTO serviceNowMetaDTO = ServiceNowMetaDTO.builder()
-                                                    .id(impactObj.get("value").textValue())
-                                                    .displayName(impactObj.get("label").textValue())
+                                                    .displayName(getTextValue(fieldObj, LABEL, field))
+                                                    .id(getTextValue(fieldObj, VALUE, field))
                                                     .build();
           fields.add(serviceNowMetaDTO);
         }
@@ -426,8 +450,8 @@ public class ServiceNowDelegateServiceImpl implements ServiceNowDelegateService 
   public static OkHttpClient getHttpClientWithIncreasedTimeout(String baseUrl, boolean certValidationRequired) {
     return Http.getOkHttpClient(baseUrl, certValidationRequired)
         .newBuilder()
-        .connectTimeout(45, TimeUnit.SECONDS)
-        .readTimeout(45, TimeUnit.SECONDS)
+        .connectTimeout(TIME_OUT, TimeUnit.SECONDS)
+        .readTimeout(TIME_OUT, TimeUnit.SECONDS)
         .build();
   }
 

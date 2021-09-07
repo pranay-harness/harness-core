@@ -3,7 +3,9 @@ package software.wings.beans;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
@@ -30,6 +32,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 
 /**
@@ -41,6 +44,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 @ToString(exclude = "password")
 @EqualsAndHashCode(callSuper = false)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class DockerConfig extends SettingValue implements EncryptableSetting, ArtifactSourceable {
   @Attributes(title = "Docker Registry URL", required = true) @NotEmpty private String dockerRegistryUrl;
   @Attributes(title = "Username") private String username;
@@ -102,6 +106,14 @@ public class DockerConfig extends SettingValue implements EncryptableSetting, Ar
   @Override
   public String fetchResourceCategory() {
     return ResourceType.ARTIFACT_SERVER.name();
+  }
+
+  @Override
+  public boolean shouldDeleteArtifact(SettingValue prev) {
+    if (!(prev instanceof DockerConfig)) {
+      return true;
+    }
+    return !StringUtils.equals(((DockerConfig) prev).getDockerRegistryUrl(), dockerRegistryUrl);
   }
 
   @Data

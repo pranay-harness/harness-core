@@ -4,7 +4,6 @@ import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_REQUES
 import static io.harness.eventsframework.webhookpayloads.webhookdata.WebhookTriggerType.GIT;
 
 import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.api.ProducerShutdownException;
 import io.harness.eventsframework.producer.Message;
 import io.harness.eventsframework.webhookpayloads.webhookdata.WebhookDTO;
 import io.harness.eventsframework.webhookpayloads.webhookdata.WebhookEventType;
@@ -21,8 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 public class WebhookEventPublisher {
   @Inject @Named(WEBHOOK_REQUEST_PAYLOAD_DETAILS) private Producer eventProducer;
 
-  public void publishGitWebhookEvent(WebhookPayloadData webhookPayloadData, WebhookEventType webhookEventType)
-      throws ProducerShutdownException {
+  public void publishGitWebhookEvent(WebhookPayloadData webhookPayloadData, WebhookEventType webhookEventType) {
     WebhookDTO webhookDTO = WebhookDTO.newBuilder()
                                 .setWebhookEventType(webhookEventType)
                                 .setWebhookTriggerType(GIT)

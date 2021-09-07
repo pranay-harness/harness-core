@@ -5,9 +5,12 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.ng.beans.PageResponse;
+import io.harness.ng.core.dto.OrganizationResponse;
 import io.harness.ng.core.dto.ProjectResponse;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.ng.core.environment.dto.EnvironmentResponse;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
+import io.harness.ng.core.service.dto.ServiceResponse;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 
 import java.util.List;
@@ -32,15 +35,25 @@ public interface NextGenClient {
       @Query("accountIdentifier") String accountIdentifier, @Query("orgIdentifier") @NotNull String orgIdentifier,
       @Query("projectIdentifier") @NotNull String projectIdentifier);
 
-  @GET("environments/{environmentIdentifier}")
-  Call<ResponseDTO<EnvironmentResponseDTO>> getEnvironment(@Path("environmentIdentifier") String environmentIdentifier,
-      @Query("accountId") String accountId, @Query("orgIdentifier") String orgIdentifier,
+  @GET("environmentsV2/{environmentIdentifier}")
+  Call<ResponseDTO<EnvironmentResponse>> getEnvironment(@Path("environmentIdentifier") String environmentIdentifier,
+      @Query("accountIdentifier") String accountId, @Query("orgIdentifier") String orgIdentifier,
       @Query("projectIdentifier") String projectIdentifier);
 
   @GET("services/{serviceIdentifier}")
   Call<ResponseDTO<ServiceResponseDTO>> getService(@Path("serviceIdentifier") String serviceIdentifier,
       @Query("accountId") String accountId, @Query("orgIdentifier") String orgIdentifier,
       @Query("projectIdentifier") String projectIdentifier);
+
+  @GET("servicesV2")
+  Call<ResponseDTO<PageResponse<ServiceResponse>>> listService(@Query("accountIdentifier") String accountId,
+      @Query("orgIdentifier") String orgIdentifier, @Query("projectIdentifier") String projectIdentifier,
+      @Query("serviceIdentifiers") List<String> serviceIdentifiers);
+
+  @GET("environmentsV2")
+  Call<ResponseDTO<PageResponse<EnvironmentResponse>>> listEnvironment(@Query("accountIdentifier") String accountId,
+      @Query("orgIdentifier") String orgIdentifier, @Query("projectIdentifier") String projectIdentifier,
+      @Query("envIdentifiers") List<String> environmentIdentifier);
 
   @GET("services")
   Call<ResponseDTO<PageResponse<ServiceResponseDTO>>> listServicesForProject(@Query("page") int page,
@@ -57,4 +70,8 @@ public interface NextGenClient {
   @GET("projects/{projectIdentifier}")
   Call<ResponseDTO<ProjectResponse>> getProject(@Path("projectIdentifier") String projectIdentifier,
       @Query("accountIdentifier") String accountId, @Query("orgIdentifier") String orgIdentifier);
+
+  @GET("organizations/{orgIdentifier}")
+  Call<ResponseDTO<OrganizationResponse>> getOrganization(
+      @Path("orgIdentifier") String orgIdentifier, @Query("accountIdentifier") String accountId);
 }

@@ -10,7 +10,7 @@
     <dependencies>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>950-ng-audit-commons</artifactId>
+            <artifactId>951-ng-audit-commons</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

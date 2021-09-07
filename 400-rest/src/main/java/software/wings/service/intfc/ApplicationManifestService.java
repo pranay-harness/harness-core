@@ -1,5 +1,7 @@
 package software.wings.service.intfc;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 
@@ -19,6 +21,7 @@ import javax.annotation.Nonnull;
 import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotEmpty;
 
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public interface ApplicationManifestService extends OwnedByService, OwnedByEnvironment {
   ApplicationManifest create(ApplicationManifest applicationManifest);
 
@@ -34,7 +37,7 @@ public interface ApplicationManifestService extends OwnedByService, OwnedByEnvir
 
   ApplicationManifest update(ApplicationManifest applicationManifest);
 
-  ApplicationManifest getManifestByServiceId(String appId, String serviceId);
+  @Deprecated ApplicationManifest getManifestByServiceId(String appId, String serviceId);
 
   ApplicationManifest getById(String appId, String id);
 
@@ -52,6 +55,8 @@ public interface ApplicationManifestService extends OwnedByService, OwnedByEnvir
   void deleteAppManifest(String appId, String appManifestId);
 
   DirectoryNode getManifestFilesFromGit(String appId, String appManifestId);
+
+  List<ApplicationManifest> getManifestsByServiceId(String appId, String serviceId, AppManifestKind kind);
 
   ApplicationManifest getByEnvId(String appId, String envId, AppManifestKind kind);
 
@@ -79,7 +84,7 @@ public interface ApplicationManifestService extends OwnedByService, OwnedByEnvir
 
   List<ManifestFile> listManifestFiles(String appManifestId, String appId);
 
-  ApplicationManifest getByServiceId(String appId, String serviceId, AppManifestKind kind);
+  @Deprecated ApplicationManifest getByServiceId(String appId, String serviceId, AppManifestKind kind);
 
   void cloneManifestFiles(
       String appId, ApplicationManifest applicationManifestOld, ApplicationManifest applicationManifestNew);
@@ -101,4 +106,8 @@ public interface ApplicationManifestService extends OwnedByService, OwnedByEnvir
   boolean updateFailedAttempts(String accountId, String appManifestId, int failedAttempts);
 
   void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String applicationManifestId);
+
+  ApplicationManifest getAppManifestByName(String appId, String envId, String serviceId, String appManifestName);
+
+  Map<String, String> getNamesForIds(String appId, Set<String> appManifestIds);
 }

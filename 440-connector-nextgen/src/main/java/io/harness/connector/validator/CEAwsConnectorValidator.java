@@ -1,14 +1,16 @@
 package io.harness.connector.validator;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.aws.AwsClient;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.entities.embedded.ceawsconnector.S3BucketDetails;
+import io.harness.delegate.beans.connector.CEFeatures;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.awsconnector.CrossAccountAccessDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.AwsCurAttributesDTO;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO;
-import io.harness.delegate.beans.connector.ceawsconnector.CEAwsFeatures;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.ng.core.dto.ErrorDetail;
@@ -23,7 +25,6 @@ import com.amazonaws.services.costandusagereport.model.ReportDefinition;
 import com.amazonaws.services.identitymanagement.model.AmazonIdentityManagementException;
 import com.amazonaws.services.identitymanagement.model.EvaluationResult;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.securitytoken.model.AWSSecurityTokenServiceException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -38,12 +39,12 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
 @Singleton
+@OwnedBy(HarnessTeam.CE)
 public class CEAwsConnectorValidator extends AbstractConnectorValidator {
   private static final String COMPRESSION = "GZIP";
   private static final String TIME_GRANULARITY = "HOURLY";
@@ -72,7 +73,7 @@ public class CEAwsConnectorValidator extends AbstractConnectorValidator {
   public ConnectorValidationResult validate(ConnectorConfigDTO connectorDTO, String accountIdentifier,
       String orgIdentifier, String projectIdentifier, String identifier) {
     final CEAwsConnectorDTO ceAwsConnectorDTO = (CEAwsConnectorDTO) connectorDTO;
-    final List<CEAwsFeatures> featuresEnabled = ceAwsConnectorDTO.getFeaturesEnabled();
+    final List<CEFeatures> featuresEnabled = ceAwsConnectorDTO.getFeaturesEnabled();
     final CrossAccountAccessDTO crossAccountAccessDTO = ceAwsConnectorDTO.getCrossAccountAccess();
     final AwsCurAttributesDTO awsCurAttributesDTO = ceAwsConnectorDTO.getCurAttributes();
 
@@ -81,24 +82,24 @@ public class CEAwsConnectorValidator extends AbstractConnectorValidator {
     try {
       final AWSCredentialsProvider credentialsProvider = getCredentialProvider(crossAccountAccessDTO);
 
-      if (featuresEnabled.contains(CEAwsFeatures.EVENTS)) {
+      if (featuresEnabled.contains(CEFeatures.VISIBILITY)) {
         final Policy eventsPolicy = getRequiredEventsPolicy();
         errorList.addAll(validateIfPolicyIsCorrect(
-            credentialsProvider, crossAccountAccessDTO.getCrossAccountRoleArn(), CEAwsFeatures.EVENTS, eventsPolicy));
+            credentialsProvider, crossAccountAccessDTO.getCrossAccountRoleArn(), CEFeatures.VISIBILITY, eventsPolicy));
       }
 
-      if (featuresEnabled.contains(CEAwsFeatures.OPTIMIZATION)) {
+      if (featuresEnabled.contains(CEFeatures.OPTIMIZATION)) {
         final Policy optimizationPolicy = getRequiredOptimizationPolicy();
         errorList.addAll(validateIfPolicyIsCorrect(credentialsProvider, crossAccountAccessDTO.getCrossAccountRoleArn(),
-            CEAwsFeatures.OPTIMIZATION, optimizationPolicy));
+            CEFeatures.OPTIMIZATION, optimizationPolicy));
       }
 
-      if (featuresEnabled.contains(CEAwsFeatures.CUR)) {
+      if (featuresEnabled.contains(CEFeatures.BILLING)) {
         log.info("Destination bucket: {}", ceAwsSetupConfig.getDestinationBucket());
         final Policy curPolicy =
             getRequiredCurPolicy(awsCurAttributesDTO.getS3BucketName(), ceAwsSetupConfig.getDestinationBucket());
         errorList.addAll(validateIfPolicyIsCorrect(
-            credentialsProvider, crossAccountAccessDTO.getCrossAccountRoleArn(), CEAwsFeatures.CUR, curPolicy));
+            credentialsProvider, crossAccountAccessDTO.getCrossAccountRoleArn(), CEFeatures.BILLING, curPolicy));
 
         errorList.addAll(validateResourceExists(credentialsProvider, awsCurAttributesDTO, errorList));
       }
@@ -158,7 +159,7 @@ public class CEAwsConnectorValidator extends AbstractConnectorValidator {
   }
 
   private Collection<ErrorDetail> validateIfPolicyIsCorrect(AWSCredentialsProvider credentialsProvider,
-      String crossAccountRoleArn, CEAwsFeatures feature, @NotNull Policy policy) {
+      String crossAccountRoleArn, CEFeatures feature, @NotNull Policy policy) {
     List<ErrorDetail> errorDetails = new ArrayList<>();
 
     for (Statement statement : policy.getStatements()) {
@@ -260,15 +261,7 @@ public class CEAwsConnectorValidator extends AbstractConnectorValidator {
   private Collection<ErrorDetail> validateIfBucketIsPresent(
       AWSCredentialsProvider credentialsProvider, S3BucketDetails s3BucketDetails) {
     try {
-      ObjectListing s3BucketObject =
-          awsClient.getBucket(credentialsProvider, s3BucketDetails.getS3BucketName(), s3BucketDetails.getS3Prefix());
-      if (CollectionUtils.isEmpty(s3BucketObject.getObjectSummaries())) {
-        return ImmutableList.of(ErrorDetail.builder()
-                                    .message(String.format("Can't access bucket: '%s', can you check if it exists?",
-                                        s3BucketDetails.getS3BucketName()))
-                                    .reason("The bucket might not be existing.")
-                                    .build());
-      }
+      awsClient.getBucket(credentialsProvider, s3BucketDetails.getS3BucketName(), s3BucketDetails.getS3Prefix());
     } catch (AmazonS3Exception ex) {
       lastErrorSummary = String.format(
           "Either bucket '%s' doesn't exist or, %nthere is a mismatch between bucketName entered in connector and the name present in the role policy.",
@@ -283,14 +276,11 @@ public class CEAwsConnectorValidator extends AbstractConnectorValidator {
         + "  \"Version\": \"2012-10-17\","
         + "  \"Statement\": ["
         + "    {"
+        + "      \"Effect\": \"Allow\","
         + "      \"Action\": ["
-        + "        \"rds:StartDBCluster\","
-        + "        \"rds:StopDBCluster\","
         + "        \"elasticloadbalancing:*\","
         + "        \"ec2:StopInstances\","
         + "        \"autoscaling:*\","
-        + "        \"rds:StopDBInstance\","
-        + "        \"rds:StartDBInstance\","
         + "        \"ec2:Describe*\","
         + "        \"iam:CreateServiceLinkedRole\","
         + "        \"iam:ListInstanceProfiles\","
@@ -298,15 +288,23 @@ public class CEAwsConnectorValidator extends AbstractConnectorValidator {
         + "        \"iam:AddRoleToInstanceProfile\","
         + "        \"iam:PassRole\","
         + "        \"ec2:StartInstances\","
-        + "        \"rds:ListTagsForResource\","
-        + "        \"rds:DescribeDBInstances\","
         + "        \"ec2:*\","
-        + "        \"rds:ModifyDBInstance\","
         + "        \"iam:GetUser\","
         + "        \"ec2:ModifyInstanceAttribute\","
-        + "        \"rds:DescribeDBClusters\""
+        + "        \"iam:ListRoles\","
+        + "        \"acm:ListCertificates\","
+        + "        \"lambda:*\","
+        + "        \"cloudwatch:ListMetrics\","
+        + "        \"cloudwatch:GetMetricData\","
+        + "        \"route53:GetHostedZone\","
+        + "        \"route53:ListHostedZones\","
+        + "        \"route53:ListHostedZonesByName\","
+        + "        \"route53:ChangeResourceRecordSets\","
+        + "        \"route53:ListResourceRecordSets\","
+        + "        \"route53:GetHealthCheck\","
+        + "        \"route53:GetHealthCheckStatus\","
+        + "        \"cloudwatch:GetMetricStatistics\""
         + "      ],"
-        + "      \"Effect\": \"Allow\","
         + "      \"Resource\": \"*\""
         + "    }"
         + "  ]"
@@ -357,11 +355,18 @@ public class CEAwsConnectorValidator extends AbstractConnectorValidator {
         + "      \"Sid\": \"VisualEditor0\","
         + "      \"Effect\": \"Allow\","
         + "      \"Action\": ["
-        + "        \"organizations:Describe*\","
-        + "        \"organizations:List*\","
-        + "        \"eks:Describe*\","
-        + "        \"eks:List*\","
-        + "        \"cur:DescribeReportDefinitions\""
+        + "        \"ecs:ListClusters*\","
+        + "        \"ecs:ListServices\","
+        + "        \"ecs:DescribeServices\","
+        + "        \"ecs:DescribeContainerInstances\","
+        + "        \"ecs:ListTasks\","
+        + "        \"ecs:ListContainerInstances\","
+        + "        \"ecs:DescribeTasks\","
+        + "        \"ec2:DescribeInstances*\","
+        + "        \"ec2:DescribeRegions\","
+        + "        \"cloudwatch:GetMetricData\","
+        + "        \"ec2:DescribeVolumes\","
+        + "        \"ec2:DescribeSnapshots\""
         + "      ],"
         + "      \"Resource\": \"*\""
         + "    }"

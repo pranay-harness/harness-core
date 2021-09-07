@@ -10,7 +10,7 @@ import static software.wings.beans.command.EcsSetupCommandUnit.ERROR;
 import static software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsSwapRoutesCommandTaskHelper.BG_GREEN;
 import static software.wings.delegatetasks.aws.ecs.ecstaskhandler.EcsSwapRoutesCommandTaskHelper.BG_VERSION;
 import static software.wings.service.impl.aws.model.AwsConstants.MAIN_ECS_CONTAINER_NAME_TAG;
-import static software.wings.utils.EcsConvention.getServiceNamePrefixFromServiceName;
+import static software.wings.utils.EcsConvention.getServiceNamePrefix;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static java.lang.String.format;
@@ -1276,10 +1276,11 @@ public class EcsSetupCommandTaskHelper {
     return serviceEvents;
   }
   public void downsizeOldOrUnhealthy(SettingAttribute settingAttribute, EcsSetupParams setupParams,
-      String containerServiceName, List<EncryptedDataDetail> encryptedDataDetails,
-      ExecutionLogCallback executionLogCallback, boolean timeoutErrorSupported) {
-    Map<String, Integer> activeCounts = awsClusterService.getActiveServiceCounts(setupParams.getRegion(),
-        settingAttribute, encryptedDataDetails, setupParams.getClusterName(), containerServiceName);
+      List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback,
+      boolean timeoutErrorSupported) {
+    Map<String, Integer> activeCounts =
+        awsClusterService.getActiveServiceCountsByServiceNamePrefix(setupParams.getRegion(), settingAttribute,
+            encryptedDataDetails, setupParams.getClusterName(), getServiceNamePrefix(setupParams.getTaskFamily()));
     String latestHealthyController = null;
     if (activeCounts.size() > 1) {
       AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
@@ -1319,20 +1320,22 @@ public class EcsSetupCommandTaskHelper {
   /**
    * Delete all older service with desiredCount as 0 while keeping only recent "minRevisionToKeep" no of services
    */
-  public void cleanup(SettingAttribute settingAttribute, String region, String containerServiceName, String clusterName,
+  public void cleanup(SettingAttribute settingAttribute, EcsSetupParams setupParams,
       List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog("\nCleaning versions with no tasks", LogLevel.INFO);
-    String serviceNamePrefix = getServiceNamePrefixFromServiceName(containerServiceName);
-    awsClusterService.getServices(region, settingAttribute, encryptedDataDetails, clusterName, serviceNamePrefix)
+    String serviceNamePrefix = getServiceNamePrefix(setupParams.getTaskFamily());
+    awsClusterService
+        .getServices(setupParams.getRegion(), settingAttribute, encryptedDataDetails, setupParams.getClusterName(),
+            serviceNamePrefix)
         .stream()
         .filter(service
             -> EcsConvention.getServiceNamePrefixFromServiceName(service.getServiceName()).equals(serviceNamePrefix))
-        .filter(s -> !s.getServiceName().equals(containerServiceName))
         .filter(s -> s.getDesiredCount() == 0)
         .forEach(s -> {
           String oldServiceName = s.getServiceName();
           executionLogCallback.saveExecutionLog("Deleting old version: " + oldServiceName, LogLevel.INFO);
-          awsClusterService.deleteService(region, settingAttribute, encryptedDataDetails, clusterName, oldServiceName);
+          awsClusterService.deleteService(setupParams.getRegion(), settingAttribute, encryptedDataDetails,
+              setupParams.getClusterName(), oldServiceName);
         });
   }
 

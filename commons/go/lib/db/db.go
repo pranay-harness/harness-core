@@ -7,6 +7,7 @@ import (
 
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
+	"github.com/wings-software/portal/product/ci/ti-service/logger"
 	"go.uber.org/zap"
 )
 
@@ -115,7 +116,7 @@ func (db *DB) ExecContext(ctx context.Context, query string, args ...interface{}
 	deferFunc := startNewSpanIfContextHasSpan(ctx, "db.ExecContext", db.ci.Application, db.ci.DBName, db.ci.Engine, query)
 	defer deferFunc()
 	res, err := db.conn.ExecContext(ctx, query, args...)
-	logQuery(db.log, start, query, args, err)
+	logQuery(logger.FromContext(ctx), start, query, args, err)
 	return res, err
 }
 
@@ -125,8 +126,16 @@ func (db *DB) QueryContext(ctx context.Context, query string, args ...interface{
 	deferFunc := startNewSpanIfContextHasSpan(ctx, "db.QueryContext", db.ci.Application, db.ci.DBName, db.ci.Engine, query)
 	defer deferFunc()
 	rows, err := db.conn.QueryContext(ctx, query, args...)
-	logQuery(db.log, start, query, args, err)
+	logQuery(logger.FromContext(ctx), start, query, args, err)
 	return rows, err
+}
+
+// PingContext pings the DB using the given context.
+// Not logging the command to avoid spamming this in clients
+// for health checks.
+func (db *DB) PingContext(ctx context.Context) error {
+	err := db.conn.PingContext(ctx)
+	return err
 }
 
 // QueryRowContext runs the given sql statement using the given context db.QueryRowContext, logs details about the call and returns the result
@@ -135,7 +144,7 @@ func (db *DB) QueryRowContext(ctx context.Context, query string, args ...interfa
 	deferFunc := startNewSpanIfContextHasSpan(ctx, "db.QueryRowContext", db.ci.Application, db.ci.DBName, db.ci.Engine, query)
 	defer deferFunc()
 	row := db.conn.QueryRowContext(ctx, query, args...)
-	logQuery(db.log, start, query, args, nil)
+	logQuery(logger.FromContext(ctx), start, query, args, nil)
 	return row
 }
 
@@ -148,8 +157,8 @@ func (db *DB) PrepareContext(ctx context.Context, query string) (*Stmt, error) {
 	if err != nil {
 		return nil, err
 	}
-	db.log.Infow("sql prepare", "sql.query", collapseSpaces(query), "sql.hash", hash(query), "query_time_ms", ms(time.Since(start)))
-	return newStmt(stmt, query, db, db.log), nil
+	logger.FromContext(ctx).Infow("sql prepare", "sql.query", collapseSpaces(query), "sql.hash", hash(query), "query_time_ms", ms(time.Since(start)))
+	return newStmt(stmt, query, db, logger.FromContext(ctx)), nil
 }
 
 func startNewSpanIfContextHasSpan(ctx context.Context, name, appName, dbName, dbEngine, query string) func() {
@@ -233,7 +242,7 @@ func (db *DB) DoInTransactionContext(ctx context.Context, opts *sql.TxOptions, o
 	} else {
 		rberr := tx.Rollback()
 		if rberr != nil {
-			db.log.Errorw("error while rolling back transaction", zap.Error(rberr))
+			logger.FromContext(ctx).Errorw("error while rolling back transaction", zap.Error(rberr))
 		}
 	}
 	return err

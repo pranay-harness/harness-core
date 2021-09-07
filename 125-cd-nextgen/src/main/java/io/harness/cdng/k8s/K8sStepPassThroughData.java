@@ -2,6 +2,7 @@ package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
@@ -18,9 +19,11 @@ import org.springframework.data.annotation.TypeAlias;
 @Value
 @Builder
 @TypeAlias("k8sStepPassThroughData")
+@RecasterAlias("io.harness.cdng.k8s.K8sStepPassThroughData")
 public class K8sStepPassThroughData implements PassThroughData {
   ManifestOutcome k8sManifestOutcome;
   List<ValuesManifestOutcome> valuesManifestOutcomes;
   List<OpenshiftParamManifestOutcome> openshiftParamManifestOutcomes;
   InfrastructureOutcome infrastructure;
+  String helmValuesFileContent;
 }

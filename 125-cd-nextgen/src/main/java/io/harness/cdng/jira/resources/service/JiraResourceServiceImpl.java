@@ -82,13 +82,15 @@ public class JiraResourceServiceImpl implements JiraResourceService {
 
   @Override
   public JiraIssueCreateMetadataNG getIssueCreateMetadata(IdentifierRef jiraConnectorRef, String orgId,
-      String projectId, String projectKey, String issueType, String expand, boolean fetchStatus) {
+      String projectId, String projectKey, String issueType, String expand, boolean fetchStatus,
+      boolean ignoreComment) {
     JiraTaskNGParametersBuilder paramsBuilder = JiraTaskNGParameters.builder()
                                                     .action(JiraActionNG.GET_ISSUE_CREATE_METADATA)
                                                     .projectKey(projectKey)
                                                     .issueType(issueType)
                                                     .expand(expand)
-                                                    .fetchStatus(fetchStatus);
+                                                    .fetchStatus(fetchStatus)
+                                                    .ignoreComment(ignoreComment);
     JiraTaskNGResponse jiraTaskResponse = obtainJiraTaskNGResponse(jiraConnectorRef, orgId, projectId, paramsBuilder);
     return jiraTaskResponse.getIssueCreateMetadata();
   }

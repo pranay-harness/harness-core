@@ -7,6 +7,8 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EnvironmentType;
@@ -77,9 +79,10 @@ import org.mongodb.morphia.query.UpdateOperations;
 @ValidateOnExecution
 @Singleton
 @TargetModule(HarnessModule._960_API_SERVICES)
+@OwnedBy(HarnessTeam.CDC)
 public class GovernanceConfigServiceImpl implements GovernanceConfigService {
   private static final long MIN_FREEZE_WINDOW_TIME = 1800000L;
-  private static final long MAX_FREEZE_WINDOW_TIME = 2592000000L;
+  private static final long MAX_FREEZE_WINDOW_TIME = 31536000000L;
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;
@@ -108,6 +111,19 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
 
   private GovernanceConfig getDefaultGovernanceConfig(String accountId) {
     return GovernanceConfig.builder().accountId(accountId).deploymentFreeze(false).build();
+  }
+
+  @Override
+  public void resetEnableIterators(GovernanceConfig governanceConfig) {
+    Query<GovernanceConfig> query = wingsPersistence.createQuery(GovernanceConfig.class)
+                                        .filter(GovernanceConfigKeys.accountId, governanceConfig.getAccountId());
+    governanceConfig.recalculateEnableNextIterations();
+    governanceConfig.recalculateEnableNextCloseIterations();
+    wingsPersistence.findAndModify(query,
+        wingsPersistence.createUpdateOperations(GovernanceConfig.class)
+            .set(GovernanceConfigKeys.enableNextIterations, governanceConfig.isEnableNextIterations())
+            .set(GovernanceConfigKeys.enableNextCloseIterations, governanceConfig.isEnableNextCloseIterations()),
+        WingsPersistence.returnNewOptions);
   }
 
   @Override
@@ -147,6 +163,9 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
         updateOperations.set(GovernanceConfigKeys.nextIterations, governanceConfig.getNextIterations());
         updateOperations.set(GovernanceConfigKeys.nextCloseIterations, governanceConfig.getNextCloseIterations());
       }
+
+      updateOperations.set(GovernanceConfigKeys.enableNextIterations, governanceConfig.isEnableNextIterations());
+      updateOperations.set(GovernanceConfigKeys.enableNextCloseIterations, governanceConfig.isEnableNextIterations());
 
       GovernanceConfig updatedSetting =
           wingsPersistence.findAndModify(query, updateOperations, WingsPersistence.upsertReturnNewOptions);
@@ -381,8 +400,10 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
 
         // if no timezone(update from YAML) then fetch from db
         if (isEmpty(entry.getTimeRange().getTimeZone())) {
-          entry.setTimeRange(new TimeRange(
-              entry.getTimeRange().getFrom(), entry.getTimeRange().getTo(), oldWindow.getTimeRange().getTimeZone()));
+          new TimeRange(entry.getTimeRange().getFrom(), entry.getTimeRange().getTo(),
+              oldWindow.getTimeRange().getTimeZone(), entry.getTimeRange().isDurationBased(),
+              entry.getTimeRange().getDuration(), entry.getTimeRange().getEndTime(),
+              entry.getTimeRange().getFreezeOccurrence(), false);
         }
 
         if (isEmpty(entry.getDescription())) {
@@ -414,7 +435,7 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
       throw new InvalidRequestException("Freeze window time should be at least 30 minutes");
     }
     if (timeRange.getTo() - timeRange.getFrom() > MAX_FREEZE_WINDOW_TIME) {
-      throw new InvalidRequestException("Freeze window time should be less than 30 days");
+      throw new InvalidRequestException("Freeze window time should be less than 365 days");
     }
   }
 

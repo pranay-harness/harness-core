@@ -117,13 +117,13 @@ def main(event, context):
     create_dataset(client, jsonData["datasetName"])
     if not if_tbl_exists(client, preAggragatedTableRef):
         print_("%s table does not exists, creating table..." % preAggragatedTableRef)
-        createTable(client, preAggragatedTableTableName)
+        createTable(client, preAggragatedTableRef)
     else:
         print_("%s table exists" % preAggragatedTableTableName)
 
     if not if_tbl_exists(client, unifiedTableRef):
         print_("%s table does not exists, creating table..." % unifiedTableRef)
-        createTable(client, unifiedTableTableName)
+        createTable(client, unifiedTableRef)
     else:
         print_("%s table exists" % unifiedTableTableName)
 
@@ -168,7 +168,7 @@ def loadIntoPreaggregated(client, jsonData):
         INTERVAL = '45'
     else:
         INTERVAL = '3'
-    query = """DELETE FROM `%s.preAggregated` WHERE DATE(startTime) >= DATE_SUB(@run_date , INTERVAL %s DAY) AND cloudProvider = "GCP";
+    query = """DELETE FROM `%s.preAggregated` WHERE DATE(startTime) >= DATE_SUB(@run_date , INTERVAL %s DAY) AND cloudProvider = "GCP" ;
            INSERT INTO `%s.preAggregated` (cost, gcpProduct,gcpSkuId,gcpSkuDescription,
              startTime,gcpProjectId,region,zone,gcpBillingAccountId,cloudProvider, discount) SELECT SUM(cost) AS cost, service.description AS gcpProduct,
              sku.id AS gcpSkuId, sku.description AS gcpSkuDescription, TIMESTAMP_TRUNC(usage_start_time, DAY) as startTime, project.id AS gcpProjectId,

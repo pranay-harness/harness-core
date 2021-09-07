@@ -99,8 +99,7 @@ public class ConnectorChangeEventMessageProcessorTest extends CvNextGenTestBase 
   public void testProcessUpdateAction_resetLiveMonitoringPerpetualTaskForKubernetesActivitySource() {
     KubernetesActivitySourceDTO kubernetesActivitySourceDTO = createKubernetesActivitySourceDTO();
 
-    String kubernetesSourceId = activitySourceService.saveActivitySource(
-        accountIdentifier, orgIdentifier, projectIdentifier, kubernetesActivitySourceDTO);
+    String kubernetesSourceId = activitySourceService.create(accountIdentifier, kubernetesActivitySourceDTO);
 
     KubernetesActivitySource kubernetesActivitySource =
         (KubernetesActivitySource) activitySourceService.getActivitySource(kubernetesSourceId);
@@ -125,6 +124,8 @@ public class ConnectorChangeEventMessageProcessorTest extends CvNextGenTestBase 
         .identifier(generateUuid())
         .name("some-name")
         .connectorIdentifier(connectorIdentifier)
+        .orgIdentifier(orgIdentifier)
+        .projectIdentifier(projectIdentifier)
         .activitySourceConfigs(Sets.newHashSet(KubernetesActivitySourceConfig.builder()
                                                    .serviceIdentifier(generateUuid())
                                                    .envIdentifier(generateUuid())

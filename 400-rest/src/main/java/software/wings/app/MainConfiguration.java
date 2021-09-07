@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Collections.singletonList;
 
+import io.harness.AccessControlClientConfiguration;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -20,11 +21,12 @@ import io.harness.config.PipelineConfig;
 import io.harness.config.PublisherConfiguration;
 import io.harness.config.WorkersConfiguration;
 import io.harness.configuration.DeployMode;
-import io.harness.cvng.client.CVNGClientConfig;
+import io.harness.delegate.beans.FileUploadLimit;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SalesforceConfig;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
+import io.harness.ff.FeatureFlagConfig;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.lock.DistributedLockImplementation;
@@ -45,6 +47,7 @@ import software.wings.beans.security.access.GlobalWhitelistConfig;
 import software.wings.cdn.CdnConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.jre.JreConfig;
+import software.wings.scheduler.LdapSyncJobConfig;
 import software.wings.search.framework.ElasticsearchConfig;
 import software.wings.security.authentication.MarketPlaceConfig;
 import software.wings.security.authentication.oauth.AzureConfig;
@@ -82,10 +85,8 @@ import lombok.EqualsAndHashCode;
 
 /**
  * Used to load all the application configuration.
- *
- * @author Rishi
  */
-@TargetModule(HarnessModule._360_CG_MANAGER)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Singleton
@@ -108,7 +109,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty(defaultValue = "true") private boolean enableIterators = true;
   @JsonProperty(defaultValue = "true") private boolean enableAuth = true;
   @JsonProperty(defaultValue = "50") private int jenkinsBuildQuerySize = 50;
-  @JsonProperty private FileUploadLimit fileUploadLimits = new FileUploadLimit();
+  @JsonProperty private io.harness.delegate.beans.FileUploadLimit fileUploadLimits = new FileUploadLimit();
   @JsonProperty("backgroundScheduler") private SchedulerConfig backgroundSchedulerConfig = new SchedulerConfig();
   @JsonProperty("serviceScheduler") private SchedulerConfig serviceSchedulerConfig = new SchedulerConfig();
   @JsonProperty("watcherMetadataUrl") private String watcherMetadataUrl;
@@ -116,6 +117,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("awsInstanceTypes") private List<String> awsInstanceTypes;
   @JsonProperty("awsRegionIdToName") private Map<String, String> awsRegionIdToName;
   @JsonProperty("apiUrl") private String apiUrl;
+  @JsonProperty("exportAccountDataBatchSize") private int exportAccountDataBatchSize;
   @JsonProperty("supportEmail") private String supportEmail;
   @JsonProperty("envPath") private String envPath;
   @JsonProperty("smtp") private SmtpConfig smtpConfig;
@@ -124,8 +126,9 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("featuresEnabled") private String featureNames;
   @JsonProperty("kubectlVersion") private String kubectlVersion;
   @JsonProperty("ocVersion") private String ocVersion;
+  @JsonProperty("scmVersion") private String scmVersion;
   @JsonProperty("trialRegistrationAllowed") private boolean trialRegistrationAllowed;
-  @JsonProperty("ngManagerAvailable") private boolean ngManagerAvailable;
+  @JsonProperty("eventsFrameworkAvailableInOnPrem") private boolean eventsFrameworkAvailableInOnPrem;
   @JsonProperty(value = "trialRegistrationAllowedForBugathon", defaultValue = "false")
   private boolean trialRegistrationAllowedForBugathon;
   @JsonProperty("blacklistedEmailDomainsAllowed") private boolean blacklistedEmailDomainsAllowed;
@@ -134,6 +137,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("executionLogStorageMode") private DataStorageMode executionLogsStorageMode;
   @JsonProperty("fileStorageMode") private DataStorageMode fileStorageMode;
   @JsonProperty("clusterName") private String clusterName;
+  @JsonProperty("deploymentClusterName") private String deploymentClusterName;
   @JsonProperty("ceSetUpConfig") private CESetUpConfig ceSetUpConfig;
   @JsonProperty("marketoConfig") private MarketoConfig marketoConfig;
   @JsonProperty("segmentConfig") private SegmentConfig segmentConfig;
@@ -153,11 +157,14 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("sampleTargetStatusHost") private String sampleTargetStatusHost;
   @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
   @JsonProperty("cacheConfig") private CacheConfig cacheConfig;
+  @JsonProperty("ngAuthUIEnabled") private boolean ngAuthUIEnabled;
   @JsonProperty("gcpMarketplaceConfig") private GcpMarketplaceConfig gcpMarketplaceConfig;
   @JsonProperty("techStacks") private Map<String, UrlInfo> techStackLinks;
   @JsonProperty("grpcServerConfig") private GrpcServerConfig grpcServerConfig;
   @JsonProperty("grpcDelegateServiceClientConfig") private GrpcClientConfig grpcDelegateServiceClientConfig;
+  @JsonProperty("grpcOnpremDelegateClientConfig") private GrpcClientConfig grpcOnpremDelegateClientConfig;
   @JsonProperty("grpcClientConfig") private GrpcClientConfig grpcClientConfig;
+  @JsonProperty("grpcDMSClientConfig") private GrpcClientConfig grpcDMSClientConfig;
   @JsonProperty("workers") private WorkersConfiguration workers;
   @JsonProperty("publishers") private PublisherConfiguration publisherConfiguration;
   @JsonProperty("pipelineConfig") private PipelineConfig pipelineConfig = new PipelineConfig();
@@ -171,14 +178,21 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("atmosphereBroadcaster") private AtmosphereBroadcaster atmosphereBroadcaster;
   @JsonProperty(value = "jobsFrequencyConfig") private JobsFrequencyConfig jobsFrequencyConfig;
   @JsonProperty("ngManagerServiceHttpClientConfig") private ServiceHttpClientConfig ngManagerServiceHttpClientConfig;
-  @JsonProperty("cvngClientConfig") private CVNGClientConfig cvngClientConfig;
   @JsonProperty("mockServerConfig") private MockServerConfig mockServerConfig;
   @JsonProperty("numberOfRemindersBeforeAccountDeletion") private int numberOfRemindersBeforeAccountDeletion;
   @JsonProperty("delegateGrpcServicePort") private Integer delegateGrpcServicePort;
   @JsonProperty("logStreamingServiceConfig") private LogStreamingServiceConfig logStreamingServiceConfig;
+  @JsonProperty("accessControlClient") private AccessControlClientConfiguration accessControlClientConfiguration;
   @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
   @JsonProperty("cfClientConfig") private CfClientConfig cfClientConfig;
   @JsonProperty("cfMigrationConfig") private CfMigrationConfig cfMigrationConfig;
+  @JsonProperty("featureFlagConfig") private FeatureFlagConfig featureFlagConfig;
+  @JsonProperty("auditClientConfig") private ServiceHttpClientConfig auditClientConfig;
+  @JsonProperty(value = "enableAudit") private boolean enableAudit;
+  @JsonProperty("dmsSecret") private String dmsSecret;
+  @JsonProperty(value = "disableDelegateMgmtInManager", defaultValue = "false")
+  private boolean disableDelegateMgmtInManager;
+  @JsonProperty("ldapSyncJobConfig") private LdapSyncJobConfig ldapSyncJobConfig;
 
   private int applicationPort;
   private boolean sslEnabled;
@@ -232,13 +246,13 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
     return assetsConfiguration;
   }
 
-  private ConnectorFactory getDefaultAdminConnectorFactory() {
+  protected ConnectorFactory getDefaultAdminConnectorFactory() {
     final HttpConnectorFactory factory = new HttpConnectorFactory();
     factory.setPort(9091);
     return factory;
   }
 
-  private ConnectorFactory getDefaultApplicationConnectorFactory() {
+  protected ConnectorFactory getDefaultApplicationConnectorFactory() {
     final HttpConnectorFactory factory = new HttpConnectorFactory();
     factory.setPort(9090);
     return factory;

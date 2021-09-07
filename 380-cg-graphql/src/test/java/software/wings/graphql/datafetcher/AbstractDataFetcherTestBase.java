@@ -12,6 +12,8 @@ import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.entities.Cluster;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.EcsCluster;
+import io.harness.ccm.commons.entities.billing.CECloudAccount;
+import io.harness.ccm.commons.entities.billing.CECluster;
 import io.harness.ccm.setup.CECloudAccountDao;
 import io.harness.ccm.setup.CEClusterDao;
 import io.harness.persistence.HPersistence;
@@ -36,8 +38,6 @@ import software.wings.beans.SettingAttribute.SettingCategory;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.WorkflowExecution;
-import software.wings.beans.ce.CECloudAccount;
-import software.wings.beans.ce.CECluster;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.beans.trigger.Trigger;
@@ -153,22 +153,22 @@ public abstract class AbstractDataFetcherTestBase extends WingsBaseTest {
   public static final String ARTIFACT_STREAM_ID_2 = "ARTIFACT_STREAM_ID_2";
   public static final String SETTING_ID_1 = "SETTING_ID_1";
   public static final String SETTING_ID_2 = "SETTING_ID_2";
-  @Inject AccountService accountService;
-  @Inject AppService appService;
-  @Inject HarnessTagService harnessTagService;
-  @Inject ServiceResourceService serviceResourceService;
-  @Inject EnvironmentService environmentService;
-  @Inject InstanceService instanceService;
-  @Inject InfrastructureDefinitionService infrastructureDefinitionService;
-  @Inject SettingsService settingsService;
-  @Inject TriggerService triggerService;
-  @Inject WorkflowService workflowService;
-  @Inject PipelineService pipelineService;
-  @Inject WorkflowExecutionService workflowExecutionService;
-  @Inject ClusterRecordService clusterRecordService;
-  @Inject CEClusterDao clusterDao;
-  @Inject CECloudAccountDao cloudAccountDao;
-  @Inject HPersistence hPersistence;
+  @Inject protected AccountService accountService;
+  @Inject protected AppService appService;
+  @Inject protected HarnessTagService harnessTagService;
+  @Inject protected ServiceResourceService serviceResourceService;
+  @Inject protected EnvironmentService environmentService;
+  @Inject protected InstanceService instanceService;
+  @Inject protected InfrastructureDefinitionService infrastructureDefinitionService;
+  @Inject protected SettingsService settingsService;
+  @Inject protected TriggerService triggerService;
+  @Inject protected WorkflowService workflowService;
+  @Inject protected PipelineService pipelineService;
+  @Inject protected WorkflowExecutionService workflowExecutionService;
+  @Inject protected ClusterRecordService clusterRecordService;
+  @Inject protected CEClusterDao clusterDao;
+  @Inject protected CECloudAccountDao cloudAccountDao;
+  @Inject protected HPersistence hPersistence;
   @Inject protected TestUtils testUtils;
   @Inject private WingsPersistence wingsPersistence;
 
@@ -201,6 +201,19 @@ public abstract class AbstractDataFetcherTestBase extends WingsBaseTest {
     return wingsPersistence.insert(workflowExecution);
   }
 
+  public String createWorkflowExecution(
+      String accountId, String appId, String workflowId, EnvironmentType environmentType) {
+    WorkflowExecution workflowExecution = WorkflowExecution.builder()
+                                              .workflowId(workflowId)
+                                              .workflowType(WorkflowType.ORCHESTRATION)
+                                              .status(ExecutionStatus.SUCCESS)
+                                              .accountId(accountId)
+                                              .appId(appId)
+                                              .envType(environmentType)
+                                              .build();
+    return wingsPersistence.insert(workflowExecution);
+  }
+
   public String createPipelineExecution(String accountId, String appId, String pipelineId) {
     long startTs = System.currentTimeMillis();
     WorkflowExecution workflowExecution = WorkflowExecution.builder()
@@ -212,6 +225,23 @@ public abstract class AbstractDataFetcherTestBase extends WingsBaseTest {
                                               .duration(10L)
                                               .accountId(accountId)
                                               .appId(appId)
+                                              .build();
+    return wingsPersistence.insert(workflowExecution);
+  }
+
+  public String createPipelineExecution(
+      String accountId, String appId, String pipelineId, EnvironmentType environmentType) {
+    long startTs = System.currentTimeMillis();
+    WorkflowExecution workflowExecution = WorkflowExecution.builder()
+                                              .workflowId(pipelineId)
+                                              .workflowType(WorkflowType.PIPELINE)
+                                              .status(ExecutionStatus.SUCCESS)
+                                              .startTs(startTs)
+                                              .endTs(startTs + 10)
+                                              .duration(10L)
+                                              .accountId(accountId)
+                                              .appId(appId)
+                                              .envType(environmentType)
                                               .build();
     return wingsPersistence.insert(workflowExecution);
   }
@@ -248,6 +278,19 @@ public abstract class AbstractDataFetcherTestBase extends WingsBaseTest {
       String accountId, String appId, String serviceId, String serviceName, String tagKey, String tagValue) {
     Service service = serviceResourceService.save(
         Service.builder().name(serviceName).uuid(serviceId).appId(appId).accountId(accountId).build());
+    setTagToEntity(tagKey, tagValue, accountId, appId, serviceId, EntityType.SERVICE);
+    return service;
+  }
+
+  public Service createService(String accountId, String appId, String serviceId, String serviceName, String tagKey,
+      String tagValue, DeploymentType deploymentType) {
+    Service service = serviceResourceService.save(Service.builder()
+                                                      .name(serviceName)
+                                                      .uuid(serviceId)
+                                                      .appId(appId)
+                                                      .accountId(accountId)
+                                                      .deploymentType(deploymentType)
+                                                      .build());
     setTagToEntity(tagKey, tagValue, accountId, appId, serviceId, EntityType.SERVICE);
     return service;
   }

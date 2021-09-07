@@ -7,16 +7,20 @@ import static java.lang.String.format;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.OutcomeInstance;
 import io.harness.data.OutcomeInstance.OutcomeInstanceKeys;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.expressions.ExpressionEvaluatorProvider;
 import io.harness.engine.expressions.functors.NodeExecutionEntityType;
 import io.harness.engine.outcomes.OutcomeException;
+import io.harness.exception.UnresolvedExpressionsException;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.refobjects.RefObject;
+import io.harness.pms.data.PmsOutcome;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.resolver.ResolverUtils;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
@@ -28,16 +32,18 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.NonNull;
-import org.bson.Document;
+import org.apache.commons.jexl3.JexlException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class PmsOutcomeServiceImpl implements PmsOutcomeService {
   @Inject private ExpressionEvaluatorProvider expressionEvaluatorProvider;
   @Inject private Injector injector;
@@ -57,12 +63,11 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
         expressionEvaluatorProvider.get(null, ambiance, EnumSet.of(NodeExecutionEntityType.OUTCOME), true);
     injector.injectMembers(evaluator);
     Object value = evaluator.evaluateExpression(EngineExpressionEvaluator.createExpression(refObject.getName()));
-    return value == null ? null : ((Document) value).toJson();
+    return value == null ? null : RecastOrchestrationUtils.toJson(value);
   }
 
   @Override
-  public String consumeInternal(
-      Ambiance ambiance, String name, String value, int levelsToKeep, boolean isGraphOutcome) {
+  public String consumeInternal(Ambiance ambiance, String name, String value, int levelsToKeep, String groupName) {
     Level producedBy = AmbianceUtils.obtainCurrentLevel(ambiance);
     if (levelsToKeep >= 0) {
       ambiance = AmbianceUtils.clone(ambiance, levelsToKeep);
@@ -73,11 +78,11 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
           mongoTemplate.insert(OutcomeInstance.builder()
                                    .uuid(generateUuid())
                                    .planExecutionId(ambiance.getPlanExecutionId())
-                                   .levels(ambiance.getLevelsList())
+                                   .stageExecutionId(ambiance.getStageExecutionId())
                                    .producedBy(producedBy)
                                    .name(name)
-                                   .isGraphOutcome(isGraphOutcome)
-                                   .outcome(RecastOrchestrationUtils.toDocumentFromJson(value))
+                                   .outcomeValue(PmsOutcome.parse(value))
+                                   .groupName(groupName)
                                    .levelRuntimeIdIdx(ResolverUtils.prepareLevelRuntimeIdIdx(ambiance.getLevelsList()))
                                    .build());
       return instance.getUuid();
@@ -88,22 +93,27 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
 
   @Override
   public List<String> findAllByRuntimeId(String planExecutionId, String runtimeId) {
-    return findAllByRuntimeId(planExecutionId, runtimeId, false);
+    Map<String, String> outcomesMap = findAllOutcomesMapByRuntimeId(planExecutionId, runtimeId);
+    if (isEmpty(outcomesMap)) {
+      return Collections.emptyList();
+    }
+    return new ArrayList<>(outcomesMap.values());
   }
 
   @Override
-  public List<String> findAllByRuntimeId(String planExecutionId, String runtimeId, boolean isGraphOutcome) {
+  public Map<String, String> findAllOutcomesMapByRuntimeId(String planExecutionId, String runtimeId) {
     Query query = query(where(OutcomeInstanceKeys.planExecutionId).is(planExecutionId))
                       .addCriteria(where(OutcomeInstanceKeys.producedByRuntimeId).is(runtimeId))
-                      .addCriteria(where(OutcomeInstanceKeys.isGraphOutcome).is(isGraphOutcome))
                       .with(Sort.by(Sort.Direction.DESC, OutcomeInstanceKeys.createdAt));
 
     List<OutcomeInstance> outcomeInstances = mongoTemplate.find(query, OutcomeInstance.class);
     if (isEmpty(outcomeInstances)) {
-      return Collections.emptyList();
+      return Collections.emptyMap();
     }
 
-    return outcomeInstances.stream().map(oi -> oi.getOutcome().toJson()).collect(Collectors.toList());
+    Map<String, String> outcomesMap = new LinkedHashMap<>();
+    outcomeInstances.forEach(oi -> outcomesMap.put(oi.getName(), oi.getOutcomeJsonValue()));
+    return outcomesMap;
   }
 
   @Override
@@ -115,7 +125,7 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
     Query query = query(where(OutcomeInstanceKeys.uuid).in(outcomeInstanceIds));
     Iterable<OutcomeInstance> outcomesInstances = mongoTemplate.find(query, OutcomeInstance.class);
     for (OutcomeInstance instance : outcomesInstances) {
-      outcomes.add(instance.getOutcome().toJson());
+      outcomes.add(instance.getOutcomeJsonValue());
     }
     return outcomes;
   }
@@ -125,7 +135,7 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
     Query query = query(where(OutcomeInstanceKeys.uuid).is(outcomeInstanceId));
     Optional<OutcomeInstance> outcomeInstance =
         Optional.ofNullable(mongoTemplate.findOne(query, OutcomeInstance.class));
-    return outcomeInstance.map(oi -> oi.getOutcome().toJson()).orElse(null);
+    return outcomeInstance.map(OutcomeInstance::getOutcomeJsonValue).orElse(null);
   }
 
   private String resolveUsingRuntimeId(@NotNull Ambiance ambiance, @NotNull RefObject refObject) {
@@ -145,7 +155,7 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
     if (instance == null) {
       throw new OutcomeException(format("Could not resolve outcome with name '%s'", name));
     }
-    return RecastOrchestrationUtils.toDocumentJson(instance.getOutcome());
+    return instance.getOutcomeJsonValue();
   }
 
   private String resolveUsingProducerSetupId(@NotNull Ambiance ambiance, @NotNull RefObject refObject) {
@@ -162,7 +172,7 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
     if (EmptyPredicate.isEmpty(instances)) {
       throw new OutcomeException(format("Could not resolve outcome with name '%s'", name));
     }
-    return RecastOrchestrationUtils.toDocumentJson(instances.get(0).getOutcome());
+    return instances.get(0).getOutcomeJsonValue();
   }
 
   @Override
@@ -180,8 +190,11 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
     injector.injectMembers(evaluator);
     try {
       Object value = evaluator.evaluateExpression(EngineExpressionEvaluator.createExpression(refObject.getName()));
-      return OptionalOutcome.builder().found(true).outcome(value == null ? null : ((Document) value).toJson()).build();
-    } catch (OutcomeException ignore) {
+      return OptionalOutcome.builder()
+          .found(true)
+          .outcome(value == null ? null : RecastOrchestrationUtils.toJson(value))
+          .build();
+    } catch (UnresolvedExpressionsException | JexlException ignore) {
       return OptionalOutcome.builder().found(false).build();
     }
   }

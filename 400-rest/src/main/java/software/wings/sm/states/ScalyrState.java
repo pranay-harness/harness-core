@@ -2,6 +2,9 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
@@ -30,6 +33,8 @@ import org.slf4j.Logger;
 @Data
 @Slf4j
 @FieldNameConstants(innerTypeName = "ScalyrStateKeys")
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class ScalyrState extends AbstractLogAnalysisState {
   @Inject @SchemaIgnore private ScalyrService scalyrService;
   private String analysisServerConfigId;

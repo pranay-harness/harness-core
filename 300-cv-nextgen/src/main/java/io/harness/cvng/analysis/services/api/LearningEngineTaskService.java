@@ -18,5 +18,4 @@ public interface LearningEngineTaskService {
   void markFailure(String taskId);
   String createFailureUrl(String taskId);
   LearningEngineTask get(String learningEngineTaskId);
-  void recordMetrics();
 }

@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -47,8 +48,8 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 	var store store.Store
 	if config.S3.Bucket != "" {
 		// create the s3 store.
-		logrus.Infof("configuring log store to use s3 compatible backend with endpoint: %s and bucket name: %s",
-			config.S3.Endpoint, config.S3.Bucket)
+		logrus.Infof("configuring log store to use s3 compatible backend with endpoint: %s and bucket name: %s and ACL: %s",
+			config.S3.Endpoint, config.S3.Bucket, config.S3.Acl)
 		store = s3.NewEnv(
 			config.S3.Bucket,
 			config.S3.Prefix,
@@ -57,6 +58,7 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 			config.S3.AccessKeyID,
 			config.S3.AccessKeySecret,
 			config.S3.Region,
+			config.S3.Acl,
 		)
 	} else {
 		// create the blob store.
@@ -109,7 +111,7 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 		}
 	}()
 
-	logrus.Infof(fmt.Sprintf("server listening at: %s", config.Server.Bind))
+	logrus.Infof(fmt.Sprintf("server listening at port %s", config.Server.Bind))
 
 	// starts the http server.
 	err = server.ListenAndServe(ctx)
@@ -137,9 +139,22 @@ func Register(app *kingpin.Application) {
 		StringVar(&c.envfile)
 }
 
+// Get stackdriver to display logs correctly
+// https://github.com/sirupsen/logrus/issues/403
+// TODO: (Vistaar) Move to uber zap similar to other services
+type OutputSplitter struct{}
+
+func (splitter *OutputSplitter) Write(p []byte) (n int, err error) {
+	if bytes.Contains(p, []byte("level=error")) {
+		return os.Stderr.Write(p)
+	}
+	return os.Stdout.Write(p)
+}
+
 // helper function configures the global logger from
 // the loaded configuration.
 func initLogging(c config.Config) {
+	logrus.SetOutput(&OutputSplitter{})
 	l := logrus.StandardLogger()
 	logger.L = logrus.NewEntry(l)
 	if c.Debug {

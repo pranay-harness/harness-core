@@ -8,6 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -16,23 +17,28 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.NGInstanceUnitType;
 import io.harness.category.element.UnitTests;
+import io.harness.cdng.instance.info.InstanceInfoService;
+import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.task.k8s.K8sCanaryDeployRequest;
 import io.harness.delegate.task.k8s.K8sCanaryDeployResponse;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sTaskType;
+import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
-import io.harness.steps.StepOutcomeGroup;
 
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import org.junit.Test;
@@ -44,6 +50,7 @@ import org.mockito.Mock;
 @OwnedBy(HarnessTeam.CDP)
 public class K8sCanaryStepTest extends AbstractK8sStepExecutorTestBase {
   @Mock ExecutionSweepingOutputService executionSweepingOutputService;
+  @Mock InstanceInfoService instanceInfoService;
   @InjectMocks private K8sCanaryStep k8sCanaryStep;
 
   @Test
@@ -51,14 +58,15 @@ public class K8sCanaryStepTest extends AbstractK8sStepExecutorTestBase {
   @Category(UnitTests.class)
   public void testExecuteTask() {
     CountInstanceSelection instanceSelection = new CountInstanceSelection();
-    instanceSelection.setCount(ParameterField.createValueField(10));
+    instanceSelection.setCount(ParameterField.createValueField("10"));
     K8sCanaryStepParameters stepParameters = new K8sCanaryStepParameters();
     stepParameters.setSkipDryRun(ParameterField.createValueField(true));
-    stepParameters.setTimeout(ParameterField.createValueField("30m"));
     stepParameters.setInstanceSelection(
         InstanceSelectionWrapper.builder().type(K8sInstanceUnitType.Count).spec(instanceSelection).build());
+    final StepElementParameters stepElementParameters =
+        StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.createValueField("30m")).build();
 
-    K8sCanaryDeployRequest request = executeTask(stepParameters, K8sCanaryDeployRequest.class);
+    K8sCanaryDeployRequest request = executeTask(stepElementParameters, K8sCanaryDeployRequest.class);
     assertThat(request.getAccountId()).isEqualTo(accountId);
     assertThat(request.getInstances()).isEqualTo(10);
     assertThat(request.getInstanceUnitType()).isEqualTo(NGInstanceUnitType.COUNT);
@@ -68,6 +76,10 @@ public class K8sCanaryStepTest extends AbstractK8sStepExecutorTestBase {
     assertThat(request.isSkipDryRun()).isTrue();
     assertThat(request.getTimeoutIntervalInMin()).isEqualTo(30);
     assertThat(request.isSkipResourceVersioning()).isTrue();
+
+    ArgumentCaptor<String> releaseNameCaptor = ArgumentCaptor.forClass(String.class);
+    verify(k8sStepHelper, times(1)).publishReleaseNameStepDetails(eq(ambiance), releaseNameCaptor.capture());
+    assertThat(releaseNameCaptor.getValue()).isEqualTo(releaseName);
   }
 
   @Test
@@ -75,16 +87,17 @@ public class K8sCanaryStepTest extends AbstractK8sStepExecutorTestBase {
   @Category(UnitTests.class)
   public void testExecuteTaskNullParameterFields() {
     PercentageInstanceSelection instanceSelection = new PercentageInstanceSelection();
-    instanceSelection.setPercentage(ParameterField.createValueField(90));
+    instanceSelection.setPercentage(ParameterField.createValueField("90"));
     K8sCanaryStepParameters stepParameters = new K8sCanaryStepParameters();
     stepParameters.setSkipDryRun(ParameterField.ofNull());
-    stepParameters.setTimeout(ParameterField.ofNull());
     stepParameters.setInstanceSelection(
         InstanceSelectionWrapper.builder().type(K8sInstanceUnitType.Percentage).spec(instanceSelection).build());
+    final StepElementParameters stepElementParameters =
+        StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.ofNull()).build();
 
-    K8sCanaryDeployRequest request = executeTask(stepParameters, K8sCanaryDeployRequest.class);
+    K8sCanaryDeployRequest request = executeTask(stepElementParameters, K8sCanaryDeployRequest.class);
     assertThat(request.isSkipDryRun()).isFalse();
-    assertThat(request.getTimeoutIntervalInMin()).isEqualTo(K8sStepHelper.getTimeoutInMin(stepParameters));
+    assertThat(request.getTimeoutIntervalInMin()).isEqualTo(K8sStepHelper.getTimeoutInMin(stepElementParameters));
     assertThat(request.isSkipResourceVersioning()).isTrue();
   }
 
@@ -93,19 +106,21 @@ public class K8sCanaryStepTest extends AbstractK8sStepExecutorTestBase {
   @Category(UnitTests.class)
   public void testValidateMissingInstanceSelection() {
     K8sCanaryStepParameters canaryStepParameters = K8sCanaryStepParameters.infoBuilder().build();
+    StepElementParameters stepElementParameters = StepElementParameters.builder().spec(canaryStepParameters).build();
+
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
-    assertThatThrownBy(() -> k8sCanaryStep.startChainLink(ambiance, canaryStepParameters, stepInputPackage))
+    assertThatThrownBy(() -> k8sCanaryStep.startChainLink(ambiance, stepElementParameters, stepInputPackage))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("Instance selection is mandatory");
 
     canaryStepParameters.setInstanceSelection(InstanceSelectionWrapper.builder().build());
-    assertThatThrownBy(() -> k8sCanaryStep.startChainLink(ambiance, canaryStepParameters, stepInputPackage))
+    assertThatThrownBy(() -> k8sCanaryStep.startChainLink(ambiance, stepElementParameters, stepInputPackage))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("Instance selection is mandatory");
 
     canaryStepParameters.setInstanceSelection(
         InstanceSelectionWrapper.builder().type(K8sInstanceUnitType.Count).build());
-    assertThatThrownBy(() -> k8sCanaryStep.startChainLink(ambiance, canaryStepParameters, stepInputPackage))
+    assertThatThrownBy(() -> k8sCanaryStep.startChainLink(ambiance, stepElementParameters, stepInputPackage))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining("Instance selection is mandatory");
   }
@@ -119,13 +134,15 @@ public class K8sCanaryStepTest extends AbstractK8sStepExecutorTestBase {
         InstanceSelectionWrapper.builder().type(K8sInstanceUnitType.Count).spec(new CountInstanceSelection()).build();
     K8sCanaryStepParameters canaryStepParameters =
         K8sCanaryStepParameters.infoBuilder().instanceSelection(instanceSelection).build();
-    assertThatThrownBy(() -> k8sCanaryStep.startChainLink(ambiance, canaryStepParameters, stepInputPackage))
+    StepElementParameters stepElementParameters = StepElementParameters.builder().spec(canaryStepParameters).build();
+
+    assertThatThrownBy(() -> k8sCanaryStep.startChainLink(ambiance, stepElementParameters, stepInputPackage))
         .isInstanceOf(InvalidArgumentsException.class)
         .hasMessageContaining("Instance selection count value is mandatory");
 
     instanceSelection.setType(K8sInstanceUnitType.Percentage);
     instanceSelection.setSpec(new PercentageInstanceSelection());
-    assertThatThrownBy(() -> k8sCanaryStep.startChainLink(ambiance, canaryStepParameters, stepInputPackage))
+    assertThatThrownBy(() -> k8sCanaryStep.startChainLink(ambiance, stepElementParameters, stepInputPackage))
         .isInstanceOf(InvalidArgumentsException.class)
         .hasMessageContaining("Instance selection percentage value is mandatory");
   }
@@ -137,20 +154,22 @@ public class K8sCanaryStepTest extends AbstractK8sStepExecutorTestBase {
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     CountInstanceSelection countSpec = new CountInstanceSelection();
     PercentageInstanceSelection percentageSpec = new PercentageInstanceSelection();
-    countSpec.setCount(ParameterField.createValueField(0));
-    percentageSpec.setPercentage(ParameterField.createValueField(0));
+    countSpec.setCount(ParameterField.createValueField("0"));
+    percentageSpec.setPercentage(ParameterField.createValueField("0"));
     InstanceSelectionWrapper instanceSelection =
         InstanceSelectionWrapper.builder().type(K8sInstanceUnitType.Count).spec(countSpec).build();
     K8sCanaryStepParameters canaryStepParameters =
         K8sCanaryStepParameters.infoBuilder().instanceSelection(instanceSelection).build();
-    assertThatThrownBy(() -> k8sCanaryStep.startChainLink(ambiance, canaryStepParameters, stepInputPackage))
+    StepElementParameters stepElementParameters = StepElementParameters.builder().spec(canaryStepParameters).build();
+
+    assertThatThrownBy(() -> k8sCanaryStep.startChainLink(ambiance, stepElementParameters, stepInputPackage))
         .isInstanceOf(InvalidArgumentsException.class)
         .hasMessageContaining("Instance selection count value cannot be less than 1");
 
     instanceSelection.setType(K8sInstanceUnitType.Percentage);
     instanceSelection.setSpec(percentageSpec);
 
-    assertThatThrownBy(() -> k8sCanaryStep.startChainLink(ambiance, canaryStepParameters, stepInputPackage))
+    assertThatThrownBy(() -> k8sCanaryStep.startChainLink(ambiance, stepElementParameters, stepInputPackage))
         .isInstanceOf(InvalidArgumentsException.class)
         .hasMessageContaining("Instance selection percentage value cannot be less than 1");
   }
@@ -161,17 +180,21 @@ public class K8sCanaryStepTest extends AbstractK8sStepExecutorTestBase {
   @Category(UnitTests.class)
   public void testOutcomesInResponse() {
     K8sCanaryStepParameters stepParameters = new K8sCanaryStepParameters();
+    StepElementParameters stepElementParameters = StepElementParameters.builder().spec(stepParameters).build();
 
-    K8sDeployResponse k8sDeployResponse =
-        K8sDeployResponse.builder()
-            .k8sNGTaskResponse(
-                K8sCanaryDeployResponse.builder().canaryWorkload("canaryWorkload").releaseNumber(1).build())
-            .commandUnitsProgress(UnitProgressData.builder().build())
-            .commandExecutionStatus(SUCCESS)
-            .build();
-    when(k8sStepHelper.getReleaseName(any())).thenReturn("releaseName");
+    K8sDeployResponse k8sDeployResponse = K8sDeployResponse.builder()
+                                              .k8sNGTaskResponse(K8sCanaryDeployResponse.builder()
+                                                                     .canaryWorkload("canaryWorkload")
+                                                                     .releaseNumber(1)
+                                                                     .k8sPodList(new ArrayList<>())
+                                                                     .build())
+                                              .commandUnitsProgress(UnitProgressData.builder().build())
+                                              .commandExecutionStatus(SUCCESS)
+                                              .build();
+    when(k8sStepHelper.getReleaseName(any(), any())).thenReturn("releaseName");
 
-    StepResponse response = k8sCanaryStep.finalizeExecution(ambiance, stepParameters, null, () -> k8sDeployResponse);
+    StepResponse response = k8sCanaryStep.finalizeExecutionWithSecurityContext(
+        ambiance, stepElementParameters, K8sExecutionPassThroughData.builder().build(), () -> k8sDeployResponse);
     assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
     assertThat(response.getStepOutcomes()).hasSize(1);
 
@@ -183,9 +206,28 @@ public class K8sCanaryStepTest extends AbstractK8sStepExecutorTestBase {
     ArgumentCaptor<K8sCanaryOutcome> argumentCaptor = ArgumentCaptor.forClass(K8sCanaryOutcome.class);
     verify(executionSweepingOutputService, times(1))
         .consume(eq(ambiance), eq(OutcomeExpressionConstants.K8S_CANARY_OUTCOME), argumentCaptor.capture(),
-            eq(StepOutcomeGroup.STAGE.name()));
+            eq(StepOutcomeGroup.STEP.name()));
     assertThat(argumentCaptor.getValue().getReleaseName()).isEqualTo("releaseName");
     assertThat(argumentCaptor.getValue().getCanaryWorkload()).isEqualTo("canaryWorkload");
+  }
+
+  @Test
+  @Owner(developers = ABOSII)
+  @Category(UnitTests.class)
+  public void testFinalizeExecutionException() {
+    final StepElementParameters stepElementParameters = StepElementParameters.builder().build();
+    final Exception thrownException = new GeneralException("Something went wrong");
+    final K8sExecutionPassThroughData executionPassThroughData = K8sExecutionPassThroughData.builder().build();
+    final StepResponse stepResponse = StepResponse.builder().status(Status.FAILED).build();
+
+    doReturn(stepResponse).when(k8sStepHelper).handleTaskException(ambiance, executionPassThroughData, thrownException);
+
+    StepResponse response = k8sCanaryStep.finalizeExecutionWithSecurityContext(
+        ambiance, stepElementParameters, executionPassThroughData, () -> { throw thrownException; });
+
+    assertThat(response).isEqualTo(stepResponse);
+
+    verify(k8sStepHelper, times(1)).handleTaskException(ambiance, executionPassThroughData, thrownException);
   }
 
   @Override

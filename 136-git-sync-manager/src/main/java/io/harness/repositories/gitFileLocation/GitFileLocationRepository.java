@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.encryption.Scope;
 import io.harness.gitsync.common.beans.GitFileLocation;
 
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
@@ -13,15 +14,21 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 @OwnedBy(HarnessTeam.DX)
 public interface GitFileLocationRepository
     extends PagingAndSortingRepository<GitFileLocation, String>, GitFileLocationRepositoryCustom {
-  Optional<GitFileLocation> findByProjectIdAndOrganizationIdAndAccountIdAndEntityTypeAndEntityIdentifier(
-      String projectId, String orgId, String accountId, String entityType, String entityId);
-
   long countByProjectIdAndOrganizationIdAndAccountIdAndScopeAndEntityType(
       String projectId, String orgId, String accountId, Scope scope, String entityType);
 
-  Optional<GitFileLocation> findByEntityIdentifierFQNAndEntityTypeAndAccountId(
-      String fqn, String entityType, String accountId);
+  Optional<GitFileLocation> findByEntityIdentifierFQNAndEntityTypeAndAccountIdAndBranch(
+      String fqn, String entityType, String accountId, String branch);
 
-  Optional<GitFileLocation> findByEntityGitPathAndGitSyncConfigIdAndAccountId(
-      String entityGitPath, String gitSyncConfigId, String accountId);
+  Optional<GitFileLocation> findByEntityGitPathAndGitSyncConfigIdAndAccountIdAndBranch(
+      String entityGitPath, String gitSyncConfigId, String accountId, String branch);
+
+  List<GitFileLocation> findByAccountIdAndOrganizationIdAndProjectIdAndGitSyncConfigIdAndIsDefault(
+      String accountIdentifier, String organizationIdentifier, String projectIdentifier, String yamlGitConfigId,
+      boolean b);
+
+  Optional<GitFileLocation> findByAccountIdAndCompleteGitPathAndRepoAndBranch(
+      String accountIdentifier, String completeFilePath, String repoUrl, String branch);
+
+  List<GitFileLocation> findByAccountIdAndRepoAndBranch(String accountIdentifier, String repoUrl, String branch);
 }

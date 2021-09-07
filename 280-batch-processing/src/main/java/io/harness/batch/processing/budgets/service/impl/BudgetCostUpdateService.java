@@ -4,9 +4,9 @@ import static software.wings.graphql.datafetcher.billing.CloudBillingHelper.unif
 
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.shard.AccountShardService;
-import io.harness.ccm.budget.Budget;
 import io.harness.ccm.budget.BudgetUtils;
 import io.harness.ccm.budget.dao.BudgetDao;
+import io.harness.ccm.commons.entities.billing.Budget;
 
 import software.wings.beans.Account;
 import software.wings.graphql.datafetcher.billing.CloudBillingHelper;

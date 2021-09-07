@@ -1,25 +1,29 @@
 package io.harness.steps.jira.update;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.runtime;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.common.SwaggerConstants;
-import io.harness.plancreator.steps.StepElementConfig;
+import io.harness.beans.SwaggerConstants;
+import io.harness.filters.WithConnectorRef;
+import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.plancreator.steps.internal.PMSStepInfo;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
-import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.steps.StepSpecTypeConstants;
+import io.harness.steps.jira.JiraStepUtils;
 import io.harness.steps.jira.beans.JiraField;
 import io.harness.steps.jira.update.beans.TransitionTo;
-import io.harness.yaml.core.timeout.TimeoutUtils;
+import io.harness.yaml.YamlSchemaTypes;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
+import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -33,15 +37,17 @@ import org.springframework.data.annotation.TypeAlias;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonTypeName(StepSpecTypeConstants.JIRA_UPDATE)
 @TypeAlias("jiraUpdateStepInfo")
-public class JiraUpdateStepInfo implements PMSStepInfo {
-  @JsonIgnore String name;
-  @JsonIgnore String identifier;
-
+@RecasterAlias("io.harness.steps.jira.update.JiraUpdateStepInfo")
+public class JiraUpdateStepInfo implements PMSStepInfo, WithConnectorRef {
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> connectorRef;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> issueKey;
 
   TransitionTo transitionTo;
   List<JiraField> fields;
+
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
+  @YamlSchemaTypes(value = {runtime})
+  ParameterField<List<String>> delegateSelectors;
 
   @Override
   public StepType getStepType() {
@@ -54,16 +60,20 @@ public class JiraUpdateStepInfo implements PMSStepInfo {
   }
 
   @Override
-  public StepParameters getStepParametersInfo(StepElementConfig stepElementConfig) {
-    return JiraUpdateStepParameters.builder()
-        .name(name)
-        .identifier(identifier)
-        .timeout(ParameterField.createValueField(TimeoutUtils.getTimeoutString(stepElementConfig.getTimeout())))
+  public SpecParameters getSpecParameters() {
+    return JiraUpdateSpecParameters.builder()
         .connectorRef(connectorRef)
         .issueKey(issueKey)
         .transitionTo(transitionTo)
-        .fields(
-            fields == null ? null : fields.stream().collect(Collectors.toMap(JiraField::getName, JiraField::getValue)))
+        .fields(JiraStepUtils.processJiraFieldsList(fields))
+        .delegateSelectors(delegateSelectors)
         .build();
+  }
+
+  @Override
+  public Map<String, ParameterField<String>> extractConnectorRefs() {
+    Map<String, ParameterField<String>> connectorRefMap = new HashMap<>();
+    connectorRefMap.put(YAMLFieldNameConstants.CONNECTOR_REF, connectorRef);
+    return connectorRefMap;
   }
 }

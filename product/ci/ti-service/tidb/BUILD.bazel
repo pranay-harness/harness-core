@@ -1,13 +1,13 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
 go_library(
-    name = "go_default_library",
+    name = "tidb",
     srcs = ["tidb.go"],
     importpath = "github.com/wings-software/portal/product/ci/ti-service/tidb",
     visibility = ["//visibility:public"],
     deps = [
-        "//product/ci/addon/ti:go_default_library",
-        "//product/ci/ti-service/tidb/mongodb:go_default_library",
-        "//product/ci/ti-service/types:go_default_library",
+        "//product/ci/addon/parser/cg",
+        "//product/ci/ti-service/tidb/mongodb",
+        "//product/ci/ti-service/types",
     ],
 )

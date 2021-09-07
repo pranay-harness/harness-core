@@ -18,7 +18,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.outbox.OutboxEvent.OutboxEventKeys;
 import io.harness.outbox.filter.OutboxEventFilter;
-import io.harness.repositories.OutboxEventRepository;
+import io.harness.repositories.outbox.OutboxEventRepository;
 import io.harness.rule.Owner;
 
 import com.mongodb.BasicDBList;

@@ -1,26 +1,26 @@
 package io.harness.delegate.task.helm;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.ConnectorValidationResult.ConnectorValidationResultBuilder;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
-import io.harness.delegate.beans.connector.helm.HttpHelmAuthType;
-import io.harness.delegate.beans.connector.helm.HttpHelmUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.helm.HttpHelmValidationParams;
 import io.harness.delegate.task.ConnectorValidationHandler;
 import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.ExceptionUtils;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.security.encryption.SecretDecryptionService;
-import io.harness.utils.FieldWithPlainTextOrSecretValueHelper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Collections;
@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(CDP)
 public class HttpHelmValidationHandler implements ConnectorValidationHandler {
   private static final String WORKING_DIR_BASE = "./repository/helm-validation/";
   private static final HelmVersion defaultHelmVersion = HelmVersion.V3;
@@ -54,13 +55,15 @@ public class HttpHelmValidationHandler implements ConnectorValidationHandler {
       String repoName = convertBase64UuidToCanonicalForm(generateUuid());
 
       helmTaskHelperBase.addRepo(repoName, helmValidationParams.getConnectorName(),
-          helmValidationParams.getHttpHelmConnectorDTO().getHelmRepoUrl(), getUsername(helmValidationParams),
-          getPassword(helmValidationParams), workingDirectory, defaultHelmVersion, DEFAULT_TIMEOUT_IN_MILLIS);
+          helmValidationParams.getHttpHelmConnectorDTO().getHelmRepoUrl(),
+          helmTaskHelperBase.getHttpHelmUsername(helmValidationParams.getHttpHelmConnectorDTO()),
+          helmTaskHelperBase.getHttpHelmPassword(helmValidationParams.getHttpHelmConnectorDTO()), workingDirectory,
+          defaultHelmVersion, DEFAULT_TIMEOUT_IN_MILLIS);
 
       helmTaskHelperBase.removeRepo(repoName, workingDirectory, defaultHelmVersion, DEFAULT_TIMEOUT_IN_MILLIS);
       helmTaskHelperBase.cleanup(workingDirectory);
       validationResultBuilder.status(ConnectivityStatus.SUCCESS);
-    } catch (Exception exception) {
+    } catch (IOException exception) {
       log.warn("HttpHelmValidationHandler execution failed with exception ", exception);
       validationResultBuilder.status(ConnectivityStatus.FAILURE);
       String errorMessage = ExceptionUtils.getMessage(exception);
@@ -78,26 +81,5 @@ public class HttpHelmValidationHandler implements ConnectorValidationHandler {
     for (DecryptableEntity entity : decryptableEntityList) {
       decryptionService.decrypt(entity, helmValidationParams.getEncryptionDataDetails());
     }
-  }
-
-  private String getUsername(final HttpHelmValidationParams helmValidationParams) {
-    if (helmValidationParams.getHttpHelmConnectorDTO().getAuth().getAuthType() == HttpHelmAuthType.ANONYMOUS) {
-      return null;
-    }
-
-    HttpHelmUsernamePasswordDTO creds =
-        (HttpHelmUsernamePasswordDTO) helmValidationParams.getHttpHelmConnectorDTO().getAuth().getCredentials();
-    return FieldWithPlainTextOrSecretValueHelper.getSecretAsStringFromPlainTextOrSecretRef(
-        creds.getUsername(), creds.getUsernameRef());
-  }
-
-  private char[] getPassword(final HttpHelmValidationParams helmValidationParams) {
-    if (helmValidationParams.getHttpHelmConnectorDTO().getAuth().getAuthType() == HttpHelmAuthType.ANONYMOUS) {
-      return null;
-    }
-
-    HttpHelmUsernamePasswordDTO creds =
-        (HttpHelmUsernamePasswordDTO) helmValidationParams.getHttpHelmConnectorDTO().getAuth().getCredentials();
-    return creds.getPasswordRef().getDecryptedValue();
   }
 }

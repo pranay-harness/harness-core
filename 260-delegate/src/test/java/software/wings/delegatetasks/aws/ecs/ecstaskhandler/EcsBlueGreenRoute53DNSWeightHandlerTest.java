@@ -1,5 +1,7 @@
 package software.wings.delegatetasks.aws.ecs.ecstaskhandler;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ARVIND;
 
@@ -11,13 +13,16 @@ import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.TimeoutException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 
@@ -38,6 +43,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
+@OwnedBy(CDP)
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class EcsBlueGreenRoute53DNSWeightHandlerTest extends WingsBaseTest {
   private final EcsBlueGreenRoute53DNSWeightHandler task = new EcsBlueGreenRoute53DNSWeightHandler();
@@ -115,6 +121,7 @@ public class EcsBlueGreenRoute53DNSWeightHandlerTest extends WingsBaseTest {
     assertThat(response).isNotNull();
     assertThat(response.getCommandExecutionStatus()).isEqualTo(SUCCESS);
     assertThat(response.getEcsCommandResponse().getCommandExecutionStatus()).isEqualTo(SUCCESS);
+    assertThat(response.getEcsCommandResponse().isTimeoutFailure()).isFalse();
   }
 
   @Test
@@ -153,6 +160,7 @@ public class EcsBlueGreenRoute53DNSWeightHandlerTest extends WingsBaseTest {
     assertThat(response).isNotNull();
     assertThat(response.getCommandExecutionStatus()).isEqualTo(SUCCESS);
     assertThat(response.getEcsCommandResponse().getCommandExecutionStatus()).isEqualTo(SUCCESS);
+    assertThat(response.getEcsCommandResponse().isTimeoutFailure()).isFalse();
   }
 
   @Test
@@ -179,7 +187,8 @@ public class EcsBlueGreenRoute53DNSWeightHandlerTest extends WingsBaseTest {
     verify(mockCallback, times(3)).saveExecutionLog(anyString());
 
     verify(mockEcsSwapRoutesCommandTaskHelper)
-        .upsizeOlderService(any(), any(), anyString(), anyString(), anyInt(), anyString(), any(), anyInt());
+        .upsizeOlderService(
+            any(), any(), anyString(), anyString(), anyInt(), anyString(), any(), anyInt(), anyBoolean());
     verify(mockAwsRoute53HelperServiceDelegate)
         .upsertRoute53ParentRecord(
             any(), any(), anyString(), anyString(), anyString(), eq(100), eq(oldValue), eq(0), eq(newValue), anyInt());
@@ -189,5 +198,42 @@ public class EcsBlueGreenRoute53DNSWeightHandlerTest extends WingsBaseTest {
     assertThat(response).isNotNull();
     assertThat(response.getCommandExecutionStatus()).isEqualTo(SUCCESS);
     assertThat(response.getEcsCommandResponse().getCommandExecutionStatus()).isEqualTo(SUCCESS);
+    assertThat(response.getEcsCommandResponse().isTimeoutFailure()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testExecuteTaskInternal_NoRollback_DownsizeOldService_TimeoutHandling() {
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+
+    doReturn(newValue)
+        .when(mockAwsServiceDiscoveryHelperServiceDelegate)
+        .getRecordValueForService(any(), any(), anyString(), eq(newSvcArn));
+
+    doReturn(oldValue)
+        .when(mockAwsServiceDiscoveryHelperServiceDelegate)
+        .getRecordValueForService(any(), any(), anyString(), eq(oldSvcArn));
+
+    EcsBGRoute53DNSWeightUpdateRequest request = EcsBGRoute53DNSWeightUpdateRequest.builder()
+                                                     .rollback(false)
+                                                     .downsizeOldService(true)
+                                                     .newServiceDiscoveryArn(newSvcArn)
+                                                     .newServiceWeight(100)
+                                                     .oldServiceDiscoveryArn(oldSvcArn)
+                                                     .oldServiceWeight(0)
+                                                     .timeoutErrorSupported(true)
+                                                     .build();
+
+    doThrow(new TimeoutException("", "", null))
+        .when(mockEcsSwapRoutesCommandTaskHelper)
+        .downsizeOlderService(any(), any(), anyString(), anyString(), anyString(), any(), anyInt());
+
+    EcsCommandExecutionResponse response = task.executeTaskInternal(request, null, mockCallback);
+
+    assertThat(response).isNotNull();
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
+    assertThat(response.getEcsCommandResponse().getCommandExecutionStatus()).isEqualTo(FAILURE);
+    assertThat(response.getEcsCommandResponse().isTimeoutFailure()).isTrue();
   }
 }

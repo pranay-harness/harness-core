@@ -1,24 +1,25 @@
 package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.runtime;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.SwaggerConstants;
 import io.harness.cdng.pipeline.CDStepInfo;
-import io.harness.cdng.visitor.YamlTypes;
-import io.harness.common.SwaggerConstants;
 import io.harness.executions.steps.StepSpecTypeConstants;
-import io.harness.plancreator.steps.StepElementConfig;
+import io.harness.plancreator.steps.TaskSelectorYaml;
+import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
-import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.Visitable;
-import io.harness.yaml.core.timeout.TimeoutUtils;
+import io.harness.yaml.YamlSchemaTypes;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
-import lombok.Builder;
+import java.util.List;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -31,16 +32,17 @@ import org.springframework.data.annotation.TypeAlias;
 @EqualsAndHashCode
 @JsonTypeName(StepSpecTypeConstants.K8S_BG_SWAP_SERVICES)
 @TypeAlias("k8sBGSwapServicesStepInfo")
+@RecasterAlias("io.harness.cdng.k8s.K8sBGSwapServicesStepInfo")
 public class K8sBGSwapServicesStepInfo implements CDStepInfo, Visitable {
   @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH) ParameterField<Boolean> skipDryRun;
+  @YamlSchemaTypes({runtime})
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
+  ParameterField<List<TaskSelectorYaml>> delegateSelectors;
+  @JsonIgnore String blueGreenStepFqn;
+  @JsonIgnore String blueGreenSwapServicesStepFqn;
 
   // For Visitor Framework Impl
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
-
-  @Builder(builderMethodName = "infoBuilder")
-  public K8sBGSwapServicesStepInfo(ParameterField<Boolean> skipDryRun) {
-    this.skipDryRun = skipDryRun;
-  }
 
   @Override
   public StepType getStepType() {
@@ -53,19 +55,12 @@ public class K8sBGSwapServicesStepInfo implements CDStepInfo, Visitable {
   }
 
   @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.K8S_BG_SWAP_SERVICES).build();
-  }
-
-  @Override
-  public StepParameters getStepParametersInfo(StepElementConfig stepElementConfig) {
+  public SpecParameters getSpecParameters() {
     return K8sBGSwapServicesStepParameters.infoBuilder()
-        .timeout(ParameterField.createValueField(TimeoutUtils.getTimeoutString(stepElementConfig.getTimeout())))
-        .name(stepElementConfig.getName())
-        .identifier(stepElementConfig.getIdentifier())
-        .description(stepElementConfig.getDescription())
-        .skipCondition(stepElementConfig.getSkipCondition())
         .skipDryRun(skipDryRun)
+        .delegateSelectors(delegateSelectors)
+        .blueGreenStepFqn(blueGreenStepFqn)
+        .blueGreenSwapServicesFqn(blueGreenSwapServicesStepFqn)
         .build();
   }
 }

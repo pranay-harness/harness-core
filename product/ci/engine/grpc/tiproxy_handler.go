@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/pkg/errors"
 	fs "github.com/wings-software/portal/commons/go/lib/filesystem"
-	"github.com/wings-software/portal/product/ci/addon/ti"
+	cgp "github.com/wings-software/portal/product/ci/addon/parser/cg"
 	"github.com/wings-software/portal/product/ci/common/avro"
 	"io"
 	"path/filepath"
@@ -28,7 +28,7 @@ var (
 )
 
 const (
-	cgSchemaPath = "callgraph.avsc"
+	cgSchemaType = "callgraph"
 )
 
 // handler is used to implement EngineServer
@@ -54,18 +54,12 @@ func (h *tiProxyHandler) SelectTests(ctx context.Context, req *pb.SelectTestsReq
 	if step == "" {
 		return nil, errors.New("step ID not present in request")
 	}
-	sha := req.GetSha()
-	if sha == "" {
-		return nil, errors.New("commit ID not present in request")
-	}
+	sha := req.GetSha() // may not be set for manual execution
 	repo := req.GetRepo()
 	if repo == "" {
 		return nil, errors.New("repo not present in request")
 	}
-	source := req.GetSourceBranch()
-	if source == "" {
-		return nil, errors.New("source branch not present in request")
-	}
+	source := req.GetSourceBranch() // may not be set for manual execution
 	target := req.GetTargetBranch()
 	if target == "" {
 		return nil, errors.New("target branch not present in request")
@@ -115,6 +109,8 @@ func (h *tiProxyHandler) WriteTests(stream pb.TiProxy_WriteTestsServer) error {
 	}
 	var tests []*types.TestCase
 	stepId := ""
+	repo := ""
+	sha := ""
 	for {
 		msg, err := stream.Recv()
 		if err == io.EOF {
@@ -125,6 +121,8 @@ func (h *tiProxyHandler) WriteTests(stream pb.TiProxy_WriteTestsServer) error {
 			continue
 		}
 		stepId = msg.GetStepId()
+		repo = msg.GetRepo()
+		sha = msg.GetSha()
 		ret := msg.GetTests()
 		for _, bt := range ret {
 			t := &types.TestCase{}
@@ -159,7 +157,7 @@ func (h *tiProxyHandler) WriteTests(stream pb.TiProxy_WriteTestsServer) error {
 		return err
 	}
 	report := "junit" // get from proto if we need other reports in the future
-	err = tc.Write(stream.Context(), org, project, pipeline, build, stage, stepId, report, tests)
+	err = tc.Write(stream.Context(), org, project, pipeline, build, stage, stepId, report, repo, sha, tests)
 	if err != nil {
 		h.log.Errorw("could not write test cases: ", zap.Error(err))
 		return err
@@ -174,49 +172,25 @@ func (h *tiProxyHandler) WriteTests(stream pb.TiProxy_WriteTestsServer) error {
 }
 
 func (h *tiProxyHandler) UploadCg(ctx context.Context, req *pb.UploadCgRequest) (*pb.UploadCgResponse, error) {
-	var parser ti.Parser
 	step := req.GetStepId()
 	res := &pb.UploadCgResponse{}
 	if step == "" {
 		return res, fmt.Errorf("step ID not present in request")
-		return res, nil
 	}
 	sha := req.GetSha()
-	if sha == "" {
-		return res, fmt.Errorf("commit ID not present in request")
-	}
 	repo := req.GetRepo()
 	if repo == "" {
 		return res, fmt.Errorf("repo not present in request")
 	}
-	branch := req.GetBranch()
-	if branch == "" {
-		return res, fmt.Errorf("branch not present in request")
+	source := req.GetSource()
+	if source == "" {
+		return res, fmt.Errorf("source branch not present in request")
 	}
-	cgDir := req.GetCgDir()
-	if cgDir == "" {
-		return res, fmt.Errorf("cgDir not present in request")
+	target := req.GetTarget()
+	if target == "" {
+		return res, fmt.Errorf("target branch not present in request")
 	}
-	files, err := h.getCgFiles(cgDir)
-	if err != nil {
-		return res, errors.Wrap(err, "failed to fetch files inside the directory")
-	}
-	fs := fs.NewOSFileSystem(h.log)
-	parser = ti.NewCallGraphParser(h.log, fs)
-	cg, err := parser.Parse(files)
-	if err != nil {
-		return res, errors.Wrap(err, "failed to parse callgraph")
-	}
-	h.log.Infow(fmt.Sprintf("size of nodes parsed is: %d, size of relns parsed is: %d", len(cg.Nodes), len(cg.Relations)))
-	cgMap := cg.ToStringMap()
-	cgSer, err := avro.NewCgphSerialzer(cgSchemaPath)
-	if err != nil {
-		return res, errors.Wrap(err, "failed to create serializer")
-	}
-	encBytes, err := cgSer.Serialize(cgMap)
-	if err != nil {
-		return res, errors.Wrap(err, "failed to encode callgraph")
-	}
+	timeMs := req.GetTimeMs()
 	client, err := remoteTiClient()
 	if err != nil {
 		return res, errors.Wrap(err, "failed to create tiClient")
@@ -241,7 +215,13 @@ func (h *tiProxyHandler) UploadCg(ctx context.Context, req *pb.UploadCgRequest) 
 	if err != nil {
 		return res, errors.Wrap(err, "stage id not found")
 	}
-	err = client.UploadCg(org, project, pipeline, build, stage, step, repo, sha, branch, encBytes)
+
+	//Upload callgraph to TI server
+	encCg, err := h.getEncodedData(req)
+	if err != nil {
+		return res, errors.Wrap(err, "failed to get avro encoded callgraph")
+	}
+	err = client.UploadCg(org, project, pipeline, build, stage, step, repo, sha, source, target, timeMs, encCg)
 	if err != nil {
 		return res, errors.Wrap(err, "failed to upload cg to ti server")
 	}
@@ -249,9 +229,47 @@ func (h *tiProxyHandler) UploadCg(ctx context.Context, req *pb.UploadCgRequest) 
 }
 
 // getCgFiles return list of cg files in given directory
-func (h *tiProxyHandler) getCgFiles(dir string) ([]string, error) {
+func (h *tiProxyHandler) getCgFiles(dir, ext1, ext2 string) ([]string, []string, error) {
 	if !strings.HasSuffix(dir, "/") {
 		dir = dir + "/"
 	}
-	return filepath.Glob(dir + "*.json")
+	cgFiles, err1 := filepath.Glob(dir + "*." + ext1)
+	visFiles, err2 := filepath.Glob(dir + "*." + ext2)
+
+	if err1 != nil || err2 != nil {
+		h.log.Errorw(fmt.Sprintf("error in getting files list in dir %s", dir), zap.Error(err1), zap.Error(err2))
+	}
+	return cgFiles, visFiles, nil
+}
+
+// getEncodedData reads all files of specified format from datadir folder and returns byte array of avro encoded format
+func (h *tiProxyHandler) getEncodedData(req *pb.UploadCgRequest) ([]byte, error) {
+	var parser cgp.Parser
+
+	visDir := req.GetDataDir()
+	if visDir == "" {
+		return nil, fmt.Errorf("dataDir not present in request")
+	}
+	cgFiles, visFiles, err := h.getCgFiles(visDir, "json", "csv")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to fetch files inside the directory")
+	}
+	fs := fs.NewOSFileSystem(h.log)
+	parser = cgp.NewCallGraphParser(h.log, fs)
+	cg, err := parser.Parse(cgFiles, visFiles)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse visgraph")
+	}
+	h.log.Infow(fmt.Sprintf("size of nodes: %d, testReln: %d, visReln %d", len(cg.Nodes), len(cg.TestRelations), len(cg.VisRelations)))
+
+	cgMap := cg.ToStringMap()
+	cgSer, err := avro.NewCgphSerialzer(cgSchemaType)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create serializer")
+	}
+	encCg, err := cgSer.Serialize(cgMap)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to encode callgraph")
+	}
+	return encCg, nil
 }

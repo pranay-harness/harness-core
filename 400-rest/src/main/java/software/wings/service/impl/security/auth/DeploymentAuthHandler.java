@@ -1,15 +1,18 @@
 package software.wings.service.impl.security.auth;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.security.PermissionAttribute.Action.EXECUTE_PIPELINE;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE_WORKFLOW;
+import static software.wings.security.PermissionAttribute.Action.EXECUTE_WORKFLOW_ROLLBACK;
 import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
 
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.Pipeline;
@@ -38,6 +41,7 @@ import org.apache.commons.lang3.StringUtils;
  */
 @Singleton
 @Slf4j
+@OwnedBy(PL)
 public class DeploymentAuthHandler {
   @Inject private AuthService authService;
   @Inject private WorkflowExecutionService workflowExecutionService;
@@ -73,6 +77,19 @@ public class DeploymentAuthHandler {
     checkPermissionToDeployEnv(appId, workflowExecution);
   }
 
+  public void authorizeRollback(String appId, String workflowExecutionId) {
+    List<PermissionAttribute> permissionAttributeList = new ArrayList<>();
+    WorkflowExecution workflowExecution =
+        workflowExecutionService.getExecutionDetailsWithoutGraph(appId, workflowExecutionId);
+    if (workflowExecution != null) {
+      String workflowId = workflowExecution.getWorkflowId();
+      notNullCheck("Workflow id is null for execution " + workflowExecutionId, workflowId);
+      permissionAttributeList.add(new PermissionAttribute(DEPLOYMENT, EXECUTE_WORKFLOW_ROLLBACK));
+      authorize(permissionAttributeList, asList(appId), workflowId);
+      authService.checkIfUserAllowedToRollbackWorkflowToEnv(appId, workflowExecution.getEnvId());
+    }
+  }
+
   public void authorize(String appId, WorkflowExecution workflowExecution) {
     if (workflowExecution != null && workflowExecution.getWorkflowId() != null) {
       String workflowId = workflowExecution.getWorkflowId();
@@ -80,6 +97,16 @@ public class DeploymentAuthHandler {
       authorize(permissionAttributeList, Collections.singletonList(appId), workflowId);
     }
     checkPermissionToDeployEnv(appId, workflowExecution);
+  }
+
+  public void authorizeRollback(String appId, WorkflowExecution workflowExecution) {
+    if (workflowExecution != null && workflowExecution.getWorkflowId() != null) {
+      String workflowId = workflowExecution.getWorkflowId();
+      List<PermissionAttribute> permissionAttributeList =
+          Collections.singletonList(new PermissionAttribute(DEPLOYMENT, EXECUTE_WORKFLOW_ROLLBACK));
+      authorize(permissionAttributeList, Collections.singletonList(appId), workflowId);
+      authService.checkIfUserAllowedToRollbackWorkflowToEnv(appId, workflowExecution.getEnvId());
+    }
   }
 
   private List<PermissionAttribute> getPermissionAttributeList(WorkflowExecution workflowExecution) {

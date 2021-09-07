@@ -10,7 +10,7 @@ import io.harness.CategoryTest;
 import io.harness.batch.processing.events.timeseries.data.CostEventData;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.beans.InstanceType;
-import io.harness.ccm.commons.utils.DataUtils;
+import io.harness.ccm.commons.utils.TimeUtils;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
 
@@ -33,7 +33,7 @@ public class CostEventServiceImplTest extends CategoryTest {
   @InjectMocks private CostEventServiceImpl costEventService;
   @Mock private TimeScaleDBService timeScaleDBService;
   @Mock private PreparedStatement statement;
-  @Mock private DataUtils utils;
+  @Mock private TimeUtils utils;
 
   @Before
   public void setup() throws SQLException {

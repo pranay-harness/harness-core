@@ -314,7 +314,7 @@ public class PluginServiceTest extends CategoryTest {
                 .withSettingClass(PcfConfig.class)
                 .withAccountId(accountId)
                 .withIsEnabled(true)
-                .withDisplayName("Pivotal Cloud Foundry")
+                .withDisplayName("Tanzu Application Services")
                 .withType("PCF")
                 .withPluginCategories(asList(CloudProvider))
                 .build(),

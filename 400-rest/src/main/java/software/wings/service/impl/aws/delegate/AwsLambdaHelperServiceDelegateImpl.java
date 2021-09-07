@@ -43,6 +43,7 @@ import software.wings.beans.artifact.ArtifactFile;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.DelegateFileManager;
+import software.wings.service.impl.aws.client.CloseableAmazonWebServiceClient;
 import software.wings.service.impl.aws.model.AwsLambdaExecuteFunctionRequest;
 import software.wings.service.impl.aws.model.AwsLambdaExecuteFunctionResponse;
 import software.wings.service.impl.aws.model.AwsLambdaExecuteFunctionResponse.AwsLambdaExecuteFunctionResponseBuilder;
@@ -138,11 +139,11 @@ public class AwsLambdaHelperServiceDelegateImpl
 
   @Override
   public AwsLambdaExecuteFunctionResponse executeFunction(AwsLambdaExecuteFunctionRequest request) {
-    try {
-      AwsConfig awsConfig = request.getAwsConfig();
-      List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      AWSLambdaClient lambdaClient = getAmazonLambdaClient(request.getRegion(), awsConfig);
+    AwsConfig awsConfig = request.getAwsConfig();
+    List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AWSLambdaClient> closeableAWSLambdaClient =
+             new CloseableAmazonWebServiceClient(getAmazonLambdaClient(request.getRegion(), request.getAwsConfig()))) {
       InvokeRequest invokeRequest = new InvokeRequest()
                                         .withFunctionName(request.getFunctionName())
                                         .withQualifier(request.getQualifier())
@@ -151,7 +152,7 @@ public class AwsLambdaHelperServiceDelegateImpl
         invokeRequest.setPayload(request.getPayload());
       }
       tracker.trackLambdaCall("Invoke Function");
-      InvokeResult invokeResult = lambdaClient.invoke(invokeRequest);
+      InvokeResult invokeResult = closeableAWSLambdaClient.getClient().invoke(invokeRequest);
       log.info("Lambda invocation result: " + invokeResult.toString());
       AwsLambdaExecuteFunctionResponseBuilder responseBuilder = AwsLambdaExecuteFunctionResponse.builder();
       responseBuilder.statusCode(invokeResult.getStatusCode());
@@ -174,17 +175,19 @@ public class AwsLambdaHelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return null;
   }
 
   @Override
   public AwsLambdaFunctionResponse getLambdaFunctions(AwsLambdaFunctionRequest request) {
-    try {
-      AwsConfig awsConfig = request.getAwsConfig();
-      List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      AWSLambdaClient lambdaClient = getAmazonLambdaClient(request.getRegion(), awsConfig);
+    AwsConfig awsConfig = request.getAwsConfig();
+    List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AWSLambdaClient> closeableAWSLambdaClient =
+             new CloseableAmazonWebServiceClient(getAmazonLambdaClient(request.getRegion(), request.getAwsConfig()))) {
       AwsLambdaFunctionResponseBuilder response = AwsLambdaFunctionResponse.builder();
       List<String> lambdaFunctions = new ArrayList<>();
       List<FunctionConfiguration> functionConfigurations = new ArrayList<>();
@@ -193,8 +196,8 @@ public class AwsLambdaHelperServiceDelegateImpl
       String nextMarker = null;
       do {
         tracker.trackLambdaCall("List Functions");
-        listFunctionsResult =
-            lambdaClient.listFunctions(new ListFunctionsRequest().withMaxItems(100).withMarker(nextMarker));
+        listFunctionsResult = closeableAWSLambdaClient.getClient().listFunctions(
+            new ListFunctionsRequest().withMaxItems(100).withMarker(nextMarker));
         functionConfigurations.addAll(listFunctionsResult.getFunctions());
         nextMarker = listFunctionsResult.getNextMarker();
       } while (nextMarker != null);
@@ -206,6 +209,8 @@ public class AwsLambdaHelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return null;
   }
@@ -213,13 +218,15 @@ public class AwsLambdaHelperServiceDelegateImpl
   @Override
   public AwsLambdaExecuteWfResponse executeWf(AwsLambdaExecuteWfRequest request, ExecutionLogCallback logCallback) {
     AwsLambdaExecuteWfResponseBuilder responseBuilder = AwsLambdaExecuteWfResponse.builder();
-    try {
-      AwsConfig awsConfig = request.getAwsConfig();
-      responseBuilder.awsConfig(awsConfig);
-      responseBuilder.region(request.getRegion());
-      List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      AWSLambdaClient lambdaClient = getAmazonLambdaClient(request.getRegion(), awsConfig);
+
+    AwsConfig awsConfig = request.getAwsConfig();
+    responseBuilder.awsConfig(awsConfig);
+    responseBuilder.region(request.getRegion());
+    List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+
+    try (CloseableAmazonWebServiceClient<AWSLambdaClient> closeableAWSLambdaClient =
+             new CloseableAmazonWebServiceClient(getAmazonLambdaClient(request.getRegion(), request.getAwsConfig()))) {
       String roleArn = request.getRoleArn();
       List<String> evaluatedAliases = request.getEvaluatedAliases();
       Map<String, String> serviceVariables = request.getServiceVariables();
@@ -231,8 +238,9 @@ public class AwsLambdaHelperServiceDelegateImpl
       ExecutionStatus status = SUCCESS;
       for (AwsLambdaFunctionParams functionParams : functionParamsList) {
         try {
-          functionResultList.add(executeFunctionDeployment(lambdaClient, roleArn, evaluatedAliases, serviceVariables,
-              lambdaVpcConfig, functionParams, request, workingDirectory, logCallback));
+          functionResultList.add(
+              executeFunctionDeployment(closeableAWSLambdaClient.getClient(), roleArn, evaluatedAliases,
+                  serviceVariables, lambdaVpcConfig, functionParams, request, workingDirectory, logCallback));
         } catch (Exception ex) {
           logCallback.saveExecutionLog(
               "Exception: " + ex.getMessage() + " while deploying function: " + functionParams.getFunctionName(),
@@ -271,6 +279,8 @@ public class AwsLambdaHelperServiceDelegateImpl
           .executionStatus(FAILED)
           .errorMessage(ExceptionUtils.getMessage(ioException))
           .build();
+    } catch (Exception e) {
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return responseBuilder.build();
   }
@@ -716,15 +726,16 @@ public class AwsLambdaHelperServiceDelegateImpl
 
   @Override
   public AwsLambdaDetailsResponse getFunctionDetails(AwsLambdaDetailsRequest request, boolean isInstanceSync) {
-    try {
-      GetFunctionResult getFunctionResult = null;
-      final AwsConfig awsConfig = request.getAwsConfig();
-      final List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
-      encryptionService.decrypt(awsConfig, encryptionDetails, isInstanceSync);
-      final AWSLambdaClient lambdaClient = getAmazonLambdaClient(request.getRegion(), awsConfig);
+    GetFunctionResult getFunctionResult = null;
+    final AwsConfig awsConfig = request.getAwsConfig();
+    final List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
+    encryptionService.decrypt(awsConfig, encryptionDetails, isInstanceSync);
+
+    try (CloseableAmazonWebServiceClient<AWSLambdaClient> closeableAWSLambdaClient =
+             new CloseableAmazonWebServiceClient(getAmazonLambdaClient(request.getRegion(), request.getAwsConfig()))) {
       try {
         tracker.trackLambdaCall("Get Function");
-        getFunctionResult = lambdaClient.getFunction(
+        getFunctionResult = closeableAWSLambdaClient.getClient().getFunction(
             new GetFunctionRequest().withFunctionName(request.getFunctionName()).withQualifier(request.getQualifier()));
       } catch (ResourceNotFoundException rnfe) {
         log.info("No function found with name =[{}], qualifier =[{}]. Error Msg is [{}]", request.getFunctionName(),
@@ -739,13 +750,15 @@ public class AwsLambdaHelperServiceDelegateImpl
           listAliasRequest.withFunctionVersion(getFunctionResult.getConfiguration().getVersion());
         }
         tracker.trackLambdaCall("List Function Aliases");
-        listAliasesResult = lambdaClient.listAliases(listAliasRequest);
+        listAliasesResult = closeableAWSLambdaClient.getClient().listAliases(listAliasRequest);
       }
       return AwsLambdaDetailsResponse.from(getFunctionResult, listAliasesResult);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return null;
   }

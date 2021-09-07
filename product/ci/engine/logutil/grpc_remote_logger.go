@@ -3,6 +3,7 @@ package logutil
 import (
 	"github.com/wings-software/portal/commons/go/lib/logs"
 	"github.com/wings-software/portal/product/ci/common/external"
+	plogs "github.com/wings-software/portal/product/ci/common/logs"
 )
 
 // GetGrpcRemoteLogger is a helper method that returns a logger than can communicate with the
@@ -12,7 +13,7 @@ func GetGrpcRemoteLogger(key string) (*logs.RemoteLogger, error) {
 	if err != nil {
 		return nil, err
 	}
-	rw, err := logs.NewRemoteWriter(grpcClient, key)
+	rw, err := plogs.NewRemoteWriter(grpcClient, key, external.GetNudges())
 	if err != nil {
 		return nil, err
 	}

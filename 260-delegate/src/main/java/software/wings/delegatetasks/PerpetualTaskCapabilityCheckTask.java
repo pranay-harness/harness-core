@@ -1,5 +1,6 @@
 package software.wings.delegatetasks;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.util.stream.Collectors.toList;
@@ -50,6 +51,10 @@ public class PerpetualTaskCapabilityCheckTask extends AbstractDelegateRunnableTa
 
     List<ExecutionCapability> executionCapabilities =
         Arrays.stream(parameters).map(param -> (ExecutionCapability) param).collect(toList());
+
+    if (isEmpty(executionCapabilities)) {
+      return PerpetualTaskCapabilityCheckResponse.builder().ableToExecutePerpetualTask(true).build();
+    }
 
     executionCapabilities.forEach(delegateCapability -> {
       log.info("Checking Capability: " + delegateCapability.toString());

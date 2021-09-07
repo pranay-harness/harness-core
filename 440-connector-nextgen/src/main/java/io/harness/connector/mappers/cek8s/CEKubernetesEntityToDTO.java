@@ -10,6 +10,9 @@ import com.google.inject.Singleton;
 public class CEKubernetesEntityToDTO implements ConnectorEntityToDTOMapper<CEKubernetesClusterConfigDTO, CEK8sDetails> {
   @Override
   public CEKubernetesClusterConfigDTO createConnectorDTO(CEK8sDetails connector) {
-    return CEKubernetesClusterConfigDTO.builder().connectorRef(connector.getConnectorRef()).build();
+    return CEKubernetesClusterConfigDTO.builder()
+        .featuresEnabled(connector.getFeaturesEnabled())
+        .connectorRef(connector.getConnectorRef())
+        .build();
   }
 }

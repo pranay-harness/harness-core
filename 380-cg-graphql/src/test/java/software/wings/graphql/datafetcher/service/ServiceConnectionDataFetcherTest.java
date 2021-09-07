@@ -9,6 +9,7 @@ import static org.mockito.Mockito.doReturn;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
+import software.wings.api.DeploymentType;
 import software.wings.beans.Service;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
@@ -17,8 +18,11 @@ import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.schema.query.QLPageQueryParameterImpl;
 import software.wings.graphql.schema.type.QLService;
 import software.wings.graphql.schema.type.QLServiceConnection;
+import software.wings.graphql.schema.type.aggregation.QLEnumOperator;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.QLIdOperator;
+import software.wings.graphql.schema.type.aggregation.service.QLDeploymentType;
+import software.wings.graphql.schema.type.aggregation.service.QLDeploymentTypeFilter;
 import software.wings.graphql.schema.type.aggregation.service.QLServiceFilter;
 import software.wings.graphql.schema.type.aggregation.service.QLServiceTagFilter;
 import software.wings.graphql.schema.type.aggregation.service.QLServiceTagType;
@@ -110,8 +114,8 @@ public class ServiceConnectionDataFetcherTest extends AbstractDataFetcherTestBas
     // Account1
     createAccount(ACCOUNT1_ID, getLicenseInfo());
     createApp(ACCOUNT1_ID, APP1_ID_ACCOUNT1, APP1_ID_ACCOUNT1, TAG_TEAM, TAG_VALUE_TEAM1);
-    service =
-        createService(ACCOUNT1_ID, APP1_ID_ACCOUNT1, SERVICE1_ID_APP1_ACCOUNT1, SERVICE, TAG_TEAM, TAG_VALUE_TEAM1);
+    service = createService(ACCOUNT1_ID, APP1_ID_ACCOUNT1, SERVICE1_ID_APP1_ACCOUNT1, SERVICE, TAG_TEAM,
+        TAG_VALUE_TEAM1, DeploymentType.KUBERNETES);
   }
 
   @Test
@@ -126,6 +130,10 @@ public class ServiceConnectionDataFetcherTest extends AbstractDataFetcherTestBas
         QLServiceFilter.builder()
             .service(idFilter)
             .application(QLIdFilter.builder().operator(QLIdOperator.IN).values(new String[] {APP1_ID_ACCOUNT1}).build())
+            .deploymentType(QLDeploymentTypeFilter.builder()
+                                .operator(QLEnumOperator.IN)
+                                .values(new QLDeploymentType[] {QLDeploymentType.KUBERNETES})
+                                .build())
             .build();
     List<QLServiceFilter> serviceFilters = Arrays.asList(qlServiceFilter);
     QLPageQueryParameterImpl pageQueryParams =
@@ -135,6 +143,7 @@ public class ServiceConnectionDataFetcherTest extends AbstractDataFetcherTestBas
     assertThat(connection).isNotNull();
     assertThat(connection.getNodes()).hasSize(1);
     assertThat(connection.getNodes().get(0).getName()).isEqualTo(SERVICE);
+    assertThat(connection.getNodes().get(0).getDeploymentType()).isEqualTo(DeploymentType.KUBERNETES);
 
     qlServiceFilter =
         QLServiceFilter.builder()

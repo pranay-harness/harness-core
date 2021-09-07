@@ -51,7 +51,7 @@ public class StackdriverResource {
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier, @QueryParam("pageSize") @NotNull int pageSize,
       @QueryParam("offset") @NotNull int offset, @QueryParam("filter") String filter,
-      @QueryParam("tracingId") String tracingId) {
+      @NotNull @QueryParam("tracingId") String tracingId) {
     return ResponseDTO.newResponse(stackdriverService.listDashboards(
         accountId, connectorIdentifier, orgIdentifier, projectIdentifier, pageSize, offset, filter, tracingId));
   }
@@ -66,7 +66,7 @@ public class StackdriverResource {
       @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
       @QueryParam("projectIdentifier") @NotNull String projectIdentifier, @QueryParam("path") @NotNull String path,
-      @QueryParam("tracingId") String tracingId) {
+      @NotNull @QueryParam("tracingId") String tracingId) {
     return ResponseDTO.newResponse(stackdriverService.getDashboardDetails(
         accountId, connectorIdentifier, orgIdentifier, projectIdentifier, path, tracingId));
   }
@@ -80,8 +80,8 @@ public class StackdriverResource {
       @NotNull @QueryParam("accountId") String accountId,
       @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
       @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotNull String projectIdentifier, @QueryParam("tracingId") String tracingId,
-      @NotNull Object metricDefinitionDTO) {
+      @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
+      @NotNull @QueryParam("tracingId") String tracingId, @NotNull Object metricDefinitionDTO) {
     return ResponseDTO.newResponse(stackdriverService.getSampleData(
         accountId, connectorIdentifier, orgIdentifier, projectIdentifier, metricDefinitionDTO, tracingId));
   }

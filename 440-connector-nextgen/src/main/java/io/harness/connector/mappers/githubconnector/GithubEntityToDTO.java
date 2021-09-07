@@ -46,6 +46,7 @@ public class GithubEntityToDTO implements ConnectorEntityToDTOMapper<GithubConne
         .connectionType(connector.getConnectionType())
         .authentication(githubAuthenticationDTO)
         .url(connector.getUrl())
+        .validationRepo(connector.getValidationRepo())
         .build();
   }
 

@@ -1,8 +1,10 @@
 package software.wings.service.impl.instance.sync;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.validation.Validator.notNullCheck;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -12,6 +14,7 @@ import software.wings.beans.Application;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
+import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SyncTaskContext;
@@ -24,6 +27,7 @@ import software.wings.service.impl.instance.sync.request.ContainerSyncRequest;
 import software.wings.service.impl.instance.sync.response.ContainerSyncResponse;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ContainerService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
@@ -39,12 +43,14 @@ import lombok.extern.slf4j.Slf4j;
  * Created by brett on 9/6/17
  */
 @Slf4j
+@OwnedBy(CDP)
 public class ContainerSyncImpl implements ContainerSync {
   @Inject private SettingsService settingsService;
   @Inject private AppService appService;
   @Inject private InfrastructureMappingService infraMappingService;
   @Inject private SecretManager secretManager;
   @Inject private DelegateProxyFactory delegateProxyFactory;
+  @Inject private EnvironmentService environmentService;
 
   @Override
   public ContainerSyncResponse getInstances(ContainerSyncRequest syncRequest) {
@@ -84,12 +90,15 @@ public class ContainerSyncImpl implements ContainerSync {
                 infrastructureMapping.getAppId(), containerDeploymentInfo.getWorkflowExecutionId());
 
         Application app = appService.get(infrastructureMapping.getAppId());
+        Environment environment = environmentService.get(app.getUuid(), infrastructureMapping.getEnvId());
 
         SyncTaskContext syncTaskContext =
             SyncTaskContext.builder()
                 .accountId(app.getAccountId())
                 .appId(app.getUuid())
                 .envId(infrastructureMapping.getEnvId())
+                .envType(environment != null ? environment.getEnvironmentType() : null)
+                .serviceId(infrastructureMapping.getServiceId())
                 .infrastructureMappingId(infrastructureMapping.getUuid())
                 .infraStructureDefinitionId(infrastructureMapping.getInfrastructureDefinitionId())
                 .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 2)
@@ -144,11 +153,15 @@ public class ContainerSyncImpl implements ContainerSync {
                 containerMetadata.getNamespace(), containerMetadata.getReleaseName());
 
         Application app = appService.get(containerInfraMapping.getAppId());
+        Environment environment = environmentService.get(app.getUuid(), containerInfraMapping.getEnvId());
+
         SyncTaskContext syncTaskContext =
             SyncTaskContext.builder()
                 .accountId(app.getAccountId())
                 .appId(app.getUuid())
                 .envId(containerInfraMapping.getEnvId())
+                .envType(environment != null ? environment.getEnvironmentType() : null)
+                .serviceId(containerInfraMapping.getServiceId())
                 .infrastructureMappingId(containerInfraMapping.getUuid())
                 .infraStructureDefinitionId(containerInfraMapping.getInfrastructureDefinitionId())
                 .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 2)
@@ -181,11 +194,15 @@ public class ContainerSyncImpl implements ContainerSync {
         getContainerServiceParams(containerInfraMapping, null, namespace, null);
 
     Application app = appService.get(containerInfraMapping.getAppId());
+    Environment environment = environmentService.get(app.getUuid(), containerInfraMapping.getEnvId());
+
     SyncTaskContext syncTaskContext =
         SyncTaskContext.builder()
             .accountId(app.getAccountId())
             .appId(app.getUuid())
             .envId(containerInfraMapping.getEnvId())
+            .envType(environment != null ? environment.getEnvironmentType() : null)
+            .serviceId(containerInfraMapping.getServiceId())
             .infrastructureMappingId(containerInfraMapping.getUuid())
             .infraStructureDefinitionId(containerInfraMapping.getInfrastructureDefinitionId())
             .timeout(DEFAULT_SYNC_CALL_TIMEOUT * 2)

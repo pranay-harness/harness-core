@@ -8,6 +8,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -68,14 +69,16 @@ import org.mongodb.morphia.annotations.Transient;
 /**
  * The Class WorkflowExecution.
  */
+@TargetModule(HarnessModule._957_CG_BEANS)
 @OwnedBy(CDC)
+@BreakDependencyOn("software.wings.service.impl.WorkflowExecutionServiceHelper")
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "WorkflowExecutionKeys")
 @Entity(value = "workflowExecutions", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.impl.WorkflowExecutionServiceHelper")
 public class WorkflowExecution implements PersistentRegularIterable, AccountDataRetentionEntity, UuidAware,
                                           CreatedAtAware, CreatedByAware, KeywordsAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
@@ -162,6 +165,14 @@ public class WorkflowExecution implements PersistentRegularIterable, AccountData
                  .descSortField(WorkflowExecutionKeys.createdAt)
                  .build())
         .add(SortCompoundMongoIndex.builder()
+                 .name("appid_status_workflowid_infraMappingIds_createdat")
+                 .field(WorkflowExecutionKeys.appId)
+                 .field(WorkflowExecutionKeys.status)
+                 .field(WorkflowExecutionKeys.workflowId)
+                 .field(WorkflowExecutionKeys.infraMappingIds)
+                 .descSortField(WorkflowExecutionKeys.createdAt)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
                  .name("accountId_cdPageCandidate_keywords_createdAt")
                  .field(WorkflowExecutionKeys.accountId)
                  .field(WorkflowExecutionKeys.cdPageCandidate)
@@ -201,6 +212,25 @@ public class WorkflowExecution implements PersistentRegularIterable, AccountData
                  .field(WorkflowExecutionKeys.status)
                  .field(WorkflowExecutionKeys.pipelineExecutionId)
                  .field(WorkflowExecutionKeys.endTs)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_cdPageCandidate_appId_createdAtDesc")
+                 .field(WorkflowExecutionKeys.accountId)
+                 .field(WorkflowExecutionKeys.cdPageCandidate)
+                 .field(WorkflowExecutionKeys.appId)
+                 .descSortField(WorkflowExecutionKeys.createdAt)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_pipelineExecutionId_appId")
+                 .field(WorkflowExecutionKeys.accountId)
+                 .field(WorkflowExecutionKeys.pipelineExecutionId)
+                 .field(WorkflowExecutionKeys.appId)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_startTs_serviceIds")
+                 .field(WorkflowExecutionKeys.accountId)
+                 .field(WorkflowExecutionKeys.startTs)
+                 .field(WorkflowExecutionKeys.serviceIds)
                  .build())
         .build();
   }
@@ -309,7 +339,10 @@ public class WorkflowExecution implements PersistentRegularIterable, AccountData
   private String message;
   @Transient private String failureDetails;
 
-  @Default @JsonIgnore @FdTtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
+  private boolean isRollbackProvisionerAfterPhases;
+
+  // Making this consistent with data retention default of 183 days instead of "6 months"
+  @Default @JsonIgnore @FdTtlIndex private Date validUntil = Date.from(OffsetDateTime.now().plusDays(183).toInstant());
 
   public String normalizedName() {
     if (isBlank(name)) {

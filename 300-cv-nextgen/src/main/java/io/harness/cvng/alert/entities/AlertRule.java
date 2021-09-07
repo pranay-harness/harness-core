@@ -1,11 +1,13 @@
 package io.harness.cvng.alert.entities;
 
+import io.harness.annotation.StoreIn;
 import io.harness.cvng.alert.beans.AlertRuleDTO;
 import io.harness.cvng.alert.beans.AlertRuleDTO.AlertCondition;
 import io.harness.cvng.alert.beans.AlertRuleDTO.AlertCondition.AlertConditionKeys;
 import io.harness.cvng.alert.beans.AlertRuleDTO.NotificationMethod;
 import io.harness.cvng.alert.beans.AlertRuleDTO.RiskNotify.RiskNotifyKeys;
 import io.harness.mongo.index.FdUniqueIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -25,6 +27,7 @@ import org.mongodb.morphia.annotations.Id;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "AlertRuleKeys")
 @Entity(value = "alertRule", noClassnameStored = true)
+@StoreIn(DbAliases.CVNG)
 public final class AlertRule implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Id private String uuid;
   private long createdAt;

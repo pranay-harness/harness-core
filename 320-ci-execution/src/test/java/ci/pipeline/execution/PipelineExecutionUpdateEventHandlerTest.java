@@ -50,6 +50,6 @@ public class PipelineExecutionUpdateEventHandlerTest extends CategoryTest {
     when(gitBuildStatusUtility.shouldSendStatus(any())).thenReturn(true);
     pipelineExecutionUpdateEventHandler.handleEvent(orchestrationEvent);
 
-    verify(gitBuildStatusUtility).sendStatusToGit(any(), any(), any());
+    verify(gitBuildStatusUtility).sendStatusToGit(any(), any(), any(), any());
   }
 }

@@ -1,11 +1,14 @@
 package software.wings.core.winrm.executors;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.windows.CmdUtils.escapeEnvValueSpecialChars;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.configuration.InstallUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -36,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class WinRmSession implements AutoCloseable {
   private static final int retryCount = 1;
   @VisibleForTesting static final String COMMAND_PLACEHOLDER = "%s %s";
@@ -43,6 +47,9 @@ public class WinRmSession implements AutoCloseable {
   private final ShellCommand shell;
   private final WinRmTool winRmTool;
   private final LogCallback logCallback;
+
+  private WinRmClient client;
+  private WinRmClientContext context;
   private PyWinrmArgs args;
 
   public WinRmSession(WinRmSessionConfig config, LogCallback logCallback) throws JSchException {
@@ -64,9 +71,14 @@ public class WinRmSession implements AutoCloseable {
       SshHelperUtils.generateTGT(getUserPrincipal(config.getUsername(), config.getDomain()), config.getPassword(),
           config.getKeyTabFilePath(), logCallback);
       shell = null;
+      if (executeCommandString("echo 'checking connection'", null, null, false) != 0) {
+        throw new InvalidRequestException("Cannot reach remote host");
+      }
       winRmTool = null;
       return;
     }
+
+    context = WinRmClientContext.newInstance();
 
     WinRmClientBuilder clientBuilder =
         WinRmClient.builder(getEndpoint(config.getHostname(), config.getPort(), config.isUseSSL()))
@@ -76,10 +88,11 @@ public class WinRmSession implements AutoCloseable {
             .workingDirectory(config.getWorkingDirectory())
             .environment(processedEnvironmentMap)
             .retriesForConnectionFailures(retryCount)
+            .context(context)
             .operationTimeout(config.getTimeout());
-    WinRmClient client = clientBuilder.build();
 
-    WinRmClientContext context = WinRmClientContext.newInstance();
+    client = clientBuilder.build();
+    shell = client.createShell();
 
     winRmTool = WinRmTool.Builder.builder(config.getHostname(), config.getUsername(), config.getPassword())
                     .disableCertificateChecks(config.isSkipCertChecks())
@@ -90,8 +103,6 @@ public class WinRmSession implements AutoCloseable {
                     .useHttps(config.isUseSSL())
                     .context(context)
                     .build();
-
-    shell = client.createShell();
   }
 
   public int executeCommandString(String command, Writer output, Writer error, boolean isOutputWriter) {
@@ -115,14 +126,17 @@ public class WinRmSession implements AutoCloseable {
     return shell.execute(command, output, error);
   }
 
-  public int executeCommandsList(List<List<String>> commandList, Writer output, Writer error, boolean isOutputWriter)
-      throws IOException {
+  public int executeCommandsList(List<List<String>> commandList, Writer output, Writer error, boolean isOutputWriter,
+      String scriptExecCommand) throws IOException {
     WinRmToolResponse winRmToolResponse = null;
     if (commandList.isEmpty()) {
       return -1;
     }
     int statusCode = 0;
     if (args != null) {
+      if (isNotEmpty(scriptExecCommand)) {
+        commandList.get(commandList.size() - 1).add(scriptExecCommand);
+      }
       for (List<String> list : commandList) {
         String command = String.join(" & ", list);
         statusCode = executeCommandString(command, output, error, isOutputWriter);
@@ -144,6 +158,9 @@ public class WinRmSession implements AutoCloseable {
         if (statusCode != 0) {
           return statusCode;
         }
+      }
+      if (isNotEmpty(scriptExecCommand)) {
+        statusCode = shell.execute(scriptExecCommand, output, error);
       }
     }
 
@@ -171,6 +188,12 @@ public class WinRmSession implements AutoCloseable {
   public void close() {
     if (shell != null) {
       shell.close();
+    }
+    if (client != null) {
+      client.close();
+    }
+    if (context != null) {
+      context.shutdown();
     }
   }
 

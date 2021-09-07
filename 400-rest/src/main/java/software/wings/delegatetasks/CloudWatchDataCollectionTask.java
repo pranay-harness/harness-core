@@ -14,6 +14,7 @@ import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidRequestException;
 import io.harness.time.Timestamp;
 
 import software.wings.beans.TaskType;
@@ -21,6 +22,7 @@ import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
+import software.wings.service.impl.aws.client.CloseableAmazonWebServiceClient;
 import software.wings.service.impl.aws.delegate.AwsLambdaHelperServiceDelegateImpl;
 import software.wings.service.impl.cloudwatch.AwsNameSpace;
 import software.wings.service.impl.cloudwatch.CloudWatchDataCollectionInfo;
@@ -206,67 +208,73 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
     public TreeBasedTable<String, Long, NewRelicMetricDataRecord> getMetricsData() {
       final TreeBasedTable<String, Long, NewRelicMetricDataRecord> metricDataResponses = TreeBasedTable.create();
       List<Callable<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> callables = new ArrayList<>();
+      try (CloseableAmazonWebServiceClient<AmazonCloudWatchClient> closeableAmazonCloudWatchClient =
+               new CloseableAmazonWebServiceClient(awsHelperService.getAwsCloudWatchClient(
+                   dataCollectionInfo.getRegion(), dataCollectionInfo.getAwsConfig()))) {
+        Map<String, List<CloudWatchMetric>> cloudWatchMetricsByLambdaFunction =
+            dataCollectionInfo.getLambdaFunctionNames();
+        Map<String, List<CloudWatchMetric>> cloudWatchMetricsByECSClusterName =
+            dataCollectionInfo.getMetricsByECSClusterName();
+        Map<String, List<CloudWatchMetric>> cloudWatchMetricsByELBName = dataCollectionInfo.getLoadBalancerMetrics();
 
-      AmazonCloudWatchClient cloudWatchClient =
-          awsHelperService.getAwsCloudWatchClient(dataCollectionInfo.getRegion(), dataCollectionInfo.getAwsConfig());
-
-      Map<String, List<CloudWatchMetric>> cloudWatchMetricsByLambdaFunction =
-          dataCollectionInfo.getLambdaFunctionNames();
-      Map<String, List<CloudWatchMetric>> cloudWatchMetricsByECSClusterName =
-          dataCollectionInfo.getMetricsByECSClusterName();
-      Map<String, List<CloudWatchMetric>> cloudWatchMetricsByELBName = dataCollectionInfo.getLoadBalancerMetrics();
-
-      if (isNotEmpty(cloudWatchMetricsByECSClusterName)) {
-        log.info("for {} fetching metrics for ECS Cluster {}", dataCollectionInfo.getStateExecutionId(),
-            cloudWatchMetricsByECSClusterName);
-        addCallablesForGetMetricData(cloudWatchClient, callables, AwsNameSpace.ECS, cloudWatchMetricsByECSClusterName);
-      }
-      if (isNotEmpty(cloudWatchMetricsByLambdaFunction)) {
-        log.info("for {} fetching metrics for lambda functions {}", dataCollectionInfo.getStateExecutionId(),
-            cloudWatchMetricsByLambdaFunction);
-        addCallablesForGetMetricData(
-            cloudWatchClient, callables, AwsNameSpace.LAMBDA, cloudWatchMetricsByLambdaFunction);
-      }
-      if (isNotEmpty(cloudWatchMetricsByELBName)) {
-        log.info("for {} fetching metrics for load balancers {}", dataCollectionInfo.getStateExecutionId(),
-            cloudWatchMetricsByELBName);
-        addCallablesForGetMetricData(cloudWatchClient, callables, AwsNameSpace.ELB, cloudWatchMetricsByELBName);
-      }
-      if (isNotEmpty(dataCollectionInfo.getHosts()) && isNotEmpty(dataCollectionInfo.getEc2Metrics())) {
-        log.info("for {} fetching {} metrics for hosts {}", dataCollectionInfo.getStateExecutionId(),
-            dataCollectionInfo.getEc2Metrics(), dataCollectionInfo.getHosts());
-        dataCollectionInfo.getHosts().forEach(
-            (host, groupName)
-                -> dataCollectionInfo.getEc2Metrics().forEach(cloudWatchMetric
-                    -> callables.add(()
-                                         -> cloudWatchDelegateService.getMetricDataRecords(AwsNameSpace.EC2,
-                                             cloudWatchClient, cloudWatchMetric, host, groupName, dataCollectionInfo,
-                                             dataCollectionInfo.getApplicationId(),
-                                             collectionStartTime - TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES),
-                                             collectionStartTime,
-                                             ThirdPartyApiCallLog.fromDetails(
-                                                 createApiCallLog(dataCollectionInfo.getStateExecutionId())),
-                                             is247Task, hostStartTimeMap))));
-      }
-      log.info("Fetching CloudWatch metrics for {} strategy {} for min {}", dataCollectionInfo.getStateExecutionId(),
-          dataCollectionInfo.getAnalysisComparisonStrategy(), dataCollectionMinute);
-      List<Optional<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> results = executeParallel(callables);
-      log.info("Done fetching CloudWatch metrics for {} strategy {} for min {}",
-          dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getAnalysisComparisonStrategy(),
-          dataCollectionMinute);
-      results.forEach(result -> {
-        if (result.isPresent()) {
-          TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = result.get();
-          for (Cell<String, Long, NewRelicMetricDataRecord> cell : records.cellSet()) {
-            NewRelicMetricDataRecord metricDataRecord = metricDataResponses.get(cell.getRowKey(), cell.getColumnKey());
-            if (metricDataRecord != null) {
-              metricDataRecord.getValues().putAll(cell.getValue().getValues());
-            } else {
-              metricDataResponses.put(cell.getRowKey(), cell.getColumnKey(), cell.getValue());
+        if (isNotEmpty(cloudWatchMetricsByECSClusterName)) {
+          log.info("for {} fetching metrics for ECS Cluster {}", dataCollectionInfo.getStateExecutionId(),
+              cloudWatchMetricsByECSClusterName);
+          addCallablesForGetMetricData(closeableAmazonCloudWatchClient.getClient(), callables, AwsNameSpace.ECS,
+              cloudWatchMetricsByECSClusterName);
+        }
+        if (isNotEmpty(cloudWatchMetricsByLambdaFunction)) {
+          log.info("for {} fetching metrics for lambda functions {}", dataCollectionInfo.getStateExecutionId(),
+              cloudWatchMetricsByLambdaFunction);
+          addCallablesForGetMetricData(closeableAmazonCloudWatchClient.getClient(), callables, AwsNameSpace.LAMBDA,
+              cloudWatchMetricsByLambdaFunction);
+        }
+        if (isNotEmpty(cloudWatchMetricsByELBName)) {
+          log.info("for {} fetching metrics for load balancers {}", dataCollectionInfo.getStateExecutionId(),
+              cloudWatchMetricsByELBName);
+          addCallablesForGetMetricData(
+              closeableAmazonCloudWatchClient.getClient(), callables, AwsNameSpace.ELB, cloudWatchMetricsByELBName);
+        }
+        if (isNotEmpty(dataCollectionInfo.getHosts()) && isNotEmpty(dataCollectionInfo.getEc2Metrics())) {
+          log.info("for {} fetching {} metrics for hosts {}", dataCollectionInfo.getStateExecutionId(),
+              dataCollectionInfo.getEc2Metrics(), dataCollectionInfo.getHosts());
+          dataCollectionInfo.getHosts().forEach(
+              (host, groupName)
+                  -> dataCollectionInfo.getEc2Metrics().forEach(cloudWatchMetric
+                      -> callables.add(()
+                                           -> cloudWatchDelegateService.getMetricDataRecords(AwsNameSpace.EC2,
+                                               closeableAmazonCloudWatchClient.getClient(), cloudWatchMetric, host,
+                                               groupName, dataCollectionInfo, dataCollectionInfo.getApplicationId(),
+                                               collectionStartTime - TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES),
+                                               collectionStartTime,
+                                               ThirdPartyApiCallLog.fromDetails(
+                                                   createApiCallLog(dataCollectionInfo.getStateExecutionId())),
+                                               is247Task, hostStartTimeMap))));
+        }
+        log.info("Fetching CloudWatch metrics for {} strategy {} for min {}", dataCollectionInfo.getStateExecutionId(),
+            dataCollectionInfo.getAnalysisComparisonStrategy(), dataCollectionMinute);
+        List<Optional<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> results = executeParallel(callables);
+        log.info("Done fetching CloudWatch metrics for {} strategy {} for min {}",
+            dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getAnalysisComparisonStrategy(),
+            dataCollectionMinute);
+        results.forEach(result -> {
+          if (result.isPresent()) {
+            TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = result.get();
+            for (Cell<String, Long, NewRelicMetricDataRecord> cell : records.cellSet()) {
+              NewRelicMetricDataRecord metricDataRecord =
+                  metricDataResponses.get(cell.getRowKey(), cell.getColumnKey());
+              if (metricDataRecord != null) {
+                metricDataRecord.getValues().putAll(cell.getValue().getValues());
+              } else {
+                metricDataResponses.put(cell.getRowKey(), cell.getColumnKey(), cell.getValue());
+              }
             }
           }
-        }
-      });
+        });
+      } catch (Exception e) {
+        log.error("Exception getMetricsData", e);
+        throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
+      }
       return metricDataResponses;
     }
 

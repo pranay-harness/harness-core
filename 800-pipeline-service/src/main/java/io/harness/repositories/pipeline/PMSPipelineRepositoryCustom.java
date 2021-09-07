@@ -1,23 +1,33 @@
 package io.harness.repositories.pipeline;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.git.model.ChangeType;
+import io.harness.plancreator.pipeline.PipelineConfig;
 import io.harness.pms.pipeline.PipelineEntity;
 
-import com.mongodb.client.result.UpdateResult;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
 
+@OwnedBy(PIPELINE)
 public interface PMSPipelineRepositoryCustom {
-  PipelineEntity update(Criteria criteria, PipelineEntity pipelineEntity);
+  Page<PipelineEntity> findAll(Criteria criteria, Pageable pageable, String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, boolean getDistinctFromBranches);
 
-  PipelineEntity update(Criteria criteria, Update update);
+  PipelineEntity save(PipelineEntity pipelineToSave, PipelineConfig yamlDTO);
 
-  UpdateResult delete(Criteria criteria);
+  Optional<PipelineEntity> findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(
+      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, boolean notDeleted);
 
-  Page<PipelineEntity> findAll(Criteria criteria, Pageable pageable);
+  PipelineEntity updatePipelineYaml(
+      PipelineEntity pipelineToUpdate, PipelineEntity oldPipelineEntity, PipelineConfig yamlDTO, ChangeType changeType);
 
-  Optional<PipelineEntity> incrementRunSequence(
-      String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, boolean deleted);
+  PipelineEntity updatePipelineMetadata(
+      String accountId, String orgIdentifier, String projectIdentifier, Criteria criteria, Update update);
+
+  PipelineEntity deletePipeline(PipelineEntity pipelineToUpdate, PipelineConfig yamlDTO);
 }

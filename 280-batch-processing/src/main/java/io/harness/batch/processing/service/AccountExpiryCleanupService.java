@@ -3,9 +3,9 @@ package io.harness.batch.processing.service;
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
 import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryHelperService;
 import io.harness.batch.processing.service.intfc.AccountExpiryService;
-import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
-import io.harness.ccm.commons.entities.CEMetadataRecord;
-import io.harness.ccm.commons.entities.CEMetadataRecord.CEMetadataRecordBuilder;
+import io.harness.ccm.commons.entities.batch.CEMetadataRecord;
+import io.harness.ccm.commons.entities.batch.CEMetadataRecord.CEMetadataRecordBuilder;
+import io.harness.ccm.commons.entities.billing.BillingDataPipelineRecord;
 import io.harness.ccm.license.CeLicenseInfo;
 
 import software.wings.beans.Account;

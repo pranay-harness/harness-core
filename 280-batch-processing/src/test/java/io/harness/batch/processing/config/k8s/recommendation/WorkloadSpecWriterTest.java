@@ -4,23 +4,27 @@ import static io.harness.rule.OwnerRule.AVMOHAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
-import io.harness.event.grpc.PublishedMessage;
+import io.harness.ccm.commons.entities.events.PublishedMessage;
+import io.harness.ccm.commons.entities.k8s.recommendation.K8sWorkloadRecommendation;
+import io.harness.ff.FeatureFlagService;
 import io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec;
 import io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec.ContainerSpec;
 import io.harness.rule.Owner;
 
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerRecommendation;
-import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation;
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ResourceRequirement;
 
 import com.google.common.collect.ImmutableList;
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -34,8 +38,14 @@ public class WorkloadSpecWriterTest extends CategoryTest {
   private static final String ACCOUNT_ID = "ACCOUNT_ID1";
   public static final String CLUSTER_ID = "CLUSTER_ID1";
 
+  @Mock private FeatureFlagService featureFlagService;
   @Mock private WorkloadRecommendationDao workloadRecommendationDao;
   @InjectMocks private WorkloadSpecWriter workloadSpecWriter;
+
+  @Before
+  public void setUp() throws Exception {
+    when(featureFlagService.isEnabled(eq(FeatureName.NODE_RECOMMENDATION_1), eq(ACCOUNT_ID))).thenReturn(false);
+  }
 
   @Test
   @Owner(developers = AVMOHAN)
@@ -59,6 +69,7 @@ public class WorkloadSpecWriterTest extends CategoryTest {
                                           .setNamespace("kube-system")
                                           .setWorkloadKind("kube-dns")
                                           .setWorkloadName("Deployment")
+                                          .setUid("test-uid")
                                           .addContainerSpecs(ContainerSpec.newBuilder()
                                                                  .setName("kubedns")
                                                                  .putRequests("cpu", "100m")
@@ -193,6 +204,7 @@ public class WorkloadSpecWriterTest extends CategoryTest {
                                                                .setClusterId(CLUSTER_ID)
                                                                .setNamespace("harness")
                                                                .setWorkloadName("test-ctr")
+                                                               .setUid("test-uid")
                                                                .setWorkloadKind("Deployment")
                                                                .addContainerSpecs(ContainerSpec.newBuilder()
                                                                                       .setName("ctr-b")

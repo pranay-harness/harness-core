@@ -1,15 +1,18 @@
 package io.harness.exception;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 
 import static java.util.stream.Collectors.joining;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.Level;
 
 import java.util.EnumSet;
 import java.util.stream.Stream;
 import org.apache.commons.lang3.tuple.Pair;
 
+@OwnedBy(PL)
 public class InvalidArgumentsException extends WingsException {
   private static final String ARGS_ARG = "args";
 
@@ -52,5 +55,12 @@ public class InvalidArgumentsException extends WingsException {
   public InvalidArgumentsException(String message, EnumSet<ReportTarget> reportTargets, Throwable cause) {
     super(message, cause, INVALID_ARGUMENT, Level.ERROR, reportTargets, null);
     super.param(ARGS_ARG, message);
+  }
+
+  public InvalidArgumentsException(Pair<String, String> arg1, String helpMessage) {
+    super(null, null, INVALID_ARGUMENT, Level.ERROR, null, null);
+    String invalidArgument = Stream.of(arg1).map(pair -> pair.getKey() + ": " + pair.getValue()).collect(joining("; "));
+    String finalMessage = invalidArgument + ". " + helpMessage;
+    super.param(ARGS_ARG, finalMessage);
   }
 }

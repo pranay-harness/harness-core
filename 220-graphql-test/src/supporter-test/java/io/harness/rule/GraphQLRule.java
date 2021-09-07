@@ -6,21 +6,26 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 
 import static org.mockito.Mockito.mock;
 
+import io.harness.AccessControlClientConfiguration;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.app.GraphQLModule;
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheConfig.CacheConfigBuilder;
 import io.harness.cache.CacheModule;
 import io.harness.capability.CapabilityModule;
+import io.harness.cf.AbstractCfModule;
+import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
-import io.harness.cvng.client.CVNGServiceClient;
+import io.harness.delegate.authenticator.DelegateTokenAuthenticatorImpl;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
+import io.harness.ff.FeatureFlagConfig;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.grpc.client.GrpcClientConfig;
@@ -29,6 +34,7 @@ import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
+import io.harness.security.DelegateTokenAuthenticator;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.ManagerRegistrars;
 import io.harness.serializer.kryo.TestManagerKryoRegistrar;
@@ -42,9 +48,9 @@ import io.harness.time.TimeModule;
 import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.version.VersionModule;
 
+import software.wings.DataStorageMode;
 import software.wings.app.AuthModule;
 import software.wings.app.GcpMarketplaceIntegrationModule;
-import software.wings.app.GraphQLModule;
 import software.wings.app.IndexMigratorModule;
 import software.wings.app.MainConfiguration;
 import software.wings.app.ManagerExecutorModule;
@@ -130,8 +136,23 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
     configuration.setGrpcClientConfig(
         GrpcClientConfig.builder().target("localhost:9880").authority("localhost").build());
 
+    configuration.setGrpcDMSClientConfig(
+        GrpcClientConfig.builder().target("localhost:15011").authority("localhost").build());
+    configuration.setDmsSecret("dummy_key");
+
     configuration.setLogStreamingServiceConfig(
         LogStreamingServiceConfig.builder().baseUrl("http://localhost:8079").serviceToken("token").build());
+
+    configuration.setAccessControlClientConfiguration(
+        AccessControlClientConfiguration.builder()
+            .enableAccessControl(false)
+            .accessControlServiceSecret("token")
+            .accessControlServiceConfig(ServiceHttpClientConfig.builder()
+                                            .baseUrl("http://localhost:9006/api/")
+                                            .readTimeOutSeconds(15)
+                                            .connectTimeOutSeconds(15)
+                                            .build())
+            .build());
 
     MarketoConfig marketoConfig =
         MarketoConfig.builder().clientId("client_id").clientSecret("client_secret_id").enabled(false).build();
@@ -143,7 +164,10 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
         EventsFrameworkConfiguration.builder()
             .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
             .build());
+    configuration.setFileStorageMode(DataStorageMode.MONGO);
+    configuration.setClusterName("");
     configuration.setTimeScaleDBConfig(TimeScaleDBConfig.builder().build());
+    configuration.setCfClientConfig(CfClientConfig.builder().build());
     configuration.setCfMigrationConfig(CfMigrationConfig.builder()
                                            .account("testAccount")
                                            .enabled(false)
@@ -201,6 +225,23 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
       }
     });
 
+    modules.add(new AbstractCfModule() {
+      @Override
+      public CfClientConfig cfClientConfig() {
+        return CfClientConfig.builder().build();
+      }
+
+      @Override
+      public CfMigrationConfig cfMigrationConfig() {
+        return CfMigrationConfig.builder().build();
+      }
+
+      @Override
+      public FeatureFlagConfig featureFlagConfig() {
+        return FeatureFlagConfig.builder().build();
+      }
+    });
+
     MainConfiguration configuration = getConfiguration("graphQL");
 
     CacheConfigBuilder cacheConfigBuilder =
@@ -218,8 +259,13 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
       protected void configure() {
         bind(BroadcasterFactory.class).toInstance(mock(BroadcasterFactory.class));
         bind(CommandLibraryServiceHttpClient.class).toInstance(mock(CommandLibraryServiceHttpClient.class));
-        CVNGServiceClient mockCVNGServiceClient = mock(CVNGServiceClient.class);
-        bind(CVNGServiceClient.class).toInstance(mockCVNGServiceClient);
+      }
+    });
+
+    modules.add(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(DelegateTokenAuthenticator.class).to(DelegateTokenAuthenticatorImpl.class).in(Singleton.class);
       }
     });
 
@@ -238,7 +284,7 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
     modules.add(new ManagerExecutorModule());
     modules.add(new TemplateModule());
     modules.add(new EventsModule(configuration));
-    modules.add(new GraphQLModule());
+    modules.add(GraphQLModule.getInstance());
     modules.add(new AuthModule());
     modules.add(new SSOModule());
     modules.add(new SignupModule());

@@ -75,6 +75,8 @@ public class WorkflowYamlConstant {
   // START STRING CONSTANTS FOR MULTI_SERVICE WORKFLOW YAML TEST
   public static final String MULTI_SERVICE_VALID_YAML_CONTENT_RESOURCE_PATH =
       resourcePath + "multiServiceValidWorkflow.yaml";
+  public static final String MULTI_SERVICE_VARIABLE_OVERRIDE_RESOURCE_PATH =
+      resourcePath + "multiServiceWorkflowWithVariableOverride.yaml";
   public static final String MULTI_SERVICE_VALID_YAML_FILE_PATH =
       "Setup/Applications/APP_NAME/Workflows/multiService.yaml";
   public static final String MULTI_SERVICE_INVALID_YAML_CONTENT =

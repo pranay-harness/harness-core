@@ -2,7 +2,9 @@ package io.harness.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.logging.CommandExecutionStatus;
 
 import java.util.EnumSet;
@@ -12,6 +14,7 @@ import java.util.Set;
  * Describes possible execution statuses for a state.
  */
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public enum ExecutionStatus {
   ABORTED,
   DISCONTINUING,

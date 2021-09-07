@@ -8,7 +8,7 @@ import io.harness.batch.processing.service.impl.BatchJobBucketLogContext;
 import io.harness.batch.processing.service.intfc.BatchJobIntervalService;
 import io.harness.batch.processing.service.intfc.BatchJobScheduledDataService;
 import io.harness.batch.processing.service.intfc.CustomBillingMetaDataService;
-import io.harness.ccm.commons.entities.LatestClusterInfo;
+import io.harness.ccm.commons.entities.batch.LatestClusterInfo;
 import io.harness.ccm.health.LastReceivedPublishedMessageDao;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
@@ -87,6 +87,8 @@ public class RecentlyAddedAccountJobRunner {
         runBillingJobs(latestClusterInfo, BatchJobType.ACTUAL_IDLE_COST_BILLING_HOURLY, hourlyBillingJobEndTime,
             hourlyBillingStartTime);
         runBillingJobs(latestClusterInfo, BatchJobType.INSTANCE_BILLING_HOURLY_AGGREGATION, hourlyBillingJobEndTime,
+            hourlyBillingStartTime);
+        runBillingJobs(latestClusterInfo, BatchJobType.CLUSTER_DATA_HOURLY_TO_BIG_QUERY, hourlyBillingJobEndTime,
             hourlyBillingStartTime);
 
         Instant dailyBillingJobEndTime =

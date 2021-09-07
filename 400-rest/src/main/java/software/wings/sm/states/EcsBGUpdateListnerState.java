@@ -1,9 +1,15 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
+import static io.harness.exception.FailureType.TIMEOUT;
 
 import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.exception.ExceptionUtils;
@@ -35,6 +41,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
@@ -43,7 +50,11 @@ import com.github.reinert.jjschema.Attributes;
 import com.google.inject.Inject;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.lang3.StringUtils;
 
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class EcsBGUpdateListnerState extends State {
   @Inject private AppService appService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
@@ -57,6 +68,7 @@ public class EcsBGUpdateListnerState extends State {
   public static final String ECS_UPDATE_LISTENER_COMMAND = "ECS Update Listener Command";
 
   @Attributes(title = "Downsize Older Service") private boolean downsizeOldService;
+  @Attributes(title = "Delay (In Seconds)") private String downsizeOldServiceDelayInSecs;
 
   /**
    * Instantiates a new state.
@@ -110,16 +122,22 @@ public class EcsBGUpdateListnerState extends State {
     List<EncryptedDataDetail> encryptedDetails = secretManager.getEncryptionDetails(
         (EncryptableSetting) awsConfig, context.getAppId(), context.getWorkflowExecutionId());
 
-    EcsListenerUpdateRequestConfigData requestConfigData = getEcsListenerUpdateRequestConfigData(containerElement);
+    EcsListenerUpdateRequestConfigData requestConfigData =
+        getEcsListenerUpdateRequestConfigData(containerElement, context);
 
     return ecsStateHelper.queueDelegateTaskForEcsListenerUpdate(application, awsConfig, delegateService,
         infrastructureMapping, activity.getUuid(), environment, ECS_UPDATE_LISTENER_COMMAND, requestConfigData,
-        encryptedDetails, containerElement.getServiceSteadyStateTimeout());
+        encryptedDetails, containerElement.getServiceSteadyStateTimeout(), isSelectionLogsTrackingForTasksEnabled(),
+        context.getStateExecutionInstanceId());
   }
 
   protected EcsListenerUpdateRequestConfigData getEcsListenerUpdateRequestConfigData(
-      ContainerServiceElement containerServiceElement) {
+      ContainerServiceElement containerServiceElement, ExecutionContext context) {
     EcsBGSetupData ecsBGSetupData = containerServiceElement.getEcsBGSetupData();
+    long downsizeOldServiceDelayInSecsLong = 0l;
+    if (StringUtils.isNotEmpty(downsizeOldServiceDelayInSecs)) {
+      downsizeOldServiceDelayInSecsLong = Long.parseLong(context.renderExpression(downsizeOldServiceDelayInSecs));
+    }
     return EcsListenerUpdateRequestConfigData.builder()
         .clusterName(containerServiceElement.getClusterName())
         .prodListenerArn(ecsBGSetupData.getProdEcsListener())
@@ -133,6 +151,7 @@ public class EcsBGUpdateListnerState extends State {
         .targetGroupForExistingService(containerServiceElement.getTargetGroupForExistingService())
         .serviceNameDownsized(containerServiceElement.getEcsBGSetupData().getDownsizedServiceName())
         .downsizeOldService(downsizeOldService)
+        .downsizeOldServiceDelayInSecs(downsizeOldServiceDelayInSecsLong)
         .build();
   }
 
@@ -153,11 +172,15 @@ public class EcsBGUpdateListnerState extends State {
       stateExecutionData.setStatus(executionStatus);
       stateExecutionData.setErrorMsg(executionResponse.getErrorMessage());
       stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
-      return ExecutionResponse.builder()
-          .stateExecutionData(stateExecutionData)
-          .errorMessage(executionResponse.getErrorMessage())
-          .executionStatus(executionStatus)
-          .build();
+      ExecutionResponseBuilder builder = ExecutionResponse.builder()
+                                             .stateExecutionData(stateExecutionData)
+                                             .errorMessage(executionResponse.getErrorMessage())
+                                             .executionStatus(executionStatus);
+      if (null != executionResponse.getEcsCommandResponse()
+          && executionResponse.getEcsCommandResponse().isTimeoutFailure()) {
+        builder.failureTypes(TIMEOUT);
+      }
+      return builder.build();
 
     } catch (WingsException ex) {
       throw ex;
@@ -180,5 +203,18 @@ public class EcsBGUpdateListnerState extends State {
 
   public void setDownsizeOldService(boolean downsizeOldService) {
     this.downsizeOldService = downsizeOldService;
+  }
+
+  public String getDownsizeOldServiceDelayInSecs() {
+    return downsizeOldServiceDelayInSecs;
+  }
+
+  public void setDownsizeOldServiceDelayInSecs(String downsizeOldServiceDelayInSecs) {
+    this.downsizeOldServiceDelayInSecs = downsizeOldServiceDelayInSecs;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

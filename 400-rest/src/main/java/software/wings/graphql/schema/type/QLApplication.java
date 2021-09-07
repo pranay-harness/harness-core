@@ -21,4 +21,5 @@ public class QLApplication implements QLObject {
   String description;
   Long createdAt;
   QLUser createdBy;
+  Boolean isManualTriggerAuthorized;
 }

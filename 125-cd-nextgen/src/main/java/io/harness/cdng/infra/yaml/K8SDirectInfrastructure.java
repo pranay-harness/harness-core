@@ -1,32 +1,56 @@
 package io.harness.cdng.infra.yaml;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotation.RecasterAlias;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.SwaggerConstants;
 import io.harness.cdng.infra.beans.InfraMapping;
 import io.harness.cdng.infra.beans.K8sDirectInfraMapping;
-import io.harness.cdng.visitor.YamlTypes;
-import io.harness.cdng.visitor.helpers.pipelineinfrastructure.K8SDirectInfrastructureVisitorHelper;
-import io.harness.common.SwaggerConstants;
+import io.harness.filters.ConnectorRefExtractorHelper;
+import io.harness.filters.WithConnectorRef;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.walktree.beans.LevelNode;
+import io.harness.pms.yaml.SkipAutoEvaluation;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
+import java.util.HashMap;
+import java.util.Map;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Value;
 import lombok.experimental.Wither;
+import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.data.annotation.TypeAlias;
 
+@OwnedBy(CDC)
 @Value
 @Builder
 @JsonTypeName(InfrastructureKind.KUBERNETES_DIRECT)
-@SimpleVisitorHelper(helperClass = K8SDirectInfrastructureVisitorHelper.class)
+@SimpleVisitorHelper(helperClass = ConnectorRefExtractorHelper.class)
 @TypeAlias("k8sDirectInfrastructure")
-public class K8SDirectInfrastructure implements Infrastructure, Visitable {
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> connectorRef;
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> namespace;
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> releaseName;
+@RecasterAlias("io.harness.cdng.infra.yaml.K8SDirectInfrastructure")
+public class K8SDirectInfrastructure implements Infrastructure, Visitable, WithConnectorRef {
+  @NotNull
+  @NotEmpty
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
+  @Wither
+  ParameterField<String> connectorRef;
+  @NotNull
+  @NotEmpty
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
+  @Wither
+  ParameterField<String> namespace;
+  @NotNull
+  @NotEmpty
+  @SkipAutoEvaluation
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
+  @Wither
+  ParameterField<String> releaseName;
 
   // For Visitor Framework Impl
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
@@ -42,6 +66,16 @@ public class K8SDirectInfrastructure implements Infrastructure, Visitable {
   @Override
   public String getKind() {
     return InfrastructureKind.KUBERNETES_DIRECT;
+  }
+
+  @Override
+  public ParameterField<String> getConnectorReference() {
+    return connectorRef;
+  }
+
+  @Override
+  public String[] getInfrastructureKeyValues() {
+    return new String[] {connectorRef.getValue(), namespace.getValue()};
   }
 
   @Override
@@ -61,7 +95,9 @@ public class K8SDirectInfrastructure implements Infrastructure, Visitable {
   }
 
   @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.SPEC).isPartOfFQN(false).build();
+  public Map<String, ParameterField<String>> extractConnectorRefs() {
+    Map<String, ParameterField<String>> connectorRefMap = new HashMap<>();
+    connectorRefMap.put(YAMLFieldNameConstants.CONNECTOR_REF, connectorRef);
+    return connectorRefMap;
   }
 }

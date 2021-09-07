@@ -6,21 +6,15 @@ import static io.harness.cvng.core.services.CVNextGenConstants.SPLUNK_RESOURCE_P
 import static io.harness.cvng.core.services.CVNextGenConstants.SPLUNK_SAVED_SEARCH_PATH;
 import static io.harness.cvng.core.services.CVNextGenConstants.SPLUNK_VALIDATION_RESPONSE_PATH;
 
-import io.harness.cvng.beans.AppdynamicsValidationResponse;
 import io.harness.cvng.beans.CVNGPerpetualTaskDTO;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.SplunkSavedSearch;
 import io.harness.cvng.beans.SplunkValidationResponse;
-import io.harness.cvng.beans.appd.AppDynamicsApplication;
-import io.harness.cvng.beans.appd.AppDynamicsTier;
-import io.harness.cvng.beans.appd.AppdynamicsMetricPackDataValidationRequest;
-import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 import io.harness.rest.RestResponse;
 
 import java.util.List;
-import java.util.Set;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.DELETE;
@@ -66,22 +60,6 @@ public interface VerificationManagerClient {
       @Query("connectorId") String connectorId, @Query("orgIdentifier") String orgIdentifier,
       @Query("projectIdentifier") String projectIdentifier, @Query("query") String query,
       @Query("requestGuid") String requestGuid, @Body SplunkConnectorDTO splunkConnectorDTO);
-
-  @POST("appdynamics/metric-data")
-  Call<RestResponse<Set<AppdynamicsValidationResponse>>> getAppDynamicsMetricData(@Query("accountId") String accountId,
-      @Query("orgIdentifier") String orgIdentifier, @Query("projectIdentifier") String projectIdentifier,
-      @Query("appName") String appName, @Query("tierName") String tierName, @Query("requestGuid") String requestGuid,
-      @Body AppdynamicsMetricPackDataValidationRequest validationRequest);
-
-  @POST("appdynamics/applications-ng")
-  Call<RestResponse<List<AppDynamicsApplication>>> getAppDynamicsApplications(@Query("accountId") String accountId,
-      @Query("orgIdentifier") String orgIdentifier, @Query("projectIdentifier") String projectIdentifier,
-      @Body AppDynamicsConnectorDTO appDynamicsConnectorDTO);
-
-  @POST("appdynamics/tiers-ng")
-  Call<RestResponse<Set<AppDynamicsTier>>> getTiers(@Query("accountId") String accountId,
-      @Query("orgIdentifier") String orgIdentifier, @Query("projectIdentifier") String projectIdentifier,
-      @Query("appDynamicsAppId") long appDynamicsAppId, @Body AppDynamicsConnectorDTO appDynamicsConnectorDTO);
 
   @POST("account/validate-delegate-token")
   Call<RestResponse<Boolean>> authenticateDelegateRequest(

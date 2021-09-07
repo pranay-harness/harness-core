@@ -3,7 +3,9 @@ package software.wings.beans;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.HarnessStringUtils.join;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -12,6 +14,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @Builder
 public class SkipCondition {
   @VisibleForTesting enum SkipConditionType { ALWAYS_SKIP, DO_NOT_SKIP, CONDITIONAL_SKIP }

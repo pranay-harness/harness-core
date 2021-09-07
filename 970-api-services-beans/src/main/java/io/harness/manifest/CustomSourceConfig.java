@@ -1,14 +1,21 @@
 package io.harness.manifest;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+
+import java.util.List;
 import javax.annotation.Nullable;
 import lombok.Builder;
 import lombok.Data;
 
 @Data
 @Builder
+@OwnedBy(CDP)
 public class CustomSourceConfig {
   @Nullable private String script;
   private String path;
+  private List<String> delegateSelectors;
 
   @Nullable
   public static CustomSourceConfig cloneFrom(@Nullable CustomSourceConfig sourceConfig) {
@@ -16,6 +23,10 @@ public class CustomSourceConfig {
       return null;
     }
 
-    return CustomSourceConfig.builder().script(sourceConfig.getScript()).path(sourceConfig.getPath()).build();
+    return CustomSourceConfig.builder()
+        .script(sourceConfig.getScript())
+        .path(sourceConfig.getPath())
+        .delegateSelectors(sourceConfig.getDelegateSelectors())
+        .build();
   }
 }

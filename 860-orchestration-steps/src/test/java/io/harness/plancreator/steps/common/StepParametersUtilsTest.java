@@ -12,6 +12,9 @@ import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
+import io.harness.when.beans.StageWhenCondition;
+import io.harness.when.beans.StepWhenCondition;
+import io.harness.when.beans.WhenConditionStatus;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -22,14 +25,15 @@ public class StepParametersUtilsTest extends CategoryTest {
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
   public void testGetStepParameters() {
-    StepElementConfig stepElementConfig = StepElementConfig.builder()
-                                              .identifier("IDENTIFIER")
-                                              .name("NAME")
-                                              .description("DESCRIPTION")
-                                              .type("TYPE")
-                                              .skipCondition(ParameterField.createValueField("SKIPCONDITION"))
-                                              .when(ParameterField.createValueField("WHEN"))
-                                              .build();
+    StepElementConfig stepElementConfig =
+        StepElementConfig.builder()
+            .identifier("IDENTIFIER")
+            .name("NAME")
+            .description("DESCRIPTION")
+            .type("TYPE")
+            .skipCondition(ParameterField.createValueField("SKIPCONDITION"))
+            .when(StepWhenCondition.builder().stageStatus(WhenConditionStatus.SUCCESS).build())
+            .build();
     StepElementParameters stepElementParameters = StepParametersUtils.getStepParameters(stepElementConfig).build();
     assertThat(stepElementParameters.getIdentifier()).isEqualTo(stepElementConfig.getIdentifier());
     assertThat(stepElementParameters.getName()).isEqualTo(stepElementConfig.getName());
@@ -43,14 +47,15 @@ public class StepParametersUtilsTest extends CategoryTest {
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
   public void testGetStageParameters() {
-    StageElementConfig config = StageElementConfig.builder()
-                                    .identifier("IDENTIFIER")
-                                    .name("NAME")
-                                    .description(ParameterField.createValueField("DESCRIPTION"))
-                                    .type("TYPE")
-                                    .skipCondition(ParameterField.createValueField("SKIPCONDITION"))
-                                    .when(ParameterField.createValueField("WHEN"))
-                                    .build();
+    StageElementConfig config =
+        StageElementConfig.builder()
+            .identifier("IDENTIFIER")
+            .name("NAME")
+            .description(ParameterField.createValueField("DESCRIPTION"))
+            .type("TYPE")
+            .skipCondition(ParameterField.createValueField("SKIPCONDITION"))
+            .when(StageWhenCondition.builder().pipelineStatus(WhenConditionStatus.SUCCESS).build())
+            .build();
     StageElementParameters stageParameters = StepParametersUtils.getStageParameters(config).build();
     assertThat(stageParameters.getIdentifier()).isEqualTo(config.getIdentifier());
     assertThat(stageParameters.getName()).isEqualTo(config.getName());

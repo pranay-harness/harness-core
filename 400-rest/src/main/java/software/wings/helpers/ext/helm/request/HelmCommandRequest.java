@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.helm.request;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 import static io.harness.k8s.model.HelmVersion.V2;
 
@@ -10,6 +11,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.beans.executioncapability.HelmInstallationCapability;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.ActivityAccess;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.helm.HelmCommandFlag;
@@ -19,20 +21,27 @@ import io.harness.k8s.model.HelmVersion;
 import io.harness.logging.LogCallback;
 import io.harness.security.encryption.EncryptedDataDetail;
 
+import software.wings.beans.AwsConfig;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.container.HelmChartSpecification;
+import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
 import software.wings.delegatetasks.validation.capabilities.GitConnectionCapability;
 import software.wings.delegatetasks.validation.capabilities.HelmCommandCapability;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.service.impl.ContainerServiceParams;
+import software.wings.settings.SettingValue;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NonNull;
 import org.hibernate.validator.constraints.NotEmpty;
 
 /**
@@ -66,6 +75,7 @@ public class HelmCommandRequest implements TaskParameters, ActivityAccess, Execu
   private GitFileConfig gitFileConfig;
   private boolean k8SteadyStateCheckEnabled;
   private boolean mergeCapabilities; // HELM_MERGE_CAPABILITIES
+  private boolean isGitHostConnectivityCheck;
 
   public HelmCommandRequest(HelmCommandType helmCommandType, boolean mergeCapabilities) {
     this.helmCommandType = helmCommandType;
@@ -82,16 +92,50 @@ public class HelmCommandRequest implements TaskParameters, ActivityAccess, Execu
       executionCapabilities.add(HelmCommandCapability.builder().commandRequest(this).build());
     }
     if (gitConfig != null) {
-      executionCapabilities.add(GitConnectionCapability.builder()
-                                    .gitConfig(gitConfig)
-                                    .settingAttribute(gitConfig.getSshSettingAttribute())
-                                    .encryptedDataDetails(getEncryptedDataDetails())
-                                    .build());
+      if (isGitHostConnectivityCheck) {
+        executionCapabilities.addAll(CapabilityHelper.generateExecutionCapabilitiesForGit(gitConfig));
+      } else {
+        executionCapabilities.add(GitConnectionCapability.builder()
+                                      .gitConfig(gitConfig)
+                                      .settingAttribute(gitConfig.getSshSettingAttribute())
+                                      .encryptedDataDetails(getEncryptedDataDetails())
+                                      .build());
+      }
+    }
+
+    Set<String> delegateSelectors = getDelegateSelectorsFromConfigurations();
+    if (isNotEmpty(delegateSelectors)) {
+      executionCapabilities.add(SelectorCapability.builder().selectors(delegateSelectors).build());
     }
     if (containerServiceParams != null) {
       executionCapabilities.addAll(containerServiceParams.fetchRequiredExecutionCapabilities(maskingEvaluator));
     }
     return executionCapabilities;
+  }
+
+  @NonNull
+  private Set<String> getDelegateSelectorsFromConfigurations() {
+    Set<String> delegateSelectors = new HashSet<>();
+    if (repoConfig != null && repoConfig.getHelmChartConfigParams() != null) {
+      SettingValue connectorConfig = repoConfig.getHelmChartConfigParams().getConnectorConfig();
+      if (connectorConfig != null) {
+        if (connectorConfig instanceof AwsConfig) {
+          AwsConfig awsConfig = (AwsConfig) connectorConfig;
+          if (isNotEmpty(awsConfig.getTag())) {
+            delegateSelectors.add(awsConfig.getTag());
+          }
+        } else if (connectorConfig instanceof GcpConfig) {
+          GcpConfig gcpConfig = (GcpConfig) connectorConfig;
+          if (isNotEmpty(gcpConfig.getDelegateSelectors())) {
+            delegateSelectors.addAll(new HashSet<>(gcpConfig.getDelegateSelectors()));
+          }
+        }
+      }
+    }
+    if (gitConfig != null && isNotEmpty(gitConfig.getDelegateSelectors())) {
+      delegateSelectors.addAll(gitConfig.getDelegateSelectors());
+    }
+    return delegateSelectors;
   }
 
   public enum HelmCommandType { INSTALL, ROLLBACK, LIST_RELEASE, RELEASE_HISTORY }

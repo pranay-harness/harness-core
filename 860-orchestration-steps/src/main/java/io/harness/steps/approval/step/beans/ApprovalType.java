@@ -29,4 +29,15 @@ public enum ApprovalType implements EntitySubtype {
   public String toString() {
     return displayName;
   }
+
+  public static ApprovalType fromName(String name) {
+    switch (name) {
+      case StepSpecTypeConstants.HARNESS_APPROVAL:
+        return HARNESS_APPROVAL;
+      case StepSpecTypeConstants.JIRA_APPROVAL:
+        return JIRA_APPROVAL;
+      default:
+        return null;
+    }
+  }
 }

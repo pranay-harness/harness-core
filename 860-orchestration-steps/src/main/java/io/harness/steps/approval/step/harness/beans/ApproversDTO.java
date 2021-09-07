@@ -26,7 +26,21 @@ public class ApproversDTO {
       return null;
     }
 
-    List<String> userGroups = (List<String>) approvers.getUserGroups().fetchFinalValue();
+    Object userGroupsObj = approvers.getUserGroups().fetchFinalValue();
+    if (userGroupsObj == null) {
+      throw new InvalidRequestException("At least 1 user group is required");
+    }
+    if (userGroupsObj instanceof String) {
+      throw new InvalidRequestException(String.format(
+          "User groups should be a list of user group identifiers, got a single string value '%s'", userGroupsObj));
+    }
+    if (!(userGroupsObj instanceof List)) {
+      throw new InvalidRequestException(
+          String.format("User groups should be a list of user group identifiers, got value %s of type %s",
+              userGroupsObj, userGroupsObj.getClass().getSimpleName()));
+    }
+
+    List<String> userGroups = (List<String>) userGroupsObj;
     if (EmptyPredicate.isEmpty(userGroups)) {
       throw new InvalidRequestException("At least 1 user group is required");
     }

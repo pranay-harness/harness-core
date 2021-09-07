@@ -1,7 +1,9 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ARVIND;
+import static io.harness.rule.OwnerRule.PRAKHAR;
 
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -16,6 +18,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
@@ -34,6 +37,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDC)
 public class GitFileConfigHelperServiceTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
 
@@ -167,5 +171,29 @@ public class GitFileConfigHelperServiceTest extends WingsBaseTest {
 
     gitFileConfig.setRepoName("repo1");
     configHelperService.validate(gitFileConfig);
+  }
+
+  @Test
+  @Owner(developers = PRAKHAR)
+  @Category(UnitTests.class)
+  public void testValidateEcsGitfileConfig() {
+    GitFileConfig gitFileConfig = GitFileConfig.builder().build();
+    assertThatExceptionOfType(GeneralException.class)
+        .isThrownBy(() -> configHelperService.validateEcsGitfileConfig(null));
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> configHelperService.validateEcsGitfileConfig(gitFileConfig))
+        .withMessageContaining("File Path to Task Definition cannot be empty.");
+
+    gitFileConfig.setTaskSpecFilePath("taskSpecFilePath");
+    gitFileConfig.setUseInlineServiceDefinition(true);
+    configHelperService.validateEcsGitfileConfig(gitFileConfig);
+
+    gitFileConfig.setUseInlineServiceDefinition(false);
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(() -> configHelperService.validateEcsGitfileConfig(gitFileConfig))
+        .withMessageContaining("File Path to Service Definition cannot be empty.");
+
+    gitFileConfig.setServiceSpecFilePath("serviceSpecFilePath");
+    configHelperService.validateEcsGitfileConfig(gitFileConfig);
   }
 }

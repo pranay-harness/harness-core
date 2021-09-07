@@ -51,12 +51,15 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.ServiceGuardLimitDTO;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.datahandler.models.AccountDetails;
 import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
+import io.harness.ng.core.account.AuthenticationMechanism;
+import io.harness.ng.core.account.DefaultExperience;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 
@@ -94,7 +97,6 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.analysis.CVEnabledService;
 import software.wings.service.impl.security.auth.AuthHandler;
@@ -201,6 +203,8 @@ public class AccountServiceTest extends WingsBaseTest {
                                    .withCompanyName(HARNESS_NAME)
                                    .withAccountName(HARNESS_NAME)
                                    .withAccountKey("ACCOUNT_KEY")
+                                   .withDefaultExperience(DefaultExperience.NG)
+                                   .withCreatedFromNG(false)
                                    .withLicenseInfo(getLicenseInfo(AccountStatus.ACTIVE, accountType))
                                    .build(),
         false);
@@ -229,11 +233,13 @@ public class AccountServiceTest extends WingsBaseTest {
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
   public void testGetAccountDetails() {
-    when(configuration.getClusterName()).thenReturn(CLUSTER_NAME);
+    when(configuration.getDeploymentClusterName()).thenReturn(CLUSTER_NAME);
     Account account = setUpDataForTestingSetAccountStatusInternal(AccountType.PAID);
-    AccountDetails details = accountService.getDetails(account.getUuid());
+    AccountDetails details = accountService.getAccountDetails(account.getUuid());
     assertThat(details.getCluster()).isEqualTo(CLUSTER_NAME);
     assertThat(details.getAccountName()).isEqualTo(HARNESS_NAME);
+    assertThat(details.getDefaultExperience()).isEqualTo(DefaultExperience.NG);
+    assertThat(details.isCreatedFromNG()).isEqualTo(false);
     assertThat(details.getLicenseInfo().getAccountType()).isEqualTo(AccountType.PAID);
   }
 
@@ -482,6 +488,22 @@ public class AccountServiceTest extends WingsBaseTest {
                           .build();
     wingsPersistence.save(account);
     account.setCompanyName(HARNESS_NAME);
+    accountService.update(account);
+    assertThat(wingsPersistence.get(Account.class, account.getUuid())).isEqualTo(account);
+  }
+
+  @Test
+  @Owner(developers = RAMA)
+  @Category(UnitTests.class)
+  public void shouldUpdateDefaultExperience() {
+    Account account = anAccount()
+                          .withCompanyName("Wings")
+                          .withAccountName("Wings")
+                          .withWhitelistedDomains(Collections.singleton("mike@harness.io"))
+                          .withDefaultExperience(DefaultExperience.CG)
+                          .build();
+    wingsPersistence.save(account);
+    account.setDefaultExperience(DefaultExperience.NG);
     accountService.update(account);
     assertThat(wingsPersistence.get(Account.class, account.getUuid())).isEqualTo(account);
   }
@@ -953,6 +975,72 @@ public class AccountServiceTest extends WingsBaseTest {
     assertThat(accountUpdated).isTrue();
     account = accountService.get(account.getUuid());
     assertThat(account.getCompanyName()).isEqualTo(newCompanyName);
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void test_enableHarnessUserGroupAccess() {
+    String accountId = UUIDGenerator.generateUuid();
+    Account account = anAccount()
+                          .withUuid(accountId)
+                          .withCompanyName("CompanyName")
+                          .withAccountName("Account Name 1")
+                          .withAccountKey("ACCOUNT_KEY")
+                          .withLicenseInfo(getLicenseInfo())
+                          .withWhitelistedDomains(new HashSet<>())
+                          .build();
+    account.setHarnessSupportAccessAllowed(false);
+    Account savedAccount = accountService.save(account, false);
+
+    assertThat(savedAccount.isHarnessSupportAccessAllowed()).isFalse();
+
+    boolean accountUpdated = accountService.enableHarnessUserGroupAccess(account.getUuid());
+    assertThat(accountUpdated).isTrue();
+    savedAccount = accountService.get(savedAccount.getUuid());
+    assertThat(savedAccount.isHarnessSupportAccessAllowed()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void test_disableHarnessUserGroupAccess() {
+    String accountId = UUIDGenerator.generateUuid();
+    Account account = anAccount()
+                          .withUuid(accountId)
+                          .withCompanyName("CompanyName")
+                          .withAccountName("Account Name 1")
+                          .withAccountKey("ACCOUNT_KEY")
+                          .withLicenseInfo(getLicenseInfo())
+                          .withWhitelistedDomains(new HashSet<>())
+                          .build();
+    Account savedAccount = accountService.save(account, false);
+
+    assertThat(savedAccount.isHarnessSupportAccessAllowed()).isTrue();
+
+    boolean accountUpdated = accountService.disableHarnessUserGroupAccess(account.getUuid());
+    assertThat(accountUpdated).isTrue();
+    savedAccount = accountService.get(savedAccount.getUuid());
+    assertThat(savedAccount.isHarnessSupportAccessAllowed()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = NANDAN)
+  @Category(UnitTests.class)
+  public void test_isRestrictedAccessEnabled() {
+    String accountId = UUIDGenerator.generateUuid();
+    Account account = anAccount()
+                          .withUuid(accountId)
+                          .withCompanyName("CompanyName")
+                          .withAccountName("Account Name 1")
+                          .withAccountKey("ACCOUNT_KEY")
+                          .withLicenseInfo(getLicenseInfo())
+                          .withWhitelistedDomains(new HashSet<>())
+                          .build();
+    account.setHarnessSupportAccessAllowed(false);
+    Account savedAccount = accountService.save(account, false);
+
+    assertThat(accountService.isRestrictedAccessEnabled(savedAccount.getUuid())).isTrue();
   }
 
   @Test

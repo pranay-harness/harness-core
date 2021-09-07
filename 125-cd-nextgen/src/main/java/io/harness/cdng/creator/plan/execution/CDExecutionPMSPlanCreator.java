@@ -8,18 +8,20 @@ import io.harness.cdng.creator.plan.rollback.RollbackPlanCreator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.plancreator.beans.OrchestrationConstants;
+import io.harness.plancreator.utils.CommonPlanCreatorUtils;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
-import io.harness.pms.contracts.steps.SkipType;
+import io.harness.pms.contracts.facilitators.FacilitatorType;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
-import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
+import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
-import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.common.NGSectionStep;
 import io.harness.steps.common.NGSectionStepParameters;
 
@@ -54,7 +56,9 @@ public class CDExecutionPMSPlanCreator {
             .name(OrchestrationConstants.EXECUTION_NODE_NAME)
             .stepParameters(stepParameters)
             .facilitatorObtainment(
-                FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
+                FacilitatorObtainment.newBuilder()
+                    .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+                    .build())
             .adviserObtainment(AdviserObtainment.newBuilder().setType(RollbackCustomAdviser.ADVISER_TYPE).build())
             .skipExpressionChain(false)
             .build();
@@ -74,14 +78,15 @@ public class CDExecutionPMSPlanCreator {
     for (YamlField stepYamlField : stepYamlFields) {
       Map<String, YamlField> stepYamlFieldMap = new HashMap<>();
       stepYamlFieldMap.put(stepYamlField.getNode().getUuid(), stepYamlField);
-      responseMap.put(
-          stepYamlField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(stepYamlFieldMap).build());
+      responseMap.put(stepYamlField.getNode().getUuid(),
+          PlanCreationResponse.builder().dependencies(DependenciesUtils.toDependenciesProto(stepYamlFieldMap)).build());
     }
     // Add Steps Node
     if (EmptyPredicate.isNotEmpty(stepYamlFields)) {
       YamlField stepsField =
           Preconditions.checkNotNull(executionField.getNode().getField(YAMLFieldNameConstants.STEPS));
-      PlanNode stepsNode = getStepsPlanNode(stepsField, stepYamlFields.get(0).getNode().getUuid());
+      PlanNode stepsNode = CommonPlanCreatorUtils.getStepsPlanNode(
+          stepsField.getNode().getUuid(), stepYamlFields.get(0).getNode().getUuid(), "Steps Element");
       responseMap.put(stepsNode.getUuid(), PlanCreationResponse.builder().node(stepsNode.getUuid(), stepsNode).build());
     }
 
@@ -104,19 +109,5 @@ public class CDExecutionPMSPlanCreator {
             .orElse(Collections.emptyList());
 
     return PlanCreatorUtils.getStepYamlFields(yamlNodes);
-  }
-
-  private PlanNode getStepsPlanNode(YamlField stepsYamlField, String childNodeId) {
-    StepParameters stepParameters =
-        NGSectionStepParameters.builder().childNodeId(childNodeId).logMessage("Steps Element").build();
-    return PlanNode.builder()
-        .uuid(stepsYamlField.getNode().getUuid())
-        .identifier(YAMLFieldNameConstants.STEPS)
-        .stepType(NGSectionStep.STEP_TYPE)
-        .name(YAMLFieldNameConstants.STEPS)
-        .stepParameters(stepParameters)
-        .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
-        .skipGraphType(SkipType.SKIP_NODE)
-        .build();
   }
 }

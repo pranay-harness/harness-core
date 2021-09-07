@@ -11,11 +11,12 @@ import java.util.regex.Pattern;
 @OwnedBy(CDC)
 public interface JiraConstantsNG {
   DateTimeFormatter DATE_FORMATTER = DateTimeUtils.DATE_FORMATTER;
-  DateTimeFormatter[] DATE_FORMATTERS = {DATE_FORMATTER, DateTimeFormatter.ISO_LOCAL_DATE};
+  DateTimeFormatter[] DATE_FORMATTERS = {
+      DATE_FORMATTER, DateTimeFormatter.ISO_LOCAL_DATE, DateTimeFormatter.BASIC_ISO_DATE};
 
   DateTimeFormatter DATETIME_FORMATTER = DateTimeUtils.DATETIME_FORMATTER;
   DateTimeFormatter[] DATETIME_FORMATTERS = {DATETIME_FORMATTER, DateTimeFormatter.ISO_DATE_TIME,
-      DateTimeFormatter.ISO_OFFSET_DATE_TIME, DateTimeFormatter.ISO_ZONED_DATE_TIME};
+      DateTimeFormatter.ISO_OFFSET_DATE_TIME, DateTimeFormatter.ISO_ZONED_DATE_TIME, DateTimeFormatter.ISO_INSTANT};
 
   Pattern COMMA_SPLIT_PATTERN = Pattern.compile(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
 

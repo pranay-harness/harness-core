@@ -4,13 +4,15 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.plancreator.beans.OrchestrationConstants;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
+import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.contracts.steps.SkipType;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
-import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse.PlanCreationResponseBuilder;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
@@ -46,7 +48,7 @@ public class ExecutionStepsRollbackPMSPlanCreator {
     for (YamlField stepYamlField : stepsArrayFields) {
       Map<String, YamlField> stepYamlFieldMap = new HashMap<>();
       stepYamlFieldMap.put(stepYamlField.getNode().getUuid(), stepYamlField);
-      planCreationResponseBuilder.dependencies(stepYamlFieldMap);
+      planCreationResponseBuilder.dependencies(DependenciesUtils.toDependenciesProto(stepYamlFieldMap));
     }
 
     StepParameters stepParameters = NGSectionStepParameters.builder()
@@ -61,7 +63,9 @@ public class ExecutionStepsRollbackPMSPlanCreator {
             .stepType(NGSectionStep.STEP_TYPE)
             .stepParameters(stepParameters)
             .facilitatorObtainment(
-                FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
+                FacilitatorObtainment.newBuilder()
+                    .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+                    .build())
             .skipGraphType(SkipType.SKIP_NODE)
             .build();
     return planCreationResponseBuilder.node(executionRollbackNode.getUuid(), executionRollbackNode).build();

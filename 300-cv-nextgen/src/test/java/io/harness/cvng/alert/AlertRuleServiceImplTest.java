@@ -8,15 +8,19 @@ import static io.harness.cvng.alert.util.VerificationStatus.VERIFICATION_PASSED;
 import static io.harness.cvng.beans.activity.ActivityType.CONFIG;
 import static io.harness.cvng.beans.activity.ActivityType.CUSTOM;
 import static io.harness.cvng.beans.activity.ActivityType.DEPLOYMENT;
+import static io.harness.cvng.beans.activity.ActivityType.HARNESS_CD;
 import static io.harness.cvng.beans.activity.ActivityType.INFRASTRUCTURE;
 import static io.harness.cvng.beans.activity.ActivityType.KUBERNETES;
 import static io.harness.cvng.beans.activity.ActivityType.OTHER;
+import static io.harness.cvng.beans.activity.ActivityType.PAGER_DUTY;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.VUK;
 
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -35,6 +39,11 @@ import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.alert.util.VerificationStatus;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.activity.ActivityType;
+import io.harness.cvng.client.NextGenService;
+import io.harness.ng.core.dto.OrganizationDTO;
+import io.harness.ng.core.dto.ProjectDTO;
+import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
+import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.notification.NotificationSettingType;
 import io.harness.notification.channeldetails.SlackChannel;
 import io.harness.notification.notificationclient.NotificationClient;
@@ -66,6 +75,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
   @Mock private AlertRuleAnomalyService alertRuleAnomalyService;
   @Mock private NotificationClient notificationClient;
   @Mock private Clock clock;
+  @Mock private NextGenService nextGenService;
 
   String accountId;
   String orgIdentifier;
@@ -85,9 +95,18 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
     envIdentifier = generateUuid();
     identifier = generateUuid();
 
+    when(nextGenService.getOrganization(accountId, orgIdentifier))
+        .thenReturn(OrganizationDTO.builder().name(generateUuid()).build());
+    when(nextGenService.getCachedProject(accountId, orgIdentifier, projectIdentifier))
+        .thenReturn(ProjectDTO.builder().name(generateUuid()).build());
+    when(nextGenService.getEnvironment(eq(accountId), eq(orgIdentifier), anyString(), anyString()))
+        .thenReturn(EnvironmentResponseDTO.builder().build().builder().name(generateUuid()).build());
+    when(nextGenService.getService(eq(accountId), eq(orgIdentifier), anyString(), anyString()))
+        .thenReturn(ServiceResponseDTO.builder().build().builder().name(generateUuid()).build());
     clock = Clock.fixed(Instant.parse("2020-04-22T10:02:06Z"), ZoneOffset.UTC);
     FieldUtils.writeField(alertRuleService, "clock", clock, true);
     FieldUtils.writeField(alertRuleService, "notificationClient", notificationClient, true);
+    FieldUtils.writeField(alertRuleService, "nextGenService", nextGenService, true);
   }
 
   @Test
@@ -190,7 +209,8 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
     List<ActivityType> activityTypes = alertRuleService.getActivityTypes(accountId, orgIdentifier, projectIdentifier);
 
     assertThat(activityTypes).isNotNull();
-    assertThat(activityTypes).containsExactly(DEPLOYMENT, INFRASTRUCTURE, CUSTOM, CONFIG, OTHER, KUBERNETES);
+    assertThat(activityTypes)
+        .containsExactly(DEPLOYMENT, INFRASTRUCTURE, CUSTOM, CONFIG, OTHER, KUBERNETES, HARNESS_CD, PAGER_DUTY);
   }
 
   @Test
@@ -380,7 +400,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
     assertThat(applicationArgumentCaptor.getValue().getTeam()).isEqualTo(slack_test.getTeam());
     assertThat(applicationArgumentCaptor.getValue().getTemplateId()).isEqualTo(slack_test.getTemplateId());
     assertThat(applicationArgumentCaptor.getValue().getTemplateData()).isNotEmpty();
-    assertThat(applicationArgumentCaptor.getValue().getUserGroupIds()).isEqualTo(slack_test.getUserGroupIds());
+    assertThat(applicationArgumentCaptor.getValue().getUserGroups()).isEqualTo(slack_test.getUserGroups());
   }
 
   @Test
@@ -540,7 +560,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
     assertThat(applicationArgumentCaptor.getValue().getTeam()).isEqualTo(slack_test.getTeam());
     assertThat(applicationArgumentCaptor.getValue().getTemplateId()).isEqualTo(slack_test.getTemplateId());
     assertThat(applicationArgumentCaptor.getValue().getTemplateData()).isNotEmpty();
-    assertThat(applicationArgumentCaptor.getValue().getUserGroupIds()).isEqualTo(slack_test.getUserGroupIds());
+    assertThat(applicationArgumentCaptor.getValue().getUserGroups()).isEqualTo(slack_test.getUserGroups());
   }
 
   @Test
@@ -598,7 +618,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
     assertThat(applicationArgumentCaptor.getValue().getTeam()).isEqualTo(slack_test.getTeam());
     assertThat(applicationArgumentCaptor.getValue().getTemplateId()).isEqualTo(slack_test.getTemplateId());
     assertThat(applicationArgumentCaptor.getValue().getTemplateData()).isNotEmpty();
-    assertThat(applicationArgumentCaptor.getValue().getUserGroupIds()).isEqualTo(slack_test.getUserGroupIds());
+    assertThat(applicationArgumentCaptor.getValue().getUserGroups()).isEqualTo(slack_test.getUserGroups());
   }
 
   @Test
@@ -792,7 +812,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
     assertThat(applicationArgumentCaptor.getValue().getTeam()).isEqualTo(slack_test.getTeam());
     assertThat(applicationArgumentCaptor.getValue().getTemplateId()).isEqualTo(slack_test.getTemplateId());
     assertThat(applicationArgumentCaptor.getValue().getTemplateData()).isNotEmpty();
-    assertThat(applicationArgumentCaptor.getValue().getUserGroupIds()).isEqualTo(slack_test.getUserGroupIds());
+    assertThat(applicationArgumentCaptor.getValue().getUserGroups()).isEqualTo(slack_test.getUserGroups());
   }
 
   @Test
@@ -1100,7 +1120,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
     assertThat(applicationArgumentCaptor.getValue().getTeam()).isEqualTo(slack_test.getTeam());
     assertThat(applicationArgumentCaptor.getValue().getTemplateId()).isEqualTo(slack_test.getTemplateId());
     assertThat(applicationArgumentCaptor.getValue().getTemplateData()).isNotEmpty();
-    assertThat(applicationArgumentCaptor.getValue().getUserGroupIds()).isEqualTo(slack_test.getUserGroupIds());
+    assertThat(applicationArgumentCaptor.getValue().getUserGroups()).isEqualTo(slack_test.getUserGroups());
   }
 
   @Test
@@ -1178,7 +1198,7 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
         .team(Team.CV)
         .templateId("slack_vanilla")
         .templateData(Collections.emptyMap())
-        .userGroupIds(emptyList())
+        .userGroups(emptyList())
         .build();
   }
 

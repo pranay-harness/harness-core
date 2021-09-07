@@ -1,0 +1,15 @@
+syntax = "proto3";
+package io.harness.eventsframework.schemas.instancestatstimeseriesevent;
+
+option java_multiple_files = true;
+option go_package = "953_events_api";
+
+message TimeseriesBatchEventInfo {
+  string accountId = 1;
+  int64 timestamp = 2;
+  repeated DataPoint dataPointList = 3;
+}
+
+message DataPoint {
+  map<string, string> data = 1;
+}

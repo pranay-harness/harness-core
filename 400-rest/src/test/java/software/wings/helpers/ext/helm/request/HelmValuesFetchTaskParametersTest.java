@@ -7,6 +7,7 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
@@ -19,12 +20,13 @@ import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.service.impl.ContainerServiceParams;
 
+import java.util.Collections;
 import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @OwnedBy(CDP)
-public class HelmValuesFetchTaskParametersTest {
+public class HelmValuesFetchTaskParametersTest extends CategoryTest {
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
@@ -41,12 +43,14 @@ public class HelmValuesFetchTaskParametersTest {
         .containsExactly(CapabilityType.HELM_INSTALL, CapabilityType.HTTP, CapabilityType.CHART_MUSEUM);
 
     helmChartConfigParams.setHelmRepoConfig(GCSHelmRepoConfig.builder().build());
+    taskParameters.setDelegateSelectors(Collections.singleton("delegate1"));
     capabilities = taskParameters.fetchRequiredExecutionCapabilities(null);
-    assertThat(capabilities.size()).isEqualTo(2);
+    assertThat(capabilities.size()).isEqualTo(3);
     assertThat(capabilities)
         .extracting(ExecutionCapability::getCapabilityType)
-        .containsExactly(CapabilityType.HELM_INSTALL, CapabilityType.CHART_MUSEUM);
+        .containsExactly(CapabilityType.HELM_INSTALL, CapabilityType.CHART_MUSEUM, CapabilityType.SELECTORS);
 
+    taskParameters.setDelegateSelectors(null);
     helmChartConfigParams.setHelmRepoConfig(
         HttpHelmRepoConfig.builder().chartRepoUrl("http://www.example.com").build());
     capabilities = taskParameters.fetchRequiredExecutionCapabilities(null);

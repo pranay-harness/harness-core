@@ -8,7 +8,8 @@ import io.harness.pms.contracts.commons.RepairActionCode;
 @OwnedBy(CDC)
 public enum RollbackStrategy {
   STAGE_ROLLBACK("StageRollback"),
-  STEP_GROUP_ROLLBACK("StepGroupRollback");
+  STEP_GROUP_ROLLBACK("StepGroupRollback"),
+  UNKNOWN("Unknown");
 
   String yamlName;
 
@@ -19,6 +20,15 @@ public enum RollbackStrategy {
   public static RollbackStrategy fromRepairActionCode(RepairActionCode repairActionCode) {
     for (RollbackStrategy value : RollbackStrategy.values()) {
       if (value.name().equals(repairActionCode.name())) {
+        return value;
+      }
+    }
+    return null;
+  }
+
+  public static RollbackStrategy fromYamlName(String yamlName) {
+    for (RollbackStrategy value : RollbackStrategy.values()) {
+      if (value.yamlName.equals(yamlName)) {
         return value;
       }
     }

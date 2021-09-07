@@ -6,6 +6,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 
+import io.harness.beans.EncryptedData;
 import io.harness.exception.HarnessException;
 
 import software.wings.beans.SettingAttribute;
@@ -23,6 +24,7 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -70,6 +72,24 @@ public abstract class SettingValueYamlHandler<Y extends SettingValue.Yaml, B ext
       return null;
     }
     return secretManager.getEncryptedYamlRef(accountId, secretId);
+  }
+
+  protected String getSecretNameFromId(String accountId, String secretId) {
+    if (isEmpty(accountId) || isEmpty(secretId)) {
+      return null;
+    }
+    EncryptedData data = secretManager.getSecretById(accountId, secretId);
+    Preconditions.checkNotNull(data, "Invalid secret present in service verification config");
+    return data.getName();
+  }
+
+  protected String getSecretIdFromName(String accountId, String secretName) {
+    if (isEmpty(accountId) || isEmpty(secretName)) {
+      return null;
+    }
+    EncryptedData data = secretManager.getSecretByName(accountId, secretName);
+    Preconditions.checkNotNull(data, "No secret present with name: " + secretName);
+    return data.getUuid();
   }
 
   protected void toYaml(Y yaml, SettingAttribute settingAttribute, String appId) {

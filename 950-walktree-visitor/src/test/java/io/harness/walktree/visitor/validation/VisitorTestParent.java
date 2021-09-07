@@ -1,7 +1,6 @@
 package io.harness.walktree.visitor.validation;
 
 import io.harness.walktree.beans.DummyVisitorField;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -30,10 +29,5 @@ public class VisitorTestParent implements Visitable {
     VisitableChildren visitableChildren = VisitableChildren.builder().build();
     visitableChildren.add("visitorTestChild", visitorTestChild);
     return visitableChildren;
-  }
-
-  @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName("dummyTestPOJO").build();
   }
 }

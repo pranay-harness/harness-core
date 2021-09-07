@@ -1,10 +1,12 @@
 package io.harness.serializer;
 
 import io.harness.EntityType;
+import io.harness.accesscontrol.serializer.AccessControlClientRegistrars;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cvng.cdng.beans.CVStepInfoBase;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.plancreator.steps.StepElementConfig;
+import io.harness.pms.serializer.kryo.PmsContractsKryoRegistrar;
 import io.harness.serializer.kryo.CVNGKryoRegistrar;
 import io.harness.serializer.morphia.CVNextGenMorphiaRegister;
 import io.harness.serializer.morphia.NotificationClientRegistrars;
@@ -23,7 +25,12 @@ public class CvNextGenRegistrars {
           .addAll(CvNextGenCommonsRegistrars.kryoRegistrars)
           .addAll(ConnectorNextGenRegistrars.kryoRegistrars)
           .add(CVNGKryoRegistrar.class)
+          .add(PipelineServiceUtilKryoRegistrar.class)
+          .add(PmsContractsKryoRegistrar.class)
           .addAll(NotificationClientRegistrars.kryoRegistrars)
+          .addAll(OrchestrationBeansRegistrars.kryoRegistrars)
+          .addAll(OrchestrationStepsModuleRegistrars.kryoRegistrars)
+          .addAll(AccessControlClientRegistrars.kryoRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -32,6 +39,9 @@ public class CvNextGenRegistrars {
           .add(CVNextGenMorphiaRegister.class)
           .addAll(NotificationClientRegistrars.morphiaRegistrars)
           .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
+          .addAll(OrchestrationBeansRegistrars.morphiaRegistrars)
+          .addAll(OrchestrationStepsModuleRegistrars.morphiaRegistrars)
+          .addAll(PrimaryVersionManagerRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =
@@ -46,7 +56,7 @@ public class CvNextGenRegistrars {
                    .availableAtProjectLevel(true)
                    .availableAtOrgLevel(false)
                    .availableAtAccountLevel(false)
-                   .clazz(CVStepInfoBase.class)
+                   .clazz(StepElementConfig.class)
                    .build())
           .build();
 }

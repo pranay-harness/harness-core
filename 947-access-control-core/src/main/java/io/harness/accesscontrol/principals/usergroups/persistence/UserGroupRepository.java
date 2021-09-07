@@ -13,8 +13,7 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 
 @OwnedBy(PL)
 @HarnessRepo
-public interface UserGroupRepository
-    extends PagingAndSortingRepository<UserGroupDBO, String>, UserGroupCustomRepository {
+public interface UserGroupRepository extends PagingAndSortingRepository<UserGroupDBO, String> {
   Optional<UserGroupDBO> findByIdentifierAndScopeIdentifier(String identifier, String scopeIdentifier);
 
   Page<UserGroupDBO> findByScopeIdentifier(String scopeIdentifier, Pageable pageable);

@@ -17,6 +17,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
+import io.harness.delegate.beans.pcf.ResizeStrategy;
 import io.harness.delegate.task.aws.LoadBalancerDetailsForBGDeployment;
 import io.harness.delegate.task.spotinst.request.SpotInstSetupTaskParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstSetupTaskResponse;
@@ -29,7 +30,6 @@ import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
 import io.harness.tasks.ResponseData;
 
-import software.wings.beans.ResizeStrategy;
 import software.wings.beans.TaskType;
 import software.wings.service.impl.spotinst.SpotInstCommandRequest;
 import software.wings.service.intfc.ActivityService;
@@ -114,9 +114,11 @@ public class SpotInstServiceSetup extends State {
         spotInstTaskParameters.getAppId(), TaskType.SPOTINST_COMMAND_TASK, spotInstTaskParameters.getActivityId(),
         spotinstSetupStateExecutionData.getEnvId(), spotinstSetupStateExecutionData.getInfraMappingId(),
         spotinstSetupStateExecutionData.getSpotinstCommandRequest(),
-        spotinstSetupStateExecutionData.getEnvironmentType(), spotinstSetupStateExecutionData.getServiceId());
+        spotinstSetupStateExecutionData.getEnvironmentType(), spotinstSetupStateExecutionData.getServiceId(),
+        isSelectionLogsTrackingForTasksEnabled());
 
     delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
 
     return ExecutionResponse.builder()
         .correlationIds(Arrays.asList(spotInstTaskParameters.getActivityId()))
@@ -273,5 +275,10 @@ public class SpotInstServiceSetup extends State {
       invalidFields.put("targetInstances", "Target Instances is needed");
     }
     return invalidFields;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

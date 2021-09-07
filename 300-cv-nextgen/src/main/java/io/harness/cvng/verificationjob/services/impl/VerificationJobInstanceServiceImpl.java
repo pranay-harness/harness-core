@@ -4,6 +4,7 @@ import static io.harness.cvng.activity.CVActivityConstants.HEALTH_VERIFICATION_R
 import static io.harness.cvng.beans.DataCollectionExecutionStatus.QUEUED;
 import static io.harness.cvng.beans.DataCollectionExecutionStatus.SUCCESS;
 import static io.harness.cvng.core.utils.DateTimeUtils.roundDownTo1MinBoundary;
+import static io.harness.cvng.metrics.CVNGMetricsUtils.VERIFICATION_JOB_INSTANCE_EXTRA_TIME;
 import static io.harness.cvng.verificationjob.entities.VerificationJobInstance.ENV_IDENTIFIER_KEY;
 import static io.harness.cvng.verificationjob.entities.VerificationJobInstance.ORG_IDENTIFIER_KEY;
 import static io.harness.cvng.verificationjob.entities.VerificationJobInstance.PROJECT_IDENTIFIER_KEY;
@@ -27,12 +28,14 @@ import io.harness.cvng.beans.DataCollectionInfo;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.client.NextGenService;
+import io.harness.cvng.core.beans.DatasourceTypeDTO;
 import io.harness.cvng.core.beans.TimeRange;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.DataCollectionTask;
 import io.harness.cvng.core.entities.DataCollectionTask.Type;
 import io.harness.cvng.core.entities.DeploymentDataCollectionTask;
 import io.harness.cvng.core.entities.MetricCVConfig;
+import io.harness.cvng.core.entities.VerificationTask;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
@@ -40,6 +43,8 @@ import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
+import io.harness.cvng.metrics.CVNGMetricsUtils;
+import io.harness.cvng.metrics.beans.AccountMetricContext;
 import io.harness.cvng.statemachine.services.intfc.OrchestrationService;
 import io.harness.cvng.verificationjob.beans.AdditionalInfo;
 import io.harness.cvng.verificationjob.beans.TestVerificationBaselineExecutionDTO;
@@ -51,6 +56,7 @@ import io.harness.cvng.verificationjob.entities.VerificationJobInstance.Executio
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ProgressLog;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceKeys;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
+import io.harness.metrics.service.api.MetricService;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.persistence.HPersistence;
@@ -96,6 +102,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   @Inject private NextGenService nextGenService;
   @Inject private AlertRuleService alertRuleService;
   @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
+  @Inject private MetricService metricService;
 
   @Override
   public String create(VerificationJobInstance verificationJobInstance) {
@@ -179,17 +186,15 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
 
   private void createAndQueueHealthVerification(VerificationJobInstance verificationJobInstance) {
     // We dont do any data collection for health verification. So just queue the analysis.
-    VerificationJob verificationJob = verificationJobInstance.getResolvedJob();
     List<CVConfig> cvConfigs = getCVConfigsForVerificationJob(verificationJobInstance.getResolvedJob());
     cvConfigs.forEach(cvConfig -> {
       String verificationTaskId = verificationTaskService.create(
-          cvConfig.getAccountId(), cvConfig.getUuid(), verificationJobInstance.getUuid());
+          cvConfig.getAccountId(), cvConfig.getUuid(), verificationJobInstance.getUuid(), cvConfig.getType());
       log.info("For verificationJobInstance with ID: {}, creating a new health analysis with verificationTaskID {}",
           verificationJobInstance.getUuid(), verificationTaskId);
       orchestrationService.queueAnalysis(verificationTaskId,
           ((HealthVerificationJob) verificationJobInstance.getResolvedJob())
-              .getPreActivityVerificationStartTime(verificationJobInstance.getStartTime(),
-                  verificationJobInstance.getPreActivityVerificationStartTime()),
+              .getPreActivityVerificationStartTime(verificationJobInstance.getStartTime()),
           verificationJobInstance.getStartTime());
     });
 
@@ -199,7 +204,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   public List<CVConfig> getCVConfigsForVerificationJob(VerificationJob verificationJob) {
     Preconditions.checkNotNull(verificationJob);
     List<String> monitoringSourceFilter = verificationJob.getMonitoringSources();
-    if (verificationJob.isDefaultJob()) {
+    if (verificationJob.isDefaultJob() || verificationJob.isAllMonitoringSourcesEnabled()) {
       monitoringSourceFilter = null;
     }
 
@@ -215,7 +220,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     if (verificationJobInstance.isExecutionTimedOut(clock.instant())) {
       log.error("VerificationJobInstance timed out {} endTime: {}", verificationJobInstance,
           verificationJobInstance.getEndTime());
-      // TODO: add telemetry and alerting
+      metricService.incCounter(CVNGMetricsUtils.getVerificationJobInstanceStatusMetricName(ExecutionStatus.TIMEOUT));
       UpdateOperations<VerificationJobInstance> updateOperations =
           hPersistence.createUpdateOperations(VerificationJobInstance.class)
               .set(VerificationJobInstanceKeys.executionStatus, ExecutionStatus.TIMEOUT);
@@ -231,11 +236,23 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   @Override
   public CVConfig getEmbeddedCVConfig(String cvConfigId, String verificationJobInstanceId) {
     VerificationJobInstance verificationJobInstance = getVerificationJobInstance(verificationJobInstanceId);
-    if (verificationJobInstance.getCvConfigMap()
-        != null) { // TODO: this is just migration logic. Remove this check once VerificationJobInstances expires.
-      return verificationJobInstance.getCvConfigMap().get(cvConfigId);
-    }
-    return cvConfigService.get(cvConfigId);
+    return verificationJobInstance.getCvConfigMap().get(cvConfigId);
+  }
+
+  @Override
+  public Set<DatasourceTypeDTO> getDataSourcetypes(List<String> verificationJobInstanceIds) {
+    Preconditions.checkNotNull(verificationJobInstanceIds);
+    List<VerificationJobInstance> verificationJobInstances = get(verificationJobInstanceIds);
+    Set<DatasourceTypeDTO> datasourceTypeDTOSet = new HashSet<>();
+    verificationJobInstances.forEach(verificationJobInstance -> {
+      verificationJobInstance.getCvConfigMap().values().forEach(cvConfig -> {
+        datasourceTypeDTOSet.add(DatasourceTypeDTO.builder()
+                                     .verificationType(cvConfig.getVerificationType())
+                                     .dataSourceType(cvConfig.getType())
+                                     .build());
+      });
+    });
+    return datasourceTypeDTOSet;
   }
 
   @Override
@@ -252,22 +269,52 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   public void logProgress(ProgressLog progressLog) {
     progressLog.setCreatedAt(clock.instant());
     progressLog.validate();
-    String verificationJobInstanceId =
-        verificationTaskService.getVerificationJobInstanceId(progressLog.getVerificationTaskId());
-    UpdateOperations<VerificationJobInstance> verificationJobInstanceUpdateOperations =
-        hPersistence.createUpdateOperations(VerificationJobInstance.class)
-            .addToSet(VerificationJobInstanceKeys.progressLogs, progressLog);
-    if (progressLog.shouldUpdateJobStatus()) {
-      verificationJobInstanceUpdateOperations.set(
-          VerificationJobInstanceKeys.executionStatus, progressLog.getVerificationJobExecutionStatus());
+    VerificationTask verificationTask = verificationTaskService.get(progressLog.getVerificationTaskId());
+    try (AccountMetricContext accountMetricContext = new AccountMetricContext(verificationTask.getAccountId())) {
+      String verificationJobInstanceId = verificationTask.getVerificationJobInstanceId();
+      UpdateOperations<VerificationJobInstance> verificationJobInstanceUpdateOperations =
+          hPersistence.createUpdateOperations(VerificationJobInstance.class)
+              .addToSet(VerificationJobInstanceKeys.progressLogs, progressLog);
+      if (progressLog.shouldUpdateJobStatus()) {
+        ExecutionStatus executionStatus = progressLog.getVerificationJobExecutionStatus();
+        metricService.incCounter(CVNGMetricsUtils.getVerificationJobInstanceStatusMetricName(executionStatus));
+        verificationJobInstanceUpdateOperations.set(VerificationJobInstanceKeys.executionStatus, executionStatus);
+      }
+      UpdateOptions options = new UpdateOptions();
+      options.upsert(true);
+      hPersistence.getDatastore(VerificationJobInstance.class)
+          .update(hPersistence.createQuery(VerificationJobInstance.class)
+                      .filter(VerificationJobInstanceKeys.uuid, verificationJobInstanceId),
+              verificationJobInstanceUpdateOperations, options);
+      updateStatusIfDone(verificationJobInstanceId);
     }
-    UpdateOptions options = new UpdateOptions();
-    options.upsert(true);
-    hPersistence.getDatastore(VerificationJobInstance.class)
-        .update(hPersistence.createQuery(VerificationJobInstance.class)
-                    .filter(VerificationJobInstanceKeys.uuid, verificationJobInstanceId),
-            verificationJobInstanceUpdateOperations, options);
-    updateStatusIfDone(verificationJobInstanceId);
+  }
+
+  @Override
+  public void abort(List<String> verficationJobInstanceIds) {
+    UpdateOperations<VerificationJobInstance> abortUpdateOperation =
+        hPersistence.createUpdateOperations(VerificationJobInstance.class)
+            .set(VerificationJobInstanceKeys.executionStatus, ExecutionStatus.ABORTED);
+    Query<VerificationJobInstance> query = hPersistence.createQuery(VerificationJobInstance.class)
+                                               .field(VerificationJobInstanceKeys.uuid)
+                                               .in(verficationJobInstanceIds)
+                                               .field(VerificationJobInstanceKeys.executionStatus)
+                                               .in(ExecutionStatus.nonFinalStatuses());
+    hPersistence.update(query, abortUpdateOperation);
+    List<String> verificationTaskIds = verificationTaskService.maybeGetVerificationTaskIds(verficationJobInstanceIds);
+    dataCollectionTaskService.abortDeploymentDataCollectionTasks(verificationTaskIds);
+  }
+
+  @Override
+  public List<String> getCVConfigIdsForVerificationJobInstance(
+      String verificationJobInstanceId, List<String> filterIdentifiers) {
+    VerificationJobInstance verificationJobInstance = getVerificationJobInstance(verificationJobInstanceId);
+    return verificationJobInstance.getCvConfigMap()
+        .values()
+        .stream()
+        .filter(cvConfig -> filterIdentifiers.contains(cvConfig.getIdentifier()))
+        .map(cvConfig -> cvConfig.getUuid())
+        .collect(Collectors.toList());
   }
 
   private void updateStatusIfDone(String verificationJobInstanceId) {
@@ -289,6 +336,10 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
         == verificationTaskCount) {
       verificationJobInstance.setExecutionStatus(ExecutionStatus.SUCCESS);
       ActivityVerificationStatus activityVerificationStatus = getDeploymentVerificationStatus(verificationJobInstance);
+      metricService.incCounter(CVNGMetricsUtils.getVerificationJobInstanceStatusMetricName(activityVerificationStatus));
+      metricService.incCounter(CVNGMetricsUtils.getVerificationJobInstanceStatusMetricName(ExecutionStatus.SUCCESS));
+      metricService.recordDuration(
+          VERIFICATION_JOB_INSTANCE_EXTRA_TIME, verificationJobInstance.getExtraTimeTakenToFinish(clock.instant()));
       UpdateOperations<VerificationJobInstance> verificationJobInstanceUpdateOperations =
           hPersistence.createUpdateOperations(VerificationJobInstance.class);
       verificationJobInstanceUpdateOperations.set(VerificationJobInstanceKeys.executionStatus, SUCCESS)
@@ -297,6 +348,10 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
           .update(hPersistence.createQuery(VerificationJobInstance.class)
                       .filter(VerificationJobInstanceKeys.uuid, verificationJobInstanceId),
               verificationJobInstanceUpdateOperations, new UpdateOptions());
+
+      Set<String> verificatioTaskIds = verificationTaskService.getVerificationTaskIds(
+          verificationJobInstance.getAccountId(), verificationJobInstanceId);
+      orchestrationService.markCompleted(verificatioTaskIds);
 
       alertRuleService.processDeploymentVerificationJobInstanceId(verificationJobInstanceId);
     }
@@ -513,6 +568,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     int failed = 0;
     int notStarted = 0;
     int errors = 0;
+    int aborted = 0;
     List<Risk> latestRiskScores = new ArrayList<>();
     for (int i = 0; i < verificationJobInstances.size(); i++) {
       VerificationJobInstance verificationJobInstance = verificationJobInstances.get(i);
@@ -543,6 +599,9 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
           }
           progress++;
           break;
+        case ABORTED:
+          aborted++;
+          break;
         default:
           throw new IllegalStateException(verificationJobInstance.getExecutionStatus() + " not supported");
       }
@@ -556,6 +615,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
         .total(total)
         .failed(failed)
         .errors(errors)
+        .aborted(aborted)
         .passed(passed)
         .progress(progress)
         .notStarted(notStarted)
@@ -568,6 +628,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
         .startTime(verificationJobInstance.getStartTime().toEpochMilli())
         .durationMs(verificationJobInstance.getResolvedJob().getDuration().toMillis())
         .progressPercentage(verificationJobInstance.getProgressPercentage())
+        .remainingTimeMs(verificationJobInstance.getRemainingTime(clock.instant()).toMillis())
         .risk(getLatestRisk(verificationJobInstance).orElse(null))
         .environmentName(getEnvironment(verificationJobInstance.getResolvedJob()).getName())
         .jobName(verificationJobInstance.getResolvedJob().getJobName())
@@ -663,7 +724,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
       populateMetricPack(cvConfig);
       List<DataCollectionTask> dataCollectionTasks = new ArrayList<>();
       String verificationTaskId = verificationTaskService.create(
-          cvConfig.getAccountId(), cvConfig.getUuid(), verificationJobInstance.getUuid());
+          cvConfig.getAccountId(), cvConfig.getUuid(), verificationJobInstance.getUuid(), cvConfig.getType());
       DataCollectionInfoMapper dataCollectionInfoMapper =
           injector.getInstance(Key.get(DataCollectionInfoMapper.class, Names.named(cvConfig.getType().name())));
 
@@ -680,6 +741,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
                                     .validAfter(preDeploymentTimeRange.get().getEndTime().plus(
                                         verificationJobInstance.getDataCollectionDelay()))
                                     .accountId(verificationJob.getAccountId())
+                                    .type(Type.DEPLOYMENT)
                                     .status(QUEUED)
                                     .dataCollectionInfo(preDeploymentDataCollectionInfo)
                                     .queueAnalysis(cvConfig.queueAnalysisForPreDeploymentTask())
@@ -702,6 +764,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
                 .endTime(timeRange.getEndTime())
                 .validAfter(timeRange.getEndTime().plus(verificationJobInstance.getDataCollectionDelay()))
                 .accountId(verificationJob.getAccountId())
+                .type(Type.DEPLOYMENT)
                 .status(QUEUED)
                 .dataCollectionInfo(dataCollectionInfo)
                 .build());

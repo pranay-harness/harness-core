@@ -2,8 +2,8 @@ package io.harness.ccm.commons.dao;
 
 import static io.harness.persistence.HQuery.excludeValidate;
 
-import io.harness.ccm.commons.entities.CEMetadataRecord;
-import io.harness.ccm.commons.entities.CEMetadataRecord.CEMetadataRecordKeys;
+import io.harness.ccm.commons.entities.batch.CEMetadataRecord;
+import io.harness.ccm.commons.entities.batch.CEMetadataRecord.CEMetadataRecordKeys;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;
@@ -27,6 +27,11 @@ public class CEMetadataRecordDao {
 
     if (null != ceMetadataRecord.getClusterDataConfigured()) {
       updateOperations.set(CEMetadataRecordKeys.clusterDataConfigured, ceMetadataRecord.getClusterDataConfigured());
+    }
+
+    if (null != ceMetadataRecord.getClusterConnectorConfigured()) {
+      updateOperations.set(
+          CEMetadataRecordKeys.clusterConnectorConfigured, ceMetadataRecord.getClusterConnectorConfigured());
     }
 
     if (null != ceMetadataRecord.getAwsConnectorConfigured()) {

@@ -2,20 +2,22 @@ package io.harness.batch.processing;
 
 import static io.harness.rule.OwnerRule.AVMOHAN;
 
+import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.concurent.HTimeLimiterMocker;
 import io.harness.mongo.IndexManager;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
 
 import com.google.common.base.VerifyException;
+import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import java.time.Duration;
 import lombok.val;
@@ -38,11 +40,12 @@ public class ApplicationReadyListenerTest extends CategoryTest {
   @Mock private TimeScaleDBService timeScaleDBService;
   @Mock private Morphia morphia;
   @Mock private IndexManager indexManager;
+  @Mock private TimeLimiter timeLimiter;
 
   @Before
   public void setUp() throws Exception {
     MockEnvironment env = new MockEnvironment();
-    listener = new ApplicationReadyListener(timeScaleDBService, hPersistence, morphia, indexManager, env);
+    listener = new ApplicationReadyListener(timeScaleDBService, hPersistence, morphia, indexManager, timeLimiter, env);
   }
 
   @Test
@@ -69,7 +72,8 @@ public class ApplicationReadyListenerTest extends CategoryTest {
   public void shouldPassIfTsDbNotConnectableButEnsureTimescaleFalse() throws Exception {
     MockEnvironment env = new MockEnvironment();
     env.setProperty("ensure-timescale", "false");
-    val listener = new ApplicationReadyListener(timeScaleDBService, hPersistence, morphia, indexManager, env);
+    val listener =
+        new ApplicationReadyListener(timeScaleDBService, hPersistence, morphia, indexManager, timeLimiter, env);
     assertThatCode(listener::ensureTimescaleConnectivity).doesNotThrowAnyException();
   }
 
@@ -78,7 +82,7 @@ public class ApplicationReadyListenerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldFailIfMongoConnectivityRuntimeError() throws Exception {
     doReturn(Duration.ofSeconds(5)).when(hPersistence).healthExpectedResponseTimeout();
-    doThrow(new RuntimeException("unknown")).when(hPersistence).isHealthy();
+    HTimeLimiterMocker.mockCallInterruptible(timeLimiter, ofSeconds(5)).thenThrow(new RuntimeException("unknown"));
     assertThatThrownBy(() -> listener.ensureMongoConnectivity())
         .withFailMessage("unknown")
         .isInstanceOf(RuntimeException.class);
@@ -89,7 +93,8 @@ public class ApplicationReadyListenerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldFailIfMongoConnectivityTimeoutError() throws Exception {
     doReturn(Duration.ofSeconds(5)).when(hPersistence).healthExpectedResponseTimeout();
-    doThrow(new UncheckedTimeoutException("timed out")).when(hPersistence).isHealthy();
+    HTimeLimiterMocker.mockCallInterruptible(timeLimiter, ofSeconds(5))
+        .thenThrow(new UncheckedTimeoutException("timed out"));
     assertThatThrownBy(() -> listener.ensureMongoConnectivity())
         .withFailMessage("timed out")
         .isInstanceOf(UncheckedTimeoutException.class);
@@ -101,6 +106,7 @@ public class ApplicationReadyListenerTest extends CategoryTest {
   public void shouldPassIfMongoConnectivityDoesNotThrow() throws Exception {
     doReturn(Duration.ofSeconds(5)).when(hPersistence).healthExpectedResponseTimeout();
     doNothing().when(hPersistence).isHealthy();
+    HTimeLimiterMocker.mockCallInterruptible(timeLimiter, ofSeconds(5)).thenReturn(null);
     assertThatCode(() -> listener.ensureMongoConnectivity()).doesNotThrowAnyException();
   }
 }

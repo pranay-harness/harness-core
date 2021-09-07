@@ -8,6 +8,7 @@ import static io.harness.beans.OrchestrationWorkflowType.BLUE_GREEN;
 import static io.harness.beans.OrchestrationWorkflowType.CANARY;
 import static io.harness.beans.OrchestrationWorkflowType.MULTI_SERVICE;
 import static io.harness.beans.OrchestrationWorkflowType.ROLLING;
+import static io.harness.delegate.beans.pcf.ResizeStrategy.RESIZE_NEW_FIRST;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.SATYAM;
@@ -15,7 +16,6 @@ import static io.harness.rule.OwnerRule.SATYAM;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.command.Command.Builder.aCommand;
@@ -54,6 +54,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -115,6 +116,8 @@ public class AwsAmiServiceSetupTest extends WingsBaseTest {
   @Mock private AwsAmiServiceStateHelper mockAwsAmiServiceStateHelper;
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private AwsStateHelper awsStateHelper;
+  @Mock private FeatureFlagService mockFeatureFlagService;
+
   @InjectMocks private AwsAmiServiceSetup state = new AwsAmiServiceSetup("stateName");
 
   @Test
@@ -143,6 +146,7 @@ public class AwsAmiServiceSetupTest extends WingsBaseTest {
     WorkflowStandardParams mockParams = mock(WorkflowStandardParams.class);
     doReturn(EmbeddedUser.builder().email("user@harness.io").name("user").build()).when(mockParams).getCurrentUser();
     doReturn(mockParams).when(mockContext).getContextElement(any());
+    doReturn(false).when(mockFeatureFlagService).isEnabled(any(), any());
     String revision = "ami-1234";
     Artifact artifact = anArtifact().withRevision(revision).build();
     doReturn(artifact).when(mockContext).getDefaultArtifactForService(anyString());

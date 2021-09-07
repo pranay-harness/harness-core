@@ -1,12 +1,20 @@
 package software.wings.app;
 
+import static io.harness.AuthorizationServiceHeader.DELEGATE_SERVICE;
 import static io.harness.AuthorizationServiceHeader.MANAGER;
+import static io.harness.annotations.dev.HarnessModule._360_CG_MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJECT_ENTITY;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
+import static io.harness.outbox.OutboxSDKConstants.DEFAULT_OUTBOX_POLL_CONFIGURATION;
 
+import io.harness.AccessControlClientModule;
 import io.harness.CgOrchestrationModule;
 import io.harness.SecretManagementCoreModule;
-import io.harness.annotations.dev.HarnessModule;
+import io.harness.accesscontrol.AccessControlAdminClientConfiguration;
+import io.harness.accesscontrol.AccessControlAdminClientModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.annotations.retry.MethodExecutionHelper;
@@ -14,9 +22,7 @@ import io.harness.annotations.retry.RetryOnException;
 import io.harness.annotations.retry.RetryOnExceptionInterceptor;
 import io.harness.artifacts.gcr.service.GcrApiService;
 import io.harness.artifacts.gcr.service.GcrApiServiceImpl;
-import io.harness.callback.DelegateCallback;
-import io.harness.callback.DelegateCallbackToken;
-import io.harness.callback.MongoDatabase;
+import io.harness.audit.client.remote.AuditClientModule;
 import io.harness.ccm.anomaly.service.impl.AnomalyServiceImpl;
 import io.harness.ccm.anomaly.service.itfc.AnomalyService;
 import io.harness.ccm.billing.GcpBillingService;
@@ -29,6 +35,8 @@ import io.harness.ccm.budget.BudgetService;
 import io.harness.ccm.budget.BudgetServiceImpl;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.ClusterRecordServiceImpl;
+import io.harness.ccm.commons.service.impl.InstanceDataServiceImpl;
+import io.harness.ccm.commons.service.intf.InstanceDataService;
 import io.harness.ccm.communication.CECommunicationsService;
 import io.harness.ccm.communication.CECommunicationsServiceImpl;
 import io.harness.ccm.communication.CESlackWebhookService;
@@ -37,6 +45,8 @@ import io.harness.ccm.config.CCMSettingService;
 import io.harness.ccm.config.CCMSettingServiceImpl;
 import io.harness.ccm.health.HealthStatusService;
 import io.harness.ccm.health.HealthStatusServiceImpl;
+import io.harness.ccm.ngperpetualtask.service.K8sWatchTaskService;
+import io.harness.ccm.ngperpetualtask.service.K8sWatchTaskServiceImpl;
 import io.harness.ccm.setup.CESetupServiceModule;
 import io.harness.ccm.views.service.CEReportScheduleService;
 import io.harness.ccm.views.service.CEReportTemplateBuilderService;
@@ -48,21 +58,12 @@ import io.harness.ccm.views.service.impl.CEReportTemplateBuilderServiceImpl;
 import io.harness.ccm.views.service.impl.CEViewServiceImpl;
 import io.harness.ccm.views.service.impl.ViewCustomFieldServiceImpl;
 import io.harness.ccm.views.service.impl.ViewsBillingServiceImpl;
-import io.harness.cf.CFApi;
-import io.harness.cf.CfClientConfig;
-import io.harness.cf.CfMigrationConfig;
-import io.harness.cf.client.api.CfClient;
-import io.harness.cf.openapi.ApiClient;
 import io.harness.config.PipelineConfig;
-import io.harness.configuration.DeployMode;
 import io.harness.connector.ConnectorResourceClientModule;
+import io.harness.cv.CVCommonsServiceModule;
 import io.harness.cvng.CVNextGenCommonsServiceModule;
-import io.harness.cvng.client.CVNGService;
-import io.harness.cvng.client.CVNGServiceImpl;
 import io.harness.cvng.perpetualtask.CVDataCollectionTaskService;
 import io.harness.cvng.perpetualtask.CVDataCollectionTaskServiceImpl;
-import io.harness.cvng.state.CVNGVerificationTaskService;
-import io.harness.cvng.state.CVNGVerificationTaskServiceImpl;
 import io.harness.dashboard.DashboardSettingsService;
 import io.harness.dashboard.DashboardSettingsServiceImpl;
 import io.harness.datahandler.services.AdminAccountService;
@@ -77,8 +78,12 @@ import io.harness.delegate.DelegateConfigurationServiceProvider;
 import io.harness.delegate.DelegatePropertiesServiceProvider;
 import io.harness.delegate.chartmuseum.NGChartMuseumService;
 import io.harness.delegate.chartmuseum.NGChartMuseumServiceImpl;
+import io.harness.delegate.configuration.DelegateConfiguration;
+import io.harness.delegate.event.listener.OrganizationEntityCRUDEventListener;
+import io.harness.delegate.event.listener.ProjectEntityCRUDEventListener;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.git.NGGitServiceImpl;
+import io.harness.delegate.outbox.DelegateOutboxEventHandler;
 import io.harness.encryptors.CustomEncryptor;
 import io.harness.encryptors.Encryptors;
 import io.harness.encryptors.KmsEncryptor;
@@ -95,12 +100,9 @@ import io.harness.event.reconciliation.service.DeploymentReconService;
 import io.harness.event.reconciliation.service.DeploymentReconServiceImpl;
 import io.harness.event.timeseries.processor.instanceeventprocessor.instancereconservice.IInstanceReconService;
 import io.harness.event.timeseries.processor.instanceeventprocessor.instancereconservice.InstanceReconServiceImpl;
-import io.harness.eventsframework.EventsFrameworkConstants;
-import io.harness.eventsframework.api.Producer;
-import io.harness.eventsframework.impl.noop.NoOpProducer;
-import io.harness.eventsframework.impl.redis.RedisProducer;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.ff.FeatureFlagModule;
+import io.harness.file.FileServiceModule;
 import io.harness.git.GitClientV2;
 import io.harness.git.GitClientV2Impl;
 import io.harness.govern.ProviderMethodInterceptor;
@@ -112,12 +114,15 @@ import io.harness.governance.pipeline.service.evaluators.OnPipeline;
 import io.harness.governance.pipeline.service.evaluators.OnWorkflow;
 import io.harness.governance.pipeline.service.evaluators.PipelineStatusEvaluator;
 import io.harness.governance.pipeline.service.evaluators.WorkflowStatusEvaluator;
+import io.harness.grpc.DelegateServiceClassicGrpcClientModule;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
-import io.harness.grpc.DelegateServiceGrpcClient;
+import io.harness.instancesync.InstanceSyncResourceClientModule;
 import io.harness.invites.NgInviteClientModule;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.KubernetesContainerServiceImpl;
+import io.harness.licensing.remote.NgLicenseHttpClientModule;
+import io.harness.licensing.remote.admin.AdminLicenseHttpClientModule;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.limits.LimitCheckerFactoryImpl;
 import io.harness.limits.configuration.LimitConfigurationService;
@@ -134,19 +139,28 @@ import io.harness.logstreaming.LogStreamingServiceRestClient;
 import io.harness.marketplace.gcp.procurement.CDProductHandler;
 import io.harness.marketplace.gcp.procurement.GcpProductHandler;
 import io.harness.mongo.MongoConfig;
+import io.harness.ng.core.event.MessageListener;
 import io.harness.notifications.AlertNotificationRuleChecker;
 import io.harness.notifications.AlertNotificationRuleCheckerImpl;
 import io.harness.notifications.AlertVisibilityChecker;
 import io.harness.notifications.AlertVisibilityCheckerImpl;
+import io.harness.outbox.TransactionOutboxModule;
+import io.harness.outbox.api.OutboxEventHandler;
+import io.harness.pcf.CfDeploymentManager;
+import io.harness.perpetualtask.PerpetualTaskScheduleService;
+import io.harness.perpetualtask.PerpetualTaskScheduleServiceImpl;
 import io.harness.perpetualtask.PerpetualTaskServiceModule;
 import io.harness.persistence.HPersistence;
+import io.harness.polling.client.PollResourceClientModule;
 import io.harness.queue.QueueController;
 import io.harness.redis.RedisConfig;
+import io.harness.remote.client.ClientMode;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.scheduler.SchedulerConfig;
 import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.secretmanagers.SecretsManagerRBACService;
 import io.harness.secretmanagers.SecretsManagerRBACServiceImpl;
+import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.secrets.SecretsAuditService;
 import io.harness.secrets.SecretsAuditServiceImpl;
 import io.harness.secrets.SecretsDelegateCacheHelperService;
@@ -163,17 +177,27 @@ import io.harness.secrets.setupusage.builders.ConfigFileSetupUsageBuilder;
 import io.harness.secrets.setupusage.builders.SecretManagerSetupUsageBuilder;
 import io.harness.secrets.setupusage.builders.ServiceVariableSetupUsageBuilder;
 import io.harness.secrets.setupusage.builders.SettingAttributeSetupUsageBuilder;
+import io.harness.secrets.setupusage.builders.TriggerSetupUsageBuilder;
 import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.seeddata.SampleDataProviderService;
 import io.harness.seeddata.SampleDataProviderServiceImpl;
 import io.harness.serializer.YamlUtils;
+import io.harness.service.CgEventHelper;
 import io.harness.service.DelegateServiceDriverModule;
+import io.harness.service.EventConfigService;
+import io.harness.service.EventConfigServiceImpl;
+import io.harness.service.EventHelper;
+import io.harness.service.EventService;
+import io.harness.service.EventServiceImpl;
+import io.harness.service.impl.DelegateTokenServiceImpl;
+import io.harness.service.intfc.DelegateTokenService;
 import io.harness.templatizedsm.RuntimeCredentialsInjector;
 import io.harness.threading.ThreadPool;
 import io.harness.time.TimeModule;
 import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.timescaledb.TimeScaleDBServiceImpl;
+import io.harness.usermembership.UserMembershipClientModule;
 import io.harness.version.VersionModule;
 
 import software.wings.DataStorageMode;
@@ -267,8 +291,7 @@ import software.wings.helpers.ext.helm.HelmDeployServiceUnsupported;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.helpers.ext.jenkins.JenkinsImpl;
-import software.wings.helpers.ext.pcf.PcfDeploymentManager;
-import software.wings.helpers.ext.pcf.PcfDeploymentManagerUnsupported;
+import software.wings.helpers.ext.pcf.CfDeploymentManagerUnsupported;
 import software.wings.helpers.ext.sftp.SftpService;
 import software.wings.helpers.ext.sftp.SftpServiceImpl;
 import software.wings.helpers.ext.smb.SmbService;
@@ -294,6 +317,7 @@ import software.wings.security.authentication.recaptcha.FailedLoginAttemptCountC
 import software.wings.security.authentication.recaptcha.FailedLoginAttemptCountCheckerImpl;
 import software.wings.security.saml.SamlUserGroupSync;
 import software.wings.service.EcrClassicBuildServiceImpl;
+import software.wings.service.impl.AccessRequestServiceImpl;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.AcrBuildServiceImpl;
 import software.wings.service.impl.ActivityServiceImpl;
@@ -326,13 +350,13 @@ import software.wings.service.impl.DelegateProfileServiceImpl;
 import software.wings.service.impl.DelegateScopeServiceImpl;
 import software.wings.service.impl.DelegateSelectionLogsServiceImpl;
 import software.wings.service.impl.DelegateServiceImpl;
+import software.wings.service.impl.DelegateTaskServiceClassicImpl;
 import software.wings.service.impl.DownloadTokenServiceImpl;
 import software.wings.service.impl.EcrBuildServiceImpl;
 import software.wings.service.impl.EmailNotificationServiceImpl;
 import software.wings.service.impl.EntityVersionServiceImpl;
 import software.wings.service.impl.EnvironmentServiceImpl;
 import software.wings.service.impl.ExternalApiRateLimitingServiceImpl;
-import software.wings.service.impl.FileServiceImpl;
 import software.wings.service.impl.GcpInfrastructureProvider;
 import software.wings.service.impl.GcrBuildServiceImpl;
 import software.wings.service.impl.GcsBuildServiceImpl;
@@ -347,7 +371,6 @@ import software.wings.service.impl.InfrastructureProvisionerServiceImpl;
 import software.wings.service.impl.JenkinsBuildServiceImpl;
 import software.wings.service.impl.LogServiceImpl;
 import software.wings.service.impl.MicrosoftTeamsNotificationServiceImpl;
-import software.wings.service.impl.MigrationServiceImpl;
 import software.wings.service.impl.MongoDataStoreServiceImpl;
 import software.wings.service.impl.NotificationDispatcherServiceImpl;
 import software.wings.service.impl.NotificationServiceImpl;
@@ -396,6 +419,7 @@ import software.wings.service.impl.apm.ApmVerificationServiceImpl;
 import software.wings.service.impl.appdynamics.AppdynamicsServiceImpl;
 import software.wings.service.impl.applicationmanifest.HelmChartServiceImpl;
 import software.wings.service.impl.artifact.ArtifactCleanupServiceAsyncImpl;
+import software.wings.service.impl.artifact.ArtifactCleanupServiceSyncImpl;
 import software.wings.service.impl.artifact.ArtifactCollectionServiceAsyncImpl;
 import software.wings.service.impl.artifact.ArtifactCollectionServiceImpl;
 import software.wings.service.impl.artifact.ArtifactServiceImpl;
@@ -503,6 +527,7 @@ import software.wings.service.impl.yaml.YamlSuccessfulChangeServiceImpl;
 import software.wings.service.impl.yaml.service.YamlCloneServiceImpl;
 import software.wings.service.impl.yaml.sync.GitSyncErrorServiceImpl;
 import software.wings.service.impl.yaml.sync.YamlGitConfigServiceImpl;
+import software.wings.service.intfc.AccessRequestService;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AcrBuildService;
 import software.wings.service.intfc.ActivityService;
@@ -541,6 +566,7 @@ import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.DelegateScopeService;
 import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.DelegateTaskServiceClassic;
 import software.wings.service.intfc.DockerBuildService;
 import software.wings.service.intfc.DownloadTokenService;
 import software.wings.service.intfc.EcrBuildService;
@@ -550,7 +576,6 @@ import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ErrorReporter;
 import software.wings.service.intfc.ExternalApiRateLimitingService;
-import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.GcrBuildService;
 import software.wings.service.intfc.GcsBuildService;
 import software.wings.service.intfc.HarnessApiKeyService;
@@ -566,7 +591,6 @@ import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.MicrosoftTeamsNotificationService;
-import software.wings.service.intfc.MigrationService;
 import software.wings.service.intfc.NexusBuildService;
 import software.wings.service.intfc.NotificationDispatcherService;
 import software.wings.service.intfc.NotificationService;
@@ -664,14 +688,13 @@ import software.wings.service.intfc.security.AzureSecretsManagerService;
 import software.wings.service.intfc.security.CustomEncryptedDataDetailBuilder;
 import software.wings.service.intfc.security.CustomSecretsManagerService;
 import software.wings.service.intfc.security.CyberArkService;
+import software.wings.service.intfc.security.EncryptedSettingAttributes;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.GcpSecretsManagerService;
 import software.wings.service.intfc.security.GcpSecretsManagerServiceV2;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.LocalSecretManagerService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
-import software.wings.service.intfc.security.NGSecretFileService;
-import software.wings.service.intfc.security.NGSecretFileServiceImpl;
 import software.wings.service.intfc.security.NGSecretManagerService;
 import software.wings.service.intfc.security.NGSecretService;
 import software.wings.service.intfc.security.NGSecretServiceImpl;
@@ -711,7 +734,7 @@ import software.wings.utils.CdnStorageUrlGenerator;
 import software.wings.utils.HostValidationService;
 import software.wings.utils.HostValidationServiceImpl;
 
-import com.google.common.base.Suppliers;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -723,6 +746,7 @@ import com.google.inject.matcher.Matchers;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
+import io.dropwizard.jackson.Jackson;
 import io.dropwizard.lifecycle.Managed;
 import java.io.Closeable;
 import java.io.IOException;
@@ -735,7 +759,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -747,7 +770,7 @@ import org.jetbrains.annotations.NotNull;
  */
 @Slf4j
 @OwnedBy(PL)
-@TargetModule(HarnessModule._360_CG_MANAGER)
+@TargetModule(_360_CG_MANAGER)
 public class WingsModule extends AbstractModule implements ServersModule {
   private final String hashicorpvault = "hashicorpvault";
   private final MainConfiguration configuration;
@@ -759,27 +782,6 @@ public class WingsModule extends AbstractModule implements ServersModule {
    */
   public WingsModule(MainConfiguration configuration) {
     this.configuration = configuration;
-  }
-
-  @Provides
-  @Singleton
-  Supplier<DelegateCallbackToken> getDelegateCallbackTokenSupplier(
-      DelegateServiceGrpcClient delegateServiceGrpcClient) {
-    return Suppliers.memoize(() -> getDelegateCallbackToken(delegateServiceGrpcClient, configuration));
-  }
-
-  private DelegateCallbackToken getDelegateCallbackToken(
-      DelegateServiceGrpcClient delegateServiceClient, MainConfiguration appConfig) {
-    log.info("Generating Delegate callback token");
-    final DelegateCallbackToken delegateCallbackToken = delegateServiceClient.registerCallback(
-        DelegateCallback.newBuilder()
-            .setMongoDatabase(MongoDatabase.newBuilder()
-                                  .setCollectionNamePrefix("ngManager")
-                                  .setConnection(appConfig.getMongoConnectionFactory().getUri())
-                                  .build())
-            .build());
-    log.info("delegate callback token generated =[{}]", delegateCallbackToken.getToken());
-    return delegateCallbackToken;
   }
 
   @Provides
@@ -848,51 +850,28 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(DelegateServiceDriverModule.getInstance(false));
     install(new DelegateServiceDriverGrpcClientModule(configuration.getPortal().getJwtNextGenManagerSecret(),
         configuration.getGrpcDelegateServiceClientConfig().getTarget(),
-        configuration.getGrpcDelegateServiceClientConfig().getAuthority()));
+        configuration.getGrpcDelegateServiceClientConfig().getAuthority(), false));
+    install(new DelegateServiceClassicGrpcClientModule(configuration.getDmsSecret(),
+        configuration.getGrpcDMSClientConfig().getTarget(), configuration.getGrpcDMSClientConfig().getAuthority()));
+
     install(PersistentLockModule.getInstance());
     install(AlertModule.getInstance());
 
-    install(new AbstractModule() {
-      @Override
-      protected void configure() {
-        RedisConfig redisConfig = configuration.getEventsFrameworkConfiguration().getRedisConfig();
-        String deployMode = System.getenv(DeployMode.DEPLOY_MODE);
-        if (DeployMode.isOnPrem(deployMode) || redisConfig.getRedisUrl().equals("dummyRedisUrl")) {
-          bind(Producer.class)
-              .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
-              .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
-          bind(Producer.class)
-              .annotatedWith(Names.named(EventsFrameworkConstants.FEATURE_FLAG_STREAM))
-              .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
-          bind(Producer.class)
-              .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_ACTIVITY))
-              .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
-          bind(Producer.class)
-              .annotatedWith(Names.named(EventsFrameworkConstants.USERMEMBERSHIP))
-              .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
-        } else {
-          bind(Producer.class)
-              .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
-              .toInstance(RedisProducer.of(EventsFrameworkConstants.ENTITY_CRUD, redisConfig,
-                  EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE, MANAGER.getServiceId()));
-          bind(Producer.class)
-              .annotatedWith(Names.named(EventsFrameworkConstants.FEATURE_FLAG_STREAM))
-              .toInstance(RedisProducer.of(EventsFrameworkConstants.FEATURE_FLAG_STREAM, redisConfig,
-                  EventsFrameworkConstants.FEATURE_FLAG_MAX_TOPIC_SIZE, MANAGER.getServiceId()));
-          bind(Producer.class)
-              .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_ACTIVITY))
-              .toInstance(RedisProducer.of(EventsFrameworkConstants.ENTITY_ACTIVITY, redisConfig,
-                  EventsFrameworkConstants.ENTITY_ACTIVITY_MAX_TOPIC_SIZE, MANAGER.getServiceId()));
-          bind(Producer.class)
-              .annotatedWith(Names.named(EventsFrameworkConstants.USERMEMBERSHIP))
-              .toInstance(RedisProducer.of(EventsFrameworkConstants.USERMEMBERSHIP, redisConfig,
-                  EventsFrameworkConstants.DEFAULT_TOPIC_SIZE, MANAGER.getServiceId()));
-        }
-      }
-    });
+    install(new EventsFrameworkModule(
+        configuration.getEventsFrameworkConfiguration(), configuration.isEventsFrameworkAvailableInOnPrem()));
     install(FeatureFlagModule.getInstance());
+    install(AccessControlAdminClientModule.getInstance(
+        AccessControlAdminClientConfiguration.builder()
+            .accessControlServiceConfig(
+                configuration.getAccessControlClientConfiguration().getAccessControlServiceConfig())
+            .accessControlServiceSecret(
+                configuration.getAccessControlClientConfiguration().getAccessControlServiceSecret())
+            .mockAccessControlService(false)
+            .build(),
+        MANAGER.getServiceId()));
 
     bind(MainConfiguration.class).toInstance(configuration);
+    bind(PortalConfig.class).toInstance(configuration.getPortal());
     // RetryOnException Binding start
     bind(MethodExecutionHelper.class); // untargetted binding for eager loading
     ProviderMethodInterceptor retryOnExceptionInterceptor =
@@ -903,6 +882,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
         .annotatedWith(Names.named("BackgroundSchedule"))
         .toInstance(configuration.getBackgroundSchedulerConfig());
     bind(PipelineConfig.class).toInstance(configuration.getPipelineConfig());
+    bind(DelegateConfiguration.class).toInstance(DelegateConfiguration.builder().build());
     bind(QueueController.class).to(ConfigurationController.class);
     bind(HPersistence.class).to(WingsMongoPersistence.class);
     bind(WingsPersistence.class).to(WingsMongoPersistence.class);
@@ -934,6 +914,9 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(GcsService.class).to(GcsServiceImpl.class);
     bind(GcsBuildService.class).to(GcsBuildServiceImpl.class);
     bind(SettingsService.class).to(SettingsServiceImpl.class);
+    bind(EventConfigService.class).to(EventConfigServiceImpl.class);
+    bind(EventService.class).to(EventServiceImpl.class);
+    bind(EventHelper.class).to(CgEventHelper.class);
     bind(ExpressionProcessorFactory.class).to(WingsExpressionProcessorFactory.class);
     bind(EmailNotificationService.class).to(EmailNotificationServiceImpl.class);
     bind(ServiceInstanceService.class).to(ServiceInstanceServiceImpl.class);
@@ -1030,7 +1013,6 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(TriggerService.class).to(TriggerServiceImpl.class);
     bind(VerificationService.class).to(VerificationServiceImpl.class);
     bind(Clock.class).toInstance(Clock.systemUTC());
-    bind(MigrationService.class).to(MigrationServiceImpl.class).in(Singleton.class);
     bind(WorkflowExecutionBaselineService.class).to(WorkflowExecutionBaselineServiceImpl.class);
     bind(GitClient.class).to(GitClientUnsupported.class).in(Singleton.class);
     bind(WhitelistService.class).to(WhitelistServiceImpl.class);
@@ -1067,6 +1049,8 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(YamlGitConfigService.class).to(YamlGitConfigServiceImpl.class);
     bind(ErrorReporter.class).to(BugsnagErrorReporter.class);
     bind(CeAccountExpirationChecker.class).to(CeAccountExpirationCheckerImpl.class);
+    bind(AccessRequestService.class).to(AccessRequestServiceImpl.class);
+    bind(DelegateTaskServiceClassic.class).to(DelegateTaskServiceClassicImpl.class);
 
     bind(GcbService.class).to(GcbServiceImpl.class);
 
@@ -1095,6 +1079,8 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(HealthStatusService.class).to(HealthStatusServiceImpl.class);
     bind(GcpBillingService.class).to(GcpBillingServiceImpl.class);
     bind(PreAggregateBillingService.class).to(PreAggregateBillingServiceImpl.class);
+    bind(DelegateTokenService.class).to(DelegateTokenServiceImpl.class);
+    bind(InstanceDataService.class).to(InstanceDataServiceImpl.class);
 
     bind(WingsMongoExportImport.class);
 
@@ -1107,8 +1093,6 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(ExperimentalMetricAnalysisRecordService.class).to(ExperimentalMetricAnalysisRecordServiceImpl.class);
     bind(GitSyncService.class).to(GitSyncServiceImpl.class);
     bind(SecretDecryptionService.class).to(SecretDecryptionServiceImpl.class);
-    bind(CVNGVerificationTaskService.class).to(CVNGVerificationTaskServiceImpl.class);
-    bind(CVNGService.class).to(CVNGServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);
@@ -1140,6 +1124,8 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(SecretManagementCoreModule.getInstance());
     registerSecretManagementBindings();
 
+    registerEventListeners();
+
     bind(PersistentScheduler.class)
         .annotatedWith(Names.named("BackgroundJobScheduler"))
         .to(BackgroundJobScheduler.class)
@@ -1167,6 +1153,9 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(ArtifactCleanupService.class)
         .annotatedWith(Names.named("AsyncArtifactCleanupService"))
         .to(ArtifactCleanupServiceAsyncImpl.class);
+    bind(ArtifactCleanupService.class)
+        .annotatedWith(Names.named("SyncArtifactCleanupService"))
+        .to(ArtifactCleanupServiceSyncImpl.class);
     bind(CustomBuildSourceService.class).to(CustomBuildSourceServiceImpl.class);
 
     bind(ContainerSync.class).to(ContainerSyncImpl.class);
@@ -1174,7 +1163,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(CloudToHarnessMappingService.class).to(CloudToHarnessMappingServiceImpl.class);
     bind(DeploymentService.class).to(DeploymentServiceImpl.class);
     bind(HelmDeployService.class).to(HelmDeployServiceUnsupported.class).in(Singleton.class);
-    bind(PcfDeploymentManager.class).to(PcfDeploymentManagerUnsupported.class).in(Singleton.class);
+    bind(CfDeploymentManager.class).to(CfDeploymentManagerUnsupported.class).in(Singleton.class);
 
     bind(LogVerificationService.class).to(LogVerificationServiceImpl.class);
     bind(CVConfigurationService.class).to(CVConfigurationServiceImpl.class);
@@ -1210,7 +1199,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
       configuration.setFileStorageMode(DataStorageMode.MONGO);
     }
 
-    bind(FileService.class).to(FileServiceImpl.class);
+    install(new FileServiceModule(configuration.getFileStorageMode(), configuration.getClusterName()));
     bind(AlertNotificationRuleChecker.class).to(AlertNotificationRuleCheckerImpl.class);
 
     bind(new TypeLiteral<NotificationDispatcher<UserGroup>>() {})
@@ -1289,6 +1278,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(NGGitService.class).to(NGGitServiceImpl.class);
     bind(GitClientV2.class).to(GitClientV2Impl.class);
     bind(NGChartMuseumService.class).to(NGChartMuseumServiceImpl.class);
+    bind(PerpetualTaskScheduleService.class).to(PerpetualTaskScheduleServiceImpl.class);
 
     bind(AnomalyService.class).to(AnomalyServiceImpl.class);
 
@@ -1314,22 +1304,58 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(new CVNextGenCommonsServiceModule());
     try {
       install(new ConnectorResourceClientModule(configuration.getNgManagerServiceHttpClientConfig(),
-          configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
+          configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId(), ClientMode.PRIVILEGED));
     } catch (Exception ex) {
       log.info("Could not create the connector resource client module", ex);
     }
 
+    install(new PollResourceClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
+
+    // ng-usermembership Dependencies
+    install(new UserMembershipClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
+
     // ng-invite Dependencies
     install(new NgInviteClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
+
+    install(new InstanceSyncResourceClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
+
+    // ng-secret dependencies
+    install(new SecretNGManagerClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
+
+    // ng-rbac dependencies
+    install(AccessControlClientModule.getInstance(
+        configuration.getAccessControlClientConfiguration(), DELEGATE_SERVICE.getServiceId()));
+
+    // ng-license dependencies
+    install(NgLicenseHttpClientModule.getInstance(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
+
+    // admin ng-license dependencies
+    install(new AdminLicenseHttpClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
 
     install(CgOrchestrationModule.getInstance());
     // Orchestration Dependencies
 
     bind(CVDataCollectionTaskService.class).to(CVDataCollectionTaskServiceImpl.class);
+    bind(K8sWatchTaskService.class).to(K8sWatchTaskServiceImpl.class);
     bind(HelmChartService.class).to(HelmChartServiceImpl.class);
     bind(LogStreamingServiceRestClient.class).toProvider(LogStreamingServiceClientFactory.class);
     bind(IInstanceReconService.class).to(InstanceReconServiceImpl.class);
+
+    // audit service
+    install(new AuditClientModule(this.configuration.getAuditClientConfig(),
+        this.configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId(),
+        this.configuration.isEnableAudit()));
+    install(new TransactionOutboxModule(DEFAULT_OUTBOX_POLL_CONFIGURATION, MANAGER.getServiceId(), false));
+
+    bind(OutboxEventHandler.class).to(DelegateOutboxEventHandler.class);
+    install(new CVCommonsServiceModule());
   }
 
   private void bindFeatures() {
@@ -1466,9 +1492,9 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(ManagerDecryptionService.class).to(ManagerDecryptionServiceImpl.class);
     bind(RuntimeCredentialsInjector.class).annotatedWith(Names.named(hashicorpvault)).to(VaultServiceImpl.class);
     bind(SecretManager.class).to(SecretManagerImpl.class);
+    bind(EncryptedSettingAttributes.class).to(SecretManagerImpl.class);
     bind(NGSecretManagerService.class).to(NGSecretManagerServiceImpl.class);
     bind(NGSecretService.class).to(NGSecretServiceImpl.class);
-    bind(NGSecretFileService.class).to(NGSecretFileServiceImpl.class);
     bind(SecretsDelegateCacheHelperService.class).to(SecretsDelegateCacheHelperServiceImpl.class);
     bind(DelegatePropertiesServiceProvider.class).to(NoopDelegatePropertiesServiceProviderImpl.class);
     bind(DelegateConfigurationServiceProvider.class).to(NoopDelegateConfigurationServiceProviderImpl.class);
@@ -1562,6 +1588,20 @@ public class WingsModule extends AbstractModule implements ServersModule {
         .bind(SecretSetupUsageBuilder.class)
         .annotatedWith(Names.named(SecretSetupUsageBuilders.SECRET_MANAGER_CONFIG_SETUP_USAGE_BUILDER.getName()))
         .to(SecretManagerSetupUsageBuilder.class);
+    binder()
+        .bind(SecretSetupUsageBuilder.class)
+        .annotatedWith(Names.named(SecretSetupUsageBuilders.TRIGGER_SETUP_USAGE_BUILDER.getName()))
+        .to(TriggerSetupUsageBuilder.class);
+  }
+
+  private void registerEventListeners() {
+    bind(MessageListener.class)
+        .annotatedWith(Names.named(ORGANIZATION_ENTITY + ENTITY_CRUD))
+        .to(OrganizationEntityCRUDEventListener.class);
+
+    bind(MessageListener.class)
+        .annotatedWith(Names.named(PROJECT_ENTITY + ENTITY_CRUD))
+        .to(ProjectEntityCRUDEventListener.class);
   }
 
   private void bindGcpMarketplaceProductHandlers() {
@@ -1569,33 +1609,6 @@ public class WingsModule extends AbstractModule implements ServersModule {
         MapBinder.newMapBinder(binder(), String.class, GcpProductHandler.class);
 
     binder.addBinding("harness-continuous-delivery").to(CDProductHandler.class).in(Singleton.class);
-  }
-
-  @Provides
-  CfClient provideCfClient() {
-    CfClientConfig cfClientConfig = configuration.getCfClientConfig();
-    if (cfClientConfig == null) {
-      return null;
-    }
-    log.info("Using CF API key {}", cfClientConfig.getApiKey());
-    String apiKey = cfClientConfig.getApiKey();
-
-    return new CfClient(apiKey);
-  }
-
-  @Provides
-  @Singleton
-  CFApi providesCfAPI() {
-    CfMigrationConfig migrationConfig = configuration.getCfMigrationConfig();
-    ApiClient apiClient = new ApiClient();
-    apiClient.setBasePath(migrationConfig.getAdminUrl());
-    return new CFApi(apiClient);
-  }
-
-  @Provides
-  @Singleton
-  CfMigrationConfig providesCfMigrationConfig() {
-    return configuration.getCfMigrationConfig();
   }
 
   @Provides
@@ -1625,5 +1638,11 @@ public class WingsModule extends AbstractModule implements ServersModule {
         }
       }
     };
+  }
+
+  @Provides
+  @Singleton
+  public ObjectMapper getYamlSchemaObjectMapperWithoutNamed() {
+    return Jackson.newObjectMapper();
   }
 }

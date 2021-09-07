@@ -25,6 +25,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.pcf.ResizeStrategy;
 import io.harness.delegate.task.azure.request.AzureVMSSDeployTaskParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters;
 import io.harness.delegate.task.azure.response.AzureVMSSDeployTaskResponse;
@@ -43,7 +44,6 @@ import software.wings.beans.AzureVMSSInfrastructureMapping;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
 import software.wings.beans.InstanceUnitType;
-import software.wings.beans.ResizeStrategy;
 import software.wings.beans.Service;
 import software.wings.beans.TaskType;
 import software.wings.beans.artifact.Artifact;
@@ -185,10 +185,13 @@ public class AzureVMSSDeployState extends AbstractAzureState {
             .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, azureVMSSInfrastructureMapping.getUuid())
             .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, azureVMSSInfrastructureMapping.getServiceId())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("Azure VMSS Deploy task execution")
             .build();
 
     delegateService.queueTask(delegateTask);
 
+    appendDelegateTaskDetails(context, delegateTask);
     return ExecutionResponse.builder()
         .async(true)
         .stateExecutionData(azureVMSSDeployStateExecutionData)
@@ -429,5 +432,10 @@ public class AzureVMSSDeployState extends AbstractAzureState {
       commandUnitList.add(new AzureVMSSDummyCommandUnit(DEPLOYMENT_ERROR));
     }
     return commandUnitList;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

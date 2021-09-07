@@ -1,6 +1,12 @@
 package software.wings.service.impl.workflow.creation.helpers;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.PhaseStep;
 import software.wings.beans.Workflow;
@@ -10,6 +16,8 @@ import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 import com.google.inject.Inject;
 import java.util.List;
 
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public abstract class PhaseHelper {
   @Inject private WorkflowPhaseHelper workflowPhaseHelper;
   @Inject private WorkflowServiceTemplateHelper workflowServiceTemplateHelper;

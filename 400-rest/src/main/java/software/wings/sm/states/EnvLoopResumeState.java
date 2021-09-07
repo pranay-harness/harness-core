@@ -3,7 +3,9 @@ package software.wings.sm.states;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.validation.Validator.notNullCheck;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.api.ForkElement;
 import software.wings.beans.LoopEnvResumeStateParams;
@@ -30,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @Attributes(title = "EnvLoopResume")
 @Slf4j
 @FieldNameConstants(innerTypeName = "EnvLoopResumeStateKeys")

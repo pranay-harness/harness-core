@@ -1,5 +1,6 @@
 package io.harness.k8s.manifest;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.exception.WingsException.ReportTarget.LOG_SYSTEM;
 import static io.harness.k8s.manifest.ManifestHelper.MAX_VALUES_EXPRESSION_RECURSION_DEPTH;
 import static io.harness.k8s.manifest.ManifestHelper.getMapFromValuesFileContent;
@@ -18,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.ExceptionUtils;
@@ -43,6 +45,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Slf4j
+@OwnedBy(CDP)
 public class ManifestHelperTest extends CategoryTest {
   @Before
   public void setup() {
@@ -545,6 +548,14 @@ public class ManifestHelperTest extends CategoryTest {
         asList(deployment, statefulSet, daemonSet, deploymentDirectApply.get(0)));
     assertThat(kubernetesResources.size()).isEqualTo(1);
     assertThat(kubernetesResources.get(0)).isEqualTo(deployment);
+
+    kubernetesResources = ManifestHelper.getWorkloadsForCanaryAndBG(asList(statefulSet));
+    assertThat(kubernetesResources.size()).isEqualTo(1);
+    assertThat(kubernetesResources.get(0)).isEqualTo(statefulSet);
+
+    kubernetesResources = ManifestHelper.getWorkloadsForCanaryAndBG(asList(statefulSet, deploymentConfig));
+    assertThat(kubernetesResources.size()).isEqualTo(1);
+    assertThat(kubernetesResources.get(0)).isEqualTo(deploymentConfig);
   }
 
   @Test

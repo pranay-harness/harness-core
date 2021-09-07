@@ -1,0 +1,25 @@
+trigger:
+  name: first trigger
+  identifier: first_trigger
+  enabled: true
+  tags: {}
+  orgIdentifier: org
+  projectIdentifier: proj
+  pipelineIdentifier: pipeline
+  source:
+    type: Scheduled
+    spec:
+      type: Cron
+      spec:
+        expression: 20 4 * * *
+  inputYaml: |
+    pipeline:
+      identifier: secrethttp1
+      stages:
+        - stage:
+            identifier: qaStage
+            spec:
+              infrastructure:
+                infrastructureDefinition:
+                  spec:
+                    releaseName: releaseName1

@@ -1,11 +1,13 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import static java.util.Arrays.asList;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
@@ -14,6 +16,7 @@ import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
+import io.harness.pcf.model.CfCliVersion;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.NameAccess;
 
@@ -58,6 +61,7 @@ import org.mongodb.morphia.annotations.Version;
 @FieldNameConstants(innerTypeName = "ServiceKeys")
 @Entity(value = "services", noClassnameStored = true)
 @HarnessEntity(exportable = true)
+@TargetModule(_957_CG_BEANS)
 public class Service
     extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess, CustomDeploymentTypeAware {
   public static List<MongoIndex> mongoIndexes() {
@@ -73,19 +77,22 @@ public class Service
                  .field(ServiceKeys.accountId)
                  .descSortField(ServiceKeys.createdAt)
                  .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("account_deploymentTypeIndex")
+                 .field(ServiceKeys.accountId)
+                 .field(ServiceKeys.deploymentType)
+                 .build())
         .build();
   }
   public static final String GLOBAL_SERVICE_NAME_FOR_YAML = "__all_service__";
   public static final String APP_ID = "appId";
   public static final String ID = "_id";
 
-  @Trimmed(message = "Service Name should not contain leading and trailing spaces")
-  @EntityName
-  @NotEmpty
-  private String name;
+  @Trimmed(message = "should not contain leading and trailing spaces") @EntityName @NotEmpty private String name;
   private String description;
   private ArtifactType artifactType;
   private DeploymentType deploymentType;
+  private String serviceId;
   private String configMapYaml;
   private String helmValueYaml;
 
@@ -107,6 +114,7 @@ public class Service
   private boolean isK8sV2;
   private boolean isPcfV2;
   private HelmVersion helmVersion;
+  private CfCliVersion cfCliVersion;
   @FdIndex private String accountId;
   @FdIndex private List<String> artifactStreamIds;
   @Transient private List<ArtifactStreamBinding> artifactStreamBindings;
@@ -116,6 +124,7 @@ public class Service
 
   private String deploymentTypeTemplateId;
   private transient String customDeploymentName;
+  private Boolean artifactFromManifest;
 
   @Builder
   public Service(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
@@ -125,7 +134,8 @@ public class Service
       List<ArtifactStream> artifactStreams, List<ServiceCommand> serviceCommands, Activity lastDeploymentActivity,
       Activity lastProdDeploymentActivity, Setup setup, boolean isK8sV2, String accountId,
       List<String> artifactStreamIds, boolean sample, boolean isPcfV2, HelmVersion helmVersion,
-      String deploymentTypeTemplateId, String customDeploymentName) {
+      CfCliVersion cfCliVersion, String deploymentTypeTemplateId, String customDeploymentName,
+      Boolean artifactFromManifest) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, entityYamlPath);
     this.name = name;
     this.description = description;
@@ -149,8 +159,10 @@ public class Service
     this.artifactStreamIds = artifactStreamIds;
     this.sample = sample;
     this.helmVersion = helmVersion;
+    this.cfCliVersion = cfCliVersion;
     this.deploymentTypeTemplateId = deploymentTypeTemplateId;
     this.customDeploymentName = customDeploymentName;
+    this.artifactFromManifest = artifactFromManifest;
   }
 
   // TODO: check what to do with artifactStreamIds and artifactStreamBindings
@@ -168,8 +180,10 @@ public class Service
         .isK8sV2(isK8sV2)
         .isPcfV2(isPcfV2)
         .helmVersion(helmVersion)
+        .cfCliVersion(cfCliVersion)
         .deploymentTypeTemplateId(deploymentTypeTemplateId)
         .customDeploymentName(customDeploymentName)
+        .artifactFromManifest(artifactFromManifest)
         .build();
   }
 
@@ -198,6 +212,8 @@ public class Service
     private String configMapYaml;
     private String applicationStack;
     private String helmVersion;
+    private Boolean artifactFromManifest;
+    private String cfCliVersion;
     private List<NameValuePair.Yaml> configVariables = new ArrayList<>();
 
     /*
@@ -209,7 +225,8 @@ public class Service
     @lombok.Builder
     public Yaml(String harnessApiVersion, String description, String artifactType, String deploymentType,
         String configMapYaml, String applicationStack, List<NameValuePair.Yaml> configVariables, String helmVersion,
-        String deploymentTypeTemplateUri, String deploymentTypeTemplateVersion) {
+        String cfCliVersion, String deploymentTypeTemplateUri, String deploymentTypeTemplateVersion,
+        Boolean artifactFromManifest) {
       super(EntityType.SERVICE.name(), harnessApiVersion);
       this.description = description;
       this.artifactType = artifactType;
@@ -218,8 +235,10 @@ public class Service
       this.applicationStack = applicationStack;
       this.configVariables = configVariables;
       this.helmVersion = helmVersion;
+      this.cfCliVersion = cfCliVersion;
       this.deploymentTypeTemplateUri = deploymentTypeTemplateUri;
       this.deploymentTypeTemplateVersion = deploymentTypeTemplateVersion;
+      this.artifactFromManifest = artifactFromManifest;
     }
   }
 
@@ -229,5 +248,8 @@ public class Service
     public static final String appId = "appId";
     public static final String createdAt = "createdAt";
     public static final String uuid = "uuid";
+    public static final String deploymentType = "deploymentType";
+    public static final String serviceId = "serviceId";
+    public static final String accountId = "accountId";
   }
 }

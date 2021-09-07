@@ -10,13 +10,15 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.aws.AwsClient;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.utils.AWSConnectorTestHelper;
+import io.harness.delegate.beans.connector.CEFeatures;
 import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO;
-import io.harness.delegate.beans.connector.ceawsconnector.CEAwsFeatures;
 import io.harness.remote.CEAwsSetupConfig;
 import io.harness.rule.Owner;
 
@@ -39,6 +41,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
 @Slf4j
+@OwnedBy(HarnessTeam.CE)
 public class CEAwsConnectorValidatorTest extends CategoryTest {
   @Mock AwsClient awsClient;
   @Mock CEAwsSetupConfig ceAwsSetupConfig;
@@ -93,7 +96,7 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void testValidateEventsSuccess() {
-    ceAwsConnectorDTO.setFeaturesEnabled(Collections.singletonList(CEAwsFeatures.EVENTS));
+    ceAwsConnectorDTO.setFeaturesEnabled(Collections.singletonList(CEFeatures.VISIBILITY));
     ceAwsConnectorDTO.setCurAttributes(null);
 
     ConnectorValidationResult result = connectorValidator.validate(ceAwsConnectorDTO, null, null, null, null);
@@ -107,7 +110,7 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void testValidateEventsPermissionMissing() {
-    ceAwsConnectorDTO.setFeaturesEnabled(Collections.singletonList(CEAwsFeatures.EVENTS));
+    ceAwsConnectorDTO.setFeaturesEnabled(Collections.singletonList(CEFeatures.VISIBILITY));
     ceAwsConnectorDTO.setCurAttributes(null);
 
     doReturn(Collections.singletonList(DENY_EVALUATION_RESULT))
@@ -129,7 +132,7 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void testValidateCurSuccess() throws NoSuchFieldException, IllegalAccessException {
-    ceAwsConnectorDTO.setFeaturesEnabled(ImmutableList.of(CEAwsFeatures.CUR));
+    ceAwsConnectorDTO.setFeaturesEnabled(ImmutableList.of(CEFeatures.BILLING));
     ReportDefinition report = createReportDefinition();
     ObjectListing s3Object = createNonEmptyObjectListing();
 
@@ -146,7 +149,7 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void testValidateReportNotPresent() throws NoSuchFieldException, IllegalAccessException {
-    ceAwsConnectorDTO.setFeaturesEnabled(ImmutableList.of(CEAwsFeatures.CUR));
+    ceAwsConnectorDTO.setFeaturesEnabled(ImmutableList.of(CEFeatures.BILLING));
     ObjectListing s3Object = createNonEmptyObjectListing();
 
     doReturn(Optional.empty()).when(awsClient).getReportDefinition(any(), any());
@@ -163,19 +166,17 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
   @Test
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
-  public void testValidateBucketNotPresent() {
-    ceAwsConnectorDTO.setFeaturesEnabled(ImmutableList.of(CEAwsFeatures.CUR));
-    ObjectListing s3Object = new ObjectListing();
+  public void testValidateBucketIsPresentIgnoringObjects() {
+    ceAwsConnectorDTO.setFeaturesEnabled(ImmutableList.of(CEFeatures.BILLING));
     ReportDefinition report = createReportDefinition();
 
     doReturn(Optional.of(report)).when(awsClient).getReportDefinition(any(), any());
-    doReturn(s3Object).when(awsClient).getBucket(any(), any(), any());
+    doReturn(null).when(awsClient).getBucket(any(), any(), any());
 
     ConnectorValidationResult result = connectorValidator.validate(ceAwsConnectorDTO, null, null, null, null);
 
-    assertThat(result.getStatus()).isEqualTo(ConnectivityStatus.FAILURE);
-    assertThat(result.getErrors()).hasSize(1);
-    assertThat(result.getErrors().get(0).getReason()).isEqualTo("The bucket might not be existing.");
+    assertThat(result.getStatus()).isEqualTo(ConnectivityStatus.SUCCESS);
+    assertThat(result.getErrors()).isNull();
     assertThat(result.getTestedAt()).isLessThanOrEqualTo(Instant.now().toEpochMilli());
   }
 
@@ -183,7 +184,7 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void testValidateCurPermissionMissing() throws NoSuchFieldException, IllegalAccessException {
-    ceAwsConnectorDTO.setFeaturesEnabled(ImmutableList.of(CEAwsFeatures.CUR));
+    ceAwsConnectorDTO.setFeaturesEnabled(ImmutableList.of(CEFeatures.BILLING));
     ReportDefinition report = createReportDefinition();
     ObjectListing s3Object = createNonEmptyObjectListing();
 
@@ -208,7 +209,7 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void testValidateOptimizationSuccess() {
-    ceAwsConnectorDTO.setFeaturesEnabled(Collections.singletonList(CEAwsFeatures.OPTIMIZATION));
+    ceAwsConnectorDTO.setFeaturesEnabled(Collections.singletonList(CEFeatures.OPTIMIZATION));
 
     ConnectorValidationResult result = connectorValidator.validate(ceAwsConnectorDTO, null, null, null, null);
 
@@ -221,7 +222,7 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void testValidateOptimizationPermissionMissing() {
-    ceAwsConnectorDTO.setFeaturesEnabled(Collections.singletonList(CEAwsFeatures.OPTIMIZATION));
+    ceAwsConnectorDTO.setFeaturesEnabled(Collections.singletonList(CEFeatures.OPTIMIZATION));
 
     doReturn(Collections.singletonList(DENY_EVALUATION_RESULT))
         .when(awsClient)

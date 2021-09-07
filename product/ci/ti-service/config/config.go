@@ -23,12 +23,15 @@ type Config struct {
 	}
 
 	TimeScaleDb struct {
-		Username       string `envconfig:"TI_SERVICE_TIMESCALE_USERNAME"`
-		Password       string `envconfig:"TI_SERVICE_TIMESCALE_PASSWORD"`
-		Host           string `envconfig:"TI_SERVICE_TIMESCALE_HOST"`
-		Port           string `envconfig:"TI_SERVICE_TIMESCALE_PORT"`
+		Username  string `envconfig:"TI_SERVICE_TIMESCALE_USERNAME"`
+		Password  string `envconfig:"TI_SERVICE_TIMESCALE_PASSWORD"`
+		Host      string `envconfig:"TI_SERVICE_TIMESCALE_HOST"`
+		Port      string `envconfig:"TI_SERVICE_TIMESCALE_PORT"`
+		EnableSSL bool   `envconfig:"TI_SERVICE_TIMESCALE_ENABLE_SSL"`
+		// Path to root certificate provided by server in plaintext
+		SSLCertPath    string `envconfig:"TI_SERVICE_TIMESCALE_SSL_CERT_PATH"`
 		DbName         string `envconfig:"TI_SERVICE_DB_NAME"`
-		HyperTableName string `envconfig:"TI_SERVICE_HYPER_TABLE"`
+		EvalTable      string `envconfig:"TI_SERVICE_HYPER_TABLE"`
 		SelectionTable string `envconfig:"TI_SERVICE_SELECTION_HYPER_TABLE"`
 		CoverageTable  string `envconfig:"TI_SERVICE_COVERAGE_HYPER_TABLE"`
 	}
@@ -42,7 +45,8 @@ type Config struct {
 		// Set this if you want to connect to mongoDB using a connection string directly
 		// If this is not set, TI service will create a connStr using the host/port and
 		// will try to create a direct connection to mongodb.
-		ConnStr string `envconfig:"TI_SERVICE_MONGODB_CONN_STR"`
+		ConnStr          string `envconfig:"TI_SERVICE_MONGODB_CONN_STR"`
+		EnableReflection bool   `envconfig:"TI_SERVICE_MONGODB_ENABLE_REFLECTION"`
 	}
 
 	// Variables required to talk to redis as part of the events framework
@@ -50,6 +54,9 @@ type Config struct {
 		RedisUrl      string `envconfig:"EVENTS_FRAMEWORK_REDIS_URL"`
 		EnvNamespace  string `envconfig:"EVENTS_FRAMEWORK_ENV_NAMESPACE"`
 		RedisPassword string `envconfig:"EVENTS_FRAMEWORK_REDIS_PASSWORD"`
+		SSLEnabled    bool   `envconfig:"EVENTS_FRAMEWORK_REDIS_SSL_ENABLED"`
+		// Path to b64 encoded .pem file
+		CertPath string `envconfig:"EVENTS_FRAMEWORK_REDIS_SSL_CA_CERT_PATH"`
 	}
 }
 

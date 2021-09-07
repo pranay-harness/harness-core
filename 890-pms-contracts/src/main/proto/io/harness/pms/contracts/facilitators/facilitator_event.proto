@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.facilitators;
+
+option java_multiple_files = true;
+
+import "io/harness/pms/contracts/ambiance/ambiance.proto";
+import "io/harness/pms/contracts/steps/step_type.proto";
+import "io/harness/pms/contracts/refobjects/ref_objects.proto";
+import "io/harness/pms/contracts/facilitators/facilitators.proto";
+
+message FacilitatorEvent {
+  io.harness.pms.contracts.ambiance.Ambiance ambiance = 1;
+  repeated io.harness.pms.contracts.refobjects.RefObject refObjects = 2;
+  io.harness.pms.contracts.steps.StepType stepType = 3;
+  repeated FacilitatorObtainment facilitatorObtainments = 4;
+  bytes stepParameters = 5;
+  string nodeExecutionId = 6;
+  string notifyId = 7;
+}

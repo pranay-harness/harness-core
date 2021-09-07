@@ -1,7 +1,5 @@
 package software.wings.service.intfc.appdynamics;
 
-import io.harness.cvng.beans.AppdynamicsValidationResponse;
-import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.appd.AppDynamicsApplication;
 import io.harness.cvng.beans.appd.AppDynamicsTier;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
@@ -19,7 +17,6 @@ import software.wings.service.impl.appdynamics.AppdynamicsSetupTestNodeData;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 
@@ -64,9 +61,4 @@ public interface AppdynamicsDelegateService {
   VerificationNodeDataSetupResponse getMetricsWithDataForNode(AppDynamicsConfig appDynamicsConfig,
       List<EncryptedDataDetail> encryptionDetails, AppdynamicsSetupTestNodeData setupTestNodeData, String hostName,
       ThirdPartyApiCallLog apiCallLog);
-
-  @DelegateTaskType(TaskType.APPDYNAMICS_METRIC_PACK_DATA)
-  Set<AppdynamicsValidationResponse> getMetricPackData(AppDynamicsConnectorDTO appDynamicsConnectorDTO,
-      List<EncryptedDataDetail> encryptionDetails, String appName, String tierName, String requestGuid,
-      List<MetricPackDTO> metricPacks, Instant startTime, Instant endTime);
 }

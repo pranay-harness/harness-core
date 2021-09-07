@@ -12,7 +12,7 @@ import io.harness.expression.ExpressionEvaluator;
 import io.harness.jira.JiraActionNG;
 import io.harness.security.encryption.EncryptedDataDetail;
 
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,6 +38,8 @@ public class JiraTaskNGParameters implements TaskParameters, ExecutionCapability
   String expand;
   // Fetch status along with create metadata.
   boolean fetchStatus;
+  // Do not fetch comment along with create metadata.
+  boolean ignoreComment;
 
   // Transition to do while updating (optional).
   String transitionToStatus; // required in a transition
@@ -45,12 +47,17 @@ public class JiraTaskNGParameters implements TaskParameters, ExecutionCapability
 
   // Fields sent while creating/updating issue.
   Map<String, String> fields;
+  List<String> delegateSelectors;
 
   public Set<String> getDelegateSelectors() {
-    if (jiraConnectorDTO == null || jiraConnectorDTO.getDelegateSelectors() == null) {
-      return Collections.emptySet();
+    Set<String> combinedDelegateSelectors = new HashSet<>();
+    if (jiraConnectorDTO != null && jiraConnectorDTO.getDelegateSelectors() != null) {
+      combinedDelegateSelectors.addAll(jiraConnectorDTO.getDelegateSelectors());
     }
-    return jiraConnectorDTO.getDelegateSelectors();
+    if (delegateSelectors != null) {
+      combinedDelegateSelectors.addAll(delegateSelectors);
+    }
+    return combinedDelegateSelectors;
   }
 
   @Override

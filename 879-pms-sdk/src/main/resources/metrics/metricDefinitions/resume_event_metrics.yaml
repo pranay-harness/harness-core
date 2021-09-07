@@ -1,0 +1,12 @@
+name: Resume event time
+identifier: resume_event
+metricGroup: resume_event_group
+metrics:
+  - metricName: resume_event_service_time
+    metricDefinition: Time for which resume event was was processed by the service.
+    type: LastValue
+    unit: count
+  - metricName: resume_event_time_in_queue
+    metricDefinition: Time for resume event was in the queue.
+    type: LastValue
+    unit: count

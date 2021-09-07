@@ -1,82 +1,173 @@
 package io.harness.aggregator.consumers;
 
+import static io.harness.accesscontrol.principals.PrincipalType.USER;
+import static io.harness.accesscontrol.principals.PrincipalType.USER_GROUP;
+import static io.harness.aggregator.ACLUtils.buildACL;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import io.harness.accesscontrol.acl.models.ACL;
-import io.harness.accesscontrol.acl.services.ACLService;
+import io.harness.accesscontrol.Principal;
+import io.harness.accesscontrol.acl.persistence.ACL;
+import io.harness.accesscontrol.acl.persistence.repositories.ACLRepository;
+import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.resources.resourcegroups.persistence.ResourceGroupDBO;
+import io.harness.accesscontrol.resources.resourcegroups.persistence.ResourceGroupRepository;
+import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO;
+import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO.RoleAssignmentDBOKeys;
+import io.harness.accesscontrol.roleassignments.persistence.repositories.RoleAssignmentRepository;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.GeneralException;
 
 import com.google.common.collect.Sets;
-import com.google.inject.Inject;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.query.Criteria;
 
 @OwnedBy(PL)
 @Singleton
-@AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class ResourceGroupChangeConsumerImpl implements ChangeConsumer<ResourceGroupDBO> {
-  private final ACLService aclService;
+  private final ACLRepository aclRepository;
+  private final RoleAssignmentRepository roleAssignmentRepository;
+  private final ResourceGroupRepository resourceGroupRepository;
+  private final ExecutorService executorService;
+  private final ChangeConsumerService changeConsumerService;
+
+  public ResourceGroupChangeConsumerImpl(ACLRepository aclRepository, RoleAssignmentRepository roleAssignmentRepository,
+      ResourceGroupRepository resourceGroupRepository, String executorServiceSuffix,
+      ChangeConsumerService changeConsumerService) {
+    this.aclRepository = aclRepository;
+    this.roleAssignmentRepository = roleAssignmentRepository;
+    this.resourceGroupRepository = resourceGroupRepository;
+    this.changeConsumerService = changeConsumerService;
+    String changeConsumerThreadFactory =
+        String.format("%s-resource-group-change-consumer", executorServiceSuffix) + "-%d";
+    // Number of threads = Number of Available Cores * (1 + (Wait time / Service time) )
+    this.executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2,
+        new ThreadFactoryBuilder().setNameFormat(changeConsumerThreadFactory).build());
+  }
 
   @Override
-  public long consumeUpdateEvent(String id, ResourceGroupDBO resourceGroupDBO) {
-    if (Optional.ofNullable(resourceGroupDBO.getResourceSelectors()).filter(x -> !x.isEmpty()).isPresent()) {
-      List<ACL> aclsWithThisResourceGroup = aclService.getByResourceGroup(resourceGroupDBO.getScopeIdentifier(),
-          resourceGroupDBO.getIdentifier(), Boolean.TRUE.equals(resourceGroupDBO.getManaged()));
-
-      Set<String> currentResourceSelectors = resourceGroupDBO.getResourceSelectors();
-      Set<String> resourceSelectorsInAcls =
-          aclsWithThisResourceGroup.stream().map(ACL::getResourceSelector).collect(Collectors.toSet());
-
-      Set<String> resourcesSelectorsToDelete = Sets.difference(resourceSelectorsInAcls, currentResourceSelectors);
-      Set<String> resourceSelectorsToAdd = Sets.difference(currentResourceSelectors, resourceSelectorsInAcls);
-
-      // delete ACLs which contain old resource Selectors
-      List<ACL> aclsToDelete = aclsWithThisResourceGroup.stream()
-                                   .filter(x -> resourcesSelectorsToDelete.contains(x.getResourceSelector()))
-                                   .collect(Collectors.toList());
-      if (!aclsToDelete.isEmpty()) {
-        log.info("Deleting: {} ACls", aclsToDelete.size());
-        aclService.deleteAll(aclsToDelete);
-      }
-
-      Map<ACL.RoleAssignmentPermissionPrincipal, List<ACL>> roleAssignmentToACLMapping =
-          aclsWithThisResourceGroup.stream().collect(Collectors.groupingBy(ACL::roleAssignmentPermissionPrincipal));
-
-      // insert new ACLs for all new resource selectors
-      List<ACL> aclsToCreate = new ArrayList<>();
-      roleAssignmentToACLMapping.forEach(
-          (roleAssignmentId, aclList) -> resourceSelectorsToAdd.forEach(resourceSelectorToAdd -> {
-            ACL aclToCreate = ACL.copyOf(aclList.get(0));
-            aclToCreate.setResourceSelector(resourceSelectorToAdd);
-            aclToCreate.setAclQueryString(ACL.getAclQueryString(aclToCreate));
-            aclsToCreate.add(aclToCreate);
-          }));
-      long count = 0;
-      if (!aclsToCreate.isEmpty()) {
-        count = aclService.insertAllIgnoringDuplicates(aclsToCreate);
-      }
-      log.info("{} ACLs created", count);
-      return count;
+  public void consumeUpdateEvent(String id, ResourceGroupDBO updatedResourceGroup) {
+    if (updatedResourceGroup.getResourceSelectors() == null && updatedResourceGroup.getFullScopeSelected() == null) {
+      return;
     }
-    return 0;
+
+    Optional<ResourceGroupDBO> resourceGroup = resourceGroupRepository.findById(id);
+    if (!resourceGroup.isPresent()) {
+      return;
+    }
+
+    Criteria criteria = Criteria.where(RoleAssignmentDBOKeys.resourceGroupIdentifier)
+                            .is(resourceGroup.get().getIdentifier())
+                            .and(RoleAssignmentDBOKeys.scopeIdentifier)
+                            .is(resourceGroup.get().getScopeIdentifier());
+    List<ReProcessRoleAssignmentOnResourceGroupUpdateTask> tasksToExecute =
+        roleAssignmentRepository.findAll(criteria, Pageable.unpaged())
+            .stream()
+            .map((RoleAssignmentDBO roleAssignment)
+                     -> new ReProcessRoleAssignmentOnResourceGroupUpdateTask(
+                         aclRepository, changeConsumerService, roleAssignment, resourceGroup.get()))
+            .collect(Collectors.toList());
+
+    long numberOfACLsCreated = 0;
+    long numberOfACLsDeleted = 0;
+
+    try {
+      for (Future<Result> future : executorService.invokeAll(tasksToExecute)) {
+        Result result = future.get();
+        numberOfACLsCreated += result.getNumberOfACLsCreated();
+        numberOfACLsDeleted += result.getNumberOfACLsDeleted();
+      }
+    } catch (ExecutionException ex) {
+      throw new GeneralException("", ex.getCause());
+    } catch (InterruptedException ex) {
+      Thread.currentThread().interrupt();
+      throw new GeneralException("", ex);
+    }
+
+    log.info("Number of ACLs created: {}", numberOfACLsCreated);
+    log.info("Number of ACLs deleted: {}", numberOfACLsDeleted);
   }
 
   @Override
-  public long consumeDeleteEvent(String id) {
-    return 0;
+  public void consumeDeleteEvent(String id) {
+    // No need to process separately. Would be processed indirectly when associated role bindings will be deleted
   }
 
   @Override
-  public long consumeCreateEvent(String id, ResourceGroupDBO accessControlEntity) {
-    return 0;
+  public void consumeCreateEvent(String id, ResourceGroupDBO createdEntity) {
+    // we do not consume create event
+  }
+
+  private static class ReProcessRoleAssignmentOnResourceGroupUpdateTask implements Callable<Result> {
+    private final ACLRepository aclRepository;
+    private final RoleAssignmentDBO roleAssignmentDBO;
+    private final ResourceGroupDBO updatedResourceGroup;
+    private final ChangeConsumerService changeConsumerService;
+
+    private ReProcessRoleAssignmentOnResourceGroupUpdateTask(ACLRepository aclRepository,
+        ChangeConsumerService changeConsumerService, RoleAssignmentDBO roleAssignment,
+        ResourceGroupDBO updatedResourceGroup) {
+      this.aclRepository = aclRepository;
+      this.changeConsumerService = changeConsumerService;
+      this.roleAssignmentDBO = roleAssignment;
+      this.updatedResourceGroup = updatedResourceGroup;
+    }
+
+    @Override
+    public Result call() {
+      Set<String> existingResourceSelectors =
+          Sets.newHashSet(aclRepository.getDistinctResourceSelectorsInACLs(roleAssignmentDBO.getId()));
+      Set<String> newResourceSelectors = new HashSet<>();
+      if (updatedResourceGroup.isFullScopeSelected()) {
+        newResourceSelectors.add("/*/*");
+      } else if (updatedResourceGroup.getResourceSelectors() != null) {
+        newResourceSelectors = updatedResourceGroup.getResourceSelectors();
+      }
+
+      Set<String> resourceSelectorsRemovedFromResourceGroup =
+          Sets.difference(existingResourceSelectors, newResourceSelectors);
+      Set<String> resourceSelectorsAddedToResourceGroup =
+          Sets.difference(newResourceSelectors, existingResourceSelectors);
+
+      long numberOfACLsDeleted = aclRepository.deleteByRoleAssignmentIdAndResourceSelectors(
+          roleAssignmentDBO.getId(), resourceSelectorsRemovedFromResourceGroup);
+
+      Set<String> existingPermissions =
+          Sets.newHashSet(aclRepository.getDistinctPermissionsInACLsForRoleAssignment(roleAssignmentDBO.getId()));
+      Set<String> existingPrincipals =
+          Sets.newHashSet(aclRepository.getDistinctPrincipalsInACLsForRoleAssignment(roleAssignmentDBO.getId()));
+      PrincipalType principalType =
+          USER_GROUP.equals(roleAssignmentDBO.getPrincipalType()) ? USER : roleAssignmentDBO.getPrincipalType();
+
+      long numberOfACLsCreated = 0;
+      List<ACL> aclsToCreate = new ArrayList<>();
+
+      if (existingPermissions.isEmpty() || existingPrincipals.isEmpty()) {
+        aclsToCreate.addAll(changeConsumerService.getAClsForRoleAssignment(roleAssignmentDBO));
+      } else {
+        resourceSelectorsAddedToResourceGroup.forEach(resourceSelector
+            -> existingPrincipals.forEach(principalIdentifier
+                -> existingPermissions.forEach(permissionIdentifier
+                    -> aclsToCreate.add(buildACL(permissionIdentifier, Principal.of(principalType, principalIdentifier),
+                        roleAssignmentDBO, resourceSelector)))));
+      }
+      numberOfACLsCreated += aclRepository.insertAllIgnoringDuplicates(aclsToCreate);
+
+      return new Result(numberOfACLsCreated, numberOfACLsDeleted);
+    }
   }
 }

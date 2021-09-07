@@ -13,7 +13,6 @@ import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 
 import com.google.inject.Inject;
-import java.util.List;
 import java.util.Optional;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.AccessLevel;
@@ -31,14 +30,17 @@ public class RoleAssignmentServiceImpl implements RoleAssignmentService {
   RoleAssignmentValidator roleAssignmentValidator;
 
   @Override
-  public List<RoleAssignment> createMulti(List<RoleAssignment> roleAssignments) {
-    return roleAssignmentDao.insertAllIgnoringDuplicates(roleAssignments);
-  }
-
-  @Override
   public RoleAssignment create(RoleAssignment roleAssignment) {
-    RoleAssignmentValidationResult result = roleAssignmentValidator.validate(
-        RoleAssignmentValidationRequest.builder().roleAssignment(roleAssignment).build());
+    RoleAssignmentValidationResult result = roleAssignmentValidator.validate(RoleAssignmentValidationRequest.builder()
+                                                                                 .roleAssignment(roleAssignment)
+                                                                                 .validateScope(true)
+                                                                                 .validatePrincipal(true)
+                                                                                 .validateRole(true)
+                                                                                 .validateResourceGroup(true)
+                                                                                 .build());
+    if (!result.getScopeValidationResult().isValid()) {
+      throw new InvalidRequestException(result.getScopeValidationResult().getErrorMessage());
+    }
     if (!result.getPrincipalValidationResult().isValid()) {
       throw new InvalidRequestException(result.getPrincipalValidationResult().getErrorMessage());
     }
@@ -57,8 +59,8 @@ public class RoleAssignmentServiceImpl implements RoleAssignmentService {
   }
 
   @Override
-  public Optional<RoleAssignment> get(String identifier, String parentIdentifier) {
-    return roleAssignmentDao.get(identifier, parentIdentifier);
+  public Optional<RoleAssignment> get(String identifier, String scopeIdentifier) {
+    return roleAssignmentDao.get(identifier, scopeIdentifier);
   }
 
   @Override
@@ -92,8 +94,8 @@ public class RoleAssignmentServiceImpl implements RoleAssignmentService {
   }
 
   @Override
-  public Optional<RoleAssignment> delete(String identifier, String parentIdentifier) {
-    return roleAssignmentDao.delete(identifier, parentIdentifier);
+  public Optional<RoleAssignment> delete(String identifier, String scopeIdentifier) {
+    return roleAssignmentDao.delete(identifier, scopeIdentifier);
   }
 
   @Override

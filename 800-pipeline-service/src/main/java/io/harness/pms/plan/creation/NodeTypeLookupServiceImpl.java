@@ -1,5 +1,6 @@
 package io.harness.pms.plan.creation;
 
+import static io.harness.cf.pipeline.FeatureFlagStageFilterJsonCreator.FEATURE_FLAG_SUPPORTED_TYPE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.exception.InvalidRequestException;
@@ -28,6 +29,9 @@ public class NodeTypeLookupServiceImpl implements NodeTypeLookupService {
         }
 
         if (supportedNodeTypes.stream().anyMatch(st -> st.equals(nodeType))) {
+          if (nodeType.equals(FEATURE_FLAG_SUPPORTED_TYPE)) {
+            return "cf";
+          }
           return entry.getKey();
         }
       }

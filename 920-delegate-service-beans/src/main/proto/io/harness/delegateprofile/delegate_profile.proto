@@ -7,6 +7,7 @@ option go_package = "920_delegate_service_beans";
 
 import "955-delegate-beans/src/main/proto/io/harness/delegate/account.proto";
 import "920-delegate-service-beans/src/main/proto/io/harness/paging/paging.proto";
+import "920-delegate-service-beans/src/main/proto/io/harness/owner/owner.proto";
 
 // Profile global unique identifier
 message ProfileId {
@@ -50,10 +51,33 @@ message DelegateProfileGrpc {
   EmbeddedUserDetails lastUpdatedBy = 11;
   string identifier = 12;
   int64 numberOfDelegates = 13;
+  bool ng = 14;
+  owner.OrgIdentifier orgIdentifier = 15;
+  owner.ProjectIdentifier projectIdentifier = 16;
+  int64 createdAt = 17;
+  int64 lastUpdatedAt = 18;
+}
+
+// Represents Delegate Profile Filter
+message DelegateProfileFilterGrpc {
+  delegate.AccountId account_id = 1;
+  string name = 2;
+  string description = 3;
+  bool approval_required = 4;
+  repeated ProfileSelector selectors = 5;
+  string identifier = 6;
+  bool ng = 7;
+  owner.OrgIdentifier orgIdentifier = 8;
+  owner.ProjectIdentifier projectIdentifier = 9;
+  map<string, string> filterTags = 10;
 }
 
 message DelegateProfilePageResponseGrpc {
   paging.PageRequestGrpc page_request = 1;
   int64 total = 2;
   repeated DelegateProfileGrpc response = 3;
+}
+
+message ProfileIdentifier {
+  string identifier = 1;
 }

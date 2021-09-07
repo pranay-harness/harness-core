@@ -1,5 +1,6 @@
 package io.harness.k8s.model;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
@@ -10,6 +11,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import static java.lang.String.format;
 import static java.util.Objects.nonNull;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.k8s.manifest.ObjectYamlUtils;
@@ -69,8 +71,10 @@ import org.apache.commons.lang3.StringUtils;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@OwnedBy(CDP)
 public class KubernetesResource {
   private static final String MISSING_DEPLOYMENT_SPEC_MSG = "Deployment does not have spec";
+  private static final String MISSING_STATEFULSET_SPEC_MSG = "StatefulSet does not have spec";
   private static final String MISSING_DEPLOYMENT_CONFIG_SPEC_MSG = "DeploymentConfig does not have spec";
   private static final String MISSING_CRON_JOB_SPEC_MSG = "CronJob does not have spec";
 
@@ -117,6 +121,21 @@ public class KubernetesResource {
 
       matchLabels.putAll(labels);
       v1Deployment.getSpec().getSelector().setMatchLabels(matchLabels);
+    } else if (k8sResource instanceof V1StatefulSet) {
+      V1StatefulSet v1StatefulSet = (V1StatefulSet) k8sResource;
+
+      notNullCheck(MISSING_STATEFULSET_SPEC_MSG, v1StatefulSet.getSpec());
+      if (v1StatefulSet.getSpec().getSelector() == null) {
+        throw new KubernetesYamlException("StatefulSet spec does not have selector");
+      }
+
+      Map<String, String> matchLabels = v1StatefulSet.getSpec().getSelector().getMatchLabels();
+      if (matchLabels == null) {
+        matchLabels = new HashMap<>();
+      }
+
+      matchLabels.putAll(labels);
+      v1StatefulSet.getSpec().getSelector().setMatchLabels(matchLabels);
     } else {
       throw new InvalidRequestException(
           format("Unhandled Kubernetes resource %s while adding labels to selector", this.resourceId.getKind()));
@@ -146,6 +165,10 @@ public class KubernetesResource {
       V1Deployment v1Deployment = (V1Deployment) k8sResource;
       notNullCheck(MISSING_DEPLOYMENT_SPEC_MSG, v1Deployment.getSpec());
       v1Deployment.getSpec().setReplicas(replicas);
+    } else if (k8sResource instanceof V1StatefulSet) {
+      V1StatefulSet v1StatefulSet = (V1StatefulSet) k8sResource;
+      notNullCheck(MISSING_STATEFULSET_SPEC_MSG, v1StatefulSet.getSpec());
+      v1StatefulSet.getSpec().setReplicas(replicas);
     } else {
       throw new InvalidRequestException(
           format("Unhandled Kubernetes resource %s while setting replicaCount", this.resourceId.getKind()));
@@ -175,6 +198,10 @@ public class KubernetesResource {
       V1Deployment v1Deployment = (V1Deployment) k8sResource;
       notNullCheck(MISSING_DEPLOYMENT_SPEC_MSG, v1Deployment.getSpec());
       return v1Deployment.getSpec().getReplicas();
+    } else if (k8sResource instanceof V1StatefulSet) {
+      V1StatefulSet v1StatefulSet = (V1StatefulSet) k8sResource;
+      notNullCheck(MISSING_STATEFULSET_SPEC_MSG, v1StatefulSet.getSpec());
+      return v1StatefulSet.getSpec().getReplicas();
     } else {
       throw new InvalidRequestException(
           format("Unhandled Kubernetes resource %s while getting replicaCount", this.resourceId.getKind()));
@@ -190,6 +217,10 @@ public class KubernetesResource {
       return hasMetadataAnnotation(HarnessAnnotations.primaryService);
     }
     return false;
+  }
+
+  public boolean isSkipPruning() {
+    return hasMetadataAnnotation(HarnessAnnotations.skipPruning);
   }
 
   public boolean isStageService() {
@@ -261,6 +292,14 @@ public class KubernetesResource {
         notNullCheck("Deployment does not have metadata", v1Deployment.getMetadata());
         newName = (String) transformer.apply(v1Deployment.getMetadata().getName());
         v1Deployment.getMetadata().setName(newName);
+        this.resourceId.setName(newName);
+        break;
+
+      case StatefulSet:
+        V1StatefulSet v1StatefulSet = (V1StatefulSet) k8sResource;
+        notNullCheck("StatefulSet does not have metadata", v1StatefulSet.getMetadata());
+        newName = (String) transformer.apply(v1StatefulSet.getMetadata().getName());
+        v1StatefulSet.getMetadata().setName(newName);
         this.resourceId.setName(newName);
         break;
 

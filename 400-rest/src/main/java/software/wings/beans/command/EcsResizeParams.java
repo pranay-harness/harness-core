@@ -2,10 +2,10 @@ package software.wings.beans.command;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.delegate.beans.pcf.ResizeStrategy;
 
 import software.wings.api.ContainerServiceData;
 import software.wings.beans.InstanceUnitType;
-import software.wings.beans.ResizeStrategy;
 import software.wings.beans.container.AwsAutoScalarConfig;
 
 import java.util.List;

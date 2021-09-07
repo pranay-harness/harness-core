@@ -38,6 +38,6 @@ WORKDIR /opt/harness-delegate
 
 RUN curl -s https://app.harness.io/storage/wingsdelegates/jre/openjdk-8u242/jre_x64_linux_8u242b08.tar.gz | tar -xz
 
-CMD ./start.sh && bash -c ' \
+CMD ./entrypoint.sh && bash -c ' \
     while [[ ! -e watcher.log ]]; do sleep 1s; done; tail -F watcher.log & \
     while [[ ! -e delegate.log ]]; do sleep 1s; done; tail -F delegate.log'

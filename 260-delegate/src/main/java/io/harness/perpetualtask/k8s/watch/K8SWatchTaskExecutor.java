@@ -6,7 +6,12 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.delegate.beans.ccm.K8sClusterInfo;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
+import io.harness.delegate.task.citasks.cik8handler.K8sConnectorHelper;
 import io.harness.event.client.EventPublisher;
 import io.harness.event.payloads.CeExceptionMessage;
 import io.harness.grpc.utils.AnyUtils;
@@ -22,13 +27,12 @@ import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import io.harness.perpetualtask.k8s.metrics.client.impl.DefaultK8sMetricsClient;
 import io.harness.perpetualtask.k8s.metrics.collector.K8sMetricCollector;
+import io.harness.perpetualtask.k8s.utils.ApiExceptionLogger;
 import io.harness.serializer.KryoSerializer;
 
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.JsonSyntaxException;
@@ -42,18 +46,17 @@ import io.kubernetes.client.openapi.models.V1PersistentVolume;
 import io.kubernetes.client.openapi.models.V1Pod;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(HarnessTeam.CE)
 public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
   private static final String MESSAGE_PROCESSOR_TYPE = "EXCEPTION";
   private final Map<String, String> taskWatchIdMap = new ConcurrentHashMap<>();
@@ -65,18 +68,18 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
   private final ApiClientFactoryImpl apiClientFactory;
   private final KryoSerializer kryoSerializer;
   private final ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
-  private final Cache<Class<? extends Throwable>, Boolean> recentlyLoggedExceptions;
+  private final K8sConnectorHelper k8sConnectorHelper;
 
   @Inject
   public K8SWatchTaskExecutor(EventPublisher eventPublisher, K8sWatchServiceDelegate k8sWatchServiceDelegate,
       ApiClientFactoryImpl apiClientFactory, KryoSerializer kryoSerializer,
-      ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper) {
+      ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper, K8sConnectorHelper k8sConnectorHelper) {
     this.eventPublisher = eventPublisher;
     this.k8sWatchServiceDelegate = k8sWatchServiceDelegate;
     this.apiClientFactory = apiClientFactory;
     this.kryoSerializer = kryoSerializer;
     this.containerDeploymentDelegateHelper = containerDeploymentDelegateHelper;
-    recentlyLoggedExceptions = Caffeine.newBuilder().expireAfterWrite(10, TimeUnit.MINUTES).build();
+    this.k8sConnectorHelper = k8sConnectorHelper;
   }
 
   @Override
@@ -86,13 +89,10 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
     try (AutoLogContext ignore1 = new PerpetualTaskLogContext(taskId.getId(), OVERRIDE_ERROR)) {
       try {
         Instant now = Instant.now();
-        String watchId = k8sWatchServiceDelegate.create(watchTaskParams);
-        log.info("Ensured watch exists with id {}.", watchId);
-        K8sClusterConfig k8sClusterConfig =
-            (K8sClusterConfig) kryoSerializer.asObject(watchTaskParams.getK8SClusterConfig().toByteArray());
+        KubernetesConfig kubernetesConfig = getKubernetesConfig(watchTaskParams);
 
-        KubernetesConfig kubernetesConfig =
-            containerDeploymentDelegateHelper.getKubernetesConfig(k8sClusterConfig, false);
+        String watchId = k8sWatchServiceDelegate.create(watchTaskParams, kubernetesConfig);
+        log.info("Ensured watch exists with id {}.", watchId);
 
         DefaultK8sMetricsClient k8sMetricsClient =
             new DefaultK8sMetricsClient(apiClientFactory.getClient(kubernetesConfig));
@@ -113,19 +113,20 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
                           .clusterName(watchTaskParams.getClusterName())
                           .kubeSystemUid(K8sWatchServiceDelegate.getKubeSystemUid(k8sMetricsClient))
                           .build();
-                  return new K8sMetricCollector(eventPublisher, k8sMetricsClient, clusterDetails, heartbeatTime);
+                  return new K8sMetricCollector(eventPublisher, clusterDetails, heartbeatTime);
                 })
-            .collectAndPublishMetrics(now);
+            .collectAndPublishMetrics(k8sMetricsClient, now);
 
       } catch (JsonSyntaxException ex) {
-        logIfNotSeenRecently(ex, "Encountered json deserialization error");
+        ApiExceptionLogger.logErrorIfNotSeenRecently(
+            ex, "Encountered json deserialization error while parsing Kubernetes Api response");
         publishError(CeExceptionMessage.newBuilder()
                          .setClusterId(watchTaskParams.getClusterId())
                          .setMessage(ex.toString())
                          .build(),
             taskId);
       } catch (ApiException ex) {
-        logIfNotSeenRecently(ex, "Encountered api exception");
+        ApiExceptionLogger.logErrorIfNotSeenRecently(ex, String.format("ApiException: %s", ex.getResponseBody()));
         publishError(CeExceptionMessage.newBuilder()
                          .setClusterId(watchTaskParams.getClusterId())
                          .setMessage(format(
@@ -137,13 +138,6 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
       }
       return PerpetualTaskResponse.builder().responseCode(200).responseMessage("success").build();
     }
-  }
-
-  private void logIfNotSeenRecently(Exception ex, String msg) {
-    recentlyLoggedExceptions.get(ex.getClass(), k -> {
-      log.error(msg, ex);
-      return Boolean.TRUE;
-    });
   }
 
   private void publishError(CeExceptionMessage ceExceptionMessage, PerpetualTaskId taskId) {
@@ -158,29 +152,28 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
   @VisibleForTesting
   static void publishClusterSyncEvent(DefaultK8sMetricsClient client, EventPublisher eventPublisher,
       K8sWatchTaskParams watchTaskParams, Instant pollTime) throws ApiException {
-    List<String> nodeUidList = client.listNode(null, null, null, null, null, null, null, null, null)
-                                   .getItems()
-                                   .stream()
-                                   .map(V1Node::getMetadata)
-                                   .map(V1ObjectMeta::getUid)
-                                   .collect(Collectors.toList());
-    List<String> podUidList = client.listPodForAllNamespaces(null, null, null, null, null, null, null, null, null)
-                                  .getItems()
-                                  .stream()
-                                  .filter(pod -> "Running".equals(pod.getStatus().getPhase()))
-                                  .map(V1Pod::getMetadata)
-                                  .map(V1ObjectMeta::getUid)
-                                  .collect(Collectors.toList());
-    List<String> pvUidList = new ArrayList<>();
+    Map<String, String> nodeUidNameMap = client.listNode(null, null, null, null, null, null, null, null, null)
+                                             .getItems()
+                                             .stream()
+                                             .map(V1Node::getMetadata)
+                                             .collect(Collectors.toMap(V1ObjectMeta::getUid, V1ObjectMeta::getName));
 
+    Map<String, String> podUidNameMap =
+        client.listPodForAllNamespaces(null, null, null, null, null, null, null, null, null)
+            .getItems()
+            .stream()
+            .filter(pod -> "Running".equals(pod.getStatus().getPhase()))
+            .map(V1Pod::getMetadata)
+            .collect(Collectors.toMap(V1ObjectMeta::getUid, V1ObjectMeta::getName));
+
+    Map<String, String> pvUidNameMap = new HashMap<>();
     // optional as of now, will remove when the permission is mandatory.
     try {
-      pvUidList.addAll(client.listPersistentVolume(null, null, null, null, null, null, null, null, null)
-                           .getItems()
-                           .stream()
-                           .map(V1PersistentVolume::getMetadata)
-                           .map(V1ObjectMeta::getUid)
-                           .collect(Collectors.toList()));
+      pvUidNameMap.putAll(client.listPersistentVolume(null, null, null, null, null, null, null, null, null)
+                              .getItems()
+                              .stream()
+                              .map(V1PersistentVolume::getMetadata)
+                              .collect(Collectors.toMap(V1ObjectMeta::getUid, V1ObjectMeta::getName)));
     } catch (ApiException ex) {
       log.warn("ListPersistentVolume failed: code=[{}], headers=[{}]", ex.getCode(), ex.getResponseHeaders(), ex);
     }
@@ -191,10 +184,11 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
                                                   .setCloudProviderId(watchTaskParams.getCloudProviderId())
                                                   .setClusterName(watchTaskParams.getClusterName())
                                                   .setKubeSystemUid(K8sWatchServiceDelegate.getKubeSystemUid(client))
-                                                  .addAllActiveNodeUids(nodeUidList)
-                                                  .addAllActivePodUids(podUidList)
-                                                  .addAllActivePvUids(pvUidList)
+                                                  .putAllActiveNodeUidsMap(nodeUidNameMap)
+                                                  .putAllActivePodUidsMap(podUidNameMap)
+                                                  .putAllActivePvUidsMap(pvUidNameMap)
                                                   .setLastProcessedTimestamp(timestamp)
+                                                  .setVersion(2)
                                                   .build();
     eventPublisher.publishMessage(
         k8SClusterSyncEvent, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, watchTaskParams.getClusterId()));
@@ -217,5 +211,21 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
       });
       return true;
     }
+  }
+
+  private KubernetesConfig getKubernetesConfig(K8sWatchTaskParams watchTaskParams) {
+    if (watchTaskParams.getK8SClusterConfig().size() != 0) {
+      // Supporting deprecated K8sWatchTaskParams field
+      K8sClusterConfig k8sClusterConfig =
+          (K8sClusterConfig) kryoSerializer.asObject(watchTaskParams.getK8SClusterConfig().toByteArray());
+
+      return containerDeploymentDelegateHelper.getKubernetesConfig(k8sClusterConfig, false);
+    }
+
+    K8sClusterInfo k8sClusterInfo =
+        (K8sClusterInfo) kryoSerializer.asObject(watchTaskParams.getK8SClusterInfo().toByteArray());
+
+    return k8sConnectorHelper.getKubernetesConfig(
+        (KubernetesClusterConfigDTO) k8sClusterInfo.getConnectorConfigDTO(), k8sClusterInfo.getEncryptedDataDetails());
   }
 }

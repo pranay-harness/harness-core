@@ -31,12 +31,14 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.when;
 
+import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
@@ -68,6 +70,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -94,6 +97,7 @@ public class EcsSetupRollbackTest extends WingsBaseTest {
   @Mock private ServiceResourceService mockServiceResourceService;
   @Mock private InfrastructureMappingService mockInfrastructureMappingService;
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private StateExecutionService stateExecutionService;
   @InjectMocks private final EcsSetupRollback state = new EcsSetupRollback("stateName");
 
   @Test
@@ -138,9 +142,10 @@ public class EcsSetupRollbackTest extends WingsBaseTest {
         .getStateExecutionData(any(), anyString(), any(), any(Activity.class));
     EcsSetupContextVariableHolder holder = EcsSetupContextVariableHolder.builder().build();
     doReturn(holder).when(mockEcsStateHelper).renderEcsSetupContextVariables(any());
-    doReturn(DEL_TASK_ID)
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
+    doReturn(DelegateTask.builder().uuid(DEL_TASK_ID).description("desc").build())
         .when(mockEcsStateHelper)
-        .createAndQueueDelegateTaskForEcsServiceSetUp(any(), any(), any(Activity.class), any());
+        .createAndQueueDelegateTaskForEcsServiceSetUp(any(), any(), any(Activity.class), any(), eq(true));
 
     ExecutionResponse response = state.execute(mockContext);
 
@@ -161,7 +166,7 @@ public class EcsSetupRollbackTest extends WingsBaseTest {
 
     ArgumentCaptor<EcsServiceSetupRequest> captor2 = ArgumentCaptor.forClass(EcsServiceSetupRequest.class);
     verify(mockEcsStateHelper)
-        .createAndQueueDelegateTaskForEcsServiceSetUp(captor2.capture(), any(), any(Activity.class), any());
+        .createAndQueueDelegateTaskForEcsServiceSetUp(captor2.capture(), any(), any(Activity.class), any(), eq(true));
     EcsServiceSetupRequest request = captor2.getValue();
     assertThat(request).isNotNull();
     assertThat(request.getEcsSetupParams()).isNotNull();
@@ -174,6 +179,7 @@ public class EcsSetupRollbackTest extends WingsBaseTest {
     assertThat(response.getStateExecutionData()).isEqualTo(executionData);
     assertThat(response.getDelegateTaskId()).isEqualTo(DEL_TASK_ID);
     verify(featureFlagService).isEnabled(eq(TIMEOUT_FAILURE_SUPPORT), any());
+    verify(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
   }
 
   @Test

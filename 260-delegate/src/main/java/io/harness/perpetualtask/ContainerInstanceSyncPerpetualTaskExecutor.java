@@ -1,5 +1,6 @@
 package io.harness.perpetualtask;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.network.SafeHttpCall.execute;
@@ -8,6 +9,7 @@ import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.service.impl.ContainerMetadataType.K8S;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
@@ -42,6 +44,7 @@ import org.eclipse.jetty.server.Response;
 
 @Slf4j
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(CDP)
 public class ContainerInstanceSyncPerpetualTaskExecutor implements PerpetualTaskExecutor {
   @Inject private DelegateAgentManagerClient delegateAgentManagerClient;
   @Inject private K8sTaskHelper k8sTaskHelper;
@@ -117,6 +120,8 @@ public class ContainerInstanceSyncPerpetualTaskExecutor implements PerpetualTask
           .controllerName(request.getContainerServiceName())
           .isEcs(isEcs)
           .ecsServiceExists(ecsServiceExists)
+          .releaseName(containerServicePerpetualTaskParams.getReleaseName())
+          .namespace(containerServicePerpetualTaskParams.getNamespace())
           .build();
     } catch (Exception exception) {
       log.error(String.format("Failed to fetch containers info for namespace: [%s] and svc:[%s] ",

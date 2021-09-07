@@ -52,6 +52,7 @@ import software.wings.api.RouteUpdateRollbackElement;
 import software.wings.api.ScriptStateExecutionSummary;
 import software.wings.api.ServiceInstanceArtifactParam;
 import software.wings.api.ServiceInstanceIdsParam;
+import software.wings.api.ShellScriptProvisionerOutputElement;
 import software.wings.api.TerraformOutputInfoElement;
 import software.wings.api.cloudformation.CloudFormationOutputInfoElement;
 import software.wings.api.cloudformation.CloudFormationRollbackInfoElement;
@@ -92,7 +93,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -408,8 +408,11 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
                   .releaseName(k8sExecutionSummary.getReleaseName())
                   .targetInstances(k8sExecutionSummary.getTargetInstances())
                   .delegateSelectors((k8sExecutionSummary.getDelegateSelectors() == null)
-                          ? Collections.emptyList()
+                          ? emptyList()
                           : new ArrayList<>(k8sExecutionSummary.getDelegateSelectors()))
+                  .prunedResourcesIds(k8sExecutionSummary.getPrunedResourcesIds() == null
+                          ? emptyList()
+                          : k8sExecutionSummary.getPrunedResourcesIds())
                   .build();
           return asList(k8SContextElement);
         }
@@ -703,7 +706,8 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
   private boolean isProvisionerElement(ContextElement element) {
     return element instanceof TerraformProvisionInheritPlanElement || element instanceof TerraformOutputInfoElement
-        || element instanceof CloudFormationRollbackInfoElement || element instanceof CloudFormationOutputInfoElement;
+        || element instanceof CloudFormationRollbackInfoElement || element instanceof CloudFormationOutputInfoElement
+        || element instanceof ShellScriptProvisionerOutputElement;
   }
 
   private ContextElement fetchNotifiedContextElement(

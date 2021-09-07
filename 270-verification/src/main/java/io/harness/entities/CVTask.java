@@ -32,7 +32,7 @@ import org.mongodb.morphia.annotations.PrePersist;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "cvTasks", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class CVTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+public final class CVTask implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
   @Id private String uuid;
 
   @NonNull @FdIndex private String accountId;

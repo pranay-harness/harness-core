@@ -1,19 +1,24 @@
 package io.harness.cdng.manifest.yaml.kinds;
 
-import static io.harness.common.SwaggerConstants.BOOLEAN_CLASSPATH;
-import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.SwaggerConstants.STRING_CLASSPATH;
+import static io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper.StoreConfigWrapperParameters;
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.bool;
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
+import io.harness.annotation.RecasterAlias;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.ManifestType;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
-import io.harness.cdng.manifest.yaml.StoreConfig;
-import io.harness.cdng.manifest.yaml.StoreConfigWrapper;
-import io.harness.cdng.visitor.YamlTypes;
+import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
+import io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper;
 import io.harness.cdng.visitor.helpers.manifest.KustomizeManifestVisitorHelper;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.walktree.beans.LevelNode;
+import io.harness.pms.yaml.SkipAutoEvaluation;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
+import io.harness.yaml.YamlSchemaTypes;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -22,7 +27,9 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Value;
 import lombok.experimental.FieldDefaults;
+import lombok.experimental.FieldNameConstants;
 import lombok.experimental.Wither;
 import org.springframework.data.annotation.TypeAlias;
 
@@ -31,13 +38,21 @@ import org.springframework.data.annotation.TypeAlias;
 @EqualsAndHashCode(callSuper = false)
 @JsonTypeName(ManifestType.Kustomize)
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@FieldNameConstants(innerTypeName = "KustomizeManifestKeys")
 @SimpleVisitorHelper(helperClass = KustomizeManifestVisitorHelper.class)
 @TypeAlias("kustomizeManifest")
+@OwnedBy(CDC)
+@RecasterAlias("io.harness.cdng.manifest.yaml.kinds.KustomizeManifest")
 public class KustomizeManifest implements ManifestAttributes, Visitable {
   @EntityIdentifier String identifier;
-  @Wither @JsonProperty("store") StoreConfigWrapper storeConfigWrapper;
-  @Wither @ApiModelProperty(dataType = BOOLEAN_CLASSPATH) ParameterField<Boolean> skipResourceVersioning;
-  @Wither @ApiModelProperty(dataType = STRING_CLASSPATH) ParameterField<String> pluginPath;
+  @Wither
+  @JsonProperty("store")
+  @ApiModelProperty(dataType = "io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper")
+  @SkipAutoEvaluation
+  ParameterField<StoreConfigWrapper> store;
+
+  @Wither @YamlSchemaTypes({string, bool}) @SkipAutoEvaluation ParameterField<Boolean> skipResourceVersioning;
+  @Wither @ApiModelProperty(dataType = STRING_CLASSPATH) @SkipAutoEvaluation ParameterField<String> pluginPath;
 
   @Override
   public String getKind() {
@@ -46,22 +61,17 @@ public class KustomizeManifest implements ManifestAttributes, Visitable {
 
   @Override
   public StoreConfig getStoreConfig() {
-    return this.storeConfigWrapper.getStoreConfig();
-  }
-
-  @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.KUSTOMIZE_MANIFEST).isPartOfFQN(false).build();
+    return this.store.getValue().getSpec();
   }
 
   @Override
   public ManifestAttributes applyOverrides(ManifestAttributes overrideConfig) {
     KustomizeManifest kustomizeManifest = (KustomizeManifest) overrideConfig;
     KustomizeManifest resultantManifest = this;
-    if (kustomizeManifest.getStoreConfigWrapper() != null) {
-      StoreConfigWrapper storeConfigOverride = kustomizeManifest.getStoreConfigWrapper();
-      resultantManifest =
-          resultantManifest.withStoreConfigWrapper(storeConfigWrapper.applyOverrides(storeConfigOverride));
+    if (kustomizeManifest.getStore() != null && kustomizeManifest.getStore().getValue() != null) {
+      StoreConfigWrapper storeConfigOverride = kustomizeManifest.getStore().getValue();
+      resultantManifest = resultantManifest.withStore(
+          ParameterField.createValueField(store.getValue().applyOverrides(storeConfigOverride)));
     }
     if (kustomizeManifest.getSkipResourceVersioning() != null) {
       resultantManifest = resultantManifest.withSkipResourceVersioning(kustomizeManifest.getSkipResourceVersioning());
@@ -72,5 +82,19 @@ public class KustomizeManifest implements ManifestAttributes, Visitable {
     }
 
     return resultantManifest;
+  }
+
+  @Override
+  public ManifestAttributeStepParameters getManifestAttributeStepParameters() {
+    return new KustomizeManifestStepParameters(identifier,
+        StoreConfigWrapperParameters.fromStoreConfigWrapper(store.getValue()), skipResourceVersioning, pluginPath);
+  }
+
+  @Value
+  public static class KustomizeManifestStepParameters implements ManifestAttributeStepParameters {
+    String identifier;
+    StoreConfigWrapperParameters store;
+    ParameterField<Boolean> skipResourceVersioning;
+    ParameterField<String> pluginPath;
   }
 }

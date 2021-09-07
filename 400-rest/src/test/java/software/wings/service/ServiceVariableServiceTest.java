@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -13,6 +14,7 @@ import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SRINIVAS;
+import static io.harness.rule.OwnerRule.TMACARI;
 import static io.harness.rule.OwnerRule.YOGESH;
 
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
@@ -44,6 +46,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -96,6 +99,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 /**
  * Created by anubhaw on 8/9/16.
  */
+@OwnedBy(CDC)
 public class ServiceVariableServiceTest extends WingsBaseTest {
   private static final ServiceVariable SERVICE_VARIABLE = ServiceVariable.builder()
                                                               .envId(ENV_ID)
@@ -620,6 +624,26 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
                                    .name("Test-Name")
                                    .type(TEXT)
                                    .value("TestValue".toCharArray())
+                                   .build();
+
+    variable.setAppId(APP_ID);
+    variable.setUuid(SERVICE_VARIABLE_ID);
+    when(wingsPersistence.getWithAppId(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(variable);
+    serviceVariableService.save(variable, false);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void shouldNotSaveServiceVariableWithEmptyValue() {
+    ServiceVariable variable = ServiceVariable.builder()
+                                   .envId(ENV_ID)
+                                   .entityType(EntityType.SERVICE_TEMPLATE)
+                                   .entityId(TEMPLATE_ID)
+                                   .templateId(TEMPLATE_ID)
+                                   .name("TestName")
+                                   .type(TEXT)
+                                   .value("".toCharArray())
                                    .build();
 
     variable.setAppId(APP_ID);

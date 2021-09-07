@@ -1,23 +1,34 @@
 package software.wings.service.impl.security.auth;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.UJJAWAL;
+import static io.harness.rule.OwnerRule.VUK;
 
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.SettingAttribute.SettingCategory.CLOUD_PROVIDER;
 import static software.wings.beans.SettingAttribute.SettingCategory.CONNECTOR;
 import static software.wings.beans.SettingAttribute.SettingCategory.SETTING;
+import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CLOUD_PROVIDERS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CONNECTORS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SSH_AND_WINRM;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.StringValue;
 import software.wings.beans.User;
 import software.wings.security.AccountPermissionSummary;
 import software.wings.security.PermissionAttribute.PermissionType;
@@ -35,6 +46,8 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(PL)
+@TargetModule(HarnessModule.UNDEFINED)
 public class SettingAuthHandlerTest extends WingsBaseTest {
   @Mock private AuthHandler authHandler;
   @Mock private SettingsService settingsService;
@@ -81,7 +94,7 @@ public class SettingAuthHandlerTest extends WingsBaseTest {
 
       settingAttribute.setCategory(CLOUD_PROVIDER);
 
-      settingAuthHandler.authorize(new SettingAttribute());
+      settingAuthHandler.authorize(new SettingAttribute(), null);
     } catch (Exception e) {
       assertThat(e).isNull();
       exceptionThrown = true;
@@ -102,7 +115,7 @@ public class SettingAuthHandlerTest extends WingsBaseTest {
 
       settingAttribute.setCategory(SETTING);
 
-      settingAuthHandler.authorize(new SettingAttribute());
+      settingAuthHandler.authorize(new SettingAttribute(), null);
     } catch (Exception e) {
       assertThat(e).isNull();
       exceptionThrown = true;
@@ -123,7 +136,7 @@ public class SettingAuthHandlerTest extends WingsBaseTest {
 
       settingAttribute.setCategory(CLOUD_PROVIDER);
 
-      settingAuthHandler.authorize(settingAttribute);
+      settingAuthHandler.authorize(settingAttribute, null);
     } catch (Exception e) {
       assertThat(e).isNull();
       exceptionThrown = true;
@@ -144,7 +157,28 @@ public class SettingAuthHandlerTest extends WingsBaseTest {
       settingAttribute.setCategory(CONNECTOR);
       UserThreadLocal.set(user);
 
-      settingAuthHandler.authorize(settingAttribute);
+      settingAuthHandler.authorize(settingAttribute, null);
+    } catch (Exception e) {
+      assertThat(e).isNull();
+      exceptionThrown = true;
+    } finally {
+      UserThreadLocal.unset();
+    }
+    assertThat(exceptionThrown).isFalse();
+  }
+
+  @Test
+  @Owner(developers = VUK)
+  @Category(UnitTests.class)
+  public void testAuthorizeSshAndWinRM() {
+    boolean exceptionThrown = false;
+    try {
+      setPermissions(MANAGE_SSH_AND_WINRM);
+
+      settingAttribute.setCategory(SETTING);
+      UserThreadLocal.set(user);
+
+      settingAuthHandler.authorize(settingAttribute, null);
     } catch (Exception e) {
       assertThat(e).isNull();
       exceptionThrown = true;
@@ -211,6 +245,50 @@ public class SettingAuthHandlerTest extends WingsBaseTest {
       when(settingsService.get(eq(appId), eq(entityId))).thenReturn(settingAttribute);
 
       settingAuthHandler.authorize(appId, entityId);
+    } catch (Exception e) {
+      assertThat(e).isNull();
+      exceptionThrown = true;
+    } finally {
+      UserThreadLocal.unset();
+    }
+    assertThat(exceptionThrown).isFalse();
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void testAuthorizeApplicationDefaults() {
+    boolean exceptionThrown = false;
+    try {
+      setPermissions(ACCOUNT_MANAGEMENT);
+      UserThreadLocal.set(user);
+
+      settingAttribute.setCategory(SETTING);
+      settingAttribute.setValue(StringValue.Builder.aStringValue().withValue("testValue").build());
+
+      settingAuthHandler.authorize(settingAttribute, GLOBAL_APP_ID);
+    } catch (Exception e) {
+      assertThat(e).isNull();
+      exceptionThrown = true;
+    } finally {
+      UserThreadLocal.unset();
+    }
+    assertThat(exceptionThrown).isFalse();
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void testAuthorizeAccountDefaults() {
+    boolean exceptionThrown = false;
+    try {
+      setPermissions(MANAGE_APPLICATIONS);
+      UserThreadLocal.set(user);
+
+      settingAttribute.setCategory(SETTING);
+      settingAttribute.setValue(StringValue.Builder.aStringValue().withValue("testValue").build());
+
+      settingAuthHandler.authorize(settingAttribute, "testAppId");
     } catch (Exception e) {
       assertThat(e).isNull();
       exceptionThrown = true;

@@ -28,12 +28,14 @@ import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.when;
 
+import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -55,6 +57,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -81,6 +84,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
   @Mock private InfrastructureMappingService mockInfrastructureMappingService;
   @Mock private ContainerDeploymentManagerHelper mockContainerDeploymentHelper;
   @Mock private FeatureFlagService mockFeatureFlagService;
+  @Mock private StateExecutionService stateExecutionService;
 
   @InjectMocks private EcsServiceDeploy state = new EcsServiceDeploy("stateName");
 
@@ -119,9 +123,14 @@ public class EcsServiceDeployTest extends WingsBaseTest {
     Activity activity = Activity.builder().uuid(ACTIVITY_ID).build();
     doReturn(activity).when(mockEcsStateHelper).createActivity(any(), anyString(), anyString(), any(), any());
     doReturn(false).when(mockFeatureFlagService).isEnabled(any(), anyString());
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
+    doReturn(DelegateTask.builder().description("desc").build())
+        .when(mockEcsStateHelper)
+        .createAndQueueDelegateTaskForEcsServiceDeploy(any(), any(), any(), any(), eq(true));
     ExecutionResponse response = state.execute(mockContext);
     ArgumentCaptor<EcsServiceDeployRequest> captor = ArgumentCaptor.forClass(EcsServiceDeployRequest.class);
-    verify(mockEcsStateHelper).createAndQueueDelegateTaskForEcsServiceDeploy(any(), captor.capture(), any(), any());
+    verify(mockEcsStateHelper)
+        .createAndQueueDelegateTaskForEcsServiceDeploy(any(), captor.capture(), any(), any(), eq(true));
     verify(mockEcsStateHelper).createSweepingOutputForRollback(any(), any(), any(), any(), any());
     verify(mockFeatureFlagService).isEnabled(eq(TIMEOUT_FAILURE_SUPPORT), any());
     EcsServiceDeployRequest request = captor.getValue();

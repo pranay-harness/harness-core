@@ -1,5 +1,6 @@
 package io.harness.connector;
 
+import io.harness.remote.client.ClientMode;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.security.ServiceTokenGenerator;
 import io.harness.serializer.kryo.KryoConverterFactory;
@@ -13,6 +14,16 @@ public class ConnectorResourceClientModule extends AbstractModule {
   private final ServiceHttpClientConfig ngManagerClientConfig;
   private final String serviceSecret;
   private final String clientId;
+  private final ClientMode clientMode;
+
+  @Inject
+  public ConnectorResourceClientModule(
+      ServiceHttpClientConfig ngManagerClientConfig, String serviceSecret, String clientId, ClientMode clientMode) {
+    this.ngManagerClientConfig = ngManagerClientConfig;
+    this.serviceSecret = serviceSecret;
+    this.clientId = clientId;
+    this.clientMode = clientMode;
+  }
 
   @Inject
   public ConnectorResourceClientModule(
@@ -20,12 +31,13 @@ public class ConnectorResourceClientModule extends AbstractModule {
     this.ngManagerClientConfig = ngManagerClientConfig;
     this.serviceSecret = serviceSecret;
     this.clientId = clientId;
+    this.clientMode = ClientMode.NON_PRIVILEGED;
   }
 
   @Provides
-  private ConnectorResourceHttpClientFactory secretManagerHttpClientFactory(KryoConverterFactory kryoConverterFactory) {
-    return new ConnectorResourceHttpClientFactory(
-        this.ngManagerClientConfig, this.serviceSecret, new ServiceTokenGenerator(), kryoConverterFactory, clientId);
+  private ConnectorResourceHttpClientFactory providesHttpClientFactory(KryoConverterFactory kryoConverterFactory) {
+    return new ConnectorResourceHttpClientFactory(this.ngManagerClientConfig, this.serviceSecret,
+        new ServiceTokenGenerator(), kryoConverterFactory, clientId, clientMode);
   }
 
   @Override

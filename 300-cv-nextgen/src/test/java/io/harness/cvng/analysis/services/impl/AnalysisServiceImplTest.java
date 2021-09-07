@@ -74,10 +74,12 @@ public class AnalysisServiceImplTest extends CvNextGenTestBase {
     projectIdentifier = generateUuid();
     serviceIdentifier = generateUuid();
     instant = Instant.parse("2020-07-27T10:44:06.390Z");
-    splunkCVConfigId = cvConfigService.save(createSplunkCVConfig()).getUuid();
-    appDynamicsCVConfigId = cvConfigService.save(creatAppDynamicsCVConfig()).getUuid();
-    metricVerificationTaskId = verificationTaskService.create(accountId, appDynamicsCVConfigId);
-    logVerificationTaskId = verificationTaskService.create(accountId, splunkCVConfigId);
+    CVConfig cvConfig = cvConfigService.save(createSplunkCVConfig());
+    splunkCVConfigId = cvConfig.getUuid();
+    logVerificationTaskId = verificationTaskService.create(accountId, splunkCVConfigId, cvConfig.getType());
+    cvConfig = cvConfigService.save(creatAppDynamicsCVConfig());
+    appDynamicsCVConfigId = cvConfig.getUuid();
+    metricVerificationTaskId = verificationTaskService.create(accountId, appDynamicsCVConfigId, cvConfig.getType());
   }
   @Test
   @Owner(developers = KAMAL)

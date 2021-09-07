@@ -79,7 +79,7 @@ public class ChangeEventProcessorTask implements Runnable {
     for (CDCEntity<?> cdcEntity : cdcEntities) {
       if (cdcEntity.getSubscriptionEntity().equals(clazz)) {
         for (ChangeDataCapture changeDataCapture : dataCaptures) {
-          ChangeHandler changeHandler = cdcEntity.getTimescaleChangeHandler(changeDataCapture.handler());
+          ChangeHandler changeHandler = cdcEntity.getChangeHandler(changeDataCapture.handler());
           Callable<Boolean> processChangeEventTask =
               getProcessChangeEventTask(changeHandler, changeEvent, changeDataCapture);
           processChangeEventTaskFutures.add(executorService.submit(processChangeEventTask));

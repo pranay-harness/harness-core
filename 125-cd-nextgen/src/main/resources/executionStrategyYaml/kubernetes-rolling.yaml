@@ -1,7 +1,7 @@
 failureStrategies:
   - onFailure:
       errors:
-        - AnyOther
+        - AllErrors
       action:
         type: StageRollback
 spec:

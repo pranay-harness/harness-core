@@ -1,6 +1,8 @@
 package software.wings.service.impl.trigger;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.PRABU;
 
 import static software.wings.beans.trigger.ArtifactSelection.Type.WEBHOOK_VARIABLE;
@@ -8,13 +10,18 @@ import static software.wings.service.impl.trigger.TriggerServiceTestHelper.build
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildWorkflowWebhookTrigger;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.MANIFEST_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.TRIGGER_ID;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.ff.FeatureFlagService;
@@ -27,6 +34,7 @@ import software.wings.beans.trigger.ArtifactSelection;
 import software.wings.beans.trigger.ManifestSelection;
 import software.wings.beans.trigger.ManifestSelection.ManifestSelectionType;
 import software.wings.beans.trigger.Trigger;
+import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactStreamService;
 
 import com.google.gson.Gson;
@@ -40,12 +48,15 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class TriggerServiceHelperTest extends WingsBaseTest {
   private static final String ARTIFACT_STREAM_ID_1 = "ARTIFACT_STREAM_ID_1";
   private static final String CATALOG_SERVICE_NAME = "Catalog";
   @Inject @InjectMocks private TriggerServiceHelper triggerServiceHelper;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private ArtifactStreamService artifactStreamService;
+  @Mock private ArtifactCollectionService artifactCollectionService;
   Trigger workflowWebhookConditionTrigger = buildWorkflowWebhookTrigger();
 
   @Test
@@ -107,5 +118,14 @@ public class TriggerServiceHelperTest extends WingsBaseTest {
         .toString()
         .contains(
             "[{service=Catalog, versionNumber=Catalog_VERSION_NUMBER_PLACE_HOLDER}], {service=${service}, versionNumber=${service}_VERSION_NUMBER_PLACE_HOLDER}");
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldFireArtifactCollection() {
+    triggerServiceHelper.collectArtifactsForSelection(
+        ArtifactSelection.builder().artifactStreamId(ARTIFACT_STREAM_ID).build(), APP_ID);
+    verify(artifactCollectionService).collectNewArtifacts(APP_ID, ARTIFACT_STREAM_ID);
   }
 }

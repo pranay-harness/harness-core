@@ -3,9 +3,11 @@ package io.harness.cvng.analysis.entities;
 import static io.harness.cvng.analysis.CVAnalysisConstants.ML_RECORDS_TTL_MONTHS;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.cvng.analysis.beans.LogAnalysisCluster;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -34,6 +36,7 @@ import org.mongodb.morphia.annotations.Id;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "logAnalysisRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@StoreIn(DbAliases.CVNG)
 public final class LogAnalysisRecord implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
   @Id private String uuid;
   @FdIndex private long createdAt;

@@ -1,7 +1,12 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_YAML;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.GcpKubernetesInfrastructureMapping.Yaml;
@@ -15,6 +20,8 @@ import java.util.List;
  * @author rktummala on 10/22/17
  */
 @Singleton
+@OwnedBy(CDP)
+@TargetModule(_870_CG_YAML)
 public class GcpKubernetesInfraMappingYamlHandler
     extends InfraMappingYamlWithComputeProviderHandler<Yaml, GcpKubernetesInfrastructureMapping> {
   @Override

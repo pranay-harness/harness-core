@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"strings"
 	"sync"
 
 	"github.com/wings-software/portal/product/log-service/stream"
@@ -29,6 +30,11 @@ func (s *Streamer) Create(ctx context.Context, key string) error {
 	s.Lock()
 	s.streams[key] = newStream()
 	s.Unlock()
+	return nil
+}
+
+// Ping to an in memory stream is always successful
+func (s *Streamer) Ping(ctx context.Context) error {
 	return nil
 }
 
@@ -65,6 +71,18 @@ func (s *Streamer) Tail(ctx context.Context, key string) (<-chan *stream.Line, <
 	return stream.subscribe(ctx)
 }
 
+func (s *Streamer) ListPrefix(ctx context.Context, prefix string) ([]string, error) {
+	s.Lock()
+	defer s.Unlock()
+	keys := []string{}
+	for k := range s.streams {
+		if strings.HasPrefix(k, prefix) {
+			keys = append(keys, k)
+		}
+	}
+	return keys, nil
+}
+
 func (s *Streamer) CopyTo(ctx context.Context, key string, wc io.WriteCloser) error {
 	defer wc.Close()
 	s.Lock()
@@ -97,4 +115,14 @@ func (s *Streamer) Info(ctx context.Context) *stream.Info {
 		str.Unlock()
 	}
 	return info
+}
+
+func (s *Streamer) Exists(ctx context.Context, key string) error {
+	s.Lock()
+	_, ok := s.streams[key]
+	s.Unlock()
+	if !ok {
+		return stream.ErrNotFound
+	}
+	return nil
 }

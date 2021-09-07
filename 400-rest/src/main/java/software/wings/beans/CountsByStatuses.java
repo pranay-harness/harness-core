@@ -1,10 +1,17 @@
 package software.wings.beans;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import java.util.Objects;
 
 /**
  * Created by peeyushaggarwal on 7/8/16.
  */
+@OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class CountsByStatuses {
   private int success;
   private int failed;

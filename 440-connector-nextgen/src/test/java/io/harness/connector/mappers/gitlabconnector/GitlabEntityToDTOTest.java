@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.ABHINAV;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabConnector;
 import io.harness.connector.entities.embedded.gitlabconnector.GitlabHttpAuthentication;
@@ -32,7 +33,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 
-public class GitlabEntityToDTOTest {
+public class GitlabEntityToDTOTest extends CategoryTest {
   @InjectMocks GitlabEntityToDTO gitlabEntityToDTO;
 
   @Before
@@ -48,6 +49,7 @@ public class GitlabEntityToDTOTest {
     final String passwordRef = "passwordRef";
     final String username = "username";
     final String privateKeyRef = "privateKeyRef";
+    final String validationRepo = "validationRepo";
 
     final GitlabAuthenticationDTO gitlabAuthenticationDTO =
         GitlabAuthenticationDTO.builder()
@@ -68,7 +70,8 @@ public class GitlabEntityToDTOTest {
             .build();
     final GitlabConnectorDTO gitlabConnectorDTO = GitlabConnectorDTO.builder()
                                                       .url(url)
-                                                      .connectionType(GitConnectionType.REPO)
+                                                      .validationRepo(validationRepo)
+                                                      .connectionType(GitConnectionType.ACCOUNT)
                                                       .authentication(gitlabAuthenticationDTO)
                                                       .apiAccess(gitlabApiAccessDTO)
                                                       .build();
@@ -77,8 +80,9 @@ public class GitlabEntityToDTOTest {
         GitlabConnector.builder()
             .hasApiAccess(true)
             .url(url)
+            .validationRepo(validationRepo)
             .gitlabApiAccess(GitlabTokenApiAccess.builder().tokenRef(privateKeyRef).build())
-            .connectionType(GitConnectionType.REPO)
+            .connectionType(GitConnectionType.ACCOUNT)
             .authType(HTTP)
             .authenticationDetails(
                 GitlabHttpAuthentication.builder()

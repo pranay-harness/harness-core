@@ -1,13 +1,16 @@
 package io.harness.batch.processing.billing.tasklet;
 
 import io.harness.batch.processing.billing.tasklet.dao.intfc.DataGeneratedNotificationDao;
-import io.harness.batch.processing.billing.tasklet.entities.DataGeneratedNotification;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.mail.CEMailNotificationService;
 import io.harness.ccm.cluster.entities.CEUserInfo;
 import io.harness.ccm.commons.dao.CEMetadataRecordDao;
-import io.harness.ccm.commons.entities.CEMetadataRecord;
-import io.harness.ccm.commons.utils.DataUtils;
+import io.harness.ccm.commons.entities.batch.CEMetadataRecord;
+import io.harness.ccm.commons.entities.batch.DataGeneratedNotification;
+import io.harness.ccm.commons.utils.TimeUtils;
+import io.harness.ccm.views.dto.DefaultViewIdDto;
+import io.harness.ccm.views.entities.ViewFieldIdentifier;
+import io.harness.ccm.views.service.CEViewService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -53,9 +56,11 @@ public class BillingDataGeneratedMailTasklet implements Tasklet {
   @Autowired private CloudToHarnessMappingService cloudToHarnessMappingService;
   @Autowired private DataGeneratedNotificationDao notificationDao;
   @Autowired private TimeScaleDBService timeScaleDBService;
-  @Autowired private DataUtils utils;
+  @Autowired private TimeUtils utils;
   @Autowired private CEMailNotificationService emailNotificationService;
   @Autowired private CEMetadataRecordDao metadataRecordDao;
+  @Autowired private CEViewService ceViewService;
+
   private JobParameters parameters;
 
   private static final int MAX_RETRY_COUNT = 3;
@@ -71,52 +76,65 @@ public class BillingDataGeneratedMailTasklet implements Tasklet {
 
   @Override
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
-    parameters = chunkContext.getStepContext().getStepExecution().getJobParameters();
-    String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
-    CEMetadataRecord ceMetadataRecord = metadataRecordDao.getByAccountId(accountId);
-    boolean isApplicationDataPresent = false;
-    if (ceMetadataRecord != null) {
-      if (ceMetadataRecord.getApplicationDataPresent() != null) {
-        isApplicationDataPresent = ceMetadataRecord.getApplicationDataPresent();
-      }
-      if (!isApplicationDataPresent) {
-        Instant sevenDaysPriorInstant =
-            Instant.ofEpochMilli(Instant.now().truncatedTo(ChronoUnit.DAYS).toEpochMilli() - TimeUnit.DAYS.toMillis(7));
-        String applicationQuery = String.format(queryTemplate, accountId, sevenDaysPriorInstant);
-        if (getCount(applicationQuery, accountId) != 0) {
-          isApplicationDataPresent = true;
+    try {
+      parameters = chunkContext.getStepContext().getStepExecution().getJobParameters();
+      String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
+      createDefaultPerspective(accountId);
+      CEMetadataRecord ceMetadataRecord = metadataRecordDao.getByAccountId(accountId);
+      boolean isApplicationDataPresent = false;
+      if (ceMetadataRecord != null) {
+        if (ceMetadataRecord.getApplicationDataPresent() != null) {
+          isApplicationDataPresent = ceMetadataRecord.getApplicationDataPresent();
+        }
+        if (!isApplicationDataPresent) {
+          Instant sevenDaysPriorInstant = Instant.ofEpochMilli(
+              Instant.now().truncatedTo(ChronoUnit.DAYS).toEpochMilli() - TimeUnit.DAYS.toMillis(7));
+          String applicationQuery = String.format(queryTemplate, accountId, sevenDaysPriorInstant);
+          if (getCount(applicationQuery, accountId) != 0) {
+            isApplicationDataPresent = true;
+          }
         }
       }
-    }
-    cloudToHarnessMappingService.upsertCEMetaDataRecord(CEMetadataRecord.builder()
-                                                            .accountId(accountId)
-                                                            .applicationDataPresent(isApplicationDataPresent)
-                                                            .clusterDataConfigured(true)
-                                                            .build());
-    boolean notificationSend = notificationDao.isMailSent(accountId);
-    if (!notificationSend) {
-      long firstEventTime = getFirstDataRecordTime(accountId);
-      long cutoffTime = getStartOfCurrentDay() - 4 * ONE_DAY_MILLIS;
-      if (cutoffTime >= firstEventTime) {
-        notificationSend = true;
-        notificationDao.save(DataGeneratedNotification.builder().accountId(accountId).mailSent(true).build());
-        log.info("Old account, accountId : {} , First event time : {}", accountId, firstEventTime);
-      }
-    }
-    if (!notificationSend) {
-      Map<String, String> clusters = getClusters(accountId);
-      if (!clusters.isEmpty()) {
-        List<CEUserInfo> users = getUsers(accountId);
-        if (!users.isEmpty()) {
-          sendMail(users, clusters, accountId);
+      cloudToHarnessMappingService.upsertCEMetaDataRecord(CEMetadataRecord.builder()
+                                                              .accountId(accountId)
+                                                              .applicationDataPresent(isApplicationDataPresent)
+                                                              .clusterDataConfigured(true)
+                                                              .clusterConnectorConfigured(true)
+                                                              .build());
+      boolean notificationSend = notificationDao.isMailSent(accountId);
+      if (!notificationSend) {
+        long firstEventTime = getFirstDataRecordTime(accountId);
+        long cutoffTime = getStartOfCurrentDay() - 4 * ONE_DAY_MILLIS;
+        if (cutoffTime >= firstEventTime) {
+          notificationSend = true;
           notificationDao.save(DataGeneratedNotification.builder().accountId(accountId).mailSent(true).build());
-          log.info("Data generated mail sent, accountId : {}", accountId);
-        } else {
-          log.info("No users found in BillingDataGeneratedMailTasklet, accountId : {}", accountId);
+          log.info("Old account, accountId : {} , First event time : {}", accountId, firstEventTime);
         }
       }
+      if (!notificationSend) {
+        Map<String, String> clusters = getClusters(accountId);
+        if (!clusters.isEmpty()) {
+          List<CEUserInfo> users = getUsers(accountId);
+          if (!users.isEmpty()) {
+            sendMail(users, clusters, accountId);
+            notificationDao.save(DataGeneratedNotification.builder().accountId(accountId).mailSent(true).build());
+            log.info("Data generated mail sent, accountId : {}", accountId);
+          } else {
+            log.info("No users found in BillingDataGeneratedMailTasklet, accountId : {}", accountId);
+          }
+        }
+      }
+    } catch (Exception e) {
+      log.error("Failed to execute step BillingDataGeneratedMailTasklet, Exception: ", e);
     }
     return null;
+  }
+
+  private void createDefaultPerspective(String accountId) {
+    DefaultViewIdDto defaultViewIds = ceViewService.getDefaultViewIds(accountId);
+    if (defaultViewIds.getClusterViewId() == null) {
+      ceViewService.createDefaultView(accountId, ViewFieldIdentifier.CLUSTER);
+    }
   }
 
   // Map returns clusterId -> clusterName mapping

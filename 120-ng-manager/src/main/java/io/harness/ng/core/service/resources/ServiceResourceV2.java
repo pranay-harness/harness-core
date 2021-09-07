@@ -2,8 +2,11 @@ package io.harness.ng.core.service.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_PROJECT_PERMISSION;
+import static io.harness.ng.accesscontrol.PlatformResourceTypes.PROJECT;
 import static io.harness.rbac.CDNGRbacPermissions.SERVICE_CREATE_PERMISSION;
 import static io.harness.rbac.CDNGRbacPermissions.SERVICE_UPDATE_PERMISSION;
+import static io.harness.rbac.CDNGRbacPermissions.SERVICE_VIEW_PERMISSION;
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import static software.wings.beans.Service.ServiceKeys;
@@ -20,13 +23,12 @@ import io.harness.accesscontrol.OrgIdentifier;
 import io.harness.accesscontrol.ProjectIdentifier;
 import io.harness.accesscontrol.ResourceIdentifier;
 import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.AccessControlDTO;
+import io.harness.accesscontrol.clients.PermissionCheckDTO;
 import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.AccessDeniedException;
-import io.harness.exception.WingsException;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -39,7 +41,6 @@ import io.harness.ng.core.service.mappers.ServiceElementMapper;
 import io.harness.ng.core.service.mappers.ServiceFilterHelper;
 import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.pms.rbac.NGResourceType;
-import io.harness.rbac.CDNGRbacPermissions;
 import io.harness.rbac.CDNGRbacUtility;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.utils.PageUtils;
@@ -49,6 +50,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -76,8 +78,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @NextGenManagerAuth
 @Api("/servicesV2")
 @Path("/servicesV2")
-@Produces({"application/json", "text/yaml", "text/html"})
-@Consumes({"application/json", "text/yaml", "text/html"})
+@Produces({"application/json", "application/yaml"})
+@Consumes({"application/json", "application/yaml"})
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 @ApiResponses(value =
     {
@@ -113,7 +115,7 @@ public class ServiceResourceV2 {
       @NotNull @Valid ServiceRequestDTO serviceRequestDTO) {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountId, serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier()),
-        Resource.NONE, SERVICE_CREATE_PERMISSION);
+        Resource.of(NGResourceType.SERVICE, null), SERVICE_CREATE_PERMISSION);
     ServiceEntity serviceEntity = ServiceElementMapper.toServiceEntity(accountId, serviceRequestDTO);
     ServiceEntity createdService = serviceEntityService.create(serviceEntity);
     return ResponseDTO.newResponse(
@@ -129,7 +131,7 @@ public class ServiceResourceV2 {
     for (ServiceRequestDTO serviceRequestDTO : serviceRequestDTOs) {
       accessControlClient.checkForAccessOrThrow(
           ResourceScope.of(accountId, serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier()),
-          Resource.NONE, SERVICE_CREATE_PERMISSION);
+          Resource.of(NGResourceType.SERVICE, null), SERVICE_CREATE_PERMISSION);
     }
     List<ServiceEntity> serviceEntities =
         serviceRequestDTOs.stream()
@@ -159,7 +161,7 @@ public class ServiceResourceV2 {
       @NotNull @Valid ServiceRequestDTO serviceRequestDTO) {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountId, serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier()),
-        Resource.NONE, SERVICE_UPDATE_PERMISSION);
+        Resource.of(NGResourceType.SERVICE, serviceRequestDTO.getIdentifier()), SERVICE_UPDATE_PERMISSION);
     ServiceEntity requestService = ServiceElementMapper.toServiceEntity(accountId, serviceRequestDTO);
     requestService.setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
     ServiceEntity updatedService = serviceEntityService.update(requestService);
@@ -175,7 +177,7 @@ public class ServiceResourceV2 {
       @NotNull @Valid ServiceRequestDTO serviceRequestDTO) {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountId, serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier()),
-        Resource.NONE, SERVICE_UPDATE_PERMISSION);
+        Resource.of(NGResourceType.SERVICE, serviceRequestDTO.getIdentifier()), SERVICE_UPDATE_PERMISSION);
     ServiceEntity requestService = ServiceElementMapper.toServiceEntity(accountId, serviceRequestDTO);
     requestService.setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
     ServiceEntity upsertedService = serviceEntityService.upsert(requestService);
@@ -192,11 +194,9 @@ public class ServiceResourceV2 {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ResourceIdentifier String projectIdentifier,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
       @QueryParam("serviceIdentifiers") List<String> serviceIdentifiers, @QueryParam("sort") List<String> sort) {
-    boolean hasAccess = accessControlClient.hasAccess(CDNGRbacUtility.getPermissionDTO(
-        accountId, orgIdentifier, projectIdentifier, CDNGRbacPermissions.SERVICE_VIEW_PERMISSION));
-    if (!hasAccess) {
-      throw new AccessDeniedException("Unauthorized to list services", ErrorCode.NG_ACCESS_DENIED, WingsException.USER);
-    }
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgIdentifier, projectIdentifier),
+        Resource.of(NGResourceType.SERVICE, null), SERVICE_VIEW_PERMISSION, "Unauthorized to list services");
+
     Criteria criteria =
         ServiceFilterHelper.createCriteriaForGetList(accountId, orgIdentifier, projectIdentifier, false, searchTerm);
     Pageable pageRequest;
@@ -211,5 +211,49 @@ public class ServiceResourceV2 {
     Page<ServiceResponse> serviceList =
         serviceEntityService.list(criteria, pageRequest).map(ServiceElementMapper::toResponseWrapper);
     return ResponseDTO.newResponse(getNGPageResponse(serviceList));
+  }
+
+  @GET
+  @Path("/list/access")
+  @ApiOperation(value = "Gets Service Access list ", nickname = "getServiceAccessList")
+  public ResponseDTO<List<ServiceResponse>> listAccessServices(@QueryParam("page") @DefaultValue("0") int page,
+      @QueryParam("size") @DefaultValue("100") int size,
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @QueryParam("serviceIdentifiers") List<String> serviceIdentifiers, @QueryParam("sort") List<String> sort) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgIdentifier, projectIdentifier),
+        Resource.of(PROJECT, projectIdentifier), VIEW_PROJECT_PERMISSION, "Unauthorized to list services");
+
+    Criteria criteria =
+        ServiceFilterHelper.createCriteriaForGetList(accountId, orgIdentifier, projectIdentifier, false, searchTerm);
+    if (isNotEmpty(serviceIdentifiers)) {
+      criteria.and(ServiceEntityKeys.identifier).in(serviceIdentifiers);
+    }
+    List<ServiceResponse> serviceList = serviceEntityService.listRunTimePermission(criteria)
+                                            .stream()
+                                            .map(ServiceElementMapper::toResponseWrapper)
+                                            .collect(Collectors.toList());
+
+    List<PermissionCheckDTO> permissionCheckDTOS =
+        serviceList.stream().map(CDNGRbacUtility::serviceResponseToPermissionCheckDTO).collect(Collectors.toList());
+    List<AccessControlDTO> accessControlList =
+        accessControlClient.checkForAccess(permissionCheckDTOS).getAccessControlList();
+    return ResponseDTO.newResponse(filterByPermissionAndId(accessControlList, serviceList));
+  }
+
+  private List<ServiceResponse> filterByPermissionAndId(
+      List<AccessControlDTO> accessControlList, List<ServiceResponse> serviceList) {
+    List<ServiceResponse> filteredAccessControlDtoList = new ArrayList<>();
+    for (int i = 0; i < accessControlList.size(); i++) {
+      AccessControlDTO accessControlDTO = accessControlList.get(i);
+      ServiceResponse serviceResponse = serviceList.get(i);
+      if (accessControlDTO.isPermitted()
+          && serviceResponse.getService().getIdentifier().equals(accessControlDTO.getResourceIdentifier())) {
+        filteredAccessControlDtoList.add(serviceResponse);
+      }
+    }
+    return filteredAccessControlDtoList;
   }
 }

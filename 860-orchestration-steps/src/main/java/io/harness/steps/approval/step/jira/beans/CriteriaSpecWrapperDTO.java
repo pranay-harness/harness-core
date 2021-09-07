@@ -34,14 +34,20 @@ public class CriteriaSpecWrapperDTO {
   @NotNull
   CriteriaSpecDTO criteriaSpecDTO;
 
-  public static CriteriaSpecWrapperDTO fromCriteriaSpecWrapper(CriteriaSpecWrapper criteriaSpecWrapper) {
+  public static CriteriaSpecWrapperDTO fromCriteriaSpecWrapper(
+      CriteriaSpecWrapper criteriaSpecWrapper, boolean skipEmpty) {
+    if (criteriaSpecWrapper == null) {
+      return null;
+    }
+
     CriteriaSpec criteriaSpec = criteriaSpecWrapper.getCriteriaSpec();
     if (criteriaSpec == null) {
       throw new InvalidRequestException("Criteria Spec can't be null");
     }
+
     return CriteriaSpecWrapperDTO.builder()
         .type(criteriaSpecWrapper.getType())
-        .criteriaSpecDTO(criteriaSpec.toCriteriaSpecDTO())
+        .criteriaSpecDTO(criteriaSpec.toCriteriaSpecDTO(skipEmpty))
         .build();
   }
 }

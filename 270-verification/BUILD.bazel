@@ -1,30 +1,24 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:tools/bazel/macros.bzl", "run_analysis")
+
+HarnessTeam = "CV"
 
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
 ] + [
     "//400-rest:module",
+    "//940-primary-version-manager:module",
     "//955-alert-beans:module",
     "//970-rbac-core:module",
     "//:lombok",
     "@maven//:com_openpojo_openpojo",
-    "@maven//:de_bwaldvogel_mongo_java_server_core",
-    "@maven//:de_bwaldvogel_mongo_java_server_memory_backend",
-    "@maven//:de_flapdoodle_embed_de_flapdoodle_embed_mongo",
     "@maven//:io_prometheus_simpleclient_servlet",
-    "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_grizzly2",
-    "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_inmemory",
 ]
 
 java_binary(
     name = "module",
-    srcs = glob([
-        "src/main/**/*.java",
-        "src/generated/**/*.java",
-    ]),
+    srcs = glob(["src/main/java/**/*.java"]),
     data = ["//:resource"],
     main_class = "io.harness.app.VerificationServiceApplication",
     resources = [
@@ -65,3 +59,10 @@ java_library(
 )
 
 run_tests()
+
+run_analysis()
+
+exports_files([
+    "keystore.jks",
+    "verification-config.yml",
+])

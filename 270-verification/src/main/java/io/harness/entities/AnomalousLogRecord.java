@@ -44,7 +44,7 @@ import org.mongodb.morphia.annotations.Id;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "anomalousLogRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class AnomalousLogRecord implements GoogleDataStoreAware {
+public final class AnomalousLogRecord implements GoogleDataStoreAware {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()

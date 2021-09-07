@@ -1,5 +1,10 @@
 package software.wings.beans.container;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.expression.ExpressionEvaluator;
@@ -16,6 +21,8 @@ import lombok.Data;
 @Data
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
+@OwnedBy(CDP)
 public class EcsSteadyStateCheckParams implements ExecutionCapabilityDemander {
   private String appId;
   private String region;
@@ -27,6 +34,7 @@ public class EcsSteadyStateCheckParams implements ExecutionCapabilityDemander {
   private String serviceName;
   private AwsConfig awsConfig;
   private List<EncryptedDataDetail> encryptionDetails;
+  private boolean timeoutErrorSupported;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

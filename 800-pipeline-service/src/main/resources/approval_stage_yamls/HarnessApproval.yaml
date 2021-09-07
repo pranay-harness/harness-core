@@ -11,7 +11,6 @@ spec:
               Please review the following information
               and approve the pipeline progression
             includePipelineExecutionHistory: true
-
             approvers:
               minimumCount: 1
-              disallowPipelineExecutor: true
+              disallowPipelineExecutor: false

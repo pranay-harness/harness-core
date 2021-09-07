@@ -5,7 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
 
-import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 
@@ -31,14 +30,6 @@ public class StepResponseMapper {
                                      .stream()
                                      .map(StepOutcomeMapper::toStepOutcomeProto)
                                      .collect(Collectors.toList()));
-    }
-
-    if (stepResponse.getStepOutcomes() != null) {
-      builder.addAllGraphOutcomes(stepResponse.getStepOutcomes()
-                                      .stream()
-                                      .map(StepOutcomeMapper::toGraphOutcomeProto)
-                                      .filter(Objects::nonNull)
-                                      .collect(Collectors.toList()));
     }
 
     if (stepResponse.getFailureInfo() != null) {

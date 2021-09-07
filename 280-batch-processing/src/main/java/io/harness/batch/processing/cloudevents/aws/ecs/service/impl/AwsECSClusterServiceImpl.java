@@ -4,12 +4,12 @@ import io.harness.batch.processing.cloudevents.aws.ecs.service.CEClusterDao;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.intfc.AwsECSClusterService;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.support.intfc.AwsECSHelperService;
 import io.harness.batch.processing.cloudevents.aws.ecs.service.support.intfc.AwsHelperResourceService;
+import io.harness.ccm.commons.entities.billing.CECloudAccount;
+import io.harness.ccm.commons.entities.billing.CECluster;
 
 import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.ce.CEAwsConfig;
-import software.wings.beans.ce.CECloudAccount;
-import software.wings.beans.ce.CECluster;
 
 import java.util.ArrayList;
 import java.util.List;

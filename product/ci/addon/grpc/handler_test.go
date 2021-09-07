@@ -129,7 +129,7 @@ func TestExecutePluginStep(t *testing.T) {
 		return mockStep
 	}
 
-	mockStep.EXPECT().Run(ctx).Return(int32(1), nil)
+	mockStep.EXPECT().Run(ctx).Return(nil, int32(1), nil)
 	h := NewAddonHandler(stopCh, false, log.Sugar())
 	_, err := h.ExecuteStep(ctx, in)
 	assert.Nil(t, err)

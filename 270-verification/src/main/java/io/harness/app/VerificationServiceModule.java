@@ -1,11 +1,11 @@
 package io.harness.app;
 
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
 import io.harness.cvng.core.services.impl.VerificationServiceSecretManagerImpl;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagModule;
 import io.harness.persistence.HPersistence;
-import io.harness.queue.QueueController;
 import io.harness.service.ContinuousVerificationServiceImpl;
 import io.harness.service.LearningEngineAnalysisServiceImpl;
 import io.harness.service.LogAnalysisServiceImpl;
@@ -19,7 +19,6 @@ import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import io.harness.threading.ThreadPool;
-import io.harness.version.VersionInfoManager;
 
 import software.wings.DataStorageMode;
 import software.wings.alerts.AlertModule;
@@ -39,25 +38,22 @@ import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.MigrationService;
 import software.wings.service.intfc.VerificationService;
 import software.wings.service.intfc.datadog.DatadogService;
+import software.wings.service.intfc.security.EncryptedSettingAttributes;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.verification.CVActivityLogService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.verification.CVTaskService;
 import software.wings.service.intfc.yaml.YamlPushService;
 
-import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import org.apache.commons.io.IOUtils;
 
 /**
  * Guice Module for initializing all beans.
@@ -83,16 +79,18 @@ public class VerificationServiceModule extends AbstractModule {
   protected void configure() {
     install(FeatureFlagModule.getInstance());
     install(AlertModule.getInstance());
+    install(PrimaryVersionManagerModule.getInstance());
 
     bind(VerificationServiceConfiguration.class).toInstance(configuration);
     bind(HPersistence.class).to(WingsMongoPersistence.class);
     bind(WingsPersistence.class).to(WingsMongoPersistence.class);
     bind(LearningEngineService.class).to(LearningEngineAnalysisServiceImpl.class);
     bind(SecretManager.class).to(NoOpSecretManagerImpl.class);
+    bind(EncryptedSettingAttributes.class).to(NoOpSecretManagerImpl.class);
     bind(MigrationService.class).to(VerificationMigrationServiceImpl.class);
     bind(Clock.class).toInstance(Clock.systemUTC());
 
-    bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
+    bind(TimeLimiter.class).toInstance(HTimeLimiter.create());
     bind(TimeSeriesAnalysisService.class).to(TimeSeriesAnalysisServiceImpl.class);
     bind(LogAnalysisService.class).to(LogAnalysisServiceImpl.class);
     bind(CVTaskService.class).to(CVTaskServiceImpl.class);
@@ -134,18 +132,6 @@ public class VerificationServiceModule extends AbstractModule {
         .toInstance(ThreadPool.create(1, 10, 5, TimeUnit.SECONDS,
             new ThreadFactoryBuilder().setNameFormat("Alerts-creator-%d").setPriority(Thread.MIN_PRIORITY).build()));
 
-    bind(QueueController.class).toInstance(new QueueController() {
-      @Override
-      public boolean isPrimary() {
-        return true;
-      }
-
-      @Override
-      public boolean isNotPrimary() {
-        return false;
-      }
-    });
-
     if (configuration.getDataStorageMode() == null) {
       configuration.setDataStorageMode(DataStorageMode.MONGO);
     }
@@ -159,15 +145,6 @@ public class VerificationServiceModule extends AbstractModule {
         break;
       default:
         throw new WingsException("Invalid execution log data storage mode: " + configuration.getDataStorageMode());
-    }
-
-    try {
-      VersionInfoManager versionInfoManager = new VersionInfoManager(
-          IOUtils.toString(getClass().getClassLoader().getResourceAsStream("main/resources-filtered/versionInfo.yaml"),
-              StandardCharsets.UTF_8));
-      bind(VersionInfoManager.class).toInstance(versionInfoManager);
-    } catch (IOException e) {
-      throw new RuntimeException("Could not load versionInfo.yaml", e);
     }
   }
 }

@@ -1,0 +1,136 @@
+extend type Query {
+  """
+  Fetch given approval Details for the given approvalId, executionId and workflowId
+  """
+  approvalDetails(applicationId: String!, executionId: String!): ApprovalDetailsPayload
+    @dataFetcher(name: approvalDetails)
+}
+
+extend type Mutation {
+  """
+  Approve or Reject the Approvals
+  """
+  approveOrRejectApprovals(input: ApproveOrRejectApprovalsInput!): ApproveOrRejectApprovalsInputPayload
+    @dataFetcher(name: approveOrRejectApprovals)
+}
+
+input ApprovalDetailsInput {
+  executionId: String!
+  applicationId: String!
+}
+
+input ApproveOrRejectApprovalsInput {
+  executionId: String!
+  approvalId: String!
+  action: Action!
+  variableInputs: [UserInput]
+  applicationId: String!
+  comments: String
+  clientMutationId: String
+}
+
+type ApproveOrRejectApprovalsInputPayload {
+  success: Boolean!
+  clientMutationId: String
+}
+
+type ApprovalDetailsPayload {
+  approvalDetails: [ApprovalDetails]
+}
+
+interface ApprovalDetails {
+  approvalId: String
+  approvalType: ApprovalStateType
+  stepName: String
+  stageName: String
+  startedAt: Long
+  willExpireAt: Long
+  triggeredBy: EmbeddedUser
+}
+
+type UserGroupApprovalDetails implements ApprovalDetails {
+  startedAt: Long
+  willExpireAt: Long
+  approvalId: String
+  approvalType: ApprovalStateType
+  approvers: [String]
+  triggeredBy: EmbeddedUser
+  stepName: String
+  stageName: String
+  variables: [NameValuePair] #approverInputs
+  executionId: String
+}
+
+type JiraApprovalDetails implements ApprovalDetails {
+  startedAt: Long
+  willExpireAt: Long
+  issueUrl: String
+  approvalCondition: String
+  rejectionCondition: String
+  approvalId: String
+  approvalType: ApprovalStateType
+  stepName: String
+  stageName: String
+  issueKey: String
+  currentStatus: String
+  triggeredBy: EmbeddedUser
+}
+
+type SNOWApprovalDetails implements ApprovalDetails {
+  startedAt: Long
+  willExpireAt: Long
+  ticketUrl: String
+  approvalCondition: String
+  rejectionCondition: String
+  approvalId: String
+  approvalType: ApprovalStateType
+  stepName: String
+  stageName: String
+  ticketType: ServiceNowTicketType
+  currentStatus: String
+  triggeredBy: EmbeddedUser
+}
+type ShellScriptDetails implements ApprovalDetails {
+  startedAt: Long
+  willExpireAt: Long
+  retryInterval: Long
+  approvalId: String
+  approvalType: ApprovalStateType
+  stepName: String
+  stageName: String
+  triggeredBy: EmbeddedUser
+}
+
+enum ApprovalStateType {
+  JIRA
+  USER_GROUP
+  SHELL_SCRIPT
+  SERVICENOW
+}
+
+type EmbeddedUser {
+  name: String
+  email: String
+}
+
+type NameValuePair {
+  name: String
+  value: String
+}
+
+input UserInput {
+  name: String
+  value: String
+}
+
+enum Action {
+  APPROVE
+  REJECT
+}
+
+enum ServiceNowTicketType {
+  INCIDENT
+  PROBLEM
+  CHANGE_REQUEST
+  CHANGE_TASK
+}

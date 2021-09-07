@@ -1,6 +1,7 @@
 package io.harness.perpetualtask.k8s.watch;
 
 import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
+import static io.harness.ccm.health.HealthStatusService.UID;
 import static io.harness.perpetualtask.k8s.watch.NodeEvent.EventType.EVENT_TYPE_STOP;
 
 import static java.util.Optional.ofNullable;
@@ -45,7 +46,6 @@ public class NodeWatcher implements ResourceEventHandler<V1Node> {
 
   private static final String NODE_EVENT_MSG = "Node: {}, action: {}";
   private static final String ERROR_PUBLISH_MSG = "Error publishing V1Node.{} event.";
-  private static final String AZURE_SEARCH_STRING = "azure:";
 
   @Inject
   public NodeWatcher(@Assisted ApiClient apiClient, @Assisted ClusterDetails params,
@@ -103,10 +103,7 @@ public class NodeWatcher implements ResourceEventHandler<V1Node> {
       log.debug(NODE_EVENT_MSG, node.getMetadata().getUid(), EventType.ADDED);
 
       DateTime creationTimestamp = node.getMetadata().getCreationTimestamp();
-      // Interim fix to back fill data for existing Azure clusters
-      Boolean isAzure = node.getSpec().getProviderID().startsWith(AZURE_SEARCH_STRING);
-      if (isAzure || !isClusterSeen || creationTimestamp == null
-          || creationTimestamp.isAfter(DateTime.now().minusHours(2))) {
+      if (!isClusterSeen || creationTimestamp == null || creationTimestamp.isAfter(DateTime.now().minusHours(2))) {
         publishNodeInfo(node);
       } else {
         publishedNodes.add(node.getMetadata().getUid());
@@ -139,7 +136,8 @@ public class NodeWatcher implements ResourceEventHandler<V1Node> {
                                      .build();
 
     log.debug("Publishing event: {}", nodeStoppedEvent);
-    eventPublisher.publishMessage(nodeStoppedEvent, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));
+    eventPublisher.publishMessage(nodeStoppedEvent, timestamp,
+        ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId, UID, node.getMetadata().getUid()));
     publishedNodes.remove(node.getMetadata().getUid());
   }
 
@@ -156,7 +154,11 @@ public class NodeWatcher implements ResourceEventHandler<V1Node> {
               .putAllLabels(node.getMetadata().getLabels())
               .putAllAllocatableResource(K8sResourceUtils.getResourceMap(node.getStatus().getAllocatable()))
               .build();
-      eventPublisher.publishMessage(nodeInfo, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));
+      eventPublisher.publishMessage(
+          nodeInfo, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId, UID, node.getMetadata().getUid()));
+
+      log.info("Published Node Uid: {}, Name:{}", nodeInfo.getNodeUid(), nodeInfo.getNodeName());
+
       publishedNodes.add(node.getMetadata().getUid());
     } else {
       log.debug("NodeInfo for uid:{} already published", node.getMetadata().getUid());

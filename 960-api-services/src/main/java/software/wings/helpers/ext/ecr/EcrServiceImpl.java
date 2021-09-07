@@ -12,14 +12,17 @@ import io.harness.artifacts.beans.BuildDetailsInternal.BuildDetailsInternalMetad
 import io.harness.artifacts.comparator.BuildDetailsInternalComparatorAscending;
 import io.harness.artifacts.comparator.BuildDetailsInternalComparatorDescending;
 import io.harness.aws.beans.AwsInternalConfig;
-import io.harness.exception.ArtifactServerException;
+import io.harness.context.MdcGlobalContextData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArtifactServerException;
+import io.harness.exception.exceptionmanager.exceptionhandler.ExceptionMetadataKeys;
 import io.harness.expression.RegexFunctor;
+import io.harness.manage.GlobalContextManager;
 
 import software.wings.service.impl.AwsApiHelperService;
 
+import com.amazonaws.services.codedeploy.model.InvalidTagException;
 import com.amazonaws.services.ecr.model.DescribeRepositoriesRequest;
 import com.amazonaws.services.ecr.model.DescribeRepositoriesResult;
 import com.amazonaws.services.ecr.model.ListImagesRequest;
@@ -146,16 +149,23 @@ public class EcrServiceImpl implements EcrService {
   @Override
   public BuildDetailsInternal verifyBuildNumber(
       AwsInternalConfig awsInternalConfig, String imageUrl, String region, String imageName, String tag) {
-    try {
-      List<BuildDetailsInternal> builds =
-          getBuilds(awsInternalConfig, imageUrl, region, imageName, MAX_NO_OF_TAGS_PER_IMAGE);
-      builds = builds.stream().filter(build -> build.getNumber().equals(tag)).collect(Collectors.toList());
-      if (builds.size() != 1) {
-        throw new InvalidArtifactServerException("Didn't get build number", USER);
-      }
-      return builds.get(0);
-    } catch (Exception e) {
-      throw new ArtifactServerException(ExceptionUtils.getMessage(e), e, USER);
+    List<BuildDetailsInternal> builds =
+        getBuilds(awsInternalConfig, imageUrl, region, imageName, MAX_NO_OF_TAGS_PER_IMAGE);
+    builds = builds.stream().filter(build -> build.getNumber().equals(tag)).collect(Collectors.toList());
+    if (builds.size() != 1) {
+      Map<String, String> imageDataMap = new HashMap<>();
+      imageDataMap.put(ExceptionMetadataKeys.IMAGE_NAME.name(), imageName);
+      imageDataMap.put(ExceptionMetadataKeys.IMAGE_TAG.name(), tag);
+      imageDataMap.put(ExceptionMetadataKeys.URL.name(), imageUrl + ":" + tag);
+      MdcGlobalContextData mdcGlobalContextData = MdcGlobalContextData.builder().map(imageDataMap).build();
+      GlobalContextManager.upsertGlobalContextRecord(mdcGlobalContextData);
+      InvalidTagException exception = new InvalidTagException(
+          "Could not find tag [" + tag + "] for Repository [" + imageName + "] in the region: [" + region + "]");
+      exception.setErrorCode(exception.getClass().getSimpleName());
+      exception.setStatusCode(400);
+      exception.setServiceName("AmazonECR");
+      throw exception;
     }
+    return builds.get(0);
   }
 }

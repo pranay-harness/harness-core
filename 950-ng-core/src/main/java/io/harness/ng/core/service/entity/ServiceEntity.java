@@ -45,6 +45,15 @@ public class ServiceEntity implements PersistentEntity {
                  .field(ServiceEntityKeys.projectIdentifier)
                  .field(ServiceEntityKeys.identifier)
                  .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("index_accountId_orgId_projectId_createdAt_deleted_deletedAt")
+                 .field(ServiceEntityKeys.accountId)
+                 .field(ServiceEntityKeys.orgIdentifier)
+                 .field(ServiceEntityKeys.projectIdentifier)
+                 .field(ServiceEntityKeys.createdAt)
+                 .field(ServiceEntityKeys.deleted)
+                 .field(ServiceEntityKeys.deletedAt)
+                 .build())
         .build();
   }
 
@@ -64,4 +73,5 @@ public class ServiceEntity implements PersistentEntity {
   @Wither @LastModifiedDate Long lastModifiedAt;
   @Wither @Version Long version;
   @Builder.Default Boolean deleted = Boolean.FALSE;
+  Long deletedAt;
 }

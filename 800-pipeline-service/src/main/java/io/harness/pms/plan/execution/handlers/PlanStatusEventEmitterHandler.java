@@ -1,34 +1,51 @@
 package io.harness.pms.plan.execution.handlers;
 
-import io.harness.engine.events.OrchestrationEventEmitter;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.observers.PlanStatusUpdateObserver;
+import io.harness.observer.AsyncInformObserver;
+import io.harness.observer.Subject;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
-import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.execution.utils.StatusUtils;
-import io.harness.pms.sdk.core.events.AsyncOrchestrationEventHandler;
-import io.harness.pms.sdk.core.events.OrchestrationEvent;
+import io.harness.pms.notification.orchestration.observers.NotificationObserver;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import java.util.concurrent.ExecutorService;
+import lombok.Getter;
 
-public class PlanStatusEventEmitterHandler implements AsyncOrchestrationEventHandler {
-  @Inject PlanExecutionService planExecutionService;
-  @Inject private OrchestrationEventEmitter eventEmitter;
+@OwnedBy(HarnessTeam.PIPELINE)
+@Singleton
+public class PlanStatusEventEmitterHandler implements AsyncInformObserver, PlanStatusUpdateObserver {
+  private final ExecutorService executorService;
+  private final PlanExecutionService planExecutionService;
+
+  @Getter private final Subject<NotificationObserver> planExecutionSubject = new Subject<>();
+
+  @Inject
+  public PlanStatusEventEmitterHandler(
+      @Named("PipelineExecutorService") ExecutorService executorService, PlanExecutionService planExecutionService) {
+    this.executorService = executorService;
+    this.planExecutionService = planExecutionService;
+  }
 
   @Override
-  public void handleEvent(OrchestrationEvent event) {
-    Ambiance ambiance = event.getAmbiance();
+  public void onPlanStatusUpdate(Ambiance ambiance) {
     Status status = planExecutionService.get(ambiance.getPlanExecutionId()).getStatus();
     if (status == Status.SUCCEEDED) {
-      emitEvent(ambiance, OrchestrationEventType.PLAN_EXECUTION_SUCCESS);
+      planExecutionSubject.fireInform(NotificationObxxxxxxxx:onSuccess, ambiance);
     } else if (StatusUtils.brokeStatuses().contains(status)) {
-      emitEvent(ambiance, OrchestrationEventType.PLAN_EXECUTION_FAILED);
+      planExecutionSubject.fireInform(NotificationObxxxxxxxx:onFailure, ambiance);
     } else if (status == Status.PAUSED) {
-      emitEvent(ambiance, OrchestrationEventType.PLAN_EXECUTION_PAUSED);
+      planExecutionSubject.fireInform(NotificationObxxxxxxxx:onPause, ambiance);
     }
   }
 
-  public void emitEvent(Ambiance ambiance, OrchestrationEventType orchestrationEventType) {
-    eventEmitter.emitEvent(OrchestrationEvent.builder().ambiance(ambiance).eventType(orchestrationEventType).build());
+  @Override
+  public ExecutorService getInformExecutorService() {
+    return executorService;
   }
 }

@@ -8,7 +8,9 @@ import static software.wings.beans.artifact.ArtifactStreamType.BAMBOO;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
@@ -28,6 +30,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @JsonTypeName("BAMBOO")
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -66,6 +69,20 @@ public class BambooArtifactStream extends ArtifactStream {
       }
     }
     setArtifactPaths(updatedArtifactPathsList);
+  }
+
+  @Override
+  public ArtifactStream cloneInternal() {
+    return builder()
+        .appId(getAppId())
+        .accountId(getAccountId())
+        .name(getName())
+        .sourceName(getSourceName())
+        .settingId(getSettingId())
+        .keywords(getKeywords())
+        .jobname(jobname)
+        .artifactPaths(artifactPaths)
+        .build();
   }
 
   @Override

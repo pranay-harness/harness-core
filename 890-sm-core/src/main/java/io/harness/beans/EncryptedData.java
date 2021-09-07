@@ -99,6 +99,12 @@ public class EncryptedData
                 .field(EncryptedDataKeys.orgIdentifier)
                 .field(EncryptedDataKeys.projectIdentifier)
                 .field(EncryptedDataKeys.secretManagerIdentifier)
+                .build(),
+            CompoundMongoIndex.builder()
+                .name("ngSecretManagerTypeIdx")
+                .field(EncryptedDataKeys.accountId)
+                .field(EncryptedDataKeys.type)
+                .field(EncryptedDataKeys.createdAt)
                 .build())
         .build();
   }

@@ -1,12 +1,13 @@
 package software.wings.beans;
 
-import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.delegate.beans.DelegateConfiguration.DelegateConfigurationKeys;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.common.VerificationConstants.SERVICE_GUAARD_LIMIT;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.ChangeDataCapture;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -19,12 +20,13 @@ import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.ng.core.account.DefaultExperience;
+import io.harness.ng.core.account.ServiceAccountConfig;
 import io.harness.security.EncryptionInterface;
 import io.harness.security.SimpleEncryption;
 import io.harness.validation.Create;
 
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.yaml.BaseEntityYaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -40,6 +42,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
+import lombok.AccessLevel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -50,12 +53,13 @@ import lombok.experimental.UtilityClass;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
 
-@OwnedBy(PL)
-@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
+@OwnedBy(DX)
+@TargetModule(HarnessModule._955_ACCOUNT_MGMT)
 @FieldNameConstants(innerTypeName = "AccountKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "accounts", noClassnameStored = true)
 @HarnessEntity(exportable = true)
+@ChangeDataCapture(table = "accounts", fields = {}, handler = "Account")
 public class Account extends Base implements PersistentRegularIterable {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
@@ -70,6 +74,8 @@ public class Account extends Base implements PersistentRegularIterable {
   public static final String GLOBAL_ACCOUNT_ID = "__GLOBAL_ACCOUNT_ID__";
 
   @NotNull private String companyName;
+
+  @Getter(value = AccessLevel.PRIVATE) @Setter private Boolean nextGenEnabled = Boolean.FALSE;
 
   @FdUniqueIndex @NotNull private String accountName;
 
@@ -116,6 +122,8 @@ public class Account extends Base implements PersistentRegularIterable {
 
   @Getter @Setter DefaultExperience defaultExperience;
 
+  @Getter @Setter boolean createdFromNG;
+
   /**
    * If this flag is set, all encryption/decryption activities will go through LOCAL security manager.
    * No VAULT/KMS secret manager can be configured. This helps for accounts whose delegate can't access
@@ -153,11 +161,14 @@ public class Account extends Base implements PersistentRegularIterable {
   @Getter @Setter private TrialSignupOptions trialSignupOptions;
 
   @Getter @Setter private Long serviceGuardLimit = SERVICE_GUAARD_LIMIT;
+
+  @Getter @Setter ServiceAccountConfig serviceAccountConfig;
+
   private transient Map<String, String> defaults = new HashMap<>();
   /**
    * Default mechanism is USER_PASSWORD
    */
-  @JsonIgnore private AuthenticationMechanism authenticationMechanism = AuthenticationMechanism.USER_PASSWORD;
+  private AuthenticationMechanism authenticationMechanism = AuthenticationMechanism.USER_PASSWORD;
 
   public Map<String, String> getDefaults() {
     return defaults;
@@ -191,6 +202,10 @@ public class Account extends Base implements PersistentRegularIterable {
 
   public void setLocalEncryptionEnabled(boolean localEncryptionEnabled) {
     this.localEncryptionEnabled = localEncryptionEnabled;
+  }
+
+  public boolean isNextGenEnabled() {
+    return Boolean.TRUE.equals(nextGenEnabled);
   }
 
   /**
@@ -511,6 +526,7 @@ public class Account extends Base implements PersistentRegularIterable {
     private long lastLicenseExpiryReminderSentAt;
     private List<Long> licenseExpiryRemindersSentAt;
     private boolean oauthEnabled;
+    private Boolean nextGenEnabled;
     private boolean cloudCostEnabled;
     private boolean ceK8sEventCollectionEnabled;
     private String subdomainUrl;
@@ -518,6 +534,8 @@ public class Account extends Base implements PersistentRegularIterable {
     private boolean isHarnessSupportAccessAllowed = true;
     private AccountPreferences accountPreferences;
     private DefaultExperience defaultExperience;
+    private boolean createdFromNG;
+    private ServiceAccountConfig serviceAccountConfig;
 
     private Builder() {}
 
@@ -530,6 +548,11 @@ public class Account extends Base implements PersistentRegularIterable {
       return this;
     }
 
+    public Builder withNextGenEnabled(boolean enabled) {
+      this.nextGenEnabled = enabled;
+      return this;
+    }
+
     public Builder withAccountName(String accountName) {
       this.accountName = accountName;
       return this;
@@ -537,6 +560,11 @@ public class Account extends Base implements PersistentRegularIterable {
 
     public Builder withDefaultExperience(DefaultExperience defaultExperience) {
       this.defaultExperience = defaultExperience;
+      return this;
+    }
+
+    public Builder withCreatedFromNG(boolean createdFromNG) {
+      this.createdFromNG = createdFromNG;
       return this;
     }
 
@@ -660,6 +688,11 @@ public class Account extends Base implements PersistentRegularIterable {
       return this;
     }
 
+    public Builder withServiceAccountConfig(ServiceAccountConfig serviceAccountConfig) {
+      this.serviceAccountConfig = serviceAccountConfig;
+      return this;
+    }
+
     public Builder but() {
       return anAccount()
           .withCompanyName(companyName)
@@ -685,7 +718,9 @@ public class Account extends Base implements PersistentRegularIterable {
           .withSubdomainUrl(subdomainUrl)
           .withBackgroundJobsDisabled(backgroundJobsDisabled)
           .withDefaultExperience(defaultExperience)
-          .withAccountPreferences(accountPreferences);
+          .withCreatedFromNG(createdFromNG)
+          .withAccountPreferences(accountPreferences)
+          .withServiceAccountConfig(serviceAccountConfig);
     }
 
     public Account build() {
@@ -716,7 +751,10 @@ public class Account extends Base implements PersistentRegularIterable {
       account.setHarnessSupportAccessAllowed(isHarnessSupportAccessAllowed);
       account.setBackgroundJobsDisabled(backgroundJobsDisabled);
       account.setDefaultExperience(defaultExperience);
+      account.setCreatedFromNG(createdFromNG);
       account.setAccountPreferences(accountPreferences);
+      account.setNextGenEnabled(nextGenEnabled);
+      account.setServiceAccountConfig(serviceAccountConfig);
       return account;
     }
   }
@@ -752,6 +790,7 @@ public class Account extends Base implements PersistentRegularIterable {
     public static final String ceLicenseInfo = "ceLicenseInfo";
     public static final String isHarnessSupportAccessAllowed = "isHarnessSupportAccessAllowed";
     public static final String resourceLookupSyncIteration = "resourceLookupSyncIteration";
+    public static final String instanceStatsMetricsPublisherInteration = "instanceStatsMetricsPublisherIteration";
     public static final String DELEGATE_CONFIGURATION_DELEGATE_VERSIONS =
         delegateConfiguration + "." + DelegateConfigurationKeys.delegateVersions;
   }

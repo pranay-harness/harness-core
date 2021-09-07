@@ -23,6 +23,8 @@ import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.core.beans.LoadTestAdditionalInfo;
 import io.harness.cvng.core.beans.LoadTestAdditionalInfo.LoadTestAdditionalInfoBuilder;
 import io.harness.cvng.core.beans.TimeRange;
+import io.harness.cvng.core.beans.params.filterParams.DeploymentLogAnalysisFilter;
+import io.harness.cvng.core.beans.params.filterParams.DeploymentTimeSeriesAnalysisFilter;
 import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.utils.CVNGObjectUtils;
@@ -94,9 +96,9 @@ public class VerificationJobInstanceAnalysisServiceImpl implements VerificationJ
       String accountId, VerificationJobInstance verificationJobInstance) {
     List<DeploymentTimeSeriesAnalysis> deploymentTimeSeriesAnalysis =
         deploymentTimeSeriesAnalysisService.getLatestDeploymentTimeSeriesAnalysis(
-            accountId, verificationJobInstance.getUuid());
-    List<DeploymentLogAnalysis> deploymentLogAnalysis =
-        deploymentLogAnalysisService.getLatestDeploymentLogAnalysis(accountId, verificationJobInstance.getUuid());
+            accountId, verificationJobInstance.getUuid(), DeploymentTimeSeriesAnalysisFilter.builder().build());
+    List<DeploymentLogAnalysis> deploymentLogAnalysis = deploymentLogAnalysisService.getLatestDeploymentLogAnalysis(
+        accountId, verificationJobInstance.getUuid(), DeploymentLogAnalysisFilter.builder().build());
 
     Optional<TimeRange> preDeploymentTimeRange =
         verificationJobInstanceService.getPreDeploymentTimeRange(verificationJobInstance.getUuid());
@@ -177,8 +179,10 @@ public class VerificationJobInstanceAnalysisServiceImpl implements VerificationJ
       for (HostSummary hostInfo : deploymentLogAnalysis.getHostSummaries()) {
         // In case multiple analysis for a test node (possible when using multiple providers), use the one with higher
         // risk
-        HostSummaryInfo hostSummaryInfo =
-            HostSummaryInfo.builder().hostName(hostInfo.getHost()).risk(hostInfo.getResultSummary().getRisk()).build();
+        HostSummaryInfo hostSummaryInfo = HostSummaryInfo.builder()
+                                              .hostName(hostInfo.getHost())
+                                              .risk(hostInfo.getResultSummary().getRiskLevel())
+                                              .build();
         if (!testMap.keySet().contains(hostInfo.getHost())
             || testMap.get(hostInfo.getHost()).getRisk().isLessThanEq(hostSummaryInfo.getRisk())) {
           testMap.put(hostInfo.getHost(), hostSummaryInfo);
@@ -213,12 +217,14 @@ public class VerificationJobInstanceAnalysisServiceImpl implements VerificationJ
       int anomalousLogClustersCount[] = new int[] {0};
       for (DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis : deploymentTimeSeriesAnalysisList) {
         deploymentTimeSeriesAnalysis.getTransactionMetricSummaries().forEach(transactionMetricHostData
-            -> anomalousMetricsCount[0] += transactionMetricHostData.getHostData()
-                                               .stream()
-                                               .filter(hostData
-                                                   -> hostData.getHostName().get().equals(hostSummaryInfo.getHostName())
-                                                       && hostData.getRisk().isGreaterThanEq(Risk.MEDIUM))
-                                               .count());
+            -> anomalousMetricsCount[0] +=
+            transactionMetricHostData.getHostData()
+                .stream()
+                .filter(hostData
+                    -> hostData.getHostName().isPresent()
+                        && hostData.getHostName().get().equals(hostSummaryInfo.getHostName())
+                        && hostData.getRisk().isGreaterThanEq(Risk.MEDIUM))
+                .count());
       }
       for (DeploymentLogAnalysis deploymentLogAnalysis : deploymentLogAnalysisList) {
         if (deploymentLogAnalysis.getHostSummaries() != null) {
@@ -230,7 +236,7 @@ public class VerificationJobInstanceAnalysisServiceImpl implements VerificationJ
                   hostSummary.getResultSummary()
                       .getTestClusterSummaries()
                       .stream()
-                      .filter(clusterSummary -> clusterSummary.getRisk().isGreaterThanEq(Risk.MEDIUM))
+                      .filter(clusterSummary -> clusterSummary.getRiskLevel().isGreaterThanEq(Risk.MEDIUM))
                       .count());
         }
       }
@@ -244,8 +250,8 @@ public class VerificationJobInstanceAnalysisServiceImpl implements VerificationJ
     Integer trafficSplitPercentage = canaryBlueGreenVerificationJob.getTrafficSplitPercentage();
     if (trafficSplitPercentage != null) {
       return TrafficSplitPercentage.builder()
-          .preDeploymentPercentage(trafficSplitPercentage)
-          .postDeploymentPercentage(100 - trafficSplitPercentage)
+          .preDeploymentPercentage(100 - trafficSplitPercentage)
+          .postDeploymentPercentage(trafficSplitPercentage)
           .build();
     }
     return null;

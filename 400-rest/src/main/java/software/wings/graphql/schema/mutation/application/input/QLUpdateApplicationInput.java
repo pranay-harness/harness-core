@@ -19,4 +19,5 @@ public class QLUpdateApplicationInput implements QLMutationInput {
   private String applicationId;
   private RequestField<String> name;
   private RequestField<String> description;
+  private Boolean isManualTriggerAuthorized;
 }

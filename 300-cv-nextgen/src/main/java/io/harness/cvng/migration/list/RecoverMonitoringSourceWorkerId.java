@@ -1,11 +1,9 @@
 package io.harness.cvng.migration.list;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask;
 import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask.MonitoringSourcePerpetualTaskKeys;
-import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.migration.CVNGMigration;
 import io.harness.cvng.migration.beans.ChecklistItem;
 import io.harness.persistence.HPersistence;
@@ -18,7 +16,6 @@ import org.mongodb.morphia.query.UpdateResults;
 @Slf4j
 public class RecoverMonitoringSourceWorkerId implements CVNGMigration {
   @Inject private HPersistence hPersistence;
-  @Inject private DataCollectionTaskService dataCollectionTaskService;
 
   @Override
   public void migrate() {
@@ -28,10 +25,6 @@ public class RecoverMonitoringSourceWorkerId implements CVNGMigration {
 
     monitoringSourcePerpetualTasks.forEach(monitoringSourcePerpetualTask -> {
       log.info("Starting migration for {}", monitoringSourcePerpetualTask);
-      if (isNotEmpty(monitoringSourcePerpetualTask.getPerpetualTaskId())) {
-        dataCollectionTaskService.deletePerpetualTasks(
-            monitoringSourcePerpetualTask.getAccountId(), monitoringSourcePerpetualTask.getPerpetualTaskId());
-      }
       UpdateOperations<MonitoringSourcePerpetualTask> updateOperations =
           hPersistence.createUpdateOperations(MonitoringSourcePerpetualTask.class);
       updateOperations.unset(MonitoringSourcePerpetualTaskKeys.dataCollectionWorkerId);

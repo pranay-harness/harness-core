@@ -1,6 +1,7 @@
 package io.harness.remote.client;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ResponseMessage;
@@ -23,7 +24,20 @@ import retrofit2.Response;
 @UtilityClass
 @Slf4j
 public class RestClientUtils {
+  public static final String DEFAULT_CONNECTION_ERROR_MESSAGE =
+      "Unable to connect to upstream systems, please try again.";
+  public static final String DEFAULT_ERROR_MESSAGE = "Error occurred while performing this operation.";
+
   public static <T> T getResponse(Call<RestResponse<T>> request) {
+    return getResponse(request, DEFAULT_ERROR_MESSAGE, DEFAULT_CONNECTION_ERROR_MESSAGE);
+  }
+
+  public static <T> T getResponse(Call<RestResponse<T>> request, String defaultErrorMessage) {
+    return getResponse(request, defaultErrorMessage, DEFAULT_CONNECTION_ERROR_MESSAGE);
+  }
+
+  public static <T> T getResponse(
+      Call<RestResponse<T>> request, String defaultErrorMessage, String connectionErrorMessage) {
     try {
       Response<RestResponse<T>> response = request.execute();
       if (response.isSuccessful()) {
@@ -33,20 +47,19 @@ public class RestClientUtils {
         try {
           RestResponse<T> restResponse =
               JsonUtils.asObject(response.errorBody().string(), new TypeReference<RestResponse<T>>() {});
-          if (!restResponse.getResponseMessages().isEmpty()) {
+          if (restResponse != null && isNotEmpty(restResponse.getResponseMessages())) {
             List<ResponseMessage> responseMessageList = restResponse.getResponseMessages();
             errorMessage = responseMessageList.get(0).getMessage();
           }
         } catch (Exception e) {
-          log.debug("Error while converting error received from 71 rest manager", e);
+          log.debug("Error while converting error received from upstream systems", e);
         }
-        throw new InvalidRequestException(
-            StringUtils.isEmpty(errorMessage) ? "Error occurred while performing this operation" : errorMessage);
+        throw new InvalidRequestException(StringUtils.isEmpty(errorMessage) ? defaultErrorMessage : errorMessage);
       }
     } catch (IOException ex) {
       String url = Optional.ofNullable(request.request()).map(x -> x.url().encodedPath()).orElse(null);
       log.error("IO error while connecting to the service: {}", url, ex);
-      throw new UnexpectedException("Unable to connect to upstream systems, please try again.");
+      throw new UnexpectedException(connectionErrorMessage);
     }
   }
 }

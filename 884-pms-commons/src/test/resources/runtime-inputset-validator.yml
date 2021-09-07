@@ -1,0 +1,5 @@
+pipeline:
+  identifier: "Test_Pipline11"
+  variables:
+  - name: var2
+    value: a

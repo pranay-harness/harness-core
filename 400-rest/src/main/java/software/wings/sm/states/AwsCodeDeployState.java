@@ -15,7 +15,9 @@ import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aSt
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
@@ -91,6 +93,7 @@ import org.mongodb.morphia.Key;
  */
 @Slf4j
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class AwsCodeDeployState extends State {
   public static final String ARTIFACT_S3_BUCKET_EXPRESSION = "${artifact.bucketName}";
   public static final String ARTIFACT_S3_KEY_EXPRESSION = "${artifact.key}";
@@ -220,7 +223,7 @@ public class AwsCodeDeployState extends State {
                                                           .codeDeployParams(codeDeployParams)
                                                           .build();
 
-    String delegateTaskId = delegateService.queueTask(
+    DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(app.getAccountId())
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, app.getAppId())
@@ -236,7 +239,12 @@ public class AwsCodeDeployState extends State {
             .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infrastructureMapping.getUuid())
             .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, infrastructureMapping.getServiceId())
-            .build());
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("Aws code deploy task execution")
+            .build();
+
+    String delegateTaskId = delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
 
     return ExecutionResponse.builder()
         .async(true)
@@ -530,5 +538,10 @@ public class AwsCodeDeployState extends State {
     stateDefaults.put("key", ARTIFACT_S3_KEY_EXPRESSION);
     stateDefaults.put("bundleType", "zip");
     return stateDefaults;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

@@ -2,7 +2,10 @@ package io.harness.network;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.GeneralException;
+import io.harness.exception.HttpResponseException;
 
 import java.io.IOException;
 import lombok.experimental.UtilityClass;
@@ -10,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import retrofit2.Call;
 import retrofit2.Response;
 
+@OwnedBy(HarnessTeam.CDC)
 @UtilityClass
 @Slf4j
 public class SafeHttpCall {
@@ -48,8 +52,7 @@ public class SafeHttpCall {
       throw new GeneralException("Null response found");
     }
     if (!response.isSuccessful()) {
-      throw new GeneralException(format("Unsuccessful HTTP call: status code = %d, message = %s", response.code(),
-          response.message() == null ? "null" : response.message()));
+      throw new HttpResponseException(response.code(), response.message());
     }
   }
 

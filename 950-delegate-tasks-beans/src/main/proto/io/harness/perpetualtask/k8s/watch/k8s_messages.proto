@@ -163,6 +163,10 @@ message K8SClusterSyncEvent {
   google.protobuf.Timestamp last_processed_timestamp = 6;
   string kube_system_uid = 7;
   repeated string active_pv_uids = 8;
+  int32 version = 9;
+  map<string, string> active_pod_uids_map = 10;
+  map<string, string> active_node_uids_map = 11;
+  map<string, string> active_pv_uids_map = 12;
 }
 
 // uniquely identify a k8s resource within a cluster
@@ -239,4 +243,9 @@ message K8sWorkloadSpec {
 
   repeated ContainerSpec container_specs = 8;
   repeated ContainerSpec init_container_specs = 9;
+
+  int64 replicas = 10;
+  string uid = 11;
+
+  int32 version = 12;
 }

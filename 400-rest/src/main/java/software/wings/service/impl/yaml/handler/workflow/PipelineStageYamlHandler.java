@@ -66,12 +66,14 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @Slf4j
 public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStage> {
+  private static final String USER_GROUPS = "userGroups";
   @Inject YamlHelper yamlHelper;
   @Inject WorkflowService workflowService;
   @Inject EnvironmentService environmentService;
   @Inject WorkflowYAMLHelper workflowYAMLHelper;
   @Inject UserGroupService userGroupService;
   @Inject AppService appService;
+  @Inject ApprovalStepYamlBuilder approvalStepYamlBuilder;
 
   private static final List<String> irrelevantApprovalStateFields =
       Arrays.asList(ApprovalStateKeys.disableAssertion, ApprovalStateKeys.disable, EnvStateKeys.pipelineId,
@@ -137,14 +139,17 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
 
   private void generateBeanForApprovalStage(Yaml yaml, String appId, Map<String, Object> properties) {
     Map<String, Object> yamlProperties = yaml.getProperties();
+    String accountId = appService.getAccountIdByAppId(appId);
 
     if (yamlProperties != null) {
       yamlProperties.forEach((name, value) -> {
         if (!shouldBeIgnored(name)) {
-          properties.put(name,
-              ("userGroups".equals(name))
-                  ? getUserGroupUuids((List<String>) value, appService.getAccountIdByAppId(appId), yamlProperties)
-                  : value);
+          if (USER_GROUPS.equals(name)) {
+            properties.put(name, getUserGroupUuids((List<String>) value, accountId, yamlProperties));
+          } else {
+            approvalStepYamlBuilder.convertNameToIdForKnownTypes(
+                name, value, properties, appId, accountId, yamlProperties);
+          }
         }
       });
     }
@@ -299,10 +304,14 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
       }
       properties.forEach((name, value) -> {
         if (!shouldBeIgnored(name)) {
-          outputProperties.put(name,
-              ("userGroups".equals(name) && value != null)
-                  ? getUserGroupNames((List<String>) value, appService.getAccountIdByAppId(appId))
-                  : value);
+          if (USER_GROUPS.equals(name)) {
+            outputProperties.put(name,
+                ("userGroups".equals(name) && value != null)
+                    ? getUserGroupNames((List<String>) value, appService.getAccountIdByAppId(appId))
+                    : value);
+          } else {
+            approvalStepYamlBuilder.convertIdToNameForKnownTypes(name, value, outputProperties, appId, properties);
+          }
         }
       });
     }

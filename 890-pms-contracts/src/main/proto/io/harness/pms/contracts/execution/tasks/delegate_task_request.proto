@@ -4,19 +4,15 @@ package io.harness.pms.contracts.execution.tasks;
 
 option java_multiple_files = true;
 
-import "920-delegate-service-beans/src/main/proto/io/harness/delegate/task.proto";
-import "955-delegate-beans/src/main/proto/io/harness/delegate/capability.proto";
+import "920-delegate-service-beans/src/main/proto/io/harness/delegate/delegate_service.proto";
 
 message DelegateTaskRequest {
-  string account_id = 1;
-  io.harness.delegate.TaskSetupAbstractions setup_abstractions = 2;
-  io.harness.delegate.TaskLogAbstractions log_abstractions = 3;
-  io.harness.delegate.TaskDetails details = 4;
-  repeated io.harness.delegate.Capability capabilities = 5;
-  repeated io.harness.delegate.TaskSelector selectors = 6;
   repeated string units = 7;
   repeated string logKeys = 8;
-  bool selectionTrackingLogEnabled = 9;
   string taskName = 10;
-  bool forceExecute = 11;
+  // This will contain delegate token field which should not be used in this context even if it is used this would be
+  // overridden by the PMS. In delegate service we should have separated out the token from the data model.
+  // We are not creating a dto object for this because we need to keep both in sync which can lead to gaps in supported
+  // properties and duplicated effort on the delegate and pipeline side
+  io.harness.delegate.SubmitTaskRequest request = 12;
 }

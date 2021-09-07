@@ -2,11 +2,12 @@ package io.harness.ci.integrationstage;
 
 import static io.harness.beans.steps.CIStepInfoType.CIStepExecEnvironment;
 import static io.harness.beans.steps.CIStepInfoType.CIStepExecEnvironment.CI_MANAGER;
-import static io.harness.common.CIExecutionConstants.GIT_CLONE_DEPTH;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_DEPTH_ATTRIBUTE;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_MANUAL_DEPTH;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_STEP_ID;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_STEP_NAME;
+import static io.harness.common.CIExecutionConstants.GIT_SSL_NO_VERIFY;
+import static io.harness.common.CIExecutionConstants.PR_CLONE_STRATEGY_ATTRIBUTE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -14,6 +15,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.execution.ExecutionSource;
+import io.harness.beans.execution.ManualExecutionSource;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.stages.IntegrationStageConfig;
@@ -30,6 +32,7 @@ import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.yaml.core.timeout.Timeout;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
 import io.harness.yaml.utils.JsonPipelineUtils;
 
@@ -37,7 +40,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -49,9 +51,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.CI)
 public class CILiteEngineStepGroupUtils {
   private static final String LITE_ENGINE_TASK = "liteEngineTask";
-  private static final String BUILD_NUMBER = "buildnumber";
   @Inject private LiteEngineTaskStepGenerator liteEngineTaskStepGenerator;
-  private static final SecureRandom random = new SecureRandom();
   @Inject private CIExecutionServiceConfig ciExecutionServiceConfig;
 
   public List<ExecutionWrapperConfig> createExecutionWrapperWithLiteEngineSteps(StageElementConfig stageElementConfig,
@@ -76,7 +76,7 @@ public class CILiteEngineStepGroupUtils {
     boolean gitClone = RunTimeInputHandler.resolveGitClone(integrationStageConfig.getCloneCodebase());
 
     if (gitClone) {
-      liteEngineExecutionSections.add(getGitCloneStep(ciExecutionArgs));
+      liteEngineExecutionSections.add(getGitCloneStep(ciExecutionArgs, ciCodebase));
     }
     int liteEngineCounter = 0;
     for (ExecutionWrapperConfig executionWrapper : executionSections) {
@@ -130,6 +130,7 @@ public class CILiteEngineStepGroupUtils {
       String uuid = generateUuid();
       String jsonString = JsonPipelineUtils.writeJsonString(StepElementConfig.builder()
                                                                 .identifier(LITE_ENGINE_TASK + liteEngineCounter)
+                                                                .name(LITE_ENGINE_TASK + liteEngineCounter)
                                                                 .uuid(generateUuid())
                                                                 .type("liteEngineTask")
                                                                 .stepSpecType(liteEngineTaskStepInfo)
@@ -198,30 +199,57 @@ public class CILiteEngineStepGroupUtils {
     return ciStepExecEnvironment;
   }
 
-  private ExecutionWrapperConfig getGitCloneStep(CIExecutionArgs ciExecutionArgs) {
-    Integer cloneDepth = GIT_CLONE_DEPTH;
-    if (ciExecutionArgs.getExecutionSource().getType() == ExecutionSource.Type.MANUAL) {
-      cloneDepth = GIT_CLONE_MANUAL_DEPTH;
+  private ExecutionWrapperConfig getGitCloneStep(CIExecutionArgs ciExecutionArgs, CodeBase ciCodebase) {
+    Map<String, String> settings = new HashMap<>();
+    if (ciCodebase == null) {
+      throw new CIStageExecutionException("Codebase is mandatory with enabled cloneCodebase flag");
+    }
+    Integer depth = ciCodebase.getDepth();
+    ExecutionSource executionSource = ciExecutionArgs.getExecutionSource();
+    if (depth == null) {
+      if (executionSource.getType() == ExecutionSource.Type.MANUAL) {
+        ManualExecutionSource manualExecutionSource = (ManualExecutionSource) executionSource;
+        if (isNotEmpty(manualExecutionSource.getBranch()) || isNotEmpty(manualExecutionSource.getTag())) {
+          depth = GIT_CLONE_MANUAL_DEPTH;
+        }
+      }
     }
 
-    Map<String, String> settings = new HashMap<>();
-    settings.put(GIT_CLONE_DEPTH_ATTRIBUTE, cloneDepth.toString());
+    if (depth != null) {
+      settings.put(GIT_CLONE_DEPTH_ATTRIBUTE, depth.toString());
+    }
+
+    if (ciCodebase.getPrCloneStrategy() != null) {
+      settings.put(PR_CLONE_STRATEGY_ATTRIBUTE, ciCodebase.getPrCloneStrategy().getYamlName());
+    }
+
+    Map<String, String> envVariables = new HashMap<>();
+    if (ciCodebase.getSslVerify() != null && !ciCodebase.getSslVerify()) {
+      envVariables.put(GIT_SSL_NO_VERIFY, "true");
+    }
+
     PluginStepInfo step = PluginStepInfo.builder()
                               .identifier(GIT_CLONE_STEP_ID)
                               .image(ParameterField.createValueField(
                                   ciExecutionServiceConfig.getStepConfig().getGitCloneConfig().getImage()))
                               .name(GIT_CLONE_STEP_NAME)
                               .settings(ParameterField.createValueField(settings))
+                              .envVariables(envVariables)
+                              .entrypoint(ciExecutionServiceConfig.getStepConfig().getGitCloneConfig().getEntrypoint())
+                              .harnessManagedImage(true)
+                              .resources(ciCodebase.getResources())
                               .build();
 
     String uuid = generateUuid();
-    StepElementConfig stepElementConfig = StepElementConfig.builder()
-                                              .identifier(GIT_CLONE_STEP_ID)
-                                              .name(GIT_CLONE_STEP_NAME)
-                                              .uuid(generateUuid())
-                                              .type("Plugin")
-                                              .stepSpecType(step)
-                                              .build();
+    StepElementConfig stepElementConfig =
+        StepElementConfig.builder()
+            .identifier(GIT_CLONE_STEP_ID)
+            .name(GIT_CLONE_STEP_NAME)
+            .timeout(ParameterField.createValueField(Timeout.builder().timeoutString("1h").build()))
+            .uuid(generateUuid())
+            .type("Plugin")
+            .stepSpecType(step)
+            .build();
 
     try {
       String jsonString = JsonPipelineUtils.writeJsonString(stepElementConfig);

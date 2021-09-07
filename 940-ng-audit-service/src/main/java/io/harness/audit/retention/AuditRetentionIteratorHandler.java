@@ -17,6 +17,7 @@ import io.harness.mongo.iterator.filter.SpringFilterExpander;
 import io.harness.mongo.iterator.provider.SpringPersistenceProvider;
 
 import com.google.inject.Inject;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -30,8 +31,8 @@ public class AuditRetentionIteratorHandler implements MongoPersistenceIterator.H
 
   @Override
   public void handle(AuditSettings auditSettings) {
-    Instant toBeDeletedTillTimestamp =
-        Instant.now().minus(auditSettings.getRetentionPeriodInMonths(), ChronoUnit.MONTHS);
+    Instant toBeDeletedTillTimestamp = Instant.now().minus(
+        Duration.ofSeconds(auditSettings.getRetentionPeriodInMonths() * ChronoUnit.MONTHS.getDuration().getSeconds()));
 
     auditService.purgeAuditsOlderThanTimestamp(auditSettings.getAccountIdentifier(), toBeDeletedTillTimestamp);
     auditYamlService.purgeYamlDiffOlderThanTimestamp(auditSettings.getAccountIdentifier(), toBeDeletedTillTimestamp);

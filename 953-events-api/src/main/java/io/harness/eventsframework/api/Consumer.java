@@ -10,7 +10,7 @@ import java.util.List;
 
 @OwnedBy(PL)
 public interface Consumer {
-  List<Message> read(Duration maxWaitTime) throws ConsumerShutdownException;
-  void acknowledge(String messageId) throws ConsumerShutdownException;
+  List<Message> read(Duration maxWaitTime);
+  void acknowledge(String messageId);
   void shutdown();
 }

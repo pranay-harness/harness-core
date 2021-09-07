@@ -1,6 +1,9 @@
 package software.wings.sm.states.pcf;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.beans.FeatureName.CF_APP_NON_VERSIONING_INACTIVE_ROLLBACK;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -9,12 +12,17 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.context.ContextElementType;
-import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.beans.pcf.CfAppSetupTimeDetails;
+import io.harness.delegate.beans.pcf.CfRouteUpdateRequestConfigData;
+import io.harness.delegate.cf.apprenaming.AppNamingStrategy;
+import io.harness.delegate.task.pcf.response.CfCommandExecutionResponse;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -33,10 +41,9 @@ import software.wings.beans.Environment;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
-import software.wings.helpers.ext.pcf.request.PcfRouteUpdateRequestConfigData;
-import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
-import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
+import software.wings.beans.command.PcfDummyCommandUnit;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -53,11 +60,16 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import lombok.Getter;
+import lombok.Setter;
+import org.jetbrains.annotations.NotNull;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class PcfSwitchBlueGreenRoutes extends State {
   @Inject private transient AppService appService;
   @Inject private transient InfrastructureMappingService infrastructureMappingService;
@@ -68,10 +80,14 @@ public class PcfSwitchBlueGreenRoutes extends State {
   @Inject private transient SweepingOutputService sweepingOutputService;
   @Inject protected transient FeatureFlagService featureFlagService;
 
+  @Getter @Setter private List<String> tags;
+
   public static final String PCF_BG_SWAP_ROUTE_COMMAND = "PCF BG Swap Route";
+  public static final String RESTORE_ACTIVE_IN_ACTIVE_APPS_COMMAND = "Restore Active and In-Active Apps";
   static final String PCF_BG_SKIP_SWAP_ROUTE_MESG = "Skipping route swapping";
 
   @Attributes(title = "Downsize Old Applications") private boolean downsizeOldApps;
+  @Getter @Setter @Attributes(title = "Up size InActive app") private boolean upSizeInActiveApp;
 
   public boolean isDownsizeOldApps() {
     return downsizeOldApps;
@@ -119,8 +135,11 @@ public class PcfSwitchBlueGreenRoutes extends State {
 
     SetupSweepingOutputPcf setupSweepingOutputPcf = pcfStateHelper.findSetupSweepingOutputPcf(context, isRollback());
     pcfStateHelper.populatePcfVariables(context, setupSweepingOutputPcf);
-    PcfRouteUpdateRequestConfigData requestConfigData = getPcfRouteUpdateRequestConfigData(setupSweepingOutputPcf);
-    Activity activity = createActivity(context);
+    SettingAttribute settingAttribute = settingsService.get(pcfInfrastructureMapping.getComputeProviderSettingId());
+    PcfConfig pcfConfig = (PcfConfig) settingAttribute.getValue();
+    CfRouteUpdateRequestConfigData requestConfigData =
+        getPcfRouteUpdateRequestConfigData(setupSweepingOutputPcf, pcfConfig);
+    Activity activity = createActivity(context, pcfConfig);
 
     if (isRollback()) {
       if (pcfStateHelper.isRollBackNotNeeded(setupSweepingOutputPcf)) {
@@ -134,6 +153,11 @@ public class PcfSwitchBlueGreenRoutes extends State {
       if (sweepingOutputInstance != null) {
         SwapRouteRollbackSweepingOutputPcf swapRouteRollbackSweepingOutputPcf =
             (SwapRouteRollbackSweepingOutputPcf) sweepingOutputInstance.getValue();
+
+        if (isEmpty(tags) && isNotEmpty(swapRouteRollbackSweepingOutputPcf.getTags())) {
+          tags = swapRouteRollbackSweepingOutputPcf.getTags();
+        }
+
         // it means no update route happened.
         if (swapRouteRollbackSweepingOutputPcf.getPcfRouteUpdateRequestConfigData() != null) {
           downsizeOldApps =
@@ -143,14 +167,14 @@ public class PcfSwitchBlueGreenRoutes extends State {
       requestConfigData.setSkipRollback(sweepingOutputInstance == null);
     }
 
-    SettingAttribute settingAttribute = settingsService.get(pcfInfrastructureMapping.getComputeProviderSettingId());
-    PcfConfig pcfConfig = (PcfConfig) settingAttribute.getValue();
-
     List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(
         (EncryptableSetting) pcfConfig, context.getAppId(), context.getWorkflowExecutionId());
 
     // update value as for rollback, we need to readt it from SweepingOutput
     requestConfigData.setDownsizeOldApplication(downsizeOldApps);
+
+    List<String> renderedTags = pcfStateHelper.getRenderedTags(context, tags);
+
     return pcfStateHelper.queueDelegateTaskForRouteUpdate(
         PcfRouteUpdateQueueRequestData.builder()
             .pcfConfig(pcfConfig)
@@ -160,31 +184,32 @@ public class PcfSwitchBlueGreenRoutes extends State {
             .envId(env.getUuid())
             .environmentType(env.getEnvironmentType())
             .timeoutIntervalInMinutes(firstNonNull(setupSweepingOutputPcf.getTimeoutIntervalInMinutes(), 5))
-            .commandName(PCF_BG_SWAP_ROUTE_COMMAND)
+            .commandName(
+                shouldUpSizeInActiveApp(pcfConfig) ? RESTORE_ACTIVE_IN_ACTIVE_APPS_COMMAND : PCF_BG_SWAP_ROUTE_COMMAND)
             .requestConfigData(requestConfigData)
             .encryptedDataDetails(encryptedDataDetails)
             .downsizeOldApps(downsizeOldApps)
             .useCfCli(true)
             .build(),
-        setupSweepingOutputPcf);
+        setupSweepingOutputPcf, context.getStateExecutionInstanceId(), isSelectionLogsTrackingForTasksEnabled(),
+        renderedTags);
   }
 
-  private PcfRouteUpdateRequestConfigData getPcfRouteUpdateRequestConfigData(
-      SetupSweepingOutputPcf setupSweepingOutputPcf) {
+  private CfRouteUpdateRequestConfigData getPcfRouteUpdateRequestConfigData(
+      SetupSweepingOutputPcf setupSweepingOutputPcf, PcfConfig pcfConfig) {
     List<String> existingAppNames;
 
-    if (setupSweepingOutputPcf != null
-        && EmptyPredicate.isNotEmpty(setupSweepingOutputPcf.getAppDetailsToBeDownsized())) {
+    if (setupSweepingOutputPcf != null && isNotEmpty(setupSweepingOutputPcf.getAppDetailsToBeDownsized())) {
       existingAppNames = setupSweepingOutputPcf.getAppDetailsToBeDownsized()
                              .stream()
-                             .map(PcfAppSetupTimeDetails::getApplicationName)
+                             .map(CfAppSetupTimeDetails::getApplicationName)
                              .collect(toList());
     } else {
       existingAppNames = emptyList();
     }
 
-    return PcfRouteUpdateRequestConfigData.builder()
-        .newApplicatiaonName(getNewApplicationName(setupSweepingOutputPcf))
+    return CfRouteUpdateRequestConfigData.builder()
+        .newApplicationName(getNewApplicationName(setupSweepingOutputPcf))
         .existingApplicationDetails(
             setupSweepingOutputPcf != null ? setupSweepingOutputPcf.getAppDetailsToBeDownsized() : null)
         .existingApplicationNames(existingAppNames)
@@ -193,7 +218,29 @@ public class PcfSwitchBlueGreenRoutes extends State {
         .isRollback(isRollback())
         .isStandardBlueGreen(true)
         .downsizeOldApplication(downsizeOldApps)
+        .upSizeInActiveApp(shouldUpSizeInActiveApp(pcfConfig))
+        .versioningChanged(setupSweepingOutputPcf != null && setupSweepingOutputPcf.isVersioningChanged())
+        .nonVersioning(setupSweepingOutputPcf != null && setupSweepingOutputPcf.isNonVersioning())
+        .existingAppNamingStrategy(getExistingAppNamingStrategy(setupSweepingOutputPcf))
+        .existingInActiveApplicationDetails(
+            setupSweepingOutputPcf != null ? setupSweepingOutputPcf.getMostRecentInactiveAppVersionDetails() : null)
+        .newApplicationDetails(
+            setupSweepingOutputPcf != null ? setupSweepingOutputPcf.getNewPcfApplicationDetails() : null)
+        .cfAppNamePrefix(setupSweepingOutputPcf != null ? setupSweepingOutputPcf.getCfAppNamePrefix() : null)
         .build();
+  }
+
+  private String getExistingAppNamingStrategy(SetupSweepingOutputPcf setupSweepingOutputPcf) {
+    if (setupSweepingOutputPcf == null || isEmpty(setupSweepingOutputPcf.getExistingAppNamingStrategy())) {
+      return AppNamingStrategy.VERSIONING.name();
+    }
+    return setupSweepingOutputPcf.getExistingAppNamingStrategy();
+  }
+
+  private boolean shouldUpSizeInActiveApp(PcfConfig pcfConfig) {
+    return isRollback()
+        && featureFlagService.isEnabled(CF_APP_NON_VERSIONING_INACTIVE_ROLLBACK, pcfConfig.getAccountId())
+        && upSizeInActiveApp;
   }
 
   @VisibleForTesting
@@ -210,7 +257,7 @@ public class PcfSwitchBlueGreenRoutes extends State {
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     try {
       String activityId = response.keySet().iterator().next();
-      PcfCommandExecutionResponse executionResponse = (PcfCommandExecutionResponse) response.values().iterator().next();
+      CfCommandExecutionResponse executionResponse = (CfCommandExecutionResponse) response.values().iterator().next();
       ExecutionStatus executionStatus = executionResponse.getCommandExecutionStatus() == CommandExecutionStatus.SUCCESS
           ? ExecutionStatus.SUCCESS
           : ExecutionStatus.FAILED;
@@ -231,6 +278,7 @@ public class PcfSwitchBlueGreenRoutes extends State {
                 .name(pcfStateHelper.obtainSwapRouteSweepingOutputName(context, false))
                 .value(SwapRouteRollbackSweepingOutputPcf.builder()
                            .pcfRouteUpdateRequestConfigData(stateExecutionData.getPcfRouteUpdateRequestConfigData())
+                           .tags(stateExecutionData.getTags())
                            .build())
                 .build());
       }
@@ -251,8 +299,27 @@ public class PcfSwitchBlueGreenRoutes extends State {
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
 
-  protected Activity createActivity(ExecutionContext executionContext) {
-    return pcfStateHelper.createActivity(executionContext, PCF_BG_SWAP_ROUTE_COMMAND, getStateType(),
-        CommandUnitType.PCF_BG_SWAP_ROUTE, activityService);
+  protected Activity createActivity(ExecutionContext executionContext, PcfConfig pcfConfig) {
+    boolean shouldUpSizeInActiveApp = shouldUpSizeInActiveApp(pcfConfig);
+    return pcfStateHelper.createActivity(executionContext, getPcfBgSwapRouteCommand(shouldUpSizeInActiveApp),
+        getStateType(), CommandUnitType.PCF_BG_SWAP_ROUTE, activityService,
+        getCommandUnitList(shouldUpSizeInActiveApp));
+  }
+
+  List<CommandUnit> getCommandUnitList(boolean shouldUpSizeInActiveApp) {
+    List<CommandUnit> commandUnits = new ArrayList<>();
+    commandUnits.add(new PcfDummyCommandUnit(
+        shouldUpSizeInActiveApp ? RESTORE_ACTIVE_IN_ACTIVE_APPS_COMMAND : PCF_BG_SWAP_ROUTE_COMMAND));
+    return commandUnits;
+  }
+
+  @NotNull
+  private String getPcfBgSwapRouteCommand(boolean upSizeInActiveApp) {
+    return upSizeInActiveApp ? RESTORE_ACTIVE_IN_ACTIVE_APPS_COMMAND : PCF_BG_SWAP_ROUTE_COMMAND;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

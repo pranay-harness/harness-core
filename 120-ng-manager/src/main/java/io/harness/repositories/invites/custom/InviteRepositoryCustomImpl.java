@@ -9,7 +9,6 @@ import io.harness.utils.RetryUtils;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
-import com.mongodb.client.result.UpdateResult;
 import java.time.Duration;
 import java.util.List;
 import lombok.AccessLevel;
@@ -21,6 +20,7 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -46,10 +46,11 @@ public class InviteRepositoryCustomImpl implements InviteRepositoryCustom {
   }
 
   @Override
-  public UpdateResult updateInvite(String inviteId, Update update) {
+  public Invite updateInvite(String inviteId, Update update) {
     Criteria criteria = Criteria.where(InviteKeys.id).is(inviteId);
     Query query = new Query(criteria);
-
-    return Failsafe.with(updateRetryPolicy).get(() -> mongoTemplate.updateFirst(query, update, Invite.class));
+    return Failsafe.with(updateRetryPolicy)
+        .get(
+            () -> mongoTemplate.findAndModify(query, update, new FindAndModifyOptions().returnNew(true), Invite.class));
   }
 }

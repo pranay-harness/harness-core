@@ -1,8 +1,8 @@
 package io.harness.engine.interrupts.handlers;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.data.structure.CollectionUtils.filterAndGetFirst;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.CollectionUtils.isPresent;
+import static io.harness.eraro.ErrorCode.ABORT_ALL_ALREADY;
 import static io.harness.eraro.ErrorCode.RESUME_ALL_ALREADY;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.interrupts.Interrupt.State.DISCARDED;
@@ -13,6 +13,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.interrupts.InterruptHandler;
 import io.harness.engine.interrupts.InterruptService;
+import io.harness.engine.interrupts.InterruptUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
@@ -23,15 +24,22 @@ import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.sdk.core.steps.io.StatusNotifyResponseData;
 import io.harness.waiter.WaitNotifyEngine;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
+import lombok.extern.slf4j.Slf4j;
 
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
+@Slf4j
 public class ResumeAllInterruptHandler implements InterruptHandler {
   @Inject private InterruptService interruptService;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private WaitNotifyEngine waitNotifyEngine;
+
+  private final Predicate<Interrupt> resumeAllPredicate = interrupt -> interrupt.getType() == InterruptType.RESUME_ALL;
 
   @Override
   public Interrupt registerInterrupt(Interrupt interrupt) {
@@ -40,15 +48,37 @@ public class ResumeAllInterruptHandler implements InterruptHandler {
 
   private Interrupt validateAndSave(Interrupt interrupt) {
     List<Interrupt> interrupts = interruptService.fetchActiveInterrupts(interrupt.getPlanExecutionId());
-    Optional<Interrupt> pauseAllOptional =
-        filterAndGetFirst(interrupts, presentInterrupt -> presentInterrupt.getType() == InterruptType.PAUSE_ALL);
+
+    // Check if ABORT_ALL present on plan level
+    if (isPresent(interrupts, presentInterrupt -> presentInterrupt.getType() == InterruptType.ABORT_ALL)) {
+      throw new InvalidRequestException("Execution already has ABORT_ALL interrupt", ABORT_ALL_ALREADY, USER);
+    }
+
+    // Check if RESUME_ALL present on plan level
+    if (isPresent(interrupts,
+            presentInterrupt
+            -> presentInterrupt.getType() == InterruptType.RESUME_ALL
+                && presentInterrupt.getNodeExecutionId() == null)) {
+      throw new InvalidRequestException("Execution already has RESUME_ALL interrupt", RESUME_ALL_ALREADY, USER);
+    }
+
+    // Check if RESUME_ALL already for same node
+    if (isPresent(interrupts,
+            presentInterrupt
+            -> presentInterrupt.getType() == InterruptType.RESUME_ALL && presentInterrupt.getNodeExecutionId() != null
+                && interrupt.getNodeExecutionId() != null
+                && presentInterrupt.getNodeExecutionId().equals(interrupt.getNodeExecutionId()))) {
+      throw new InvalidRequestException(
+          "Execution already has RESUME_ALL interrupt for node", RESUME_ALL_ALREADY, USER);
+    }
+
+    Optional<Interrupt> pauseAllOptional = InterruptUtils.obtainOptionalInterruptFromActiveInterruptsWithPredicates(
+        interrupts, interrupt.getPlanExecutionId(), interrupt.getNodeExecutionId(),
+        ImmutableList.of(presentInterrupt -> presentInterrupt.getType() == InterruptType.PAUSE_ALL));
     if (!pauseAllOptional.isPresent()) {
       throw new InvalidRequestException("No PAUSE_ALL interrupt present", USER);
     }
 
-    if (isPresent(interrupts, presentInterrupt -> presentInterrupt.getType() == InterruptType.RESUME_ALL)) {
-      throw new InvalidRequestException("Interrupt RESUME_ALL already present", RESUME_ALL_ALREADY, USER);
-    }
     Interrupt pauseAllInterrupt = pauseAllOptional.get();
     interruptService.markProcessed(
         pauseAllInterrupt.getUuid(), pauseAllInterrupt.getState() == PROCESSING ? PROCESSED_SUCCESSFULLY : DISCARDED);
@@ -78,7 +108,8 @@ public class ResumeAllInterruptHandler implements InterruptHandler {
                 .tookEffectAt(System.currentTimeMillis())
                 .interruptType(interrupt.getType())
                 .interruptConfig(interrupt.getInterruptConfig())
-                .build()));
+                .build()),
+        EnumSet.noneOf(Status.class));
 
     return interrupt;
   }

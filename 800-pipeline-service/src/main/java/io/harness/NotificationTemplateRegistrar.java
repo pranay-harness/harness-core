@@ -30,7 +30,9 @@ public class NotificationTemplateRegistrar implements Runnable {
           PredefinedTemplate.STAGE_PLAIN_MSTEAMS, PredefinedTemplate.STEP_PLAIN_EMAIL,
           PredefinedTemplate.STEP_PLAIN_SLACK, PredefinedTemplate.STEP_PLAIN_MSTEAMS,
           PredefinedTemplate.STEP_PLAIN_PAGERDUTY, PredefinedTemplate.HARNESS_APPROVAL_NOTIFICATION_SLACK,
-          PredefinedTemplate.HARNESS_APPROVAL_NOTIFICATION_EMAIL));
+          PredefinedTemplate.HARNESS_APPROVAL_NOTIFICATION_EMAIL,
+          PredefinedTemplate.HARNESS_APPROVAL_EXECUTION_NOTIFICATION_SLACK,
+          PredefinedTemplate.HARNESS_APPROVAL_EXECUTION_NOTIFICATION_EMAIL));
       while (true) {
         List<PredefinedTemplate> unprocessedTemplate = new ArrayList<>();
         for (PredefinedTemplate template : templates) {
@@ -38,6 +40,7 @@ public class NotificationTemplateRegistrar implements Runnable {
           try {
             notificationClient.saveNotificationTemplate(Team.PIPELINE, template, true);
           } catch (Exception ex) {
+            log.error(String.format("Unable to register tempate with id: %s", template.getIdentifier()), ex);
             unprocessedTemplate.add(template);
           }
         }

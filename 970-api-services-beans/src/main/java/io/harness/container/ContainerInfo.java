@@ -37,4 +37,5 @@ public class ContainerInfo {
    * Helm Release to which the kubernetes pods belong to
    */
   private String releaseName;
+  private String namespace;
 }

@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.FeatureName.SOCKET_HTTP_STATE_TIMEOUT;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtils.trimStrings;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
@@ -14,6 +15,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -105,7 +107,8 @@ import org.mongodb.morphia.annotations.Transient;
 @FieldNameConstants(innerTypeName = "HttpStateKeys")
 @Attributes
 @Slf4j
-@TargetModule(HarnessModule._860_ORCHESTRATION_STEPS)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class HttpState extends State implements SweepingOutputStateMixin {
   private static final String ASSERTION_ERROR_MSG =
       "Assertion should return true/false (Expression syntax is based on java language).";
@@ -365,14 +368,18 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     String finalMethod = getFinalMethod(context);
     String infrastructureMappingId = context.fetchInfraMappingId();
 
-    Integer stateTimeout = getTimeoutMillis();
     int taskSocketTimeout = socketTimeoutMillis;
     String warningMessage = null;
-    if (stateTimeout != null && taskSocketTimeout >= stateTimeout) {
-      taskSocketTimeout = stateTimeout - 1000;
+    if (featureFlagService.isEnabled(SOCKET_HTTP_STATE_TIMEOUT, context.getAccountId())) {
+      taskSocketTimeout = getTimeoutMillis() - 1000;
     } else {
-      warningMessage = "State timeout is greater than " + socketTimeoutMillis / 1000
-          + " sec. Defaulting  socket timeout to " + socketTimeoutMillis / 1000 + " sec.";
+      Integer stateTimeout = getTimeoutMillis();
+      if (stateTimeout != null && taskSocketTimeout >= stateTimeout) {
+        taskSocketTimeout = stateTimeout - 1000;
+      } else {
+        warningMessage = "State timeout is greater than " + socketTimeoutMillis / 1000
+            + " sec. Defaulting  socket timeout to " + socketTimeoutMillis / 1000 + " sec.";
+      }
     }
 
     List<String> renderedTags = newArrayList();
@@ -385,6 +392,8 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     }
 
     boolean isCertValidationRequired = accountService.isCertValidationRequired(context.getAccountId());
+    boolean useHeaderForCapabilityCheck =
+        featureFlagService.isEnabled(FeatureName.HTTP_HEADERS_CAPABILITY_CHECK, context.getAccountId());
 
     HttpTaskParameters httpTaskParameters = HttpTaskParameters.builder()
                                                 .method(finalMethod)
@@ -394,6 +403,7 @@ public class HttpState extends State implements SweepingOutputStateMixin {
                                                 .socketTimeoutMillis(taskSocketTimeout)
                                                 .useProxy(useProxy)
                                                 .isCertValidationRequired(isCertValidationRequired)
+                                                .useHeaderForCapabilityCheck(useHeaderForCapabilityCheck)
                                                 .build();
 
     HttpStateExecutionDataBuilder executionDataBuilder =

@@ -13,25 +13,27 @@ import io.harness.plancreator.utils.CommonPlanCreatorUtils;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
-import io.harness.pms.execution.utils.RunInfoUtils;
+import io.harness.pms.contracts.facilitators.FacilitatorType;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.execution.utils.SkipInfoUtils;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
 import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
-import io.harness.pms.sdk.core.facilitator.child.ChildFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
+import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.serializer.KryoSerializer;
-import io.harness.steps.StepOutcomeGroup;
 import io.harness.steps.common.steps.stepgroup.StepGroupStep;
 import io.harness.steps.common.steps.stepgroup.StepGroupStepParameters;
+import io.harness.when.utils.RunInfoUtils;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -60,7 +62,8 @@ public class StepGroupPMSPlanCreator extends ChildrenPlanCreator<StepGroupElemen
     for (YamlField yamlField : dependencyNodeIdsList) {
       Map<String, YamlField> yamlFieldMap = new HashMap<>();
       yamlFieldMap.put(yamlField.getNode().getUuid(), yamlField);
-      responseMap.put(yamlField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(yamlFieldMap).build());
+      responseMap.put(yamlField.getNode().getUuid(),
+          PlanCreationResponse.builder().dependencies(DependenciesUtils.toDependenciesProto(yamlFieldMap)).build());
     }
 
     // Add Steps Node
@@ -96,9 +99,12 @@ public class StepGroupPMSPlanCreator extends ChildrenPlanCreator<StepGroupElemen
         .skipCondition(SkipInfoUtils.getSkipCondition(config.getSkipCondition()))
         // We Should add default when condition as StageFailure if stepGroup is inside rollback
         .whenCondition(isStepGroupInsideRollback ? RunInfoUtils.getRunConditionForRollback(config.getWhen())
-                                                 : RunInfoUtils.getRunCondition(config.getWhen(), false))
+                                                 : RunInfoUtils.getRunCondition(config.getWhen()))
         .stepParameters(stepParameters)
-        .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildFacilitator.FACILITATOR_TYPE).build())
+        .facilitatorObtainment(
+            FacilitatorObtainment.newBuilder()
+                .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+                .build())
         .adviserObtainments(getAdviserObtainmentFromMetaData(ctx.getCurrentField()))
         .skipExpressionChain(false)
         .build();

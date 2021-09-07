@@ -7,9 +7,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.entities.embedded.cek8s.CEK8sDetails;
+import io.harness.delegate.beans.connector.CEFeatures;
 import io.harness.delegate.beans.connector.cek8s.CEKubernetesClusterConfigDTO;
 import io.harness.rule.Owner;
 
+import java.util.Arrays;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -29,9 +32,11 @@ public class CEKubernetesEntityToDTOTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testCreateConnectorDTO() {
     final String connectorRef = "connectorRef";
-    final CEK8sDetails cek8sDetails = CEK8sDetails.builder().connectorRef(connectorRef).build();
+    List<CEFeatures> ceK8sFeatures = Arrays.asList(CEFeatures.VISIBILITY, CEFeatures.OPTIMIZATION);
+    final CEK8sDetails cek8sDetails =
+        CEK8sDetails.builder().connectorRef(connectorRef).featuresEnabled(ceK8sFeatures).build();
     final CEKubernetesClusterConfigDTO ceKubernetesClusterConfigDTO =
-        CEKubernetesClusterConfigDTO.builder().connectorRef(connectorRef).build();
+        CEKubernetesClusterConfigDTO.builder().connectorRef(connectorRef).featuresEnabled(ceK8sFeatures).build();
 
     assertThat(ceKubernetesEntityToDTO.createConnectorDTO(cek8sDetails)).isEqualTo(ceKubernetesClusterConfigDTO);
   }

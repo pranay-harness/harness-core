@@ -1,23 +1,31 @@
 package io.harness.beans.steps.stepinfo;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
-import static io.harness.common.SwaggerConstants.INTEGER_CLASSPATH;
-import static io.harness.common.SwaggerConstants.STRING_CLASSPATH;
+import static io.harness.beans.SwaggerConstants.INTEGER_CLASSPATH;
+import static io.harness.beans.SwaggerConstants.STRING_CLASSPATH;
+import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
 import io.harness.beans.steps.CIStepInfoType;
 import io.harness.beans.steps.TypeInfo;
-import io.harness.beans.yaml.extended.container.ContainerResource;
+import io.harness.filters.WithConnectorRef;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
+import io.harness.yaml.YamlSchemaTypes;
+import io.harness.yaml.extended.ci.container.ContainerResource;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
 import java.beans.ConstructorProperties;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
@@ -32,15 +40,18 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("uploadToGCSStepInfo")
 @OwnedBy(CI)
-public class UploadToGCSStepInfo implements PluginCompatibleStep {
+@RecasterAlias("io.harness.beans.steps.stepinfo.UploadToGCSStepInfo")
+public class UploadToGCSStepInfo implements PluginCompatibleStep, WithConnectorRef {
   public static final int DEFAULT_RETRY = 1;
   public static final int DEFAULT_TIMEOUT = 60 * 60 * 2; // 2 hour
 
   @JsonIgnore
   public static final TypeInfo typeInfo = TypeInfo.builder().stepInfoType(CIStepInfoType.UPLOAD_GCS).build();
   @JsonIgnore
-  public static final StepType STEP_TYPE =
-      StepType.newBuilder().setType(CIStepInfoType.UPLOAD_GCS.getDisplayName()).build();
+  public static final StepType STEP_TYPE = StepType.newBuilder()
+                                               .setType(CIStepInfoType.UPLOAD_GCS.getDisplayName())
+                                               .setStepCategory(StepCategory.STEP)
+                                               .build();
 
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) private String identifier;
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) private String name;
@@ -48,12 +59,12 @@ public class UploadToGCSStepInfo implements PluginCompatibleStep {
 
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> connectorRef;
   private ContainerResource resources;
-  @JsonIgnore @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
+  @YamlSchemaTypes({string}) @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
 
   // plugin settings
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> bucket;
   @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> sourcePath;
-  @NotNull @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> target;
+  @ApiModelProperty(dataType = STRING_CLASSPATH) private ParameterField<String> target;
 
   @Builder
   @ConstructorProperties(
@@ -85,5 +96,12 @@ public class UploadToGCSStepInfo implements PluginCompatibleStep {
   @Override
   public String getFacilitatorType() {
     return OrchestrationFacilitatorType.ASYNC;
+  }
+
+  @Override
+  public Map<String, ParameterField<String>> extractConnectorRefs() {
+    Map<String, ParameterField<String>> connectorRefMap = new HashMap<>();
+    connectorRefMap.put(YAMLFieldNameConstants.CONNECTOR_REF, connectorRef);
+    return connectorRefMap;
   }
 }

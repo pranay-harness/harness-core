@@ -51,6 +51,7 @@ public class GitlabDTOToEntity implements ConnectorDTOToEntityMapper<GitlabConne
         .authenticationDetails(gitlabAuthentication)
         .gitlabApiAccess(gitlabApiAccess)
         .url(configDTO.getUrl())
+        .validationRepo(configDTO.getValidationRepo())
         .build();
   }
 

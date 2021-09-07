@@ -1,19 +1,25 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.MILOS;
+import static io.harness.rule.OwnerRule.NAMAN_TALAYCHA;
 import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.PRASHANT;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.appmanifest.AppManifestKind.AZURE_APP_SETTINGS_OVERRIDE;
+import static software.wings.beans.yaml.YamlConstants.CONN_STRINGS_FILE;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.times;
@@ -21,6 +27,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.doReturn;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageResponse;
@@ -32,6 +39,7 @@ import io.harness.rule.Owner;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Environment;
 import software.wings.beans.HarnessTagLink;
+import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.HarnessTagService;
@@ -52,6 +60,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDC)
 public class EnvironmentServiceImplTest extends WingsBaseTest {
   @Mock FeatureFlagService featureFlagService;
   @Mock AppService appService;
@@ -92,6 +101,18 @@ public class EnvironmentServiceImplTest extends WingsBaseTest {
     assertThat(env2.getInfrastructureDefinitions()).hasSize(0);
     assertThat(env1.getInfraDefinitionsCount()).isEqualTo(2);
     assertThat(env2.getInfraDefinitionsCount()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = NAMAN_TALAYCHA)
+  @Category(UnitTests.class)
+  public void testCreateValuesNegativeScenario() {
+    ManifestFile manifestFile = ManifestFile.builder().fileName(CONN_STRINGS_FILE).fileContent("").build();
+
+    assertThatExceptionOfType(InvalidRequestException.class)
+        .isThrownBy(()
+                        -> environmentService.createValues(
+                            APP_ID, ENV_ID, SERVICE_ID, manifestFile, AZURE_APP_SETTINGS_OVERRIDE));
   }
 
   @Test

@@ -21,6 +21,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -53,6 +54,7 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.sm.ExecutionContextImpl;
@@ -82,6 +84,7 @@ public class CloudFormationDeleteStackStateTest extends WingsBaseTest {
   @Mock private WingsPersistence wingsPersistence;
   @Mock private ActivityService activityService;
   @Mock private SettingsService settingsService;
+  @Mock private StateExecutionService stateExecutionService;
 
   @InjectMocks private CloudFormationDeleteStackState state = new CloudFormationDeleteStackState("stateName");
 
@@ -99,6 +102,7 @@ public class CloudFormationDeleteStackStateTest extends WingsBaseTest {
     application.setAccountId(ACCOUNT_ID);
     application.setUuid(UUID);
     when(mockContext.getApp()).thenReturn(application);
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
 
     state.useCustomStackName = true;
     state.customStackName = "customStackName";

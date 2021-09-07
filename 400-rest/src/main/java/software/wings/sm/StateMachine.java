@@ -16,7 +16,9 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.ListUtils;
@@ -80,6 +82,7 @@ import org.mongodb.morphia.annotations.Transient;
  * @author Rishi
  */
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @Data
 @Entity(value = "stateMachines", noClassnameStored = true)
 @HarnessEntity(exportable = true)

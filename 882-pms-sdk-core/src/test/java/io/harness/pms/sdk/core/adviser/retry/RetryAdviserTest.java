@@ -2,22 +2,26 @@ package io.harness.pms.sdk.core.adviser.retry;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRASHANT;
+import static io.harness.rule.OwnerRule.SAHIL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserResponse;
-import io.harness.pms.contracts.advisers.NextStepAdvise;
+import io.harness.pms.contracts.advisers.EndPlanAdvise;
+import io.harness.pms.contracts.advisers.InterventionWaitAdvise;
+import io.harness.pms.contracts.advisers.MarkSuccessAdvise;
 import io.harness.pms.contracts.advisers.RetryAdvise;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.commons.RepairActionCode;
-import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.failure.FailureType;
-import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.AmbianceTestUtils;
 import io.harness.pms.sdk.core.PmsSdkCoreTestBase;
@@ -25,24 +29,28 @@ import io.harness.pms.sdk.core.adviser.AdvisingEvent;
 import io.harness.pms.sdk.core.adviser.AdvisingEvent.AdvisingEventBuilder;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
-import io.harness.serializer.ProtoUtils;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
+import com.google.protobuf.Duration;
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.List;
+import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class RetryAdviserTest extends PmsSdkCoreTestBase {
   public static final String DUMMY_NODE_ID = generateUuid();
   public static final String NODE_EXECUTION_ID = generateUuid();
   public static final String NODE_SETUP_ID = generateUuid();
   public static final String NODE_NAME = generateUuid();
   public static final String NODE_IDENTIFIER = "DUMMY";
-  public static final StepType DUMMY_STEP_TYPE = StepType.newBuilder().setType("DUMMY").build();
+  public static final StepType DUMMY_STEP_TYPE =
+      StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build();
 
   @InjectMocks @Inject RetryAdviser retryAdviser;
 
@@ -66,25 +74,13 @@ public class RetryAdviserTest extends PmsSdkCoreTestBase {
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
-  public void shouldTestValidStatus() {
-    NodeExecutionProto nodeExecutionProto =
-        NodeExecutionProto.newBuilder()
-            .setUuid(NODE_EXECUTION_ID)
-            .setAmbiance(ambiance)
-            .setNode(PlanNodeProto.newBuilder()
-                         .setUuid(NODE_SETUP_ID)
-                         .setName(NODE_NAME)
-                         .setIdentifier("dummy")
-                         .setStepType(StepType.newBuilder().setType("DUMMY").build())
-                         .build())
-            .setStartTs(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()))
-            .setStatus(Status.FAILED)
+  public void shouldTestValidStatusWithIgnore() {
+    AdvisingEvent advisingEvent =
+        AdvisingEvent.builder()
+            .ambiance(ambiance)
+            .toStatus(Status.FAILED)
+            .adviserParameters(kryoSerializer.asBytes(getRetryParams(RepairActionCode.IGNORE)))
             .build();
-    AdvisingEvent advisingEvent = AdvisingEvent.builder()
-                                      .nodeExecution(nodeExecutionProto)
-                                      .toStatus(Status.FAILED)
-                                      .adviserParameters(kryoSerializer.asBytes(getRetryParamsWithIgnore()))
-                                      .build();
     AdviserResponse adviserResponse = retryAdviser.onAdviseEvent(advisingEvent);
 
     assertThat(adviserResponse.getType()).isEqualTo(AdviseType.RETRY);
@@ -95,28 +91,103 @@ public class RetryAdviserTest extends PmsSdkCoreTestBase {
   }
 
   @Test
+  @Owner(developers = SAHIL)
+  @Category(UnitTests.class)
+  public void testHandlePostRetryWithManualIntervention() {
+    List<String> retryIds = Lists.newArrayList(
+        generateUuid(), generateUuid(), generateUuid(), generateUuid(), generateUuid(), generateUuid());
+
+    AdvisingEvent advisingEvent =
+        AdvisingEvent.builder()
+            .ambiance(ambiance)
+            .toStatus(Status.FAILED)
+            .retryIds(retryIds)
+            .adviserParameters(kryoSerializer.asBytes(getRetryParams(RepairActionCode.MANUAL_INTERVENTION)))
+            .build();
+    AdviserResponse adviserResponse = retryAdviser.onAdviseEvent(advisingEvent);
+
+    assertThat(adviserResponse.getType()).isEqualTo(AdviseType.INTERVENTION_WAIT);
+    assertThat(adviserResponse.getInterventionWaitAdvise()).isNotNull();
+    InterventionWaitAdvise interventionWaitAdvise = adviserResponse.getInterventionWaitAdvise();
+    assertThat(interventionWaitAdvise.getTimeout())
+        .isEqualTo(Duration.newBuilder().setSeconds(java.time.Duration.ofDays(1).toMinutes() * 60).build());
+  }
+
+  @Test
+  @Owner(developers = SAHIL)
+  @Category(UnitTests.class)
+  public void testHandlePostRetryWithEndExecution() {
+    List<String> retryIds = Lists.newArrayList(
+        generateUuid(), generateUuid(), generateUuid(), generateUuid(), generateUuid(), generateUuid());
+
+    AdvisingEvent advisingEvent =
+        AdvisingEvent.builder()
+            .ambiance(ambiance)
+            .toStatus(Status.FAILED)
+            .retryIds(retryIds)
+            .adviserParameters(kryoSerializer.asBytes(getRetryParams(RepairActionCode.END_EXECUTION)))
+            .build();
+    AdviserResponse adviserResponse = retryAdviser.onAdviseEvent(advisingEvent);
+
+    assertThat(adviserResponse.getType()).isEqualTo(AdviseType.END_PLAN);
+    assertThat(adviserResponse.getEndPlanAdvise()).isNotNull();
+    EndPlanAdvise endPlanAdvise = adviserResponse.getEndPlanAdvise();
+    assertThat(endPlanAdvise.getIsAbort()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = SAHIL)
+  @Category(UnitTests.class)
+  public void testHandlePostRetryWithOnFail() {
+    List<String> retryIds = Lists.newArrayList(
+        generateUuid(), generateUuid(), generateUuid(), generateUuid(), generateUuid(), generateUuid());
+
+    AdvisingEvent advisingEvent =
+        AdvisingEvent.builder()
+            .ambiance(ambiance)
+            .toStatus(Status.FAILED)
+            .retryIds(retryIds)
+            .adviserParameters(kryoSerializer.asBytes(getRetryParams(RepairActionCode.ON_FAIL)))
+            .build();
+    AdviserResponse adviserResponse = retryAdviser.onAdviseEvent(advisingEvent);
+
+    assertThat(adviserResponse.getType()).isEqualTo(AdviseType.NEXT_STEP);
+    assertThat(adviserResponse.getNextStepAdvise()).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = SAHIL)
+  @Category(UnitTests.class)
+  public void testHandlePostRetryWithOnMarkAsSucess() {
+    List<String> retryIds = Lists.newArrayList(
+        generateUuid(), generateUuid(), generateUuid(), generateUuid(), generateUuid(), generateUuid());
+
+    AdvisingEvent advisingEvent =
+        AdvisingEvent.builder()
+            .ambiance(ambiance)
+            .toStatus(Status.FAILED)
+            .retryIds(retryIds)
+            .adviserParameters(kryoSerializer.asBytes(getRetryParams(RepairActionCode.MARK_AS_SUCCESS)))
+            .build();
+    AdviserResponse adviserResponse = retryAdviser.onAdviseEvent(advisingEvent);
+
+    assertThat(adviserResponse.getType()).isEqualTo(AdviseType.MARK_SUCCESS);
+    assertThat(adviserResponse.getMarkSuccessAdvise()).isNotNull();
+    MarkSuccessAdvise markSuccessAdvise = adviserResponse.getMarkSuccessAdvise();
+    assertThat(markSuccessAdvise.getNextNodeId()).isEqualTo(DUMMY_NODE_ID);
+  }
+
+  @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestLastWaitInterval() {
-    NodeExecutionProto nodeExecutionProto =
-        NodeExecutionProto.newBuilder()
-            .setUuid(NODE_EXECUTION_ID)
-            .setAmbiance(ambiance)
-            .setNode(PlanNodeProto.newBuilder()
-                         .setUuid(NODE_SETUP_ID)
-                         .setName(NODE_NAME)
-                         .setIdentifier("dummy")
-                         .setStepType(StepType.newBuilder().setType("DUMMY").build())
-                         .build())
-            .setStartTs(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()))
-            .setStatus(Status.FAILED)
-            .addAllRetryIds(Arrays.asList(generateUuid(), generateUuid(), generateUuid(), generateUuid()))
+    AdvisingEvent advisingEvent =
+        AdvisingEvent.<io.harness.pms.sdk.core.adviser.retry.RetryAdviserParameters>builder()
+            .ambiance(ambiance)
+            .retryIds(Arrays.asList(generateUuid(), generateUuid(), generateUuid(), generateUuid()))
+            .toStatus(Status.FAILED)
+            .adviserParameters(kryoSerializer.asBytes(getRetryParams(RepairActionCode.IGNORE)))
             .build();
-    AdvisingEvent advisingEvent = AdvisingEvent.<io.harness.pms.sdk.core.adviser.retry.RetryAdviserParameters>builder()
-                                      .nodeExecution(nodeExecutionProto)
-                                      .toStatus(Status.FAILED)
-                                      .adviserParameters(kryoSerializer.asBytes(getRetryParamsWithIgnore()))
-                                      .build();
     AdviserResponse adviserResponse = retryAdviser.onAdviseEvent(advisingEvent);
 
     assertThat(adviserResponse.getType()).isEqualTo(AdviseType.RETRY);
@@ -130,32 +201,31 @@ public class RetryAdviserTest extends PmsSdkCoreTestBase {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestAfterRetryStatus() {
-    NodeExecutionProto nodeExecutionProto =
-        NodeExecutionProto.newBuilder()
-            .setUuid(NODE_EXECUTION_ID)
-            .setAmbiance(ambiance)
-            .setNode(PlanNodeProto.newBuilder()
-                         .setUuid(NODE_SETUP_ID)
-                         .setName(NODE_NAME)
-                         .setIdentifier("dummy")
-                         .setStepType(StepType.newBuilder().setType("DUMMY").build())
-                         .build())
-            .setStartTs(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()))
-            .setStatus(Status.FAILED)
-            .addAllRetryIds(
-                Arrays.asList(generateUuid(), generateUuid(), generateUuid(), generateUuid(), generateUuid()))
+    AdvisingEvent advisingEvent =
+        AdvisingEvent.builder()
+            .ambiance(ambiance)
+            .retryIds(Arrays.asList(generateUuid(), generateUuid(), generateUuid(), generateUuid(), generateUuid()))
+            .toStatus(Status.FAILED)
+            .adviserParameters(kryoSerializer.asBytes(getRetryParams(RepairActionCode.IGNORE)))
             .build();
-    AdvisingEvent advisingEvent = AdvisingEvent.builder()
-                                      .nodeExecution(nodeExecutionProto)
-                                      .toStatus(Status.FAILED)
-                                      .adviserParameters(kryoSerializer.asBytes(getRetryParamsWithIgnore()))
-                                      .build();
     AdviserResponse adviserResponse = retryAdviser.onAdviseEvent(advisingEvent);
 
-    assertThat(adviserResponse.getType()).isEqualTo(AdviseType.NEXT_STEP);
-    assertThat(adviserResponse.getNextStepAdvise()).isNotNull();
-    NextStepAdvise nextStepAdvise = adviserResponse.getNextStepAdvise();
-    assertThat(nextStepAdvise.getNextNodeId()).isEqualTo(DUMMY_NODE_ID);
+    assertThat(adviserResponse.getType()).isEqualTo(AdviseType.IGNORE_FAILURE);
+    assertThat(adviserResponse.getIgnoreFailureAdvise()).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = SAHIL)
+  @Category(UnitTests.class)
+  public void testCanAdvise() {
+    AdvisingEvent advisingEvent =
+        AdvisingEvent.builder()
+            .ambiance(ambiance)
+            .retryIds(Arrays.asList(generateUuid(), generateUuid(), generateUuid(), generateUuid(), generateUuid()))
+            .toStatus(Status.INTERVENTION_WAITING)
+            .adviserParameters(kryoSerializer.asBytes(getRetryParams(RepairActionCode.IGNORE)))
+            .build();
+    assertThat(retryAdviser.canAdvise(advisingEvent)).isTrue();
   }
 
   @Test
@@ -164,39 +234,34 @@ public class RetryAdviserTest extends PmsSdkCoreTestBase {
   public void shouldTestCanAdvise() {
     AdvisingEventBuilder advisingEventBuilder =
         AdvisingEvent.builder()
+            .ambiance(ambiance)
+            .failureInfo(FailureInfo.newBuilder()
+                             .setErrorMessage("Auth Error")
+                             .addAllFailureTypes(EnumSet.of(FailureType.AUTHENTICATION_FAILURE))
+                             .build())
             .toStatus(Status.FAILED)
-            .adviserParameters(kryoSerializer.asBytes(getRetryParamsWithIgnore()));
+            .adviserParameters(kryoSerializer.asBytes(getRetryParams(RepairActionCode.IGNORE)));
 
-    NodeExecutionProto nodeExecutionAuthFail =
-        NodeExecutionProto.newBuilder()
-            .setAmbiance(ambiance)
-            .setFailureInfo(FailureInfo.newBuilder()
-                                .setErrorMessage("Auth Error")
-                                .addAllFailureTypes(EnumSet.of(FailureType.AUTHENTICATION_FAILURE))
-                                .build())
-            .build();
-    AdvisingEvent authFailEvent = advisingEventBuilder.nodeExecution(nodeExecutionAuthFail).build();
+    AdvisingEvent authFailEvent = advisingEventBuilder.build();
     boolean canAdvise = retryAdviser.canAdvise(authFailEvent);
     assertThat(canAdvise).isTrue();
 
-    NodeExecutionProto nodeExecutionAppFail =
-        NodeExecutionProto.newBuilder()
-            .setAmbiance(ambiance)
-            .setFailureInfo(FailureInfo.newBuilder()
-                                .setErrorMessage("Application Error")
-                                .addAllFailureTypes(EnumSet.of(FailureType.APPLICATION_FAILURE))
-                                .build())
-            .build();
-    AdvisingEvent appFailEvent = advisingEventBuilder.nodeExecution(nodeExecutionAppFail).build();
+    AdvisingEvent appFailEvent = advisingEventBuilder
+                                     .failureInfo(FailureInfo.newBuilder()
+                                                      .setErrorMessage("Application Error")
+                                                      .addAllFailureTypes(EnumSet.of(FailureType.APPLICATION_FAILURE))
+                                                      .build())
+                                     .build();
     canAdvise = retryAdviser.canAdvise(appFailEvent);
     assertThat(canAdvise).isFalse();
   }
 
-  private static io.harness.pms.sdk.core.adviser.retry.RetryAdviserParameters getRetryParamsWithIgnore() {
+  private static io.harness.pms.sdk.core.adviser.retry.RetryAdviserParameters getRetryParams(
+      RepairActionCode repairActionCode) {
     return RetryAdviserParameters.builder()
         .retryCount(5)
         .waitIntervalList(ImmutableList.of(2, 5))
-        .repairActionCodeAfterRetry(RepairActionCode.IGNORE)
+        .repairActionCodeAfterRetry(repairActionCode)
         .nextNodeId(DUMMY_NODE_ID)
         .applicableFailureTypes(EnumSet.of(FailureType.AUTHENTICATION_FAILURE))
         .build();

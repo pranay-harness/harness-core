@@ -18,7 +18,7 @@ inputSet:
                 spec:
                   artifacts:
                     primary:
-                      type: Dockerhub
+                      type: DockerRegistry
                       spec:
                         connectorRef: npQuoteCenter
                         imagePath: this/that

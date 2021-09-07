@@ -1,15 +1,18 @@
 package software.wings.sm.states;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.beans.FeatureName.TIMEOUT_FAILURE_SUPPORT;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.ExceptionUtils.getMessage;
+import static io.harness.exception.FailureType.TIMEOUT;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.pcf.CfCommandUnitConstants.FetchFiles;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
-import static software.wings.beans.command.PcfDummyCommandUnit.FetchFiles;
 import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT;
 import static software.wings.service.impl.aws.model.AwsConstants.ECS_SERVICE_SETUP_SWEEPING_OUTPUT_NAME;
 import static software.wings.sm.StateType.ECS_BG_SERVICE_SETUP_ROUTE53;
@@ -17,13 +20,17 @@ import static software.wings.sm.StateType.ECS_BG_SERVICE_SETUP_ROUTE53;
 import static com.google.common.collect.Maps.newHashMap;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.FeatureName;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.pcf.ResizeStrategy;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -43,7 +50,6 @@ import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.ResizeStrategy;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.artifact.Artifact;
@@ -70,6 +76,7 @@ import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionResponse.ExecutionResponseBuilder;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.WorkflowStandardParams;
@@ -89,6 +96,9 @@ import org.apache.commons.lang3.tuple.Pair;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Slf4j
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class EcsBlueGreenServiceSetupRoute53DNS extends State {
   public static final String ECS_SERVICE_SETUP_COMMAND_ROUTE53 = "ECS Service Setup Route 53";
 
@@ -133,10 +143,8 @@ public class EcsBlueGreenServiceSetupRoute53DNS extends State {
     EcsSetUpDataBag dataBag = ecsStateHelper.prepareBagForEcsSetUp(context, serviceSteadyStateTimeout,
         artifactCollectionUtils, serviceResourceService, infrastructureMappingService, settingsService, secretManager);
 
-    if (featureFlagService.isEnabled(FeatureName.ECS_REMOTE_MANIFEST, context.getAccountId())) {
-      appManifestMap = applicationManifestUtils.getApplicationManifests(context, AppManifestKind.K8S_MANIFEST);
-      valuesInGit = ecsStateHelper.isRemoteManifest(appManifestMap);
-    }
+    appManifestMap = applicationManifestUtils.getApplicationManifests(context, AppManifestKind.K8S_MANIFEST);
+    valuesInGit = ecsStateHelper.isRemoteManifest(appManifestMap);
 
     Activity activity = ecsStateHelper.createActivity(context, ECS_SERVICE_SETUP_COMMAND_ROUTE53, getStateType(),
         CommandUnitType.AWS_ECS_SERVICE_SETUP_ROUTE53, activityService);
@@ -199,10 +207,12 @@ public class EcsBlueGreenServiceSetupRoute53DNS extends State {
             .activityId(activityId)
             .safeDisplayServiceVariables(variables.getSafeDisplayServiceVariables())
             .serviceVariables(variables.getServiceVariables())
+            .timeoutErrorSupported(
+                featureFlagService.isEnabled(TIMEOUT_FAILURE_SUPPORT, ecsSetUpDataBag.getApplication().getAccountId()))
             .build();
 
     DelegateTask task = ecsStateHelper.createAndQueueDelegateTaskForEcsServiceSetUp(
-        request, ecsSetUpDataBag, activityId, delegateService);
+        request, ecsSetUpDataBag, activityId, delegateService, isSelectionLogsTrackingForTasksEnabled());
     appendDelegateTaskDetails(context, task);
 
     return ExecutionResponse.builder()
@@ -288,6 +298,8 @@ public class EcsBlueGreenServiceSetupRoute53DNS extends State {
         .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
         .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infraMapping.getUuid())
         .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, infraMapping.getServiceId())
+        .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+        .description("Fetch remote git files")
         .waitId(waitId)
         .data(TaskData.builder()
                   .async(true)
@@ -408,10 +420,15 @@ public class EcsBlueGreenServiceSetupRoute53DNS extends State {
             .build());
 
     executionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
-    return ExecutionResponse.builder()
-        .stateExecutionData(context.getStateExecutionData())
-        .executionStatus(executionStatus)
-        .build();
+    ExecutionResponseBuilder builder = ExecutionResponse.builder()
+                                           .stateExecutionData(context.getStateExecutionData())
+                                           .executionStatus(executionStatus);
+
+    if (ecsServiceSetupResponse.isTimeoutFailure()) {
+      builder.failureTypes(TIMEOUT);
+    }
+
+    return builder.build();
   }
 
   @Override
@@ -450,5 +467,10 @@ public class EcsBlueGreenServiceSetupRoute53DNS extends State {
     this.parentRecordHostedZoneId = stateExecutionData.getParentRecordHostedZoneId();
     this.serviceDiscoveryService1JSON = stateExecutionData.getServiceDiscoveryService1JSON();
     this.serviceDiscoveryService2JSON = stateExecutionData.getServiceDiscoveryService2JSON();
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

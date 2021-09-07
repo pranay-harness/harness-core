@@ -67,7 +67,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -107,13 +106,10 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
     manifestFilesDirectory = Paths.get(k8sDelegateTaskParams.getWorkingDirectory(), MANIFEST_FILES_DIR).toString();
     final long timeoutInMillis = getTimeoutMillisFromMinutes(k8sBGDeployRequest.getTimeoutIntervalInMin());
 
-    List<String> manifestHelperFiles = isEmpty(k8sBGDeployRequest.getValuesYamlList())
-        ? k8sBGDeployRequest.getOpenshiftParamList()
-        : k8sBGDeployRequest.getValuesYamlList();
     boolean success = k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(
         k8sBGDeployRequest.getManifestDelegateConfig(), manifestFilesDirectory,
-        k8sTaskHelperBase.getLogCallback(
-            logStreamingTaskClient, FetchFiles, CollectionUtils.isEmpty(manifestHelperFiles), commandUnitsProgress),
+        k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, FetchFiles,
+            k8sBGDeployRequest.isShouldOpenFetchFilesLogStream(), commandUnitsProgress),
         timeoutInMillis, k8sBGDeployRequest.getAccountId());
     if (!success) {
       return getFailureResponse();
@@ -204,6 +200,7 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
   boolean init(K8sBGDeployRequest request, K8sDelegateTaskParams k8sDelegateTaskParams,
       LogCallback executionLogCallback) throws IOException {
     executionLogCallback.saveExecutionLog("Initializing..\n");
+    executionLogCallback.saveExecutionLog(color(String.format("Release Name: [%s]", releaseName), Yellow, Bold));
 
     kubernetesConfig =
         containerDeploymentDelegateBaseHelper.createKubernetesConfig(request.getK8sInfraDelegateConfig());
@@ -261,11 +258,11 @@ public class K8sBGRequestHandler extends K8sRequestHandler {
       if (workloads.size() != 1) {
         if (workloads.isEmpty()) {
           executionLogCallback.saveExecutionLog(
-              "\nNo workload found in the Manifests. Can't do  Blue/Green Deployment. Only Deployment and DeploymentConfig (OpenShift) workloads are supported in Blue/Green workflow type.",
+              "\nNo workload found in the Manifests. Can't do  Blue/Green Deployment. Only Deployment, DeploymentConfig (OpenShift) and StatefulSet workloads are supported in Blue/Green workflow type.",
               ERROR, FAILURE);
         } else {
           executionLogCallback.saveExecutionLog(
-              "\nThere are multiple workloads in the Service Manifests you are deploying. Blue/Green Workflows support a single Deployment or DeploymentConfig (OpenShift) workload only. To deploy additional workloads in Manifests, annotate them with "
+              "\nThere are multiple workloads in the Service Manifests you are deploying. Blue/Green Workflows support a single Deployment, DeploymentConfig (OpenShift) or StatefulSet workload only. To deploy additional workloads in Manifests, annotate them with "
                   + HarnessAnnotations.directApply + ": true",
               ERROR, FAILURE);
         }

@@ -7,14 +7,14 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.harness.CategoryTest;
 import io.harness.batch.processing.billing.tasklet.dao.intfc.DataGeneratedNotificationDao;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.mail.CEMailNotificationService;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.dao.CEMetadataRecordDao;
-import io.harness.ccm.commons.utils.DataUtils;
+import io.harness.ccm.commons.utils.TimeUtils;
 import io.harness.rule.Owner;
+import io.harness.testsupport.BaseTaskletTest;
 import io.harness.timescaledb.TimeScaleDBService;
 
 import software.wings.beans.User;
@@ -35,23 +35,19 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.StepExecution;
-import org.springframework.batch.core.scope.context.ChunkContext;
-import org.springframework.batch.core.scope.context.StepContext;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.test.context.ActiveProfiles;
 
 @ActiveProfiles("test")
 @RunWith(MockitoJUnitRunner.class)
-public class BillingDataGeneratedMailTaskletTest extends CategoryTest {
+public class BillingDataGeneratedMailTaskletTest extends BaseTaskletTest {
   @Mock private CloudToHarnessMappingService cloudToHarnessMappingService;
   @Mock private DataGeneratedNotificationDao notificationDao;
   @Mock private TimeScaleDBService timeScaleDBService;
-  @Mock private DataUtils utils;
+  @Mock private TimeUtils utils;
   @Mock private CEMailNotificationService emailNotificationService;
   @Mock private JobParameters parameters;
   @Mock private CEMetadataRecordDao metadataRecordDao;
@@ -61,12 +57,10 @@ public class BillingDataGeneratedMailTaskletTest extends CategoryTest {
   @Mock ResultSet resultSet;
 
   private static final long TIME = System.currentTimeMillis();
-  private static final String ACCOUNT_ID = "ACCOUNT_ID";
   final int[] count = {0};
 
   @Before
   public void setup() throws SQLException {
-    MockitoAnnotations.initMocks(this);
     Connection connection = mock(Connection.class);
     statement = mock(Statement.class);
     resultSet = mock(ResultSet.class);
@@ -85,15 +79,6 @@ public class BillingDataGeneratedMailTaskletTest extends CategoryTest {
   @Owner(developers = SHUBHANSHU)
   @Category(UnitTests.class)
   public void testExecute() throws Exception {
-    ChunkContext chunkContext = mock(ChunkContext.class);
-    StepContext stepContext = mock(StepContext.class);
-    StepExecution stepExecution = mock(StepExecution.class);
-    JobParameters parameters = mock(JobParameters.class);
-
-    when(chunkContext.getStepContext()).thenReturn(stepContext);
-    when(stepContext.getStepExecution()).thenReturn(stepExecution);
-    when(stepExecution.getJobParameters()).thenReturn(parameters);
-
     when(parameters.getString(CCMJobConstants.ACCOUNT_ID)).thenReturn(ACCOUNT_ID);
     when(notificationDao.isMailSent(ACCOUNT_ID)).thenReturn(true);
     when(cloudToHarnessMappingService.listUserGroupsForAccount(ACCOUNT_ID))

@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.exception.FunctorException;
+import io.harness.exception.EngineFunctorException;
 import io.harness.expression.LateBindingValue;
 import io.harness.network.SafeHttpCall;
 import io.harness.ng.core.dto.OrganizationResponse;
@@ -37,7 +37,7 @@ public class OrgFunctor implements LateBindingValue {
           SafeHttpCall.execute(organizationClient.getOrganization(orgIdentifier, accountId)).getData();
       return resp.map(OrganizationResponse::getOrganization).orElse(null);
     } catch (Exception ex) {
-      throw new FunctorException(String.format("Invalid organization: %s", orgIdentifier), ex);
+      throw new EngineFunctorException(String.format("Invalid organization: %s", orgIdentifier), ex);
     }
   }
 }

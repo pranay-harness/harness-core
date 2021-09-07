@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.validation.Validator.notNullCheck;
@@ -24,6 +25,7 @@ import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_PCF_OVERRI
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_VALUES_ENV_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
@@ -67,6 +69,7 @@ import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
 import software.wings.infra.InfrastructureDefinition;
+import software.wings.infra.InfrastructureDefinitionYaml;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.setting.SettingValueYamlHandler;
 import software.wings.service.intfc.AppService;
@@ -108,10 +111,12 @@ import com.google.inject.Singleton;
 import java.util.List;
 import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @Singleton
 @Slf4j
+@OwnedBy(DX)
 public class YamlResourceServiceImpl implements YamlResourceService {
   @Inject private AppService appService;
   @Inject private CommandService commandService;
@@ -197,8 +202,9 @@ public class YamlResourceServiceImpl implements YamlResourceService {
     ApplicationManifest.Yaml yaml =
         (ApplicationManifest.Yaml) yamlHandlerFactory.getYamlHandler(getYamlTypeFromAppManifest(applicationManifest))
             .toYaml(applicationManifest, appId);
-    return YamlHelper.getYamlRestResponse(
-        yamlGitSyncService, applicationManifest.getUuid(), accountId, yaml, INDEX_YAML);
+    return YamlHelper.getYamlRestResponse(yamlGitSyncService, applicationManifest.getUuid(), accountId, yaml,
+        StringUtils.isNotBlank(applicationManifest.getName()) ? applicationManifest.getName() + YAML_EXTENSION
+                                                              : INDEX_YAML);
   }
 
   @Override
@@ -446,8 +452,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
     String accountId = appService.getAccountIdByAppId(appId);
     InfrastructureDefinition infrastructureDefinition = infrastructureDefinitionService.get(appId, infraDefinitionId);
     notNullCheck("InfraDefinition not found for appId:" + appId, infrastructureDefinition);
-    InfrastructureDefinition.Yaml infraDefinitionYaml =
-        (InfrastructureDefinition.Yaml) yamlHandlerFactory.getYamlHandler(YamlType.INFRA_DEFINITION)
+    InfrastructureDefinitionYaml infraDefinitionYaml =
+        (InfrastructureDefinitionYaml) yamlHandlerFactory.getYamlHandler(YamlType.INFRA_DEFINITION)
             .toYaml(infrastructureDefinition, appId);
     return YamlHelper.getYamlRestResponse(yamlGitSyncService, infrastructureDefinition.getUuid(), accountId,
         infraDefinitionYaml, infrastructureDefinition.getName() + YAML_EXTENSION);
@@ -550,8 +556,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       yaml = yamlHandler.toYaml(settingAttribute, GLOBAL_APP_ID);
     }
 
-    return YamlHelper.getYamlRestResponse(yamlGitSyncService, settingAttribute.getUuid(), accountId, yaml,
-        YamlConstants.LAMBDA_SPEC_YAML_FILE_NAME + YAML_EXTENSION);
+    return YamlHelper.getYamlRestResponse(
+        yamlGitSyncService, settingAttribute.getUuid(), accountId, yaml, settingAttribute.getName() + YAML_EXTENSION);
   }
 
   @Override
@@ -626,6 +632,9 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       case NEW_RELIC:
       case DYNA_TRACE:
       case PROMETHEUS:
+      case DATA_DOG:
+      case APM_VERIFICATION:
+      case BUG_SNAG:
         return yamlHandlerFactory.getYamlHandler(YamlType.VERIFICATION_PROVIDER, settingVariableType.name());
 
       case HOST_CONNECTION_ATTRIBUTES:

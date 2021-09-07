@@ -1,6 +1,8 @@
 package io.harness.workers.background.critical.iterator;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionInterruptType.MARK_EXPIRED;
+import static io.harness.beans.ExecutionInterruptType.ROLLBACK_PROVISIONER_AFTER_PHASES;
 import static io.harness.beans.ExecutionStatus.ERROR;
 import static io.harness.beans.ExecutionStatus.EXPIRED;
 import static io.harness.beans.ExecutionStatus.PREPARING;
@@ -10,8 +12,12 @@ import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionInterruptType;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.iterator.PersistenceIteratorFactory;
@@ -49,6 +55,8 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 @Singleton
 @Slf4j
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class WorkflowExecutionMonitorHandler implements Handler<WorkflowExecution> {
   @Inject private AccountService accountService;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
@@ -117,8 +125,7 @@ public class WorkflowExecutionMonitorHandler implements Handler<WorkflowExecutio
                                      .executionUuid(stateExecutionInstance.getExecutionUuid())
                                      .stateExecutionInstanceId(stateExecutionInstance.getUuid())
                                      .build();
-          }
-          if (stateExecutionInstance.isWaitingForManualIntervention()) {
+          } else if (stateExecutionInstance.isWaitingForManualIntervention()) {
             executionInterrupt =
                 anExecutionInterrupt()
                     .executionInterruptType(stateExecutionInstance.getActionAfterManualInterventionTimeout())
@@ -135,6 +142,12 @@ public class WorkflowExecutionMonitorHandler implements Handler<WorkflowExecutio
                                      .build();
           }
 
+          if (featureFlagService.isEnabled(FeatureName.ROLLBACK_PROVISIONER_AFTER_PHASES, entity.getAccountId())) {
+            if (executionInterrupt.getExecutionInterruptType() == ROLLBACK_PROVISIONER_AFTER_PHASES) {
+              entity.setRollbackProvisionerAfterPhases(true);
+              wingsPersistence.save(entity);
+            }
+          }
           executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
         }
       } catch (WingsException exception) {

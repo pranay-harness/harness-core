@@ -17,6 +17,7 @@ import io.harness.logging.AutoLogContext;
 
 import software.wings.beans.Service;
 import software.wings.beans.Service.ServiceKeys;
+import software.wings.beans.deployment.DeploymentMetadata.DeploymentMetadataKeys;
 import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
 import software.wings.graphql.datafetcher.service.ServiceController;
 import software.wings.graphql.schema.mutation.execution.input.QLExecutionType;
@@ -58,34 +59,40 @@ public class ExecutionInputsDataFetcher
     try (AutoLogContext ignore0 = new AccountLogContext(accountId, AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
       validateAppBelongsToAccount(parameters, accountId);
       QLExecutionType executionType = parameters.getExecutionType();
-      List<String> serviceIds;
+      Map<String, List<String>> serviceIds;
       switch (executionType) {
         case PIPELINE:
-          serviceIds = pipelineExecutionController.getArtifactNeededServices(parameters);
+          serviceIds = pipelineExecutionController.getArtifactAndManifestNeededServices(parameters);
           break;
         case WORKFLOW:
-          serviceIds = workflowExecutionController.getArtifactNeededServices(parameters);
+          serviceIds = workflowExecutionController.getArtifactAndManifestNeededServices(parameters);
           break;
         default:
           throw new InvalidRequestException("Unsupported execution type: " + executionType);
       }
 
-      if (isEmpty(serviceIds)) {
-        return QLExecutionInputs.builder().serviceInputs(new ArrayList<>()).build();
-      }
-      PageRequest<Service> pageRequest = aPageRequest()
-                                             .addFilter(ServiceKeys.appId, EQ, parameters.getApplicationId())
-                                             .addFilter(ServiceKeys.accountId, EQ, accountId)
-                                             .addFilter("_id", IN, serviceIds.toArray())
-                                             .build();
-      List<Service> services = serviceResourceService.list(pageRequest, true, false, false, null);
-      List<QLService> qlServices = new ArrayList<>();
-      for (Service service : services) {
-        QLServiceBuilder builder = QLService.builder();
-        ServiceController.populateService(service, builder);
-        qlServices.add(builder.build());
-      }
-      return QLExecutionInputs.builder().serviceInputs(qlServices).build();
+      List<String> artifactNeededServiceIds = serviceIds.get(DeploymentMetadataKeys.artifactRequiredServices);
+      List<String> manifestNeededServiceIds = serviceIds.get(DeploymentMetadataKeys.manifestRequiredServiceIds);
+      PageRequest<Service> artifactNeededPageRequest =
+          aPageRequest()
+              .addFilter(ServiceKeys.appId, EQ, parameters.getApplicationId())
+              .addFilter(ServiceKeys.accountId, EQ, accountId)
+              .addFilter("_id", IN, artifactNeededServiceIds.toArray())
+              .build();
+
+      PageRequest<Service> manifestNeededPageRequest =
+          aPageRequest()
+              .addFilter(ServiceKeys.appId, EQ, parameters.getApplicationId())
+              .addFilter(ServiceKeys.accountId, EQ, accountId)
+              .addFilter("_id", IN, manifestNeededServiceIds.toArray())
+              .build();
+
+      return QLExecutionInputs.builder()
+          .serviceInputs(
+              isEmpty(artifactNeededServiceIds) ? new ArrayList<>() : serviceBuilder(artifactNeededPageRequest))
+          .serviceManifestInputs(
+              isEmpty(manifestNeededServiceIds) ? new ArrayList<>() : serviceBuilder(manifestNeededPageRequest))
+          .build();
     }
   }
 
@@ -107,5 +114,16 @@ public class ExecutionInputsDataFetcher
     if (StringUtils.isBlank(accountIdFromApp) || !accountIdFromApp.equals(accountId)) {
       throw new InvalidRequestException(APPLICATION_DOES_NOT_EXIST_MSG, WingsException.USER);
     }
+  }
+
+  private List<QLService> serviceBuilder(PageRequest<Service> pageRequest) {
+    List<Service> services = serviceResourceService.list(pageRequest, true, false, false, null);
+    List<QLService> qlServices = new ArrayList<>();
+    for (Service service : services) {
+      QLServiceBuilder builder = QLService.builder();
+      ServiceController.populateService(service, builder);
+      qlServices.add(builder.build());
+    }
+    return qlServices;
   }
 }

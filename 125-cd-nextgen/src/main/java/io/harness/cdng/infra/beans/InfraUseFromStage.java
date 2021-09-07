@@ -1,11 +1,10 @@
 package io.harness.cdng.infra.beans;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.cdng.infra.InfrastructureDef;
-import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.pipelineinfrastructure.InfraUseFromOverridesVisitorHelper;
 import io.harness.cdng.visitor.helpers.pipelineinfrastructure.InfraUseFromStageVisitorHelper;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
@@ -23,6 +22,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @SimpleVisitorHelper(helperClass = InfraUseFromStageVisitorHelper.class)
 @TypeAlias("infraUseFromStage")
+@RecasterAlias("io.harness.cdng.infra.beans.InfraUseFromStage")
 public class InfraUseFromStage implements Serializable, Visitable {
   // Stage identifier of the stage to select from.
   @NotNull String stage;
@@ -38,16 +38,12 @@ public class InfraUseFromStage implements Serializable, Visitable {
     return children;
   }
 
-  @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.INFRA_USE_FROM_STAGE).build();
-  }
-
   @Data
   @Builder
   @ApiModel(value = "InfraOverrides")
   @SimpleVisitorHelper(helperClass = InfraUseFromOverridesVisitorHelper.class)
   @TypeAlias("infraUseFromStage_overrides")
+  @RecasterAlias("io.harness.cdng.infra.beans.InfraUseFromStage$Overrides")
   public static class Overrides implements Serializable, Visitable {
     EnvironmentYaml environment;
     InfrastructureDef infrastructureDefinition;
@@ -60,11 +56,6 @@ public class InfraUseFromStage implements Serializable, Visitable {
       children.add("infrastructureDefinition", infrastructureDefinition);
       children.add("environment", environment);
       return children;
-    }
-
-    @Override
-    public LevelNode getLevelNode() {
-      return LevelNode.builder().qualifierName(YamlTypes.INFRA_USE_FROM_STAGE_OVERRIDES).build();
     }
   }
 }

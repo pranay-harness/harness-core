@@ -4,22 +4,20 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.GeneralException;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
-import io.harness.pms.contracts.refobjects.RefType;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
-import io.harness.pms.sdk.core.facilitator.Facilitator;
+import io.harness.pms.sdk.core.execution.events.node.facilitate.Facilitator;
 import io.harness.pms.sdk.core.registries.AdviserRegistry;
 import io.harness.pms.sdk.core.registries.FacilitatorRegistry;
 import io.harness.pms.sdk.core.registries.OrchestrationEventHandlerRegistry;
-import io.harness.pms.sdk.core.registries.ResolverRegistry;
 import io.harness.pms.sdk.core.registries.StepRegistry;
-import io.harness.pms.sdk.core.registries.registrar.ResolverRegistrar;
-import io.harness.pms.sdk.core.resolver.Resolver;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.pms.sdk.registries.registrar.local.PmsSdkAdviserRegistrar;
 import io.harness.pms.sdk.registries.registrar.local.PmsSdkFacilitatorRegistrar;
@@ -29,13 +27,14 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.multibindings.MapBinder;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Pair;
 
 @OwnedBy(CDC)
 @Slf4j
@@ -55,19 +54,27 @@ public class PmsSdkRegistryModule extends AbstractModule {
     this.config = config;
   }
 
-  public void configure() {
-    MapBinder.newMapBinder(binder(), String.class, ResolverRegistrar.class);
-  }
+  public void configure() {}
 
   @Provides
   @Singleton
   StepRegistry providesStateRegistry(Injector injector) {
     StepRegistry stepRegistry = new StepRegistry();
     Map<StepType, Class<? extends Step>> engineSteps = config.getEngineSteps();
+    List<String> stepsMissingStepCategory = new ArrayList<>();
     if (EmptyPredicate.isNotEmpty(engineSteps)) {
-      engineSteps.forEach((k, v) -> stepRegistry.register(k, injector.getInstance(v)));
+      engineSteps.forEach((stepType, v) -> {
+        if (stepType.getStepCategory() == StepCategory.UNKNOWN) {
+          stepsMissingStepCategory.add(stepType.getType());
+        }
+        stepRegistry.register(stepType, injector.getInstance(v));
+      });
     }
-    return stepRegistry;
+    if (stepsMissingStepCategory.isEmpty()) {
+      return stepRegistry;
+    }
+    throw new GeneralException(String.format("Following steps missing step Category, please add the category: [%s]",
+        stepsMissingStepCategory.stream().collect(Collectors.joining(","))));
   }
 
   @Provides
@@ -83,17 +90,6 @@ public class PmsSdkRegistryModule extends AbstractModule {
       engineAdvisers.forEach((k, v) -> adviserRegistry.register(k, injector.getInstance(v)));
     }
     return adviserRegistry;
-  }
-
-  @Provides
-  @Singleton
-  ResolverRegistry providesResolverRegistry(Injector injector, Map<String, ResolverRegistrar> resolverRegistrarMap) {
-    Set<Pair<RefType, Resolver<?>>> classes = new HashSet<>();
-    resolverRegistrarMap.values().forEach(resolverRegistrar -> resolverRegistrar.register(classes));
-    ResolverRegistry resolverRegistry = new ResolverRegistry();
-    injector.injectMembers(resolverRegistry);
-    classes.forEach(pair -> { resolverRegistry.register(pair.getLeft(), pair.getRight()); });
-    return resolverRegistry;
   }
 
   @Provides

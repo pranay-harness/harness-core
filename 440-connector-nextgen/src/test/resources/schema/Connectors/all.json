@@ -15,17 +15,24 @@
         {
           "type": "object",
           "required": [
-            "accountId",
             "accountname",
-            "controllerUrl",
-            "passwordRef",
-            "username"
+            "controllerUrl"
           ],
           "properties": {
-            "accountId": {
+            "accountname": {
               "type": "string"
             },
-            "accountname": {
+            "authType": {
+              "type": "string",
+              "enum": [
+                "UsernamePassword",
+                "ApiClientToken"
+              ]
+            },
+            "clientId": {
+              "type": "string"
+            },
+            "clientSecretRef": {
               "type": "string"
             },
             "controllerUrl": {
@@ -42,6 +49,22 @@
               "type": "string"
             },
             "username": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ArgoConnector": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "adapterUrl": {
               "type": "string"
             }
           }
@@ -352,7 +375,8 @@
           "type": "string",
           "enum": [
             "InheritFromDelegate",
-            "ManualConfig"
+            "ManualConfig",
+            "Irsa"
           ]
         }
       },
@@ -387,13 +411,209 @@
         "s3BucketName"
       ],
       "properties": {
+        "region": {
+          "type": "string"
+        },
         "reportName": {
           "type": "string"
         },
         "s3BucketName": {
           "type": "string"
+        },
+        "s3Prefix": {
+          "type": "string"
         }
       },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsKmsConnectorCredential": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "AssumeIAMRole",
+            "AssumeSTSRole",
+            "ManualConfig"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "AssumeIAMRole"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AwsKmsCredentialSpecAssumeIAM"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "AssumeSTSRole"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AwsKmsCredentialSpecAssumeSTS"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "ManualConfig"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AwsKmsCredentialSpecManualConfig"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "AwsKmsConnectorDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "kmsArn"
+          ],
+          "properties": {
+            "credential": {
+              "$ref": "#/definitions/AwsKmsConnectorCredential"
+            },
+            "default": {
+              "type": "boolean"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "kmsArn": {
+              "type": "string"
+            },
+            "region": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsKmsCredentialSpec": {
+      "type": "object",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsKmsCredentialSpecAssumeIAM": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/AwsKmsCredentialSpec"
+        },
+        {
+          "type": "object",
+          "required": [
+            "delegateSelectors"
+          ],
+          "properties": {
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 2147483647,
+              "minItems": 1
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsKmsCredentialSpecAssumeSTS": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/AwsKmsCredentialSpec"
+        },
+        {
+          "type": "object",
+          "required": [
+            "delegateSelectors",
+            "roleArn"
+          ],
+          "properties": {
+            "assumeStsRoleDuration": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 2147483647,
+              "minItems": 1
+            },
+            "externalName": {
+              "type": "string"
+            },
+            "roleArn": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsKmsCredentialSpecManualConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/AwsKmsCredentialSpec"
+        },
+        {
+          "type": "object",
+          "required": [
+            "accessKey",
+            "secretKey"
+          ],
+          "properties": {
+            "accessKey": {
+              "type": "string"
+            },
+            "secretKey": {
+              "type": "string"
+            }
+          }
+        }
+      ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "AwsManualConfigSpec": {
@@ -435,12 +655,233 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "AwsSMCredentialSpecAssumeIAM": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/AwsSecretManagerCredentialSpec"
+        },
+        {
+          "type": "object"
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsSMCredentialSpecAssumeSTS": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/AwsSecretManagerCredentialSpec"
+        },
+        {
+          "type": "object",
+          "required": [
+            "roleArn"
+          ],
+          "properties": {
+            "assumeStsRoleDuration": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "externalId": {
+              "type": "string"
+            },
+            "roleArn": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsSMCredentialSpecManualConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/AwsSecretManagerCredentialSpec"
+        },
+        {
+          "type": "object",
+          "required": [
+            "accessKey",
+            "secretKey"
+          ],
+          "properties": {
+            "accessKey": {
+              "type": "string"
+            },
+            "secretKey": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsSecretManagerCredential": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "AssumeIAMRole",
+            "AssumeSTSRole",
+            "ManualConfig"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "AssumeIAMRole"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AwsSMCredentialSpecAssumeIAM"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "AssumeSTSRole"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AwsSMCredentialSpecAssumeSTS"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "ManualConfig"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AwsSMCredentialSpecManualConfig"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "AwsSecretManagerCredentialSpec": {
+      "type": "object",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AwsSecretManagerDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "credential",
+            "region"
+          ],
+          "properties": {
+            "credential": {
+              "$ref": "#/definitions/AwsSecretManagerCredential"
+            },
+            "default": {
+              "type": "boolean"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "region": {
+              "type": "string"
+            },
+            "secretNamePrefix": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AzureKeyVaultConnectorDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "clientId",
+            "secretKey",
+            "subscription",
+            "tenantId",
+            "vaultName"
+          ],
+          "properties": {
+            "azureEnvironmentType": {
+              "type": "string",
+              "enum": [
+                "AZURE",
+                "AZURE_US_GOVERNMENT"
+              ]
+            },
+            "clientId": {
+              "type": "string"
+            },
+            "default": {
+              "type": "boolean"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "secretKey": {
+              "type": "string"
+            },
+            "subscription": {
+              "type": "string"
+            },
+            "tenantId": {
+              "type": "string"
+            },
+            "vaultName": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "BillingExportSpec": {
       "type": "object",
       "required": [
         "containerName",
         "directoryName",
-        "storageAccountName"
+        "reportName",
+        "storageAccountName",
+        "subscriptionId"
       ],
       "properties": {
         "containerName": {
@@ -449,7 +890,13 @@
         "directoryName": {
           "type": "string"
         },
+        "reportName": {
+          "type": "string"
+        },
         "storageAccountName": {
+          "type": "string"
+        },
+        "subscriptionId": {
           "type": "string"
         }
       },
@@ -578,6 +1025,9 @@
               ]
             },
             "url": {
+              "type": "string"
+            },
+            "validationRepo": {
               "type": "string"
             }
           }
@@ -740,6 +1190,9 @@
             "crossAccountAccess"
           ],
           "properties": {
+            "awsAccountId": {
+              "type": "string"
+            },
             "crossAccountAccess": {
               "$ref": "#/definitions/CrossAccountAccess"
             },
@@ -751,11 +1204,12 @@
               "items": {
                 "type": "string",
                 "enum": [
-                  "CUR",
-                  "EVENTS",
-                  "OPTIMIZATION"
+                  "BILLING",
+                  "OPTIMIZATION",
+                  "VISIBILITY"
                 ]
-              }
+              },
+              "minLength": 1
             }
           }
         }
@@ -783,9 +1237,11 @@
                 "type": "string",
                 "enum": [
                   "BILLING",
-                  "OPTIMIZATION"
+                  "OPTIMIZATION",
+                  "VISIBILITY"
                 ]
-              }
+              },
+              "minLength": 1
             },
             "subscriptionId": {
               "type": "string"
@@ -811,6 +1267,18 @@
           "properties": {
             "connectorRef": {
               "type": "string"
+            },
+            "featuresEnabled": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "BILLING",
+                  "OPTIMIZATION",
+                  "VISIBILITY"
+                ]
+              },
+              "minLength": 1
             }
           }
         }
@@ -867,10 +1335,15 @@
             "Git",
             "Splunk",
             "AppDynamics",
+            "Prometheus",
+            "Dynatrace",
             "Vault",
+            "AzureKeyVault",
             "DockerRegistry",
             "Local",
+            "AwsKms",
             "GcpKms",
+            "AwsSecretManager",
             "Gcp",
             "Aws",
             "Artifactory",
@@ -882,9 +1355,14 @@
             "Codecommit",
             "CEAws",
             "CEAzure",
+            "GcpCloudCost",
             "CEK8sCluster",
             "HttpHelmRepo",
-            "NewRelic"
+            "ArgoConnector",
+            "NewRelic",
+            "Datadog",
+            "SumoLogic",
+            "PagerDuty"
           ]
         }
       },
@@ -902,6 +1380,22 @@
             "properties": {
               "spec": {
                 "$ref": "#/definitions/AppDynamicsConnectorDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "ArgoConnector"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/ArgoConnector"
               }
             }
           }
@@ -934,6 +1428,54 @@
             "properties": {
               "spec": {
                 "$ref": "#/definitions/AwsConnector"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "AwsKms"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AwsKmsConnectorDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "AwsSecretManager"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AwsSecretManagerDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "AzureKeyVault"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AzureKeyVaultConnectorDTO"
               }
             }
           }
@@ -1022,6 +1564,22 @@
           "if": {
             "properties": {
               "type": {
+                "const": "Datadog"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/DatadogConnectorDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
                 "const": "DockerRegistry"
               }
             }
@@ -1038,6 +1596,22 @@
           "if": {
             "properties": {
               "type": {
+                "const": "Dynatrace"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/DynatraceConnectorDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
                 "const": "Gcp"
               }
             }
@@ -1046,6 +1620,22 @@
             "properties": {
               "spec": {
                 "$ref": "#/definitions/GcpConnector"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "GcpCloudCost"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/GcpCloudCostConnector"
               }
             }
           }
@@ -1214,6 +1804,38 @@
           "if": {
             "properties": {
               "type": {
+                "const": "PagerDuty"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/PagerDutyConnectorDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Prometheus"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/PrometheusConnectorDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
                 "const": "Splunk"
               }
             }
@@ -1222,6 +1844,22 @@
             "properties": {
               "spec": {
                 "$ref": "#/definitions/SplunkConnectorDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "SumoLogic"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/SumoLogicConnectorDTO"
               }
             }
           }
@@ -1259,19 +1897,38 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
-    "CustomCommitAttributes": {
-      "type": "object",
-      "properties": {
-        "authorEmail": {
-          "type": "string"
+    "DatadogConnectorDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
         },
-        "authorName": {
-          "type": "string"
-        },
-        "commitMessage": {
-          "type": "string"
+        {
+          "type": "object",
+          "required": [
+            "apiKeyRef",
+            "applicationKeyRef",
+            "url"
+          ],
+          "properties": {
+            "apiKeyRef": {
+              "type": "string"
+            },
+            "applicationKeyRef": {
+              "type": "string"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "url": {
+              "type": "string"
+            }
+          }
         }
-      },
+      ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "DockerAuthCredentialsDTO": {
@@ -1390,6 +2047,86 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "DynatraceConnectorDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "apiTokenRef",
+            "url"
+          ],
+          "properties": {
+            "apiTokenRef": {
+              "type": "string"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "url": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "GcpBillingExportSpec": {
+      "type": "object",
+      "required": [
+        "datasetId"
+      ],
+      "properties": {
+        "datasetId": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "GcpCloudCostConnector": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "projectId",
+            "serviceAccountEmail"
+          ],
+          "properties": {
+            "billingExportSpec": {
+              "$ref": "#/definitions/GcpBillingExportSpec"
+            },
+            "featuresEnabled": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "BILLING",
+                  "OPTIMIZATION",
+                  "VISIBILITY"
+                ]
+              },
+              "minLength": 1
+            },
+            "projectId": {
+              "type": "string"
+            },
+            "serviceAccountEmail": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "GcpConnector": {
       "allOf": [
         {
@@ -1458,15 +2195,22 @@
         },
         {
           "type": "object",
+          "required": [
+            "credentials"
+          ],
           "properties": {
             "credentials": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "type": "string"
             },
             "default": {
               "type": "boolean"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
             },
             "keyName": {
               "type": "string"
@@ -1540,9 +2284,6 @@
                 "type": "string"
               }
             },
-            "gitSync": {
-              "$ref": "#/definitions/GitSyncConfig"
-            },
             "type": {
               "type": "string",
               "enum": [
@@ -1551,6 +2292,9 @@
               ]
             },
             "url": {
+              "type": "string"
+            },
+            "validationRepo": {
               "type": "string"
             }
           }
@@ -1646,21 +2390,6 @@
           }
         }
       ],
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "GitSyncConfig": {
-      "type": "object",
-      "properties": {
-        "customCommitAttributes": {
-          "$ref": "#/definitions/CustomCommitAttributes"
-        },
-        "enabled": {
-          "type": "boolean"
-        },
-        "syncEnabled": {
-          "type": "boolean"
-        }
-      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "GithubApiAccess": {
@@ -1829,6 +2558,9 @@
               ]
             },
             "url": {
+              "type": "string"
+            },
+            "validationRepo": {
               "type": "string"
             }
           }
@@ -2124,6 +2856,9 @@
               ]
             },
             "url": {
+              "type": "string"
+            },
+            "validationRepo": {
               "type": "string"
             }
           }
@@ -2466,8 +3201,25 @@
             },
             "username": {
               "type": "string"
+            },
+            "usernameRef": {
+              "type": "string"
             }
           }
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "usernameRef"
+              ]
+            },
+            {
+              "required": [
+                "username"
+              ]
+            }
+          ]
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -2570,7 +3322,6 @@
           "type": "object",
           "required": [
             "clientCertRef",
-            "clientKeyPassphraseRef",
             "clientKeyRef"
           ],
           "properties": {
@@ -2823,6 +3574,13 @@
             "apiKeyRef": {
               "type": "string"
             },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
             "newRelicAccountId": {
               "type": "string"
             },
@@ -2944,6 +3702,58 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "PagerDutyConnectorDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "apiTokenRef"
+          ],
+          "properties": {
+            "apiTokenRef": {
+              "type": "string"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "PrometheusConnectorDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "url"
+          ],
+          "properties": {
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "url": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "SplunkConnectorDTO": {
       "allOf": [
         {
@@ -2953,7 +3763,8 @@
           "type": "object",
           "required": [
             "accountId",
-            "passwordRef"
+            "passwordRef",
+            "splunkUrl"
           ],
           "properties": {
             "accountId": {
@@ -2980,6 +3791,40 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "SumoLogicConnectorDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "accessIdRef",
+            "accessKeyRef",
+            "url"
+          ],
+          "properties": {
+            "accessIdRef": {
+              "type": "string"
+            },
+            "accessKeyRef": {
+              "type": "string"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "url": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "VaultConnectorDTO": {
       "allOf": [
         {
@@ -2992,7 +3837,8 @@
               "type": "string",
               "enum": [
                 "APP_ROLE",
-                "TOKEN"
+                "TOKEN",
+                "VAULT_AGENT"
               ]
             },
             "appRoleId": {
@@ -3006,6 +3852,16 @@
             },
             "default": {
               "type": "boolean"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "namespace": {
+              "type": "string"
             },
             "readOnly": {
               "type": "boolean"
@@ -3026,6 +3882,12 @@
             },
             "secretId": {
               "type": "string"
+            },
+            "sinkPath": {
+              "type": "string"
+            },
+            "useVaultAgent": {
+              "type": "boolean"
             },
             "vaultUrl": {
               "type": "string"

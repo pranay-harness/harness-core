@@ -1,35 +1,59 @@
 package io.harness.cdng.infra.yaml;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.SwaggerConstants;
 import io.harness.cdng.infra.beans.InfraMapping;
 import io.harness.cdng.infra.beans.K8sGcpInfraMapping;
-import io.harness.cdng.visitor.YamlTypes;
-import io.harness.cdng.visitor.helpers.pipelineinfrastructure.K8sGcpInfrastructureVisitorHelper;
-import io.harness.common.SwaggerConstants;
+import io.harness.filters.ConnectorRefExtractorHelper;
+import io.harness.filters.WithConnectorRef;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.walktree.beans.LevelNode;
+import io.harness.pms.yaml.SkipAutoEvaluation;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
+import java.util.HashMap;
+import java.util.Map;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.Wither;
+import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.data.annotation.TypeAlias;
 
 @Value
 @Builder
 @JsonTypeName(InfrastructureKind.KUBERNETES_GCP)
-@SimpleVisitorHelper(helperClass = K8sGcpInfrastructureVisitorHelper.class)
+@SimpleVisitorHelper(helperClass = ConnectorRefExtractorHelper.class)
 @TypeAlias("k8sGcpInfrastructure")
 @OwnedBy(HarnessTeam.CDP)
-public class K8sGcpInfrastructure implements Infrastructure, Visitable {
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> connectorRef;
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> namespace;
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> releaseName;
-  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither ParameterField<String> cluster;
+@RecasterAlias("io.harness.cdng.infra.yaml.K8sGcpInfrastructure")
+public class K8sGcpInfrastructure implements Infrastructure, Visitable, WithConnectorRef {
+  @NotNull
+  @NotEmpty
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
+  @Wither
+  ParameterField<String> connectorRef;
+  @NotNull
+  @NotEmpty
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
+  @Wither
+  ParameterField<String> namespace;
+  @NotNull
+  @NotEmpty
+  @SkipAutoEvaluation
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
+  @Wither
+  ParameterField<String> releaseName;
+  @NotNull
+  @NotEmpty
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
+  @Wither
+  ParameterField<String> cluster;
 
   @Override
   public InfraMapping getInfraMapping() {
@@ -41,13 +65,18 @@ public class K8sGcpInfrastructure implements Infrastructure, Visitable {
   }
 
   @Override
-  public String getKind() {
-    return InfrastructureKind.KUBERNETES_GCP;
+  public ParameterField<String> getConnectorReference() {
+    return connectorRef;
   }
 
   @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.SPEC).isPartOfFQN(false).build();
+  public String[] getInfrastructureKeyValues() {
+    return new String[] {connectorRef.getValue(), cluster.getValue(), namespace.getValue()};
+  }
+
+  @Override
+  public String getKind() {
+    return InfrastructureKind.KUBERNETES_GCP;
   }
 
   @Override
@@ -67,5 +96,12 @@ public class K8sGcpInfrastructure implements Infrastructure, Visitable {
       resultantInfra = resultantInfra.withReleaseName(config.getReleaseName());
     }
     return resultantInfra;
+  }
+
+  @Override
+  public Map<String, ParameterField<String>> extractConnectorRefs() {
+    Map<String, ParameterField<String>> connectorRefMap = new HashMap<>();
+    connectorRefMap.put(YAMLFieldNameConstants.CONNECTOR_REF, connectorRef);
+    return connectorRefMap;
   }
 }

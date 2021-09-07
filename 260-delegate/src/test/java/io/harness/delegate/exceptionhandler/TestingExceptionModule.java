@@ -4,13 +4,15 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.exceptionhandler.handler.AmazonClientExceptionHandler;
 import io.harness.delegate.exceptionhandler.handler.AmazonServiceExceptionHandler;
-import io.harness.exception.exceptionmanager.ExceptionHandler;
+import io.harness.exception.DelegateServiceDriverExceptionHandler;
+import io.harness.exception.exceptionmanager.exceptionhandler.ExceptionHandler;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;
+import io.grpc.StatusRuntimeException;
 
 @OwnedBy(HarnessTeam.DX)
 public class TestingExceptionModule extends AbstractModule {
@@ -30,5 +32,7 @@ public class TestingExceptionModule extends AbstractModule {
 
     exceptionHandlerMapBinder.addBinding(AmazonServiceException.class).to(AmazonServiceExceptionHandler.class);
     exceptionHandlerMapBinder.addBinding(AmazonClientException.class).to(AmazonClientExceptionHandler.class);
+
+    exceptionHandlerMapBinder.addBinding(StatusRuntimeException.class).to(DelegateServiceDriverExceptionHandler.class);
   }
 }

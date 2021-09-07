@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package io.harness.polling.contracts;
+
+option java_multiple_files = true;
+
+import "io/harness/polling/contracts/polling_payload_data.proto";
+
+message PollingItem {
+  Category category = 1;
+  Qualifier qualifier = 2;
+  io.harness.polling.contracts.PollingPayloadData pollingPayloadData = 3;
+  string signature = 4;
+  string pollingDocId = 5;
+}
+
+message Qualifier {
+  string accountId = 1;
+  string organizationId = 2;
+  string projectId = 3;
+}
+
+message PollingResponse {
+  repeated string signatures = 1;
+  string accountId = 2;
+  string pollingDocId = 3;
+  io.harness.polling.contracts.Type type = 4;
+  oneof PollInfo {
+    BuildInfo buildInfo = 5;
+  }
+}
+
+message BuildInfo {
+  string name = 1;
+  repeated string versions = 2;
+}
+
+enum Category {
+  ARTIFACT = 0;
+  MANIFEST = 1;
+}

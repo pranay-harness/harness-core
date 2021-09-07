@@ -36,6 +36,7 @@ import static org.mockito.Mockito.when;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.nexus.NexusRequest;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.shell.AccessType;
@@ -460,7 +461,7 @@ public class ScpCommandUnitTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldDownloadArtifactFromNexusIfMetadataOnly() {
-    when(nexusService.getFileSize(any(), any(), eq("todolist.tar"), eq(NEXUS_URL))).thenReturn(1234L);
+    when(nexusService.getFileSize(any(), eq("todolist.tar"), eq(NEXUS_URL))).thenReturn(1234L);
     when(fileBasedScriptExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(),
              anyString(), anyString(), anyString()))
         .thenReturn(CommandExecutionStatus.SUCCESS);
@@ -472,7 +473,7 @@ public class ScpCommandUnitTest extends WingsBaseTest {
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
   public void shouldReturnSuccessIfArtifactFileMetadataIfEmpty() {
-    when(nexusService.getFileSize(any(), any(), eq("todolist.tar"), eq(NEXUS_URL))).thenReturn(1234L);
+    when(nexusService.getFileSize(any(), eq("todolist.tar"), eq(NEXUS_URL))).thenReturn(1234L);
     when(fileBasedScriptExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(),
              anyString(), anyString(), anyString()))
         .thenReturn(CommandExecutionStatus.SUCCESS);
@@ -503,10 +504,9 @@ public class ScpCommandUnitTest extends WingsBaseTest {
     buildDetailsList.add(buildDetails);
     when(encryptionService.decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class), eq(false)))
         .thenReturn((EncryptableSetting) hostConnectionAttributes.getValue());
-    when(nexusTwoService.getVersion(
-             any(NexusConfig.class), anyListOf(EncryptedDataDetail.class), any(), any(), any(), any(), any(), any()))
+    when(nexusTwoService.getVersion(any(NexusRequest.class), any(), any(), any(), any(), any(), any()))
         .thenReturn(buildDetailsList);
-    when(nexusService.getFileSize(any(), any(), eq("todolist.tar"), eq(NEXUS_URL))).thenReturn(1234L);
+    when(nexusService.getFileSize(any(), eq("todolist.tar"), eq(NEXUS_URL))).thenReturn(1234L);
     when(fileBasedScriptExecutor.copyFiles(anyString(), any(ArtifactStreamAttributes.class), anyString(), anyString(),
              anyString(), anyString(), anyString()))
         .thenReturn(CommandExecutionStatus.SUCCESS);

@@ -246,9 +246,10 @@ public class SpotinstTrafficShiftAlbSetupState extends State {
     DelegateTask delegateTask = spotinstStateHelper.getDelegateTask(dataBag.getApp().getAccountId(),
         dataBag.getApp().getUuid(), TaskType.SPOTINST_COMMAND_TASK, activity.getUuid(), dataBag.getEnv().getUuid(),
         dataBag.getInfrastructureMapping().getUuid(), commandRequest, dataBag.getEnv().getEnvironmentType(),
-        dataBag.getInfrastructureMapping().getServiceId());
+        dataBag.getInfrastructureMapping().getServiceId(), isSelectionLogsTrackingForTasksEnabled());
 
     delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
 
     return ExecutionResponse.builder()
         .correlationIds(singletonList(activity.getUuid()))
@@ -283,5 +284,10 @@ public class SpotinstTrafficShiftAlbSetupState extends State {
       invalidFields.put("lbDetails", "Load balancers are required");
     }
     return invalidFields;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

@@ -17,7 +17,7 @@ import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.metadata.NGTriggerMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.WebhookMetadata;
-import io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus;
+import io.harness.ngtriggers.beans.response.TriggerEventResponse.FinalStatus;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.ngtriggers.eventmapper.filters.dto.FilterRequestData;
 import io.harness.ngtriggers.service.NGTriggerService;
@@ -68,7 +68,7 @@ public class TriggerSourceRepoFilterTest extends CategoryTest {
             .build();
 
     FilterRequestData filterRequestData = FilterRequestData.builder()
-                                              .projectFqn("acc/org/proj")
+                                              .accountId("acc")
                                               .webhookPayloadData(WebhookPayloadData.builder()
                                                                       .originalEvent(TriggerWebhookEvent.builder()
                                                                                          .accountId("acc")
@@ -102,7 +102,7 @@ public class TriggerSourceRepoFilterTest extends CategoryTest {
 
     FilterRequestData filterRequestData =
         FilterRequestData.builder()
-            .projectFqn("acc/org/proj")
+            .accountId("acc")
             .webhookPayloadData(WebhookPayloadData.builder()
                                     .originalEvent(TriggerWebhookEvent.builder()
                                                        .accountId("acc")

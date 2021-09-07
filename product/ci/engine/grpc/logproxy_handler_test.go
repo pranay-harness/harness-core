@@ -326,7 +326,6 @@ func Test_UploadUsingLink_Success(t *testing.T) {
 	data := new(bytes.Buffer)
 	for _, line := range jsonLines {
 		data.Write([]byte(line))
-		data.Write([]byte("\n"))
 	}
 
 	mLogClient := mock.NewMockClient(ctrl)
@@ -363,7 +362,6 @@ func Test_UploadUsingLink_Failure(t *testing.T) {
 	data := new(bytes.Buffer)
 	for _, line := range jsonLines {
 		data.Write([]byte(line))
-		data.Write([]byte("\n"))
 	}
 
 	mLogClient := mock.NewMockClient(ctrl)

@@ -1,12 +1,19 @@
 package io.harness.delegate.beans.executioncapability;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.pcf.model.CfCliVersion;
+
 import java.time.Duration;
 import lombok.Builder;
 import lombok.Value;
 
 @Value
 @Builder
+@OwnedBy(HarnessTeam.CDP)
 public class PcfAutoScalarCapability implements ExecutionCapability {
+  CfCliVersion version;
+  String criteria;
   private final CapabilityType capabilityType = CapabilityType.PCF_AUTO_SCALAR;
 
   @Override
@@ -16,7 +23,7 @@ public class PcfAutoScalarCapability implements ExecutionCapability {
 
   @Override
   public String fetchCapabilityBasis() {
-    return "cf_appautoscalar";
+    return criteria;
   }
 
   @Override

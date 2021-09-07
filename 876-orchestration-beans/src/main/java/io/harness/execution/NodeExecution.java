@@ -3,12 +3,15 @@ package io.harness.execution;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.logging.UnitProgress;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import io.harness.pms.contracts.advisers.AdviserResponse;
@@ -21,13 +24,18 @@ import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.run.NodeRunInfo;
 import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.data.OrchestrationMap;
+import io.harness.pms.data.stepparameters.PmsStepParameters;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
-import io.harness.tasks.ProgressData;
+import io.harness.pms.utils.OrchestrationMapBackwardCompatibilityUtils;
 import io.harness.timeout.TimeoutDetails;
 
 import com.google.common.collect.ImmutableList;
+import com.google.protobuf.ByteString;
 import java.time.Duration;
+import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
@@ -52,7 +60,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Entity(value = "nodeExecutions", noClassnameStored = true)
 @Document("nodeExecutions")
 @TypeAlias("nodeExecution")
+@StoreIn(DbAliases.PMS)
 public final class NodeExecution implements PersistentEntity, UuidAware {
+  public static final long TTL_MONTHS = 6;
+
   // Immutable
   @Id @org.mongodb.morphia.annotations.Id String uuid;
   @NotNull Ambiance ambiance;
@@ -63,9 +74,11 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
   private Long endTs;
   private Duration initialWaitDuration;
 
+  @Builder.Default @FdTtlIndex Date validUntil = Date.from(OffsetDateTime.now().plusMonths(TTL_MONTHS).toInstant());
+
   // Resolved StepParameters stored just before invoking step.
-  org.bson.Document resolvedStepParameters;
-  org.bson.Document resolvedStepInputs;
+  Map<String, Object> resolvedStepParameters;
+  Map<String, Object> resolvedStepInputs;
 
   // For Wait Notify
   String notifyId;
@@ -96,22 +109,14 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
 
   List<StepOutcomeRef> outcomeRefs;
 
-  Map<String, List<ProgressData>> progressDataMap;
-
   @Singular List<UnitProgress> unitProgresses;
+
+  Map<String, Object> progressData;
 
   AdviserResponse adviserResponse;
   // Timeouts for advisers
   List<String> adviserTimeoutInstanceIds;
   TimeoutDetails adviserTimeoutDetails;
-
-  public boolean isChildSpawningMode() {
-    return mode == ExecutionMode.CHILD || mode == ExecutionMode.CHILDREN || mode == ExecutionMode.CHILD_CHAIN;
-  }
-
-  public boolean isTaskSpawningMode() {
-    return mode == ExecutionMode.TASK || mode == ExecutionMode.TASK_CHAIN;
-  }
 
   public ExecutableResponse obtainLatestExecutableResponse() {
     if (isEmpty(executableResponses)) {
@@ -126,6 +131,10 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
     public static final String planExecutionId = NodeExecutionKeys.ambiance + "."
         + "planExecutionId";
 
+    public static final String stepCategory = NodeExecutionKeys.node + "."
+        + "stepType"
+        + "."
+        + "stepCategory";
     public static final String planNodeId = NodeExecutionKeys.node + "."
         + "uuid";
     public static final String planNodeIdentifier = NodeExecutionKeys.node + "."
@@ -134,17 +143,17 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
 
   public static class NodeExecutionBuilder {
     public NodeExecutionBuilder resolvedStepParameters(StepParameters stepParameters) {
-      this.resolvedStepParameters = RecastOrchestrationUtils.toDocument(stepParameters);
+      this.resolvedStepParameters = RecastOrchestrationUtils.toMap(stepParameters);
       return this;
     }
 
     public NodeExecutionBuilder resolvedStepParameters(String jsonString) {
-      this.resolvedStepParameters = RecastOrchestrationUtils.toDocumentFromJson(jsonString);
+      this.resolvedStepParameters = RecastOrchestrationUtils.fromJson(jsonString);
       return this;
     }
 
     public NodeExecutionBuilder resolvedStepInputs(String jsonString) {
-      this.resolvedStepInputs = RecastOrchestrationUtils.toDocumentFromJson(jsonString);
+      this.resolvedStepInputs = RecastOrchestrationUtils.fromJson(jsonString);
       return this;
     }
   }
@@ -186,7 +195,30 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
                  .name("parentId_status_idx")
                  .field(NodeExecutionKeys.parentId)
                  .field(NodeExecutionKeys.status)
+                 .field(NodeExecutionKeys.oldRetry)
                  .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("planExecutionId_mode_status_oldRetry_idx")
+                 .field(NodeExecutionKeys.planExecutionId)
+                 .field(NodeExecutionKeys.mode)
+                 .field(NodeExecutionKeys.status)
+                 .field(NodeExecutionKeys.oldRetry)
+                 .build())
+        .add(CompoundMongoIndex.builder().name("previous_id_idx").field(NodeExecutionKeys.previousId).build())
         .build();
+  }
+
+  public ByteString getResolvedStepParametersBytes() {
+    String resolvedStepParams = RecastOrchestrationUtils.toJson(this.getResolvedStepParameters());
+    return ByteString.copyFromUtf8(resolvedStepParams);
+  }
+
+  public PmsStepParameters getPmsStepParameters() {
+    return PmsStepParameters.parse(
+        OrchestrationMapBackwardCompatibilityUtils.extractToOrchestrationMap(resolvedStepInputs));
+  }
+
+  public OrchestrationMap getPmsProgressData() {
+    return OrchestrationMapBackwardCompatibilityUtils.extractToOrchestrationMap(progressData);
   }
 }

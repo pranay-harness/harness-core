@@ -2,13 +2,13 @@ package software.wings.sm.states.spotinst;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.delegate.beans.pcf.ResizeStrategy.RESIZE_NEW_FIRST;
 import static io.harness.rule.OwnerRule.SATYAM;
 
 import static software.wings.beans.AmiDeploymentType.SPOTINST;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
@@ -47,6 +48,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateExecutionData;
@@ -66,6 +68,7 @@ public class SpotInstListenerUpdateStateTest extends WingsBaseTest {
   @Mock private SettingsService mockSettingsService;
   @Mock private ActivityService mockActivityService;
   @Mock private SpotInstStateHelper mockSpotinstStateHelper;
+  @Mock private StateExecutionService stateExecutionService;
 
   @InjectMocks SpotInstListenerUpdateState state = new SpotInstListenerUpdateState("stateName");
 
@@ -119,11 +122,11 @@ public class SpotInstListenerUpdateStateTest extends WingsBaseTest {
         .createActivity(any(), any(), anyString(), anyString(), any(), anyList());
     SpotInstCommandRequestBuilder builder = SpotInstCommandRequest.builder();
     doReturn(builder).when(mockSpotinstStateHelper).generateSpotInstCommandRequest(any(), any());
-    DelegateTask task = DelegateTask.builder().build();
+    DelegateTask task = DelegateTask.builder().description("desc").build();
     doReturn(task)
         .when(mockSpotinstStateHelper)
-        .getDelegateTask(
-            anyString(), anyString(), any(), anyString(), anyString(), anyString(), any(), any(), anyString());
+        .getDelegateTask(anyString(), anyString(), any(), anyString(), anyString(), anyString(), any(), any(),
+            anyString(), eq(true));
     ExecutionResponse response = state.execute(mockContext);
     assertThat(response).isNotNull();
     assertThat(response.getExecutionStatus()).isEqualTo(SUCCESS);

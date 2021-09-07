@@ -1,5 +1,6 @@
 package software.wings.core.managerConfiguration;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.threading.Morpheus.sleep;
 
 import static software.wings.beans.ManagerConfiguration.Builder.aManagerConfiguration;
@@ -11,6 +12,7 @@ import static org.apache.commons.collections.MapUtils.synchronizedMap;
 
 import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueController;
@@ -33,6 +35,7 @@ import org.apache.commons.codec.binary.StringUtils;
 
 @Singleton
 @Slf4j
+@OwnedBy(PL)
 @TargetModule(HarnessModule._960_PERSISTENCE)
 @BreakDependencyOn("software.wings.beans.ManagerConfiguration")
 public class ConfigurationController implements Managed, QueueController {
@@ -102,9 +105,15 @@ public class ConfigurationController implements Managed, QueueController {
         primaryVersion.set(managerConfiguration.getPrimaryVersion());
       }
 
+      // With introduction of the patch version feature, we need to incorporate the patch version to calculate the
+      // current primary version of manager. If the `primaryVersion` from DB doesn't have patch then we fall back to
+      // using getVersion() like earlier. We always build the full version from buildNo and patch like below.
+      String currPrimaryVersion = managerConfiguration.getPrimaryVersion().contains("-")
+          ? versionInfoManager.getVersionInfo().getVersion() + "-" + versionInfoManager.getVersionInfo().getPatch()
+          : versionInfoManager.getVersionInfo().getVersion();
+
       boolean isPrimary = StringUtils.equals(MATCH_ALL_VERSION, managerConfiguration.getPrimaryVersion())
-          || StringUtils.equals(
-              versionInfoManager.getVersionInfo().getVersion(), managerConfiguration.getPrimaryVersion());
+          || StringUtils.equals(currPrimaryVersion, managerConfiguration.getPrimaryVersion());
 
       if (primary.getAndSet(isPrimary) != isPrimary) {
         log.info("{} primary mode", isPrimary ? "Entering" : "Leaving");

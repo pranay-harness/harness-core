@@ -281,6 +281,9 @@ public class AnomalyEntityDao {
           retryCount++;
         }
       }
+      if (!successfulInsert) {
+        throw new InvalidArgumentsException("Not being able to write anomalies into db.");
+      }
     } else {
       log.warn("Not able to write {} anomalies to timescale db(validity:{}) for account", anomaliesList.size(),
           dbService.isValid());

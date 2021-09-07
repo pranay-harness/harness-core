@@ -1,6 +1,11 @@
 package software.wings.service.intfc.yaml;
 
+import static io.harness.annotations.dev.HarnessModule._951_CG_GIT_SYNC;
+
 import io.harness.alert.AlertData;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
@@ -32,6 +37,8 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 /**
  * The interface Yaml git sync service.
  */
+@OwnedBy(HarnessTeam.DX)
+@TargetModule(_951_CG_GIT_SYNC)
 public interface YamlGitService {
   /**
    * Gets the yaml git sync info by entitytId

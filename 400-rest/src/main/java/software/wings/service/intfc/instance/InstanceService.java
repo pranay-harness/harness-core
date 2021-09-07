@@ -1,5 +1,10 @@
 package software.wings.service.intfc.instance;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.validation.Create;
@@ -23,9 +28,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.Query;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
-/**
- * @author rktummala on 08/17/17
- */
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public interface InstanceService
     extends OwnedByApplication, OwnedByService, OwnedByEnvironment, OwnedByInfrastructureMapping, OwnedByAccount {
   /**
@@ -118,7 +122,8 @@ public interface InstanceService
    * @param infraMappingName the infra mapping name
    * @param timestamp        failure sync timestamp
    * @param errorMsg         failure reason
-   * @return
+   * @return false if it is repetitive failures and sync should be stopped
+   *         true if it is not repetitive failures and sync should continue
    */
   boolean handleSyncFailure(String appId, String serviceId, String envId, String infraMappingId,
       String infraMappingName, long timestamp, String errorMsg);

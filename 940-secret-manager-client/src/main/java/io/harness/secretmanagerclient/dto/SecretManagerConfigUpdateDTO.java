@@ -1,5 +1,9 @@
 package io.harness.secretmanagerclient.dto;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.secretmanagerclient.dto.awskms.AwsKmsConfigUpdateDTO;
 import io.harness.security.encryption.EncryptionType;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -10,6 +14,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
+@OwnedBy(PL)
 @Getter
 @Setter
 @SuperBuilder
@@ -18,9 +23,11 @@ import lombok.experimental.SuperBuilder;
     visible = true)
 @JsonSubTypes({
   @JsonSubTypes.Type(name = "VAULT", value = VaultConfigUpdateDTO.class)
-  , @JsonSubTypes.Type(name = "GCP_KMS", value = GcpKmsConfigUpdateDTO.class)
+  , @JsonSubTypes.Type(name = "GCP_KMS", value = GcpKmsConfigUpdateDTO.class),
+      @JsonSubTypes.Type(name = "AWS_KMS", value = AwsKmsConfigUpdateDTO.class)
 })
 public class SecretManagerConfigUpdateDTO {
+  private String name;
   private Map<String, String> tags;
   private EncryptionType encryptionType;
   private boolean isDefault;

@@ -18,7 +18,7 @@ import io.harness.event.PingPongServiceGrpc.PingPongServiceBlockingStub;
 import io.harness.grpc.auth.DelegateAuthCallCredentials;
 import io.harness.grpc.auth.DelegateAuthServerInterceptor;
 import io.harness.rule.Owner;
-import io.harness.security.TokenAuthenticator;
+import io.harness.security.DelegateTokenAuthenticator;
 import io.harness.security.TokenGenerator;
 
 import io.grpc.Channel;
@@ -64,7 +64,7 @@ public class PingPongTest extends CategoryTest implements MockableTestMixin {
     server = InProcessServerBuilder.forName(serverName)
                  .directExecutor()
                  .addService(new PingPongService())
-                 .intercept(new DelegateAuthServerInterceptor(mock(TokenAuthenticator.class)))
+                 .intercept(new DelegateAuthServerInterceptor(mock(DelegateTokenAuthenticator.class)))
                  .build()
                  .start();
     grpcCleanup.register(server);

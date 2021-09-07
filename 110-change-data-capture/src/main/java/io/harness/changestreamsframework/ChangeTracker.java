@@ -4,6 +4,7 @@ import io.harness.ChangeDataCaptureServiceConfig;
 import io.harness.annotations.ChangeDataCapture;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import io.harness.persistence.PersistentEntity;
 
@@ -16,6 +17,7 @@ import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
+import com.mongodb.Tag;
 import com.mongodb.TagSet;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoCollection;
@@ -23,7 +25,6 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.OperationType;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -36,7 +37,7 @@ import org.mongodb.morphia.annotations.Entity;
 public class ChangeTracker {
   @Inject private ChangeDataCaptureServiceConfig mainConfiguration;
   @Inject private ChangeEventFactory changeEventFactory;
-  @Inject private TagSet mongoTagSet;
+  @Inject private MongoConfig mongoConfig;
   private ExecutorService executorService;
   private Set<ChangeTrackingTask> changeTrackingTasks;
   private Set<Future<?>> changeTrackingTasksFuture;
@@ -49,7 +50,7 @@ public class ChangeTracker {
   }
 
   public String getChangeDataCaptureDataStore(Class<? extends PersistentEntity> clazz) {
-    return clazz.getAnnotation(ChangeDataCapture.class).dataStore();
+    return clazz.getAnnotationsByType(ChangeDataCapture.class)[0].dataStore();
   }
 
   private MongoClientURI mongoClientUri(String dataStore) {
@@ -58,17 +59,34 @@ public class ChangeTracker {
       case "events":
         mongoClientUrl = mainConfiguration.getEventsMongo().getUri();
         break;
+      case "pms-harness":
+        mongoClientUrl = mainConfiguration.getPmsMongo().getUri();
+        break;
+      case "ng-harness":
+        mongoClientUrl = mainConfiguration.getNgMongo().getUri();
+        break;
       default:
         mongoClientUrl = mainConfiguration.getHarnessMongo().getUri();
         break;
     }
-    if (Objects.isNull(mongoTagSet)) {
+
+    TagSet mongoTagSet = getMongoTagSet();
+    if (mongoTagSet == null) {
       readPreference = ReadPreference.secondaryPreferred();
     } else {
       readPreference = ReadPreference.secondary(mongoTagSet);
     }
     return new MongoClientURI(mongoClientUrl,
-        MongoClientOptions.builder(MongoModule.defaultMongoClientOptions).readPreference(readPreference));
+        MongoClientOptions.builder(MongoModule.getDefaultMongoClientOptions(mongoConfig))
+            .readPreference(readPreference));
+  }
+
+  private TagSet getMongoTagSet() {
+    if (!mainConfiguration.getMongoTagsConfig().getTagKey().equals("none")) {
+      return new TagSet(new Tag(
+          mainConfiguration.getMongoTagsConfig().getTagKey(), mainConfiguration.getMongoTagsConfig().getTagValue()));
+    }
+    return null;
   }
 
   public MongoDatabase connectToMongoDatabase(String dataStore) {

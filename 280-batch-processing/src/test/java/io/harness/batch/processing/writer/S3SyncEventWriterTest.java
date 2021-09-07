@@ -4,10 +4,19 @@ import static io.harness.rule.OwnerRule.ROHIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyObject;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.batch.processing.service.impl.AwsS3SyncServiceImpl;
 import io.harness.category.element.UnitTests;
+import io.harness.connector.ConnectorResourceClient;
+import io.harness.ff.FeatureFlagService;
+import io.harness.ng.beans.PageResponse;
+import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.rule.Owner;
 
 import software.wings.beans.AwsCrossAccountAttributes;
@@ -17,6 +26,7 @@ import software.wings.beans.ce.CEAwsConfig;
 import software.wings.service.impl.instance.CloudToHarnessMappingServiceImpl;
 import software.wings.settings.SettingValue;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -30,11 +40,14 @@ import org.mockito.Mockito;
 import org.mockito.invocation.Invocation;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.batch.core.JobParameters;
-
+import retrofit2.Call;
+import retrofit2.Response;
 @RunWith(MockitoJUnitRunner.class)
 public class S3SyncEventWriterTest extends CategoryTest {
   @InjectMocks S3SyncEventWriter s3SyncEventWriter;
   @Mock private AwsS3SyncServiceImpl awsS3SyncService;
+  @Mock private FeatureFlagService featureFlagService;
+  @Mock private ConnectorResourceClient connectorResourceClient;
   @Mock JobParameters parameters;
   @Mock private CloudToHarnessMappingServiceImpl cloudToHarnessMappingService;
 
@@ -51,7 +64,7 @@ public class S3SyncEventWriterTest extends CategoryTest {
   @Test
   @Owner(developers = ROHIT)
   @Category(UnitTests.class)
-  public void setS3SyncEventWriterTest() {
+  public void setS3SyncEventWriterTest() throws IOException {
     AwsCrossAccountAttributes awsCrossAccountAttributes =
         AwsCrossAccountAttributes.builder().externalId(EXTERNAL_ID).crossAccountRoleArn(ROLE_ARN).build();
     AwsS3BucketDetails s3BucketDetails = AwsS3BucketDetails.builder()
@@ -71,11 +84,16 @@ public class S3SyncEventWriterTest extends CategoryTest {
                                             .withCategory(SettingAttribute.SettingCategory.CE_CONNECTOR)
                                             .withValue(settingValue)
                                             .build();
-    Mockito.doNothing().when(awsS3SyncService).syncBuckets(any());
+    Mockito.doReturn(true).when(awsS3SyncService).syncBuckets(any());
     Mockito.doReturn(Arrays.asList(settingAttribute))
         .when(cloudToHarnessMappingService)
         .listSettingAttributesCreatedInDuration(any(), any(), any());
     Mockito.doReturn(TEST_ACCOUNT_ID).when(parameters).getString(any());
+
+    Call call = mock(Call.class);
+    when(call.execute()).thenReturn(Response.success(ResponseDTO.newResponse(PageResponse.builder().build())));
+    when(connectorResourceClient.listConnectors(any(), any(), any(), anyInt(), anyInt(), anyObject(), anyBoolean()))
+        .thenReturn(call);
 
     List<SettingAttribute> settingAttributeList = new ArrayList<>();
     s3SyncEventWriter.write(settingAttributeList);

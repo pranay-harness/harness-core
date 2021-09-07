@@ -22,6 +22,7 @@ import org.springframework.data.annotation.TypeAlias;
 public class GitlabConnector extends Connector {
   GitConnectionType connectionType;
   String url;
+  String validationRepo;
   GitAuthType authType;
   GitlabAuthentication authenticationDetails;
   boolean hasApiAccess;

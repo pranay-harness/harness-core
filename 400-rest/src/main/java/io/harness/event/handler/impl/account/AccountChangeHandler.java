@@ -169,7 +169,7 @@ public class AccountChangeHandler implements EventHandler {
                     if (userObj.getEmail() != null) {
                       return !userObj.getEmail().endsWith(Keys.HARNESS_EMAIL);
                     }
-                    return true;
+                    return !userObj.getDisabled();
                   })
                   .count();
     }

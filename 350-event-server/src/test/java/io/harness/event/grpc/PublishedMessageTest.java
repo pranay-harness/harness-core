@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.entities.events.PublishedMessage;
 import io.harness.event.payloads.EcsTaskLifecycle;
 import io.harness.event.payloads.Lifecycle;
 import io.harness.rule.Owner;
@@ -32,11 +33,12 @@ public class PublishedMessageTest extends CategoryTest {
             .build();
     Any payload = Any.pack(ecsTaskLifecycle);
     String accountId = "accountId-123";
-    PublishedMessage publishedMessage = PublishedMessage.builder()
-                                            .accountId(accountId)
-                                            .data(payload.toByteArray())
-                                            .type(ecsTaskLifecycle.getClass().getName())
-                                            .build();
+    io.harness.ccm.commons.entities.events.PublishedMessage publishedMessage =
+        io.harness.ccm.commons.entities.events.PublishedMessage.builder()
+            .accountId(accountId)
+            .data(payload.toByteArray())
+            .type(ecsTaskLifecycle.getClass().getName())
+            .build();
     assertThat(publishedMessage.getMessage()).isEqualTo(ecsTaskLifecycle);
   }
 
@@ -45,7 +47,7 @@ public class PublishedMessageTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldSetValidUntil() throws Exception {
     Date expected = Date.from(OffsetDateTime.now().plusDays(14).toInstant());
-    PublishedMessage message = PublishedMessage.builder().build();
+    io.harness.ccm.commons.entities.events.PublishedMessage message = PublishedMessage.builder().build();
     assertThat(message.getValidUntil()).isNotNull().isAfterOrEqualTo(expected);
   }
 }

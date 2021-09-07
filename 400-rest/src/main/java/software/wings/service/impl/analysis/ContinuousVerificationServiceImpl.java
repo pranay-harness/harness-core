@@ -42,6 +42,7 @@ import static java.lang.Math.ceil;
 import static java.lang.Math.min;
 import static java.util.Collections.emptySet;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -55,6 +56,7 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
+import io.harness.cv.api.WorkflowVerificationResultService;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.DataCollectionExecutorService;
 import io.harness.eraro.ErrorCode;
@@ -239,6 +241,7 @@ import org.mongodb.morphia.query.Sort;
 @Slf4j
 @OwnedBy(HarnessTeam.CV)
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class ContinuousVerificationServiceImpl implements ContinuousVerificationService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AuthService authService;
@@ -265,6 +268,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Inject private DatadogService datadogService;
   @Inject private EnvironmentService environmentService;
   @Inject private AccountService accountService;
+  @Inject private WorkflowVerificationResultService workflowVerificationResultService;
 
   private static final String DATE_PATTERN = "yyyy-MM-dd HH:MM";
   public static final String HARNESS_DEFAULT_TAG = "_HARNESS_DEFAULT_TAG_";
@@ -1753,6 +1757,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       throw new IllegalArgumentException("Invalid state type :" + analysisContext.getStateType());
     }
     setMetaDataExecutionStatus(stateExecutionId, status, true, true);
+    workflowVerificationResultService.updateWorkflowVerificationResult(stateExecutionId, false, status, message);
     try {
       final VerificationStateAnalysisExecutionData stateAnalysisExecutionData =
           VerificationStateAnalysisExecutionData.builder()
@@ -2459,12 +2464,13 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   private CustomLogDataCollectionInfo createCustomLogDataCollectionInfo(
       DatadogConfig datadogConfig, AnalysisContext context, long collectionStartMinute, Set<String> hostBatch) {
     CustomLogDataCollectionInfo savedDataCollectionInfo = (CustomLogDataCollectionInfo) context.getDataCollectionInfo();
-    savedDataCollectionInfo.setHosts(hostBatch);
-    savedDataCollectionInfo.setStartMinute((int) collectionStartMinute);
-    savedDataCollectionInfo.setCollectionTime(1);
-    savedDataCollectionInfo.setEncryptedDataDetails(
+    CustomLogDataCollectionInfo cloned = savedDataCollectionInfo.clone();
+    cloned.setHosts(hostBatch);
+    cloned.setStartMinute((int) collectionStartMinute);
+    cloned.setCollectionTime(1);
+    cloned.setEncryptedDataDetails(
         secretManager.getEncryptionDetails(datadogConfig, context.getAppId(), context.getWorkflowExecutionId()));
-    return savedDataCollectionInfo;
+    return cloned;
   }
 
   private StackDriverLogDataCollectionInfo createStackDriverLogDataCollectionInfo(

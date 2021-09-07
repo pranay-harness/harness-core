@@ -44,7 +44,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class GcpHelperServiceManagerTest extends WingsBaseTest {
   @Mock private GcpHelperService gcpHelperService;
   @Mock private DelegateService delegateService;

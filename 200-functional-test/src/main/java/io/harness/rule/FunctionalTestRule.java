@@ -1,19 +1,21 @@
 package io.harness.rule;
 
 import static io.harness.cache.CacheBackend.NOOP;
-import static io.harness.mongo.MongoModule.defaultMongoClientOptions;
 
 import static org.mockito.Mockito.mock;
 
+import io.harness.AccessControlClientConfiguration;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.app.GraphQLModule;
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheModule;
 import io.harness.capability.CapabilityModule;
+import io.harness.cf.AbstractCfModule;
+import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
 import io.harness.configuration.ConfigurationType;
-import io.harness.cvng.client.CVNGServiceClient;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
@@ -22,6 +24,7 @@ import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.factory.ClosingFactory;
 import io.harness.factory.ClosingFactoryModule;
+import io.harness.ff.FeatureFlagConfig;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
@@ -33,6 +36,7 @@ import io.harness.grpc.server.Connector;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.logstreaming.LogStreamingServiceConfig;
 import io.harness.mongo.MongoConfig;
+import io.harness.mongo.MongoModule;
 import io.harness.mongo.ObjectFactoryModule;
 import io.harness.mongo.QueryFactory;
 import io.harness.morphia.MorphiaRegistrar;
@@ -57,9 +61,9 @@ import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.timescaledb.TimeScaleDBConfig;
 
+import software.wings.DataStorageMode;
 import software.wings.app.AuthModule;
 import software.wings.app.GcpMarketplaceIntegrationModule;
-import software.wings.app.GraphQLModule;
 import software.wings.app.IndexMigratorModule;
 import software.wings.app.MainConfiguration;
 import software.wings.app.ManagerExecutorModule;
@@ -127,14 +131,11 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
   }
 
   private ExecutorService executorService = new CurrentThreadExecutor();
-  public static final String alpnJar =
-      "org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar";
-  public static final String alpn = "/home/jenkins/maven-repositories/0/";
   @Getter private GraphQL graphQL;
 
   @Override
   public List<Module> modules(List<Annotation> annotations) throws Exception {
-    ManagerExecutor.ensureManager(AbstractFunctionalTest.class, alpn, alpnJar);
+    ManagerExecutor.ensureManager(AbstractFunctionalTest.class);
 
     RestResponse<MongoConfig> mongoConfigRestResponse =
         Setup.portal()
@@ -145,7 +146,9 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
     String mongoUri =
         new AsymmetricDecryptor(new ScmSecret()).decryptText(mongoConfigRestResponse.getResource().getEncryptedUri());
 
-    MongoClientURI clientUri = new MongoClientURI(mongoUri, MongoClientOptions.builder(defaultMongoClientOptions));
+    MongoConfig mongoConfig = MongoConfig.builder().build();
+    MongoClientURI clientUri =
+        new MongoClientURI(mongoUri, MongoClientOptions.builder(MongoModule.getDefaultMongoClientOptions(mongoConfig)));
     String dbName = clientUri.getDatabase();
 
     MongoClient mongoClient = new MongoClient(clientUri);
@@ -284,8 +287,6 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
         bind(BroadcasterFactory.class).toInstance(mock(BroadcasterFactory.class));
         bind(MetricRegistry.class);
         bind(CommandLibraryServiceHttpClient.class).toInstance(mock(CommandLibraryServiceHttpClient.class));
-        CVNGServiceClient mockCVNGServiceClient = mock(CVNGServiceClient.class);
-        bind(CVNGServiceClient.class).toInstance(mockCVNGServiceClient);
       }
     });
     modules.add(new ValidationModule(validatorFactory));
@@ -297,7 +298,7 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
     modules.add(new ManagerExecutorModule());
     modules.add(new TemplateModule());
     modules.add(new EventsModule((MainConfiguration) configuration));
-    modules.add(new GraphQLModule());
+    modules.add(GraphQLModule.getInstance());
     modules.add(new SSOModule());
     modules.add(new SignupModule());
     modules.add(new SearchModule());
@@ -317,6 +318,23 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
     });
     modules.add(new GrpcServiceConfigurationModule(((MainConfiguration) configuration).getGrpcServerConfig(),
         ((MainConfiguration) configuration).getPortal().getJwtNextGenManagerSecret()));
+    modules.add(new AbstractCfModule() {
+      @Override
+      public CfClientConfig cfClientConfig() {
+        return CfClientConfig.builder().build();
+      }
+
+      @Override
+      public CfMigrationConfig cfMigrationConfig() {
+        return CfMigrationConfig.builder().build();
+      }
+
+      @Override
+      public FeatureFlagConfig featureFlagConfig() {
+        return FeatureFlagConfig.builder().build();
+      }
+    });
+
     return modules;
   }
 
@@ -336,8 +354,23 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
     configuration.setGrpcDelegateServiceClientConfig(
         GrpcClientConfig.builder().target("localhost:9880").authority("localhost").build());
 
+    configuration.setGrpcDMSClientConfig(
+        GrpcClientConfig.builder().target("localhost:15011").authority("localhost").build());
+    configuration.setDmsSecret("dummy_key");
+
     configuration.setLogStreamingServiceConfig(
         LogStreamingServiceConfig.builder().baseUrl("http://localhost:8079").serviceToken("token").build());
+
+    configuration.setAccessControlClientConfiguration(
+        AccessControlClientConfiguration.builder()
+            .enableAccessControl(false)
+            .accessControlServiceSecret("token")
+            .accessControlServiceConfig(ServiceHttpClientConfig.builder()
+                                            .baseUrl("http://localhost:9006/api/")
+                                            .readTimeOutSeconds(15)
+                                            .connectTimeOutSeconds(15)
+                                            .build())
+            .build());
 
     configuration.setMongoConnectionFactory(MongoConfig.builder().uri(mongoUri).build());
     configuration.setElasticsearchConfig(elasticsearchConfig);
@@ -351,7 +384,10 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
         EventsFrameworkConfiguration.builder()
             .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
             .build());
+    configuration.setFileStorageMode(DataStorageMode.MONGO);
+    configuration.setClusterName("");
     configuration.setTimeScaleDBConfig(TimeScaleDBConfig.builder().build());
+    configuration.setCfClientConfig(CfClientConfig.builder().build());
     configuration.setCfMigrationConfig(CfMigrationConfig.builder()
                                            .account("testAccount")
                                            .enabled(false)

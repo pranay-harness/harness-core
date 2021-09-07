@@ -1,11 +1,15 @@
 package io.harness.delegate.configuration;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.HarnessStringUtils.join;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.network.Http.getBaseUrl;
 
 import static java.lang.String.format;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.ProcessExecutionException;
 
 import com.google.common.annotations.VisibleForTesting;
 import java.io.File;
@@ -25,9 +29,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
+import org.zeroturnaround.exec.stream.LogOutputStream;
 
 @UtilityClass
 @Slf4j
+@OwnedBy(DEL)
 public class InstallUtils {
   private static final String defaultKubectlVersion = "v1.13.2";
   private static final String kubectlBaseDir = "./client-tools/kubectl/";
@@ -35,7 +41,7 @@ public class InstallUtils {
   private static final String goTemplateClientVersion = "v0.4";
   private static final String goTemplateClientBaseDir = "./client-tools/go-template/";
 
-  private static final String harnessPywinrmVersion = "v0.3-dev";
+  private static final String harnessPywinrmVersion = "v0.4-dev";
   private static final String harnessPywinrmBaseDir = "./client-tools/harness-pywinrm/";
 
   static final String helm3Version = "v3.1.2";
@@ -46,7 +52,8 @@ public class InstallUtils {
 
   private static final String helmBaseDir = "./client-tools/helm/";
 
-  private static final String chartMuseumVersion = "v0.8.2";
+  private static final String chartMuseumVersion = "v0.13.0"; // updated version from v0.8.2 to v0.13.0
+  // to enable IRSA for chartmuseum
   private static final String chartMuseumBaseDir = "./client-tools/chartmuseum/";
 
   private static final String ocVersion = "v4.2.16";
@@ -73,8 +80,15 @@ public class InstallUtils {
   private static final String terraformConfigInspectBaseDir = "./client-tools/tf-config"
       + "-inspect";
   private static final String terraformConfigInspectBinary = "terraform-config-inspect";
-  private static final String terraformConfigInspectVersion = "v1.0"; // This is not the
+  private static final String terraformConfigInspectCurrentVersion = "v1.0";
+  private static final String terraformConfigInspectLatestVersion = "v1.1"; // This is not the
   // version provided by Hashicorp because currently they do not maintain releases as such
+  private static final List<String> terraformConfigInspectVersions =
+      Arrays.asList(terraformConfigInspectCurrentVersion, terraformConfigInspectLatestVersion);
+
+  private static final String scmBaseDir = "./client-tools/scm/";
+  private static final String scmBinary = "scm";
+  private static final String defaultScmVersion = "b276dd03";
 
   private static final String KUBECTL_CDN_PATH = "public/shared/tools/kubectl/release/%s/bin/%s/amd64/kubectl";
   private static final String CHART_MUSEUM_CDN_PATH =
@@ -88,10 +102,33 @@ public class InstallUtils {
   private static final String TERRAFORM_CONFIG_CDN_PATH =
       "public/shared/tools/terraform-config-inspect/%s/%s/amd64/terraform-config-inspect";
   private static final String KUSTOMIZE_CDN_PATH = "public/shared/tools/kustomize/release/%s/bin/%s/amd64/kustomize";
+  private static final String CF_VERSION_COMMAND = "cf --version";
+  private static final String SCM_CDN_PATH = "public/shared/tools/scm/release/%s/bin/%s/amd64/scm";
 
-  public static String getTerraformConfigInspectPath() {
-    return join("/", terraformConfigInspectBaseDir, terraformConfigInspectVersion, getOsPath(), "amd64",
-        terraformConfigInspectBinary);
+  public static String getTerraformConfigInspectPath(String version) {
+    return join("/", terraformConfigInspectBaseDir, version, getOsPath(), "amd64", terraformConfigInspectBinary);
+  }
+  public static String getTerraformConfigInspectPath(boolean useLatestVersion) {
+    if (useLatestVersion) {
+      return join("/", terraformConfigInspectBaseDir, terraformConfigInspectLatestVersion, getOsPath(), "amd64",
+          terraformConfigInspectBinary);
+    } else {
+      return join("/", terraformConfigInspectBaseDir, terraformConfigInspectCurrentVersion, getOsPath(), "amd64",
+          terraformConfigInspectBinary);
+    }
+  }
+
+  public static String getScmPath() {
+    return join("/", getScmFolderPath(), getScmBinary());
+  }
+
+  public static String getScmBinary() {
+    return scmBinary;
+  }
+
+  public static String getScmFolderPath() {
+    String version = getScmVersion();
+    return join("/", scmBaseDir, version, getOsPath(), "amd64");
   }
 
   public static String getKubectlPath() {
@@ -687,23 +724,33 @@ public class InstallUtils {
   }
 
   public static boolean installTerraformConfigInspect(DelegateConfiguration configuration) {
+    boolean terraformConfigInspectInstalled = true;
+    for (String version : terraformConfigInspectVersions) {
+      terraformConfigInspectInstalled =
+          terraformConfigInspectInstalled && installTerraformConfigInspect(configuration, version);
+    }
+    return terraformConfigInspectInstalled;
+  }
+
+  public static boolean installTerraformConfigInspect(DelegateConfiguration configuration, String version) {
     try {
       if (SystemUtils.IS_OS_WINDOWS) {
-        log.info("Skipping terraform-config-inspect install on Windows");
+        log.info(format("Skipping terraform-config-inspect version %s install on Windows", version));
         return true;
       }
 
       final String terraformConfigInspectVersionedDirectory =
-          Paths.get(getTerraformConfigInspectPath()).getParent().toString();
-      if (validateTerraformConfigInspectExists(terraformConfigInspectVersionedDirectory)) {
-        log.info("terraform-config-inspect already installed at {}", terraformConfigInspectVersionedDirectory);
+          Paths.get(getTerraformConfigInspectPath(version)).getParent().toString();
+      if (validateTerraformConfigInspectExists(terraformConfigInspectVersionedDirectory, version)) {
+        log.info(format("terraform-config-inspect version %s already installed at {}", version),
+            terraformConfigInspectVersionedDirectory);
         return true;
       }
 
-      log.info("Installing terraform-config-inspect");
+      log.info(format("Installing terraform-config-inspect version %s", version));
       createDirectoryIfDoesNotExist(terraformConfigInspectVersionedDirectory);
 
-      String downloadUrl = getTerraformConfigInspectDownloadUrl(configuration);
+      String downloadUrl = getTerraformConfigInspectDownloadUrl(configuration, version);
       log.info("Download Url is {}", downloadUrl);
 
       String script = "curl $MANAGER_PROXY_CURL -LO " + downloadUrl + "\n"
@@ -716,36 +763,148 @@ public class InstallUtils {
                                             .readOutput(true);
       ProcessResult result = processExecutor.execute();
       if (result.getExitValue() == 0) {
-        String tfConfigInspectPath = Paths.get(getTerraformConfigInspectPath()).toAbsolutePath().toString();
-        log.info("terraform config inspect installed at {}", tfConfigInspectPath);
+        String tfConfigInspectPath = Paths.get(getTerraformConfigInspectPath(version)).toAbsolutePath().toString();
+        log.info(format("terraform config inspect version %s installed at {}", version), tfConfigInspectPath);
         return true;
       } else {
-        log.error("Error installing terraform config inspect");
+        log.error(format("Error installing Terraform Config Inspect version %s", version));
         return false;
       }
 
     } catch (Exception ex) {
-      log.error("Error installing terraform config inspect", ex);
+      log.error(format("Error installing Terraform Config Inspect version %s", version), ex);
       return false;
     }
   }
 
   @VisibleForTesting
-  protected static String getTerraformConfigInspectDownloadUrl(DelegateConfiguration delegateConfiguration) {
+  protected static String getTerraformConfigInspectDownloadUrl(
+      DelegateConfiguration delegateConfiguration, String version) {
     if (delegateConfiguration.isUseCdn()) {
-      return join("/", delegateConfiguration.getCdnUrl(),
-          String.format(TERRAFORM_CONFIG_CDN_PATH, terraformConfigInspectVersion, getOsPath()));
+      return join(
+          "/", delegateConfiguration.getCdnUrl(), String.format(TERRAFORM_CONFIG_CDN_PATH, version, getOsPath()));
     }
     return getManagerBaseUrl(delegateConfiguration.getManagerUrl())
-        + "storage/harness-download/harness-terraform-config-inspect/" + terraformConfigInspectVersion + "/"
-        + getOsPath() + "/amd64/" + terraformConfigInspectBinary;
+        + "storage/harness-download/harness-terraform-config-inspect/" + version + "/" + getOsPath() + "/amd64/"
+        + terraformConfigInspectBinary;
   }
 
-  private static boolean validateTerraformConfigInspectExists(String terraformConfigInspectVersionedDirectory) {
-    if (Files.exists(Paths.get(join("/", terraformConfigInspectVersionedDirectory, terraformConfigInspectBinary)))) {
-      return true;
+  private static boolean validateTerraformConfigInspectExists(
+      String terraformConfigInspectVersionedDirectory, String version) {
+    try {
+      Path path = Paths.get(join("/", terraformConfigInspectVersionedDirectory, terraformConfigInspectBinary));
+      if (!path.toFile().exists()) {
+        return false;
+      }
+      String terraformConfigInspectBinary = "./terraform-config-inspect";
+      ProcessExecutor processExecutor = new ProcessExecutor()
+                                            .timeout(1, TimeUnit.MINUTES)
+                                            .directory(new File(terraformConfigInspectVersionedDirectory))
+                                            .command("/bin/bash", "-c", terraformConfigInspectBinary)
+                                            .readOutput(true);
+      ProcessResult result = processExecutor.execute();
+      return result.getExitValue() == 0;
+
+    } catch (Exception e) {
+      log.error(format("Error checking Terraform Config Inspect version %s", version), e);
+      return false;
     }
-    return false;
+  }
+
+  public static boolean installScm(DelegateConfiguration configuration) {
+    try {
+      if (SystemUtils.IS_OS_WINDOWS) {
+        log.info("Skipping scm install on Windows");
+        return true;
+      }
+
+      final String scmVersionedDirectory = Paths.get(getScmPath()).getParent().toString();
+      if (validateScmExists(scmVersionedDirectory)) {
+        log.info("scm already installed at {}", scmVersionedDirectory);
+        return true;
+      }
+
+      log.info("Installing scm");
+      createDirectoryIfDoesNotExist(scmVersionedDirectory);
+
+      String downloadUrl = getScmDownloadUrl(configuration);
+      log.info("Download Url is {}", downloadUrl);
+
+      String script = "curl $MANAGER_PROXY_CURL -LO " + downloadUrl + "\n"
+          + "chmod +x ./scm";
+
+      ProcessExecutor processExecutor = new ProcessExecutor()
+                                            .timeout(10, TimeUnit.MINUTES)
+                                            .directory(new File(scmVersionedDirectory))
+                                            .command("/bin/bash", "-c", script)
+                                            .readOutput(true);
+      ProcessResult result = processExecutor.execute();
+      if (result.getExitValue() == 0) {
+        String scmPath = Paths.get(getScmPath()).toAbsolutePath().toString();
+        log.info(result.outputUTF8());
+        if (validateScmExists(scmVersionedDirectory)) {
+          log.info("scm path: {}", scmPath);
+          return true;
+        } else {
+          log.error("scm not validated after download: {}", scmPath);
+          return false;
+        }
+      } else {
+        log.error("scm install failed");
+        log.error(result.outputUTF8());
+        return false;
+      }
+    } catch (Exception e) {
+      log.error("Error installing scm", e);
+      return false;
+    }
+  }
+
+  public static String getScmVersion() {
+    String version = System.getenv().get("SCM_VERSION");
+    if (StringUtils.isEmpty(version)) {
+      version = defaultScmVersion;
+      log.info("No version configured. Using default scm version {}", version);
+    }
+    return version;
+  }
+
+  private static boolean validateScmExists(String scmDirectory) {
+    try {
+      Path path = Paths.get(scmDirectory, scmBinary);
+      if (!path.toFile().exists()) {
+        return false;
+      }
+
+      String script = "./scm --version\n";
+      ProcessExecutor processExecutor = new ProcessExecutor()
+                                            .timeout(1, TimeUnit.MINUTES)
+                                            .directory(new File(scmDirectory))
+                                            .command("/bin/bash", "-c", script)
+                                            .readOutput(true);
+      ProcessResult result = processExecutor.execute();
+
+      if (result.getExitValue() == 0) {
+        log.info(result.outputString());
+        return true;
+      } else {
+        log.error(result.outputString());
+        return false;
+      }
+    } catch (Exception e) {
+      log.error("Error checking scm", e);
+      return false;
+    }
+  }
+
+  @VisibleForTesting
+  protected static String getScmDownloadUrl(DelegateConfiguration delegateConfiguration) {
+    String scmVersion = getScmVersion();
+    if (delegateConfiguration.isUseCdn()) {
+      return join("/", delegateConfiguration.getCdnUrl(), String.format(SCM_CDN_PATH, scmVersion, getOsPath()));
+    }
+    return getManagerBaseUrl(delegateConfiguration.getManagerUrl()) + "storage/harness-download/harness-scm/release/"
+        + scmVersion + "/bin/" + getOsPath() + "/amd64/" + scmBinary;
   }
 
   public static boolean installOc(DelegateConfiguration configuration) {
@@ -954,5 +1113,36 @@ public class InstallUtils {
       }
     }
     return false;
+  }
+
+  public static void validateCfCliExists() {
+    ProcessResult processResult = executeCommand(CF_VERSION_COMMAND, 1);
+    if (processResult.getExitValue() == 0) {
+      log.info(format("Found CF CLI installed by package manager : %s", processResult.outputUTF8()));
+    }
+  }
+
+  private static ProcessResult executeCommand(final String cmd, long timeoutInMin) {
+    try {
+      return new ProcessExecutor()
+          .timeout(timeoutInMin, TimeUnit.MINUTES)
+          .command("/bin/bash", "-c", cmd)
+          .readOutput(true)
+          .redirectOutput(new LogOutputStream() {
+            @Override
+            protected void processLine(String line) {
+              log.info(line);
+            }
+          })
+          .redirectError(new LogOutputStream() {
+            @Override
+            protected void processLine(String line) {
+              log.error(line);
+            }
+          })
+          .execute();
+    } catch (Exception ex) {
+      throw new ProcessExecutionException(format("Unable to execute bash command: %s", cmd), ex);
+    }
   }
 }

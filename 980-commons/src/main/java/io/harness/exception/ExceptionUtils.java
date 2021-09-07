@@ -4,6 +4,10 @@ import static io.harness.exception.WingsException.ReportTarget.REST_API;
 
 import static java.util.stream.Collectors.joining;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.eraro.ErrorCode;
+import io.harness.eraro.Level;
 import io.harness.eraro.ResponseMessage;
 import io.harness.logging.ExceptionLogger;
 
@@ -14,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @UtilityClass
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
 public class ExceptionUtils {
   public static <T> T cause(Class<T> clazz, Throwable exception) {
     while (exception != null) {
@@ -31,6 +36,31 @@ public class ExceptionUtils {
     Throwable t = throwable;
     while (t != null) {
       if (t instanceof WingsException) {
+        failureTypes.addAll(((WingsException) t).getFailureTypes());
+      }
+
+      t = t.getCause();
+    }
+
+    if (failureTypes.isEmpty()) {
+      log.error("While determining the failureTypes, none was discovered for the following exception", throwable);
+    }
+
+    return failureTypes;
+  }
+
+  /**
+   * It recurses through exception stack and fetches list of failure types of all exceptions
+   * with level = ERROR
+   * @param throwable
+   * @return Set of failure types of exceptions with ERROR level
+   */
+  public static EnumSet<FailureType> getFailureTypesOfErrors(Throwable throwable) {
+    EnumSet<FailureType> failureTypes = EnumSet.noneOf(FailureType.class);
+
+    Throwable t = throwable;
+    while (t != null) {
+      if (t instanceof WingsException && Level.ERROR.equals(((WingsException) t).getLevel())) {
         failureTypes.addAll(((WingsException) t).getFailureTypes());
       }
 
@@ -73,5 +103,15 @@ public class ExceptionUtils {
     } else {
       return t.getClass().getSimpleName() + (t.getMessage() == null ? "" : ": " + t.getMessage());
     }
+  }
+
+  public static WingsException cause(ErrorCode errorCode, Throwable exception) {
+    while (exception != null) {
+      if (exception instanceof WingsException && ((WingsException) exception).getCode().equals(errorCode)) {
+        return (WingsException) exception;
+      }
+      exception = exception.getCause();
+    }
+    return null;
   }
 }

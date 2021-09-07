@@ -1,11 +1,16 @@
 package software.wings.dl.exportimport;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.PersistentEntity;
 
 import software.wings.dl.WingsPersistence;
 import software.wings.dl.exportimport.ImportStatusReport.ImportStatus;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonParser;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mongodb.BasicDBObject;
@@ -15,8 +20,13 @@ import com.mongodb.DBObject;
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.model.DBCollectionFindOptions;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Entity;
 
@@ -27,6 +37,10 @@ import org.mongodb.morphia.annotations.Entity;
 @Singleton
 public class WingsMongoExportImport {
   private static final int BATCH_SIZE = 1000;
+  private static final String JSON_FILE_SUFFIX = ".json";
+  private JsonParser jsonParser = new JsonParser();
+
+  private Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
   @Inject private WingsPersistence wingsPersistence;
 
@@ -45,6 +59,103 @@ public class WingsMongoExportImport {
     }
 
     return records;
+  }
+
+  public boolean exportRecords(ZipOutputStream zipOutputStream, FileOutputStream fileOutputStream, DBObject filter,
+      String collectionName, int batchSize, int mongoBatchSize) throws Exception {
+    if (mongoBatchSize == 0) {
+      mongoBatchSize = BATCH_SIZE;
+    }
+    DBCollection collection =
+        wingsPersistence.getDatastore(HPersistence.DEFAULT_STORE).getDB().getCollection(collectionName);
+
+    DBCursor cursor = collection.find(filter, new DBCollectionFindOptions().batchSize(mongoBatchSize));
+    int i = 0;
+    List<String> records = new ArrayList<>();
+
+    while (cursor.hasNext()) {
+      BasicDBObject basicDBObject = (BasicDBObject) cursor.next();
+      records.add(basicDBObject.toJson());
+      if (records.size() >= batchSize) {
+        try {
+          String zipEntryName = collectionName + "_" + i + JSON_FILE_SUFFIX;
+          exportToStream(zipOutputStream, fileOutputStream, records, zipEntryName);
+          i++;
+          log.info("{} number of records of batch {} and collection {} have been exported.", records.size(), i,
+              collectionName);
+          records = new ArrayList<>();
+        } catch (IOException ioe) {
+          log.error(
+              "Migration: Getting error while batch exporting for collection {} at batch {}", collectionName, i, ioe);
+          throw new Exception("Migration: Issue while batch exporting for collection " + collectionName);
+        }
+      }
+    }
+    if (records.size() > 0) {
+      String zipEntryName = collectionName + "_" + i + JSON_FILE_SUFFIX;
+      exportToStream(zipOutputStream, fileOutputStream, records, zipEntryName);
+    }
+    return true;
+  }
+
+  private JsonArray convertStringListToJsonArray(List<String> records) {
+    JsonArray jsonArray = new JsonArray();
+    for (String record : records) {
+      jsonArray.add(jsonParser.parse(record));
+    }
+    return jsonArray;
+  }
+
+  private void exportToStream(ZipOutputStream zipOutputStream, FileOutputStream fileOutputStream, List<String> records,
+      String zipEntryName) throws IOException {
+    ZipEntry zipEntryData = new ZipEntry(zipEntryName);
+    log.info("Zipping entry: {}", zipEntryName);
+    zipOutputStream.putNextEntry(zipEntryData);
+    JsonArray jsonArrayRecord = convertStringListToJsonArray(records);
+    String jsonString = gson.toJson(jsonArrayRecord);
+    zipOutputStream.write(jsonString.getBytes(Charset.defaultCharset()));
+    zipOutputStream.flush();
+    fileOutputStream.flush();
+  }
+
+  public boolean exportRecords(ZipOutputStream zipOutputStream, FileOutputStream fileOutputStream, DBObject filter,
+      String collectionName, int batchNumber, int batchSize, int mongoBatchSize) throws Exception {
+    if (mongoBatchSize == 0) {
+      mongoBatchSize = BATCH_SIZE;
+    }
+    DBCollection collection =
+        wingsPersistence.getDatastore(HPersistence.DEFAULT_STORE).getDB().getCollection(collectionName);
+
+    DBCursor cursor = collection.find(filter, new DBCollectionFindOptions().batchSize(mongoBatchSize));
+    int i = 0;
+    List<String> records = new ArrayList<>();
+
+    while (cursor.hasNext()) {
+      BasicDBObject basicDBObject = (BasicDBObject) cursor.next();
+      if (i >= batchSize * batchNumber) {
+        records.add(basicDBObject.toJson());
+      }
+      if (EmptyPredicate.isNotEmpty(records) && records.size() >= batchSize) {
+        try {
+          String zipEntryName = collectionName + JSON_FILE_SUFFIX;
+          exportToStream(zipOutputStream, fileOutputStream, records, zipEntryName);
+          log.info("{} number of records of batch {} and collection {} have been exported.", records.size(),
+              batchNumber, collectionName);
+          records = new ArrayList<>();
+          break;
+        } catch (IOException ioe) {
+          log.error(
+              "Migration: Getting error while batch exporting for collection {} at batch {}", collectionName, i, ioe);
+          throw new Exception("Migration: Issue while batch exporting for collection " + collectionName);
+        }
+      }
+      i++;
+    }
+    if (records.size() > 0) {
+      String zipEntryName = collectionName + JSON_FILE_SUFFIX;
+      exportToStream(zipOutputStream, fileOutputStream, records, zipEntryName);
+    }
+    return true;
   }
 
   /**

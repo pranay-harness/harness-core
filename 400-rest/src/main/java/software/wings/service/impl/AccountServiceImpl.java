@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessModule._955_ACCOUNT_MGMT;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.beans.FeatureName.AUTO_ACCEPT_SAML_ACCOUNT_INVITES;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -9,6 +10,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.ACCOUNT_DOES_NOT_EXIST;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE_ACTION;
+import static io.harness.eventsframework.EventsFrameworkMetadataConstants.UPDATE_ACTION;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.k8s.KubernetesConvention.getAccountIdentifier;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
@@ -38,6 +40,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.account.ProvisionStep;
 import io.harness.account.ProvisionStep.ProvisionStepKeys;
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureFlag;
@@ -81,6 +84,8 @@ import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.managerclient.HttpsCertRequirement.CertRequirement;
 import io.harness.network.Http;
+import io.harness.ng.core.account.AuthenticationMechanism;
+import io.harness.ng.core.account.DefaultExperience;
 import io.harness.observer.Subject;
 import io.harness.persistence.HIterator;
 import io.harness.reflection.ReflectionUtils;
@@ -113,6 +118,7 @@ import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.LdapSettings.LdapSettingsKeys;
 import software.wings.beans.sso.OauthSettings;
+import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SSOType;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.TriggerConditionType;
@@ -126,6 +132,7 @@ import software.wings.licensing.LicenseService;
 import software.wings.scheduler.AlertCheckJob;
 import software.wings.scheduler.InstanceStatsCollectorJob;
 import software.wings.scheduler.LdapGroupSyncJob;
+import software.wings.scheduler.LdapGroupSyncJobHelper;
 import software.wings.scheduler.LimitVicinityCheckerJob;
 import software.wings.scheduler.ScheduledTriggerJob;
 import software.wings.security.AppPermissionSummary;
@@ -133,7 +140,6 @@ import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.authentication.AccountSettingsResponse;
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.OauthProviderType;
 import software.wings.service.impl.analysis.CVEnabledService;
 import software.wings.service.impl.event.AccountEntityEvent;
@@ -150,6 +156,7 @@ import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SystemCatalogService;
 import software.wings.service.intfc.UserService;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.account.AccountCrudObserver;
 import software.wings.service.intfc.compliance.GovernanceConfigService;
 import software.wings.service.intfc.template.TemplateGalleryService;
@@ -212,6 +219,8 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 @ValidateOnExecution
 @Slf4j
 @TargetModule(_955_ACCOUNT_MGMT)
+@BreakDependencyOn("io.harness.delegate.beans.Delegate")
+@BreakDependencyOn("software.wings.service.impl.DelegateConnectionDao")
 public class AccountServiceImpl implements AccountService {
   private static final SecureRandom random = new SecureRandom();
   private static final int SIZE_PER_SERVICES_REQUEST = 25;
@@ -229,10 +238,12 @@ public class AccountServiceImpl implements AccountService {
   private static final String SAMPLE_DELEGATE_NAME = "harness-sample-k8s-delegate";
   private static final String SAMPLE_DELEGATE_STATUS_ENDPOINT_FORMAT_STRING = "http://%s/account-%s.txt";
   private static final String DELIMITER = "####";
+  private static final String DEFAULT_EXPERIENCE = "defaultExperience";
 
   @Inject protected AuthService authService;
   @Inject protected HarnessCacheManager harnessCacheManager;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private RoleService roleService;
   @Inject private AuthHandler authHandler;
   @Inject private LicenseService licenseService;
@@ -265,6 +276,7 @@ public class AccountServiceImpl implements AccountService {
   @Inject private AccountDao accountDao;
   @Inject private AccountDataRetentionService accountDataRetentionService;
   @Inject private PersistentLocker persistentLocker;
+  @Inject private LdapGroupSyncJobHelper ldapGroupSyncJobHelper;
   @Inject @Named(EventsFrameworkConstants.ENTITY_CRUD) private Producer eventProducer;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
@@ -452,12 +464,14 @@ public class AccountServiceImpl implements AccountService {
     featureFlagService.enableAccount(FeatureName.HELM_CHART_NAME_SPLIT, account.getUuid());
 
     if (fromDataGen) {
-      featureFlagService.enableAccount(FeatureName.NEXT_GEN_ENABLED, account.getUuid());
+      updateNextGenEnabled(account.getUuid(), true);
       featureFlagService.enableAccount(FeatureName.CDNG_ENABLED, account.getUuid());
       featureFlagService.enableAccount(FeatureName.CENG_ENABLED, account.getUuid());
       featureFlagService.enableAccount(FeatureName.CFNG_ENABLED, account.getUuid());
       featureFlagService.enableAccount(FeatureName.CING_ENABLED, account.getUuid());
       featureFlagService.enableAccount(FeatureName.CVNG_ENABLED, account.getUuid());
+    } else if (account.isCreatedFromNG()) {
+      updateNextGenEnabled(account.getUuid(), true);
     }
   }
 
@@ -504,7 +518,22 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
-  public AccountDetails getDetails(String accountId) {
+  public boolean isNextGenEnabled(String accountId) {
+    Account account = getFromCacheWithFallback(accountId);
+    return account != null && account.isNextGenEnabled();
+  }
+
+  @Override
+  public Boolean updateNextGenEnabled(String accountId, boolean enabled) {
+    Account account = get(accountId);
+    account.setNextGenEnabled(enabled);
+    update(account);
+    publishAccountChangeEventViaEventFramework(accountId, UPDATE_ACTION);
+    return true;
+  }
+
+  @Override
+  public AccountDetails getAccountDetails(String accountId) {
     Account account = wingsPersistence.get(Account.class, accountId);
     if (account == null) {
       throw new AccountNotFoundException(
@@ -515,9 +544,12 @@ public class AccountServiceImpl implements AccountService {
     accountDetails.setAccountId(accountId);
     accountDetails.setAccountName(account.getAccountName());
     accountDetails.setCompanyName(account.getCompanyName());
-    accountDetails.setCluster(mainConfiguration.getClusterName());
+    accountDetails.setCluster(mainConfiguration.getDeploymentClusterName());
     accountDetails.setLicenseInfo(account.getLicenseInfo());
     accountDetails.setCeLicenseInfo(account.getCeLicenseInfo());
+    accountDetails.setDefaultExperience(account.getDefaultExperience());
+    accountDetails.setCreatedFromNG(account.isCreatedFromNG());
+    accountDetails.setActiveServiceCount(workflowExecutionService.getActiveServiceCount(accountId));
     return accountDetails;
   }
 
@@ -605,14 +637,14 @@ public class AccountServiceImpl implements AccountService {
    */
   @Override
   public String suggestAccountName(@NotNull String accountName) {
-    if (!isDuplicateAccountName(accountName)) {
+    if (!exists(accountName)) {
       return accountName;
     }
     log.debug("Account name '{}' already in use, generating new unique account name", accountName);
     int count = 0;
     while (count < NUM_OF_RETRIES_TO_GENERATE_UNIQUE_ACCOUNT_NAME) {
       String newAccountName = accountName + "-" + (1000 + random.nextInt(9000));
-      if (!isDuplicateAccountName(newAccountName)) {
+      if (!exists(newAccountName)) {
         return newAccountName;
       }
       count++;
@@ -772,7 +804,7 @@ public class AccountServiceImpl implements AccountService {
   public boolean exists(String accountName) {
     return wingsPersistence.createQuery(Account.class, excludeAuthority)
                .field(AccountKeys.accountName)
-               .equal(accountName)
+               .equalIgnoreCase(accountName)
                .getKey()
         != null;
   }
@@ -826,6 +858,7 @@ public class AccountServiceImpl implements AccountService {
             .set("twoFactorAdminEnforced", account.isTwoFactorAdminEnforced())
             .set(AccountKeys.oauthEnabled, account.isOauthEnabled())
             .set(AccountKeys.cloudCostEnabled, account.isCloudCostEnabled())
+            .set(AccountKeys.nextGenEnabled, account.isNextGenEnabled())
             .set(AccountKeys.ceAutoCollectK8sEvents, account.isCeAutoCollectK8sEvents())
             .set("whitelistedDomains", account.getWhitelistedDomains());
 
@@ -839,6 +872,10 @@ public class AccountServiceImpl implements AccountService {
 
     if (account.getServiceGuardLimit() != null) {
       updateOperations.set(AccountKeys.serviceGuardLimit, account.getServiceGuardLimit());
+    }
+
+    if (account.getDefaultExperience() != null) {
+      updateOperations.set(AccountKeys.defaultExperience, account.getDefaultExperience());
     }
 
     wingsPersistence.update(account, updateOperations);
@@ -1276,6 +1313,7 @@ public class AccountServiceImpl implements AccountService {
     List<LdapSettings> ldapSettings = getAllLdapSettingsForAccount(accountId);
     for (LdapSettings ldapSetting : ldapSettings) {
       LdapGroupSyncJob.add(jobScheduler, accountId, ldapSetting.getUuid());
+      ldapGroupSyncJobHelper.syncJob(ldapSetting);
     }
     log.info("Started all background quartz jobs for account {}", accountId);
   }
@@ -1752,11 +1790,13 @@ public class AccountServiceImpl implements AccountService {
 
       Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
 
-      long assureInterval = ofDays(2).toMillis();
+      long assureInterval;
       if (calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY) {
         assureInterval = ofDays(10).toMillis();
       } else if (Calendar.DAY_OF_WEEK == Calendar.SUNDAY) {
         assureInterval = ofDays(30).toMillis();
+      } else {
+        return;
       }
 
       long assureTo = now + assureInterval;
@@ -1779,5 +1819,61 @@ public class AccountServiceImpl implements AccountService {
           account.getDataRetentionDurationMs() == 0 ? ofDays(183).toMillis() : account.getDataRetentionDurationMs());
     });
     return accounts;
+  }
+
+  @Override
+  public boolean enableHarnessUserGroupAccess(String accountId) {
+    Account account = get(accountId);
+    notNullCheck("Invalid Account for the given Id: " + accountId, account);
+    account.setHarnessSupportAccessAllowed(true);
+    wingsPersistence.save(account);
+    return true;
+  }
+
+  @Override
+  public boolean disableHarnessUserGroupAccess(String accountId) {
+    Account account = get(accountId);
+    notNullCheck("Invalid Account for the given Id: " + accountId, account);
+    account.setHarnessSupportAccessAllowed(false);
+    wingsPersistence.save(account);
+    return true;
+  }
+
+  @Override
+  public boolean isRestrictedAccessEnabled(String accountId) {
+    Account account = get(accountId);
+    notNullCheck("Invalid Account for the given Id: " + accountId, account);
+    if (account.isHarnessSupportAccessAllowed()) {
+      return false;
+    }
+    return true;
+  }
+
+  @Override
+  public boolean isAutoInviteAcceptanceEnabled(String accountId) {
+    if (!featureFlagService.isEnabled(AUTO_ACCEPT_SAML_ACCOUNT_INVITES, accountId)) {
+      // This feature is restricted only to a certain accounts
+      return false;
+    }
+
+    Account account = get(accountId);
+
+    if (!AuthenticationMechanism.SAML.equals(account.getAuthenticationMechanism())) {
+      // Currently this provision is only for SAML authenticated accounts
+      return false;
+    }
+
+    List<SSOSettings> ssoSettings = ssoSettingService.getAllSsoSettings(accountId);
+    return ssoSettings.stream().anyMatch(settings -> settings.getType() == SSOType.SAML);
+  }
+
+  @Override
+  public Void setDefaultExperience(String accountId, DefaultExperience defaultExperience) {
+    Account account = getFromCacheWithFallback(accountId);
+    notNullCheck("Invalid Account for the given Id: " + accountId, account);
+    notNullCheck("Invalid Default Experience: " + defaultExperience, defaultExperience);
+    wingsPersistence.updateField(Account.class, accountId, DEFAULT_EXPERIENCE, defaultExperience);
+    dbCache.invalidate(Account.class, account.getUuid());
+    return null;
   }
 }

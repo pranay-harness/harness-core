@@ -1,5 +1,6 @@
 package software.wings.expression;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ANSHUL;
 
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -12,6 +13,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
 import io.harness.data.algorithm.HashGenerator;
@@ -21,11 +23,11 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.FunctorException;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.rule.Owner;
+import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.VaultConfig;
-import software.wings.service.intfc.security.NGSecretService;
 import software.wings.service.intfc.security.SecretManager;
 
 import com.google.inject.Inject;
@@ -36,8 +38,9 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
+@OwnedBy(CDP)
 public class NgSecretManagerFunctorTest extends WingsBaseTest {
-  @Mock private NGSecretService ngSecretService;
+  @Mock private SecretManagerClientService ngSecretService;
   @Inject private SecretManager secretManager;
 
   private NgSecretManagerFunctor buildFunctor(int token) {

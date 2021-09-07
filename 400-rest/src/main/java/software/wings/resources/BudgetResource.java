@@ -2,8 +2,8 @@ package software.wings.resources;
 
 import static software.wings.security.PermissionAttribute.ResourceType.USER;
 
-import io.harness.ccm.budget.Budget;
 import io.harness.ccm.budget.BudgetService;
+import io.harness.ccm.commons.entities.billing.Budget;
 import io.harness.rest.RestResponse;
 
 import software.wings.security.annotations.Scope;

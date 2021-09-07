@@ -3,11 +3,11 @@ package software.wings.api.pcf;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.beans.pcf.CfAppSetupTimeDetails;
+import io.harness.delegate.beans.pcf.CfRouteUpdateRequestConfigData;
 
 import software.wings.api.DeploymentInfo;
 import software.wings.api.PcfDeploymentInfo;
-import software.wings.helpers.ext.pcf.request.PcfRouteUpdateRequestConfigData;
-import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 import software.wings.service.impl.instance.DeploymentInfoExtractor;
 import software.wings.sm.StepExecutionSummary;
 
@@ -27,13 +27,13 @@ import lombok.EqualsAndHashCode;
 public class PcfRouteSwapExecutionSummary extends StepExecutionSummary implements DeploymentInfoExtractor {
   private String organization;
   private String space;
-  private PcfRouteUpdateRequestConfigData pcfRouteUpdateRequestConfigData;
+  private CfRouteUpdateRequestConfigData pcfRouteUpdateRequestConfigData;
 
   @Override
   public Optional<List<DeploymentInfo>> extractDeploymentInfo() {
     if (pcfRouteUpdateRequestConfigData.isDownsizeOldApplication()) {
       List<DeploymentInfo> pcfDeploymentInfo = new ArrayList<>();
-      List<PcfAppSetupTimeDetails> details = pcfRouteUpdateRequestConfigData.getExistingApplicationDetails();
+      List<CfAppSetupTimeDetails> details = pcfRouteUpdateRequestConfigData.getExistingApplicationDetails();
       details.forEach(existingApp
           -> pcfDeploymentInfo.add(PcfDeploymentInfo.builder()
                                        .applicationName(existingApp.getApplicationName())

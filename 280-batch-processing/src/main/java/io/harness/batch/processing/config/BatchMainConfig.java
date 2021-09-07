@@ -1,7 +1,10 @@
 package io.harness.batch.processing.config;
 
+import io.harness.cf.CfClientConfig;
 import io.harness.event.handler.segment.SegmentConfig;
+import io.harness.ff.FeatureFlagConfig;
 import io.harness.mongo.MongoConfig;
+import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.timescaledb.TimeScaleDBConfig;
 
 import software.wings.helpers.ext.mail.SmtpConfig;
@@ -29,8 +32,13 @@ public class BatchMainConfig {
   @JsonProperty("segmentConfig") private SegmentConfig segmentConfig;
   @JsonProperty("reportScheduleConfig") private ReportScheduleConfig reportScheduleConfig;
   @JsonProperty("baseUrl") private String baseUrl;
+  @JsonProperty("awsCurBilling") private boolean awsCurBilling;
   @JsonProperty("scheduler-jobs-config") private SchedulerJobsConfig schedulerJobsConfig;
-  @JsonProperty("cfConfig") private CfConfig cfConfig;
+  @JsonProperty("cfClientConfig") private CfClientConfig cfClientConfig;
+  @JsonProperty("featureFlagConfig") private FeatureFlagConfig featureFlagConfig;
   @JsonProperty("cePythonService") private CEPythonServiceConfig cePythonServiceConfig;
   @JsonProperty("banzaiConfig") private BanzaiConfig banzaiConfig;
+  @JsonProperty("ngManagerServiceHttpClientConfig") private ServiceHttpClientConfig ngManagerServiceHttpClientConfig;
+  @JsonProperty("ngManagerServiceSecret") private String ngManagerServiceSecret;
+  @JsonProperty("banzaiRecommenderConfig") private ServiceHttpClientConfig banzaiRecommenderConfig;
 }

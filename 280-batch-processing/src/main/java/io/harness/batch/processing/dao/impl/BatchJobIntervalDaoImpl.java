@@ -1,8 +1,8 @@
 package io.harness.batch.processing.dao.impl;
 
 import io.harness.batch.processing.dao.intfc.BatchJobIntervalDao;
-import io.harness.ccm.cluster.entities.BatchJobInterval;
-import io.harness.ccm.cluster.entities.BatchJobInterval.BatchJobIntervalKeys;
+import io.harness.ccm.commons.entities.batch.BatchJobInterval;
+import io.harness.ccm.commons.entities.batch.BatchJobInterval.BatchJobIntervalKeys;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;

@@ -2,24 +2,23 @@ package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.pipeline.CDStepInfo;
-import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cdng.visitor.helpers.cdstepinfo.K8sCanaryStepInfoVisitorHelper;
 import io.harness.executions.steps.StepSpecTypeConstants;
-import io.harness.plancreator.steps.StepElementConfig;
+import io.harness.plancreator.steps.TaskSelectorYaml;
+import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
-import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
-import io.harness.yaml.core.timeout.TimeoutUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -34,6 +33,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(StepSpecTypeConstants.K8S_CANARY_DEPLOY)
 @SimpleVisitorHelper(helperClass = K8sCanaryStepInfoVisitorHelper.class)
 @TypeAlias("k8sCanaryStepInfo")
+@RecasterAlias("io.harness.cdng.k8s.K8sCanaryStepInfo")
 public class K8sCanaryStepInfo extends K8sCanaryBaseStepInfo implements CDStepInfo, Visitable {
   @JsonIgnore private String name;
   @JsonIgnore private String identifier;
@@ -42,9 +42,9 @@ public class K8sCanaryStepInfo extends K8sCanaryBaseStepInfo implements CDStepIn
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
   @Builder(builderMethodName = "infoBuilder")
-  public K8sCanaryStepInfo(
-      InstanceSelectionWrapper instanceSelection, ParameterField<Boolean> skipDryRun, String name, String identifier) {
-    super(instanceSelection, skipDryRun);
+  public K8sCanaryStepInfo(InstanceSelectionWrapper instanceSelection, ParameterField<Boolean> skipDryRun,
+      ParameterField<List<TaskSelectorYaml>> delegateSelectors, String name, String identifier) {
+    super(instanceSelection, skipDryRun, delegateSelectors);
     this.name = name;
     this.identifier = identifier;
   }
@@ -65,20 +65,11 @@ public class K8sCanaryStepInfo extends K8sCanaryBaseStepInfo implements CDStepIn
   }
 
   @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.K8S_CANARY_DEPLOY).build();
-  }
-
-  @Override
-  public StepParameters getStepParametersInfo(StepElementConfig stepElementConfig) {
+  public SpecParameters getSpecParameters() {
     return K8sCanaryStepParameters.infoBuilder()
         .instanceSelection(instanceSelection)
         .skipDryRun(skipDryRun)
-        .timeout(ParameterField.createValueField(TimeoutUtils.getTimeoutString(stepElementConfig.getTimeout())))
-        .name(stepElementConfig.getName())
-        .identifier(stepElementConfig.getIdentifier())
-        .skipCondition(stepElementConfig.getSkipCondition())
-        .description(stepElementConfig.getDescription())
+        .delegateSelectors(delegateSelectors)
         .build();
   }
 }

@@ -1,7 +1,9 @@
 package io.harness.delegate.task.citasks.cik8handler;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.k8s.apiclient.ApiClientFactory;
 import io.harness.k8s.model.KubernetesConfig;
@@ -22,10 +24,11 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(CI)
 public class K8EventHandler {
   @Inject private ApiClientFactory apiClientFactory;
 
-  private static Integer watchTimeout = 300;
+  private static Integer watchTimeout = 8 * 60;
 
   public Watch<V1Event> startAsyncPodEventWatch(
       KubernetesConfig kubernetesConfig, String namespace, String pod, ILogStreamingTaskClient logStreamingTaskClient) {

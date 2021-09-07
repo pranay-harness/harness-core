@@ -3,11 +3,10 @@ package io.harness.ccm.setup;
 import static io.harness.annotations.dev.HarnessTeam.CE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ccm.commons.entities.billing.CECloudAccount;
+import io.harness.ccm.commons.entities.billing.CECloudAccount.AccountStatus;
+import io.harness.ccm.commons.entities.billing.CECloudAccount.CECloudAccountKeys;
 import io.harness.persistence.HPersistence;
-
-import software.wings.beans.ce.CECloudAccount;
-import software.wings.beans.ce.CECloudAccount.AccountStatus;
-import software.wings.beans.ce.CECloudAccount.CECloudAccountKeys;
 
 import com.google.inject.Inject;
 import java.util.List;

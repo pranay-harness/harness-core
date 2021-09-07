@@ -1,8 +1,10 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.TaskType;
@@ -21,6 +23,7 @@ import java.util.Optional;
 /**
  * Created by srinivas on 3/31/17.
  */
+@TargetModule(_930_DELEGATE_TASKS)
 @OwnedBy(CDC)
 public interface NexusBuildService extends BuildService<NexusConfig> {
   @Override
@@ -53,22 +56,12 @@ public interface NexusBuildService extends BuildService<NexusConfig> {
       List<EncryptedDataDetail> encryptionDetails, String repositoryFormat);
 
   @Override
-  @DelegateTaskType(TaskType.NEXUS_GET_ARTIFACT_PATHS)
-  List<String> getArtifactPathsUsingPrivateApis(String jobName, String groupId, NexusConfig config,
-      List<EncryptedDataDetail> encryptionDetails, String repositoryFormat);
-
-  @Override
   @DelegateTaskType(TaskType.NEXUS_GET_GROUP_IDS)
   List<String> getGroupIds(String repositoryName, NexusConfig config, List<EncryptedDataDetail> encryptionDetails);
 
   @Override
   @DelegateTaskType(TaskType.NEXUS_GET_GROUP_IDS)
   List<String> getGroupIds(
-      String repositoryName, String repositoryType, NexusConfig config, List<EncryptedDataDetail> encryptionDetails);
-
-  @Override
-  @DelegateTaskType(TaskType.NEXUS_GET_GROUP_IDS)
-  List<String> getGroupIdsUsingPrivateApis(
       String repositoryName, String repositoryType, NexusConfig config, List<EncryptedDataDetail> encryptionDetails);
 
   @Override

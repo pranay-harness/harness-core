@@ -15,10 +15,12 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.ResponseData;
 
@@ -76,6 +78,7 @@ public class AwsAmiSwitchRoutesState extends State {
   @Inject protected transient DelegateService delegateService;
   @Inject protected transient AwsStateHelper awsStateHelper;
   @Inject protected transient AwsAmiServiceStateHelper awsAmiServiceHelper;
+  @Inject private FeatureFlagService featureFlagService;
 
   public AwsAmiSwitchRoutesState(String name) {
     super(name, StateType.AWS_AMI_SWITCH_ROUTES.name());
@@ -156,6 +159,12 @@ public class AwsAmiSwitchRoutesState extends State {
             .downscaleOldAsg(downsizeOldAsg)
             .rollback(rollback)
             .baseScalingPolicyJSONs(serviceSetupElement.getBaseScalingPolicyJSONs())
+            .amiInServiceHealthyStateFFEnabled(false)
+            .scheduledActions(featureFlagService.isEnabled(FeatureName.AMI_ASG_CONFIG_COPY, context.getAccountId())
+                    ? serviceSetupElement.getBaseAsgScheduledActionJSONs()
+                    : null)
+            .amiAsgConfigCopyEnabled(
+                featureFlagService.isEnabled(FeatureName.AMI_ASG_CONFIG_COPY, context.getAccountId()))
             .build();
 
     AwsAmiSwitchRoutesStateExecutionData executionData =
@@ -186,9 +195,12 @@ public class AwsAmiSwitchRoutesState extends State {
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, infrastructureMapping.getEnvId())
             .setupAbstraction(
                 Cd1SetupFields.ENV_TYPE_FIELD, context.fetchRequiredEnvironment().getEnvironmentType().name())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("Aws Ami switch routes task execution")
             .build();
     delegateService.queueTask(delegateTask);
 
+    appendDelegateTaskDetails(context, delegateTask);
     return ExecutionResponse.builder()
         .async(true)
         .stateExecutionData(executionData)
@@ -235,5 +247,10 @@ public class AwsAmiSwitchRoutesState extends State {
     Activity activity = activityBuilder.build();
     activity.setAppId(app.getUuid());
     return activityService.save(activity);
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

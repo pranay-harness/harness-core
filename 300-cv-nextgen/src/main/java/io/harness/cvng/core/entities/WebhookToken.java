@@ -1,6 +1,8 @@
 package io.harness.cvng.core.entities;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
@@ -25,6 +27,7 @@ import org.mongodb.morphia.annotations.Id;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "webhookTokens")
 @HarnessEntity(exportable = true)
+@StoreIn(DbAliases.CVNG)
 public class WebhookToken implements PersistentEntity, CreatedAtAware, UpdatedAtAware, UuidAware {
   @Id private String uuid;
   private long createdAt;

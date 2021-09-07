@@ -151,6 +151,7 @@ public class ConnectorsController {
         .sshSettingId(gitConfig.getSshSettingId())
         .webhookUrl(generateWebhookUrl(gitConfig.getWebhookToken(), settingAttribute.getAccountId()))
         .generateWebhookUrl(gitConfig.isGenerateWebhookUrl())
+        .delegateSelectors(gitConfig.getDelegateSelectors())
         .customCommitDetails(QLCustomCommitDetails.builder()
                                  .authorName(gitConfig.getAuthorName())
                                  .authorEmailId(gitConfig.getAuthorEmailId())

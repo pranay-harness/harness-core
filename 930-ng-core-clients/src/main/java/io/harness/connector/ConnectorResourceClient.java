@@ -44,5 +44,6 @@ public interface ConnectorResourceClient {
       @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @Query(NGResourceFilterConstants.PAGE_KEY) int page, @Query(NGResourceFilterConstants.SIZE_KEY) int size,
-      @Body ConnectorFilterPropertiesDTO connectorListFilter);
+      @Body ConnectorFilterPropertiesDTO connectorListFilter,
+      @Query("getDistinctFromBranches") Boolean getDistinctFromBranches);
 }

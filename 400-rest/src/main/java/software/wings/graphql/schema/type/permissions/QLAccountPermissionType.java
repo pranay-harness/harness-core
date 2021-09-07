@@ -96,6 +96,11 @@ public enum QLAccountPermissionType implements QLEnum {
   MANAGE_DEPLOYMENT_FREEZES,
 
   /**
+   * Deploy during Deployment Freezes
+   */
+  ALLOW_DEPLOYMENTS_DURING_FREEZE,
+
+  /**
    * Manage Pipeline Governance Standards
    */
   MANAGE_PIPELINE_GOVERNANCE_STANDARDS,
@@ -112,7 +117,12 @@ public enum QLAccountPermissionType implements QLEnum {
   /**
    * Create custom dashboard
    */
-  CREATE_CUSTOM_DASHBOARDS;
+  CREATE_CUSTOM_DASHBOARDS,
+
+  /**
+   * Manage Restricted Access
+   */
+  MANAGE_RESTRICTED_ACCESS;
 
   @Override
   public String getStringValue() {

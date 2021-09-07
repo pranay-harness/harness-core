@@ -14,9 +14,12 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.CollectionUtils;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
+import software.wings.service.impl.aws.client.CloseableAmazonWebServiceClient;
 import software.wings.service.impl.aws.model.AwsEc2ValidateCredentialsResponse;
 import software.wings.service.impl.aws.model.AwsEc2ValidateCredentialsResponse.AwsEc2ValidateCredentialsResponseBuilder;
 import software.wings.service.impl.aws.model.AwsSecurityGroup;
@@ -60,9 +63,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@Slf4j
 @OwnedBy(CDP)
 public class AwsEc2HelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsEc2HelperServiceDelegate {
@@ -85,15 +90,16 @@ public class AwsEc2HelperServiceDelegateImpl
   @Override
   public AwsEc2ValidateCredentialsResponse validateAwsAccountCredential(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonEC2Client> closeableAmazonEC2Client =
+             new CloseableAmazonWebServiceClient(getAmazonEc2Client(awsConfig))) {
       tracker.trackEC2Call("Get Ec2 client");
-      getAmazonEc2Client(awsConfig).describeRegions();
+      closeableAmazonEC2Client.getClient().describeRegions();
     } catch (AmazonEC2Exception amazonEC2Exception) {
       if (amazonEC2Exception.getStatusCode() == 401) {
         AwsEc2ValidateCredentialsResponseBuilder responseBuilder =
             AwsEc2ValidateCredentialsResponse.builder().valid(false).executionStatus(SUCCESS);
-        if (!awsConfig.isUseEc2IamCredentials()) {
+        if (!awsConfig.isUseEc2IamCredentials() && !awsConfig.isUseIRSA()) {
           if (isEmpty(awsConfig.getAccessKey())) {
             responseBuilder.errorMessage("Access Key should not be empty");
           } else if (isEmpty(awsConfig.getSecretKey())) {
@@ -105,6 +111,9 @@ public class AwsEc2HelperServiceDelegateImpl
       handleAmazonServiceException(amazonEC2Exception);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception validateAwsAccountCredential", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
 
     return AwsEc2ValidateCredentialsResponse.builder().valid(true).executionStatus(SUCCESS).build();
@@ -112,26 +121,34 @@ public class AwsEc2HelperServiceDelegateImpl
 
   @Override
   public List<String> listRegions(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      AmazonEC2Client amazonEC2Client = getAmazonEc2Client(awsConfig);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonEC2Client> closeableAmazonEC2Client =
+             new CloseableAmazonWebServiceClient(getAmazonEc2Client(awsConfig))) {
       tracker.trackEC2Call("List Ec2 regions");
-      return amazonEC2Client.describeRegions().getRegions().stream().map(Region::getRegionName).collect(toList());
+      return closeableAmazonEC2Client.getClient()
+          .describeRegions()
+          .getRegions()
+          .stream()
+          .map(Region::getRegionName)
+          .collect(toList());
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception listRegions", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return emptyList();
   }
 
   @Override
   public List<AwsVPC> listVPCs(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonEC2Client> closeableAmazonEC2Client =
+             new CloseableAmazonWebServiceClient(getAmazonEc2Client(region, awsConfig))) {
       tracker.trackEC2Call("List VPCs");
-      return amazonEC2Client
+      return closeableAmazonEC2Client.getClient()
           .describeVpcs(new DescribeVpcsRequest().withFilters(new Filter("state").withValues("available")))
           .getVpcs()
           .stream()
@@ -150,6 +167,9 @@ public class AwsEc2HelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception listVPCs", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return emptyList();
   }
@@ -157,16 +177,17 @@ public class AwsEc2HelperServiceDelegateImpl
   @Override
   public List<AwsSubnet> listSubnets(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, List<String> vpcIds) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonEC2Client> closeableAmazonEC2Client =
+             new CloseableAmazonWebServiceClient(getAmazonEc2Client(region, awsConfig))) {
       List<Filter> filters = new ArrayList<>();
       if (isNotEmpty(vpcIds)) {
         filters.add(new Filter("vpc-id", vpcIds));
       }
       filters.add(new Filter("state").withValues("available"));
       tracker.trackEC2Call("List Subnets");
-      return amazonEC2Client.describeSubnets(new DescribeSubnetsRequest().withFilters(filters))
+      return closeableAmazonEC2Client.getClient()
+          .describeSubnets(new DescribeSubnetsRequest().withFilters(filters))
           .getSubnets()
           .stream()
           .map(subnet
@@ -184,6 +205,9 @@ public class AwsEc2HelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception listSubnets", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return emptyList();
   }
@@ -192,18 +216,19 @@ public class AwsEc2HelperServiceDelegateImpl
   public List<AwsSecurityGroup> listSGs(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, List<String> vpcIds) {
     List<AwsSecurityGroup> result = new ArrayList<>();
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonEC2Client> closeableAmazonEC2Client =
+             new CloseableAmazonWebServiceClient(getAmazonEc2Client(region, awsConfig))) {
       String nextToken = null;
       do {
-        AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig);
         List<Filter> filters = new ArrayList<>();
         if (isNotEmpty(vpcIds)) {
           filters.add(new Filter("vpc-id", vpcIds));
         }
         tracker.trackEC2Call("List SGs");
-        DescribeSecurityGroupsResult describeSecurityGroupsResult = amazonEC2Client.describeSecurityGroups(
-            new DescribeSecurityGroupsRequest().withNextToken(nextToken).withFilters(filters));
+        DescribeSecurityGroupsResult describeSecurityGroupsResult =
+            closeableAmazonEC2Client.getClient().describeSecurityGroups(
+                new DescribeSecurityGroupsRequest().withNextToken(nextToken).withFilters(filters));
         List<SecurityGroup> securityGroups = describeSecurityGroupsResult.getSecurityGroups();
         result.addAll(securityGroups.stream()
                           .map(securityGroup
@@ -218,6 +243,9 @@ public class AwsEc2HelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception listSGs", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return result;
   }
@@ -227,16 +255,16 @@ public class AwsEc2HelperServiceDelegateImpl
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String resourceType) {
     String nextToken = null;
     Set<String> tags = new HashSet<>();
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonEC2Client> closeableAmazonEC2Client =
+             new CloseableAmazonWebServiceClient(getAmazonEc2Client(region, awsConfig))) {
       do {
-        AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig);
         tracker.trackEC2Call("List Tags");
-        DescribeTagsResult describeTagsResult =
-            amazonEC2Client.describeTags(new DescribeTagsRequest()
-                                             .withNextToken(nextToken)
-                                             .withFilters(new Filter("resource-type").withValues(resourceType))
-                                             .withMaxResults(1000));
+        DescribeTagsResult describeTagsResult = closeableAmazonEC2Client.getClient().describeTags(
+            new DescribeTagsRequest()
+                .withNextToken(nextToken)
+                .withFilters(new Filter("resource-type").withValues(resourceType))
+                .withMaxResults(1000));
         tags.addAll(describeTagsResult.getTags().stream().map(TagDescription::getKey).collect(toSet()));
         nextToken = describeTagsResult.getNextToken();
       } while (nextToken != null);
@@ -244,6 +272,9 @@ public class AwsEc2HelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception listTags", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return tags;
   }
@@ -251,8 +282,9 @@ public class AwsEc2HelperServiceDelegateImpl
   @Override
   public List<Instance> listEc2Instances(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String region, List<Filter> filters, boolean isInstanceSync) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, isInstanceSync);
+    encryptionService.decrypt(awsConfig, encryptionDetails, isInstanceSync);
+    try (CloseableAmazonWebServiceClient<AmazonEC2Client> closeableAmazonEC2Client =
+             new CloseableAmazonWebServiceClient(getAmazonEc2Client(region, awsConfig))) {
       List<Instance> result = new ArrayList<>();
       String nextToken = null;
       do {
@@ -260,7 +292,7 @@ public class AwsEc2HelperServiceDelegateImpl
             new DescribeInstancesRequest().withNextToken(nextToken).withFilters(filters);
         tracker.trackEC2Call("List Ec2 instances");
         DescribeInstancesResult describeInstancesResult =
-            getAmazonEc2Client(region, awsConfig).describeInstances(describeInstancesRequest);
+            closeableAmazonEC2Client.getClient().describeInstances(describeInstancesRequest);
         result.addAll(getInstanceList(describeInstancesResult));
         nextToken = describeInstancesResult.getNextToken();
       } while (nextToken != null);
@@ -269,6 +301,9 @@ public class AwsEc2HelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception listEc2Instances", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return emptyList();
   }
@@ -276,11 +311,12 @@ public class AwsEc2HelperServiceDelegateImpl
   @Override
   public List<Instance> listEc2Instances(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       List<String> instanceIds, String region, boolean isInstanceSync) {
-    try {
+    encryptionService.decrypt(awsConfig, encryptionDetails, isInstanceSync);
+    try (CloseableAmazonWebServiceClient<AmazonEC2Client> closeableAmazonEC2Client =
+             new CloseableAmazonWebServiceClient(getAmazonEc2Client(region, awsConfig))) {
       if (instanceIds.isEmpty()) {
         return emptyList();
       }
-      encryptionService.decrypt(awsConfig, encryptionDetails, isInstanceSync);
       List<Instance> result = new ArrayList<>();
       String nextToken = null;
       do {
@@ -288,7 +324,7 @@ public class AwsEc2HelperServiceDelegateImpl
             new DescribeInstancesRequest().withNextToken(nextToken).withInstanceIds(instanceIds);
         tracker.trackEC2Call("List Ec2 instances");
         DescribeInstancesResult describeInstancesResult =
-            getAmazonEc2Client(region, awsConfig).describeInstances(describeInstancesRequest);
+            closeableAmazonEC2Client.getClient().describeInstances(describeInstancesRequest);
         result.addAll(getInstanceList(describeInstancesResult));
         nextToken = describeInstancesResult.getNextToken();
       } while (nextToken != null);
@@ -297,6 +333,9 @@ public class AwsEc2HelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception listEc2Instances", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return emptyList();
   }
@@ -304,15 +343,15 @@ public class AwsEc2HelperServiceDelegateImpl
   @Override
   public Set<String> listBlockDeviceNamesOfAmi(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String amiId) {
-    try {
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonEC2Client> closeableAmazonEC2Client =
+             new CloseableAmazonWebServiceClient(getAmazonEc2Client(region, awsConfig))) {
       if (isEmpty(amiId)) {
         return emptySet();
       }
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig);
       DescribeImagesRequest request = new DescribeImagesRequest().withImageIds(amiId);
       tracker.trackEC2Call("List Images");
-      DescribeImagesResult result = amazonEC2Client.describeImages(request);
+      DescribeImagesResult result = closeableAmazonEC2Client.getClient().describeImages(request);
       List<Image> images = result.getImages();
       if (isNotEmpty(images)) {
         Optional<Image> optionalImage = images.stream().filter(image -> amiId.equals(image.getImageId())).findFirst();
@@ -327,6 +366,9 @@ public class AwsEc2HelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception listBlockDeviceNamesOfAmi", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return emptySet();
   }
@@ -334,12 +376,12 @@ public class AwsEc2HelperServiceDelegateImpl
   @Override
   public LaunchTemplateVersion getLaunchTemplateVersion(AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, String region, String launchTemplateId, String version) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      final AmazonEC2Client amazonEc2Client = getAmazonEc2Client(region, awsConfig);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonEC2Client> closeableAmazonEC2Client =
+             new CloseableAmazonWebServiceClient(getAmazonEc2Client(region, awsConfig))) {
       tracker.trackEC2Call("Get Launch Template Version");
       final DescribeLaunchTemplateVersionsResult describeLaunchTemplateVersionsResult =
-          amazonEc2Client.describeLaunchTemplateVersions(
+          closeableAmazonEC2Client.getClient().describeLaunchTemplateVersions(
               new DescribeLaunchTemplateVersionsRequest().withLaunchTemplateId(launchTemplateId).withVersions(version));
       if (describeLaunchTemplateVersionsResult != null
           && isNotEmpty(describeLaunchTemplateVersionsResult.getLaunchTemplateVersions())) {
@@ -350,6 +392,9 @@ public class AwsEc2HelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception getLaunchTemplateVersion", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
 
     return null;
@@ -359,15 +404,18 @@ public class AwsEc2HelperServiceDelegateImpl
   public CreateLaunchTemplateVersionResult createLaunchTemplateVersion(
       CreateLaunchTemplateVersionRequest createLaunchTemplateVersionRequest, AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, String region) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      final AmazonEC2Client amazonEc2Client = getAmazonEc2Client(region, awsConfig);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonEC2Client> closeableAmazonEC2Client =
+             new CloseableAmazonWebServiceClient(getAmazonEc2Client(region, awsConfig))) {
       tracker.trackEC2Call("Create Launch Template Version");
-      return amazonEc2Client.createLaunchTemplateVersion(createLaunchTemplateVersionRequest);
+      return closeableAmazonEC2Client.getClient().createLaunchTemplateVersion(createLaunchTemplateVersionRequest);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception createLaunchTemplateVersion", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
 
     return null;

@@ -3,14 +3,19 @@ package software.wings.service;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.TestUserProvider.testUserProvider;
 
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.service.impl.WorkflowExecutionBaselineServiceImpl.BASELINE_TTL;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EmbeddedUser;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
@@ -27,6 +32,7 @@ import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
 import software.wings.dl.WingsPersistence;
+import software.wings.metrics.TimeSeriesDataRecord;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
@@ -60,6 +66,7 @@ import org.mockito.Mockito;
  * Created by rsingh on 2/16/18.
  */
 @Slf4j
+@OwnedBy(HarnessTeam.CV)
 public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
   private static final SecureRandom random = new SecureRandom();
   @Inject private WingsPersistence wingsPersistence;
@@ -286,6 +293,17 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
     }
   }
 
+  private List<TimeSeriesDataRecord> createDataRecords(WorkflowExecution workflowExecution) {
+    List<TimeSeriesDataRecord> dataRecords = new ArrayList<>();
+    for (int i = 0; i < 10; i++) {
+      dataRecords.add(TimeSeriesDataRecord.builder()
+                          .workflowExecutionId(workflowExecution.getUuid())
+                          .accountId(workflowExecution.getAccountId())
+                          .build());
+    }
+    return dataRecords;
+  }
+
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
@@ -419,6 +437,12 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
         WorkflowExecution workflowExecution1 =
             wingsPersistence.getWithAppId(WorkflowExecution.class, appId, executionId);
         assertThat(workflowExecution1.isBaseline()).isTrue();
+        List<TimeSeriesDataRecord> dataRecords = wingsPersistence.createQuery(TimeSeriesDataRecord.class)
+                                                     .filter("workflowExecutionId", executionId)
+                                                     .asList();
+        for (TimeSeriesDataRecord dataRecord : dataRecords) {
+          assertThat(dataRecord.getValidUntil()).isEqualTo(BASELINE_TTL);
+        }
       }
 
       savedPipelineExecution = wingsPersistence.get(WorkflowExecution.class, pipeLineExecId);
@@ -652,6 +676,8 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testGetBaselineDetails() throws IllegalAccessException {
+    testUserProvider.setActiveUser(EmbeddedUser.builder().uuid(user.getUuid()).name(userName).email(userEmail).build());
+
     StateMachineExecutor stateMachineExecutor = Mockito.mock(StateMachineExecutor.class);
     int numOfWorkflowExecutions = 10;
     List<String> envIds = new ArrayList<>();
@@ -767,10 +793,10 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
     }
   }
 
-  private void createDataRecords(String workflowExecutionId, String appId) {
+  private void createDataRecords(String workflowExecutionId, String accountId) {
     for (int i = 0; i < 100; i++) {
       wingsPersistence.save(
-          NewRelicMetricDataRecord.builder().workflowExecutionId(workflowExecutionId).appId(appId).build());
+          TimeSeriesDataRecord.builder().workflowExecutionId(workflowExecutionId).accountId(accountId).build());
       wingsPersistence.save(
           NewRelicMetricAnalysisRecord.builder().workflowExecutionId(workflowExecutionId).appId(appId).build());
       TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord = TimeSeriesMLAnalysisRecord.builder().build();

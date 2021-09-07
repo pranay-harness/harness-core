@@ -28,6 +28,8 @@ public class RollingOrchestrationWorkflow extends CanaryOrchestrationWorkflow {
     return aRollingOrchestrationWorkflow()
         .withGraph(getGraph())
         .withPreDeploymentSteps(getPreDeploymentSteps())
+        .withRollbackProvisioners(getRollbackProvisioners())
+        .withRollbackProvisionersReverse(getRollbackProvisionersReverse())
         .withWorkflowPhaseIds(getWorkflowPhaseIds())
         .withWorkflowPhases(getWorkflowPhases())
         .withWorkflowPhaseIdMap(getWorkflowPhaseIdMap())
@@ -58,6 +60,8 @@ public class RollingOrchestrationWorkflow extends CanaryOrchestrationWorkflow {
     private List<Variable> userVariables = new ArrayList<>();
     private List<Variable> derivedVariables = new ArrayList<>();
     private Set<EntityType> requiredEntityTypes;
+    private PhaseStep rollbackProvisioners;
+    private PhaseStep rollbackProvisionersReverse;
 
     private RollingOrchestrationWorkflowBuilder() {}
     public static RollingOrchestrationWorkflowBuilder aRollingOrchestrationWorkflow() {
@@ -71,6 +75,16 @@ public class RollingOrchestrationWorkflow extends CanaryOrchestrationWorkflow {
 
     public RollingOrchestrationWorkflowBuilder withPreDeploymentSteps(PhaseStep preDeploymentSteps) {
       this.preDeploymentSteps = preDeploymentSteps;
+      return this;
+    }
+
+    public RollingOrchestrationWorkflowBuilder withRollbackProvisioners(PhaseStep rollbackProvisioners) {
+      this.rollbackProvisioners = rollbackProvisioners;
+      return this;
+    }
+
+    public RollingOrchestrationWorkflowBuilder withRollbackProvisionersReverse(PhaseStep rollbackProvisionersReverse) {
+      this.rollbackProvisionersReverse = rollbackProvisionersReverse;
       return this;
     }
 
@@ -156,6 +170,8 @@ public class RollingOrchestrationWorkflow extends CanaryOrchestrationWorkflow {
       rollingOrchestrationWorkflow.setDerivedVariables(derivedVariables);
       rollingOrchestrationWorkflow.setRequiredEntityTypes(requiredEntityTypes);
       rollingOrchestrationWorkflow.setConcurrencyStrategy(concurrencyStrategy);
+      rollingOrchestrationWorkflow.setRollbackProvisioners(rollbackProvisioners);
+      rollingOrchestrationWorkflow.setRollbackProvisionersReverse(rollbackProvisionersReverse);
       return rollingOrchestrationWorkflow;
     }
   }

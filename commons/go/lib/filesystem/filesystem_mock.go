@@ -164,6 +164,20 @@ func (mr *MockFileSystemMockRecorder) Unsetenv(name interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Unsetenv", reflect.TypeOf((*MockFileSystem)(nil).Unsetenv), name)
 }
 
+// MkdirAll mocks base method.
+func (m *MockFileSystem) MkdirAll(name string, perm os.FileMode) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "MkdirAll", name, perm)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// MkdirAll indicates an expected call of MkdirAll.
+func (mr *MockFileSystemMockRecorder) MkdirAll(name, perm interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MkdirAll", reflect.TypeOf((*MockFileSystem)(nil).MkdirAll), name, perm)
+}
+
 // WriteFile mocks base method.
 func (m *MockFileSystem) WriteFile(filename string, op func(io.WriterAt) error) error {
 	m.ctrl.T.Helper()

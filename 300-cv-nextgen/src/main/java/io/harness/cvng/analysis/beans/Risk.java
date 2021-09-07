@@ -31,7 +31,11 @@ public enum Risk {
   }
 
   public static Risk getRiskFromRiskScore(double riskScore) {
-    if (riskScore < .3) {
+    if (riskScore == -2.0) {
+      return Risk.NO_DATA;
+    } else if (riskScore < 0.0) {
+      return Risk.NO_ANALYSIS;
+    } else if (riskScore < .3) {
       return Risk.LOW;
     } else if (riskScore < .5) {
       return Risk.MEDIUM;
@@ -42,6 +46,10 @@ public enum Risk {
 
   public boolean isGreaterThanEq(Risk other) {
     return this.getValue() >= other.getValue();
+  }
+
+  public boolean isGreaterThan(Risk other) {
+    return this.getValue() > other.getValue();
   }
 
   public boolean isLessThanEq(Risk other) {

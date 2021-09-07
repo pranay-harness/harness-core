@@ -2,8 +2,6 @@ package io.harness.walktree.visitor.entityreference;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
-import io.harness.walktree.beans.LevelNode;
-import io.harness.walktree.beans.ParentQualifier;
 import io.harness.walktree.beans.VisitElementResult;
 import io.harness.walktree.visitor.DummyVisitableElement;
 import io.harness.walktree.visitor.SimpleVisitor;
@@ -26,34 +24,15 @@ public class EntityReferenceExtractorVisitor extends SimpleVisitor<DummyVisitabl
   }
 
   public EntityReferenceExtractorVisitor(Injector injector, String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, List<LevelNode> initialLevelNodes) {
+      String projectIdentifier, List<String> fqnList) {
     super(injector);
     entityReferenceSet = new HashSet<>();
     this.accountIdentifier = accountIdentifier;
     this.orgIdentifier = orgIdentifier;
     this.projectIdentifier = projectIdentifier;
-    if (initialLevelNodes != null) {
-      initialLevelNodes.forEach(levelNode -> VisitorParentPathUtils.addToParentList(this.getContextMap(), levelNode));
+    if (fqnList != null) {
+      fqnList.forEach(levelNode -> VisitorParentPathUtils.addToParentList(this.getContextMap(), levelNode));
     }
-  }
-
-  @Override
-  public VisitElementResult preVisitElement(Object element) {
-    // add to the list of parent.
-    if (element instanceof ParentQualifier) {
-      LevelNode levelNode = ((ParentQualifier) element).getLevelNode();
-      VisitorParentPathUtils.addToParentList(this.getContextMap(), levelNode);
-    }
-    return super.preVisitElement(element);
-  }
-
-  @Override
-  public VisitElementResult postVisitElement(Object element) {
-    // Remove from parent list once traversed
-    if (element instanceof ParentQualifier) {
-      VisitorParentPathUtils.removeFromParentList(this.getContextMap());
-    }
-    return super.postVisitElement(element);
   }
 
   @Override

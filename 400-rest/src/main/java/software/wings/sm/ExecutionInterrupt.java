@@ -4,12 +4,16 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionInterruptType;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
+import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
@@ -24,7 +28,9 @@ import software.wings.service.impl.StateExecutionInstanceLogContext;
 import software.wings.service.impl.WorkflowExecutionLogContext;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
@@ -37,12 +43,24 @@ import org.mongodb.morphia.annotations.Id;
  * The type Workflow execution event.
  */
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @Data
 @Entity(value = "executionInterrupts", noClassnameStored = true)
 @HarnessEntity(exportable = false)
 @FieldNameConstants(innerTypeName = "ExecutionInterruptKeys")
 public class ExecutionInterrupt implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
                                            UpdatedByAware, ApplicationAccess {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("appId_seized_executionUuid")
+                 .field(ExecutionInterruptKeys.appId)
+                 .field(ExecutionInterruptKeys.seized)
+                 .field(ExecutionInterruptKeys.executionUuid)
+                 .build())
+        .build();
+  }
+
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @FdIndex @NotNull @SchemaIgnore protected String appId;
   @SchemaIgnore private EmbeddedUser createdBy;

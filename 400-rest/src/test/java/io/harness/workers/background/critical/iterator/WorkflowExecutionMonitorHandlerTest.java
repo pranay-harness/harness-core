@@ -1,9 +1,11 @@
 package io.harness.workers.background.critical.iterator;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.EXPIRED;
 import static io.harness.beans.ExecutionStatus.PREPARING;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.AGORODETKI;
+import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.YOGESH;
 
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
@@ -19,8 +21,12 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionInterruptType;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.RepairActionCode;
 import io.harness.category.element.UnitTests;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
@@ -54,6 +60,8 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({WorkflowExecutionMonitorHandler.class, PersistenceIteratorFactory.class})
 @PowerMockIgnore({"javax.security.*", "javax.net.*"})
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class WorkflowExecutionMonitorHandlerTest extends WingsBaseTest {
   @Mock PersistenceIteratorFactory persistenceIteratorFactory;
   @Mock private ExecutionInterruptManager executionInterruptManager;
@@ -95,6 +103,19 @@ public class WorkflowExecutionMonitorHandlerTest extends WingsBaseTest {
                                                                .build();
     expiredStateExecutionInstance.setActionAfterManualInterventionTimeout(ExecutionInterruptType.END_EXECUTION);
     expiredStateExecutionInstance.setWaitingForManualIntervention(true);
+    expiredStateExecutionInstance.setExpiryTs(System.currentTimeMillis() - 1);
+    persistence.save(expiredStateExecutionInstance);
+    return expiredStateExecutionInstance;
+  }
+
+  private StateExecutionInstance createExpiredButWaitingForInputsStateExecutionInstance() {
+    StateExecutionInstance expiredStateExecutionInstance = aStateExecutionInstance()
+                                                               .appId(APP_ID)
+                                                               .executionUuid(WORKFLOW_EXECUTION_ID)
+                                                               .status(ExecutionStatus.PAUSED)
+                                                               .build();
+    expiredStateExecutionInstance.setActionOnTimeout(RepairActionCode.CONTINUE_WITH_DEFAULTS);
+    expiredStateExecutionInstance.setWaitingForInputs(true);
     expiredStateExecutionInstance.setExpiryTs(System.currentTimeMillis() - 1);
     persistence.save(expiredStateExecutionInstance);
     return expiredStateExecutionInstance;
@@ -179,6 +200,20 @@ public class WorkflowExecutionMonitorHandlerTest extends WingsBaseTest {
     verify(executionInterruptManager, times(1)).registerExecutionInterrupt(executionInterruptArgumentCaptor.capture());
     ExecutionInterrupt executionInterrupt = executionInterruptArgumentCaptor.getValue();
     assertThat(executionInterrupt.getExecutionInterruptType()).isEqualTo(ExecutionInterruptType.END_EXECUTION);
+    persistence.delete(expiredStateExecutionInstance);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldInterruptByContinuingWithDefaultValues() {
+    StateExecutionInstance expiredStateExecutionInstance = createExpiredButWaitingForInputsStateExecutionInstance();
+    ArgumentCaptor<ExecutionInterrupt> executionInterruptArgumentCaptor =
+        ArgumentCaptor.forClass(ExecutionInterrupt.class);
+    workflowExecutionMonitorHandler.handle(workflowExecution);
+    verify(executionInterruptManager, times(1)).registerExecutionInterrupt(executionInterruptArgumentCaptor.capture());
+    ExecutionInterrupt executionInterrupt = executionInterruptArgumentCaptor.getValue();
+    assertThat(executionInterrupt.getExecutionInterruptType()).isEqualTo(ExecutionInterruptType.CONTINUE_WITH_DEFAULTS);
     persistence.delete(expiredStateExecutionInstance);
   }
 }

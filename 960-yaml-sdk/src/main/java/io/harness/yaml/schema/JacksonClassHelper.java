@@ -7,12 +7,14 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidRequestException;
 import io.harness.validation.OneOfField;
 import io.harness.validation.OneOfFields;
 import io.harness.yaml.YamlSchemaTypes;
 import io.harness.yaml.schema.beans.FieldSubtypeData;
 import io.harness.yaml.schema.beans.OneOfMapping;
 import io.harness.yaml.schema.beans.PossibleFieldTypes;
+import io.harness.yaml.schema.beans.StringFieldTypeMetadata;
 import io.harness.yaml.schema.beans.SubtypeClassMap;
 import io.harness.yaml.schema.beans.SupportedPossibleFieldTypes;
 import io.harness.yaml.schema.beans.SwaggerDefinitionsMetaInfo;
@@ -20,8 +22,14 @@ import io.harness.yaml.utils.YamlSchemaUtils;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.cfg.MapperConfig;
+import com.fasterxml.jackson.databind.introspect.AnnotatedClass;
+import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.lang.reflect.Field;
@@ -30,6 +38,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -37,15 +46,24 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @Slf4j
 @Singleton
 @OwnedBy(DX)
 public class JacksonClassHelper {
+  @Inject
+  public JacksonClassHelper(@Named("yaml-schema-mapper") ObjectMapper objectMapper) {
+    this.objectMapper = objectMapper;
+  }
+
+  ObjectMapper objectMapper;
+
   /**
-   * @param aClass                         Class which will be traversed.
+   * @param aClass                        Class which will be traversed.
    * @param swaggerDefinitionsMetaInfoMap The map which will be populated with all metainfo needed to be added to
-   *     swagger spec.
+   *                                      swagger spec.
    */
   public void getRequiredMappings(
       Class<?> aClass, Map<String, SwaggerDefinitionsMetaInfo> swaggerDefinitionsMetaInfoMap) {
@@ -63,15 +81,17 @@ public class JacksonClassHelper {
       }
       Set<FieldSubtypeData> fieldSubtypeDataList = new HashSet<>();
       Set<PossibleFieldTypes> possibleFieldTypesSet = new HashSet<>();
+      Set<String> nonEmptyFields = new HashSet<>();
 
       // Instantiating so that we don't get into infinite loop.
       swaggerDefinitionsMetaInfoMap.put(swaggerClassName, null);
 
-      for (Field declaredField : clazz.getDeclaredFields()) {
-        if (checkIfClassShouldBeTraversed(declaredField)) {
+      for (Field declaredField : FieldUtils.getAllFields(clazz)) {
+        if (YamlSchemaUtils.checkIfClassShouldBeTraversed(declaredField)) {
           getRequiredMappings(declaredField.getType(), swaggerDefinitionsMetaInfoMap);
         }
-        if (checkIfClassIsCollection(declaredField)) {
+
+        if (YamlSchemaUtils.checkIfClassIsCollection(declaredField)) {
           ParameterizedType collectionType = (ParameterizedType) declaredField.getGenericType();
           Class<?> collectionTypeClass = (Class<?>) collectionType.getActualTypeArguments()[0];
           getRequiredMappings(collectionTypeClass, swaggerDefinitionsMetaInfoMap);
@@ -84,16 +104,63 @@ public class JacksonClassHelper {
         processFieldTypeSet(possibleFieldTypesSet, declaredField);
         // subtype mappings
         processSubtypeMappings(swaggerDefinitionsMetaInfoMap, fieldSubtypeDataList, declaredField);
+        // Non empty fields
+        processNonEmptyFields(nonEmptyFields, declaredField);
       }
       // One of mappings
       final Set<OneOfMapping> oneOfMappingForClasses = getOneOfMappingsForClass(clazz);
+      checkIfSubTypeDataListIsNotUnique(fieldSubtypeDataList);
       final SwaggerDefinitionsMetaInfo definitionsMetaInfo = SwaggerDefinitionsMetaInfo.builder()
                                                                  .oneOfMappings(oneOfMappingForClasses)
                                                                  .subtypeClassMap(fieldSubtypeDataList)
                                                                  .fieldPossibleTypes(possibleFieldTypesSet)
+                                                                 .notEmptyStringFields(nonEmptyFields)
                                                                  .build();
       swaggerDefinitionsMetaInfoMap.put(swaggerClassName, definitionsMetaInfo);
     }
+  }
+
+  private void processNonEmptyFields(Set<String> nonEmptyFields, Field declaredField) {
+    if (declaredField.getAnnotation(NotEmpty.class) != null) {
+      nonEmptyFields.add(YamlSchemaUtils.getFieldName(declaredField));
+    }
+  }
+
+  private void checkIfSubTypeDataListIsNotUnique(Set<FieldSubtypeData> fieldSubtypeData) {
+    Map<String, Set<String>> fieldSubtypeEnumMap = new HashMap<>();
+    for (FieldSubtypeData fieldSubtypeDatum : fieldSubtypeData) {
+      final String fieldName = fieldSubtypeDatum.getFieldName();
+      if (!fieldSubtypeEnumMap.containsKey(fieldName)) {
+        final Set<SubtypeClassMap> subtypesMapping = fieldSubtypeDatum.getSubtypesMapping();
+        fieldSubtypeEnumMap.put(fieldName, new HashSet<>());
+        for (SubtypeClassMap subtypeClassMap : subtypesMapping) {
+          final Set<String> enums = fieldSubtypeEnumMap.get(fieldName);
+          if (enums.contains(subtypeClassMap.getSubtypeEnum())) {
+            throw new InvalidRequestException(
+                String.format("Enum %s being generated twice in yaml schema. ", subtypeClassMap.getSubtypeEnum()));
+          } else {
+            enums.add(subtypeClassMap.getSubtypeEnum());
+          }
+        }
+      } else {
+        throw new InvalidRequestException(
+            String.format("field %s being generated twice in yaml schema. ", fieldSubtypeDatum));
+      }
+    }
+  }
+
+  private List<Class<?>> getSubtypesOfClass(Class<?> clazz) {
+    List<Class<?>> classes = new ArrayList<>();
+    MapperConfig<?> config = objectMapper.getDeserializationConfig();
+    AnnotatedClass ac = AnnotatedClass.constructWithoutSuperTypes(clazz, config);
+    final Collection<NamedType> namedTypes =
+        objectMapper.getSubtypeResolver().collectAndResolveSubtypesByClass(config, ac);
+    if (!namedTypes.isEmpty()) {
+      for (NamedType namedType : namedTypes) {
+        classes.add(namedType.getType());
+      }
+    }
+    return classes;
   }
 
   private void processFieldTypeSet(Set<PossibleFieldTypes> possibleFieldTypesSet, Field declaredField) {
@@ -102,14 +169,30 @@ public class JacksonClassHelper {
       Set<SupportedPossibleFieldTypes> value = Arrays.stream(fieldTypes.value()).collect(Collectors.toSet());
       final SupportedPossibleFieldTypes defaultType = fieldTypes.defaultType();
       final String fieldName = YamlSchemaUtils.getFieldName(declaredField);
-      possibleFieldTypesSet.add(
-          PossibleFieldTypes.builder().fieldName(fieldName).defaultFieldType(defaultType).fieldTypes(value).build());
+      possibleFieldTypesSet.add(PossibleFieldTypes.builder()
+                                    .fieldName(fieldName)
+                                    .defaultFieldType(defaultType)
+                                    .fieldTypes(value)
+                                    .fieldTypesMetadata(StringFieldTypeMetadata.builder()
+                                                            .minLength(fieldTypes.minLength())
+                                                            .pattern(fieldTypes.pattern())
+                                                            .build())
+                                    .build());
     }
   }
 
   private void processSubtypeMappings(Map<String, SwaggerDefinitionsMetaInfo> swaggerDefinitionsMetaInfoMap,
       Set<FieldSubtypeData> fieldSubtypeDataList, Field declaredField) {
-    Set<SubtypeClassMap> mapOfSubtypes = getMapOfSubtypes(declaredField);
+    Set<SubtypeClassMap> mapOfSubtypesUsingJackson = getMapOfSubtypes(declaredField);
+    final Set<SubtypeClassMap> mapOfSubtypesUsingReflection =
+        YamlSchemaUtils.getMapOfSubtypesUsingObjectMapper(declaredField, objectMapper);
+    Set<SubtypeClassMap> mapOfSubtypes = new HashSet<>();
+    if (!isEmpty(mapOfSubtypesUsingJackson)) {
+      mapOfSubtypes.addAll(mapOfSubtypesUsingJackson);
+    }
+    if (!isEmpty(mapOfSubtypesUsingReflection)) {
+      mapOfSubtypes.addAll(mapOfSubtypesUsingReflection);
+    }
     if (isEmpty(mapOfSubtypes)) {
       return;
     }
@@ -117,9 +200,14 @@ public class JacksonClassHelper {
       getRequiredMappings(subtype.getSubTypeClass(), swaggerDefinitionsMetaInfoMap);
     }
     // Subtype mappings.
-    FieldSubtypeData fieldSubtypeData = YamlSchemaUtils.getFieldSubtypeData(declaredField, mapOfSubtypes);
+    FieldSubtypeData fieldSubtypeData = YamlSchemaUtils.getFieldSubtypeData(declaredField, mapOfSubtypesUsingJackson);
     if (fieldSubtypeData != null) {
       fieldSubtypeDataList.add(fieldSubtypeData);
+    }
+    final FieldSubtypeData fieldSubtypeDataUsingReflection =
+        YamlSchemaUtils.getFieldSubtypeData(declaredField, mapOfSubtypesUsingReflection);
+    if (fieldSubtypeDataUsingReflection != null) {
+      fieldSubtypeDataList.add(fieldSubtypeDataUsingReflection);
     }
   }
 
@@ -169,13 +257,6 @@ public class JacksonClassHelper {
     return null;
   }
 
-  private boolean checkIfClassShouldBeTraversed(Field declaredField) {
-    // Generating only for harness classes hence checking if package is software.wings or io.harness.
-    return !declaredField.getType().isPrimitive() && !declaredField.getType().isEnum()
-        && (declaredField.getType().getCanonicalName().startsWith("io.harness")
-            || declaredField.getType().getCanonicalName().startsWith("software.wings"));
-  }
-
   private Set<SubtypeClassMap> getMapOfSubtypes(Field field) {
     JsonSubTypes annotation = YamlSchemaUtils.getJsonSubTypes(field);
     if (annotation == null) {
@@ -202,9 +283,5 @@ public class JacksonClassHelper {
       return jsonTypeInfo.property();
     }
     return null;
-  }
-
-  private boolean checkIfClassIsCollection(Field declaredField) {
-    return Collection.class.isAssignableFrom(declaredField.getType());
   }
 }

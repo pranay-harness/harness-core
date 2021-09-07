@@ -7,23 +7,25 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
+import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.contracts.plan.EdgeLayoutList;
 import io.harness.pms.contracts.plan.GraphLayoutNode;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.adviser.OrchestrationAdviserTypes;
-import io.harness.pms.sdk.core.facilitator.chilidren.ChildrenFacilitator;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.GraphLayoutResponse;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
+import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
+import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.serializer.KryoSerializer;
-import io.harness.steps.StepOutcomeGroup;
-import io.harness.steps.common.NGForkStep;
 import io.harness.steps.fork.ForkStepParameters;
+import io.harness.steps.fork.NGForkStep;
 
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
@@ -60,7 +62,8 @@ public class ParallelPlanCreator extends ChildrenPlanCreator<YamlField> {
     for (YamlField yamlField : dependencyNodeIdsList) {
       Map<String, YamlField> yamlFieldMap = new HashMap<>();
       yamlFieldMap.put(yamlField.getNode().getUuid(), yamlField);
-      responseMap.put(yamlField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(yamlFieldMap).build());
+      responseMap.put(yamlField.getNode().getUuid(),
+          PlanCreationResponse.builder().dependencies(DependenciesUtils.toDependenciesProto(yamlFieldMap)).build());
     }
 
     return responseMap;
@@ -75,7 +78,10 @@ public class ParallelPlanCreator extends ChildrenPlanCreator<YamlField> {
         .identifier(YAMLFieldNameConstants.PARALLEL + currentNode.getUuid())
         .stepType(NGForkStep.STEP_TYPE)
         .stepParameters(ForkStepParameters.builder().parallelNodeIds(childrenNodeIds).build())
-        .facilitatorObtainment(FacilitatorObtainment.newBuilder().setType(ChildrenFacilitator.FACILITATOR_TYPE).build())
+        .facilitatorObtainment(
+            FacilitatorObtainment.newBuilder()
+                .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILDREN).build())
+                .build())
         .adviserObtainments(getAdviserObtainmentFromMetaData(config))
         .skipExpressionChain(true)
         .build();

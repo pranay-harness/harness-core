@@ -11,6 +11,7 @@ import static io.harness.rule.OwnerRule.ALEXEI;
 import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GARVIT;
+import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 
@@ -435,7 +436,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(yamlPushService, times(2))
         .pushYamlChangeSet(
             any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
-    verify(artifactService).deleteWhenArtifactSourceNameChanged(jenkinsArtifactStream);
+    verify(artifactService).deleteByArtifactStreamId(APP_ID, savedJenkinsArtifactStream.getUuid());
     verify(triggerService).updateByArtifactStream(savedJenkinsArtifactStream.getUuid());
     assertThat(updatedJenkinsArtifactStream.getCollectionStatus()).isEqualTo(UNSTABLE.name());
   }
@@ -465,7 +466,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(yamlPushService, times(2))
         .pushYamlChangeSet(
             any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
-    verify(artifactService).deleteWhenArtifactSourceNameChanged(jenkinsArtifactStream);
+    verify(artifactService).deleteByArtifactStreamId(GLOBAL_APP_ID, savedArtifactSteam.getUuid());
     //    verify(triggerService).updateByApp(APP_ID);
     assertThat(updatedJenkinsArtifactStream.getCollectionStatus()).isEqualTo(UNSTABLE.name());
   }
@@ -631,7 +632,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(yamlPushService, times(2))
         .pushYamlChangeSet(
             any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
-    verify(artifactService).deleteWhenArtifactSourceNameChanged(bambooArtifactStream);
+    verify(artifactService).deleteByArtifactStreamId(APP_ID, savedArtifactSteam.getUuid());
     verify(triggerService).updateByArtifactStream(savedArtifactSteam.getUuid());
   }
 
@@ -655,8 +656,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(yamlPushService, times(2))
         .pushYamlChangeSet(
             any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
-    verify(artifactService).deleteWhenArtifactSourceNameChanged(bambooArtifactStream);
-    //    verify(triggerService).updateByApp(APP_ID);
+    verify(artifactService).deleteByArtifactStreamId(GLOBAL_APP_ID, savedArtifactSteam.getUuid());
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -2610,7 +2610,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(yamlPushService, times(2))
         .pushYamlChangeSet(
             any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
-    verify(artifactService).deleteWhenArtifactSourceNameChanged(azureArtifactsArtifactStream);
+    verify(artifactService).deleteByArtifactStreamId(APP_ID, savedArtifactSteam.getUuid());
     verify(triggerService).updateByArtifactStream(savedArtifactSteam.getUuid());
   }
 
@@ -2625,7 +2625,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(yamlPushService, times(2))
         .pushYamlChangeSet(
             any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
-    verify(artifactService).deleteWhenArtifactSourceNameChanged(azureArtifactsArtifactStream);
+    verify(artifactService).deleteByArtifactStreamId(GLOBAL_APP_ID, savedArtifactSteam.getUuid());
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -3297,7 +3297,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
     assertThat(artifactStreamService.get(updatedArtifactStream.getUuid())).isNull();
 
-    verify(artifactService, times(0)).deleteWhenArtifactSourceNameChanged(customArtifactStream);
+    verify(artifactService, times(0)).deleteByArtifactStreamId(anyString(), anyString());
     verify(triggerService).updateByArtifactStream(updatedArtifactStream.getUuid());
     verify(buildSourceService, times(1)).validateArtifactSource(savedArtifactSteam);
   }
@@ -3381,7 +3381,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
 
     assertThat(artifactStreamService.get(updatedArtifactStream.getUuid())).isNull();
 
-    verify(artifactService, times(0)).deleteWhenArtifactSourceNameChanged(customArtifactStream);
+    verify(artifactService, times(0)).deleteByArtifactStreamId(anyString(), anyString());
     verify(triggerService).updateByArtifactStream(updatedArtifactStream.getUuid());
     verify(buildSourceService, times(1)).validateArtifactSource(savedArtifactSteam);
   }
@@ -3485,7 +3485,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     artifactStreamService.delete(APP_ID, updatedArtifactStream.getUuid());
     assertThat(artifactStreamService.get(updatedArtifactStream.getUuid())).isNull();
 
-    verify(artifactService, times(0)).deleteWhenArtifactSourceNameChanged(customArtifactStream);
+    verify(artifactService, times(0)).deleteByArtifactStreamId(anyString(), anyString());
     verify(buildSourceService, times(1)).validateArtifactSource(savedArtifactSteam);
   }
 
@@ -3566,7 +3566,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     artifactStreamService.delete(APP_ID, updatedArtifactStream.getUuid());
     assertThat(artifactStreamService.get(updatedArtifactStream.getUuid())).isNull();
 
-    verify(artifactService, times(0)).deleteWhenArtifactSourceNameChanged(customArtifactStream);
+    verify(artifactService, times(0)).deleteByArtifactStreamId(anyString(), anyString());
     verify(buildSourceService, times(0)).validateArtifactSource(savedArtifactSteam);
   }
 
@@ -4094,7 +4094,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(yamlPushService, times(2))
         .pushYamlChangeSet(
             any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
-    verify(artifactService).deleteWhenArtifactSourceNameChanged(nexusArtifactStream);
+    verify(artifactService).deleteByArtifactStreamId(APP_ID, savedArtifactSteam.getUuid());
     verify(triggerService).updateByArtifactStream(savedArtifactSteam.getUuid());
   }
 
@@ -4303,5 +4303,51 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     verify(auditServiceHelper, times(1)).reportDeleteForAuditing(anyString(), any());
     verify(artifactStreamServiceBindingService, times(1)).deleteByArtifactStream(UUID, false);
     verify(wingsPersistence).delete(ArtifactStream.class, APP_ID, UUID);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowErrorWhenPatternIsNotMatching() {
+    assertThatThrownBy(
+        () -> artifactStreamService.fetchByArtifactSourceVariableValue(APP_ID, "artifactName-serviceName"))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("The Artifact Source variable should be of the format 'artifactSourceName (serviceName)'");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowErrorWhenPatternIsNotMatching2() {
+    assertThatThrownBy(() -> artifactStreamService.fetchByArtifactSourceVariableValue(APP_ID, "(serviceName)"))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("The Artifact Source variable should be of the format 'artifactSourceName (serviceName)'");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowErrorForWrongServiceName() {
+    when(serviceResourceService.getServiceByName(APP_ID, "serviceName")).thenReturn(null);
+    assertThatThrownBy(
+        () -> artifactStreamService.fetchByArtifactSourceVariableValue(APP_ID, "artifactSource (serviceName)"))
+        .isInstanceOf(GeneralException.class)
+        .hasMessage("Service with name serviceName doesn't exist");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldFetchArtifactStreamByVariableValue() {
+    when(serviceResourceService.getServiceByName(APP_ID, "serviceName"))
+        .thenReturn(Service.builder().uuid(SERVICE_ID).build());
+    ArtifactStream artifactStream =
+        DockerArtifactStream.builder().uuid(ARTIFACT_STREAM_ID).name("artifactSource").build();
+    when(artifactStreamServiceBindingService.listArtifactStreams(APP_ID, SERVICE_ID))
+        .thenReturn(Collections.singletonList(artifactStream));
+
+    ArtifactStream artifactStream1 =
+        artifactStreamService.fetchByArtifactSourceVariableValue(APP_ID, "artifactSource (serviceName)");
+    assertThat(artifactStream1.getUuid()).isEqualTo(ARTIFACT_STREAM_ID);
   }
 }

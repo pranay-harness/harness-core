@@ -1,6 +1,11 @@
 package software.wings.api;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
@@ -30,8 +35,9 @@ import org.mongodb.morphia.annotations.Entity;
 @EqualsAndHashCode(callSuper = true)
 @Entity(value = "deploymentSummary", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-
 @FieldNameConstants(innerTypeName = "DeploymentSummaryKeys")
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class DeploymentSummary extends Base {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
@@ -77,6 +83,18 @@ public class DeploymentSummary extends Base {
                  .field(DeploymentSummaryKeys.infraMappingId)
                  .field(DeploymentSummaryKeys.CONTAINER_KEY_LABELS)
                  .field(DeploymentSummaryKeys.CONTAINER_KEY_NEW_VERSION)
+                 .descSortField(DeploymentSummaryKeys.CREATED_AT)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("inframappingId_awsCodeDeployDeploymentKeyKey_createdAtDesc")
+                 .field(DeploymentSummaryKeys.infraMappingId)
+                 .field(DeploymentSummaryKeys.AWS_CODE_DEPLOY_DEPLOYMENT_KEY_KEY)
+                 .descSortField(DeploymentSummaryKeys.CREATED_AT)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("inframappingId_awsAmiDeploymentKeyAsgName_createdAtDesc")
+                 .field(DeploymentSummaryKeys.infraMappingId)
+                 .field(DeploymentSummaryKeys.AWS_AMI_DEPLOYMENT_KEY_ASG_NAME)
                  .descSortField(DeploymentSummaryKeys.CREATED_AT)
                  .build())
         .build();
@@ -165,5 +183,7 @@ public class DeploymentSummary extends Base {
     public static final String CONTAINER_KEY_SERVICE_NAME = "containerDeploymentKey.containerServiceName";
     public static final String CONTAINER_KEY_LABELS = "containerDeploymentKey.labels";
     public static final String CONTAINER_KEY_NEW_VERSION = "containerDeploymentKey.newVersion";
+    public static final String AWS_CODE_DEPLOY_DEPLOYMENT_KEY_KEY = "awsCodeDeployDeploymentKey.key";
+    public static final String AWS_AMI_DEPLOYMENT_KEY_ASG_NAME = "awsAmiDeploymentKey.autoScalingGroupName";
   }
 }

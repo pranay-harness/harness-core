@@ -12,6 +12,7 @@ import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrati
 import static software.wings.beans.EntityType.APPDYNAMICS_APPID;
 import static software.wings.beans.EntityType.APPDYNAMICS_CONFIGID;
 import static software.wings.beans.EntityType.APPDYNAMICS_TIERID;
+import static software.wings.beans.EntityType.ARTIFACT_STREAM;
 import static software.wings.beans.EntityType.CF_AWS_CONFIG_ID;
 import static software.wings.beans.EntityType.ELK_CONFIGID;
 import static software.wings.beans.EntityType.ELK_INDICES;
@@ -46,7 +47,9 @@ import static java.lang.String.join;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.exception.InvalidRequestException;
 
@@ -72,6 +75,7 @@ import org.mongodb.morphia.annotations.Transient;
 @OwnedBy(CDC)
 @JsonTypeName("CANARY")
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
   public CanaryOrchestrationWorkflow() {
     setOrchestrationWorkflowType(CANARY);
@@ -81,6 +85,9 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   // This is a nullable field
   private PhaseStep rollbackProvisioners;
+
+  // This is a nullable field
+  private PhaseStep rollbackProvisionersReverse;
 
   @JsonIgnore private List<String> workflowPhaseIds = new ArrayList<>();
 
@@ -128,6 +135,14 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   public void setRollbackProvisioners(PhaseStep rollbackProvisioners) {
     this.rollbackProvisioners = rollbackProvisioners;
+  }
+
+  public PhaseStep getRollbackProvisionersReverse() {
+    return rollbackProvisionersReverse;
+  }
+
+  public void setRollbackProvisionersReverse(PhaseStep rollbackProvisionersReverse) {
+    this.rollbackProvisionersReverse = rollbackProvisionersReverse;
   }
 
   public List<WorkflowPhase> getWorkflowPhases() {
@@ -309,6 +324,9 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     if (rollbackProvisioners != null) {
       populatePhaseStepIds(rollbackProvisioners);
     }
+    if (rollbackProvisionersReverse != null) {
+      populatePhaseStepIds(rollbackProvisionersReverse);
+    }
     if (workflowPhases != null) {
       workflowPhaseIds = new ArrayList<>();
       workflowPhaseIdMap = new HashMap<>();
@@ -344,6 +362,9 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     populatePhaseSteps(preDeploymentSteps, getGraph());
     if (rollbackProvisioners != null) {
       populatePhaseSteps(rollbackProvisioners, getGraph());
+    }
+    if (rollbackProvisionersReverse != null) {
+      populatePhaseSteps(rollbackProvisionersReverse, getGraph());
     }
 
     // cleanup relatedField, infraId,serviceId,envId from metadata as they should be runtime.
@@ -558,11 +579,8 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         // Environment, Service and Infra Variables
         addEnvServiceInfraVariables(reorderVariables, entityVariables);
 
-        // Add Cloud formation variables
-        addCloudFormationUserVariables(reorderVariables, entityVariables);
-
-        addHelmUserVariables(reorderVariables, entityVariables);
-
+        addVariablesOfType(reorderVariables, entityVariables, CF_AWS_CONFIG_ID);
+        addVariablesOfType(reorderVariables, entityVariables, HELM_GIT_CONFIG_ID);
         // AppDynamic state user variables
         addAppDUserVariables(reorderVariables, entityVariables);
         // NewRelic state user variables
@@ -571,75 +589,24 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         addNewRelicMarkerUserVariables(reorderVariables, entityVariables);
         // Add elk variables
         addElkUserVariables(reorderVariables, entityVariables);
-        // Add SUMO variables
-        addSumoLogicUserVariables(reorderVariables, entityVariables);
-        // Add Splunk variables
-        addSplunkUserVariables(reorderVariables, entityVariables);
 
-        addSSHConnectionUserVariables(reorderVariables, entityVariables);
+        List<EntityType> entityTypeOrder =
+            Arrays.asList(SUMOLOGIC_CONFIGID, SPLUNK_CONFIGID, SS_SSH_CONNECTION_ATTRIBUTE,
+                SS_WINRM_CONNECTION_ATTRIBUTE, USER_GROUP, GCP_CONFIG, GIT_CONFIG, JENKINS_SERVER, ARTIFACT_STREAM);
 
-        // add User Group Variables
-        addUserGroupVariables(reorderVariables, entityVariables);
-
-        addWINRMConnnectionUserVariables(reorderVariables, entityVariables);
-
-        addGcpConfigVariables(reorderVariables, entityVariables);
-
-        addGitConfigVariables(reorderVariables, entityVariables);
-
-        addJenkinsServerVariables(reorderVariables, entityVariables);
-      }
-      if (nonEntityVariables != null) {
-        reorderVariables.addAll(nonEntityVariables);
+        entityTypeOrder.forEach(entityType -> addVariablesOfType(reorderVariables, entityVariables, entityType));
+        if (nonEntityVariables != null) {
+          reorderVariables.addAll(nonEntityVariables);
+        }
       }
     }
     return reorderVariables;
   }
 
-  private static void addSSHConnectionUserVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
+  private static void addVariablesOfType(
+      List<Variable> reorderVariables, List<Variable> entityVariables, EntityType entityType) {
     for (Variable variable : entityVariables) {
-      if (SS_SSH_CONNECTION_ATTRIBUTE == variable.obtainEntityType()) {
-        reorderVariables.add(variable);
-      }
-    }
-  }
-
-  private static void addUserGroupVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
-    for (Variable variable : entityVariables) {
-      if (USER_GROUP == variable.obtainEntityType()) {
-        reorderVariables.add(variable);
-      }
-    }
-  }
-
-  private static void addWINRMConnnectionUserVariables(
-      List<Variable> reorderVariables, List<Variable> entityVariables) {
-    for (Variable variable : entityVariables) {
-      if (SS_WINRM_CONNECTION_ATTRIBUTE == variable.obtainEntityType()) {
-        reorderVariables.add(variable);
-      }
-    }
-  }
-
-  private static void addGcpConfigVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
-    for (Variable variable : entityVariables) {
-      if (GCP_CONFIG == variable.obtainEntityType()) {
-        reorderVariables.add(variable);
-      }
-    }
-  }
-
-  private static void addGitConfigVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
-    for (Variable variable : entityVariables) {
-      if (GIT_CONFIG == variable.obtainEntityType()) {
-        reorderVariables.add(variable);
-      }
-    }
-  }
-
-  private static void addJenkinsServerVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
-    for (Variable variable : entityVariables) {
-      if (JENKINS_SERVER == variable.obtainEntityType()) {
+      if (entityType == variable.obtainEntityType()) {
         reorderVariables.add(variable);
       }
     }
@@ -709,14 +676,6 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     addRemainingEntity(reorderVariables, entityVariables, NEWRELIC_APPID);
   }
 
-  private static void addSplunkUserVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
-    for (Variable variable : entityVariables) {
-      if (SPLUNK_CONFIGID == variable.obtainEntityType()) {
-        reorderVariables.add(variable);
-      }
-    }
-  }
-
   private static void addNewRelicMarkerUserVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
     for (Variable variable : entityVariables) {
       if (NEWRELIC_MARKER_CONFIGID == variable.obtainEntityType()) {
@@ -735,30 +694,6 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       }
     }
     addRemainingEntity(reorderVariables, entityVariables, ELK_INDICES);
-  }
-
-  private static void addSumoLogicUserVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
-    for (Variable variable : entityVariables) {
-      if (SUMOLOGIC_CONFIGID == variable.obtainEntityType()) {
-        reorderVariables.add(variable);
-      }
-    }
-  }
-
-  private static void addCloudFormationUserVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
-    for (Variable variable : entityVariables) {
-      if (CF_AWS_CONFIG_ID == variable.obtainEntityType()) {
-        reorderVariables.add(variable);
-      }
-    }
-  }
-
-  private static void addHelmUserVariables(List<Variable> reorderVariables, List<Variable> entityVariables) {
-    for (Variable variable : entityVariables) {
-      if (HELM_GIT_CONFIG_ID == variable.obtainEntityType()) {
-        reorderVariables.add(variable);
-      }
-    }
   }
 
   private static void addRemainingEntity(
@@ -857,6 +792,12 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       graphBuilder.addNodes(rollbackProvisionersNode)
           .addSubworkflow(rollbackProvisioners.getUuid(), rollbackProvisioners.generateSubworkflow(null));
     }
+    if (rollbackProvisionersReverse != null) {
+      GraphNode rollbackProvisionersReverseNode = rollbackProvisionersReverse.generatePhaseStepNode();
+      graphBuilder.addNodes(rollbackProvisionersReverseNode)
+          .addSubworkflow(rollbackProvisionersReverse.getUuid(), rollbackProvisionersReverse.generateSubworkflow(null));
+    }
+
     if (workflowPhases != null) {
       for (WorkflowPhase workflowPhase : workflowPhases) {
         id2 = workflowPhase.getUuid();
@@ -977,7 +918,7 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     }
     for (String phaseId : workflowPhaseIds) {
       WorkflowPhase existingPhase = workflowPhaseIdMap.get(phaseId);
-      if (existingPhase.getServiceId().equals(workflowPhase.getServiceId())
+      if (isNotEmpty(existingPhase.getServiceId()) && existingPhase.getServiceId().equals(workflowPhase.getServiceId())
           && existingPhase.getDeploymentType() == workflowPhase.getDeploymentType()
           && existingPhase.getInfraDefinitionId() != null
           && existingPhase.getInfraDefinitionId().equals(workflowPhase.getInfraDefinitionId())) {
@@ -1005,6 +946,8 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     return aCanaryOrchestrationWorkflow()
         .withGraph(getGraph())
         .withPreDeploymentSteps(getPreDeploymentSteps())
+        .withRollbackProvisioners(getRollbackProvisioners())
+        .withRollbackProvisionersReverse(getRollbackProvisionersReverse())
         .withWorkflowPhases(getWorkflowPhases())
         .withWorkflowPhaseIds(getWorkflowPhaseIds())
         .withWorkflowPhaseIdMap(getWorkflowPhaseIdMap())
@@ -1161,6 +1104,8 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     private List<Variable> derivedVariables = new ArrayList<>();
     private Set<EntityType> requiredEntityTypes;
     private OrchestrationWorkflowType orchestrationWorkflowType = CANARY;
+    private PhaseStep rollbackProvisioners;
+    private PhaseStep rollbackProvisionersReverse;
 
     private CanaryOrchestrationWorkflowBuilder() {}
 
@@ -1175,6 +1120,16 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
     public CanaryOrchestrationWorkflowBuilder withPreDeploymentSteps(PhaseStep preDeploymentSteps) {
       this.preDeploymentSteps = preDeploymentSteps;
+      return this;
+    }
+
+    public CanaryOrchestrationWorkflowBuilder withRollbackProvisioners(PhaseStep rollbackProvisioners) {
+      this.rollbackProvisioners = rollbackProvisioners;
+      return this;
+    }
+
+    public CanaryOrchestrationWorkflowBuilder withRollbackProvisionersReverse(PhaseStep rollbackProvisionersReverse) {
+      this.rollbackProvisionersReverse = rollbackProvisionersReverse;
       return this;
     }
 
@@ -1267,6 +1222,8 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       canaryOrchestrationWorkflow.setRequiredEntityTypes(requiredEntityTypes);
       canaryOrchestrationWorkflow.setOrchestrationWorkflowType(orchestrationWorkflowType);
       canaryOrchestrationWorkflow.setConcurrencyStrategy(concurrencyStrategy);
+      canaryOrchestrationWorkflow.setRollbackProvisioners(rollbackProvisioners);
+      canaryOrchestrationWorkflow.setRollbackProvisionersReverse(rollbackProvisionersReverse);
       return canaryOrchestrationWorkflow;
     }
   }

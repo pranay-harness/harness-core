@@ -5,6 +5,7 @@ import static io.harness.network.Localhost.getLocalHostAddress;
 import static io.harness.network.Localhost.getLocalHostName;
 
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.delegate.beans.FileBucket;
 import io.harness.exception.WingsException;
@@ -49,7 +50,9 @@ import org.apache.commons.io.IOUtils;
 @Slf4j
 public class AuditRequestFilter implements ContainerRequestFilter {
   private static final String FILE_CONTENT_NOT_STORED = "__FILE_CONTENT_NOT_STORED__";
+  private static final String X_FORWARDED_FOR = "X-Forwarded-For";
 
+  @Context private HttpServletRequest servletRequest;
   @Context private ResourceContext resourceContext;
   @Context private ResourceInfo resourceInfo;
 
@@ -87,9 +90,12 @@ public class AuditRequestFilter implements ContainerRequestFilter {
     header.setRequestTime(System.currentTimeMillis());
 
     HttpServletRequest request = resourceContext.getResource(HttpServletRequest.class);
-
     header.setRemoteHostName(request.getRemoteHost());
-    header.setRemoteIpAddress(request.getRemoteAddr());
+
+    String forwardedFor = servletRequest.getHeader(X_FORWARDED_FOR);
+    String remoteHost = isNotBlank(forwardedFor) ? forwardedFor : servletRequest.getRemoteHost();
+    header.setRemoteIpAddress(remoteHost != null ? remoteHost : request.getRemoteAddr());
+
     header.setRemoteHostPort(request.getRemotePort());
     header.setLocalHostName(getLocalHostName());
     header.setLocalIpAddress(getLocalHostAddress());

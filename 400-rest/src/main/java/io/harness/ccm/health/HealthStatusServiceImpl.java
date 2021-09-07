@@ -25,6 +25,7 @@ import static io.harness.ccm.health.CEError.NO_ELIGIBLE_DELEGATE;
 import static io.harness.ccm.health.CEError.NO_RECENT_EVENTS_PUBLISHED;
 import static io.harness.ccm.health.CEError.PERPETUAL_TASK_CREATION_FAILURE;
 import static io.harness.ccm.health.CEError.PERPETUAL_TASK_NOT_ASSIGNED;
+import static io.harness.ccm.health.CEError.PVC_PERMISSION_ERROR;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
@@ -32,10 +33,11 @@ import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.billing.dao.BillingDataPipelineRecordDao;
-import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.entities.ClusterRecord;
-import io.harness.ccm.cluster.entities.LastReceivedPublishedMessage;
+import io.harness.ccm.commons.entities.batch.LastReceivedPublishedMessage;
+import io.harness.ccm.commons.entities.billing.BillingDataPipelineRecord;
+import io.harness.ccm.commons.entities.events.CeExceptionRecord;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.perpetualtask.PerpetualTaskService;
@@ -274,6 +276,9 @@ public class HealthStatusServiceImpl implements HealthStatusService {
     String[] perpetualTaskIds = clusterRecord.getPerpetualTaskIds();
     for (String taskId : perpetualTaskIds) {
       PerpetualTaskRecord perpetualTaskRecord = perpetualTaskService.getTaskRecord(taskId);
+      if (null == perpetualTaskRecord) {
+        continue;
+      }
       String delegateId = perpetualTaskRecord.getDelegateId();
       if (isNullOrEmpty(delegateId)) {
         if (perpetualTaskRecord.getUnassignedReason() == null) {
@@ -331,9 +336,11 @@ public class HealthStatusServiceImpl implements HealthStatusService {
     } else if (exceptionMessage.startsWith("code=[403]")) {
       // generaly the 403 is due to 'nodes is forbidden: User \\\"system:anonymous\\\" cannot list resource
       // \\\"nodes\\\" in API group \\\"\\\" at the cluster scope\"'
-      ceError = NODES_IS_FORBIDDEN;
+      ceError = K8S_PERMISSIONS_MISSING;
 
-      if (exceptionMessage.contains("nodes is forbidden")
+      if (exceptionMessage.contains("persistentvolumeclaims")) {
+        ceError = PVC_PERMISSION_ERROR;
+      } else if (exceptionMessage.contains("nodes is forbidden")
           || exceptionMessage.contains("nodes.metrics.k8s.io is forbidden")) {
         ceError = NODES_IS_FORBIDDEN;
       }

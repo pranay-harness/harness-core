@@ -2,6 +2,7 @@ package software.wings.service.impl.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.beans.FeatureName.GITHUB_WEBHOOK_AUTHENTICATION;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.beans.WorkflowType.PIPELINE;
@@ -34,10 +35,12 @@ import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_COLLECTED
 import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_DEPLOYED;
 import static software.wings.beans.trigger.ArtifactSelection.Type.PIPELINE_SOURCE;
 import static software.wings.beans.trigger.ArtifactSelection.Type.WEBHOOK_VARIABLE;
+import static software.wings.beans.trigger.WebHookTriggerCondition.WEBHOOK_SECRET;
 import static software.wings.beans.trigger.WebhookEventType.PULL_REQUEST;
 import static software.wings.beans.trigger.WebhookEventType.PUSH;
 import static software.wings.beans.trigger.WebhookSource.BITBUCKET;
 import static software.wings.beans.trigger.WebhookSource.GITHUB;
+import static software.wings.beans.trigger.WebhookSource.GITLAB;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.artifact;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildArtifactTrigger;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildArtifactTriggerWithArtifactSelections;
@@ -100,11 +103,14 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.EncryptedData;
+import io.harness.beans.EncryptedDataParent;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -137,6 +143,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.HelmChart;
+import software.wings.beans.appmanifest.ManifestSummary;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
@@ -160,6 +167,7 @@ import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookParameters;
 import software.wings.beans.trigger.WebhookSource;
 import software.wings.common.MongoIdempotentRegistry;
+import software.wings.dl.WingsPersistence;
 import software.wings.infra.AwsInstanceInfrastructure;
 import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.InfrastructureDefinition;
@@ -186,6 +194,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.applicationmanifest.HelmChartService;
 import software.wings.service.intfc.trigger.TriggerExecutionService;
 import software.wings.service.intfc.yaml.YamlPushService;
+import software.wings.settings.SettingVariableTypes;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -196,10 +205,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -210,11 +221,12 @@ import org.quartz.JobDetail;
 import org.quartz.TriggerKey;
 
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._960_API_SERVICES)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class TriggerServiceTest extends WingsBaseTest {
   private static final String CATALOG_SERVICE_NAME = "Catalog";
   private static final String ARTIFACT_STREAM_ID_1 = "ARTIFACT_STREAM_ID_1";
   private static final String BUILD_NUMBER = "123";
+  private static final String SECRET_ID = "secret_id";
 
   @Mock private BackgroundJobScheduler jobScheduler;
   @Mock private PipelineService pipelineService;
@@ -241,9 +253,11 @@ public class TriggerServiceTest extends WingsBaseTest {
   @Mock private ApplicationManifestService applicationManifestService;
   @Mock private HelmChartService helmChartService;
   @Mock private DeploymentFreezeUtils deploymentFreezeUtils;
+  @Mock private ArtifactCollectionService syncArtifactCollectionServiceImpl;
 
   @Inject @InjectMocks TriggerServiceHelper triggerServiceHelper;
   @Inject @InjectMocks private TriggerServiceImpl triggerService;
+  @Inject private WingsPersistence wingsPersistence;
 
   Trigger webhookConditionTrigger = buildWebhookCondTrigger();
 
@@ -281,6 +295,7 @@ public class TriggerServiceTest extends WingsBaseTest {
 
   @Before
   public void setUp() {
+    Reflect.on(triggerServiceHelper).set("artifactCollectionService", syncArtifactCollectionServiceImpl);
     Pipeline pipeline = buildPipeline();
     pipeline.setServices(Lists.newArrayList(Service.builder().uuid(SERVICE_ID).name(CATALOG_SERVICE_NAME).build()));
     when(pipelineService.readPipelineWithResolvedVariables(eq(APP_ID), eq(PIPELINE_ID), any())).thenReturn(pipeline);
@@ -530,6 +545,8 @@ public class TriggerServiceTest extends WingsBaseTest {
     assertThat(((ScheduledTriggerCondition) trigger.getCondition()).getCronExpression())
         .isNotNull()
         .isEqualTo("* * * * ?");
+    assertThat(savedScheduledTrigger.getNextIterations()).isNotEmpty();
+    assertThat(trigger.getNextIterations()).isNotEmpty();
     verify(jobScheduler).scheduleJob(any(JobDetail.class), any(org.quartz.Trigger.class));
   }
 
@@ -558,6 +575,7 @@ public class TriggerServiceTest extends WingsBaseTest {
         .isNotNull()
         .extracting(ArtifactSelection::getType)
         .contains(LAST_COLLECTED, LAST_DEPLOYED);
+    assertThat(updatedTrigger.getNextIterations()).isNotEmpty();
     verify(jobScheduler).rescheduleJob(any(TriggerKey.class), any(org.quartz.Trigger.class));
   }
 
@@ -808,6 +826,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     assertThat(((ScheduledTriggerCondition) trigger.getCondition()).getCronExpression())
         .isNotNull()
         .isEqualTo("* * * * ?");
+    assertThat(trigger.getNextIterations()).isNotEmpty();
     verify(jobScheduler).scheduleJob(any(JobDetail.class), any(org.quartz.Trigger.class));
 
     setWebhookArtifactSelections();
@@ -821,6 +840,7 @@ public class TriggerServiceTest extends WingsBaseTest {
         .isNotNull()
         .extracting(ArtifactSelection::getType)
         .contains(LAST_COLLECTED, LAST_DEPLOYED);
+    assertThat(updatedTrigger.getNextIterations()).isEmpty();
     verify(jobScheduler).deleteJob(TRIGGER_ID, ScheduledTriggerJob.GROUP);
   }
 
@@ -837,6 +857,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     assertThat(((ArtifactTriggerCondition) trigger.getCondition()).getArtifactStreamId())
         .isNotNull()
         .isEqualTo(ARTIFACT_STREAM_ID);
+    assertThat(trigger.getNextIterations()).isEmpty();
 
     Trigger updatedTrigger = triggerService.update(scheduledConditionTrigger, false);
     assertThat(updatedTrigger.getUuid()).isEqualTo(TRIGGER_ID);
@@ -845,6 +866,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     assertThat(((ScheduledTriggerCondition) updatedTrigger.getCondition()).getCronExpression())
         .isNotNull()
         .isEqualTo("* * * * ?");
+    assertThat(updatedTrigger.getNextIterations()).isNotEmpty();
     verify(jobScheduler).scheduleJob(any(JobDetail.class), any(org.quartz.Trigger.class));
   }
 
@@ -1374,7 +1396,8 @@ public class TriggerServiceTest extends WingsBaseTest {
                         .build());
 
     triggerService.triggerExecutionPostArtifactCollectionAsync(APP_ID, ARTIFACT_STREAM_ID, asList(artifact));
-
+    verify(syncArtifactCollectionServiceImpl).collectNewArtifacts(APP_ID, ARTIFACT_STREAM_ID);
+    verifyNoMoreInteractions(syncArtifactCollectionServiceImpl);
     verify(workflowExecutionService)
         .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
     verify(artifactStreamService, times(4)).get(ARTIFACT_STREAM_ID);
@@ -1440,6 +1463,8 @@ public class TriggerServiceTest extends WingsBaseTest {
 
     triggerService.triggerExecutionPostArtifactCollectionAsync(APP_ID, ARTIFACT_STREAM_ID, asList(artifact));
 
+    verify(syncArtifactCollectionServiceImpl).collectNewArtifacts(APP_ID, ARTIFACT_STREAM_ID);
+    verifyNoMoreInteractions(syncArtifactCollectionServiceImpl);
     verify(workflowExecutionService)
         .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
     verify(artifactStreamService, times(4)).get(ARTIFACT_STREAM_ID);
@@ -1496,6 +1521,8 @@ public class TriggerServiceTest extends WingsBaseTest {
 
     triggerService.triggerExecutionPostArtifactCollectionAsync(APP_ID, ARTIFACT_STREAM_ID, asList(artifact));
 
+    verify(syncArtifactCollectionServiceImpl).collectNewArtifacts(APP_ID, ARTIFACT_STREAM_ID);
+    verifyNoMoreInteractions(syncArtifactCollectionServiceImpl);
     verify(workflowExecutionService)
         .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
     verify(artifactStreamService, times(4)).get(ARTIFACT_STREAM_ID);
@@ -1612,6 +1639,8 @@ public class TriggerServiceTest extends WingsBaseTest {
                         .build());
 
     triggerService.triggerExecutionPostPipelineCompletionAsync(APP_ID, PIPELINE_ID);
+    verify(syncArtifactCollectionServiceImpl).collectNewArtifacts(APP_ID, ARTIFACT_STREAM_ID);
+    verifyNoMoreInteractions(syncArtifactCollectionServiceImpl);
     verify(workflowExecutionService)
         .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
     verify(artifactStreamService, times(3)).get(ARTIFACT_STREAM_ID);
@@ -1755,6 +1784,8 @@ public class TriggerServiceTest extends WingsBaseTest {
         .thenReturn(WorkflowExecution.builder().appId(APP_ID).status(SUCCESS).build());
 
     triggerService.triggerScheduledExecutionAsync(scheduledConditionTrigger, new Date());
+    verify(syncArtifactCollectionServiceImpl).collectNewArtifacts(APP_ID, ARTIFACT_STREAM_ID);
+    verifyNoMoreInteractions(syncArtifactCollectionServiceImpl);
     verify(workflowExecutionService)
         .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
     verify(artifactStreamService, times(3)).get(ARTIFACT_STREAM_ID);
@@ -1867,6 +1898,8 @@ public class TriggerServiceTest extends WingsBaseTest {
         ImmutableMap.of(SERVICE_ID, ArtifactSummary.builder().buildNo(BUILD_NUMBER).build()), Collections.emptyMap(),
         null, new HashMap<>());
 
+    verify(syncArtifactCollectionServiceImpl, times(2)).collectNewArtifacts(APP_ID, ARTIFACT_STREAM_ID);
+    verifyNoMoreInteractions(syncArtifactCollectionServiceImpl);
     verify(artifactCollectionServiceAsync).collectNewArtifacts(APP_ID, jenkinsArtifactStream, BUILD_NUMBER);
     verify(artifactService).fetchLastCollectedArtifact(artifactStream);
   }
@@ -1964,6 +1997,8 @@ public class TriggerServiceTest extends WingsBaseTest {
         ImmutableMap.of(SERVICE_ID, ArtifactSummary.builder().buildNo("123").build()), Collections.emptyMap(), null,
         new HashMap<>());
 
+    verify(syncArtifactCollectionServiceImpl, times(2)).collectNewArtifacts(APP_ID, ARTIFACT_STREAM_ID);
+    verifyNoMoreInteractions(syncArtifactCollectionServiceImpl);
     verify(workflowExecutionService)
         .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
     verify(artifactStreamService, times(11)).get(ARTIFACT_STREAM_ID);
@@ -2031,6 +2066,8 @@ public class TriggerServiceTest extends WingsBaseTest {
         ImmutableMap.of(SERVICE_ID, ArtifactSummary.builder().buildNo("123").build()), Collections.emptyMap(), null,
         new HashMap<>());
 
+    verify(syncArtifactCollectionServiceImpl, times(2)).collectNewArtifacts(APP_ID, ARTIFACT_STREAM_ID);
+    verifyNoMoreInteractions(syncArtifactCollectionServiceImpl);
     verify(workflowExecutionService)
         .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
     verify(artifactStreamService, times(11)).get(ARTIFACT_STREAM_ID);
@@ -2086,6 +2123,8 @@ public class TriggerServiceTest extends WingsBaseTest {
         ImmutableMap.of(SERVICE_ID, ArtifactSummary.builder().buildNo("123").build()), Collections.emptyMap(), null,
         new HashMap<>());
 
+    verify(syncArtifactCollectionServiceImpl).collectNewArtifacts(APP_ID, ARTIFACT_STREAM_ID);
+    verifyNoMoreInteractions(syncArtifactCollectionServiceImpl);
     verify(workflowExecutionService)
         .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
     verify(artifactStreamService, times(7)).get(ARTIFACT_STREAM_ID);
@@ -2791,7 +2830,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     assertThat(webHookToken.getPayload()).isNotEmpty();
     assertThat(webHookToken.getPayload())
         .isEqualTo(
-            "{\"application\":\"APP_ID\",\"manifests\":[{\"service\":\"Service_PLACEHOLDER\",\"versionNumber\":\"Service_VERSION_NUMBER_PLACE_HOLDER\"}],\"parameters\":{\"Service\":\"Service_placeholder\"},\"artifacts\":[{\"artifactSourceName\":\"Service_ARTIFACT_SOURCE_NAME_PLACE_HOLDER\",\"service\":\"Service_PLACEHOLDER\",\"buildNumber\":\"Service_BUILD_NUMBER_PLACE_HOLDER\"}]}");
+            "{\"application\":\"APP_ID\",\"manifests\":[{\"service\":\"Service_PLACEHOLDER\",\"appManifestName\":\"Service_APPLICATION_MANIFEST_NAME_PLACE_HOLDER\",\"versionNumber\":\"Service_VERSION_NUMBER_PLACE_HOLDER\"}],\"parameters\":{\"Service\":\"Service_placeholder\"},\"artifacts\":[{\"artifactSourceName\":\"Service_ARTIFACT_SOURCE_NAME_PLACE_HOLDER\",\"service\":\"Service_PLACEHOLDER\",\"buildNumber\":\"Service_BUILD_NUMBER_PLACE_HOLDER\"}]}");
   }
 
   @Test
@@ -3175,6 +3214,7 @@ public class TriggerServiceTest extends WingsBaseTest {
             .appManifestId(MANIFEST_ID + 2)
             .pipelineId(WORKFLOW_ID)
             .build()));
+    mockGetAppManifestAndGetService();
     triggerService.save(trigger);
 
     when(helmChartService.getLastCollectedManifest(ACCOUNT_ID, MANIFEST_ID))
@@ -3196,6 +3236,20 @@ public class TriggerServiceTest extends WingsBaseTest {
         .containsExactlyInAnyOrder(HELM_CHART_ID, HELM_CHART_ID + 2);
   }
 
+  private void mockGetAppManifestAndGetService() {
+    ApplicationManifest appManifest =
+        ApplicationManifest.builder().accountId(ACCOUNT_ID).storeType(StoreType.HelmChartRepo).build();
+    appManifest.setUuid(MANIFEST_ID + 2);
+    when(applicationManifestService.getManifestByServiceId(APP_ID, SERVICE_ID + 2)).thenReturn(appManifest);
+    ApplicationManifest appManifest1 =
+        ApplicationManifest.builder().accountId(ACCOUNT_ID).storeType(StoreType.HelmChartRepo).build();
+    appManifest1.setUuid(MANIFEST_ID);
+    when(applicationManifestService.getManifestByServiceId(APP_ID, SERVICE_ID)).thenReturn(appManifest1);
+    when(serviceResourceService.get(APP_ID, SERVICE_ID + 2, false))
+        .thenReturn(Service.builder().name(SERVICE_NAME + 2).uuid(SERVICE_ID + 2).build());
+    return;
+  }
+
   @Test
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
@@ -3211,6 +3265,7 @@ public class TriggerServiceTest extends WingsBaseTest {
             .serviceId(SERVICE_ID + 2)
             .appManifestId(MANIFEST_ID + 2)
             .build()));
+    mockGetAppManifestAndGetService();
     triggerService.save(trigger);
 
     when(helmChartService.getLastCollectedManifest(ACCOUNT_ID, MANIFEST_ID))
@@ -3247,6 +3302,7 @@ public class TriggerServiceTest extends WingsBaseTest {
             .serviceId(SERVICE_ID + 2)
             .appManifestId(MANIFEST_ID + 2)
             .build()));
+    mockGetAppManifestAndGetService();
     triggerService.save(trigger);
 
     when(helmChartService.getManifestByVersionNumber(eq(ACCOUNT_ID), anyString(), anyString()))
@@ -3262,7 +3318,9 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(applicationManifestService.getById(APP_ID, MANIFEST_ID)).thenReturn(appManifest);
 
     ArgumentCaptor<ExecutionArgs> argsArgumentCaptor = ArgumentCaptor.forClass(ExecutionArgs.class);
-    Map<String, String> serviceManifestMapping = ImmutableMap.of(SERVICE_ID, "1", SERVICE_ID + 2, "5");
+    Map<String, ManifestSummary> serviceManifestMapping =
+        ImmutableMap.of(SERVICE_ID, ManifestSummary.builder().versionNo("1").appManifestName("name").build(),
+            SERVICE_ID + 2, ManifestSummary.builder().versionNo("5").appManifestName("name").build());
     triggerService.triggerExecutionByWebHook(APP_ID, trigger.getWebHookToken(), Collections.emptyMap(),
         serviceManifestMapping, null, Collections.singletonMap("service", SERVICE_NAME));
     verify(workflowExecutionService, times(1))
@@ -3288,6 +3346,7 @@ public class TriggerServiceTest extends WingsBaseTest {
             .serviceId(SERVICE_ID + 2)
             .appManifestId(MANIFEST_ID + 2)
             .build()));
+    mockGetAppManifestAndGetService();
     triggerService.save(trigger);
 
     when(helmChartService.getManifestByVersionNumber(eq(ACCOUNT_ID), eq("1"), anyString()))
@@ -3298,7 +3357,9 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(applicationManifestService.getById(APP_ID, MANIFEST_ID + 2)).thenReturn(appManifest);
     when(applicationManifestService.getById(APP_ID, MANIFEST_ID)).thenReturn(appManifest);
 
-    Map<String, String> serviceManifestMapping = ImmutableMap.of(SERVICE_ID, "1", SERVICE_ID + 2, "5");
+    Map<String, ManifestSummary> serviceManifestMapping =
+        ImmutableMap.of(SERVICE_ID, ManifestSummary.builder().versionNo("1").appManifestName("name").build(),
+            SERVICE_ID + 2, ManifestSummary.builder().versionNo("5").appManifestName("name").build());
     assertThatThrownBy(
         ()
             -> triggerService.triggerExecutionByWebHook(APP_ID, trigger.getWebHookToken(), Collections.emptyMap(),
@@ -3336,6 +3397,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(applicationManifestService.getById(APP_ID, MANIFEST_ID)).thenReturn(appManifest);
     when(serviceResourceService.get(APP_ID, SERVICE_ID))
         .thenReturn(Service.builder().name(SERVICE_NAME).uuid(SERVICE_ID).build());
+    mockGetAppManifestAndGetService();
     triggerService.save(trigger);
 
     HelmChart helmChart1 = HelmChart.builder()
@@ -3399,6 +3461,8 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(applicationManifestService.getById(APP_ID, MANIFEST_ID)).thenReturn(appManifest);
     when(serviceResourceService.get(APP_ID, SERVICE_ID))
         .thenReturn(Service.builder().name(SERVICE_NAME).uuid(SERVICE_ID).build());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID + 2, false))
+        .thenReturn(Service.builder().name(SERVICE_NAME + 2).uuid(SERVICE_ID + 2).build());
     triggerService.save(trigger);
 
     HelmChart helmChart1 = HelmChart.builder()
@@ -3474,6 +3538,13 @@ public class TriggerServiceTest extends WingsBaseTest {
                                              .serviceId(SERVICE_ID)
                                              .appManifestId(MANIFEST_ID)
                                              .build()));
+    ApplicationManifest appManifest = ApplicationManifest.builder()
+                                          .accountId(ACCOUNT_ID)
+                                          .storeType(StoreType.HelmChartRepo)
+                                          .pollForChanges(true)
+                                          .build();
+    appManifest.setUuid(MANIFEST_ID);
+    when(applicationManifestService.getManifestByServiceId(APP_ID, SERVICE_ID)).thenReturn(appManifest);
     triggerService.save(trigger);
 
     when(helmChartService.getManifestByVersionNumber(eq(ACCOUNT_ID), anyString(), anyString()))
@@ -3482,17 +3553,14 @@ public class TriggerServiceTest extends WingsBaseTest {
                    .uuid(HELM_CHART_ID + invocationOnMock.getArgumentAt(2, String.class))
                    .version(invocationOnMock.getArgumentAt(2, String.class))
                    .build());
-    ApplicationManifest appManifest = ApplicationManifest.builder()
-                                          .accountId(ACCOUNT_ID)
-                                          .storeType(StoreType.HelmChartRepo)
-                                          .pollForChanges(true)
-                                          .build();
-    appManifest.setUuid(MANIFEST_ID);
     when(applicationManifestService.getManifestByServiceId(APP_ID, SERVICE_ID + 2)).thenReturn(appManifest);
+    when(applicationManifestService.getAppManifestByName(APP_ID, null, SERVICE_ID + 2, "name")).thenReturn(appManifest);
     when(applicationManifestService.getById(APP_ID, MANIFEST_ID)).thenReturn(appManifest);
 
     ArgumentCaptor<ExecutionArgs> argsArgumentCaptor = ArgumentCaptor.forClass(ExecutionArgs.class);
-    Map<String, String> serviceManifestMapping = ImmutableMap.of(SERVICE_ID, "1", SERVICE_ID + 2, "5");
+    Map<String, ManifestSummary> serviceManifestMapping =
+        ImmutableMap.of(SERVICE_ID, ManifestSummary.builder().versionNo("1").appManifestName("name").build(),
+            SERVICE_ID + 2, ManifestSummary.builder().versionNo("5").appManifestName("name").build());
     triggerService.triggerExecutionByWebHook(APP_ID, trigger.getWebHookToken(), Collections.emptyMap(),
         serviceManifestMapping, null, Collections.singletonMap("service", SERVICE_NAME));
     verify(workflowExecutionService, times(1))
@@ -3708,6 +3776,7 @@ public class TriggerServiceTest extends WingsBaseTest {
             .appManifestId(MANIFEST_ID + 2)
             .pipelineId(WORKFLOW_ID)
             .build()));
+    mockGetAppManifestAndGetService();
     triggerService.save(trigger);
 
     when(featureFlagService.isEnabled(FeatureName.ON_NEW_ARTIFACT_TRIGGER_WITH_LAST_COLLECTED_FILTER, ACCOUNT_ID))
@@ -3728,6 +3797,9 @@ public class TriggerServiceTest extends WingsBaseTest {
 
     triggerService.triggerExecutionPostArtifactCollectionAsync(
         ACCOUNT_ID, APP_ID, ARTIFACT_STREAM_ID, Collections.singletonList(anArtifact().withUuid(ARTIFACT_ID).build()));
+
+    verify(syncArtifactCollectionServiceImpl).collectNewArtifacts(APP_ID, ARTIFACT_STREAM_ID);
+    verifyNoMoreInteractions(syncArtifactCollectionServiceImpl);
     verify(workflowExecutionService, times(1))
         .triggerEnvExecution(eq(APP_ID), anyString(), argsArgumentCaptor.capture(), eq(trigger));
     assertThat(argsArgumentCaptor.getValue().getHelmCharts()).hasSize(2);
@@ -3764,5 +3836,157 @@ public class TriggerServiceTest extends WingsBaseTest {
     triggerService.addArtifactsFromSelectionsTriggeringArtifactSource(
         APP_ID, Trigger.builder().build(), selectedArtifacts, collectedArtifacts);
     assertThat(selectedArtifacts).containsAll(collectedArtifacts);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldThrowErrorIfWebHookSecretNotGivenWithGithub() {
+    when(featureFlagService.isEnabled(GITHUB_WEBHOOK_AUTHENTICATION, ACCOUNT_ID)).thenReturn(true);
+
+    Trigger bitbucketTrigger = createWebHookTriggerWithSecret(BITBUCKET);
+    assertThatThrownBy(() -> triggerService.save(bitbucketTrigger))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("WebHook Secret is only supported with Github repository");
+
+    Trigger gitLabTrigger = createWebHookTriggerWithSecret(GITLAB);
+    assertThatThrownBy(() -> triggerService.save(gitLabTrigger))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("WebHook Secret is only supported with Github repository");
+
+    Trigger customTrigger = createWebHookTriggerWithSecret(null);
+    assertThatThrownBy(() -> triggerService.save(customTrigger))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("WebHook Secret is only supported with Github repository");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldSaveWebHookSecretWithTrigger() {
+    when(featureFlagService.isEnabled(GITHUB_WEBHOOK_AUTHENTICATION, ACCOUNT_ID)).thenReturn(true);
+    wingsPersistence.save(EncryptedData.builder().uuid(SECRET_ID).build());
+
+    Trigger trigger = triggerService.save(createWebHookTriggerWithSecret(GITHUB));
+    assertThat(trigger).isNotNull();
+    assertThat(trigger.getCondition()).isNotNull();
+    WebHookTriggerCondition webHookTriggerCondition = (WebHookTriggerCondition) trigger.getCondition();
+    assertThat(webHookTriggerCondition.getWebHookSecret()).isEqualTo(SECRET_ID);
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldNotSaveWebHookSecretWhenFfOff() {
+    assertThatThrownBy(() -> triggerService.save(createWebHookTriggerWithSecret(GITHUB)))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Please enable feature flag to authenticate your webhook sources");
+  }
+
+  private Trigger createWebHookTriggerWithSecret(WebhookSource webhookSource) {
+    return Trigger.builder()
+        .workflowId(WORKFLOW_ID)
+        .workflowType(ORCHESTRATION)
+        .uuid(TRIGGER_ID)
+        .appId(APP_ID)
+        .name(TRIGGER_NAME)
+        .condition(WebHookTriggerCondition.builder()
+                       .webhookSource(webhookSource)
+                       .webHookToken(WebHookToken.builder().build())
+                       .webHookSecret(SECRET_ID)
+                       .parameters(ImmutableMap.of("MyVar", "MyVal"))
+                       .build())
+        .build();
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testAddSecretParentOnTriggerService() {
+    Trigger trigger = createWebHookTriggerWithSecret(GITHUB);
+    when(featureFlagService.isEnabled(GITHUB_WEBHOOK_AUTHENTICATION, ACCOUNT_ID)).thenReturn(true);
+    wingsPersistence.save(EncryptedData.builder().uuid(SECRET_ID).build());
+
+    Trigger savedTrigger = triggerService.save(trigger);
+    assertThat(savedTrigger).isNotNull();
+    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, SECRET_ID);
+    assertThat(encryptedData).isNotNull();
+    assertThat(encryptedData.getParents()).hasSize(1);
+    assertThat(encryptedData.getParents())
+        .isEqualTo(new HashSet(singletonList(
+            new EncryptedDataParent(savedTrigger.getUuid(), SettingVariableTypes.TRIGGER, WEBHOOK_SECRET))));
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testUpdateSecretParentOnTriggerService() {
+    Trigger trigger = createWebHookTriggerWithSecret(GITHUB);
+    when(featureFlagService.isEnabled(GITHUB_WEBHOOK_AUTHENTICATION, ACCOUNT_ID)).thenReturn(true);
+    wingsPersistence.save(EncryptedData.builder().uuid(SECRET_ID).build());
+    wingsPersistence.save(EncryptedData.builder().uuid(SECRET_ID + 2).build());
+    triggerService.save(trigger);
+
+    Trigger newTrigger = Trigger.builder()
+                             .workflowId(WORKFLOW_ID)
+                             .workflowType(ORCHESTRATION)
+                             .uuid(TRIGGER_ID)
+                             .appId(APP_ID)
+                             .name(TRIGGER_NAME)
+                             .accountId(ACCOUNT_ID)
+                             .condition(WebHookTriggerCondition.builder()
+                                            .webhookSource(GITHUB)
+                                            .webHookToken(WebHookToken.builder().build())
+                                            .webHookSecret(SECRET_ID + 2)
+                                            .parameters(ImmutableMap.of("MyVar", "MyVal"))
+                                            .build())
+                             .build();
+
+    Trigger updatedTrigger = triggerService.update(newTrigger, false);
+    assertThat(updatedTrigger).isNotNull();
+    EncryptedData oldEncryptedData = wingsPersistence.get(EncryptedData.class, SECRET_ID);
+    assertThat(oldEncryptedData).isNotNull();
+    assertThat(oldEncryptedData.getParents()).isEmpty();
+    EncryptedData newEncryptedData = wingsPersistence.get(EncryptedData.class, SECRET_ID + 2);
+    assertThat(newEncryptedData).isNotNull();
+    assertThat(newEncryptedData.getParents()).hasSize(1);
+    assertThat(newEncryptedData.getParents())
+        .isEqualTo(new HashSet(singletonList(
+            new EncryptedDataParent(updatedTrigger.getUuid(), SettingVariableTypes.TRIGGER, WEBHOOK_SECRET))));
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testDeleteSecretParentOnTriggerService() {
+    Trigger trigger = createWebHookTriggerWithSecret(GITHUB);
+    when(featureFlagService.isEnabled(GITHUB_WEBHOOK_AUTHENTICATION, ACCOUNT_ID)).thenReturn(true);
+    wingsPersistence.save(EncryptedData.builder().uuid(SECRET_ID).build());
+    triggerService.save(trigger);
+
+    triggerService.delete(APP_ID, TRIGGER_ID);
+    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, SECRET_ID);
+    assertThat(encryptedData).isNotNull();
+    assertThat(encryptedData.getParents()).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldNotRunDisabledTrigger() {
+    Artifact artifact = prepareArtifact(ARTIFACT_ID);
+    Artifact artifact2 = prepareArtifact(UUIDGenerator.generateUuid());
+
+    scheduledTriggerMocks();
+
+    when(workflowExecutionService.obtainLastGoodDeployedArtifacts(APP_ID, PIPELINE_ID))
+        .thenReturn(asList(artifact, artifact2));
+
+    ScheduledTriggerCondition scheduledTriggerCondition =
+        (ScheduledTriggerCondition) scheduledConditionTrigger.getCondition();
+    scheduledTriggerCondition.setCronExpression("0 5 31 2 ?");
+    assertThatThrownBy(() -> triggerService.save(scheduledConditionTrigger))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Given cron expression doesn't evaluate to a valid time. Please check the expression provided");
   }
 }

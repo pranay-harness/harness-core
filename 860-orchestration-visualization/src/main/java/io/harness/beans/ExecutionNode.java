@@ -9,14 +9,13 @@ import io.harness.logging.UnitProgress;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.run.NodeRunInfo;
 import io.harness.pms.contracts.execution.skip.SkipInfo;
+import io.harness.pms.data.OrchestrationMap;
 import io.harness.pms.execution.ExecutionStatus;
-import io.harness.tasks.ProgressData;
 
 import java.util.List;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
-import org.bson.Document;
 
 @Value
 @Builder
@@ -27,8 +26,8 @@ public class ExecutionNode {
   String name;
   String identifier;
   String baseFqn;
-  List<Document> outcomes;
-  Document stepParameters;
+  Map<String, OrchestrationMap> outcomes;
+  OrchestrationMap stepParameters;
   Long startTs;
   Long endTs;
   String stepType;
@@ -37,8 +36,9 @@ public class ExecutionNode {
   SkipInfo skipInfo;
   NodeRunInfo nodeRunInfo;
   List<ExecutableResponse> executableResponses;
-  Map<String, List<ProgressData>> taskIdToProgressDataMap;
   List<UnitProgress> unitProgresses;
+  OrchestrationMap progressData;
   List<DelegateInfo> delegateInfoList;
   List<InterruptEffect> interruptHistories;
+  Map<String, OrchestrationMap> stepDetails;
 }

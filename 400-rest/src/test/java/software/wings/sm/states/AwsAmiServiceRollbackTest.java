@@ -3,12 +3,12 @@ package software.wings.sm.states;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.EnvironmentType.PROD;
 import static io.harness.beans.ExecutionStatus.SKIPPED;
+import static io.harness.delegate.beans.pcf.ResizeStrategy.RESIZE_NEW_FIRST;
 import static io.harness.rule.OwnerRule.TMACARI;
 
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsAmiInfrastructureMapping.Builder.anAwsAmiInfrastructureMapping;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.command.Command.Builder.aCommand;
@@ -32,6 +32,7 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -45,6 +46,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 
@@ -78,6 +80,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
@@ -107,6 +110,8 @@ public class AwsAmiServiceRollbackTest extends WingsBaseTest {
   @Mock private ActivityService mockActivityService;
   @Mock private DelegateService mockDelegateService;
   @Mock private KryoSerializer kryoSerializer;
+  @Mock private StateExecutionService stateExecutionService;
+  @Mock private FeatureFlagService featureFlagService;
 
   @InjectMocks private AwsAmiServiceRollback state = new AwsAmiServiceRollback("stepName");
 
@@ -165,6 +170,7 @@ public class AwsAmiServiceRollbackTest extends WingsBaseTest {
             .build();
     doReturn(phaseElement).when(mockContext).getContextElement(any(), anyString());
     doReturn(SweepingOutputInquiry.builder()).when(mockContext).prepareSweepingOutputInquiryBuilder();
+    doReturn(false).when(featureFlagService).isEnabled(any(), any());
     WorkflowStandardParams mockParams = mock(WorkflowStandardParams.class);
     List newInstanceData = new ArrayList();
     newInstanceData.add(ContainerServiceData.builder().name("target-name").build());
@@ -187,6 +193,7 @@ public class AwsAmiServiceRollbackTest extends WingsBaseTest {
     String revision = "ami-1234";
     Artifact artifact = anArtifact().withRevision(revision).build();
     doReturn(artifact).when(mockContext).getDefaultArtifactForService(anyString());
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
     ArtifactStream artifactStream =
         AmiArtifactStream.builder().uuid(ARTIFACT_STREAM_ID).sourceName(ARTIFACT_SOURCE_NAME).build();
     doReturn(artifactStream).when(mockArtifactStreamService).get(anyString());

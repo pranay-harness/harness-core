@@ -7,6 +7,7 @@ import io.harness.batch.processing.cloudevents.aws.ecs.service.tasklet.support.r
 import io.harness.beans.ExecutionStatus;
 
 import software.wings.beans.AwsCrossAccountAttributes;
+import software.wings.service.impl.aws.client.CloseableAmazonWebServiceClient;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
@@ -52,9 +53,9 @@ public class AwsCloudWatchHelperServiceImpl implements AwsCloudWatchHelperServic
 
   private GetMetricDataResult getMetricData(
       GetMetricDataRequest request, AwsCrossAccountAttributes awsCrossAccountAttributes, String region) {
-    try {
-      AmazonCloudWatchClient cloudWatchClient = getAwsCloudWatchClient(region, awsCrossAccountAttributes);
-      return cloudWatchClient.getMetricData(request);
+    try (CloseableAmazonWebServiceClient<AmazonCloudWatchClient> closeableAmazonCloudWatchClient =
+             new CloseableAmazonWebServiceClient(getAwsCloudWatchClient(region, awsCrossAccountAttributes))) {
+      return closeableAmazonCloudWatchClient.getClient().getMetricData(request);
     } catch (Exception ex) {
       log.error("Exception getMetricData ", ex);
     }

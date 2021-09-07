@@ -3,14 +3,17 @@ package software.wings.api.pcf;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
+import io.harness.delegate.beans.pcf.CfRouteUpdateRequestConfigData;
+import io.harness.delegate.task.pcf.CfCommandRequest;
 
 import software.wings.api.ExecutionDataValue;
-import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
-import software.wings.helpers.ext.pcf.request.PcfRouteUpdateRequestConfigData;
 import software.wings.sm.StateExecutionData;
 
+import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,13 +27,17 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class PcfRouteUpdateStateExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData {
   private String activityId;
   private String accountId;
   private String appId;
-  private PcfCommandRequest pcfCommandRequest;
+  private CfCommandRequest pcfCommandRequest;
   private String commandName;
-  private PcfRouteUpdateRequestConfigData pcfRouteUpdateRequestConfigData;
+  private CfRouteUpdateRequestConfigData pcfRouteUpdateRequestConfigData;
+  private List<String> tags;
+  private boolean isRollback;
+  private boolean isUpSizeInActiveApp;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
@@ -65,9 +72,10 @@ public class PcfRouteUpdateStateExecutionData extends StateExecutionData impleme
 
     if (pcfRouteUpdateRequestConfigData.isStandardBlueGreen()) {
       stringBuilder.append('{')
-          .append(pcfRouteUpdateRequestConfigData.getNewApplicatiaonName())
+          .append(pcfRouteUpdateRequestConfigData.getNewApplicationName())
           .append(" : ")
-          .append(pcfRouteUpdateRequestConfigData.getFinalRoutes())
+          .append(isRollback ? pcfRouteUpdateRequestConfigData.getTempRoutes()
+                             : pcfRouteUpdateRequestConfigData.getFinalRoutes())
           .append('}');
 
       if (isNotEmpty(pcfRouteUpdateRequestConfigData.getExistingApplicationNames())) {
@@ -75,7 +83,8 @@ public class PcfRouteUpdateStateExecutionData extends StateExecutionData impleme
             -> stringBuilder.append(", {")
                    .append(appName)
                    .append(" : ")
-                   .append(pcfRouteUpdateRequestConfigData.getTempRoutes())
+                   .append(isRollback ? pcfRouteUpdateRequestConfigData.getFinalRoutes()
+                                      : pcfRouteUpdateRequestConfigData.getTempRoutes())
                    .append('}'));
       }
     } else {

@@ -11,9 +11,9 @@ import static software.wings.graphql.datafetcher.billing.BillingDataQueryBuilder
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.ccm.cluster.InstanceDataServiceImpl;
 import io.harness.ccm.commons.beans.InstanceType;
-import io.harness.ccm.commons.entities.InstanceData;
+import io.harness.ccm.commons.entities.batch.InstanceData;
+import io.harness.ccm.commons.service.impl.InstanceDataServiceImpl;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -73,6 +73,7 @@ public class NodeAndPodDetailsDataFetcher
   private static final String WORKLOAD = "workload_name";
   private static final String PARENT_RESOURCE_ID = "parent_resource_id";
   private static final String NODE_POOL_NAME = "node_pool_name";
+  public static final String CLOUD_PROVIDER_INSTANCE_ID = "cloud_provider_instance_id";
   private static final String K8S_POD_CAPACITY = "pod_capacity";
   private static final String DEFAULT_STRING_VALUE = "-";
   private static final InstanceData DEFAULT_INSTANCE_DATA = InstanceData.builder().metaData(new HashMap<>()).build();
@@ -422,12 +423,13 @@ public class NodeAndPodDetailsDataFetcher
       InstanceData entry = instanceIdToInstanceData.getOrDefault(instanceIdWithCluster, DEFAULT_INSTANCE_DATA);
       QLNodeAndPodDetailsTableRow costDataEntry = instanceIdToCostData.get(instanceIdWithCluster);
       QLNodeAndPodDetailsTableRowBuilder builder = QLNodeAndPodDetailsTableRow.builder();
-      builder.name(costDataEntry.getName())
+      builder.name(entry.getInstanceName())
           .id(costDataEntry.getClusterId() + BillingStatsDefaultKeys.TOKEN + costDataEntry.getId())
           .nodeId(costDataEntry.getId())
           .clusterName(costDataEntry.getClusterName())
           .clusterId(costDataEntry.getClusterId())
           .nodePoolName(entry.getMetaData().getOrDefault(NODE_POOL_NAME, DEFAULT_STRING_VALUE))
+          .cloudProviderInstanceId(entry.getMetaData().getOrDefault(CLOUD_PROVIDER_INSTANCE_ID, DEFAULT_STRING_VALUE))
           .podCapacity(entry.getMetaData().getOrDefault(K8S_POD_CAPACITY, DEFAULT_STRING_VALUE))
           .totalCost(costDataEntry.getTotalCost())
           .idleCost(costDataEntry.getIdleCost())
@@ -542,7 +544,7 @@ public class NodeAndPodDetailsDataFetcher
   @Override
   protected QLData fetchSelectedFields(String accountId, List<QLCCMAggregationFunction> aggregateFunction,
       List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sort, Integer limit,
-      Integer offset, DataFetchingEnvironment dataFetchingEnvironment) {
+      Integer offset, boolean skipRoundOff, DataFetchingEnvironment dataFetchingEnvironment) {
     return null;
   }
 

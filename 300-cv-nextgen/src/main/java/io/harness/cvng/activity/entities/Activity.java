@@ -3,17 +3,21 @@ package io.harness.cvng.activity.entities;
 import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageFromParam;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
 import io.harness.cvng.activity.beans.ActivityVerificationSummary;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityDTO.VerificationJobRuntimeDetails;
 import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
+import io.harness.cvng.core.services.api.UpdatableEntity;
+import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceBuilder;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
@@ -27,6 +31,7 @@ import com.google.common.collect.ImmutableList;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import javax.validation.constraints.NotNull;
@@ -38,6 +43,8 @@ import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Data
 @FieldNameConstants(innerTypeName = "ActivityKeys")
@@ -48,6 +55,7 @@ import org.mongodb.morphia.annotations.Id;
 @Entity(value = "activities")
 @HarnessEntity(exportable = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXISTING_PROPERTY)
+@StoreIn(DbAliases.CVNG)
 public abstract class Activity
     implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess, PersistentRegularIterable {
   public static List<MongoIndex> mongoIndexes() {
@@ -87,8 +95,13 @@ public abstract class Activity
   @NotNull private String orgIdentifier;
   private String activitySourceId;
 
+  private String changeSourceIdentifier;
+  private Instant eventTime;
+
   private String activityName;
-  private List<VerificationJobRuntimeDetails> verificationJobRuntimeDetails;
+  @Deprecated private List<VerificationJobRuntimeDetails> verificationJobRuntimeDetails;
+  private List<VerificationJob> verificationJobs;
+
   @NotNull private Instant activityStartTime;
   private Instant activityEndTime;
   @FdIndex private List<String> verificationJobInstanceIds;
@@ -102,6 +115,20 @@ public abstract class Activity
   @FdIndex private Long verificationIteration;
 
   public abstract ActivityType getType();
+
+  public List<VerificationJob> getVerificationJobs() {
+    if (verificationJobs == null) {
+      verificationJobs = Collections.EMPTY_LIST;
+    }
+    return verificationJobs;
+  }
+
+  public Instant getEventTime() {
+    if (eventTime == null) {
+      eventTime = this.activityStartTime;
+    }
+    return eventTime;
+  }
 
   public abstract void fromDTO(ActivityDTO activityDTO);
 
@@ -121,6 +148,7 @@ public abstract class Activity
     setActivityStartTime(Instant.ofEpochMilli(activityDTO.getActivityStartTime()));
     setActivityEndTime(
         activityDTO.getActivityEndTime() != null ? Instant.ofEpochMilli(activityDTO.getActivityEndTime()) : null);
+    setType(activityDTO.getType());
     setTags(activityDTO.getTags());
   }
 
@@ -132,6 +160,7 @@ public abstract class Activity
     Preconditions.checkNotNull(orgIdentifier, generateErrorMessageFromParam(ActivityKeys.orgIdentifier));
     Preconditions.checkNotNull(activityName, generateErrorMessageFromParam(ActivityKeys.activityName));
     Preconditions.checkNotNull(activityStartTime, generateErrorMessageFromParam(ActivityKeys.activityStartTime));
+    Preconditions.checkNotNull(type, generateErrorMessageFromParam(ActivityKeys.type));
     this.validateActivityParams();
   }
 
@@ -153,4 +182,29 @@ public abstract class Activity
   }
 
   public abstract boolean deduplicateEvents();
+
+  public abstract static class ActivityUpdatableEntity<T extends Activity, D extends Activity>
+      implements UpdatableEntity<T, D> {
+    public abstract Class getEntityClass();
+
+    public Query<T> populateKeyQuery(Query<T> query, D activity) {
+      return query.filter(ActivityKeys.orgIdentifier, activity.getOrgIdentifier())
+          .filter(ActivityKeys.projectIdentifier, activity.getProjectIdentifier())
+          .filter(ActivityKeys.serviceIdentifier, activity.getServiceIdentifier())
+          .filter(ActivityKeys.environmentIdentifier, activity.getEnvironmentIdentifier());
+    }
+
+    protected void setCommonUpdateOperations(UpdateOperations<T> updateOperations, D activity) {
+      updateOperations.set(ActivityKeys.accountId, activity.getAccountId())
+          .set(ActivityKeys.orgIdentifier, activity.getOrgIdentifier())
+          .set(ActivityKeys.projectIdentifier, activity.getProjectIdentifier())
+          .set(ActivityKeys.serviceIdentifier, activity.getServiceIdentifier())
+          .set(ActivityKeys.environmentIdentifier, activity.getEnvironmentIdentifier())
+          .set(ActivityKeys.eventTime, activity.getEventTime())
+          .set(ActivityKeys.activityStartTime, activity.getActivityStartTime())
+          .set(ActivityKeys.activityEndTime, activity.getActivityEndTime())
+          .set(ActivityKeys.changeSourceIdentifier, activity.getChangeSourceIdentifier())
+          .set(ActivityKeys.type, activity.getType());
+    }
+  }
 }

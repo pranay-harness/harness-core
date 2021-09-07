@@ -12,8 +12,8 @@ import io.harness.exception.InvalidRequestException;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
 
-@OwnedBy(HarnessTeam.PIPELINE)
 @UtilityClass
+@OwnedBy(HarnessTeam.PIPELINE)
 public class IdentifierRefHelper {
   public final String IDENTIFIER_REF_DELIMITER = "\\."; // check if this is the correct delimiter
 
@@ -45,7 +45,7 @@ public class IdentifierRefHelper {
     }
 
     if (EmptyPredicate.isEmpty(scopedIdentifierConfig)) {
-      throw new InvalidRequestException("Empty secret ref cannot be given");
+      throw new InvalidRequestException("Empty identifier ref cannot be given");
     }
     String[] identifierConfigStringSplit = scopedIdentifierConfig.split(IDENTIFIER_REF_DELIMITER);
 

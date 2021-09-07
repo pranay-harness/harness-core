@@ -1,0 +1,45 @@
+trigger:
+  name: first trigger
+  identifier: first_trigger
+  pipelineIdentifier: pipeline
+  inputYaml: |
+    pipeline:
+      identifier: secrethttp1
+      stages:
+        - stage:
+            identifier: qaStage
+            spec:
+              infrastructure:
+                infrastructureDefinition:
+                  spec:
+                    releaseName: releaseName1
+  source:
+    type: Webhook
+    spec:
+      type: Github
+      spec:
+        type: PullRequest
+        spec:
+          connectorRef: conn
+          repoName: myrepo
+          actions:
+            - Close
+            - Open
+            - Reopen
+            - Label
+            - Unlabel
+            - Synchronize
+          headerConditions: []
+          payloadConditions:
+            - key: sourceBranch
+              operator: Equals
+              value: dev
+            - key: targetBranch
+              operator: In
+              value: master, on-prem
+            - key: ${pull_request.number}
+              operator: Regex
+              value: ^pr-[0-9a-f]{7}$
+          jexlCondition: true
+          autoAbortPreviousExecutions: false
+  enabled: true

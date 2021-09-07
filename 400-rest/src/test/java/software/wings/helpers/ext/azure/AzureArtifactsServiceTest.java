@@ -16,6 +16,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.task.ListNotifyResponseData;
@@ -54,6 +58,8 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import retrofit2.Response;
 
+@OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._960_API_SERVICES)
 public class AzureArtifactsServiceTest extends WingsBaseTest {
   private static final String DEFAULT_AZURE_ARTIFACTS_URL_WITHOUT_SLASH = "http://localhost:9891/azureartifacts";
   private static final String DEFAULT_AZURE_ARTIFACTS_URL = DEFAULT_AZURE_ARTIFACTS_URL_WITHOUT_SLASH + "/";
@@ -120,7 +126,7 @@ public class AzureArtifactsServiceTest extends WingsBaseTest {
     azureArtifactsService.validateArtifactServer(azureArtifactsConfig, null, false);
   }
 
-  @Test(expected = InvalidArtifactServerException.class)
+  @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldNotValidateArtifactServerForInvalidUrl() {
@@ -688,7 +694,7 @@ public class AzureArtifactsServiceTest extends WingsBaseTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldNotGetSubdomainUrlForInvalidAzureDevopsUrl() {
-    String invalidUrl = "https://devother.azure.com/org";
+    String invalidUrl = "htttttp://invalid.azure.com/org";
     assertThat(getSubdomainUrl(invalidUrl, "feeds")).isEqualTo(invalidUrl);
   }
 
@@ -706,7 +712,7 @@ public class AzureArtifactsServiceTest extends WingsBaseTest {
     validateAzureDevopsUrl("$[level]");
   }
 
-  @Test(expected = InvalidArtifactServerException.class)
+  @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldNotValidateInvalidAzureDevopsUrl() {

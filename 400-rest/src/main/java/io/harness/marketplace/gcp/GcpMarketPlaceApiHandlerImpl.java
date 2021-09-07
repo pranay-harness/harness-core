@@ -15,6 +15,7 @@ import io.harness.event.handler.impl.segment.SegmentHandler.Keys;
 import io.harness.event.handler.impl.segment.SegmentHelper;
 import io.harness.exception.FailureType;
 import io.harness.exception.GeneralException;
+import io.harness.exception.SignupException;
 import io.harness.marketplace.gcp.procurement.GcpProcurementService;
 import io.harness.marketplace.gcp.signup.GcpMarketplaceSignUpHandler;
 import io.harness.marketplace.gcp.signup.annotations.NewSignUp;
@@ -23,7 +24,6 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.marketplace.gcp.GCPMarketplaceCustomer;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.authentication.AuthenticationUtils;
-import software.wings.service.intfc.signup.SignupException;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.JWTVerifier;
@@ -34,6 +34,7 @@ import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpTransport;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.inject.Inject;
@@ -51,7 +52,6 @@ import java.util.Map;
 import javax.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.utils.URIBuilder;
-import org.assertj.core.util.VisibleForTesting;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @OwnedBy(GTM)

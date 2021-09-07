@@ -1,12 +1,20 @@
 package io.harness.app.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
+import static io.harness.cache.CacheBackend.CAFFEINE;
+import static io.harness.cache.CacheBackend.NOOP;
 
+import io.harness.AccessControlClientConfiguration;
+import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.CIManagerConfiguration;
 import io.harness.app.CIManagerServiceModule;
+import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.app.SCMGrpcClientModule;
 import io.harness.app.ScmConnectionConfig;
+import io.harness.cache.CacheConfig;
+import io.harness.cache.CacheConfig.CacheConfigBuilder;
+import io.harness.cache.CacheModule;
 import io.harness.ci.beans.entities.LogServiceConfig;
 import io.harness.ci.beans.entities.TIServiceConfig;
 import io.harness.ci.config.CIExecutionServiceConfig;
@@ -17,11 +25,11 @@ import io.harness.govern.ServersModule;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
-import io.harness.queue.QueueController;
+import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.registrars.ExecutionAdvisers;
 import io.harness.registrars.ExecutionRegistrar;
-import io.harness.registrars.OrchestrationStepsModuleFacilitatorRegistrar;
 import io.harness.remote.client.ServiceHttpClientConfig;
+import io.harness.rule.Cache;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.CiBeansRegistrars;
 import io.harness.serializer.CiExecutionRegistrars;
@@ -29,6 +37,7 @@ import io.harness.serializer.ConnectorNextGenRegistrars;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.OrchestrationBeansRegistrars;
 import io.harness.serializer.PersistenceRegistrars;
+import io.harness.serializer.PrimaryVersionManagerRegistrars;
 import io.harness.serializer.YamlBeansModuleRegistrars;
 import io.harness.springdata.SpringPersistenceTestModule;
 import io.harness.testlib.module.MongoRuleMixin;
@@ -41,7 +50,6 @@ import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 import ci.pipeline.execution.OrchestrationExecutionEventHandlerRegistrar;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
@@ -49,6 +57,7 @@ import com.google.inject.Singleton;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
@@ -73,6 +82,7 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
 
     List<Module> modules = new ArrayList<>();
     modules.add(YamlSdkModule.getInstance());
+    modules.add(PrimaryVersionManagerModule.getInstance());
     modules.add(new ProviderModule() {
       @Provides
       @Singleton
@@ -90,6 +100,7 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
       Set<Class<? extends MorphiaRegistrar>> morphiaRegistrars() {
         return ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
             .addAll(CiExecutionRegistrars.morphiaRegistrars)
+            .addAll(PrimaryVersionManagerRegistrars.morphiaRegistrars)
             .build();
       }
 
@@ -117,10 +128,21 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
       }
     });
 
+    CacheConfigBuilder cacheConfigBuilder =
+        CacheConfig.builder().disabledCaches(new HashSet<>()).cacheNamespace("harness-cache");
+    if (annotations.stream().anyMatch(annotation -> annotation instanceof Cache)) {
+      cacheConfigBuilder.cacheBackend(CAFFEINE);
+    } else {
+      cacheConfigBuilder.cacheBackend(NOOP);
+    }
+    CacheModule cacheModule = new CacheModule(cacheConfigBuilder.build());
+    modules.add(cacheModule);
+
     CIManagerConfiguration configuration =
         CIManagerConfiguration.builder()
             .managerAuthority("localhost")
             .managerTarget("localhost:9880")
+            .accessControlClientConfiguration(AccessControlClientConfiguration.builder().build())
             .ciExecutionServiceConfig(CIExecutionServiceConfig.builder()
                                           .addonImageTag("v1.4-alpha")
                                           .defaultCPULimit(200)
@@ -145,22 +167,6 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
     modules.add(new SCMGrpcClientModule(configuration.getScmConnectionConfig()));
     modules.add(new ClosingFactoryModule(closingFactory));
     modules.add(mongoTypeModule(annotations));
-    modules.add(new AbstractModule() {
-      @Override
-      protected void configure() {
-        bind(QueueController.class).toInstance(new QueueController() {
-          @Override
-          public boolean isPrimary() {
-            return true;
-          }
-
-          @Override
-          public boolean isNotPrimary() {
-            return false;
-          }
-        });
-      }
-    });
     modules.add(TestMongoModule.getInstance());
     modules.add(new SpringPersistenceTestModule());
     modules.add(new CIManagerServiceModule(configuration));
@@ -170,12 +176,11 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
 
   private PmsSdkConfiguration getPmsSdkConfiguration() {
     return PmsSdkConfiguration.builder()
-        .deploymentMode(PmsSdkConfiguration.DeployMode.LOCAL)
-        .serviceName("ci")
+        .deploymentMode(SdkDeployMode.LOCAL)
+        .moduleType(ModuleType.CI)
         .engineSteps(ExecutionRegistrar.getEngineSteps())
         .engineAdvisers(ExecutionAdvisers.getEngineAdvisers())
-        .engineFacilitators(OrchestrationStepsModuleFacilitatorRegistrar.getEngineFacilitators())
-        .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers(false))
+        .engineEventHandlersMap(OrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers())
         .build();
   }
 

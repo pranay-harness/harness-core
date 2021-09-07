@@ -1,6 +1,8 @@
 package software.wings.delegatetasks.azure.arm.deployment.context;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.blueprint.Blueprint;
@@ -13,16 +15,17 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Builder
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(HarnessTeam.CDP)
 public class DeploymentBlueprintContext {
   private AzureConfig azureConfig;
   private String definitionResourceScope;
   private String blueprintName;
-  private Blueprint blueprint;
+  private Blueprint existingBlueprint;
   private String blueprintJSON;
   private Map<String, String> artifacts;
   private String versionId;

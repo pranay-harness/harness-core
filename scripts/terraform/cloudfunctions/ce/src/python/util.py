@@ -1,21 +1,36 @@
 import json
+import bq_schema
 from google.cloud import bigquery
 from google.cloud.exceptions import NotFound
-from clusterdata_schema import clusterDataTableFields
-from unified_schema import unifiedTableTableSchema
-from preaggregated_schema import preAggreagtedTableSchema
 
 ACCOUNTID_LOG = ""
+TABLE_NAME_FORMAT = "%s.BillingReport_%s.%s"
+
+# TABLE NAMES
+CLUSTERDATAAGGREGATED = "clusterDataAggregated"
+CLUSTERDATA = "clusterData"
+CLUSTERDATAHOURLY = "clusterDataHourly"
+CLUSTERDATAHOURLYAGGREGATED = "clusterDataHourlyAggregated"
+PREAGGREGATED = "preAggregated"
+AWSEC2INVENTORYMETRIC = "awsEc2InventoryMetric"
+AWSEC2INVENTORY = "awsEc2Inventory"
+AWSEBSINVENTORYMETRICS = "awsEbsInventoryMetrics"
+AWSEBSINVENTORY = "awsEbsInventory"
+UNIFIED = "unifiedTable"
+AWSCURPREFIX = "awscur"
 
 def print_(message, severity="INFO"):
     # Set account id in the beginning of your CF call
-    print(json.dumps({"accountId":ACCOUNTID_LOG, "severity":severity, "message": message}))
+    try:
+        print(json.dumps({"accountId":ACCOUNTID_LOG, "severity":severity, "message": message}))
+    except:
+        print(message)
 
 def create_dataset(client, datasetName):
     dataset_id = "{}.{}".format(client.project, datasetName)
     dataset = bigquery.Dataset(dataset_id)
     dataset.location = "US"
-    dataset.description = "Data set for [ AccountId: %s ]" % (ACCOUNTID_LOG)
+    dataset.description = "Dataset for [ AccountId: %s ]" % (ACCOUNTID_LOG)
 
     # Send the dataset to the API for creation, with an explicit timeout.
     # Raises google.api_core.exceptions.Conflict if the Dataset already
@@ -35,37 +50,87 @@ def if_tbl_exists(client, table_ref):
         return False
 
 
-def createTable(client, tableName):
+def createTable(client, table_ref):
+    tableName = table_ref.table_id
     print_("Creating %s table" % tableName)
     schema = []
-    if tableName.endswith("clusterData"):
-        fieldset = clusterDataTableFields
-    elif tableName.endswith("preAggregated"):
-        fieldset = preAggreagtedTableSchema
-    else:
-        fieldset = unifiedTableTableSchema
-
-    for field in fieldset:
-        if field.get("type") == "RECORD":
-             nested_field = [bigquery.SchemaField(nested_field["name"], nested_field["type"], mode=nested_field.get("mode", "")) for nested_field in field["fields"]]
-             schema.append(bigquery.SchemaField(field["name"], field["type"], mode=field["mode"], fields=nested_field))
-        else:
-             schema.append(bigquery.SchemaField(field["name"], field["type"], mode=field.get("mode", "")))
-    table = bigquery.Table(tableName, schema=schema)
-
-    if tableName.endswith("clusterData"):
-        table.range_partitioning = bigquery.RangePartitioning(
-             field="starttime",
-             range_=bigquery.PartitionRange(start=1514745000000, end=1893436200000, interval=86400000)
+    if tableName == CLUSTERDATA or tableName == CLUSTERDATAHOURLY:
+        fieldset = bq_schema.clusterDataTableFields
+        partition = bigquery.RangePartitioning(
+            field="starttime",
+            range_=bigquery.PartitionRange(start=1514745000000, end=1893436200000, interval=86400000)
         )
-    elif tableName.endswith("unifiedTable") or tableName.endswith("preAggregated"):
-        table.time_partitioning = bigquery.TimePartitioning(
+    elif tableName == CLUSTERDATAAGGREGATED or tableName == CLUSTERDATAHOURLYAGGREGATED:
+        fieldset = bq_schema.clusterDataAggregatedFields
+        partition = bigquery.RangePartitioning(
+            field="starttime",
+            range_=bigquery.PartitionRange(start=1514745000000, end=1893436200000, interval=86400000)
+        )
+    elif tableName == PREAGGREGATED:
+        fieldset = bq_schema.preAggreagtedTableSchema
+        partition = bigquery.TimePartitioning(
+            type_=bigquery.TimePartitioningType.DAY,
+            field="startTime"
+        )
+    elif tableName == AWSEC2INVENTORYMETRIC:
+        fieldset = bq_schema.awsEc2InventoryCPUSchema
+        partition = bigquery.TimePartitioning(
+            type_=bigquery.TimePartitioningType.DAY,
+            field="addedAt"
+        )
+    elif tableName.startswith(AWSEC2INVENTORY):
+        fieldset = bq_schema.awsEc2InventorySchema
+        partition = bigquery.RangePartitioning(
+            range_=bigquery.PartitionRange(start=0, end=10000, interval=1),
+            field="linkedAccountIdPartition"
+        )
+    elif tableName == AWSEBSINVENTORYMETRICS:
+        fieldset = bq_schema.awsEbsInventoryMetricsSchema
+        partition = bigquery.TimePartitioning(
+            type_=bigquery.TimePartitioningType.DAY,
+            field="addedAt"
+        )
+    elif tableName.startswith(AWSEBSINVENTORY):
+        fieldset = bq_schema.awsEbsInventorySchema
+        partition = bigquery.RangePartitioning(
+            range_=bigquery.PartitionRange(start=0, end=10000, interval=1),
+            field="linkedAccountIdPartition"
+        )
+    elif tableName.startswith(AWSCURPREFIX):
+        fieldset = bq_schema.aws_cur_table_schema
+        partition = bigquery.TimePartitioning(
+            type_=bigquery.TimePartitioningType.DAY,
+            field="usagestartdate"
+        )
+    elif tableName == UNIFIED:
+        fieldset = bq_schema.unifiedTableTableSchema
+        partition = bigquery.TimePartitioning(
             type_=bigquery.TimePartitioningType.DAY,
             field="startTime"  # name of column to use for partitioning
         )
+
+    for field in fieldset:
+        if field.get("type") == "RECORD":
+            nested_field = [bigquery.SchemaField(nested_field["name"], nested_field["type"], mode=nested_field.get("mode", "")) for nested_field in field["fields"]]
+            schema.append(bigquery.SchemaField(field["name"], field["type"], mode=field["mode"], fields=nested_field))
+        else:
+            schema.append(bigquery.SchemaField(field["name"], field["type"], mode=field.get("mode", "")))
+    if not schema:
+        print_("Could not find any schema for table %s : %s" % (tableName, schema))
+        return False
+    table = bigquery.Table("%s.%s.%s" % (table_ref.project, table_ref.dataset_id, tableName), schema=schema)
+
+    if tableName in [UNIFIED, PREAGGREGATED, AWSEC2INVENTORYMETRIC, AWSEBSINVENTORYMETRICS] or \
+        tableName.startswith(AWSCURPREFIX):
+        table.time_partitioning = partition
+    elif tableName.startswith(AWSEC2INVENTORY) or tableName.startswith(AWSEBSINVENTORY) or \
+            tableName in [CLUSTERDATA, CLUSTERDATAAGGREGATED, CLUSTERDATAHOURLY, CLUSTERDATAHOURLYAGGREGATED]:
+        table.range_partitioning = partition
+
     try:
         table = client.create_table(table)  # Make an API request.
         print_("Created table {}.{}.{}".format(table.project, table.dataset_id, table.table_id))
     except Exception as e:
         print_("Error while creating table\n {}".format(e), "WARN")
-
+        return False
+    return True

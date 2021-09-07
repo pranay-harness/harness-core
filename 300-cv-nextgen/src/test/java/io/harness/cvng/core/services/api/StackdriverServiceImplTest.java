@@ -9,6 +9,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.DataCollectionRequestType;
@@ -34,7 +35,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class StackdriverServiceImplTest {
+public class StackdriverServiceImplTest extends CategoryTest {
   @Mock private OnboardingService onboardingService;
   @InjectMocks private StackdriverService stackdriverService = new StackdriverServiceImpl();
   private String accountId;

@@ -172,6 +172,8 @@ spec:
           periodSeconds: 10
           failureThreshold: 2
         env:
+        - name: JAVA_OPTS
+          value: "-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=2 -Xms64M"
         - name: ACCOUNT_ID
           value: ${accountId}
         - name: ACCOUNT_SECRET
@@ -232,6 +234,10 @@ spec:
           value: ""
         - name: HELM_PATH
           value: ""
+        - name: CF_CLI6_PATH
+          value: ""
+        - name: CF_CLI7_PATH
+          value: ""
         - name: KUSTOMIZE_PATH
           value: ""
         - name: OC_PATH
@@ -240,6 +246,4 @@ spec:
           value: ""
         - name: ENABlE_CE
           value: "${enableCE}"
-        - name: MANAGER_SERVICE_SECRET
-          value: "${managerServiceSecret}"
       restartPolicy: Always

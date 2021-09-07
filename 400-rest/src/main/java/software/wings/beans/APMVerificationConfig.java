@@ -15,12 +15,14 @@ import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.audit.ResourceType;
+import software.wings.security.UsageRestrictions;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.sm.states.APMVerificationState.Method;
 import software.wings.utils.Utils;
+import software.wings.yaml.setting.VerificationProviderYaml;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
@@ -39,6 +41,7 @@ import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -318,5 +321,34 @@ public class APMVerificationConfig extends SettingValue implements EncryptableSe
       }
     }
     return keyValuesList;
+  }
+
+  @Data
+  @NoArgsConstructor
+  @EqualsAndHashCode(callSuper = true)
+  public static final class Yaml extends VerificationProviderYaml {
+    private String url;
+    private String validationUrl;
+    private String validationBody;
+    private Method validationMethod;
+    private boolean logVerification;
+    private List<KeyValues> headersList;
+    private List<KeyValues> optionsList;
+    private List<KeyValues> additionalEncryptedFields;
+
+    @Builder
+    public Yaml(String type, String harnessApiVersion, UsageRestrictions.Yaml usageRestrictions, String url,
+        String validationUrl, String validationBody, Method validationMethod, boolean logVerification,
+        List<KeyValues> headersList, List<KeyValues> optionsList, List<KeyValues> additionalEncryptedFields) {
+      super(type, harnessApiVersion, usageRestrictions);
+      this.url = url;
+      this.validationUrl = validationUrl;
+      this.validationBody = validationBody;
+      this.validationMethod = validationMethod;
+      this.logVerification = logVerification;
+      this.headersList = headersList;
+      this.optionsList = optionsList;
+      this.additionalEncryptedFields = additionalEncryptedFields;
+    }
   }
 }

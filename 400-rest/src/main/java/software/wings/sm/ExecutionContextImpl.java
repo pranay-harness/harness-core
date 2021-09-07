@@ -1,5 +1,6 @@
 package software.wings.sm;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.ExecutionStatus.RUNNING;
@@ -32,6 +33,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.join;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
@@ -169,6 +171,7 @@ import org.mongodb.morphia.Key;
 
 @OwnedBy(CDC)
 @Slf4j
+@TargetModule(_870_CG_ORCHESTRATION)
 public class ExecutionContextImpl implements DeploymentExecutionContext {
   public static final String PHASE_PARAM = "PHASE_PARAM";
   private static final SecureRandom random = new SecureRandom();
@@ -321,8 +324,10 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       return;
     }
 
-    helmChart.setMetadata(
-        applicationManifestService.fetchAppManifestProperties(appId, helmChart.getApplicationManifestId()));
+    if (isEmpty(helmChart.getMetadata())) {
+      helmChart.setMetadata(
+          applicationManifestService.fetchAppManifestProperties(appId, helmChart.getApplicationManifestId()));
+    }
     map.put(HELM_CHART, helmChart);
   }
 
@@ -1128,8 +1133,10 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
     PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM);
     if (phaseElement != null && isNotEmpty(phaseElement.getVariableOverrides())) {
-      variables.putAll(phaseElement.getVariableOverrides().stream().collect(
-          Collectors.toMap(NameValuePair::getName, NameValuePair::getValue)));
+      variables.putAll(phaseElement.getVariableOverrides()
+                           .stream()
+                           .filter(variableOverride -> variableOverride.getValue() != null)
+                           .collect(Collectors.toMap(NameValuePair::getName, NameValuePair::getValue)));
     }
 
     if (contextMap != null) {

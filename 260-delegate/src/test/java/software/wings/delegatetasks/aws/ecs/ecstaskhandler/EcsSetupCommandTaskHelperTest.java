@@ -1296,7 +1296,8 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testDownsizeOldOrUnhealthy() {
-    EcsSetupParams params = anEcsSetupParams().withRegion("us-east-1").withClusterName("cluster").build();
+    EcsSetupParams params =
+        anEcsSetupParams().withRegion("us-east-1").withClusterName("cluster").withTaskFamily("foo").build();
     SettingAttribute attribute = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallback).saveExecutionLog(anyString());
@@ -1305,7 +1306,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     result.put("foo__2", 1);
     doReturn(result)
         .when(awsClusterService)
-        .getActiveServiceCounts(anyString(), any(), anyList(), anyString(), anyString());
+        .getActiveServiceCountsByServiceNamePrefix(anyString(), any(), anyList(), anyString(), anyString());
     doReturn(new ListTasksResult().withTaskArns(singletonList("foo__1__arn")))
         .doReturn(new ListTasksResult().withTaskArns(singletonList("foo__2__arn")))
         .when(mockAwsHelperService)
@@ -1314,7 +1315,7 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
         .doReturn(singletonList(ContainerInfo.builder().status(SUCCESS).build()))
         .when(mockEcsContainerService)
         .getContainerInfosAfterEcsWait(anyString(), any(), anyList(), anyString(), anyString(), anyList(), any());
-    ecsSetupCommandTaskHelper.downsizeOldOrUnhealthy(attribute, params, "foo__3", emptyList(), mockCallback, false);
+    ecsSetupCommandTaskHelper.downsizeOldOrUnhealthy(attribute, params, emptyList(), mockCallback, false);
     verify(awsClusterService)
         .resizeCluster(
             anyString(), any(), anyList(), anyString(), eq("foo__1"), anyInt(), eq(0), anyInt(), any(), anyBoolean());
@@ -1324,6 +1325,8 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
   @Owner(developers = SATYAM)
   @Category(UnitTests.class)
   public void testCleanup() {
+    EcsSetupParams params =
+        anEcsSetupParams().withRegion("us-east-1").withClusterName("clusterName").withTaskFamily("foo").build();
     doReturn(newArrayList(new Service().withServiceName("foo__1").withDesiredCount(0),
                  new Service().withServiceName("foo__2").withDesiredCount(2),
                  new Service().withServiceName("foo__3").withDesiredCount(0)))
@@ -1332,8 +1335,9 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
     SettingAttribute attribute = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
     ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallback).saveExecutionLog(anyString());
-    ecsSetupCommandTaskHelper.cleanup(attribute, "us-east-1", "foo__3", "clusterName", emptyList(), mockCallback);
+    ecsSetupCommandTaskHelper.cleanup(attribute, params, emptyList(), mockCallback);
     verify(awsClusterService).deleteService(anyString(), any(), anyList(), anyString(), eq("foo__1"));
+    verify(awsClusterService).deleteService(anyString(), any(), anyList(), anyString(), eq("foo__3"));
   }
 
   @Test

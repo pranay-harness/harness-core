@@ -1,10 +1,13 @@
 package software.wings.resources.secretsmanagement;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SECRET_MANAGERS;
 import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.ff.FeatureFlagService;
 import io.harness.helpers.ext.vault.SecretEngineSummary;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
@@ -30,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Created by rsingh on 10/10/17.
  */
+@OwnedBy(PL)
 @Api("vault")
 @Path("/vault")
 @Produces("application/json")
@@ -38,6 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class VaultResource {
   @Inject private VaultService vaultService;
+  @Inject private FeatureFlagService featureFlagService;
 
   @POST
   @Timed
@@ -67,6 +72,7 @@ public class VaultResource {
   @ExceptionMetered
   public RestResponse<List<SecretEngineSummary>> listSecretEngines(
       @QueryParam("accountId") final String accountId, VaultConfig vaultConfig) {
+    // checkIfFeatureIsEnabled(accountId, vaultConfig);
     vaultConfig.setAccountId(accountId);
     return new RestResponse<>(vaultService.listSecretEngines(vaultConfig));
   }

@@ -1,7 +1,7 @@
 package io.harness.ccm.budget.dao;
 
-import io.harness.ccm.budget.Budget;
-import io.harness.ccm.budget.Budget.BudgetKeys;
+import io.harness.ccm.commons.entities.billing.Budget;
+import io.harness.ccm.commons.entities.billing.Budget.BudgetKeys;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;

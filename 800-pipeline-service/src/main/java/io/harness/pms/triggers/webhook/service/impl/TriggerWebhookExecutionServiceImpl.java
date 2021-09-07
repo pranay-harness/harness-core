@@ -4,25 +4,27 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
-import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.INVALID_PAYLOAD;
-import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.SCM_SERVICE_CONNECTION_FAILED;
+import static io.harness.ngtriggers.beans.response.TriggerEventResponse.FinalStatus.INVALID_PAYLOAD;
+import static io.harness.ngtriggers.beans.response.TriggerEventResponse.FinalStatus.SCM_SERVICE_CONNECTION_FAILED;
 
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
+import static java.util.stream.Collectors.toList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.filter.SpringFilterExpander;
 import io.harness.mongo.iterator.provider.SpringPersistenceProvider;
+import io.harness.ngtriggers.beans.dto.TriggerMappingRequestData;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventProcessingResult;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEventsKeys;
-import io.harness.ngtriggers.beans.response.WebhookEventResponse;
-import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
+import io.harness.ngtriggers.beans.response.TriggerEventResponse;
+import io.harness.ngtriggers.helpers.TriggerEventResponseHelper;
 import io.harness.ngtriggers.service.NGTriggerService;
+import io.harness.pms.triggers.webhook.helpers.TriggerEventExecutionHelper;
 import io.harness.pms.triggers.webhook.helpers.TriggerWebhookConfirmationHelper;
-import io.harness.pms.triggers.webhook.helpers.TriggerWebhookExecutionHelper;
 import io.harness.pms.triggers.webhook.service.TriggerWebhookExecutionService;
 import io.harness.repositories.spring.TriggerEventHistoryRepository;
 
@@ -30,7 +32,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -43,7 +44,7 @@ public class TriggerWebhookExecutionServiceImpl
                MongoPersistenceIterator.Handler<TriggerWebhookEvent> {
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private MongoTemplate mongoTemplate;
-  @Inject private TriggerWebhookExecutionHelper ngTriggerWebhookExecutionHelper;
+  @Inject private TriggerEventExecutionHelper ngTriggerWebhookExecutionHelper;
   @Inject private TriggerWebhookConfirmationHelper ngTriggerWebhookConfirmationHelper;
 
   @Inject private NGTriggerService ngTriggerService;
@@ -84,14 +85,15 @@ public class TriggerWebhookExecutionServiceImpl
       if (event.isSubscriptionConfirmation()) {
         result = ngTriggerWebhookConfirmationHelper.handleTriggerWebhookConfirmationEvent(event);
       } else {
-        result = ngTriggerWebhookExecutionHelper.handleTriggerWebhookEvent(event);
+        result = ngTriggerWebhookExecutionHelper.handleTriggerWebhookEvent(
+            TriggerMappingRequestData.builder().triggerWebhookEvent(event).webhookDTO(null).build());
       }
 
-      List<WebhookEventResponse> responseList = result.getResponses();
+      List<TriggerEventResponse> responseList = result.getResponses();
 
       // Remove any null values if present in list
       if (isNotEmpty(responseList)) {
-        responseList = responseList.stream().filter(Objects::nonNull).collect(Collectors.toList());
+        responseList = responseList.stream().filter(Objects::nonNull).collect(toList());
       }
 
       if (discardEmptyOrInvalidPayloadEvents(responseList)) {
@@ -100,7 +102,7 @@ public class TriggerWebhookExecutionServiceImpl
         handleTriggerNotFoundCase(event, result);
       } else {
         responseList.forEach(
-            response -> triggerEventHistoryRepository.save(WebhookEventResponseHelper.toEntity(response)));
+            response -> triggerEventHistoryRepository.save(TriggerEventResponseHelper.toEntity(response)));
         ngTriggerService.deleteTriggerWebhookEvent(event);
       }
     } catch (Exception e) {
@@ -110,7 +112,7 @@ public class TriggerWebhookExecutionServiceImpl
     }
   }
 
-  private boolean discardEmptyOrInvalidPayloadEvents(List<WebhookEventResponse> responseList) {
+  private boolean discardEmptyOrInvalidPayloadEvents(List<TriggerEventResponse> responseList) {
     if (isEmpty(responseList)) {
       return true;
     }
@@ -128,7 +130,7 @@ public class TriggerWebhookExecutionServiceImpl
       updateTriggerEventProcessingStatus(event, false);
       log.error("SCM service is unreachable. Please verify the service is running.");
     } else {
-      triggerEventHistoryRepository.save(WebhookEventResponseHelper.toEntity(result.getResponses().get(0)));
+      triggerEventHistoryRepository.save(TriggerEventResponseHelper.toEntity(result.getResponses().get(0)));
       ngTriggerService.deleteTriggerWebhookEvent(event);
     }
   }

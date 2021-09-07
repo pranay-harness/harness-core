@@ -12,7 +12,10 @@ import static software.wings.service.impl.security.customsecretsmanager.CustomSe
 
 import static java.time.Duration.ofMillis;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.concurrent.HTimeLimiter;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.encryptors.CustomEncryptor;
 import io.harness.exception.CommandExecutionException;
@@ -30,12 +33,13 @@ import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsMan
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.time.Duration;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import javax.validation.executable.ValidateOnExecution;
 
 @ValidateOnExecution
 @OwnedBy(PL)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 @Singleton
 public class CustomSecretsManagerEncryptor implements CustomEncryptor {
   private final ShellScriptTaskHandler shellScriptTaskHandler;
@@ -62,8 +66,8 @@ public class CustomSecretsManagerEncryptor implements CustomEncryptor {
     int failedAttempts = 0;
     while (true) {
       try {
-        return timeLimiter.callWithTimeout(
-            () -> fetchSecretValueInternal(encryptedRecord, customSecretsManagerConfig), 20, TimeUnit.SECONDS, true);
+        return HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(20),
+            () -> fetchSecretValueInternal(encryptedRecord, customSecretsManagerConfig));
       } catch (SecretManagementDelegateException e) {
         throw e;
       } catch (Exception e) {
@@ -88,7 +92,8 @@ public class CustomSecretsManagerEncryptor implements CustomEncryptor {
     ShellExecutionData shellExecutionData = (ShellExecutionData) commandExecutionResult.getCommandExecutionData();
     String result = shellExecutionData.getSweepingOutputEnvVariables().get(OUTPUT_VARIABLE);
     if (isEmpty(result) || result.equals("null")) {
-      String errorMessage = "Empty or null value returned by custom shell script for the given parameters";
+      String errorMessage = "Empty or null value returned by custom shell script for the given secret: "
+          + encryptedRecord.getName() + ", for accountId: " + customSecretsManagerConfig.getAccountId();
       throw new SecretManagementDelegateException(SECRET_MANAGEMENT_ERROR, errorMessage, USER);
     }
     return result.toCharArray();

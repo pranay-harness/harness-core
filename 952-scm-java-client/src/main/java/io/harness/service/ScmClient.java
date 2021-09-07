@@ -3,20 +3,31 @@ package io.harness.service;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FileContentBatchResponse;
 import io.harness.beans.gitsync.GitFileDetails;
 import io.harness.beans.gitsync.GitFilePathDetails;
+import io.harness.beans.gitsync.GitPRCreateRequest;
+import io.harness.beans.gitsync.GitWebhookDetails;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
+import io.harness.product.ci.scm.proto.CompareCommitsResponse;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
+import io.harness.product.ci.scm.proto.CreatePRResponse;
+import io.harness.product.ci.scm.proto.CreateWebhookResponse;
 import io.harness.product.ci.scm.proto.DeleteFileResponse;
-import io.harness.product.ci.scm.proto.FileBatchContentResponse;
+import io.harness.product.ci.scm.proto.DeleteWebhookResponse;
 import io.harness.product.ci.scm.proto.FileContent;
 import io.harness.product.ci.scm.proto.FindFilesInBranchResponse;
 import io.harness.product.ci.scm.proto.FindFilesInCommitResponse;
 import io.harness.product.ci.scm.proto.GetLatestCommitResponse;
 import io.harness.product.ci.scm.proto.IsLatestFileResponse;
 import io.harness.product.ci.scm.proto.ListBranchesResponse;
+import io.harness.product.ci.scm.proto.ListCommitsInPRResponse;
 import io.harness.product.ci.scm.proto.ListCommitsResponse;
+import io.harness.product.ci.scm.proto.ListWebhooksResponse;
 import io.harness.product.ci.scm.proto.UpdateFileResponse;
+
+import java.util.List;
+import java.util.Set;
 
 @OwnedBy(DX)
 public interface ScmClient {
@@ -25,11 +36,9 @@ public interface ScmClient {
 
   UpdateFileResponse updateFile(ScmConnector scmConnector, GitFileDetails gitFileDetails);
 
-  DeleteFileResponse deleteFile(ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails);
+  DeleteFileResponse deleteFile(ScmConnector scmConnector, GitFileDetails gitFileDetails);
 
   FileContent getFileContent(ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails);
-
-  FileBatchContentResponse getHarnessFilesOfBranch(ScmConnector connector, String branch);
 
   FileContent getLatestFile(ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails);
 
@@ -38,13 +47,35 @@ public interface ScmClient {
 
   FileContent pushFile(ScmConnector scmConnector, GitFileDetails gitFileDetails);
 
-  FindFilesInBranchResponse findFilesInBranch(ScmConnector scmConnector, String branch);
+  FindFilesInBranchResponse findFilesInBranch(ScmConnector scmConnector, String branchName);
 
   FindFilesInCommitResponse findFilesInCommit(ScmConnector scmConnector, GitFilePathDetails gitFilePathDetails);
 
-  GetLatestCommitResponse getLatestCommit(ScmConnector scmConnector, String branch);
+  GetLatestCommitResponse getLatestCommit(ScmConnector scmConnector, String branchName);
 
   ListBranchesResponse listBranches(ScmConnector scmConnector);
 
-  ListCommitsResponse listCommits(ScmConnector scmConnector, String branch);
+  ListCommitsResponse listCommits(ScmConnector scmConnector, String branchName);
+
+  ListCommitsInPRResponse listCommitsInPR(ScmConnector scmConnector, int prNumber);
+
+  FileContentBatchResponse listFiles(ScmConnector connector, Set<String> foldersList, String branchName);
+
+  FileContentBatchResponse listFilesByFilePaths(ScmConnector connector, List<String> filePathsList, String branchName);
+
+  FileContentBatchResponse listFilesByCommitId(ScmConnector connector, List<String> filePathsList, String commitId);
+
+  void createNewBranch(ScmConnector scmConnector, String branch, String defaultBranchName);
+
+  CreatePRResponse createPullRequest(ScmConnector scmConnector, GitPRCreateRequest gitPRCreateRequest);
+
+  CreateWebhookResponse createWebhook(ScmConnector scmConnector, GitWebhookDetails gitWebhookDetails);
+
+  DeleteWebhookResponse deleteWebhook(ScmConnector scmConnector, String id);
+
+  ListWebhooksResponse listWebhook(ScmConnector scmConnector);
+
+  CreateWebhookResponse upsertWebhook(ScmConnector scmConnector, GitWebhookDetails gitWebhookDetails);
+
+  CompareCommitsResponse compareCommits(ScmConnector scmConnector, String initialCommitId, String finalCommitId);
 }

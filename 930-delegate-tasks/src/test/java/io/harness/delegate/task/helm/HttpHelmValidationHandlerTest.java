@@ -1,8 +1,10 @@
 package io.harness.delegate.task.helm;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.exception.WingsException.USER;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyLong;
@@ -15,6 +17,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
@@ -27,6 +30,7 @@ import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.HelmClientException;
+import io.harness.helm.HelmCliCommandType;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.ng.core.dto.ErrorDetail;
 import io.harness.rule.Owner;
@@ -41,6 +45,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(CDP)
 public class HttpHelmValidationHandlerTest extends CategoryTest {
   @Mock private HelmTaskHelperBase helmTaskHelperBase;
   @Mock private NGErrorHelper ngErrorHelper;
@@ -71,7 +76,7 @@ public class HttpHelmValidationHandlerTest extends CategoryTest {
   @Owner(developers = OwnerRule.ACASIAN)
   @Category(UnitTests.class)
   public void testShouldAddRepoWithSuccess() throws Exception {
-    stubSuccessfulCalls();
+    stubSuccessfulCalls(HttpHelmAuthType.USER_PASSWORD);
     verifySuccessfulCalls(buildValidationParams(HttpHelmAuthType.USER_PASSWORD, false));
   }
 
@@ -79,7 +84,7 @@ public class HttpHelmValidationHandlerTest extends CategoryTest {
   @Owner(developers = OwnerRule.ACASIAN)
   @Category(UnitTests.class)
   public void testShouldAddRepoBothUsernameAndPasswordSecretRefWithSuccess() throws Exception {
-    stubSuccessfulCalls();
+    stubSuccessfulCalls(HttpHelmAuthType.USER_PASSWORD);
     verifySuccessfulCalls(buildValidationParams(HttpHelmAuthType.USER_PASSWORD, true));
   }
 
@@ -87,7 +92,7 @@ public class HttpHelmValidationHandlerTest extends CategoryTest {
   @Owner(developers = OwnerRule.ACASIAN)
   @Category(UnitTests.class)
   public void testShouldAddRepoAnonymousWithSuccess() throws Exception {
-    stubSuccessfulCalls();
+    stubSuccessfulCalls(HttpHelmAuthType.ANONYMOUS);
     verifySuccessfulCalls(buildValidationParams(HttpHelmAuthType.ANONYMOUS, false));
   }
 
@@ -95,7 +100,7 @@ public class HttpHelmValidationHandlerTest extends CategoryTest {
   @Owner(developers = OwnerRule.ACASIAN)
   @Category(UnitTests.class)
   public void testShouldAddRepoWithFailure() throws Exception {
-    stubFailureCalls();
+    stubFailureCalls(HttpHelmAuthType.USER_PASSWORD);
     verifyFailureCalls(buildValidationParams(HttpHelmAuthType.USER_PASSWORD, false));
   }
 
@@ -103,7 +108,7 @@ public class HttpHelmValidationHandlerTest extends CategoryTest {
   @Owner(developers = OwnerRule.ACASIAN)
   @Category(UnitTests.class)
   public void testShouldAddRepoBothUsernameAndPasswordSecretRefWithFailure() throws Exception {
-    stubFailureCalls();
+    stubFailureCalls(HttpHelmAuthType.USER_PASSWORD);
     verifyFailureCalls(buildValidationParams(HttpHelmAuthType.USER_PASSWORD, true));
   }
 
@@ -111,7 +116,7 @@ public class HttpHelmValidationHandlerTest extends CategoryTest {
   @Owner(developers = OwnerRule.ACASIAN)
   @Category(UnitTests.class)
   public void testShouldAddRepoAnonymousWithFailure() throws Exception {
-    stubFailureCalls();
+    stubFailureCalls(HttpHelmAuthType.ANONYMOUS);
     verifyFailureCalls(buildValidationParams(HttpHelmAuthType.ANONYMOUS, false));
   }
 
@@ -134,8 +139,16 @@ public class HttpHelmValidationHandlerTest extends CategoryTest {
         .build();
   }
 
-  private void stubSuccessfulCalls() throws Exception {
+  private void stubSuccessfulCalls(HttpHelmAuthType authType) throws Exception {
     doReturn(workingDir).when(helmTaskHelperBase).createNewDirectoryAtPath(anyString());
+    if (authType == HttpHelmAuthType.ANONYMOUS) {
+      doReturn(null).when(helmTaskHelperBase).getHttpHelmUsername(any());
+      doReturn(null).when(helmTaskHelperBase).getHttpHelmPassword(any());
+    } else {
+      doReturn("test").when(helmTaskHelperBase).getHttpHelmUsername(any());
+      doReturn("password".toCharArray()).when(helmTaskHelperBase).getHttpHelmPassword(any());
+    }
+
     doNothing().when(helmTaskHelperBase).initHelm(anyString(), any(), anyLong());
     doReturn(HttpHelmUsernamePasswordDTO.builder().build()).when(decryptionService).decrypt(any(), anyList());
     doNothing()
@@ -146,11 +159,18 @@ public class HttpHelmValidationHandlerTest extends CategoryTest {
     doNothing().when(helmTaskHelperBase).cleanup(anyString());
   }
 
-  private void stubFailureCalls() throws Exception {
+  private void stubFailureCalls(HttpHelmAuthType authType) throws Exception {
     doReturn(workingDir).when(helmTaskHelperBase).createNewDirectoryAtPath(anyString());
+    if (authType == HttpHelmAuthType.ANONYMOUS) {
+      doReturn(null).when(helmTaskHelperBase).getHttpHelmUsername(any());
+      doReturn(null).when(helmTaskHelperBase).getHttpHelmPassword(any());
+    } else {
+      doReturn("test").when(helmTaskHelperBase).getHttpHelmUsername(any());
+      doReturn("password".toCharArray()).when(helmTaskHelperBase).getHttpHelmPassword(any());
+    }
     doNothing().when(helmTaskHelperBase).initHelm(anyString(), any(), anyLong());
     doReturn(HttpHelmUsernamePasswordDTO.builder().build()).when(decryptionService).decrypt(any(), anyList());
-    doThrow(new HelmClientException(errorMessage, USER))
+    doThrow(new HelmClientException(errorMessage, USER, HelmCliCommandType.REPO_ADD))
         .when(helmTaskHelperBase)
         .addRepo(anyString(), anyString(), anyString(), anyString(), any(), anyString(), any(), anyLong());
 
@@ -181,12 +201,9 @@ public class HttpHelmValidationHandlerTest extends CategoryTest {
 
   private void verifyFailureCalls(HttpHelmValidationParams connectorValidationParams) throws Exception {
     HttpHelmAuthType authType = connectorValidationParams.getHttpHelmConnectorDTO().getAuth().getAuthType();
-    ConnectorValidationResult result = validationHandler.validate(connectorValidationParams, "1234");
-    assertThat(result).isNotNull();
-    assertThat(result.getStatus()).isEqualTo(ConnectivityStatus.FAILURE);
-    assertThat(result.getErrorSummary()).isEqualTo(generalError);
-    assertThat(result.getErrors().size()).isEqualTo(1);
-    assertThat(result.getErrors().get(0).getMessage()).isEqualTo(generalError);
+    assertThatExceptionOfType(HelmClientException.class)
+        .isThrownBy(() -> validationHandler.validate(connectorValidationParams, "1234"))
+        .withMessageContaining("Something went wrong");
 
     verify(helmTaskHelperBase, times(1)).createNewDirectoryAtPath(eq("./repository/helm-validation"));
     verify(helmTaskHelperBase, times(1)).initHelm(eq(workingDir), eq(HelmVersion.V3), anyLong());

@@ -8,8 +8,10 @@ import static software.wings.yaml.YamlHelper.trimYaml;
 import static java.util.Arrays.asList;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.EnvironmentType;
 import io.harness.data.validator.EntityName;
@@ -51,6 +53,7 @@ import org.mongodb.morphia.annotations.Transient;
 @FieldNameConstants(innerTypeName = "EnvironmentKeys")
 @Entity(value = "environments", noClassnameStored = true)
 @HarnessEntity(exportable = true)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class Environment extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess, ApplicationAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

@@ -1,18 +1,20 @@
 package software.wings.security.saml;
 
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.exception.WingsException.USER;
 
 import static com.google.common.base.Charsets.UTF_8;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.ng.core.account.AuthenticationMechanism;
 
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.sso.SamlSettings;
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.AuthenticationUtils;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.intfc.SSOSettingService;
@@ -36,13 +38,16 @@ import org.hibernate.validator.constraints.NotBlank;
 
 @OwnedBy(PL)
 @Singleton
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
 public class SamlClientService {
   public static final String SAML_REQUEST_URI_KEY = "SAMLRequest";
+  public static final String SAML_TRIGGER_TYPE = "triggerType"; // login or test
   @Inject AuthenticationUtils authenticationUtils;
   @Inject AccountServiceImpl accountServiceImpl;
   @Inject SSOSettingService ssoSettingService;
   private static final String GOOGLE_HOST = "accounts.google.com";
   private static final String AZURE_HOST = "login.microsoftonline.com";
+  private static final String ACCOUNT_ID = "accountId";
 
   /**
    * This field is identifier of SAML application and is used to point to the
@@ -79,7 +84,7 @@ public class SamlClientService {
   public SSORequest generateSamlRequest(User user) {
     Account primaryAccount = authenticationUtils.getDefaultAccount(user);
     if (primaryAccount.getAuthenticationMechanism() == AuthenticationMechanism.SAML) {
-      return generateSamlRequestFromAccount(primaryAccount);
+      return generateSamlRequestFromAccount(primaryAccount, false);
     }
 
     throw new WingsException(ErrorCode.INVALID_AUTHENTICATION_MECHANISM, USER);
@@ -87,7 +92,7 @@ public class SamlClientService {
 
   public SSORequest generateTestSamlRequest(String accountId) {
     Account account = accountServiceImpl.get(accountId);
-    return generateSamlRequestFromAccount(account);
+    return generateSamlRequestFromAccount(account, true);
   }
 
   /**
@@ -96,12 +101,14 @@ public class SamlClientService {
    * @return SSORequest for redirection to SSO provider
    * @throws Exception error while creating request
    */
-  private SSORequest generateSamlRequestFromAccount(Account account) {
+  public SSORequest generateSamlRequestFromAccount(Account account, boolean isTestConnectionRequest) {
     SSORequest ssoRequest = new SSORequest();
+    String triggerType = isTestConnectionRequest ? "test" : "login";
     try {
       SamlClient samlClient = getSamlClientFromAccount(account);
       URIBuilder redirectionUri = new URIBuilder(samlClient.getIdentityProviderUrl());
       redirectionUri.addParameter(SAML_REQUEST_URI_KEY, encodeParamaeters(samlClient.getSamlRequest()));
+      redirectionUri.addParameter("RelayState", SAML_TRIGGER_TYPE + "=" + triggerType);
       ssoRequest.setIdpRedirectUrl(redirectionUri.toString());
       return ssoRequest;
     } catch (SamlException | URISyntaxException | IOException e) {
@@ -121,8 +128,8 @@ public class SamlClientService {
   }
 
   // TODO: this method should return HIterator and close at the end
-  public Iterator<SamlSettings> getSamlSettingsFromOrigin(String origin) {
-    return ssoSettingService.getSamlSettingsIteratorByOrigin(origin);
+  public Iterator<SamlSettings> getSamlSettingsFromOrigin(String origin, String accountId) {
+    return ssoSettingService.getSamlSettingsIteratorByOrigin(origin, accountId);
   }
 
   public HostType getHostType(@NotBlank String url) throws URISyntaxException {

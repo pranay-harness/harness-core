@@ -1,80 +1,81 @@
 package io.harness.engine.events;
 
-import static io.harness.rule.OwnerRule.PRASHANT;
+import static io.harness.rule.OwnerRule.ALEXEI;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import io.harness.OrchestrationTestBase;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.engine.pms.commons.events.PmsEventSender;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.events.OrchestrationEvent;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
-import io.harness.pms.sdk.core.events.AsyncOrchestrationEventHandlerProxy;
-import io.harness.pms.sdk.core.events.OrchestrationEvent;
-import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
-import io.harness.pms.sdk.core.events.OrchestrationSubject;
-import io.harness.pms.sdk.core.events.SyncOrchestrationEventHandler;
-import io.harness.pms.sdk.core.events.SyncOrchestrationEventHandlerProxy;
-import io.harness.pms.sdk.core.registries.OrchestrationEventHandlerRegistry;
-import io.harness.pms.sdk.execution.SdkOrchestrationEventListener;
+import io.harness.pms.events.base.PmsEventCategory;
 import io.harness.rule.Owner;
-import io.harness.utils.AmbianceTestUtils;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
+import com.google.protobuf.ByteString;
+import org.joor.Reflect;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class OrchestrationEventEmitterTest extends OrchestrationTestBase {
-  @InjectMocks @Inject private OrchestrationEventEmitter eventEmitter;
-  @InjectMocks @Inject private SdkOrchestrationEventListener eventListener;
-  @Mock OrchestrationEventHandlerRegistry registry;
+  @Mock private PmsEventSender eventSender;
 
-  @Inject private Injector injector;
+  private OrchestrationEventEmitter orchestrationEventEmitter;
+
+  @Before
+  public void setUp() {
+    orchestrationEventEmitter = new OrchestrationEventEmitter();
+    Reflect.on(orchestrationEventEmitter).set("eventSender", eventSender);
+  }
 
   @Test
-  @Owner(developers = PRASHANT, intermittent = true)
+  @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
-  public void shouldTestEmitEvent() {
-    OrchestrationSubject subject = spy(new OrchestrationSubject());
-    SyncOrchestrationEventHandlerProxy syncProxy =
-        spy(SyncOrchestrationEventHandlerProxy.builder().eventHandler(new StartHandler1()).build());
-    AsyncOrchestrationEventHandlerProxy asyncProxy =
-        spy(AsyncOrchestrationEventHandlerProxy.builder().eventHandler(new StartHandler2()).build());
-    subject.registerSyncHandler(syncProxy);
-    subject.registerAsyncHandler(asyncProxy);
+  public void emitEvent() {
+    OrchestrationEvent orchestrationEvent = OrchestrationEvent.newBuilder()
+                                                .setAmbiance(Ambiance.newBuilder().build())
+                                                .setEventType(OrchestrationEventType.ORCHESTRATION_START)
+                                                .setServiceName("serviceName")
+                                                .build();
+    when(eventSender.sendEvent(any(Ambiance.class), any(ByteString.class), eq(PmsEventCategory.ORCHESTRATION_EVENT),
+             eq("serviceName"), eq(true)))
+        .thenReturn(null);
 
-    when(registry.obtain(OrchestrationEventType.ORCHESTRATION_START)).thenReturn(ImmutableSet.of());
-    OrchestrationEvent event = OrchestrationEvent.builder()
-                                   .ambiance(AmbianceTestUtils.buildAmbiance())
-                                   .eventType(OrchestrationEventType.ORCHESTRATION_START)
-                                   .build();
-    eventEmitter.emitEvent(event);
-    eventListener.onMessage(event);
-    verify(subject, times(1)).handleEventSync(eq(event));
-    verify(subject, times(1)).handleEventAsync(eq(event));
-    verify(syncProxy, times(1)).handleEvent(eq(event));
-    verify(asyncProxy, times(1)).handleEvent(eq(event));
-    verify(asyncProxy, times(1)).getInformExecutorService();
-    verifyNoMoreInteractions(asyncProxy);
+    orchestrationEventEmitter.emitEvent(orchestrationEvent);
+
+    verify(eventSender)
+        .sendEvent(any(Ambiance.class), any(ByteString.class), eq(PmsEventCategory.ORCHESTRATION_EVENT),
+            eq("serviceName"), eq(true));
   }
 
-  private static class StartHandler1 implements SyncOrchestrationEventHandler {
-    @Override
-    public void handleEvent(OrchestrationEvent event) {}
-  }
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void emitEventShouldThrowException() {
+    OrchestrationEvent orchestrationEvent = OrchestrationEvent.newBuilder()
+                                                .setAmbiance(Ambiance.newBuilder().build())
+                                                .setEventType(OrchestrationEventType.ORCHESTRATION_START)
+                                                .setServiceName("serviceName")
+                                                .build();
 
-  private static class StartHandler2 implements OrchestrationEventHandler {
-    @Override
-    public void handleEvent(OrchestrationEvent event) {}
+    when(eventSender.sendEvent(any(Ambiance.class), any(ByteString.class), eq(PmsEventCategory.ORCHESTRATION_EVENT),
+             eq("serviceName"), eq(true)))
+        .thenThrow(Exception.class);
+
+    assertThatThrownBy(() -> orchestrationEventEmitter.emitEvent(orchestrationEvent)).isInstanceOf(Exception.class);
+
+    verify(eventSender)
+        .sendEvent(any(Ambiance.class), any(ByteString.class), eq(PmsEventCategory.ORCHESTRATION_EVENT),
+            eq("serviceName"), eq(true));
   }
 }

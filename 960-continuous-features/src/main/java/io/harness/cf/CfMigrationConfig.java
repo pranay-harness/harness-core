@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import com.google.inject.Singleton;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -23,4 +24,6 @@ public class CfMigrationConfig {
   private String org;
   private String project;
   private String environment;
+  @Default private int connectionTimeout = 10000;
+  @Default private int readTimeout = 10000;
 }

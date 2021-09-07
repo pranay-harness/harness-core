@@ -1,5 +1,9 @@
 package io.harness.persistence.converters;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import com.google.inject.Singleton;
 import com.google.protobuf.Message;
 import com.google.protobuf.Message.Builder;
@@ -12,6 +16,7 @@ import org.mongodb.morphia.mapping.MappedField;
 
 @SuppressWarnings("unchecked")
 @Singleton
+@OwnedBy(PIPELINE)
 public abstract class ProtoMessageConverter<T extends Message> extends TypeConverter implements SimpleValueConverter {
   public ProtoMessageConverter(Class<T> entityClass) {
     super(entityClass);
@@ -24,7 +29,7 @@ public abstract class ProtoMessageConverter<T extends Message> extends TypeConve
       return null;
     }
     Message message = (Message) value;
-    String entityJson = JsonFormat.printer().print(message);
+    String entityJson = JsonFormat.printer().includingDefaultValueFields().print(message);
     return BasicDBObject.parse(entityJson);
   }
 

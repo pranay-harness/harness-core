@@ -1,0 +1,4 @@
+Var validationUrl = concat(Env:baseUrl, "services")
+Var services = sync-call(url=Var:validationUrl, header=Env:commonHeaders)
+Var t = "true"
+return Var:t

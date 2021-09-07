@@ -1,8 +1,0 @@
-name: Learning Engine Task Metrics
-identifier: learning_engine_task_metrics
-metricGroup:
-metrics:
-  - metricName: le_task_queued_count
-    metricDefinition: queueSize of the Learning Engine Tasks
-    type: LastValue
-    unit: count

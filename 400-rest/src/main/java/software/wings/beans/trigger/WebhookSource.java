@@ -2,7 +2,9 @@ package software.wings.beans.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import java.util.HashMap;
 import java.util.List;
@@ -12,10 +14,13 @@ import lombok.Getter;
 import lombok.Value;
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public enum WebhookSource {
   GITHUB,
   GITLAB,
-  BITBUCKET;
+  BITBUCKET,
+  AZURE_DEVOPS;
 
   @OwnedBy(CDC)
   public interface WebhookEvent {}
@@ -157,6 +162,50 @@ public enum WebhookSource {
 
     public static GitLabEventType find(String eventKeyValue) {
       return GitLabEventType.GitLabEventHolder.map.get(eventKeyValue);
+    }
+  }
+
+  public enum AzureDevopsPullRequestStatus {
+    ACTIVE("active"),
+    COMPLETED("completed");
+
+    @Getter private String value;
+
+    AzureDevopsPullRequestStatus(String value) {
+      this.value = value;
+      WebhookSource.AzureDevopsPullRequestStatus.AzureDevOpsPullRequestStatusHolder.map.put(value, this);
+    }
+
+    public static class AzureDevOpsPullRequestStatusHolder {
+      @Getter static Map<String, AzureDevopsPullRequestStatus> map = new HashMap<>();
+    }
+
+    public static AzureDevopsPullRequestStatus find(String eventKeyValue) {
+      return AzureDevOpsPullRequestStatusHolder.map.get(eventKeyValue);
+    }
+  }
+
+  public enum AzureDevOpsEventType implements WebhookEvent {
+    PULL_REQUEST_MERGED("Pull request merged", "git.pullrequest.merged", WebhookEventType.PUSH),
+    CODE_PUSH("Code Pushed", "git.push", WebhookEventType.PUSH);
+
+    @Getter private String displayName;
+    @Getter private String value;
+    @Getter private WebhookEventType eventType;
+
+    AzureDevOpsEventType(String displayName, String value, WebhookEventType eventType) {
+      this.displayName = displayName;
+      this.value = value;
+      this.eventType = eventType;
+      WebhookSource.AzureDevOpsEventType.AzureDevOpsEventHolder.map.put(value, this);
+    }
+
+    public static class AzureDevOpsEventHolder {
+      @Getter static Map<String, AzureDevOpsEventType> map = new HashMap<>();
+    }
+
+    public static AzureDevOpsEventType find(String eventKeyValue) {
+      return AzureDevOpsEventType.AzureDevOpsEventHolder.map.get(eventKeyValue);
     }
   }
 

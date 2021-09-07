@@ -11,6 +11,7 @@ import io.harness.serializer.JsonUtils;
 import software.wings.beans.DelegateTaskBroadcast;
 import software.wings.beans.PerpetualTaskBroadcastEvent;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.DelegateTaskServiceClassic;
 
 import com.google.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
@@ -22,6 +23,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class DelegateEventFilter extends BroadcastFilterAdapter {
   @Inject private DelegateService delegateService;
+  @Inject private DelegateTaskServiceClassic delegateTaskServiceClassic;
 
   @Override
   public BroadcastAction filter(String broadcasterId, AtmosphereResource r, Object originalMessage, Object message) {
@@ -59,7 +61,7 @@ public class DelegateEventFilter extends BroadcastFilterAdapter {
 
     if (message instanceof DelegateTaskAbortEvent) {
       DelegateTaskAbortEvent abortEvent = (DelegateTaskAbortEvent) message;
-      if (!delegateService.filter(delegateId, abortEvent)) {
+      if (!delegateTaskServiceClassic.filter(delegateId, abortEvent)) {
         return abort(message);
       }
 

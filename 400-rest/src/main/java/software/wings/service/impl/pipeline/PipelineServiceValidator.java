@@ -12,7 +12,9 @@ import static software.wings.sm.StateType.APPROVAL;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.ExplanationException;
 import io.harness.exception.HintException;
 import io.harness.exception.InvalidRequestException;
@@ -28,6 +30,8 @@ import software.wings.sm.states.ApprovalState;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +39,7 @@ import org.jetbrains.annotations.NotNull;
 
 @OwnedBy(CDC)
 @Singleton
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class PipelineServiceValidator {
   @Inject UserGroupService userGroupService;
 
@@ -73,6 +78,7 @@ public class PipelineServiceValidator {
       PipelineStageElement pipelineStageElement, List<Variable> workflowVariables) {
     Map<String, String> pseVariableValues = pipelineStageElement.getWorkflowVariables();
     List<String> runtimeVariables = pipelineStageElement.getRuntimeInputsConfig().getRuntimeInputVariables();
+    runtimeVariables.removeIf(variable -> !pseVariableValues.containsKey(variable));
     String missing =
         runtimeVariables.stream().filter(variable -> !pseVariableValues.containsKey(variable)).findAny().orElse(null);
     if (missing != null) {
@@ -98,10 +104,15 @@ public class PipelineServiceValidator {
 
           if (entityType != null) {
             if (EntityType.SERVICE != entityType && EntityType.INFRASTRUCTURE_DEFINITION != entityType) {
-              String relatedField = workflowVar.obtainRelatedField();
-              if (isNotEmpty(relatedField) && !runtimeVariables.contains(relatedField)) {
-                throw new InvalidRequestException(
-                    String.format("Variable %s should be runtime as %s is marked runtime", relatedField, variableName));
+              if (isNotEmpty(workflowVar.obtainRelatedField())) {
+                List<String> relatedFields =
+                    new ArrayList<>(Arrays.asList(workflowVar.obtainRelatedField().split(",")));
+                if (isNotEmpty(relatedFields) && !runtimeVariables.containsAll(relatedFields)) {
+                  relatedFields.removeIf(runtimeVariables::contains);
+                  throw new InvalidRequestException(
+                      String.format("Variable%s %s should be runtime as %s is marked runtime",
+                          relatedFields.size() > 1 ? "s" : "", String.join(", ", relatedFields), variableName));
+                }
               }
             }
           } else {

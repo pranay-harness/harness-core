@@ -12,10 +12,13 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static org.mindrot.jbcrypt.BCrypt.checkpw;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
+import io.harness.ng.core.account.AuthenticationMechanism;
 
 import software.wings.beans.Account;
 import software.wings.beans.User;
@@ -31,6 +34,7 @@ import com.google.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 @Singleton
 @Slf4j
 public class PasswordBasedAuthHandler implements AuthHandler {
@@ -73,8 +77,10 @@ public class PasswordBasedAuthHandler implements AuthHandler {
     }
     String accountId = user == null ? null : user.getDefaultAccountId();
     String uuid = user == null ? null : user.getUuid();
+
     try (AutoLogContext ignore = new UserLogContext(accountId, uuid, OVERRIDE_ERROR)) {
       log.info("Authenticating via Username Password");
+
       if (!user.isEmailVerified()) {
         throw new WingsException(EMAIL_NOT_VERIFIED, USER);
       }
@@ -94,6 +100,7 @@ public class PasswordBasedAuthHandler implements AuthHandler {
         if (validCredentials) {
           return getAuthenticationResponse(user);
         } else {
+          checkUserLockoutStatus(user);
           updateFailedLoginAttemptCount(user);
 
           try {
@@ -150,11 +157,15 @@ public class PasswordBasedAuthHandler implements AuthHandler {
   }
 
   @Override
-  public AuthenticationMechanism getAuthenticationMechanism() {
+  public io.harness.ng.core.account.AuthenticationMechanism getAuthenticationMechanism() {
     return AuthenticationMechanism.USER_PASSWORD;
   }
 
   protected User getUser(String email) {
     return userService.getUserByEmail(email);
+  }
+
+  protected Account getAccount(String accountId) {
+    return accountService.getFromCacheWithFallback(accountId);
   }
 }

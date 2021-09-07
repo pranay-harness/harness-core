@@ -1,7 +1,7 @@
 package io.harness.batch.processing.config.k8s.recommendation;
 
-import static io.harness.batch.processing.config.k8s.recommendation.ResourceId.NOT_FOUND;
 import static io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils.getValueForKeyFromInstanceMetaData;
+import static io.harness.ccm.commons.beans.recommendation.ResourceId.NOT_FOUND;
 import static io.harness.time.DurationUtils.truncate;
 
 import static software.wings.graphql.datafetcher.ce.recommendation.entity.RecommenderUtils.MEMORY_AGGREGATION_INTERVAL;
@@ -13,16 +13,17 @@ import static software.wings.graphql.datafetcher.ce.recommendation.entity.Recomm
 import static java.time.Duration.between;
 
 import io.harness.batch.processing.dao.intfc.InstanceDataDao;
-import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
-import io.harness.ccm.commons.entities.InstanceData;
-import io.harness.event.grpc.PublishedMessage;
+import io.harness.ccm.commons.beans.recommendation.ResourceId;
+import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
+import io.harness.ccm.commons.entities.batch.InstanceData;
+import io.harness.ccm.commons.entities.events.PublishedMessage;
+import io.harness.ccm.commons.entities.k8s.recommendation.K8sWorkloadRecommendation;
+import io.harness.ccm.commons.entities.k8s.recommendation.PartialRecommendationHistogram;
 import io.harness.event.payloads.ContainerStateProto;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.histogram.Histogram;
 
 import software.wings.graphql.datafetcher.ce.recommendation.entity.ContainerCheckpoint;
-import software.wings.graphql.datafetcher.ce.recommendation.entity.K8sWorkloadRecommendation;
-import software.wings.graphql.datafetcher.ce.recommendation.entity.PartialRecommendationHistogram;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;

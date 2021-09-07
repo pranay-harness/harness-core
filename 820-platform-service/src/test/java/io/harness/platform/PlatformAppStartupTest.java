@@ -55,7 +55,8 @@ public class PlatformAppStartupTest extends CategoryTest {
         String.valueOf(new File("820-platform-service/src/test/resources/test-config.yml")),
         ConfigOverride.config("notificationServiceConfig.mongo.uri", getMongoUri("notification")),
         ConfigOverride.config("auditServiceConfig.mongo.uri", getMongoUri("ng-audits")),
-        ConfigOverride.config("notificationClient.messageBroker.uri", getMongoUri("notificationChannel")));
+        ConfigOverride.config("notificationClient.messageBroker.uri", getMongoUri("notificationChannel")),
+        ConfigOverride.config("resourceGroupServiceConfig.mongo.uri", getMongoUri("resourcegroup")));
     SUPPORT.before();
   }
 

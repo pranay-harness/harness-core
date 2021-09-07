@@ -7,7 +7,7 @@ import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
 import io.harness.batch.processing.service.BillingDataPipelineUtils;
 import io.harness.batch.processing.service.intfc.BillingDataPipelineService;
-import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
+import io.harness.ccm.commons.entities.billing.BillingDataPipelineRecord;
 
 import software.wings.beans.Account;
 

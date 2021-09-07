@@ -35,14 +35,16 @@ import org.hibernate.validator.constraints.NotBlank;
 public class GithubConnectorDTO extends ConnectorConfigDTO implements ScmConnector, DelegateSelectable {
   @NotNull @JsonProperty("type") GitConnectionType connectionType;
   @NotBlank @NotNull String url;
+  String validationRepo;
   @Valid @NotNull GithubAuthenticationDTO authentication;
   @Valid GithubApiAccessDTO apiAccess;
   Set<String> delegateSelectors;
   @Builder
-  public GithubConnectorDTO(GitConnectionType connectionType, String url, GithubAuthenticationDTO authentication,
-      GithubApiAccessDTO apiAccess, Set<String> delegateSelectors) {
+  public GithubConnectorDTO(GitConnectionType connectionType, String url, String validationRepo,
+      GithubAuthenticationDTO authentication, GithubApiAccessDTO apiAccess, Set<String> delegateSelectors) {
     this.connectionType = connectionType;
     this.url = url;
+    this.validationRepo = validationRepo;
     this.authentication = authentication;
     this.apiAccess = apiAccess;
     this.delegateSelectors = delegateSelectors;

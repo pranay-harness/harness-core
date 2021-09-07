@@ -1,7 +1,10 @@
 package io.harness.morphia;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.GeneralException;
 import io.harness.reflection.CodeUtils;
 
@@ -10,6 +13,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+@OwnedBy(PL)
 public interface MorphiaRegistrar {
   interface NotFoundClass {}
 

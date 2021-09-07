@@ -7,6 +7,7 @@ import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.context.GlobalContext;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
@@ -23,8 +24,10 @@ import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.delegate.exceptionhandler.DelegateExceptionManager;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.FailureType;
+import io.harness.globalcontex.ErrorHandlingGlobalContextData;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.ExceptionLogger;
+import io.harness.manage.GlobalContextManager;
 
 import com.google.inject.Inject;
 import java.util.EnumSet;
@@ -96,6 +99,12 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
     try {
       log.info("Started executing task {}", taskId);
 
+      if (!GlobalContextManager.isAvailable()) {
+        GlobalContextManager.set(new GlobalContext());
+      }
+      GlobalContextManager.upsertGlobalContextRecord(
+          ErrorHandlingGlobalContextData.builder().isSupportedErrorFramework(isSupportingErrorFramework()).build());
+
       DelegateResponseData result = parameters.length == 1 && parameters[0] instanceof TaskParameters
           ? run((TaskParameters) parameters[0])
           : run(parameters);
@@ -137,6 +146,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
           throwable, errorNotifyResponseDataBuilder, isSupportingErrorFramework()));
       taskResponse.responseCode(ResponseCode.FAILED);
     } finally {
+      GlobalContextManager.unset();
       if (consumer != null) {
         consumer.accept(taskResponse.build());
       }

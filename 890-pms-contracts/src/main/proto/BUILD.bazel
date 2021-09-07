@@ -8,9 +8,9 @@ proto_library(
     visibility = ["//visibility:public"],
     deps = [
         "//920-delegate-service-beans/src/main/proto/io/harness/delegate:920_delegate_service_beans_proto",
-        "//950-timeout-engine/src/main/proto:950_timeout_engine_proto",
         "//955-delegate-beans/src/main/proto/io/harness/delegate:955_delegate_beans_proto",
-        "//970-api-services-beans/src/main/proto/io/harness/logging:970_api_service_beans_proto",
+        "//959-timeout-engine/src/main/proto:950_timeout_engine_proto",
+        "//970-api-services-beans/src/main/proto:970_api_service_beans_proto",
         "//970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity:970_ng_commons_proto",
         "//product/ci/scm/proto:ciscmpb_proto",
         "@com_google_protobuf//:any_proto",
@@ -21,10 +21,6 @@ proto_library(
 
 harness_grpc_library(
     name = "890_pms_contracts_java_proto",
-    java_deps = [
-        "//980-commons:module",
-    ],
-    java_sources = glob(["**/*.java"]),
     visibility = ["//visibility:public"],
     deps = [
         ":890_pms_contracts_proto",

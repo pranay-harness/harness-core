@@ -7,7 +7,7 @@ import io.harness.batch.processing.billing.timeseries.data.PodCountData;
 import io.harness.batch.processing.billing.timeseries.data.UsageTimeInfo;
 import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.shard.AccountShardService;
-import io.harness.ccm.commons.utils.DataUtils;
+import io.harness.ccm.commons.utils.TimeUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -39,7 +39,7 @@ public class PodCountComputationServiceImpl {
   @Autowired private CloudToHarnessMappingServiceImpl cloudToHarnessMappingService;
   @Autowired private AccountShardService accountShardService;
   @Autowired private InstanceDataService instanceDataService;
-  @Autowired private DataUtils utils;
+  @Autowired private TimeUtils utils;
 
   static final String GET_NODE_QUERY =
       "SELECT INSTANCEID, CLUSTERID FROM billing_data where INSTANCETYPE = 'K8S_NODE' AND ACCOUNTID = '%s' AND STARTTIME >= '%s' AND STARTTIME < '%s' GROUP BY INSTANCEID, CLUSTERID";

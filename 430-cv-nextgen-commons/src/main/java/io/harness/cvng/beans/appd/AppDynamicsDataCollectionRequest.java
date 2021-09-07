@@ -5,10 +5,10 @@ import static io.harness.annotations.dev.HarnessTeam.CV;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
+import io.harness.delegate.beans.cvng.appd.AppDynamicsUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import java.util.HashMap;
 import java.util.Map;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
@@ -20,9 +20,7 @@ import lombok.experimental.SuperBuilder;
 public abstract class AppDynamicsDataCollectionRequest extends DataCollectionRequest<AppDynamicsConnectorDTO> {
   @Override
   public Map<String, String> collectionHeaders() {
-    Map<String, String> headers = new HashMap<>();
-    headers.put("Authorization", AppDynamicsUtils.getAuthorizationHeader(getConnectorConfigDTO()));
-    return headers;
+    return AppDynamicsUtils.collectionHeaders(getConnectorConfigDTO());
   }
 
   @Override

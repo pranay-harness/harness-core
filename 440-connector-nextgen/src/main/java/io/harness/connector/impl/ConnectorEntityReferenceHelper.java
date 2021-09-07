@@ -2,6 +2,7 @@ package io.harness.connector.impl;
 
 import static io.harness.NGConstants.ENTITY_REFERENCE_LOG_PREFIX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.ng.core.entitysetupusage.dto.SetupUsageDetailType.SECRET_REFERRED_BY_CONNECTOR;
 
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.IdentifierRef;
@@ -17,6 +18,7 @@ import io.harness.eventsframework.protohelper.IdentifierRefProtoDTOHelper;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
 import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
+import io.harness.eventsframework.schemas.entitysetupusage.EntityDetailWithSetupUsageDetailProtoDTO;
 import io.harness.eventsframework.schemas.entitysetupusage.EntitySetupUsageCreateV2DTO;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
@@ -29,7 +31,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -71,11 +73,12 @@ public class ConnectorEntityReferenceHelper {
       return produceEventForSetupUsage(
           connectorInfoDTO, new ArrayList<>(), accountIdentifier, connectorFQN, new ArrayList<>(), logMessage);
     }
-    Set<SecretRefData> secrets = secretRefInputValidationHelper.getDecryptableFieldsData(decryptableEntities);
+    Map<String, SecretRefData> secrets = secretRefInputValidationHelper.getDecryptableFieldsData(decryptableEntities);
 
     NGAccess baseNGAccess = buildBaseNGAccess(connectorInfoDTO, accountIdentifier);
     List<String> secretFQNs = getAllSecretFQNs(secrets, baseNGAccess);
-    List<EntityDetailProtoDTO> allSecretDetails = getAllReferredSecretDetails(secrets, baseNGAccess);
+    List<EntityDetailWithSetupUsageDetailProtoDTO> allSecretDetails =
+        getAllReferredSecretDetails(secrets, baseNGAccess);
 
     log.info(ENTITY_REFERENCE_LOG_PREFIX
             + "[{}] the entity reference when the connector [{}] was created using the secret [{}]",
@@ -94,16 +97,16 @@ public class ConnectorEntityReferenceHelper {
     if (isEmpty(decryptableEntities)) {
       return true;
     }
-    Set<SecretRefData> secrets = secretRefInputValidationHelper.getDecryptableFieldsData(decryptableEntities);
+    Map<String, SecretRefData> secrets = secretRefInputValidationHelper.getDecryptableFieldsData(decryptableEntities);
 
     NGAccess baseNGAccess = buildBaseNGAccess(connectorInfoDTO, accountIdentifier);
     List<String> secretFQNs = getAllSecretFQNs(secrets, baseNGAccess);
-    List<EntityDetailProtoDTO> allSecretDetails = new ArrayList<>();
+    List<EntityDetailWithSetupUsageDetailProtoDTO> allSecretDetails = new ArrayList<>();
     return produceEventForSetupUsage(
         connectorInfoDTO, allSecretDetails, accountIdentifier, connectorFQN, secretFQNs, deleteLogMsg);
   }
   private boolean produceEventForSetupUsage(ConnectorInfoDTO connectorInfoDTO,
-      List<EntityDetailProtoDTO> allSecretDetails, String accountIdentifier, String connectorFQN,
+      List<EntityDetailWithSetupUsageDetailProtoDTO> allSecretDetails, String accountIdentifier, String connectorFQN,
       List<String> secretFQNs, String logMessage) {
     EntitySetupUsageCreateV2DTO entityReferenceDTO =
         createSetupUsageDTOForConnector(connectorInfoDTO, allSecretDetails, accountIdentifier);
@@ -121,8 +124,8 @@ public class ConnectorEntityReferenceHelper {
       return false;
     }
   }
-  private EntitySetupUsageCreateV2DTO createSetupUsageDTOForConnector(
-      ConnectorInfoDTO connectorInfoDTO, List<EntityDetailProtoDTO> secretDetails, String accountIdentifier) {
+  private EntitySetupUsageCreateV2DTO createSetupUsageDTOForConnector(ConnectorInfoDTO connectorInfoDTO,
+      List<EntityDetailWithSetupUsageDetailProtoDTO> secretDetails, String accountIdentifier) {
     IdentifierRefProtoDTO connectorReference =
         identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(accountIdentifier, connectorInfoDTO.getOrgIdentifier(),
             connectorInfoDTO.getProjectIdentifier(), connectorInfoDTO.getIdentifier());
@@ -135,16 +138,16 @@ public class ConnectorEntityReferenceHelper {
     return EntitySetupUsageCreateV2DTO.newBuilder()
         .setAccountIdentifier(accountIdentifier)
         .setReferredByEntity(connectorDetails)
-        .addAllReferredEntities(secretDetails)
+        .addAllReferredEntityWithSetupUsageDetail(secretDetails)
         .setDeleteOldReferredByRecords(true)
         .build();
   }
 
-  private List<IdentifierRef> getAllSecretIdentifiers(Set<SecretRefData> secrets, NGAccess baseNGAccess) {
+  private List<IdentifierRef> getAllSecretIdentifiers(Map<String, SecretRefData> secrets, NGAccess baseNGAccess) {
     List<IdentifierRef> secretIdentifierRef = new ArrayList<>();
-    for (SecretRefData secret : secrets) {
-      if (secret != null && !secret.isNull()) {
-        secretIdentifierRef.add(IdentifierRefHelper.getIdentifierRef(secret.toSecretRefStringValue(),
+    for (Map.Entry<String, SecretRefData> secret : secrets.entrySet()) {
+      if (secret != null && secret.getValue() != null && !secret.getValue().isNull()) {
+        secretIdentifierRef.add(IdentifierRefHelper.getIdentifierRef(secret.getValue().toSecretRefStringValue(),
             baseNGAccess.getAccountIdentifier(), baseNGAccess.getOrgIdentifier(), baseNGAccess.getProjectIdentifier()));
       }
     }
@@ -159,7 +162,7 @@ public class ConnectorEntityReferenceHelper {
         .build();
   }
 
-  private List<String> getAllSecretFQNs(Set<SecretRefData> secrets, NGAccess baseNGAccess) {
+  private List<String> getAllSecretFQNs(Map<String, SecretRefData> secrets, NGAccess baseNGAccess) {
     List<IdentifierRef> secretIdentifiers = getAllSecretIdentifiers(secrets, baseNGAccess);
     List<String> secretFQNs = new ArrayList<>();
     for (IdentifierRef secretIdentifier : secretIdentifiers) {
@@ -172,18 +175,32 @@ public class ConnectorEntityReferenceHelper {
     return secretFQNs;
   }
 
-  private List<EntityDetailProtoDTO> getAllReferredSecretDetails(Set<SecretRefData> secrets, NGAccess baseNGAccess) {
-    List<IdentifierRef> secretIdentifiers = getAllSecretIdentifiers(secrets, baseNGAccess);
-    List<EntityDetailProtoDTO> allSecretDetails = new ArrayList<>();
-    for (IdentifierRef secretIdentifierRef : secretIdentifiers) {
-      if (secretIdentifierRef != null) {
+  private List<EntityDetailWithSetupUsageDetailProtoDTO> getAllReferredSecretDetails(
+      Map<String, SecretRefData> secrets, NGAccess baseNGAccess) {
+    List<EntityDetailWithSetupUsageDetailProtoDTO> allSecretDetails = new ArrayList<>();
+    for (Map.Entry<String, SecretRefData> secret : secrets.entrySet()) {
+      if (secret != null && secret.getValue() != null && !secret.getValue().isNull()) {
+        IdentifierRef secretIdentifierRef = IdentifierRefHelper.getIdentifierRef(
+            secret.getValue().toSecretRefStringValue(), baseNGAccess.getAccountIdentifier(),
+            baseNGAccess.getOrgIdentifier(), baseNGAccess.getProjectIdentifier());
+        if (secretIdentifierRef == null) {
+          continue;
+        }
         IdentifierRefProtoDTO secretReference = identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(
             baseNGAccess.getAccountIdentifier(), secretIdentifierRef.getOrgIdentifier(),
             secretIdentifierRef.getProjectIdentifier(), secretIdentifierRef.getIdentifier());
-
-        allSecretDetails.add(EntityDetailProtoDTO.newBuilder()
-                                 .setIdentifierRef(secretReference)
-                                 .setType(EntityTypeProtoEnum.SECRETS)
+        EntityDetailProtoDTO entityDetailProtoDTO = EntityDetailProtoDTO.newBuilder()
+                                                        .setIdentifierRef(secretReference)
+                                                        .setType(EntityTypeProtoEnum.SECRETS)
+                                                        .build();
+        EntityDetailWithSetupUsageDetailProtoDTO.SecretReferredByConnectorSetupUsageDetailProtoDTO detailProtoDTO =
+            EntityDetailWithSetupUsageDetailProtoDTO.SecretReferredByConnectorSetupUsageDetailProtoDTO.newBuilder()
+                .setFieldName(secret.getKey())
+                .build();
+        allSecretDetails.add(EntityDetailWithSetupUsageDetailProtoDTO.newBuilder()
+                                 .setReferredEntity(entityDetailProtoDTO)
+                                 .setType(SECRET_REFERRED_BY_CONNECTOR.toString())
+                                 .setSecretConnectorDetail(detailProtoDTO)
                                  .build());
       }
     }

@@ -1,11 +1,18 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.security.encryption.EncryptedDataDetail;
 
+import software.wings.beans.AzureConfig;
+import software.wings.beans.AzureContainerRegistry;
+import software.wings.beans.AzureImageDefinition;
+import software.wings.beans.AzureImageGallery;
+import software.wings.beans.AzureResourceGroup;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsFeed;
@@ -30,6 +37,7 @@ import java.util.Optional;
  *
  * @param <T> the type parameter
  */
+@TargetModule(_930_DELEGATE_TASKS)
 @OwnedBy(CDC)
 public interface BuildService<T> {
   /**
@@ -107,20 +115,6 @@ public interface BuildService<T> {
    * @return the artifact paths
    */
   default List<String> getArtifactPaths(
-      String jobName, String groupId, T config, List<EncryptedDataDetail> encryptionDetails, String repositoryType) {
-    throw new UnsupportedOperationException();
-  }
-
-  /**
-   * Gets artifact paths using nexus3 private apis.
-   *
-   * @param jobName the job name
-   * @param groupId the Group Id
-   * @param config  the nexus config
-   * @param config  the repositoryType
-   * @return the artifact paths
-   */
-  default List<String> getArtifactPathsUsingPrivateApis(
       String jobName, String groupId, T config, List<EncryptedDataDetail> encryptionDetails, String repositoryType) {
     throw new UnsupportedOperationException();
   }
@@ -241,11 +235,6 @@ public interface BuildService<T> {
     throw new UnsupportedOperationException();
   }
 
-  default List<String> getGroupIdsUsingPrivateApis(
-      String repositoryName, String repositoryType, T config, List<EncryptedDataDetail> encryptionDetails) {
-    throw new UnsupportedOperationException();
-  }
-
   /**
    * Validates Artifact Server
    *
@@ -344,6 +333,41 @@ public interface BuildService<T> {
    * */
   default ArtifactStreamAttributes validateThenInferAttributes(
       T config, List<EncryptedDataDetail> encryptionDetails, ArtifactStreamAttributes artifactStreamAttributes) {
+    throw new UnsupportedOperationException();
+  }
+
+  default List<AzureContainerRegistry> listContainerRegistries(
+      AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails, String subscriptionId) {
+    throw new UnsupportedOperationException();
+  }
+
+  default List<String> listContainerRegistryNames(
+      AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails, String subscriptionId) {
+    throw new UnsupportedOperationException();
+  }
+
+  default List<String> listRepositories(AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails,
+      String subscriptionId, String registryName) {
+    throw new UnsupportedOperationException();
+  }
+
+  default Map<String, String> listSubscriptions(AzureConfig config, List<EncryptedDataDetail> encryptionDetails) {
+    throw new UnsupportedOperationException();
+  }
+
+  default List<AzureImageGallery> listImageGalleries(AzureConfig config, List<EncryptedDataDetail> encryptionDetails,
+      String subscriptionId, String resourceGroupName) {
+    throw new UnsupportedOperationException();
+  }
+
+  default List<AzureImageDefinition> listImageDefinitions(AzureConfig config,
+      List<EncryptedDataDetail> encryptionDetails, String subscriptionId, String resourceGroupName,
+      String galleryName) {
+    throw new UnsupportedOperationException();
+  }
+
+  default List<AzureResourceGroup> listResourceGroups(
+      AzureConfig config, List<EncryptedDataDetail> encryptionDetails, String subscriptionId) {
     throw new UnsupportedOperationException();
   }
 }

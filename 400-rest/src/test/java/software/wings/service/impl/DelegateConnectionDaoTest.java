@@ -12,9 +12,14 @@ import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.DelegateConnectionDetails;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -22,7 +27,6 @@ import io.harness.rule.Owner;
 import software.wings.WingsBaseTest;
 import software.wings.beans.DelegateConnection;
 import software.wings.beans.DelegateConnection.DelegateConnectionKeys;
-import software.wings.beans.DelegateStatus;
 import software.wings.service.intfc.DelegateService;
 
 import com.google.inject.Inject;
@@ -32,6 +36,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.DEL)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class DelegateConnectionDaoTest extends WingsBaseTest {
   private String delegateId = "DELEGATE_ID";
   private String delegateId2 = "DELEGATE_ID2";
@@ -81,7 +87,7 @@ public class DelegateConnectionDaoTest extends WingsBaseTest {
         DelegateConnectionHeartbeat.builder().delegateConnectionId(generateUuid()).version("1.0.1").build(),
         ConnectionMode.POLLING);
 
-    Map<String, List<DelegateStatus.DelegateInner.DelegateConnectionInner>> delegateConnections =
+    Map<String, List<DelegateConnectionDetails>> delegateConnections =
         delegateConnectionDao.obtainActiveDelegateConnections(ACCOUNT_ID);
 
     assertThat(delegateConnections).hasSize(2);

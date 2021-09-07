@@ -1,6 +1,8 @@
 package io.harness.mongo;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotation.StoreIn;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 
 import java.util.Set;
@@ -15,6 +17,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "MorphiaMoveKeys")
 @Entity(value = "morphiaMove", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@StoreIn(DbAliases.ALL)
 public class MorphiaMove implements PersistentEntity {
   @Id private String target;
   private Set<String> sources;

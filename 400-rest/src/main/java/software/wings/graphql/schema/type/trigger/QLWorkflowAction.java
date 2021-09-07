@@ -25,4 +25,5 @@ public class QLWorkflowAction implements QLTriggerAction {
   String workflowName;
   List<QLTriggerVariableValue> variables;
   List<QLArtifactSelection> artifactSelections;
+  List<QLManifestSelection> manifestSelections;
 }

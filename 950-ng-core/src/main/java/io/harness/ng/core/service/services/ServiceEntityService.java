@@ -22,8 +22,16 @@ public interface ServiceEntityService {
 
   Page<ServiceEntity> list(Criteria criteria, Pageable pageable);
 
+  List<ServiceEntity> listRunTimePermission(Criteria criteria);
+
   boolean delete(
       String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier, Long version);
 
   Page<ServiceEntity> bulkCreate(String accountId, List<ServiceEntity> serviceEntities);
+
+  // Find all services for given accountId + orgId + projectId including deleted services in asc order of creation
+  List<ServiceEntity> getAllServices(String accountIdentifier, String orgIdentifier, String projectIdentifier);
+
+  Integer findActiveServicesCountAtGivenTimestamp(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, long timestampInMs);
 }

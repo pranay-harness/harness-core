@@ -1,5 +1,9 @@
 package io.harness.beans.outcomes;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
+
+import io.harness.annotation.RecasterAlias;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.validation.Update;
 
@@ -15,13 +19,10 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @TypeAlias("podDetailsOutcome")
 @JsonTypeName("podDetailsOutcome")
+@OwnedBy(CI)
+@RecasterAlias("io.harness.beans.outcomes.LiteEnginePodDetailsOutcome")
 public class LiteEnginePodDetailsOutcome implements Outcome {
   String ipAddress;
   public static final String POD_DETAILS_OUTCOME = "podDetailsOutcome";
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
-
-  @Override
-  public String getType() {
-    return "podDetailsOutcome";
-  }
 }

@@ -39,13 +39,13 @@ import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -76,7 +76,7 @@ public class K8sApplyRequestHandler extends K8sRequestHandler {
     boolean success = k8sTaskHelperBase.fetchManifestFilesAndWriteToDirectory(
         k8sApplyRequest.getManifestDelegateConfig(), k8sApplyHandlerConfig.getManifestFilesDirectory(),
         k8sTaskHelperBase.getLogCallback(logStreamingTaskClient, FetchFiles,
-            CollectionUtils.isEmpty(k8sApplyRequest.getValuesYamlList()), commandUnitsProgress),
+            k8sApplyRequest.isShouldOpenFetchFilesLogStream(), commandUnitsProgress),
         timeoutInMillis, k8sApplyRequest.getAccountId());
     if (!success) {
       return getGenericFailureResponse(null);
@@ -119,6 +119,7 @@ public class K8sApplyRequestHandler extends K8sRequestHandler {
 
   private boolean init(K8sApplyRequest request, K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback logCallback) {
     logCallback.saveExecutionLog("Initializing..\n");
+    logCallback.saveExecutionLog(color(String.format("Release Name: [%s]", request.getReleaseName()), Yellow, Bold));
 
     k8sApplyHandlerConfig.setKubernetesConfig(
         containerDeploymentDelegateBaseHelper.createKubernetesConfig(request.getK8sInfraDelegateConfig()));
@@ -166,5 +167,10 @@ public class K8sApplyRequestHandler extends K8sRequestHandler {
       logCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
       return false;
     }
+  }
+
+  @VisibleForTesting
+  K8sApplyHandlerConfig getK8sApplyHandlerConfig() {
+    return k8sApplyHandlerConfig;
   }
 }

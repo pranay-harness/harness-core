@@ -40,7 +40,6 @@ public class AuditEventMapper {
   public static AuditEventDTO toDTO(AuditEvent auditEvent) {
     return AuditEventDTO.builder()
         .auditId(auditEvent.getId())
-        .insertId(auditEvent.getInsertId())
         .resourceScope(ResourceScopeMapper.toDTO(auditEvent.getResourceScope()))
         .httpRequestInfo(auditEvent.getHttpRequestInfo())
         .requestMetadata(auditEvent.getRequestMetadata())

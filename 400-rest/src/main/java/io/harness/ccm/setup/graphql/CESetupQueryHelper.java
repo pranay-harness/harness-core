@@ -6,9 +6,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.ccm.commons.entities.billing.CECloudAccount.CECloudAccountKeys;
 
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.ce.CECloudAccount.CECloudAccountKeys;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 

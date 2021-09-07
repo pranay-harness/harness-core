@@ -6,7 +6,7 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.cluster.dao.K8sYamlDao;
-import io.harness.ccm.cluster.entities.K8sYaml;
+import io.harness.ccm.commons.entities.k8s.K8sYaml;
 
 import software.wings.graphql.datafetcher.AbstractObjectDataFetcher;
 import software.wings.graphql.datafetcher.cloudefficiencyevents.QLK8sEventYamls.QLK8sEventYamlsBuilder;

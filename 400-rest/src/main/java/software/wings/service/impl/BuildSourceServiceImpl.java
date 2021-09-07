@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
@@ -25,14 +26,19 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
-import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.AzureConfig;
+import software.wings.beans.AzureContainerRegistry;
+import software.wings.beans.AzureImageDefinition;
+import software.wings.beans.AzureImageGallery;
+import software.wings.beans.AzureResourceGroup;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -42,7 +48,6 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.GcbTaskParams;
-import software.wings.beans.config.NexusConfig;
 import software.wings.beans.settings.azureartifacts.AzureArtifactsConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsFeed;
@@ -52,11 +57,13 @@ import software.wings.helpers.ext.gcs.GcsService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.service.ArtifactStreamHelper;
+import software.wings.service.impl.artifact.ArtifactCollectionUtils;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.BuildService;
 import software.wings.service.intfc.BuildSourceService;
+import software.wings.service.intfc.DelegateTaskServiceClassic;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UsageRestrictionsService;
@@ -82,12 +89,11 @@ import java.util.Set;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.springframework.util.Assert;
 
-/**
- * Created by anubhaw on 8/18/16.
- */
 @ValidateOnExecution
 @Singleton
+@TargetModule(_870_CG_ORCHESTRATION)
 @OwnedBy(CDC)
 @Slf4j
 public class BuildSourceServiceImpl implements BuildSourceService {
@@ -106,6 +112,8 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private ArtifactStreamHelper artifactStreamHelper;
   @Inject private DelegateServiceImpl delegateService;
+  @Inject private DelegateTaskServiceClassic delegateTaskServiceClassic;
+  @Inject private ArtifactCollectionUtils artifactCollectionUtils;
 
   @Override
   public Set<JobDetails> getJobs(String appId, String settingId, String parentJobName) {
@@ -198,16 +206,8 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     SettingValue value = getSettingValue(settingAttribute);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) value);
-    if (featureFlagService.isEnabled(FeatureName.USE_NEXUS3_PRIVATE_APIS, settingAttribute.getAccountId())
-        && value instanceof NexusConfig && ((NexusConfig) value).getVersion().equals("3.x")
-        && repositoryFormat.equals("maven")) {
-      return Sets.newTreeSet(
-          getBuildService(settingAttribute, appId)
-              .getArtifactPathsUsingPrivateApis(jobName, groupId, value, encryptedDataDetails, repositoryFormat));
-    } else {
-      return Sets.newTreeSet(getBuildService(settingAttribute, appId, artifactStreamType)
-                                 .getArtifactPaths(jobName, groupId, value, encryptedDataDetails, repositoryFormat));
-    }
+    return Sets.newTreeSet(getBuildService(settingAttribute, appId, artifactStreamType)
+                               .getArtifactPaths(jobName, groupId, value, encryptedDataDetails, repositoryFormat));
   }
 
   @Override
@@ -250,7 +250,30 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     return getBuildDetails(appId, artifactStreamId, settingId, limit);
   }
 
+  /**
+   * Get New builds only returns new artifacts. Let us assume that a artifact source has v1, v2, v3 & v4 versions.
+   * And we have already collected v1, v2 & v3. This method returns only v4.
+   * And we had already collected v1, v2, v3 & v4. This method returns only empty list.
+   */
+  @Override
+  public List<BuildDetails> getNewBuilds(String appId, String artifactStreamId, String settingId) {
+    return getBuildDetails(appId, artifactStreamId, settingId, -1, true);
+  }
+
+  /**
+   *
+   */
   private List<BuildDetails> getBuildDetails(String appId, String artifactStreamId, String settingId, int limit) {
+    return getBuildDetails(appId, artifactStreamId, settingId, limit, false);
+  }
+
+  /**
+   * The shouldSetSavedBuildKeys flag is used to pass the existing collected artifacts versions to the delegate.
+   * Set this to true when trying to do an artifact collection. To get the list of all artifacts then pass false.
+   * Checkout method - getNewBuilds
+   */
+  private List<BuildDetails> getBuildDetails(
+      String appId, String artifactStreamId, String settingId, int limit, boolean shouldSetSavedBuildKeys) {
     ArtifactStream artifactStream = getArtifactStream(artifactStreamId);
     if (artifactStream.isArtifactStreamParameterized()) {
       throw new InvalidRequestException("Manually pull artifact not supported for parameterized artifact stream");
@@ -277,6 +300,10 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     }
     if (GCS.name().equals(artifactStreamType)) {
       limit = (limit != -1) ? limit : 100;
+    }
+    if (shouldSetSavedBuildKeys) {
+      artifactStreamAttributes.setSavedBuildDetailsKeys(
+          artifactCollectionUtils.getArtifactsKeys(artifactStream, artifactStreamAttributes));
     }
     return getBuildDetails(appId, limit, settingAttribute, settingValue, encryptedDataDetails, artifactStreamType,
         artifactStreamAttributes);
@@ -377,13 +404,6 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     SettingValue settingValue = getSettingValue(settingAttribute);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
-    if (featureFlagService.isEnabled(FeatureName.USE_NEXUS3_PRIVATE_APIS, settingAttribute.getAccountId())
-        && settingValue instanceof NexusConfig && ((NexusConfig) settingValue).getVersion().equals("3.x")
-        && repositoryFormat.equals("maven")) {
-      return Sets.newTreeSet(
-          getBuildService(settingAttribute, appId)
-              .getGroupIdsUsingPrivateApis(repoType, repositoryFormat, settingValue, encryptedDataDetails));
-    }
     return Sets.newTreeSet(getBuildService(settingAttribute, appId)
                                .getGroupIds(repoType, repositoryFormat, settingValue, encryptedDataDetails));
   }
@@ -467,7 +487,10 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     }
     Class<? extends BuildService> buildServiceClass = serviceLocator.getBuildServiceClass(artifactStreamType);
     SyncTaskContextBuilder syncTaskContextBuilder =
-        SyncTaskContext.builder().accountId(settingAttribute.getAccountId()).appId(appId).timeout(120 * 1000);
+        SyncTaskContext.builder()
+            .accountId(settingAttribute.getAccountId())
+            .appId(isBlank(appId) || appId.equals(GLOBAL_APP_ID) ? SCOPE_WILDCARD : appId)
+            .timeout(120 * 1000);
     SyncTaskContext syncTaskContext = areDelegateSelectorsRequired(settingAttribute)
         ? appendDelegateSelector(settingAttribute, syncTaskContextBuilder)
         : syncTaskContextBuilder.build();
@@ -669,16 +692,8 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     SettingValue settingValue = getSettingValue(settingAttribute);
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
-    if (featureFlagService.isEnabled(FeatureName.USE_NEXUS3_PRIVATE_APIS, settingAttribute.getAccountId())
-        && settingValue instanceof NexusConfig && ((NexusConfig) settingValue).getVersion().equals("3.x")
-        && (repositoryFormat.equals("npm") || repositoryFormat.equals("nuget"))) {
-      return Sets.newTreeSet(
-          getBuildService(settingAttribute, appId)
-              .getGroupIdsUsingPrivateApis(repositoryName, repositoryFormat, settingValue, encryptedDataDetails));
-    } else {
-      return Sets.newTreeSet(getBuildService(settingAttribute, appId)
-                                 .getGroupIds(repositoryName, repositoryFormat, settingValue, encryptedDataDetails));
-    }
+    return Sets.newTreeSet(getBuildService(settingAttribute, appId)
+                               .getGroupIds(repositoryName, repositoryFormat, settingValue, encryptedDataDetails));
   }
 
   @Override
@@ -730,7 +745,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   public List<String> getGcbTriggers(String settingId) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     if (settingAttribute == null) {
-      throw new InvalidRequestException("GCP Cloud provider Settings Attribute is null", USER);
+      throw new InvalidRequestException("GCP Clo∂ud provider Settings Attribute is null", USER);
     }
     SettingValue settingValue = settingAttribute.getValue();
     if (settingValue == null) {
@@ -738,21 +753,117 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     }
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
     GcpConfig gcpConfig = (GcpConfig) settingValue;
-    GcbState.GcbDelegateResponse delegateResponseData = delegateService.executeTask(
-        DelegateTask.builder()
-            .accountId(gcpConfig.getAccountId())
-            .data(TaskData.builder()
-                      .async(true)
-                      .taskType(GCB.name())
-                      .parameters(new Object[] {GcbTaskParams.builder()
-                                                    .gcpConfig(gcpConfig)
-                                                    .encryptedDataDetails(encryptedDataDetails)
-                                                    .type(GcbTaskParams.GcbTaskType.FETCH_TRIGGERS)
-                                                    .build()})
-                      .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                      .build())
-            .build());
+    GcbState.GcbDelegateResponse delegateResponseData = null;
+    try {
+      delegateResponseData = delegateTaskServiceClassic.executeTask(
+          DelegateTask.builder()
+              .accountId(gcpConfig.getAccountId())
+              .data(TaskData.builder()
+                        .async(true)
+                        .taskType(GCB.name())
+                        .parameters(new Object[] {GcbTaskParams.builder()
+                                                      .gcpConfig(gcpConfig)
+                                                      .encryptedDataDetails(encryptedDataDetails)
+                                                      .type(GcbTaskParams.GcbTaskType.FETCH_TRIGGERS)
+                                                      .build()})
+                        .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                        .build())
+              .build());
+    } catch (InterruptedException e) {
+      log.error("Exception on getGcbTriggers: ", e);
+    }
+    Assert.notNull(delegateResponseData, "Delegate Response data should not be null!");
+    if (delegateResponseData.getErrorMsg() != null) {
+      log.error("Exception on getGcbTriggers: " + delegateResponseData.getErrorMsg());
+      throw new InvalidRequestException(
+          "Exception while fetching GcbTriggers from the delegate: " + delegateResponseData.getErrorMsg(), USER);
+    }
     return delegateResponseData.getTriggers();
+  }
+
+  @Override
+  public List<String> listAcrRepositories(String settingId, String subscriptionId, String registryName) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    if (!(settingValue instanceof AzureConfig)) {
+      return Collections.emptyList();
+    }
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
+    return getBuildService(settingAttribute)
+        .listRepositories((AzureConfig) settingValue, encryptedDataDetails, subscriptionId, registryName);
+  }
+
+  @Override
+  public List<AzureContainerRegistry> listAzureContainerRegistries(String settingId, String subscriptionId) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    if (!(settingValue instanceof AzureConfig)) {
+      return Collections.emptyList();
+    }
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
+    return getBuildService(settingAttribute)
+        .listContainerRegistries((AzureConfig) settingValue, encryptedDataDetails, subscriptionId);
+  }
+
+  @Override
+  public List<String> listAzureContainerRegistryNames(String settingId, String subscriptionId) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    if (!(settingValue instanceof AzureConfig)) {
+      return Collections.emptyList();
+    }
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
+    return getBuildService(settingAttribute)
+        .listContainerRegistryNames((AzureConfig) settingValue, encryptedDataDetails, subscriptionId);
+  }
+
+  @Override
+  public Map<String, String> listSubscriptions(String settingId) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    if (!(settingValue instanceof AzureConfig)) {
+      return Collections.emptyMap();
+    }
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
+    return getBuildService(settingAttribute).listSubscriptions((AzureConfig) settingValue, encryptedDataDetails);
+  }
+
+  @Override
+  public List<AzureImageGallery> listImageGalleries(String settingId, String subscriptionId, String resourceGroupName) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    if (!(settingValue instanceof AzureConfig)) {
+      return Collections.emptyList();
+    }
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
+    return getBuildService(settingAttribute)
+        .listImageGalleries((AzureConfig) settingValue, encryptedDataDetails, subscriptionId, resourceGroupName);
+  }
+
+  @Override
+  public List<AzureResourceGroup> listResourceGroups(String settingId, String subscriptionId) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    if (!(settingValue instanceof AzureConfig)) {
+      return Collections.emptyList();
+    }
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
+    return getBuildService(settingAttribute)
+        .listResourceGroups((AzureConfig) settingValue, encryptedDataDetails, subscriptionId);
+  }
+
+  @Override
+  public List<AzureImageDefinition> listImageDefinitions(
+      String settingId, String subscriptionId, String resourceGroupName, String galleryName) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    if (!(settingValue instanceof AzureConfig)) {
+      return Collections.emptyList();
+    }
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
+    return getBuildService(settingAttribute)
+        .listImageDefinitions(
+            (AzureConfig) settingValue, encryptedDataDetails, subscriptionId, resourceGroupName, galleryName);
   }
 
   private boolean areDelegateSelectorsRequired(SettingAttribute settingAttribute) {

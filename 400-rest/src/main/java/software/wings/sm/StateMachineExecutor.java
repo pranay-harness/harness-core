@@ -58,6 +58,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.alert.AlertData;
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -113,6 +114,7 @@ import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.DelegateTaskServiceClassic;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.StateExecutionService;
@@ -170,6 +172,7 @@ import org.mongodb.morphia.query.UpdateResults;
 @Singleton
 @Slf4j
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class StateMachineExecutor implements StateInspectionListener {
   public static final int DEFAULT_STATE_TIMEOUT_MILLIS = 4 * 60 * 60 * 1000; // 4 hours
   private static final int ABORT_EXPIRY_BUFFER_MILLIS = 10 * 60 * 1000; // 5 min
@@ -190,6 +193,7 @@ public class StateMachineExecutor implements StateInspectionListener {
   @Inject private AppService appService;
   @Inject private DelayEventHelper delayEventHelper;
   @Inject private DelegateService delegateService;
+  @Inject private DelegateTaskServiceClassic delegateTaskServiceClassic;
   @Inject private ExecutionInterruptManager executionInterruptManager;
   @Inject @Named("stateMachineExecutor-handler") private ExecutorService stateMachineExecutor;
   @Inject private ExecutorService executorService;
@@ -963,6 +967,7 @@ public class StateMachineExecutor implements StateInspectionListener {
         break;
       }
       case NEXT_STEP:
+      case ROLLBACK_PROVISIONER_AFTER_PHASES:
       case ROLLBACK: {
         if (executionEventAdvice.getNextChildStateMachineId() != null
             || executionEventAdvice.getNextStateName() != null) {
@@ -1503,7 +1508,7 @@ public class StateMachineExecutor implements StateInspectionListener {
         notNullCheck("context.getApp()", context.getApp());
         if (finalStatus == ABORTED) {
           try {
-            delegateService.abortTask(context.getApp().getAccountId(), delegateTaskId);
+            delegateTaskServiceClassic.abortTask(context.getApp().getAccountId(), delegateTaskId);
           } catch (Exception e) {
             log.error(
                 "[AbortInstance] Error in ABORTING WorkflowExecution {}. Error in aborting delegate task : {}. Reason : {}",
@@ -1511,7 +1516,7 @@ public class StateMachineExecutor implements StateInspectionListener {
           }
         } else {
           try {
-            String errorMsg = delegateService.expireTask(context.getApp().getAccountId(), delegateTaskId);
+            String errorMsg = delegateTaskServiceClassic.expireTask(context.getApp().getAccountId(), delegateTaskId);
             if (isNotBlank(errorMsg)) {
               errorMsgBuilder.append(errorMsg);
             }
@@ -1983,6 +1988,7 @@ public class StateMachineExecutor implements StateInspectionListener {
           break;
         }
         case END_EXECUTION:
+        case ROLLBACK_PROVISIONER_AFTER_PHASES:
         case ROLLBACK: {
           endExecution(workflowExecutionInterrupt, workflowExecution);
           break;

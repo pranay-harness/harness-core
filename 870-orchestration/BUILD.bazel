@@ -1,7 +1,6 @@
 load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
-load("//tools/checkstyle:rules.bzl", "checkstyle")
-load("//tools/bazel/pmd:defs.bzl", "pmd")
+load("//:tools/bazel/macros.bzl", "run_analysis")
 
 shared_dependencies = [
     "//955-delegate-beans:module",
@@ -10,7 +9,10 @@ shared_dependencies = [
     "//890-pms-contracts:module",
     "//910-delegate-service-driver:module",
     "//930-delegate-tasks:module",
+    "//945-account-mgmt:module",
     "//950-wait-engine:module",
+    "//956-feature-flag-beans:module",
+    "//970-ng-commons:module",
     "@maven//:com_esotericsoftware_kryo",
     "@maven//:com_fasterxml_jackson_core_jackson_annotations",
     "@maven//:com_google_code_findbugs_annotations",
@@ -31,7 +33,7 @@ shared_dependencies = [
 
 java_library(
     name = "module",
-    srcs = glob(["src/main/**/*.java"]),
+    srcs = glob(["src/main/java/**/*.java"]),
     visibility = ["//visibility:public"],
     deps = shared_dependencies,
 )
@@ -40,6 +42,7 @@ java_library(
     name = "tests",
     testonly = True,
     srcs = glob(["src/test/**/*.java"]),
+    resources = ["//870-orchestration/src/test/resources:resource"],
     visibility = ["//visibility:public"],
     deps = shared_dependencies + [
         ":module",
@@ -53,12 +56,12 @@ java_library(
         "@maven//:org_awaitility_awaitility",
         "@maven//:org_jooq_joor",
         "@maven//:org_mockito_mockito_core",
+        "@maven//:org_powermock_powermock_api_mockito",
+        "@maven//:org_powermock_powermock_module_junit4",
         "@maven//:org_reflections_reflections",
     ],
 )
 
 run_tests()
 
-checkstyle()
-
-pmd()
+run_analysis()

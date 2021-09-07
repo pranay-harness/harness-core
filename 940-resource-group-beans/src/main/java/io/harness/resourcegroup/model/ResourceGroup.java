@@ -1,11 +1,11 @@
 package io.harness.resourcegroup.model;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.ng.DbAliases.NG_MANAGER;
 
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.Scope;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.CollationLocale;
 import io.harness.mongo.CollationStrength;
@@ -13,11 +13,14 @@ import io.harness.mongo.index.Collation;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.persistence.PersistentEntity;
+import io.harness.utils.ScopeUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableList;
+import java.util.Collections;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -43,8 +46,11 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("resourceGroup")
 @Entity("resourceGroup")
 @TypeAlias("resourceGroup")
-@StoreIn(NG_MANAGER)
+@StoreIn(DbAliases.RESOURCEGROUP)
 public class ResourceGroup implements PersistentRegularIterable, PersistentEntity {
+  public static final String ALL_RESOURCES_RESOURCE_GROUP_IDENTIFIER = "_all_resources";
+  public static final String DEFAULT_COLOR = "#0063F7";
+
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -81,14 +87,13 @@ public class ResourceGroup implements PersistentRegularIterable, PersistentEntit
   @NotNull @Size(max = 256) @Singular List<ResourceSelector> resourceSelectors;
   @Builder.Default Boolean fullScopeSelected = Boolean.FALSE;
 
-  @Builder.Default Boolean deleted = Boolean.FALSE;
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
   @CreatedBy EmbeddedUser createdBy;
   @LastModifiedBy EmbeddedUser lastUpdatedBy;
   @Version Long version;
 
-  @FdIndex private long nextIteration;
+  @FdIndex private Long nextIteration;
 
   @Override
   public void updateNextIteration(String fieldName, long nextIteration) {
@@ -104,5 +109,21 @@ public class ResourceGroup implements PersistentRegularIterable, PersistentEntit
   @Override
   public String getUuid() {
     return this.id;
+  }
+
+  public static ResourceGroup getHarnessManagedResourceGroup(Scope scope) {
+    return builder()
+        .accountIdentifier(scope.getAccountIdentifier())
+        .orgIdentifier(scope.getOrgIdentifier())
+        .projectIdentifier(scope.getProjectIdentifier())
+        .tags(Collections.emptyList())
+        .name("All Resources")
+        .identifier(ALL_RESOURCES_RESOURCE_GROUP_IDENTIFIER)
+        .description(String.format("All the resources in this %s are included in this resource group.",
+            ScopeUtils.getMostSignificantScope(scope).toString().toLowerCase()))
+        .resourceSelectors(Collections.emptyList())
+        .fullScopeSelected(true)
+        .harnessManaged(true)
+        .build();
   }
 }

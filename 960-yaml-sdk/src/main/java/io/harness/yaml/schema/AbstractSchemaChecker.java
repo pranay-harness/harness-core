@@ -21,7 +21,9 @@ import com.google.inject.Singleton;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -42,40 +44,45 @@ public class AbstractSchemaChecker {
     ensureOneOfHasCorrectValues(reflections);
   }
 
-  void ensureSchemaUpdated(List<YamlSchemaRootClass> yamlSchemaRootClasses, ObjectMapper objectMapper)
+  void ensureSchemaUpdated(List<YamlSchemaRootClass> yamlSchemaRootClazzes, ObjectMapper objectMapper)
       throws IOException, ClassNotFoundException {
-    if (isEmpty(yamlSchemaRootClasses)) {
+    if (isEmpty(yamlSchemaRootClazzes)) {
       return;
     }
-    YamlSchemaGenerator yamlSchemaGenerator =
-        new YamlSchemaGenerator(new JacksonClassHelper(), new SwaggerGenerator(objectMapper), yamlSchemaRootClasses);
+    List<YamlSchemaRootClass> yamlSchemaRootClasses = new ArrayList<>(yamlSchemaRootClazzes);
+    Set<YamlSchemaRootClass> toBeRemoved = new HashSet<>();
+    for (YamlSchemaRootClass yamlSchemaRootClass : yamlSchemaRootClasses) {
+      final String schemaPathForRootCLass = getSchemaPathForRootCLass(yamlSchemaRootClass);
+      try {
+        IOUtils.resourceToString(schemaPathForRootCLass, StandardCharsets.UTF_8, this.getClass().getClassLoader());
+      } catch (Exception e) {
+        log.warn("No schema found for unit testing for {}.", yamlSchemaRootClass.getEntityType());
+        toBeRemoved.add(yamlSchemaRootClass);
+      }
+    }
+    yamlSchemaRootClasses.removeAll(toBeRemoved);
+    YamlSchemaGenerator yamlSchemaGenerator = new YamlSchemaGenerator(
+        new JacksonClassHelper(objectMapper), new SwaggerGenerator(objectMapper), yamlSchemaRootClasses);
     final Map<EntityType, JsonNode> entityTypeJsonNodeMap = yamlSchemaGenerator.generateYamlSchema();
     final ObjectWriter objectWriter = yamlSchemaGenerator.getObjectWriter();
     for (YamlSchemaRootClass schemaRoot : yamlSchemaRootClasses) {
       log.info("Running schema check for {}", schemaRoot.getEntityType());
-      final String schemaBasePath = YamlSdkInitConstants.schemaBasePath;
-      final String schemaPathForEntityType =
-          YamlSchemaUtils.getSchemaPathForEntityType(schemaRoot.getEntityType(), schemaBasePath);
+      final String schemaPathForEntityType = getSchemaPathForRootCLass(schemaRoot);
       final JsonNode jsonNode = entityTypeJsonNodeMap.get(schemaRoot.getEntityType());
       final String s = objectWriter.writeValueAsString(jsonNode);
-      // todo(abhinav): find a better way to find caller class.
-      String callerName = Thread.currentThread().getStackTrace()[10].getClassName();
-      final Class<?> clazz = Class.forName(callerName);
-      try {
-        final String schemaInUT =
-            IOUtils.resourceToString(schemaPathForEntityType, StandardCharsets.UTF_8, clazz.getClassLoader());
-        if (!schemaInUT.trim().equals(s.trim())) {
-          log.info("Difference in schema :\n" + StringUtils.difference(s, schemaInUT));
-          throw new YamlSchemaException(String.format("Yaml schema not updated for %s", schemaRoot.getEntityType()));
-        }
-        log.info("schema check success for {}", schemaRoot.getEntityType());
-      } catch (Exception e) {
-        if (e instanceof YamlSchemaException) {
-          throw e;
-        }
-        log.info("No schema found for unit testing for {}.", schemaRoot.getEntityType());
+      final String schemaInUT =
+          IOUtils.resourceToString(schemaPathForEntityType, StandardCharsets.UTF_8, this.getClass().getClassLoader());
+      if (!schemaInUT.replaceAll("\\s+", "").equals(s.replaceAll("\\s+", ""))) {
+        log.info("Difference in schema :\n" + StringUtils.difference(s, schemaInUT));
+        throw new YamlSchemaException(String.format("Yaml schema not updated for %s", schemaRoot.getEntityType()));
       }
+      log.info("schema check success for {}", schemaRoot.getEntityType());
     }
+  }
+
+  private String getSchemaPathForRootCLass(YamlSchemaRootClass schemaRoot) {
+    final String schemaBasePath = YamlSdkInitConstants.schemaBasePath;
+    return YamlSchemaUtils.getSchemaPathForEntityType(schemaRoot.getEntityType(), schemaBasePath);
   }
 
   void ensureOneOfHasCorrectValues(Reflections reflections) {

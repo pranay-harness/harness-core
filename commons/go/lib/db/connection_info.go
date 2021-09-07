@@ -17,6 +17,8 @@ type ConnectionInfo struct {
 	Host        string `json:"host" validate:"nonzero"`
 	Port        uint   `json:"port" validate:"nonzero"`
 	Engine      string `json:"engine" validate:"nonzero"`
+	EnableSSL   bool   `json:"enable_ssl"`
+	SSLCertPath string `json:"ssl_cert_path"`
 }
 
 func (ci *ConnectionInfo) getDBConnection() (*sql.DB, error) {
@@ -35,8 +37,14 @@ func (ci *ConnectionInfo) String() string {
 }
 
 func (ci *ConnectionInfo) psqlConnectionString() string {
-	return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable application_name=%s",
-		ci.Host, ci.Port, ci.User, ci.Password, ci.DBName, ci.Application)
+	if ci.EnableSSL == false {
+		return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable application_name=%s",
+			ci.Host, ci.Port, ci.User, ci.Password, ci.DBName, ci.Application)
+	} else {
+		return fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=verify-full sslrootcert=%s sslcert= sslkey= application_name=%s",
+			ci.Host, ci.Port, ci.User, ci.Password, ci.DBName, ci.SSLCertPath, ci.Application)
+	}
+
 }
 
 func (ci *ConnectionInfo) mysqlConnectionString() string {

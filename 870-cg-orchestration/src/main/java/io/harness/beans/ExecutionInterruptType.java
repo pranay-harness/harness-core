@@ -1,10 +1,17 @@
 package io.harness.beans;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 /**
  * Describes different possible events for state.
  *
  * @author Rishi
  */
+@OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public enum ExecutionInterruptType {
   /**
    * Abort state event.
@@ -57,6 +64,8 @@ public enum ExecutionInterruptType {
   MARK_SUCCESS("Mark the node as success"),
 
   ROLLBACK("Rollback"),
+
+  ROLLBACK_PROVISIONER_AFTER_PHASES("Rollback Provisioner after Phases"),
 
   NEXT_STEP("Next Step"),
 

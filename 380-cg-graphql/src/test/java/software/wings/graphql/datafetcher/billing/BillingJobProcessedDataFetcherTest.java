@@ -11,7 +11,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.cluster.dao.BatchJobScheduledDataDao;
-import io.harness.ccm.cluster.entities.BatchJobScheduledData;
+import io.harness.ccm.commons.entities.batch.BatchJobScheduledData;
 import io.harness.rule.Owner;
 
 import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;

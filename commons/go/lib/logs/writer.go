@@ -10,11 +10,13 @@ type StreamWriter interface {
 	Write(p []byte) (n int, err error) // Write log data into a buffer
 	Open() error                       // Open remote stream for writing of logs
 	Close() error                      // Close remote stream for writing of logs
+	Error() error                      // Track if any error was recorded
 }
 
 func (*nopWriter) Start() error { return nil }
 func (*nopWriter) Open() error  { return nil }
 func (*nopWriter) Close() error { return nil }
+func (*nopWriter) Error() error { return nil }
 func (n *nopWriter) Write(p []byte) (int, error) {
 	n.data = append(n.data, string(p))
 	return len(p), nil

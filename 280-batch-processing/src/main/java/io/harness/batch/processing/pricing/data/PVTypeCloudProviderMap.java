@@ -1,5 +1,6 @@
 package io.harness.batch.processing.pricing.data;
 
+import io.harness.ccm.commons.constants.CloudProvider;
 import io.harness.perpetualtask.k8s.watch.PVInfo.PVType;
 
 import lombok.Getter;
@@ -10,20 +11,20 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public enum PVTypeCloudProviderMap {
-  GCE_PD(PVType.PV_TYPE_GCE_PERSISTENT_DISK, CloudProvider.GCP),
-  AWS_EBS(PVType.PV_TYPE_AWS_EBS, CloudProvider.AWS),
-  AZURE_DISK(PVType.PV_TYPE_AZURE_DISK, CloudProvider.AZURE),
-  NFS(PVType.PV_TYPE_NFS, CloudProvider.ON_PREM),
-  UNKNOWN(PVType.PV_TYPE_UNSPECIFIED, CloudProvider.UNKNOWN);
+  GCE_PD(PVType.PV_TYPE_GCE_PERSISTENT_DISK, io.harness.ccm.commons.constants.CloudProvider.GCP),
+  AWS_EBS(PVType.PV_TYPE_AWS_EBS, io.harness.ccm.commons.constants.CloudProvider.AWS),
+  AZURE_DISK(PVType.PV_TYPE_AZURE_DISK, io.harness.ccm.commons.constants.CloudProvider.AZURE),
+  NFS(PVType.PV_TYPE_NFS, io.harness.ccm.commons.constants.CloudProvider.ON_PREM),
+  UNKNOWN(PVType.PV_TYPE_UNSPECIFIED, io.harness.ccm.commons.constants.CloudProvider.UNKNOWN);
 
   @Getter private final PVType pvType;
-  @Getter private final CloudProvider cloudProvider;
-  PVTypeCloudProviderMap(PVType pvType, CloudProvider cloudProvider) {
+  @Getter private final io.harness.ccm.commons.constants.CloudProvider cloudProvider;
+  PVTypeCloudProviderMap(PVType pvType, io.harness.ccm.commons.constants.CloudProvider cloudProvider) {
     this.pvType = pvType;
     this.cloudProvider = cloudProvider;
   }
 
-  public static CloudProvider get(PVType pvType) {
+  public static io.harness.ccm.commons.constants.CloudProvider get(PVType pvType) {
     for (PVTypeCloudProviderMap val : PVTypeCloudProviderMap.values()) {
       if (val.getPvType() == pvType) {
         return val.getCloudProvider();

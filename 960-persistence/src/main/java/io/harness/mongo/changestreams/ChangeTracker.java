@@ -73,7 +73,8 @@ public class ChangeTracker {
       readPreference = ReadPreference.secondary(mongoTagSet);
     }
     return new MongoClientURI(mongoClientUrl,
-        MongoClientOptions.builder(MongoModule.defaultMongoClientOptions).readPreference(readPreference));
+        MongoClientOptions.builder(MongoModule.getDefaultMongoClientOptions(mongoConfig))
+            .readPreference(readPreference));
   }
 
   private void connectToMongoDatabase() {

@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
 
-scripts/bazel/aeriform.sh prepare
+set -e
+
+scripts/bazel/aeriform.sh prepare bazel-rule
 bazel build `bazel query 'attr(tags, "aeriform", //...:*)'`

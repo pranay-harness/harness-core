@@ -127,6 +127,13 @@ public class CiBeansRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
       public ObjectMapper getYamlSchemaObjectMapper() {
         return Jackson.newObjectMapper();
       }
+
+      @Provides
+      @Named("disableDeserialization")
+      @Singleton
+      public boolean getSerializationForDelegate() {
+        return false;
+      }
     });
 
     modules.add(CIBeansModule.getInstance());

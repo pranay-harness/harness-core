@@ -10,7 +10,7 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.commons.dao.CEMetadataRecordDao;
-import io.harness.ccm.commons.entities.CEMetadataRecord;
+import io.harness.ccm.commons.entities.batch.CEMetadataRecord;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -52,7 +52,6 @@ import software.wings.graphql.schema.type.aggregation.billing.QLTimeGroupType;
 import software.wings.service.impl.EnvironmentServiceImpl;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.healthmarketscience.sqlbuilder.AliasedObject;
 import com.healthmarketscience.sqlbuilder.BinaryCondition;
@@ -146,6 +145,11 @@ public class BillingDataQueryBuilder {
     if (isGroupByEntityPresent(groupBy, QLCCMEntityGroupBy.WorkloadName)
         && !isGroupByEntityPresent(groupBy, QLCCMEntityGroupBy.Namespace)) {
       groupBy.add(0, QLCCMEntityGroupBy.Namespace);
+    } else if (isGroupByEntityPresent(groupBy, QLCCMEntityGroupBy.Namespace)) {
+      filters.add(
+          QLBillingDataFilter.builder()
+              .instanceType(QLIdFilter.builder().operator(QLIdOperator.NOT_IN).values(new String[] {"K8S_PV"}).build())
+              .build());
     }
     // Reorder group by entity list to first group by cluster/application
     groupBy = getGroupByOrderedByDrillDown(groupBy);
@@ -186,6 +190,11 @@ public class BillingDataQueryBuilder {
 
     // To change node instance id filter to parent instance id filter in case of group by namespace/workload
     filters = getUpdatedInstanceIdFilter(filters, groupBy);
+
+    if (isGroupByEntityPresent(groupBy, QLCCMEntityGroupBy.WorkloadName) && !isWorkloadTypeFilterPresent(filters)) {
+      addWorkloadTypeFilter(filters);
+    }
+
     if (!Lists.isNullOrEmpty(filters)) {
       filters = processFilterForTagsAndLabels(accountId, filters);
       decorateQueryWithFilters(selectQuery, filters);
@@ -290,6 +299,11 @@ public class BillingDataQueryBuilder {
     }
 
     addFiltersToExcludeUnallocatedRows(filters, groupBy);
+
+    if (isGroupByEntityPresent(groupBy, QLCCMEntityGroupBy.WorkloadName) && !isWorkloadTypeFilterPresent(filters)) {
+      addWorkloadTypeFilter(filters);
+    }
+
     if (!Lists.isNullOrEmpty(filters)) {
       filters = processFilterForTagsAndLabels(accountId, filters);
       filters = filters.stream()
@@ -366,10 +380,24 @@ public class BillingDataQueryBuilder {
       groupBy.add(QLCCMEntityGroupBy.ClusterName);
     }
 
-    if (!shouldUseHourlyData(filters, accountId)) {
-      selectQuery.addCustomFromTable(schema.getBillingDataTable());
+    if (!isGroupByHour(groupByTime) && !shouldUseHourlyData(filters, accountId)) {
+      if (featureFlagService.isEnabled(CE_BILLING_DATA_PRE_AGGREGATION, accountId)
+          && isValidGroupByForPreAggregation(groupBy) && areFiltersValidForPreAggregation(filters)
+          && areAggregationsValidForPreAggregation(aggregateFunction)) {
+        selectQuery.addCustomFromTable(BILLING_DATA_PRE_AGGREGATED_TABLE);
+        aggregateFunction = getSupportedAggregations(aggregateFunction);
+      } else {
+        selectQuery.addCustomFromTable(schema.getBillingDataTable());
+      }
     } else {
-      selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
+      if (featureFlagService.isEnabled(CE_BILLING_DATA_HOURLY_PRE_AGGREGATION, accountId)
+          && isValidGroupByForPreAggregation(groupBy) && areFiltersValidForPreAggregation(filters)
+          && areAggregationsValidForPreAggregation(aggregateFunction)) {
+        selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_PRE_AGGREGATED_TABLE);
+        aggregateFunction = getSupportedAggregations(aggregateFunction);
+      } else {
+        selectQuery.addCustomFromTable(BILLING_DATA_HOURLY_TABLE);
+      }
     }
 
     decorateQueryWithAggregations(selectQuery, aggregateFunction, fieldNames);
@@ -432,6 +460,10 @@ public class BillingDataQueryBuilder {
     }
 
     List<QLBillingDataFilter> timeFilters = getTimeFilters(filters);
+
+    if (isGroupByEntityPresent(groupBy, QLCCMEntityGroupBy.WorkloadName) && !isWorkloadTypeFilterPresent(filters)) {
+      addWorkloadTypeFilter(filters);
+    }
 
     if (!Lists.isNullOrEmpty(timeFilters)) {
       decorateQueryWithFilters(selectQuery, timeFilters);
@@ -842,6 +874,8 @@ public class BillingDataQueryBuilder {
         return schema.getInstanceName();
       case WorkloadName:
         return schema.getWorkloadName();
+      case WorkloadType:
+        return schema.getWorkloadType();
       case Namespace:
         return schema.getNamespace();
       case CloudProvider:
@@ -941,11 +975,13 @@ public class BillingDataQueryBuilder {
       List<QLBillingDataFilter> filters) {
     List<String> instanceTypes = new ArrayList<>();
     boolean isNodeAndPodQuery = false;
+    boolean isNodeQuery = false;
     for (QLCCMEntityGroupBy aggregation : groupBy) {
       switch (aggregation) {
         case Node:
           instanceTypes.add("K8S_NODE");
           isNodeAndPodQuery = true;
+          isNodeQuery = true;
           break;
         case Pod:
           instanceTypes.add("K8S_POD");
@@ -968,14 +1004,16 @@ public class BillingDataQueryBuilder {
               .build());
       // Adding groupBy with corresponding selectField
       addGroupByColumn(selectQuery, groupByFields, fieldNames, schema.getInstanceId(), true);
-      addGroupByColumn(selectQuery, groupByFields, fieldNames, schema.getInstanceName(), true);
-
       addGroupByColumn(selectQuery, groupByFields, fieldNames, schema.getInstanceType(), false);
-      addGroupByColumn(selectQuery, groupByFields, fieldNames, schema.getNamespace(), false);
-      addGroupByColumn(selectQuery, groupByFields, fieldNames, schema.getCloudProvider(), false);
       addGroupByColumn(selectQuery, groupByFields, fieldNames, schema.getClusterName(), false);
-      addGroupByColumn(selectQuery, groupByFields, fieldNames, schema.getClusterId(), false);
-      addGroupByColumn(selectQuery, groupByFields, fieldNames, schema.getWorkloadName(), false);
+
+      if (!isNodeQuery) {
+        addGroupByColumn(selectQuery, groupByFields, fieldNames, schema.getInstanceName(), true);
+        addGroupByColumn(selectQuery, groupByFields, fieldNames, schema.getNamespace(), false);
+        addGroupByColumn(selectQuery, groupByFields, fieldNames, schema.getCloudProvider(), false);
+        addGroupByColumn(selectQuery, groupByFields, fieldNames, schema.getClusterId(), false);
+        addGroupByColumn(selectQuery, groupByFields, fieldNames, schema.getWorkloadName(), false);
+      }
     }
   }
 
@@ -1129,12 +1167,24 @@ public class BillingDataQueryBuilder {
     return false;
   }
 
+  private boolean isWorkloadTypeFilterPresent(List<QLBillingDataFilter> filters) {
+    return filters.stream().anyMatch(filter -> filter.getWorkloadType() != null);
+  }
+
   private boolean isClusterFilterPresent(List<QLBillingDataFilter> filters) {
     return filters.stream().anyMatch(filter -> filter.getCluster() != null);
   }
 
   protected boolean isUnallocatedCostAggregationPresent(List<QLCCMAggregationFunction> aggregationFunctions) {
     return aggregationFunctions.stream().anyMatch(agg -> agg.getColumnName().equals("unallocatedcost"));
+  }
+
+  private void addWorkloadTypeFilter(List<QLBillingDataFilter> filters) {
+    QLBillingDataFilter workloadTypeFilter =
+        QLBillingDataFilter.builder()
+            .workloadType(QLIdFilter.builder().operator(QLIdOperator.NOT_NULL).values(new String[] {""}).build())
+            .build();
+    filters.add(workloadTypeFilter);
   }
 
   protected void addInstanceTypeFilter(List<QLBillingDataFilter> filters) {
@@ -1487,9 +1537,12 @@ public class BillingDataQueryBuilder {
 
   private boolean shouldUseHourlyData(List<QLBillingDataFilter> filters, String accountId) {
     CEMetadataRecord ceMetadataRecord = ceMetadataRecordDao.getByAccountId(accountId);
-    if ((null != ceMetadataRecord && null != ceMetadataRecord.getAwsDataPresent()
-            && ceMetadataRecord.getAwsDataPresent())
-        || ImmutableSet.of("hW63Ny6rQaaGsKkVjE0pJA", "zEaak-FLS425IEO7OLzMUg").contains(accountId)) {
+    if (null != ceMetadataRecord && null != ceMetadataRecord.getAwsDataPresent()
+        && ceMetadataRecord.getAwsDataPresent()) {
+      return false;
+    }
+    if (null != ceMetadataRecord && null != ceMetadataRecord.getAzureDataPresent()
+        && ceMetadataRecord.getAzureDataPresent()) {
       return false;
     }
 
@@ -1728,7 +1781,7 @@ public class BillingDataQueryBuilder {
   // Checking if any non supported group by for pre-aggregation is present
   private boolean isValidGroupByForPreAggregation(List<QLCCMEntityGroupBy> entityGroupBy) {
     return !entityGroupBy.stream().anyMatch(groupBy
-        -> groupBy == QLCCMEntityGroupBy.Pod || groupBy == QLCCMEntityGroupBy.Node || groupBy == QLCCMEntityGroupBy.PV
+        -> groupBy == QLCCMEntityGroupBy.Pod || groupBy == QLCCMEntityGroupBy.PV
             || groupBy == QLCCMEntityGroupBy.CloudServiceName || groupBy == QLCCMEntityGroupBy.TaskId
             || groupBy == QLCCMEntityGroupBy.LaunchType);
   }

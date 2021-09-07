@@ -18,15 +18,12 @@ func TestLogState_ClosePendingLogs(t *testing.T) {
 	ctrl, _ := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
 
-	mWriter1 := logs.NewMockStreamWriter(ctrl)
-	mWriter2 := logs.NewMockStreamWriter(ctrl)
-	mWriter1.EXPECT().Open() // For creating the remote logger
-	mWriter2.EXPECT().Open() // For creating the remote logger
-	mWriter1.EXPECT().Close()
-	mWriter2.EXPECT().Close()
+	mWriter1 := logs.NopWriter()
+	mWriter2 := logs.NopWriter()
 
 	logger1, _ := logs.NewRemoteLogger(mWriter1)
 	logger2, _ := logs.NewRemoteLogger(mWriter2)
+
 	o1 := LogState()
 	ch := o1.PendingLogs()
 	ch <- logger1

@@ -1,21 +1,40 @@
 package io.harness.pms.ngpipeline.inputset.mappers;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
 import io.harness.NGResourceFilterConstants;
-import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.gitsync.helpers.GitContextHelper;
+import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity.InputSetEntityKeys;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntityType;
 import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetListTypePMS;
 
 import lombok.experimental.UtilityClass;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Update;
 
+@OwnedBy(PIPELINE)
 @UtilityClass
 public class PMSInputSetFilterHelper {
+  public Criteria createCriteriaForGetListForBranchAndRepo(String accountId, String orgIdentifier,
+      String projectIdentifier, String pipelineIdentifier, InputSetListTypePMS type) {
+    Criteria criteria =
+        createCriteriaForGetList(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, type, null, false);
+    GitEntityInfo gitEntityInfo = GitContextHelper.getGitEntityInfo();
+    if (gitEntityInfo != null) {
+      Criteria gitSyncCriteria = new Criteria()
+                                     .and(InputSetEntityKeys.branch)
+                                     .is(gitEntityInfo.getBranch())
+                                     .and(InputSetEntityKeys.yamlGitConfigRef)
+                                     .is(gitEntityInfo.getYamlGitConfigId());
+      criteria.andOperator(gitSyncCriteria);
+    }
+    return criteria;
+  }
+
   public Criteria createCriteriaForGetList(String accountId, String orgIdentifier, String projectIdentifier,
       String pipelineIdentifier, InputSetListTypePMS type, String searchTerm, boolean deleted) {
     Criteria criteria = new Criteria();
@@ -46,31 +65,6 @@ public class PMSInputSetFilterHelper {
     }
 
     return criteria;
-  }
-
-  public Update getUpdateOperations(InputSetEntity inputSetEntity) {
-    Update update = new Update();
-    update.set(InputSetEntityKeys.accountId, inputSetEntity.getAccountId());
-    update.set(InputSetEntityKeys.orgIdentifier, inputSetEntity.getOrgIdentifier());
-    update.set(InputSetEntityKeys.projectIdentifier, inputSetEntity.getProjectIdentifier());
-    update.set(InputSetEntityKeys.pipelineIdentifier, inputSetEntity.getPipelineIdentifier());
-
-    update.set(InputSetEntityKeys.identifier, inputSetEntity.getIdentifier());
-    update.set(InputSetEntityKeys.name, inputSetEntity.getName());
-    update.set(InputSetEntityKeys.description, inputSetEntity.getDescription());
-    update.set(InputSetEntityKeys.tags, inputSetEntity.getTags());
-
-    update.set(InputSetEntityKeys.yaml, inputSetEntity.getYaml());
-    if (inputSetEntity.getInputSetEntityType() == InputSetEntityType.OVERLAY_INPUT_SET) {
-      update.set(InputSetEntityKeys.inputSetReferences, inputSetEntity.getInputSetReferences());
-    }
-    return update;
-  }
-
-  public Update getUpdateOperationsForDelete() {
-    Update update = new Update();
-    update.set(InputSetEntityKeys.deleted, true);
-    return update;
   }
 
   private InputSetEntityType getInputSetType(InputSetListTypePMS inputSetListType) {

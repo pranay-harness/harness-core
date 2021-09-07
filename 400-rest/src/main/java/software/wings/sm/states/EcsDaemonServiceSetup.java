@@ -21,10 +21,10 @@ import static java.util.Collections.singletonList;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.FeatureName;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.pcf.ResizeStrategy;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -47,7 +47,6 @@ import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.ResizeStrategy;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.artifact.Artifact;
@@ -155,10 +154,8 @@ public class EcsDaemonServiceSetup extends State {
     EcsSetUpDataBag dataBag = ecsStateHelper.prepareBagForEcsSetUp(context, serviceSteadyStateTimeout,
         artifactCollectionUtils, serviceResourceService, infrastructureMappingService, settingsService, secretManager);
 
-    if (featureFlagService.isEnabled(FeatureName.ECS_REMOTE_MANIFEST, context.getAccountId())) {
-      appManifestMap = applicationManifestUtils.getApplicationManifests(context, AppManifestKind.K8S_MANIFEST);
-      valuesInGit = ecsStateHelper.isRemoteManifest(appManifestMap);
-    }
+    appManifestMap = applicationManifestUtils.getApplicationManifests(context, AppManifestKind.K8S_MANIFEST);
+    valuesInGit = ecsStateHelper.isRemoteManifest(appManifestMap);
 
     Activity activity = ecsStateHelper.createActivity(context, ECS_DAEMON_SERVICE_SETUP_COMMAND, getStateType(),
         CommandUnitType.AWS_ECS_SERVICE_SETUP_DAEMON, activityService);
@@ -253,7 +250,7 @@ public class EcsDaemonServiceSetup extends State {
                                          .build();
 
     DelegateTask task = ecsStateHelper.createAndQueueDelegateTaskForEcsServiceSetUp(
-        request, ecsSetUpDataBag, activityId, delegateService);
+        request, ecsSetUpDataBag, activityId, delegateService, isSelectionLogsTrackingForTasksEnabled());
     appendDelegateTaskDetails(context, task);
 
     return ExecutionResponse.builder()
@@ -285,6 +282,8 @@ public class EcsDaemonServiceSetup extends State {
         .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
         .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infraMapping.getUuid())
         .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, infraMapping.getServiceId())
+        .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+        .description("Fetch remote git files")
         .waitId(waitId)
         .data(TaskData.builder()
                   .async(true)
@@ -454,5 +453,10 @@ public class EcsDaemonServiceSetup extends State {
     this.targetPort = stateExecutionData.getTargetPort();
     this.useLoadBalancer = stateExecutionData.isUseLoadBalancer();
     this.resizeStrategy = stateExecutionData.getResizeStrategy();
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

@@ -24,6 +24,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
+import io.harness.nexus.NexusRequest;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.shell.ScriptType;
 
@@ -50,6 +51,7 @@ import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.SftpHelperService;
 import software.wings.service.impl.SmbHelperService;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.mappers.artifact.NexusConfigToNexusRequestMapper;
 import software.wings.utils.RepositoryType;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -374,7 +376,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
           artifactFileName = artifactFileName.substring(lastIndexOfSlash + 1);
           log.info("Got filename: " + artifactFileName);
         }
-        command = "curl --fail --progress-bar \""
+        command = "curl --fail \""
             + AWS4SignerForAuthorizationHeader.getEndpointWithCanonicalizedResourcePath(endpointUrl, true) + "\""
             + " \\\n"
             + "-H \"Authorization: " + authorizationHeader + "\" \\\n"
@@ -506,11 +508,11 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     switch (this.getScriptType()) {
       case BASH:
         if (!artifactoryConfig.hasCredentials()) {
-          command = "curl --fail --progress-bar -X GET \""
+          command = "curl --fail -X GET \""
               + getArtifactoryUrl(artifactoryConfig, metadata.get(ArtifactMetadataKeys.artifactPath)) + "\" -o \""
               + getCommandPath() + "/" + artifactFileName + "\"";
         } else {
-          command = "curl --fail --progress-bar -H \"Authorization: " + authHeader + "\" -X GET \""
+          command = "curl --fail -H \"Authorization: " + authHeader + "\" -X GET \""
               + getArtifactoryUrl(artifactoryConfig, metadata.get(ArtifactMetadataKeys.artifactPath)) + "\" -o \""
               + getCommandPath() + "/" + artifactFileName + "\"";
         }
@@ -540,11 +542,11 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
 
   private String constructCommandStringForNexus(ShellCommandExecutionContext context,
       ArtifactStreamAttributes artifactStreamAttributes, List<EncryptedDataDetail> encryptionDetails) {
-    NexusConfig nexusConfig = (NexusConfig) artifactStreamAttributes.getServerSetting().getValue();
-    encryptionService.decrypt(nexusConfig, encryptionDetails, false);
+    NexusRequest nexusRequest = NexusConfigToNexusRequestMapper.toNexusRequest(
+        (NexusConfig) artifactStreamAttributes.getServerSetting().getValue(), encryptionService, encryptionDetails);
     String authHeader = null;
-    if (nexusConfig.hasCredentials()) {
-      String pair = nexusConfig.getUsername() + ":" + new String(nexusConfig.getPassword());
+    if (nexusRequest.isHasCredentials()) {
+      String pair = nexusRequest.getUsername() + ":" + new String(nexusRequest.getPassword());
       authHeader = "Basic " + encodeBase64(pair);
     }
     List<ArtifactFileMetadata> artifactFileMetadata = artifactStreamAttributes.getArtifactFileMetadata();
@@ -556,14 +558,14 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
         List<BuildDetails> buildDetailsList;
         if (artifactStreamAttributes.getRepositoryType() != null
             && artifactStreamAttributes.getRepositoryType().equals(RepositoryType.maven.name())) {
-          buildDetailsList = nexusTwoService.getVersion(nexusConfig, encryptionDetails,
-              artifactStreamAttributes.getRepositoryName(), artifactStreamAttributes.getGroupId(),
-              artifactStreamAttributes.getArtifactName(), artifactStreamAttributes.getExtension(),
-              artifactStreamAttributes.getClassifier(), artifactStreamAttributes.getMetadata().get("buildNo"));
+          buildDetailsList = nexusTwoService.getVersion(nexusRequest, artifactStreamAttributes.getRepositoryName(),
+              artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName(),
+              artifactStreamAttributes.getExtension(), artifactStreamAttributes.getClassifier(),
+              artifactStreamAttributes.getMetadata().get("buildNo"));
 
         } else {
           buildDetailsList = Collections.singletonList(
-              nexusTwoService.getVersion(artifactStreamAttributes.getRepositoryFormat(), nexusConfig, encryptionDetails,
+              nexusTwoService.getVersion(artifactStreamAttributes.getRepositoryFormat(), nexusRequest,
                   artifactStreamAttributes.getRepositoryName(), artifactStreamAttributes.getNexusPackageName(),
                   artifactStreamAttributes.getMetadata().get("buildNo")));
         }
@@ -601,8 +603,8 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     switch (this.getScriptType()) {
       case BASH:
         for (ArtifactFileMetadata downloadMetadata : artifactFileMetadata) {
-          if (!nexusConfig.hasCredentials()) {
-            command.append("curl --fail --progress-bar -X GET \"")
+          if (!nexusRequest.isHasCredentials()) {
+            command.append("curl --fail -X GET \"")
                 .append(downloadMetadata.getUrl())
                 .append("\" -o \"")
                 .append(getCommandPath().trim())
@@ -610,7 +612,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
                 .append(downloadMetadata.getFileName())
                 .append("\"\n");
           } else {
-            command.append("curl --fail --progress-bar -H \"Authorization: ")
+            command.append("curl --fail -H \"Authorization: ")
                 .append(authHeader)
                 .append("\" -X GET \"")
                 .append(downloadMetadata.getUrl())
@@ -623,7 +625,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
         }
         break;
       case POWERSHELL:
-        if (nexusConfig.hasCredentials()) {
+        if (nexusRequest.isHasCredentials()) {
           command
               .append("$Headers = @{\n"
                   + "    Authorization = \"")
@@ -678,7 +680,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     switch (this.getScriptType()) {
       case BASH:
         for (ArtifactFileMetadata downloadMetadata : artifactFileMetadata) {
-          command.append("curl --fail --progress-bar -H \"Authorization: ")
+          command.append("curl --fail -H \"Authorization: ")
               .append(authHeader)
               .append("\" -X GET \"")
               .append(downloadMetadata.getUrl())
@@ -730,7 +732,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     switch (this.getScriptType()) {
       case BASH:
         for (ArtifactFileMetadata downloadMetadata : artifactFileMetadata) {
-          command.append("curl --fail --progress-bar -H \"Authorization: ")
+          command.append("curl --fail -H \"Authorization: ")
               .append(authHeader)
               .append("\" -X GET \"")
               .append(downloadMetadata.getUrl())
@@ -800,7 +802,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     String command;
     switch (this.getScriptType()) {
       case BASH:
-        command = "curl --fail -L --progress-bar -H \"Authorization: " + authHeader + "\" -X GET \"" + url + "\" -o \""
+        command = "curl --fail -L -H \"Authorization: " + authHeader + "\" -X GET \"" + url + "\" -o \""
             + getCommandPath() + "/" + artifactFileName + "\"";
         break;
       case POWERSHELL:

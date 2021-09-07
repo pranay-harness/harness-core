@@ -2,7 +2,9 @@ package software.wings.service.intfc;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -18,6 +20,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
+import software.wings.beans.PhaseStepType;
 import software.wings.beans.Service;
 import software.wings.beans.TrafficShiftMetadata;
 import software.wings.beans.Variable;
@@ -54,6 +57,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
  * @author Rishi
  */
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public interface WorkflowService extends OwnedByApplication, SettingsServiceManipulationObserver {
   PageResponse<Workflow> listWorkflows(PageRequest<Workflow> pageRequest);
 
@@ -235,4 +239,10 @@ public interface WorkflowService extends OwnedByApplication, SettingsServiceMani
       String appId, List<ArtifactVariable> artifactVariables, WorkflowExecution workflowExecution);
 
   TrafficShiftMetadata readWorkflowTrafficShiftMetadata(@NotNull String appId, @NotNull String workflowId);
+
+  PhaseStep generateRollbackProvisioners(
+      PhaseStep preDeploymentSteps, PhaseStepType phaseStepType, String phaseStepName);
+
+  PhaseStep generateRollbackProvisionersReverse(
+      PhaseStep preDeploymentSteps, PhaseStepType phaseStepType, String phaseStepName);
 }

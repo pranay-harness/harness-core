@@ -1,6 +1,7 @@
 package io.harness.delegate.task.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType.CLIENT_KEY_CERT;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType.OPEN_ID_CONNECT;
 import static io.harness.delegate.beans.connector.k8Connector.KubernetesAuthType.SERVICE_ACCOUNT;
@@ -30,6 +31,7 @@ import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
 import java.util.Collections;
+import junitparams.Parameters;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -84,6 +86,7 @@ public class K8sYamlToDelegateDTOMapperTest extends CategoryTest {
   @Test
   @Owner(developers = OwnerRule.DEEPAK)
   @Category(UnitTests.class)
+  @Parameters({"clientKeyPhraseIdentifier", ""})
   public void createKubernetesConfigFromClusterConfigWithNameSpaceForClientKeyCertTest() {
     String clientKey = "clientKey";
     String clientKeyIdentifier = "clientKeyRef";
@@ -111,11 +114,15 @@ public class K8sYamlToDelegateDTOMapperTest extends CategoryTest {
                                          .scope(Scope.ACCOUNT)
                                          .decryptedValue(clientCert.toCharArray())
                                          .build();
-    SecretRefData clientKeyPassPhraseSecret = SecretRefData.builder()
-                                                  .identifier(clientKeyPhraseIdentifier)
-                                                  .scope(Scope.ACCOUNT)
-                                                  .decryptedValue(clientKeyPhrase.toCharArray())
-                                                  .build();
+
+    SecretRefData clientKeyPassPhraseSecret = null;
+    if (isNotEmpty(clientKeyPhraseIdentifier)) {
+      clientKeyPassPhraseSecret = SecretRefData.builder()
+                                      .identifier(clientKeyPhraseIdentifier)
+                                      .scope(Scope.ACCOUNT)
+                                      .decryptedValue(clientKeyPhrase.toCharArray())
+                                      .build();
+    }
     KubernetesAuthDTO kubernetesAuthDTO = KubernetesAuthDTO.builder()
                                               .authType(CLIENT_KEY_CERT)
                                               .credentials(KubernetesClientKeyCertDTO.builder()
@@ -140,7 +147,9 @@ public class K8sYamlToDelegateDTOMapperTest extends CategoryTest {
     assertThat(config.getMasterUrl()).isEqualTo(masterUrl);
     assertThat(config.getClientKey()).isEqualTo(clientKey.toCharArray());
     assertThat(config.getClientCert()).isEqualTo(clientCert.toCharArray());
-    assertThat(config.getClientKeyPassphrase()).isEqualTo(clientKeyPhrase.toCharArray());
+    if (isNotEmpty(clientKeyPhraseIdentifier)) {
+      assertThat(config.getClientKeyPassphrase()).isEqualTo(clientKeyPhrase.toCharArray());
+    }
     assertThat(config.getClientKeyAlgo()).isEqualTo(clientKeyAlgo);
   }
 

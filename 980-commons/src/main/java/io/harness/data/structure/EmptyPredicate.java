@@ -1,5 +1,6 @@
 package io.harness.data.structure;
 
+import com.google.protobuf.ByteString;
 import java.util.Collection;
 import java.util.Map;
 
@@ -26,6 +27,10 @@ public class EmptyPredicate {
   }
 
   public static boolean isEmpty(String string) {
+    return string == null || string.isEmpty();
+  }
+
+  public static boolean isEmpty(ByteString string) {
     return string == null || string.isEmpty();
   }
 
@@ -78,6 +83,10 @@ public class EmptyPredicate {
   }
 
   public static boolean isNotEmpty(String string) {
+    return string != null && !string.isEmpty();
+  }
+
+  public static boolean isNotEmpty(ByteString string) {
     return string != null && !string.isEmpty();
   }
 

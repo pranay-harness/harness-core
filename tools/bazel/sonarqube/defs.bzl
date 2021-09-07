@@ -1,11 +1,5 @@
-load("@bazel_version//:bazel_version.bzl", "bazel_version")
-load("@bazel_skylib//lib:versions.bzl", "versions")
-
 def sonarqube_coverage_generator_binary():
-    if versions.is_at_least(threshold = "2.1.0", version = bazel_version):
-        deps = ["@remote_coverage_tools//:all_lcov_merger_lib"]
-    else:
-        deps = ["@bazel_tools//tools/test/CoverageOutputGenerator/java/com/google/devtools/coverageoutputgenerator:all_lcov_merger_lib"]
+    deps = ["@remote_coverage_tools//:all_lcov_merger_lib"]
 
     native.java_binary(
         name = "SonarQubeCoverageGenerator",
@@ -265,18 +259,12 @@ def sq_project(
         test_srcs = test_srcs,
         source_encoding = source_encoding,
         targets = targets,
+        modules = modules,
         test_targets = test_targets,
         test_reports = test_reports,
-        modules = modules,
         sq_properties_template = sq_properties_template,
         sq_properties = "sonar-project.properties",
         tags = tags,
         visibility = visibility,
         checkstyle_report_path = checkstyle_report_path,
     )
-
-def get_sonar_targets(modules = []):
-    _targets = dict()
-    for f in modules:
-        _targets.update({f + ":sq_mycomponent": f[2:]})
-    return _targets

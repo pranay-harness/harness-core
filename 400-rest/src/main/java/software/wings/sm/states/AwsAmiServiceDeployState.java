@@ -30,15 +30,18 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.beans.SweepingOutput;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.pcf.ResizeStrategy;
 import io.harness.deployment.InstanceDetails;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -63,7 +66,6 @@ import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.Log.Builder;
-import software.wings.beans.ResizeStrategy;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
@@ -147,6 +149,7 @@ public class AwsAmiServiceDeployState extends State {
   @Inject private ServiceTemplateHelper serviceTemplateHelper;
   @Inject private AwsStateHelper awsStateHelper;
   @Inject private AwsAmiServiceStateHelper awsAmiServiceStateHelper;
+  @Inject private FeatureFlagService featureFlagService;
 
   public AwsAmiServiceDeployState(String name) {
     this(name, StateType.AWS_AMI_SERVICE_DEPLOY.name());
@@ -347,7 +350,7 @@ public class AwsAmiServiceDeployState extends State {
             .context(context)
             .build();
 
-    createAndQueueResizeTask(amiResizeTaskRequestData);
+    createAndQueueResizeTask(amiResizeTaskRequestData, context);
 
     return ExecutionResponse.builder()
         .async(true)
@@ -357,7 +360,7 @@ public class AwsAmiServiceDeployState extends State {
         .build();
   }
 
-  protected void createAndQueueResizeTask(AmiResizeTaskRequestData amiResizeTaskRequestData) {
+  protected void createAndQueueResizeTask(AmiResizeTaskRequestData amiResizeTaskRequestData, ExecutionContext context) {
     String accountId = amiResizeTaskRequestData.getAccountId();
     String appId = amiResizeTaskRequestData.getAppId();
     String envId = amiResizeTaskRequestData.getEnvId();
@@ -387,6 +390,14 @@ public class AwsAmiServiceDeployState extends State {
             .asgDesiredCounts(amiResizeTaskRequestData.getResizeData())
             .infraMappingClassisLbs(amiResizeTaskRequestData.getClassicLBs())
             .infraMappingTargetGroupArns(amiResizeTaskRequestData.getTargetGroupArns())
+            .amiInServiceHealthyStateFFEnabled(
+                featureFlagService.isEnabled(FeatureName.AMI_IN_SERVICE_HEALTHY_WAIT, accountId))
+            .baseAsgScheduledActionJSONs(
+                featureFlagService.isEnabled(FeatureName.AMI_ASG_CONFIG_COPY, context.getAccountId())
+                    ? serviceSetupElement.getBaseAsgScheduledActionJSONs()
+                    : null)
+            .amiAsgConfigCopyEnabled(
+                featureFlagService.isEnabled(FeatureName.AMI_ASG_CONFIG_COPY, context.getAccountId()))
             .build();
 
     addExistingInstanceIds(amiResizeTaskRequestData, request);
@@ -405,8 +416,11 @@ public class AwsAmiServiceDeployState extends State {
             .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
             .setupAbstraction(Cd1SetupFields.ENV_ID_FIELD, envId)
             .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, amiResizeTaskRequestData.getEnvironmentType().name())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("AWS AMI service deploy task execution")
             .build();
     delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(context, delegateTask);
   }
 
   @VisibleForTesting
@@ -707,5 +721,10 @@ public class AwsAmiServiceDeployState extends State {
 
   public void setCommandName(String commandName) {
     this.commandName = commandName;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

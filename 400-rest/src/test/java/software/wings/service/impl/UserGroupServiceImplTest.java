@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessModule._360_CG_MANAGER;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -62,6 +64,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
@@ -71,6 +75,7 @@ import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UserGroupAlreadyExistException;
 import io.harness.limits.LimitCheckerFactory;
+import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
@@ -96,7 +101,6 @@ import software.wings.security.GenericEntityFilter.FilterType;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserThreadLocal;
-import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EmailNotificationService;
@@ -122,7 +126,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-
+@OwnedBy(PL)
+@TargetModule(_360_CG_MANAGER)
 public class UserGroupServiceImplTest extends WingsBaseTest {
   private String accountId = generateUuid();
   private String userGroupId = generateUuid();
@@ -231,9 +236,10 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     user.setDefaultAccountId(testAccount.getUuid());
     user.setUuid(userId);
     user.setName(userName);
+    user.setEmail("user@harness.io");
     user.setAccounts(Arrays.asList(testAccount));
     user.setUserGroups(Arrays.asList(userGroup));
-    userService.save(user, testAccount.getUuid());
+    userService.createUser(user, testAccount.getUuid());
     return userService.get(userId);
   }
 
@@ -273,9 +279,9 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
                     .build();
 
     user1.getUserGroups().add(userGroup);
-    userService.save(user1, accountId);
+    userService.createUser(user1, accountId);
     user2.getUserGroups().add(userGroup);
-    userService.save(user2, accountId);
+    userService.createUser(user2, accountId);
 
     createUserAndSave(userId, userName, userGroup, account);
 

@@ -11,7 +11,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.rule.Owner;
 
 import org.junit.Test;
@@ -61,23 +60,23 @@ public class PlanTest extends OrchestrationBeansTestBase {
 
   private Plan buildDummyPlan() {
     return Plan.builder()
-        .node(PlanNode.builder()
-                  .uuid(DUMMY_NODE_1_ID)
-                  .name("Dummy Node 1")
-                  .stepType(DUMMY_STEP_TYPE)
-                  .identifier("dummy1")
+        .node(PlanNodeProto.newBuilder()
+                  .setUuid(DUMMY_NODE_1_ID)
+                  .setName("Dummy Node 1")
+                  .setStepType(DUMMY_STEP_TYPE)
+                  .setIdentifier("dummy1")
                   .build())
-        .node(PlanNode.builder()
-                  .uuid(DUMMY_NODE_2_ID)
-                  .name("Dummy Node 2")
-                  .stepType(DUMMY_STEP_TYPE)
-                  .identifier("dummy2")
+        .node(PlanNodeProto.newBuilder()
+                  .setUuid(DUMMY_NODE_2_ID)
+                  .setName("Dummy Node 2")
+                  .setStepType(DUMMY_STEP_TYPE)
+                  .setIdentifier("dummy2")
                   .build())
-        .node(PlanNode.builder()
-                  .uuid(DUMMY_NODE_3_ID)
-                  .name("Dummy Node 3")
-                  .stepType(DUMMY_STEP_TYPE)
-                  .identifier("dummy3")
+        .node(PlanNodeProto.newBuilder()
+                  .setUuid(DUMMY_NODE_3_ID)
+                  .setName("Dummy Node 3")
+                  .setStepType(DUMMY_STEP_TYPE)
+                  .setIdentifier("dummy3")
                   .build())
         .startingNodeId(DUMMY_NODE_1_ID)
         .build();

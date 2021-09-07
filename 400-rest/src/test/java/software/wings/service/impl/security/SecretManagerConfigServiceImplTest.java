@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.UTKARSH;
 
@@ -8,6 +9,7 @@ import static software.wings.beans.LocalEncryptionConfig.HARNESS_DEFAULT_SECRET_
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
@@ -23,6 +25,7 @@ import com.google.inject.Inject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(PL)
 public class SecretManagerConfigServiceImplTest extends WingsBaseTest {
   private String accountId = "accountId";
   @Inject private SecretManagerConfigService secretManagerConfigService;
@@ -40,7 +43,7 @@ public class SecretManagerConfigServiceImplTest extends WingsBaseTest {
   public void test_getEncryptionBySecretManagerId() {
     char[] credentials = "{\"credentials\":\"abc\"}".toCharArray();
     SecretManagerConfig secretManagerConfig =
-        new GcpKmsConfig("name", "projectId", "region", "keyRing", "keyName", credentials);
+        new GcpKmsConfig("name", "projectId", "region", "keyRing", "keyName", credentials, null);
     secretManagerConfig.setAccountId(accountId);
     String configId = secretManagerConfigService.save(secretManagerConfig);
     EncryptionType encryptionType = secretManagerConfigService.getEncryptionBySecretManagerId(configId, accountId);
@@ -54,7 +57,7 @@ public class SecretManagerConfigServiceImplTest extends WingsBaseTest {
     String secretManagerName = "secretManagerName";
     char[] credentials = "{\"credentials\":\"abc\"}".toCharArray();
     SecretManagerConfig secretManagerConfig =
-        new GcpKmsConfig(secretManagerName, "projectId", "region", "keyRing", "keyName", credentials);
+        new GcpKmsConfig(secretManagerName, "projectId", "region", "keyRing", "keyName", credentials, null);
     secretManagerConfig.setAccountId(GLOBAL_ACCOUNT_ID);
     String configId = secretManagerConfigService.save(secretManagerConfig);
     String name = secretManagerConfigService.getSecretManagerName(configId, accountId);
@@ -76,7 +79,7 @@ public class SecretManagerConfigServiceImplTest extends WingsBaseTest {
     String secretManagerName = "secretManagerName";
     char[] credentials = "{\"credentials\":\"abc\"}".toCharArray();
     SecretManagerConfig secretManagerConfig =
-        new GcpKmsConfig(secretManagerName, "projectId", "region", "keyRing", "keyName", credentials);
+        new GcpKmsConfig(secretManagerName, "projectId", "region", "keyRing", "keyName", credentials, null);
     secretManagerConfig.setAccountId(accountId);
     String configId = secretManagerConfigService.save(secretManagerConfig);
     String name = secretManagerConfigService.getSecretManagerName(configId, accountId);
@@ -90,7 +93,7 @@ public class SecretManagerConfigServiceImplTest extends WingsBaseTest {
     String secretManagerName = "secretManagerName";
     char[] credentials = "{\"credentials\":\"abc\"}".toCharArray();
     SecretManagerConfig secretManagerConfig =
-        new GcpKmsConfig(secretManagerName, "projectId", "region", "keyRing", "keyName", credentials);
+        new GcpKmsConfig(secretManagerName, "projectId", "region", "keyRing", "keyName", credentials, null);
     secretManagerConfig.setAccountId(UUIDGenerator.generateUuid());
     String configId = secretManagerConfigService.save(secretManagerConfig);
     String name = secretManagerConfigService.getSecretManagerName(configId, accountId);

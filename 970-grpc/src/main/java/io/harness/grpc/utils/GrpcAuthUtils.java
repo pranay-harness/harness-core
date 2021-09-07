@@ -1,5 +1,7 @@
 package io.harness.grpc.utils;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import com.google.common.annotations.VisibleForTesting;
 import io.grpc.Context;
 import io.grpc.Metadata;
@@ -12,6 +14,8 @@ public class GrpcAuthUtils {
   @VisibleForTesting
   public final Context.Key<Boolean> IS_AUTHENTICATED_CONTEXT_KEY =
       Context.keyWithDefault("isAuthenticated", Boolean.FALSE);
+  private final io.grpc.Metadata.Key<String> ACCOUNT_ID_CTX_KEY =
+      Metadata.Key.of("accountId", Metadata.ASCII_STRING_MARSHALLER);
   private final io.grpc.Metadata.Key<String> SERVICE_ID_METADATA_KEY =
       Metadata.Key.of("serviceId", Metadata.ASCII_STRING_MARSHALLER);
   private static final Metadata.Key<String> TOKEN_METADATA_KEY =
@@ -19,6 +23,10 @@ public class GrpcAuthUtils {
 
   public boolean isAuthenticated() {
     return IS_AUTHENTICATED_CONTEXT_KEY.get();
+  }
+
+  public boolean isAuthenticatedWithAccountId(Metadata metadata) {
+    return isAuthenticated() && isNotBlank(metadata.get(ACCOUNT_ID_CTX_KEY));
   }
 
   public Context newAuthenticatedContext() {

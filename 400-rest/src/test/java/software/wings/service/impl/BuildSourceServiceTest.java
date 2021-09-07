@@ -1,6 +1,9 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.ABHINAV_MITTAL;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GARVIT;
@@ -30,9 +33,10 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -109,6 +113,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
+@TargetModule(_930_DELEGATE_TASKS)
+@OwnedBy(CDC)
 public class BuildSourceServiceTest extends WingsBaseTest {
   public static final String DELEGATE_SELECTOR = "delegateSelector";
   private final SettingsService settingsService = Mockito.mock(SettingsServiceImpl.class);
@@ -128,6 +134,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   @Mock AzureArtifactsBuildService azureArtifactsBuildService;
   @Mock ServiceResourceService serviceResourceService;
   @Mock DelegateServiceImpl delegateService;
+  @Mock DelegateTaskServiceClassicImpl delegateTaskServiceClassic;
   @Inject @InjectMocks private BuildSourceServiceImpl buildSourceService;
   @Mock DelegateProxyFactory delegateProxyFactory;
   @Mock ExpressionEvaluator evaluator;
@@ -911,7 +918,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
     when(delegateProxyFactory.get(any(), any(SyncTaskContext.class))).thenReturn(nexusBuildService);
     ArtifactStreamAttributes nexusArtifactStream = ArtifactStreamAttributes.builder().extension("jar").build();
-    when(nexusService.existsVersion(any(), any(), anyString(), anyString(), anyString(), anyString(), anyString()))
+    when(nexusService.existsVersion(any(), anyString(), anyString(), anyString(), anyString(), anyString()))
         .thenReturn(false);
     assertThat(buildSourceService.validateArtifactSource(APP_ID, SETTING_ID, nexusArtifactStream)).isFalse();
   }
@@ -1187,11 +1194,50 @@ public class BuildSourceServiceTest extends WingsBaseTest {
         SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).withValue(gcpConfig).build();
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
     when(gcbService.getAllTriggers(any(), any())).thenReturn(triggers);
-    when(delegateService.executeTask(any(DelegateTask.class))).thenReturn(delegateResponse);
+    when(delegateTaskServiceClassic.executeTask(any(DelegateTask.class))).thenReturn(delegateResponse);
 
     List<String> actualTriggerNames = buildSourceService.getGcbTriggers(SETTING_ID);
     assertThat(actualTriggerNames).hasSize(1);
     assertThat(actualTriggerNames.get(0)).isEqualTo(TRIGGER_NAME);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  @Owner(developers = ABHINAV_MITTAL)
+  @Category(UnitTests.class)
+  public void shouldReturnExceptionWhenDelegateResponseIsNull() {
+    GcbTrigger gcbTrigger = new GcbTrigger();
+    gcbTrigger.setId(TRIGGER_ID);
+    gcbTrigger.setName(TRIGGER_NAME);
+    List<GcbTrigger> triggers = Collections.singletonList(gcbTrigger);
+    GcpConfig gcpConfig = GcpConfig.builder().accountId(ACCOUNT_ID).build();
+    SettingAttribute settingAttribute =
+        SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).withValue(gcpConfig).build();
+    when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
+    when(gcbService.getAllTriggers(any(), any())).thenReturn(triggers);
+    when(delegateTaskServiceClassic.executeTask(any(DelegateTask.class))).thenReturn(null);
+
+    buildSourceService.getGcbTriggers(SETTING_ID);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = ABHINAV_MITTAL)
+  @Category(UnitTests.class)
+  public void shouldReturnExceptionWhenDelegateResponseGivesError() {
+    GcbState.GcbDelegateResponse delegateResponse = new GcbState.GcbDelegateResponse(
+        ExecutionStatus.FAILED, null, GcbTaskParams.builder().build(), "erorMessage", false);
+    delegateResponse.setTriggers(Collections.singletonList(TRIGGER_NAME));
+    GcbTrigger gcbTrigger = new GcbTrigger();
+    gcbTrigger.setId(TRIGGER_ID);
+    gcbTrigger.setName(TRIGGER_NAME);
+    List<GcbTrigger> triggers = Collections.singletonList(gcbTrigger);
+    GcpConfig gcpConfig = GcpConfig.builder().accountId(ACCOUNT_ID).build();
+    SettingAttribute settingAttribute =
+        SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).withValue(gcpConfig).build();
+    when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
+    when(gcbService.getAllTriggers(any(), any())).thenReturn(triggers);
+    when(delegateTaskServiceClassic.executeTask(any(DelegateTask.class))).thenReturn(delegateResponse);
+
+    buildSourceService.getGcbTriggers(SETTING_ID);
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -1208,70 +1254,6 @@ public class BuildSourceServiceTest extends WingsBaseTest {
   public void shouldThrowExceptionOnNullSettingValue() {
     when(settingsService.get(SETTING_ID)).thenReturn(new SettingAttribute());
     buildSourceService.getGcbTriggers(SETTING_ID);
-  }
-
-  @Test
-  @Owner(developers = AADITI)
-  @Category(UnitTests.class)
-  public void testGetGroupIdsForMavenUsingPrivateApis() {
-    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId(ACCOUNT_ID)
-                                            .withValue(NexusConfig.builder().version("3.x").build())
-                                            .build();
-    when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
-    when(delegateProxyFactory.get(any(), any(SyncTaskContext.class))).thenReturn(nexusBuildService);
-    List<String> groupIds = new ArrayList<>();
-    groupIds.add("group1");
-    groupIds.add("group2");
-    when(featureFlagService.isEnabled(FeatureName.USE_NEXUS3_PRIVATE_APIS, ACCOUNT_ID)).thenReturn(true);
-    when(nexusBuildService.getGroupIdsUsingPrivateApis(anyString(), anyString(), any(), any())).thenReturn(groupIds);
-    Set<String> ids =
-        buildSourceService.getGroupIds(APP_ID, "harness-maven", SETTING_ID, RepositoryFormat.maven.name());
-    assertThat(ids).isNotEmpty();
-    assertThat(ids.size()).isEqualTo(2);
-    assertThat(ids).contains("group1", "group2");
-  }
-
-  @Test
-  @Owner(developers = AADITI)
-  @Category(UnitTests.class)
-  public void testGetArtifactPathsUsingPrivateApis() {
-    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId(ACCOUNT_ID)
-                                            .withValue(NexusConfig.builder().version("3.x").build())
-                                            .build();
-    when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
-    when(featureFlagService.isEnabled(FeatureName.USE_NEXUS3_PRIVATE_APIS, ACCOUNT_ID)).thenReturn(true);
-    when(delegateProxyFactory.get(any(), any(SyncTaskContext.class))).thenReturn(nexusBuildService);
-    when(nexusBuildService.getArtifactPathsUsingPrivateApis(anyString(), anyString(), any(), anyList(), anyString()))
-        .thenReturn(asList("myartifact"));
-    Set<String> artifactPaths = buildSourceService.getArtifactPaths(APP_ID, "maven-releases", SETTING_ID, "mygroup",
-        ArtifactStreamType.NEXUS.name(), RepositoryFormat.maven.name());
-    assertThat(artifactPaths).isNotEmpty();
-    assertThat(artifactPaths.size()).isEqualTo(1);
-    assertThat(artifactPaths).contains("myartifact");
-  }
-
-  @Test
-  @Owner(developers = AADITI)
-  @Category(UnitTests.class)
-  public void testFetchNexusPackageNamesUsingPrivateApis() {
-    SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId(ACCOUNT_ID)
-                                            .withValue(NexusConfig.builder().version("3.x").build())
-                                            .build();
-    when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
-    when(delegateProxyFactory.get(any(), any(SyncTaskContext.class))).thenReturn(nexusBuildService);
-    List<String> groupIds = new ArrayList<>();
-    groupIds.add("group1");
-    groupIds.add("group2");
-    when(featureFlagService.isEnabled(FeatureName.USE_NEXUS3_PRIVATE_APIS, ACCOUNT_ID)).thenReturn(true);
-    when(nexusBuildService.getGroupIdsUsingPrivateApis(anyString(), anyString(), any(), any())).thenReturn(groupIds);
-    Set<String> packageNames =
-        buildSourceService.fetchNexusPackageNames(APP_ID, REPO_NAME, RepositoryFormat.npm.name(), SETTING_ID);
-    assertThat(packageNames).isNotEmpty();
-    assertThat(packageNames.size()).isEqualTo(2);
-    assertThat(packageNames).contains("group1", "group2");
   }
 
   @Test
@@ -1421,7 +1403,7 @@ public class BuildSourceServiceTest extends WingsBaseTest {
     when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
     when(delegateProxyFactory.get(any(), any(SyncTaskContext.class))).thenReturn(nexusBuildService);
     ArtifactStreamAttributes nexusArtifactStream = ArtifactStreamAttributes.builder().extension("jar").build();
-    when(nexusService.existsVersion(any(), any(), anyString(), anyString(), anyString(), anyString(), anyString()))
+    when(nexusService.existsVersion(any(), anyString(), anyString(), anyString(), anyString(), anyString()))
         .thenReturn(false);
     assertThat(buildSourceService.validateArtifactSource(APP_ID, SETTING_ID, nexusArtifactStream)).isFalse();
   }

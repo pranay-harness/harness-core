@@ -17,4 +17,6 @@ public interface TriggerEventHistoryRepository
     extends PagingAndSortingRepository<TriggerEventHistory, String>, TriggerEventHistoryRepositoryCustom {
   List<TriggerEventHistory> findFirst1ByAccountIdAndOrgIdentifierAndProjectIdentifierAndTriggerIdentifier(
       String accountId, String orgIdentifier, String projectIdentifier, String triggerIdentifier, Sort sort);
+
+  TriggerEventHistory findByAccountIdAndEventCorrelationId(String accountId, String eventCorrelationId);
 }

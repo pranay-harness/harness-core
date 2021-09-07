@@ -1,10 +1,14 @@
 package io.harness.pms.plan.execution.service;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 
+import static java.lang.String.format;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 
+import io.harness.ModuleType;
 import io.harness.NGResourceFilterConstants;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.OrchestrationService;
@@ -13,95 +17,145 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.filter.FilterType;
 import io.harness.filter.dto.FilterDTO;
 import io.harness.filter.service.FilterService;
+import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.interrupts.Interrupt;
 import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
-import io.harness.pms.contracts.advisers.InterruptConfig;
-import io.harness.pms.contracts.advisers.IssuedBy;
-import io.harness.pms.contracts.advisers.ManualIssuer;
+import io.harness.pms.contracts.interrupts.InterruptConfig;
+import io.harness.pms.contracts.interrupts.IssuedBy;
+import io.harness.pms.contracts.interrupts.ManualIssuer;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.filter.utils.ModuleInfoFilterUtils;
+import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.helpers.TriggeredByHelper;
+import io.harness.pms.helpers.YamlExpressionResolveHelper;
+import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetYamlWithTemplateDTO;
+import io.harness.pms.ngpipeline.inputset.helpers.ValidateAndMergeHelper;
+import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.plan.execution.PlanExecutionInterruptType;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
+import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys;
 import io.harness.pms.plan.execution.beans.dto.InterruptDTO;
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionFilterPropertiesDTO;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
+import io.harness.security.SecurityContextBuilder;
+import io.harness.security.dto.Principal;
 import io.harness.serializer.JsonUtils;
+import io.harness.serializer.ProtoUtils;
 import io.harness.service.GraphGenerationService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.protobuf.ByteString;
+import com.mongodb.client.result.UpdateResult;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 
 @Singleton
 @Slf4j
+@OwnedBy(PIPELINE)
 public class PMSExecutionServiceImpl implements PMSExecutionService {
+  // This is here just for backward compatibility should be removed
+  private static final String INTERNAL_SERVICE_NAME = "pmsInternal";
+
   @Inject private PmsExecutionSummaryRespository pmsExecutionSummaryRespository;
   @Inject private GraphGenerationService graphGenerationService;
   @Inject private OrchestrationService orchestrationService;
   @Inject private FilterService filterService;
   @Inject private TriggeredByHelper triggeredByHelper;
+  @Inject private YamlExpressionResolveHelper yamlExpressionResolveHelper;
+  @Inject private ValidateAndMergeHelper validateAndMergeHelper;
+  @Inject private PmsGitSyncHelper pmsGitSyncHelper;
 
   @Override
   public Criteria formCriteria(String accountId, String orgId, String projectId, String pipelineIdentifier,
       String filterIdentifier, PipelineExecutionFilterPropertiesDTO filterProperties, String moduleName,
-      String searchTerm, ExecutionStatus status, boolean myDeployments) {
+      String searchTerm, ExecutionStatus status, boolean myDeployments, boolean pipelineDeleted,
+      ByteString gitSyncBranchContext) {
     Criteria criteria = new Criteria();
     if (EmptyPredicate.isNotEmpty(accountId)) {
-      criteria.and(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.accountId).is(accountId);
+      criteria.and(PlanExecutionSummaryKeys.accountId).is(accountId);
     }
     if (EmptyPredicate.isNotEmpty(orgId)) {
-      criteria.and(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.orgIdentifier).is(orgId);
+      criteria.and(PlanExecutionSummaryKeys.orgIdentifier).is(orgId);
     }
     if (EmptyPredicate.isNotEmpty(projectId)) {
-      criteria.and(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.projectIdentifier).is(projectId);
+      criteria.and(PlanExecutionSummaryKeys.projectIdentifier).is(projectId);
     }
     if (EmptyPredicate.isNotEmpty(pipelineIdentifier)) {
-      criteria.and(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.pipelineIdentifier).is(pipelineIdentifier);
+      criteria.and(PlanExecutionSummaryKeys.pipelineIdentifier).is(pipelineIdentifier);
     }
     if (status != null) {
-      criteria.and(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.status).is(status);
+      criteria.and(PlanExecutionSummaryKeys.status).is(status);
     }
+    criteria.and(PlanExecutionSummaryKeys.pipelineDeleted).ne(!pipelineDeleted);
 
+    Criteria filterCriteria = new Criteria();
     if (EmptyPredicate.isNotEmpty(filterIdentifier) && filterProperties != null) {
       throw new InvalidRequestException("Can not apply both filter properties and saved filter together");
     } else if (EmptyPredicate.isNotEmpty(filterIdentifier) && filterProperties == null) {
-      populatePipelineFilterUsingIdentifier(criteria, accountId, orgId, projectId, filterIdentifier);
+      populatePipelineFilterUsingIdentifier(filterCriteria, accountId, orgId, projectId, filterIdentifier);
     } else if (EmptyPredicate.isEmpty(filterIdentifier) && filterProperties != null) {
-      populatePipelineFilter(criteria, filterProperties);
+      populatePipelineFilter(filterCriteria, filterProperties);
     }
 
     if (myDeployments) {
-      criteria.and(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.executionTriggerInfo)
+      criteria.and(PlanExecutionSummaryKeys.executionTriggerInfo)
           .is(ExecutionTriggerInfo.newBuilder()
                   .setTriggerType(MANUAL)
                   .setTriggeredBy(triggeredByHelper.getFromSecurityContext())
                   .build());
     }
 
+    Criteria moduleCriteria = new Criteria();
     if (EmptyPredicate.isNotEmpty(moduleName)) {
-      criteria.orOperator(
-          Criteria.where(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.modules).in(moduleName),
+      // Check for pipeline with no filters also - empty pipeline or pipelines with only approval stage
+      moduleCriteria.orOperator(Criteria.where(PlanExecutionSummaryKeys.modules).is(Collections.emptyList()),
+          // This is here just for backward compatibility should be removed
+          Criteria.where(PlanExecutionSummaryKeys.modules).is(Collections.singletonList(INTERNAL_SERVICE_NAME)),
+          Criteria.where(PlanExecutionSummaryKeys.modules).in(ModuleType.PMS.name().toLowerCase()),
+          Criteria.where(PlanExecutionSummaryKeys.modules).in(moduleName),
           Criteria.where(String.format("moduleInfo.%s", moduleName)).exists(true));
     }
+
+    Criteria searchCriteria = new Criteria();
     if (EmptyPredicate.isNotEmpty(searchTerm)) {
-      Criteria searchCriteria =
-          new Criteria().orOperator(where(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.pipelineIdentifier)
-                                        .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
-              where(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.name)
-                  .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
-              where(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.tags + "." + NGTagKeys.key)
-                  .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
-              where(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.tags + "." + NGTagKeys.value)
-                  .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
-      criteria.andOperator(searchCriteria);
+      searchCriteria.orOperator(where(PlanExecutionSummaryKeys.pipelineIdentifier)
+                                    .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+          where(PlanExecutionSummaryKeys.name)
+              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+          where(PlanExecutionSummaryKeys.tags + "." + NGTagKeys.key)
+              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+          where(PlanExecutionSummaryKeys.tags + "." + NGTagKeys.value)
+              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
     }
+
+    Criteria gitCriteria = new Criteria();
+    if (gitSyncBranchContext != null) {
+      Criteria gitCriteriaDeprecated =
+          Criteria.where(PlanExecutionSummaryKeys.gitSyncBranchContext).is(gitSyncBranchContext);
+
+      EntityGitDetails entityGitDetails = pmsGitSyncHelper.getEntityGitDetailsFromBytes(gitSyncBranchContext);
+      Criteria gitCriteriaNew = Criteria
+                                    .where(PlanExecutionSummaryKeys.entityGitDetails + "."
+                                        + "branch")
+                                    .is(entityGitDetails.getBranch())
+                                    .and(PlanExecutionSummaryKeys.entityGitDetails + "."
+                                        + "repoIdentifier")
+                                    .is(entityGitDetails.getRepoIdentifier());
+      gitCriteria.orOperator(gitCriteriaDeprecated, gitCriteriaNew);
+    }
+
+    criteria.andOperator(filterCriteria, moduleCriteria, searchCriteria, gitCriteria);
+
     return criteria;
   }
 
@@ -118,10 +172,14 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
 
   private void populatePipelineFilter(Criteria criteria, @NotNull PipelineExecutionFilterPropertiesDTO piplineFilter) {
     if (EmptyPredicate.isNotEmpty(piplineFilter.getPipelineName())) {
-      criteria.and(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.name).is(piplineFilter.getPipelineName());
+      criteria.orOperator(
+          where(PlanExecutionSummaryKeys.name)
+              .regex(piplineFilter.getPipelineName(), NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+          where(PlanExecutionSummaryKeys.pipelineIdentifier)
+              .regex(piplineFilter.getPipelineName(), NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
     }
     if (EmptyPredicate.isNotEmpty(piplineFilter.getStatus())) {
-      criteria.and(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.status).in(piplineFilter.getStatus());
+      criteria.and(PlanExecutionSummaryKeys.status).in(piplineFilter.getStatus());
     }
     if (piplineFilter.getModuleProperties() != null) {
       ModuleInfoFilterUtils.processNode(
@@ -130,26 +188,48 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
   }
 
   @Override
-  public String getInputsetYaml(String accountId, String orgId, String projectId, String planExecutionId) {
+  public InputSetYamlWithTemplateDTO getInputSetYamlWithTemplate(String accountId, String orgId, String projectId,
+      String planExecutionId, boolean pipelineDeleted, boolean resolveExpressions) {
     Optional<PipelineExecutionSummaryEntity> pipelineExecutionSummaryEntityOptional =
-        pmsExecutionSummaryRespository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndPlanExecutionId(
-            accountId, orgId, projectId, planExecutionId);
+        pmsExecutionSummaryRespository
+            .findByAccountIdAndOrgIdentifierAndProjectIdentifierAndPlanExecutionIdAndPipelineDeletedNot(
+                accountId, orgId, projectId, planExecutionId, !pipelineDeleted);
     if (pipelineExecutionSummaryEntityOptional.isPresent()) {
-      return pipelineExecutionSummaryEntityOptional.get().getInputSetYaml();
+      String yaml = pipelineExecutionSummaryEntityOptional.get().getInputSetYaml();
+      String template = pipelineExecutionSummaryEntityOptional.get().getPipelineTemplate();
+      if (resolveExpressions && EmptyPredicate.isNotEmpty(yaml)) {
+        yaml = yamlExpressionResolveHelper.resolveExpressionsInYaml(yaml, planExecutionId);
+      }
+      if (EmptyPredicate.isEmpty(template) && EmptyPredicate.isNotEmpty(yaml)) {
+        EntityGitDetails entityGitDetails = pmsGitSyncHelper.getEntityGitDetailsFromBytes(
+            pipelineExecutionSummaryEntityOptional.get().getGitSyncBranchContext());
+        if (entityGitDetails != null) {
+          template = validateAndMergeHelper.getPipelineTemplate(accountId, orgId, projectId,
+              pipelineExecutionSummaryEntityOptional.get().getPipelineIdentifier(), entityGitDetails.getBranch(),
+              entityGitDetails.getRepoIdentifier());
+        } else {
+          template = validateAndMergeHelper.getPipelineTemplate(
+              accountId, orgId, projectId, pipelineExecutionSummaryEntityOptional.get().getPipelineIdentifier());
+        }
+      }
+      return InputSetYamlWithTemplateDTO.builder().inputSetTemplateYaml(template).inputSetYaml(yaml).build();
     }
-    throw InvalidRequestException.builder().message("Invalid request").build();
+    throw new InvalidRequestException(
+        "Invalid request : Input Set did not exist or pipeline execution has been deleted");
   }
 
   @Override
   public PipelineExecutionSummaryEntity getPipelineExecutionSummaryEntity(
-      String accountId, String orgId, String projectId, String planExecutionId) {
+      String accountId, String orgId, String projectId, String planExecutionId, boolean pipelineDeleted) {
     Optional<PipelineExecutionSummaryEntity> pipelineExecutionSummaryEntityOptional =
-        pmsExecutionSummaryRespository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndPlanExecutionId(
-            accountId, orgId, projectId, planExecutionId);
+        pmsExecutionSummaryRespository
+            .findByAccountIdAndOrgIdentifierAndProjectIdentifierAndPlanExecutionIdAndPipelineDeletedNot(
+                accountId, orgId, projectId, planExecutionId, !pipelineDeleted);
     if (pipelineExecutionSummaryEntityOptional.isPresent()) {
       return pipelineExecutionSummaryEntityOptional.get();
     }
-    throw new InvalidRequestException("Plan Execution Summary does not exist with given planExecutionId");
+    throw new InvalidRequestException(
+        "Plan Execution Summary does not exist or has been deleted for given planExecutionId");
   }
 
   @Override
@@ -168,21 +248,67 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
   @Override
   public InterruptDTO registerInterrupt(
       PlanExecutionInterruptType executionInterruptType, String planExecutionId, String nodeExecutionId) {
-    InterruptPackage interruptPackage =
-        InterruptPackage.builder()
-            .interruptType(executionInterruptType.getExecutionInterruptType())
-            .planExecutionId(planExecutionId)
-            .nodeExecutionId(nodeExecutionId)
-            .interruptConfig(
-                InterruptConfig.newBuilder()
-                    .setIssuedBy(IssuedBy.newBuilder().setManualIssuer(ManualIssuer.newBuilder().build()).build())
-                    .build())
+    final Principal principal = SecurityContextBuilder.getPrincipal();
+    InterruptConfig interruptConfig =
+        InterruptConfig.newBuilder()
+            .setIssuedBy(IssuedBy.newBuilder()
+                             .setManualIssuer(ManualIssuer.newBuilder()
+                                                  .setType(principal.getType().toString())
+                                                  .setIdentifier(principal.getName())
+                                                  .build())
+                             .setIssueTime(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()))
+                             .build())
             .build();
+    return registerInterrupt(executionInterruptType, planExecutionId, nodeExecutionId, interruptConfig);
+  }
+
+  @Override
+  public InterruptDTO registerInterrupt(PlanExecutionInterruptType executionInterruptType, String planExecutionId,
+      String nodeExecutionId, InterruptConfig interruptConfig) {
+    InterruptPackage interruptPackage = InterruptPackage.builder()
+                                            .interruptType(executionInterruptType.getExecutionInterruptType())
+                                            .planExecutionId(planExecutionId)
+                                            .nodeExecutionId(nodeExecutionId)
+                                            .interruptConfig(interruptConfig)
+                                            .metadata(getMetadata(executionInterruptType))
+                                            .build();
     Interrupt interrupt = orchestrationService.registerInterrupt(interruptPackage);
     return InterruptDTO.builder()
         .id(interrupt.getUuid())
         .planExecutionId(interrupt.getPlanExecutionId())
         .type(executionInterruptType)
         .build();
+  }
+
+  private Map<String, String> getMetadata(PlanExecutionInterruptType planExecutionInterruptType) {
+    if (planExecutionInterruptType == PlanExecutionInterruptType.STAGEROLLBACK
+        || planExecutionInterruptType == PlanExecutionInterruptType.STEPGROUPROLLBACK) {
+      return Collections.singletonMap("ROLLBACK", planExecutionInterruptType.getDisplayName());
+    }
+    return Collections.emptyMap();
+  }
+
+  @Override
+  public void deleteExecutionsOnPipelineDeletion(PipelineEntity pipelineEntity) {
+    Criteria criteria = new Criteria();
+    criteria.and(PlanExecutionSummaryKeys.accountId)
+        .is(pipelineEntity.getAccountId())
+        .and(PlanExecutionSummaryKeys.orgIdentifier)
+        .is(pipelineEntity.getOrgIdentifier())
+        .and(PlanExecutionSummaryKeys.projectIdentifier)
+        .is(pipelineEntity.getProjectIdentifier())
+        .and(PlanExecutionSummaryKeys.pipelineIdentifier)
+        .is(pipelineEntity.getIdentifier());
+    Query query = new Query(criteria);
+
+    Update update = new Update();
+    update.set(PlanExecutionSummaryKeys.pipelineDeleted, Boolean.TRUE);
+
+    UpdateResult updateResult = pmsExecutionSummaryRespository.deleteAllExecutionsWhenPipelineDeleted(query, update);
+    if (!updateResult.wasAcknowledged()) {
+      throw new InvalidRequestException(format(
+          "Executions for Pipeline [%s] under Project[%s], Organization [%s] couldn't be deleted.",
+          pipelineEntity.getIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineEntity.getOrgIdentifier()));
+    }
   }
 }

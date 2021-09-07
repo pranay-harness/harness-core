@@ -8,6 +8,8 @@ import static software.wings.utils.WingsTestConstants.PROVISIONER_NAME;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
@@ -30,6 +32,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
+@OwnedBy(HarnessTeam.CDP)
 public class InfrastructureProvisionerResourceTest extends WingsBaseTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Mock static InfrastructureProvisionerService INFRASTRUCTURE_PROVISIONER_SERVICE;

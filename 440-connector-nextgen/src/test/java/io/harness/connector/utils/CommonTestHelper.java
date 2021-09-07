@@ -1,5 +1,8 @@
 package io.harness.connector.utils;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
@@ -7,9 +10,13 @@ import io.harness.delegate.beans.connector.ConnectorType;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@FieldDefaults(makeFinal = true, level = AccessLevel.PUBLIC)
+@OwnedBy(CE)
 public class CommonTestHelper {
   public String connectorIdentifier = "identifier_ph";
   public String name = "name_ph";

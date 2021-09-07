@@ -11,10 +11,13 @@ import static java.util.stream.Collectors.toList;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidRequestException;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.service.impl.aws.client.CloseableAmazonWebServiceClient;
 import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
 
 import com.amazonaws.AmazonClientException;
@@ -47,10 +50,12 @@ import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(CDP)
+@Slf4j
 public class AwsEcsHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsEcsHelperServiceDelegate {
   @VisibleForTesting
@@ -66,14 +71,15 @@ public class AwsEcsHelperServiceDelegateImpl
 
   @Override
   public List<String> listClusters(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonECSClient> closeableAmazonECSClient =
+             new CloseableAmazonWebServiceClient(getAmazonEcsClient(region, awsConfig))) {
       List<String> result = new ArrayList<>();
       String nextToken = null;
       do {
         ListClustersRequest listClustersRequest = new ListClustersRequest().withNextToken(nextToken);
         tracker.trackECSCall("List Clusters");
-        ListClustersResult listClustersResult = getAmazonEcsClient(region, awsConfig).listClusters(listClustersRequest);
+        ListClustersResult listClustersResult = closeableAmazonECSClient.getClient().listClusters(listClustersRequest);
         result.addAll(listClustersResult.getClusterArns().stream().map(this::getIdFromArn).collect(toList()));
         nextToken = listClustersResult.getNextToken();
       } while (nextToken != null);
@@ -82,6 +88,8 @@ public class AwsEcsHelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return emptyList();
   }
@@ -89,16 +97,16 @@ public class AwsEcsHelperServiceDelegateImpl
   @Override
   public List<Service> listServicesForCluster(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String cluster) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      AmazonECSClient client = getAmazonEcsClient(region, awsConfig);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonECSClient> closeableAmazonECSClient =
+             new CloseableAmazonWebServiceClient(getAmazonEcsClient(region, awsConfig))) {
       List<String> serviceArns = newArrayList();
       String nextToken = null;
       do {
         ListServicesRequest listServicesRequest =
             new ListServicesRequest().withCluster(cluster).withNextToken(nextToken);
         tracker.trackECSCall("List Services");
-        ListServicesResult listServicesResult = client.listServices(listServicesRequest);
+        ListServicesResult listServicesResult = closeableAmazonECSClient.getClient().listServices(listServicesRequest);
         List<String> arnsBatch = listServicesResult.getServiceArns();
         if (isNotEmpty(arnsBatch)) {
           serviceArns.addAll(arnsBatch);
@@ -117,7 +125,8 @@ public class AwsEcsHelperServiceDelegateImpl
         DescribeServicesRequest describeServicesRequest =
             new DescribeServicesRequest().withCluster(cluster).withServices(arnsBatch).withInclude(TAGS);
         tracker.trackECSCall("Describe Services");
-        DescribeServicesResult describeServicesResult = client.describeServices(describeServicesRequest);
+        DescribeServicesResult describeServicesResult =
+            closeableAmazonECSClient.getClient().describeServices(describeServicesRequest);
         allServices.addAll(describeServicesResult.getServices());
       }
       return allServices;
@@ -125,6 +134,8 @@ public class AwsEcsHelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return emptyList();
   }
@@ -133,9 +144,9 @@ public class AwsEcsHelperServiceDelegateImpl
   public List<String> listTasksArnForService(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String region, String cluster, String service, DesiredStatus desiredStatus) {
     List<String> taskArns = newArrayList();
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      AmazonECSClient client = getAmazonEcsClient(region, awsConfig);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonECSClient> closeableAmazonECSClient =
+             new CloseableAmazonWebServiceClient(getAmazonEcsClient(region, awsConfig))) {
       String nextToken = null;
       do {
         ListTasksRequest listTasksRequest =
@@ -144,7 +155,7 @@ public class AwsEcsHelperServiceDelegateImpl
           listTasksRequest.withServiceName(service);
         }
         tracker.trackECSCall("List Tasks");
-        ListTasksResult listTasksResult = client.listTasks(listTasksRequest);
+        ListTasksResult listTasksResult = closeableAmazonECSClient.getClient().listTasks(listTasksRequest);
         List<String> arnsBatch = listTasksResult.getTaskArns();
         if (isNotEmpty(arnsBatch)) {
           taskArns.addAll(arnsBatch);
@@ -155,6 +166,8 @@ public class AwsEcsHelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return taskArns;
   }
@@ -162,9 +175,9 @@ public class AwsEcsHelperServiceDelegateImpl
   @Override
   public List<Task> listTasksForService(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       String cluster, String service, DesiredStatus desiredStatus) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      AmazonECSClient client = getAmazonEcsClient(region, awsConfig);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonECSClient> closeableAmazonECSClient =
+             new CloseableAmazonWebServiceClient(getAmazonEcsClient(region, awsConfig))) {
       List<String> taskArns =
           listTasksArnForService(awsConfig, encryptionDetails, region, cluster, service, desiredStatus);
       int counter = 0;
@@ -179,7 +192,8 @@ public class AwsEcsHelperServiceDelegateImpl
         DescribeTasksRequest describeTasksRequest =
             new DescribeTasksRequest().withCluster(cluster).withTasks(arnsBatch).withInclude(TaskField.TAGS);
         tracker.trackECSCall("Describe Tasks");
-        DescribeTasksResult describeTasksResult = client.describeTasks(describeTasksRequest);
+        DescribeTasksResult describeTasksResult =
+            closeableAmazonECSClient.getClient().describeTasks(describeTasksRequest);
         allTasks.addAll(describeTasksResult.getTasks());
       }
       return allTasks;
@@ -187,6 +201,8 @@ public class AwsEcsHelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return emptyList();
   }
@@ -195,9 +211,9 @@ public class AwsEcsHelperServiceDelegateImpl
   public List<ContainerInstance> listContainerInstancesForCluster(AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, String region, String cluster,
       ContainerInstanceStatus containerInstanceStatus) {
-    try {
-      encryptionService.decrypt(awsConfig, encryptionDetails, false);
-      AmazonECSClient client = getAmazonEcsClient(region, awsConfig);
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonECSClient> closeableAmazonECSClient =
+             new CloseableAmazonWebServiceClient(getAmazonEcsClient(region, awsConfig))) {
       List<String> containerInstanceArns = newArrayList();
       String nextToken = null;
       do {
@@ -207,7 +223,7 @@ public class AwsEcsHelperServiceDelegateImpl
                                                                           .withNextToken(nextToken);
         tracker.trackECSCall("List Container Instances");
         ListContainerInstancesResult listContainerInstancesResult =
-            client.listContainerInstances(listContainerInstancesRequest);
+            closeableAmazonECSClient.getClient().listContainerInstances(listContainerInstancesRequest);
         List<String> arnsBatch = listContainerInstancesResult.getContainerInstanceArns();
         if (isNotEmpty(arnsBatch)) {
           containerInstanceArns.addAll(arnsBatch);
@@ -229,7 +245,7 @@ public class AwsEcsHelperServiceDelegateImpl
                 ContainerInstanceField.TAGS);
         tracker.trackECSCall("Describe Containers");
         DescribeContainerInstancesResult describeContainerInstancesResult =
-            client.describeContainerInstances(describeContainerInstancesRequest);
+            closeableAmazonECSClient.getClient().describeContainerInstances(describeContainerInstancesRequest);
         allContainerInstance.addAll(describeContainerInstancesResult.getContainerInstances());
       }
       return allContainerInstance;
@@ -237,6 +253,8 @@ public class AwsEcsHelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
     return emptyList();
   }

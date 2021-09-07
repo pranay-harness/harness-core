@@ -24,7 +24,6 @@ import static software.wings.service.impl.workflow.WorkflowServiceHelper.AZURE_W
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.DEPLOY_CONTAINERS;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBACK_PREFIX;
-import static software.wings.service.impl.workflow.WorkflowServiceHelper.SHELL_SCRIPT;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.VERIFY_SERVICE;
 
 import static java.util.Arrays.asList;
@@ -36,6 +35,7 @@ import io.harness.beans.WorkflowType;
 import io.harness.category.element.CDFunctionalTests;
 import io.harness.category.speed.SlowTests;
 import io.harness.functional.AbstractFunctionalTest;
+import io.harness.functional.WorkflowUtils;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.EnvironmentGenerator;
 import io.harness.generator.InfrastructureDefinitionGenerator;
@@ -263,7 +263,7 @@ public class AzureAppServiceFunctionalTest extends AbstractFunctionalTest {
     WorkflowPhase rollbackPhase = generateRollbackPhase(workflowPhase1);
 
     if (withShellScript) {
-      workflowPhase1.getPhaseSteps().get(0).getSteps().add(getShellScriptStep());
+      workflowPhase1.getPhaseSteps().get(0).getSteps().add(WorkflowUtils.getShellScriptStep("exit 1"));
     }
 
     Map<String, WorkflowPhase> rollbackMap = new HashMap<>();
@@ -282,20 +282,6 @@ public class AzureAppServiceFunctionalTest extends AbstractFunctionalTest {
                                    .withRollbackWorkflowPhaseIdMap(rollbackMap)
                                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT).build())
                                    .build())
-        .build();
-  }
-
-  private GraphNode getShellScriptStep() {
-    return GraphNode.builder()
-        .id(generateUuid())
-        .name(SHELL_SCRIPT)
-        .type(StateType.SHELL_SCRIPT.name())
-        .properties(ImmutableMap.<String, Object>builder()
-                        .put("scriptType", "BASH")
-                        .put("scriptString", "exit 1")
-                        .put("timeoutMillis", 60000)
-                        .put("executeOnDelegate", true)
-                        .build())
         .build();
   }
 

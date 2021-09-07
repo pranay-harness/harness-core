@@ -2,14 +2,19 @@ package software.wings.helpers.ext.k8s.request;
 
 import static io.harness.annotations.dev.HarnessModule._950_DELEGATE_TASKS_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.expression.Expression;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.k8s.model.HelmVersion;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import lombok.Builder;
@@ -20,7 +25,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @TargetModule(_950_DELEGATE_TASKS_BEANS)
 @OwnedBy(CDP)
-public class K8sDeleteTaskParameters extends K8sTaskParameters {
+public class K8sDeleteTaskParameters extends K8sTaskParameters implements ManifestAwareTaskParams {
   @Expression(ALLOW_SECRETS) private K8sDelegateManifestConfig k8sDelegateManifestConfig;
   @Expression(ALLOW_SECRETS) private List<String> valuesYamlList;
   private String resources;
@@ -40,5 +45,17 @@ public class K8sDeleteTaskParameters extends K8sTaskParameters {
     this.resources = resources;
     this.filePaths = filePaths;
     this.deleteNamespacesForRelease = deleteNamespacesForRelease;
+  }
+
+  @Override
+  public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
+    List<ExecutionCapability> capabilities =
+        new ArrayList<>(super.fetchRequiredExecutionCapabilities(maskingEvaluator));
+
+    Set<String> delegateSelectors = getDelegateSelectorsFromConfigs(k8sDelegateManifestConfig);
+    if (isNotEmpty(delegateSelectors)) {
+      capabilities.add(SelectorCapability.builder().selectors(delegateSelectors).build());
+    }
+    return capabilities;
   }
 }

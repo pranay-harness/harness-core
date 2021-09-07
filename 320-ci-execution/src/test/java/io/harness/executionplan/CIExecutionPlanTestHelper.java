@@ -1,10 +1,9 @@
 package io.harness.executionplan;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_BUILD_NUMBER;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_COMMIT_BRANCH;
-import static io.harness.common.CIExecutionConstants.CI_PIPELINE_CONFIG;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_DEPTH_ATTRIBUTE;
-import static io.harness.common.CIExecutionConstants.GIT_CLONE_IMAGE;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_MANUAL_DEPTH;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_STEP_ID;
 import static io.harness.common.CIExecutionConstants.GIT_CLONE_STEP_NAME;
@@ -28,6 +27,7 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.util.Lists.newArrayList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.dependencies.CIServiceInfo;
 import io.harness.beans.dependencies.DependencyElement;
 import io.harness.beans.environment.BuildJobEnvInfo;
@@ -45,23 +45,12 @@ import io.harness.beans.execution.WebhookBaseAttributes;
 import io.harness.beans.execution.WebhookEvent;
 import io.harness.beans.execution.WebhookExecutionSource;
 import io.harness.beans.executionargs.CIExecutionArgs;
-import io.harness.beans.executionargs.ExecutionArgs;
 import io.harness.beans.script.ScriptInfo;
-import io.harness.beans.stages.IntegrationStage;
 import io.harness.beans.stages.IntegrationStageConfig;
-import io.harness.beans.steps.CIStepInfoType;
-import io.harness.beans.steps.stepinfo.CleanupStepInfo;
-import io.harness.beans.steps.stepinfo.ECRStepInfo;
-import io.harness.beans.steps.stepinfo.GCRStepInfo;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
-import io.harness.beans.steps.stepinfo.PluginStepInfo;
-import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.yaml.extended.CustomSecretVariable;
 import io.harness.beans.yaml.extended.CustomTextVariable;
 import io.harness.beans.yaml.extended.CustomVariable;
-import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
-import io.harness.beans.yaml.extended.container.Container;
-import io.harness.beans.yaml.extended.container.ContainerResource;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml.K8sDirectInfraYamlSpec;
@@ -109,25 +98,17 @@ import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernamePasswordDTO;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
-import io.harness.executionplan.core.impl.ExecutionPlanCreationContextImpl;
 import io.harness.k8s.model.ImageDetails;
-import io.harness.ngpipeline.pipeline.beans.entities.NgPipelineEntity;
-import io.harness.ngpipeline.pipeline.beans.yaml.NgPipeline;
 import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.plancreator.execution.ExecutionWrapperConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.yaml.core.ExecutionElement;
-import io.harness.yaml.core.ParallelStepElement;
-import io.harness.yaml.core.StageElement;
-import io.harness.yaml.core.StepElement;
-import io.harness.yaml.core.auxiliary.intfc.ExecutionWrapper;
-import io.harness.yaml.core.auxiliary.intfc.StageElementWrapper;
-import io.harness.yaml.core.intfc.Connector;
 import io.harness.yaml.core.variables.NGVariable;
 import io.harness.yaml.core.variables.SecretNGVariable;
 import io.harness.yaml.core.variables.StringNGVariable;
 import io.harness.yaml.extended.ci.codebase.CodeBase;
+import io.harness.yaml.extended.ci.container.Container;
+import io.harness.yaml.extended.ci.container.ContainerResource;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -145,6 +126,7 @@ import java.util.Map;
 import java.util.Set;
 
 @Singleton
+@OwnedBy(CI)
 public class CIExecutionPlanTestHelper {
   private static final String BUILD_STAGE_NAME = "buildStage";
   private static final String ENV_SETUP_NAME = "envSetupName";
@@ -189,37 +171,21 @@ public class CIExecutionPlanTestHelper {
   private static final String COMMIT_LINK = "foo/bar";
   private static final String COMMIT = "e9a0d31c5ac677ec1e06fb3ab69cd1d2cc62a74a";
 
-  private static final String MOUNT_PATH = "/step-exec";
-  private static final String VOLUME_NAME = "step-exec";
-  private static final String WORK_DIR = "/step-exec/workspace";
+  private static final String MOUNT_PATH = "/harness";
+  private static final String VOLUME_NAME = "harness";
+  private static final String WORK_DIR = "/harness";
 
   public static final String GIT_CONNECTOR = "git-connector";
   private static final String CLONE_STEP_ID = "step-1";
   private static final String GIT_PLUGIN_DEPTH_ENV = "PLUGIN_DEPTH";
   private static final Integer GIT_STEP_LIMIT_MEM = 200;
   private static final Integer GIT_STEP_LIMIT_CPU = 200;
+  private static final String GIT_CLONE_IMAGE = "drone/git";
 
   private final ImageDetails imageDetails = ImageDetails.builder().name("maven").tag("3.6.3-jdk-8").build();
 
   public List<ScriptInfo> getBuildCommandSteps() {
     return singletonList(ScriptInfo.builder().scriptString(BUILD_SCRIPT).build());
-  }
-
-  public List<ExecutionWrapper> getExpectedExecutionWrappers() {
-    List<ExecutionWrapper> executionWrappers = new ArrayList<>();
-    executionWrappers.add(StepElement.builder()
-                              .identifier("liteEngineTask1")
-                              .type("liteEngineTask")
-                              .stepSpecType(LiteEngineTaskStepInfo.builder()
-                                                .identifier("liteEngineTask1")
-                                                .buildJobEnvInfo(getCIBuildJobEnvInfoOnFirstPod())
-                                                .usePVC(true)
-                                                .steps(getExpectedExecutionElementWithoutCleanup())
-                                                .accountId("accountId")
-                                                .build())
-                              .build());
-
-    return executionWrappers;
   }
 
   public CodeBase getCICodebase() {
@@ -263,11 +229,13 @@ public class CIExecutionPlanTestHelper {
   public LiteEngineTaskStepInfo getExpectedLiteEngineTaskInfoOnFirstPod() {
     return LiteEngineTaskStepInfo.builder()
         .identifier("liteEngineTask1")
+        .name("liteEngineTask1")
         .buildJobEnvInfo(getCIBuildJobEnvInfoOnFirstPod())
         .usePVC(true)
         .executionElementConfig(getExecutionElementConfig())
         .ciCodebase(getCICodebase())
         .infrastructure(getInfrastructure())
+        .timeout(600000)
         .build();
   }
 
@@ -275,9 +243,9 @@ public class CIExecutionPlanTestHelper {
     List<ExecutionWrapperConfig> steps = new ArrayList<>();
     return LiteEngineTaskStepInfo.builder()
         .identifier("liteEngineTask1")
+        .name("liteEngineTask1")
         .buildJobEnvInfo(getCIBuildJobEnvInfoOnFirstPod())
         .usePVC(true)
-        .steps(getExpectedExecutionElement())
         .accountId("accountId")
         .ciCodebase(getCICodebase())
         .executionElementConfig(ExecutionElementConfig.builder().steps(steps).build())
@@ -288,9 +256,9 @@ public class CIExecutionPlanTestHelper {
     List<ExecutionWrapperConfig> steps = new ArrayList<>();
     return LiteEngineTaskStepInfo.builder()
         .identifier("liteEngineTask1")
+        .name("liteEngineTask1")
         .buildJobEnvInfo(getCIBuildJobEnvInfoOnFirstPod())
         .usePVC(true)
-        .steps(getExpectedExecutionElement())
         .accountId("accountId")
         .ciCodebase(getCICodebaseWithRepoName())
         .executionElementConfig(ExecutionElementConfig.builder().steps(steps).build())
@@ -300,16 +268,18 @@ public class CIExecutionPlanTestHelper {
   public LiteEngineTaskStepInfo getExpectedLiteEngineTaskInfoOnOtherPods() {
     return LiteEngineTaskStepInfo.builder()
         .identifier("liteEngineTask2")
+        .name("liteEngineTask2")
         .buildJobEnvInfo(getCIBuildJobEnvInfoOnOtherPods())
         .usePVC(true)
         .executionElementConfig(getExecutionElementConfig())
         .infrastructure(getInfrastructure())
+        .timeout(600000)
         .build();
   }
 
   public BuildJobEnvInfo getCIBuildJobEnvInfoOnFirstPod() {
     return K8BuildJobEnvInfo.builder()
-        .workDir("workspace")
+        .workDir("/harness")
         .podsSetupInfo(getCIPodsSetupInfoOnFirstPod())
         .stepConnectorRefs(emptyMap())
         .build();
@@ -317,7 +287,7 @@ public class CIExecutionPlanTestHelper {
 
   public BuildJobEnvInfo getCIBuildJobEnvInfoOnOtherPods() {
     return K8BuildJobEnvInfo.builder()
-        .workDir("workspace")
+        .workDir("/harness")
         .podsSetupInfo(getCIPodsSetupInfoOnOtherPods())
         .stepConnectorRefs(emptyMap())
         .build();
@@ -345,6 +315,7 @@ public class CIExecutionPlanTestHelper {
     Map<String, String> volumeToMountPath = new HashMap<>();
     volumeToMountPath.put(VOLUME_NAME, MOUNT_PATH);
     volumeToMountPath.put("shared-0", "share/");
+    volumeToMountPath.put("addon", "/addon");
     pods.add(PodSetupInfo.builder()
                  .name("")
                  .pvcParamsList(Arrays.asList(PVCParams.builder()
@@ -355,8 +326,15 @@ public class CIExecutionPlanTestHelper {
                                                   .storageClass(CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS)
                                                   .build(),
                      PVCParams.builder()
-                         .volumeName("step-exec")
-                         .claimName("pod-step-exec")
+                         .volumeName("addon")
+                         .claimName("pod-addon")
+                         .isPresent(false)
+                         .sizeMib(PVC_DEFAULT_STORAGE_SIZE)
+                         .storageClass(CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS)
+                         .build(),
+                     PVCParams.builder()
+                         .volumeName("harness")
+                         .claimName("pod-harness")
                          .isPresent(false)
                          .sizeMib(PVC_DEFAULT_STORAGE_SIZE)
                          .storageClass(CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS)
@@ -383,6 +361,7 @@ public class CIExecutionPlanTestHelper {
     Map<String, String> volumeToMountPath = new HashMap<>();
     volumeToMountPath.put(VOLUME_NAME, MOUNT_PATH);
     volumeToMountPath.put("shared-0", "share/");
+    volumeToMountPath.put("addon", "/addon");
     Integer index = 1;
     pods.add(PodSetupInfo.builder()
                  .name("")
@@ -394,8 +373,15 @@ public class CIExecutionPlanTestHelper {
                                                   .storageClass(CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS)
                                                   .build(),
                      PVCParams.builder()
-                         .volumeName("step-exec")
-                         .claimName("pod-2-step-exec")
+                         .volumeName("addon")
+                         .claimName("pod-2-addon")
+                         .isPresent(true)
+                         .sizeMib(PVC_DEFAULT_STORAGE_SIZE)
+                         .storageClass(CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS)
+                         .build(),
+                     PVCParams.builder()
+                         .volumeName("harness")
+                         .claimName("pod-2-harness")
                          .isPresent(true)
                          .sizeMib(PVC_DEFAULT_STORAGE_SIZE)
                          .storageClass(CIExecutionConstants.PVC_DEFAULT_STORAGE_CLASS)
@@ -417,41 +403,14 @@ public class CIExecutionPlanTestHelper {
     return K8BuildJobEnvInfo.PodsSetupInfo.builder().podSetupInfoList(pods).build();
   }
 
-  public ExecutionElement getExecutionElement() {
-    List<ExecutionWrapper> executionSectionList = getExecutionSectionsWithLESteps();
-    executionSectionList.addAll(getCleanupStep());
-    return ExecutionElement.builder().steps(executionSectionList).build();
-  }
-
-  public ExecutionElement getExpectedExecutionElementWithoutCleanup() {
-    List<ExecutionWrapper> executionSectionList = getExpectedExecutionSectionsWithLESteps();
-    return ExecutionElement.builder().steps(executionSectionList).build();
-  }
-
-  public ExecutionElement getExpectedExecutionElement() {
-    List<ExecutionWrapper> executionSectionList = getExpectedExecutionSectionsWithLESteps();
-    executionSectionList.addAll(getCleanupStep());
-    return ExecutionElement.builder().steps(executionSectionList).build();
-  }
-
   public ExecutionElementConfig getExecutionElementConfig() {
     List<ExecutionWrapperConfig> executionSectionList = getExecutionWrapperConfigList();
     return ExecutionElementConfig.builder().steps(executionSectionList).build();
   }
 
-  public List<ExecutionWrapper> getExpectedExecutionSectionsWithLESteps() {
-    return new ArrayList<>(Arrays.asList(getGitCloneStep(),
-        ParallelStepElement.builder().sections(asList(getRunStepElement(), getPluginStepElement())).build()));
-  }
-
   public List<ExecutionWrapperConfig> getExecutionWrapperConfigList() {
     return newArrayList(ExecutionWrapperConfig.builder().step(getGitCloneStepElementConfigAsJsonNode()).build(),
         ExecutionWrapperConfig.builder().parallel(getRunAndPluginStepsInParallelAsJsonNode()).build());
-  }
-
-  public List<ExecutionWrapper> getExecutionSectionsWithLESteps() {
-    return newArrayList(
-        ParallelStepElement.builder().sections(asList(getRunStepElement(), getPluginStepElement())).build());
   }
 
   private DependencyElement getServiceDependencyElement() {
@@ -700,22 +659,6 @@ public class CIExecutionPlanTestHelper {
 
   // CI STEPS
 
-  public StepElement getGitCloneStep() {
-    Map<String, String> settings = new HashMap<>();
-    settings.put(GIT_CLONE_DEPTH_ATTRIBUTE, GIT_CLONE_MANUAL_DEPTH.toString());
-    return StepElement.builder()
-        .identifier(GIT_CLONE_STEP_ID)
-        .name(GIT_CLONE_STEP_NAME)
-        .type(CIStepInfoType.PLUGIN.name().toLowerCase())
-        .stepSpecType(PluginStepInfo.builder()
-                          .identifier(GIT_CLONE_STEP_ID)
-                          .image(createValueField(GIT_CLONE_IMAGE))
-                          .name(GIT_CLONE_STEP_NAME)
-                          .settings(createValueField(settings))
-                          .build())
-        .build();
-  }
-
   public JsonNode getGitCloneStepElementConfigAsJsonNode() {
     ObjectMapper mapper = new ObjectMapper();
     ObjectNode stepElementConfig = mapper.createObjectNode();
@@ -738,21 +681,6 @@ public class CIExecutionPlanTestHelper {
     return stepElementConfig;
   }
 
-  private StepElement getRunStepElement() {
-    return StepElement.builder()
-        .identifier(RUN_STEP_ID)
-        .type("Run")
-        .name(RUN_STEP_NAME)
-        .stepSpecType(RunStepInfo.builder()
-                          .identifier(RUN_STEP_ID)
-                          .name(RUN_STEP_NAME)
-                          .command(createValueField("./test-script1.sh"))
-                          .image(createValueField(RUN_STEP_IMAGE))
-                          .connectorRef(createValueField(RUN_STEP_CONNECTOR))
-                          .build())
-        .build();
-  }
-
   private JsonNode getRunStepElementConfigAsJsonNode() {
     ObjectMapper mapper = new ObjectMapper();
     ObjectNode stepElementConfig = mapper.createObjectNode();
@@ -770,28 +698,6 @@ public class CIExecutionPlanTestHelper {
 
     stepElementConfig.set("spec", stepSpecType);
     return stepElementConfig;
-  }
-
-  private StepElement getPluginStepElement() {
-    Map<String, String> settings = new HashMap<>();
-    settings.put(PLUGIN_ENV_VAR, PLUGIN_ENV_VAL);
-    return StepElement.builder()
-        .identifier(PLUGIN_STEP_ID)
-        .type("Plugin")
-        .name(PLUGIN_STEP_NAME)
-        .stepSpecType(PluginStepInfo.builder()
-                          .identifier(PLUGIN_STEP_ID)
-                          .name(PLUGIN_STEP_NAME)
-                          .image(createValueField(PLUGIN_STEP_IMAGE))
-                          .resources(ContainerResource.builder()
-                                         .limits(ContainerResource.Limits.builder()
-                                                     .cpu(createValueField(PLUGIN_STEP_LIMIT_CPU_STRING))
-                                                     .memory(createValueField(PLUGIN_STEP_LIMIT_MEM_STRING))
-                                                     .build())
-                                         .build())
-                          .settings(createValueField(settings))
-                          .build())
-        .build();
   }
 
   private JsonNode getPluginStepElementConfigAsJsonNode() {
@@ -817,22 +723,6 @@ public class CIExecutionPlanTestHelper {
     return stepElementConfig;
   }
 
-  private StepElement getECRStepElement() {
-    return StepElement.builder()
-        .identifier("publish-2")
-        .type("BuildAndPushECR")
-        .stepSpecType(ECRStepInfo.builder()
-                          .connectorRef(createValueField("ecr-connector"))
-                          .region(createValueField("eu-west-1"))
-                          .account(createValueField("987923132879"))
-                          .tags(createValueField(singletonList("v01")))
-                          .imageName(createValueField("ci-play/portal"))
-                          .context(createValueField("~/"))
-                          .dockerfile(createValueField("~/Dockerfile"))
-                          .build())
-        .build();
-  }
-
   private JsonNode getECRStepElementConfigAsJsonNode() {
     ObjectMapper mapper = new ObjectMapper();
     ObjectNode stepElementConfig = mapper.createObjectNode();
@@ -853,22 +743,6 @@ public class CIExecutionPlanTestHelper {
 
     stepElementConfig.set("spec", stepSpecType);
     return stepElementConfig;
-  }
-
-  private StepElement getGCRStepElement() {
-    return StepElement.builder()
-        .identifier("publish-1")
-        .type("BuildAndPushGCR")
-        .stepSpecType(GCRStepInfo.builder()
-                          .connectorRef(createValueField("gcr-connector"))
-                          .tags(createValueField(singletonList("v01")))
-                          .host(createValueField("us.gcr.io"))
-                          .projectID(createValueField("ci-play"))
-                          .imageName(createValueField("portal"))
-                          .context(createValueField("~/"))
-                          .dockerfile(createValueField("~/Dockerfile"))
-                          .build())
-        .build();
   }
 
   private JsonNode getGCRStepElementConfigAsJsonNode() {
@@ -911,45 +785,11 @@ public class CIExecutionPlanTestHelper {
     return arrayNode;
   }
 
-  public List<ExecutionWrapper> getCleanupStep() {
-    return singletonList(StepElement.builder()
-                             .identifier("cleanup")
-                             .type("cleanup")
-                             .stepSpecType(CleanupStepInfo.builder().identifier("cleanup").build())
-                             .build());
-  }
-
   public Set<String> getPublishArtifactStepIds() {
     Set<String> ids = new HashSet<>();
     ids.add("publish-1");
     ids.add("publish-2");
     return ids;
-  }
-
-  public NgPipelineEntity getCIPipeline() {
-    NgPipeline ngPipeline = NgPipeline.builder().stages(getStages()).build();
-    return NgPipelineEntity.builder()
-        .identifier("testPipelineIdentifier")
-        .orgIdentifier("orgIdentifier")
-        .projectIdentifier("projectIdentifier")
-        .accountId("accountId")
-        .ngPipeline(ngPipeline)
-        .build();
-  }
-
-  private List<StageElementWrapper> getStages() {
-    return new ArrayList<>(singletonList(getIntegrationStageElement()));
-  }
-
-  public Connector getConnector() {
-    return GitConnectorYaml.builder()
-        .identifier("testGitConnector")
-        .type("git")
-        .spec(GitConnectorYaml.Spec.builder()
-                  .authScheme(GitConnectorYaml.Spec.AuthScheme.builder().sshKey("testKey").type("ssh").build())
-                  .repo("testRepo")
-                  .build())
-        .build();
   }
 
   public Container getContainer() {
@@ -968,20 +808,6 @@ public class CIExecutionPlanTestHelper {
     return K8sDirectInfraYaml.builder()
         .type(Infrastructure.Type.KUBERNETES_DIRECT)
         .spec(K8sDirectInfraYamlSpec.builder().connectorRef("testKubernetesCluster").namespace("testNamespace").build())
-        .build();
-  }
-  public StageElement getIntegrationStageElement() {
-    return StageElement.builder().identifier("intStageIdentifier").stageType(getIntegrationStage()).build();
-  }
-
-  public IntegrationStage getIntegrationStage() {
-    return IntegrationStage.builder()
-        .identifier("intStageIdentifier")
-        .workingDirectory("workspace")
-        .execution(getExecutionElement())
-        .infrastructure(getInfrastructure())
-        .customVariables(getCustomVariables())
-        .dependencies(Collections.singletonList(getServiceDependencyElement()))
         .build();
   }
 
@@ -1304,10 +1130,6 @@ public class CIExecutionPlanTestHelper {
         .build();
   }
 
-  public NgPipeline getPipeline() {
-    return NgPipeline.builder().ciCodebase(getCICodebase()).build();
-  }
-
   public CIExecutionArgs getPRCIExecutionArgs() {
     WebhookBaseAttributes core =
         WebhookBaseAttributes.builder().link(COMMIT_LINK).message(COMMIT_MESSAGE).after(COMMIT).build();
@@ -1364,20 +1186,6 @@ public class CIExecutionPlanTestHelper {
     envVarMap.put("DRONE_BUILD_NUMBER", BUILD_NUMBER + "");
     envVarMap.put("DRONE_BUILD_EVENT", "push");
     return envVarMap;
-  }
-
-  public ExecutionPlanCreationContextImpl getExecutionPlanCreationContextWithExecutionArgs() {
-    ExecutionPlanCreationContextImpl context = ExecutionPlanCreationContextImpl.builder().build();
-    context.addAttribute(ExecutionArgs.EXEC_ARGS, getCIExecutionArgs());
-    context.addAttribute(CI_PIPELINE_CONFIG, getPipeline());
-    return context;
-  }
-
-  public ExecutionPlanCreationContextImpl getWebhookPlanContextWithExecArgs() {
-    ExecutionPlanCreationContextImpl context = ExecutionPlanCreationContextImpl.builder().build();
-    context.addAttribute(ExecutionArgs.EXEC_ARGS, getPRCIExecutionArgs());
-    context.addAttribute(CI_PIPELINE_CONFIG, getPipeline());
-    return context;
   }
 
   public StageElementConfig getIntegrationStageElementConfig() {

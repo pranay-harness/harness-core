@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.advisers.RollbackCustomStepParameters;
-import io.harness.cdng.artifact.bean.ArtifactSpecWrapper;
 import io.harness.cdng.artifact.bean.artifactsource.DockerArtifactSource;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSetWrapper;
@@ -12,9 +11,9 @@ import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSets;
 import io.harness.cdng.artifact.bean.yaml.DockerHubArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.EcrArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.GcrArtifactConfig;
+import io.harness.cdng.artifact.bean.yaml.PrimaryArtifact;
 import io.harness.cdng.artifact.bean.yaml.SidecarArtifact;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters;
-import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.cdng.infra.InfrastructureDef;
 import io.harness.cdng.infra.beans.InfraUseFromStage;
@@ -23,6 +22,7 @@ import io.harness.cdng.infra.beans.K8sGcpInfrastructureOutcome;
 import io.harness.cdng.infra.steps.InfraStepParameters;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
 import io.harness.cdng.infra.yaml.K8sGcpInfrastructure;
+import io.harness.cdng.instance.outcome.DeploymentInfoOutcome;
 import io.harness.cdng.k8s.DeleteResourcesWrapper;
 import io.harness.cdng.k8s.K8sBlueGreenOutcome;
 import io.harness.cdng.k8s.K8sCanaryOutcome;
@@ -40,6 +40,9 @@ import io.harness.cdng.k8s.K8sScaleStepInfo;
 import io.harness.cdng.k8s.K8sScaleStepParameter;
 import io.harness.cdng.k8s.K8sStepPassThroughData;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
+import io.harness.cdng.k8s.beans.HelmValuesFetchResponsePassThroughData;
+import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
+import io.harness.cdng.k8s.beans.StepExceptionPassThroughData;
 import io.harness.cdng.manifest.yaml.BitbucketStore;
 import io.harness.cdng.manifest.yaml.GcsStoreConfig;
 import io.harness.cdng.manifest.yaml.GitLabStore;
@@ -65,14 +68,17 @@ import io.harness.cdng.manifest.yaml.kinds.KustomizeManifest;
 import io.harness.cdng.manifest.yaml.kinds.OpenshiftManifest;
 import io.harness.cdng.manifest.yaml.kinds.OpenshiftParamManifest;
 import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
-import io.harness.cdng.pipeline.DeploymentStage;
+import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
+import io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
-import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.cdng.pipeline.beans.DeploymentStageStepParameters;
 import io.harness.cdng.pipeline.beans.RollbackNode;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters;
 import io.harness.cdng.pipeline.stepinfo.ShellScriptStepInfo;
+import io.harness.cdng.provision.terraform.TerraformApplyStepInfo;
+import io.harness.cdng.provision.terraform.TerraformPlanStepInfo;
 import io.harness.cdng.service.beans.KubernetesServiceSpec;
+import io.harness.cdng.service.beans.NativeHelmServiceSpec;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceConfigOutcome;
 import io.harness.cdng.service.beans.ServiceDefinition;
@@ -85,7 +91,6 @@ import io.harness.cdng.service.beans.ServiceOutcome.VariablesWrapperOutcome;
 import io.harness.cdng.service.beans.ServiceUseFromStage;
 import io.harness.cdng.service.beans.ServiceUseFromStage.Overrides;
 import io.harness.cdng.service.beans.StageOverridesConfig;
-import io.harness.cdng.service.steps.ServiceStep.ServiceStepPassThroughData;
 import io.harness.cdng.service.steps.ServiceStepParameters;
 import io.harness.cdng.tasks.manifestFetch.step.ManifestFetchOutcome;
 import io.harness.cdng.tasks.manifestFetch.step.ManifestFetchParameters;
@@ -126,7 +131,6 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(ManifestOverrideSets.class, 8043);
     kryo.register(ArtifactOverrideSets.class, 8044);
 
-    kryo.register(CDPipelineSetupParameters.class, 8046);
     kryo.register(DeploymentStageStepParameters.class, 8047);
     kryo.register(K8sRollingRollbackStepInfo.class, 8049);
     kryo.register(K8sRollingRollbackStepParameters.class, 8050);
@@ -135,17 +139,14 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(ManifestFetchParameters.class, 8053);
     kryo.register(ShellScriptStepInfo.class, 8055);
     kryo.register(K8sStepPassThroughData.class, 8056);
-    kryo.register(ServiceStepPassThroughData.class, 8057);
 
     // Starting using 8100 series
-    kryo.register(DeploymentStage.class, 8100);
     kryo.register(PipelineInfrastructure.class, 8101);
     kryo.register(InfrastructureDef.class, 8102);
     kryo.register(ServiceDefinition.class, 8103);
     kryo.register(ManifestConfig.class, 8104);
     kryo.register(K8sDirectInfrastructureOutcome.class, 8105);
-    kryo.register(ArtifactSpecWrapper.class, 8106);
-    kryo.register(EnvironmentOutcome.class, 8107);
+    kryo.register(PrimaryArtifact.class, 8106);
     kryo.register(RollbackOptionalChildChainStepParameters.class, 8108);
     kryo.register(RollbackNode.class, 8109);
 
@@ -192,5 +193,16 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(S3StoreConfig.class, 12538);
     kryo.register(GcsStoreConfig.class, 12539);
     kryo.register(RollbackCustomStepParameters.class, 12540);
+    kryo.register(TerraformApplyStepInfo.class, 12541);
+    kryo.register(NativeHelmServiceSpec.class, 12542);
+    kryo.register(TerraformPlanStepInfo.class, 12543);
+    kryo.register(HelmValuesFetchResponsePassThroughData.class, 12544);
+    kryo.register(StepExceptionPassThroughData.class, 12545);
+
+    kryo.register(StoreConfig.class, 8022);
+    kryo.register(StoreConfigWrapper.class, 8045);
+
+    kryo.register(K8sExecutionPassThroughData.class, 12546);
+    kryo.register(DeploymentInfoOutcome.class, 12547);
   }
 }

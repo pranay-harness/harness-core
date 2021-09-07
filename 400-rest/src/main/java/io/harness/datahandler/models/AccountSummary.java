@@ -1,5 +1,10 @@
 package io.harness.datahandler.models;
 
+import static io.harness.annotations.dev.HarnessModule._955_ACCOUNT_MGMT;
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.limits.ConfiguredLimit;
 
@@ -9,8 +14,10 @@ import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 
+@OwnedBy(PL)
 @Data
 @Builder
+@TargetModule(_955_ACCOUNT_MGMT)
 public class AccountSummary {
   private String accountId;
   private String accountName;
@@ -27,4 +34,5 @@ public class AccountSummary {
   private List<ConfiguredLimit> limits;
   private Integer numSecretManagers;
   private Integer numDelegates;
+  private Boolean nextgenEnabled;
 }

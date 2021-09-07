@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.FeatureName.ECS_REGISTER_TASK_DEFINITION_TAGS;
 import static io.harness.beans.FeatureName.HARNESS_TAGS;
+import static io.harness.beans.FeatureName.HELM_CHART_AS_ARTIFACT;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -59,6 +60,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -86,6 +88,7 @@ import io.harness.limits.LimitCheckerFactory;
 import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.limits.counter.service.CounterSyncer;
+import io.harness.pcf.model.CfCliVersion;
 import io.harness.persistence.HIterator;
 import io.harness.queue.QueuePublisher;
 import io.harness.stream.BoundedInputStream;
@@ -133,6 +136,7 @@ import software.wings.beans.appmanifest.ApplicationManifest.AppManifestSource;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.artifact.Artifact;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.AmiCommandUnit;
 import software.wings.beans.command.AwsLambdaCommandUnit;
 import software.wings.beans.command.CodeDeployCommandUnit;
@@ -256,6 +260,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 @Singleton
 @Slf4j
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.TriggerService")
 public class ServiceResourceServiceImpl implements ServiceResourceService, DataProvider {
   private static final String IISWEBSITE_KEYWORD = "iiswebsite";
   private static final String IISAPP_KEYWORD = "iisapp";
@@ -484,6 +489,12 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       throw new InvalidRequestException("Service name cannot be " + GLOBAL_SERVICE_NAME_FOR_YAML, USER);
     }
 
+    if (Boolean.TRUE.equals(service.getArtifactFromManifest())
+        && !(service.getDeploymentType() == HELM || service.getDeploymentType() == KUBERNETES)) {
+      throw new InvalidRequestException(
+          "Artifact from Manifest flag can be set to true only for kubernetes and helm deployment types");
+    }
+
     // TODO: ASR: IMP: update the block below for artifact variables as service variable
     if (createdFromYaml) {
       if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, accountId)) {
@@ -501,6 +512,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     return LimitEnforcementUtils.withLimitCheck(checker, () -> {
       setKeyWords(service);
       checkAndSetHelmVersion(service);
+      checkAndSetCfCliVersion(service);
+      checkAndSetServiceAsK8sV2(service);
       Service savedService =
           duplicateCheck(() -> wingsPersistence.saveAndGet(Service.class, service), "name", service.getName());
 
@@ -533,6 +546,12 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       customDeploymentTypeService.putCustomDeploymentTypeNameIfApplicable(savedService);
       return savedService;
     });
+  }
+
+  void checkAndSetServiceAsK8sV2(Service service) {
+    if (!service.isK8sV2() && KUBERNETES == service.getDeploymentType()) {
+      service.setK8sV2(true);
+    }
   }
 
   @Override
@@ -632,6 +651,16 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         ServiceCommand clonedServiceCommand = serviceCommand.cloneInternal();
         addCommand(savedCloneService.getAppId(), savedCloneService.getUuid(), clonedServiceCommand, shouldPushToYaml);
       });
+
+      List<ArtifactStream> artifactStreams = artifactStreamServiceBindingService.listArtifactStreams(originalService);
+      if (isNotEmpty(artifactStreams)) {
+        artifactStreams.forEach(artifactStream -> {
+          ArtifactStream clonedArtifactStream = artifactStream.cloneInternal();
+          clonedArtifactStream.setServiceId(clonedService.getUuid());
+          clonedArtifactStream.setMetadataOnly(true);
+          artifactStreamService.createWithBinding(originalService.getAppId(), clonedArtifactStream, false);
+        });
+      }
 
       // Copy ContainerTask, HelmChartSpecification, PcfSpecification
       cloneServiceSpecifications(appId, originalService, savedCloneService.getUuid());
@@ -911,7 +940,13 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
             .set(ServiceKeys.description, Optional.ofNullable(service.getDescription()).orElse(""))
             .set(ServiceKeys.keywords, keywords);
 
+    if (featureFlagService.isEnabled(HELM_CHART_AS_ARTIFACT, savedService.getAccountId())
+        && service.getArtifactFromManifest() != null) {
+      updateOperations.set(ServiceKeys.artifactFromManifest, service.getArtifactFromManifest());
+    }
+
     updateOperationsForHelmVersion(savedService, service, updateOperations);
+    updateOperationsForCfCliVersion(savedService, service, updateOperations);
 
     if (fromYaml) {
       if (isNotBlank(service.getConfigMapYaml())) {
@@ -972,6 +1007,22 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   private boolean isHelmSupportedDeploymentType(DeploymentType deploymentType) {
     return deploymentType == HELM || deploymentType == KUBERNETES;
+  }
+
+  void updateOperationsForCfCliVersion(
+      Service savedService, Service newService, UpdateOperations<Service> updateOperations) {
+    if (newService.getCfCliVersion() != null) {
+      validateCfCliVersion(savedService);
+      updateOperations.set(ServiceKeys.cfCliVersion, newService.getCfCliVersion());
+    }
+  }
+
+  private void validateCfCliVersion(Service service) {
+    if (service.getDeploymentType() != null && service.getDeploymentType() != PCF) {
+      throw new InvalidRequestException(
+          format("CfCliVersion is only supported with PCF type of services, found deployment type: [%s]",
+              service.getDeploymentType()));
+    }
   }
 
   private Service updateArtifactStreamIds(
@@ -2630,6 +2681,17 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
   }
 
+  void checkAndSetCfCliVersion(Service service) {
+    if (service.getCfCliVersion() == null) {
+      DeploymentType deploymentType = service.getDeploymentType();
+      if (deploymentType == PCF) {
+        service.setCfCliVersion(CfCliVersion.V6);
+      }
+    } else {
+      validateCfCliVersion(service);
+    }
+  }
+
   private Service createDefaultHelmValueYaml(Service service, boolean createdFromYaml) {
     if (createdFromYaml) {
       return service;
@@ -2675,7 +2737,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   private void createDefaultK8sManifests(Service service, boolean createdFromGit) {
-    if (createdFromGit || !service.isK8sV2()) {
+    if (createdFromGit || !service.isK8sV2() || Boolean.TRUE.equals(service.getArtifactFromManifest())) {
       return;
     }
 
@@ -3161,5 +3223,20 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   public boolean isK8sV2Service(String appId, String serviceId) {
     Service service = get(appId, serviceId, false);
     return service != null && service.isK8sV2();
+  }
+
+  @Override
+  public List<String> getIdsWithArtifactFromManifest(String appId) {
+    List<Service> services = wingsPersistence.createQuery(Service.class)
+                                 .filter(ServiceKeys.appId, appId)
+                                 .filter(ServiceKeys.artifactFromManifest, true)
+                                 .project(ServiceKeys.uuid, true)
+                                 .asList();
+
+    if (isEmpty(services)) {
+      return new ArrayList<>();
+    }
+
+    return services.stream().map(Base::getUuid).collect(Collectors.toList());
   }
 }

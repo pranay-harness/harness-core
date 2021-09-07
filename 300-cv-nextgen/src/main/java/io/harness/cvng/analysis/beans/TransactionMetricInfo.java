@@ -1,5 +1,7 @@
 package io.harness.cvng.analysis.beans;
 
+import io.harness.cvng.beans.DataSourceType;
+
 import java.util.SortedSet;
 import lombok.Builder;
 import lombok.Data;
@@ -11,6 +13,7 @@ import lombok.Value;
 public class TransactionMetricInfo {
   private TransactionMetric transactionMetric;
   private String connectorName;
+  private DataSourceType dataSourceType;
   private SortedSet<DeploymentTimeSeriesAnalysisDTO.HostData> nodes;
 
   @Value

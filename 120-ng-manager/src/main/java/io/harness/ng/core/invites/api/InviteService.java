@@ -4,13 +4,14 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.invites.remote.InviteAcceptResponse;
-import io.harness.ng.accesscontrol.user.remote.ACLAggregateFilter;
+import io.harness.ng.accesscontrol.user.ACLAggregateFilter;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
-import io.harness.ng.core.invites.InviteOperationResponse;
 import io.harness.ng.core.invites.dto.InviteDTO;
+import io.harness.ng.core.invites.dto.InviteOperationResponse;
 import io.harness.ng.core.invites.entities.Invite;
 
+import java.net.URI;
 import java.util.Optional;
 import org.springframework.data.mongodb.core.query.Criteria;
 
@@ -18,7 +19,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public interface InviteService {
   InviteOperationResponse create(Invite invite);
 
-  Optional<Invite> getInvite(String inviteId);
+  Optional<Invite> getInvite(String inviteId, boolean allowDeleted);
 
   PageResponse<Invite> getInvites(Criteria criteria, PageRequest pageRequest);
 
@@ -29,9 +30,13 @@ public interface InviteService {
 
   Optional<Invite> updateInvite(Invite invite);
 
-  boolean completeInvite(String token);
+  boolean completeInvite(Optional<Invite> inviteOpt);
 
   Optional<Invite> deleteInvite(String inviteId);
 
-  boolean deleteInvite(String accountIdentifier, String orgIdentifier, String projectIdentifier, String emailId);
+  Optional<Invite> getInviteFromToken(String jwtToken, boolean allowDeleted);
+
+  boolean isUserPasswordSet(String accountIdentifier, String email);
+
+  URI getRedirectUrl(InviteAcceptResponse inviteAcceptResponse, String email, String decodedEmail, String jwtToken);
 }

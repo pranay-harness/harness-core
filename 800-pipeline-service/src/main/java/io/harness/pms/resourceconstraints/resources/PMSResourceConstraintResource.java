@@ -14,7 +14,6 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import java.util.List;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -41,13 +40,11 @@ public class PMSResourceConstraintResource {
 
   @GET
   @Path("/executionInfo")
-  @ApiOperation(
-      value = "Gets resource constraints execution info list", nickname = "getResourceConstraintsExecutionInfo")
-  public ResponseDTO<List<ResourceConstraintExecutionInfoDTO>>
-  getResourceConstraintsExecutionInfo(
+  @ApiOperation(value = "Gets resource constraints execution info", nickname = "getResourceConstraintsExecutionInfo")
+  public ResponseDTO<ResourceConstraintExecutionInfoDTO> getResourceConstraintsExecutionInfo(
       @NotNull @QueryParam("accountId") String accountId, @NotNull @QueryParam("resourceUnit") String resourceUnit) {
-    List<ResourceConstraintExecutionInfoDTO> response =
-        pmsResourceConstraintService.getResourceConstraintExecutionInfoList(accountId, resourceUnit);
+    ResourceConstraintExecutionInfoDTO response =
+        pmsResourceConstraintService.getResourceConstraintExecutionInfo(accountId, resourceUnit);
     return ResponseDTO.newResponse(response);
   }
 }

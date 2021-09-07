@@ -1,7 +1,6 @@
 package io.harness.batch.processing.config;
 
 import io.harness.batch.processing.ccm.BatchJobType;
-import io.harness.batch.processing.reader.EventReaderFactory;
 import io.harness.batch.processing.reader.SettingAttributeReader;
 import io.harness.batch.processing.writer.S3SyncEventWriter;
 
@@ -37,8 +36,7 @@ public class S3SyncJobConfig {
   }
 
   @Bean
-  public Step s3SyncStep(EventReaderFactory mongoEventReader, StepBuilderFactory stepBuilderFactory,
-      SettingAttributeReader settingAttributeReader) {
+  public Step s3SyncStep(StepBuilderFactory stepBuilderFactory, SettingAttributeReader settingAttributeReader) {
     return stepBuilderFactory.get("s3SyncStep")
         .<SettingAttribute, SettingAttribute>chunk(BATCH_SIZE)
         .reader(settingAttributeReader)

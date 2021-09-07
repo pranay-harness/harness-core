@@ -2,7 +2,7 @@ package io.harness.batch.processing.events.timeseries.service.impl;
 
 import io.harness.batch.processing.events.timeseries.data.CostEventData;
 import io.harness.batch.processing.events.timeseries.service.intfc.CostEventService;
-import io.harness.ccm.commons.utils.DataUtils;
+import io.harness.ccm.commons.utils.TimeUtils;
 import io.harness.timescaledb.TimeScaleDBService;
 
 import java.sql.Connection;
@@ -23,7 +23,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class CostEventServiceImpl implements CostEventService {
   @Autowired private TimeScaleDBService timeScaleDBService;
-  @Autowired private DataUtils utils;
+  @Autowired private TimeUtils utils;
 
   private static final int BATCH_SIZE = 500;
   private static final int MAX_RETRY_COUNT = 5;

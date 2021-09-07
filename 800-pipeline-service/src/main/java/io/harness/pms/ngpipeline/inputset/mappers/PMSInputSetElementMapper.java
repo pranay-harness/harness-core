@@ -1,27 +1,23 @@
 package io.harness.pms.ngpipeline.inputset.mappers;
 
-import io.harness.exception.InvalidRequestException;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.pms.merger.helpers.InputSetYamlHelper.getPipelineComponent;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.gitsync.sdk.EntityGitDetailsMapper;
 import io.harness.ng.core.mapper.TagMapper;
-import io.harness.pms.merger.PipelineYamlConfig;
+import io.harness.pms.inputset.InputSetErrorWrapperDTOPMS;
+import io.harness.pms.merger.helpers.InputSetYamlHelper;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntityType;
-import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetErrorWrapperDTOPMS;
 import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetResponseDTOPMS;
 import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetSummaryResponseDTOPMS;
 import io.harness.pms.ngpipeline.overlayinputset.beans.resource.OverlayInputSetResponseDTOPMS;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(PIPELINE)
 @UtilityClass
 public class PMSInputSetElementMapper {
   public InputSetEntity toInputSetEntity(
@@ -31,13 +27,26 @@ public class PMSInputSetElementMapper {
         .orgIdentifier(orgIdentifier)
         .projectIdentifier(projectIdentifier)
         .pipelineIdentifier(pipelineIdentifier)
-        .identifier(getStringField(yaml, "identifier", "inputSet"))
-        .name(getStringField(yaml, "name", "inputSet"))
-        .description(getStringField(yaml, "description", "inputSet"))
-        .tags(TagMapper.convertToList(getTags(yaml, "inputSet")))
+        .identifier(InputSetYamlHelper.getStringField(yaml, "identifier", "inputSet"))
+        .name(InputSetYamlHelper.getStringField(yaml, "name", "inputSet"))
+        .description(InputSetYamlHelper.getStringField(yaml, "description", "inputSet"))
+        .tags(TagMapper.convertToList(InputSetYamlHelper.getTags(yaml, "inputSet")))
         .inputSetEntityType(InputSetEntityType.INPUT_SET)
         .yaml(yaml)
         .build();
+  }
+  public InputSetEntity toInputSetEntity(String accountId, String yaml) {
+    String topKey = InputSetYamlHelper.getRootNodeOfInputSetYaml(yaml);
+    String orgIdentifier = InputSetYamlHelper.getStringField(yaml, "orgIdentifier", topKey);
+    String projectIdentifier = InputSetYamlHelper.getStringField(yaml, "projectIdentifier", topKey);
+    if (topKey.equals("inputSet")) {
+      String pipelineComponent = getPipelineComponent(yaml);
+      String pipelineIdentifier = InputSetYamlHelper.getStringField(pipelineComponent, "identifier", "pipeline");
+      return toInputSetEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml);
+    } else {
+      String pipelineIdentifier = InputSetYamlHelper.getStringField(yaml, "pipelineIdentifier", topKey);
+      return toInputSetEntityForOverlay(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, yaml);
+    }
   }
 
   public InputSetEntity toInputSetEntityForOverlay(
@@ -47,12 +56,12 @@ public class PMSInputSetElementMapper {
         .orgIdentifier(orgIdentifier)
         .projectIdentifier(projectIdentifier)
         .pipelineIdentifier(pipelineIdentifier)
-        .identifier(getStringField(yaml, "identifier", "overlayInputSet"))
-        .name(getStringField(yaml, "name", "overlayInputSet"))
-        .description(getStringField(yaml, "description", "overlayInputSet"))
-        .tags(TagMapper.convertToList(getTags(yaml, "overlayInputSet")))
+        .identifier(InputSetYamlHelper.getStringField(yaml, "identifier", "overlayInputSet"))
+        .name(InputSetYamlHelper.getStringField(yaml, "name", "overlayInputSet"))
+        .description(InputSetYamlHelper.getStringField(yaml, "description", "overlayInputSet"))
+        .tags(TagMapper.convertToList(InputSetYamlHelper.getTags(yaml, "overlayInputSet")))
         .inputSetEntityType(InputSetEntityType.OVERLAY_INPUT_SET)
-        .inputSetReferences(getReferences(yaml))
+        .inputSetReferences(InputSetYamlHelper.getReferencesFromOverlayInputSetYaml(yaml))
         .yaml(yaml)
         .build();
   }
@@ -64,11 +73,11 @@ public class PMSInputSetElementMapper {
         .orgIdentifier(orgIdentifier)
         .projectIdentifier(projectIdentifier)
         .pipelineIdentifier(pipelineIdentifier)
-        .identifier(getStringField(yaml, "identifier", "inputSet"))
+        .identifier(InputSetYamlHelper.getStringField(yaml, "identifier", "inputSet"))
         .inputSetYaml(yaml)
-        .name(getStringField(yaml, "name", "inputSet"))
-        .description(getStringField(yaml, "description", "inputSet"))
-        .tags(getTags(yaml, "inputSet"))
+        .name(InputSetYamlHelper.getStringField(yaml, "name", "inputSet"))
+        .description(InputSetYamlHelper.getStringField(yaml, "description", "inputSet"))
+        .tags(InputSetYamlHelper.getTags(yaml, "inputSet"))
         .isErrorResponse(true)
         .inputSetErrorWrapper(errorWrapperDTO)
         .build();
@@ -86,6 +95,8 @@ public class PMSInputSetElementMapper {
         .description(entity.getDescription())
         .tags(TagMapper.convertToMap(entity.getTags()))
         .version(entity.getVersion())
+        .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(entity))
+        .isInvalid(entity.getIsInvalid())
         .build();
   }
 
@@ -109,6 +120,8 @@ public class PMSInputSetElementMapper {
         .version(entity.getVersion())
         .isErrorResponse(isError)
         .invalidInputSetReferences(invalidReferences)
+        .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(entity))
+        .isInvalid(entity.getIsInvalid())
         .build();
   }
 
@@ -121,66 +134,7 @@ public class PMSInputSetElementMapper {
         .inputSetType(entity.getInputSetEntityType())
         .tags(TagMapper.convertToMap(entity.getTags()))
         .version(entity.getVersion())
+        .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(entity))
         .build();
-  }
-
-  public String getStringField(String yaml, String fieldName, String topKey) {
-    try {
-      JsonNode node = (new PipelineYamlConfig(yaml)).getYamlMap();
-      JsonNode innerMap = node.get(topKey);
-      JsonNode field = innerMap.get(fieldName);
-      if (field == null) {
-        return null;
-      }
-      return innerMap.get(fieldName).asText().equals("") ? null : innerMap.get(fieldName).asText();
-    } catch (IOException e) {
-      throw new InvalidRequestException("Could not convert yaml to JsonNode");
-    }
-  }
-
-  public boolean isPipelineAbsent(String yaml) {
-    try {
-      JsonNode node = (new PipelineYamlConfig(yaml)).getYamlMap();
-      JsonNode innerMap = node.get("inputSet");
-      JsonNode field = innerMap.get("pipeline");
-      return field == null;
-    } catch (IOException e) {
-      throw new InvalidRequestException("Could not convert yaml to JsonNode");
-    }
-  }
-
-  private Map<String, String> getTags(String yaml, String topKey) {
-    try {
-      JsonNode node = (new PipelineYamlConfig(yaml)).getYamlMap();
-      JsonNode innerMap = node.get(topKey);
-      ObjectNode tags = (ObjectNode) innerMap.get("tags");
-      if (tags == null) {
-        return null;
-      }
-      Map<String, String> res = new LinkedHashMap<>();
-
-      Set<String> fieldNames = new LinkedHashSet<>();
-      tags.fieldNames().forEachRemaining(fieldNames::add);
-      for (String key : fieldNames) {
-        String value = tags.get(key).asText();
-        res.put(key, value);
-      }
-      return res;
-    } catch (IOException e) {
-      throw new InvalidRequestException("Could not convert yaml to JsonNode");
-    }
-  }
-
-  private List<String> getReferences(String yaml) {
-    try {
-      JsonNode node = (new PipelineYamlConfig(yaml)).getYamlMap();
-      JsonNode innerMap = node.get("overlayInputSet");
-      ArrayNode list = (ArrayNode) innerMap.get("inputSetReferences");
-      List<String> res = new ArrayList<>();
-      list.forEach(element -> res.add(element.asText()));
-      return res;
-    } catch (IOException e) {
-      throw new InvalidRequestException("Could not convert yaml to JsonNode");
-    }
   }
 }

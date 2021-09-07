@@ -2,13 +2,13 @@ package software.wings.service.intfc;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.capability.CapabilitySubjectPermission;
 import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateApproval;
@@ -17,51 +17,45 @@ import io.harness.delegate.beans.DelegateGroup;
 import io.harness.delegate.beans.DelegateInitializationDetails;
 import io.harness.delegate.beans.DelegateParams;
 import io.harness.delegate.beans.DelegateProfileParams;
-import io.harness.delegate.beans.DelegateProgressData;
 import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateSetupDetails;
 import io.harness.delegate.beans.DelegateSize;
 import io.harness.delegate.beans.DelegateSizeDetails;
-import io.harness.delegate.beans.DelegateTaskAbortEvent;
-import io.harness.delegate.beans.DelegateTaskEvent;
-import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.FileBucket;
+import io.harness.exception.InvalidRequestException;
 import io.harness.validation.Create;
 
 import software.wings.beans.CEDelegateStatus;
 import software.wings.beans.DelegateStatus;
-import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import javax.validation.Valid;
 import javax.ws.rs.core.MediaType;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
-@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @OwnedBy(DEL)
+@BreakDependencyOn("software.wings.service.intfc.ownership.OwnedByAccount")
 public interface DelegateService extends OwnedByAccount {
   PageResponse<Delegate> list(PageRequest<Delegate> pageRequest);
-
-  boolean checkDelegateConnected(String accountId, String delegateId);
 
   List<String> getKubernetesDelegateNames(String accountId);
 
   Set<String> getAllDelegateSelectors(String accountId);
 
+  Set<String> getAllDelegateSelectorsUpTheHierarchy(String accountId, String orgId, String projectId);
+
   DelegateStatus getDelegateStatus(String accountId);
 
   DelegateStatus getDelegateStatusWithScalingGroups(String accountId);
-
-  DelegateGroup getDelegateGroup(String accountId, String delegateGroupId);
 
   Set<String> retrieveDelegateSelectors(Delegate delegate);
 
@@ -80,37 +74,42 @@ public interface DelegateService extends OwnedByAccount {
 
   Delegate updateDescription(String accountId, String delegateId, String newDescription);
 
-  Delegate updateApprovalStatus(String accountId, String delegateId, DelegateApproval action);
+  Delegate updateApprovalStatus(String accountId, String delegateId, DelegateApproval action)
+      throws InvalidRequestException;
 
   Delegate updateScopes(@Valid Delegate delegate);
 
   DelegateScripts getDelegateScriptsNg(String accountId, String version, String managerHost, String verificationHost,
       DelegateSize delegateSize) throws IOException;
 
-  DelegateScripts getDelegateScripts(String accountId, String version, String managerHost, String verificationHost)
-      throws IOException;
+  DelegateScripts getDelegateScripts(String accountId, String version, String managerHost, String verificationHost,
+      String delegateName) throws IOException;
 
   String getLatestDelegateVersion(String accountId);
 
   File downloadScripts(String managerHost, String verificationServiceUrl, String accountId, String delegateName,
-      String delegateProfile) throws IOException;
+      String delegateProfile, String tokenName) throws IOException;
 
   File downloadDocker(String managerHost, String verificationServiceUrl, String accountId, String delegateName,
-      String delegateProfile) throws IOException;
+      String delegateProfile, String tokenName) throws IOException;
 
   File downloadKubernetes(String managerHost, String verificationServiceUrl, String accountId, String delegateName,
-      String delegateProfile) throws IOException;
+      String delegateProfile, String tokenName) throws IOException;
 
   File downloadCeKubernetesYaml(String managerHost, String verificationUrl, String accountId, String delegateName,
-      String delegateProfile) throws IOException;
+      String delegateProfile, String tokenName) throws IOException;
 
   File downloadECSDelegate(String managerHost, String verificationUrl, String accountId, boolean awsVpcMode,
-      String hostname, String delegateGroupName, String delegateProfile) throws IOException;
+      String hostname, String delegateGroupName, String delegateProfile, String tokenName) throws IOException;
   Delegate add(Delegate delegate);
 
   void delete(String accountId, String delegateId);
 
   void retainOnlySelectedDelegatesAndDeleteRest(String accountId, List<String> delegatesToRetain);
+
+  void deleteDelegateGroup(String accountId, String delegateGroupId);
+
+  void deleteDelegateGroupV2(String accountId, String orgId, String projectId, String identifier);
 
   DelegateRegisterResponse register(@Valid Delegate delegate);
 
@@ -140,42 +139,18 @@ public interface DelegateService extends OwnedByAccount {
 
   void saveDelegateTask(DelegateTask task, DelegateTask.Status status);
 
-  String queueParkedTask(String accountId, String taskId);
-
-  byte[] getParkedTaskResults(String accountId, String taskId, String driverId);
-
-  DelegateTaskPackage acquireDelegateTask(String accountId, String delegateId, String taskId);
-
-  DelegateTaskPackage reportConnectionResults(
-      String accountId, String delegateId, String taskId, List<DelegateConnectionResult> results);
-
-  void failIfAllDelegatesFailed(String accountId, String delegateId, String taskId);
-
   void clearCache(String accountId, String delegateId);
 
-  void publishTaskProgressResponse(
-      String accountId, String driverId, String delegateTaskId, DelegateProgressData responseData);
-
   boolean filter(String accountId, String delegateId);
-
-  boolean filter(String delegateId, DelegateTaskAbortEvent taskAbortEvent);
-
-  DelegateTask abortTask(String accountId, String delegateTaskId);
-
-  String expireTask(String accountId, String delegateTaskId);
-
-  List<DelegateTaskEvent> getDelegateTaskEvents(String accountId, String delegateId, boolean syncOnly);
 
   Delegate updateHeartbeatForDelegateWithPollingEnabled(Delegate delegate);
 
   Delegate handleEcsDelegateRequest(Delegate delegate);
 
   File downloadDelegateValuesYamlFile(String managerHost, String verificationUrl, String accountId, String delegateName,
-      String delegateProfile) throws IOException;
+      String delegateProfile, String tokenName) throws IOException;
 
   List<Integer> getCountOfDelegatesForAccounts(List<String> collect);
-
-  Optional<DelegateTask> fetchDelegateTask(String accountId, String taskId);
 
   boolean validateThatDelegateNameIsUnique(String accountId, String delegateName);
 
@@ -185,22 +160,13 @@ public interface DelegateService extends OwnedByAccount {
 
   CEDelegateStatus validateCEDelegate(String accountId, String delegateName);
 
-  void convertToExecutionCapability(DelegateTask task);
-
   List<DelegateSizeDetails> fetchAvailableSizes();
 
   List<String> getConnectedDelegates(String accountId, List<String> delegateIds);
 
   List<DelegateInitializationDetails> obtainDelegateInitializationDetails(String accountID, List<String> delegateIds);
 
-  void executeBatchCapabilityCheckTask(String accountId, String delegateId,
-      List<CapabilitySubjectPermission> capabilitySubjectPermissions, String blockedTaskSelectionDetailsId);
-
   void regenerateCapabilityPermissions(String accountId, String delegateId);
 
-  String getHostNameForGroupedDelegate(String hostname);
-
-  String obtainCapableDelegateId(DelegateTask task, Set<String> alreadyTriedDelegates);
-
-  DelegateGroup upsertDelegateGroup(String name, String accountId);
+  DelegateGroup upsertDelegateGroup(String name, String accountId, DelegateSetupDetails delegateSetupDetails);
 }

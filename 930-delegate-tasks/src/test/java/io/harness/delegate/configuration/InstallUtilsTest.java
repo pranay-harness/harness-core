@@ -1,10 +1,13 @@
 package io.harness.delegate.configuration;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.delegate.configuration.InstallUtils.helm2Version;
 import static io.harness.delegate.configuration.InstallUtils.helm3Version;
+import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.AVMOHAN;
 import static io.harness.rule.OwnerRule.RIHAZ;
+import static io.harness.rule.OwnerRule.SHUBHAM;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.VUK;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -14,6 +17,7 @@ import static org.assertj.core.api.Assumptions.assumeThat;
 
 import io.harness.CategoryTest;
 import io.harness.MockableTestMixin;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.FunctionalTests;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -21,16 +25,17 @@ import io.harness.rule.Owner;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(DEL)
 public class InstallUtilsTest extends CategoryTest implements MockableTestMixin {
   DelegateConfiguration delegateConfiguration =
       DelegateConfiguration.builder().managerUrl("localhost").maxCachedArtifacts(10).build();
+  String terraformConfigInspectVersion = "v1.0";
 
   @Test
   @Owner(developers = VUK)
@@ -41,7 +46,7 @@ public class InstallUtilsTest extends CategoryTest implements MockableTestMixin 
     boolean useCdn = delegateConfiguration.isUseCdn();
 
     assertThat(useCdn).isFalse();
-    assertThat(InstallUtils.getTerraformConfigInspectDownloadUrl(delegateConfiguration))
+    assertThat(InstallUtils.getTerraformConfigInspectDownloadUrl(delegateConfiguration, terraformConfigInspectVersion))
         .isEqualTo(
             "https://app.harness.io/storage/harness-download/harness-terraform-config-inspect/v1.0/windows/amd64/terraform-config-inspect");
   }
@@ -59,21 +64,52 @@ public class InstallUtilsTest extends CategoryTest implements MockableTestMixin 
     try {
       setStaticFieldValue(SystemUtils.class, "IS_OS_WINDOWS", false);
       setStaticFieldValue(SystemUtils.class, "IS_OS_MAC", false);
-      assertThat(InstallUtils.getTerraformConfigInspectDownloadUrl(delegateConfiguration))
+      assertThat(
+          InstallUtils.getTerraformConfigInspectDownloadUrl(delegateConfiguration, terraformConfigInspectVersion))
           .isEqualTo(
               "https://app.harness.io/storage/harness-download/harness-terraform-config-inspect/v1.0/linux/amd64/terraform-config-inspect");
 
       setStaticFieldValue(SystemUtils.class, "IS_OS_WINDOWS", false);
       setStaticFieldValue(SystemUtils.class, "IS_OS_MAC", true);
-      assertThat(InstallUtils.getTerraformConfigInspectDownloadUrl(delegateConfiguration))
+      assertThat(
+          InstallUtils.getTerraformConfigInspectDownloadUrl(delegateConfiguration, terraformConfigInspectVersion))
           .isEqualTo(
               "https://app.harness.io/storage/harness-download/harness-terraform-config-inspect/v1.0/darwin/amd64/terraform-config-inspect");
 
       setStaticFieldValue(SystemUtils.class, "IS_OS_WINDOWS", true);
       setStaticFieldValue(SystemUtils.class, "IS_OS_MAC", false);
-      assertThat(InstallUtils.getTerraformConfigInspectDownloadUrl(delegateConfiguration))
+      assertThat(
+          InstallUtils.getTerraformConfigInspectDownloadUrl(delegateConfiguration, terraformConfigInspectVersion))
           .isEqualTo(
               "https://app.harness.io/storage/harness-download/harness-terraform-config-inspect/v1.0/windows/amd64/terraform-config-inspect");
+    } finally {
+      setStaticFieldValue(SystemUtils.class, "IS_OS_WINDOWS", win);
+      setStaticFieldValue(SystemUtils.class, "IS_OS_MAC", mac);
+    }
+  }
+
+  @Test
+  @Owner(developers = SHUBHAM)
+  @Category(UnitTests.class)
+  public void testGetScmDownloadUrlPath() throws Exception {
+    boolean useCdn = delegateConfiguration.isUseCdn();
+    assertThat(useCdn).isFalse();
+
+    boolean win = SystemUtils.IS_OS_MAC;
+    boolean mac = SystemUtils.IS_OS_WINDOWS;
+
+    try {
+      setStaticFieldValue(SystemUtils.class, "IS_OS_WINDOWS", false);
+      setStaticFieldValue(SystemUtils.class, "IS_OS_MAC", false);
+      assertThat(InstallUtils.getScmDownloadUrl(delegateConfiguration))
+          .isEqualTo(
+              "https://app.harness.io/storage/harness-download/harness-scm/release/b276dd03/bin/linux/amd64/scm");
+
+      setStaticFieldValue(SystemUtils.class, "IS_OS_WINDOWS", false);
+      setStaticFieldValue(SystemUtils.class, "IS_OS_MAC", true);
+      assertThat(InstallUtils.getScmDownloadUrl(delegateConfiguration))
+          .isEqualTo(
+              "https://app.harness.io/storage/harness-download/harness-scm/release/b276dd03/bin/darwin/amd64/scm");
     } finally {
       setStaticFieldValue(SystemUtils.class, "IS_OS_WINDOWS", win);
       setStaticFieldValue(SystemUtils.class, "IS_OS_MAC", mac);
@@ -148,7 +184,7 @@ public class InstallUtilsTest extends CategoryTest implements MockableTestMixin 
   private void deleteOcDirectory() throws Exception {
     File file = new File("./client-tools/oc/");
     if (file.exists()) {
-      org.apache.commons.io.FileUtils.deleteDirectory(file);
+      deleteDirectoryAndItsContentIfExists(file.getAbsolutePath());
     }
   }
 
@@ -187,7 +223,7 @@ public class InstallUtilsTest extends CategoryTest implements MockableTestMixin 
     assumeThat(SystemUtils.IS_OS_WINDOWS).isFalse();
     assumeThat(SystemUtils.IS_OS_MAC).isFalse();
 
-    FileUtils.deleteDirectory(new File("./client-tools/kustomize/"));
+    deleteDirectoryAndItsContentIfExists("./client-tools/kustomize/");
     assertThat(InstallUtils.installKustomize(delegateConfiguration)).isTrue();
 
     // Won't download this time

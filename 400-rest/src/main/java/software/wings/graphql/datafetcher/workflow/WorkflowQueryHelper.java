@@ -15,6 +15,7 @@ import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.datafetcher.tag.TagHelper;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
 import software.wings.graphql.schema.type.aggregation.tag.QLTagInput;
+import software.wings.graphql.schema.type.aggregation.workflow.QLOrchestrationWorkflowTypeFilter;
 import software.wings.graphql.schema.type.aggregation.workflow.QLWorkflowFilter;
 import software.wings.graphql.schema.type.aggregation.workflow.QLWorkflowTagFilter;
 import software.wings.graphql.schema.type.aggregation.workflow.QLWorkflowTagType;
@@ -58,6 +59,12 @@ public class WorkflowQueryHelper {
         utils.setIdFilter(field, workflowFilter);
       }
 
+      if (filter.getOrchestrationWorkflowType() != null) {
+        field = query.field("orchestration.orchestrationWorkflowType");
+        QLOrchestrationWorkflowTypeFilter orchestrationWorkflowType = filter.getOrchestrationWorkflowType();
+        utils.setEnumFilter(field, orchestrationWorkflowType);
+      }
+
       if (filter.getTag() != null) {
         QLWorkflowTagFilter triggerTagFilter = filter.getTag();
         List<QLTagInput> tags = triggerTagFilter.getTags();
@@ -66,6 +73,9 @@ public class WorkflowQueryHelper {
         switch (triggerTagFilter.getEntityType()) {
           case APPLICATION:
             query.field("appId").in(entityIds);
+            break;
+          case WORKFLOW:
+            query.field("_id").in(entityIds);
             break;
           default:
             log.error("EntityType {} not supported in query", triggerTagFilter.getEntityType());
@@ -79,6 +89,8 @@ public class WorkflowQueryHelper {
     switch (entityType) {
       case APPLICATION:
         return EntityType.APPLICATION;
+      case WORKFLOW:
+        return EntityType.WORKFLOW;
       default:
         log.error("Unsupported entity type {} for tag ", entityType);
         throw new InvalidRequestException("Unsupported entity type " + entityType);

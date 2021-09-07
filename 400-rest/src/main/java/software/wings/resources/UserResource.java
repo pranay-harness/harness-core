@@ -1,6 +1,6 @@
 package software.wings.resources;
 
-import static io.harness.annotations.dev.HarnessModule._970_RBAC_CORE;
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -24,6 +24,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.authenticationservice.recaptcha.ReCaptchaVerifier;
 import io.harness.beans.FeatureFlag;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -35,7 +36,9 @@ import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
 import io.harness.ng.core.common.beans.Generation;
-import io.harness.ng.core.invites.InviteOperationResponse;
+import io.harness.ng.core.dto.UserInviteDTO;
+import io.harness.ng.core.invites.dto.InviteOperationResponse;
+import io.harness.ng.core.user.TwoFactorAdminOverrideSettings;
 import io.harness.rest.RestResponse;
 import io.harness.rest.RestResponse.Builder;
 import io.harness.security.annotations.PublicApi;
@@ -52,8 +55,8 @@ import software.wings.beans.LoginTypeRequest;
 import software.wings.beans.PublicUser;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
+import software.wings.beans.UserInvite.UserInviteBuilder;
 import software.wings.beans.ZendeskSsoLoginResponse;
-import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.beans.loginSettings.PasswordSource;
 import software.wings.beans.marketplace.MarketPlaceType;
 import software.wings.beans.security.UserGroup;
@@ -67,12 +70,10 @@ import software.wings.security.annotations.Scope;
 import software.wings.security.authentication.AuthenticationManager;
 import software.wings.security.authentication.LoginTypeResponse;
 import software.wings.security.authentication.SsoRedirectRequest;
-import software.wings.security.authentication.TwoFactorAdminOverrideSettings;
 import software.wings.security.authentication.TwoFactorAuthenticationManager;
 import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings;
 import software.wings.service.impl.MarketplaceTypeLogContext;
-import software.wings.service.impl.ReCaptchaVerifier;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.HarnessUserGroupService;
@@ -87,6 +88,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
@@ -141,7 +143,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @AuthRule(permissionType = LOGGED_IN)
 @Slf4j
 @OwnedBy(HarnessTeam.PL)
-@TargetModule(_970_RBAC_CORE)
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
 public class UserResource {
   private UserService userService;
   private AuthService authService;
@@ -155,7 +157,6 @@ public class UserResource {
   private MainConfiguration mainConfiguration;
   private AccountPasswordExpirationJob accountPasswordExpirationJob;
   private ReCaptchaVerifier reCaptchaVerifier;
-  private LoginSettingsService loginSettingsService;
 
   private static final String BASIC = "Basic";
   private static final List<BugsnagTab> tab =
@@ -168,7 +169,7 @@ public class UserResource {
       TwoFactorAuthenticationManager twoFactorAuthenticationManager, Map<String, Cache<?, ?>> caches,
       HarnessUserGroupService harnessUserGroupService, UserGroupService userGroupService,
       MainConfiguration mainConfiguration, AccountPasswordExpirationJob accountPasswordExpirationJob,
-      ReCaptchaVerifier reCaptchaVerifier, LoginSettingsService loginSettingsService) {
+      ReCaptchaVerifier reCaptchaVerifier) {
     this.userService = userService;
     this.authService = authService;
     this.accountService = accountService;
@@ -181,7 +182,6 @@ public class UserResource {
     this.mainConfiguration = mainConfiguration;
     this.accountPasswordExpirationJob = accountPasswordExpirationJob;
     this.reCaptchaVerifier = reCaptchaVerifier;
-    this.loginSettingsService = loginSettingsService;
   }
 
   /**
@@ -202,7 +202,7 @@ public class UserResource {
     Integer offset = Integer.valueOf(pageRequest.getOffset());
     Integer pageSize = pageRequest.getPageSize();
 
-    List<User> userList = userService.listUsers(pageRequest, accountId, searchTerm, offset, pageSize, true);
+    List<User> userList = userService.listUsers(pageRequest, accountId, searchTerm, offset, pageSize, true, true);
 
     PageResponse<PublicUser> pageResponse = aPageResponse()
                                                 .withOffset(offset.toString())
@@ -585,6 +585,23 @@ public class UserResource {
         authenticationManager.switchAccount(authenticationManager.extractToken(authorization, "Bearer"), accountId));
   }
 
+  @Data
+  public static class SwitchAccountRequest {
+    @NotBlank private String accountId;
+  }
+
+  @POST
+  @Path("switch-account")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> newSwitchAccount(@HeaderParam(HttpHeaders.AUTHORIZATION) String authorization,
+      @Valid @NotNull SwitchAccountRequest switchAccountRequest) {
+    return new RestResponse<>(
+        authenticationManager.switchAccount(
+            authenticationManager.extractToken(authorization, "Bearer"), switchAccountRequest.getAccountId())
+        != null);
+  }
+
   /**
    * Explicitly set default account for a logged in user. This means the user will be landed in the default account
    * after logged in next time.
@@ -619,7 +636,7 @@ public class UserResource {
       @QueryParam("captcha") @Nullable String captchaToken) {
     String basicAuthToken = authenticationManager.extractToken(loginBody.getAuthorization(), BASIC);
 
-    validateCaptchaToken(captchaToken, basicAuthToken);
+    validateCaptchaToken(captchaToken);
 
     // accountId field is optional, it could be null.
     return new RestResponse<>(authenticationManager.defaultLoginAccount(basicAuthToken, accountId));
@@ -638,9 +655,10 @@ public class UserResource {
   @PublicApi
   @Timed
   @ExceptionMetered
-  public RestResponse<User> forceLoginUsingHarnessPassword(LoginRequest loginBody) {
+  public RestResponse<User> forceLoginUsingHarnessPassword(
+      @QueryParam("accountId") String accountId, LoginRequest loginBody) {
     return new RestResponse<>(authenticationManager.loginUsingHarnessPassword(
-        authenticationManager.extractToken(loginBody.getAuthorization(), BASIC)));
+        authenticationManager.extractToken(loginBody.getAuthorization(), BASIC), accountId));
   }
 
   @POST
@@ -836,10 +854,11 @@ public class UserResource {
   @Timed
   @ExceptionMetered
   public javax.ws.rs.core.Response samlLogin(@FormParam(value = "SAMLResponse") String samlResponse,
-      @Context HttpServletRequest request, @Context HttpServletResponse response) {
+      @FormParam(value = "RelayState") String relayState, @Context HttpServletRequest request,
+      @Context HttpServletResponse response, @QueryParam("accountId") @NotEmpty String accountId) {
     try {
       return authenticationManager.samlLogin(
-          request.getHeader(com.google.common.net.HttpHeaders.REFERER), samlResponse);
+          request.getHeader(com.google.common.net.HttpHeaders.REFERER), samlResponse, accountId, relayState);
     } catch (URISyntaxException e) {
       throw new WingsException(ErrorCode.UNKNOWN_ERROR, e);
     }
@@ -1136,9 +1155,86 @@ public class UserResource {
   public RestResponse<User> completeInviteAndSignIn(@QueryParam("accountId") @NotEmpty String accountId,
       @PathParam("inviteId") @NotEmpty String inviteId, @QueryParam("generation") Generation gen,
       @NotNull UserInvite userInvite) {
+    if (gen != null && gen.equals(Generation.NG)) {
+      UserInviteDTO inviteDTO = UserInviteDTO.builder()
+                                    .accountId(accountId)
+                                    .email(userInvite.getEmail())
+                                    .password(String.valueOf(userInvite.getPassword()))
+                                    .name(userInvite.getName())
+                                    .token(inviteId)
+                                    .build();
+      return new RestResponse<>(userService.completeNGInviteAndSignIn(inviteDTO));
+    } else {
+      userInvite.setAccountId(accountId);
+      userInvite.setUuid(inviteId);
+      return new RestResponse<>(userService.completeInviteAndSignIn(userInvite));
+    }
+  }
+
+  @PublicApi
+  @PUT
+  @Path("invites/ngsignin")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<User> completeInviteAndSignIn(@QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("generation") Generation gen, @NotNull UserInviteDTO userInviteDTO) {
+    if (gen != null && gen.equals(Generation.CG)) {
+      Account account = accountService.get(accountId);
+      String inviteId = userService.getInviteIdFromToken(userInviteDTO.getToken());
+      UserInvite userInvite = UserInviteBuilder.anUserInvite()
+                                  .withAccountId(accountId)
+                                  .withEmail(userInviteDTO.getEmail())
+                                  .withName(userInviteDTO.getName())
+                                  .withAccountName(account.getAccountName())
+                                  .withCompanyName(account.getCompanyName())
+                                  .withUuid(inviteId)
+                                  .build();
+      userInvite.setAccountId(accountId);
+      userInvite.setUuid(inviteId);
+      userInvite.setPassword(userInviteDTO.getPassword().toCharArray());
+      return new RestResponse<>(userService.completeInviteAndSignIn(userInvite));
+    } else {
+      return new RestResponse<>(userService.completeNGInviteAndSignIn(userInviteDTO));
+    }
+  }
+
+  /**
+   * The backend URL for invite which will be added in
+   *
+   * @param accountId the account ID
+   * @param jwtToken JWT token corresponding to the invite
+   * @param email Email id for the user
+   * @return the rest response
+   */
+  @PublicApi
+  @GET
+  @Path("invites/verify")
+  @Timed
+  @ExceptionMetered
+  public Response acceptInviteAndRedirect(@QueryParam("accountId") @NotEmpty String accountId,
+      @QueryParam("token") @NotNull String jwtToken, @QueryParam("email") @NotNull String email) {
+    UserInvite userInvite = new UserInvite();
+    String decodedEmail = email;
+    try {
+      decodedEmail = URLDecoder.decode(email, "UTF-8");
+    } catch (UnsupportedEncodingException e) {
+      log.error("Unsupported encoding exception for " + accountId, e);
+      throw new InvalidRequestException("Malformed email received");
+    }
+
+    String inviteId = userService.getInviteIdFromToken(jwtToken);
     userInvite.setAccountId(accountId);
+    userInvite.setEmail(decodedEmail);
     userInvite.setUuid(inviteId);
-    return new RestResponse<>(userService.completeInviteAndSignIn(userInvite, gen));
+    InviteOperationResponse inviteResponse = userService.checkInviteStatus(userInvite, Generation.CG);
+    URI redirectURL = null;
+    try {
+      redirectURL = userService.getInviteAcceptRedirectURL(inviteResponse, userInvite, jwtToken);
+      return Response.seeOther(redirectURL).build();
+    } catch (URISyntaxException e) {
+      log.error("Unable to create redirect url for invite", e);
+      throw new InvalidRequestException("URI syntax error");
+    }
   }
 
   @PublicApi
@@ -1344,18 +1440,11 @@ public class UserResource {
     @NotBlank private String email;
   }
 
-  private void validateCaptchaToken(String captchaToken, String basicAuthToken) {
+  private void validateCaptchaToken(String captchaToken) {
     if (StringUtils.isEmpty(captchaToken)) {
       return;
     }
 
     reCaptchaVerifier.verify(captchaToken);
-
-    // If the captcha was correct, reset the counter so that a fresh set of counter is started
-    // for displaying captcha. UI will handle removing the captcha in case of a successful captcha validation
-    String[] credentials = authenticationManager.decryptBasicToken(basicAuthToken);
-    String userEmail = credentials[0];
-    User user = userService.getUserByEmail(userEmail);
-    loginSettingsService.updateUserLockoutInfo(user, accountService.get(user.getDefaultAccountId()), 0);
   }
 }

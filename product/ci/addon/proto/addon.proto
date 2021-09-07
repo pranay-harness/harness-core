@@ -6,6 +6,7 @@ option java_multiple_files = true;
 option go_package = "ciaddonpb";
 
 import "product/ci/engine/proto/execution.proto";
+import "product/ci/engine/proto/artifact.proto";
 
 message ExecuteStepRequest {
   io.harness.product.ci.engine.proto.UnitStep step = 1;
@@ -18,6 +19,7 @@ message ExecuteStepRequest {
 message ExecuteStepResponse {
   map<string, string> output = 1;  // Step output
   int32 num_retries = 2;
+  io.harness.product.ci.engine.proto.Artifact artifact = 3;  // Artifact metadata
 }
 
 message SignalStopRequest {}

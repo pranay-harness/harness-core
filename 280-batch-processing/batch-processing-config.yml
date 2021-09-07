@@ -51,6 +51,8 @@ billingDataPipelineConfig:
   gcpProjectId: gcpProjectIdPlaceHolder
   gcsBasePath: gcsBasePathPlaceHolder
   gcpPipelinePubSubTopic: "ce-gcpdata"
+  gcpSyncPubSubTopic: "ce-gcp-billing-cf"
+  isGcpSyncEnabled: false
   gcpUseNewPipeline: false
   awsUseNewPipeline: false
   clusterDataGcsBucketName: "clusterdata-qa"
@@ -72,9 +74,28 @@ segmentConfig:
 
 baseUrl: https://localhost:8000
 
-cfConfig:
+cfClientConfig:
   apiKey: ""
-  baseUrl: ""
+  configUrl: "https://config.feature-flags.uat.harness.io/api/1.0"
+  eventUrl: "https://event.feature-flags.uat.harness.io/api/1.0"
+  analyticsEnabled: true
+  connectionTimeout: 10000
+  readTimeout: 30000
+
+cfMigrationConfig:
+  enabled: false
+  adminUrl : "http://localhost:3000/api/1.0"
+  apiKey: ""
+  account: "default"
+  org: "default_org"
+  project: "project1"
+  environment: "environment1"
+  connectionTimeout: 10000
+  readTimeout: 30000
+
+featureFlagConfig:
+  featureFlagSystem: LOCAL
+  syncFeaturesToCF: false
 
 reportScheduleConfig:
   enabled: true
@@ -92,3 +113,17 @@ cePythonService:
 banzaiConfig:
   host: "http://35.232.8.217"
   port: 80
+
+ngManagerServiceHttpClientConfig:
+  baseUrl: http://localhost:7457/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
+# banzaicloud/telescopes repo
+banzaiRecommenderConfig:
+  baseUrl: http://104.155.154.180:9090/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
+ngManagerServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+awsCurBilling: true

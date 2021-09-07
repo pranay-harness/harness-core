@@ -3,6 +3,7 @@ package io.harness.batch.processing.config.k8s.recommendation;
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 
+import io.harness.ccm.commons.beans.recommendation.ResourceId;
 import io.harness.timescaledb.TimeScaleDBService;
 
 import software.wings.graphql.datafetcher.ce.recommendation.entity.Cost;

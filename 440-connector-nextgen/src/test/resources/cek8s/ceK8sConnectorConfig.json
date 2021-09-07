@@ -11,6 +11,10 @@
       "env": "dev"
     },
     "spec": {
+      "featuresEnabled": [
+        "OPTIMIZATION",
+        "VISIBILITY"
+      ],
       "connectorRef": "account.k8s_cd"
     }
   }

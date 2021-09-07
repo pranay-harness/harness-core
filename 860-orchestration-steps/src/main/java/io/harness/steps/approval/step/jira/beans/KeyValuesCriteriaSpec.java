@@ -3,8 +3,9 @@ package io.harness.steps.approval.step.jira.beans;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.common.SwaggerConstants;
+import io.harness.beans.SwaggerConstants;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.YamlSchemaTypes;
 
@@ -23,8 +24,9 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-@JsonTypeName("KeyValuesCriteriaSpec")
+@JsonTypeName(CriteriaSpecTypeConstants.KEY_VALUES)
 @TypeAlias("keyValuesCriteriaSpec")
+@RecasterAlias("io.harness.steps.approval.step.jira.beans.KeyValuesCriteriaSpec")
 public class KeyValuesCriteriaSpec implements CriteriaSpec {
   @YamlSchemaTypes({string})
   @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH)
@@ -38,7 +40,7 @@ public class KeyValuesCriteriaSpec implements CriteriaSpec {
   }
 
   @Override
-  public CriteriaSpecDTO toCriteriaSpecDTO() {
-    return KeyValuesCriteriaSpecDTO.fromKeyValueCriteria(this);
+  public CriteriaSpecDTO toCriteriaSpecDTO(boolean skipEmpty) {
+    return KeyValuesCriteriaSpecDTO.fromKeyValueCriteria(this, skipEmpty);
   }
 }

@@ -27,10 +27,13 @@ nextGen:
   managerServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
   userVerificationSecret: dyBvaWVmbGRrYyB6aHpjeHZvaWxzamt6ZGN6c2RhZmh5dBrebhmnjryRe54rX43W3565ytgbsDvnjws5
   ngManagerServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+  pipelineServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
   jwtAuthSecret: dOkdsVqdRPPRJG31XU0qY4MPqmBBMk0PTAGIKM6O7TGqhjyxScIdJe80mwh5Yb5zF3KxYBHw6B3Lfzlq
   jwtIdentityServiceSecret: HVSKUYqD4e5Rxu12hFDdCJKGM64sxgEynvdDhaOHaTHhwwn0K4Ttr0uoOxSsEVYNrUU=
 
 enableAudit: false
+
+exportMetricsToStackDriver: false
 
 allowedOrigins:
   - https://localhost:8181
@@ -65,6 +68,10 @@ mongo:
   indexManagerMode: AUTO
   transactionsEnabled: false
   aliasDBName: ng-harness
+  traceMode: DISABLED
+
+accountConfig:
+  deploymentClusterName: ""
 
 #[secondary-db] : Uncomment the following if you want to connect to another database
 #secondary - mongo:
@@ -90,6 +97,11 @@ managerClientConfig:
 
 ngManagerClientConfig:
   baseUrl: http://localhost:7457/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
+pipelineServiceClientConfig:
+  baseUrl: http://localhost:12001/api/
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
 
@@ -120,7 +132,11 @@ gitSyncServerConfig:
       certFilePath: cert.pem
     - port: 13002
 
-shouldDeployWithGitSync: false
+shouldDeployWithGitSync: true
+
+fileServiceConfiguration:
+  fileStorageMode: MONGO
+  clusterName: ""
 
 eventsFramework:
   redis:
@@ -137,6 +153,12 @@ eventsFramework:
     useScriptCache: true
     userName: ""
     password: ""
+    sslConfig:
+      enabled: false
+      CATrustStorePath: "/tmp/ca_trust_store"
+      CATrustStorePassword: ""
+
+distributedLockImplementation: MONGO
 
 redisLockConfig:
   sentinel: false
@@ -150,6 +172,7 @@ redisLockConfig:
   readMode: MASTER
   nettyThreads: 16
   useScriptCache: true
+  userName: ""
   password: ""
 
 pmsSdkGrpcServerConfig:
@@ -172,24 +195,17 @@ ceAwsSetupConfig:
   destinationBucket: ce_aws_destinationBucket_placeholder
   templateURL: https://continuous-efficiency-templates.s3.amazonaws.com/templateOptimOnly.yaml
 
+ceAzureSetupConfig:
+  azureAppClientId: azureAppClientIdPlaceholder
+  azureAppClientSecret: azureAppClientSecretplaceholder
+
 ciDefaultEntityConfiguration:
   harnessImageUseName: harnessdev
   harnessImagePassword: harnessPass
 
-resourceGroupConfig:
-  ng-manager:
-    baseUrl: http://localhost:7457/
-    secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
-  pipeline-service:
-    baseUrl: http://localhost:12001/api/
-    secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
-  manager:
-    baseUrl: http://localhost:3457/api/
-    secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
-
 resourceGroupClientConfig:
   serviceConfig:
-    baseUrl: http://localhost:7457/
+    baseUrl: http://localhost:9005/api/
     connectTimeOutSeconds: 15
     readTimeOutSeconds: 15
     enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
@@ -218,11 +234,17 @@ outboxPollConfig:
   initialDelayInSeconds: 5
   pollingIntervalInSeconds: 5
   maximumRetryAttemptsForAnEvent: 7
+  lockId: NextGenManager
+
+segmentConfiguration:
+  enabled: false
+  url: "segment_url_place_holder"
+  apiKey: "segment_api_key"
 
 accessControlClient:
   enableAccessControl: false
   accessControlServiceConfig:
-    baseUrl: http://localhost:9006/api
+    baseUrl: http://localhost:9006/api/
     connectTimeOutSeconds: 15
     readTimeOutSeconds: 15
     enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
@@ -240,8 +262,80 @@ accessControlAdminClient:
 
 gitGrpcClientConfigs:
   pms:
-    target: localhost:12011
+    target: localhost:14001
+    authority: localhost
+  core:
+    target: localhost:13001
+    authority: localhost
+  templateservice:
+    target: localhost:16001
     authority: localhost
 
-scmConnectionConfig:
-  url: localhost:8091
+gitSdkConfiguration:
+  gitSdkGrpcServerConfig:
+    # For ng it will be in process server so this isn't required.
+    connectors:
+      - port: 13001
+        secure: true
+        keyFilePath: key.pem
+        certFilePath: cert.pem
+      - port: 13002
+  gitManagerGrpcClientConfig:
+    target: localhost:13001
+    authority: localhost
+  scmConnectionConfig:
+    url: localhost:8091
+
+baseUrls:
+  currentGenUiUrl: http://localhost:8181/#/
+  nextGenUiUrl: http://localhost:8181/ng/#/
+  nextGenAuthUiUrl: http://localhost:8181/auth/#/
+  webhookBaseUrl: http://localhost:7457/
+
+ngAuthUIEnabled: false
+
+cfClientConfig:
+  apiKey: ""
+  configUrl: "https://config.feature-flags.uat.harness.io/api/1.0"
+  eventUrl: "https://event.feature-flags.uat.harness.io/api/1.0"
+  analyticsEnabled: true
+  connectionTimeout: 10000
+  readTimeout: 30000
+
+featureFlagConfig:
+  featureFlagSystem: LOCAL
+  syncFeaturesToCF: false
+
+enableDashboardTimescale: false
+
+timescaledb:
+  timescaledbUrl: "jdbc:postgresql://34.83.25.129:5432/harnessdev"
+  timescaledbUsername: "harnessappdev"
+  timescaledbPassword: "harnessappdev"
+  connectTimeout: 10
+  socketTimeout: 30
+  logUnclosedConnections: false
+  loggerLevel: OFF
+
+signupNotificationConfiguration:
+  projectId: "projectId_place_holder"
+  bucketName: "bucketName_place_holder"
+  templates:
+    verify:
+      gcsFileName: "email_verify.txt"
+      templateId: "email_verify"
+    confirm:
+      gcsFileName: "signup_confirmation.txt"
+      templateId: "signup_confirmation"
+  expireDurationInMinutes: 60
+
+cacheConfig:
+  cacheBackend: REDIS
+  cacheNamespace: ""
+  disabledCaches: [ ]
+
+scopeAccessCheckEnabled: true
+
+hostname: ${HOSTNAME:-localhost}
+
+basePathPrefix: ${BASE_PATH_PREFIX:-}

@@ -1,0 +1,22 @@
+Var header = {}
+Var headerVal = concat("Bearer ", Env:accessToken)
+Var:header.put("Authorization", Var:headerVal)
+
+Var body = {}
+Var projects = []
+Var:projects.append(Env:project)
+Var:body.put("projectIds", Var:projects)
+Var:body.put("filter", Env:query)
+Var:body.put("pageSize", "10")
+Var:body.put("orderBy", "timestamp desc")
+
+Var url = concat(Env:baseUrl, "entries:list")
+
+Var logsResponse = sync-call(url=Var:url, header=Var:header, body=Var:body)
+Var logs = extract(Var:logsResponse, $.entries)
+Var responseList = []
+Var nullObject = null
+if Var:logs == Var:nullObject {
+    logs = []
+}
+return Var:logs

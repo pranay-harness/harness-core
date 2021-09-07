@@ -16,10 +16,10 @@ import io.harness.utils.IdentifierRefHelper;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.lang.reflect.Field;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,9 +39,8 @@ public class SecretRefInputValidationHelper {
     validateTheSecretIsPresent(secretRefData, secretIdentifiers);
   }
 
-  public Set<SecretRefData> getDecryptableFieldsData(List<DecryptableEntity> decryptableEntities) {
-    Set<SecretRefData> secrets = new HashSet<>();
-
+  public Map<String, SecretRefData> getDecryptableFieldsData(List<DecryptableEntity> decryptableEntities) {
+    Map<String, SecretRefData> secrets = new HashMap<>();
     for (DecryptableEntity decryptableEntity : decryptableEntities) {
       List<Field> secretFields = decryptableEntity.getSecretReferenceFields();
       for (Field secretField : secretFields) {
@@ -53,7 +52,7 @@ public class SecretRefInputValidationHelper {
           log.info("Error reading the secret data", ex);
           throw new UnexpectedException("Error processing the data");
         }
-        secrets.add(secretRefData);
+        secrets.put(secretField.getName(), secretRefData);
       }
     }
     return secrets;

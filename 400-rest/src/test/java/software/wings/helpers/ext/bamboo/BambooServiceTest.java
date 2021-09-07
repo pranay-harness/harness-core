@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.bamboo;
 
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 
@@ -22,12 +23,15 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.exception.ArtifactServerException;
 import io.harness.exception.InvalidArtifactServerException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -47,8 +51,10 @@ import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.FakeTimeLimiter;
 import com.google.inject.Inject;
 import java.io.FileNotFoundException;
+import java.util.Collections;
 import java.util.List;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -58,10 +64,14 @@ import org.mockito.Mock;
 /**
  * Created by anubhaw on 12/8/16.
  */
+@OwnedBy(HarnessTeam.CDC)
 public class BambooServiceTest extends WingsBaseTest {
   @Rule
-  public WireMockRule wireMockRule = new WireMockRule(
-      WireMockConfiguration.wireMockConfig().usingFilesUnderDirectory("400-rest/src/test/resources").port(0));
+  public WireMockRule wireMockRule = new WireMockRule(WireMockConfiguration.wireMockConfig()
+                                                          .usingFilesUnderClasspath("400-rest/src/test/resources")
+                                                          .disableRequestJournal()
+                                                          .port(0));
+
   @Inject @InjectMocks DelegateFileManager delegateFileManager;
   @Mock private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
 
@@ -251,6 +261,7 @@ public class BambooServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = DEEPAK_PUTHRAYA)
   @Category(UnitTests.class)
+  @Ignore("TODO: fix with the new version of com.github.tomakehurst.wiremock")
   public void shouldGetTriggerPlan() {
     wireMockRule.stubFor(
         post(urlEqualTo("/rest/api/latest/queue/planKey?authtype=basic&stage&executeAllStages"))
@@ -337,5 +348,18 @@ public class BambooServiceTest extends WingsBaseTest {
                              .willReturn(aResponse().withStatus(400).withBody("{\"message\" : \"Bad Request\"}")));
     actual = bambooService.getBuildResultStatus(bambooConfig, null, "failingBuild");
     assertThat(actual).isNull();
+  }
+
+  @Test
+  @Owner(developers = AGORODETKI)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionIfPasswordIsNotDecrypted() {
+    BambooConfig bambooConfigPasswordEncrypted =
+        BambooConfig.builder().password(null).encryptedPassword("encrypted").build();
+    assertThatThrownBy(()
+                           -> ((BambooServiceImpl) bambooService)
+                                  .getBasicAuthCredentials(bambooConfigPasswordEncrypted, Collections.emptyList()))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Failed to decrypt password for Bamboo connector");
   }
 }

@@ -28,6 +28,7 @@ import io.harness.beans.FeatureName;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
+import io.harness.delegate.beans.pcf.ResizeStrategy;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -50,7 +51,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.ResizeStrategy;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.StoreType;
@@ -174,10 +174,8 @@ public class EcsServiceSetup extends State {
 
     this.isMultipleLoadBalancersFeatureFlagActive =
         featureFlagService.isEnabled(FeatureName.ECS_MULTI_LBS, context.getAccountId());
-    if (featureFlagService.isEnabled(FeatureName.ECS_REMOTE_MANIFEST, context.getAccountId())) {
-      appManifestMap = applicationManifestUtils.getApplicationManifests(context, AppManifestKind.K8S_MANIFEST);
-      valuesInGit = isRemoteManifest(appManifestMap);
-    }
+    appManifestMap = applicationManifestUtils.getApplicationManifests(context, AppManifestKind.K8S_MANIFEST);
+    valuesInGit = isRemoteManifest(appManifestMap);
 
     Activity activity = ecsStateHelper.createActivity(
         context, ECS_SERVICE_SETUP_COMMAND, getStateType(), CommandUnitType.AWS_ECS_SERVICE_SETUP, activityService);
@@ -216,6 +214,8 @@ public class EcsServiceSetup extends State {
         .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, env.getEnvironmentType().name())
         .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, infraMapping.getUuid())
         .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, infraMapping.getServiceId())
+        .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+        .description("Fetch remote git files")
         .waitId(waitId)
         .data(TaskData.builder()
                   .async(true)
@@ -330,7 +330,7 @@ public class EcsServiceSetup extends State {
                                          .build();
 
     DelegateTask task = ecsStateHelper.createAndQueueDelegateTaskForEcsServiceSetUp(
-        request, ecsSetUpDataBag, activityId, delegateService);
+        request, ecsSetUpDataBag, activityId, delegateService, isSelectionLogsTrackingForTasksEnabled());
     appendDelegateTaskDetails(context, task);
 
     return ExecutionResponse.builder()
@@ -544,5 +544,10 @@ public class EcsServiceSetup extends State {
     this.targetPort = stateExecutionData.getTargetPort();
     this.useLoadBalancer = stateExecutionData.isUseLoadBalancer();
     this.resizeStrategy = stateExecutionData.getResizeStrategy();
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

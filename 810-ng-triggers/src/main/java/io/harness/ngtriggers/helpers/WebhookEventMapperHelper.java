@@ -2,6 +2,7 @@ package io.harness.ngtriggers.helpers;
 
 import static io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo.CUSTOM;
 
+import io.harness.ngtriggers.beans.dto.TriggerMappingRequestData;
 import io.harness.ngtriggers.beans.dto.eventmapping.WebhookEventMappingResponse;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.eventmapper.impl.CustomWebhookEventToTriggerMapper;
@@ -19,11 +20,12 @@ public class WebhookEventMapperHelper {
   private final GitWebhookEventToTriggerMapper gitWebhookEventToTriggerMapper;
   private final CustomWebhookEventToTriggerMapper customWebhookEventToTriggerMapper;
 
-  public WebhookEventMappingResponse mapWebhookEventToTriggers(TriggerWebhookEvent triggerWebhookEvent) {
+  public WebhookEventMappingResponse mapWebhookEventToTriggers(TriggerMappingRequestData mappingRequestData) {
+    TriggerWebhookEvent triggerWebhookEvent = mappingRequestData.getTriggerWebhookEvent();
     if (CUSTOM.name().equals(triggerWebhookEvent.getSourceRepoType())) {
-      return customWebhookEventToTriggerMapper.mapWebhookEventToTriggers(triggerWebhookEvent);
+      return customWebhookEventToTriggerMapper.mapWebhookEventToTriggers(mappingRequestData);
     }
 
-    return gitWebhookEventToTriggerMapper.mapWebhookEventToTriggers(triggerWebhookEvent);
+    return gitWebhookEventToTriggerMapper.mapWebhookEventToTriggers(mappingRequestData);
   }
 }

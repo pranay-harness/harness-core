@@ -20,6 +20,7 @@ public abstract class ContainerParams implements NestedAnnotationResolver {
   @Expression(ALLOW_SECRETS) private String workingDir;
   private List<Integer> ports;
   @Expression(ALLOW_SECRETS) private Map<String, String> envVars;
+  @Expression(ALLOW_SECRETS) private Map<String, String> envVarsWithSecretRef;
   private Map<String, SecretVarParams> secretEnvVars;
   private Map<String, SecretVolumeParams> secretVolumes;
   @Expression(ALLOW_SECRETS) private String imageSecret;
@@ -28,6 +29,7 @@ public abstract class ContainerParams implements NestedAnnotationResolver {
   private ContainerSecrets containerSecrets;
   private Integer runAsUser;
   private boolean privileged;
+  private String imagePullPolicy;
 
   public abstract ContainerParams.Type getType();
 

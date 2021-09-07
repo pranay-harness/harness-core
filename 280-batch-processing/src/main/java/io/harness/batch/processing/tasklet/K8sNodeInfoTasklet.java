@@ -1,30 +1,32 @@
 package io.harness.batch.processing.tasklet;
 
-import static io.harness.ccm.cluster.entities.K8sWorkload.encodeDotsInKey;
+import static io.harness.ccm.commons.entities.k8s.K8sWorkload.encodeDotsInKey;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.ccm.ClusterType;
-import io.harness.batch.processing.ccm.InstanceCategory;
 import io.harness.batch.processing.ccm.InstanceInfo;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
-import io.harness.batch.processing.pricing.data.CloudProvider;
 import io.harness.batch.processing.service.intfc.CloudProviderService;
 import io.harness.batch.processing.service.intfc.InstanceDataBulkWriteService;
-import io.harness.batch.processing.service.intfc.InstanceDataService;
+import io.harness.batch.processing.service.intfc.InstanceInfoTimescaleDAO;
 import io.harness.batch.processing.service.intfc.InstanceResourceService;
 import io.harness.batch.processing.tasklet.reader.PublishedMessageReader;
 import io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils;
 import io.harness.batch.processing.tasklet.util.K8sResourceUtils;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
-import io.harness.batch.processing.writer.constants.InstanceMetaDataConstants;
 import io.harness.batch.processing.writer.constants.K8sCCMConstants;
+import io.harness.beans.FeatureName;
 import io.harness.ccm.commons.beans.InstanceState;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.Resource;
-import io.harness.event.grpc.PublishedMessage;
+import io.harness.ccm.commons.beans.billing.InstanceCategory;
+import io.harness.ccm.commons.constants.CloudProvider;
+import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
+import io.harness.ccm.commons.entities.events.PublishedMessage;
+import io.harness.ff.FeatureFlagService;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.NodeInfo;
 
@@ -35,7 +37,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
@@ -45,41 +46,42 @@ import org.springframework.beans.factory.annotation.Autowired;
 @OwnedBy(HarnessTeam.CE)
 @Slf4j
 public class K8sNodeInfoTasklet implements Tasklet {
-  private JobParameters parameters;
   @Autowired private BatchMainConfig config;
-  @Autowired private InstanceDataService instanceDataService;
   @Autowired private PublishedMessageDao publishedMessageDao;
   @Autowired private CloudProviderService cloudProviderService;
   @Autowired private InstanceResourceService instanceResourceService;
   @Autowired private InstanceDataBulkWriteService instanceDataBulkWriteService;
+  @Autowired private InstanceInfoTimescaleDAO instanceInfoTimescaleDAO;
+  @Autowired private FeatureFlagService featureFlagService;
 
   private static final String AWS_SPOT_INSTANCE = "spot";
   private static final String AZURE_SPOT_INSTANCE = "spot";
-  private static final boolean UPDATE_OLD_NODE_DATA = false;
 
   @Override
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) {
-    parameters = chunkContext.getStepContext().getStepExecution().getJobParameters();
-    Long startTime = CCMJobConstants.getFieldLongValueFromJobParams(parameters, CCMJobConstants.JOB_START_DATE);
-    Long endTime = CCMJobConstants.getFieldLongValueFromJobParams(parameters, CCMJobConstants.JOB_END_DATE);
-    String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
+    final CCMJobConstants jobConstants = new CCMJobConstants(chunkContext);
     int batchSize = config.getBatchQueryConfig().getQueryBatchSize();
 
     String messageType = EventTypeConstants.K8S_NODE_INFO;
     PublishedMessageReader publishedMessageReader =
-        new PublishedMessageReader(publishedMessageDao, accountId, messageType, startTime, endTime, batchSize);
+        new PublishedMessageReader(publishedMessageDao, jobConstants.getAccountId(), messageType,
+            jobConstants.getJobStartTime(), jobConstants.getJobEndTime(), batchSize);
     List<PublishedMessage> publishedMessageList;
     do {
       publishedMessageList = publishedMessageReader.getNext();
-      List<InstanceInfo> instanceInfoList =
-          publishedMessageList.stream()
-              .map(this::processNodeInfoMessage)
-              .filter(instanceInfo -> null != instanceInfo.getAccountId())
-              .filter(
-                  instanceInfo -> instanceInfo.getMetaData().containsKey(InstanceMetaDataConstants.INSTANCE_CATEGORY))
-              .collect(Collectors.toList());
+      List<InstanceInfo> instanceInfoList = publishedMessageList.stream()
+                                                .map(this::processNodeInfoMessage)
+                                                .filter(x -> x.getAccountId() != null)
+                                                .collect(Collectors.toList());
 
-      instanceDataBulkWriteService.updateList(instanceInfoList);
+      instanceDataBulkWriteService.updateList(
+          instanceInfoList.stream()
+              .filter(x -> x.getMetaData().containsKey(InstanceMetaDataConstants.INSTANCE_CATEGORY))
+              .collect(Collectors.toList()));
+
+      if (featureFlagService.isEnabled(FeatureName.NODE_RECOMMENDATION_1, jobConstants.getAccountId())) {
+        instanceInfoTimescaleDAO.insertIntoNodeInfo(instanceInfoList);
+      }
     } while (publishedMessageList.size() == batchSize);
     return null;
   }
@@ -105,6 +107,8 @@ public class K8sNodeInfoTasklet implements Tasklet {
         cloudProviderService.getK8SCloudProvider(nodeInfo.getCloudProviderId(), nodeInfo.getProviderId());
     String cloudProviderInstanceId = getCloudProviderInstanceId(nodeInfo.getProviderId(), k8SCloudProvider);
     if (CloudProvider.UNKNOWN == k8SCloudProvider) {
+      log.warn("Node cloud provide is  not  present for nodeName {} and clusterId {}", nodeInfo.getNodeName(),
+          nodeInfo.getClusterId());
       return InstanceInfo.builder().metaData(metaData).build();
     }
     metaData.put(InstanceMetaDataConstants.CLOUD_PROVIDER, k8SCloudProvider.name());

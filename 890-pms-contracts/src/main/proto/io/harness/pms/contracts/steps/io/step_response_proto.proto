@@ -4,7 +4,7 @@ package io.harness.pms.contracts.steps.io;
 
 option java_multiple_files = true;
 
-import "970-api-services-beans/src/main/proto/io/harness/logging/unit_progress.proto";
+import "io/harness/logging/unit_progress.proto";
 import "io/harness/pms/contracts/execution/failure/failure_info.proto";
 import "io/harness/pms/contracts/execution/skip/skip_info.proto";
 import "io/harness/pms/contracts/execution/run/node_run_info.proto";

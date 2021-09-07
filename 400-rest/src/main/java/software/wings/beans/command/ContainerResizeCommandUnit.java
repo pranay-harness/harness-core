@@ -1,9 +1,9 @@
 package software.wings.beans.command;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.pcf.ResizeStrategy.RESIZE_NEW_FIRST;
 
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
-import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;

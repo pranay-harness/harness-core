@@ -1,7 +1,10 @@
 package io.harness.connector;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.filter.FilterConstants.CONNECTOR_FILTER;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.beans.connector.CcmConnectorFilter;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.filter.FilterType;
 import io.harness.filter.dto.FilterPropertiesDTO;
@@ -27,6 +30,7 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@OwnedBy(DX)
 public class ConnectorFilterPropertiesDTO extends FilterPropertiesDTO {
   List<String> connectorNames;
   List<String> connectorIdentifiers;
@@ -35,6 +39,7 @@ public class ConnectorFilterPropertiesDTO extends FilterPropertiesDTO {
   List<ConnectorCategory> categories;
   List<ConnectivityStatus> connectivityStatuses;
   Boolean inheritingCredentialsFromDelegate;
+  CcmConnectorFilter ccmConnectorFilter;
 
   @Override
   public FilterType getFilterType() {

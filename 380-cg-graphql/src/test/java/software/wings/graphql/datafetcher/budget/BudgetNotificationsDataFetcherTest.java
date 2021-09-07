@@ -18,10 +18,10 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.budget.AlertThreshold;
 import io.harness.ccm.budget.ApplicationBudgetScope;
-import io.harness.ccm.budget.Budget;
 import io.harness.ccm.budget.BudgetService;
 import io.harness.ccm.budget.BudgetType;
 import io.harness.ccm.budget.EnvironmentType;
+import io.harness.ccm.commons.entities.billing.Budget;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -104,7 +104,7 @@ public class BudgetNotificationsDataFetcherTest extends AbstractDataFetcherTestB
     when(timeScaleDBService.isValid()).thenReturn(false);
     assertThatThrownBy(()
                            -> budgetNotificationsDataFetcher.fetch(accountId, null, Collections.emptyList(),
-                               Collections.emptyList(), Collections.emptyList()))
+                               Collections.emptyList(), Collections.emptyList(), null))
         .isInstanceOf(InvalidRequestException.class);
   }
 
@@ -117,7 +117,7 @@ public class BudgetNotificationsDataFetcherTest extends AbstractDataFetcherTestB
     timeFilters.add(makeStartTimeFilter(currentTime - 86400000L));
     timeFilters.add(makeEndTimeFilter(currentTime));
     QLBudgetNotificationsData data = (QLBudgetNotificationsData) budgetNotificationsDataFetcher.fetch(
-        accountId, null, timeFilters, Collections.emptyList(), Collections.emptyList());
+        accountId, null, timeFilters, Collections.emptyList(), Collections.emptyList(), null);
     assertThat(data).isNotNull();
     assertThat(data.getData().getCount()).isEqualTo(100L);
   }

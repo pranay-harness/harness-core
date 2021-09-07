@@ -20,11 +20,14 @@ import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.DelegateTask;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.category.element.UnitTests;
@@ -41,6 +44,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.SpotInstConfig;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -64,6 +68,8 @@ public class SpotinstTrafficShiftAlbSwitchRoutesStateTest extends WingsBaseTest 
     on(state).set("activityService", mockActivityService);
     SpotInstStateHelper mockSpotinstStateHelper = mock(SpotInstStateHelper.class);
     on(state).set("spotinstStateHelper", mockSpotinstStateHelper);
+    StateExecutionService stateExecutionService = mock(StateExecutionService.class);
+    on(state).set("stateExecutionService", stateExecutionService);
     SpotinstTrafficShiftDataBag dataBag =
         SpotinstTrafficShiftDataBag.builder()
             .app(anApplication().uuid(APP_ID).build())
@@ -90,6 +96,11 @@ public class SpotinstTrafficShiftAlbSwitchRoutesStateTest extends WingsBaseTest 
     doReturn(Activity.builder().uuid(ACTIVITY_ID).build())
         .when(mockSpotinstStateHelper)
         .createActivity(any(), any(), anyString(), anyString(), any(), anyList());
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
+    doReturn(DelegateTask.builder().description("desc").build())
+        .when(mockSpotinstStateHelper)
+        .getDelegateTask(anyString(), anyString(), any(), anyString(), anyString(), anyString(), any(), any(),
+            anyString(), eq(true));
     ExecutionResponse response = state.execute(mockContext);
     assertThat(response).isNotNull();
     assertThat(response.getExecutionStatus()).isEqualTo(SUCCESS);

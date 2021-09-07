@@ -34,6 +34,7 @@ import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -77,6 +78,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
@@ -114,6 +116,7 @@ public class InstanceFetchStateTest extends WingsBaseTest {
   @Mock private EnvironmentService environmentService;
   @Mock private ServiceTemplateService mockServiceTemplateService;
   @Mock private ServiceTemplateHelper serviceTemplateHelper;
+  @Mock private StateExecutionService stateExecutionService;
 
   @InjectMocks private InstanceFetchState state = new InstanceFetchState("Fetch Instances");
 
@@ -174,6 +177,7 @@ public class InstanceFetchStateTest extends WingsBaseTest {
     doAnswer(invocation -> invocation.getArgumentAt(0, String.class))
         .when(expressionEvaluator)
         .substitute(anyString(), anyMap());
+    doNothing().when(stateExecutionService).appendDelegateTaskDetails(anyString(), any());
   }
 
   @Test
@@ -207,6 +211,7 @@ public class InstanceFetchStateTest extends WingsBaseTest {
             .setupAbstraction(Cd1SetupFields.ENV_TYPE_FIELD, PROD.name())
             .setupAbstraction(Cd1SetupFields.INFRASTRUCTURE_MAPPING_ID_FIELD, INFRA_MAPPING_ID)
             .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, SERVICE_ID)
+            .selectionLogsTrackingEnabled(true)
             .tags(Arrays.asList("tag1", "tag2"))
             .data(TaskData.builder()
                       .async(true)
@@ -219,7 +224,8 @@ public class InstanceFetchStateTest extends WingsBaseTest {
     verify(expressionEvaluator, times(1)).substitute(anyString(), anyMap());
 
     final DelegateTask task = captor.getValue();
-    assertThat(task).isEqualToIgnoringGivenFields(expected, DelegateTaskKeys.data, DelegateTaskKeys.validUntil);
+    assertThat(task).isEqualToIgnoringGivenFields(
+        expected, DelegateTaskKeys.uuid, DelegateTaskKeys.data, DelegateTaskKeys.validUntil);
     assertThat(task.getData()).isEqualToIgnoringGivenFields(expected.getData(), TaskDataKeys.expressionFunctorToken);
     assertThat(task.getData().getExpressionFunctorToken()).isNotEqualTo(0);
   }

@@ -1,0 +1,12 @@
+name: Advise event time
+identifier: advise_event
+metricGroup: advise_event_group
+metrics:
+  - metricName: advise_event_service_time
+    metricDefinition: Time for which advise event was processed by the service.
+    type: LastValue
+    unit: count
+  - metricName: advise_event_time_in_queue
+    metricDefinition: Time for advise event was in the queue.
+    type: LastValue
+    unit: count

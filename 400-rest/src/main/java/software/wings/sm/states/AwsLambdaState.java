@@ -20,7 +20,9 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
@@ -107,6 +109,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class AwsLambdaState extends State {
   @Inject protected transient SettingsService settingsService;
   @Inject protected transient ServiceResourceService serviceResourceService;
@@ -272,31 +275,33 @@ public class AwsLambdaState extends State {
 
     List<CommandUnit> commandUnitList =
         serviceResourceService.getFlattenCommandUnitList(app.getUuid(), serviceId, envId, command.getName());
-    ActivityBuilder activityBuilder = Activity.builder()
-                                          .applicationName(app.getName())
-                                          .environmentId(envId)
-                                          .environmentName(env.getName())
-                                          .environmentType(env.getEnvironmentType())
-                                          .serviceId(service.getUuid())
-                                          .serviceName(service.getName())
-                                          .commandName(command.getName())
-                                          .type(Type.Command)
-                                          .workflowExecutionId(context.getWorkflowExecutionId())
-                                          .workflowId(context.getWorkflowId())
-                                          .workflowType(context.getWorkflowType())
-                                          .workflowExecutionName(context.getWorkflowExecutionName())
-                                          .stateExecutionInstanceId(context.getStateExecutionInstanceId())
-                                          .stateExecutionInstanceName(context.getStateExecutionInstanceName())
-                                          .commandUnits(commandUnitList)
-                                          .commandType(command.getCommandUnitType().name())
-                                          .status(ExecutionStatus.RUNNING)
-                                          .triggeredBy(TriggeredBy.builder()
-                                                           .email(workflowStandardParams.getCurrentUser().getEmail())
-                                                           .name(workflowStandardParams.getCurrentUser().getName())
-                                                           .build());
+    ActivityBuilder activityBuilder =
+        Activity.builder()
+            .applicationName(app.getName())
+            .environmentId(envId)
+            .infrastructureDefinitionId(infrastructureMapping.getInfrastructureDefinitionId())
+            .environmentName(env.getName())
+            .environmentType(env.getEnvironmentType())
+            .serviceId(service.getUuid())
+            .serviceName(service.getName())
+            .commandName(command.getName())
+            .type(Type.Command)
+            .workflowExecutionId(context.getWorkflowExecutionId())
+            .workflowId(context.getWorkflowId())
+            .workflowType(context.getWorkflowType())
+            .workflowExecutionName(context.getWorkflowExecutionName())
+            .stateExecutionInstanceId(context.getStateExecutionInstanceId())
+            .stateExecutionInstanceName(context.getStateExecutionInstanceName())
+            .commandUnits(commandUnitList)
+            .commandType(command.getCommandUnitType().name())
+            .status(ExecutionStatus.RUNNING)
+            .triggeredBy(TriggeredBy.builder()
+                             .email(workflowStandardParams.getCurrentUser().getEmail())
+                             .name(workflowStandardParams.getCurrentUser().getName())
+                             .build());
 
-    Artifact artifact =
-        getArtifact(app.getUuid(), serviceId, context.getWorkflowExecutionId(), (DeploymentExecutionContext) context);
+    Artifact artifact = getArtifact(app.getUuid(), serviceId, context.getWorkflowExecutionId(), envId,
+        (DeploymentExecutionContext) context, infrastructureMapping.getInfrastructureDefinitionId());
     if (artifact == null) {
       throw new WingsException(format("Unable to find artifact for service %s", service.getName()));
     }
@@ -382,6 +387,8 @@ public class AwsLambdaState extends State {
               .setupAbstraction(Cd1SetupFields.SERVICE_ID_FIELD, infrastructureMapping.getServiceId())
               .tags(isNotEmpty(wfRequest.getAwsConfig().getTag()) ? singletonList(wfRequest.getAwsConfig().getTag())
                                                                   : null)
+              .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+              .description("Aws Lambda task execution")
               .data(TaskData.builder()
                         .async(true)
                         .taskType(AWS_LAMBDA_TASK.name())
@@ -390,6 +397,7 @@ public class AwsLambdaState extends State {
                         .build())
               .build();
       String delegateTaskId = delegateService.queueTask(delegateTask);
+      appendDelegateTaskDetails(context, delegateTask);
       return ExecutionResponse.builder()
           .async(true)
           .correlationIds(singletonList(activity.getUuid()))
@@ -482,10 +490,8 @@ public class AwsLambdaState extends State {
     wfRequestBuilder.commandName(getCommandName());
     wfRequestBuilder.artifactStreamAttributes(artifactStreamAttributes);
     wfRequestBuilder.roleArn(infrastructureMapping.getRole());
+    wfRequestBuilder.evaluatedAliases(getEvaluatedAliases(context));
 
-    if (isNotEmpty(aliases)) {
-      wfRequestBuilder.evaluatedAliases(getEvaluatedAliases(context));
-    }
     String serviceTemplateId = serviceTemplateHelper.fetchServiceTemplateId(infrastructureMapping);
     Map<String, String> serviceVariables =
         serviceTemplateService
@@ -550,11 +556,13 @@ public class AwsLambdaState extends State {
    * @param appId                  the app id
    * @param serviceId              the service id
    * @param workflowExecutionId    the workflow execution id
+   * @param envId                  the env id
    * @param deploymentExecutionContext the deploymentExecutionContext
+   * @param infrastructureDefinitionId the infrastructure definition id
    * @return the artifact
    */
-  protected Artifact getArtifact(String appId, String serviceId, String workflowExecutionId,
-      DeploymentExecutionContext deploymentExecutionContext) {
+  protected Artifact getArtifact(String appId, String serviceId, String workflowExecutionId, String envId,
+      DeploymentExecutionContext deploymentExecutionContext, String infrastructureDefinitionId) {
     return deploymentExecutionContext.getDefaultArtifactForService(serviceId);
   }
 
@@ -576,5 +584,10 @@ public class AwsLambdaState extends State {
 
   public void setAliases(List<String> aliases) {
     this.aliases = aliases;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

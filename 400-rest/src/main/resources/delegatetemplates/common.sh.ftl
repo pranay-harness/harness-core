@@ -45,6 +45,8 @@ esac
 
 JVM_URL=${delegateStorageUrl}/${jreTarPath}
 
+ALPN_BOOT_JAR_URL=${delegateStorageUrl}/${alpnJarPath}
+
 <#noparse>
 SOURCE="${BASH_SOURCE[0]}"
 </#noparse>

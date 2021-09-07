@@ -3,7 +3,9 @@ package software.wings.beans;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
@@ -25,6 +27,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @Data
 @Entity(value = "pipelineExecutions", noClassnameStored = true)
 @HarnessEntity(exportable = false)

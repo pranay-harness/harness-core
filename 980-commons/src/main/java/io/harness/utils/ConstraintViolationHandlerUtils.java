@@ -1,8 +1,11 @@
 package io.harness.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.util.stream.Collectors.toList;
+
+import io.harness.data.validator.EntityName;
 
 import com.google.common.base.Joiner;
 import com.google.common.cache.Cache;
@@ -103,6 +106,11 @@ public class ConstraintViolationHandlerUtils {
         return Optional.of("context");
       } else if (a instanceof MatrixParam) {
         return Optional.of("matrix param " + ((MatrixParam) a).value());
+      } else if (a instanceof EntityName) {
+        String displayName = ((EntityName) a).displayName();
+        if (isNotEmpty(displayName)) {
+          return Optional.of(displayName);
+        }
       }
     }
 

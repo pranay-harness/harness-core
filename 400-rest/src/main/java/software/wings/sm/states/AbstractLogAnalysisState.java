@@ -17,6 +17,8 @@ import static software.wings.service.intfc.security.SecretManagementDelegateServ
 import static java.time.Duration.ofMillis;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.exception.ExceptionUtils;
@@ -76,6 +78,7 @@ import org.mongodb.morphia.annotations.Transient;
 /**
  * Created by rsingh on 7/6/17.
  */
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
   public static final int HOST_BATCH_SIZE = 5;
   private static String DEMO_REQUEST_BODY;
@@ -141,20 +144,21 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         cleanUpForRetry(executionContext);
         AnalysisContext analysisContext = getLogAnalysisContext(executionContext, correlationId);
         getLogger().info("context: {}", analysisContext);
+        saveWorkflowVerificationResult(analysisContext);
 
         if (!checkLicense(appService.getAccountIdByAppId(executionContext.getAppId()),
                 StateType.valueOf(getStateType()), executionContext.getStateExecutionInstanceId())) {
-          return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS,
+          return generateAnalysisResponse(analysisContext, ExecutionStatus.SKIPPED, false,
               "Your license type does not support running this verification. Skipping Analysis");
         }
 
         if (!isEmpty(getTimeDuration()) && Integer.parseInt(getTimeDuration()) > MAX_WORKFLOW_TIMEOUT) {
-          return generateAnalysisResponse(
-              analysisContext, ExecutionStatus.SUCCESS, "Time duration cannot be more than 4 hours. Skipping Analysis");
+          return generateAnalysisResponse(analysisContext, ExecutionStatus.SKIPPED, false,
+              "Time duration cannot be more than 4 hours. Skipping Analysis");
         }
 
         if (unresolvedHosts(analysisContext)) {
-          return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED,
+          return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED, false,
               "The expression " + hostnameTemplate + " could not be resolved for hosts");
         }
 
@@ -172,7 +176,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
         if (analysisContext.isSkipVerification()) {
           getLogger().warn("Could not find test nodes to compare the data");
-          return generateAnalysisResponse(analysisContext, ExecutionStatus.SKIPPED,
+          return generateAnalysisResponse(analysisContext, ExecutionStatus.SKIPPED, false,
               "Could not find newly deployed instances. Skipping verification");
         }
 
@@ -180,7 +184,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         if (isEmpty(lastExecutionNodes)) {
           if (getComparisonStrategy() == COMPARE_WITH_CURRENT) {
             getLogger().info("No nodes with older version found to compare the logs. Skipping analysis");
-            return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS,
+            return generateAnalysisResponse(analysisContext, ExecutionStatus.SKIPPED, false,
                 "As no previous version instances exist for comparison, analysis will be skipped. Check your setup if this is the first deployment or if the previous instances have been deleted or replaced.");
           }
 
@@ -193,7 +197,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
                 || analysisContext.getNewNodesTrafficShiftPercent() > 50)) {
           getLogger().info(
               "New nodes cannot be analyzed against old nodes if new traffic percentage is greater than 50 or equal to 0");
-          return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED,
+          return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED, false,
               "Analysis cannot be performed with this traffic split. Please run verify steps with new traffic percentage greater than 0 and less than 50");
         }
 
@@ -329,9 +333,9 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
               executionContext.getStateExecutionInstanceId(), ExecutionStatus.SUCCESS, true, false);
           return isQAVerificationPath(context.getAccountId(), context.getAppId())
               ? generateAnalysisResponse(
-                  context, ExecutionStatus.FAILED, "No Analysis result found. This is not a failure.")
+                  context, ExecutionStatus.FAILED, true, "No Analysis result found. This is not a failure.")
               : generateAnalysisResponse(
-                  context, ExecutionStatus.SUCCESS, "No data found with given queries. Skipped Analysis");
+                  context, ExecutionStatus.SUCCESS, true, "No data found with given queries. Skipped Analysis");
         }
 
         if (analysisSummary.getAnalysisMinute() < analysisMinute) {
@@ -360,6 +364,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         executionResponse.getStateExecutionData().setStatus(executionStatus);
         continuousVerificationService.setMetaDataExecutionStatus(
             executionContext.getStateExecutionInstanceId(), executionStatus, false, false);
+        updateExecutionStatus(context.getStateExecutionId(), true, executionStatus, "Analysis completed");
         return ExecutionResponse.builder()
             .executionStatus(isQAVerificationPath(context.getAccountId(), context.getAppId()) ? ExecutionStatus.SUCCESS
                                                                                               : executionStatus)
@@ -369,6 +374,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
       executionResponse.getStateExecutionData().setErrorMsg(
           "Analysis for minute " + analysisMinute + " failed to save in DB");
+      updateExecutionStatus(context.getStateExecutionId(), false, ExecutionStatus.ERROR, "Error");
       return ExecutionResponse.builder()
           .executionStatus(ExecutionStatus.ERROR)
           .stateExecutionData(executionResponse.getStateExecutionData())
@@ -378,6 +384,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
   @Override
   public void handleAbortEvent(ExecutionContext executionContext) {
+    updateExecutionStatus(executionContext.getStateExecutionInstanceId(), false, ExecutionStatus.ABORTED, "Aborted");
     continuousVerificationService.setMetaDataExecutionStatus(
         executionContext.getStateExecutionInstanceId(), ExecutionStatus.ABORTED, true, false);
     AnalysisContext analysisContext =
@@ -394,7 +401,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         analysisContext.getStateExecutionId(), analysisContext.getAppId(), StateType.valueOf(getStateType()));
 
     if (analysisSummary == null) {
-      generateAnalysisResponse(analysisContext, ExecutionStatus.ABORTED, "Workflow was aborted while analysing");
+      generateAnalysisResponse(analysisContext, ExecutionStatus.ABORTED, false, "Workflow was aborted while analysing");
     }
 
     if (isNotEmpty(analysisContext.getPredictiveCvConfigId())) {
@@ -407,9 +414,10 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
   @Override
   protected ExecutionResponse generateAnalysisResponse(
-      AnalysisContext context, ExecutionStatus status, String message) {
+      AnalysisContext context, ExecutionStatus status, boolean analyzed, String message) {
     analysisService.createAndSaveSummary(context.getStateType(), context.getAppId(), context.getStateExecutionId(),
         context.getQuery(), message, context.getAccountId());
+    updateExecutionStatus(context.getStateExecutionId(), analyzed, status, message);
     return createExecutionResponse(context, status, message, true);
   }
 

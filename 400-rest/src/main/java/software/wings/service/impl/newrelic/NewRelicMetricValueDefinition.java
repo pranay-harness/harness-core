@@ -4,6 +4,10 @@ import static io.harness.beans.SortOrder.Builder.aSortOrder;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SortOrder;
 import io.harness.beans.SortOrder.OrderType;
 
@@ -31,6 +35,8 @@ import lombok.Data;
  */
 @Data
 @Builder
+@OwnedBy(HarnessTeam.CV)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class NewRelicMetricValueDefinition {
   public static String ERROR_DISPLAY_METRIC_NAME = "Error Percentage";
   public static String ERROR = "error";
@@ -51,6 +57,7 @@ public class NewRelicMetricValueDefinition {
   public static String RESPONSE_TIME = "responseTime";
   public static String SERVER_SIDE_FAILURE_RATE = "serverSideFailureRate";
 
+  @Deprecated
   public static Map<StateType, SortOrder> SORTING_METRIC_NAME =
       ImmutableMap.of(StateType.APP_DYNAMICS, aSortOrder().withField(RESPONSE_TIME_95, OrderType.DESC).build(),
           StateType.NEW_RELIC, aSortOrder().withField(REQUSET_PER_MINUTE, OrderType.DESC).build(), StateType.DYNA_TRACE,

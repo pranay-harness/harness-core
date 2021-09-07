@@ -1,8 +1,6 @@
 package io.harness.walktree.visitor.validation;
 
 import io.harness.reflection.ReflectionUtils;
-import io.harness.walktree.beans.LevelNode;
-import io.harness.walktree.beans.ParentQualifier;
 import io.harness.walktree.beans.VisitElementResult;
 import io.harness.walktree.registries.visitorfield.VisitorFieldRegistry;
 import io.harness.walktree.visitor.SimpleVisitor;
@@ -10,7 +8,6 @@ import io.harness.walktree.visitor.response.VisitorErrorResponse;
 import io.harness.walktree.visitor.response.VisitorErrorResponseWrapper;
 import io.harness.walktree.visitor.response.VisitorResponse;
 import io.harness.walktree.visitor.utilities.VisitorDummyElementUtils;
-import io.harness.walktree.visitor.utilities.VisitorParentPathUtils;
 import io.harness.walktree.visitor.utilities.VisitorResponseUtils;
 import io.harness.walktree.visitor.validation.modes.ModeType;
 import io.harness.walktree.visitor.validation.modes.PostInputSet;
@@ -54,22 +51,8 @@ public class ValidationVisitor extends SimpleVisitor<ConfigValidator> {
   }
 
   @Override
-  public VisitElementResult preVisitElement(Object element) {
-    // add to the list of parent.
-    if (element instanceof ParentQualifier) {
-      LevelNode levelNode = ((ParentQualifier) element).getLevelNode();
-      VisitorParentPathUtils.addToParentList(this.getContextMap(), levelNode);
-    }
-    return super.preVisitElement(element);
-  }
-
-  @Override
   public VisitElementResult postVisitElement(Object element) {
     addErrorChildrenToCurrentElement(element);
-    // Remove from parent list once traversed
-    if (element instanceof ParentQualifier) {
-      VisitorParentPathUtils.removeFromParentList(this.getContextMap());
-    }
     currentObject = VisitorDummyElementUtils.getDummyElementFromMap(getElementToDummyElementMap(), element);
     return super.postVisitElement(element);
   }

@@ -71,6 +71,15 @@ public interface PersistentLocker {
   AcquiredLock tryToAcquireLock(String name, Duration timeout);
 
   /**
+   * Try to acquire an infinite lock with periodic lease refreshing after every 30 seconds
+   *
+   * @param name    the lock name
+   * @param waitTime wait time to acquire lock
+   * @return AcquiredLock object
+   */
+  AcquiredLock tryToAcquireInfiniteLockWithPeriodicRefresh(String name, Duration waitTime);
+
+  /**
    * Try to acquire ephemeral lock.
    *
    * @param name    the lock name

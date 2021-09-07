@@ -76,6 +76,8 @@ public class CloudFormationDeleteStackState extends CloudFormationState {
             .waitId(activityId)
             .tags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
             .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, executionContext.getApp().getUuid())
+            .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
+            .description("CloudFormation delete stack task execution")
             .data(TaskData.builder()
                       .async(true)
                       .taskType(CLOUD_FORMATION_TASK.name())
@@ -86,6 +88,7 @@ public class CloudFormationDeleteStackState extends CloudFormationState {
                       .build())
             .build();
     String delegateTaskId = delegateService.queueTask(delegateTask);
+    appendDelegateTaskDetails(executionContext, delegateTask);
     return ExecutionResponse.builder()
         .async(true)
         .correlationIds(Collections.singletonList(activityId))
@@ -99,5 +102,10 @@ public class CloudFormationDeleteStackState extends CloudFormationState {
       CloudFormationCommandResponse commandResponse, ExecutionContext context) {
     clearRollbackConfig((ExecutionContextImpl) context);
     return emptyList();
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

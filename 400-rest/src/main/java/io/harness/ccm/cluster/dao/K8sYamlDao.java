@@ -5,8 +5,8 @@ import static io.harness.annotations.dev.HarnessTeam.CE;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.ccm.cluster.entities.K8sYaml;
-import io.harness.ccm.cluster.entities.K8sYaml.K8sYamlKeys;
+import io.harness.ccm.commons.entities.k8s.K8sYaml;
+import io.harness.ccm.commons.entities.k8s.K8sYaml.K8sYamlKeys;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;

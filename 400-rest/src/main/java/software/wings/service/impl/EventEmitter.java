@@ -1,6 +1,12 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.Application;
 import software.wings.beans.Event;
@@ -12,10 +18,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.atmosphere.cpr.BroadcasterFactory;
 
-/**
- * Created by peeyushaggarwal on 8/16/16.
- */
 @Singleton
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class EventEmitter {
   @Inject private BroadcasterFactory broadcasterFactory;
   @Inject private AppService appService;

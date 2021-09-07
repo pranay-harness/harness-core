@@ -1,5 +1,6 @@
 package io.harness.k8s.manifest;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.k8s.manifest.ObjectYamlUtils.YAML_DOCUMENT_DELIMITER;
 import static io.harness.k8s.manifest.ObjectYamlUtils.newLineRegex;
@@ -11,6 +12,7 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.KubernetesValuesException;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.exception.WingsException;
@@ -40,6 +42,7 @@ import org.yaml.snakeyaml.constructor.SafeConstructor;
 import org.yaml.snakeyaml.error.YAMLException;
 
 @UtilityClass
+@OwnedBy(CDP)
 public class ManifestHelper {
   public static final String values_filename = "values.yaml";
   public static final String yaml_file_extension = ".yaml";
@@ -241,11 +244,22 @@ public class ManifestHelper {
         .collect(Collectors.toList());
   }
 
+  // Maintaining backward compatibility here
   public static List<KubernetesResource> getWorkloadsForCanaryAndBG(List<KubernetesResource> resources) {
+    final List<KubernetesResource> resources1 =
+        resources.stream()
+            .filter(resource
+                -> ImmutableSet.of(Kind.Deployment.name(), Kind.DeploymentConfig.name())
+                       .contains(resource.getResourceId().getKind()))
+            .filter(resource -> !resource.isDirectApply())
+            .collect(Collectors.toList());
+
+    if (!resources1.isEmpty()) {
+      return resources1;
+    }
+
     return resources.stream()
-        .filter(resource
-            -> ImmutableSet.of(Kind.Deployment.name(), Kind.DeploymentConfig.name())
-                   .contains(resource.getResourceId().getKind()))
+        .filter(resource -> ImmutableSet.of(Kind.StatefulSet.name()).contains(resource.getResourceId().getKind()))
         .filter(resource -> !resource.isDirectApply())
         .collect(Collectors.toList());
   }
@@ -319,12 +333,12 @@ public class ManifestHelper {
     return filteredResources.get(0);
   }
 
-  public static String getValuesYamlGitFilePath(String filePath) {
+  public static String getValuesYamlGitFilePath(String filePath, String varFileKey) {
     if (isBlank(filePath)) {
-      return values_filename;
+      return varFileKey;
     }
 
-    return normalizeFolderPath(filePath) + values_filename;
+    return normalizeFolderPath(filePath) + varFileKey;
   }
 
   public static boolean validateValuesFileContents(String valuesFileContent) {

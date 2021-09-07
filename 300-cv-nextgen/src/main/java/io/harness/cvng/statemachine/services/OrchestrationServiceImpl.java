@@ -2,9 +2,11 @@ package io.harness.cvng.statemachine.services;
 
 import static io.harness.cvng.CVConstants.STATE_MACHINE_IGNORE_LIMIT;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.cvng.metrics.CVNGMetricsUtils;
 import io.harness.cvng.metrics.beans.CVNGMetricAnalysisContext;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
@@ -19,10 +21,13 @@ import io.harness.persistence.HPersistence;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
@@ -57,7 +62,11 @@ public class OrchestrationServiceImpl implements OrchestrationService {
         hPersistence.createUpdateOperations(AnalysisOrchestrator.class)
             .setOnInsert(AnalysisOrchestratorKeys.verificationTaskId, verificationTaskId)
             .setOnInsert(AnalysisOrchestratorKeys.accountId, accountId)
+            .setOnInsert(AnalysisOrchestratorKeys.uuid,
+                generateUuid()) // By default mongo generates object id instead of string and our hPersistence does not
+                                // work well with objectIds.
             .setOnInsert(AnalysisOrchestratorKeys.status, AnalysisStatus.CREATED)
+            .set(AnalysisOrchestratorKeys.validUntil, Date.from(OffsetDateTime.now().plusDays(30).toInstant()))
             .addToSet(AnalysisOrchestratorKeys.analysisStateMachineQueue, Arrays.asList(stateMachine));
 
     hPersistence.upsert(orchestratorQuery, updateOperations);
@@ -67,21 +76,6 @@ public class OrchestrationServiceImpl implements OrchestrationService {
     Preconditions.checkNotNull(inputs.getVerificationTaskId(), "verificationTaskId can not be null");
     Preconditions.checkNotNull(inputs.getStartTime(), "startTime can not be null");
     Preconditions.checkNotNull(inputs.getEndTime(), "endTime can not be null");
-  }
-
-  private AnalysisOrchestrator getOrchestrator(String verificationTaskId) {
-    return hPersistence.createQuery(AnalysisOrchestrator.class)
-        .field(AnalysisOrchestratorKeys.verificationTaskId)
-        .equal(verificationTaskId)
-        .get();
-  }
-
-  @Override
-  public void orchestrate(String verificationTaskId) {
-    Preconditions.checkNotNull(verificationTaskId, "verificationTaskId cannot be null when trying to orchestrate");
-    log.info("Orchestrating for verificationTaskId: {}", verificationTaskId);
-    AnalysisOrchestrator orchestrator = getOrchestrator(verificationTaskId);
-    orchestrateAtRunningState(orchestrator);
   }
 
   @Override
@@ -98,7 +92,8 @@ public class OrchestrationServiceImpl implements OrchestrationService {
           .forEach(orchestrator -> {
             try (CVNGMetricAnalysisContext context =
                      new CVNGMetricAnalysisContext(orchestrator.getAccountId(), orchestrator.getVerificationTaskId())) {
-              metricService.recordMetric("orchestrator_queue_size", orchestrator.getAnalysisStateMachineQueue().size());
+              metricService.recordMetric(
+                  CVNGMetricsUtils.ORCHESTRATOR_QUEUE_SIZE, orchestrator.getAnalysisStateMachineQueue().size());
             }
           });
     }
@@ -117,13 +112,26 @@ public class OrchestrationServiceImpl implements OrchestrationService {
       throw e;
     }
   }
-  private void orchestrateAtRunningState(AnalysisOrchestrator orchestrator) {
-    if (orchestrator == null) {
-      String errMsg = "No orchestrator available to execute currently.";
-      log.info(errMsg);
-      return;
-    }
 
+  @Override
+  public void markCompleted(String verificationTaskId) {
+    updateStatusOfOrchestrator(verificationTaskId, AnalysisStatus.COMPLETED);
+  }
+
+  @Override
+  public void markCompleted(Set<String> verificationTaskIds) {
+    Query<AnalysisOrchestrator> orchestratorQuery = hPersistence.createQuery(AnalysisOrchestrator.class)
+                                                        .field(AnalysisOrchestratorKeys.verificationTaskId)
+                                                        .in(verificationTaskIds);
+
+    UpdateOperations<AnalysisOrchestrator> updateOperations =
+        hPersistence.createUpdateOperations(AnalysisOrchestrator.class)
+            .set(AnalysisOrchestratorKeys.status, AnalysisStatus.COMPLETED);
+
+    hPersistence.update(orchestratorQuery, updateOperations);
+  }
+
+  private void orchestrateAtRunningState(AnalysisOrchestrator orchestrator) {
     if (isNotEmpty(orchestrator.getAnalysisStateMachineQueue())
         && orchestrator.getAnalysisStateMachineQueue().size() > 5) {
       log.info("For verification task ID {}, orchestrator has more than 5 tasks waiting."
@@ -157,7 +165,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
         break;
       case COMPLETED:
         log.info("Analysis for the entire duration is done. Time to close down");
-        orchestrator.setStatus(AnalysisStatus.COMPLETED);
+        markCompleted(orchestrator.getVerificationTaskId());
         break;
       default:
         log.info("Unknown analysis status of the state machine under execution");
@@ -195,12 +203,11 @@ public class OrchestrationServiceImpl implements OrchestrationService {
 
       if (analysisStateMachine == null) {
         log.info("There is currently nothing to analyze for verificationTaskId {}", verificationTaskId);
-        return;
+        break;
       }
 
-      Optional<AnalysisStateMachine> ignoredStateMachine = analysisStateMachine == null
-          ? Optional.empty()
-          : stateMachineService.ignoreOldStateMachine(analysisStateMachine);
+      Optional<AnalysisStateMachine> ignoredStateMachine =
+          stateMachineService.ignoreOldStateMachine(analysisStateMachine);
       if (!ignoredStateMachine.isPresent()) {
         break;
       }

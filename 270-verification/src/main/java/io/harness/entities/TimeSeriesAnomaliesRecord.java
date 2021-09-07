@@ -42,7 +42,7 @@ import org.mongodb.morphia.annotations.Transient;
 @FieldNameConstants(innerTypeName = "TimeSeriesAnomaliesRecordKeys")
 @Entity(value = "timeSeriesAnomaliesRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
-public class TimeSeriesAnomaliesRecord extends Base implements AccountAccess {
+public final class TimeSeriesAnomaliesRecord extends Base implements AccountAccess {
   @NotEmpty @FdIndex private String cvConfigId;
   @Transient private Map<String, Map<String, List<TimeSeriesMLHostSummary>>> anomalies;
   @JsonIgnore private byte[] compressedAnomalies;

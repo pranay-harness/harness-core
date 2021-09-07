@@ -36,10 +36,11 @@ public class MockRoleAssignmentServiceImpl implements MockRoleAssignmentService 
 
   @Override
   public List<RoleAssignmentResponseDTO> createMulti(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, List<RoleAssignmentDTO> roleAssignments) {
+      String projectIdentifier, List<RoleAssignmentDTO> roleAssignments, Boolean managed) {
     List<RoleAssignmentResponseDTO> createdRoleAssignmentDTOs = new ArrayList<>();
     for (RoleAssignmentDTO roleAssignment : roleAssignments) {
       try {
+        roleAssignment = roleAssignment.toBuilder().managed(managed).build();
         RoleAssignmentResponseDTO roleAssignmentResponseDTO =
             create(accountIdentifier, orgIdentifier, projectIdentifier, roleAssignment);
         createdRoleAssignmentDTOs.add(roleAssignmentResponseDTO);
@@ -80,6 +81,13 @@ public class MockRoleAssignmentServiceImpl implements MockRoleAssignmentService 
                 -> RoleAssignmentResponseDTO.builder().roleAssignment(mockRoleAssignment.getRoleAssignment()).build())
             .collect(Collectors.toList());
     return PageUtils.getNGPageResponse(pageResponse, mockRoleAssignments);
+  }
+
+  @Override
+  public Page<RoleAssignmentResponseDTO> list(Criteria criteria, Pageable pageable) {
+    return mockRoleAssignmentRepository.findAll(criteria, pageable)
+        .map(mockRoleAssignment
+            -> RoleAssignmentResponseDTO.builder().roleAssignment(mockRoleAssignment.getRoleAssignment()).build());
   }
 
   @Override

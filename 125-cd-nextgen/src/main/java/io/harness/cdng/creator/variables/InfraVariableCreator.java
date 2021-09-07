@@ -8,7 +8,9 @@ import io.harness.pms.sdk.core.pipeline.variables.VariableCreatorHelper;
 import io.harness.pms.sdk.core.variables.beans.VariableCreationResponse;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
+import io.harness.pms.yaml.YamlNode;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +24,7 @@ public class InfraVariableCreator {
     }
 
     Map<String, YamlProperties> yamlPropertiesMap = new LinkedHashMap<>();
+    Map<String, YamlField> dependenciesMap = new LinkedHashMap<>();
     String infraUUID = infraField.getNode().getUuid();
     yamlPropertiesMap.put(infraUUID, YamlProperties.newBuilder().setFqn(YamlTypes.PIPELINE_INFRASTRUCTURE).build());
 
@@ -29,6 +32,11 @@ public class InfraVariableCreator {
     if (VariableCreatorHelper.isNotYamlFieldEmpty(infraDefNode)
         && VariableCreatorHelper.isNotYamlFieldEmpty(infraDefNode.getNode().getField(YamlTypes.SPEC))) {
       addVariablesForInfraDef(infraDefNode, yamlPropertiesMap);
+
+      YamlField provisionerField = infraDefNode.getNode().getField(YAMLFieldNameConstants.PROVISIONER);
+      if (provisionerField != null) {
+        dependenciesMap.putAll(addDependencyForProvisionerSteps(provisionerField));
+      }
     }
     YamlField envField = infraField.getNode().getField(YamlTypes.ENVIRONMENT_YAML);
     if (VariableCreatorHelper.isNotYamlFieldEmpty(envField)) {
@@ -38,7 +46,25 @@ public class InfraVariableCreator {
     if (envRefField != null) {
       VariableCreatorHelper.addFieldToPropertiesMap(envRefField, yamlPropertiesMap, YamlTypes.PIPELINE_INFRASTRUCTURE);
     }
-    return VariableCreationResponse.builder().yamlProperties(yamlPropertiesMap).build();
+    return VariableCreationResponse.builder().yamlProperties(yamlPropertiesMap).dependencies(dependenciesMap).build();
+  }
+
+  private static Map<String, YamlField> addDependencyForProvisionerSteps(YamlField provisionerField) {
+    Map<String, YamlField> stepsDependencyMap = new HashMap<>();
+    List<YamlField> stepYamlFields = VariableCreatorHelper.getStepYamlFields(provisionerField);
+    for (YamlField stepYamlField : stepYamlFields) {
+      stepsDependencyMap.put(stepYamlField.getNode().getUuid(), stepYamlField);
+    }
+
+    YamlField rollbackStepsField = provisionerField.getNode().getField(YAMLFieldNameConstants.ROLLBACK_STEPS);
+    if (rollbackStepsField != null) {
+      List<YamlNode> yamlNodes = rollbackStepsField.getNode().asArray();
+      List<YamlField> rollbackStepYamlFields = VariableCreatorHelper.getStepYamlFields(yamlNodes);
+      for (YamlField stepYamlField : rollbackStepYamlFields) {
+        stepsDependencyMap.put(stepYamlField.getNode().getUuid(), stepYamlField);
+      }
+    }
+    return stepsDependencyMap;
   }
 
   private void addVariablesForEnv(YamlField envNode, Map<String, YamlProperties> yamlPropertiesMap) {

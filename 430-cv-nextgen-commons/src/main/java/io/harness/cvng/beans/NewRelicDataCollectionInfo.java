@@ -1,7 +1,7 @@
 package io.harness.cvng.beans;
 
-import io.harness.cvng.beans.newrelic.NewRelicUtils;
 import io.harness.delegate.beans.connector.newrelic.NewRelicConnectorDTO;
+import io.harness.delegate.beans.cvng.newrelic.NewRelicUtils;
 
 import com.google.common.base.Preconditions;
 import java.util.Collections;

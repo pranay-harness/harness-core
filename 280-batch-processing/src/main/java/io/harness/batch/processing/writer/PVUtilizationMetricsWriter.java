@@ -7,7 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.billing.timeseries.data.K8sGranularUtilizationData;
 import io.harness.batch.processing.billing.timeseries.service.impl.K8sUtilizationGranularDataServiceImpl;
 import io.harness.batch.processing.tasklet.util.K8sResourceUtils;
-import io.harness.event.grpc.PublishedMessage;
+import io.harness.ccm.commons.entities.events.PublishedMessage;
 import io.harness.event.payloads.AggregatedStorage;
 import io.harness.event.payloads.PVMetric;
 

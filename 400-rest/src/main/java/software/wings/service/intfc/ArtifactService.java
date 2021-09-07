@@ -4,7 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import static software.wings.beans.artifact.Artifact.Status;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 
@@ -27,15 +29,8 @@ import org.mongodb.morphia.query.Query;
  * The Interface ArtifactService.
  */
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public interface ArtifactService extends OwnedByArtifactStream {
-  /**
-   * List artifacts without sorting.
-   *
-   * @param pageRequest  the page request
-   * @return the page response
-   */
-  PageResponse<Artifact> listUnsorted(PageRequest<Artifact> pageRequest);
-
   /**
    * List artifacts sorted by build no.
    *
@@ -229,6 +224,8 @@ public interface ArtifactService extends OwnedByArtifactStream {
   Query<Artifact> prepareCleanupQuery(ArtifactStream artifactStream);
 
   void deleteWhenArtifactSourceNameChanged(ArtifactStream artifactStream);
+
+  void deleteByArtifactStreamId(String appId, String artifactStreamId);
 
   List<Artifact> listByIds(String accountId, Collection<String> artifactIds);
 

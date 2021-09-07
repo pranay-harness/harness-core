@@ -9,9 +9,9 @@ import io.harness.cdng.pipeline.plancreators.PlanCreatorHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildChainExecutableResponse;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.executables.ChildChainExecutable;
-import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
@@ -25,7 +25,8 @@ import java.util.Map;
 
 @OwnedBy(PIPELINE)
 public class RollbackOptionalChildChainStep implements ChildChainExecutable<RollbackOptionalChildChainStepParameters> {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType("ROLLBACK_OPTIONAL_CHILD_CHAIN").build();
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType("ROLLBACK_OPTIONAL_CHILD_CHAIN").setStepCategory(StepCategory.STEP).build();
 
   @Inject private PlanCreatorHelper planCreatorHelper;
   @Inject private KryoSerializer kryoSerializer;
@@ -56,8 +57,10 @@ public class RollbackOptionalChildChainStep implements ChildChainExecutable<Roll
   @Override
   public ChildChainExecutableResponse executeNextChild(Ambiance ambiance,
       RollbackOptionalChildChainStepParameters stepParameters, StepInputPackage inputPackage,
-      PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
-    int index = ((SectionChainPassThroughData) passThroughData).getChildIndex() + 1;
+      ByteString passThroughData, Map<String, ResponseData> responseDataMap) {
+    SectionChainPassThroughData sectionChainPassThroughData =
+        (SectionChainPassThroughData) kryoSerializer.asObject(passThroughData.toByteArray());
+    int index = sectionChainPassThroughData.getChildIndex() + 1;
 
     for (int i = index; i < stepParameters.getChildNodes().size(); i++) {
       RollbackNode childNode = stepParameters.getChildNodes().get(i);
@@ -76,7 +79,7 @@ public class RollbackOptionalChildChainStep implements ChildChainExecutable<Roll
 
   @Override
   public StepResponse finalizeExecution(Ambiance ambiance, RollbackOptionalChildChainStepParameters stepParameters,
-      PassThroughData passThroughData, Map<String, ResponseData> responseDataMap) {
+      ByteString passThroughData, Map<String, ResponseData> responseDataMap) {
     StepResponseNotifyData notifyData = (StepResponseNotifyData) responseDataMap.values().iterator().next();
     // If status is suspended, then we should mark the execution as success
     if (notifyData.getStatus() == Status.SUSPENDED) {

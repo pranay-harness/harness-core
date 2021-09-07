@@ -1,6 +1,9 @@
 package software.wings.verification.apm;
 
+import static io.harness.annotations.dev.HarnessTeam.CV;
+
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.sm.states.APMVerificationState;
@@ -13,7 +16,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-@TargetModule(HarnessModule._870_CG_YAML_BEANS)
+@TargetModule(HarnessModule._870_CG_YAML)
+@OwnedBy(CV)
 @Data
 @Builder
 @AllArgsConstructor

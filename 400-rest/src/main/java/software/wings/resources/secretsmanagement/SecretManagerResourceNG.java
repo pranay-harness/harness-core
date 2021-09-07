@@ -1,7 +1,9 @@
 package software.wings.resources.secretsmanagement;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.NGCommonEntityConstants;
-import io.harness.NGResourceFilterConstants;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.mappers.SecretManagerConfigMapper;
@@ -16,12 +18,11 @@ import software.wings.service.intfc.security.NGSecretManagerService;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -30,6 +31,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
+@OwnedBy(PL)
 @Api(value = "secret-managers", hidden = true)
 @Path("/ng/secret-managers")
 @Produces("application/json")
@@ -66,30 +68,18 @@ public class SecretManagerResourceNG {
   }
 
   @GET
-  public RestResponse<List<SecretManagerConfigDTO>> getSecretManagers(
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
-      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
-      @QueryParam(NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers) {
-    List<SecretManagerConfig> secretManagerConfigs =
-        ngSecretManagerService.list(accountIdentifier, orgIdentifier, projectIdentifier, identifiers);
-    List<SecretManagerConfigDTO> dtoList = new ArrayList<>();
-    secretManagerConfigs.forEach(secretManagerConfig -> dtoList.add(secretManagerConfig.toDTO(true)));
-    return new RestResponse<>(dtoList);
-  }
-
-  @GET
   @Path("{identifier}")
   public RestResponse<SecretManagerConfigDTO> getSecretManager(
       @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
-      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
-    Optional<SecretManagerConfig> secretManagerConfigOptional =
-        ngSecretManagerService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier, true);
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @QueryParam(NGCommonEntityConstants.MASK_SECRETS) @DefaultValue("true") Boolean maskSecrets) {
+    Optional<SecretManagerConfig> secretManagerConfigOptional = ngSecretManagerService.get(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier, Boolean.TRUE.equals(maskSecrets));
     SecretManagerConfigDTO dto = null;
     if (secretManagerConfigOptional.isPresent()) {
-      dto = secretManagerConfigOptional.get().toDTO(true);
+      dto = secretManagerConfigOptional.get().toDTO(maskSecrets);
     }
     return new RestResponse<>(dto);
   }

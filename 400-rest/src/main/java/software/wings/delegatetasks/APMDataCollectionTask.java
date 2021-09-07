@@ -5,6 +5,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.threading.Morpheus.sleep;
 
+import static software.wings.common.VerificationConstants.AZURE_BASE_URL;
+import static software.wings.common.VerificationConstants.AZURE_TOKEN_URL;
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
 import static software.wings.common.VerificationConstants.VERIFICATION_HOST_PLACEHOLDER;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
@@ -30,6 +32,7 @@ import software.wings.helpers.ext.apm.APMRestClient;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.VerificationLogContext;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
+import software.wings.service.impl.analysis.AzureLogAnalyticsConnectionDetails;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
@@ -40,6 +43,7 @@ import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.sm.StateType;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.TreeBasedTable;
@@ -93,6 +97,9 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
 
   private APMDataCollectionInfo dataCollectionInfo;
   private Map<String, String> decryptedFields = new HashMap<>();
+
+  // special case for azure. This is unfortunately a hack
+  private AzureLogAnalyticsConnectionDetails azureLogAnalyticsConnectionDetails;
 
   public APMDataCollectionTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
       Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
@@ -224,8 +231,9 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
 
       Matcher matcher = pattern.matcher(result);
       while (matcher.find()) {
-        result = result.replace(
-            matcher.group(), decryptedFields.get(matcher.group().substring(2, matcher.group().length() - 1)));
+        String fieldKey = matcher.group().substring(2, matcher.group().length() - 1);
+        Preconditions.checkState(decryptedFields.containsKey(fieldKey), "Could not resolve expression ${%s}", fieldKey);
+        result = result.replace(matcher.group(), decryptedFields.get(fieldKey));
       }
 
       return result;
@@ -316,6 +324,56 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
         }
       }
       return "";
+    }
+
+    private Map<String, String> fetchAdditionalHeaders(APMDataCollectionInfo dataCollectionInfo) {
+      // Special case for getting the bearer token for azure log analytics
+      if (!dataCollectionInfo.getBaseUrl().contains(AZURE_BASE_URL)) {
+        return null;
+      }
+      Map<String, Object> resolvedOptions = resolveDollarReferences(dataCollectionInfo.getOptions());
+      String clientId = azureLogAnalyticsConnectionDetails == null ? (String) resolvedOptions.get("client_id")
+                                                                   : azureLogAnalyticsConnectionDetails.getClientId();
+      String clientSecret = azureLogAnalyticsConnectionDetails == null
+          ? (String) resolvedOptions.get("client_secret")
+          : azureLogAnalyticsConnectionDetails.getClientSecret();
+      String tenantId = azureLogAnalyticsConnectionDetails == null ? (String) resolvedOptions.get("tenant_id")
+                                                                   : azureLogAnalyticsConnectionDetails.getTenantId();
+      if (azureLogAnalyticsConnectionDetails == null) {
+        // saving the details in this object so we can remove the details from the request parameters
+        azureLogAnalyticsConnectionDetails = AzureLogAnalyticsConnectionDetails.builder()
+                                                 .clientId(clientId)
+                                                 .clientSecret(clientSecret)
+                                                 .tenantId(tenantId)
+                                                 .build();
+
+        dataCollectionInfo.getOptions().remove("client_id");
+        dataCollectionInfo.getOptions().remove("tenant_id");
+        dataCollectionInfo.getOptions().remove("client_secret");
+      }
+
+      Preconditions.checkNotNull(
+          clientId, "client_id parameter cannot be null when collecting data from azure log analytics");
+      Preconditions.checkNotNull(
+          tenantId, "tenant_id parameter cannot be null when collecting data from azure log analytics");
+      Preconditions.checkNotNull(
+          clientSecret, "client_secret parameter cannot be null when collecting data from azure log analytics");
+      String urlForToken = tenantId + "/oauth2/token";
+
+      Map<String, String> bearerTokenHeader = new HashMap<>();
+      bearerTokenHeader.put("Content-Type", "application/x-www-form-urlencoded");
+      Call<Object> bearerTokenCall = getAPMRestClient(AZURE_TOKEN_URL, false)
+                                         .getAzureBearerToken(urlForToken, bearerTokenHeader, "client_credentials",
+                                             clientId, AZURE_BASE_URL, clientSecret);
+
+      Object response = requestExecutor.executeRequest(bearerTokenCall);
+      Map<String, Object> responseMap = new JSONObject(JsonUtils.asJson(response)).toMap();
+      String bearerToken = (String) responseMap.get("access_token");
+
+      String headerVal = "Bearer " + bearerToken;
+      Map<String, String> header = new HashMap<>();
+      header.put("Authorization", headerVal);
+      return header;
     }
 
     private List<APMResponseParser.APMResponseData> collect(String baseUrl, boolean validateCert,
@@ -510,6 +568,14 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
           try {
             TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
 
+            Map<String, String> additionalHeaders = fetchAdditionalHeaders(dataCollectionInfo);
+            if (isNotEmpty(additionalHeaders)) {
+              if (dataCollectionInfo.getHeaders() == null) {
+                dataCollectionInfo.setHeaders(new HashMap<>());
+              }
+              additionalHeaders.forEach((key, val) -> dataCollectionInfo.getHeaders().put(key, val));
+            }
+
             List<APMResponseParser.APMResponseData> apmResponseDataList = new ArrayList<>();
             if (isNotEmpty(dataCollectionInfo.getCanaryMetricInfos())) {
               apmResponseDataList.addAll(collect(dataCollectionInfo.getBaseUrl(), dataCollectionInfo.isValidateCert(),
@@ -566,7 +632,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
             dataCollectionMinute = (int) (TimeUnit.MILLISECONDS.toMinutes(currentEndTime - collectionStartMinute) - 1);
             addHeartbeatRecords(groupNameSet, records);
             List<NewRelicMetricDataRecord> allMetricRecords = getAllMetricRecords(records);
-            log.info("fetched records: {}", allMetricRecords);
+            log.debug("fetched records: {}", allMetricRecords);
             if (!saveMetrics(dataCollectionInfo.getAccountId(), dataCollectionInfo.getApplicationId(),
                     dataCollectionInfo.getStateExecutionId(), allMetricRecords)) {
               log.error("Error saving metrics to the database. DatacollectionMin: {} StateexecutionId: {}",
@@ -592,7 +658,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
 
           } catch (Throwable ex) {
             if (!(ex instanceof Exception) || ++retry >= RETRIES) {
-              log.error("error fetching metrics for {} for minute {}", dataCollectionInfo.getStateExecutionId(),
+              log.error("error fetching metrics for {} for minute {} {}", dataCollectionInfo.getStateExecutionId(),
                   dataCollectionMinute, ex);
               taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
               completed.set(true);

@@ -2,6 +2,9 @@ package io.harness.ng.core.remote;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.ng.accesscontrol.PlatformPermissions.MANAGE_USERGROUP_PERMISSION;
+import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_USERGROUP_PERMISSION;
+import static io.harness.ng.accesscontrol.PlatformResourceTypes.USERGROUP;
 import static io.harness.ng.core.utils.NGUtils.verifyValuesNotChanged;
 import static io.harness.ng.core.utils.UserGroupMapper.toDTO;
 import static io.harness.utils.PageUtils.getNGPageResponse;
@@ -9,7 +12,12 @@ import static io.harness.utils.PageUtils.getPageRequest;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.accesscontrol.AccessDeniedErrorDTO;
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
 import io.harness.beans.SortOrder;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
@@ -19,9 +27,15 @@ import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.dto.UserGroupDTO;
 import io.harness.ng.core.dto.UserGroupFilterDTO;
-import io.harness.ng.core.entities.UserGroup;
+import io.harness.ng.core.user.entities.UserGroup;
+import io.harness.ng.core.user.remote.dto.UserFilter;
+import io.harness.ng.core.user.remote.dto.UserMetadataDTO;
 import io.harness.ng.core.utils.UserGroupMapper;
+import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
+
+import software.wings.beans.sso.SSOType;
+import software.wings.beans.sso.SamlLinkGroupRequest;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -61,11 +75,13 @@ import retrofit2.http.Body;
 @ApiResponses(value =
     {
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
-      , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
+      , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error"),
+          @ApiResponse(code = 403, response = AccessDeniedErrorDTO.class, message = "Unauthorized")
     })
 @NextGenManagerAuth
 public class UserGroupResource {
   private final UserGroupService userGroupService;
+  private final AccessControlClient accessControlClient;
 
   @POST
   @ApiOperation(value = "Create a User Group", nickname = "postUserGroup")
@@ -74,6 +90,8 @@ public class UserGroupResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @Valid UserGroupDTO userGroupDTO) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(USERGROUP, null), MANAGE_USERGROUP_PERMISSION);
     validateScopes(accountIdentifier, orgIdentifier, projectIdentifier, userGroupDTO);
     userGroupDTO.setAccountIdentifier(accountIdentifier);
     userGroupDTO.setOrgIdentifier(orgIdentifier);
@@ -89,6 +107,8 @@ public class UserGroupResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotNull @Valid UserGroupDTO userGroupDTO) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(USERGROUP, userGroupDTO.getIdentifier()), MANAGE_USERGROUP_PERMISSION);
     validateScopes(accountIdentifier, orgIdentifier, projectIdentifier, userGroupDTO);
     userGroupDTO.setAccountIdentifier(accountIdentifier);
     userGroupDTO.setOrgIdentifier(orgIdentifier);
@@ -105,6 +125,8 @@ public class UserGroupResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotEmpty @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(USERGROUP, identifier), VIEW_USERGROUP_PERMISSION);
     Optional<UserGroup> userGroupOptional =
         userGroupService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     return userGroupOptional
@@ -120,7 +142,14 @@ public class UserGroupResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @NotEmpty @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier) {
-    UserGroup userGroup = userGroupService.delete(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(USERGROUP, identifier), MANAGE_USERGROUP_PERMISSION);
+    Scope scope = Scope.builder()
+                      .accountIdentifier(accountIdentifier)
+                      .orgIdentifier(orgIdentifier)
+                      .projectIdentifier(projectIdentifier)
+                      .build();
+    UserGroup userGroup = userGroupService.delete(scope, identifier);
     return ResponseDTO.newResponse(Long.toString(userGroup.getVersion()), toDTO(userGroup));
   }
 
@@ -131,6 +160,8 @@ public class UserGroupResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @BeanParam PageRequest pageRequest) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(USERGROUP, null), VIEW_USERGROUP_PERMISSION);
     if (isEmpty(pageRequest.getSortOrders())) {
       SortOrder order = SortOrder.Builder.aSortOrder().withField("lastModifiedAt", SortOrder.OrderType.DESC).build();
       pageRequest.setSortOrders(ImmutableList.of(order));
@@ -143,9 +174,33 @@ public class UserGroupResource {
   }
 
   @POST
+  @Path("{identifier}/users")
+  @ApiOperation(value = "List users in a user group", nickname = "getUsersInUserGroup")
+  public ResponseDTO<PageResponse<UserMetadataDTO>> getUsersInUserGroup(
+      @NotNull @PathParam("identifier") String userGroupIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @Valid @BeanParam PageRequest pageRequest, UserFilter userFilter) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(USERGROUP, userGroupIdentifier), VIEW_USERGROUP_PERMISSION);
+    Scope scope = Scope.builder()
+                      .accountIdentifier(accountIdentifier)
+                      .orgIdentifier(orgIdentifier)
+                      .projectIdentifier(projectIdentifier)
+                      .build();
+    return ResponseDTO.newResponse(
+        userGroupService.listUsersInUserGroup(scope, userGroupIdentifier, userFilter, pageRequest));
+  }
+
+  @POST
   @Path("batch")
   @ApiOperation(value = "Get Batch User Group List", nickname = "getBatchUserGroupList")
   public ResponseDTO<List<UserGroupDTO>> list(@Body @NotNull UserGroupFilterDTO userGroupFilterDTO) {
+    accessControlClient.checkForAccessOrThrow(
+        ResourceScope.of(userGroupFilterDTO.getAccountIdentifier(), userGroupFilterDTO.getOrgIdentifier(),
+            userGroupFilterDTO.getProjectIdentifier()),
+        Resource.of(USERGROUP, null), VIEW_USERGROUP_PERMISSION);
     List<UserGroupDTO> userGroups =
         userGroupService.list(userGroupFilterDTO).stream().map(UserGroupMapper::toDTO).collect(Collectors.toList());
     return ResponseDTO.newResponse(userGroups);
@@ -160,6 +215,8 @@ public class UserGroupResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
       @PathParam("userIdentifier") String userIdentifier) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(USERGROUP, identifier), VIEW_USERGROUP_PERMISSION);
     boolean isMember =
         userGroupService.checkMember(accountIdentifier, orgIdentifier, projectIdentifier, identifier, userIdentifier);
     return ResponseDTO.newResponse(isMember);
@@ -174,6 +231,8 @@ public class UserGroupResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
       @PathParam("userIdentifier") String userIdentifier) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(USERGROUP, identifier), MANAGE_USERGROUP_PERMISSION);
     UserGroup userGroup =
         userGroupService.addMember(accountIdentifier, orgIdentifier, projectIdentifier, identifier, userIdentifier);
     return ResponseDTO.newResponse(Long.toString(userGroup.getVersion()), toDTO(userGroup));
@@ -188,8 +247,14 @@ public class UserGroupResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
       @PathParam("userIdentifier") String userIdentifier) {
-    UserGroup userGroup =
-        userGroupService.removeMember(accountIdentifier, orgIdentifier, projectIdentifier, identifier, userIdentifier);
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(USERGROUP, identifier), MANAGE_USERGROUP_PERMISSION);
+    Scope scope = Scope.builder()
+                      .accountIdentifier(accountIdentifier)
+                      .orgIdentifier(orgIdentifier)
+                      .projectIdentifier(projectIdentifier)
+                      .build();
+    UserGroup userGroup = userGroupService.removeMember(scope, identifier, userIdentifier);
     return ResponseDTO.newResponse(Long.toString(userGroup.getVersion()), toDTO(userGroup));
   }
 
@@ -199,5 +264,33 @@ public class UserGroupResource {
                                Pair.of(orgIdentifier, userGroupDTO.getOrgIdentifier()),
                                Pair.of(projectIdentifier, userGroupDTO.getProjectIdentifier())),
         true);
+  }
+
+  @PUT
+  @Path("{userGroupId}/unlink")
+  @ApiOperation(value = "API to unlink the harness user group from SSO group", nickname = "unlinkSsoGroup")
+  public RestResponse<UserGroup> unlinkSsoGroup(@PathParam("userGroupId") String userGroupId,
+      @QueryParam("retainMembers") boolean retainMembers,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(USERGROUP, userGroupId), MANAGE_USERGROUP_PERMISSION);
+    return new RestResponse<>(userGroupService.unlinkSsoGroup(
+        accountIdentifier, orgIdentifier, projectIdentifier, userGroupId, retainMembers));
+  }
+
+  @PUT
+  @Path("{userGroupId}/link/saml/{samlId}")
+  @ApiOperation(value = "Link to SAML group", nickname = "linkToSamlGroup")
+  public RestResponse<UserGroup> linkToSamlGroup(@PathParam("userGroupId") String userGroupId,
+      @PathParam("samlId") String samlId, @NotNull @Valid SamlLinkGroupRequest groupRequest,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(USERGROUP, userGroupId), MANAGE_USERGROUP_PERMISSION);
+    return new RestResponse<>(userGroupService.linkToSsoGroup(accountIdentifier, orgIdentifier, projectIdentifier,
+        userGroupId, SSOType.SAML, samlId, groupRequest.getSamlGroupName(), groupRequest.getSamlGroupName()));
   }
 }

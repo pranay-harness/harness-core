@@ -9,6 +9,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.alert.AlertData;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -29,6 +31,7 @@ import org.mockito.Mock;
  * @author Deepak Patankar
  * 21/Oct/2019
  */
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class SSOSettingServiceImplTest extends WingsBaseTest {
   @Mock private AlertService alertService;
   @Inject @InjectMocks private SSOSettingServiceImpl ssoSettingService;

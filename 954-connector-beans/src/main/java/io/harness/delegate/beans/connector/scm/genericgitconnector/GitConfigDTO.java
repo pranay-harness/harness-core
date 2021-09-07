@@ -32,11 +32,12 @@ import org.hibernate.validator.constraints.NotBlank;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(HarnessTeam.DX)
 public class GitConfigDTO extends ConnectorConfigDTO implements ScmConnector, DelegateSelectable {
-  @NotNull @JsonProperty("type") GitAuthType gitAuthType;
-  @NotNull @JsonProperty("connectionType") GitConnectionType gitConnectionType;
+  @NotNull @JsonProperty("type") private GitAuthType gitAuthType;
+  @NotNull @JsonProperty("connectionType") private GitConnectionType gitConnectionType;
   @NotNull @NotBlank String url;
-  String branchName;
-  Set<String> delegateSelectors;
+  private String validationRepo;
+  private String branchName;
+  private Set<String> delegateSelectors;
 
   @JsonProperty("spec")
   @JsonTypeInfo(
@@ -45,16 +46,14 @@ public class GitConfigDTO extends ConnectorConfigDTO implements ScmConnector, De
   @NotNull
   GitAuthenticationDTO gitAuth;
 
-  @JsonProperty("gitSync") GitSyncConfig gitSyncConfig;
-
   @Builder
-  public GitConfigDTO(GitAuthType gitAuthType, GitAuthenticationDTO gitAuth, GitSyncConfig gitSyncConfig,
-      GitConnectionType gitConnectionType, String url, String branchName, Set<String> delegateSelectors) {
+  public GitConfigDTO(GitAuthType gitAuthType, GitAuthenticationDTO gitAuth, GitConnectionType gitConnectionType,
+      String url, String validationRepo, String branchName, Set<String> delegateSelectors) {
     this.gitAuthType = gitAuthType;
     this.gitAuth = gitAuth;
-    this.gitSyncConfig = gitSyncConfig;
     this.gitConnectionType = gitConnectionType;
     this.url = url;
+    this.validationRepo = validationRepo;
     this.branchName = branchName;
     this.delegateSelectors = delegateSelectors;
   }

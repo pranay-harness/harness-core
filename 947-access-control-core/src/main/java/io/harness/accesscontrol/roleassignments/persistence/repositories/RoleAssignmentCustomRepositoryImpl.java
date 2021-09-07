@@ -1,19 +1,20 @@
 package io.harness.accesscontrol.roleassignments.persistence.repositories;
 
 import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO;
+import io.harness.accesscontrol.roleassignments.persistence.RoleAssignmentDBO.RoleAssignmentDBOKeys;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 
-import java.util.ArrayList;
+import com.mongodb.client.result.UpdateResult;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 
 @Slf4j
@@ -34,24 +35,17 @@ public class RoleAssignmentCustomRepositoryImpl implements RoleAssignmentCustomR
   }
 
   @Override
-  public long deleteMulti(Criteria criteria) {
+  public boolean updateById(String id, Update updateOperation) {
+    Criteria criteria = Criteria.where(RoleAssignmentDBOKeys.id).is(id);
     Query query = new Query(criteria);
-    return mongoTemplate.remove(query, RoleAssignmentDBO.class).getDeletedCount();
+    UpdateResult updateResult = mongoTemplate.updateFirst(query, updateOperation, RoleAssignmentDBO.class);
+    return updateResult.getModifiedCount() == updateResult.getMatchedCount();
   }
 
   @Override
-  public List<RoleAssignmentDBO> insertAllIgnoringDuplicates(List<RoleAssignmentDBO> roleAssignmentDBOList) {
-    List<RoleAssignmentDBO> upsertedList = new ArrayList<>();
-    for (RoleAssignmentDBO roleAssignmentDBO : roleAssignmentDBOList) {
-      try {
-        mongoTemplate.insert(roleAssignmentDBO);
-        upsertedList.add(roleAssignmentDBO);
-      } catch (DuplicateKeyException duplicateKeyException) {
-        // ignore duplicates
-      } catch (Exception exception) {
-        log.error("Could not create role assignment due to unexpected error", exception);
-      }
-    }
-    return upsertedList;
+  public long deleteMulti(Criteria criteria) {
+    Query query = new Query(criteria);
+    log.info("The current query for deleting multiple role assignment is: {}", query.toString());
+    return mongoTemplate.remove(query, RoleAssignmentDBO.class).getDeletedCount();
   }
 }

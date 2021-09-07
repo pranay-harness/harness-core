@@ -3,9 +3,12 @@ package software.wings.service.impl.security.auth;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.beans.WorkflowType.PIPELINE;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.exception.WingsException.USER;
+import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
@@ -19,6 +22,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 
@@ -585,6 +589,62 @@ public class DeploymentAuthHandlerTest extends WingsBaseTest {
       deploymentAuthHandler.authorizeWithWorkflowExecutionId(appId, workflowExecution.getUuid());
       verify(authService, atLeastOnce())
           .checkIfUserAllowedToDeployWorkflowToEnv(eq(appId), eq(workflowExecution.getEnvId()));
+    } catch (Exception e) {
+      assertThat(e).isNull();
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void testAuthorizeFromRollbackWorkflowExecutionUnauthorizedUser() {
+    Workflow workflow = new Workflow();
+    workflow.setUuid(entityId);
+
+    Pipeline pipeline = new Pipeline();
+    pipeline.setUuid(entityId);
+
+    WorkflowExecution workflowExecution = WorkflowExecution.builder()
+                                              .appId(appId)
+                                              .uuid(generateUuid())
+                                              .workflowType(ORCHESTRATION)
+                                              .workflowId(entityId)
+                                              .build();
+
+    UserThreadLocal.set(user);
+    when(workflowService.getWorkflow(appId, entityId)).thenReturn(null);
+    when(pipelineService.getPipeline(appId, entityId)).thenReturn(pipeline);
+
+    doThrow(new AccessDeniedException("Not authorized", USER))
+        .when(authService)
+        .authorize(anyString(), anyList(), eq(entityId), any(), anyList());
+
+    assertThatThrownBy(() -> deploymentAuthHandler.authorizeRollback(appId, workflowExecution))
+        .isInstanceOf(AccessDeniedException.class)
+        .hasMessageContaining("Not authorized");
+    // Verify that we do not reach here
+    verify(authService, times(0)).checkIfUserAllowedToRollbackWorkflowToEnv(eq(appId), anyString());
+
+    UserThreadLocal.unset();
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void testAuthorizeRollbackWorkflowExecutionWithId() {
+    try {
+      UserThreadLocal.set(user);
+      WorkflowExecution workflowExecution =
+          WorkflowExecution.builder().uuid(generateUuid()).workflowId(entityId).build();
+
+      when(workflowExecutionService.getExecutionDetailsWithoutGraph(appId, workflowExecution.getUuid()))
+          .thenReturn(workflowExecution);
+      doNothing().when(authService).checkIfUserAllowedToDeployWorkflowToEnv(appId, workflowExecution.getEnvId());
+      doNothing().when(authService).authorize(anyString(), anyList(), eq(entityId), any(), anyList());
+
+      deploymentAuthHandler.authorizeRollback(appId, workflowExecution.getUuid());
     } catch (Exception e) {
       assertThat(e).isNull();
     } finally {

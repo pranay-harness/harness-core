@@ -4,7 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateMetaInfo;
 
@@ -27,6 +29,7 @@ import lombok.ToString;
  * @author Rishi
  */
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @ToString(exclude = {"delegateMetaInfo", "templateVariable", "stateParams", "element"})
 public class StateExecutionData {
   public static final int SUMMARY_PAYLOAD_LIMIT = 1024;

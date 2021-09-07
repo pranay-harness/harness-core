@@ -13,12 +13,12 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.billing.dao.BillingDataPipelineRecordDao;
-import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
 import io.harness.ccm.billing.graphql.CloudBillingAggregate;
 import io.harness.ccm.billing.graphql.CloudBillingFilter;
 import io.harness.ccm.billing.graphql.CloudBillingGroupBy;
 import io.harness.ccm.billing.graphql.CloudBillingIdFilter;
 import io.harness.ccm.billing.preaggregated.PreAggregateConstants;
+import io.harness.ccm.commons.entities.billing.BillingDataPipelineRecord;
 import io.harness.ccm.setup.config.CESetUpConfig;
 import io.harness.exception.InvalidRequestException;
 
@@ -32,6 +32,8 @@ import com.google.inject.Singleton;
 import com.healthmarketscience.sqlbuilder.Condition;
 import com.healthmarketscience.sqlbuilder.CustomSql;
 import com.healthmarketscience.sqlbuilder.SqlObject;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -51,11 +53,14 @@ public class CloudBillingHelper {
   private static final String preAggregated = "preAggregated";
   private static final String awsRawTable = "awscur*";
   private static final String gcpRawTable = "gcp_billing_export*";
+  private static final String azureRawTable = "azureBilling_%s_%s";
+  public static final String informationSchema = "INFORMATION_SCHEMA";
   private static final String leftJoinTemplate = " LEFT JOIN UNNEST(%s) as %s";
   private static final String tags = "tags";
   private static final String labels = "labels";
   private static final String credits = "credits";
   public static final String DATA_SET_NAME_TEMPLATE = "BillingReport_%s";
+  public static final String columnView = "COLUMNS";
 
   private Cache<String, BillingDataPipelineCacheObject> billingDataPipelineRecordCache =
       Caffeine.newBuilder().expireAfterWrite(24, TimeUnit.HOURS).build();
@@ -67,13 +72,16 @@ public class CloudBillingHelper {
   public BillingDataPipelineCacheObject getBillingDataPipelineCacheObject(String accountId) {
     List<BillingDataPipelineRecord> listOfPipelineRecords =
         billingDataPipelineRecordDao.fetchBillingPipelineRecords(accountId);
-
-    BillingDataPipelineRecord billingDataPipelineRecord = getPipelineRecord(listOfPipelineRecords);
-    return BillingDataPipelineCacheObject.builder()
-        .dataSetId(billingDataPipelineRecord.getDataSetId())
-        .awsLinkedAccountsToExclude(billingDataPipelineRecord.getAwsLinkedAccountsToExclude())
-        .awsLinkedAccountsToInclude(billingDataPipelineRecord.getAwsLinkedAccountsToInclude())
-        .build();
+    if (listOfPipelineRecords.isEmpty()) {
+      return BillingDataPipelineCacheObject.builder().build();
+    } else {
+      BillingDataPipelineRecord billingDataPipelineRecord = getPipelineRecord(listOfPipelineRecords);
+      return BillingDataPipelineCacheObject.builder()
+          .dataSetId(billingDataPipelineRecord.getDataSetId())
+          .awsLinkedAccountsToExclude(billingDataPipelineRecord.getAwsLinkedAccountsToExclude())
+          .awsLinkedAccountsToInclude(billingDataPipelineRecord.getAwsLinkedAccountsToInclude())
+          .build();
+    }
   }
 
   private BillingDataPipelineRecord getPipelineRecord(List<BillingDataPipelineRecord> listOfPipelineRecords) {
@@ -92,6 +100,13 @@ public class CloudBillingHelper {
     String projectId = ceSetUpConfig.getGcpProjectId();
     String dataSetId = getDataSetId(accountId);
     return format("%s.%s.%s", projectId, dataSetId, tableName);
+  }
+
+  public String getInformationSchemaViewForDataset(String accountId, String view) {
+    CESetUpConfig ceSetUpConfig = mainConfiguration.getCeSetUpConfig();
+    String projectId = ceSetUpConfig.getGcpProjectId();
+    String dataSetId = getDataSetId(accountId);
+    return format("%s.%s.%s.%s", projectId, dataSetId, informationSchema, view);
   }
 
   public String getCloudProviderTableName(String gcpProjectId, String accountId, String tableName) {
@@ -124,9 +139,18 @@ public class CloudBillingHelper {
         return awsRawTable;
       case "GCP":
         return gcpRawTable;
+      case "AZURE":
+        return getAzureRawTable();
       default:
         throw new InvalidRequestException("Invalid Cloud Provider");
     }
+  }
+
+  private String getAzureRawTable() {
+    LocalDateTime localNow = LocalDateTime.now();
+    String currentData = localNow.atZone(ZoneId.of("UTC")).toString();
+    String[] dateElements = currentData.split("-");
+    return format(azureRawTable, dateElements[0], dateElements[1]);
   }
 
   public SqlObject getLeftJoin(String cloudProvider) {

@@ -16,6 +16,7 @@ class PermissionDTOMapper {
                         .identifier(object.getIdentifier())
                         .name(object.getName())
                         .resourceType(resourceType.getIdentifier())
+                        .includeInAllRoles(object.isIncludeInAllRoles())
                         .action(object.getPermissionMetadata(2))
                         .status(object.getStatus())
                         .allowedScopeLevels(object.getAllowedScopeLevels())

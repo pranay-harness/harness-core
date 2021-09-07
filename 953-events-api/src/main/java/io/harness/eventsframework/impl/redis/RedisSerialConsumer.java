@@ -3,7 +3,6 @@ package io.harness.eventsframework.impl.redis;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.eventsframework.api.ConsumerShutdownException;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.redis.RedisConfig;
 
@@ -21,7 +20,7 @@ public class RedisSerialConsumer extends RedisAbstractConsumer {
   }
 
   @Override
-  public List<Message> read(Duration maxWaitTime) throws ConsumerShutdownException {
+  public List<Message> read(Duration maxWaitTime) {
     return getMessages(true, maxWaitTime);
   }
 

@@ -93,7 +93,7 @@ public class K8sStepParametersCommandUnitsTest extends CategoryTest {
         K8sCommandUnitConstants.WaitForSteadyState, K8sCommandUnitConstants.WrapUp);
   }
 
-  private void assertCommandUnitsName(K8sStepParameters stepParameters, String... expectedCommandUnits) {
+  private void assertCommandUnitsName(K8sSpecParameters stepParameters, String... expectedCommandUnits) {
     assertThat(stepParameters.getCommandUnits()).containsExactly(expectedCommandUnits);
   }
 }

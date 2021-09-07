@@ -2,55 +2,81 @@ package io.harness.steps.jira.create;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.IdentifierRef;
 import io.harness.delegate.task.jira.JiraTaskNGParameters;
 import io.harness.delegate.task.jira.JiraTaskNGParameters.JiraTaskNGParametersBuilder;
 import io.harness.delegate.task.jira.JiraTaskNGResponse;
 import io.harness.jira.JiraActionNG;
+import io.harness.ng.core.EntityDetail;
+import io.harness.plancreator.steps.common.StepElementParameters;
+import io.harness.plancreator.steps.common.rollback.TaskExecutableWithRollbackAndRbac;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
+import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.rbac.PipelineRbacHelper;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.steps.StepSpecTypeConstants;
+import io.harness.steps.StepUtils;
 import io.harness.steps.jira.JiraStepHelperService;
+import io.harness.steps.jira.JiraStepUtils;
 import io.harness.supplier.ThrowingSupplier;
+import io.harness.utils.IdentifierRefHelper;
 
 import com.google.inject.Inject;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
 
 @OwnedBy(CDC)
-public class JiraCreateStep implements TaskExecutable<JiraCreateStepParameters, JiraTaskNGResponse> {
-  public static final StepType STEP_TYPE = StepType.newBuilder().setType(StepSpecTypeConstants.JIRA_CREATE).build();
+public class JiraCreateStep extends TaskExecutableWithRollbackAndRbac<JiraTaskNGResponse> {
+  public static final StepType STEP_TYPE =
+      StepType.newBuilder().setType(StepSpecTypeConstants.JIRA_CREATE).setStepCategory(StepCategory.STEP).build();
 
   @Inject private JiraStepHelperService jiraStepHelperService;
+  @Inject private PipelineRbacHelper pipelineRbacHelper;
 
   @Override
-  public TaskRequest obtainTask(
-      Ambiance ambiance, JiraCreateStepParameters stepParameters, StepInputPackage inputPackage) {
-    JiraTaskNGParametersBuilder paramsBuilder =
-        JiraTaskNGParameters.builder()
-            .action(JiraActionNG.CREATE_ISSUE)
-            .projectKey(stepParameters.getProjectKey().getValue())
-            .issueType(stepParameters.getIssueType().getValue())
-            .fields(stepParameters.getFields() == null
-                    ? null
-                    : stepParameters.getFields().entrySet().stream().collect(
-                        Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getValue())));
-    return jiraStepHelperService.prepareTaskRequest(paramsBuilder, ambiance,
-        stepParameters.getConnectorRef().getValue(), stepParameters.getTimeout().getValue(), "Jira Task: Create Issue");
+  public void validateResources(Ambiance ambiance, StepElementParameters stepParameters) {
+    String accountIdentifier = AmbianceUtils.getAccountId(ambiance);
+    String orgIdentifier = AmbianceUtils.getOrgIdentifier(ambiance);
+    String projectIdentifier = AmbianceUtils.getProjectIdentifier(ambiance);
+    JiraCreateSpecParameters specParameters = (JiraCreateSpecParameters) stepParameters.getSpec();
+    String connectorRef = specParameters.getConnectorRef().getValue();
+    IdentifierRef identifierRef =
+        IdentifierRefHelper.getIdentifierRef(connectorRef, accountIdentifier, orgIdentifier, projectIdentifier);
+    EntityDetail entityDetail = EntityDetail.builder().type(EntityType.CONNECTORS).entityRef(identifierRef).build();
+    List<EntityDetail> entityDetailList = new ArrayList<>();
+    entityDetailList.add(entityDetail);
+    pipelineRbacHelper.checkRuntimePermissions(ambiance, entityDetailList, true);
   }
 
   @Override
-  public StepResponse handleTaskResult(Ambiance ambiance, JiraCreateStepParameters stepParameters,
+  public TaskRequest obtainTaskAfterRbac(
+      Ambiance ambiance, StepElementParameters stepParameters, StepInputPackage inputPackage) {
+    JiraCreateSpecParameters specParameters = (JiraCreateSpecParameters) stepParameters.getSpec();
+    JiraTaskNGParametersBuilder paramsBuilder =
+        JiraTaskNGParameters.builder()
+            .action(JiraActionNG.CREATE_ISSUE)
+            .projectKey(specParameters.getProjectKey().getValue())
+            .issueType(specParameters.getIssueType().getValue())
+            .delegateSelectors(StepUtils.getDelegateSelectorList(specParameters.getDelegateSelectors()))
+            .fields(JiraStepUtils.processJiraFieldsInParameters(specParameters.getFields()));
+    return jiraStepHelperService.prepareTaskRequest(paramsBuilder, ambiance,
+        specParameters.getConnectorRef().getValue(), stepParameters.getTimeout().getValue(), "Jira Task: Create Issue");
+  }
+
+  @Override
+  public StepResponse handleTaskResultWithSecurityContext(Ambiance ambiance, StepElementParameters stepParameters,
       ThrowingSupplier<JiraTaskNGResponse> responseSupplier) throws Exception {
     return jiraStepHelperService.prepareStepResponse(responseSupplier);
   }
 
   @Override
-  public Class<JiraCreateStepParameters> getStepParametersClass() {
-    return JiraCreateStepParameters.class;
+  public Class<StepElementParameters> getStepParametersClass() {
+    return StepElementParameters.class;
   }
 }

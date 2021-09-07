@@ -1,15 +1,16 @@
 package io.harness.engine.interrupts;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.engine.ExecutionCheck;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.State;
 
 import java.util.List;
 import javax.validation.Valid;
 
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 public interface InterruptService {
   List<Interrupt> fetchActiveInterrupts(String planExecutionId);
 
@@ -23,9 +24,11 @@ public interface InterruptService {
 
   List<Interrupt> fetchActivePlanLevelInterrupts(String planExecutionId);
 
-  InterruptCheck checkAndHandleInterruptsBeforeNodeStart(String planExecutionId, String nodeExecutionId);
+  ExecutionCheck checkInterruptsPreInvocation(String planExecutionId, String nodeExecutionId);
 
   Interrupt save(@Valid Interrupt interrupt);
 
   Interrupt get(String interruptId);
+
+  long closeActiveInterrupts(String planExecutionId);
 }

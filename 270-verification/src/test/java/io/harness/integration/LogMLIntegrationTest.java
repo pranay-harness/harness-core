@@ -118,7 +118,6 @@ import org.quartz.Scheduler;
 /**
  * Created by rsingh on 8/17/17.
  */
-@Ignore
 @SuppressWarnings("ALL")
 @Slf4j
 public class LogMLIntegrationTest extends VerificationIntegrationBase {

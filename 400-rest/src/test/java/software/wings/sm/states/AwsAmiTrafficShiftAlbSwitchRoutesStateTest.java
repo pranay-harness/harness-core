@@ -37,6 +37,7 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.task.aws.LbDetailsForAlbTrafficShift;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
@@ -51,6 +52,7 @@ import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesResponse;
 import software.wings.service.impl.aws.model.AwsAmiTrafficShiftAlbSwitchRouteRequest;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.states.spotinst.SpotInstStateHelper;
@@ -72,6 +74,8 @@ public class AwsAmiTrafficShiftAlbSwitchRoutesStateTest extends WingsBaseTest {
   @Mock private AwsAmiServiceStateHelper awsAmiServiceHelper;
   @Mock private DelegateService delegateService;
   @Mock private ActivityService activityService;
+  @Mock private StateExecutionService stateExecutionService;
+  @Mock private FeatureFlagService featureFlagService;
 
   private final List<LbDetailsForAlbTrafficShift> lbDetails = getLbDetailsForAlbTrafficShifts();
   @InjectMocks
@@ -172,6 +176,7 @@ public class AwsAmiTrafficShiftAlbSwitchRoutesStateTest extends WingsBaseTest {
     on(routeState).set("awsAmiServiceHelper", awsAmiServiceHelper);
     on(routeState).set("delegateService", delegateService);
     on(routeState).set("activityService", activityService);
+    on(routeState).set("featureFlagService", featureFlagService);
 
     AwsAmiTrafficShiftAlbData trafficShiftAlbData =
         AwsAmiTrafficShiftAlbData.builder()
@@ -188,6 +193,7 @@ public class AwsAmiTrafficShiftAlbSwitchRoutesStateTest extends WingsBaseTest {
             .currentUser(EmbeddedUser.builder().build())
             .build();
     doReturn(trafficShiftAlbData).when(awsAmiServiceHelper).populateAlbTrafficShiftSetupData(mockContext);
+    doReturn(false).when(featureFlagService).isEnabled(any(), anyString());
 
     if (contextElement) {
       AmiServiceTrafficShiftAlbSetupElement setupElement =

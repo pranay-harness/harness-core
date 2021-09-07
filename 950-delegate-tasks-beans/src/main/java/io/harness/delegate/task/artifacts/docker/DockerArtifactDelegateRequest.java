@@ -1,14 +1,19 @@
 package io.harness.delegate.task.artifacts.docker;
 
+import static io.harness.delegate.beans.connector.ConnectorCapabilityBaseHelper.populateDelegateSelectorCapability;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
 import io.harness.delegate.task.artifacts.ArtifactSourceDelegateRequest;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -20,6 +25,7 @@ import lombok.Value;
 @Value
 @Builder
 @EqualsAndHashCode(callSuper = false)
+@OwnedBy(HarnessTeam.PIPELINE)
 public class DockerArtifactDelegateRequest implements ArtifactSourceDelegateRequest {
   /** Images in repos need to be referenced via a path. */
   String imagePath;
@@ -29,6 +35,7 @@ public class DockerArtifactDelegateRequest implements ArtifactSourceDelegateRequ
   String tagRegex;
   /** List of buildNumbers/tags */
   List<String> tagsList;
+  String connectorRef;
   /** DockerHub Connector*/
   DockerConnectorDTO dockerConnectorDTO;
   /** Encrypted details for decrypting.*/
@@ -38,9 +45,14 @@ public class DockerArtifactDelegateRequest implements ArtifactSourceDelegateRequ
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    return Collections.singletonList(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
+    List<ExecutionCapability> capabilities =
+        new ArrayList<>(EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
+            encryptedDataDetails, maskingEvaluator));
+    populateDelegateSelectorCapability(capabilities, dockerConnectorDTO.getDelegateSelectors());
+    capabilities.add(HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(
         dockerConnectorDTO.getDockerRegistryUrl().endsWith("/") ? dockerConnectorDTO.getDockerRegistryUrl()
                                                                 : dockerConnectorDTO.getDockerRegistryUrl().concat("/"),
         maskingEvaluator));
+    return capabilities;
   }
 }

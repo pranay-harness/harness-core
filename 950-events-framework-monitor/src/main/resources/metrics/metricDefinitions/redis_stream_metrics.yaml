@@ -1,0 +1,21 @@
+name: Get stats of redis streams
+identifier: redis_stream_stats
+metricGroup: redis_streams
+metrics:
+  - metricName: redis_streams_length
+    metricDefinition: Length of the stream
+    type: LastValue
+    unit: "1"
+  - metricName: redis_streams_memory_usage
+    metricDefinition: Stream key total memory usage (in MBs)
+    type: LastValue
+    unit: "1"
+  - metricName: redis_streams_average_message_size
+    metricDefinition: Stream key Average message size (in KBs)
+    type: LastValue
+    unit: "1"
+  - metricName: redis_streams_events_framework_deadletter_queue_size
+    metricDefinition: Events framework deadletter queue size
+    type: LastValue
+    unit: "1"
+

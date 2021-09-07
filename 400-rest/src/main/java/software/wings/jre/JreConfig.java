@@ -1,5 +1,11 @@
 package software.wings.jre;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import com.google.inject.Singleton;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -10,9 +16,12 @@ import lombok.experimental.FieldDefaults;
 @Singleton
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+@OwnedBy(DEL)
 public class JreConfig {
   String version;
   String jreDirectory;
   String jreMacDirectory;
   String jreTarPath;
+  String alpnJarPath;
 }

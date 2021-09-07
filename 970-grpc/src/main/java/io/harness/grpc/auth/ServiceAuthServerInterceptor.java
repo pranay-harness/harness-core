@@ -48,6 +48,11 @@ public class ServiceAuthServerInterceptor implements ServerInterceptor {
       return Contexts.interceptCall(Context.current(), serverCall, metadata, serverCallHandler);
     }
 
+    // Urgent fix for DEL-1954. DelegateAuthServerInterceptor already authorized the call coming from delegate agent.
+    if (GrpcAuthUtils.isAuthenticatedWithAccountId(metadata)) {
+      return Contexts.interceptCall(Context.current(), serverCall, metadata, serverCallHandler);
+    }
+
     final String token = GrpcAuthUtils.getTokenFromRequest(metadata).orElse(null);
 
     @SuppressWarnings("unchecked") ServerCall.Listener<ReqT> noopListener = NOOP_LISTENER;

@@ -1,0 +1,12 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "artifact",
+    srcs = ["artifact.go"],
+    importpath = "github.com/wings-software/portal/product/ci/addon/artifact",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//product/ci/engine/proto",
+        "@com_github_pkg_errors//:errors",
+    ],
+)

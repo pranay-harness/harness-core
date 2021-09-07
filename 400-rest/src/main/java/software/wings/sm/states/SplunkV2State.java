@@ -4,6 +4,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.AnalysisTolerance;
@@ -28,6 +31,7 @@ import org.slf4j.Logger;
  */
 @Slf4j
 @FieldNameConstants(innerTypeName = "SplunkV2StateKeys")
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class SplunkV2State extends AbstractLogAnalysisState {
   @Attributes(required = true, title = "Splunk Server") private String analysisServerConfigId;
 

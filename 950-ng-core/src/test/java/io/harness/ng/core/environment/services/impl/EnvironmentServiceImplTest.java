@@ -5,13 +5,15 @@ import static io.harness.rule.OwnerRule.ARCHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.NGCoreTestBase;
 import io.harness.ng.core.environment.beans.Environment;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
-import io.harness.ng.core.environment.mappers.EnvironmentFilterHelper;
 import io.harness.ng.core.environment.mappers.EnvironmentMapper;
+import io.harness.ng.core.utils.CoreCriteriaUtils;
 import io.harness.rule.Owner;
 import io.harness.utils.PageUtils;
 
@@ -25,6 +27,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+@OwnedBy(HarnessTeam.CDC)
 public class EnvironmentServiceImplTest extends NGCoreTestBase {
   @Inject EnvironmentServiceImpl environmentService;
 
@@ -109,7 +112,7 @@ public class EnvironmentServiceImplTest extends NGCoreTestBase {
 
     // List services operations.
     Criteria criteriaFromFilter =
-        EnvironmentFilterHelper.createCriteriaForGetList("ACCOUNT_ID", "ORG_ID", "PROJECT_ID", false);
+        CoreCriteriaUtils.createCriteriaForGetList("ACCOUNT_ID", "ORG_ID", "PROJECT_ID", false);
     Pageable pageRequest = PageUtils.getPageRequest(0, 100, null);
     Page<Environment> list = environmentService.list(criteriaFromFilter, pageRequest);
     assertThat(list.getContent()).isNotNull();
@@ -117,7 +120,7 @@ public class EnvironmentServiceImplTest extends NGCoreTestBase {
     assertThat(EnvironmentMapper.writeDTO(list.getContent().get(0)))
         .isEqualTo(EnvironmentMapper.writeDTO(updatedEnvironment));
 
-    criteriaFromFilter = EnvironmentFilterHelper.createCriteriaForGetList("ACCOUNT_ID", "ORG_ID", null, false);
+    criteriaFromFilter = CoreCriteriaUtils.createCriteriaForGetList("ACCOUNT_ID", "ORG_ID", null, false);
     pageRequest = PageUtils.getPageRequest(0, 100, null);
 
     list = environmentService.list(criteriaFromFilter, pageRequest);

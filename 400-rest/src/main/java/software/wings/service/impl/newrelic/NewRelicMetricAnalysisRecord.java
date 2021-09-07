@@ -1,11 +1,16 @@
 package software.wings.service.impl.newrelic;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.common.VerificationConstants.ML_RECORDS_TTL_MONTHS;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.SortOrder;
 import io.harness.mongo.index.CompoundMongoIndex;
@@ -43,6 +48,8 @@ import org.mongodb.morphia.annotations.Transient;
 @FieldNameConstants(innerTypeName = "NewRelicMetricAnalysisRecordKeys")
 @Entity(value = "newRelicMetricAnalysisRecords", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@OwnedBy(HarnessTeam.CV)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class NewRelicMetricAnalysisRecord
     extends Base implements Comparable<NewRelicMetricAnalysisRecord>, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
@@ -161,40 +168,53 @@ public class NewRelicMetricAnalysisRecord
       if (riskDiff != 0) {
         return riskDiff;
       }
+      if (isEmpty(metricValues) && isEmpty(other.metricValues)) {
+        return metricName.compareTo(other.metricName);
+      }
 
-      if (metricValues != null) {
-        for (SortOrder sortOrder : NewRelicMetricValueDefinition.SORTING_METRIC_NAME.values()) {
-          for (NewRelicMetricAnalysisValue metricAnalysisValue : metricValues) {
-            if (metricAnalysisValue.getName().equals(sortOrder.getFieldName())) {
-              if (other.metricValues != null) {
-                for (NewRelicMetricAnalysisValue otherMetricAnalysisValue : other.metricValues) {
-                  if (otherMetricAnalysisValue.getName().equals(sortOrder.getFieldName())) {
-                    int sortCriteriaDiff = 0;
-                    switch (sortOrder.getOrderType()) {
-                      case ASC:
-                        sortCriteriaDiff =
-                            Double.compare(metricAnalysisValue.getTestValue(), otherMetricAnalysisValue.getTestValue());
-                        break;
-                      case DESC:
-                        sortCriteriaDiff =
-                            Double.compare(otherMetricAnalysisValue.getTestValue(), metricAnalysisValue.getTestValue());
-                        break;
-                      default:
-                        throw new IllegalArgumentException("Invalid sort order " + sortOrder.getOrderType());
-                    }
+      if (isNotEmpty(metricValues) && isEmpty(other.metricValues)) {
+        return -1;
+      }
 
-                    if (sortCriteriaDiff != 0) {
-                      return sortCriteriaDiff;
-                    }
-                  }
-                }
-              }
-            }
-          }
+      if (isEmpty(metricValues) && isNotEmpty(other.metricValues)) {
+        return 1;
+      }
+
+      for (SortOrder sortOrder : NewRelicMetricValueDefinition.SORTING_METRIC_NAME.values()) {
+        NewRelicMetricAnalysisValue thisAnalysisValue =
+            metricValues.stream()
+                .filter(newRelicMetricAnalysisValue
+                    -> newRelicMetricAnalysisValue.getName().equals(sortOrder.getFieldName()))
+                .findFirst()
+                .orElse(null);
+        NewRelicMetricAnalysisValue otherAnalysisValue =
+            other.metricValues.stream()
+                .filter(newRelicMetricAnalysisValue
+                    -> newRelicMetricAnalysisValue.getName().equals(sortOrder.getFieldName()))
+                .findFirst()
+                .orElse(null);
+        if (thisAnalysisValue == null && otherAnalysisValue == null) {
+          continue;
+        }
+
+        if (thisAnalysisValue == null) {
+          thisAnalysisValue = NewRelicMetricAnalysisValue.builder().testValue(-1).build();
+        }
+
+        if (otherAnalysisValue == null) {
+          otherAnalysisValue = NewRelicMetricAnalysisValue.builder().testValue(-1).build();
+        }
+        switch (sortOrder.getOrderType()) {
+          case ASC:
+            return Double.compare(thisAnalysisValue.getTestValue(), otherAnalysisValue.getTestValue());
+          case DESC:
+            return Double.compare(otherAnalysisValue.getTestValue(), thisAnalysisValue.getTestValue());
+          default:
+            throw new IllegalArgumentException("Invalid sort order " + sortOrder.getOrderType());
         }
       }
 
-      return 0;
+      return metricName.compareTo(other.metricName);
     }
   }
 

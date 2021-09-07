@@ -2,22 +2,21 @@ package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.pipeline.CDStepInfo;
-import io.harness.cdng.visitor.YamlTypes;
 import io.harness.executions.steps.StepSpecTypeConstants;
-import io.harness.plancreator.steps.StepElementConfig;
+import io.harness.plancreator.steps.TaskSelectorYaml;
+import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.pms.contracts.steps.StepType;
-import io.harness.pms.sdk.core.facilitator.OrchestrationFacilitatorType;
-import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.walktree.beans.LevelNode;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
-import io.harness.yaml.core.timeout.TimeoutUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
+import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -32,13 +31,15 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName(StepSpecTypeConstants.K8S_DELETE)
 @SimpleVisitorHelper(helperClass = K8sDeleteStepInfoVisitorHelper.class)
 @TypeAlias("K8sDeleteStepInfo")
+@RecasterAlias("io.harness.cdng.k8s.K8sDeleteStepInfo")
 public class K8sDeleteStepInfo extends K8sDeleteBaseStepInfo implements CDStepInfo, Visitable {
   // For Visitor Framework Impl
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
   @Builder(builderMethodName = "infoBuilder")
-  public K8sDeleteStepInfo(DeleteResourcesWrapper deleteResources, ParameterField<Boolean> skipDryRun) {
-    super(deleteResources, skipDryRun);
+  public K8sDeleteStepInfo(DeleteResourcesWrapper deleteResources, ParameterField<Boolean> skipDryRun,
+      ParameterField<List<TaskSelectorYaml>> delegateSelectors) {
+    super(deleteResources, skipDryRun, delegateSelectors);
   }
 
   @Override
@@ -52,20 +53,11 @@ public class K8sDeleteStepInfo extends K8sDeleteBaseStepInfo implements CDStepIn
   }
 
   @Override
-  public LevelNode getLevelNode() {
-    return LevelNode.builder().qualifierName(YamlTypes.K8S_DELETE).build();
-  }
-
-  @Override
-  public StepParameters getStepParametersInfo(StepElementConfig stepElementConfig) {
+  public SpecParameters getSpecParameters() {
     return K8sDeleteStepParameters.infoBuilder()
         .deleteResources(this.getDeleteResources())
         .skipDryRun(this.getSkipDryRun())
-        .timeout(ParameterField.createValueField(TimeoutUtils.getTimeoutString(stepElementConfig.getTimeout())))
-        .name(stepElementConfig.getName())
-        .description(stepElementConfig.getDescription())
-        .identifier(stepElementConfig.getIdentifier())
-        .skipCondition(stepElementConfig.getSkipCondition())
+        .delegateSelectors(this.getDelegateSelectors())
         .build();
   }
 }

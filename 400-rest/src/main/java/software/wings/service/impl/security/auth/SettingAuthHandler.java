@@ -1,8 +1,18 @@
 package software.wings.service.impl.security.auth;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.SettingAttribute.SettingCategory;
+import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CLOUD_PROVIDERS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CONNECTORS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_SSH_AND_WINRM;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
@@ -16,6 +26,8 @@ import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 
+@OwnedBy(PL)
+@TargetModule(HarnessModule.UNDEFINED)
 public class SettingAuthHandler {
   @Inject private AuthHandler authHandler;
   @Inject private SettingsService settingsService;
@@ -30,7 +42,7 @@ public class SettingAuthHandler {
     }
   }
 
-  public void authorize(SettingAttribute settingAttribute) {
+  public void authorize(SettingAttribute settingAttribute, String appId) {
     if (settingAttribute == null || settingAttribute.getValue() == null
         || settingAttribute.getValue().getType() == null) {
       return;
@@ -43,6 +55,18 @@ public class SettingAuthHandler {
         authorizeConnector();
         break;
       }
+      case SETTING: {
+        if (!SettingVariableTypes.STRING.equals(SettingVariableTypes.valueOf(settingAttribute.getValue().getType()))) {
+          authorizeSshAndWinRM();
+        } else {
+          if (GLOBAL_APP_ID.equals(appId)) {
+            authorizeAccountDefaults();
+          } else {
+            authorizeApplicationDefaults();
+          }
+        }
+        break;
+      }
       case CLOUD_PROVIDER: {
         authorizeCloudProvider();
         break;
@@ -51,6 +75,24 @@ public class SettingAuthHandler {
         break;
       }
     }
+  }
+
+  private void authorizeSshAndWinRM() {
+    List<PermissionAttribute> permissionAttributeList = new ArrayList<>();
+    permissionAttributeList.add(new PermissionAttribute(MANAGE_SSH_AND_WINRM));
+    authorize(permissionAttributeList);
+  }
+
+  private void authorizeAccountDefaults() {
+    List<PermissionAttribute> permissionAttributeList = new ArrayList<>();
+    permissionAttributeList.add(new PermissionAttribute(ACCOUNT_MANAGEMENT));
+    authorize(permissionAttributeList);
+  }
+
+  private void authorizeApplicationDefaults() {
+    List<PermissionAttribute> permissionAttributeList = new ArrayList<>();
+    permissionAttributeList.add(new PermissionAttribute(MANAGE_APPLICATIONS));
+    authorize(permissionAttributeList);
   }
 
   private void authorizeConnector() {
@@ -67,6 +109,6 @@ public class SettingAuthHandler {
 
   public void authorize(String appId, String settingAttributeId) {
     SettingAttribute settingAttribute = settingsService.get(appId, settingAttributeId);
-    authorize(settingAttribute);
+    authorize(settingAttribute, appId);
   }
 }

@@ -1,12 +1,8 @@
 package io.harness.cvng.core.beans;
 
-import io.harness.cvng.beans.CVMonitoringCategory;
-import io.harness.cvng.beans.TimeSeriesMetricType;
-import io.harness.cvng.beans.TimeSeriesThresholdType;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import lombok.Builder;
-import lombok.Data;
 import lombok.Value;
 
 @Value
@@ -19,12 +15,9 @@ public class StackdriverDefinition {
   private List<String> metricTags;
   private RiskProfile riskProfile;
   private boolean isManualQuery;
-
-  @Data
-  @Builder
-  public static class RiskProfile {
-    private CVMonitoringCategory category;
-    private TimeSeriesMetricType metricType;
-    List<TimeSeriesThresholdType> thresholdTypes;
+  private String serviceInstanceField;
+  @JsonProperty(value = "isManualQuery")
+  public boolean isManualQuery() {
+    return isManualQuery;
   }
 }

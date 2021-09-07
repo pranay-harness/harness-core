@@ -8,7 +8,6 @@ import io.harness.delegate.beans.connector.scm.genericgitconnector.GitAuthentica
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitHTTPAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthenticationDTO;
-import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSyncConfig;
 import io.harness.encryption.SecretRefHelper;
 import io.harness.exception.UnknownEnumTypeException;
 
@@ -19,14 +18,13 @@ public class GitEntityToDTO implements ConnectorEntityToDTOMapper<GitConfigDTO, 
   @Override
   public GitConfigDTO createConnectorDTO(GitConfig gitConnector) {
     GitAuthenticationDTO gitAuth = createGitAuthenticationDTO(gitConnector);
-    GitSyncConfig gitSyncConfig = createGitSyncConfigDTO(gitConnector);
     return GitConfigDTO.builder()
         .gitAuthType(gitConnector.getAuthType())
         .gitConnectionType(gitConnector.getConnectionType())
         .url(gitConnector.getUrl())
+        .validationRepo(gitConnector.getValidationRepo())
         .branchName(gitConnector.getBranchName())
         .gitAuth(gitAuth)
-        .gitSyncConfig(gitSyncConfig)
         .build();
   }
 
@@ -56,13 +54,6 @@ public class GitEntityToDTO implements ConnectorEntityToDTOMapper<GitConfigDTO, 
     GitSSHAuthentication gitSSHAuthentication = (GitSSHAuthentication) gitConfig.getAuthenticationDetails();
     return GitSSHAuthenticationDTO.builder()
         .encryptedSshKey(SecretRefHelper.createSecretRef(gitSSHAuthentication.getSshKeyReference()))
-        .build();
-  }
-
-  private GitSyncConfig createGitSyncConfigDTO(GitConfig gitConnector) {
-    return GitSyncConfig.builder()
-        .isSyncEnabled(gitConnector.isSupportsGitSync())
-        .customCommitAttributes(gitConnector.getCustomCommitAttributes())
         .build();
   }
 }

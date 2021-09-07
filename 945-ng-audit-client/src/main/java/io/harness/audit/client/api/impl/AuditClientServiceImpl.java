@@ -13,6 +13,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.audit.beans.AuditEntry;
 import io.harness.audit.beans.AuditEventDTO;
 import io.harness.audit.beans.AuditEventDTO.AuditEventDTOBuilder;
+import io.harness.audit.beans.AuthenticationInfoDTO;
+import io.harness.audit.beans.PrincipalType;
 import io.harness.audit.beans.YamlDiffRecordDTO;
 import io.harness.audit.client.api.AuditClientService;
 import io.harness.audit.client.remote.AuditClient;
@@ -23,36 +25,59 @@ import io.harness.request.RequestContextData;
 import io.harness.request.RequestMetadata;
 import io.harness.security.PrincipalContextData;
 import io.harness.security.dto.Principal;
+import io.harness.security.dto.ServicePrincipal;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @OwnedBy(PL)
 public class AuditClientServiceImpl implements AuditClientService {
-  @Inject private AuditClient auditClient;
+  private final AuditClient auditClient;
+
+  @Inject
+  public AuditClientServiceImpl(AuditClient auditClient) {
+    this.auditClient = auditClient;
+  }
 
   public boolean publishAudit(AuditEntry auditEntry, GlobalContext globalContext) {
+    AuditEventDTO auditEventDTO = getAuditEventDTO(auditEntry, globalContext);
+    return getResponse(auditClient.createAudit(auditEventDTO));
+  }
+
+  @Override
+  public boolean publishAudit(
+      AuditEntry auditEntry, AuthenticationInfoDTO authenticationInfo, GlobalContext globalContext) {
+    AuditEventDTO auditEventDTO = getAuditEventDTO(auditEntry, globalContext);
+    auditEventDTO.setAuthenticationInfo(authenticationInfo);
+    return getResponse(auditClient.createAudit(auditEventDTO));
+  }
+
+  private AuditEventDTO getAuditEventDTO(AuditEntry auditEntry, GlobalContext globalContext) {
     HttpRequestInfo httpRequestInfo = null;
     RequestMetadata requestMetadata = null;
     Principal principal = null;
     String correlationId = null;
-    if (globalContext.get(REQUEST_CONTEXT) instanceof RequestContextData
+    if (globalContext != null && globalContext.get(REQUEST_CONTEXT) instanceof RequestContextData
         && ((RequestContextData) globalContext.get(REQUEST_CONTEXT)).getRequestContext() != null) {
       httpRequestInfo =
           ((RequestContextData) globalContext.get(REQUEST_CONTEXT)).getRequestContext().getHttpRequestInfo();
       requestMetadata =
           ((RequestContextData) globalContext.get(REQUEST_CONTEXT)).getRequestContext().getRequestMetadata();
     }
-    if (globalContext.get(PRINCIPAL_CONTEXT) instanceof PrincipalContextData) {
+    if (globalContext != null && globalContext.get(PRINCIPAL_CONTEXT) instanceof PrincipalContextData) {
       principal = ((PrincipalContextData) globalContext.get(PRINCIPAL_CONTEXT)).getPrincipal();
     }
-    if (globalContext.get(MDC_ID) instanceof MdcGlobalContextData
+    if (globalContext != null && globalContext.get(MDC_ID) instanceof MdcGlobalContextData
         && ((MdcGlobalContextData) globalContext.get(MDC_ID)).getMap() != null) {
       correlationId = ((MdcGlobalContextData) globalContext.get(MDC_ID)).getMap().get(getCorrelationIdKey());
     }
-
-    YamlDiffRecordDTO yamlDiffRecordDTO =
-        YamlDiffRecordDTO.builder().newYaml(auditEntry.getNewYaml()).oldYaml(auditEntry.getOldYaml()).build();
+    YamlDiffRecordDTO yamlDiffRecordDTO = null;
+    if (auditEntry.getNewYaml() != null || auditEntry.getOldYaml() != null) {
+      yamlDiffRecordDTO =
+          YamlDiffRecordDTO.builder().newYaml(auditEntry.getNewYaml()).oldYaml(auditEntry.getOldYaml()).build();
+    }
 
     AuditEventDTOBuilder auditEventDTOBuilder = AuditEventDTO.builder()
                                                     .resource(auditEntry.getResource())
@@ -62,11 +87,17 @@ public class AuditClientServiceImpl implements AuditClientService {
                                                     .module(auditEntry.getModule())
                                                     .auditEventData(auditEntry.getAuditEventData())
                                                     .environment(auditEntry.getEnvironment())
-                                                    .yamlDiffRecordDTO(yamlDiffRecordDTO)
+                                                    .yamlDiffRecord(yamlDiffRecordDTO)
                                                     .timestamp(auditEntry.getTimestamp());
 
     if (principal != null) {
       auditEventDTOBuilder.authenticationInfo(fromSecurityPrincipal(principal));
+    } else {
+      log.error(String.format(
+          "[AUDIT_ERROR]: Principal not found for audit entry with insertId %s, this should not happen. Please check!!",
+          auditEntry.getInsertId()));
+      auditEventDTOBuilder.authenticationInfo(
+          fromSecurityPrincipal(new ServicePrincipal(String.valueOf(PrincipalType.SYSTEM))));
     }
     if (requestMetadata != null) {
       auditEventDTOBuilder.requestMetadata(requestMetadata);
@@ -77,6 +108,6 @@ public class AuditClientServiceImpl implements AuditClientService {
     if (correlationId != null) {
       auditEventDTOBuilder.internalInfo(ImmutableMap.of(CORRELATION_ID, correlationId));
     }
-    return getResponse(auditClient.createAudit(auditEventDTOBuilder.build()));
+    return auditEventDTOBuilder.build();
   }
 }

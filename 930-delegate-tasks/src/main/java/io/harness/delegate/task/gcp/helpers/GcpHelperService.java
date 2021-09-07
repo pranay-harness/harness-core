@@ -4,17 +4,22 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_CLOUD_PROVIDER;
 import static io.harness.exception.WingsException.USER;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.task.artifacts.gcr.exceptions.GcbClientException;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.gcp.helpers.GcpCredentialsHelperService;
 import io.harness.gcp.helpers.GcpHttpTransportHelperService;
+import io.harness.globalcontex.ErrorHandlingGlobalContextData;
+import io.harness.manage.GlobalContextManager;
 import io.harness.network.Http;
 import io.harness.serializer.JsonUtils;
 
 import software.wings.beans.TaskType;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.google.api.client.auth.oauth2.TokenResponseException;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.http.HttpTransport;
@@ -28,6 +33,7 @@ import com.google.api.services.storage.Storage;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
@@ -35,10 +41,12 @@ import lombok.extern.slf4j.Slf4j;
 import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import org.apache.commons.io.IOUtils;
 
 /**
  * Created by bzane on 2/22/17
  */
+@OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
 @Slf4j
 public class GcpHelperService {
@@ -158,7 +166,7 @@ public class GcpHelperService {
   public GoogleCredential getGoogleCredential(char[] serviceAccountKeyFileContent, boolean isUseDelegate)
       throws IOException {
     if (isUseDelegate) {
-      return gcpCredentialsHelperService.getApplicationDefaultCredentials();
+      return GcpCredentialsHelperService.getApplicationDefaultCredentials();
     }
     validateServiceAccountKey(serviceAccountKeyFileContent);
     return checkIfUseProxyAndGetGoogleCredentials(serviceAccountKeyFileContent);
@@ -176,6 +184,15 @@ public class GcpHelperService {
   private void validateServiceAccountKey(char[] serviceAccountKeyFileContent) {
     if (isEmpty(serviceAccountKeyFileContent)) {
       throw new InvalidRequestException("Empty service key found. Unable to validate", USER);
+    }
+    try {
+      GoogleCredential.fromStream(
+          IOUtils.toInputStream(String.valueOf(serviceAccountKeyFileContent), Charset.defaultCharset()));
+    } catch (Exception e) {
+      if (e instanceof JsonParseException) {
+        throw new InvalidRequestException("Provided Service account key is not in JSON format ", USER);
+      }
+      throw new InvalidRequestException("Invalid Google Cloud Platform credentials: " + e.getMessage(), e, USER);
     }
   }
 
@@ -238,7 +255,20 @@ public class GcpHelperService {
         throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE, USER).addParam("message", msg);
       }
     } catch (TokenResponseException e) {
+      ErrorHandlingGlobalContextData globalContextData =
+          GlobalContextManager.get(ErrorHandlingGlobalContextData.IS_SUPPORTED_ERROR_FRAMEWORK);
+      if (globalContextData != null && globalContextData.isSupportedErrorFramework()) {
+        throw e;
+      }
       throw new InvalidRequestException("407 Proxy Authentication Required");
+    }
+  }
+
+  public String getProjectId(char[] serviceAccountKeyFileContent, boolean isUseDelegate) {
+    if (isUseDelegate) {
+      return getClusterProjectId(TaskType.GCP_TASK.name());
+    } else {
+      return (String) (JsonUtils.asObject(new String(serviceAccountKeyFileContent), HashMap.class)).get("project_id");
     }
   }
 

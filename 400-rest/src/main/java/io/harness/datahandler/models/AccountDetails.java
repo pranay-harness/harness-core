@@ -6,6 +6,7 @@ import static io.harness.annotations.dev.HarnessTeam.GTM;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.license.CeLicenseInfo;
+import io.harness.ng.core.account.DefaultExperience;
 
 import software.wings.beans.LicenseInfo;
 
@@ -19,6 +20,9 @@ public class AccountDetails {
   private String accountName;
   private String companyName;
   private String cluster;
+  private boolean createdFromNG;
+  private DefaultExperience defaultExperience;
   private LicenseInfo licenseInfo;
   private CeLicenseInfo ceLicenseInfo;
+  private int activeServiceCount;
 }

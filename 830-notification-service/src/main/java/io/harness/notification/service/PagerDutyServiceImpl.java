@@ -187,17 +187,12 @@ public class PagerDutyServiceImpl implements ChannelService {
   private List<String> getRecipients(NotificationRequest notificationRequest) {
     PagerDuty pagerDutyDetails = notificationRequest.getPagerDuty();
     List<String> recipients = new ArrayList<>(pagerDutyDetails.getPagerDutyIntegrationKeysList());
-    if (isNotEmpty(pagerDutyDetails.getUserGroupIdsList())) {
-      List<String> pagerDutyKeys =
-          notificationSettingsService.getNotificationSettingsForGroups(pagerDutyDetails.getUserGroupIdsList(),
-              NotificationChannelType.PAGERDUTY, notificationRequest.getAccountId());
-      recipients.addAll(pagerDutyKeys);
-    } else {
+    if (isNotEmpty(pagerDutyDetails.getUserGroupList())) {
       List<String> resolvedRecipients = notificationSettingsService.getNotificationRequestForUserGroups(
           pagerDutyDetails.getUserGroupList(), NotificationChannelType.PAGERDUTY, notificationRequest.getAccountId());
       recipients.addAll(resolvedRecipients);
     }
-    return recipients;
+    return recipients.stream().distinct().collect(Collectors.toList());
   }
 
   @Getter

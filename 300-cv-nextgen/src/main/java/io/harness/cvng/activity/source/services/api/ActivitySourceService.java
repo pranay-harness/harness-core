@@ -10,9 +10,6 @@ import io.harness.ng.beans.PageResponse;
 import javax.validation.constraints.NotNull;
 @OwnedBy(HarnessTeam.CV)
 public interface ActivitySourceService extends DeleteEntityByHandler<ActivitySource> {
-  String saveActivitySource(
-      String accountId, String orgIdentifier, String projectIdentifier, ActivitySourceDTO activitySourceDTO);
-
   String create(String accountId, ActivitySourceDTO activitySourceDTO);
 
   String update(String accountId, String identifier, ActivitySourceDTO activitySourceDTO);

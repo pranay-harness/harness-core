@@ -1,7 +1,11 @@
 package io.harness.yaml.snippets;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.yaml.snippets.bean.YamlSnippetTags;
 
+@OwnedBy(DX)
 public enum SnippetTag implements YamlSnippetTags {
   k8s,
   git,
@@ -20,10 +24,13 @@ public enum SnippetTag implements YamlSnippetTags {
   splunk,
   appdynamics,
   vault,
+  azurekeyvault,
   local,
   gcpkms,
   gcp,
   aws,
+  awskms,
+  awssecretmanager,
   artifactory,
   jira,
   nexus,
@@ -35,5 +42,12 @@ public enum SnippetTag implements YamlSnippetTags {
   cek8s,
   codecommit,
   httphelmrepo,
-  newrelic
+  newrelic,
+  gcpcloudcost,
+  prometheus,
+  datadog,
+  sumologic,
+  dynatrace,
+  pagerduty,
+  argoconnector
 }

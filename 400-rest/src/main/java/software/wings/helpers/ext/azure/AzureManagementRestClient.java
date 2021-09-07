@@ -1,10 +1,14 @@
 package software.wings.helpers.ext.azure;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.Path;
 
+@OwnedBy(HarnessTeam.CDC)
 public interface AzureManagementRestClient {
   @GET(
       "/subscriptions/{subscriptionId}/resourcegroups/{resourceGroup}/providers/Microsoft.ContainerService/managedClusters/{clusterName}/accessProfiles/clusterAdmin?api-version=2017-08-31")

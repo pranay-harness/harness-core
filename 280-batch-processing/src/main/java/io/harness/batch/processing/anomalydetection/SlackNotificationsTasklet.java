@@ -25,8 +25,8 @@ public class SlackNotificationsTasklet implements Tasklet {
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
     parameters = chunkContext.getStepContext().getStepExecution().getJobParameters();
     String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
-    Instant endTime = getFieldValueFromJobParams(CCMJobConstants.JOB_END_DATE);
-    alertsService.sendAnomalyDailyReport(accountId, endTime);
+    Instant startTime = getFieldValueFromJobParams(CCMJobConstants.JOB_START_DATE);
+    alertsService.sendAnomalyDailyReport(accountId, startTime);
     return null;
   }
   private Instant getFieldValueFromJobParams(String fieldName) {

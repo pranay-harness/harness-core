@@ -27,7 +27,7 @@ ARTIFACT_TYPE:
       value: WAR
     - name: ZIP File
       value: ZIP
-    - name: Pivotal Cloud Foundry
+    - name: Tanzu Application Services
       value: PCF
     - name: IIS Website
       value: IIS
@@ -176,6 +176,8 @@ REPAIR_ACTION_CODE:
       value: ROLLBACK_WORKFLOW
     - name: Rollback Phase Execution
       value: ROLLBACK_PHASE
+    - name: Rollback Provisioner after Phases
+      value: ROLLBACK_PROVISIONER_AFTER_PHASES
     - name: Ignore
       value: IGNORE
     - name: Retry
@@ -192,6 +194,8 @@ ACTION_AFTER_RETRY:
       value: ROLLBACK_WORKFLOW
     - name: Rollback Phase
       value: ROLLBACK_PHASE
+    - name: Rollback Provisioner after Phases
+      value: ROLLBACK_PROVISIONER_AFTER_PHASES
     - name: Ignore
       value: IGNORE
     - name: Retry
@@ -407,7 +411,7 @@ TASK_TYPES:
       value: CONNECTIVITY_VALIDATION
     - name: Container
       value: CONTAINER
-    - name: Continuous Efficiency
+    - name: Cloud Cost Management
       value: CE
     - name: Continuous Integration
       value: CI
@@ -417,6 +421,8 @@ TASK_TYPES:
       value: LOG
     - name: Custom Manifest Fetch Values Task
       value: CUSTOM_MANIFEST_VALUES_FETCH_TASK
+    - name: Custom Manifest Fetch Task
+      value: CUSTOM_MANIFEST_FETCH_TASK
     - name: Docker Hub
       value: DOCKER
     - name: Dynatrace
@@ -483,6 +489,8 @@ TASK_TYPES:
       value: SUMO
     - name: Terraform
       value: TERRAFORM
+    - name: Terragrunt
+      value: TERRAGRUNT
     - name: Trigger
       value: TRIGGER
 

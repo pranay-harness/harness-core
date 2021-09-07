@@ -1,5 +1,6 @@
 package software.wings.resources.yaml;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.validation.Validator.notNullCheck;
 
@@ -11,6 +12,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CLOUD_PROVIDERS;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CONFIG_AS_CODE;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_CONNECTORS;
+import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DEPLOYMENT_FREEZES;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_TAGS;
 import static software.wings.security.PermissionAttribute.PermissionType.PIPELINE;
 import static software.wings.security.PermissionAttribute.PermissionType.PROVISIONER;
@@ -22,6 +24,7 @@ import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedException;
@@ -49,11 +52,10 @@ import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.template.Template;
 import software.wings.exception.YamlProcessingException;
 import software.wings.infra.InfrastructureDefinition;
-import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserThreadLocal;
+import software.wings.security.annotations.ApiKeyAuthorized;
 import software.wings.security.annotations.AuthRule;
-import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.HarnessUserGroupService;
@@ -109,6 +111,8 @@ import org.jvnet.hk2.annotations.Optional;
 @Path("setup-as-code/yaml")
 @Produces(APPLICATION_JSON)
 @Scope(SETTING)
+@ApiKeyAuthorized(permissionType = LOGGED_IN, skipAuth = true)
+@OwnedBy(DX)
 @Slf4j
 public class YamlResource {
   private YamlResourceService yamlResourceService;
@@ -159,6 +163,7 @@ public class YamlResource {
   @Path("/workflows/{workflowId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = WORKFLOW, action = Action.READ)
   @AuthRule(permissionType = WORKFLOW, action = Action.READ)
   public RestResponse<YamlPayload> getWorkflow(
       @QueryParam("appId") String appId, @PathParam("workflowId") String workflowId) {
@@ -185,6 +190,7 @@ public class YamlResource {
   @Path("/templates/{templateId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = TEMPLATE_MANAGEMENT, action = Action.UPDATE)
   @AuthRule(permissionType = TEMPLATE_MANAGEMENT, action = Action.UPDATE)
   public RestResponse<Template> updateTemplate(@QueryParam("accountId") String accountId,
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, YamlPayload yamlPayload,
@@ -203,6 +209,7 @@ public class YamlResource {
   @Path("/infrastructureprovisioners/{infraProvisionerId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = PROVISIONER, action = Action.READ)
   @AuthRule(permissionType = PROVISIONER, action = Action.READ)
   public RestResponse<YamlPayload> getProvisioner(
       @QueryParam("appId") String appId, @PathParam("infraProvisionerId") String provisionerId) {
@@ -213,6 +220,7 @@ public class YamlResource {
   @Path("/infrastructureprovisioners/{infraProvisionerId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = PROVISIONER, action = Action.UPDATE)
   @AuthRule(permissionType = PROVISIONER, action = Action.UPDATE)
   public RestResponse<InfrastructureProvisioner> updateProvisioner(@QueryParam("accountId") String accountId,
       @QueryParam("appId") String appId, YamlPayload yamlPayload,
@@ -249,6 +257,7 @@ public class YamlResource {
   @Path("/artifactTriggers/{artifactStreamId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = ACCOUNT_MANAGEMENT)
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<ArtifactStream> updateArtifactTrigger(@QueryParam("accountId") String accountId,
       @QueryParam("appId") String appId, YamlPayload yamlPayload,
@@ -283,6 +292,7 @@ public class YamlResource {
   @Path("/triggers/{triggerId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = ACCOUNT_MANAGEMENT)
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<Base> updateTrigger(@QueryParam("appId") String appId, @QueryParam("accountId") String accountId,
       YamlPayload yamlPayload, @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled,
@@ -301,6 +311,7 @@ public class YamlResource {
   @Path("/pipelines/{pipelineId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = PIPELINE, action = Action.READ)
   @AuthRule(permissionType = PIPELINE, action = Action.READ)
   public RestResponse<YamlPayload> getPipeline(
       @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId) {
@@ -311,6 +322,7 @@ public class YamlResource {
   @Path("/application-manifests/{applicationManifestId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = SERVICE, action = Action.READ)
   @AuthRule(permissionType = SERVICE, action = Action.READ)
   public RestResponse<YamlPayload> getApplicationManifestId(@QueryParam("appId") String appId,
       @QueryParam("serviceId") String serviceId, @PathParam("applicationManifestId") String applicationManifestId) {
@@ -332,6 +344,7 @@ public class YamlResource {
   @Path("/manifest-files/{manifestFileId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = SERVICE, action = Action.READ)
   @AuthRule(permissionType = SERVICE, action = Action.READ)
   public RestResponse<YamlPayload> getApplicationManifestFile(@QueryParam("appId") String appId,
       @QueryParam("serviceId") String serviceId, @PathParam("manifestFileId") String manifestFileId) {
@@ -360,6 +373,7 @@ public class YamlResource {
   @Path("/pipelines/{pipelineId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = PIPELINE, action = Action.UPDATE)
   @AuthRule(permissionType = PIPELINE, action = Action.UPDATE)
   public RestResponse<Pipeline> updatePipeline(@QueryParam("accountId") String accountId,
       @QueryParam("appId") String appId, YamlPayload yamlPayload, @PathParam("pipelineId") String pipelineId) {
@@ -370,6 +384,7 @@ public class YamlResource {
   @Path("/workflows/{workflowId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = WORKFLOW, action = Action.UPDATE)
   @AuthRule(permissionType = WORKFLOW, action = Action.UPDATE)
   public RestResponse<Workflow> updateWorkflow(@QueryParam("accountId") String accountId,
       @QueryParam("appId") String appId, YamlPayload yamlPayload, @PathParam("workflowId") String workflowId) {
@@ -419,6 +434,7 @@ public class YamlResource {
   @Path("/service-commands/{serviceCommandId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = SERVICE, action = Action.UPDATE)
   @AuthRule(permissionType = SERVICE, action = Action.UPDATE)
   public RestResponse<ServiceCommand> updateServiceCommand(@QueryParam("accountId") String accountId,
       YamlPayload yamlPayload, @PathParam("serviceCommandId") String serviceCommandId) {
@@ -484,6 +500,7 @@ public class YamlResource {
   @Path("/defaults/{uuid}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = ACCOUNT_MANAGEMENT)
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<ServiceCommand> updateDefaults(
       @QueryParam("accountId") String accountId, YamlPayload yamlPayload, @PathParam("uuid") String uuid) {
@@ -504,6 +521,7 @@ public class YamlResource {
   @Path("/settings/{uuid}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = MANAGE_CONNECTORS)
   @AuthRule(permissionType = MANAGE_CONNECTORS)
   @AuthRule(permissionType = MANAGE_CLOUD_PROVIDERS)
   public RestResponse<SettingAttribute> updateSettingAttribute(@QueryParam("accountId") String accountId,
@@ -523,6 +541,7 @@ public class YamlResource {
   @Path("/environments/{envId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = ENV, action = Action.READ)
   @AuthRule(permissionType = ENV, action = Action.READ)
   public RestResponse<YamlPayload> getEnvironment(@QueryParam("appId") String appId, @PathParam("envId") String envId) {
     return yamlResourceService.getEnvironment(appId, envId);
@@ -549,6 +568,7 @@ public class YamlResource {
   @Path("/environments/{envId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = ENV, action = Action.UPDATE)
   @AuthRule(permissionType = ENV, action = Action.UPDATE)
   public RestResponse<Environment> updateEnvironment(@QueryParam("accountId") String accountId,
       @QueryParam("appId") String appId, YamlPayload yamlPayload, @PathParam("envId") String envId) {
@@ -566,6 +586,7 @@ public class YamlResource {
   @Path("/services/{serviceId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = SERVICE, action = Action.READ)
   @AuthRule(permissionType = SERVICE, action = Action.READ)
   public RestResponse<YamlPayload> getService(
       @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId) {
@@ -584,6 +605,7 @@ public class YamlResource {
   @Path("/services/{serviceId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = SERVICE, action = Action.UPDATE)
   @AuthRule(permissionType = SERVICE, action = Action.UPDATE)
   public RestResponse<Service> updateService(@QueryParam("accountId") String accountId,
       @QueryParam("appId") String appId, YamlPayload yamlPayload, @PathParam("serviceId") String serviceId) {
@@ -636,6 +658,7 @@ public class YamlResource {
   @Path("/applications/{appId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = MANAGE_APPLICATIONS)
   @AuthRule(permissionType = MANAGE_APPLICATIONS)
   public RestResponse<Application> updateApp(@PathParam("appId") String appId, YamlPayload yamlPayload,
       @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
@@ -652,7 +675,7 @@ public class YamlResource {
   @Path("/directory")
   @Timed
   @ExceptionMetered
-  @ExternalFacingApiAuth
+  @ApiKeyAuthorized(permissionType = LOGGED_IN)
   public RestResponse<DirectoryNode> getDirectory(
       @QueryParam("accountId") String accountId, @QueryParam("appId") String appId) {
     return new RestResponse<>(yamlDirectoryService.getDirectory(accountId, appId));
@@ -662,6 +685,7 @@ public class YamlResource {
   @Path("/manifest")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = SERVICE, action = Action.READ)
   @AuthRule(permissionType = SERVICE, action = Action.READ)
   public RestResponse<DirectoryNode> getApplicationManifestForService(@QueryParam("accountId") String accountId,
       @QueryParam("appId") String appId, @QueryParam("serviceId") String serviceId) {
@@ -693,6 +717,7 @@ public class YamlResource {
   @Path("full-sync/{entityId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = MANAGE_CONFIG_AS_CODE)
   @AuthRule(permissionType = MANAGE_CONFIG_AS_CODE)
   public RestResponse pushDirectory(@PathParam("entityId") String entityId, @QueryParam("accountId") String accountId,
       @QueryParam("entityType") EntityType entityType) {
@@ -749,6 +774,7 @@ public class YamlResource {
   @Path("/infrastructuremappings/{infraMappingId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = ENV, action = Action.UPDATE)
   @AuthRule(permissionType = ENV, action = Action.UPDATE)
   public RestResponse<Base> updateInfraMapping(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, YamlPayload yamlPayload,
@@ -878,6 +904,7 @@ public class YamlResource {
   @Path("/user-data-specs/{userDataSpecId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = SERVICE, action = Action.UPDATE)
   @AuthRule(permissionType = SERVICE, action = Action.UPDATE)
   public RestResponse<Base> updateUserDataSpec(@QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, YamlPayload yamlPayload,
@@ -932,6 +959,7 @@ public class YamlResource {
   @Path("git-config")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = MANAGE_CONFIG_AS_CODE)
   @AuthRule(permissionType = MANAGE_CONFIG_AS_CODE)
   public RestResponse<YamlGitConfig> saveGitConfig(
       @QueryParam("accountId") String accountId, YamlGitConfig yamlGitSync) {
@@ -959,6 +987,7 @@ public class YamlResource {
   @Path("git-config/{entityId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = MANAGE_CONFIG_AS_CODE)
   @AuthRule(permissionType = MANAGE_CONFIG_AS_CODE)
   public RestResponse<YamlGitConfig> delete(@PathParam("entityId") String entityId,
       @QueryParam("accountId") String accountId, @QueryParam("entityType") EntityType entityType) {
@@ -977,6 +1006,7 @@ public class YamlResource {
   @Path("git-config/{entityId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = MANAGE_CONFIG_AS_CODE)
   @AuthRule(permissionType = MANAGE_CONFIG_AS_CODE)
   public RestResponse<YamlGitConfig> updateGitConfig(
       @QueryParam("accountId") String accountId, YamlGitConfig yamlGitSync) {
@@ -1084,6 +1114,7 @@ public class YamlResource {
   @Path("git-sync-errors-discard-all")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = MANAGE_CONFIG_AS_CODE)
   @AuthRule(permissionType = MANAGE_CONFIG_AS_CODE)
   public RestResponse discardGitSyncError(@QueryParam("accountId") String accountId) {
     return yamlGitService.discardAllGitSyncError(accountId);
@@ -1093,6 +1124,7 @@ public class YamlResource {
   @Path("git-sync-errors-discard-selected")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = MANAGE_CONFIG_AS_CODE)
   @AuthRule(permissionType = MANAGE_CONFIG_AS_CODE)
   public RestResponse discardGitSyncError(@QueryParam("accountId") String accountId, List<String> errorIds) {
     return yamlGitService.discardGitSyncErrorsForGivenIds(accountId, errorIds);
@@ -1103,6 +1135,7 @@ public class YamlResource {
   @Consumes(MULTIPART_FORM_DATA)
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = MANAGE_CONFIG_AS_CODE)
   @AuthRule(permissionType = MANAGE_CONFIG_AS_CODE)
   public RestResponse<String> processYamlFilesAsZip(@QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("yamlPath") @Optional String yamlPath, @FormDataParam("file") InputStream uploadedInputStream,
@@ -1128,6 +1161,7 @@ public class YamlResource {
   @Path("/cvconfigurations/{cvConfigId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = LOGGED_IN)
   @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<YamlPayload> getCVConfiguration(
       @QueryParam("appId") String appId, @PathParam("cvConfigId") String cvConfigId) {
@@ -1138,6 +1172,7 @@ public class YamlResource {
   @Path("/cvconfigurations/{cvConfigId}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = LOGGED_IN)
   @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<Base> updateCVConfiguration(@PathParam("cvConfigId") String cvConfigId,
       @QueryParam("appId") String appId, @QueryParam("accountId") String accountId, YamlPayload yamlPayload) {
@@ -1148,6 +1183,7 @@ public class YamlResource {
   @Path("full-sync-account")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = MANAGE_CONFIG_AS_CODE)
   @AuthRule(permissionType = MANAGE_CONFIG_AS_CODE)
   public RestResponse fullSyncAccount(@QueryParam("accountId") String accountId) {
     yamlGitService.asyncFullSyncForEntireAccount(accountId);
@@ -1158,6 +1194,7 @@ public class YamlResource {
   @Path("/tags/{uuid}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = MANAGE_TAGS)
   @AuthRule(permissionType = MANAGE_TAGS)
   public RestResponse<YamlPayload> getTags(@QueryParam("accountId") String accountId) {
     return yamlResourceService.getHarnessTags(accountId);
@@ -1167,6 +1204,7 @@ public class YamlResource {
   @Path("/tags/{uuid}")
   @Timed
   @ExceptionMetered
+  @ApiKeyAuthorized(permissionType = MANAGE_TAGS)
   @AuthRule(permissionType = MANAGE_TAGS)
   public RestResponse<ServiceCommand> updateTags(
       @QueryParam("accountId") String accountId, YamlPayload yamlPayload, @PathParam("uuid") String uuid) {
@@ -1202,7 +1240,7 @@ public class YamlResource {
   @Path("/yaml-content")
   @Timed
   @ExceptionMetered
-  @ExternalFacingApiAuth
+  @ApiKeyAuthorized(permissionType = LOGGED_IN)
   public RestResponse<YamlPayload> getYamlForFilePath(@QueryParam("accountId") String accountId,
       @QueryParam("yamlFilePath") String yamlFilePath, @QueryParam("yamlSubType") String yamlSubType,
       @QueryParam("applicationId") String applicationId) {
@@ -1223,7 +1261,7 @@ public class YamlResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
-  @ExternalFacingApiAuth
+  @ApiKeyAuthorized(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<YamlOperationResponse> upsertYAMLEntities(@QueryParam("accountId") @NotEmpty String accountId,
       @FormDataParam("file") InputStream uploadedInputStream) throws IOException {
     return new RestResponse<>(yamlService.upsertYAMLFilesAsZip(accountId,
@@ -1236,7 +1274,7 @@ public class YamlResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
-  @ExternalFacingApiAuth
+  @ApiKeyAuthorized(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<FileOperationStatus> upsertYAMLEntity(@QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("yamlFilePath") @NotEmpty String yamlFilePath, @FormDataParam("yamlContent") String yamlContent) {
     return new RestResponse<>(yamlService.upsertYAMLFile(accountId, yamlFilePath, yamlContent));
@@ -1247,7 +1285,7 @@ public class YamlResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
-  @ExternalFacingApiAuth
+  @ApiKeyAuthorized(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<YamlOperationResponse> deleteYAMLEntities(
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("filePaths") @NotEmpty List<String> filePaths) {
     return new RestResponse<>(yamlService.deleteYAMLByPaths(accountId, filePaths));
@@ -1279,7 +1317,8 @@ public class YamlResource {
   @Path("/compliance-config/{governanceConfigId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionAttribute.PermissionType.MANAGE_DEPLOYMENT_FREEZES)
+  @ApiKeyAuthorized(permissionType = MANAGE_DEPLOYMENT_FREEZES)
+  @AuthRule(permissionType = MANAGE_DEPLOYMENT_FREEZES)
   public RestResponse<YamlPayload> updateGovernanceConfig(@QueryParam("accountId") String accountId,
       YamlPayload yamlPayload, @PathParam("governanceConfigId") String governanceConfigId) {
     return yamlService.update(yamlPayload, accountId, governanceConfigId);

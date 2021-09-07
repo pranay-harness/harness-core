@@ -2,10 +2,13 @@ package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.config.CloudCostAware;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import io.harness.expression.ExpressionEvaluator;
@@ -24,14 +27,17 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @JsonTypeName("AWS")
@@ -40,6 +46,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @ToString(exclude = "secretKey")
 @EqualsAndHashCode(callSuper = false)
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class AwsConfig extends SettingValue implements EncryptableSetting, CloudCostAware {
   private static final String AWS_URL = "https://aws.amazon.com/";
   @Attributes(title = "Access Key") @Encrypted(fieldName = "access_key", isReference = true) private char[] accessKey;
@@ -84,8 +91,19 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    return Arrays.asList(
+    List<ExecutionCapability> executionCapabilities = new ArrayList<>();
+
+    executionCapabilities.add(
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(AWS_URL, maskingEvaluator));
+
+    if ((this.isUseEc2IamCredentials() || this.useIRSA) && StringUtils.isNotEmpty(tag)) {
+      executionCapabilities.add(SelectorCapability.builder()
+                                    .selectors(new HashSet<String>(Arrays.asList(tag)))
+                                    .selectorOrigin("Cloud Provider")
+                                    .build());
+    }
+
+    return executionCapabilities;
   }
 
   @Override
@@ -95,7 +113,7 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
 
   @Override
   public List<String> fetchRelevantEncryptedSecrets() {
-    if (useEc2IamCredentials) {
+    if (useEc2IamCredentials || useIRSA) {
       return Collections.emptyList();
     }
 

@@ -1,6 +1,7 @@
 package io.harness.batch.processing.service.impl;
 
-import io.harness.batch.processing.BatchProcessingException;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.batch.processing.ccm.AzureStorageSyncRecord;
 import io.harness.batch.processing.config.AzureStorageSyncConfig;
 import io.harness.batch.processing.config.BatchMainConfig;
@@ -47,13 +48,16 @@ public class AzureStorageSyncServiceImpl implements AzureStorageSyncService {
 
   @Override
   @SuppressWarnings("PMD")
-  public void syncContainer(AzureStorageSyncRecord azureStorageSyncRecord) {
+  public boolean syncContainer(AzureStorageSyncRecord azureStorageSyncRecord) {
     AzureStorageSyncConfig azureStorageSyncConfig = configuration.getAzureStorageSyncConfig();
-    String sourcePath = null;
-    String sourceSasToken = null;
+    String sourcePath = "";
+    String sourceSasToken = "";
 
-    String destinationPath = null;
-    String destinationSasToken = null;
+    String destinationPath = "";
+    String destinationSasToken = "";
+
+    String destinationPathWithToken = "";
+    String sourcePathWithToken = "";
 
     // Retry class config to retry aws commands
     RetryConfig config = RetryConfig.custom()
@@ -66,6 +70,7 @@ public class AzureStorageSyncServiceImpl implements AzureStorageSyncService {
     Retry.EventPublisher publisher = retry.getEventPublisher();
     publisher.onRetry(event -> log.info(event.toString()));
     publisher.onSuccess(event -> log.info(event.toString()));
+
     try {
       // generate SAS token for source
       sourceSasToken = genSasToken(azureStorageSyncRecord.getStorageAccountName(),
@@ -73,7 +78,8 @@ public class AzureStorageSyncServiceImpl implements AzureStorageSyncService {
           azureStorageSyncConfig.getAzureAppClientId(), azureStorageSyncConfig.getAzureAppClientSecret(), false);
     } catch (Exception exception) {
       log.error("Error in generating sourceSasToken sas token", exception);
-      throw exception;
+      // Proceed to next sync
+      return false;
     }
     try {
       destinationSasToken = azureStorageSyncConfig.getAzureSasToken();
@@ -87,39 +93,52 @@ public class AzureStorageSyncServiceImpl implements AzureStorageSyncService {
      */
     } catch (Exception exception) {
       log.error("Error in generating destinationSasToken sas token", exception);
-      throw exception;
+      // Proceed to next sync
+      return false;
     }
     try {
       // Run the azcopy tool to do the sync
-      String storageAccountUrl =
+      String sourceStorageAccountUrl =
           String.format(AZURE_STORAGE_URL_FORMAT, azureStorageSyncRecord.getStorageAccountName(), AZURE_STORAGE_SUFFIX);
-      sourcePath = String.join("/", storageAccountUrl, azureStorageSyncRecord.getContainerName(),
-                       azureStorageSyncRecord.getDirectoryName())
-          + "?" + sourceSasToken;
-      storageAccountUrl = String.format(
+      String destStorageAccountUrl = String.format(
           AZURE_STORAGE_URL_FORMAT, azureStorageSyncConfig.getAzureStorageAccountName(), AZURE_STORAGE_SUFFIX);
-      destinationPath = String.join("/", storageAccountUrl, azureStorageSyncConfig.getAzureStorageContainerName(),
-                            azureStorageSyncRecord.getAccountId(), azureStorageSyncRecord.getSettingId())
-          + "?" + destinationSasToken;
-      final ArrayList<String> cmd = Lists.newArrayList("azcopy", "sync", sourcePath, destinationPath, "--recursive");
-      // TODO: Remove below info logging for security reasons
-      log.info("azcopy sync cmd: {}", cmd);
-
+      if (azureStorageSyncRecord.getReportName() != null && isNotEmpty(azureStorageSyncRecord.getReportName())) {
+        sourcePath = String.join("/", sourceStorageAccountUrl, azureStorageSyncRecord.getContainerName(),
+            azureStorageSyncRecord.getDirectoryName(), azureStorageSyncRecord.getReportName());
+        destinationPath = String.join("/", destStorageAccountUrl, azureStorageSyncConfig.getAzureStorageContainerName(),
+            azureStorageSyncRecord.getAccountId(), azureStorageSyncRecord.getSettingId(),
+            azureStorageSyncRecord.getTenantId(), azureStorageSyncRecord.getReportName());
+      } else {
+        sourcePath = String.join("/", sourceStorageAccountUrl, azureStorageSyncRecord.getContainerName(),
+            azureStorageSyncRecord.getDirectoryName());
+        destinationPath = String.join("/", destStorageAccountUrl, azureStorageSyncConfig.getAzureStorageContainerName(),
+            azureStorageSyncRecord.getAccountId(), azureStorageSyncRecord.getSettingId(),
+            azureStorageSyncRecord.getTenantId());
+      }
+      sourcePathWithToken = sourcePath + "?" + sourceSasToken;
+      destinationPathWithToken = destinationPath + "?" + destinationSasToken;
+      log.info("azcopy sync source {}, destination {}", sourcePath, destinationPath);
+      final ArrayList<String> cmd =
+          Lists.newArrayList("azcopy", "sync", sourcePathWithToken, destinationPathWithToken, "--recursive");
+      log.debug("azcopy sync cmd: {}", cmd);
       // Wrap azcopy sync with a retry mechanism.
       CheckedFunction0<ProcessResult> retryingAzcopySync =
           Retry.decorateCheckedSupplier(retry, () -> trySyncStorage(cmd));
       try {
         retryingAzcopySync.apply();
       } catch (Throwable throwable) {
-        log.error("azcopy retries are exhausted");
-        throw new BatchProcessingException("azcopy sync failed", throwable);
+        log.error("Exception during azcopy sync {}", throwable);
+        // throw new BatchProcessingException("azcopy sync failed", throwable);
+        return false;
       }
       log.info("azcopy sync completed");
-
     } catch (InvalidExitValueException | JsonSyntaxException e) {
-      log.error("Exception during azcopy sync for src={}, dest={}", sourcePath, destinationPath);
-      throw new BatchProcessingException("azcopy sync failed", e);
+      log.error(e.getMessage(), e);
+      log.info("Exception during azcopy sync for src={}, dest={} exception={}", sourcePath, destinationPath, e);
+      // throw new BatchProcessingException("azcopy sync failed {}", e);
+      return false;
     }
+    return true;
   }
 
   private String genSasToken(String storageAccountName, String containerName, String tenantId, String azureAppClientId,
@@ -159,13 +178,16 @@ public class AzureStorageSyncServiceImpl implements AzureStorageSyncService {
   public ProcessResult trySyncStorage(ArrayList<String> cmd)
       throws InterruptedException, TimeoutException, IOException {
     log.info("Running the azcopy sync command...");
-    return getProcessExecutor()
-        .command(cmd)
-        .timeout(SYNC_TIMEOUT_MINUTES, TimeUnit.MINUTES)
-        .redirectError(Slf4jStream.of(log).asError())
-        .redirectOutput(Slf4jStream.of(log).asInfo())
-        .exitValue(0)
-        .execute();
+    ProcessResult pr = getProcessExecutor()
+                           .command(cmd)
+                           .timeout(SYNC_TIMEOUT_MINUTES, TimeUnit.MINUTES)
+                           .redirectError(Slf4jStream.of(log).asError())
+                           .redirectOutput(Slf4jStream.of(log).asInfo())
+                           .exitValue(0)
+                           .readOutput(true)
+                           .execute();
+    log.info(pr.getOutput().getUTF8());
+    return pr;
   }
 
   ProcessExecutor getProcessExecutor() {

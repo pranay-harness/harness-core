@@ -1,11 +1,14 @@
 package io.harness.cdng.service.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotation.RecasterAlias;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.ToBeDeleted;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.pms.sdk.core.data.Outcome;
-import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import lombok.Builder;
 import lombok.Data;
@@ -16,6 +19,9 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @TypeAlias("serviceConfigOutcome")
 @JsonTypeName("serviceConfigOutcome")
+@OwnedBy(CDC)
+@ToBeDeleted
+@RecasterAlias("io.harness.cdng.service.beans.ServiceConfigOutcome")
 public class ServiceConfigOutcome implements Outcome {
   ServiceOutcome service;
 
@@ -33,19 +39,4 @@ public class ServiceConfigOutcome implements Outcome {
   @Singular Map<String, ServiceOutcome.ManifestsWrapperOutcome> manifestOverrideSets;
 
   ServiceOutcome.StageOverridesOutcome stageOverrides;
-
-  @Override
-  public String getType() {
-    return "serviceConfigOutcome";
-  }
-
-  @Override
-  public String toViewJson() {
-    Map<String, Object> viewObject = new LinkedHashMap<>();
-    if (artifactsResult != null) {
-      viewObject.put("artifactsResult", artifactsResult);
-    }
-    viewObject.put("manifestResults", manifestResults);
-    return RecastOrchestrationUtils.toDocumentJson(viewObject);
-  }
 }

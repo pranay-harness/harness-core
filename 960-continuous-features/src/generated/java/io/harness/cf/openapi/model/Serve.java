@@ -20,15 +20,15 @@ import java.util.Objects;
  * Serve
  */
 @javax.annotation.Generated(value = "org.openapitools.codegen.languages.JavaClientCodegen",
-    date = "2021-03-24T19:32:06.834-07:00[America/Los_Angeles]")
+    date = "2021-05-11T09:07:44.775-07:00[America/Los_Angeles]")
 public class Serve {
   public static final String SERIALIZED_NAME_DISTRIBUTION = "distribution";
-  @SerializedName(SERIALIZED_NAME_DISTRIBUTION) private io.harness.cf.openapi.model.Distribution distribution;
+  @SerializedName(SERIALIZED_NAME_DISTRIBUTION) private Distribution distribution;
 
   public static final String SERIALIZED_NAME_VARIATION = "variation";
   @SerializedName(SERIALIZED_NAME_VARIATION) private String variation;
 
-  public Serve distribution(io.harness.cf.openapi.model.Distribution distribution) {
+  public Serve distribution(Distribution distribution) {
     this.distribution = distribution;
     return this;
   }
@@ -40,7 +40,7 @@ public class Serve {
   @javax.annotation.Nullable
   @ApiModelProperty(value = "")
 
-  public io.harness.cf.openapi.model.Distribution getDistribution() {
+  public Distribution getDistribution() {
     return distribution;
   }
 

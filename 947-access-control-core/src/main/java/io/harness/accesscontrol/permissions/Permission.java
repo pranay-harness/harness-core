@@ -33,6 +33,7 @@ public class Permission {
   @PermissionIdentifier String identifier;
   @NGEntityName String name;
   @NotNull PermissionStatus status;
+  boolean includeInAllRoles;
   @NotEmpty Set<String> allowedScopeLevels;
   @EqualsAndHashCode.Exclude @Setter Long version;
 

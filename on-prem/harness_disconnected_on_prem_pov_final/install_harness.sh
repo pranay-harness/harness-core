@@ -460,6 +460,9 @@ function setupDelegateJars(){
     cp images/jre-8u191-*.gz $STORAGE_DIR_LOCATION/wingsdelegates/jre/8u191/
     cp images/jre_x64_*.gz $STORAGE_DIR_LOCATION/wingsdelegates/jre/openjdk-8u242/
 
+    mkdir -p $STORAGE_DIR_LOCATION/wingsdelegates/tools/alpn/release/8.1.13.v20181017/
+    cp images/alpn-boot-8.1.13.v20181017.jar $STORAGE_DIR_LOCATION/wingsdelegates/tools/alpn/release/8.1.13.v20181017/
+
     rm -rf ${STORAGE_DIR_LOCATION}/wingsdelegates/jobs/deploy-prod-delegate/*
     mkdir -p  ${STORAGE_DIR_LOCATION}/wingsdelegates/jobs/deploy-prod-delegate/${DELEGATE_VERSION}
     cp images/delegate.jar ${STORAGE_DIR_LOCATION}/wingsdelegates/jobs/deploy-prod-delegate/${DELEGATE_VERSION}/
@@ -482,7 +485,7 @@ function setupDelegateJars(){
 function setupClientUtils(){
    echo "################################ Setting up Client Utils ################################"
 
-   echo "Copying kubectl go-template helm chartmuseum tf-config-inspect and oc"
+   echo "Copying kubectl go-template helm chartmuseum tf-config-inspect oc and scm"
 
     for platform in linux darwin; do
         for kubectlversion in v1.13.2; do
@@ -495,7 +498,7 @@ function setupClientUtils(){
             cp images/go-template/${platform}/$gotemplateversion/go-template ${STORAGE_DIR_LOCATION}/harness-download/snapshot-go-template/release/$gotemplateversion/bin/${platform}/amd64/
         done
 
-        for harnessPywinrmVersion in v0.1-dev v0.2-dev v0.3-dev; do
+        for harnessPywinrmVersion in v0.1-dev v0.2-dev v0.3-dev v0.4-dev; do
             mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/snapshot-harness-pywinrm/release/$harnessPywinrmVersion/bin/${platform}/amd64/
             cp images/harness-pywinrm/${platform}/$harnessPywinrmVersion/harness-pywinrm ${STORAGE_DIR_LOCATION}/harness-download/snapshot-harness-pywinrm/release/$harnessPywinrmVersion/bin/${platform}/amd64/
         done
@@ -510,7 +513,7 @@ function setupClientUtils(){
             cp images/chartmuseum/${platform}/$chartmuseumversion/chartmuseum ${STORAGE_DIR_LOCATION}/harness-download/harness-chartmuseum/release/$chartmuseumversion/bin/${platform}/amd64/
         done
 
-        for tfConfigInspectVersion in v1.0; do
+        for tfConfigInspectVersion in v1.0 v1.1; do
            mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/harness-terraform-config-inspect/"$tfConfigInspectVersion"/${platform}/amd64/
            cp images/tf-config-inspect/${platform}/"$tfConfigInspectVersion"/terraform-config-inspect ${STORAGE_DIR_LOCATION}/harness-download/harness-terraform-config-inspect/"$tfConfigInspectVersion"/${platform}/amd64/
          done
@@ -518,6 +521,11 @@ function setupClientUtils(){
         for ocversion in v4.2.16; do
             mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/harness-oc/release/$ocversion/bin/${platform}/amd64/
             cp images/oc/${platform}/$ocversion/oc ${STORAGE_DIR_LOCATION}/harness-download/harness-oc/release/$ocversion/bin/${platform}/amd64/
+        done
+
+        for scmVersion in b276dd03; do
+            mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/harness-scm/release/$scmVersion/bin/${platform}/amd64/
+            cp images/scm/${platform}/$scmVersion/scm ${STORAGE_DIR_LOCATION}/harness-download/harness-scm/release/$scmVersion/bin/${platform}/amd64/
         done
 
         for kustomizeVersion in v3.5.4; do

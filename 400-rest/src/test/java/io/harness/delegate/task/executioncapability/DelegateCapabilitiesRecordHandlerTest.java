@@ -23,6 +23,7 @@ import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.DelegateTaskServiceClassic;
 
 import com.google.inject.Inject;
 import java.util.List;
@@ -34,6 +35,7 @@ import org.mockito.Mock;
 
 public class DelegateCapabilitiesRecordHandlerTest extends WingsBaseTest {
   @Mock private DelegateService delegateService;
+  @Mock private DelegateTaskServiceClassic delegateTaskServiceClassic;
   @Mock FeatureFlagService featureFlagService;
   @InjectMocks @Inject DelegateCapabilitiesRecordHandler recordHandler;
 
@@ -46,7 +48,7 @@ public class DelegateCapabilitiesRecordHandlerTest extends WingsBaseTest {
   public void testHandleWithFFDisabled() {
     when(featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, delegate.getAccountId())).thenReturn(false);
     recordHandler.handle(delegate);
-    verify(delegateService, never())
+    verify(delegateTaskServiceClassic, never())
         .executeBatchCapabilityCheckTask(
             eq(delegate.getAccountId()), eq(delegate.getUuid()), any(List.class), eq(null));
   }
@@ -57,7 +59,7 @@ public class DelegateCapabilitiesRecordHandlerTest extends WingsBaseTest {
   public void testHandleWithNoSubjectPermission() {
     when(featureFlagService.isEnabled(PER_AGENT_CAPABILITIES, delegate.getAccountId())).thenReturn(true);
     recordHandler.handle(delegate);
-    verify(delegateService, never())
+    verify(delegateTaskServiceClassic, never())
         .executeBatchCapabilityCheckTask(
             eq(delegate.getAccountId()), eq(delegate.getUuid()), any(List.class), eq(null));
   }
@@ -92,7 +94,7 @@ public class DelegateCapabilitiesRecordHandlerTest extends WingsBaseTest {
     recordHandler.handle(delegate);
 
     ArgumentCaptor<List> argumentCaptor = ArgumentCaptor.forClass(List.class);
-    verify(delegateService)
+    verify(delegateTaskServiceClassic)
         .executeBatchCapabilityCheckTask(
             eq(delegate.getAccountId()), eq(delegate.getUuid()), argumentCaptor.capture(), eq(null));
 

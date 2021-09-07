@@ -1,42 +1,37 @@
 package io.harness.engine.events;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.engine.observers.NodeStatusUpdateObserver;
+import io.harness.engine.observers.NodeUpdateInfo;
 import io.harness.execution.NodeExecution;
-import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.execution.utils.AmbianceUtils;
-import io.harness.pms.sdk.core.events.AsyncOrchestrationEventHandler;
-import io.harness.pms.sdk.core.events.OrchestrationEvent;
+import io.harness.observer.AsyncInformObserver;
 import io.harness.timeout.TimeoutEngine;
 import io.harness.timeout.trackers.events.StatusUpdateTimeoutEvent;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
-@OwnedBy(CDC)
-public class NodeExecutionStatusUpdateEventHandler implements AsyncOrchestrationEventHandler {
-  @Inject private NodeExecutionService nodeExecutionService;
+@OwnedBy(PIPELINE)
+public class NodeExecutionStatusUpdateEventHandler implements AsyncInformObserver, NodeStatusUpdateObserver {
+  @Inject @Named("EngineExecutorService") ExecutorService executorService;
   @Inject private TimeoutEngine timeoutEngine;
 
   @Override
-  public void handleEvent(OrchestrationEvent event) {
-    Ambiance ambiance = event.getAmbiance();
-    String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
-    if (nodeExecutionId == null) {
-      return;
-    }
-
-    NodeExecution nodeExecution = nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
-    if (nodeExecution == null) {
-      return;
-    }
-
+  public void onNodeStatusUpdate(NodeUpdateInfo nodeUpdateInfo) {
+    NodeExecution nodeExecution = nodeUpdateInfo.getNodeExecution();
     List<String> timeoutInstanceIds = nodeExecution.getTimeoutInstanceIds();
     if (EmptyPredicate.isNotEmpty(timeoutInstanceIds)) {
       timeoutEngine.onEvent(timeoutInstanceIds, new StatusUpdateTimeoutEvent(nodeExecution.getStatus()));
     }
+  }
+
+  @Override
+  public ExecutorService getInformExecutorService() {
+    return executorService;
   }
 }

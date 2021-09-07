@@ -16,10 +16,3 @@ connector:
     type: Ssh
     spec:
       sshKeyRef: "secretRef:harnessAccountPassword"
-
-    gitSync:
-      enabled: true
-      customCommitAttributes:
-        authorName: "deepak"
-        authorEmail: "deepak.patankar@harness.io"
-        commitMessage: "[GITSYNC-0]: Pushing Changes"

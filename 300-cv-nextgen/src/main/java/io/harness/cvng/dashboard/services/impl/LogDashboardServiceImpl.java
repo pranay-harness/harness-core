@@ -9,6 +9,10 @@ import io.harness.cvng.analysis.entities.LogAnalysisResult.AnalysisResult;
 import io.harness.cvng.analysis.entities.LogAnalysisResult.LogAnalysisTag;
 import io.harness.cvng.analysis.services.api.LogAnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.core.beans.params.PageParams;
+import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
+import io.harness.cvng.core.beans.params.TimeRangeParams;
+import io.harness.cvng.core.beans.params.filterParams.LiveMonitoringLogAnalysisFilter;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
@@ -20,6 +24,7 @@ import io.harness.cvng.dashboard.beans.LogDataByTag.CountByTag;
 import io.harness.cvng.dashboard.services.api.LogDashboardService;
 import io.harness.cvng.utils.CVNGParallelExecutor;
 import io.harness.ng.beans.PageResponse;
+import io.harness.utils.PageUtils;
 
 import com.google.inject.Inject;
 import java.time.Instant;
@@ -73,6 +78,27 @@ public class LogDashboardServiceImpl implements LogDashboardService {
                                               : Arrays.asList(LogAnalysisTag.values());
     return getLogs(accountId, projectIdentifier, orgIdentifier, serviceIdentifier, environmentIdentifier, tags,
         Instant.ofEpochMilli(startTimeMillis), Instant.ofEpochMilli(endTimeMillis), cvConfigIds, page, size);
+  }
+
+  @Override
+  public PageResponse<AnalyzedLogDataDTO> getAllLogsData(ServiceEnvironmentParams serviceEnvironmentParams,
+      TimeRangeParams timeRangeParams, LiveMonitoringLogAnalysisFilter liveMonitoringLogAnalysisFilter,
+      PageParams pageParams) {
+    List<CVConfig> configs;
+    if (liveMonitoringLogAnalysisFilter.filterByHealthSourceIdentifiers()) {
+      configs =
+          cvConfigService.list(serviceEnvironmentParams, liveMonitoringLogAnalysisFilter.getHealthSourceIdentifiers());
+    } else {
+      configs = cvConfigService.list(serviceEnvironmentParams);
+    }
+    List<String> cvConfigIds = configs.stream().map(CVConfig::getUuid).collect(Collectors.toList());
+    List<LogAnalysisTag> tags = liveMonitoringLogAnalysisFilter.filterByClusterTypes()
+        ? liveMonitoringLogAnalysisFilter.getClusterTypes()
+        : Arrays.asList(LogAnalysisTag.values());
+    return getLogs(serviceEnvironmentParams.getAccountIdentifier(), serviceEnvironmentParams.getProjectIdentifier(),
+        serviceEnvironmentParams.getOrgIdentifier(), serviceEnvironmentParams.getServiceIdentifier(),
+        serviceEnvironmentParams.getEnvironmentIdentifier(), tags, timeRangeParams.getStartTime(),
+        timeRangeParams.getEndTime(), cvConfigIds, pageParams.getPage(), pageParams.getSize());
   }
 
   private List<String> getCVConfigIdsForActivity(String accountId, String activityId) {
@@ -193,7 +219,7 @@ public class LogDashboardServiceImpl implements LogDashboardService {
     List<List<LogData>> logDataResults = cvngParallelExecutor.executeParallel(logDataCallables);
     logDataResults.forEach(result -> logDataToBeReturned.addAll(result));
 
-    SortedSet<AnalyzedLogDataDTO> sortedList = new TreeSet<>();
+    List<AnalyzedLogDataDTO> sortedList = new ArrayList<>();
     // create the sorted set first. Then form the page response.
     logDataToBeReturned.forEach(logData -> {
       sortedList.add(AnalyzedLogDataDTO.builder()
@@ -204,8 +230,8 @@ public class LogDashboardServiceImpl implements LogDashboardService {
                          .logData(logData)
                          .build());
     });
-
-    return formPageResponse(page, size, sortedList);
+    Collections.sort(sortedList);
+    return PageUtils.offsetAndLimit(sortedList, page, size);
   }
 
   private List<AnalysisResult> getAnalysisResultForCvConfigId(
@@ -221,13 +247,15 @@ public class LogDashboardServiceImpl implements LogDashboardService {
 
   private List<LogData> mergeClusterWithResults(
       List<AnalysisResult> analysisResults, List<LogAnalysisCluster> analysisClusters, Instant start, Instant end) {
-    Map<Long, LogAnalysisTag> labelTagMap = new HashMap<>();
+    Map<Long, AnalysisResult> labelTagMap = new HashMap<>();
+
     analysisResults.forEach(result -> {
       Long label = result.getLabel();
-      if (!labelTagMap.containsKey(label) || result.getTag().isMoreSevereThan(labelTagMap.get(label))) {
-        labelTagMap.put(label, result.getTag());
+      if (!labelTagMap.containsKey(label) || result.getTag().isMoreSevereThan(labelTagMap.get(label).getTag())) {
+        labelTagMap.put(label, result);
       }
     });
+
     List<LogData> logDataList = new ArrayList<>();
 
     analysisClusters.forEach(cluster -> {
@@ -247,12 +275,15 @@ public class LogDashboardServiceImpl implements LogDashboardService {
       trendMap.forEach(
           (timestamp, count) -> frequencies.add(FrequencyDTO.builder().timestamp(timestamp).count(count).build()));
 
+      AnalysisResult analysisResult = labelTagMap.get(cluster.getLabel());
       LogData data = LogData.builder()
                          .text(cluster.getText())
                          .label(cluster.getLabel())
                          .count(trendMap.values().stream().collect(Collectors.summingInt(Integer::intValue)))
                          .trend(frequencies)
-                         .tag(labelTagMap.get(cluster.getLabel()))
+                         .tag(analysisResult.getTag())
+                         .riskScore(analysisResult.getRiskScore())
+                         .riskStatus(analysisResult.getRisk())
                          .build();
       logDataList.add(data);
     });

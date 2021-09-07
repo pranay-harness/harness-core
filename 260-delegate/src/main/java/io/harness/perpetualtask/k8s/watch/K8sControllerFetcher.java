@@ -96,6 +96,7 @@ public class K8sControllerFetcher {
     return objectMeta;
   }
 
+  @SuppressWarnings("PMD")
   private Integer getWorkloadReplicas(@NotNull Object workloadResource) {
     // Deployment, ReplicaSet, StatefulSet have replicas field
     // DaemonSet, Job, CronJob doesn't have replicas
@@ -128,7 +129,7 @@ public class K8sControllerFetcher {
         .setName(topLevelOwner.getObjectMeta().getName())
         .setUid(topLevelOwner.getObjectMeta().getUid())
         .putAllLabels(ofNullable(topLevelOwner.getObjectMeta().getLabels()).orElse(emptyMap()))
-        .setReplicas(ofNullable(topLevelOwner.getReplicas()).orElse(1))
+        .setReplicas(ofNullable(topLevelOwner.getReplicas()).orElse(0))
         .build();
   }
 }

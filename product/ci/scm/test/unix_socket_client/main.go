@@ -27,28 +27,7 @@ type StdinAddr struct {
 	s string
 }
 
-func NewStdinAddr(s string) *StdinAddr {
-	return &StdinAddr{s}
-}
-
-func NewStdStreamJoint(in io.Reader, out io.Writer) *StdStreamJoint {
-	return &StdStreamJoint{
-		local:  NewStdinAddr("local"),
-		remote: NewStdinAddr("remote"),
-		in:     in,
-		out:    out,
-	}
-}
-
-func init() {
-	debugFile, err := os.Create("client.log")
-	if err != nil {
-		panic(err)
-	}
-	logger = log.New(debugFile, "", log.LstdFlags)
-}
-
-func (s *StdStreamJoint) Close() error {
+func (s *StdStreamJoint) Close() error { //nolint
 	s.closed = true
 	return nil
 }
@@ -88,6 +67,12 @@ func (s *StdStreamJoint) Read(b []byte) (n int, err error) {
 }
 
 func main() {
+	debugFile, err := os.Create("client.log")
+	if err != nil {
+		panic(err)
+	}
+	logger = log.New(debugFile, "", log.LstdFlags)
+
 	logger.Println("client starting")
 	conn, err := grpc.Dial("unix:///tmp/bla", grpc.WithInsecure())
 	if err != nil {

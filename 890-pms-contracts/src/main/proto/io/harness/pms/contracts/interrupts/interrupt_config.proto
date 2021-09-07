@@ -1,8 +1,10 @@
 syntax = "proto3";
 
-package io.harness.pms.contracts.advisers;
+package io.harness.pms.contracts.interrupts;
 
 option java_multiple_files = true;
+
+import "google/protobuf/timestamp.proto";
 
 import "io/harness/pms/contracts/advisers/advise.proto";
 
@@ -18,20 +20,32 @@ message RetryInterruptConfig {
 }
 
 message IssuedBy {
+  google.protobuf.Timestamp issueTime = 2;
   oneof issuer {
     ManualIssuer manualIssuer = 3;
     AdviserIssuer adviserIssuer = 4;
     TimeoutIssuer timeoutIssuer = 5;
+    TriggerIssuer triggerIssuer = 6;
   }
 }
 
 message ManualIssuer {
   // TODO(archit): Add user details
-  string email_id = 1;
-  string user_id = 2;
+  string email_id = 1 [deprecated = true];
+  string user_id = 2 [deprecated = true];
+
+  string type = 3;
+  string identifier = 4;
 }
 message AdviserIssuer {
   io.harness.pms.contracts.advisers.AdviseType adviserType = 1;
 }
 
-message TimeoutIssuer {}
+message TimeoutIssuer {
+  string timeoutInstanceId = 1;
+}
+
+message TriggerIssuer {
+  string triggerRef = 1;
+  bool abortPrevConcurrentExecution = 2;
+}

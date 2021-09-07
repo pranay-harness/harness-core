@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.encoding.EncodingUtils.compressString;
 import static io.harness.data.encoding.EncodingUtils.deCompressString;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -13,6 +15,8 @@ import static software.wings.beans.Log.Builder.aLog;
 import static java.lang.System.currentTimeMillis;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.dataretention.AccountDataRetentionEntity;
 import io.harness.exception.GeneralException;
@@ -62,6 +66,8 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "LogKeys")
 @Entity(value = "commandLogs", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@OwnedBy(CDC)
+@TargetModule(_957_CG_BEANS)
 public class Log implements GoogleDataStoreAware, PersistentEntity, AccountDataRetentionEntity, UuidAware,
                             CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware, ApplicationAccess {
   public static List<MongoIndex> mongoIndexes() {

@@ -3,10 +3,14 @@ package io.harness.serializer.morphia;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.gitsync.common.beans.GitBranch;
 import io.harness.gitsync.common.beans.GitFileLocation;
+import io.harness.gitsync.common.beans.GitSyncSettings;
+import io.harness.gitsync.common.beans.GitToHarnessProgress;
 import io.harness.gitsync.common.beans.YamlChangeSet;
 import io.harness.gitsync.common.beans.YamlGitConfig;
 import io.harness.gitsync.core.beans.GitCommit;
+import io.harness.gitsync.core.beans.GitFullSyncEntityInfo;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivity;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivitySummary;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncError;
@@ -26,6 +30,10 @@ public class GitSyncMorphiaClassesRegistrar implements MorphiaRegistrar {
     set.add(GitSyncError.class);
     set.add(GitFileActivity.class);
     set.add(GitFileLocation.class);
+    set.add(GitBranch.class);
+    set.add(GitSyncSettings.class);
+    set.add(GitToHarnessProgress.class);
+    set.add(GitFullSyncEntityInfo.class);
   }
 
   @Override

@@ -23,9 +23,11 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @OwnedBy(CDP)
 public abstract class GcpRequest extends ConnectorTaskParams implements ExecutionCapabilityDemander {
+  private boolean useDelegate;
   // Below 2 are NG specific.
   private List<EncryptedDataDetail> encryptionDetails;
   private GcpManualDetailsDTO gcpManualDetailsDTO;
+
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     if (isNotEmpty(delegateSelectors)) {

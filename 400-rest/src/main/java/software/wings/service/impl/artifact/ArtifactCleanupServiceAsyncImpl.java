@@ -1,5 +1,6 @@
 package software.wings.service.impl.artifact;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.microservice.NotifyEngineTarget.GENERAL;
@@ -7,6 +8,7 @@ import static io.harness.microservice.NotifyEngineTarget.GENERAL;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
@@ -20,7 +22,6 @@ import software.wings.beans.TaskType;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.CustomArtifactStream;
-import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.delegatetasks.buildsource.BuildSourceCleanupCallback;
 import software.wings.delegatetasks.buildsource.BuildSourceParameters;
 import software.wings.service.intfc.ArtifactCleanupService;
@@ -33,6 +34,7 @@ import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(CDC)
 @Singleton
 @Slf4j
 public class ArtifactCleanupServiceAsyncImpl implements ArtifactCleanupService {
@@ -40,18 +42,16 @@ public class ArtifactCleanupServiceAsyncImpl implements ArtifactCleanupService {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private DelegateService delegateService;
   @Inject private ArtifactCollectionUtils artifactCollectionUtils;
-  @Inject private AwsCommandHelper awsCommandHelper;
 
   public static final Duration timeout = Duration.ofMinutes(10);
 
   @Override
-  public void cleanupArtifactsAsync(ArtifactStream artifactStream) {
+  public void cleanupArtifacts(ArtifactStream artifactStream, String accountId) {
     log.info("Cleaning build details for artifact stream type {} and source name {} ",
         artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
 
     String artifactStreamType = artifactStream.getArtifactStreamType();
 
-    String accountId;
     BuildSourceParameters buildSourceRequest;
 
     String waitId = generateUuid();

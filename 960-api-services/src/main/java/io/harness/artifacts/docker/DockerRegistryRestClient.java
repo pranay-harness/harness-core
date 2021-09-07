@@ -20,6 +20,9 @@ import retrofit2.http.Url;
 public interface DockerRegistryRestClient {
   //  https://auth.docker.io/token?service=registry.docker.io&scope=repository:samalba/my-app:pull,push
 
+  @GET("/token")
+  Call<DockerRegistryToken> getGithubContainerRegistryToken(@Header("Authorization") String basicAuthHeader);
+
   @GET
   Call<DockerRegistryToken> getToken(@Header("Authorization") String basicAuthHeader, @Url String url,
       @Query("service") String service, @Query("scope") String scope);
@@ -40,9 +43,11 @@ public interface DockerRegistryRestClient {
   @GET
   Call<DockerImageTagResponse> listImageTagsByUrl(@Header("Authorization") String bearerAuthHeader, @Url String url);
 
-  @Headers("Accept: application/vnd.docker.distribution.manifest.v1+json")
+  @Headers(
+      "Accept: application/vnd.docker.distribution.manifest.v1+json, application/vnd.docker.distribution.manifest.v1+prettyjws")
   @GET("/v2/{imageName}/manifests/{tag}")
-  Call<DockerImageManifestResponse> getImageManifest(@Header("Authorization") String bearerAuthHeader,
+  Call<DockerImageManifestResponse>
+  getImageManifest(@Header("Authorization") String bearerAuthHeader,
       @Path(value = "imageName", encoded = true) String imageName, @Path(value = "tag", encoded = true) String tag);
 
   @GET("/v2/repositories/{imageName}/tags")

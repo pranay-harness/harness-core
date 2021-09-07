@@ -22,6 +22,8 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.PageRequest;
@@ -82,6 +84,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 @Singleton
 @ValidateOnExecution
 @Slf4j
+@OwnedBy(HarnessTeam.CDC)
 public class ServiceVariableServiceImpl implements ServiceVariableService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private EnvironmentService environmentService;
@@ -150,7 +153,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
             format("Adding variable name %s with hyphens (dashes) is not allowed", variableName));
       }
 
-      if (serviceVariable.getValue() == null) {
+      if (isEmpty(serviceVariable.getValue())) {
         throw new InvalidRequestException(format("Service Variable [%s] value cannot be empty", variableName));
       } else {
         checkDuplicateNameServiceVariable(serviceVariable);

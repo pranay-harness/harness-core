@@ -58,15 +58,6 @@ public class VerificationJobResource {
         verificationJobService.getVerificationJobDTO(accountId, orgIdentifier, projectIdentifier, identifier));
   }
 
-  @PUT
-  @Timed
-  @ExceptionMetered
-  @ApiOperation(value = "upserts a verification job for an identifier", nickname = "upsertVerificationJob")
-  public void upsert(
-      @QueryParam("accountId") @Valid final String accountId, @Body VerificationJobDTO verificationJobDTO) {
-    verificationJobService.upsert(accountId, verificationJobDTO);
-  }
-
   @POST
   @Timed
   @ExceptionMetered

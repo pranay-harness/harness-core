@@ -2,6 +2,8 @@ package io.harness.perpetualtask.k8s.informer.handlers;
 
 import static io.harness.perpetualtask.k8s.informer.handlers.support.WorkloadSpecUtils.makeContainerSpecs;
 
+import static com.google.common.base.MoreObjects.firstNonNull;
+
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.event.client.EventPublisher;
@@ -39,6 +41,9 @@ public class V1ReplicaSetHandler extends BaseHandler<V1ReplicaSet> {
                               .setWorkloadKind(getKind())
                               .setWorkloadName(replicaSet.getMetadata().getName())
                               .setNamespace(replicaSet.getMetadata().getNamespace())
+                              .setUid(replicaSet.getMetadata().getUid())
+                              .setVersion(VERSION)
+                              .setReplicas(firstNonNull(replicaSet.getSpec().getReplicas(), 0))
                               .addAllContainerSpecs(makeContainerSpecs(containers))
                               .addAllInitContainerSpecs(makeContainerSpecs(initContainers))
                               .build(),
@@ -63,6 +68,9 @@ public class V1ReplicaSetHandler extends BaseHandler<V1ReplicaSet> {
                                      .setWorkloadKind(getKind())
                                      .addAllContainerSpecs(makeContainerSpecs(containers))
                                      .addAllInitContainerSpecs(makeContainerSpecs(initContainers))
+                                     .setReplicas(firstNonNull(oldReplicaSet.getSpec().getReplicas(), 0))
+                                     .setUid(oldReplicaSet.getMetadata().getUid())
+                                     .setVersion(VERSION)
                                      .build();
       List<V1Container> newContainers = newReplicaSet.getSpec().getTemplate().getSpec().getContainers();
       List<V1Container> newInitContainers = newReplicaSet.getSpec().getTemplate().getSpec().getInitContainers();
@@ -73,6 +81,9 @@ public class V1ReplicaSetHandler extends BaseHandler<V1ReplicaSet> {
                                      .setWorkloadKind(getKind())
                                      .addAllContainerSpecs(makeContainerSpecs(newContainers))
                                      .addAllInitContainerSpecs(makeContainerSpecs(newInitContainers))
+                                     .setReplicas(firstNonNull(newReplicaSet.getSpec().getReplicas(), 0))
+                                     .setUid(newReplicaSet.getMetadata().getUid())
+                                     .setVersion(VERSION)
                                      .build();
       if (!oldSpecs.equals(newSpecs)) {
         publishWorkloadSpec(newSpecs, occurredAt);

@@ -1486,6 +1486,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
     settingsService.forceSave(settingAttribute);
     verify(settingServiceHelper).updateReferencedSecrets(eq(settingAttribute));
     verify(settingServiceHelper).resetEncryptedFields(any());
+    verify(settingServiceHelper).resetTransientFields(any());
   }
 
   @Test

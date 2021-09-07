@@ -8,7 +8,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.billing.dao.BillingDataPipelineRecordDao;
-import io.harness.ccm.billing.entities.BillingDataPipelineRecord;
+import io.harness.ccm.commons.entities.billing.BillingDataPipelineRecord;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;

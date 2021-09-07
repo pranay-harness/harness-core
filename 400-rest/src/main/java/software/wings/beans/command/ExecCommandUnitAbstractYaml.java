@@ -1,15 +1,19 @@
 package software.wings.beans.command;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import java.util.List;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-@TargetModule(HarnessModule._870_CG_YAML_BEANS)
+@TargetModule(HarnessModule._870_CG_YAML)
 @Data
 @EqualsAndHashCode(callSuper = true)
+@OwnedBy(CDC)
 public class ExecCommandUnitAbstractYaml extends SshCommandUnit.Yaml {
   // maps to commandPath
   private String workingDirectory;

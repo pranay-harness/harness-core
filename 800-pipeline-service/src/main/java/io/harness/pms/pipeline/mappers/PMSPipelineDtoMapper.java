@@ -7,6 +7,7 @@ import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.NGExpressionUtils;
 import io.harness.exception.InvalidRequestException;
+import io.harness.gitsync.sdk.EntityGitDetailsMapper;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.pms.pipeline.ExecutionSummaryInfoDTO;
 import io.harness.pms.pipeline.PMSPipelineResponseDTO;
@@ -29,6 +30,7 @@ public class PMSPipelineDtoMapper {
     return PMSPipelineResponseDTO.builder()
         .yamlPipeline(pipelineEntity.getYaml())
         .version(pipelineEntity.getVersion())
+        .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(pipelineEntity))
         .build();
   }
 
@@ -67,7 +69,29 @@ public class PMSPipelineDtoMapper {
         .modules(pipelineEntity.getFilters().keySet())
         .filters(pipelineEntity.getFilters())
         .stageNames(pipelineEntity.getStageNames())
+        .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(pipelineEntity))
         .build();
+  }
+
+  public PipelineEntity toPipelineEntity(String accountId, String yaml) {
+    try {
+      BasicPipeline basicPipeline = YamlUtils.read(yaml, BasicPipeline.class);
+      if (NGExpressionUtils.matchesInputSetPattern(basicPipeline.getIdentifier())) {
+        throw new InvalidRequestException("Pipeline identifier cannot be runtime input");
+      }
+      return PipelineEntity.builder()
+          .yaml(yaml)
+          .accountId(accountId)
+          .orgIdentifier(basicPipeline.getOrgIdentifier())
+          .projectIdentifier(basicPipeline.getProjectIdentifier())
+          .name(basicPipeline.getName())
+          .identifier(basicPipeline.getIdentifier())
+          .description(basicPipeline.getDescription())
+          .tags(TagMapper.convertToList(basicPipeline.getTags()))
+          .build();
+    } catch (IOException e) {
+      throw new InvalidRequestException("Cannot create pipeline entity due to " + e.getMessage());
+    }
   }
 
   private ExecutionSummaryInfoDTO getExecutionSummaryInfoDTO(PipelineEntity pipelineEntity) {
@@ -112,7 +136,7 @@ public class PMSPipelineDtoMapper {
     for (int i = 0; i < 7; i++) {
       cal.add(Calendar.DAY_OF_YEAR, 1);
       numberOfDeployments.add(
-          pipeline.getExecutionSummaryInfo().getNumOfErrors().getOrDefault(sdf.format(cal.getTime()), 0));
+          pipeline.getExecutionSummaryInfo().getDeployments().getOrDefault(sdf.format(cal.getTime()), 0));
     }
     return numberOfDeployments;
   }

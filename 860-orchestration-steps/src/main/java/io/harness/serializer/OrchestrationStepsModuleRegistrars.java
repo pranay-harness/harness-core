@@ -12,7 +12,6 @@ import io.harness.serializer.kryo.DelegateServiceBeansKryoRegistrar;
 import io.harness.serializer.kryo.NGCoreBeansKryoRegistrar;
 import io.harness.serializer.kryo.OrchestrationStepsKryoRegistrar;
 import io.harness.serializer.kryo.YamlKryoRegistrar;
-import io.harness.serializer.morphia.CgNgSharedOrchestrationBeansMorphiaRegistrar;
 import io.harness.serializer.morphia.NotificationClientRegistrars;
 import io.harness.serializer.morphia.OrchestrationStepsMorphiaRegistrar;
 import io.harness.steps.approval.stage.ApprovalStageConfig;
@@ -39,15 +38,18 @@ public class OrchestrationStepsModuleRegistrars {
           .addAll(PmsCommonsModuleRegistrars.kryoRegistrars)
           .addAll(YamlBeansModuleRegistrars.kryoRegistrars)
           .addAll(NotificationClientRegistrars.kryoRegistrars)
+          .addAll(RbacCoreRegistrars.kryoRegistrars)
+          .addAll(NGCoreClientRegistrars.kryoRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(OrchestrationRegistrars.morphiaRegistrars)
           .add(OrchestrationStepsMorphiaRegistrar.class)
-          .add(CgNgSharedOrchestrationBeansMorphiaRegistrar.class)
           .addAll(YamlBeansModuleRegistrars.morphiaRegistrars)
           .addAll(NotificationClientRegistrars.morphiaRegistrars)
+          .addAll(RbacCoreRegistrars.morphiaRegistrars)
+          .addAll(NGCoreClientRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =
@@ -78,6 +80,13 @@ public class OrchestrationStepsModuleRegistrars {
                    .build())
           .add(YamlSchemaRootClass.builder()
                    .entityType(EntityType.APPROVAL_STAGE)
+                   .availableAtProjectLevel(true)
+                   .availableAtOrgLevel(false)
+                   .availableAtAccountLevel(false)
+                   .clazz(ApprovalStageConfig.class)
+                   .build())
+          .add(YamlSchemaRootClass.builder()
+                   .entityType(EntityType.FEATURE_FLAG_STAGE)
                    .availableAtProjectLevel(true)
                    .availableAtOrgLevel(false)
                    .availableAtAccountLevel(false)

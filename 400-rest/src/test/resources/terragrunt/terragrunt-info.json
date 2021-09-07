@@ -1,0 +1,8 @@
+{
+  "ConfigPath": "/Users/user/Projects/terragrunt/terragrunt.hcl",
+  "DownloadDir": "/Users/user/Projects/terragrunt/.terragrunt-cache",
+  "IamRole": "",
+  "TerraformBinary": "terraform",
+  "TerraformCommand": "terragrunt-info",
+  "WorkingDir": "/Users/user/Projects/terragrunt/module1"
+}

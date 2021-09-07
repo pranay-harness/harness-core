@@ -20,12 +20,15 @@ import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.context.ContextElementType;
+import io.harness.cv.WorkflowVerificationResult;
+import io.harness.cv.api.WorkflowVerificationResultService;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.ff.FeatureFlagService;
 import io.harness.time.Timestamp;
@@ -102,6 +105,7 @@ import org.slf4j.Logger;
 @OwnedBy(CV)
 @FieldNameConstants(innerTypeName = "AbstractAnalysisStateKeys")
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public abstract class AbstractAnalysisState extends State {
   private static final SecureRandom random = new SecureRandom();
   // only use it in the new instance API.
@@ -142,6 +146,7 @@ public abstract class AbstractAnalysisState extends State {
   @Inject private transient ExpressionEvaluator evaluator;
   @Inject protected AccountService accountService;
   @Inject protected CVActivityLogService cvActivityLogService;
+  @Inject protected WorkflowVerificationResultService workflowVerificationResultService;
 
   protected String hostnameField;
 
@@ -253,6 +258,27 @@ public abstract class AbstractAnalysisState extends State {
     } catch (Exception ex) {
       getLogger().error("[learning-engine] Unable to save ml analysis metadata", ex);
     }
+  }
+
+  protected void saveWorkflowVerificationResult(AnalysisContext analysisContext) {
+    workflowVerificationResultService.addWorkflowVerificationResult(
+        WorkflowVerificationResult.builder()
+            .accountId(analysisContext.getAccountId())
+            .appId(analysisContext.getAppId())
+            .stateExecutionId(analysisContext.getStateExecutionId())
+            .serviceId(analysisContext.getServiceId())
+            .envId(analysisContext.getEnvId())
+            .workflowId(analysisContext.getWorkflowId())
+            .stateType(getStateType())
+            .analyzed(false)
+            .executionStatus(ExecutionStatus.RUNNING)
+            .build());
+  }
+
+  protected void updateExecutionStatus(
+      String stateExecutionId, boolean analyzed, ExecutionStatus executionStatus, String message) {
+    workflowVerificationResultService.updateWorkflowVerificationResult(
+        stateExecutionId, analyzed, executionStatus, message);
   }
 
   protected String scheduleAnalysisCronJob(AnalysisContext context, String delegateTaskId) {
@@ -528,14 +554,14 @@ public abstract class AbstractAnalysisState extends State {
   protected ExecutionResponse getDemoExecutionResponse(AnalysisContext analysisContext) {
     boolean failedState = getSettingAttribute(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev");
     if (failedState) {
-      return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED, "Demo CV");
+      return generateAnalysisResponse(analysisContext, ExecutionStatus.FAILED, true, "Demo CV");
     } else {
-      return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS, "Demo CV");
+      return generateAnalysisResponse(analysisContext, ExecutionStatus.SUCCESS, true, "Demo CV");
     }
   }
 
   protected abstract ExecutionResponse generateAnalysisResponse(
-      AnalysisContext context, ExecutionStatus status, String message);
+      AnalysisContext context, ExecutionStatus status, boolean analyzed, String message);
 
   protected ExecutionResponse getErrorExecutionResponse(
       ExecutionContext executionContext, VerificationDataAnalysisResponse executionResponse) {

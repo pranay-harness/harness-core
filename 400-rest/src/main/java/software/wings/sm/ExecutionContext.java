@@ -4,9 +4,11 @@
 
 package software.wings.sm;
 
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.SweepingOutputInstance.SweepingOutputInstanceBuilder;
@@ -32,6 +34,7 @@ import java.util.Map;
  * @author Rishi
  */
 @OwnedBy(CDC)
+@TargetModule(_957_CG_BEANS)
 public interface ExecutionContext {
   Object evaluateExpression(String expression);
 

@@ -8,13 +8,13 @@ import io.harness.notification.channeldetails.PagerDutyChannel;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.collect.Lists;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.assertj.core.util.Lists;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Data
@@ -30,9 +30,10 @@ public class PmsPagerDutyChannel extends PmsNotificationChannel {
       String templateId, Map<String, String> templateData) {
     return PagerDutyChannel.builder()
         .accountId(accountId)
-        .userGroups(userGroups.stream()
-                        .map(e -> NotificationChannelUtils.getUserGroups(e, orgIdentifier, projectIdentifier))
-                        .collect(Collectors.toList()))
+        .userGroups(
+            userGroups.stream()
+                .map(e -> NotificationChannelUtils.getUserGroups(e, accountId, orgIdentifier, projectIdentifier))
+                .collect(Collectors.toList()))
         .team(Team.PIPELINE)
         .templateId(templateId)
         .integrationKeys(Lists.newArrayList(integrationKey))

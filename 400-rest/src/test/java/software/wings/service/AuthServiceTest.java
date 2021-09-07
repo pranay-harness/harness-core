@@ -1,8 +1,8 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANUBHAW;
-import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.RAMA;
@@ -39,6 +39,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.FeatureName;
 import io.harness.cache.HarnessCacheManager;
@@ -47,15 +50,13 @@ import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.segment.SegmentHandler;
 import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.InvalidTokenException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
-import io.harness.security.TokenGenerator;
+import io.harness.security.DelegateTokenAuthenticator;
 
 import software.wings.WingsBaseTest;
-import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
@@ -86,16 +87,12 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.google.inject.Inject;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import javax.cache.Cache;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
-import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -108,13 +105,14 @@ import org.mongodb.morphia.AdvancedDatastore;
 /**
  * Created by anubhaw on 8/31/16.
  */
+@OwnedBy(PL)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 public class AuthServiceTest extends WingsBaseTest {
   private final String VALID_TOKEN = "VALID_TOKEN";
   private final String INVALID_TOKEN = "INVALID_TOKEN";
   private final String EXPIRED_TOKEN = "EXPIRED_TOKEN";
   private final String NOT_AVAILABLE_TOKEN = "NOT_AVAILABLE_TOKEN";
   private final String AUTH_SECRET = "AUTH_SECRET";
-  private static final String GLOBAL_ACCOUNT_ID = "__GLOBAL_ACCOUNT_ID__";
 
   @Mock private GenericDbCache cache;
   @Mock private Cache<String, User> userCache;
@@ -126,8 +124,8 @@ public class AuthServiceTest extends WingsBaseTest {
   @Mock FeatureFlagService featureFlagService;
   @Mock private ConfigurationController configurationController;
   @Mock private HarnessCacheManager harnessCacheManager;
-  @Mock PortalConfig portalConfig;
-  @Inject MainConfiguration mainConfiguration;
+  @Inject PortalConfig portalConfig;
+  @Mock private DelegateTokenAuthenticator delegateTokenAuthenticator;
   @Inject @InjectMocks private UserService userService;
   @Inject @InjectMocks private AuthService authService;
 
@@ -142,7 +140,6 @@ public class AuthServiceTest extends WingsBaseTest {
   @Before
   public void setUp() throws Exception {
     initMocks(this);
-    on(mainConfiguration).set("portal", portalConfig);
     when(configurationController.isPrimary()).thenReturn(true);
     when(harnessCacheManager.getCache(anyString(), eq(String.class), eq(User.class), any())).thenReturn(userCache);
     when(userCache.get(USER_ID)).thenReturn(User.Builder.anUser().uuid(USER_ID).build());
@@ -155,7 +152,7 @@ public class AuthServiceTest extends WingsBaseTest {
         .thenReturn(anAccount().withUuid(ACCOUNT_ID).withAccountKey(accountKey).build());
     when(cache.get(Account.class, ACCOUNT_ID))
         .thenReturn(anAccount().withUuid(ACCOUNT_ID).withAccountKey(accountKey).build());
-    when(portalConfig.getJwtAuthSecret()).thenReturn(AUTH_SECRET);
+    on(portalConfig).set("jwtAuthSecret", AUTH_SECRET);
 
     when(persistence.getDatastore(AuthToken.class)).thenReturn(advancedDatastore);
   }
@@ -229,6 +226,14 @@ public class AuthServiceTest extends WingsBaseTest {
       UserThreadLocal.unset();
     }
     assertThat(exceptionThrown).isFalse();
+  }
+
+  @Test
+  @Owner(developers = MARKO)
+  @Category(UnitTests.class)
+  public void testValidateDelegateToken() {
+    authService.validateDelegateToken(ACCOUNT_ID, VALID_TOKEN);
+    verify(delegateTokenAuthenticator).validateDelegateToken(ACCOUNT_ID, VALID_TOKEN);
   }
 
   @Test
@@ -565,95 +570,12 @@ public class AuthServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = BRETT)
-  @Category(UnitTests.class)
-  public void shouldValidateDelegateToken() {
-    TokenGenerator tokenGenerator = new TokenGenerator(ACCOUNT_ID, accountKey);
-    authService.validateDelegateToken(ACCOUNT_ID, tokenGenerator.getToken("https", "localhost", 9090, "hostname"));
-  }
-
-  @Test
-  @Owner(developers = UJJAWAL)
-  @Category(UnitTests.class)
-  public void shouldNotValidateDelegateToken() {
-    TokenGenerator tokenGenerator = new TokenGenerator(GLOBAL_ACCOUNT_ID, accountKey);
-    assertThatThrownBy(()
-                           -> authService.validateDelegateToken(
-                               GLOBAL_ACCOUNT_ID, tokenGenerator.getToken("https", "localhost", 9090, "hostname")))
-        .isInstanceOf(InvalidRequestException.class)
-        .hasMessage("Access denied");
-  }
-
-  @Test
-  @Owner(developers = MARKO)
-  @Category(UnitTests.class)
-  public void shouldNotValidateExpiredDelegateToken() {
-    String expiredToken =
-        "eyJlbmMiOiJBMTI4R0NNIiwiYWxnIjoiZGlyIn0..SFvYSml0znPxoa7K.JcsFw5GiYevubqqzjy-nQyDMzjtA64YhxZjnQz6VH7lRCAGP5JML9Ov86rSRV1V7Kb-a12UvTNzqEqdJ4PCLv4R7GA5SzCwxLEYrlTLtUWX40r0GKuRGoiJVJqax2bBy3gOqDftETZCm_90lD3NxDeJ__RICl4osp9IxCKmlfGyoqriAswoEvkVtu0wjRlvBS-FtY42AeyCf9XIH5rppw-AsXoHH40M6_8FN-mFkilfqv3QKPaGL6Zph.1ipAjbMS834AKSotvHy4sg";
-    assertThatThrownBy(() -> authService.validateDelegateToken(ACCOUNT_ID, expiredToken))
-        .isInstanceOf(InvalidRequestException.class)
-        .hasMessage("Unauthorized");
-  }
-
-  @Test
-  @Owner(developers = UJJAWAL)
-  @Category(UnitTests.class)
-  public void shouldThrowDenyAccessWhenAccountIdNullForDelegate() {
-    TokenGenerator tokenGenerator = new TokenGenerator(ACCOUNT_ID, accountKey);
-    assertThatThrownBy(
-        () -> authService.validateDelegateToken(null, tokenGenerator.getToken("https", "localhost", 9090, "hostname")))
-        .isInstanceOf(InvalidRequestException.class)
-        .hasMessage("Access denied");
-  }
-
-  @Test
-  @Owner(developers = BRETT)
-  @Category(UnitTests.class)
-  public void shouldThrowDenyAccessWhenAccountIdNotFoundForDelegate() {
-    TokenGenerator tokenGenerator = new TokenGenerator(ACCOUNT_ID, accountKey);
-    assertThatThrownBy(()
-                           -> authService.validateDelegateToken(
-                               ACCOUNT_ID + "1", tokenGenerator.getToken("https", "localhost", 9090, "hostname")))
-        .isInstanceOf(InvalidRequestException.class)
-        .hasMessage("Access denied");
-  }
-
-  @Test
-  @Owner(developers = ANUBHAW)
-  @Category(UnitTests.class)
-  public void shouldThrowThrowInavlidTokenForDelegate() {
-    assertThatThrownBy(() -> authService.validateDelegateToken(ACCOUNT_ID, "Dummy"))
-        .isInstanceOf(InvalidTokenException.class);
-  }
-
-  @Test
-  @Owner(developers = ANUBHAW)
-  @Category(UnitTests.class)
-  public void shouldThrowExceptionWhenUnableToDecryptToken() {
-    assertThatThrownBy(() -> authService.validateDelegateToken(ACCOUNT_ID, getDelegateToken()))
-        .isInstanceOf(InvalidTokenException.class);
-  }
-
-  private String getDelegateToken() {
-    KeyGenerator keyGen = null;
-    try {
-      keyGen = KeyGenerator.getInstance("AES");
-    } catch (NoSuchAlgorithmException e) {
-      throw new WingsException(ErrorCode.DEFAULT_ERROR_CODE);
-    }
-    keyGen.init(128);
-    SecretKey secretKey = keyGen.generateKey();
-    byte[] encoded = secretKey.getEncoded();
-    TokenGenerator tokenGenerator = new TokenGenerator(ACCOUNT_ID, Hex.encodeHexString(encoded));
-    return tokenGenerator.getToken("https", "localhost", 9090, "hostname");
-  }
-
-  @Test
   @Owner(developers = RUSHABH)
   @Category(UnitTests.class)
   public void testGenerateBearerTokenWithJWTToken() throws UnsupportedEncodingException {
     when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(true);
-    Account mockAccount = Account.Builder.anAccount().withAccountKey("TestAccount").build();
+    Account mockAccount =
+        Account.Builder.anAccount().withUuid("kmpySmUISimoRrJL6NL73w").withAccountKey("TestAccount").build();
     User mockUser = getMockUser(mockAccount);
     mockUser.setDefaultAccountId("kmpySmUISimoRrJL6NL73w");
     mockUser.setUuid("kmpySmUISimoRrJL6NL73w");
@@ -684,7 +606,8 @@ public class AuthServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGenerateBearerTokenWithoutJWTToken() {
     when(featureFlagService.isEnabled(Matchers.any(FeatureName.class), anyString())).thenReturn(false);
-    Account mockAccount = Account.Builder.anAccount().withAccountKey("TestAccount").build();
+    Account mockAccount =
+        Account.Builder.anAccount().withUuid("kmpySmUISimoRrJL6NL73w").withAccountKey("TestAccount").build();
     User mockUser = getMockUser(mockAccount);
     mockUser.setDefaultAccountId("kmpySmUISimoRrJL6NL73w");
     mockUser.setUuid("kmpySmUISimoRrJL6NL73w");
@@ -801,6 +724,161 @@ public class AuthServiceTest extends WingsBaseTest {
       UserThreadLocal.unset();
     }
     // no error since the environment is not required in the pipeline
+    assertThat(exceptionThrown).isFalse();
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void checkIfUserAllowedToRollbackWorkflowToEnv() {
+    Application application = anApplication().name("appName").uuid(generateUuid()).build();
+    String envId = generateUuid();
+
+    Set<String> workflowRollbackExecutePermissionsForEnvs = new HashSet<>();
+    workflowRollbackExecutePermissionsForEnvs.add(envId);
+
+    AppPermissionSummary appPermissionSummary =
+        AppPermissionSummary.builder()
+            .rollbackWorkflowExecutePermissionsForEnvs(workflowRollbackExecutePermissionsForEnvs)
+            .build();
+
+    Map<String, AppPermissionSummary> appPermissionMapInternal = new HashMap<>();
+    appPermissionMapInternal.put(application.getUuid(), appPermissionSummary);
+
+    UserPermissionInfo userPermissionInfo =
+        UserPermissionInfo.builder().appPermissionMapInternal(appPermissionMapInternal).build();
+    UserRequestContext userRequestContext = UserRequestContext.builder().userPermissionInfo(userPermissionInfo).build();
+
+    User user = anUser().uuid(generateUuid()).name("user-name").userRequestContext(userRequestContext).build();
+
+    UserThreadLocal.set(user);
+    boolean exceptionThrown = false;
+
+    try {
+      authService.checkIfUserAllowedToRollbackWorkflowToEnv(application.getUuid(), envId);
+    } catch (InvalidRequestException ue) {
+      exceptionThrown = true;
+    } finally {
+      UserThreadLocal.unset();
+    }
+    assertThat(exceptionThrown).isFalse();
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void throwErrorIfUserNotAuthorizedToRollbackWorkflowToEnv() {
+    Application application = anApplication().name("appName").uuid(generateUuid()).build();
+    String envId = generateUuid();
+
+    // No env where user is allowed to rollback workflow for
+    Set<String> workflowRollbackExecutePermissionsForEnvs = new HashSet<>();
+
+    AppPermissionSummary appPermissionSummary =
+        AppPermissionSummary.builder()
+            .rollbackWorkflowExecutePermissionsForEnvs(workflowRollbackExecutePermissionsForEnvs)
+            .build();
+
+    Map<String, AppPermissionSummary> appPermissionMapInternal = new HashMap<>();
+    appPermissionMapInternal.put(application.getUuid(), appPermissionSummary);
+
+    UserPermissionInfo userPermissionInfo =
+        UserPermissionInfo.builder().appPermissionMapInternal(appPermissionMapInternal).build();
+    UserRequestContext userRequestContext = UserRequestContext.builder().userPermissionInfo(userPermissionInfo).build();
+
+    User user = anUser().uuid(generateUuid()).name("user-name").userRequestContext(userRequestContext).build();
+
+    UserThreadLocal.set(user);
+
+    assertThatThrownBy(() -> authService.checkIfUserAllowedToRollbackWorkflowToEnv(application.getUuid(), envId))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("User doesn't have rights to rollback Workflow in this Environment");
+
+    UserThreadLocal.unset();
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void allowWorkflowUpdateWhenEnvironmentAccessNotPresentAndWorkflowAccessExplicit() {
+    Application application = anApplication().name("appName").uuid(generateUuid()).build();
+    String envId = generateUuid();
+    String workflowId = generateUuid();
+    Workflow workflow = aWorkflow().uuid(workflowId).envId(generateUuid()).build();
+
+    Set<String> workflowUpdatePermissionsForEnvs = new HashSet<>();
+    Set<String> workflowUpdatePermissionsByEntity = new HashSet<>();
+    workflowUpdatePermissionsByEntity.add(workflowId);
+    workflowUpdatePermissionsForEnvs.add(envId);
+
+    AppPermissionSummary appPermissionSummary =
+        AppPermissionSummary.builder()
+            .workflowUpdatePermissionsForEnvs(workflowUpdatePermissionsForEnvs)
+            .workflowUpdatePermissionsByEntity(workflowUpdatePermissionsByEntity)
+            .build();
+
+    Map<String, AppPermissionSummary> appPermissionMapInternal = new HashMap<>();
+    appPermissionMapInternal.put(application.getUuid(), appPermissionSummary);
+
+    UserPermissionInfo userPermissionInfo =
+        UserPermissionInfo.builder().appPermissionMapInternal(appPermissionMapInternal).build();
+    UserRequestContext userRequestContext = UserRequestContext.builder().userPermissionInfo(userPermissionInfo).build();
+
+    User user = anUser().uuid(generateUuid()).name("user-name").userRequestContext(userRequestContext).build();
+
+    UserThreadLocal.set(user);
+    boolean exceptionThrown = false;
+
+    try {
+      authService.checkWorkflowPermissionsForEnv(application.getUuid(), workflow, Action.UPDATE);
+    } catch (InvalidRequestException ue) {
+      exceptionThrown = true;
+    } finally {
+      UserThreadLocal.unset();
+    }
+    assertThat(exceptionThrown).isFalse();
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void allowPipelineCreationWhenEnvironmentAccessNotPresentAndPipelineAccessExplicit() {
+    Application application = anApplication().name("appName").uuid(generateUuid()).build();
+    String envId = generateUuid();
+    String pipelineId = generateUuid();
+
+    Pipeline pipeline = Pipeline.builder().uuid(pipelineId).build();
+
+    Set<String> pipelineUpdatePermissionsForEnvs = new HashSet<>();
+    Set<String> pipelineUpdatePermissionsByEntity = new HashSet<>();
+    pipelineUpdatePermissionsByEntity.add(pipelineId);
+    pipelineUpdatePermissionsForEnvs.add(envId);
+
+    AppPermissionSummary appPermissionSummary =
+        AppPermissionSummary.builder()
+            .pipelineUpdatePermissionsForEnvs(pipelineUpdatePermissionsForEnvs)
+            .pipelineUpdatePermissionsByEntity(pipelineUpdatePermissionsByEntity)
+            .build();
+
+    Map<String, AppPermissionSummary> appPermissionMapInternal = new HashMap<>();
+    appPermissionMapInternal.put(application.getUuid(), appPermissionSummary);
+
+    UserPermissionInfo userPermissionInfo =
+        UserPermissionInfo.builder().appPermissionMapInternal(appPermissionMapInternal).build();
+    UserRequestContext userRequestContext = UserRequestContext.builder().userPermissionInfo(userPermissionInfo).build();
+
+    User user = anUser().uuid(generateUuid()).name("user-name").userRequestContext(userRequestContext).build();
+
+    UserThreadLocal.set(user);
+    boolean exceptionThrown = false;
+
+    try {
+      authService.checkPipelinePermissionsForEnv(application.getUuid(), pipeline, Action.CREATE);
+    } catch (InvalidRequestException ue) {
+      exceptionThrown = true;
+    } finally {
+      UserThreadLocal.unset();
+    }
     assertThat(exceptionThrown).isFalse();
   }
 }

@@ -6,6 +6,7 @@ import static io.harness.k8s.K8sCommandUnitConstants.Apply;
 import static io.harness.k8s.K8sCommandUnitConstants.FetchFiles;
 import static io.harness.k8s.K8sCommandUnitConstants.Init;
 import static io.harness.k8s.K8sCommandUnitConstants.Prepare;
+import static io.harness.k8s.K8sCommandUnitConstants.Prune;
 import static io.harness.k8s.K8sCommandUnitConstants.WaitForSteadyState;
 import static io.harness.k8s.K8sCommandUnitConstants.WrapUp;
 import static io.harness.k8s.K8sConstants.MANIFEST_FILES_DIR;
@@ -35,6 +36,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
 import io.harness.delegate.k8s.K8sBGBaseHandler;
+import io.harness.delegate.k8s.PrePruningInfo;
+import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
@@ -56,7 +59,6 @@ import io.harness.logging.CommandExecutionStatus;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.k8s.K8sTaskHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
-import software.wings.helpers.ext.helm.response.HelmChartInfo;
 import software.wings.helpers.ext.k8s.request.K8sBlueGreenDeployTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sBlueGreenDeployResponse;
@@ -98,6 +100,7 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
   private String stageColor;
   private String releaseName;
   private String manifestFilesDirectory;
+  private PrePruningInfo prePruningInfo;
 
   @Override
   public K8sTaskExecutionResponse executeTaskInternal(
@@ -179,6 +182,14 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
           kubernetesConfig, k8sBlueGreenDeployTaskParameters.getReleaseName(), releaseHistory.getAsYaml());
 
       wrapUpLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+
+      if (k8sBlueGreenDeployTaskParameters.isPruningEnabled()) {
+        ExecutionLogCallback pruneExecutionLogCallback =
+            k8sTaskHelper.getExecutionLogCallback(k8sBlueGreenDeployTaskParameters, Prune);
+        k8sBGBaseHandler.pruneForBg(k8sDelegateTaskParams, prePruningInfo, pruneExecutionLogCallback, primaryColor,
+            stageColor, currentRelease, client);
+      }
+
       return k8sTaskHelper.getK8sTaskExecutionResponse(K8sBlueGreenDeployResponse.builder()
                                                            .releaseNumber(currentRelease.getNumber())
                                                            .k8sPodList(podList)
@@ -256,11 +267,11 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
       if (workloads.size() != 1) {
         if (workloads.isEmpty()) {
           executionLogCallback.saveExecutionLog(
-              "\nNo workload found in the Manifests. Can't do  Blue/Green Deployment. Only Deployment and DeploymentConfig (OpenShift) workloads are supported in Blue/Green workflow type.",
+              "\nNo workload found in the Manifests. Can't do  Blue/Green Deployment. Only Deployment, DeploymentConfig (OpenShift) and StatefulSet workloads are supported in Blue/Green workflow type.",
               ERROR, FAILURE);
         } else {
           executionLogCallback.saveExecutionLog(
-              "\nThere are multiple workloads in the Service Manifests you are deploying. Blue/Green Workflows support a single Deployment or DeploymentConfig (OpenShift) workload only. To deploy additional workloads in Manifests, annotate them with "
+              "\nThere are multiple workloads in the Service Manifests you are deploying. Blue/Green Workflows support a single Deployment, DeploymentConfig (OpenShift) or StatefulSet workload only. To deploy additional workloads in Manifests, annotate them with "
                   + HarnessAnnotations.directApply + ": true",
               ERROR, FAILURE);
         }
@@ -323,11 +334,15 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
         return false;
       }
 
-      currentRelease = releaseHistory.createNewRelease(
-          resources.stream().map(KubernetesResource::getResourceId).collect(Collectors.toList()));
+      if (k8sBlueGreenDeployTaskParameters.isPruningEnabled()) {
+        currentRelease = releaseHistory.createNewReleaseWithResourceMap(resources);
+      } else {
+        currentRelease = releaseHistory.createNewRelease(
+            resources.stream().map(KubernetesResource::getResourceId).collect(Collectors.toList()));
+      }
 
-      k8sBGBaseHandler.cleanupForBlueGreen(k8sDelegateTaskParams, releaseHistory, executionLogCallback, primaryColor,
-          stageColor, currentRelease, client);
+      prePruningInfo = k8sBGBaseHandler.cleanupForBlueGreen(k8sDelegateTaskParams, releaseHistory, executionLogCallback,
+          primaryColor, stageColor, currentRelease, client);
 
       executionLogCallback.saveExecutionLog("\nCurrent release number is: " + currentRelease.getNumber());
 

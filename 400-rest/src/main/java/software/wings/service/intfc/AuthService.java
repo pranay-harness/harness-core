@@ -1,5 +1,9 @@
 package software.wings.service.intfc;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 
 import software.wings.beans.AuthToken;
@@ -20,6 +24,8 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by peeyushaggarwal on 8/18/16.
  */
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public interface AuthService {
   /**
    * Validate token auth token.
@@ -67,6 +73,17 @@ public interface AuthService {
   /**
    * Authorize.
    * @param accountId
+   * @param appId                the app id
+   * @param entityId             the entity id
+   * @param user                 the user
+   * @param permissionAttributes the permission attributes
+   */
+  void authorize(String accountId, String appId, String entityId, User user,
+      List<PermissionAttribute> permissionAttributes, boolean matchesAny);
+
+  /**
+   * Authorize.
+   * @param accountId
    * @param appIds               list of app ids
    * @param entityId             the entity id
    * @param user                 the user
@@ -88,6 +105,11 @@ public interface AuthService {
   UserPermissionInfo getUserPermissionInfo(String accountId, User user, boolean cacheOnly);
 
   UserRestrictionInfo getUserRestrictionInfo(
+      String accountId, User user, UserPermissionInfo userPermissionInfo, boolean cacheOnly);
+
+  void updateUserPermissionCacheInfo(String accountId, User user, boolean cacheOnly);
+
+  void updateUserRestrictionCacheInfo(
       String accountId, User user, UserPermissionInfo userPermissionInfo, boolean cacheOnly);
 
   void evictPermissionAndRestrictionCacheForUserGroup(UserGroup userGroup);
@@ -116,6 +138,8 @@ public interface AuthService {
   void checkIfUserAllowedToDeployWorkflowToEnv(String appId, String envId);
 
   void checkIfUserAllowedToDeployPipelineToEnv(String appId, String envId);
+
+  void checkIfUserAllowedToRollbackWorkflowToEnv(String appId, String envId);
 
   void checkIfUserCanCreateEnv(String appId, EnvironmentType envType);
 

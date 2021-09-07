@@ -46,6 +46,7 @@ pipeline:
                         name: step2
                         type: myStep
                     - step:
+                        __uuid: barrier1
                         name: Barrier
                         type: Barrier
                         timeout: 10m
@@ -59,6 +60,7 @@ pipeline:
                     name: step1
                     type: myStep
                 - step:
+                    __uuid: barrier2
                     name: Barrier
                     type: Barrier
                     timeout: 20m
@@ -102,6 +104,7 @@ pipeline:
                     name: step2
                     type: myStep
                 - step:
+                    __uuid: barrier3
                     name: Barrier
                     type: Barrier
                     timeout: 10m

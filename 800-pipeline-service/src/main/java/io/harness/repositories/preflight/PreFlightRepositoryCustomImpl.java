@@ -1,5 +1,7 @@
 package io.harness.repositories.preflight;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.preflight.entity.PreFlightEntity;
 import io.harness.pms.preflight.entity.PreFlightEntity.PreFlightEntityKeys;
 
@@ -20,6 +22,7 @@ import org.springframework.data.mongodb.core.query.Update;
 
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 @Slf4j
+@OwnedBy(HarnessTeam.PIPELINE)
 public class PreFlightRepositoryCustomImpl implements PreFlightRepositoryCustom {
   private final MongoTemplate mongoTemplate;
 
@@ -29,6 +32,16 @@ public class PreFlightRepositoryCustomImpl implements PreFlightRepositoryCustom 
     Update update = new Update();
     update.set(PreFlightEntityKeys.connectorCheckResponse, entity.getConnectorCheckResponse());
     update.set(PreFlightEntityKeys.pipelineInputResponse, entity.getPipelineInputResponse());
+    RetryPolicy<Object> retryPolicy = getRetryPolicy();
+    return Failsafe.with(retryPolicy)
+        .get(()
+                 -> mongoTemplate.findAndModify(
+                     query, update, new FindAndModifyOptions().returnNew(true), PreFlightEntity.class));
+  }
+
+  @Override
+  public PreFlightEntity update(Criteria criteria, Update update) {
+    Query query = new Query(criteria);
     RetryPolicy<Object> retryPolicy = getRetryPolicy();
     return Failsafe.with(retryPolicy)
         .get(()

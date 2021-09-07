@@ -6,7 +6,9 @@ import static io.harness.secretmanagerclient.NGMetadata.NGMetadataKeys;
 import static io.harness.secretmanagerclient.NGSecretManagerMetadata.NGSecretManagerMetadataKeys;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
@@ -66,6 +68,7 @@ import org.mongodb.morphia.annotations.Transient;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldNameConstants(innerTypeName = "SecretManagerConfigKeys")
 @OwnedBy(PL)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public abstract class SecretManagerConfig
     implements AccountAccess, EncryptionConfig, PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware,
                UpdatedAtAware, UpdatedByAware, PersistentRegularIterable, NGAccess, NGSecretManagerConfigDTOConverter,
@@ -82,6 +85,18 @@ public abstract class SecretManagerConfig
                  .field(SecretManagerConfigKeys.orgIdentifier)
                  .field(SecretManagerConfigKeys.projectIdentifier)
                  .field(SecretManagerConfigKeys.identifier)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("identifierCheckIdx")
+                 .field(SecretManagerConfigKeys.accountIdentifier)
+                 .field(SecretManagerConfigKeys.orgIdentifier)
+                 .field(SecretManagerConfigKeys.projectIdentifier)
+                 .field(SecretManagerConfigKeys.identifier)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("renewCheckIdx")
+                 .field(SecretManagerConfigKeys.encryptionType)
+                 .field(SecretManagerConfigKeys.nextTokenRenewIteration)
                  .build())
         .build();
   }

@@ -23,6 +23,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.context.ContextElementType;
+import io.harness.delegate.beans.pcf.ResizeStrategy;
 import io.harness.delegate.task.spotinst.request.SpotInstDeployTaskParameters;
 import io.harness.delegate.task.spotinst.request.SpotInstTaskParameters;
 import io.harness.delegate.task.spotinst.response.SpotInstDeployTaskResponse;
@@ -41,7 +42,6 @@ import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.InstanceUnitType;
-import software.wings.beans.ResizeStrategy;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
@@ -180,9 +180,11 @@ public class SpotInstDeployState extends State {
 
     DelegateTask task = spotInstStateHelper.getDelegateTask(app.getAccountId(), app.getUuid(),
         TaskType.SPOTINST_COMMAND_TASK, activity.getUuid(), env.getUuid(), awsAmiInfrastructureMapping.getUuid(),
-        spotInstCommandRequest, env.getEnvironmentType(), awsAmiInfrastructureMapping.getServiceId());
+        spotInstCommandRequest, env.getEnvironmentType(), awsAmiInfrastructureMapping.getServiceId(),
+        isSelectionLogsTrackingForTasksEnabled());
 
     delegateService.queueTask(task);
+    appendDelegateTaskDetails(context, task);
 
     return ExecutionResponse.builder()
         .correlationIds(Arrays.asList(activity.getUuid()))
@@ -448,5 +450,10 @@ public class SpotInstDeployState extends State {
       invalidFields.put("instanceCount", "Instance count needs to be populated");
     }
     return invalidFields;
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    return true;
   }
 }

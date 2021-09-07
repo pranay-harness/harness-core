@@ -1,14 +1,35 @@
 {
-    "text": "
-*Approval Required for ${pipelineName} in ${projectName}.*
-This is a notification that the pipeline <${pipelineExecutionLink}|${pipelineName}> is waiting for your approval.
-*Approval message:* ${approvalMessage}
-*Pipeline execution summary:*
-*Started At:* ${startedAt}
-*Triggered By:* ${triggeredBy}
-*Finished Stage(s):* ${finishedStages}
-*Running Stage(s):* ${runningStages}
-*Upcoming Stage(s):* ${upcomingStages}
-*Time remaining for approval:* ${timeRemainingForApproval}
-"
+  "blocks" : [
+    {
+      "type" : "section",
+      "text" : {
+        "type" : "mrkdwn",
+        "text" : "*Approval Required for pipeline <${pipelineExecutionLink}|${pipelineName}> triggered by ${triggeredBy}*\n\n*Approval message:*\n${approvalMessage}"
+      },
+      "fields" : [
+        {"type" : "mrkdwn", "text" : "*Organization:*\n${orgIdentifier}"},
+        {"type" : "mrkdwn", "text" : "*Project:*\n${orgIdentifier}"},
+        {"type" : "mrkdwn", "text" : "*Triggered by:*\n${triggeredBy}"}
+      ]
+    },
+    {
+      "type" : "section",
+      "text" : {
+        "type" : "mrkdwn",
+        "text" : "_Pipeline started on ${startedAt} and approval expires on ${expiresAt}_"
+      }
+    },
+    {
+      "type" : "context",
+      "elements" : [
+        {
+          "type" : "image",
+          "image_url" :
+              "https://s3.amazonaws.com/wings-assets/slackicons/paused.png",
+          "alt_text" : "Expires in"
+        },
+        {"type" : "mrkdwn", "text" : "${timeRemainingForApproval}"}
+      ]
+    }
+  ]
 }

@@ -4,25 +4,29 @@ import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.PublishedMessageDao;
 import io.harness.batch.processing.service.intfc.InstanceDataBulkWriteService;
+import io.harness.batch.processing.service.intfc.InstanceInfoTimescaleDAO;
 import io.harness.batch.processing.tasklet.reader.PublishedMessageReader;
 import io.harness.batch.processing.writer.EventWriter;
 import io.harness.batch.processing.writer.constants.EventTypeConstants;
-import io.harness.event.grpc.PublishedMessage;
+import io.harness.beans.FeatureName;
+import io.harness.ccm.commons.beans.JobConstants;
+import io.harness.ccm.commons.entities.events.PublishedMessage;
 import io.harness.event.payloads.Lifecycle;
 import io.harness.event.payloads.Lifecycle.EventType;
+import io.harness.ff.FeatureFlagService;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.watch.K8SClusterSyncEvent;
 
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.protobuf.Timestamp;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.tasklet.Tasklet;
@@ -31,33 +35,57 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 @Slf4j
 public class K8SSyncEventTasklet extends EventWriter implements Tasklet {
-  private JobParameters parameters;
   @Autowired private BatchMainConfig config;
   @Autowired private PublishedMessageDao publishedMessageDao;
   @Autowired private InstanceDataBulkWriteService instanceDataBulkWriteService;
+  @Autowired private InstanceInfoTimescaleDAO instanceInfoTimescaleDAO;
+  @Autowired private FeatureFlagService featureFlagService;
 
   @Override
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) {
     if (config.getBatchQueryConfig().isSyncJobDisabled()) {
       return null;
     }
-    parameters = chunkContext.getStepContext().getStepExecution().getJobParameters();
+    final CCMJobConstants jobConstants = new CCMJobConstants(chunkContext);
     int batchSize = config.getBatchQueryConfig().getQueryBatchSize();
-    Long startTime = CCMJobConstants.getFieldLongValueFromJobParams(parameters, CCMJobConstants.JOB_START_DATE);
-    Long endTime = CCMJobConstants.getFieldLongValueFromJobParams(parameters, CCMJobConstants.JOB_END_DATE);
-    String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
 
     String messageType = EventTypeConstants.K8S_SYNC_EVENT;
     PublishedMessageReader publishedMessageReader =
-        new PublishedMessageReader(publishedMessageDao, accountId, messageType, startTime, endTime, batchSize);
+        new PublishedMessageReader(publishedMessageDao, jobConstants.getAccountId(), messageType,
+            jobConstants.getJobStartTime(), jobConstants.getJobEndTime(), batchSize);
     List<PublishedMessage> publishedMessageList;
     do {
       publishedMessageList = publishedMessageReader.getNext();
       List<Lifecycle> lifecycleList = processK8SSyncEventMessage(publishedMessageList);
 
       instanceDataBulkWriteService.updateList(lifecycleList);
+
+      if (featureFlagService.isEnabled(FeatureName.NODE_RECOMMENDATION_1, jobConstants.getAccountId())) {
+        updateInactiveInstancesInTimescale(jobConstants, publishedMessageList);
+      }
+
     } while (publishedMessageList.size() == batchSize);
     return null;
+  }
+
+  private void updateInactiveInstancesInTimescale(JobConstants jobConstants, List<PublishedMessage> publishedMessages) {
+    for (PublishedMessage publishedMessage : publishedMessages) {
+      K8SClusterSyncEvent k8SClusterSyncEvent = (K8SClusterSyncEvent) publishedMessage.getMessage();
+
+      Instant syncEventTime = HTimestamps.toInstant(k8SClusterSyncEvent.getLastProcessedTimestamp());
+
+      if (k8SClusterSyncEvent.getVersion() == 2) {
+        instanceInfoTimescaleDAO.stopInactiveNodesAtTime(jobConstants, k8SClusterSyncEvent.getClusterId(),
+            syncEventTime, new ArrayList<>(k8SClusterSyncEvent.getActiveNodeUidsMapMap().keySet()));
+        instanceInfoTimescaleDAO.stopInactivePodsAtTime(jobConstants, k8SClusterSyncEvent.getClusterId(), syncEventTime,
+            new ArrayList<>(k8SClusterSyncEvent.getActivePodUidsMapMap().keySet()));
+      } else {
+        instanceInfoTimescaleDAO.stopInactiveNodesAtTime(jobConstants, k8SClusterSyncEvent.getClusterId(),
+            syncEventTime, k8SClusterSyncEvent.getActiveNodeUidsList());
+        instanceInfoTimescaleDAO.stopInactivePodsAtTime(jobConstants, k8SClusterSyncEvent.getClusterId(), syncEventTime,
+            k8SClusterSyncEvent.getActivePodUidsList());
+      }
+    }
   }
 
   private List<Lifecycle> processK8SSyncEventMessage(List<PublishedMessage> publishedMessages) {
@@ -86,9 +114,16 @@ public class K8SSyncEventTasklet extends EventWriter implements Tasklet {
       log.info("Active K8S instances before {} time {}", lastProcessedTimestamp, activeInstanceIds.size());
 
       Set<String> activeInstanceArns = new HashSet<>();
-      activeInstanceArns.addAll(k8SClusterSyncEvent.getActiveNodeUidsList());
-      activeInstanceArns.addAll(k8SClusterSyncEvent.getActivePodUidsList());
-      activeInstanceArns.addAll(k8SClusterSyncEvent.getActivePvUidsList());
+
+      if (k8SClusterSyncEvent.getVersion() == 2) {
+        activeInstanceArns.addAll(k8SClusterSyncEvent.getActiveNodeUidsMapMap().keySet());
+        activeInstanceArns.addAll(k8SClusterSyncEvent.getActivePodUidsMapMap().keySet());
+        activeInstanceArns.addAll(k8SClusterSyncEvent.getActivePvUidsMapMap().keySet());
+      } else {
+        activeInstanceArns.addAll(k8SClusterSyncEvent.getActiveNodeUidsList());
+        activeInstanceArns.addAll(k8SClusterSyncEvent.getActivePodUidsList());
+        activeInstanceArns.addAll(k8SClusterSyncEvent.getActivePvUidsList());
+      }
 
       final SetView<String> inactiveInstanceArns = Sets.difference(activeInstanceIds, activeInstanceArns);
 

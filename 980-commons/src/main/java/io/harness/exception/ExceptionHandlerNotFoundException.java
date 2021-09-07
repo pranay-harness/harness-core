@@ -14,4 +14,9 @@ public class ExceptionHandlerNotFoundException extends WingsException {
     super(message, null, EXCEPTION_HANDLER_NOT_FOUND, Level.ERROR, null, null);
     super.param(MESSAGE_ARG, message);
   }
+
+  public ExceptionHandlerNotFoundException(String message, Throwable cause) {
+    super(message, cause, EXCEPTION_HANDLER_NOT_FOUND, Level.ERROR, null, null);
+    super.param(MESSAGE_ARG, message);
+  }
 }

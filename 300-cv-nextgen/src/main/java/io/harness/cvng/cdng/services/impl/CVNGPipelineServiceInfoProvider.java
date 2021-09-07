@@ -36,7 +36,9 @@ public class CVNGPipelineServiceInfoProvider implements PipelineServiceInfoProvi
 
   @Override
   public List<VariableCreator> getVariableCreators() {
-    return new ArrayList<>();
+    List<VariableCreator> variableCreators = new ArrayList<>();
+    variableCreators.add(new CVNGStepVariableCreator());
+    return variableCreators;
   }
 
   @Override

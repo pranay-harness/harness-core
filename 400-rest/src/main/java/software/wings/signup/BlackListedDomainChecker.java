@@ -1,12 +1,14 @@
 package software.wings.signup;
 
+import static io.harness.annotations.dev.HarnessModule._950_NG_SIGNUP;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.exception.SignupException;
 
 import software.wings.app.MainConfiguration;
-import software.wings.service.intfc.signup.SignupException;
 
 import com.google.inject.Singleton;
 import java.io.BufferedReader;
@@ -19,6 +21,7 @@ import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
+@TargetModule(_950_NG_SIGNUP)
 @Slf4j
 @Singleton
 public class BlackListedDomainChecker {

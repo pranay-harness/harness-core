@@ -2,6 +2,7 @@ package io.harness.functional;
 
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.WorkflowType.ORCHESTRATION;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -11,6 +12,8 @@ import static software.wings.sm.StateExecutionInstance.StateExecutionInstanceKey
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureFlag;
 import io.harness.beans.FeatureName;
@@ -88,6 +91,7 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 
 @Slf4j
+@OwnedBy(HarnessTeam.CDP)
 public abstract class AbstractFunctionalTest extends CategoryTest implements GraphQLTestMixin, MultilineStringMixin {
   protected static final String ADMIN_USER = "admin@harness.io";
 
@@ -137,10 +141,9 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
     bearerToken = adminUser.getToken();
     delegateExecutor.ensureDelegate(account, bearerToken, AbstractFunctionalTest.class);
     if (needCommandLibraryService()) {
-      commandLibraryServiceExecutor.ensureCommandLibraryService(
-          AbstractFunctionalTest.class, FunctionalTestRule.alpn, FunctionalTestRule.alpnJar);
+      commandLibraryServiceExecutor.ensureCommandLibraryService(AbstractFunctionalTest.class);
     }
-    log.info("Basic setup completed");
+    log.info("Basic setup completed.");
   }
 
   @AfterClass
@@ -423,5 +426,13 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
     }
 
     log.info("Feature flags on manager:\n{}", featureFlagListAsString.toString());
+  }
+
+  protected Workflow createAndAssertWorkflow(Workflow workflow, String accountId, String appId) {
+    Workflow savedWorkflow = WorkflowRestUtils.createWorkflow(bearerToken, accountId, appId, workflow);
+    assertThat(savedWorkflow).isNotNull();
+    assertThat(savedWorkflow.getUuid()).isNotEmpty();
+    assertThat(savedWorkflow.getWorkflowType()).isEqualTo(ORCHESTRATION);
+    return savedWorkflow;
   }
 }

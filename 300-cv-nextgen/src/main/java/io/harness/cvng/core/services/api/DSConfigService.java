@@ -9,7 +9,6 @@ import java.util.List;
 
 public interface DSConfigService {
   List<DSConfig> list(String accountId, String connectorIdentifier, String productName);
-  void upsert(DSConfig dsConfig);
   void create(DSConfig dsConfig);
   void update(String identifier, DSConfig dsConfig);
   void delete(String accountId, String orgIdentifier, String projectIdentifier, String monitoringSourceIdentifier);

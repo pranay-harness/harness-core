@@ -36,6 +36,8 @@ public class BarrierPositionInfo {
     String stepSetupId;
     String stepRuntimeId;
 
+    boolean stepGroupRollback;
+
     public enum BarrierPositionType { STAGE, STEP_GROUP, STEP }
   }
 }

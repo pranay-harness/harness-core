@@ -24,7 +24,11 @@ public class EcsConvention {
   }
 
   public static String getServiceName(String family, Integer revision) {
-    return trim(family) + DELIMITER + revision;
+    return getServiceNamePrefix(family) + revision;
+  }
+
+  public static String getServiceNamePrefix(String family) {
+    return trim(family) + DELIMITER;
   }
 
   /**

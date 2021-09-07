@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import io.harness.yaml.extended.ci.container.Container;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;

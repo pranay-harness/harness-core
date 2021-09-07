@@ -28,6 +28,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 
 public class V1StatefulSetHandlerTest extends CategoryTest {
+  private static final Integer VERSION = 1;
   private EventPublisher eventPublisher;
   private final ClusterDetails clusterDetails = ClusterDetails.builder()
                                                     .clusterName("ce-test-cluster")
@@ -53,8 +54,10 @@ public class V1StatefulSetHandlerTest extends CategoryTest {
                                     .withNewMetadata()
                                     .withName("test-name")
                                     .withNamespace("test-namespace")
+                                    .withUid("test-uid")
                                     .endMetadata()
                                     .withNewSpec()
+                                    .withReplicas(5)
                                     .withNewTemplate()
                                     .withNewSpec()
                                     .addNewInitContainer()
@@ -87,6 +90,9 @@ public class V1StatefulSetHandlerTest extends CategoryTest {
         .contains(K8sWorkloadSpec.newBuilder()
                       .setNamespace("test-namespace")
                       .setWorkloadName("test-name")
+                      .setUid("test-uid")
+                      .setVersion(VERSION)
+                      .setReplicas(5)
                       .setClusterName("ce-test-cluster")
                       .setClusterId("cluster-id")
                       .setKubeSystemUid("kube-system-uid")
@@ -119,8 +125,10 @@ public class V1StatefulSetHandlerTest extends CategoryTest {
                                        .withNewMetadata()
                                        .withName("test-name")
                                        .withNamespace("test-namespace")
+                                       .withUid("test-uid")
                                        .endMetadata()
                                        .withNewSpec()
+                                       .withReplicas(5)
                                        .withNewTemplate()
                                        .withNewSpec()
                                        .addNewInitContainer()
@@ -150,6 +158,7 @@ public class V1StatefulSetHandlerTest extends CategoryTest {
                                        .build();
     V1StatefulSet newStatefulSet = new V1StatefulSetBuilder(oldStatefulSet)
                                        .withNewSpec()
+                                       .withReplicas(12)
                                        .withNewTemplate()
                                        .withNewSpec()
                                        .addNewInitContainer()
@@ -185,6 +194,9 @@ public class V1StatefulSetHandlerTest extends CategoryTest {
         .isEqualTo(K8sWorkloadSpec.newBuilder()
                        .setNamespace("test-namespace")
                        .setWorkloadName("test-name")
+                       .setUid("test-uid")
+                       .setVersion(VERSION)
+                       .setReplicas(12)
                        .setClusterName("ce-test-cluster")
                        .setClusterId("cluster-id")
                        .setKubeSystemUid("kube-system-uid")
@@ -219,8 +231,10 @@ public class V1StatefulSetHandlerTest extends CategoryTest {
                                        .withNewMetadata()
                                        .withName("test-name")
                                        .withNamespace("test-namespace")
+                                       .withUid("test-uid")
                                        .endMetadata()
                                        .withNewSpec()
+                                       .withReplicas(5)
                                        .withNewTemplate()
                                        .withNewSpec()
                                        .addNewContainer()
@@ -247,6 +261,7 @@ public class V1StatefulSetHandlerTest extends CategoryTest {
                                        .build();
     V1StatefulSet newStatefulSet = new V1StatefulSetBuilder(oldStatefulSet)
                                        .withNewSpec()
+                                       .withReplicas(5)
                                        .withNewTemplate()
                                        .withNewSpec()
                                        .withAutomountServiceAccountToken(false)

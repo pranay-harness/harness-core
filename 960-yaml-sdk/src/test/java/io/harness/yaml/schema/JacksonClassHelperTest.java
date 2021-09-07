@@ -5,12 +5,15 @@ import static io.harness.rule.OwnerRule.ABHINAV;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.yaml.TestClass;
 import io.harness.yaml.schema.beans.OneOfMapping;
 import io.harness.yaml.schema.beans.SwaggerDefinitionsMetaInfo;
 
+import io.dropwizard.jackson.Jackson;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -19,8 +22,9 @@ import java.util.Set;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.DX)
 public class JacksonClassHelperTest extends CategoryTest {
-  JacksonClassHelper jacksonSubtypeHelper = new JacksonClassHelper();
+  JacksonClassHelper jacksonSubtypeHelper = new JacksonClassHelper(Jackson.newObjectMapper());
 
   @Test
   @Owner(developers = ABHINAV)

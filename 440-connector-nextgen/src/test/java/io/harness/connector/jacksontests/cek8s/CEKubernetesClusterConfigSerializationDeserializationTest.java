@@ -4,9 +4,11 @@ import static io.harness.connector.jacksontests.ConnectorJacksonTestHelper.readF
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.utils.CommonTestHelper;
+import io.harness.delegate.beans.connector.CEFeatures;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.cek8s.CEKubernetesClusterConfigDTO;
 import io.harness.remote.NGObjectMapperHelper;
@@ -15,14 +17,18 @@ import io.harness.rule.OwnerRule;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
+import java.util.Arrays;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class CEKubernetesClusterConfigSerializationDeserializationTest {
+public class CEKubernetesClusterConfigSerializationDeserializationTest extends CategoryTest {
   private static ObjectMapper objectMapper;
   private static final CEKubernetesClusterConfigDTO CE_KUBERNETES_CLUSTER_CONFIG_DTO =
-      CEKubernetesClusterConfigDTO.builder().connectorRef("account.k8s_cd").build();
+      CEKubernetesClusterConfigDTO.builder()
+          .connectorRef("account.k8s_cd")
+          .featuresEnabled(Arrays.asList(CEFeatures.OPTIMIZATION, CEFeatures.VISIBILITY))
+          .build();
 
   @Before
   public void setup() {

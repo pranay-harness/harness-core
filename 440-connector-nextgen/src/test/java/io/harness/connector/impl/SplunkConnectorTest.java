@@ -1,6 +1,8 @@
 package io.harness.connector.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.delegate.beans.connector.ConnectorType.SPLUNK;
+import static io.harness.git.model.ChangeType.ADD;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -10,6 +12,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
@@ -19,6 +22,7 @@ import io.harness.connector.mappers.ConnectorMapper;
 import io.harness.connector.validator.ConnectionValidator;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 import io.harness.encryption.SecretRefData;
+import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.repositories.ConnectorRepository;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
@@ -39,6 +43,7 @@ import org.mockito.MockitoAnnotations;
 
 @Slf4j
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
+@OwnedBy(DX)
 public class SplunkConnectorTest extends CategoryTest {
   @Mock ConnectorMapper connectorMapper;
   @Mock ConnectorRepository connectorRepository;
@@ -46,6 +51,7 @@ public class SplunkConnectorTest extends CategoryTest {
   @InjectMocks DefaultConnectorServiceImpl connectorService;
   @Mock SecretRefInputValidationHelper secretRefInputValidationHelper;
   @Mock ConnectorEntityReferenceHelper connectorEntityReferenceHelper;
+  @Mock GitSyncSdkService gitSyncSdkService;
 
   String userName = "userName";
   String password = "password";
@@ -90,9 +96,10 @@ public class SplunkConnectorTest extends CategoryTest {
                                          .build();
     connectorRequest = ConnectorDTO.builder().connectorInfo(connectorInfo).build();
     connectorResponse = ConnectorResponseDTO.builder().connector(connectorInfo).build();
-    when(connectorRepository.save(connector)).thenReturn(connector);
+    when(connectorRepository.save(connector, connectorRequest, ADD, null)).thenReturn(connector);
     when(connectorMapper.writeDTO(connector)).thenReturn(connectorResponse);
     when(connectorMapper.toConnector(connectorRequest, accountIdentifier)).thenReturn(connector);
+    when(gitSyncSdkService.isGitSyncEnabled(accountIdentifier, null, null)).thenReturn(true);
     doNothing().when(secretRefInputValidationHelper).validateTheSecretInput(any(), any());
   }
 
@@ -128,7 +135,8 @@ public class SplunkConnectorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetSplunkConnector() {
     createConnector();
-    when(connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(anyString(), anyBoolean()))
+    when(connectorRepository.findByFullyQualifiedIdentifierAndDeletedNot(
+             anyString(), anyString(), anyString(), anyString(), anyBoolean()))
         .thenReturn(Optional.of(connector));
     ConnectorResponseDTO connectorDTO = connectorService.get(accountIdentifier, null, null, identifier).get();
     ensureSplunkConnectorFieldsAreCorrect(connectorDTO);

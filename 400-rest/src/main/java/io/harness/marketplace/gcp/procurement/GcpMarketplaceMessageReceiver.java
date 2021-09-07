@@ -3,8 +3,11 @@ package io.harness.marketplace.gcp.procurement;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.event.handler.impl.segment.SegmentHandler.Keys;
+import io.harness.event.handler.impl.segment.SegmentHelper;
 import io.harness.exception.GcpMarketplaceException;
 import io.harness.marketplace.gcp.procurement.pubsub.ProcurementPubsubMessage;
+import io.harness.marketplace.gcp.procurement.pubsub.ProcurementPubsubMessage.AccountMessage;
 
 import software.wings.beans.AccountStatus;
 import software.wings.beans.marketplace.gcp.GCPMarketplaceCustomer;
@@ -24,6 +27,8 @@ import com.google.pubsub.v1.PubsubMessage;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -34,28 +39,43 @@ import org.apache.commons.lang3.StringUtils;
 @Singleton
 public class GcpMarketplaceMessageReceiver implements MessageReceiver {
   private static final String PRODUCT_NAME_FIELD = "productExternalName";
+  private static String SYSTEM = "system";
+  private static String GCP_ACCOUNT_APPROVAL_REQUEST_RECEIVED = "Gcp Account Approval Request received";
+  private static String GCP_ACCOUNT_APPROVAL_REQUEST_APPROVED = "Gcp Account approved";
+  private static String GCP_ACCOUNT_APPROVAL_REQUEST_REJECTED = "Gcp Account rejected";
+  private static String GCP_ENTITLEMENT_APPROVAL_REQUEST_RECEIVED = "Gcp Entitlement Approval Request received";
+  private static String GCP_ENTITLEMENT_APPROVAL_REQUEST_APPROVED = "Gcp Entitlement approved";
+  private static String GCP_ENTITLEMENT_CHANGE_APPROVAL_REQUEST_APPROVED = "Gcp Entitlement change approved";
+  private static String GCP_ENTITLEMENT_CANCELLATION_APPROVED = "Gcp Entitlement cancellation approved";
+  /*
+   This dummy account id has to be added to the GCPMarketplaceCustomer to support billing only flows.
+   */
+  private static String DUMMY_HARNESS_ACCOUNT_ID = "HarnessGcpDummyAccount";
 
   private final WingsPersistence wingsPersistence;
   private final AccountService accountService;
   private final GcpProcurementService gcpProcurementService;
   private final GcpProductsRegistry gcpProductsRegistry;
+  private final SegmentHelper segmentHelper;
   private final Gson gson = new Gson();
 
   public GcpMarketplaceMessageReceiver(GcpProcurementService gcpProcurementService, WingsPersistence wingsPersistence,
-      AccountService accountService, GcpProductsRegistry gcpProductsRegistry) {
+      AccountService accountService, GcpProductsRegistry gcpProductsRegistry, SegmentHelper segmentHelper) {
     this.gcpProcurementService = gcpProcurementService;
     this.wingsPersistence = wingsPersistence;
     this.accountService = accountService;
     this.gcpProductsRegistry = gcpProductsRegistry;
+    this.segmentHelper = segmentHelper;
   }
 
   @Override
   public void receiveMessage(PubsubMessage message, AckReplyConsumer consumer) {
-    log.info("Received GCP marketplace message: {}", message.getData().toStringUtf8());
+    String data = message.getData().toStringUtf8();
+    log.info("Received GCP marketplace message: {}", data);
 
     boolean ack;
     try {
-      ack = processPubsubMessage(parseMessage(message));
+      ack = processPubsubMessage(parseMessage(data));
     } catch (IOException e) {
       throw new GcpMarketplaceException(
           String.format("Failed to handle GCP marketplace message %s.", message.getData().toStringUtf8()), e);
@@ -70,9 +90,7 @@ public class GcpMarketplaceMessageReceiver implements MessageReceiver {
     }
   }
 
-  private ProcurementPubsubMessage parseMessage(PubsubMessage message) {
-    String data = message.getData().toStringUtf8();
-
+  private ProcurementPubsubMessage parseMessage(String data) {
     if (StringUtils.isNotBlank(data)) {
       return gson.fromJson(data, ProcurementPubsubMessage.class);
     }
@@ -85,7 +103,7 @@ public class GcpMarketplaceMessageReceiver implements MessageReceiver {
     }
 
     if (message.getAccount() != null && StringUtils.isNotBlank(message.getAccount().getId())) {
-      return processAccount(message.getAccount());
+      return processAccount(message.getAccount(), message.getEventType());
     }
 
     if (message.getEntitlement() != null && StringUtils.isNotBlank(message.getEntitlement().getId())) {
@@ -95,8 +113,19 @@ public class GcpMarketplaceMessageReceiver implements MessageReceiver {
     return false;
   }
 
-  public boolean processAccount(ProcurementPubsubMessage.AccountMessage accountMessage) throws IOException {
-    // we are expecting and processing only DELETE_ACCOUNT message
+  private HashMap<String, String> getPropertiesMap(String gcpAccountId) {
+    return new HashMap<String, String>() {
+      { put("gcpAccountId", gcpAccountId); }
+    };
+  }
+
+  private Map<String, Boolean> getIntegrations() {
+    return new HashMap<String, Boolean>() {
+      { put(Keys.SALESFORCE, Boolean.TRUE); }
+    };
+  }
+
+  public boolean processAccount(AccountMessage accountMessage, ProcurementEventType eventType) throws IOException {
     String gcpAccountId = accountMessage.getId();
     GCPMarketplaceCustomer gcpMarketplaceCustomer = getCustomer(gcpAccountId);
     Account account = gcpProcurementService.getAccount(gcpAccountId);
@@ -105,7 +134,9 @@ public class GcpMarketplaceMessageReceiver implements MessageReceiver {
       if (gcpMarketplaceCustomer != null) {
         log.info("Deleting Account provisioned through GCP Marketplace with accountId: {} and GCP AccountId: {}.",
             gcpMarketplaceCustomer.getHarnessAccountId(), gcpAccountId);
-        accountService.delete(gcpMarketplaceCustomer.getHarnessAccountId());
+        if (!DUMMY_HARNESS_ACCOUNT_ID.equals(gcpMarketplaceCustomer.getHarnessAccountId())) {
+          accountService.delete(gcpMarketplaceCustomer.getHarnessAccountId());
+        }
         wingsPersistence.delete(GCPMarketplaceCustomer.class, gcpMarketplaceCustomer.getUuid());
         return true;
       } else {
@@ -131,15 +162,26 @@ public class GcpMarketplaceMessageReceiver implements MessageReceiver {
     String gcpAccountId = GcpProcurementService.getAccountId(entitlement.getAccount());
     GCPMarketplaceCustomer customer = getCustomer(gcpAccountId);
 
+    Map<String, String> properties = getPropertiesMap(gcpAccountId);
+    Map<String, Boolean> integrations = getIntegrations();
+
     if (customer == null) {
-      log.info("Didn't find customer entry in DB for GCP Marketplace AccountId: {}", gcpAccountId);
-      return false;
+      wingsPersistence.save(GCPMarketplaceCustomer.builder()
+                                .gcpAccountId(gcpAccountId)
+                                .harnessAccountId(DUMMY_HARNESS_ACCOUNT_ID)
+                                .build());
+      gcpProcurementService.approveAccount(gcpAccountId);
+      log.info("Approved Gcp Account: {} successfully from Entitlement flow", gcpAccountId);
+      segmentHelper.reportTrackEvent(SYSTEM, GCP_ACCOUNT_APPROVAL_REQUEST_APPROVED, properties, integrations);
     }
 
     switch (eventType) {
       case ENTITLEMENT_CREATION_REQUESTED:
+        log.info("Gcp Entitlement approval request received for gcp account: {}", gcpAccountId);
         if (entitlement.getState().equals("ENTITLEMENT_ACTIVATION_REQUESTED")) {
+          segmentHelper.reportTrackEvent(SYSTEM, GCP_ENTITLEMENT_APPROVAL_REQUEST_RECEIVED, properties, integrations);
           gcpProcurementService.approveEntitlement(entitlementId);
+          segmentHelper.reportTrackEvent(SYSTEM, GCP_ENTITLEMENT_APPROVAL_REQUEST_APPROVED, properties, integrations);
           return true;
         }
         break;
@@ -153,12 +195,15 @@ public class GcpMarketplaceMessageReceiver implements MessageReceiver {
       case ENTITLEMENT_PLAN_CHANGE_REQUESTED:
         if (entitlement.getState().equals("ENTITLEMENT_PENDING_PLAN_CHANGE_APPROVAL")) {
           gcpProcurementService.approveEntitlementPlanChange(entitlementId, entitlement.getNewPendingPlan());
+          segmentHelper.reportTrackEvent(
+              SYSTEM, GCP_ENTITLEMENT_CHANGE_APPROVAL_REQUEST_APPROVED, properties, integrations);
           return true;
         }
         break;
       case ENTITLEMENT_CANCELLED:
         if (entitlement.getState().equals("ENTITLEMENT_CANCELLED")) {
           cancelCustomer(customer, entitlement);
+          segmentHelper.reportTrackEvent(SYSTEM, GCP_ENTITLEMENT_CANCELLATION_APPROVED, properties, integrations);
           return true;
         }
         break;
@@ -167,6 +212,7 @@ public class GcpMarketplaceMessageReceiver implements MessageReceiver {
       case ENTITLEMENT_CANCELLATION_REVERTED:
       case ENTITLEMENT_CANCELLING:
       case ENTITLEMENT_DELETED:
+        segmentHelper.reportTrackEvent(SYSTEM, eventType.name(), properties, integrations);
         return true;
       default:
         throw new IllegalStateException("Unexpected value for GCP marketplace eventType: " + eventType);
