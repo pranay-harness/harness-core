@@ -15,4 +15,5 @@ import lombok.Data;
 @OwnedBy(PL)
 public class SignedSSHVaultRequest {
   @JsonProperty("public_key") private String publicKey;
+  @JsonProperty("valid_principals") private String validPrincipals;
 }
