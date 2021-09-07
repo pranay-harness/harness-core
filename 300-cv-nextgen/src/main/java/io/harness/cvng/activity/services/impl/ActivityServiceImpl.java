@@ -27,7 +27,6 @@ import io.harness.cvng.activity.entities.InfrastructureActivity;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.alert.util.VerificationStatus;
-import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ClusterType;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
 import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
@@ -45,6 +44,8 @@ import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceD
 import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
+import io.harness.cvng.core.beans.params.filterParams.DeploymentLogAnalysisFilter;
+import io.harness.cvng.core.beans.params.filterParams.DeploymentTimeSeriesAnalysisFilter;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.WebhookService;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
@@ -622,15 +623,14 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public TransactionMetricInfoSummaryPageDTO getDeploymentActivityTimeSeriesData(String accountId, String activityId,
-      boolean anomalousMetricsOnly, String hostName, String filter, List<String> healthSourceIdentifiersFilter,
-      int pageNumber, int pageSize) {
+      DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter, PageParams pageParams) {
     List<String> verificationJobInstanceIds = getVerificationJobInstanceId(activityId);
     // TODO: We currently support only one verificationJobInstance per deployment. Hence this check. Revisit if that
     // changes later
     Preconditions.checkState(verificationJobInstanceIds.size() == 1,
         "We do not support more than one monitored source validation from deployment");
-    return deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceIds.get(0),
-        anomalousMetricsOnly, hostName, filter, healthSourceIdentifiersFilter, pageNumber);
+    return deploymentTimeSeriesAnalysisService.getMetrics(
+        accountId, verificationJobInstanceIds.get(0), deploymentTimeSeriesAnalysisFilter, pageParams);
   }
 
   @Override
@@ -641,28 +641,27 @@ public class ActivityServiceImpl implements ActivityService {
   }
 
   @Override
-  public List<LogAnalysisClusterChartDTO> getDeploymentActivityLogAnalysisClusters(String accountId, String activityId,
-      String hostName, List<String> healthSourceIdentifiersFilter, List<ClusterType> clusterTypesFilter) {
+  public List<LogAnalysisClusterChartDTO> getDeploymentActivityLogAnalysisClusters(
+      String accountId, String activityId, DeploymentLogAnalysisFilter deploymentLogAnalysisFilter) {
     List<String> verificationJobInstanceIds = getVerificationJobInstanceId(activityId);
     // TODO: We currently support only one verificationJobInstance per deployment. Hence this check. Revisit if that
     // changes later
     Preconditions.checkState(verificationJobInstanceIds.size() == 1,
         "We do not support more than one monitored source validation from deployment");
     return deploymentLogAnalysisService.getLogAnalysisClusters(
-        accountId, verificationJobInstanceIds.get(0), hostName, healthSourceIdentifiersFilter, clusterTypesFilter);
+        accountId, verificationJobInstanceIds.get(0), deploymentLogAnalysisFilter);
   }
 
   @Override
   public PageResponse<LogAnalysisClusterDTO> getDeploymentActivityLogAnalysisResult(String accountId, String activityId,
-      Integer label, String hostName, List<String> healthSourceIdentifiers, List<ClusterType> clusterTypes,
-      PageParams pageParams) {
+      Integer label, DeploymentLogAnalysisFilter deploymentLogAnalysisFilter, PageParams pageParams) {
     List<String> verificationJobInstanceIds = getVerificationJobInstanceId(activityId);
     // TODO: We currently support only one verificationJobInstance per deployment. Hence this check. Revisit if that
     // changes later
     Preconditions.checkState(verificationJobInstanceIds.size() == 1,
         "We do not support more than one monitored source validation from deployment");
-    return deploymentLogAnalysisService.getLogAnalysisResult(accountId, verificationJobInstanceIds.get(0), label,
-        hostName, healthSourceIdentifiers, clusterTypes, pageParams);
+    return deploymentLogAnalysisService.getLogAnalysisResult(
+        accountId, verificationJobInstanceIds.get(0), label, deploymentLogAnalysisFilter, pageParams);
   }
 
   @Override

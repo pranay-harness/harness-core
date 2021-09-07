@@ -25,6 +25,7 @@ import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.beans.params.TimeRangeParams;
+import io.harness.cvng.core.beans.params.filterParams.TimeSeriesAnalysisFilter;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.TimeSeriesRecord;
 import io.harness.cvng.core.services.api.CVConfigService;
@@ -427,6 +428,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTestBase {
     Instant end = start.plus(5, ChronoUnit.MINUTES);
     TimeRangeParams timeRangeParams = TimeRangeParams.builder().startTime(start).endTime(end).build();
     PageParams pageParams = PageParams.builder().page(0).size(10).build();
+
     String cvConfigId = generateUuid();
     when(timeSeriesRecordService.getTimeSeriesRecordsForConfigs(any(), any(), any(), anyBoolean()))
         .thenReturn(getTimeSeriesRecords(cvConfigId, true));
@@ -437,8 +439,14 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTestBase {
     when(cvConfigService.getDataSourceTypeForCVConfigs(serviceEnvironmentParams, Arrays.asList(cvConfigId)))
         .thenReturn(Maps.of(cvConfigId, DataSourceType.APP_DYNAMICS));
 
+    TimeSeriesAnalysisFilter timeSeriesAnalysisFilter = TimeSeriesAnalysisFilter.builder()
+                                                            .filter(null)
+                                                            .anomalous(true)
+                                                            .healthSourceIdentifiers(healthSourceIdentifiers)
+                                                            .build();
+
     PageResponse<TimeSeriesMetricDataDTO> response = timeSeriesDashboardService.getTimeSeriesMetricData(
-        serviceEnvironmentParams, timeRangeParams, true, healthSourceIdentifiers, null, pageParams);
+        serviceEnvironmentParams, timeRangeParams, timeSeriesAnalysisFilter, pageParams);
 
     verify(cvConfigService).list(serviceEnvironmentParams, healthSourceIdentifiers);
     verify(cvConfigService).getDataSourceTypeForCVConfigs(serviceEnvironmentParams, Arrays.asList(cvConfigId));
@@ -450,8 +458,14 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTestBase {
       assertThat(timeSeriesMetricDataDTO.getDataSourceType()).isEqualTo(DataSourceType.APP_DYNAMICS);
     });
 
+    timeSeriesAnalysisFilter = TimeSeriesAnalysisFilter.builder()
+                                   .filter(null)
+                                   .anomalous(true)
+                                   .healthSourceIdentifiers(Arrays.asList("some-identifier"))
+                                   .build();
+
     response = timeSeriesDashboardService.getTimeSeriesMetricData(
-        serviceEnvironmentParams, timeRangeParams, true, Arrays.asList("some-identifier"), null, pageParams);
+        serviceEnvironmentParams, timeRangeParams, timeSeriesAnalysisFilter, pageParams);
     assertThat(response).isNotNull();
     assertThat(response.getContent()).isEmpty();
   }

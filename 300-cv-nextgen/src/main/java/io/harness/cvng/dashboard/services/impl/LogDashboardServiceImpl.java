@@ -1,7 +1,5 @@
 package io.harness.cvng.dashboard.services.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.analysis.entities.LogAnalysisCluster;
@@ -14,6 +12,7 @@ import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.beans.params.TimeRangeParams;
+import io.harness.cvng.core.beans.params.filterParams.LiveMonitoringLogAnalysisFilter;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
@@ -83,11 +82,19 @@ public class LogDashboardServiceImpl implements LogDashboardService {
 
   @Override
   public PageResponse<AnalyzedLogDataDTO> getAllLogsData(ServiceEnvironmentParams serviceEnvironmentParams,
-      TimeRangeParams timeRangeParams, List<LogAnalysisTag> clusterTypes, List<String> healthSourceIdentifiers,
+      TimeRangeParams timeRangeParams, LiveMonitoringLogAnalysisFilter liveMonitoringLogAnalysisFilter,
       PageParams pageParams) {
-    List<CVConfig> configs = cvConfigService.list(serviceEnvironmentParams, healthSourceIdentifiers);
+    List<CVConfig> configs;
+    if (liveMonitoringLogAnalysisFilter.filterByHealthSourceIdentifiers()) {
+      configs =
+          cvConfigService.list(serviceEnvironmentParams, liveMonitoringLogAnalysisFilter.getHealthSourceIdentifiers());
+    } else {
+      configs = cvConfigService.list(serviceEnvironmentParams);
+    }
     List<String> cvConfigIds = configs.stream().map(CVConfig::getUuid).collect(Collectors.toList());
-    List<LogAnalysisTag> tags = isEmpty(clusterTypes) ? Arrays.asList(LogAnalysisTag.values()) : clusterTypes;
+    List<LogAnalysisTag> tags = liveMonitoringLogAnalysisFilter.filterByClusterTypes()
+        ? liveMonitoringLogAnalysisFilter.getClusterTypes()
+        : Arrays.asList(LogAnalysisTag.values());
     return getLogs(serviceEnvironmentParams.getAccountIdentifier(), serviceEnvironmentParams.getProjectIdentifier(),
         serviceEnvironmentParams.getOrgIdentifier(), serviceEnvironmentParams.getServiceIdentifier(),
         serviceEnvironmentParams.getEnvironmentIdentifier(), tags, timeRangeParams.getStartTime(),
