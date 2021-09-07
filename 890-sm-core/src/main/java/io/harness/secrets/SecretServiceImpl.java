@@ -162,6 +162,43 @@ public class SecretServiceImpl implements SecretService {
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, reason, e, USER);
     }
   }
+  @Override
+  public EncryptedData encryptSecret(String accountId, HarnessSecret secret, boolean validateScopes) {
+    SecretManagerConfig secretManagerConfig = secretManagerConfigService.getSecretManager(accountId, accountId);
+    secret.setKmsId(secretManagerConfig.getUuid());
+    secretValidatorsRegistry.getSecretValidator(secretManagerConfig.getEncryptionType())
+        .validateSecret(accountId, secret, secretManagerConfig);
+    if (validateScopes) {
+      SecretScopeMetadata secretScopeMetadata = SecretScopeMetadata.builder()
+                                                    .secretScopes(secret)
+                                                    .inheritScopesFromSM(secret.isInheritScopesFromSM())
+                                                    .secretsManagerScopes(secretManagerConfig)
+                                                    .build();
+      secretsRBACService.canSetPermissions(accountId, secretScopeMetadata);
+    }
+    EncryptedDataBuilder encryptedDataBuilder = EncryptedData.builder()
+                                                    .accountId(accountId)
+                                                    .kmsId(secretManagerConfig.getUuid())
+                                                    .encryptionType(secretManagerConfig.getEncryptionType())
+                                                    .name(secret.getName())
+                                                    .enabled(true)
+                                                    .searchTags(new HashMap<>())
+                                                    .hideFromListing(secret.isHideFromListing())
+                                                    .scopedToAccount(secret.isScopedToAccount())
+                                                    .usageRestrictions(secret.getUsageRestrictions())
+                                                    .additionalMetadata(secret.getAdditionalMetadata())
+                                                    .inheritScopesFromSM(secret.isInheritScopesFromSM());
+
+    EncryptedData encryptedData;
+    if (secret instanceof SecretText) {
+      encryptedData = buildSecretText(accountId, (SecretText) secret, secretManagerConfig, encryptedDataBuilder);
+    } else {
+      encryptedData = buildSecretFile(accountId, (SecretFile) secret, secretManagerConfig, encryptedDataBuilder);
+    }
+    encryptedData.addSearchTag(encryptedData.getName());
+    secretsAuditService.logSecretCreateEvent(encryptedData);
+    return encryptedData;
+  }
 
   @Override
   public boolean updateSecret(String accountId, HarnessSecret secret, String existingRecordId, boolean validateScopes) {

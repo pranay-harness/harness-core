@@ -6,7 +6,9 @@ import static io.harness.exception.WingsException.USER_SRE;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.eraro.ErrorCode;
@@ -40,6 +42,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @OwnedBy(PL)
 @Slf4j
+@TargetModule(HarnessModule._890_SM_CORE)
 public abstract class AbstractSecretServiceImpl {
   static final String SECRET_MASK = SecretString.SECRET_MASK;
   protected static final String ID_KEY = "_id";

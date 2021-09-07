@@ -136,6 +136,8 @@ aeriform("//440-connector-nextgen:module")
 
 aeriform("//440-connector-nextgen:tests")
 
+aeriform("//440-secret-management-service:module")
+
 aeriform("//441-cg-instance-sync:module")
 
 aeriform("//445-cg-connectors:module")
