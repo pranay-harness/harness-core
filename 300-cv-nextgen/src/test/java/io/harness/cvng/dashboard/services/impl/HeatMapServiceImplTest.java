@@ -1209,8 +1209,9 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
       Instant trendStartTime = trendEndTime.minus(duration.getDuration());
       assertThat(historicalTrend.getHealthScores().size()).isEqualTo(48);
       for (int i = 0; i < 48; i++) {
-        assertThat(historicalTrend.getHealthScores().get(i).getTimeRange().getStartTime()).isEqualTo(trendStartTime);
-        assertThat(historicalTrend.getHealthScores().get(i).getTimeRange().getEndTime())
+        assertThat(historicalTrend.getHealthScores().get(i).getTimeRangeParams().getStartTime())
+            .isEqualTo(trendStartTime);
+        assertThat(historicalTrend.getHealthScores().get(i).getTimeRangeParams().getEndTime())
             .isEqualTo(trendStartTime.plus(heatMapResolution.getResolution()));
         trendStartTime = trendStartTime.plus(heatMapResolution.getResolution());
       }
