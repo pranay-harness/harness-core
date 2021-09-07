@@ -21,7 +21,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
-@OwnedBy(HarnessTeam.PL)
+@OwnedBy(HarnessTeam.DEL)
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class PerpetualTaskScheduleServiceImpl implements PerpetualTaskScheduleService {
   @Inject private WingsPersistence wingsPersistence;

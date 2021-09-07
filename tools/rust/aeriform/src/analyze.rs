@@ -11,7 +11,7 @@ use strum_macros::EnumIter;
 use strum_macros::EnumString;
 
 use crate::java_class::{JavaClass, JavaClassTraits, UNKNOWN_LOCATION};
-use crate::java_module::{JavaModule, JavaModuleTraits, modules};
+use crate::java_module::{modules, JavaModule, JavaModuleTraits};
 use crate::team::UNKNOWN_TEAM;
 
 #[derive(PartialEq, Eq, Debug, Copy, Clone, EnumIter, EnumString)]
@@ -281,7 +281,12 @@ pub fn analyze(opts: Analyze) {
         if ordering != Equal {
             ordering
         } else {
-            a.message.cmp(&b.message)
+            let ordering = a.message.cmp(&b.message);
+            if ordering != Equal {
+                ordering
+            } else {
+                a.for_team.cmp(&b.for_team)
+            }
         }
     });
 
@@ -628,7 +633,7 @@ fn check_already_in_target(class: &JavaClass, module: &JavaModule, target_module
     } else {
         if module.name.eq(target_module.unwrap()) {
             results.push(Report {
-                kind: Kind::Warning,
+                kind: Kind::Critical,
                 explanation: Explanation::ClassAlreadyInTheTargetModule,
                 message: format!("{} target module is the same as the module of the class", class.name),
                 action: Default::default(),
@@ -740,10 +745,6 @@ fn check_for_promotion(
             .get(src)
             .expect(&format!("The source {} is not find in any module", src));
 
-        if dependent_class.deprecated {
-            return ();
-        }
-
         let &dependent_real_module = class_modules.get(dependent_class).expect(&format!(
             "The class {} is not find in the modules",
             dependent_class.name
@@ -766,6 +767,11 @@ fn check_for_promotion(
             && !target_module.dependencies.contains(&dependent_target_module.name)
         {
             issue = true;
+
+            if dependent_class.deprecated {
+                return ();
+            }
+
             let mdls = [
                 module.name.clone(),
                 dependent_target_module.name.clone(),
@@ -861,6 +867,8 @@ fn check_for_promotion(
 
     if !issue && !not_ready_yet.is_empty() {
         all_classes.insert(class.name.clone());
+
+        not_ready_yet.sort_by(|a, b| a.cmp(b));
 
         results.push(Report {
             kind: Kind::Blocked,
@@ -1063,6 +1071,8 @@ fn check_for_demotion(
 
     if !issue && !not_ready_yet.is_empty() {
         all_classes.insert(class.name.clone());
+
+        not_ready_yet.sort_by(|a, b| a.cmp(b));
 
         results.push(Report {
             kind: Kind::Blocked,
