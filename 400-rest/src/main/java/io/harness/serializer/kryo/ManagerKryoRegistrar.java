@@ -668,7 +668,6 @@ import software.wings.service.impl.dynatrace.DynaTraceSetupTestNodeData;
 import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.service.impl.elk.ElkDataCollectionInfoV2;
-import software.wings.service.impl.elk.ElkIndexTemplate;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
 import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.service.impl.email.EmailNotificationCallBack;
@@ -1253,7 +1252,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(DynaTraceSetupTestNodeData.class, 5512);
     kryo.register(DynaTraceTimeSeries.class, 5239);
     kryo.register(ElkDataCollectionInfo.class, 5169);
-    kryo.register(ElkIndexTemplate.class, 5217);
     kryo.register(ElkLogFetchRequest.class, 5376);
     kryo.register(ElkQueryType.class, 5275);
     kryo.register(LogzDataCollectionInfo.class, 5170);
