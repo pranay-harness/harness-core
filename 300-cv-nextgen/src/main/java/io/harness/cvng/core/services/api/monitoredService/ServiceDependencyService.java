@@ -10,20 +10,18 @@ import io.harness.cvng.core.services.api.DeleteEntityByHandler;
 
 import java.util.List;
 import java.util.Set;
-import javax.annotation.Nullable;
 import lombok.NonNull;
 
 @OwnedBy(CV)
 public interface ServiceDependencyService extends DeleteEntityByHandler<ServiceDependency> {
-  void updateDependencies(String accountId, String orgIdentifier, String projectIdentifier, String toServiceIdentifier,
-      String envIdentifier, Set<ServiceRef> fromServiceIdentifiers);
+  void updateDependencies(ProjectParams projectParams, String toMonitoredServiceIdentifier,
+      Set<ServiceRef> fromMonitoredServiceIdentifiers);
 
-  void deleteDependenciesForService(
-      String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier, String envIdentifier);
+  void deleteDependenciesForService(ProjectParams projectParams, String monitoredServiceIdentifier);
 
   Set<ServiceRef> getDependentServicesForMonitoredService(
-      String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier, String envIdentifier);
+      @NonNull ProjectParams projectParams, String monitoredServiceIdentifier);
 
   List<ServiceDependency> getServiceDependencies(
-      @NonNull ProjectParams projectParams, @Nullable String serviceIdentifier, @Nullable String envIdentifier);
+      @NonNull ProjectParams projectParams, @NonNull List<String> monitoredServiceIdentifiers);
 }

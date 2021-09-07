@@ -1,5 +1,6 @@
 package io.harness.cvng.core.beans.params;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NonNull;
@@ -13,4 +14,13 @@ public class ProjectParams {
   @NonNull String accountIdentifier;
   @NonNull String orgIdentifier;
   @NonNull String projectIdentifier;
+
+  @JsonIgnore
+  public ProjectParams getProjectParams() {
+    return ProjectParams.builder()
+        .accountIdentifier(getAccountIdentifier())
+        .orgIdentifier(getOrgIdentifier())
+        .projectIdentifier(getProjectIdentifier())
+        .build();
+  }
 }
