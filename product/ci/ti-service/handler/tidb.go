@@ -93,8 +93,8 @@ func HandleSelect(tidb tidb.TiDB, db db.Db, config config.Config) http.HandlerFu
 		// Write the selected tests back
 		WriteJSON(w, selected, 200)
 		log.Infow("completed test selection", "account_id", accountId,
-			"repo", repo, "source", source, "target", target, "sha", sha, "tests",
-			selected.Tests, "num_tests", len(selected.Tests), "time_taken", time.Since(st))
+			"repo", repo, "source", source, "target", target, "sha", sha,
+			"num_tests", len(selected.Tests), "time_taken", time.Since(st))
 
 	}
 }
