@@ -86,6 +86,7 @@ import org.slf4j.Logger;
 @BreakDependencyOn("software.wings.beans.User")
 @BreakDependencyOn("software.wings.service.intfc.UserService")
 public class DelegateProfileServiceGrpcImplTest extends WingsBaseTest implements MockableTestMixin {
+  
   @Rule public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
 
   private static final String NAME = "name";
