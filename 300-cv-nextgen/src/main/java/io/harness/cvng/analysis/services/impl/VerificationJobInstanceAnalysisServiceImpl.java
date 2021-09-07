@@ -23,6 +23,8 @@ import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.core.beans.LoadTestAdditionalInfo;
 import io.harness.cvng.core.beans.LoadTestAdditionalInfo.LoadTestAdditionalInfoBuilder;
 import io.harness.cvng.core.beans.TimeRange;
+import io.harness.cvng.core.beans.params.filterParams.DeploymentLogAnalysisFilter;
+import io.harness.cvng.core.beans.params.filterParams.DeploymentTimeSeriesAnalysisFilter;
 import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.utils.CVNGObjectUtils;
@@ -94,9 +96,9 @@ public class VerificationJobInstanceAnalysisServiceImpl implements VerificationJ
       String accountId, VerificationJobInstance verificationJobInstance) {
     List<DeploymentTimeSeriesAnalysis> deploymentTimeSeriesAnalysis =
         deploymentTimeSeriesAnalysisService.getLatestDeploymentTimeSeriesAnalysis(
-            accountId, verificationJobInstance.getUuid(), null);
-    List<DeploymentLogAnalysis> deploymentLogAnalysis =
-        deploymentLogAnalysisService.getLatestDeploymentLogAnalysis(accountId, verificationJobInstance.getUuid(), null);
+            accountId, verificationJobInstance.getUuid(), DeploymentTimeSeriesAnalysisFilter.builder().build());
+    List<DeploymentLogAnalysis> deploymentLogAnalysis = deploymentLogAnalysisService.getLatestDeploymentLogAnalysis(
+        accountId, verificationJobInstance.getUuid(), DeploymentLogAnalysisFilter.builder().build());
 
     Optional<TimeRange> preDeploymentTimeRange =
         verificationJobInstanceService.getPreDeploymentTimeRange(verificationJobInstance.getUuid());

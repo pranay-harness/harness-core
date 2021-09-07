@@ -1,10 +1,7 @@
 package software.wings.helpers.ext.elk;
 
-import static io.harness.annotations.dev.HarnessModule._960_API_SERVICES;
-
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 
 import java.util.Map;
 import retrofit2.Call;
@@ -17,7 +14,6 @@ import retrofit2.http.Query;
  * Created by sriram_parthasarathy on 10/2/17.
  */
 @OwnedBy(HarnessTeam.CV)
-@TargetModule(_960_API_SERVICES)
 public interface KibanaRestClient {
   String searchPathPattern = "%%2F%s%%2F_search%%3Fsize=%s";
   String searchMethod = "POST";

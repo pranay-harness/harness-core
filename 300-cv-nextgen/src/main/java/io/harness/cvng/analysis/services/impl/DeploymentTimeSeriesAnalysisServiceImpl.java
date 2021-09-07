@@ -16,6 +16,8 @@ import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.TimeRange;
+import io.harness.cvng.core.beans.params.PageParams;
+import io.harness.cvng.core.beans.params.filterParams.DeploymentTimeSeriesAnalysisFilter;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.VerificationTask;
 import io.harness.cvng.core.services.api.VerificationTaskService;
@@ -57,15 +59,14 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
 
   @Override
   public TransactionMetricInfoSummaryPageDTO getMetrics(String accountId, String verificationJobInstanceId,
-      boolean anomalousMetricsOnly, String hostName, String filter, List<String> healthSourceIdentifiersFilter,
-      int pageNumber) {
+      DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter, PageParams pageParams) {
     VerificationJobInstance verificationJobInstance =
         verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
     List<DeploymentTimeSeriesAnalysis> latestDeploymentTimeSeriesAnalysis =
-        getLatestDeploymentTimeSeriesAnalysis(accountId, verificationJobInstanceId, healthSourceIdentifiersFilter);
+        getLatestDeploymentTimeSeriesAnalysis(accountId, verificationJobInstanceId, deploymentTimeSeriesAnalysisFilter);
     if (isEmpty(latestDeploymentTimeSeriesAnalysis)) {
       return TransactionMetricInfoSummaryPageDTO.builder()
-          .pageResponse(formPageResponse(Collections.emptyList(), pageNumber, DEFAULT_PAGE_SIZE))
+          .pageResponse(formPageResponse(Collections.emptyList(), pageParams.getPage(), pageParams.getSize()))
           .build();
     }
     TimeRange deploymentTimeRange = TimeRange.builder()
@@ -73,20 +74,21 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
                                         .endTime(latestDeploymentTimeSeriesAnalysis.get(0).getEndTime())
                                         .build();
     List<TransactionMetricInfo> transactionMetricInfoList =
-        getMetrics(accountId, verificationJobInstanceId, anomalousMetricsOnly, hostName);
-    if (isNotEmpty(filter)) {
+        getMetrics(accountId, verificationJobInstanceId, deploymentTimeSeriesAnalysisFilter);
+
+    if (deploymentTimeSeriesAnalysisFilter.filterByFilter()) {
       transactionMetricInfoList =
           transactionMetricInfoList.stream()
               .filter(transactionMetricInfo
                   -> transactionMetricInfo.getTransactionMetric().getMetricName().toLowerCase().contains(
-                         filter.toLowerCase())
+                         deploymentTimeSeriesAnalysisFilter.getFilter().toLowerCase())
                       || transactionMetricInfo.getTransactionMetric().getTransactionName().toLowerCase().contains(
-                          filter.toLowerCase()))
+                          deploymentTimeSeriesAnalysisFilter.getFilter().toLowerCase()))
               .collect(Collectors.toList());
     }
 
     return TransactionMetricInfoSummaryPageDTO.builder()
-        .pageResponse(formPageResponse(transactionMetricInfoList, pageNumber, DEFAULT_PAGE_SIZE))
+        .pageResponse(formPageResponse(transactionMetricInfoList, pageParams.getPage(), pageParams.getSize()))
         .deploymentTimeRange(deploymentTimeRange)
         .deploymentStartTime(deploymentTimeRange.getStartTime().toEpochMilli())
         .deploymentEndTime(deploymentTimeRange.getEndTime().toEpochMilli())
@@ -102,8 +104,8 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
     verificationJobInstanceIds.forEach(verificationJobInstanceId -> {
       VerificationJobInstance verificationJobInstance =
           verificationJobInstanceService.getVerificationJobInstance(verificationJobInstanceId);
-      List<TransactionMetricInfo> transactionMetricInfoList =
-          getMetrics(verificationJobInstance.getAccountId(), verificationJobInstanceId, false, null);
+      List<TransactionMetricInfo> transactionMetricInfoList = getMetrics(verificationJobInstance.getAccountId(),
+          verificationJobInstanceId, DeploymentTimeSeriesAnalysisFilter.builder().build());
       int numAnomMetrics = 0, totalMetrics = 0;
       for (TransactionMetricInfo transactionMetricInfo : transactionMetricInfoList) {
         if (transactionMetricInfo.getTransactionMetric().getRisk().isGreaterThan(Risk.LOW)) {
@@ -121,10 +123,10 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
         .build();
   }
 
-  private List<TransactionMetricInfo> getMetrics(
-      String accountId, String verificationJobInstanceId, boolean anomalousMetricsOnly, String hostName) {
+  private List<TransactionMetricInfo> getMetrics(String accountId, String verificationJobInstanceId,
+      DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter) {
     List<DeploymentTimeSeriesAnalysis> latestDeploymentTimeSeriesAnalysis =
-        getLatestDeploymentTimeSeriesAnalysis(accountId, verificationJobInstanceId, null);
+        getLatestDeploymentTimeSeriesAnalysis(accountId, verificationJobInstanceId, deploymentTimeSeriesAnalysisFilter);
 
     if (isEmpty(latestDeploymentTimeSeriesAnalysis)) {
       return Collections.emptyList();
@@ -144,7 +146,9 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
       timeSeriesAnalysis.getTransactionMetricSummaries()
           .stream()
           .filter(transactionMetricHostData
-              -> filterAnomalousMetrics(transactionMetricHostData, isNotEmpty(hostName), anomalousMetricsOnly))
+              -> filterAnomalousMetrics(transactionMetricHostData,
+                  deploymentTimeSeriesAnalysisFilter.filterByHostName(),
+                  deploymentTimeSeriesAnalysisFilter.isAnomalous()))
           .forEach(transactionMetricHostData -> {
             TransactionMetricInfo transactionMetricInfo =
                 TransactionMetricInfo.builder()
@@ -155,7 +159,9 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
             SortedSet<DeploymentTimeSeriesAnalysisDTO.HostData> nodeDataSet = new TreeSet();
             transactionMetricHostData.getHostData()
                 .stream()
-                .filter(hostData -> filterHostData(hostData, hostName, anomalousMetricsOnly))
+                .filter(hostData
+                    -> filterHostData(hostData, deploymentTimeSeriesAnalysisFilter.getHostName(),
+                        deploymentTimeSeriesAnalysisFilter.isAnomalous()))
                 .forEach(hostData -> nodeDataSet.add(hostData));
             transactionMetricInfo.setNodes(nodeDataSet);
             if (isNotEmpty(nodeDataSet)) {
@@ -270,14 +276,14 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
   }
 
   @Override
-  public List<DeploymentTimeSeriesAnalysis> getLatestDeploymentTimeSeriesAnalysis(
-      String accountId, String verificationJobInstanceId, List<String> healthSourceIdentifiersFilter) {
+  public List<DeploymentTimeSeriesAnalysis> getLatestDeploymentTimeSeriesAnalysis(String accountId,
+      String verificationJobInstanceId, DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter) {
     Set<String> verificationTaskIds =
         verificationTaskService.maybeGetVerificationTaskIds(accountId, verificationJobInstanceId);
 
-    if (healthSourceIdentifiersFilter != null) {
+    if (deploymentTimeSeriesAnalysisFilter.filterByHealthSourceIdentifiers()) {
       List<String> cvConfigIds = verificationJobInstanceService.getCVConfigIdsForVerificationJobInstance(
-          verificationJobInstanceId, healthSourceIdentifiersFilter);
+          verificationJobInstanceId, deploymentTimeSeriesAnalysisFilter.getHealthSourceIdentifiers());
       verificationTaskIds =
           verificationTaskIds.stream()
               .filter(verificationTaskId

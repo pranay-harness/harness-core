@@ -517,7 +517,6 @@ import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.CustomLogDataCollectionInfo;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
-import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.analysis.SetupTestNodeData;
@@ -1138,7 +1137,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(CustomLogDataCollectionInfo.class, 5492);
     kryo.register(DataCollectionTaskResult.DataCollectionTaskStatus.class, 5185);
     kryo.register(DataCollectionTaskResult.class, 5184);
-    kryo.register(ElkConnector.class, 5216);
     kryo.register(LogElement.class, 5486);
     kryo.register(SetupTestNodeData.class, 5530);
     kryo.register(TimeSeries.class, 5312);
