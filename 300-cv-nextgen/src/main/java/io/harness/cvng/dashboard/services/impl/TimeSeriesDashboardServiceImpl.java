@@ -213,7 +213,7 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
                   .projectIdentifier(projectIdentifier)
                   .orgIdentifier(orgIdentifier)
                   .metricType(record.getMetricType())
-                  .dataSourceType(cvConfigIdToDataSourceTypeMap.get(record.getCvConfigId()))
+                  .dataSourceType(cvConfigIdToDataSourceTypeMap.get(record.getVerificationTaskId()))
                   .build());
         }
         TimeSeriesMetricDataDTO timeSeriesMetricDataDTO = transactionMetricDataMap.get(key);
