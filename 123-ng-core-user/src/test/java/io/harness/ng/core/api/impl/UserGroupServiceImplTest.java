@@ -30,6 +30,7 @@ import io.harness.ng.core.dto.UserGroupFilterDTO;
 import io.harness.ng.core.invites.api.InviteService;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.entities.UserGroup;
+import io.harness.ng.core.user.remote.dto.UserMetadataDTO;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.outbox.api.OutboxService;
 import io.harness.repositories.ng.core.spring.UserGroupRepository;
@@ -42,6 +43,7 @@ import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -125,6 +127,14 @@ public class UserGroupServiceImplTest extends CategoryTest {
     assertThatThrownBy(() -> userGroupService.create(userGroupDTO))
         .isInstanceOf(InvalidArgumentsException.class)
         .hasMessageContaining("Duplicate users");
+
+    users.remove(3);
+    when(ngUserService.getUsersAtScope(users, Scope.of(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER)))
+        .thenReturn(Arrays.asList(UserMetadataDTO.builder().uuid("u1").email("u1@harness.io").build(),
+            UserMetadataDTO.builder().uuid("u2").email("u2@harness.io").build()));
+    when(ngUserService.getUsersByUserIdentifiers(Collections.singletonList("u3"))).thenReturn(emptyList());
+    when(inviteService.createInvitations(any(), any(), any(), any())).thenReturn(emptyList());
+    userGroupService.create(userGroupDTO);
   }
 
   @Test
