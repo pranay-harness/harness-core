@@ -27,25 +27,15 @@ public class MetricDataStoreServiceImpl implements MetricDataStoreService {
 
   @Override
   public boolean saveNewRelicMetrics(String accountId, String applicationId, String stateExecutionId,
-      String delegateTaskId, List<NewRelicMetricDataRecord> metricData) {
+      String delegateTaskId, List<NewRelicMetricDataRecord> metricData) throws Exception {
     if (metricData.isEmpty()) {
       return true;
     }
 
-    try {
-      RestResponse<Boolean> restResponse = HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(15),
-          ()
-              -> execute(verificationClient.saveTimeSeriesMetrics(
-                  accountId, applicationId, stateExecutionId, delegateTaskId, metricData)));
-      if (restResponse == null) {
-        return false;
-      }
-
-      return restResponse.getResource();
-    } catch (Exception e) {
-      log.error(
-          "error saving new apm metrics StateExecutionId: {}, Size: {}, {}", stateExecutionId, metricData.size(), e);
-      return false;
-    }
+    RestResponse<Boolean> restResponse = HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(15),
+        ()
+            -> execute(verificationClient.saveTimeSeriesMetrics(
+                accountId, applicationId, stateExecutionId, delegateTaskId, metricData)));
+    return restResponse.getResource();
   }
 }

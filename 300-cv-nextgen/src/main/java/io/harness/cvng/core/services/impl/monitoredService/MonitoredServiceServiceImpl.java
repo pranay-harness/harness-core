@@ -118,16 +118,15 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
           monitoredServiceDTO.getSources().getHealthSources(), getMonitoredServiceEnableStatus());
     }
     if (isNotEmpty(monitoredServiceDTO.getDependencies())) {
-      serviceDependencyService.updateDependencies(environmentParams.getProjectParams(),
-          monitoredServiceDTO.getIdentifier(), monitoredServiceDTO.getDependencies());
+      serviceDependencyService.updateDependencies(
+          environmentParams, monitoredServiceDTO.getIdentifier(), monitoredServiceDTO.getDependencies());
     }
     if (isNotEmpty(monitoredServiceDTO.getSources().getChangeSources())) {
       changeSourceService.create(environmentParams, monitoredServiceDTO.getSources().getChangeSources());
     }
     saveMonitoredServiceEntity(accountId, monitoredServiceDTO);
-    setupUsageEventService.sendCreateEventsForMonitoredService(
-        environmentParams.getProjectParams(), monitoredServiceDTO);
-    return get(environmentParams.getProjectParams(), monitoredServiceDTO.getIdentifier());
+    setupUsageEventService.sendCreateEventsForMonitoredService(environmentParams, monitoredServiceDTO);
+    return get(environmentParams, monitoredServiceDTO.getIdentifier());
   }
 
   private boolean getMonitoredServiceEnableStatus() {
@@ -143,8 +142,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
                                                      .serviceIdentifier(monitoredServiceDTO.getServiceRef())
                                                      .environmentIdentifier(monitoredServiceDTO.getEnvironmentRef())
                                                      .build();
-    MonitoredService monitoredService =
-        getMonitoredService(environmentParams.getProjectParams(), monitoredServiceDTO.getIdentifier());
+    MonitoredService monitoredService = getMonitoredService(environmentParams, monitoredServiceDTO.getIdentifier());
     if (monitoredService == null) {
       throw new InvalidRequestException(String.format(
           "Monitored Source Entity  with identifier %s, accountId %s, orgIdentifier %s and projectIdentifier %s  is not present",
@@ -161,9 +159,8 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     updateHealthSources(monitoredService, monitoredServiceDTO);
     changeSourceService.update(environmentParams, monitoredServiceDTO.getSources().getChangeSources());
     updateMonitoredService(monitoredService, monitoredServiceDTO);
-    setupUsageEventService.sendCreateEventsForMonitoredService(
-        environmentParams.getProjectParams(), monitoredServiceDTO);
-    return get(environmentParams.getProjectParams(), monitoredServiceDTO.getIdentifier());
+    setupUsageEventService.sendCreateEventsForMonitoredService(environmentParams, monitoredServiceDTO);
+    return get(environmentParams, monitoredServiceDTO.getIdentifier());
   }
 
   private void updateMonitoredService(MonitoredService monitoredService, MonitoredServiceDTO monitoredServiceDTO) {
@@ -298,7 +295,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     if (monitoredService == null) {
       return null;
     }
-    return get(serviceEnvironmentParams.getProjectParams(), monitoredService.getIdentifier());
+    return get(serviceEnvironmentParams, monitoredService.getIdentifier());
   }
 
   @Override

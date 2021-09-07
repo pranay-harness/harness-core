@@ -59,7 +59,7 @@ public class MetricDataCollectionTaskTest extends WingsBaseTest {
   @Mock private MetricDataStoreService metricStoreService;
 
   @Before
-  public void setupTests() throws IllegalAccessException {
+  public void setupTests() throws Exception {
     initMocks(this);
     metricsDataCollectionTask = mock(MetricsDataCollectionTask.class, Mockito.CALLS_REAL_METHODS);
     when(metricsDataCollector.getHostBatchSize()).thenReturn(1);
@@ -73,7 +73,7 @@ public class MetricDataCollectionTaskTest extends WingsBaseTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testSavingHeartbeatsForAllHosts() throws DataCollectionException {
+  public void testSavingHeartbeatsForAllHosts() throws Exception {
     MetricsDataCollectionInfo metricsDataCollectionInfo = createMetricDataCollectionInfo();
     when(metricsDataCollectionInfo.getHosts()).thenReturn(Sets.newHashSet("host1", "host2", "host3", "host4"));
     Map<String, String> hostToGroupNameMap = new HashMap<>();
@@ -131,7 +131,7 @@ public class MetricDataCollectionTaskTest extends WingsBaseTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testCollectAndSaveData_forBatchingOfSaveCallByHost() throws DataCollectionException {
+  public void testCollectAndSaveData_forBatchingOfSaveCallByHost() throws Exception {
     MetricsDataCollectionInfo metricsDataCollectionInfo = createMetricDataCollectionInfo();
     when(metricsDataCollectionInfo.getHosts()).thenReturn(Sets.newHashSet("host1", "host2"));
     Map<String, String> hostToGroupNameMap = new HashMap<>();
@@ -164,7 +164,7 @@ public class MetricDataCollectionTaskTest extends WingsBaseTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testCollectAndSaveData_withoutHostWithAbsoluteMinute() throws DataCollectionException {
+  public void testCollectAndSaveData_withoutHostWithAbsoluteMinute() throws Exception {
     MetricsDataCollectionInfo metricsDataCollectionInfo = createMetricDataCollectionInfo();
     when(metricsDataCollectionInfo.getHosts()).thenReturn(Sets.newHashSet());
     Map<String, String> hostToGroupNameMap = new HashMap<>();
@@ -204,7 +204,7 @@ public class MetricDataCollectionTaskTest extends WingsBaseTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testcollectAndSaveData_IfNewRelicMetricDataRecordsAreSaved() throws DataCollectionException {
+  public void testcollectAndSaveData_IfNewRelicMetricDataRecordsAreSaved() throws Exception {
     MetricsDataCollectionInfo metricsDataCollectionInfo = createMetricDataCollectionInfo();
     when(metricsDataCollectionInfo.getHosts()).thenReturn(Sets.newHashSet("host1"));
     Instant now = Instant.now();
@@ -238,8 +238,7 @@ public class MetricDataCollectionTaskTest extends WingsBaseTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testcollectAndSaveData_IfNewRelicMetricDataRecordsAreSavedWithRelativeMinute()
-      throws DataCollectionException {
+  public void testcollectAndSaveData_IfNewRelicMetricDataRecordsAreSavedWithRelativeMinute() throws Exception {
     MetricsDataCollectionInfo metricsDataCollectionInfo = createMetricDataCollectionInfo();
     when(metricsDataCollectionInfo.getHosts()).thenReturn(Sets.newHashSet("host1"));
     Instant now = Instant.now();
@@ -272,7 +271,7 @@ public class MetricDataCollectionTaskTest extends WingsBaseTest {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testCollectAndSaveData_withNewRelicRecordsSaveCallsReturnsFalse() throws DataCollectionException {
+  public void testCollectAndSaveData_withNewRelicRecordsSaveCallsReturnsFalse() throws Exception {
     when(metricStoreService.saveNewRelicMetrics(any(), any(), any(), any(), any())).thenReturn(false);
     MetricsDataCollectionInfo metricsDataCollectionInfo = createMetricDataCollectionInfo();
     when(metricsDataCollectionInfo.getHosts()).thenReturn(Sets.newHashSet("host1"));
