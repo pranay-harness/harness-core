@@ -112,19 +112,19 @@ public class ValidateAndMergeHelperTest extends PipelineServiceTestBase {
                                accountId, orgId, projectId, pipelineId, overlayInputSetYamlWithoutReferences))
         .hasMessage("Input Set References can't be empty");
 
-    String overlayInputSetYamlWithoutOrgId = getOverlayInputSetYaml(true, false, true, true);
+    String overlayInputSetYamlWithoutOrgId = getOverlayInputSetYaml(true, false, true, true, false);
     assertThatThrownBy(()
                            -> validateAndMergeHelper.validateOverlayInputSet(
                                accountId, orgId, projectId, pipelineId, overlayInputSetYamlWithoutOrgId))
         .hasMessage("Org identifier in input set does not match");
 
-    String overlayInputSetYamlWithoutProjectId = getOverlayInputSetYaml(true, true, false, true);
+    String overlayInputSetYamlWithoutProjectId = getOverlayInputSetYaml(true, true, false, true, false);
     assertThatThrownBy(()
                            -> validateAndMergeHelper.validateOverlayInputSet(
                                accountId, orgId, projectId, pipelineId, overlayInputSetYamlWithoutProjectId))
         .hasMessage("Project identifier in input set does not match");
 
-    String overlayInputSetYamlWithoutPipelineId = getOverlayInputSetYaml(true, true, true, false);
+    String overlayInputSetYamlWithoutPipelineId = getOverlayInputSetYaml(true, true, true, false, false);
     assertThatThrownBy(()
                            -> validateAndMergeHelper.validateOverlayInputSet(
                                accountId, orgId, projectId, pipelineId, overlayInputSetYamlWithoutPipelineId))
@@ -165,11 +165,32 @@ public class ValidateAndMergeHelperTest extends PipelineServiceTestBase {
     verify(pmsInputSetService, times(2)).get(accountId, orgId, projectId, pipelineId, identifier2, false);
   }
 
-  private String getOverlayInputSetWithAllIds(boolean hasReferences) {
-    return getOverlayInputSetYaml(hasReferences, true, true, true);
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testValidateNonExistentReferencesInOverlayInputSet() {
+    String nonExistentReference = "doesNotExist";
+    String overlayYaml = getOverlayInputSetWithNonExistentReference();
+    doReturn(Optional.empty())
+        .when(pmsInputSetService)
+        .get(accountId, orgId, projectId, pipelineId, nonExistentReference, false);
+    Map<String, String> nonExistentReferenceMap =
+        validateAndMergeHelper.validateOverlayInputSet(accountId, orgId, projectId, pipelineId, overlayYaml);
+    assertThat(nonExistentReferenceMap).hasSize(1);
+    assertThat(nonExistentReferenceMap.get(nonExistentReference)).isEqualTo("Reference does not exist");
+    verify(pmsInputSetService, times(1)).get(accountId, orgId, projectId, pipelineId, nonExistentReference, false);
   }
 
-  private String getOverlayInputSetYaml(boolean hasReferences, boolean hasOrg, boolean hasProj, boolean hasPipeline) {
+  private String getOverlayInputSetWithNonExistentReference() {
+    return getOverlayInputSetYaml(true, true, true, true, true);
+  }
+
+  private String getOverlayInputSetWithAllIds(boolean hasReferences) {
+    return getOverlayInputSetYaml(hasReferences, true, true, true, false);
+  }
+
+  private String getOverlayInputSetYaml(
+      boolean hasReferences, boolean hasOrg, boolean hasProj, boolean hasPipeline, boolean nonExistentReference) {
     String base = "overlayInputSet:\n"
         + "  identifier: overlay1\n"
         + "  name : thisName\n";
@@ -177,8 +198,9 @@ public class ValidateAndMergeHelperTest extends PipelineServiceTestBase {
     String projectId = "  projectIdentifier: projectId\n";
     String pipelineId = "  pipelineIdentifier: Test_Pipline11\n";
     String references = "  inputSetReferences:\n"
-        + "    - input1\n"
-        + "    - thisInputSetIsWrong";
+        + (nonExistentReference ? "    - doesNotExist"
+                                : ("    - input1\n"
+                                    + "    - thisInputSetIsWrong"));
     String noReferences = "  inputSetReferences: []\n";
 
     return base + (hasOrg ? orgId : "") + (hasProj ? projectId : "") + (hasPipeline ? pipelineId : "")
