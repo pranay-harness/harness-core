@@ -4,6 +4,8 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 load("//tools/bazel/pmd:dependencies.bzl", "rules_pmd_dependencies")
 
+
+
 rules_pmd_dependencies()
 
 http_archive(
