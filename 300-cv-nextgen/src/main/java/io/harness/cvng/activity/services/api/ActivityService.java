@@ -15,10 +15,12 @@ import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
 import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
+import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.core.beans.DatasourceTypeDTO;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
 import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.ProjectParams;
+import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.ng.beans.PageResponse;
 
 import java.time.Instant;
@@ -79,4 +81,12 @@ public interface ActivityService {
   void abort(String activityId);
 
   Set<HealthSourceDTO> healthSources(String accountId, String activityId);
+
+  void upsert(Activity activity);
+
+  List<Activity> get(ServiceEnvironmentParams serviceEnvironmentParams, List<String> changeSourceIdentifiers,
+      Instant startTime, Instant endTime, List<ActivityType> activityTypes);
+
+  Long getCount(ServiceEnvironmentParams serviceEnvironmentParams, List<String> changeSourceIdentifiers,
+      Instant startTime, Instant endTime, List<ActivityType> activityTypes);
 }

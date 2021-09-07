@@ -19,6 +19,7 @@ import io.harness.cvng.activity.beans.DeploymentActivitySummaryDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.Activity.ActivityKeys;
+import io.harness.cvng.activity.entities.Activity.ActivityUpdatableEntity;
 import io.harness.cvng.activity.entities.CustomActivity;
 import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.activity.entities.DeploymentActivity.DeploymentActivityKeys;
@@ -43,6 +44,7 @@ import io.harness.cvng.core.beans.DatasourceTypeDTO;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
 import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.ProjectParams;
+import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.WebhookService;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
@@ -69,6 +71,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -78,6 +81,8 @@ import lombok.Data;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -97,6 +102,7 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
   @Inject private DeploymentLogAnalysisService deploymentLogAnalysisService;
   @Inject private Injector injector;
+  @Inject private Map<ActivityType, ActivityUpdatableEntity> activityUpdatableEntityMap;
 
   @Override
   public Activity get(String activityId) {
@@ -728,6 +734,69 @@ public class ActivityServiceImpl implements ActivityService {
 
     activity.fromDTO(activityDTO);
     return activity;
+  }
+
+  @Override
+  public void upsert(Activity activity) {
+    ActivityUpdatableEntity activityUpdatableEntity = activityUpdatableEntityMap.get(activity.getType());
+    Optional<Activity> optionalFromDb =
+        StringUtils.isEmpty(activity.getUuid()) ? getFromDb(activity) : Optional.ofNullable(get(activity.getUuid()));
+    if (optionalFromDb.isPresent()) {
+      UpdateOperations<Activity> updateOperations =
+          hPersistence.createUpdateOperations(activityUpdatableEntity.getEntityClass());
+      activityUpdatableEntity.setUpdateOperations(updateOperations, activity);
+      hPersistence.update(optionalFromDb.get(), updateOperations);
+    } else {
+      register(activity);
+    }
+  }
+
+  @Override
+  public List<Activity> get(ServiceEnvironmentParams serviceEnvironmentParams, List<String> changeSourceIdentifiers,
+      Instant startTime, Instant endTime, List<ActivityType> activityTypes) {
+    Query<Activity> query = createQuery(serviceEnvironmentParams, changeSourceIdentifiers, startTime, endTime);
+    if (CollectionUtils.isNotEmpty(activityTypes)) {
+      query = query.field(ActivityKeys.type).in(activityTypes);
+    }
+    return query.asList();
+  }
+
+  @Override
+  public Long getCount(ServiceEnvironmentParams serviceEnvironmentParams, List<String> changeSourceIdentifiers,
+      Instant startTime, Instant endTime, List<ActivityType> activityTypes) {
+    Query<Activity> query = createQuery(serviceEnvironmentParams, changeSourceIdentifiers, startTime, endTime);
+    if (CollectionUtils.isNotEmpty(activityTypes)) {
+      query = query.field(ActivityKeys.type).in(activityTypes);
+    }
+    return query.count();
+  }
+
+  private Query<Activity> createQuery(ServiceEnvironmentParams serviceEnvironmentParams,
+      List<String> changeSourceIdentifiers, Instant startTime, Instant endTime) {
+    return createQuery(serviceEnvironmentParams)
+        .field(ActivityKeys.changeSourceIdentifier)
+        .in(changeSourceIdentifiers)
+        .field(ActivityKeys.eventTime)
+        .lessThan(endTime)
+        .field(ActivityKeys.eventTime)
+        .greaterThanOrEq(startTime);
+  }
+
+  private Query<Activity> createQuery(ServiceEnvironmentParams serviceEnvironmentParams) {
+    return hPersistence.createQuery(Activity.class)
+        .filter(ActivityKeys.accountId, serviceEnvironmentParams.getAccountIdentifier())
+        .filter(ActivityKeys.orgIdentifier, serviceEnvironmentParams.getOrgIdentifier())
+        .filter(ActivityKeys.projectIdentifier, serviceEnvironmentParams.getProjectIdentifier())
+        .filter(ActivityKeys.environmentIdentifier, serviceEnvironmentParams.getEnvironmentIdentifier())
+        .filter(ActivityKeys.serviceIdentifier, serviceEnvironmentParams.getServiceIdentifier());
+  }
+
+  private Optional<Activity> getFromDb(Activity activity) {
+    ActivityUpdatableEntity activityUpdatableEntity = activityUpdatableEntityMap.get(activity.getType());
+    return Optional.ofNullable(
+        (Activity) activityUpdatableEntity
+            .populateKeyQuery(hPersistence.createQuery(activityUpdatableEntity.getEntityClass()), activity)
+            .get());
   }
 
   @Value

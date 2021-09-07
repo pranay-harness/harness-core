@@ -7,6 +7,8 @@ import io.harness.cvng.verificationjob.entities.VerificationJobInstance.Verifica
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @Builder
 @EqualsAndHashCode(callSuper = true)
@@ -32,5 +34,21 @@ public class CustomActivity extends Activity {
   @Override
   public boolean deduplicateEvents() {
     throw new UnsupportedOperationException("Custom events are not yet supported");
+  }
+
+  public static class CustomActivityUpdatableEntity extends ActivityUpdatableEntity<CustomActivity, CustomActivity> {
+    @Override
+    public Class getEntityClass() {
+      return CustomActivity.class;
+    }
+
+    public Query<CustomActivity> populateKeyQuery(Query<CustomActivity> query, HarnessCDActivity changeEvent) {
+      throw new UnsupportedOperationException("Custom events have no unique key");
+    }
+
+    @Override
+    public void setUpdateOperations(UpdateOperations<CustomActivity> updateOperations, CustomActivity activity) {
+      setCommonUpdateOperations(updateOperations, activity);
+    }
   }
 }
