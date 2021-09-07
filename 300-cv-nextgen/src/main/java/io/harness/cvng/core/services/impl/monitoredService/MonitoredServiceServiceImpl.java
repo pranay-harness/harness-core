@@ -4,11 +4,13 @@ import static io.harness.cvng.core.beans.params.ServiceEnvironmentParams.builder
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.cvng.analysis.entities.LogAnalysisResult.LogAnalysisTag;
 import io.harness.cvng.beans.MonitoredServiceType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.ChangeSummaryDTO;
 import io.harness.cvng.core.beans.HealthMonitoringFlagResponse;
 import io.harness.cvng.core.beans.change.event.ChangeEventDTO;
+import io.harness.cvng.core.beans.monitoredService.AnomaliesSummaryDTO;
 import io.harness.cvng.core.beans.monitoredService.DurationDTO;
 import io.harness.cvng.core.beans.monitoredService.HealthScoreDTO;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
@@ -20,8 +22,12 @@ import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO.M
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceResponse;
 import io.harness.cvng.core.beans.monitoredService.RiskData;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
+import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
+import io.harness.cvng.core.beans.params.TimeRangeParams;
+import io.harness.cvng.core.beans.params.filterParams.LiveMonitoringLogAnalysisFilter;
+import io.harness.cvng.core.beans.params.filterParams.TimeSeriesAnalysisFilter;
 import io.harness.cvng.core.entities.MonitoredService;
 import io.harness.cvng.core.entities.MonitoredService.MonitoredServiceKeys;
 import io.harness.cvng.core.services.api.SetupUsageEventService;
@@ -31,6 +37,8 @@ import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceServic
 import io.harness.cvng.core.services.api.monitoredService.ServiceDependencyService;
 import io.harness.cvng.core.types.ChangeCategory;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
+import io.harness.cvng.dashboard.services.api.LogDashboardService;
+import io.harness.cvng.dashboard.services.api.TimeSeriesDashboardService;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
@@ -86,6 +94,8 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   @Inject private SetupUsageEventService setupUsageEventService;
   @Inject private ChangeSourceService changeSourceService;
   @Inject private Clock clock;
+  @Inject private TimeSeriesDashboardService timeSeriesDashboardService;
+  @Inject private LogDashboardService logDashboardService;
 
   @Override
   public MonitoredServiceResponse create(String accountId, MonitoredServiceDTO monitoredServiceDTO) {
@@ -693,5 +703,38 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
             .build();
     return changeSourceService.getChangeSummary(
         serviceEnvironmentParams, monitoredService.getChangeSourceIdentifiers(), startTime, endTime);
+  }
+
+  @Override
+  public AnomaliesSummaryDTO getAnomaliesSummary(
+      ProjectParams projectParams, String monitoredServiceIdentifier, TimeRangeParams timeRangeParams) {
+    MonitoredService monitoredService = getMonitoredService(projectParams, monitoredServiceIdentifier);
+    if (monitoredService == null) {
+      throw new InvalidRequestException(
+          String.format("Monitored Service not found for identifier %s", monitoredServiceIdentifier));
+    }
+    ServiceEnvironmentParams serviceEnvironmentParams =
+        ServiceEnvironmentParams.builderWithProjectParams(projectParams)
+            .serviceIdentifier(monitoredService.getServiceIdentifier())
+            .environmentIdentifier(monitoredService.getEnvironmentIdentifier())
+            .build();
+    PageParams pageParams = PageParams.builder().page(0).size(10).build();
+    LiveMonitoringLogAnalysisFilter liveMonitoringLogAnalysisFilter =
+        LiveMonitoringLogAnalysisFilter.builder()
+            .clusterTypes(Arrays.asList(LogAnalysisTag.UNKNOWN, LogAnalysisTag.UNEXPECTED))
+            .build();
+    long logAnomalousCount =
+        logDashboardService
+            .getAllLogsData(serviceEnvironmentParams, timeRangeParams, liveMonitoringLogAnalysisFilter, pageParams)
+            .getTotalItems();
+    TimeSeriesAnalysisFilter timeSeriesAnalysisFilter = TimeSeriesAnalysisFilter.builder().anomalous(true).build();
+    long timeSeriesAnomalousCount =
+        timeSeriesDashboardService
+            .getTimeSeriesMetricData(serviceEnvironmentParams, timeRangeParams, timeSeriesAnalysisFilter, pageParams)
+            .getTotalItems();
+    return AnomaliesSummaryDTO.builder()
+        .logsAnomalies(logAnomalousCount)
+        .timeSeriesAnomalies(timeSeriesAnomalousCount)
+        .build();
   }
 }
