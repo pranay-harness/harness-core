@@ -18,10 +18,11 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 
 public class ChangeEventServiceImpl implements ChangeEventService {
   @Inject ChangeSourceService changeSourceService;
@@ -29,22 +30,27 @@ public class ChangeEventServiceImpl implements ChangeEventService {
   @Inject ActivityService activityService;
 
   @Override
-  public Boolean register(String accountId, ChangeEventDTO changeEventDTO) {
+  public Boolean register(ChangeEventDTO changeEventDTO) {
     ServiceEnvironmentParams serviceEnvironmentParams = ServiceEnvironmentParams.builder()
-                                                            .accountIdentifier(accountId)
+                                                            .accountIdentifier(changeEventDTO.getAccountId())
                                                             .orgIdentifier(changeEventDTO.getOrgIdentifier())
                                                             .projectIdentifier(changeEventDTO.getProjectIdentifier())
                                                             .serviceIdentifier(changeEventDTO.getServiceIdentifier())
                                                             .environmentIdentifier(changeEventDTO.getEnvIdentifier())
                                                             .build();
-    Set<ChangeSourceDTO> changeSourceDTOS =
+    Optional<ChangeSourceDTO> changeSourceDTOOptional =
         changeSourceService.getByType(serviceEnvironmentParams, changeEventDTO.getType())
             .stream()
             .filter(source -> source.isEnabled())
-            .collect(Collectors.toSet());
-    if (changeSourceDTOS.isEmpty()) {
+            .findAny();
+    if (!changeSourceDTOOptional.isPresent()) {
       return false;
     }
+    activityService.upsert(transformer.getEntity(changeEventDTO));
+    if (StringUtils.isEmpty(changeEventDTO.getChangeSourceIdentifier())) {
+      changeEventDTO.setChangeSourceIdentifier(changeSourceDTOOptional.get().getIdentifier());
+    }
+    changeEventDTO.setChangeSourceIdentifier(changeSourceDTOOptional.get().getIdentifier());
     activityService.upsert(transformer.getEntity(changeEventDTO));
     return true;
   }
