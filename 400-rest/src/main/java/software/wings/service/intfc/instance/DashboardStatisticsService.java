@@ -2,7 +2,9 @@ package software.wings.service.intfc.instance;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageResponse;
 
 import software.wings.beans.infrastructure.instance.Instance;
@@ -22,6 +24,7 @@ import org.hibernate.validator.constraints.NotEmpty;
  * Serves all the service and infrastructure dashboard related statistics
  * @author rktummala on 08/13/17
  */
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @OwnedBy(DX)
 public interface DashboardStatisticsService {
   /**
