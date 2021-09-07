@@ -181,9 +181,6 @@ public class InviteServiceImpl implements InviteService {
     preCreateInvite(invite);
     if (checkIfUserAlreadyAdded(invite)) {
       return InviteOperationResponse.USER_ALREADY_ADDED;
-    } else if (checkIfUserAlreadyPartOfAccount(invite)) {
-      completeInvite(Optional.of(invite));
-      return InviteOperationResponse.USER_ADDED_SUCCESSFULLY;
     }
     Optional<Invite> existingInviteOptional = getExistingInvite(invite);
     if (existingInviteOptional.isPresent()) {
@@ -235,19 +232,6 @@ public class InviteServiceImpl implements InviteService {
                     .accountIdentifier(invite.getAccountIdentifier())
                     .orgIdentifier(invite.getOrgIdentifier())
                     .projectIdentifier(invite.getProjectIdentifier())
-                    .build()))
-        .isPresent();
-  }
-
-  private boolean checkIfUserAlreadyPartOfAccount(Invite invite) {
-    Optional<UserMetadataDTO> userOptional = ngUserService.getUserByEmail(invite.getEmail(), false);
-    return userOptional
-        .filter(user
-            -> ngUserService.isUserAtScope(user.getUuid(),
-                Scope.builder()
-                    .accountIdentifier(invite.getAccountIdentifier())
-                    .orgIdentifier(null)
-                    .projectIdentifier(null)
                     .build()))
         .isPresent();
   }
