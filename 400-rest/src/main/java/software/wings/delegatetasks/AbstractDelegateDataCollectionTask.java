@@ -154,14 +154,13 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
     }
     int retrySave = 0;
     do {
-      boolean response =
-          metricStoreService.saveNewRelicMetrics(accountId, appId, stateExecutionId, getTaskId(), records);
-      if (response) {
-        return true;
+      try {
+        return metricStoreService.saveNewRelicMetrics(accountId, appId, stateExecutionId, getTaskId(), records);
+      } catch (Exception e) {
+        getLogger().error(
+            "error saving new apm metrics StateExecutionId: {}, Size: {}, {}", stateExecutionId, records.size(), e);
+        sleep(DATA_COLLECTION_RETRY_SLEEP);
       }
-      getLogger().warn("Unable to save metrics to Harness manger {}. Retrying in {} ", stateExecutionId,
-          DATA_COLLECTION_RETRY_SLEEP);
-      sleep(DATA_COLLECTION_RETRY_SLEEP);
     } while (++retrySave != RETRIES);
     return false;
   }

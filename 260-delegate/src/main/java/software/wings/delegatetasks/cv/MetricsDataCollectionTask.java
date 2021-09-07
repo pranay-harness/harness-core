@@ -103,8 +103,14 @@ public class MetricsDataCollectionTask<T extends MetricsDataCollectionInfo> exte
 
   private void save(MetricsDataCollectionInfo dataCollectionInfo, List<NewRelicMetricDataRecord> records)
       throws DataCollectionException {
-    boolean response = metricStoreService.saveNewRelicMetrics(dataCollectionInfo.getAccountId(),
-        dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(), getTaskId(), records);
+    boolean response = false;
+    try {
+      response = metricStoreService.saveNewRelicMetrics(dataCollectionInfo.getAccountId(),
+          dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(), getTaskId(), records);
+    } catch (Exception e) {
+      log.error("error saving new apm metrics StateExecutionId: {}, Size: {}, {}",
+          dataCollectionInfo.getStateExecutionId(), records.size(), e);
+    }
     if (!response) {
       throw new DataCollectionException("Unable to save metrics elements. Manager API returned false");
     }

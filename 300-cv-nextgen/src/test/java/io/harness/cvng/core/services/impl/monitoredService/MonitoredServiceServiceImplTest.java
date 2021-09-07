@@ -28,7 +28,7 @@ import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.MetricPackDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
-import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceRef;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.MonitoredServiceRef;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.AppDynamicsHealthSourceSpec;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceSpec;
@@ -290,9 +290,9 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     assertThat(savedMonitoredServiceDTO).isEqualTo(monitoredServiceDTO);
     MonitoredService monitoredService = getMonitoredService(monitoredServiceDTO.getIdentifier());
     assertCommonMonitoredService(monitoredService, monitoredServiceDTO);
-    Set<ServiceRef> serviceRefs = serviceDependencyService.getDependentServicesForMonitoredService(
+    Set<MonitoredServiceRef> monitoredServiceRefs = serviceDependencyService.getDependentServicesForMonitoredService(
         builderFactory.getContext().getProjectParams(), monitoredServiceDTO.getIdentifier());
-    assertThat(serviceRefs).isEqualTo(monitoredServiceDTO.getDependencies());
+    assertThat(monitoredServiceRefs).isEqualTo(monitoredServiceDTO.getDependencies());
   }
 
   @Test
@@ -798,8 +798,9 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
                 .healthSources(
                     Arrays.asList(createHealthSource(CVMonitoringCategory.ERRORS)).stream().collect(Collectors.toSet()))
                 .build())
-        .dependencies(Sets.newHashSet(ServiceRef.builder().monitoredServiceIdentifier(randomAlphanumeric(20)).build(),
-            ServiceRef.builder().monitoredServiceIdentifier(randomAlphanumeric(20)).build()))
+        .dependencies(
+            Sets.newHashSet(MonitoredServiceRef.builder().monitoredServiceIdentifier(randomAlphanumeric(20)).build(),
+                MonitoredServiceRef.builder().monitoredServiceIdentifier(randomAlphanumeric(20)).build()))
         .build();
   }
 
