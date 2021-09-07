@@ -409,8 +409,8 @@ public class ScmServiceClientImpl implements ScmServiceClient {
         GetLatestCommitRequest.newBuilder().setBranch(branchName).setProvider(gitProvider).setSlug(slug).build());
     ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
         latestCommitResponse.getStatus(), latestCommitResponse.getError());
-    String latestCommitId = latestCommitResponse.getCommit().getSha();
-    try (AutoLogContext ignore1 = new RepoBranchLogContext(slug, branchName, latestCommitId, OVERRIDE_ERROR)) {
+    String latestCommitId = latestCommitResponse.getCommitId();
+    try (AutoLogContext ignore = new RepoBranchLogContext(slug, branchName, latestCommitId, OVERRIDE_ERROR)) {
       List<String> getFilesWhichArePartOfHarness =
           getFileNames(foldersList, slug, gitProvider, branchName, latestCommitId, scmBlockingStub);
       final FileBatchContentResponse contentOfFiles =
@@ -419,6 +419,21 @@ public class ScmServiceClientImpl implements ScmServiceClient {
           .fileBatchContentResponse(contentOfFiles)
           .commitId(latestCommitId)
           .build();
+    }
+  }
+
+  @Override
+  public FileContentBatchResponse listFoldersFilesByCommitId(
+      ScmConnector connector, Set<String> foldersList, String commitId, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(connector);
+    String slug = scmGitProviderHelper.getSlug(connector);
+
+    try (AutoLogContext ignore = new RepoBranchLogContext(slug, null, commitId, OVERRIDE_ERROR)) {
+      List<String> getFilesWhichArePartOfHarness =
+          getFileNames(foldersList, slug, gitProvider, null, commitId, scmBlockingStub);
+      final FileBatchContentResponse contentOfFiles =
+          getContentOfFiles(getFilesWhichArePartOfHarness, slug, gitProvider, commitId, scmBlockingStub);
+      return FileContentBatchResponse.builder().fileBatchContentResponse(contentOfFiles).commitId(commitId).build();
     }
   }
 
@@ -442,8 +457,7 @@ public class ScmServiceClientImpl implements ScmServiceClient {
     String slug = scmGitProviderHelper.getSlug(connector);
     final GetLatestCommitResponse latestCommit = scmBlockingStub.getLatestCommit(
         GetLatestCommitRequest.newBuilder().setBranch(branch).setProvider(gitProvider).setSlug(slug).build());
-    return processListFilesByFilePaths(
-        connector, filePaths, branch, latestCommit.getCommit().getSha(), scmBlockingStub);
+    return processListFilesByFilePaths(connector, filePaths, branch, latestCommit.getCommitId(), scmBlockingStub);
   }
 
   // Find content of files for given files paths in the branch at given commit
@@ -636,7 +650,7 @@ public class ScmServiceClientImpl implements ScmServiceClient {
       String branch, String commitId, SCMGrpc.SCMBlockingStub scmBlockingStub) {
     Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(connector);
     String slug = scmGitProviderHelper.getSlug(connector);
-    try (AutoLogContext ignore1 = new RepoBranchLogContext(slug, branch, commitId, OVERRIDE_ERROR)) {
+    try (AutoLogContext ignore = new RepoBranchLogContext(slug, branch, commitId, OVERRIDE_ERROR)) {
       final FileBatchContentResponse contentOfFiles =
           getContentOfFiles(filePaths, slug, gitProvider, commitId, scmBlockingStub);
       return FileContentBatchResponse.builder().fileBatchContentResponse(contentOfFiles).commitId(commitId).build();

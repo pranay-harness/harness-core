@@ -8,7 +8,7 @@ import io.harness.annotations.dev.TargetModule;
 import lombok.Getter;
 
 @OwnedBy(HarnessTeam.DEL)
-@TargetModule(HarnessModule._955_DELEGATE_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public enum SettingVariableTypes {
   /**
    * Host connection attributes setting variable types.

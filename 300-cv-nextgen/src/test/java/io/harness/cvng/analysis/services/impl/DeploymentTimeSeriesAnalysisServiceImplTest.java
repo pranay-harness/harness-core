@@ -251,6 +251,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
     verificationJobService.create(accountId, createCanaryVerificationJobDTO());
     VerificationJobInstance verificationJobInstance = createVerificationJobInstance();
     CVConfig cvConfig = verificationJobInstance.getCvConfigMap().values().iterator().next();
+    List<String> healthSourceIdentifiersFilter = Arrays.asList(cvConfig.getIdentifier());
     String verificationJobInstanceId = verificationJobInstanceService.create(verificationJobInstance);
     String verificationTaskId =
         verificationTaskService.create(accountId, cvConfig.getUuid(), verificationJobInstanceId, cvConfig.getType());
@@ -258,7 +259,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
 
     TransactionMetricInfoSummaryPageDTO transactionMetricInfoSummaryPageDTO =
         deploymentTimeSeriesAnalysisService.getMetrics(
-            accountId, verificationJobInstanceId, false, null, null, DataSourceType.APP_DYNAMICS, 0);
+            accountId, verificationJobInstanceId, false, null, null, healthSourceIdentifiersFilter, 0);
 
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageIndex()).isEqualTo(0);
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getTotalPages()).isEqualTo(0);
@@ -270,7 +271,7 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
         .isEqualTo(3);
 
     transactionMetricInfoSummaryPageDTO = deploymentTimeSeriesAnalysisService.getMetrics(
-        accountId, verificationJobInstanceId, false, null, null, DataSourceType.STACKDRIVER_LOG, 0);
+        accountId, verificationJobInstanceId, false, null, null, Arrays.asList("some-identifier"), 0);
 
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageIndex()).isEqualTo(0);
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getTotalPages()).isEqualTo(0);

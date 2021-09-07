@@ -77,6 +77,8 @@ public class ClusterTableKeys {
   public static final String EFFECTIVE_MEMORY_LIMIT = "memorylimit*usagedurationseconds";
   public static final String EFFECTIVE_CPU_UTILIZATION_VALUE = "avgcpuutilizationvalue*usagedurationseconds";
   public static final String EFFECTIVE_MEMORY_UTILIZATION_VALUE = "avgmemoryutilizationvalue*usagedurationseconds";
+  public static final String COUNT = "totalCount";
+  public static final String COUNT_INNER = "totalCountInner";
   public static final String PRICING_SOURCE = "pricingsource";
 
   // Some default constants

@@ -240,13 +240,15 @@ public class LogDashboardServiceImpl implements LogDashboardService {
 
   private List<LogData> mergeClusterWithResults(
       List<AnalysisResult> analysisResults, List<LogAnalysisCluster> analysisClusters, Instant start, Instant end) {
-    Map<Long, LogAnalysisTag> labelTagMap = new HashMap<>();
+    Map<Long, AnalysisResult> labelTagMap = new HashMap<>();
+
     analysisResults.forEach(result -> {
       Long label = result.getLabel();
-      if (!labelTagMap.containsKey(label) || result.getTag().isMoreSevereThan(labelTagMap.get(label))) {
-        labelTagMap.put(label, result.getTag());
+      if (!labelTagMap.containsKey(label) || result.getTag().isMoreSevereThan(labelTagMap.get(label).getTag())) {
+        labelTagMap.put(label, result);
       }
     });
+
     List<LogData> logDataList = new ArrayList<>();
 
     analysisClusters.forEach(cluster -> {
@@ -266,12 +268,15 @@ public class LogDashboardServiceImpl implements LogDashboardService {
       trendMap.forEach(
           (timestamp, count) -> frequencies.add(FrequencyDTO.builder().timestamp(timestamp).count(count).build()));
 
+      AnalysisResult analysisResult = labelTagMap.get(cluster.getLabel());
       LogData data = LogData.builder()
                          .text(cluster.getText())
                          .label(cluster.getLabel())
                          .count(trendMap.values().stream().collect(Collectors.summingInt(Integer::intValue)))
                          .trend(frequencies)
-                         .tag(labelTagMap.get(cluster.getLabel()))
+                         .tag(analysisResult.getTag())
+                         .riskScore(analysisResult.getRiskScore())
+                         .riskStatus(analysisResult.getRisk())
                          .build();
       logDataList.add(data);
     });

@@ -12,7 +12,9 @@ import static io.harness.helm.HelmConstants.HELM_NAMESPACE_PLACEHOLDER;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.eraro.ErrorCode;
@@ -45,6 +47,7 @@ import org.apache.commons.io.LineIterator;
 
 @Singleton
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class HelmHelper {
   @Inject private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
 

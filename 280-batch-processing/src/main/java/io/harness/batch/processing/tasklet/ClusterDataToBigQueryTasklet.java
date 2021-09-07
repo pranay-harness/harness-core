@@ -215,6 +215,8 @@ public class ClusterDataToBigQueryTasklet implements Tasklet {
         getDoubleValueFromBigDecimal(instanceBillingData.getStorageUnallocatedCost()));
     clusterBillingData.setStorageutilizationvalue(instanceBillingData.getStorageUtilizationValue());
     clusterBillingData.setStoragerequest(instanceBillingData.getStorageRequest());
+    clusterBillingData.setMaxstorageutilizationvalue(instanceBillingData.getMaxStorageUtilizationValue());
+    clusterBillingData.setMaxstoragerequest(instanceBillingData.getMaxStorageRequest());
 
     if (instanceBillingData.getAppId() != null) {
       clusterBillingData.setAppname(entityIdToNameCache.get(

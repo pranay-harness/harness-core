@@ -179,7 +179,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
     final Optional<ConnectorResponseDTO> connectorResponseDTO = connectorService.get(accountId,
         identifierRef.getOrgIdentifier(), identifierRef.getProjectIdentifier(), identifierRef.getIdentifier());
     if (!connectorResponseDTO.isPresent()) {
-      throw new InvalidRequestException("Connector doesn't exist.");
+      throw new InvalidRequestException(String.format("Ref Connector [{}] doesn't exist.", gitConnectorId));
     }
     final ConnectorResponseDTO connector = connectorResponseDTO.get();
     userProfileHelper.setConnectorDetailsFromUserProfile(yamlGitConfig, userPrincipal, connector);

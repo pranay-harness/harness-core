@@ -17,8 +17,8 @@ public interface DeploymentLogAnalysisService {
 
   List<DeploymentLogAnalysis> getAnalysisResults(String verificationTaskId);
 
-  List<LogAnalysisClusterChartDTO> getLogAnalysisClusters(
-      String accountId, String verificationJobInstanceId, String hostName);
+  List<LogAnalysisClusterChartDTO> getLogAnalysisClusters(String accountId, String verificationJobInstanceId,
+      String hostName, List<String> healthSourceIdentifiersFilter, List<ClusterType> clusterTypesFilter);
 
   Optional<Risk> getRecentHighestRiskScore(String accountId, String verificationJobInstanceId);
 

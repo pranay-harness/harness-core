@@ -17,7 +17,7 @@ def qbg_java_files(name):
             srcs = [file],
             tools = [gbq_tool],
             tags = ["manual", "no-ide"],
-            cmd = "$(location %s) generate --input $(location %s) --root \"$(RULEDIR)\" --class %s" % (gbq_tool, file, qbg_file),
+            cmd = "$(location %s) generate --input $(location %s) --root \"$(RULEDIR)\" --class %s > /dev/null" % (gbq_tool, file, qbg_file),
         )
 
         srcs += [qbg_file]

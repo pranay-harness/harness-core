@@ -15,6 +15,7 @@ java_binary(
         "//230-model-test:module",
         "//360-cg-manager:module",
         "//400-rest:module",
+        "//957-cg-beans:module",
         "//990-commons-test:module",
         "@maven//:ch_qos_logback_logback_classic",
         "@maven//:com_github_scribejava_scribejava_apis",

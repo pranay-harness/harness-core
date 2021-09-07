@@ -52,14 +52,17 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.FileContentBatchResponse;
 import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.k8s.kustomize.KustomizeTaskHelper;
 import io.harness.delegate.k8s.openshift.OpenShiftDelegateService;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
+import io.harness.delegate.task.scm.ScmDelegateClient;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.HelmClientException;
@@ -82,14 +85,19 @@ import io.harness.logging.LogCallback;
 import io.harness.logging.LoggingInitializer;
 import io.harness.manifest.CustomManifestService;
 import io.harness.manifest.CustomManifestSource;
+import io.harness.product.ci.scm.proto.FileBatchContentResponse;
+import io.harness.product.ci.scm.proto.FileContent;
 import io.harness.rule.Owner;
+import io.harness.service.ScmServiceClient;
 
 import software.wings.beans.GitConfig;
+import software.wings.beans.GitConfig.ProviderType;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.yaml.GitFetchFilesResult;
+import software.wings.delegatetasks.ScmFetchFilesHelper;
 import software.wings.delegatetasks.helm.HelmTaskHelper;
 import software.wings.exception.ShellScriptException;
 import software.wings.helpers.ext.helm.HelmHelper;
@@ -150,7 +158,11 @@ public class K8sTaskHelperTest extends CategoryTest {
   @Mock private HelmHelper helmHelper;
   @Mock private CustomManifestService customManifestService;
   @Mock private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
+  @Mock private ScmFetchFilesHelper scmFetchFilesHelper;
+  @Mock private ScmDelegateClient scmDelegateClient;
+  @Mock private ScmServiceClient scmServiceClient;
 
+  private static final String REPO_URL = "helm-url";
   private String resourcePath = "k8s";
   private String deploymentYaml = "deployment.yaml";
   private String deploymentConfigYaml = "deployment-config.yaml";
@@ -235,13 +247,16 @@ public class K8sTaskHelperTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = YOGESH)
+  @Owner(developers = {YOGESH, TMACARI})
   @Category(UnitTests.class)
   public void fetchManifestFilesAndWriteToDirectory() throws Exception {
     fetchManifestFilesAndWriteToDirectory_local();
     fetchManifestFilesAndWriteToDirectory_helmChartRepo();
     fetchManifestFilesAndWriteToDirectory_gitRepo(HelmSourceRepo);
     fetchManifestFilesAndWriteToDirectory_gitRepo(Remote);
+    fetchManifestFilesAndWriteToDirectory_gitRepoBranchUsingScm();
+    fetchManifestFilesAndWriteToDirectory_gitRepoCommitIdUsingScm();
+    fetchManifestFilesAndWriteToDirectory_gitRepoBranchUsingScmByFilePath();
     fetchManifestFilesAndWriteToDirectory_gitRepo(OC_TEMPLATES);
     fetchManifestFilesAndWriteToDirectory_gitRepo(KustomizeSourceRepo);
   }
@@ -253,7 +268,7 @@ public class K8sTaskHelperTest extends CategoryTest {
         spyHelper.fetchManifestFilesAndWriteToDirectory(
             K8sDelegateManifestConfig.builder()
                 .manifestStoreTypes(storeType)
-                .gitConfig(GitConfig.builder().repoUrl("helm-url").build())
+                .gitConfig(GitConfig.builder().repoUrl(REPO_URL).build())
                 .gitFileConfig(
                     GitFileConfig.builder().filePath("dir/file").branch("master").connectorId("git-connector").build())
                 .build(),
@@ -261,7 +276,7 @@ public class K8sTaskHelperTest extends CategoryTest {
         .isTrue();
 
     verify(mockGitService, times(1))
-        .downloadFiles(eq(GitConfig.builder().repoUrl("helm-url").build()), any(GitFileConfig.class), eq("./dir"));
+        .downloadFiles(eq(GitConfig.builder().repoUrl(REPO_URL).build()), any(GitFileConfig.class), eq("./dir"));
     verify(mockEncryptionService, times(1)).decrypt(any(), anyList(), eq(false));
 
     // handle exception
@@ -272,7 +287,7 @@ public class K8sTaskHelperTest extends CategoryTest {
         spyHelper.fetchManifestFilesAndWriteToDirectory(
             K8sDelegateManifestConfig.builder()
                 .manifestStoreTypes(storeType)
-                .gitConfig(GitConfig.builder().repoUrl("helm-url").build())
+                .gitConfig(GitConfig.builder().repoUrl(REPO_URL).build())
                 .gitFileConfig(
                     GitFileConfig.builder().filePath("dir/file").branch("master").connectorId("git-connector").build())
                 .build(),
@@ -280,6 +295,174 @@ public class K8sTaskHelperTest extends CategoryTest {
         .isFalse();
     reset(mockGitService);
     reset(mockEncryptionService);
+  }
+
+  private void fetchManifestFilesAndWriteToDirectory_gitRepoBranchUsingScm() throws IOException {
+    K8sTaskHelper spyHelper = spy(helper);
+    doReturn("").when(spyHelperBase).getManifestFileNamesInLogFormat(anyString());
+    doReturn(true).when(scmFetchFilesHelper).shouldUseScm(anyBoolean(), any());
+    doReturn(GithubConnectorDTO.builder().build()).when(scmFetchFilesHelper).getScmConnector(any());
+    doReturn(FileContentBatchResponse.builder()
+                 .fileBatchContentResponse(FileBatchContentResponse.newBuilder()
+                                               .addFileContents(FileContent.newBuilder().setStatus(200).build())
+                                               .build())
+                 .build())
+        .when(scmServiceClient)
+        .listFiles(any(), any(), any(), any());
+    doReturn(FileContentBatchResponse.builder()
+                 .fileBatchContentResponse(FileBatchContentResponse.newBuilder()
+                                               .addFileContents(FileContent.newBuilder().setStatus(200).build())
+                                               .build())
+                 .build())
+        .when(scmDelegateClient)
+        .processScmRequest(any());
+    assertThat(spyHelper.fetchManifestFilesAndWriteToDirectory(
+                   K8sDelegateManifestConfig.builder()
+                       .optimizedFilesFetch(true)
+                       .manifestStoreTypes(Remote)
+                       .gitConfig(GitConfig.builder().repoUrl(REPO_URL).providerType(ProviderType.GITHUB).build())
+                       .gitFileConfig(GitFileConfig.builder()
+                                          .useBranch(true)
+                                          .filePath("dir/file")
+                                          .branch("master")
+                                          .connectorId("git-connector")
+                                          .build())
+                       .build(),
+                   "./dir", logCallback, LONG_TIMEOUT_INTERVAL))
+        .isTrue();
+
+    verify(scmDelegateClient, times(1)).processScmRequest(any());
+    verify(mockGitService, times(0))
+        .downloadFiles(eq(GitConfig.builder().repoUrl(REPO_URL).build()), any(GitFileConfig.class), eq("./dir"));
+    verify(mockEncryptionService, times(1)).decrypt(any(), anyList(), eq(false));
+
+    // handle exception
+    doReturn(true).when(scmFetchFilesHelper).shouldUseScm(anyBoolean(), any());
+    doReturn(GithubConnectorDTO.builder().build()).when(scmFetchFilesHelper).getScmConnector(any());
+    doReturn(FileContentBatchResponse.builder()
+                 .fileBatchContentResponse(FileBatchContentResponse.newBuilder().build())
+                 .build())
+        .when(scmDelegateClient)
+        .processScmRequest(any());
+    doThrow(new RuntimeException()).when(scmDelegateClient).processScmRequest(any());
+    assertThat(spyHelper.fetchManifestFilesAndWriteToDirectory(
+                   K8sDelegateManifestConfig.builder()
+                       .optimizedFilesFetch(true)
+                       .manifestStoreTypes(Remote)
+                       .gitConfig(GitConfig.builder().repoUrl(REPO_URL).providerType(ProviderType.GITHUB).build())
+                       .gitFileConfig(GitFileConfig.builder()
+                                          .useBranch(true)
+                                          .filePath("dir/file")
+                                          .branch("master")
+                                          .connectorId("git-connector")
+                                          .build())
+                       .build(),
+                   "./dir", logCallback, LONG_TIMEOUT_INTERVAL))
+        .isFalse();
+    reset(mockGitService);
+    reset(mockEncryptionService);
+    reset(scmFetchFilesHelper);
+    reset(scmServiceClient);
+    reset(scmDelegateClient);
+  }
+
+  private void fetchManifestFilesAndWriteToDirectory_gitRepoCommitIdUsingScm() throws IOException {
+    K8sTaskHelper spyHelper = spy(helper);
+    doReturn("").when(spyHelperBase).getManifestFileNamesInLogFormat(anyString());
+    doReturn(true).when(scmFetchFilesHelper).shouldUseScm(anyBoolean(), any());
+    doReturn(GithubConnectorDTO.builder().build()).when(scmFetchFilesHelper).getScmConnector(any());
+    doReturn(FileContentBatchResponse.builder()
+                 .fileBatchContentResponse(FileBatchContentResponse.newBuilder()
+                                               .addFileContents(FileContent.newBuilder().setStatus(200).build())
+                                               .build())
+                 .build())
+        .when(scmServiceClient)
+        .listFoldersFilesByCommitId(any(), any(), any(), any());
+    doReturn(FileContentBatchResponse.builder()
+                 .fileBatchContentResponse(FileBatchContentResponse.newBuilder()
+                                               .addFileContents(FileContent.newBuilder().setStatus(200).build())
+                                               .build())
+                 .build())
+        .when(scmDelegateClient)
+        .processScmRequest(any());
+    assertThat(spyHelper.fetchManifestFilesAndWriteToDirectory(
+                   K8sDelegateManifestConfig.builder()
+                       .optimizedFilesFetch(true)
+                       .manifestStoreTypes(Remote)
+                       .gitConfig(GitConfig.builder().repoUrl(REPO_URL).providerType(ProviderType.GITHUB).build())
+                       .gitFileConfig(GitFileConfig.builder()
+                                          .useBranch(false)
+                                          .filePath("dir/file")
+                                          .commitId("commitId")
+                                          .connectorId("git-connector")
+                                          .build())
+                       .build(),
+                   "./dir", logCallback, LONG_TIMEOUT_INTERVAL))
+        .isTrue();
+
+    verify(scmDelegateClient, times(1)).processScmRequest(any());
+    verify(mockGitService, times(0))
+        .downloadFiles(eq(GitConfig.builder().repoUrl(REPO_URL).build()), any(GitFileConfig.class), eq("./dir"));
+    verify(mockEncryptionService, times(1)).decrypt(any(), anyList(), eq(false));
+
+    reset(mockGitService);
+    reset(mockEncryptionService);
+    reset(scmFetchFilesHelper);
+    reset(scmServiceClient);
+    reset(scmDelegateClient);
+  }
+
+  private void fetchManifestFilesAndWriteToDirectory_gitRepoBranchUsingScmByFilePath() throws IOException {
+    K8sTaskHelper spyHelper = spy(helper);
+    doReturn("").when(spyHelperBase).getManifestFileNamesInLogFormat(anyString());
+    doReturn(true).when(scmFetchFilesHelper).shouldUseScm(anyBoolean(), any());
+    doReturn(GithubConnectorDTO.builder().build()).when(scmFetchFilesHelper).getScmConnector(any());
+    doReturn(FileContentBatchResponse.builder()
+                 .fileBatchContentResponse(FileBatchContentResponse.newBuilder().build())
+                 .build())
+        .when(scmServiceClient)
+        .listFiles(any(), any(), any(), any());
+    doReturn(FileContentBatchResponse.builder()
+                 .fileBatchContentResponse(FileBatchContentResponse.newBuilder()
+                                               .addFileContents(FileContent.newBuilder().setStatus(200).build())
+                                               .build())
+                 .build())
+        .when(scmServiceClient)
+        .listFilesByFilePaths(any(), any(), any(), any());
+    when(scmDelegateClient.processScmRequest(any()))
+        .thenReturn(FileContentBatchResponse.builder()
+                        .fileBatchContentResponse(FileBatchContentResponse.newBuilder().build())
+                        .build())
+        .thenReturn(FileContentBatchResponse.builder()
+                        .fileBatchContentResponse(FileBatchContentResponse.newBuilder()
+                                                      .addFileContents(FileContent.newBuilder().setStatus(200).build())
+                                                      .build())
+                        .build());
+    assertThat(spyHelper.fetchManifestFilesAndWriteToDirectory(
+                   K8sDelegateManifestConfig.builder()
+                       .optimizedFilesFetch(true)
+                       .manifestStoreTypes(Remote)
+                       .gitConfig(GitConfig.builder().repoUrl(REPO_URL).providerType(ProviderType.GITHUB).build())
+                       .gitFileConfig(GitFileConfig.builder()
+                                          .useBranch(true)
+                                          .filePath("dir/file")
+                                          .branch("master")
+                                          .connectorId("git-connector")
+                                          .build())
+                       .build(),
+                   "./dir", logCallback, LONG_TIMEOUT_INTERVAL))
+        .isTrue();
+
+    verify(scmDelegateClient, times(2)).processScmRequest(any());
+    verify(mockGitService, times(0))
+        .downloadFiles(eq(GitConfig.builder().repoUrl(REPO_URL).build()), any(GitFileConfig.class), eq("./dir"));
+    verify(mockEncryptionService, times(1)).decrypt(any(), anyList(), eq(false));
+
+    reset(mockGitService);
+    reset(mockEncryptionService);
+    reset(scmFetchFilesHelper);
+    reset(scmServiceClient);
+    reset(scmDelegateClient);
   }
 
   private void fetchManifestFilesAndWriteToDirectory_helmChartRepo() throws Exception {

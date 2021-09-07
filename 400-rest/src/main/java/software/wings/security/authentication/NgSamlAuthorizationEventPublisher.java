@@ -2,6 +2,10 @@ package software.wings.security.authentication;
 
 import static io.harness.eventsframework.EventsFrameworkConstants.SAML_AUTHORIZATION_ASSERTION;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.producer.Message;
 import io.harness.eventsframework.samlauthorization.samlauthorizationdata.SamlAuthorizationDTO;
@@ -14,6 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class NgSamlAuthorizationEventPublisher {
   @Inject @Named(SAML_AUTHORIZATION_ASSERTION) private Producer eventProducer;
 

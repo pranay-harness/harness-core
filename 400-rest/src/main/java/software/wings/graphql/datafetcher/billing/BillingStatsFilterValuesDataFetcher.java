@@ -78,7 +78,7 @@ public class BillingStatsFilterValuesDataFetcher
   @AuthRule(permissionType = PermissionType.LOGGED_IN)
   protected QLData fetchSelectedFields(String accountId, List<QLCCMAggregationFunction> aggregateFunction,
       List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sortCriteria,
-      Integer limit, Integer offset, DataFetchingEnvironment dataFetchingEnvironment) {
+      Integer limit, Integer offset, boolean skipRoundOff, DataFetchingEnvironment dataFetchingEnvironment) {
     accountChecker.checkIsCeEnabled(accountId);
     try {
       if (timeScaleDBService.isValid()) {

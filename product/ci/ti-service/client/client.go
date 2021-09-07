@@ -25,7 +25,4 @@ type Client interface {
 
 	// UploadCg uploads avro encoded callgraph to ti server
 	UploadCg(org, project, pipeline, build, stage, step, repo, sha, source, target string, timeMs int64, cg []byte) error
-
-	// UploadVisgraph uploads avro encoded visualization callgraph to ti server
-	UploadVisgraph(org, project, pipeline, build, stage, step, repo, sha, source, target string, vis []byte) error
 }

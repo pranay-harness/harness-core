@@ -13,6 +13,7 @@ import io.harness.gitsync.entityInfo.AbstractGitSdkEntityHandler;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.ng.core.EntityDetail;
 import io.harness.template.beans.yaml.NGTemplateConfig;
+import io.harness.template.beans.yaml.NGTemplateInfoConfig;
 import io.harness.template.entity.TemplateEntity;
 import io.harness.template.entity.TemplateEntity.TemplateEntityKeys;
 import io.harness.template.mappers.NGTemplateDtoMapper;
@@ -21,6 +22,7 @@ import io.harness.template.services.NGTemplateService;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 @OwnedBy(HarnessTeam.CDC)
@@ -66,7 +68,7 @@ public class TemplateEntityGitSyncHandler extends AbstractGitSdkEntityHandler<Te
                        .scope(ScopeHelper.getScope(
                            entity.getAccountIdentifier(), entity.getOrgIdentifier(), entity.getProjectIdentifier()))
                        .identifier(entity.getIdentifier())
-                       .label(entity.getVersionLabel())
+                       .versionLabel(entity.getVersionLabel())
                        .build())
         .build();
   }
@@ -121,6 +123,11 @@ public class TemplateEntityGitSyncHandler extends AbstractGitSdkEntityHandler<Te
 
   @Override
   public String getLastObjectIdIfExists(String accountIdentifier, String yaml) {
-    return null;
+    NGTemplateConfig yamlDTO = getYamlDTO(yaml);
+    NGTemplateInfoConfig templateInfoConfig = yamlDTO.getTemplateInfoConfig();
+    Optional<TemplateEntity> templateEntity = templateService.get(accountIdentifier,
+        templateInfoConfig.getOrgIdentifier(), templateInfoConfig.getProjectIdentifier(),
+        templateInfoConfig.getIdentifier(), templateInfoConfig.getVersionLabel(), false);
+    return templateEntity.map(TemplateEntity::getObjectIdOfYaml).orElse(null);
   }
 }

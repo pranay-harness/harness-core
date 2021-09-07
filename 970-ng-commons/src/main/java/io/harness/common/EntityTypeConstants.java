@@ -28,4 +28,5 @@ public interface EntityTypeConstants {
   String TRIGGERS = "Triggers";
   String MONITORED_SERVICE = "MonitoredService";
   String TEMPLATE = "Template";
+  String GIT_REPOSITORIES = "GitRepositories";
 }
