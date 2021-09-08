@@ -3,6 +3,7 @@
  */
 package io.harness.timescaledb;
 
+import io.harness.timescaledb.tables.Anomalies;
 import io.harness.timescaledb.tables.BillingData;
 import io.harness.timescaledb.tables.KubernetesUtilizationData;
 
@@ -20,6 +21,13 @@ public class Indexes {
   // INDEX definitions
   // -------------------------------------------------------------------------
 
+  public static final Index ANOMALIES_ANOMALYTIME_IDX = Internal.createIndex(DSL.name("anomalies_anomalytime_idx"),
+      Anomalies.ANOMALIES, new OrderField[] {Anomalies.ANOMALIES.ANOMALYTIME.desc()}, false);
+  public static final Index ANOMALIES_PKEY = Internal.createIndex(DSL.name("anomalies_pkey"), Anomalies.ANOMALIES,
+      new OrderField[] {Anomalies.ANOMALIES.ID, Anomalies.ANOMALIES.ANOMALYTIME}, true);
+  public static final Index ANOMALY_ACCOUNTID_INDEX =
+      Internal.createIndex(DSL.name("anomaly_accountid_index"), Anomalies.ANOMALIES,
+          new OrderField[] {Anomalies.ANOMALIES.ACCOUNTID, Anomalies.ANOMALIES.ANOMALYTIME.desc()}, false);
   public static final Index BILLING_DATA_ACCOUNTID_INDEX =
       Internal.createIndex(DSL.name("billing_data_accountid_index"), BillingData.BILLING_DATA,
           new OrderField[] {BillingData.BILLING_DATA.ACCOUNTID, BillingData.BILLING_DATA.STARTTIME.desc()}, false);

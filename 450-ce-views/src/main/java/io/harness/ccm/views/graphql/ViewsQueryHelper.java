@@ -20,6 +20,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
@@ -160,10 +161,17 @@ public class ViewsQueryHelper {
                      : Instant.ofEpochMilli(currentDay - ONE_DAY_MILLIS);
   }
 
-  private static List<QLCEViewTimeFilter> getTimeFilters(List<QLCEViewFilterWrapper> filters) {
+  public List<QLCEViewTimeFilter> getTimeFilters(List<QLCEViewFilterWrapper> filters) {
     return filters.stream()
         .filter(f -> f.getTimeFilter() != null)
         .map(QLCEViewFilterWrapper::getTimeFilter)
+        .collect(Collectors.toList());
+  }
+
+  public List<QLCEViewFilter> getIdFilters(List<QLCEViewFilterWrapper> filters) {
+    return filters.stream()
+        .filter(f -> f.getIdFilter() != null)
+        .map(QLCEViewFilterWrapper::getIdFilter)
         .collect(Collectors.toList());
   }
 
@@ -268,5 +276,11 @@ public class ViewsQueryHelper {
         .isTimeTruncGroupByRequired(false)
         .isTotalCountQuery(false)
         .build();
+  }
+
+  public String getPerspectiveIdFromMetadataFilter(List<QLCEViewFilterWrapper> filters) {
+    Optional<QLCEViewFilterWrapper> viewMetadataFilter =
+        filters.stream().filter(f -> f.getViewMetadataFilter() != null).findFirst();
+    return viewMetadataFilter.isPresent() ? viewMetadataFilter.get().getViewMetadataFilter().getViewId() : null;
   }
 }
