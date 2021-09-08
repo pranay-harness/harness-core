@@ -3,8 +3,7 @@ package software.wings.security.saml;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-
-import software.wings.security.authentication.OauthProviderType;
+import io.harness.ng.core.account.OauthProviderType;
 
 import java.util.List;
 import lombok.AllArgsConstructor;

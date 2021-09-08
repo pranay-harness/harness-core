@@ -1,8 +1,9 @@
 package software.wings.ratelimit;
 
-import static io.harness.annotations.dev.HarnessTeam.PL;
-
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.limits.ActionType;
 import io.harness.limits.ConfiguredLimit;
 import io.harness.limits.configuration.LimitConfigurationService;
@@ -24,10 +25,11 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
-@OwnedBy(PL)
 @Slf4j
 @Singleton
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class LoginRequestRateLimiter {
   private static final int GLOBAL_LOGIN_REQUEST_LIMIT_PER_MINUTE = 300;
 

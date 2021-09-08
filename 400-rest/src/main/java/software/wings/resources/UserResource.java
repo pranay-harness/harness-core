@@ -38,6 +38,7 @@ import io.harness.logging.ExceptionLogger;
 import io.harness.ng.core.common.beans.Generation;
 import io.harness.ng.core.dto.UserInviteDTO;
 import io.harness.ng.core.invites.dto.InviteOperationResponse;
+import io.harness.ng.core.switchaccount.SwitchAccountResponse;
 import io.harness.ng.core.user.TwoFactorAdminOverrideSettings;
 import io.harness.rest.RestResponse;
 import io.harness.rest.RestResponse.Builder;
@@ -600,6 +601,17 @@ public class UserResource {
         authenticationManager.switchAccount(
             authenticationManager.extractToken(authorization, "Bearer"), switchAccountRequest.getAccountId())
         != null);
+  }
+
+  @POST
+  @Path("restricted-switch-account")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<SwitchAccountResponse> restrictedSwitchAccount(
+      @HeaderParam(HttpHeaders.AUTHORIZATION) String authorization, @QueryParam("routingId") String accountId,
+      @Valid @NotNull SwitchAccountRequest switchAccountRequest) {
+    // Adding this endpoint for UI swagger generation
+    return new RestResponse<>(SwitchAccountResponse.builder().requiresReAuthentication(false).build());
   }
 
   /**
