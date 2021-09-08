@@ -47,6 +47,7 @@ import io.harness.ng.cdOverview.dto.ServiceDeploymentListInfo;
 import io.harness.ng.cdOverview.dto.ServiceDetailsDTO;
 import io.harness.ng.cdOverview.dto.ServiceDetailsDTO.ServiceDetailsDTOBuilder;
 import io.harness.ng.cdOverview.dto.ServiceDetailsInfoDTO;
+import io.harness.ng.cdOverview.dto.ServiceHeaderInfo;
 import io.harness.ng.cdOverview.dto.ServicePipelineInfo;
 import io.harness.ng.cdOverview.dto.TimeAndStatusDeployment;
 import io.harness.ng.cdOverview.dto.TimeValuePair;
@@ -87,9 +88,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -640,22 +641,14 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         item -> serviceIdToWorkloadDeploymentInfo.putIfAbsent(item.getServiceId(), item));
 
     List<String> serviceIdentifiers = services.stream().map(ServiceEntity::getIdentifier).collect(Collectors.toList());
-    List<String> servicesDeployedBeforePrevTime = new ArrayList<>(serviceIdentifiers);
-    servicesDeployedBeforePrevTime.removeAll(
-        workloadDeploymentInfoList.stream().map(WorkloadDeploymentInfo::getServiceId).collect(Collectors.toList()));
 
-    Map<String, String> serviceIdToPipelineIdMapForOldDeployments =
-        getLastPipeline(accountIdentifier, orgIdentifier, projectIdentifier, servicesDeployedBeforePrevTime);
-    List<String> pipelineExecutionIdList = workloadDeploymentInfoList.stream()
-                                               .map(WorkloadDeploymentInfo::getLastPipelineExecutionId)
-                                               .collect(Collectors.toList());
-    List<String> oldPipelineExecutionIdList =
-        serviceIdToPipelineIdMapForOldDeployments.values().stream().collect(Collectors.toList());
+    Map<String, String> serviceIdToPipelineIdMap =
+        getLastPipeline(accountIdentifier, orgIdentifier, projectIdentifier, serviceIdentifiers);
+
+    List<String> pipelineExecutionIdList = serviceIdToPipelineIdMap.values().stream().collect(Collectors.toList());
 
     // Gets all the details for the pipeline execution id's in the list and stores it in a map.
-    Map<String, ServicePipelineInfo> pipelineExecutionDetailsMap =
-        getPipelineExecutionDetails(Stream.concat(pipelineExecutionIdList.stream(), oldPipelineExecutionIdList.stream())
-                                        .collect(Collectors.toList()));
+    Map<String, ServicePipelineInfo> pipelineExecutionDetailsMap = getPipelineExecutionDetails(pipelineExecutionIdList);
 
     Map<String, Set<String>> serviceIdToDeploymentTypeMap =
         getDeploymentType(accountIdentifier, orgIdentifier, projectIdentifier, serviceIdentifiers);
@@ -670,12 +663,15 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         services.stream()
             .map(service -> {
               final String serviceId = service.getIdentifier();
+              final String pipelineId = serviceIdToPipelineIdMap.getOrDefault(serviceId, null);
+
               ServiceDetailsDTOBuilder serviceDetailsDTOBuilder = ServiceDetailsDTO.builder();
               serviceDetailsDTOBuilder.serviceName(service.getName());
               serviceDetailsDTOBuilder.serviceIdentifier(serviceId);
               serviceDetailsDTOBuilder.deploymentTypeList(serviceIdToDeploymentTypeMap.getOrDefault(serviceId, null));
               serviceDetailsDTOBuilder.instanceCountDetails(
                   serviceIdToInstanceCountDetails.getOrDefault(serviceId, null));
+              serviceDetailsDTOBuilder.lastPipelineExecuted(pipelineExecutionDetailsMap.getOrDefault(pipelineId, null));
 
               if (serviceIdToWorkloadDeploymentInfo.containsKey(serviceId)) {
                 final WorkloadDeploymentInfo workloadDeploymentInfo = serviceIdToWorkloadDeploymentInfo.get(serviceId);
@@ -688,11 +684,6 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
                 serviceDetailsDTOBuilder.failureRateChangeRate(workloadDeploymentInfo.getFailureRateChangeRate());
                 serviceDetailsDTOBuilder.frequency(workloadDeploymentInfo.getFrequency());
                 serviceDetailsDTOBuilder.frequencyChangeRate(workloadDeploymentInfo.getFrequencyChangeRate());
-                serviceDetailsDTOBuilder.lastPipelineExecuted(pipelineExecutionDetailsMap.getOrDefault(
-                    workloadDeploymentInfo.getLastPipelineExecutionId(), null));
-              } else if (pipelineExecutionDetailsMap.containsKey(serviceId)) {
-                serviceDetailsDTOBuilder.lastPipelineExecuted(
-                    pipelineExecutionDetailsMap.getOrDefault(pipelineExecutionDetailsMap.get(serviceId), null));
               }
 
               return serviceDetailsDTOBuilder.build();
@@ -1607,5 +1598,23 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         + String.format("accountid='%s' and ", accountIdentifier)
         + String.format("orgidentifier='%s' and ", orgIdentifier)
         + String.format("projectidentifier='%s' and ", projectIdentifier) + String.format("service_id='%s'", serviceId);
+  }
+
+  public ServiceHeaderInfo getServiceHeaderInfo(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId) {
+    Optional<ServiceEntity> service =
+        ServiceEntityServiceImpl.get(accountIdentifier, orgIdentifier, projectIdentifier, serviceId, false);
+    ServiceEntity serviceEntity = service.get();
+    Set<String> deploymentTypes =
+        getDeploymentType(accountIdentifier, orgIdentifier, projectIdentifier, Arrays.asList(serviceId))
+            .getOrDefault(serviceId, new HashSet<>());
+    return ServiceHeaderInfo.builder()
+        .identifier(serviceId)
+        .name(serviceEntity.getName())
+        .description(serviceEntity.getDescription())
+        .deploymentTypes(deploymentTypes)
+        .createdAt(serviceEntity.getCreatedAt())
+        .lastModifiedAt(serviceEntity.getLastModifiedAt())
+        .build();
   }
 }

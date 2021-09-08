@@ -65,6 +65,8 @@ public enum ExecutionInterruptType {
 
   ROLLBACK("Rollback"),
 
+  ROLLBACK_PROVISIONER_AFTER_PHASES("Rollback Provisioner after Phases"),
+
   NEXT_STEP("Next Step"),
 
   END_EXECUTION("End Execution"),

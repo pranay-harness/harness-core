@@ -29,6 +29,7 @@ import io.harness.resourcegroup.framework.service.ResourceGroupService;
 import io.harness.resourcegroup.model.ResourceGroup;
 import io.harness.resourcegroup.model.ResourceGroup.ResourceGroupKeys;
 import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
+import io.harness.resourcegroup.remote.dto.ResourceGroupFilterDTO;
 import io.harness.resourcegroupclient.ResourceGroupResponse;
 
 import com.google.common.collect.ImmutableList;
@@ -102,6 +103,23 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
     }));
   }
 
+  private Criteria getResourceGroupCritera(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String searchTerm) {
+    Criteria criteria = Criteria.where(ResourceGroupKeys.accountIdentifier)
+                            .in(accountIdentifier)
+                            .and(ResourceGroupKeys.orgIdentifier)
+                            .in(orgIdentifier)
+                            .and(ResourceGroupKeys.projectIdentifier)
+                            .is(projectIdentifier);
+    if (Objects.nonNull(stripToNull(searchTerm))) {
+      criteria.orOperator(Criteria.where(ResourceGroupKeys.name).regex(searchTerm, "i"),
+          Criteria.where(ResourceGroupKeys.identifier).regex(searchTerm, "i"),
+          Criteria.where(ResourceGroupKeys.tags + "." + NGTagKeys.key).regex(searchTerm, "i"),
+          Criteria.where(ResourceGroupKeys.tags + "." + NGTagKeys.value).regex(searchTerm, "i"));
+    }
+    return criteria;
+  }
+
   @Override
   public Page<ResourceGroupResponse> list(Scope scope, PageRequest pageRequest, String searchTerm) {
     if (isEmpty(pageRequest.getSortOrders())) {
@@ -112,19 +130,21 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
       pageRequest.setSortOrders(ImmutableList.of(harnessManagedOrder, lastModifiedOrder));
     }
     Pageable page = getPageRequest(pageRequest);
-    Criteria criteria = Criteria.where(ResourceGroupKeys.accountIdentifier)
-                            .in(scope.getAccountIdentifier())
-                            .and(ResourceGroupKeys.orgIdentifier)
-                            .in(scope.getOrgIdentifier())
-                            .and(ResourceGroupKeys.projectIdentifier)
-                            .is(scope.getProjectIdentifier());
-    if (Objects.nonNull(stripToNull(searchTerm))) {
-      criteria.orOperator(Criteria.where(ResourceGroupKeys.name).regex(searchTerm, "i"),
-          Criteria.where(ResourceGroupKeys.identifier).regex(searchTerm, "i"),
-          Criteria.where(ResourceGroupKeys.tags + "." + NGTagKeys.key).regex(searchTerm, "i"),
-          Criteria.where(ResourceGroupKeys.tags + "." + NGTagKeys.value).regex(searchTerm, "i"));
-    }
+    Criteria criteria = getResourceGroupCritera(
+        scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier(), searchTerm);
     return resourceGroupRepository.findAll(criteria, page).map(ResourceGroupMapper::toResponseWrapper);
+  }
+
+  @Override
+  public Page<ResourceGroupResponse> list(ResourceGroupFilterDTO resourceGroupFilterDTO, PageRequest pageRequest) {
+    Criteria criteria = getResourceGroupCritera(resourceGroupFilterDTO.getAccountIdentifier(),
+        resourceGroupFilterDTO.getOrgIdentifier(), resourceGroupFilterDTO.getProjectIdentifier(),
+        resourceGroupFilterDTO.getSearchTerm());
+    if (isNotEmpty(resourceGroupFilterDTO.getIdentifierFilter())) {
+      criteria.and(ResourceGroupKeys.identifier).in(resourceGroupFilterDTO.getIdentifierFilter());
+    }
+    return resourceGroupRepository.findAll(criteria, getPageRequest(pageRequest))
+        .map(ResourceGroupMapper::toResponseWrapper);
   }
 
   @Override

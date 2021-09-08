@@ -1332,7 +1332,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
         configuration.getAccessControlClientConfiguration(), DELEGATE_SERVICE.getServiceId()));
 
     // ng-license dependencies
-    install(new NgLicenseHttpClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+    install(NgLicenseHttpClientModule.getInstance(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
 
     // admin ng-license dependencies

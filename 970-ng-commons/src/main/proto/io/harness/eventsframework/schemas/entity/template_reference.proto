@@ -1,0 +1,16 @@
+syntax = "proto3";
+package io.harness.eventsframework.schemas.entity;
+import "google/protobuf/wrappers.proto";
+
+option java_multiple_files = true;
+import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/scope.proto";
+option go_package = "970_ng_commons";
+
+message TemplateReferenceProtoDTO {
+  io.harness.eventsframework.schemas.entity.ScopeProtoEnum scope = 1;
+  google.protobuf.StringValue identifier = 2;
+  google.protobuf.StringValue accountIdentifier = 3;
+  google.protobuf.StringValue orgIdentifier = 4;
+  google.protobuf.StringValue projectIdentifier = 5;
+  google.protobuf.StringValue versionLabel = 6;
+}

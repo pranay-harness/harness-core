@@ -18,6 +18,7 @@ import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.Collections;
+import java.util.HashMap;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -41,7 +42,7 @@ public class EventMonitoringServiceImplTest extends PmsCommonsTestBase {
   @Category(UnitTests.class)
   public void testSendMetric() {
     String metricName = "m";
-    eventMonitoringService.sendMetric(metricName, null, null);
+    eventMonitoringService.sendMetric(metricName, null, new HashMap<>());
     verify(metricService, never()).recordMetric(anyString(), anyDouble());
     eventMonitoringService.sendMetric(metricName, null, Collections.emptyMap());
     verify(metricService, never()).recordMetric(anyString(), anyDouble());
@@ -52,14 +53,14 @@ public class EventMonitoringServiceImplTest extends PmsCommonsTestBase {
     PowerMockito.when(System.currentTimeMillis()).thenReturn(10001L);
     MonitoringInfo monitoringInfo = MonitoringInfo.builder().metricPrefix("p").createdAt(10000L).build();
     eventMonitoringService.sendMetric(metricName, monitoringInfo, ImmutableMap.of(PIPELINE_MONITORING_ENABLED, "true"));
-    verify(metricService, never()).recordMetric(anyString(), anyDouble());
+    verify(metricService, times(1)).recordMetric(anyString(), anyDouble());
 
     monitoringInfo = MonitoringInfo.builder().metricPrefix("p").createdAt(1000L).build();
     eventMonitoringService.sendMetric(metricName, monitoringInfo, ImmutableMap.of(PIPELINE_MONITORING_ENABLED, "true"));
-    verify(metricService, times(1)).recordMetric(anyString(), anyDouble());
+    verify(metricService, times(2)).recordMetric(anyString(), anyDouble());
 
     PowerMockito.when(System.currentTimeMillis()).thenReturn(11000L);
     eventMonitoringService.sendMetric(metricName, monitoringInfo, ImmutableMap.of(PIPELINE_MONITORING_ENABLED, "true"));
-    verify(metricService, times(2)).recordMetric(anyString(), anyDouble());
+    verify(metricService, times(3)).recordMetric(anyString(), anyDouble());
   }
 }

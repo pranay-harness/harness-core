@@ -15,6 +15,9 @@ import io.harness.helpers.ext.vault.VaultSysAuthRestClient;
 import software.wings.beans.BaseVaultConfig;
 
 import java.io.IOException;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 import retrofit2.Response;
@@ -67,5 +70,21 @@ public class NGVaultTaskHelper {
     }
     log.error(errorMsg);
     throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, errorMsg, USER);
+  }
+
+  public static String getToken(BaseVaultConfig vaultConfig) {
+    if (vaultConfig.isUseVaultAgent()) {
+      try {
+        byte[] content = Files.readAllBytes(Paths.get(URI.create("file://" + vaultConfig.getSinkPath())));
+        String token = new String(content);
+        vaultConfig.setAuthToken(token);
+        return token;
+      } catch (IOException e) {
+        throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR,
+            "Using Vault Agent Cannot read Token From Sink Path:" + vaultConfig.getSinkPath(), e, USER);
+      }
+    } else {
+      return vaultConfig.getAuthToken();
+    }
   }
 }

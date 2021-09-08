@@ -4,6 +4,10 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.WingsException;
 import io.harness.serializer.JsonUtils;
 
@@ -23,6 +27,8 @@ import org.json.JSONObject;
  */
 
 @Data
+@OwnedBy(HarnessTeam.CV)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class ElkLogFetchRequest {
   private final String query;
   private final String indices;

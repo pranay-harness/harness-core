@@ -9,18 +9,22 @@ message PollingPayloadData {
   string connectorRef = 2;
   oneof Payload {
     HttpHelmPayload httpHelmPayload = 3;
-    DockerEcrPayload dockerEcrPayload = 4;
+    EcrPayload ecrPayload = 4;
     GcsHelmPayload gcsHelmPayload = 5;
     S3HelmPayload s3HelmPayload = 6;
+    DockerHubPayload dockerHubPayload = 7;
+    GcrPayload gcrPayload = 8;
   }
 }
 
 enum Type {
   UNDEFINED = 0;
   HTTP_HELM = 1;
-  DOCKER_ECR = 2;
+  ECR = 2;
   GCS_HELM = 3;
   S3_HELM = 4;
+  DOCKER_HUB = 5;
+  GCR = 6;
 }
 
 message HttpHelmPayload {
@@ -28,8 +32,9 @@ message HttpHelmPayload {
   HelmVersion helmVersion = 2;
 }
 
-message DockerEcrPayload {
-  string imageName = 1;
+message EcrPayload {
+  string imagePath = 1;
+  string region = 2;
 }
 
 message GcsHelmPayload {
@@ -50,4 +55,13 @@ message S3HelmPayload {
 enum HelmVersion {
   V2 = 0;
   V3 = 1;
+}
+
+message DockerHubPayload {
+  string imagePath = 1;
+}
+
+message GcrPayload {
+  string imagePath = 1;
+  string registryHostname = 2;
 }

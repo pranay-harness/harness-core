@@ -178,7 +178,7 @@ public class ConditionEvaluator {
         return true;
       }
 
-      return NGExpressionUtils.matchesPattern(Pattern.compile(standard), input);
+      return NGExpressionUtils.matchesPattern(Pattern.compile(standard, Pattern.DOTALL), input);
     }
   }
 }

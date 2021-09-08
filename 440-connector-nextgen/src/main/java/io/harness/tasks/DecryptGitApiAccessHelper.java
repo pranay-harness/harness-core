@@ -14,7 +14,10 @@ import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.gitapi.DecryptGitAPIAccessTaskResponse;
 import io.harness.delegate.beans.gitapi.DecryptGitAPiAccessTaskParams;
+import io.harness.exception.DelegateNotAvailableException;
+import io.harness.exception.DelegateServiceDriverException;
 import io.harness.exception.UnexpectedException;
+import io.harness.exception.WingsException;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -69,6 +72,8 @@ public class DecryptGitApiAccessHelper {
     DelegateResponseData responseData = null;
     try {
       responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    } catch (DelegateServiceDriverException e) {
+      throw new DelegateNotAvailableException("Encountered error while decrypting secrets", WingsException.USER);
     } catch (Exception e) {
       log.error("Encountered error while decrypting api access", e);
     }

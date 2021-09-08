@@ -3,7 +3,9 @@ package software.wings.security.authentication.oauth;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
@@ -46,6 +48,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Slf4j
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class OauthBasedAuthHandler implements AuthHandler {
   @Inject AuthenticationUtils authenticationUtils;
   @Inject UserService userService;

@@ -20,6 +20,10 @@ public class ParameterFieldSerializer extends StdSerializer<ParameterField<?>> {
 
   @Override
   public void serialize(ParameterField<?> value, JsonGenerator gen, SerializerProvider provider) throws IOException {
-    gen.writeObject(value.getJsonFieldValue());
+    if (ParameterField.isNull(value)) {
+      gen.writeString("");
+    } else {
+      gen.writeObject(value.getJsonFieldValue());
+    }
   }
 }

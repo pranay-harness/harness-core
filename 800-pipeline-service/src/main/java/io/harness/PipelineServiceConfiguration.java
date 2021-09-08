@@ -80,7 +80,6 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("cacheConfig") private CacheConfig cacheConfig;
   @JsonProperty("hostname") String hostname;
   @JsonProperty("basePathPrefix") String basePathPrefix;
-  @JsonProperty(value = "useRedisForOrchestrationNotify") private boolean useRedisForOrchestrationNotify;
 
   private String managerServiceSecret;
   private String managerTarget;
@@ -93,6 +92,8 @@ public class PipelineServiceConfiguration extends Configuration {
   private PipelineServiceIteratorsConfig iteratorsConfig;
   private boolean shouldDeployWithGitSync;
   private GitSdkConfiguration gitSdkConfiguration;
+  private DelegatePollingConfig delegatePollingConfig;
+
   public PipelineServiceConfiguration() {
     DefaultServerFactory defaultServerFactory = new DefaultServerFactory();
     defaultServerFactory.setJerseyRootPath("/api");

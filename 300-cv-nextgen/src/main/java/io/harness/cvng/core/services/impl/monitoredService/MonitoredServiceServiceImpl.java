@@ -5,7 +5,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.cvng.beans.MonitoredServiceType;
 import io.harness.cvng.client.NextGenService;
+import io.harness.cvng.core.beans.ChangeSummaryDTO;
 import io.harness.cvng.core.beans.HealthMonitoringFlagResponse;
+import io.harness.cvng.core.beans.change.event.ChangeEventDTO;
 import io.harness.cvng.core.beans.monitoredService.DurationDTO;
 import io.harness.cvng.core.beans.monitoredService.HealthScoreDTO;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
@@ -16,6 +18,7 @@ import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO.MonitoredServiceListItemDTOBuilder;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceResponse;
 import io.harness.cvng.core.beans.monitoredService.RiskData;
+import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.entities.MonitoredService;
@@ -25,6 +28,7 @@ import io.harness.cvng.core.services.api.monitoredService.ChangeSourceService;
 import io.harness.cvng.core.services.api.monitoredService.HealthSourceService;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.cvng.core.services.api.monitoredService.ServiceDependencyService;
+import io.harness.cvng.core.types.ChangeCategory;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
@@ -40,6 +44,7 @@ import com.google.inject.Inject;
 import com.mongodb.DuplicateKeyException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -49,6 +54,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import lombok.NonNull;
@@ -78,6 +84,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   @Inject private ServiceDependencyService serviceDependencyService;
   @Inject private SetupUsageEventService setupUsageEventService;
   @Inject private ChangeSourceService changeSourceService;
+  @Inject private Clock clock;
 
   @Override
   public MonitoredServiceResponse create(String accountId, MonitoredServiceDTO monitoredServiceDTO) {
@@ -432,6 +439,8 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
       monitoredServicesQuery.filter(MonitoredServiceKeys.environmentIdentifier, environmentIdentifier);
     }
     List<MonitoredService> monitoredServices = monitoredServicesQuery.asList();
+    Map<String, MonitoredService> idToMonitoredServiceMap =
+        monitoredServices.stream().collect(Collectors.toMap(MonitoredService::getIdentifier, Function.identity()));
     if (monitoredServices != null) {
       monitoredServiceListItemDTOS =
           monitoredServices.stream()
@@ -480,10 +489,22 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
       HistoricalTrend historicalTrend = historicalTrendList.get(index);
       RiskData riskData = currentRiskScoreList.get(index);
       index++;
+      ServiceEnvironmentParams serviceEnvironmentParams =
+          ServiceEnvironmentParams.builder()
+              .accountIdentifier(accountId)
+              .orgIdentifier(orgIdentifier)
+              .projectIdentifier(projectIdentifier)
+              .serviceIdentifier(monitoredServiceListDTOBuilder.getServiceRef())
+              .environmentIdentifier(monitoredServiceListDTOBuilder.getEnvironmentRef())
+              .build();
+      ChangeSummaryDTO changeSummary = changeSourceService.getChangeSummary(serviceEnvironmentParams,
+          idToMonitoredServiceMap.get(monitoredServiceListDTOBuilder.getIdentifier()).getChangeSourceIdentifiers(),
+          clock.instant().minus(Duration.ofDays(1)), clock.instant());
       monitoredServiceListDTOS.add(monitoredServiceListDTOBuilder.historicalTrend(historicalTrend)
                                        .currentHealthScore(riskData)
                                        .serviceName(serviceName)
                                        .environmentName(environmentName)
+                                       .changeSummary(changeSummary)
                                        .build());
     }
     return PageResponse.<MonitoredServiceListItemDTO>builder()
@@ -659,5 +680,54 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     // returning default yaml template, account/org/project specific templates can be generated later.
     return StringUtils.replaceEach(DEFAULT_YAML_TEMPLATE, new String[] {"$projectIdentifier", "$orgIdentifier"},
         new String[] {projectParams.getProjectIdentifier(), projectParams.getOrgIdentifier()});
+  }
+
+  @Override
+  public List<HealthSourceDTO> getHealthSources(ServiceEnvironmentParams serviceEnvironmentParams) {
+    MonitoredService monitoredServiceEntity = getMonitoredService(serviceEnvironmentParams.getAccountIdentifier(),
+        serviceEnvironmentParams.getOrgIdentifier(), serviceEnvironmentParams.getProjectIdentifier(),
+        serviceEnvironmentParams.getServiceIdentifier(), serviceEnvironmentParams.getEnvironmentIdentifier());
+    Set<HealthSource> healthSources = healthSourceService.get(monitoredServiceEntity.getAccountId(),
+        monitoredServiceEntity.getOrgIdentifier(), monitoredServiceEntity.getProjectIdentifier(),
+        monitoredServiceEntity.getIdentifier(), monitoredServiceEntity.getHealthSourceIdentifiers());
+    return healthSources.stream()
+        .map(healthSource -> HealthSourceDTO.toHealthSourceDTO(healthSource))
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public List<ChangeEventDTO> getChangeEvents(ProjectParams projectParams, String monitoredServiceIdentifier,
+      Instant startTime, Instant endTime, List<ChangeCategory> changeCategories) {
+    MonitoredService monitoredService = getMonitoredService(projectParams.getAccountIdentifier(),
+        projectParams.getOrgIdentifier(), projectParams.getProjectIdentifier(), monitoredServiceIdentifier);
+    if (monitoredService == null) {
+      throw new InvalidRequestException(
+          String.format("Monitored Service not found for identifier %s", monitoredServiceIdentifier));
+    }
+    ServiceEnvironmentParams serviceEnvironmentParams =
+        ServiceEnvironmentParams.builderWithProjectParams(projectParams)
+            .serviceIdentifier(monitoredService.getServiceIdentifier())
+            .environmentIdentifier(monitoredService.getEnvironmentIdentifier())
+            .build();
+    return changeSourceService.getChangeEvents(
+        serviceEnvironmentParams, monitoredService.getChangeSourceIdentifiers(), startTime, endTime, changeCategories);
+  }
+
+  @Override
+  public ChangeSummaryDTO getChangeSummary(
+      ProjectParams projectParams, String monitoredServiceIdentifier, Instant startTime, Instant endTime) {
+    MonitoredService monitoredService = getMonitoredService(projectParams.getAccountIdentifier(),
+        projectParams.getOrgIdentifier(), projectParams.getProjectIdentifier(), monitoredServiceIdentifier);
+    if (monitoredService == null) {
+      throw new InvalidRequestException(
+          String.format("Monitored Service not found for identifier %s", monitoredServiceIdentifier));
+    }
+    ServiceEnvironmentParams serviceEnvironmentParams =
+        ServiceEnvironmentParams.builderWithProjectParams(projectParams)
+            .serviceIdentifier(monitoredService.getServiceIdentifier())
+            .environmentIdentifier(monitoredService.getEnvironmentIdentifier())
+            .build();
+    return changeSourceService.getChangeSummary(
+        serviceEnvironmentParams, monitoredService.getChangeSourceIdentifiers(), startTime, endTime);
   }
 }

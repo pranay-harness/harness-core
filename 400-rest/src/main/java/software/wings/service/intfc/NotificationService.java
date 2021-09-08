@@ -1,5 +1,9 @@
 package software.wings.service.intfc;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -19,6 +23,8 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 /**
  * Created by anubhaw on 7/22/16.
  */
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public interface NotificationService extends OwnedByApplication {
   /**
    * List page response.

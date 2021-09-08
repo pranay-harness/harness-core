@@ -18,7 +18,7 @@ public class TerraformConfigInspectServiceImpl implements TerraformConfigInspect
   @Inject private TerraformConfigInspectClient terraformConfigInspectClient;
 
   @Override
-  public List<String> parseFieldsUnderCategory(String directory, String category) {
-    return new ArrayList<>(terraformConfigInspectClient.parseFieldsUnderBlock(directory, category));
+  public List<String> parseFieldsUnderCategory(String directory, String category, boolean useLatestVersion) {
+    return new ArrayList<>(terraformConfigInspectClient.parseFieldsUnderBlock(directory, category, useLatestVersion));
   }
 }

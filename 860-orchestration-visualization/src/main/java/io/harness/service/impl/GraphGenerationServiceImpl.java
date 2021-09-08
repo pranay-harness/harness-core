@@ -25,7 +25,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.generator.OrchestrationAdjacencyListGenerator;
-import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.observer.Subject;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.repositories.orchestrationEventLog.OrchestrationEventLogRepository;
@@ -40,7 +39,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.mongodb.core.MongoTemplate;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
@@ -54,16 +52,10 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
   @Inject private OrchestrationAdjacencyListGenerator orchestrationAdjacencyListGenerator;
   @Inject private VertexSkipperService vertexSkipperService;
   @Inject private OrchestrationEventLogRepository orchestrationEventLogRepository;
-  @Inject private MongoTemplate mongoTemplate;
   @Inject private GraphStatusUpdateHelper graphStatusUpdateHelper;
   @Inject private PlanExecutionStatusUpdateEventHandler planExecutionStatusUpdateEventHandler;
   @Inject private StepDetailsUpdateEventHandler stepDetailsUpdateEventHandler;
-  @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Getter private final Subject<GraphNodeUpdateObserver> graphNodeUpdateObserverSubject = new Subject<>();
-
-  public Subject<GraphNodeUpdateObserver> getGraphNodeUpdateObserverSubject() {
-    return graphNodeUpdateObserverSubject;
-  }
 
   @Override
   public void updateGraph(String planExecutionId) {
