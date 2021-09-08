@@ -11,7 +11,6 @@ public abstract class ChangeSourceSpecTransformer<E extends ChangeSource, S exte
   public final ChangeSourceDTO getDTO(E changeSource) {
     return ChangeSourceDTO.builder()
         .spec(getSpec(changeSource))
-        .description(changeSource.getDescription())
         .enabled(changeSource.isEnabled())
         .name(changeSource.getName())
         .identifier(changeSource.getIdentifier())
