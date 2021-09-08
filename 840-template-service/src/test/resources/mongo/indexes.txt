@@ -1,0 +1,98 @@
+!!!custom_delegateAsyncTaskResponses {"name": "processAfter_1", "background": true} {"processAfter": 1}
+!!!custom_delegateAsyncTaskResponses {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+!!!custom_delegateSyncTaskResponses {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+!!!custom_delegateTaskProgressResponses {"name": "processAfter_1", "background": true} {"processAfter": 1}
+!!!custom_delegateTaskProgressResponses {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+cache {"name": "accountId_1", "background": true} {"accountId": 1}
+cache {"name": "unique_commutative", "unique": true} {"_id": 1, "contextValue": 1}
+cache {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+cacheEntities {"name": "createdAt_1", "background": true} {"createdAt": 1}
+cacheEntities {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+capabilityRequirement {"name": "accountId_1", "background": true} {"accountId": 1}
+capabilityRequirement {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+capabilitySubjectPermission {"name": "accountId_1", "background": true} {"accountId": 1}
+capabilitySubjectPermission {"name": "byDelegate", "unique": true} {"delegateId": 1, "capabilityId": 1}
+capabilitySubjectPermission {"name": "capabilityId_1", "background": true} {"capabilityId": 1}
+capabilitySubjectPermission {"name": "maxValidUntil_1", "background": true} {"maxValidUntil": 1}
+capabilitySubjectPermission {"name": "revalidateAfter_1", "background": true} {"revalidateAfter": 1}
+capabilitySubjectPermission {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+capabilityTaskSelectionDetails {"name": "accountId_1", "background": true} {"accountId": 1}
+capabilityTaskSelectionDetails {"name": "blocked_1", "background": true} {"blocked": 1}
+capabilityTaskSelectionDetails {"name": "capabilityId_1", "background": true} {"capabilityId": 1}
+capabilityTaskSelectionDetails {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+delegateCallbacks {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+delegateProfiles {"name": "byAcctNgOwner", "background": true} {"accountId": 1, "ng": 1, "owner": 1}
+delegateProfiles {"name": "createdAt_1", "background": true} {"createdAt": 1}
+delegateProfiles {"name": "uniqueName", "unique": true} {"accountId": 1, "name": 1, "owner": 1}
+delegateProfiles {"name": "unique_identification", "unique": true} {"accountId": 1, "owner": 1, "identifier": 1}
+delegateScopes {"name": "createdAt_1", "background": true} {"createdAt": 1}
+delegateScopes {"name": "uniqueName", "unique": true} {"accountId": 1, "name": 1}
+delegateTokens {"name": "byAccountAndName", "unique": true} {"accountId": 1, "name": 1}
+delegateTokens {"name": "byAccountAndStatus", "background": true} {"accountId": 1, "status": 1}
+delegateTokens {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+encryptedRecords {"name": "acctKmsIdx", "background": true} {"accountId": 1, "kmsId": 1}
+encryptedRecords {"name": "acctNameIdx", "unique": true} {"accountId": 1, "name": 1, "ngMetadata.accountIdentifier": 1, "ngMetadata.orgIdentifier": 1, "ngMetadata.projectIdentifier": 1, "ngMetadata.identifier": 1}
+encryptedRecords {"name": "createdAt_1", "background": true} {"createdAt": 1}
+encryptedRecords {"name": "encryptionKey_1", "background": true} {"encryptionKey": 1}
+encryptedRecords {"name": "keywords_1", "background": true} {"keywords": 1}
+encryptedRecords {"name": "name_1", "background": true} {"name": 1}
+encryptedRecords {"name": "nextAwsKmsToGcpKmsMigrationIteration_1", "background": true} {"nextAwsKmsToGcpKmsMigrationIteration": 1}
+encryptedRecords {"name": "nextAwsToGcpKmsMigrationIteration_1", "background": true} {"nextAwsToGcpKmsMigrationIteration": 1}
+encryptedRecords {"name": "nextLocalToGcpKmsMigrationIteration_1", "background": true} {"nextLocalToGcpKmsMigrationIteration": 1}
+encryptedRecords {"name": "nextMigrationIteration_1", "background": true} {"nextMigrationIteration": 1}
+encryptedRecords {"name": "ngSecretManagerIdx", "background": true} {"ngMetadata.accountIdentifier": 1, "ngMetadata.orgIdentifier": 1, "ngMetadata.projectIdentifier": 1, "ngMetadata.secretManagerIdentifier": 1}
+encryptedRecords {"name": "ngSecretManagerTypeIdx", "background": true} {"accountId": 1, "type": 1, "createdAt": 1}
+encryptedRecords {"name": "parents_1", "background": true} {"parents": 1}
+encryptedRecords {"name": "path_1", "background": true} {"path": 1}
+featureFlag {"name": "name_1", "background": true} {"name": 1}
+filters {"name": "unique_accountId_orgId_projectId_name_type_Index", "unique": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "name": 1, "filterType": 1}
+filters {"name": "unique_accountId_organizationId_projectId_type", "unique": true} {"fullyQualifiedIdentifier": 1, "filterType": 1}
+gitProcessRequestSdk {"name": "accountId_repo_branch_commit_index", "background": true} {"accountId": 1, "repoUrl": 1, "branch": 1, "commitId": 1}
+harnessApiKeys {"name": "clientType_1", "background": true} {"clientType": 1}
+kmsTransitionEvent2 {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
+kmsTransitionEvent2 {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
+notifyQueue {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
+notifyQueue {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
+notifyQueue {"name": "waitInstanceId_1", "unique": true} {"waitInstanceId": 1}
+notifyResponses {"name": "createdAt_1", "background": true} {"createdAt": 1}
+notifyResponses {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+outboxEvents {"name": "blocked_createdAt_nextUnblockAttemptAt_outbox_Idx", "background": true} {"blocked": 1, "createdAt": 1, "nextUnblockAttemptAt": 1}
+outboxEvents {"name": "eventType_blocked_outbox_Idx", "background": true} {"eventType": 1, "blocked": 1}
+perpetualTaskScheduleConfig {"name": "unique_perpetualTaskScheduleConfig_index1", "unique": true} {"accountId": 1, "perpetualTaskType": 1}
+primaryVersion {"name": "createdAt_1", "background": true} {"createdAt": 1}
+primaryVersion {"name": "lastUpdatedAt_1", "background": true} {"lastUpdatedAt": 1}
+progressUpdate {"name": "correlation", "background": true} {"correlationId": 1, "createdAt": -1}
+progressUpdate {"name": "createdAt_1", "background": true} {"createdAt": 1}
+progressUpdate {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+secretChangeLogs {"name": "acctEncryptedDataIdx", "background": true} {"accountId": 1, "encryptedDataId": 1}
+secretChangeLogs {"name": "createdAt_1", "background": true} {"createdAt": 1}
+secretManagerRuntimeParameters {"name": "executionId_1", "background": true} {"executionId": 1}
+secretManagers {"name": "accountId_1", "background": true} {"accountId": 1}
+secretManagers {"name": "createdAt_1", "background": true} {"createdAt": 1}
+secretManagers {"name": "identifierCheckIdx", "background": true} {"ngMetadata.accountIdentifier": 1, "ngMetadata.orgIdentifier": 1, "ngMetadata.projectIdentifier": 1, "ngMetadata.identifier": 1}
+secretManagers {"name": "manuallyEnteredSecretEngineMigrationIteration_1", "background": true} {"manuallyEnteredSecretEngineMigrationIteration": 1}
+secretManagers {"name": "nextTokenRenewIteration_1", "background": true} {"nextTokenRenewIteration": 1}
+secretManagers {"name": "renewCheckIdx", "background": true} {"encryptionType": 1, "nextTokenRenewIteration": 1}
+secretManagers {"name": "uniqueIdx", "unique": true} {"name": 1, "accountId": 1, "encryptionType": 1, "ngMetadata.accountIdentifier": 1, "ngMetadata.orgIdentifier": 1, "ngMetadata.projectIdentifier": 1, "ngMetadata.identifier": 1}
+secretUsageLogs {"name": "acctEncryptedDataIdx", "background": true} {"accountId": 1, "encryptedDataId": 1}
+secretUsageLogs {"name": "appId_1", "background": true} {"appId": 1}
+secretUsageLogs {"name": "createdAt_1", "background": true} {"createdAt": 1}
+secretUsageLogs {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+serviceSecrets {"name": "serviceType_1", "unique": true} {"serviceType": 1}
+taskSelectorMaps {"name": "createdAt_1", "background": true} {"createdAt": 1}
+taskSelectorMaps {"name": "uniqueGroup", "unique": true} {"accountId": 1, "taskGroup": 1}
+templatesNG {"name": "accountId_org_project_childType", "background": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "childType": 1}
+templatesNG {"name": "accountId_organizationId_projectId_identifier", "background": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1}
+templatesNG {"name": "accountId_organizationId_projectId_identifier_isStable_repo_branch", "background": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1, "isStableTemplate": 1, "yamlGitConfigRef": 1, "branch": 1}
+templatesNG {"name": "accountId_organizationId_projectId_identifier_label_isDefault", "background": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1, "versionLabel": 1, "isFromDefaultBranch": 1, "createdAt": -1}
+templatesNG {"name": "accountId_project_org_isDefault", "background": true} {"accountId": 1, "projectIdentifier": 1, "orgIdentifier": 1, "isFromDefaultBranch": 1, "createdAt": -1}
+templatesNG {"name": "accountId_project_org_repo_branch", "background": true} {"accountId": 1, "projectIdentifier": 1, "orgIdentifier": 1, "yamlGitConfigRef": 1, "branch": 1, "createdAt": -1}
+templatesNG {"name": "createdAt_1", "background": true} {"createdAt": 1}
+templatesNG {"name": "lastUpdatedAt_idx", "background": true} {"lastUpdatedAt": 1}
+templatesNG {"name": "unique_accountId_organizationId_projectId_identifier_label_repo_branch", "unique": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1, "versionLabel": 1, "yamlGitConfigRef": 1, "branch": 1}
+timeoutInstances {"name": "createdAt_1", "background": true} {"createdAt": 1}
+timeoutInstances {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
+timeoutInstances {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+waitInstances {"name": "correlationIds_1", "background": true} {"correlationIds": 1}
+waitInstances {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
+waitInstances {"name": "waitingOnCorrelationIds_1", "background": true} {"waitingOnCorrelationIds": 1}

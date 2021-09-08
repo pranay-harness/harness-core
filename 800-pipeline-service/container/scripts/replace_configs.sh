@@ -311,4 +311,3 @@ replace_key_value triggerConfig.webhookBaseUrl "$WEBHOOK_TRIGGER_BASEURL"
 replace_key_value triggerConfig.customBaseUrl "$CUSTOM_TRIGGER_BASEURL"
 
 replace_key_value opaServerConfig.baseUrl "$OPA_SERVER_BASEURL"
-replace_key_value useRedisForOrchestrationNotify "$USE_REDIS_FOR_ORCHESTRATION_NOTIFY"
