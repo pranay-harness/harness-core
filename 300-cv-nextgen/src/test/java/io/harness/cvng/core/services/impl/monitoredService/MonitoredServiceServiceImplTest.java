@@ -28,7 +28,9 @@ import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.MetricPackDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.MonitoredServiceDTOBuilder;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.MonitoredServiceRef;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.Sources;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.AppDynamicsHealthSourceSpec;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceSpec;
@@ -277,6 +279,45 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
             .map(changeSource -> changeSource.getIdentifier())
             .collect(toList()));
     assertThat(changeSources.size()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void testUpdate_ChangeSourceCreation() {
+    MonitoredServiceDTO monitoredServiceDTO =
+        createMonitoredServiceDTOBuilder()
+            .sources(Sources.builder()
+                         .changeSources(
+                             new HashSet<>(Arrays.asList(builderFactory.getHarnessCDChangeSourceDTOBuilder().build())))
+                         .build())
+            .build();
+    MonitoredServiceDTO savedMonitoredServiceDTO =
+        monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO)
+            .getMonitoredServiceDTO();
+
+    MonitoredServiceDTO toUpdateMonitoredServiceDTO =
+        createMonitoredServiceDTOBuilder()
+            .sources(Sources.builder()
+                         .changeSources(
+                             new HashSet<>(Arrays.asList(builderFactory.getHarnessCDChangeSourceDTOBuilder().build(),
+                                 builderFactory.getPagerDutyChangeSourceDTOBuilder().build())))
+                         .build())
+            .build();
+    MonitoredServiceDTO updatedMonitoredServiceDTO =
+        monitoredServiceService.update(builderFactory.getContext().getAccountId(), toUpdateMonitoredServiceDTO)
+            .getMonitoredServiceDTO();
+
+    assertThat(updatedMonitoredServiceDTO).isEqualTo(toUpdateMonitoredServiceDTO);
+    MonitoredService monitoredService = getMonitoredService(monitoredServiceDTO.getIdentifier());
+    assertCommonMonitoredService(monitoredService, toUpdateMonitoredServiceDTO);
+    Set<ChangeSourceDTO> changeSources = changeSourceService.get(environmentParams,
+        updatedMonitoredServiceDTO.getSources()
+            .getChangeSources()
+            .stream()
+            .map(changeSource -> changeSource.getIdentifier())
+            .collect(toList()));
+    assertThat(changeSources.size()).isEqualTo(2);
   }
 
   @Test
@@ -769,12 +810,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   }
 
   MonitoredServiceDTO createMonitoredServiceDTO() {
-    return builderFactory.monitoredServiceDTOBuilder()
-        .identifier(monitoredServiceIdentifier)
-        .serviceRef(serviceIdentifier)
-        .environmentRef(environmentIdentifier)
-        .name(monitoredServiceName)
-        .tags(tags)
+    return createMonitoredServiceDTOBuilder()
         .sources(
             MonitoredServiceDTO.Sources.builder()
                 .healthSources(
@@ -787,12 +823,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   }
 
   MonitoredServiceDTO createMonitoredServiceDTOWithDependencies() {
-    return builderFactory.monitoredServiceDTOBuilder()
-        .identifier(monitoredServiceIdentifier)
-        .serviceRef(serviceIdentifier)
-        .environmentRef(environmentIdentifier)
-        .name(monitoredServiceName)
-        .tags(tags)
+    return createMonitoredServiceDTOBuilder()
         .sources(
             MonitoredServiceDTO.Sources.builder()
                 .healthSources(
@@ -802,6 +833,15 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
             Sets.newHashSet(MonitoredServiceRef.builder().monitoredServiceIdentifier(randomAlphanumeric(20)).build(),
                 MonitoredServiceRef.builder().monitoredServiceIdentifier(randomAlphanumeric(20)).build()))
         .build();
+  }
+
+  private MonitoredServiceDTOBuilder createMonitoredServiceDTOBuilder() {
+    return builderFactory.monitoredServiceDTOBuilder()
+        .identifier(monitoredServiceIdentifier)
+        .serviceRef(serviceIdentifier)
+        .environmentRef(environmentIdentifier)
+        .name(monitoredServiceName)
+        .tags(tags);
   }
 
   HealthSource createHealthSource(CVMonitoringCategory cvMonitoringCategory) {
