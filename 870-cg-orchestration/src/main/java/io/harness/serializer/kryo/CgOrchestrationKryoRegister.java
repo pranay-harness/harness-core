@@ -14,6 +14,8 @@ import io.harness.beans.SweepingOutput;
 import io.harness.beans.WorkflowType;
 import io.harness.serializer.KryoRegistrar;
 
+import software.wings.sm.BarrierStatusData;
+
 import com.esotericsoftware.kryo.Kryo;
 
 @OwnedBy(CDC)
@@ -31,6 +33,8 @@ public class CgOrchestrationKryoRegister implements KryoRegistrar {
     kryo.register(RepairActionCode.class, 2528);
     kryo.register(ExecutionInterruptType.class, 4000);
     kryo.register(ShellScriptProvisionOutputVariables.class, 40021);
+
+    kryo.register(BarrierStatusData.class, 7277);
 
     // Put promoted classes here and do not change the id
   }
