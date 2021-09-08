@@ -32,6 +32,7 @@ public class TemplateServiceModuleRegistrars {
           .addAll(PersistenceRegistrars.kryoRegistrars)
           .addAll(OutboxEventRegistrars.kryoRegistrars)
           .addAll(SMCoreRegistrars.kryoRegistrars)
+          .addAll(YamlBeansModuleRegistrars.kryoRegistrars)
           .add(NGTemplateKryoRegistrar.class)
           .build();
 
@@ -48,6 +49,7 @@ public class TemplateServiceModuleRegistrars {
           .addAll(PersistenceRegistrars.morphiaRegistrars)
           .addAll(OutboxEventRegistrars.morphiaRegistrars)
           .addAll(SMCoreRegistrars.morphiaRegistrars)
+          .addAll(YamlBeansModuleRegistrars.morphiaRegistrars)
           .add(NGTemplateMorphiaRegistrar.class)
           .build();
 
@@ -55,5 +57,8 @@ public class TemplateServiceModuleRegistrars {
       ImmutableSet.<Class<? extends TypeConverter>>builder().build();
 
   public final ImmutableList<Class<? extends Converter<?, ?>>> springConverters =
-      ImmutableList.<Class<? extends Converter<?, ?>>>builder().addAll(FiltersRegistrars.springConverters).build();
+      ImmutableList.<Class<? extends Converter<?, ?>>>builder()
+          .addAll(FiltersRegistrars.springConverters)
+          .addAll(GitSyncSdkRegistrar.springConverters)
+          .build();
 }
