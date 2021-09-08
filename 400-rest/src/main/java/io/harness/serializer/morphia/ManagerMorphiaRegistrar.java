@@ -382,7 +382,6 @@ import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
-import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.infrastructure.CloudFormationRollbackConfig;
@@ -941,7 +940,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(InstanceStatsSnapshot.class);
     set.add(InstanceSyncPerpetualTaskInfo.class);
     set.add(JenkinsArtifactStream.class);
-    set.add(KeywordsAware.class);
     set.add(KubernetesContainerTask.class);
     set.add(LabeledLogRecord.class);
     set.add(LambdaSpecification.class);
