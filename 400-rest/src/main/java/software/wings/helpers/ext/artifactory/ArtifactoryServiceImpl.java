@@ -23,7 +23,10 @@ import static org.jfrog.artifactory.client.ArtifactoryRequest.Method.POST;
 import static org.jfrog.artifactory.client.model.impl.PackageTypeImpl.docker;
 import static org.jfrog.artifactory.client.model.impl.PackageTypeImpl.maven;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.artifact.ArtifactUtilities;
 import io.harness.artifactory.ArtifactoryConfigRequest;
 import io.harness.delegate.task.ListNotifyResponseData;
@@ -74,6 +77,9 @@ import org.jfrog.artifactory.client.model.repository.settings.RepositorySettings
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._960_API_SERVICES)
+@BreakDependencyOn("software.wings.beans.artifact.ArtifactStreamAttributes")
+@BreakDependencyOn("io.harness.delegate.task.ListNotifyResponseData")
 public class ArtifactoryServiceImpl implements ArtifactoryService {
   private static final String REASON = "Reason:";
   private static final String CREATED_BY = "created_by";
@@ -234,8 +240,13 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
                                  .build();
                            })
                            .collect(toList());
-        log.info(
-            "Retrieving docker tags for repoKey {} imageName {} success. Retrieved tags {}", repoKey, imageName, tags);
+        if (tags.size() < 10) {
+          log.info("Retrieving docker tags for repoKey {} imageName {} success. Retrieved tags {}", repoKey, imageName,
+              tags);
+        } else {
+          log.info("Retrieving docker tags for repoKey {} imageName {} success. Retrieved {} tags", repoKey, imageName,
+              tags.size());
+        }
       }
 
     } catch (Exception e) {
