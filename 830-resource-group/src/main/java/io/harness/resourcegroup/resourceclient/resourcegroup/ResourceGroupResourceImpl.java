@@ -13,7 +13,7 @@ import io.harness.beans.Scope;
 import io.harness.beans.ScopeLevel;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.consumer.Message;
-import io.harness.eventsframework.entity_crud.EntityChangeDTO;
+import io.harness.eventsframework.entity_crud.resourcegroup.ResourceGroupEntityChangeDTO;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.resourcegroup.beans.ValidatorType;
 import io.harness.resourcegroup.framework.service.Resource;
@@ -90,12 +90,12 @@ public class ResourceGroupResourceImpl implements Resource {
 
   @Override
   public ResourceInfo getResourceInfoFromEvent(Message message) {
-    EntityChangeDTO entityChangeDTO = null;
+    ResourceGroupEntityChangeDTO entityChangeDTO = null;
 
     try {
-      entityChangeDTO = EntityChangeDTO.parseFrom(message.getMessage().getData());
+      entityChangeDTO = ResourceGroupEntityChangeDTO.parseFrom(message.getMessage().getData());
     } catch (InvalidProtocolBufferException e) {
-      log.error("Exception in unpacking EntityChangeDTO for user group event with key {}", message.getId(), e);
+      log.error("Exception in unpacking EntityChangeDTO for resource group event with key {}", message.getId(), e);
     }
 
     if (Objects.isNull(entityChangeDTO)) {
@@ -103,11 +103,11 @@ public class ResourceGroupResourceImpl implements Resource {
     }
 
     return ResourceInfo.builder()
-        .accountIdentifier(stripToNull(entityChangeDTO.getAccountIdentifier().getValue()))
-        .orgIdentifier(stripToNull(entityChangeDTO.getOrgIdentifier().getValue()))
-        .projectIdentifier(stripToNull(entityChangeDTO.getProjectIdentifier().getValue()))
+        .accountIdentifier(stripToNull(entityChangeDTO.getAccountIdentifier()))
+        .orgIdentifier(stripToNull(entityChangeDTO.getOrgIdentifier()))
+        .projectIdentifier(stripToNull(entityChangeDTO.getProjectIdentifier()))
         .resourceType(getType())
-        .resourceIdentifier(entityChangeDTO.getIdentifier().getValue())
+        .resourceIdentifier(entityChangeDTO.getIdentifier())
         .build();
   }
 }
