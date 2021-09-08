@@ -3,8 +3,8 @@ use std::fs::{create_dir_all, remove_file, File};
 use std::io::{Result, Write};
 use std::path::Path;
 
-use crate::execute::{read_lines, MODULE_IMPORT, TARGET_MODULE_IMPORT};
-use crate::java_class::TARGET_MODULE_PATTERN;
+use crate::execute::read_lines;
+use crate::java_class::{MODULE_IMPORT, MODULE_IMPORT_STATIC_PATTERN, TARGET_MODULE_IMPORT, TARGET_MODULE_PATTERN};
 use crate::repo::GIT_REPO_ROOT_DIR;
 
 /// An action to be executed
@@ -61,7 +61,8 @@ fn copy_class(source_file: &String, target_file: &String) -> Result<()> {
             continue;
         }
 
-        let final_line = TARGET_MODULE_PATTERN.replace(&l, "");
+        let step1_line = TARGET_MODULE_PATTERN.replace(&l, "");
+        let final_line = MODULE_IMPORT_STATIC_PATTERN.replace(&step1_line, "");
 
         if final_line.is_empty() && !l.is_empty() {
             continue;

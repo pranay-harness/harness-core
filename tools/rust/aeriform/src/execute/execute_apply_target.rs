@@ -1,11 +1,11 @@
+use crate::execute::read_lines;
+use crate::java_class::{MODULE_IMPORT, TARGET_MODULE_IMPORT, TARGET_MODULE_PATTERN};
 use clap::Clap;
 use glob::glob;
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::fs::{copy, metadata, remove_file, File};
 use std::io::{Result, Write};
-
-use crate::execute::{read_lines, MODULE_IMPORT, TARGET_MODULE_IMPORT, TARGET_MODULE_PATTERN};
 
 /// An action to be executed
 #[derive(Clap)]
