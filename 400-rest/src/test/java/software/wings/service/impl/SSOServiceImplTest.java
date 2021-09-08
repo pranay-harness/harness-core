@@ -27,13 +27,13 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.core.account.OauthProviderType;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.Event;
 import software.wings.beans.sso.OauthSettings;
-import software.wings.security.authentication.OauthProviderType;
 import software.wings.security.authentication.SSOConfig;
 import software.wings.security.saml.SamlClientService;
 import software.wings.service.impl.security.auth.AuthHandler;

@@ -1,4 +1,4 @@
-package software.wings.security.authentication;
+package io.harness.ng.core.account;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;

@@ -5,13 +5,13 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ng.core.account.AuthenticationMechanism;
+import io.harness.ng.core.account.OauthProviderType;
 
 import software.wings.beans.sso.LdapGroupResponse;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.LdapTestResponse;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.helpers.ext.ldap.LdapResponse;
-import software.wings.security.authentication.OauthProviderType;
 import software.wings.security.authentication.SSOConfig;
 
 import java.io.InputStream;

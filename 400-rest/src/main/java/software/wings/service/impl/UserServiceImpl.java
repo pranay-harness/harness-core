@@ -54,6 +54,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
@@ -92,10 +93,15 @@ import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.marketplace.gcp.procurement.GcpProcurementService;
 import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.ng.core.account.DefaultExperience;
+import io.harness.ng.core.account.OauthProviderType;
 import io.harness.ng.core.common.beans.Generation;
 import io.harness.ng.core.dto.UserInviteDTO;
 import io.harness.ng.core.invites.dto.InviteDTO;
 import io.harness.ng.core.invites.dto.InviteOperationResponse;
+import io.harness.ng.core.switchaccount.LdapIdentificationInfo;
+import io.harness.ng.core.switchaccount.OauthIdentificationInfo;
+import io.harness.ng.core.switchaccount.RestrictedSwitchAccountInfo;
+import io.harness.ng.core.switchaccount.SamlIdentificationInfo;
 import io.harness.ng.core.user.PasswordChangeDTO;
 import io.harness.ng.core.user.PasswordChangeResponse;
 import io.harness.ng.core.user.SignupInviteDTO;
@@ -149,6 +155,7 @@ import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.UserGroup.UserGroupKeys;
+import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SamlSettings;
@@ -170,7 +177,6 @@ import software.wings.security.UserThreadLocal;
 import software.wings.security.authentication.AuthenticationManager;
 import software.wings.security.authentication.AuthenticationUtils;
 import software.wings.security.authentication.LogoutResponse;
-import software.wings.security.authentication.OauthProviderType;
 import software.wings.security.authentication.TOTPAuthHandler;
 import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings;
@@ -794,6 +800,43 @@ public class UserServiceImpl implements UserService {
     } else {
       return getCGDashboardUrl(accountId);
     }
+  }
+
+  @Override
+  public RestrictedSwitchAccountInfo getSwitchAccountInfo(String accountId, String userId) {
+    Account account = accountService.get(accountId);
+    RestrictedSwitchAccountInfo.Builder builder =
+        RestrictedSwitchAccountInfo.builder()
+            .skipReAuthentication(
+                featureFlagService.isEnabled(FeatureName.SKIP_SWITCH_ACCOUNT_REAUTHENTICATION, accountId))
+            .isHarnessSupportGroupUser(harnessUserGroupService.isHarnessSupportUser(userId))
+            .whitelistedDomains(accountService.getWhitelistedDomains(accountId))
+            .authenticationMechanism(account.getAuthenticationMechanism())
+            .isTwoFactorAuthEnabledForAccount(accountService.getTwoFactorEnforceInfo(accountId));
+
+    LdapSettings ldapSettings = ssoService.getLdapSettings(accountId);
+    if (ldapSettings != null) {
+      builder.ldapIdentificationInfo(LdapIdentificationInfo.builder()
+                                         .host(ldapSettings.getConnectionSettings().getHost())
+                                         .port(ldapSettings.getConnectionSettings().getPort())
+                                         .build());
+    }
+
+    SamlSettings samlSettings = ssoSettingService.getSamlSettingsByAccountId(accountId);
+    if (samlSettings != null) {
+      builder.samlIdentificationInfo(SamlIdentificationInfo.builder()
+                                         .origin(samlSettings.getOrigin())
+                                         .metaDataFile(samlSettings.getMetaDataFile())
+                                         .build());
+    }
+
+    OauthSettings oauthSettings = ssoSettingService.getOauthSettingsByAccountId(accountId);
+    if (oauthSettings != null) {
+      builder.oauthIdentificationInfo(
+          OauthIdentificationInfo.builder().providers(oauthSettings.getAllowedProviders()).build());
+    }
+
+    return builder.build();
   }
 
   private URI getUserInfoSubmitUrl(String accountId, String email, String jwtToken) throws URISyntaxException {

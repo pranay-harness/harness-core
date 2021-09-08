@@ -10,6 +10,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
 import io.harness.ng.core.account.AuthenticationMechanism;
+import io.harness.ng.core.account.OauthProviderType;
 
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
@@ -22,7 +23,6 @@ import software.wings.security.authentication.AuthenticationResponse;
 import software.wings.security.authentication.AuthenticationUtils;
 import software.wings.security.authentication.DomainWhitelistCheckerService;
 import software.wings.security.authentication.OauthAuthenticationResponse;
-import software.wings.security.authentication.OauthProviderType;
 import software.wings.service.impl.SSOSettingServiceImpl;
 import software.wings.service.intfc.SignupService;
 import software.wings.service.intfc.UserService;
