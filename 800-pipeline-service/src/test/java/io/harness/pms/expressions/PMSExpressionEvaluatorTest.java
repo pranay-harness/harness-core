@@ -7,8 +7,10 @@ import static io.harness.rule.OwnerRule.ARCHIT;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
+import io.harness.PipelineServiceApplication;
 import io.harness.PipelineServiceTestBase;
 import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
@@ -30,6 +32,8 @@ import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.sdk.PmsSdkInstance;
+import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.rule.Owner;
@@ -51,6 +55,7 @@ public class PMSExpressionEvaluatorTest extends PipelineServiceTestBase {
   @Mock private PlanExecutionService planExecutionService;
   @Mock NodeExecutionService nodeExecutionService;
   @Mock PmsOutcomeService pmsOutcomeService;
+  @Mock PmsSdkInstanceService pmsSdkInstanceService;
 
   private Ambiance ambiance;
   NodeExecution nodeExecution1;
@@ -146,6 +151,9 @@ public class PMSExpressionEvaluatorTest extends PipelineServiceTestBase {
     nodeExecution4.setStatus(Status.SUCCEEDED);
 
     EngineExpressionEvaluator engineExpressionEvaluator = prepareEngineExpressionEvaluator(newAmbiance);
+    PmsSdkInstance pmsSdkInstance =
+        PmsSdkInstance.builder().staticAliases(new PipelineServiceApplication().getStaticAliases()).build();
+    doReturn(Collections.singletonList(pmsSdkInstance)).when(pmsSdkInstanceService).getActiveInstances();
     Object pipelineSuccess =
         engineExpressionEvaluator.evaluateExpression("<+" + OrchestrationConstants.PIPELINE_SUCCESS + ">");
     assertThat(pipelineSuccess).isInstanceOf(Boolean.class);
@@ -183,15 +191,16 @@ public class PMSExpressionEvaluatorTest extends PipelineServiceTestBase {
   }
 
   private EngineExpressionEvaluator prepareEngineExpressionEvaluator(Ambiance ambiance) {
-    SampleEngineExpressionEvaluator evaluator = new SampleEngineExpressionEvaluator(ambiance);
+    SampleEngineExpressionEvaluator evaluator = new SampleEngineExpressionEvaluator(ambiance, pmsSdkInstanceService);
     on(evaluator).set("planExecutionService", planExecutionService);
     on(evaluator).set("nodeExecutionService", nodeExecutionService);
     return evaluator;
   }
 
   public static class SampleEngineExpressionEvaluator extends PMSExpressionEvaluator {
-    public SampleEngineExpressionEvaluator(Ambiance ambiance) {
+    public SampleEngineExpressionEvaluator(Ambiance ambiance, PmsSdkInstanceService pmsSdkInstanceService) {
       super(null, ambiance, null, false);
+      this.pmsSdkInstanceService = pmsSdkInstanceService;
     }
 
     @Override
