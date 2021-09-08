@@ -64,6 +64,8 @@ aeriform("//280-batch-processing:supporter-test")
 
 aeriform("//280-batch-processing:tests")
 
+aeriform("//290-dashboard-service:module")
+
 aeriform("//300-cv-nextgen:module")
 
 aeriform("//300-cv-nextgen:tests")

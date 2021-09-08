@@ -6,7 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 @OwnedBy(HarnessTeam.CDC)
-@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public enum ResourceType {
   CLOUD_PROVIDER,
   ARTIFACT_SERVER,

@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import java.time.Instant;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -110,8 +111,8 @@ public class TimeseriesDashboardResource {
       @NotNull @QueryParam("environmentIdentifier") String environmentIdentifier,
       @NotNull @QueryParam("startTime") Long startTimeMillis, @NotNull @QueryParam("endTime") Long endTimeMillis,
       @QueryParam("anomalous") @DefaultValue("false") boolean anomalous, @QueryParam("filter") String filter,
-      @QueryParam("datasourceType") DataSourceType datasourceType, @QueryParam("page") @DefaultValue("0") int page,
-      @QueryParam("size") @DefaultValue("10") int size) {
+      @QueryParam("healthSources") List<String> healthSourceIdentifiers,
+      @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("10") int size) {
     ServiceEnvironmentParams serviceEnvironmentParams = ServiceEnvironmentParams.builder()
                                                             .accountIdentifier(accountId)
                                                             .orgIdentifier(orgIdentifier)
@@ -126,6 +127,6 @@ public class TimeseriesDashboardResource {
     PageParams pageParams = PageParams.builder().page(page).size(size).build();
 
     return new RestResponse<>(timeSeriesDashboardService.getTimeSeriesMetricData(
-        serviceEnvironmentParams, timeRangeParams, anomalous, datasourceType, filter, pageParams));
+        serviceEnvironmentParams, timeRangeParams, anomalous, healthSourceIdentifiers, filter, pageParams));
   }
 }

@@ -2,7 +2,9 @@ package software.wings.security.authentication;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.User;
 import software.wings.security.authentication.oauth.OauthClient;
@@ -18,6 +20,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
 @EqualsAndHashCode(callSuper = true)
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class OauthAuthenticationResponse extends AuthenticationResponse {
   OauthUserInfo oauthUserInfo;
   Boolean userFoundInDB;

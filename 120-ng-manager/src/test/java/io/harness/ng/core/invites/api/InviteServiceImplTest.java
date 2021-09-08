@@ -16,6 +16,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -25,9 +26,11 @@ import io.harness.CategoryTest;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.account.AccountClient;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
 import io.harness.category.element.UnitTests;
 import io.harness.invites.remote.InviteAcceptResponse;
 import io.harness.mongo.MongoConfig;
+import io.harness.ng.core.api.UserGroupService;
 import io.harness.ng.core.dto.AccountDTO;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Project;
@@ -86,6 +89,7 @@ public class InviteServiceImplTest extends CategoryTest {
   @Mock private OutboxService outboxService;
   @Mock private OrganizationService organizationService;
   @Mock private ProjectService projectService;
+  @Mock private UserGroupService userGroupService;
 
   private InviteService inviteService;
 
@@ -95,7 +99,7 @@ public class InviteServiceImplTest extends CategoryTest {
     MongoConfig mongoConfig = MongoConfig.builder().uri("mongodb://localhost:27017/ng-harness").build();
     inviteService = new InviteServiceImpl(USER_VERIFICATION_SECRET, mongoConfig, jwtGeneratorUtils, ngUserService,
         transactionTemplate, inviteRepository, notificationClient, accountClient, outboxService, organizationService,
-        projectService, accessControlClient, userClient, false);
+        projectService, accessControlClient, userClient, userGroupService, false);
 
     when(accountClient.getAccountDTO(any()).execute())
         .thenReturn(Response.success(new RestResponse(AccountDTO.builder()
@@ -388,6 +392,11 @@ public class InviteServiceImplTest extends CategoryTest {
     String dummyJWTTOken = "dummy jwt token";
     Claim claim = mock(Claim.class);
     UserMetadataDTO user = UserMetadataDTO.builder().name(randomAlphabetic(7)).email(emailId).uuid(userId).build();
+    Scope scope = Scope.builder()
+                      .accountIdentifier(accountIdentifier)
+                      .orgIdentifier(orgIdentifier)
+                      .projectIdentifier(projectIdentifier)
+                      .build();
     ArgumentCaptor<Update> updateCapture = ArgumentCaptor.forClass(Update.class);
     ArgumentCaptor<String> idCapture = ArgumentCaptor.forClass(String.class);
 
@@ -395,10 +404,12 @@ public class InviteServiceImplTest extends CategoryTest {
     when(jwtGeneratorUtils.verifyJWTToken(any(), any())).thenReturn(Collections.singletonMap(InviteKeys.id, claim));
     when(inviteRepository.findFirstByIdAndDeleted(any(), any())).thenReturn(Optional.of(getDummyInvite()));
     when(ngUserService.getUserByEmail(any(), anyBoolean())).thenReturn(Optional.of(user));
+    doNothing().when(userGroupService).addUserToUserGroups(eq(scope), any(), any());
     boolean result = inviteService.completeInvite(Optional.of(getDummyInvite()));
 
     assertThat(result).isTrue();
     verify(inviteRepository, times(1)).updateInvite(idCapture.capture(), updateCapture.capture());
+    verify(userGroupService, times(1)).addUserToUserGroups(eq(scope), any(), any());
     assertThat(idCapture.getValue()).isEqualTo(inviteId);
     assertThat(updateCapture.getValue().modifies(InviteKeys.deleted)).isTrue();
   }

@@ -12,6 +12,7 @@ import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask;
 import io.harness.cvng.core.entities.ServiceDependency;
 import io.harness.cvng.core.entities.TimeSeriesThreshold;
 import io.harness.cvng.core.entities.changeSource.ChangeSource;
+import io.harness.cvng.core.entities.changeSource.event.ChangeEvent;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DeleteEntityByHandler;
 import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
@@ -42,7 +43,7 @@ public abstract class EntityChangeEventMessageProcessor implements ConsumerMessa
     ENTITIES_MAP.put(ServiceDependency.class, ServiceDependencyService.class);
     final List<Class<? extends PersistentEntity>> deleteEntitiesWithDefaultHandler =
         Arrays.asList(VerificationJob.class, Activity.class, AlertRule.class, MetricPack.class, HeatMap.class,
-            TimeSeriesThreshold.class, AlertRuleAnomaly.class);
+            TimeSeriesThreshold.class, AlertRuleAnomaly.class, ChangeEvent.class);
     deleteEntitiesWithDefaultHandler.forEach(entity -> ENTITIES_MAP.put(entity, DeleteEntityByHandler.class));
   }
 }

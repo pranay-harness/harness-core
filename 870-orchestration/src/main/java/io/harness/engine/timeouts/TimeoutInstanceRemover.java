@@ -5,12 +5,12 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.observers.NodeStatusUpdateObserver;
 import io.harness.engine.observers.NodeUpdateInfo;
-import io.harness.engine.utils.TransactionUtils;
 import io.harness.logging.AutoLogContext;
 import io.harness.observer.AsyncInformObserver;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.springdata.HMongoTemplate;
+import io.harness.springdata.TransactionHelper;
 import io.harness.timeout.TimeoutEngine;
 
 import com.google.common.collect.ImmutableMap;
@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TimeoutInstanceRemover implements AsyncInformObserver, NodeStatusUpdateObserver {
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
-  @Inject private TransactionUtils transactionUtils;
+  @Inject private TransactionHelper transactionHelper;
   @Inject private TimeoutEngine timeoutEngine;
   @Inject private NodeExecutionService nodeExecutionService;
 
@@ -42,9 +42,10 @@ public class TimeoutInstanceRemover implements AsyncInformObserver, NodeStatusUp
     List<String> timeoutInstanceIds = nodeUpdateInfo.getNodeExecution().getTimeoutInstanceIds();
 
     try (AutoLogContext autoLogContext = obtainAutoLogContext(nodeUpdateInfo)) {
-      boolean isSuccess = transactionUtils.performTransaction(()
-                                                                  -> deleteTimeoutInstancesWithRetry(timeoutInstanceIds)
-              && removeTimeoutInstanceIdsFromNodeExecution(nodeUpdateInfo.getNodeExecutionId()));
+      boolean isSuccess =
+          transactionHelper.performTransaction(()
+                                                   -> deleteTimeoutInstancesWithRetry(timeoutInstanceIds)
+                  && removeTimeoutInstanceIdsFromNodeExecution(nodeUpdateInfo.getNodeExecutionId()));
       if (isSuccess) {
         log.info("Timeout instances {} are removed successfully", timeoutInstanceIds);
       } else {

@@ -48,4 +48,6 @@ public class K8sDelegateManifestConfig implements NestedAnnotationResolver {
   @Expression(ALLOW_SECRETS) private HelmCommandFlag helmCommandFlag;
 
   private boolean customManifestEnabled;
+
+  private boolean optimizedFilesFetch;
 }

@@ -713,7 +713,8 @@ settingAttributes {"name": "secretsMigrationIdx", "background": true} {"value.ty
 settingAttributes {"name": "secretsMigrationPerAccountIdx", "background": true} {"value.type": 1, "secretsMigrated": 1, "accountId": 1}
 settingAttributes {"name": "typeNextIterationIdx", "background": true} {"value.type": 1, "nextIteration": 1}
 signupVerificationTokens {"name": "token_signupVerificationToken_query_index", "background": true} {"token": 1}
-sourceCodeManagers {"name": "query_idx", "unique": true} {"userIdentifier": 1, "name": 1}
+sourceCodeManagers {"name": "accountIdentifier_1", "background": true} {"accountIdentifier": 1}
+sourceCodeManagers {"name": "uniqueIndex", "unique": true} {"userIdentifier": 1, "name": 1, "accountIdentifier": 1}
 ssoSettings {"name": "accountIdTypeIdx", "background": true} {"accountId": 1, "type": 1}
 ssoSettings {"name": "appId_1", "background": true} {"appId": 1}
 ssoSettings {"name": "createdAt_1", "background": true} {"createdAt": 1}

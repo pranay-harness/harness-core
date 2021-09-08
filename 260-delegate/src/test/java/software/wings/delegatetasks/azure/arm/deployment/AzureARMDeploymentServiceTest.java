@@ -20,16 +20,16 @@ import io.harness.azure.model.AzureARMTemplate;
 import io.harness.azure.model.AzureConfig;
 import io.harness.azure.model.AzureDeploymentMode;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.azure.arm.deployment.context.DeploymentManagementGroupContext;
+import io.harness.delegate.azure.arm.deployment.context.DeploymentResourceGroupContext;
+import io.harness.delegate.azure.arm.deployment.context.DeploymentSubscriptionContext;
+import io.harness.delegate.azure.arm.deployment.context.DeploymentTenantContext;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.LogCallback;
 import io.harness.logstreaming.LogStreamingTaskClient;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
-import software.wings.delegatetasks.azure.arm.deployment.context.DeploymentManagementGroupContext;
-import software.wings.delegatetasks.azure.arm.deployment.context.DeploymentResourceGroupContext;
-import software.wings.delegatetasks.azure.arm.deployment.context.DeploymentSubscriptionContext;
-import software.wings.delegatetasks.azure.arm.deployment.context.DeploymentTenantContext;
 
 import com.microsoft.azure.management.resources.Deployment;
 import com.microsoft.azure.management.resources.DeploymentPropertiesExtended;

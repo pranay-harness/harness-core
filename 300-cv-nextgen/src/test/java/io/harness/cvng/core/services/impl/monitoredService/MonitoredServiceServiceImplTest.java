@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTestBase;
@@ -21,6 +22,8 @@ import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.MonitoredServiceDataSourceType;
 import io.harness.cvng.beans.MonitoredServiceType;
 import io.harness.cvng.client.NextGenService;
+import io.harness.cvng.core.beans.ChangeSummaryDTO;
+import io.harness.cvng.core.beans.change.event.ChangeEventDTO;
 import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.MetricPackDTO;
@@ -55,6 +58,8 @@ import io.harness.rule.Owner;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -80,6 +85,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Inject ServiceDependencyService serviceDependencyService;
   @Mock NextGenService nextGenService;
   @Mock SetupUsageEventService setupUsageEventService;
+  @Mock ChangeSourceService changeSourceServiceMock;
 
   private BuilderFactory builderFactory;
   String healthSourceName;
@@ -359,7 +365,8 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = KANHAIYA)
   @Category(UnitTests.class)
-  public void testList_withEnvironmentFilter() {
+  public void testList_withEnvironmentFilter() throws IllegalAccessException {
+    useChangeSourceServiceMock();
     MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
     monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
     environmentIdentifier = "new-environment";
@@ -381,6 +388,8 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
                                                        .name("environmentName")
                                                        .build())
                                       .build()));
+    ChangeSummaryDTO changeSummary = ChangeSummaryDTO.builder().build();
+    when(changeSourceServiceMock.getChangeSummary(any(), any(), any(), any())).thenReturn(changeSummary);
     PageResponse<MonitoredServiceListItemDTO> monitoredServiceListDTOPageResponse =
         monitoredServiceService.list(accountId, orgIdentifier, projectIdentifier, environmentIdentifier, 0, 10, null);
     assertThat(monitoredServiceListDTOPageResponse.getTotalPages()).isEqualTo(1);
@@ -391,6 +400,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     assertThat(monitoredServiceListItemDTO.getServiceRef()).isEqualTo(serviceIdentifier);
     assertThat(monitoredServiceListItemDTO.getEnvironmentRef()).isEqualTo(environmentIdentifier);
     assertThat(monitoredServiceListItemDTO.getType()).isEqualTo(MonitoredServiceType.APPLICATION);
+    assertThat(monitoredServiceListItemDTO.getChangeSummary()).isEqualTo(changeSummary);
     assertThat(monitoredServiceListItemDTO.isHealthMonitoringEnabled()).isTrue();
   }
 
@@ -727,6 +737,41 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
         .hasMessage("projectParams is marked @NonNull but is null");
   }
 
+  @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void testGetChangeEvents() throws IllegalAccessException {
+    useChangeSourceServiceMock();
+    MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
+    List<ChangeEventDTO> changeEventDTOS = Arrays.asList(builderFactory.getHarnessCDChangeEventDTOBuilder().build());
+    when(changeSourceServiceMock.getChangeEvents(eq(builderFactory.getContext().getServiceEnvironmentParams()),
+             eq(hPersistence.createQuery(MonitoredService.class).get().getChangeSourceIdentifiers()),
+             eq(Instant.ofEpochSecond(100)), eq(Instant.ofEpochSecond(100)), eq(new ArrayList<>())))
+        .thenReturn(changeEventDTOS);
+    List<ChangeEventDTO> result =
+        monitoredServiceService.getChangeEvents(builderFactory.getContext().getProjectParams(),
+            monitoredServiceIdentifier, Instant.ofEpochSecond(100), Instant.ofEpochSecond(100), new ArrayList<>());
+    assertThat(result).isEqualTo(changeEventDTOS);
+  }
+
+  @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void testgetChangeSummary() throws IllegalAccessException {
+    useChangeSourceServiceMock();
+    MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
+    ChangeSummaryDTO changeSummaryDTO = ChangeSummaryDTO.builder().build();
+    when(changeSourceServiceMock.getChangeSummary(eq(builderFactory.getContext().getServiceEnvironmentParams()),
+             eq(hPersistence.createQuery(MonitoredService.class).get().getChangeSourceIdentifiers()),
+             eq(Instant.ofEpochSecond(100)), eq(Instant.ofEpochSecond(100))))
+        .thenReturn(changeSummaryDTO);
+    ChangeSummaryDTO result = monitoredServiceService.getChangeSummary(builderFactory.getContext().getProjectParams(),
+        monitoredServiceIdentifier, Instant.ofEpochSecond(100), Instant.ofEpochSecond(100));
+    assertThat(result).isEqualTo(changeSummaryDTO);
+  }
+
   MonitoredServiceDTO createMonitoredServiceDTO() {
     return builderFactory.monitoredServiceDTOBuilder()
         .identifier(monitoredServiceIdentifier)
@@ -839,5 +884,9 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
                     -> HealthSourceService.getNameSpacedIdentifier(monitoredService.getIdentifier(), identifier))
                 .collect(toList()))
         .asList();
+  }
+
+  private void useChangeSourceServiceMock() throws IllegalAccessException {
+    FieldUtils.writeField(monitoredServiceService, "changeSourceService", changeSourceServiceMock, true);
   }
 }

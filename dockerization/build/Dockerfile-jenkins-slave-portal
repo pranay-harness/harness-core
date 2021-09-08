@@ -61,14 +61,6 @@ RUN yum group install -y "Development Tools" \
     && source /etc/profile.d/maven.sh \
     && rm apache-maven-3.6.1-bin.tar.gz \
     && cd / \
-    && rm -rf /tmp/* \
-    && cd /tmp \
-    && git clone https://github.com/bazelbuild/buildtools.git \
-    && cd buildtools \
-    && bazel build //... \
-    && cp /tmp/buildtools/bazel-bin/unused_deps/unused_deps_/unused_deps /usr/bin/unused_deps \
-    && unused_deps --version \
-    && cd / \
     && rm -rf /tmp/*
 
 RUN curl -fsSL https://get.docker.com/ | sh

@@ -21,7 +21,7 @@ public class NGTemplateReference implements EntityReference {
   String projectIdentifier;
   String identifier;
 
-  String label;
+  String versionLabel;
   String repoIdentifier;
   String branch;
   Boolean isDefault;
@@ -38,7 +38,7 @@ public class NGTemplateReference implements EntityReference {
       fqnList.add(projectIdentifier);
     }
     fqnList.add(identifier);
-    fqnList.add(label);
+    fqnList.add(versionLabel);
 
     return EntityReferenceHelper.createFQN(fqnList);
   }
