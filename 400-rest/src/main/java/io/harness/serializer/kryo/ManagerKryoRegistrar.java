@@ -714,7 +714,6 @@ import software.wings.settings.validation.SlackConnectivityValidationAttributes;
 import software.wings.settings.validation.SmtpConnectivityValidationAttributes;
 import software.wings.settings.validation.SshConnectionConnectivityValidationAttributes;
 import software.wings.settings.validation.WinRmConnectivityValidationAttributes;
-import software.wings.sm.BarrierStatusData;
 import software.wings.sm.ElementNotifyResponseData;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterruptEffect;
@@ -1468,7 +1467,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ContainerCommandExecutionResponse.class, 7274);
     kryo.register(VerificationDataAnalysisResponse.class, 7275);
     kryo.register(ResourceConstraintStatusData.class, 7276);
-    kryo.register(BarrierStatusData.class, 7277);
+
     kryo.register(SetupSweepingOutputPcf.class, 7278);
     kryo.register(InfoVariables.class, 7279);
     kryo.register(SwapRouteRollbackSweepingOutputPcf.class, 7280);

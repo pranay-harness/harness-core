@@ -581,7 +581,6 @@ import software.wings.service.impl.yaml.gitdiff.gitaudit.AuditYamlHelperForFaile
 import software.wings.service.impl.yaml.gitdiff.gitaudit.AuditYamlHelperForFailedChanges.InfraMappingWithOnlyAuditNeededData;
 import software.wings.service.impl.yaml.gitdiff.gitaudit.AuditYamlHelperForFailedChanges.ProvisionerWithOnlyAuditNeededData;
 import software.wings.sm.AwsLambdaVerification;
-import software.wings.sm.BarrierStatusData;
 import software.wings.sm.ElementNotifyResponseData;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionResumeAllCallback;
@@ -1416,7 +1415,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("service.impl.WorkflowExecutionUpdate", WorkflowExecutionUpdate.class);
     w.put("service.impl.yaml.GitCommandCallback", GitCommandCallback.class);
     w.put("sm.AwsLambdaVerification", AwsLambdaVerification.class);
-    w.put("sm.BarrierStatusData", BarrierStatusData.class);
     w.put("sm.ElementNotifyResponseData", ElementNotifyResponseData.class);
     w.put("sm.ExecutionResumeAllCallback", ExecutionResumeAllCallback.class);
     w.put("sm.ExecutionStatusData", ExecutionStatusData.class);
