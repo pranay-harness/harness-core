@@ -26,6 +26,7 @@ message InitializeSdkRequest {
   ConsumerConfig nodeAdviseEventConsumerConfig = 11;
   ConsumerConfig nodeResumeEventConsumerConfig = 12;
   ConsumerConfig planCreationEventConsumerConfig = 14;
+  map<string, string> staticAliases = 15;
 }
 
 message InitializeSdkResponse {}

@@ -483,6 +483,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         .grpcServerConfig(appConfig.getPmsSdkGrpcServerConfig())
         .pmsGrpcClientConfig(appConfig.getPmsGrpcClientConfig())
         .pipelineServiceInfoProviderClass(CDNGPlanCreatorProvider.class)
+        .staticAliases(getStaticAliases())
         .filterCreationResponseMerger(new CDNGFilterCreationResponseMerger())
         .engineSteps(NgStepRegistrar.getEngineSteps())
         .engineAdvisers(CDServiceAdviserRegistrar.getEngineAdvisers())
@@ -493,6 +494,16 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         .orchestrationEventPoolConfig(
             ThreadPoolConfig.builder().corePoolSize(10).maxPoolSize(50).idleTime(120L).build())
         .build();
+  }
+
+  private Map<String, String> getStaticAliases() {
+    Map<String, String> aliases = new HashMap<>();
+    aliases.put("serviceConfig", "stage.spec.serviceConfig");
+    aliases.put("serviceDefinition", "stage.spec.serviceConfig.serviceDefinition");
+    aliases.put("artifact", "stage.spec.serviceConfig.serviceDefinition.spec.artifacts.primary.output");
+    aliases.put("infra", "stage.spec.infrastructure.output");
+    aliases.put("INFRA_KEY", "stage.spec.infrastructure.output.infrastructureKey");
+    return aliases;
   }
 
   private Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> getOrchestrationEventHandlers() {
