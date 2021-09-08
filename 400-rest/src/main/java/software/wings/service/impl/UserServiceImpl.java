@@ -690,6 +690,7 @@ public class UserServiceImpl implements UserService {
     userSummary.setUserLocked(user.isUserLocked());
     userSummary.setPasswordExpired(user.isPasswordExpired());
     userSummary.setImported(user.isImported());
+    userSummary.setDisabled(user.isDisabled());
     return userSummary;
   }
 
