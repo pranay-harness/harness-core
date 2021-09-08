@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.IGNORE_PCF_CONNECTION_CONTEXT_CACHE;
 import static io.harness.beans.FeatureName.LIMIT_PCF_THREADS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.pcf.CfCommandUnitConstants.FetchFiles;
+import static io.harness.pcf.CfCommandUnitConstants.FetchGitFiles;
 import static io.harness.pcf.CfCommandUnitConstants.Pcfplugin;
 import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 
@@ -560,7 +560,7 @@ public class PcfPluginState extends State {
     final Builder<CommandUnit> canaryCommandUnitsBuilder = ImmutableList.builder();
 
     if (remoteStoreType) {
-      canaryCommandUnitsBuilder.add(new PcfDummyCommandUnit(FetchFiles));
+      canaryCommandUnitsBuilder.add(new PcfDummyCommandUnit(FetchGitFiles));
     }
     canaryCommandUnitsBuilder.add(new PcfDummyCommandUnit(Pcfplugin));
     return canaryCommandUnitsBuilder.build();
