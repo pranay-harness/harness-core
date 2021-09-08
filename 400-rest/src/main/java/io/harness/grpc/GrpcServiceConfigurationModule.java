@@ -1,13 +1,7 @@
 package io.harness.grpc;
 
-import static io.harness.annotations.dev.HarnessTeam.DEL;
-
-import io.harness.annotations.dev.HarnessModule;
-import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.DelegateServiceGrpc;
 import io.harness.delegate.authenticator.DelegateTokenAuthenticatorImpl;
-import io.harness.delegatedetails.DelegateDetailsServiceGrpc;
 import io.harness.delegateprofile.DelegateProfileServiceGrpc;
 import io.harness.grpc.auth.DelegateAuthServerInterceptor;
 import io.harness.grpc.auth.ServiceInfo;
@@ -34,8 +28,6 @@ import io.grpc.BindableService;
 import io.grpc.ServerInterceptor;
 import java.util.Set;
 
-@OwnedBy(DEL)
-@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 public class GrpcServiceConfigurationModule extends AbstractModule {
   private final GrpcServerConfig grpcServerConfig;
   private final String serviceSecret;
@@ -51,7 +43,6 @@ public class GrpcServiceConfigurationModule extends AbstractModule {
     Multibinder<BindableService> bindableServiceMultibinder = Multibinder.newSetBinder(binder(), BindableService.class);
     bindableServiceMultibinder.addBinding().to(DelegateServiceGrpcImpl.class);
     bindableServiceMultibinder.addBinding().to(DelegateProfileServiceGrpcImpl.class);
-    bindableServiceMultibinder.addBinding().to(DelegateDetailsServiceGrpcImpl.class);
     bindableServiceMultibinder.addBinding().to(PerpetualTaskServiceGrpc.class);
     bindableServiceMultibinder.addBinding().to(PingPongService.class);
 
@@ -65,8 +56,6 @@ public class GrpcServiceConfigurationModule extends AbstractModule {
         .toInstance(ServiceInfo.builder().id("delegate-service").secret(serviceSecret).build());
     stringServiceInfoMapBinder.addBinding(DelegateProfileServiceGrpc.SERVICE_NAME)
         .toInstance(ServiceInfo.builder().id("delegate-profile-service").secret(serviceSecret).build());
-    stringServiceInfoMapBinder.addBinding(DelegateDetailsServiceGrpc.SERVICE_NAME)
-        .toInstance(ServiceInfo.builder().id("delegate-details-service").secret(serviceSecret).build());
 
     Multibinder<GrpcExceptionMapper> expectionMapperMultibinder =
         Multibinder.newSetBinder(binder(), GrpcExceptionMapper.class);

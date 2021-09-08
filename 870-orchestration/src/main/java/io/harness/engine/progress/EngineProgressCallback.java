@@ -44,7 +44,6 @@ public class EngineProgressCallback implements ProgressCallback {
         nodeExecutionService.update(nodeExecutionId,
             ops -> ops.set(NodeExecutionKeys.unitProgresses, ((UnitProgressData) data).getUnitProgresses()));
       }
-      log.info("Node Execution updated for progress data");
     } catch (Exception ex) {
       log.error("Failed to deserialize progress data via kryo");
     }

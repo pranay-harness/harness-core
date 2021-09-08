@@ -2,15 +2,6 @@
 
 Harness Log service. Used for live streaming logs as well as object store uploads.
 
-# TL;DR: How to run log service locally
-```
-export LOG_SERVICE_DISABLE_AUTH=true
-bazelisk run //product/log-service:log-service server
-
-Replace bazelisk -> bazel if needed
-Log service will start up on port 8079
-```
-
 # Generating the binary
 
 Mac:
@@ -26,9 +17,14 @@ $ bazel build --platforms=@io_bazel_rules_go//go/toolchain:linux_amd64 //product
 
 # Accessing the binary
 
-Mac or Linux-based:
+Mac:
 ```
-$ $(bazel info bazel-bin)/product/log-service/log-service_/log-service
+$ $(bazel info bazel-bin)/product/log-service/darwin_amd64_stripped/log-service
+```
+
+Linux-based:
+```
+$ $(bazel info bazel-bin)/product/log-service/linux_amd64_pure_stripped/log-service
 ```
 
 # Env variables for auth
@@ -124,14 +120,13 @@ _Note that upload and download links can be a secure, scalable alternative to di
 
 ## Open a log stream:
 
-This creates a stream to start live streaming of logs. It is necessary to create the stream before you can write to it, otherwise the write API will error out.
 ```
 $ curl -H "X-Harness-Token: <account-token>" -v -X POST http://localhost:8079/stream\?accountID\=blah\&key\=sample
 ```
 
 ## Write to stream:
 
-Run same command as opening a log stream but with the below request body and use PUT instead:
+Run same command as opening a log stream but with the above request body and use PUT
 ```
 Request body example: 
 [
@@ -148,12 +143,13 @@ $ curl  -H "X-Harness-Token: <account-token>" -v GET http://localhost:8079/strea
 
 ```
 
-## Close a stream:
+Close a stream:
 
-Delete the stream after use. In case the stream is not closed, it will be automatically expired after 5 hours if Redis backend is set up. Max length of a stream is set as 5000 log lines.
 ```
 curl -H "X-Harness-Token: <account-token>" -v -X DELETE http://localhost:8079/stream\?accountID\=blah\&key\=sample
 ```
-Optional query params: `prefix` and `snapshot`.
-If `prefix=true` is provided, log service closes all the streams treating the key param as a prefix.
-If `snapshot=true` is provided, log service will write all the logs from the stream to the store and then delete the stream (this is used in case a client does not want to maintain logs client-side to write on the blob and instead wants log service to do that).
+
+# TODO
+
+- Improve the ring buffer efficiency
+- Implement a grpc client and server for the stream service only

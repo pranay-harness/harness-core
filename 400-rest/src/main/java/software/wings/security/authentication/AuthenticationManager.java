@@ -221,7 +221,7 @@ public class AuthenticationManager {
         }
         break;
       case SAML:
-        ssoRequest = samlClientService.generateSamlRequestFromAccount(account, false);
+        ssoRequest = samlClientService.generateSamlRequest(user);
         builder.SSORequest(ssoRequest);
         break;
       case OAUTH:
@@ -283,7 +283,7 @@ public class AuthenticationManager {
   public User generate2faJWTToken(User user) {
     HashMap<String, String> claimMap = new HashMap<>();
     claimMap.put(EMAIL, user.getEmail());
-    String jwtToken = userService.generateJWTToken(user, claimMap, JWT_CATEGORY.MULTIFACTOR_AUTH, false);
+    String jwtToken = userService.generateJWTToken(user, claimMap, JWT_CATEGORY.MULTIFACTOR_AUTH);
     return User.Builder.anUser()
         .uuid(user.getUuid())
         .email(user.getEmail())
@@ -395,7 +395,7 @@ public class AuthenticationManager {
     }
   }
 
-  public User loginUsingHarnessPassword(final String basicToken, String accountId) {
+  public User loginUsingHarnessPassword(final String basicToken) {
     String[] decryptedData = decryptBasicToken(basicToken);
     User user = defaultLoginInternal(decryptedData[0], decryptedData[1], false, AuthenticationMechanism.USER_PASSWORD);
     if (user == null) {
@@ -406,10 +406,9 @@ public class AuthenticationManager {
       throw new WingsException(USER_DISABLED, USER);
     }
 
-    Account account = isEmpty(accountId) ? authenticationUtils.getDefaultAccount(user) : accountService.get(accountId);
+    String accountId = authenticationUtils.getDefaultAccount(user).getUuid();
 
-    if (!userService.isUserAccountAdmin(
-            authService.getUserPermissionInfo(account.getUuid(), user, false), account.getUuid())) {
+    if (!userService.isUserAccountAdmin(authService.getUserPermissionInfo(accountId, user, false), accountId)) {
       throw new WingsException(INVALID_CREDENTIAL, USER);
     }
     return user;
@@ -440,17 +439,16 @@ public class AuthenticationManager {
   public Response samlLogin(String... credentials) throws URISyntaxException {
     try {
       User user = samlBasedAuthHandler.authenticate(credentials).getUser();
-      String accountId = (credentials != null && credentials.length >= 3) ? credentials[2] : user.getDefaultAccountId();
       HashMap<String, String> claimMap = new HashMap<>();
       claimMap.put(EMAIL, user.getEmail());
-      claimMap.put("subDomainUrl", accountService.get(accountId).getSubdomainUrl());
-      claimMap.put(ACCOUNT_ID, accountId);
+      claimMap.put("subDomainUrl", accountService.get(user.getDefaultAccountId()).getSubdomainUrl());
+      claimMap.put(ACCOUNT_ID, user.getDefaultAccountId());
 
-      String jwtToken = userService.generateJWTToken(user, claimMap, JWT_CATEGORY.SSO_REDIRECT, true);
+      String jwtToken = userService.generateJWTToken(user, claimMap, JWT_CATEGORY.SSO_REDIRECT);
       String encodedApiUrl = encodeBase64(configuration.getApiUrl());
 
       Map<String, String> params = getRedirectParamsForSsoRedirection(jwtToken, encodedApiUrl);
-      URI redirectUrl = authenticationUtils.buildAbsoluteUrl("/saml.html", params, accountId);
+      URI redirectUrl = authenticationUtils.buildAbsoluteUrl("/saml.html", params, user.getDefaultAccountId());
       return Response.seeOther(redirectUrl).build();
     } catch (WingsException e) {
       if (e.getCode() == ErrorCode.SAML_TEST_SUCCESS_MECHANISM_NOT_ENABLED) {
@@ -509,8 +507,7 @@ public class AuthenticationManager {
       log.info("OauthAuthentication succeeded for email {}", user.getEmail());
       HashMap<String, String> claimMap = new HashMap<>();
       claimMap.put(EMAIL, user.getEmail());
-      // Oauth method here is mostly not used apart from on-prem - keeping the same behaviour as before!
-      String jwtToken = userService.generateJWTToken(user, claimMap, JWT_CATEGORY.SSO_REDIRECT, false);
+      String jwtToken = userService.generateJWTToken(user, claimMap, JWT_CATEGORY.SSO_REDIRECT);
       String encodedApiUrl = encodeBase64(configuration.getApiUrl());
 
       Map<String, String> params = getRedirectParamsForSsoRedirection(jwtToken, encodedApiUrl);

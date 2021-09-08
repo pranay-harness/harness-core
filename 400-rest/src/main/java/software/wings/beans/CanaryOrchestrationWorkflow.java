@@ -86,9 +86,6 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
   // This is a nullable field
   private PhaseStep rollbackProvisioners;
 
-  // This is a nullable field
-  private PhaseStep rollbackProvisionersReverse;
-
   @JsonIgnore private List<String> workflowPhaseIds = new ArrayList<>();
 
   @JsonIgnore private Map<String, WorkflowPhase> workflowPhaseIdMap = new HashMap<>();
@@ -135,14 +132,6 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   public void setRollbackProvisioners(PhaseStep rollbackProvisioners) {
     this.rollbackProvisioners = rollbackProvisioners;
-  }
-
-  public PhaseStep getRollbackProvisionersReverse() {
-    return rollbackProvisionersReverse;
-  }
-
-  public void setRollbackProvisionersReverse(PhaseStep rollbackProvisionersReverse) {
-    this.rollbackProvisionersReverse = rollbackProvisionersReverse;
   }
 
   public List<WorkflowPhase> getWorkflowPhases() {
@@ -324,9 +313,6 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     if (rollbackProvisioners != null) {
       populatePhaseStepIds(rollbackProvisioners);
     }
-    if (rollbackProvisionersReverse != null) {
-      populatePhaseStepIds(rollbackProvisionersReverse);
-    }
     if (workflowPhases != null) {
       workflowPhaseIds = new ArrayList<>();
       workflowPhaseIdMap = new HashMap<>();
@@ -362,9 +348,6 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     populatePhaseSteps(preDeploymentSteps, getGraph());
     if (rollbackProvisioners != null) {
       populatePhaseSteps(rollbackProvisioners, getGraph());
-    }
-    if (rollbackProvisionersReverse != null) {
-      populatePhaseSteps(rollbackProvisionersReverse, getGraph());
     }
 
     // cleanup relatedField, infraId,serviceId,envId from metadata as they should be runtime.
@@ -792,12 +775,6 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       graphBuilder.addNodes(rollbackProvisionersNode)
           .addSubworkflow(rollbackProvisioners.getUuid(), rollbackProvisioners.generateSubworkflow(null));
     }
-    if (rollbackProvisionersReverse != null) {
-      GraphNode rollbackProvisionersReverseNode = rollbackProvisionersReverse.generatePhaseStepNode();
-      graphBuilder.addNodes(rollbackProvisionersReverseNode)
-          .addSubworkflow(rollbackProvisionersReverse.getUuid(), rollbackProvisionersReverse.generateSubworkflow(null));
-    }
-
     if (workflowPhases != null) {
       for (WorkflowPhase workflowPhase : workflowPhases) {
         id2 = workflowPhase.getUuid();
@@ -947,7 +924,6 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         .withGraph(getGraph())
         .withPreDeploymentSteps(getPreDeploymentSteps())
         .withRollbackProvisioners(getRollbackProvisioners())
-        .withRollbackProvisionersReverse(getRollbackProvisionersReverse())
         .withWorkflowPhases(getWorkflowPhases())
         .withWorkflowPhaseIds(getWorkflowPhaseIds())
         .withWorkflowPhaseIdMap(getWorkflowPhaseIdMap())
@@ -1105,7 +1081,6 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
     private Set<EntityType> requiredEntityTypes;
     private OrchestrationWorkflowType orchestrationWorkflowType = CANARY;
     private PhaseStep rollbackProvisioners;
-    private PhaseStep rollbackProvisionersReverse;
 
     private CanaryOrchestrationWorkflowBuilder() {}
 
@@ -1125,11 +1100,6 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
     public CanaryOrchestrationWorkflowBuilder withRollbackProvisioners(PhaseStep rollbackProvisioners) {
       this.rollbackProvisioners = rollbackProvisioners;
-      return this;
-    }
-
-    public CanaryOrchestrationWorkflowBuilder withRollbackProvisionersReverse(PhaseStep rollbackProvisionersReverse) {
-      this.rollbackProvisionersReverse = rollbackProvisionersReverse;
       return this;
     }
 
@@ -1223,7 +1193,6 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
       canaryOrchestrationWorkflow.setOrchestrationWorkflowType(orchestrationWorkflowType);
       canaryOrchestrationWorkflow.setConcurrencyStrategy(concurrencyStrategy);
       canaryOrchestrationWorkflow.setRollbackProvisioners(rollbackProvisioners);
-      canaryOrchestrationWorkflow.setRollbackProvisionersReverse(rollbackProvisionersReverse);
       return canaryOrchestrationWorkflow;
     }
   }

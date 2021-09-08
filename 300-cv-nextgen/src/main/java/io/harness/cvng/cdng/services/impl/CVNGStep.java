@@ -41,6 +41,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Map;
@@ -82,11 +83,7 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
       cvngStepTaskBuilder.callbackId(UUID.randomUUID().toString());
     } else {
       DeploymentActivity deploymentActivity =
-          getDeploymentActivity(stepParameters, accountId, projectIdentifier, orgIdentifier, monitoredServiceDTO,
-              Instant.ofEpochMilli(
-                  AmbianceUtils.getStageLevelFromAmbiance(ambiance)
-                      .orElseThrow(() -> new IllegalStateException("verify step needs to be part of a stage."))
-                      .getStartTs()));
+          getDeploymentActivity(stepParameters, accountId, projectIdentifier, orgIdentifier, monitoredServiceDTO);
       String activityUuid = activityService.register(deploymentActivity);
       cvngStepTaskBuilder.activityId(activityUuid).callbackId(activityUuid);
     }
@@ -98,8 +95,7 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
 
   @NotNull
   private DeploymentActivity getDeploymentActivity(CVNGStepParameter stepParameters, String accountId,
-      String projectIdentifier, String orgIdentifier, MonitoredServiceDTO monitoredServiceDTO,
-      Instant activityStartTime) {
+      String projectIdentifier, String orgIdentifier, MonitoredServiceDTO monitoredServiceDTO) {
     Instant startTime = clock.instant();
     VerificationJob verificationJob =
         stepParameters.getVerificationJobBuilder()
@@ -121,7 +117,7 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
                                                 .verificationStartTime(startTime.toEpochMilli())
                                                 .build();
     deploymentActivity.setVerificationJobs(Collections.singletonList(verificationJob));
-    deploymentActivity.setActivityStartTime(activityStartTime);
+    deploymentActivity.setActivityStartTime(startTime.minus(Duration.ofMinutes(5)));
     deploymentActivity.setOrgIdentifier(orgIdentifier);
     deploymentActivity.setAccountId(accountId);
     deploymentActivity.setProjectIdentifier(projectIdentifier);

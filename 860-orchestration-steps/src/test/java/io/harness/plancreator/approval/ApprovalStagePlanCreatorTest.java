@@ -77,10 +77,8 @@ public class ApprovalStagePlanCreatorTest extends CategoryTest {
     assertThat(specPlanCreationResponse.getNodes()).hasSize(1);
 
     PlanCreationResponse executionPlanCreationResponse = planForChildrenNodes.get(executionUuid);
-    assertThat(executionPlanCreationResponse.getDependencies().getDependenciesMap()).hasSize(1);
-    assertThat(executionPlanCreationResponse.getDependencies().getDependenciesMap().containsKey(executionUuid))
-        .isTrue();
-    assertThat(executionPlanCreationResponse.getDependencies().getDependenciesMap().get(executionUuid))
-        .isEqualTo("pipeline/stages/[0]/stage/spec/execution");
+    assertThat(executionPlanCreationResponse.getDependencies()).hasSize(1);
+    assertThat(executionPlanCreationResponse.getDependencies().containsKey(executionUuid)).isTrue();
+    assertThat(executionPlanCreationResponse.getDependencies().get(executionUuid)).isEqualTo(executionField);
   }
 }

@@ -28,9 +28,7 @@ import static org.apache.commons.lang3.StringUtils.trim;
 import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Projection.projection;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.EncryptedDataParent;
@@ -122,7 +120,6 @@ import org.mongodb.morphia.query.Query;
 @OwnedBy(PL)
 @Slf4j
 @Singleton
-@TargetModule(HarnessModule._360_CG_MANAGER)
 public class SecretManagerImpl implements SecretManager, EncryptedSettingAttributes {
   static final Set<EncryptionType> ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD = EnumSet.of(LOCAL, GCP_KMS, KMS);
 
@@ -183,13 +180,14 @@ public class SecretManagerImpl implements SecretManager, EncryptedSettingAttribu
                                       .filter(EncryptedDataKeys.ID_KEY, encryptedDataId)
                                       .get();
     if (encryptedData == null) {
+      log.info(
+          "No encrypted record found with UUID, trying with name for field {} for id: {}", fieldName, encryptedDataId);
       encryptedData = wingsPersistence.createQuery(EncryptedData.class)
                           .filter(EncryptedDataKeys.accountId, accountId)
                           .filter(EncryptedDataKeys.name, encryptedDataId)
                           .get();
       if (encryptedData == null) {
-        log.info("No encrypted record found neither with UUID nor with name for field {} for id: {}", fieldName,
-            encryptedDataId);
+        log.info("No encrypted record set for field {} for id: {}", fieldName, encryptedDataId);
         return Optional.empty();
       }
     }
@@ -198,7 +196,7 @@ public class SecretManagerImpl implements SecretManager, EncryptedSettingAttribu
         accountId, encryptedData.getKmsId(), encryptedData.getEncryptionType());
 
     if (encryptionConfig == null) {
-      log.error("No secret manager found with id {} for accountId {}", encryptedData.getKmsId(), accountId);
+      log.error("No secret manager found with id {}", encryptedData.getKmsId());
       return Optional.empty();
     }
 
@@ -213,6 +211,9 @@ public class SecretManagerImpl implements SecretManager, EncryptedSettingAttribu
     // PL-1836: Need to preprocess global KMS and turn the KMS encryption into a LOCAL encryption.
     EncryptedRecordData encryptedRecordData;
     if (encryptionConfig.isGlobalKms()) {
+      log.info(
+          "Pre-processing the encrypted secret by global KMS secret manager for secret {}", encryptedData.getUuid());
+
       encryptedRecordData = globalEncryptDecryptClient.convertEncryptedRecordToLocallyEncrypted(
           encryptedData, accountId, encryptionConfig);
 
@@ -221,6 +222,7 @@ public class SecretManagerImpl implements SecretManager, EncryptedSettingAttribu
       // fail.
       if (encryptedRecordData.getEncryptionType() == LOCAL) {
         encryptionConfig = localSecretManagerService.getEncryptionConfig(accountId);
+        log.info("Replaced it with LOCAL encryption for secret {}", encryptedData.getUuid());
       }
       // TODO {karan} {piyush} revisit this to check if there is a need to send encryption config if conversion to local
       // failed

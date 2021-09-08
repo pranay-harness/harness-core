@@ -375,7 +375,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
              TaskType.valueOf(task.getData().getTaskType()).getTaskGroup().name(), task.getRank(), OVERRIDE_NESTS);
          AutoLogContext ignore2 = new AccountLogContext(task.getAccountId(), OVERRIDE_ERROR)) {
       saveDelegateTask(task, QUEUED);
-      log.debug("Queueing async task");
+      log.info("Queueing async task");
       broadcastHelper.broadcastNewDelegateTaskAsync(task);
     }
     return task.getUuid();
@@ -402,7 +402,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         }
       }
 
-      log.debug("Processing sync task {}", task.getUuid());
+      log.info("Processing sync task {}", task.getUuid());
       broadcastHelper.rebroadcastDelegateTask(task);
     }
   }
@@ -918,7 +918,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
              TaskType.valueOf(task.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_NESTS);
          AutoLogContext ignore2 = new AccountLogContext(task.getAccountId(), OVERRIDE_ERROR)) {
       saveDelegateTask(task, QUEUED);
-      log.debug("Queueing parked task");
+      log.info("Queueing parked task");
       broadcastHelper.broadcastNewDelegateTaskAsync(task);
     }
     return task.getUuid();
@@ -945,7 +945,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         new ManagerPreviewExpressionEvaluator());
 
     if (isNotEmpty(task.getExecutionCapabilities())) {
-      log.debug(CapabilityHelper.generateLogStringWithCapabilitiesGenerated(
+      log.info(CapabilityHelper.generateLogStringWithCapabilitiesGenerated(
           task.getData().getTaskType(), task.getExecutionCapabilities()));
     }
   }
@@ -1090,7 +1090,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         return null;
       }
 
-      log.debug("Acquiring delegate task");
+      log.info("Acquiring delegate task");
       DelegateTask delegateTask = getUnassignedDelegateTask(accountId, taskId, delegateId);
       if (delegateTask == null) {
         return null;
@@ -1245,7 +1245,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
 
   @VisibleForTesting
   void setValidationStarted(String delegateId, DelegateTask delegateTask) {
-    log.debug("Delegate to validate {} task", delegateTask.getData().isAsync() ? ASYNC : SYNC);
+    log.info("Delegate to validate {} task", delegateTask.getData().isAsync() ? ASYNC : SYNC);
     UpdateOperations<DelegateTask> updateOperations = persistence.createUpdateOperations(DelegateTask.class)
                                                           .addToSet(DelegateTaskKeys.validatingDelegateIds, delegateId);
     Query<DelegateTask> updateQuery = persistence.createQuery(DelegateTask.class)
@@ -1267,7 +1267,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
     boolean allDelegatesFinished = isNotEmpty(validatingDelegates) && isNotEmpty(completeDelegates)
         && completeDelegates.containsAll(validatingDelegates);
     if (allDelegatesFinished) {
-      log.debug("Validation attempts are complete for task", delegateTask.getUuid());
+      log.info("Validation attempts are complete for task", delegateTask.getUuid());
     }
     boolean validationTimedOut = delegateTask.getValidationStartedAt() != null
         && clock.millis() - delegateTask.getValidationStartedAt() > VALIDATION_TIMEOUT;
@@ -1300,13 +1300,13 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
       try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
                TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
         if (delegateTask.getDelegateId() == null && delegateTask.getStatus() == QUEUED) {
-          log.debug("Found unassigned delegate task");
+          log.info("Found unassigned delegate task");
           return delegateTask;
         } else if (delegateId.equals(delegateTask.getDelegateId())) {
-          log.debug("Returning already assigned task to delegate from getUnassigned");
+          log.info("Returning already assigned task to delegate from getUnassigned");
           return delegateTask;
         }
-        log.debug("Task not available for delegate - it was assigned to {} and has status {}",
+        log.info("Task not available for delegate - it was assigned to {} and has status {}",
             delegateTask.getDelegateId(), delegateTask.getStatus());
       }
     } else {
@@ -1478,7 +1478,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
     // Clear pending validations. No longer need to track since we're assigning.
     clearFromValidationCache(delegateTask);
 
-    log.debug("Assigning {} task to delegate", delegateTask.getData().isAsync() ? ASYNC : SYNC);
+    log.info("Assigning {} task to delegate", delegateTask.getData().isAsync() ? ASYNC : SYNC);
     Query<DelegateTask> query = persistence.createQuery(DelegateTask.class)
                                     .filter(DelegateTaskKeys.accountId, delegateTask.getAccountId())
                                     .filter(DelegateTaskKeys.uuid, taskId)
@@ -1497,7 +1497,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
     if (task != null) {
       try (
           DelayLogContext ignore = new DelayLogContext(task.getLastUpdatedAt() - task.getCreatedAt(), OVERRIDE_ERROR)) {
-        log.debug("Task assigned to delegate");
+        log.info("Task assigned to delegate");
       }
       task.getData().setParameters(delegateTask.getData().getParameters());
 
@@ -1518,7 +1518,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
                .project(DelegateTaskKeys.data_parameters, false)
                .get();
     if (task == null) {
-      log.debug("Task no longer available for delegate");
+      log.info("Task no longer available for delegate");
       return null;
     }
 
@@ -1620,7 +1620,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
       delegateTaskEvents.addAll(getAbortedEvents(accountId, delegateId));
     }
 
-    log.debug("Dispatched delegateTaskIds: {}",
+    log.info("Dispatched delegateTaskIds: {}",
         join(",", delegateTaskEvents.stream().map(DelegateTaskEvent::getDelegateTaskId).collect(toList())));
 
     return delegateTaskEvents;
@@ -1716,11 +1716,11 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
              new DelegateDriverLogContext(delegateTask.getDriverId(), OVERRIDE_ERROR);
          TaskLogContext taskLogContext = new TaskLogContext(delegateTask.getUuid(), OVERRIDE_ERROR)) {
       if (delegateTask.getData().isAsync()) {
-        log.debug("Publishing async task response...");
+        log.info("Publishing async task response...");
         delegateCallbackService.publishAsyncTaskResponse(
             delegateTask.getUuid(), kryoSerializer.asDeflatedBytes(response.getResponse()));
       } else {
-        log.debug("Publishing sync task response...");
+        log.info("Publishing sync task response...");
         delegateCallbackService.publishSyncTaskResponse(
             delegateTask.getUuid(), kryoSerializer.asDeflatedBytes(response.getResponse()));
       }

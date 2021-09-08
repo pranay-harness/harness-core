@@ -267,9 +267,6 @@ gitGrpcClientConfigs:
   core:
     target: localhost:13001
     authority: localhost
-  templateservice:
-    target: localhost:16001
-    authority: localhost
 
 gitSdkConfiguration:
   gitSdkGrpcServerConfig:

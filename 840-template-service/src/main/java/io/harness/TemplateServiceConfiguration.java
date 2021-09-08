@@ -43,7 +43,6 @@ import org.reflections.Reflections;
 @Singleton
 public class TemplateServiceConfiguration extends Configuration {
   public static final String RESOURCE_PACKAGE = "io.harness.template";
-  public static final String FILTER_PACKAGE = "io.harness.filter";
 
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @JsonProperty("mongo") private MongoConfig mongoConfig;
@@ -62,8 +61,6 @@ public class TemplateServiceConfiguration extends Configuration {
   private boolean shouldDeployWithGitSync;
   private GitSdkConfiguration gitSdkConfiguration;
   private String managerServiceSecret;
-  private String managerTarget;
-  private String managerAuthority;
 
   public TemplateServiceConfiguration() {
     DefaultServerFactory defaultServerFactory = new DefaultServerFactory();
@@ -99,7 +96,7 @@ public class TemplateServiceConfiguration extends Configuration {
   }
 
   public static Collection<Class<?>> getResourceClasses() {
-    Reflections reflections = new Reflections(RESOURCE_PACKAGE, FILTER_PACKAGE);
+    Reflections reflections = new Reflections(RESOURCE_PACKAGE);
     return reflections.getTypesAnnotatedWith(Path.class);
   }
 

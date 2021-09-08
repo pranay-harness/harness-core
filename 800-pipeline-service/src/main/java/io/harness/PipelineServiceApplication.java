@@ -8,6 +8,7 @@ import static io.harness.pms.async.plan.PlanNotifyEventConsumer.PMS_PLAN_CREATIO
 import static io.harness.waiter.PmsNotifyEventListener.PMS_ORCHESTRATION;
 
 import static com.google.common.collect.ImmutableMap.of;
+import static java.util.Collections.singletonList;
 
 import io.harness.accesscontrol.NGAccessDeniedExceptionMapper;
 import io.harness.annotations.dev.OwnedBy;
@@ -289,8 +290,8 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
 
     Injector injector = Guice.createInjector(modules);
     registerEventListeners(injector);
-    registerWaitEnginePublishers(injector);
-    registerScheduledJobs(injector, appConfig);
+    registerWaitEnginePublishers(appConfig.isUseRedisForOrchestrationNotify(), injector);
+    registerScheduledJobs(injector);
     registerCorsFilter(appConfig, environment);
     registerResources(environment, injector);
     registerJerseyProviders(environment, injector);
@@ -518,28 +519,29 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     queueListenerController.register(injector.getInstance(PmsNotifyEventListener.class), 3);
   }
 
-  private void registerWaitEnginePublishers(Injector injector) {
+  private void registerWaitEnginePublishers(boolean shouldUseRedis, Injector injector) {
     final QueuePublisher<NotifyEvent> publisher =
         injector.getInstance(Key.get(new TypeLiteral<QueuePublisher<NotifyEvent>>() {}));
     final NotifyQueuePublisherRegister notifyQueuePublisherRegister =
         injector.getInstance(NotifyQueuePublisherRegister.class);
-    notifyQueuePublisherRegister.register(PMS_ORCHESTRATION, injector.getInstance(PmsNotifyEventPublisher.class));
+    if (shouldUseRedis) {
+      notifyQueuePublisherRegister.register(PMS_ORCHESTRATION, injector.getInstance(PmsNotifyEventPublisher.class));
+    } else {
+      notifyQueuePublisherRegister.register(
+          PMS_ORCHESTRATION, payload -> publisher.send(singletonList(PMS_ORCHESTRATION), payload));
+    }
     notifyQueuePublisherRegister.register(PMS_PLAN_CREATION, injector.getInstance(PlanNotifyEventPublisher.class));
   }
 
-  private void registerScheduledJobs(Injector injector, PipelineServiceConfiguration appConfig) {
+  private void registerScheduledJobs(Injector injector) {
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
-        .scheduleWithFixedDelay(injector.getInstance(DelegateSyncServiceImpl.class), 0L,
-            appConfig.getDelegatePollingConfig().getSyncDelay(), TimeUnit.MILLISECONDS);
+        .scheduleWithFixedDelay(injector.getInstance(DelegateSyncServiceImpl.class), 0L, 2L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
-        .scheduleWithFixedDelay(injector.getInstance(DelegateAsyncServiceImpl.class), 0L,
-            appConfig.getDelegatePollingConfig().getAsyncDelay(), TimeUnit.MILLISECONDS);
+        .scheduleWithFixedDelay(injector.getInstance(DelegateAsyncServiceImpl.class), 0L, 5L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
-        .scheduleWithFixedDelay(injector.getInstance(DelegateProgressServiceImpl.class), 0L,
-            appConfig.getDelegatePollingConfig().getProgressDelay(), TimeUnit.MILLISECONDS);
+        .scheduleWithFixedDelay(injector.getInstance(DelegateProgressServiceImpl.class), 0L, 5L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("progressUpdateServiceExecutor")))
-        .scheduleWithFixedDelay(injector.getInstance(ProgressUpdateService.class), 0L,
-            appConfig.getDelegatePollingConfig().getProgressDelay(), TimeUnit.MILLISECONDS);
+        .scheduleWithFixedDelay(injector.getInstance(ProgressUpdateService.class), 0L, 5L, TimeUnit.SECONDS);
 
     injector.getInstance(NotifierScheduledExecutorService.class)
         .scheduleWithFixedDelay(

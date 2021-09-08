@@ -141,8 +141,3 @@ java_library(
 run_tests()
 
 run_analysis()
-
-exports_files([
-    "keystore.jks",
-    "cv-nextgen-config.yml",
-])

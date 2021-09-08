@@ -48,7 +48,7 @@ public class UserProfileHelper {
     final GithubConnectorDTO githubConnectorDTO = (GithubConnectorDTO) connector.getConnector().getConnectorConfig();
     githubConnectorDTO.setUrl(yamlGitConfig.getRepo());
     final List<SourceCodeManagerDTO> sourceCodeManager =
-        sourceCodeManagerService.get(userPrincipal.getUserId().getValue(), yamlGitConfig.getAccountIdentifier());
+        sourceCodeManagerService.get(userPrincipal.getUserId().getValue());
     final Optional<SourceCodeManagerDTO> sourceCodeManagerDTO =
         sourceCodeManager.stream().filter(scm -> scm.getType().equals(SCMType.GITHUB)).findFirst();
     if (!sourceCodeManagerDTO.isPresent()) {

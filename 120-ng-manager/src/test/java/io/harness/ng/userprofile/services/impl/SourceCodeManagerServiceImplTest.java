@@ -5,7 +5,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KANHAIYA;
 
 import static java.lang.String.format;
-import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -76,12 +75,10 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
   private String accessKey;
   private String accessKeyRef;
   private String secretKeyRef;
-  private String accountIdentifier;
 
   @Before
   public void setup() {
     userIdentifier = generateUuid();
-    accountIdentifier = randomAlphabetic(10);
     sourceCodeManagerRepository = mock(SourceCodeManagerRepository.class);
     sourceCodeManagerService = new SourceCodeManagerServiceImpl(sourceCodeManagerRepository, scmMapBinder);
     Principal principal = mock(Principal.class);
@@ -114,9 +111,8 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
     SourceCodeManager githubSCM = githubSCMCreate();
     SourceCodeManager gitlabSCM = gitlabSCMCreate();
     List<SourceCodeManager> sourceCodeManagerList = new ArrayList<>(Arrays.asList(bitbucketSCM, githubSCM, gitlabSCM));
-    when(sourceCodeManagerRepository.findByUserIdentifierAndAccountIdentifier(any(), any()))
-        .thenReturn(sourceCodeManagerList);
-    List<SourceCodeManagerDTO> sourceCodeManagerDTOList = sourceCodeManagerService.get(accountIdentifier);
+    when(sourceCodeManagerRepository.findByUserIdentifier(any())).thenReturn(sourceCodeManagerList);
+    List<SourceCodeManagerDTO> sourceCodeManagerDTOList = sourceCodeManagerService.get();
     assertThat(sourceCodeManagerDTOList).hasSize(3);
     assertThat(sourceCodeManagerDTOList.get(0))
         .isEqualTo(scmMapBinder.get(bitbucketSCM.getType()).toSCMDTO(bitbucketSCM));
@@ -174,9 +170,9 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
   public void testDelete() {
     SourceCodeManager bitbucketSCM = bitbucketSCMCreate();
     List<SourceCodeManager> sourceCodeManagerList = new ArrayList<>(Arrays.asList(bitbucketSCM));
-    when(sourceCodeManagerRepository.deleteByUserIdentifierAndNameAndAccountIdentifier(any(), any(), any()))
+    when(sourceCodeManagerRepository.deleteByUserIdentifierAndName(any(), any()))
         .thenReturn(delete(sourceCodeManagerList));
-    sourceCodeManagerService.delete(bitbucketSCM.getName(), bitbucketSCM.getAccountIdentifier());
+    sourceCodeManagerService.delete(bitbucketSCM.getName());
     assertThat(sourceCodeManagerList).hasSize(0);
   }
 
@@ -240,7 +236,6 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
     return BitbucketSCM.builder()
         .userIdentifier(userIdentifier)
         .name(name)
-        .accountIdentifier(accountIdentifier)
         .authType(GitAuthType.SSH)
         .authenticationDetails(bitbucketAuthentication)
         .build();
@@ -256,7 +251,6 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
     return BitbucketSCMDTO.builder()
         .userIdentifier(userIdentifier)
         .name(name)
-        .accountIdentifier(accountIdentifier)
         .authentication(bitbucketAuthenticationDTO)
         .build();
   }
@@ -266,7 +260,6 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
     return GithubSCM.builder()
         .userIdentifier(userIdentifier)
         .name(name)
-        .accountIdentifier(accountIdentifier)
         .authType(GitAuthType.SSH)
         .authenticationDetails(githubAuthentication)
         .build();
@@ -282,7 +275,6 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
     return GithubSCMDTO.builder()
         .userIdentifier(userIdentifier)
         .name(name)
-        .accountIdentifier(accountIdentifier)
         .authentication(githubAuthenticationDTO)
         .build();
   }
@@ -297,7 +289,6 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
     return AzureDevOpsSCMDTO.builder()
         .userIdentifier(userIdentifier)
         .name(name)
-        .accountIdentifier(accountIdentifier)
         .authentication(githubAuthenticationDTO)
         .build();
   }
@@ -307,7 +298,6 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
     return GitlabSCM.builder()
         .userIdentifier(userIdentifier)
         .name(name)
-        .accountIdentifier(accountIdentifier)
         .authType(GitAuthType.SSH)
         .authenticationDetails(gitlabAuthentication)
         .build();
@@ -323,7 +313,6 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
     return GitlabSCMDTO.builder()
         .userIdentifier(userIdentifier)
         .name(name)
-        .accountIdentifier(accountIdentifier)
         .authentication(gitlabAuthenticationDTO)
         .build();
   }
@@ -345,7 +334,6 @@ public class SourceCodeManagerServiceImplTest extends NgManagerTestBase {
     return AwsCodeCommitSCMDTO.builder()
         .userIdentifier(userIdentifier)
         .name(name)
-        .accountIdentifier(accountIdentifier)
         .authentication(awsCodeCommitAuthenticationDTO)
         .build();
   }

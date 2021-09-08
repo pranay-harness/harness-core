@@ -15,11 +15,11 @@ go_proto_library(
     importpath = "github.com/wings-software/portal/product/ci/addon/proto",
     proto = ":ciaddonpb_proto",
     visibility = ["//visibility:public"],
-    deps = ["//product/ci/engine/proto"],
+    deps = ["//product/ci/engine/proto:go_default_library"],
 )
 
 go_library(
-    name = "proto",
+    name = "go_default_library",
     embed = [":ciaddonpb_go_proto"],
     importpath = "github.com/wings-software/portal/product/ci/addon/proto",
     visibility = ["//visibility:public"],

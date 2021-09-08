@@ -514,12 +514,10 @@ public interface UserService extends OwnedByAccount {
    *
    * @param user
    * @param claims Map of claims
-   * @param claims Persist accountId present in claims or not
    * @return
    */
 
-  String generateJWTToken(
-      User user, Map<String, String> claims, @NotNull JWT_CATEGORY category, boolean persistOldAccountId);
+  String generateJWTToken(User user, Map<String, String> claims, @NotNull JWT_CATEGORY category);
 
   /**
    *

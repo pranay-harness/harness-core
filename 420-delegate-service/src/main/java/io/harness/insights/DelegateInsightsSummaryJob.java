@@ -52,10 +52,10 @@ public class DelegateInsightsSummaryJob implements Runnable {
   @Override
   public void run() {
     try {
-      log.debug("Starting delegate insights summary calculations.");
+      log.info("Starting delegate insights summary calculations.");
       processTaskInsights();
       processPerpetualTaskInsights();
-      log.debug("Finished delegate insights summary calculations.");
+      log.info("Finished delegate insights summary calculations.");
     } catch (Exception ex) {
       log.error("Unexpected error occurred while processing delegate insights.", ex);
     }
@@ -125,7 +125,7 @@ public class DelegateInsightsSummaryJob implements Runnable {
       }
 
       // convert map to entities and upsert db and clear map to be used for next account
-      log.debug("Upserting {} task insights summary records in db.", accountInsightSummaries.size());
+      log.info("Upserting {} task insights summary records in db.", accountInsightSummaries.size());
       updateDbWithMapEntries(accountInsightSummaries);
       accountInsightSummaries.clear();
     }
@@ -173,7 +173,7 @@ public class DelegateInsightsSummaryJob implements Runnable {
       }
 
       // convert map to entities and upsert db and clear map to be used for next account
-      log.debug("Upserting {} perpetual task insights summary records in db.", accountInsightSummaries.size());
+      log.info("Upserting {} perpetual task insights summary records in db.", accountInsightSummaries.size());
       updateDbWithMapEntries(accountInsightSummaries);
       accountInsightSummaries.clear();
     }

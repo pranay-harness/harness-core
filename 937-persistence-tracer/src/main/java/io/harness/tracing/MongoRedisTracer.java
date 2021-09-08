@@ -2,7 +2,6 @@ package io.harness.tracing;
 
 import static io.harness.mongo.tracing.TracerConstants.QUERY_HASH;
 import static io.harness.mongo.tracing.TracerConstants.SERVICE_ID;
-import static io.harness.version.VersionConstants.MAJOR_VERSION_KEY;
 import static io.harness.version.VersionConstants.VERSION_KEY;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -98,7 +97,6 @@ public class MongoRedisTracer implements Tracer {
     producer.send(Message.newBuilder()
                       .putMetadata(VERSION_KEY, versionInfoManager.getVersionInfo().getVersion())
                       .putMetadata(SERVICE_ID, serviceId)
-                      .putMetadata(MAJOR_VERSION_KEY, getMajorVersionFromFullVersion())
                       .putMetadata(QUERY_HASH, qHash)
                       .setData(ByteString.copyFromUtf8(explainResult.toJson()))
                       .build());
@@ -117,17 +115,10 @@ public class MongoRedisTracer implements Tracer {
     log.debug(String.format("Explain Results: %s", explainResult));
     producer.send(Message.newBuilder()
                       .putMetadata(VERSION_KEY, versionInfoManager.getVersionInfo().getVersion())
-                      .putMetadata(MAJOR_VERSION_KEY, getMajorVersionFromFullVersion())
                       .putMetadata(SERVICE_ID, serviceId)
                       .putMetadata(QUERY_HASH, qHash)
                       .setData(ByteString.copyFromUtf8(explainResult))
                       .build());
-  }
-
-  private String getMajorVersionFromFullVersion() {
-    String buildNo = versionInfoManager.getVersionInfo().getBuildNo();
-    String replaceBuildNumber = buildNo.substring(0, buildNo.length() - 2) + "xx";
-    return versionInfoManager.getVersionInfo().getVersion().replace(buildNo, replaceBuildNumber);
   }
 
   private boolean skipSample(String qHash) {

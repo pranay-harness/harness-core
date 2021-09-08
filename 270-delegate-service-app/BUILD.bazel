@@ -285,6 +285,7 @@ shared_dependencies = [
     "@maven//:de_jkeylockmanager_jkeylockmanager",
     "@maven//:dk_brics_automaton_automaton",
     "@maven//:dnsjava_dnsjava",
+    "@maven//:dom4j_dom4j",
     "@maven//:es_moki_ratelimitj_ratelimitj_core",
     "@maven//:es_moki_ratelimitj_ratelimitj_inmemory",
     "@maven//:guru_nidi_com_kitfox_svgSalamander",
@@ -539,7 +540,6 @@ shared_dependencies = [
     "@maven//:org_elasticsearch_elasticsearch_geo",
     "@maven//:org_elasticsearch_elasticsearch_secure_sm",
     "@maven//:org_elasticsearch_elasticsearch_x_content",
-    "@maven//:org_elasticsearch_elasticsearch_plugin_classloader",
     "@maven//:org_elasticsearch_jna",
     "@maven//:org_elasticsearch_plugin_aggs_matrix_stats_client",
     "@maven//:org_elasticsearch_plugin_lang_mustache_client",
@@ -710,8 +710,3 @@ java_library(
 run_tests()
 
 run_analysis()
-
-exports_files([
-    "keystore.jks",
-    "delegate-service-config.yml",
-])

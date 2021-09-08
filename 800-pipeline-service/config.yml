@@ -214,7 +214,4 @@ hostname: ${HOSTNAME:-localhost}
 
 basePathPrefix: ${BASE_PATH_PREFIX:-}
 
-delegatePollingConfig:
-  syncDelay: 2000
-  asyncDelay: 2000
-  progressDelay: 2000
+useRedisForOrchestrationNotify: false

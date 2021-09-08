@@ -13,11 +13,10 @@ import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ClusterType;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
 import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.core.beans.DatasourceTypeDTO;
-import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
-import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.ng.beans.PageResponse;
 
@@ -65,18 +64,15 @@ public interface ActivityService {
   ActivityStatusDTO getActivityStatus(String accountId, String activityId);
   List<String> createVerificationJobInstancesForActivity(Activity activity);
   TransactionMetricInfoSummaryPageDTO getDeploymentActivityTimeSeriesData(String accountId, String activityId,
-      boolean anomalousMetricsOnly, String hostName, String filter, List<String> healthSourceIdentifiersFilter,
-      int pageNumber, int pageSize);
+      boolean anomalousMetricsOnly, String hostName, String filter, DataSourceType dataSourceType, int pageNumber,
+      int pageSize);
   Set<DatasourceTypeDTO> getDataSourcetypes(String accountId, String activityId);
 
-  List<LogAnalysisClusterChartDTO> getDeploymentActivityLogAnalysisClusters(String accountId, String activityId,
-      String hostName, List<String> healthSourceIdentifiersFilter, List<ClusterType> clusterTypesFilter);
+  List<LogAnalysisClusterChartDTO> getDeploymentActivityLogAnalysisClusters(
+      String accountId, String activityId, String hostName);
 
   PageResponse<LogAnalysisClusterDTO> getDeploymentActivityLogAnalysisResult(String accountId, String activityId,
-      Integer label, String hostName, List<String> healthSourceIdentifiers, List<ClusterType> clusterType,
-      PageParams pageParams);
+      Integer label, int pageNumber, int pageSize, String hostName, ClusterType clusterType);
 
   void abort(String activityId);
-
-  Set<HealthSourceDTO> healthSources(String accountId, String activityId);
 }

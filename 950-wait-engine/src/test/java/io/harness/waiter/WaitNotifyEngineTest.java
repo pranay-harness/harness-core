@@ -226,7 +226,7 @@ public class WaitNotifyEngineTest extends WaitEngineTestBase {
 
   @Test
   @SpringWaiter
-  @Owner(developers = PRASHANT, intermittent = true)
+  @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void shouldTestTimeoutWithResponse() {
     String uuid1 = generateUuid();

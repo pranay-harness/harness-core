@@ -131,7 +131,6 @@ public class YamlGitConfigServiceImplTest extends GitSyncTestBase {
         .gitConnectorRef(connectorId)
         .identifier(identifier)
         .gitSyncFolderConfigDTOs(rootFolder)
-        .name(repo)
         .build();
   }
 

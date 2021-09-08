@@ -967,7 +967,6 @@ public class StateMachineExecutor implements StateInspectionListener {
         break;
       }
       case NEXT_STEP:
-      case ROLLBACK_PROVISIONER_AFTER_PHASES:
       case ROLLBACK: {
         if (executionEventAdvice.getNextChildStateMachineId() != null
             || executionEventAdvice.getNextStateName() != null) {
@@ -1988,7 +1987,6 @@ public class StateMachineExecutor implements StateInspectionListener {
           break;
         }
         case END_EXECUTION:
-        case ROLLBACK_PROVISIONER_AFTER_PHASES:
         case ROLLBACK: {
           endExecution(workflowExecutionInterrupt, workflowExecution);
           break;

@@ -4,7 +4,6 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.network.Http;
-import io.harness.security.PmsAuthInterceptor;
 import io.harness.serializer.kryo.KryoConverterFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,12 +35,10 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 public class OpaClientFactory implements Provider<OpaServiceClient> {
   @Inject private KryoConverterFactory kryoConverterFactory;
 
-  private final String opaServiceBaseUrl;
-  private final String jwtAuthSecret;
+  private String opaServiceBaseUrl;
 
-  public OpaClientFactory(String opaServiceBaseUrl, String jwtAuthSecret) {
+  public OpaClientFactory(String opaServiceBaseUrl) {
     this.opaServiceBaseUrl = opaServiceBaseUrl;
-    this.jwtAuthSecret = jwtAuthSecret;
   }
 
   @Override
@@ -82,7 +79,6 @@ public class OpaClientFactory implements Provider<OpaServiceClient> {
           .connectTimeout(5, TimeUnit.SECONDS)
           .readTimeout(10, TimeUnit.SECONDS)
           .retryOnConnectionFailure(true)
-          .addInterceptor(new PmsAuthInterceptor(jwtAuthSecret))
           .sslSocketFactory(sslContext.getSocketFactory(), (X509TrustManager) trustManagers[0])
           .build();
     } catch (Exception e) {

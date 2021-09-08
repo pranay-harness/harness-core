@@ -42,7 +42,6 @@ public class PmsCommonsModuleRegistrars {
   public final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
           .add(PmsCommonsKryoRegistrar.class)
-          .addAll(YamlBeansModuleRegistrars.kryoRegistrars)
           .addAll(NGCommonsRegistrars.kryoRegistrars)
           .build();
 

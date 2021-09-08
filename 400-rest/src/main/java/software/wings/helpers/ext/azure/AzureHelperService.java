@@ -723,7 +723,7 @@ public class AzureHelperService {
     return "https://" + acrHostName + (acrHostName.endsWith("/") ? "" : "/");
   }
 
-  public void handleAzureAuthenticationException(Exception e) {
+  private void handleAzureAuthenticationException(Exception e) {
     log.error("HandleAzureAuthenticationException: Exception:" + e);
 
     Throwable e1 = e;

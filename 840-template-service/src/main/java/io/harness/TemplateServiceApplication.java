@@ -36,8 +36,6 @@ import io.harness.outbox.OutboxEventPollService;
 import io.harness.request.RequestContextFilter;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
-import io.harness.service.impl.DelegateAsyncServiceImpl;
-import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.template.InspectCommand;
 import io.harness.template.beans.yaml.NGTemplateConfig;
 import io.harness.template.entity.TemplateEntity;
@@ -76,7 +74,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -182,7 +179,6 @@ public class TemplateServiceApplication extends Application<TemplateServiceConfi
     }
 
     Injector injector = Guice.createInjector(modules);
-    registerScheduledJobs(injector);
     registerCorsFilter(templateServiceConfiguration, environment);
     registerResources(environment, injector);
     registerJerseyProviders(environment, injector);
@@ -211,13 +207,6 @@ public class TemplateServiceApplication extends Application<TemplateServiceConfi
         environment.jersey().register(injector.getInstance(resource));
       }
     }
-  }
-
-  private void registerScheduledJobs(Injector injector) {
-    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
-        .scheduleWithFixedDelay(injector.getInstance(DelegateSyncServiceImpl.class), 0L, 2L, TimeUnit.SECONDS);
-    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
-        .scheduleWithFixedDelay(injector.getInstance(DelegateAsyncServiceImpl.class), 0L, 5L, TimeUnit.SECONDS);
   }
 
   private void registerCorsFilter(TemplateServiceConfiguration appConfig, Environment environment) {

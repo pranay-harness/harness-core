@@ -16,31 +16,40 @@ http_archive(
 # Download the Go rules
 http_archive(
     name = "io_bazel_rules_go",
-    sha256 = "7904dbecbaffd068651916dce77ff3437679f9d20e1a7956bff43826e7645fcc",
+    sha256 = "7b9bbe3ea1fccb46dcfa6c3f3e29ba7ec740d8733370e21cdc8937467b4a4349",
     urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/rules_go/releases/download/v0.25.1/rules_go-v0.25.1.tar.gz",
-        "https://github.com/bazelbuild/rules_go/releases/download/v0.25.1/rules_go-v0.25.1.tar.gz",
-    ],
-)
-
-http_archive(
-    name = "bazel_gazelle",
-    sha256 = "222e49f034ca7a1d1231422cdb67066b885819885c356673cb1f72f748a3c9d4",
-    urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/bazel-gazelle/releases/download/v0.22.3/bazel-gazelle-v0.22.3.tar.gz",
-        "https://github.com/bazelbuild/bazel-gazelle/releases/download/v0.22.3/bazel-gazelle-v0.22.3.tar.gz",
+        "https://mirror.bazel.build/github.com/bazelbuild/rules_go/releases/download/v0.22.4/rules_go-v0.22.4.tar.gz",
+        "https://github.com/bazelbuild/rules_go/releases/download/v0.22.4/rules_go-v0.22.4.tar.gz",
     ],
 )
 
 # Load and call the dependencies
-load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains", "go_rules_dependencies")
-load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies", "go_repository")
+load("@io_bazel_rules_go//go:deps.bzl", "go_download_sdk", "go_register_toolchains", "go_rules_dependencies")
 
 go_rules_dependencies()
 
-go_register_toolchains(version = "1.16.4")
+go_download_sdk(
+    name = "go_sdk",
+    sdks = {
+        "darwin_amd64": ("go1.16.4.darwin-amd64.tar.gz", "18fe94775763db3878717393b6d41371b0b45206055e49b3838328120c977d13"),
+        "darwin_arm64": ("go1.16.4.darwin-arm64.tar.gz", "cb6b972cc42e669f3585c648198cd5b6f6d7a0811d413ad64b50c02ba06ccc3a"),
+        "linux_amd64": ("go1.16.4.linux-amd64.tar.gz", "7154e88f5a8047aad4b80ebace58a059e36e7e2e4eb3b383127a28c711b4ff59"),
+        "windows_amd64": ("go1.16.4.windows-amd64.zip", "d40139b7ade8a3008e3240a6f86fe8f899a9c465c917e11dac8758af216f5eb0"),
+    },
+)
 
-gazelle_dependencies()
+# Register go toolchains
+go_register_toolchains(nogo = "@//:nogo_vet")
+
+# Download Gazelle
+http_archive(
+    name = "bazel_gazelle",
+    sha256 = "d8c45ee70ec39a57e7a05e5027c32b1576cc7f16d9dd37135b0eddde45cf1b10",
+    urls = [
+        "https://storage.googleapis.com/bazel-mirror/github.com/bazelbuild/bazel-gazelle/releases/download/v0.20.0/bazel-gazelle-v0.20.0.tar.gz",
+        "https://github.com/bazelbuild/bazel-gazelle/releases/download/v0.20.0/bazel-gazelle-v0.20.0.tar.gz",
+    ],
+)
 
 http_archive(
     name = "rules_proto_grpc",
@@ -62,6 +71,11 @@ rules_proto_grpc_java_repos()
 load("@io_grpc_grpc_java//:repositories.bzl", "grpc_java_repositories")
 
 grpc_java_repositories()
+
+# Load and call Gazelle dependencies
+load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies", "go_repository")
+
+gazelle_dependencies()
 
 http_archive(
     name = "com_github_query_builder_generator",
@@ -92,12 +106,12 @@ go_repository(
     version = "v0.20.0",
 )
 
-# go_repository(
-#     name = "com_github_bazelbuild_buildtools",
-#     importpath = "github.com/bazelbuild/buildtools",
-#     sum = "h1:OfyUN/Msd8yqJww6deQ9vayJWw+Jrbe6Qp9giv51QQI=",
-#     version = "v0.0.0-20190731111112-f720930ceb60",
-# )
+go_repository(
+    name = "com_github_bazelbuild_buildtools",
+    importpath = "github.com/bazelbuild/buildtools",
+    sum = "h1:OfyUN/Msd8yqJww6deQ9vayJWw+Jrbe6Qp9giv51QQI=",
+    version = "v0.0.0-20190731111112-f720930ceb60",
+)
 
 go_repository(
     name = "com_github_bazelbuild_rules_go",
@@ -4242,7 +4256,6 @@ plain_artifacts = [
     "com.azure:azure-storage-common:12.9.0",
     "com.bertramlabs.plugins:hcl4j:0.1.7",
     "com.bettercloud:vault-java-driver:4.0.0",
-    "com.rabbitmq:amqp-client:jar:4.8.0",
     "com.bugsnag:bugsnag:3.6.2",
     "com.carrotsearch:hppc:0.8.1",
     "com.coveo:saml-client:3.0.2",
@@ -4470,6 +4483,7 @@ plain_artifacts = [
     "de.jkeylockmanager:jkeylockmanager:2.1.0",
     "dk.brics.automaton:automaton:1.11-8",
     "dnsjava:dnsjava:2.1.8",
+    "dom4j:dom4j:1.6.1",
     "es.moki.ratelimitj:ratelimitj-core:0.6.0",
     "es.moki.ratelimitj:ratelimitj-inmemory:0.6.0",
     "guru.nidi.com.kitfox:svgSalamander:1.1.3",
@@ -4659,7 +4673,7 @@ plain_artifacts = [
     "org.apache.commons:commons-lang3:3.7",
     "org.apache.commons:commons-math3:3.6.1",
     "org.apache.commons:commons-text:1.2",
-    "org.apache.cxf:cxf-core:3.3.10",
+    "org.apache.cxf:cxf-core:3.3.5",
     "org.apache.cxf:cxf-rt-bindings-soap:3.3.5",
     "org.apache.cxf:cxf-rt-bindings-xml:3.3.5",
     "org.apache.cxf:cxf-rt-databinding-jaxb:3.3.5",
@@ -4736,45 +4750,44 @@ plain_artifacts = [
     "org.conscrypt:conscrypt-openjdk-uber:2.5.1",
     "org.coursera:metrics-datadog:1.1.13",
     "org.cryptacular:cryptacular:1.1.4",
-    "org.eclipse.jetty.http2:http2-common:9.4.41.v20210516",
-    "org.eclipse.jetty.http2:http2-hpack:9.4.41.v20210516",
-    "org.eclipse.jetty.http2:http2-xxxxxxxx9.4.41.v20210516",
+    "org.eclipse.jetty.http2:http2-common:9.4.35.v20201120",
+    "org.eclipse.jetty.http2:http2-hpack:9.4.35.v20201120",
+    "org.eclipse.jetty.http2:http2-xxxxxxxx9.4.35.v20201120",
     "org.eclipse.jetty.toolchain.setuid:jetty-setuid-java:1.0.3",
-    "org.eclipse.jetty.websocket:websocket-api:9.4.41.v20210516",
-    "org.eclipse.jetty.websocket:websocket-client:9.4.41.v20210516",
-    "org.eclipse.jetty.websocket:websocket-common:9.4.41.v20210516",
-    "org.eclipse.jetty.websocket:websocket-xxxxxxxx9.4.41.v20210516",
-    "org.eclipse.jetty.websocket:websocket-servlet:9.4.41.v20210516",
-    "org.eclipse.jetty:jetty-alpn-openjdk8-xxxxxxxx9.4.41.v20210516",
-    "org.eclipse.jetty:jetty-alpn-xxxxxxxx9.4.41.v20210516",
-    "org.eclipse.jetty:jetty-client:9.4.41.v20210516",
-    "org.eclipse.jetty:jetty-continuation:9.4.41.v20210516",
-    "org.eclipse.jetty:jetty-http:9.4.41.v20210516",
-    "org.eclipse.jetty:jetty-io:9.4.41.v20210516",
-    "org.eclipse.jetty:jetty-security:9.4.41.v20210516",
-    "org.eclipse.jetty:jetty-xxxxxxxx9.4.41.v20210516",
-    "org.eclipse.jetty:jetty-servlet:9.4.41.v20210516",
-    "org.eclipse.jetty:jetty-servlets:9.4.41.v20210516",
-    "org.eclipse.jetty:jetty-util:9.4.41.v20210516",
-    "org.eclipse.jetty:jetty-webapp:9.4.41.v20210516",
-    "org.eclipse.jetty:jetty-xml:9.4.41.v20210516",
+    "org.eclipse.jetty.websocket:websocket-api:9.4.35.v20201120",
+    "org.eclipse.jetty.websocket:websocket-client:9.4.35.v20201120",
+    "org.eclipse.jetty.websocket:websocket-common:9.4.35.v20201120",
+    "org.eclipse.jetty.websocket:websocket-xxxxxxxx9.4.35.v20201120",
+    "org.eclipse.jetty.websocket:websocket-servlet:9.4.35.v20201120",
+    "org.eclipse.jetty:jetty-alpn-openjdk8-xxxxxxxx9.4.35.v20201120",
+    "org.eclipse.jetty:jetty-alpn-xxxxxxxx9.4.35.v20201120",
+    "org.eclipse.jetty:jetty-client:9.4.35.v20201120",
+    "org.eclipse.jetty:jetty-continuation:9.4.35.v20201120",
+    "org.eclipse.jetty:jetty-http:9.4.35.v20201120",
+    "org.eclipse.jetty:jetty-io:9.4.35.v20201120",
+    "org.eclipse.jetty:jetty-security:9.4.35.v20201120",
+    "org.eclipse.jetty:jetty-xxxxxxxx9.4.35.v20201120",
+    "org.eclipse.jetty:jetty-servlet:9.4.35.v20201120",
+    "org.eclipse.jetty:jetty-servlets:9.4.35.v20201120",
+    "org.eclipse.jetty:jetty-util:9.4.35.v20201120",
+    "org.eclipse.jetty:jetty-webapp:9.4.35.v20201120",
+    "org.eclipse.jetty:jetty-xml:9.4.35.v20201120",
     "org.eclipse.jgit:org.eclipse.jgit.http.apache:5.3.0.201903130848-r",
     "org.eclipse.jgit:org.eclipse.jgit:5.3.0.201903130848-r",
-    "org.elasticsearch.client:elasticsearch-rest-client:7.11.1",
-    "org.elasticsearch.client:elasticsearch-rest-high-level-client:7.11.1",
-    "org.elasticsearch.plugin:aggs-matrix-stats-client:7.11.1",
-    "org.elasticsearch.plugin:lang-mustache-client:7.11.1",
-    "org.elasticsearch.plugin:mapper-extras-client:7.11.1",
-    "org.elasticsearch.plugin:parent-join-client:7.11.1",
-    "org.elasticsearch.plugin:rank-eval-client:7.11.1",
-    "org.elasticsearch:elasticsearch-cli:7.11.1",
-    "org.elasticsearch:elasticsearch-core:7.11.1",
-    "org.elasticsearch:elasticsearch-geo:7.11.1",
-    "org.elasticsearch:elasticsearch-secure-sm:7.11.1",
-    "org.elasticsearch:elasticsearch-x-content:7.11.1",
-    "org.elasticsearch:elasticsearch:7.11.1",
-    "org.elasticsearch:elasticsearch-plugin-classloader:7.11.1",
-    "org.elasticsearch:jna:5.5.0",
+    "org.elasticsearch.client:elasticsearch-rest-client:7.7.0",
+    "org.elasticsearch.client:elasticsearch-rest-high-level-client:7.7.0",
+    "org.elasticsearch.plugin:aggs-matrix-stats-client:7.7.0",
+    "org.elasticsearch.plugin:lang-mustache-client:7.7.0",
+    "org.elasticsearch.plugin:mapper-extras-client:7.7.0",
+    "org.elasticsearch.plugin:parent-join-client:7.7.0",
+    "org.elasticsearch.plugin:rank-eval-client:7.7.0",
+    "org.elasticsearch:elasticsearch-cli:7.7.0",
+    "org.elasticsearch:elasticsearch-core:7.7.0",
+    "org.elasticsearch:elasticsearch-geo:7.7.0",
+    "org.elasticsearch:elasticsearch-secure-sm:7.7.0",
+    "org.elasticsearch:elasticsearch-x-content:7.7.0",
+    "org.elasticsearch:elasticsearch:7.7.0",
+    "org.elasticsearch:jna:4.5.1",
     "org.freemarker:freemarker:2.3.28",
     "org.glassfish.hk2.external:aopalliance-repackaged:2.5.0-b32",
     "org.glassfish.hk2.external:javax.inject:2.5.0-b32",
@@ -5249,20 +5262,6 @@ container_pull(
     registry = "us.gcr.io",
     repository = "platform-205701/ubuntu",
     tag = "safe-ubuntu18.04-sec1338",
-)
-
-container_pull(
-    name = "openjdk_8u242",
-    registry = "index.docker.io",
-    repository = "adoptopenjdk/openjdk8",
-    tag = "x86_64-alpine-jdk8u242-b08",
-)
-
-container_pull(
-    name = "nginx",
-    registry = "index.docker.io",
-    repository = "nginx",
-    tag = "latest",
 )
 
 load(

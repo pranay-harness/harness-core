@@ -82,14 +82,13 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
   @Trimmed @Email private String authorEmailId;
   @Trimmed private String commitMessage;
   private List<String> delegateSelectors;
-  @Default private ProviderType providerType = ProviderType.GIT;
 
   @Builder
   public GitConfig(String username, char[] password, String repoUrl, String branch, String accountId,
       String encryptedPassword, String sshSettingId, SettingAttribute sshSettingAttribute, boolean keyAuth,
       AuthenticationScheme authenticationScheme, String description, String webhookToken, GitRepositoryType gitRepoType,
       boolean generateWebhookUrl, String authorName, String authorEmailId, String commitMessage, UrlType urlType,
-      String repoName, String reference, List<String> delegateSelectors, ProviderType providerType) {
+      String repoName, String reference, List<String> delegateSelectors) {
     super(SettingVariableTypes.GIT.name());
     this.username = username;
     this.password = password == null ? null : password.clone();
@@ -112,7 +111,6 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
     this.repoName = repoName;
     this.reference = reference;
     this.delegateSelectors = delegateSelectors;
-    this.providerType = providerType;
   }
 
   @Override
@@ -135,8 +133,6 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
   }
 
   public enum UrlType { REPO, ACCOUNT }
-
-  public enum ProviderType { GITHUB, GITLAB, GIT }
 
   /**
    * Instantiates a new setting value.
@@ -170,13 +166,12 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
     private String commitMessage;
     private UrlType urlType;
     private List<String> delegateSelectors;
-    private ProviderType providerType;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String url, String username, String password, String branch,
         String reference, UsageRestrictions.Yaml usageRestrictions, boolean keyAuth, String sshKeyName,
         String description, String authorName, String authorEmailId, String commitMessage, UrlType urlType,
-        List<String> delegateSelectors, ProviderType providerType) {
+        List<String> delegateSelectors) {
       super(type, harnessApiVersion, url, username, password, usageRestrictions);
       this.branch = branch;
       this.reference = reference;
@@ -188,7 +183,6 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
       this.commitMessage = commitMessage;
       this.urlType = urlType;
       this.delegateSelectors = delegateSelectors;
-      this.providerType = providerType;
     }
   }
 }

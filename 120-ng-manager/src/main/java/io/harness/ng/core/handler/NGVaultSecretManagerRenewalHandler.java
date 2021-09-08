@@ -72,31 +72,26 @@ public class NGVaultSecretManagerRenewalHandler implements Handler<VaultConnecto
   @Override
   public void handle(VaultConnector vaultConnector) {
     log.info("renewing client tokens for {}", vaultConnector.getUuid());
-    if (vaultConnector.isUseVaultAgent()) {
-      log.info("Vault {} configured with Vault-Agent and does not need renewal", vaultConnector.getUuid());
-      return;
-    } else {
-      vaultConnector = mongoTemplate.findById(vaultConnector.getId(), VaultConnector.class);
-      try {
-        long renewalInterval = vaultConnector.getRenewalIntervalMinutes();
+    vaultConnector = mongoTemplate.findById(vaultConnector.getId(), VaultConnector.class);
+    try {
+      long renewalInterval = vaultConnector.getRenewalIntervalMinutes();
 
-        if (renewalInterval <= 0) {
-          log.info("Vault {} not configured for renewal.", vaultConnector.getUuid());
-          return;
-        }
-        if (!checkIfEligibleForRenewal(vaultConnector.getRenewedAt(), renewalInterval)) {
-          log.info("Vault config {} renewed at {} not renewing now", vaultConnector.getUuid(),
-              vaultConnector.getRenewedAt());
-          return;
-        }
-        if (vaultConnector.getAccessType() == APP_ROLE) {
-          vaultService.renewAppRoleClientToken(vaultConnector);
-        } else {
-          vaultService.renewToken(vaultConnector);
-        }
-      } catch (Exception e) {
-        log.info("Failed to renew vault token for vault id {}", vaultConnector.getUuid(), e);
+      if (renewalInterval <= 0) {
+        log.info("Vault {} not configured for renewal.", vaultConnector.getUuid());
+        return;
       }
+      if (!checkIfEligibleForRenewal(vaultConnector.getRenewedAt(), renewalInterval)) {
+        log.info(
+            "Vault config {} renewed at {} not renewing now", vaultConnector.getUuid(), vaultConnector.getRenewedAt());
+        return;
+      }
+      if (vaultConnector.getAccessType() == APP_ROLE) {
+        vaultService.renewAppRoleClientToken(vaultConnector);
+      } else {
+        vaultService.renewToken(vaultConnector);
+      }
+    } catch (Exception e) {
+      log.info("Failed to renew vault token for vault id {}", vaultConnector.getUuid(), e);
     }
   }
 

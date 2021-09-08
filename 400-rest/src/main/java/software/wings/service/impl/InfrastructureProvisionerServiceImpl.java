@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.GIT_HOST_CONNECTIVITY;
-import static io.harness.beans.FeatureName.TERRAFORM_CONFIG_INSPECT_VERSION_SELECTOR;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -767,8 +766,6 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
                     .parameters(new Object[] {
                         TerraformProvisionParameters.builder()
                             .scriptPath(terraformDirectory)
-                            .useTfConfigInspectLatestVersion(
-                                featureFlagService.isEnabled(TERRAFORM_CONFIG_INSPECT_VERSION_SELECTOR, accountId))
                             .sourceRepoSettingId(gitSettingAttribute.getUuid())
                             .sourceRepo(gitConfig)
                             .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, appId, null))
@@ -850,8 +847,6 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
                     .parameters(new Object[] {
                         TerraformProvisionParameters.builder()
                             .sourceRepoSettingId(settingAttribute.getUuid())
-                            .useTfConfigInspectLatestVersion(
-                                featureFlagService.isEnabled(TERRAFORM_CONFIG_INSPECT_VERSION_SELECTOR, accountId))
                             .sourceRepo(gitConfig)
                             .sourceRepoBranch(terraformInfrastructureProvisioner.getSourceRepoBranch())
                             .commitId(terraformInfrastructureProvisioner.getCommitId())

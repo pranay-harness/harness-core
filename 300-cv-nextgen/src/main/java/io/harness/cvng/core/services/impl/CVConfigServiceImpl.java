@@ -13,7 +13,6 @@ import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.beans.DatasourceTypeDTO;
-import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.entities.CVConfig.CVConfigUpdatableEntity;
@@ -330,25 +329,6 @@ public class CVConfigServiceImpl implements CVConfigService {
   }
 
   @Override
-  public List<CVConfig> list(ServiceEnvironmentParams serviceEnvironmentParams, List<String> identifiers) {
-    Query<CVConfig> query = createQuery(serviceEnvironmentParams);
-
-    if (identifiers != null) {
-      query.field(CVConfigKeys.identifier).in(identifiers);
-    }
-    return query.asList();
-  }
-
-  @Override
-  public Map<String, DataSourceType> getDataSourceTypeForCVConfigs(
-      ServiceEnvironmentParams serviceEnvironmentParams, List<String> cvConfigIds) {
-    Map<String, DataSourceType> cvConfigIdDataSourceTypeMap = new HashMap<>();
-    Query<CVConfig> query = createQuery(serviceEnvironmentParams);
-    query.asList().forEach(cvConfig -> cvConfigIdDataSourceTypeMap.put(cvConfig.getUuid(), cvConfig.getType()));
-    return cvConfigIdDataSourceTypeMap;
-  }
-
-  @Override
   public boolean isProductionConfig(CVConfig cvConfig) {
     EnvironmentResponseDTO environment = nextGenService.getEnvironment(cvConfig.getAccountId(),
         cvConfig.getOrgIdentifier(), cvConfig.getProjectIdentifier(), cvConfig.getEnvIdentifier());
@@ -416,15 +396,6 @@ public class CVConfigServiceImpl implements CVConfigService {
     List<String> serviceIdentifiers =
         hPersistence.getCollection(CVConfig.class).distinct(CVConfigKeys.serviceIdentifier, cvConfigQuery);
     return serviceIdentifiers.size();
-  }
-
-  private Query createQuery(ServiceEnvironmentParams serviceEnvironmentParams) {
-    return hPersistence.createQuery(CVConfig.class, excludeAuthority)
-        .filter(CVConfigKeys.accountId, serviceEnvironmentParams.getAccountIdentifier())
-        .filter(CVConfigKeys.orgIdentifier, serviceEnvironmentParams.getOrgIdentifier())
-        .filter(CVConfigKeys.projectIdentifier, serviceEnvironmentParams.getProjectIdentifier())
-        .filter(CVConfigKeys.serviceIdentifier, serviceEnvironmentParams.getServiceIdentifier())
-        .filter(CVConfigKeys.envIdentifier, serviceEnvironmentParams.getEnvironmentIdentifier());
   }
 
   private void deleteConfigsForEntity(

@@ -327,6 +327,7 @@ java_library(
         "@maven//:de_jkeylockmanager_jkeylockmanager",
         "@maven//:dk_brics_automaton_automaton",
         "@maven//:dnsjava_dnsjava",
+        "@maven//:dom4j_dom4j",
         "@maven//:es_moki_ratelimitj_ratelimitj_core",
         "@maven//:es_moki_ratelimitj_ratelimitj_inmemory",
         "@maven//:guru_nidi_com_kitfox_svgSalamander",
@@ -580,7 +581,6 @@ java_library(
         "@maven//:org_elasticsearch_elasticsearch_cli",
         "@maven//:org_elasticsearch_elasticsearch_core",
         "@maven//:org_elasticsearch_elasticsearch_geo",
-        "@maven//:org_elasticsearch_elasticsearch_plugin_classloader",
         "@maven//:org_elasticsearch_elasticsearch_secure_sm",
         "@maven//:org_elasticsearch_elasticsearch_x_content",
         "@maven//:org_elasticsearch_jna",
@@ -1020,6 +1020,7 @@ java_library(
         "@maven//:de_jkeylockmanager_jkeylockmanager",
         "@maven//:dk_brics_automaton_automaton",
         "@maven//:dnsjava_dnsjava",
+        "@maven//:dom4j_dom4j",
         "@maven//:es_moki_ratelimitj_ratelimitj_core",
         "@maven//:es_moki_ratelimitj_ratelimitj_inmemory",
         "@maven//:guru_nidi_com_kitfox_svgSalamander",
@@ -1277,7 +1278,6 @@ java_library(
         "@maven//:org_elasticsearch_elasticsearch_cli",
         "@maven//:org_elasticsearch_elasticsearch_core",
         "@maven//:org_elasticsearch_elasticsearch_geo",
-        "@maven//:org_elasticsearch_elasticsearch_plugin_classloader",
         "@maven//:org_elasticsearch_elasticsearch_secure_sm",
         "@maven//:org_elasticsearch_elasticsearch_x_content",
         "@maven//:org_elasticsearch_jna",
@@ -1712,6 +1712,7 @@ test_targets = run_package_tests(
         "@maven//:de_jkeylockmanager_jkeylockmanager",
         "@maven//:dk_brics_automaton_automaton",
         "@maven//:dnsjava_dnsjava",
+        "@maven//:dom4j_dom4j",
         "@maven//:es_moki_ratelimitj_ratelimitj_core",
         "@maven//:es_moki_ratelimitj_ratelimitj_inmemory",
         "@maven//:guru_nidi_com_kitfox_svgSalamander",
@@ -1969,7 +1970,6 @@ test_targets = run_package_tests(
         "@maven//:org_elasticsearch_elasticsearch_cli",
         "@maven//:org_elasticsearch_elasticsearch_core",
         "@maven//:org_elasticsearch_elasticsearch_geo",
-        "@maven//:org_elasticsearch_elasticsearch_plugin_classloader",
         "@maven//:org_elasticsearch_elasticsearch_secure_sm",
         "@maven//:org_elasticsearch_elasticsearch_x_content",
         "@maven//:org_elasticsearch_jna",
@@ -2405,6 +2405,7 @@ java_library(
         "@maven//:de_jkeylockmanager_jkeylockmanager",
         "@maven//:dk_brics_automaton_automaton",
         "@maven//:dnsjava_dnsjava",
+        "@maven//:dom4j_dom4j",
         "@maven//:es_moki_ratelimitj_ratelimitj_core",
         "@maven//:es_moki_ratelimitj_ratelimitj_inmemory",
         "@maven//:guru_nidi_com_kitfox_svgSalamander",
@@ -2665,7 +2666,6 @@ java_library(
         "@maven//:org_elasticsearch_elasticsearch_cli",
         "@maven//:org_elasticsearch_elasticsearch_core",
         "@maven//:org_elasticsearch_elasticsearch_geo",
-        "@maven//:org_elasticsearch_elasticsearch_plugin_classloader",
         "@maven//:org_elasticsearch_elasticsearch_secure_sm",
         "@maven//:org_elasticsearch_elasticsearch_x_content",
         "@maven//:org_elasticsearch_jna",
@@ -2789,10 +2789,5 @@ java_library(
         "@maven//:xpp3_xpp3",
     ],
 )
-
-exports_files([
-    "hazelcast.xml",
-    "redisson-jcache.yaml",
-])
 
 run_analysis(test_targets = test_targets)

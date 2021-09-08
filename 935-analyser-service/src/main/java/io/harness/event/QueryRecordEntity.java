@@ -49,8 +49,7 @@ public class QueryRecordEntity {
 
   @Wither @Id @org.mongodb.morphia.annotations.Id String id;
   @NonNull String hash;
-  @NonNull String fullVersion;
-  @NonNull String majorVersion;
+  @NonNull String version;
   @NonNull String serviceName;
 
   QueryExplainResult explainResult;

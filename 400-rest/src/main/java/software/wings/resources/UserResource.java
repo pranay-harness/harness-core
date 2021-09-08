@@ -655,10 +655,9 @@ public class UserResource {
   @PublicApi
   @Timed
   @ExceptionMetered
-  public RestResponse<User> forceLoginUsingHarnessPassword(
-      @QueryParam("accountId") String accountId, LoginRequest loginBody) {
+  public RestResponse<User> forceLoginUsingHarnessPassword(LoginRequest loginBody) {
     return new RestResponse<>(authenticationManager.loginUsingHarnessPassword(
-        authenticationManager.extractToken(loginBody.getAuthorization(), BASIC), accountId));
+        authenticationManager.extractToken(loginBody.getAuthorization(), BASIC)));
   }
 
   @POST
@@ -854,11 +853,10 @@ public class UserResource {
   @Timed
   @ExceptionMetered
   public javax.ws.rs.core.Response samlLogin(@FormParam(value = "SAMLResponse") String samlResponse,
-      @FormParam(value = "RelayState") String relayState, @Context HttpServletRequest request,
-      @Context HttpServletResponse response, @QueryParam("accountId") @NotEmpty String accountId) {
+      @Context HttpServletRequest request, @Context HttpServletResponse response) {
     try {
       return authenticationManager.samlLogin(
-          request.getHeader(com.google.common.net.HttpHeaders.REFERER), samlResponse, accountId, relayState);
+          request.getHeader(com.google.common.net.HttpHeaders.REFERER), samlResponse);
     } catch (URISyntaxException e) {
       throw new WingsException(ErrorCode.UNKNOWN_ERROR, e);
     }

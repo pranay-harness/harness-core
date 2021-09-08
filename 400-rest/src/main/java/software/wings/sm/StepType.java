@@ -124,7 +124,6 @@ import software.wings.common.WorkflowConstants;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.impl.yaml.handler.workflow.ApprovalStepYamlBuilder;
 import software.wings.service.impl.yaml.handler.workflow.BambooStepYamlBuilder;
-import software.wings.service.impl.yaml.handler.workflow.BarrierStepYamlBuilder;
 import software.wings.service.impl.yaml.handler.workflow.CloudFormationProvisionStepYamlBuilder;
 import software.wings.service.impl.yaml.handler.workflow.CommandStepYamlBuilder;
 import software.wings.service.impl.yaml.handler.workflow.EmailStepYamlBuilder;
@@ -680,7 +679,7 @@ public enum StepType {
   // Flow Control
   BARRIER(BarrierState.class, WorkflowServiceHelper.BARRIER, asList(WorkflowStepType.FLOW_CONTROL),
       asList(PhaseStepType.values()), asList(DeploymentType.values()),
-      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), BarrierStepYamlBuilder.class),
+      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK)),
   RESOURCE_CONSTRAINT(ResourceConstraintState.class, WorkflowServiceHelper.RESOURCE_CONSTRAINT,
       asList(WorkflowStepType.FLOW_CONTROL), asList(PhaseStepType.values()), asList(DeploymentType.values()),
       asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), ResourceConstraintStepYamlBuilder.class),

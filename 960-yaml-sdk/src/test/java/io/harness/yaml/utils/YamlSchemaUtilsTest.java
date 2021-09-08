@@ -50,10 +50,8 @@ public class YamlSchemaUtilsTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetFieldName() {
     final Field[] declaredFields = TestClass.ClassWithApiModelOverride.class.getDeclaredFields();
-    final Set<String> result = Arrays.stream(declaredFields)
-                                   .map(YamlSchemaUtils::getFieldName)
-                                   .filter(field -> !field.equals("$jacocoData"))
-                                   .collect(Collectors.toSet());
+    final Set<String> result =
+        Arrays.stream(declaredFields).map(YamlSchemaUtils::getFieldName).collect(Collectors.toSet());
     assertThat(result).containsExactlyInAnyOrder("a", "testString", "b", "apimodelproperty", "jsontypeinfo");
   }
 }

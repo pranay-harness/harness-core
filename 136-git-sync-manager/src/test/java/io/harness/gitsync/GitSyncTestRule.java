@@ -119,9 +119,6 @@ public class GitSyncTestRule implements InjectorRuleMixin, MethodRule, MongoRule
         bind(PersistentLocker.class).toInstance(mock(PersistentLocker.class));
         bind(WebhookEventService.class).toInstance(mock(WebhookEventService.class));
         bind(AccountClient.class).toInstance(mock(AccountClient.class));
-        bind(Producer.class)
-            .annotatedWith(Names.named(EventsFrameworkConstants.SETUP_USAGE))
-            .toInstance(mock(NoOpProducer.class));
       }
     });
 

@@ -18,5 +18,4 @@ public class UserGroupFilterDTO {
   String accountIdentifier;
   String orgIdentifier;
   String projectIdentifier;
-  String searchTerm;
 }

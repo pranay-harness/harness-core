@@ -33,6 +33,7 @@ import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
 import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
 import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.ActivityType;
@@ -40,8 +41,6 @@ import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.DatasourceTypeDTO;
-import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
-import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.WebhookService;
@@ -58,7 +57,6 @@ import io.harness.persistence.HQuery;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -96,7 +94,6 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private AlertRuleService alertRuleService;
   @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
   @Inject private DeploymentLogAnalysisService deploymentLogAnalysisService;
-  @Inject private Injector injector;
 
   @Override
   public Activity get(String activityId) {
@@ -616,15 +613,15 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public TransactionMetricInfoSummaryPageDTO getDeploymentActivityTimeSeriesData(String accountId, String activityId,
-      boolean anomalousMetricsOnly, String hostName, String filter, List<String> healthSourceIdentifiersFilter,
-      int pageNumber, int pageSize) {
+      boolean anomalousMetricsOnly, String hostName, String filter, DataSourceType dataSourceType, int pageNumber,
+      int pageSize) {
     List<String> verificationJobInstanceIds = getVerificationJobInstanceId(activityId);
     // TODO: We currently support only one verificationJobInstance per deployment. Hence this check. Revisit if that
     // changes later
     Preconditions.checkState(verificationJobInstanceIds.size() == 1,
         "We do not support more than one monitored source validation from deployment");
     return deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceIds.get(0),
-        anomalousMetricsOnly, hostName, filter, healthSourceIdentifiersFilter, pageNumber);
+        anomalousMetricsOnly, hostName, filter, dataSourceType, pageNumber);
   }
 
   @Override
@@ -635,28 +632,26 @@ public class ActivityServiceImpl implements ActivityService {
   }
 
   @Override
-  public List<LogAnalysisClusterChartDTO> getDeploymentActivityLogAnalysisClusters(String accountId, String activityId,
-      String hostName, List<String> healthSourceIdentifiersFilter, List<ClusterType> clusterTypesFilter) {
+  public List<LogAnalysisClusterChartDTO> getDeploymentActivityLogAnalysisClusters(
+      String accountId, String activityId, String hostName) {
     List<String> verificationJobInstanceIds = getVerificationJobInstanceId(activityId);
     // TODO: We currently support only one verificationJobInstance per deployment. Hence this check. Revisit if that
     // changes later
     Preconditions.checkState(verificationJobInstanceIds.size() == 1,
         "We do not support more than one monitored source validation from deployment");
-    return deploymentLogAnalysisService.getLogAnalysisClusters(
-        accountId, verificationJobInstanceIds.get(0), hostName, healthSourceIdentifiersFilter, clusterTypesFilter);
+    return deploymentLogAnalysisService.getLogAnalysisClusters(accountId, verificationJobInstanceIds.get(0), hostName);
   }
 
   @Override
   public PageResponse<LogAnalysisClusterDTO> getDeploymentActivityLogAnalysisResult(String accountId, String activityId,
-      Integer label, String hostName, List<String> healthSourceIdentifiers, List<ClusterType> clusterTypes,
-      PageParams pageParams) {
+      Integer label, int pageNumber, int pageSize, String hostName, ClusterType clusterType) {
     List<String> verificationJobInstanceIds = getVerificationJobInstanceId(activityId);
     // TODO: We currently support only one verificationJobInstance per deployment. Hence this check. Revisit if that
     // changes later
     Preconditions.checkState(verificationJobInstanceIds.size() == 1,
         "We do not support more than one monitored source validation from deployment");
-    return deploymentLogAnalysisService.getLogAnalysisResult(accountId, verificationJobInstanceIds.get(0), label,
-        hostName, healthSourceIdentifiers, clusterTypes, pageParams);
+    return deploymentLogAnalysisService.getLogAnalysisResult(
+        accountId, verificationJobInstanceIds.get(0), label, pageNumber, pageSize, hostName, clusterType);
   }
 
   @Override
@@ -669,19 +664,6 @@ public class ActivityServiceImpl implements ActivityService {
     if (activity != null) {
       verificationJobInstanceService.abort(activity.getVerificationJobInstanceIds());
     }
-  }
-
-  @Override
-  public Set<HealthSourceDTO> healthSources(String accountId, String activityId) {
-    Set<HealthSourceDTO> healthSourceDTOS = new HashSet<>();
-    List<VerificationJobInstance> verificationJobInstances =
-        verificationJobInstanceService.get(getVerificationJobInstanceId(activityId));
-    verificationJobInstances.forEach(verificationJobInstance -> {
-      verificationJobInstance.getCvConfigMap().forEach((s, cvConfig) -> {
-        healthSourceDTOS.add(HealthSourceDTO.toHealthSourceDTO(HealthSourceDTO.toHealthSource(cvConfig, injector)));
-      });
-    });
-    return healthSourceDTOS;
   }
 
   private List<String> getVerificationJobInstanceId(String activityId) {

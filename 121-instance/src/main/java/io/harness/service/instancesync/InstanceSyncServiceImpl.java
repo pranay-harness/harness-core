@@ -556,22 +556,14 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
   }
 
   private void logInstances(String operation, List<InstanceDTO> instanceDTOList) {
-    if (instanceDTOList.isEmpty()) {
-      return;
-    }
     StringBuilder stringBuilder = new StringBuilder();
-    instanceDTOList.forEach(instanceDTO -> stringBuilder.append(instanceDTO.getInstanceKey()).append(" :: "));
-    log.info("Instance Operation : {} , count : {} , details : {}", operation, instanceDTOList.size(),
-        stringBuilder.toString());
+    instanceDTOList.forEach(instanceDTO -> stringBuilder.append(instanceDTO.getInstanceKey()));
+    log.info("Instance Operation : {} , details : {}", operation, stringBuilder.toString());
   }
 
   private void logServerInstances(List<ServerInstanceInfo> serverInstanceInfoList) {
-    if (serverInstanceInfoList.isEmpty()) {
-      return;
-    }
     StringBuilder stringBuilder = new StringBuilder();
-    serverInstanceInfoList.forEach(
-        serverInstanceInfo -> stringBuilder.append(serverInstanceInfo.toString()).append(" :: "));
+    serverInstanceInfoList.forEach(serverInstanceInfo -> stringBuilder.append(serverInstanceInfo.toString()));
     log.info("Server Instances in the perpetual task response : {}", stringBuilder.toString());
   }
 }

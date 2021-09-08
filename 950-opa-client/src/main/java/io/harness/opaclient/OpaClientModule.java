@@ -7,16 +7,14 @@ import com.google.inject.AbstractModule;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class OpaClientModule extends AbstractModule {
-  private final String opaServiceBaseUrl;
-  private final String jwtAuthSecret;
+  private String opaServiceBaseUrl;
 
-  public OpaClientModule(String opaServiceBaseUrl, String jwtAuthSecret) {
+  public OpaClientModule(String opaServiceBaseUrl) {
     this.opaServiceBaseUrl = opaServiceBaseUrl;
-    this.jwtAuthSecret = jwtAuthSecret;
   }
 
   @Override
   public void configure() {
-    bind(OpaServiceClient.class).toProvider(new OpaClientFactory(opaServiceBaseUrl, jwtAuthSecret));
+    bind(OpaServiceClient.class).toProvider(new OpaClientFactory(opaServiceBaseUrl));
   }
 }

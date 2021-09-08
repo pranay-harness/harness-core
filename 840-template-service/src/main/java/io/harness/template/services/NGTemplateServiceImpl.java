@@ -12,36 +12,21 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.helpers.GitContextHelper;
-import io.harness.gitsync.interceptor.GitEntityFindInfoDTO;
-import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.repositories.NGTemplateRepository;
-import io.harness.springdata.TransactionHelper;
-import io.harness.template.beans.TemplateFilterPropertiesDTO;
 import io.harness.template.entity.TemplateEntity;
-import io.harness.template.entity.TemplateEntity.TemplateEntityKeys;
-import io.harness.template.gitsync.TemplateGitSyncBranchContextGuard;
 import io.harness.template.mappers.NGTemplateDtoMapper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.util.Collections;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.query.Criteria;
 
 @Singleton
 @Slf4j
 @OwnedBy(CDC)
 public class NGTemplateServiceImpl implements NGTemplateService {
   @Inject private NGTemplateRepository templateRepository;
-  @Inject private NGTemplateServiceHelper templateServiceHelper;
-  @Inject private GitSyncSdkService gitSyncSdkService;
-  @Inject private TransactionHelper transactionHelper;
 
   private static final String DUP_KEY_EXP_FORMAT_STRING =
       "Template [%s] of label [%s] under Project[%s], Organization [%s] already exists";
@@ -51,13 +36,6 @@ public class NGTemplateServiceImpl implements NGTemplateService {
     try {
       NGTemplateServiceHelper.validatePresenceOfRequiredFields(
           templateEntity.getAccountId(), templateEntity.getIdentifier(), templateEntity.getVersionLabel());
-
-      // Check if this is template identifier first entry, for marking it as stable template.
-      if (checkIfGivenTemplateShouldBeMarkedStable(templateEntity.getAccountId(), templateEntity.getOrgIdentifier(),
-              templateEntity.getProjectIdentifier(), templateEntity.getIdentifier(), false)) {
-        templateEntity = templateEntity.withStableTemplate(true);
-      }
-
       return templateRepository.save(templateEntity, NGTemplateDtoMapper.toDTO(templateEntity));
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(
@@ -163,11 +141,6 @@ public class NGTemplateServiceImpl implements NGTemplateService {
           "Template with identifier [%s] and versionLabel [%s], under Project[%s], Organization [%s] is not on the correct version.",
           templateIdentifier, versionLabel, projectIdentifier, orgIdentifier));
     }
-    if (existingTemplate.isStableTemplate()) {
-      throw new InvalidRequestException(format(
-          "Template with identifier [%s] and versionLabel [%s], under Project[%s], Organization [%s] is a stable template, thus cannot delete it.",
-          templateIdentifier, versionLabel, projectIdentifier, orgIdentifier));
-    }
     TemplateEntity withDeleted = existingTemplate.withDeleted(true);
     try {
       TemplateEntity deletedTemplate =
@@ -186,73 +159,6 @@ public class NGTemplateServiceImpl implements NGTemplateService {
       throw new InvalidRequestException(
           String.format("Error while deleting template with identifier [%s] and versionLabel [%s]: %s",
               templateIdentifier, versionLabel, e.getMessage()));
-    }
-  }
-
-  @Override
-  public Page<TemplateEntity> list(Criteria criteria, Pageable pageable, String accountId, String orgIdentifier,
-      String projectIdentifier, Boolean getDistinctFromBranches) {
-    if (Boolean.TRUE.equals(getDistinctFromBranches)
-        && gitSyncSdkService.isGitSyncEnabled(accountId, orgIdentifier, projectIdentifier)) {
-      return templateRepository.findAll(criteria, pageable, accountId, orgIdentifier, projectIdentifier, true);
-    }
-    return templateRepository.findAll(criteria, pageable, accountId, orgIdentifier, projectIdentifier, false);
-  }
-
-  @Override
-  public TemplateEntity updateStableTemplateVersion(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String templateIdentifier, String versionLabel,
-      GitEntityFindInfoDTO gitEntityBasicInfo) {
-    return transactionHelper.performTransaction(
-        ()
-            -> updateStableTemplateVersionHelper(accountIdentifier, orgIdentifier, projectIdentifier,
-                templateIdentifier, versionLabel, gitEntityBasicInfo));
-  }
-
-  private TemplateEntity updateStableTemplateVersionHelper(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String templateIdentifier, String versionLabel,
-      GitEntityFindInfoDTO gitEntityBasicInfo) {
-    try {
-      NGTemplateServiceHelper.validatePresenceOfRequiredFields(accountIdentifier, templateIdentifier, versionLabel);
-      Optional<TemplateEntity> optionalTemplateEntity =
-          templateRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndIsStableAndDeletedNot(
-              accountIdentifier, orgIdentifier, projectIdentifier, templateIdentifier, true);
-      if (optionalTemplateEntity.isPresent()) {
-        // make previous stable template as false.
-        TemplateEntity oldTemplate = optionalTemplateEntity.get();
-
-        try (TemplateGitSyncBranchContextGuard ignored =
-                 templateServiceHelper.getTemplateGitContext(oldTemplate, gitEntityBasicInfo,
-                     format("Template with identifier [%s] and versionLabel [%s] marking stable template as false.",
-                         templateIdentifier, oldTemplate.getVersionLabel()))) {
-          TemplateEntity templateToUpdate = oldTemplate.withStableTemplate(false);
-          makeTemplateUpdateCall(templateToUpdate, oldTemplate, ChangeType.MODIFY);
-        }
-      }
-      optionalTemplateEntity =
-          get(accountIdentifier, orgIdentifier, projectIdentifier, templateIdentifier, versionLabel, false);
-      if (!optionalTemplateEntity.isPresent()) {
-        throw new InvalidRequestException(format(
-            "Template with identifier [%s] and versionLabel [%s] under Project[%s], Organization [%s] does not exist.",
-            templateIdentifier, versionLabel, projectIdentifier, orgIdentifier));
-      }
-      // make current version stable template as true.
-      TemplateEntity oldTemplateForGivenVersion = optionalTemplateEntity.get();
-      try (TemplateGitSyncBranchContextGuard ignored =
-               templateServiceHelper.getTemplateGitContext(oldTemplateForGivenVersion, gitEntityBasicInfo,
-                   format("Template with identifier [%s] and versionLabel [%s] marking stable template as true.",
-                       templateIdentifier, versionLabel))) {
-        TemplateEntity templateToUpdateForGivenVersion = oldTemplateForGivenVersion.withStableTemplate(true);
-        return makeTemplateUpdateCall(templateToUpdateForGivenVersion, oldTemplateForGivenVersion, ChangeType.MODIFY);
-      }
-    } catch (Exception e) {
-      log.error(
-          String.format("Error while updating template with identifier [%s] to stable template of versionLabel [%s]",
-              templateIdentifier, versionLabel),
-          e);
-      throw new InvalidRequestException(String.format(
-          "Error while updating template with identifier [%s] to stable template of versionLabel [%s]: %s",
-          templateIdentifier, versionLabel, ExceptionUtils.getMessage(e)));
     }
   }
 
@@ -276,21 +182,5 @@ public class NGTemplateServiceImpl implements NGTemplateService {
           String.format("Error while updating template with identifier [%s] and versionLabel [%s] : %s",
               templateToUpdate.getIdentifier(), templateToUpdate.getVersionLabel(), e.getMessage()));
     }
-  }
-
-  private boolean checkIfGivenTemplateShouldBeMarkedStable(
-      String accountId, String orgIdentifier, String projectIdentifier, String templateIdentifier, boolean markStable) {
-    if (markStable) {
-      return true;
-    }
-    Criteria criteria = templateServiceHelper.formCriteria(accountId, orgIdentifier, projectIdentifier, "",
-        TemplateFilterPropertiesDTO.builder()
-            .templateIdentifiers(Collections.singletonList(templateIdentifier))
-            .build(),
-        false, "");
-    PageRequest pageRequest = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, TemplateEntityKeys.lastUpdatedAt));
-    Page<TemplateEntity> templateEntities =
-        list(criteria, pageRequest, accountId, orgIdentifier, projectIdentifier, false);
-    return templateEntities.getContent().isEmpty();
   }
 }
