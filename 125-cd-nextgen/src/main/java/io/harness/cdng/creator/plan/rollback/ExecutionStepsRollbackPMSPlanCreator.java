@@ -45,11 +45,11 @@ public class ExecutionStepsRollbackPMSPlanCreator {
     }
 
     PlanCreationResponseBuilder planCreationResponseBuilder = PlanCreationResponse.builder();
+    Map<String, YamlField> stepYamlFieldMap = new HashMap<>();
     for (YamlField stepYamlField : stepsArrayFields) {
-      Map<String, YamlField> stepYamlFieldMap = new HashMap<>();
       stepYamlFieldMap.put(stepYamlField.getNode().getUuid(), stepYamlField);
-      planCreationResponseBuilder.dependencies(DependenciesUtils.toDependenciesProto(stepYamlFieldMap));
     }
+    planCreationResponseBuilder.dependencies(DependenciesUtils.toDependenciesProto(stepYamlFieldMap));
 
     StepParameters stepParameters = NGSectionStepParameters.builder()
                                         .childNodeId(stepsArrayFields.get(0).getNode().getUuid())
