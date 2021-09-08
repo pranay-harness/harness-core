@@ -419,6 +419,7 @@ import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricDataValue;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
+import software.wings.service.impl.aws.model.AwsSubnet;
 import software.wings.service.impl.aws.model.AwsVPC;
 import software.wings.service.impl.elk.ElkIndexTemplate;
 import software.wings.service.impl.newrelic.NewRelicApplication;
@@ -447,6 +448,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AwsElbListenerRuleData.class, 19035);
     kryo.register(AwsLoadBalancerDetails.class, 19024);
     kryo.register(AwsRegionCapability.class, 19008);
+    kryo.register(AwsSubnet.class, 7320);
     kryo.register(AzureVMSSGetVirtualMachineScaleSetParameters.class, 19075);
     kryo.register(AzureVMSSGetVirtualMachineScaleSetResponse.class, 19080);
     kryo.register(AzureVMSSListResourceGroupsNamesParameters.class, 19076);

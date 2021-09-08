@@ -1,21 +1,20 @@
 package software.wings.yaml.directory;
 
-import software.wings.service.intfc.yaml.YamlGitService;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.yaml.YamlVersion;
 
+@OwnedBy(HarnessTeam.DX)
 public class ArtifactStreamYamlNode extends YamlNode {
   private String artifactStreamId;
   private String appId;
 
   public ArtifactStreamYamlNode() {}
 
-  public ArtifactStreamYamlNode(String accountId, String name, Class theClass) {
-    super(accountId, name, theClass);
-  }
-
   public ArtifactStreamYamlNode(String accountId, String appId, String artifactStreamId, String name, Class theClass,
-      DirectoryPath directoryPath, YamlGitService yamlGitSyncService, YamlVersion.Type yamlVersionType) {
-    super(accountId, artifactStreamId, name, theClass, directoryPath, yamlGitSyncService, yamlVersionType);
+      DirectoryPath directoryPath, YamlVersion.Type yamlVersionType) {
+    super(accountId, artifactStreamId, name, theClass, directoryPath, yamlVersionType);
     this.artifactStreamId = artifactStreamId;
     this.appId = appId;
   }
