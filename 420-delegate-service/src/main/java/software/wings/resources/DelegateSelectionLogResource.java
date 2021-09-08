@@ -5,9 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
 import io.harness.delegate.beans.DelegateSelectionLogResponse;
 import io.harness.rest.RestResponse;
@@ -31,7 +29,6 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @Scope(APPLICATION)
 @AuthRule(permissionType = LOGGED_IN)
-@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @OwnedBy(DEL)
 public class DelegateSelectionLogResource {
   private DelegateSelectionLogsService delegateSelectionLogsService;
