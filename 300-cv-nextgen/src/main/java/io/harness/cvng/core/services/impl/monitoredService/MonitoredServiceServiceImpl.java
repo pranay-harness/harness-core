@@ -670,6 +670,9 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
         monitoredServiceEntity.getOrgIdentifier(), monitoredServiceEntity.getProjectIdentifier(),
         monitoredServiceEntity.getIdentifier(), monitoredServiceEntity.getHealthSourceIdentifiers());
     return healthSources.stream()
+        .peek(healthSource
+            -> healthSource.setIdentifier(HealthSourceService.getNameSpacedIdentifier(
+                monitoredServiceEntity.getIdentifier(), healthSource.getIdentifier())))
         .map(healthSource -> HealthSourceDTO.toHealthSourceDTO(healthSource))
         .collect(Collectors.toList());
   }
