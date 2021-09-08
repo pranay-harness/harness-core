@@ -8,6 +8,6 @@ import com.google.inject.Singleton;
 public class StaticLimitExampleImpl implements StaticLimitInterface {
   @Override
   public long getCurrentValue(String accountIdentifier) {
-    return 5;
+    return 10;
   }
 }

@@ -14,6 +14,7 @@ import io.harness.migrations.timescaledb.AddIdleUnallocatedColumns;
 import io.harness.migrations.timescaledb.AddIndexToInstanceV2Migration;
 import io.harness.migrations.timescaledb.AddIndicesForCostEvents;
 import io.harness.migrations.timescaledb.AddInstancesDeployedToDeployment;
+import io.harness.migrations.timescaledb.AddMaxStorageColumns;
 import io.harness.migrations.timescaledb.AddMaxUtilColumns;
 import io.harness.migrations.timescaledb.AddNewIndexToAnomalies;
 import io.harness.migrations.timescaledb.AddNewentityToAnomalies;
@@ -121,6 +122,7 @@ public class TimescaleDBMigrationList {
         .add(Pair.of(52, CreateNodeInfoTableAndIsAliveFunction.class))
         .add(Pair.of(53, CreateAccountTables.class))
         .add(Pair.of(54, CreateIndexOnKubernetesUtilizationData.class))
+        .add(Pair.of(55, AddMaxStorageColumns.class))
         .build();
   }
 }

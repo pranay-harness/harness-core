@@ -8,3 +8,4 @@ io.harness.pms.sdk.core.data.StringOutcome
 io.harness.pms.timeout.AbsoluteSdkTimeoutTrackerParameters
 io.harness.pms.yaml.ParameterFieldValueWrapper
 io.harness.pms.yaml.ParameterDocumentField
+io.harness.yaml.core.properties.NGProperties

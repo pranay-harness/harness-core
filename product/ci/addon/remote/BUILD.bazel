@@ -1,7 +1,7 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
-    name = "go_default_library",
+    name = "remote",
     srcs = [
         "image.go",
         "jexl.go",
@@ -9,28 +9,28 @@ go_library(
     importpath = "github.com/wings-software/portal/product/ci/addon/remote",
     visibility = ["//visibility:public"],
     deps = [
-        "//product/ci/engine/consts:go_default_library",
-        "//product/ci/engine/grpc/client:go_default_library",
-        "//product/ci/engine/proto:go_default_library",
-        "@org_uber_go_zap//:go_default_library",
+        "//product/ci/engine/consts",
+        "//product/ci/engine/grpc/client",
+        "//product/ci/engine/proto",
+        "@org_uber_go_zap//:zap",
     ],
 )
 
 go_test(
-    name = "go_default_test",
+    name = "remote_test",
     srcs = [
         "image_test.go",
         "jexl_test.go",
     ],
-    embed = [":go_default_library"],
+    embed = [":remote"],
     deps = [
-        "//commons/go/lib/logs:go_default_library",
-        "//product/ci/engine/grpc/client:go_default_library",
-        "//product/ci/engine/grpc/client/mocks:go_default_library",
-        "//product/ci/engine/proto:go_default_library",
-        "@com_github_golang_mock//gomock:go_default_library",
-        "@com_github_tj_assert//:go_default_library",
+        "//commons/go/lib/logs",
+        "//product/ci/engine/grpc/client",
+        "//product/ci/engine/grpc/client/mocks",
+        "//product/ci/engine/proto",
+        "@com_github_golang_mock//gomock",
+        "@com_github_tj_assert//:assert",
         "@org_golang_google_grpc//:go_default_library",
-        "@org_uber_go_zap//:go_default_library",
+        "@org_uber_go_zap//:zap",
     ],
 )

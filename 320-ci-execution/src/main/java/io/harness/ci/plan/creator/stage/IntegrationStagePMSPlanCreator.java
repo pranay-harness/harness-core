@@ -32,6 +32,7 @@ import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
+import io.harness.pms.contracts.plan.YamlUpdates;
 import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.contracts.triggers.TriggerPayload;
@@ -39,6 +40,7 @@ import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
+import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
@@ -52,6 +54,7 @@ import io.harness.yaml.utils.JsonPipelineUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import java.io.IOException;
 import java.security.SecureRandom;
@@ -115,13 +118,19 @@ public class IntegrationStagePMSPlanCreator extends GenericStagePlanCreator {
     try {
       String jsonString = JsonPipelineUtils.writeJsonString(modifiedExecutionPlan);
       JsonNode jsonNode = JsonPipelineUtils.getMapper().readTree(jsonString);
-      YamlNode modifiedExecutionNode = new YamlNode(jsonNode, parentNode);
-      dependenciesNodeMap.put(executionField.getNode().getUuid(), new YamlField(EXECUTION, modifiedExecutionNode));
+      YamlNode modifiedExecutionNode = new YamlNode(EXECUTION, jsonNode, parentNode);
+
+      YamlField yamlField = new YamlField(EXECUTION, modifiedExecutionNode);
+      planCreationResponseMap.put(executionField.getNode().getUuid(),
+          PlanCreationResponse.builder()
+              .dependencies(
+                  DependenciesUtils.toDependenciesProto(ImmutableMap.of(yamlField.getNode().getUuid(), yamlField)))
+              .yamlUpdates(YamlUpdates.newBuilder().putFqnToYaml(yamlField.getYamlPath(), jsonString).build())
+              .build());
+
     } catch (IOException e) {
       throw new InvalidRequestException("Invalid yaml", e);
     }
-    planCreationResponseMap.put(
-        executionField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(dependenciesNodeMap).build());
 
     BuildStatusUpdateParameter buildStatusUpdateParameter =
         obtainBuildStatusUpdateParameter(ctx, stageElementConfig, executionSource);

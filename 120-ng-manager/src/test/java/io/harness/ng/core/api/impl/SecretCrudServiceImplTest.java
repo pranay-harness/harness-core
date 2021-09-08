@@ -22,6 +22,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.FileUploadLimit;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.producer.Message;
@@ -43,7 +44,6 @@ import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.ValueType;
 import io.harness.secretmanagerclient.remote.SecretManagerClient;
 
-import software.wings.app.FileUploadLimit;
 import software.wings.settings.SettingVariableTypes;
 
 import com.amazonaws.util.StringInputStream;

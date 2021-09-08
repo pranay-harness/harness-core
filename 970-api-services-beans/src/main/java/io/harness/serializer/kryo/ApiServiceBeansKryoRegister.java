@@ -102,6 +102,8 @@ import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
 
 import software.wings.beans.AwsCrossAccountAttributes;
+import software.wings.beans.AzureImageDefinition;
+import software.wings.beans.AzureImageGallery;
 import software.wings.helpers.ext.gcb.models.BuildOptions;
 import software.wings.helpers.ext.gcb.models.BuiltImage;
 import software.wings.helpers.ext.gcb.models.GcbArtifactObjects;
@@ -352,5 +354,7 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(StorageSource.class, 7421);
     kryo.register(SourceProvenance.class, 7422);
     kryo.register(TimeSpan.class, 7425);
+    kryo.register(AzureImageGallery.class, 40017);
+    kryo.register(AzureImageDefinition.class, 40018);
   }
 }

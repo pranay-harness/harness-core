@@ -24,12 +24,51 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @OwnedBy(PIPELINE)
 public class FQNUtilsTest extends CategoryTest {
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testIsStageIdentifier() {
+    String yaml = "topKey:\n"
+        + "  field1: val\n"
+        + "  stagesAndOtherThings:\n"
+        + "  - stage:\n"
+        + "      identifier: f1\n"
+        + "  - stage:\n"
+        + "      identifier: f2\n"
+        + "  - stage:\n"
+        + "      identifier: f3\n"
+        + "      manifests:\n"
+        + "      - manifest:\n"
+        + "         identifier: m1\n"
+        + "         name: m1\n"
+        + "  - somethingElseIdkWhat:\n"
+        + "      identifier: f4\n"
+        + "  - parallel:\n"
+        + "    - stage:\n"
+        + "        identifier: f5\n"
+        + "    - stage:\n"
+        + "        identifier: f6";
+    PipelineYamlConfig config = new PipelineYamlConfig(yaml);
+    Set<FQN> fqnSet = config.getFqnToValueMap().keySet();
+    assertThat(fqnSet).hasSize(9);
+    List<FQN> stageIdentifiers = fqnSet.stream().filter(FQN::isStageIdentifier).collect(Collectors.toList());
+    assertThat(stageIdentifiers).hasSize(5);
+    List<String> fqnStrings = stageIdentifiers.stream().map(FQN::display).collect(Collectors.toList());
+    assertThat(fqnStrings)
+        .contains("topKey.stagesAndOtherThings.stage[identifier:f1].identifier.",
+            "topKey.stagesAndOtherThings.stage[identifier:f2].identifier.",
+            "topKey.stagesAndOtherThings.stage[identifier:f3].identifier.",
+            "topKey.stagesAndOtherThings.PARALLEL.stage[identifier:f5].identifier.",
+            "topKey.stagesAndOtherThings.PARALLEL.stage[identifier:f6].identifier.");
+  }
+
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)

@@ -18,6 +18,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.repository.support.PageableExecutionUtils;
+import org.springframework.util.StringUtils;
 
 @OwnedBy(PL)
 @UtilityClass
@@ -59,5 +60,9 @@ public class SpringDataMongoUtils {
     List<T> objects = mongoTemplate.find(query, clazz);
     return PageableExecutionUtils.getPage(
         objects, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1L), clazz));
+  }
+
+  public String getPatternForMatchingAnyOneOf(List<String> wordsToBeMatched) {
+    return StringUtils.collectionToDelimitedString(wordsToBeMatched, "|");
   }
 }

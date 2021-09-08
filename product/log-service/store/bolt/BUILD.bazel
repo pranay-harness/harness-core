@@ -1,18 +1,18 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
-    name = "go_default_library",
+    name = "bolt",
     srcs = ["bolt.go"],
     importpath = "github.com/wings-software/portal/product/log-service/store/bolt",
     visibility = ["//visibility:public"],
     deps = [
-        "//product/log-service/store:go_default_library",
-        "@io_etcd_go_bbolt//:go_default_library",
+        "//product/log-service/store",
+        "@io_etcd_go_bbolt//:bbolt",
     ],
 )
 
 go_test(
-    name = "go_default_test",
+    name = "bolt_test",
     srcs = ["bolt_test.go"],
-    embed = [":go_default_library"],
+    embed = [":bolt"],
 )

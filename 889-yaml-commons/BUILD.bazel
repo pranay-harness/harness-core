@@ -10,6 +10,7 @@ java_library(
     deps = [
         "//:lombok",
         "//890-pms-contracts:module",
+        "//900-git-sync-sdk:module",
         "//950-walktree-visitor:module",
         "//959-timeout-engine:module",
         "//960-yaml-sdk:module",

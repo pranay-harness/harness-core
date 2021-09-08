@@ -8,12 +8,14 @@ option go_package = "970_ng_commons";
 import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/entity_type.proto";
 import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/identifier_ref.proto";
 import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/input_set_ref.proto";
+import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/template_reference.proto";
 
 message EntityDetailProtoDTO {
   EntityTypeProtoEnum type = 1;
   oneof entityRef {
     IdentifierRefProtoDTO identifierRef = 2;
     InputSetReferenceProtoDTO inputSetRef = 3;
+    TemplateReferenceProtoDTO templateRef = 5;
   }
   string name = 4;
 }

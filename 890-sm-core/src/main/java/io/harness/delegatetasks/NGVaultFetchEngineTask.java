@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.VAULT_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.helpers.NGVaultTaskHelper.getToken;
 import static io.harness.helpers.NGVaultTaskHelper.getVaultAppRoleLoginResult;
 import static io.harness.helpers.NGVaultTaskHelper.logAndThrowVaultError;
 
@@ -63,7 +64,7 @@ public class NGVaultFetchEngineTask extends AbstractDelegateRunnableTask {
     log.info("Executing NGVaultFetchEngineTask for: " + vaultConfig.getName());
     List<SecretEngineSummary> secretEngineSummaries = new ArrayList<>();
     try {
-      String vaultToken = vaultConfig.getAuthToken();
+      String vaultToken = getToken(vaultConfig);
       if (isEmpty(vaultToken)) {
         VaultAppRoleLoginResult loginResult = getVaultAppRoleLoginResult(vaultConfig);
         if (loginResult != null) {

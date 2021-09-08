@@ -117,6 +117,11 @@ public class EventConfigServiceImpl implements EventConfigService {
     hPersistence.delete(CgEventConfig.class, eventConfigId);
   }
 
+  @Override
+  public void pruneByApplication(String appId) {
+    hPersistence.delete(hPersistence.createQuery(CgEventConfig.class).filter(CgEventConfigKeys.appId, appId));
+  }
+
   private void validateEventConfig(CgEventConfig eventConfig) {
     CgEventRule rule = eventConfig.getRule();
     if (rule == null) {

@@ -8,6 +8,9 @@ import io.harness.template.beans.yaml.NGTemplateConfig;
 import io.harness.template.entity.TemplateEntity;
 
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.query.Criteria;
 
 @OwnedBy(CDC)
 public interface NGTemplateRepositoryCustom {
@@ -24,4 +27,7 @@ public interface NGTemplateRepositoryCustom {
       NGTemplateConfig templateConfig, ChangeType changeType);
 
   TemplateEntity deleteTemplate(TemplateEntity templateToDelete, NGTemplateConfig templateConfig);
+
+  Page<TemplateEntity> findAll(Criteria criteria, Pageable pageable, String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, boolean getDistinctFromBranches);
 }

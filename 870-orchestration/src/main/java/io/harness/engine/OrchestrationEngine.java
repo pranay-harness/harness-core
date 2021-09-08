@@ -110,7 +110,7 @@ public class OrchestrationEngine {
       previousNodeExecution = nodeExecutionService.update(AmbianceUtils.obtainCurrentRuntimeId(ambiance),
           ops -> ops.set(NodeExecutionKeys.nextId, uuid).set(NodeExecutionKeys.endTs, System.currentTimeMillis()));
     }
-    Ambiance cloned = reBuildAmbiance(ambiance, node, uuid);
+    Ambiance cloned = AmbianceUtils.cloneForFinish(ambiance, LevelUtils.buildLevelFromPlanNode(uuid, node));
     NodeExecution nodeExecution =
         NodeExecution.builder()
             .uuid(uuid)
@@ -125,13 +125,6 @@ public class OrchestrationEngine {
             .build();
     nodeExecutionService.save(nodeExecution);
     executorService.submit(ExecutionEngineDispatcher.builder().ambiance(cloned).orchestrationEngine(this).build());
-  }
-
-  private Ambiance reBuildAmbiance(Ambiance ambiance, PlanNodeProto node, String uuid) {
-    Ambiance cloned =
-        AmbianceUtils.obtainCurrentRuntimeId(ambiance) == null ? ambiance : AmbianceUtils.cloneForFinish(ambiance);
-    cloned = cloned.toBuilder().addLevels(LevelUtils.buildLevelFromPlanNode(uuid, node)).build();
-    return cloned;
   }
 
   // Start to Facilitators
