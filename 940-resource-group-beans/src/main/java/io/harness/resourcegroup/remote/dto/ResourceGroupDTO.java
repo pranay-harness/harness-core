@@ -17,7 +17,6 @@ import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
 import java.util.Map;
 import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -31,11 +30,11 @@ import org.hibernate.validator.constraints.NotEmpty;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @OwnedBy(HarnessTeam.PL)
 public class ResourceGroupDTO {
-  @ApiModelProperty(required = true) @NotNull @NotEmpty String accountIdentifier;
+  @ApiModelProperty(required = true) @NotEmpty String accountIdentifier;
   String orgIdentifier;
   String projectIdentifier;
-  @EntityIdentifier @ApiModelProperty(required = true) @NotNull @Size(max = 128) @NotEmpty String identifier;
-  @NGEntityName @ApiModelProperty(required = true) @NotNull @Size(max = 128) @NotEmpty String name;
+  @EntityIdentifier @ApiModelProperty(required = true) @Size(max = 128) @NotEmpty String identifier;
+  @NGEntityName @ApiModelProperty(required = true) @Size(max = 128) @NotEmpty String name;
   @Size(max = 256) @Valid List<ResourceSelector> resourceSelectors;
   boolean fullScopeSelected;
   @Size(max = 128) Map<String, String> tags;

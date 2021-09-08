@@ -94,9 +94,9 @@ public class VerificationJobInstanceAnalysisServiceImpl implements VerificationJ
       String accountId, VerificationJobInstance verificationJobInstance) {
     List<DeploymentTimeSeriesAnalysis> deploymentTimeSeriesAnalysis =
         deploymentTimeSeriesAnalysisService.getLatestDeploymentTimeSeriesAnalysis(
-            accountId, verificationJobInstance.getUuid(), null);
+            accountId, verificationJobInstance.getUuid());
     List<DeploymentLogAnalysis> deploymentLogAnalysis =
-        deploymentLogAnalysisService.getLatestDeploymentLogAnalysis(accountId, verificationJobInstance.getUuid(), null);
+        deploymentLogAnalysisService.getLatestDeploymentLogAnalysis(accountId, verificationJobInstance.getUuid());
 
     Optional<TimeRange> preDeploymentTimeRange =
         verificationJobInstanceService.getPreDeploymentTimeRange(verificationJobInstance.getUuid());

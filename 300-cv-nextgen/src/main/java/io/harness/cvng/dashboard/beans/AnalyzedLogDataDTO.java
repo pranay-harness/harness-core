@@ -1,6 +1,5 @@
 package io.harness.cvng.dashboard.beans;
 
-import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.entities.LogAnalysisResult.LogAnalysisTag;
 
 import java.util.List;
@@ -25,8 +24,6 @@ public class AnalyzedLogDataDTO implements Comparable<AnalyzedLogDataDTO> {
     String text;
     Long label;
     int count;
-    double riskScore;
-    Risk riskStatus;
     List<FrequencyDTO> trend;
     LogAnalysisTag tag;
   }

@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface AzureResourceService {
-  Map<String, String> listSubscriptions(String accountId, String cloudProviderId);
+  Map<String, String> listSubscriptions(String cloudProviderId);
 
   List<String> listContainerRegistryNames(String cloudProviderId, String subscriptionId);
 
@@ -24,14 +24,12 @@ public interface AzureResourceService {
 
   List<AzureKubernetesCluster> listKubernetesClusters(String cloudProviderId, String subscriptionId);
 
-  List<AzureResourceGroup> listResourceGroups(String accountId, String cloudProviderId, String subscriptionId);
+  List<AzureResourceGroup> listResourceGroups(String cloudProviderId, String subscriptionId);
 
-  List<AzureImageGallery> listImageGalleries(
-      String accountId, String cloudProviderId, String subscriptionId, String resourceGroupName);
+  List<AzureImageGallery> listImageGalleries(String cloudProviderId, String subscriptionId, String resourceGroupName);
 
   List<AzureImageDefinition> listImageDefinitions(
-      String accountId, String cloudProviderId, String subscriptionId, String resourceGroupName, String galleryName);
-
+      String cloudProviderId, String subscriptionId, String resourceGroupName, String galleryName);
   /**
    * List available Azure regions without government ones.
    *

@@ -2,9 +2,6 @@ package software.wings.yaml.setting;
 
 import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
 
-import io.harness.annotations.dev.HarnessModule;
-import io.harness.annotations.dev.TargetModule;
-
 import software.wings.security.UsageRestrictions;
 import software.wings.settings.SettingValue;
 
@@ -15,7 +12,6 @@ import lombok.NoArgsConstructor;
 /**
  * @author dhruvupadhyay on 01/06/20
  */
-@TargetModule(HarnessModule._957_CG_BEANS)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)

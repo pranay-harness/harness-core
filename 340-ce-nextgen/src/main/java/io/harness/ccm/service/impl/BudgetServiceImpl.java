@@ -145,11 +145,10 @@ public class BudgetServiceImpl implements BudgetService {
     String cloudProviderTable = bigQueryHelper.getCloudProviderTableName(accountId, UNIFIED_TABLE);
     ViewCostData costDataForForecast =
         ViewCostData.builder()
-            .cost(
-                viewsBillingService
-                    .getCostData(bigQueryService.get(), filters, viewsQueryHelper.getPerspectiveTotalCostAggregation(),
-                        cloudProviderTable, viewsQueryHelper.buildQueryParams(accountId, false))
-                    .getCost())
+            .cost(viewsBillingService
+                      .getCostData(bigQueryService.get(), filters,
+                          viewsQueryHelper.getPerspectiveTotalCostAggregation(), cloudProviderTable, accountId, false)
+                      .getCost())
             .minStartTime(1000 * startTime)
             .maxStartTime(1000 * BudgetUtils.getStartOfCurrentDay() - BudgetUtils.ONE_DAY_MILLIS)
             .build();
@@ -263,8 +262,7 @@ public class BudgetServiceImpl implements BudgetService {
   private double getCostForPerspective(String accountId, List<QLCEViewFilterWrapper> filters) {
     String cloudProviderTable = bigQueryHelper.getCloudProviderTableName(accountId, UNIFIED_TABLE);
     ViewCostData costData = viewsBillingService.getCostData(bigQueryService.get(), filters,
-        viewsQueryHelper.getPerspectiveTotalCostAggregation(), cloudProviderTable,
-        viewsQueryHelper.buildQueryParams(accountId, false));
+        viewsQueryHelper.getPerspectiveTotalCostAggregation(), cloudProviderTable, accountId, false);
     return costData.getCost();
   }
 

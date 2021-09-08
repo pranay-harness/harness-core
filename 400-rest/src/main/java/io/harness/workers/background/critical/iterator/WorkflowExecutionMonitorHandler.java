@@ -2,7 +2,6 @@ package io.harness.workers.background.critical.iterator;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.ExecutionInterruptType.MARK_EXPIRED;
-import static io.harness.beans.ExecutionInterruptType.ROLLBACK_PROVISIONER_AFTER_PHASES;
 import static io.harness.beans.ExecutionStatus.ERROR;
 import static io.harness.beans.ExecutionStatus.EXPIRED;
 import static io.harness.beans.ExecutionStatus.PREPARING;
@@ -17,7 +16,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionInterruptType;
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.FeatureName;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.iterator.PersistenceIteratorFactory;
@@ -142,12 +140,6 @@ public class WorkflowExecutionMonitorHandler implements Handler<WorkflowExecutio
                                      .build();
           }
 
-          if (featureFlagService.isEnabled(FeatureName.ROLLBACK_PROVISIONER_AFTER_PHASES, entity.getAccountId())) {
-            if (executionInterrupt.getExecutionInterruptType() == ROLLBACK_PROVISIONER_AFTER_PHASES) {
-              entity.setRollbackProvisionerAfterPhases(true);
-              wingsPersistence.save(entity);
-            }
-          }
           executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
         }
       } catch (WingsException exception) {

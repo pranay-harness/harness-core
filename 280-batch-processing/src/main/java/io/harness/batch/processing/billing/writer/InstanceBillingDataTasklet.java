@@ -329,12 +329,8 @@ public class InstanceBillingDataTasklet implements Tasklet {
     BigDecimal storageActualIdleCost = billingData.getIdleCostData().getStorageIdleCost();
     BigDecimal storageUnallocatedCost = getStorageUnallocatedCost(billingData, utilizationData, instanceData);
 
-    double maxStorageRequest = utilizationData.getMaxStorageRequestValue();
-    double maxStorageUtilization = utilizationData.getMaxStorageUsageValue();
-
-    double avgStorageRequest = utilizationData.getAvgStorageRequestValue();
-    double avgStorageUtilization = utilizationData.getAvgStorageUsageValue();
-
+    double storageRequest = utilizationData.getAvgStorageRequestValue();
+    double storageUtilization = utilizationData.getAvgStorageUsageValue();
     double storageMBSeconds = billingData.getStorageMbSeconds();
 
     if (K8S_PV == instanceType) {
@@ -360,12 +356,8 @@ public class InstanceBillingDataTasklet implements Tasklet {
               storageUnallocatedCost.add(storageInstanceBillingData.getStorageUnallocatedCost().divide(
                   BigDecimal.valueOf(claimCount), MathContext.DECIMAL128));
 
-          avgStorageRequest += storageInstanceBillingData.getStorageRequest();
-          avgStorageUtilization += storageInstanceBillingData.getStorageUtilizationValue();
-
-          maxStorageRequest += storageInstanceBillingData.getMaxStorageRequest();
-          maxStorageUtilization += storageInstanceBillingData.getMaxStorageUtilizationValue();
-
+          storageRequest += storageInstanceBillingData.getStorageRequest();
+          storageUtilization += storageInstanceBillingData.getStorageUtilizationValue();
           storageMBSeconds += storageInstanceBillingData.getStorageMbSeconds();
         }
       }
@@ -435,11 +427,9 @@ public class InstanceBillingDataTasklet implements Tasklet {
         .storageBillingAmount(storageBillingAmount)
         .storageActualIdleCost(storageActualIdleCost)
         .storageUnallocatedCost(storageUnallocatedCost)
-        .storageUtilizationValue(avgStorageUtilization)
-        .storageRequest(avgStorageRequest)
+        .storageUtilizationValue(storageUtilization)
+        .storageRequest(storageRequest)
         .storageMbSeconds(storageMBSeconds)
-        .maxStorageRequest(maxStorageRequest)
-        .maxStorageUtilizationValue(maxStorageUtilization)
         .build();
   }
 

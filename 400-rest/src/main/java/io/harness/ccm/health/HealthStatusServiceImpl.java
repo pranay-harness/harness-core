@@ -276,9 +276,6 @@ public class HealthStatusServiceImpl implements HealthStatusService {
     String[] perpetualTaskIds = clusterRecord.getPerpetualTaskIds();
     for (String taskId : perpetualTaskIds) {
       PerpetualTaskRecord perpetualTaskRecord = perpetualTaskService.getTaskRecord(taskId);
-      if (null == perpetualTaskRecord) {
-        continue;
-      }
       String delegateId = perpetualTaskRecord.getDelegateId();
       if (isNullOrEmpty(delegateId)) {
         if (perpetualTaskRecord.getUnassignedReason() == null) {

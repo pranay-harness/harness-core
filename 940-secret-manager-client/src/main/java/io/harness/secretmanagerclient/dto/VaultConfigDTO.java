@@ -19,15 +19,12 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @SuperBuilder
 @NoArgsConstructor
-@ToString(exclude = {"authToken", "secretId", "sinkPath"})
+@ToString(exclude = {"authToken", "secretId"})
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class VaultConfigDTO extends SecretManagerConfigDTO {
   private String authToken;
   private String basePath;
-  private String namespace;
-  private String sinkPath;
-  private boolean useVaultAgent;
   private String vaultUrl;
   @JsonProperty("readOnly") private boolean isReadOnly;
   private long renewalIntervalMinutes;
@@ -35,6 +32,7 @@ public class VaultConfigDTO extends SecretManagerConfigDTO {
   private String appRoleId;
   private String secretId;
   private int secretEngineVersion;
+  private String namespace;
   private boolean engineManuallyEntered;
   private Set<String> delegateSelectors;
 }

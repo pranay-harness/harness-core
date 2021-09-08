@@ -15,7 +15,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.perpetualtask.PerpetualTaskExecutionBundle;
 import io.harness.perpetualtask.polling.ManifestCollectionTaskParamsNg;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.plan.execution.SetupAbstractionKeys;
 import io.harness.polling.bean.PollingDocument;
 import io.harness.polling.bean.manifest.ManifestInfo;
 import io.harness.serializer.KryoSerializer;
@@ -24,7 +23,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
@@ -41,18 +39,11 @@ public class ManifestPerpetualTaskHelperNg {
     List<ExecutionCapability> executionCapabilities;
     ManifestInfo manifestInfo = (ManifestInfo) pollingDocument.getPollingInfo();
     String accountId = pollingDocument.getAccountId();
-
-    // This is a hack so that we can re-use same methods.
-    // Do note that Ambiance is incomplete here. In future, if need be, populate accordingly to avoid failures.
-    Map<String, String> abstractions = new HashMap<>();
-    abstractions.put(SetupAbstractionKeys.accountId, accountId);
-    if (pollingDocument.getOrgIdentifier() != null) {
-      abstractions.put(SetupAbstractionKeys.orgIdentifier, pollingDocument.getOrgIdentifier());
-    }
-    if (pollingDocument.getProjectIdentifier() != null) {
-      abstractions.put(SetupAbstractionKeys.projectIdentifier, pollingDocument.getProjectIdentifier());
-    }
-    Ambiance ambiance = Ambiance.newBuilder().putAllSetupAbstractions(abstractions).build();
+    Ambiance ambiance = Ambiance.newBuilder()
+                            .putSetupAbstractions("accountId", pollingDocument.getAccountId())
+                            .putSetupAbstractions("orgIdentifier", pollingDocument.getOrgIdentifier())
+                            .putSetupAbstractions("projectIdentifier", pollingDocument.getProjectIdentifier())
+                            .build();
 
     final Map<String, String> ngTaskSetupAbstractionsWithOwner = getNGTaskSetupAbstractionsWithOwner(
         accountId, pollingDocument.getOrgIdentifier(), pollingDocument.getProjectIdentifier());

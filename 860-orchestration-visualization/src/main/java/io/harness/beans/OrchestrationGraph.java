@@ -25,7 +25,7 @@ public class OrchestrationGraph implements Distributable, Nominal {
   long cacheContextOrder;
   String cacheKey;
   List<String> cacheParams;
-  @Builder.Default long lastUpdatedAt = System.currentTimeMillis();
+  long lastUpdatedAt = System.currentTimeMillis();
 
   String planExecutionId;
   Long startTs;

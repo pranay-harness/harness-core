@@ -82,7 +82,7 @@ public class BillingStatsEntityDataFetcher
   @Override
   protected QLData fetchSelectedFields(String accountId, List<QLCCMAggregationFunction> aggregateFunction,
       List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sort, Integer limit,
-      Integer offset, boolean skipRoundOff, DataFetchingEnvironment dataFetchingEnvironment) {
+      Integer offset, DataFetchingEnvironment dataFetchingEnvironment) {
     return null;
   }
 

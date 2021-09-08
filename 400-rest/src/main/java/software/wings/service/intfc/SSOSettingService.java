@@ -42,7 +42,7 @@ public interface SSOSettingService extends OwnedByAccount {
 
   SamlSettings getSamlSettingsByOrigin(@NotNull String origin);
 
-  Iterator<SamlSettings> getSamlSettingsIteratorByOrigin(@NotNull String origin, String accountId);
+  Iterator<SamlSettings> getSamlSettingsIteratorByOrigin(@NotNull String origin);
 
   LdapSettings createLdapSettings(@NotNull LdapSettings settings);
 

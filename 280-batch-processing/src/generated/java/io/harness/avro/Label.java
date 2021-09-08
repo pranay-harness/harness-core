@@ -5,7 +5,6 @@
  */
 package io.harness.avro;
 
-import org.apache.avro.generic.GenericArray;
 import org.apache.avro.message.BinaryMessageDecoder;
 import org.apache.avro.message.BinaryMessageEncoder;
 import org.apache.avro.message.SchemaStore;
@@ -24,9 +23,9 @@ public class Label
 
   private static SpecificData MODEL$ = new SpecificData();
 
-  private static final BinaryMessageEncoder<Label> ENCODER = new BinaryMessageEncoder<Label>(MODEL$, SCHEMA$);
+  private static final BinaryMessageEncoder<Label> ENCODER = new BinaryMessageEncoder<>(MODEL$, SCHEMA$);
 
-  private static final BinaryMessageDecoder<Label> DECODER = new BinaryMessageDecoder<Label>(MODEL$, SCHEMA$);
+  private static final BinaryMessageDecoder<Label> DECODER = new BinaryMessageDecoder<>(MODEL$, SCHEMA$);
 
   /**
    * Return the BinaryMessageEncoder instance used by this class.
@@ -72,8 +71,8 @@ public class Label
     return DECODER.decode(b);
   }
 
-  private java.lang.CharSequence key;
-  private java.lang.CharSequence value;
+  @Deprecated public java.lang.CharSequence key;
+  @Deprecated public java.lang.CharSequence value;
 
   /**
    * Default constructor.  Note that this does not initialize fields

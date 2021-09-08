@@ -2,6 +2,7 @@ package io.harness.cvng.dashboard.services.api;
 
 import io.harness.cvng.analysis.entities.LogAnalysisResult.LogAnalysisTag;
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.beans.params.TimeRangeParams;
@@ -35,6 +36,6 @@ public interface LogDashboardService {
       Long endTimeMillis, boolean anomalousOnly, int page, int size);
 
   PageResponse<AnalyzedLogDataDTO> getAllLogsData(ServiceEnvironmentParams serviceEnvironmentParams,
-      TimeRangeParams timeRangeParams, List<LogAnalysisTag> clusterTypes, List<String> healthSourceIdentifiers,
+      TimeRangeParams timeRangeParams, List<LogAnalysisTag> clusterTypes, DataSourceType dataSourceType,
       PageParams pageParams);
 }

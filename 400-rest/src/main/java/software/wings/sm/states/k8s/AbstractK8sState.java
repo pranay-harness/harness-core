@@ -2,7 +2,6 @@ package software.wings.sm.states.k8s;
 
 import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.beans.FeatureName.OPTIMIZED_GIT_FETCH_FILES;
 import static io.harness.beans.FeatureName.OVERRIDE_VALUES_YAML_FROM_HELM_CHART;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -236,8 +235,7 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
     K8sDelegateManifestConfigBuilder manifestConfigBuilder =
         K8sDelegateManifestConfig.builder()
             .manifestStoreTypes(appManifest.getStoreType())
-            .helmCommandFlag(ApplicationManifestUtils.getHelmCommandFlags(appManifest.getHelmCommandFlag()))
-            .optimizedFilesFetch(featureFlagService.isEnabled(OPTIMIZED_GIT_FETCH_FILES, context.getAccountId()));
+            .helmCommandFlag(ApplicationManifestUtils.getHelmCommandFlags(appManifest.getHelmCommandFlag()));
 
     boolean customManifestEnabled = featureFlagService.isEnabled(FeatureName.CUSTOM_MANIFEST, context.getAccountId());
     manifestConfigBuilder.customManifestEnabled(customManifestEnabled);
@@ -321,8 +319,6 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
 
     GitFetchFilesTaskParams fetchFilesTaskParams =
         applicationManifestUtils.createGitFetchFilesTaskParams(context, app, appManifestMap);
-    fetchFilesTaskParams.setOptimizedFilesFetch(
-        featureFlagService.isEnabled(OPTIMIZED_GIT_FETCH_FILES, context.getAccountId()));
     fetchFilesTaskParams.setActivityId(activityId);
     fetchFilesTaskParams.setAppManifestKind(AppManifestKind.VALUES);
     fetchFilesTaskParams.setDelegateSelectors(

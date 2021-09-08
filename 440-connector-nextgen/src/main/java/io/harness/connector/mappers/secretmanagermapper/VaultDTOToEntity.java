@@ -25,9 +25,6 @@ public class VaultDTOToEntity implements ConnectorDTOToEntityMapper<VaultConnect
         .renewedAt(System.currentTimeMillis())
         .appRoleId(connectorDTO.getAppRoleId())
         .basePath(connectorDTO.getBasePath())
-        .namespace(connectorDTO.getNamespace())
-        .sinkPath(connectorDTO.getSinkPath())
-        .useVaultAgent(connectorDTO.isUseVaultAgent())
         .secretIdRef(SecretRefHelper.getSecretConfigString(connectorDTO.getSecretId()))
         .build();
   }

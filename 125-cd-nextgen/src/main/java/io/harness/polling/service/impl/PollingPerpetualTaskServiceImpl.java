@@ -1,8 +1,5 @@
 package io.harness.polling.service.impl;
 
-import static io.harness.perpetualtask.PerpetualTaskType.ARTIFACT_COLLECTION_NG;
-import static io.harness.perpetualtask.PerpetualTaskType.MANIFEST_COLLECTION_NG;
-
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.AccountId;
@@ -14,7 +11,6 @@ import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.polling.bean.PollingDocument;
 import io.harness.polling.bean.PollingType;
-import io.harness.polling.service.impl.artifact.ArtifactPerpetualTaskHelperNg;
 import io.harness.polling.service.impl.manifest.ManifestPerpetualTaskHelperNg;
 import io.harness.polling.service.intfc.PollingPerpetualTaskService;
 import io.harness.polling.service.intfc.PollingService;
@@ -31,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.CDC)
 public class PollingPerpetualTaskServiceImpl implements PollingPerpetualTaskService {
   ManifestPerpetualTaskHelperNg manifestPerpetualTaskHelperNg;
-  ArtifactPerpetualTaskHelperNg artifactPerpetualTaskHelperNg;
   DelegateServiceGrpcClient delegateServiceGrpcClient;
   PollingService pollingService;
 
@@ -45,20 +40,13 @@ public class PollingPerpetualTaskServiceImpl implements PollingPerpetualTaskServ
     switch (pollingType) {
       case MANIFEST:
         executionBundle = manifestPerpetualTaskHelperNg.createPerpetualTaskExecutionBundle(pollingDocument);
-        perpetualTaskType = MANIFEST_COLLECTION_NG;
+        perpetualTaskType = "MANIFEST_COLLECTION_NG";
         schedule = PerpetualTaskSchedule.newBuilder()
                        .setInterval(Durations.fromMinutes(2))
                        .setTimeout(Durations.fromMinutes(3))
                        .build();
         break;
       case ARTIFACT:
-        executionBundle = artifactPerpetualTaskHelperNg.createPerpetualTaskExecutionBundle(pollingDocument);
-        perpetualTaskType = ARTIFACT_COLLECTION_NG;
-        schedule = PerpetualTaskSchedule.newBuilder()
-                       .setInterval(Durations.fromMinutes(1))
-                       .setTimeout(Durations.fromMinutes(2))
-                       .build();
-        break;
       default:
         throw new InvalidRequestException(String.format("Unsupported category %s for polling", pollingType));
     }
@@ -93,8 +81,6 @@ public class PollingPerpetualTaskServiceImpl implements PollingPerpetualTaskServ
   private PerpetualTaskExecutionBundle getExecutionBundle(PollingDocument pollingDocument) {
     if (PollingType.MANIFEST.equals(pollingDocument.getPollingType())) {
       return manifestPerpetualTaskHelperNg.createPerpetualTaskExecutionBundle(pollingDocument);
-    } else if (PollingType.ARTIFACT.equals(pollingDocument.getPollingType())) {
-      return artifactPerpetualTaskHelperNg.createPerpetualTaskExecutionBundle(pollingDocument);
     } else {
       throw new InvalidRequestException(
           String.format("Unsupported category %s for polling", pollingDocument.getPollingType()));

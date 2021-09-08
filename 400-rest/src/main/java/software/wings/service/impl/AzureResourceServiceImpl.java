@@ -4,9 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.azure.utility.AzureUtils.AZURE_GOV_REGIONS_NAMES;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.FeatureName;
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.ff.FeatureFlagService;
 
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AzureConfig;
@@ -46,13 +44,9 @@ public class AzureResourceServiceImpl implements AzureResourceService {
   @Inject private SettingsService settingService;
   @Inject private SecretManager secretManager;
   @Inject private BuildSourceService buildSourceService;
-  @Inject private FeatureFlagService featureFlagService;
 
   @Override
-  public Map<String, String> listSubscriptions(String accountId, String cloudProviderId) {
-    if (featureFlagService.isEnabled(FeatureName.AZURE_CLOUD_PROVIDER_VALIDATION_ON_DELEGATE, accountId)) {
-      return buildSourceService.listSubscriptions(cloudProviderId);
-    }
+  public Map<String, String> listSubscriptions(String cloudProviderId) {
     SettingAttribute cloudProviderSetting = settingService.get(cloudProviderId);
     AzureConfig azureConfig = validateAndGetAzureConfig(cloudProviderSetting);
     return azureHelperService.listSubscriptions(
@@ -92,10 +86,7 @@ public class AzureResourceServiceImpl implements AzureResourceService {
   }
 
   @Override
-  public List<AzureResourceGroup> listResourceGroups(String accountId, String cloudProviderId, String subscriptionId) {
-    if (featureFlagService.isEnabled(FeatureName.AZURE_CLOUD_PROVIDER_VALIDATION_ON_DELEGATE, accountId)) {
-      return buildSourceService.listResourceGroups(cloudProviderId, subscriptionId);
-    }
+  public List<AzureResourceGroup> listResourceGroups(String cloudProviderId, String subscriptionId) {
     SettingAttribute cloudProviderSetting = settingService.get(cloudProviderId);
     AzureConfig azureConfig = validateAndGetAzureConfig(cloudProviderSetting);
     return azureHelperService
@@ -107,10 +98,7 @@ public class AzureResourceServiceImpl implements AzureResourceService {
 
   @Override
   public List<AzureImageGallery> listImageGalleries(
-      String accountId, String cloudProviderId, String subscriptionId, String resourceGroupName) {
-    if (featureFlagService.isEnabled(FeatureName.AZURE_CLOUD_PROVIDER_VALIDATION_ON_DELEGATE, accountId)) {
-      return buildSourceService.listImageGalleries(cloudProviderId, subscriptionId, resourceGroupName);
-    }
+      String cloudProviderId, String subscriptionId, String resourceGroupName) {
     SettingAttribute cloudProviderSetting = settingService.get(cloudProviderId);
     AzureConfig azureConfig = validateAndGetAzureConfig(cloudProviderSetting);
     return azureHelperService.listImageGalleries(
@@ -119,10 +107,7 @@ public class AzureResourceServiceImpl implements AzureResourceService {
 
   @Override
   public List<AzureImageDefinition> listImageDefinitions(
-      String accountId, String cloudProviderId, String subscriptionId, String resourceGroupName, String galleryName) {
-    if (featureFlagService.isEnabled(FeatureName.AZURE_CLOUD_PROVIDER_VALIDATION_ON_DELEGATE, accountId)) {
-      return buildSourceService.listImageDefinitions(cloudProviderId, subscriptionId, resourceGroupName, galleryName);
-    }
+      String cloudProviderId, String subscriptionId, String resourceGroupName, String galleryName) {
     SettingAttribute cloudProviderSetting = settingService.get(cloudProviderId);
     AzureConfig azureConfig = validateAndGetAzureConfig(cloudProviderSetting);
     return azureHelperService.listImageDefinitions(azureConfig,

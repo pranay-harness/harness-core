@@ -14,10 +14,6 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.context.AzureClientContext;
 import io.harness.azure.model.ARMScopeType;
 import io.harness.azure.model.AzureConfig;
-import io.harness.delegate.azure.arm.deployment.context.DeploymentManagementGroupContext;
-import io.harness.delegate.azure.arm.deployment.context.DeploymentResourceGroupContext;
-import io.harness.delegate.azure.arm.deployment.context.DeploymentSubscriptionContext;
-import io.harness.delegate.azure.arm.deployment.context.DeploymentTenantContext;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.azure.arm.AzureARMTaskParameters;
 import io.harness.delegate.task.azure.arm.AzureARMTaskResponse;
@@ -26,6 +22,10 @@ import io.harness.delegate.task.azure.arm.response.AzureARMDeploymentResponse;
 
 import software.wings.delegatetasks.azure.arm.AbstractAzureARMTaskHandler;
 import software.wings.delegatetasks.azure.arm.deployment.AzureARMDeploymentService;
+import software.wings.delegatetasks.azure.arm.deployment.context.DeploymentManagementGroupContext;
+import software.wings.delegatetasks.azure.arm.deployment.context.DeploymentResourceGroupContext;
+import software.wings.delegatetasks.azure.arm.deployment.context.DeploymentSubscriptionContext;
+import software.wings.delegatetasks.azure.arm.deployment.context.DeploymentTenantContext;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

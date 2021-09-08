@@ -47,7 +47,6 @@ import io.harness.gitsync.GitSyncSdkInitHelper;
 import io.harness.gitsync.core.fullsync.GitFullSyncEntityIterator;
 import io.harness.gitsync.core.runnable.GitChangeSetRunnable;
 import io.harness.gitsync.core.webhook.GitSyncEventConsumerService;
-import io.harness.gitsync.migration.GitSyncMigrationProvider;
 import io.harness.gitsync.server.GitSyncGrpcModule;
 import io.harness.gitsync.server.GitSyncServiceConfiguration;
 import io.harness.govern.ProviderModule;
@@ -64,7 +63,6 @@ import io.harness.migration.NGMigrationSdkModule;
 import io.harness.migration.beans.NGMigrationConfiguration;
 import io.harness.migrations.InstanceMigrationProvider;
 import io.harness.ng.accesscontrol.migrations.AccessControlMigrationJob;
-import io.harness.ng.cdOverview.eventGenerator.DeploymentEventGenerator;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.EtagFilter;
 import io.harness.ng.core.event.NGEventConsumerService;
@@ -78,7 +76,6 @@ import io.harness.ng.core.migration.NGBeanMigrationProvider;
 import io.harness.ng.core.migration.ProjectMigrationProvider;
 import io.harness.ng.core.user.exception.mapper.InvalidUserRemoveRequestExceptionMapper;
 import io.harness.ng.migration.NGCoreMigrationProvider;
-import io.harness.ng.migration.SourceCodeManagerMigrationProvider;
 import io.harness.ng.migration.UserMembershipMigrationProvider;
 import io.harness.ng.migration.UserMetadataMigrationProvider;
 import io.harness.ng.webhook.services.api.WebhookEventProcessingService;
@@ -101,8 +98,8 @@ import io.harness.pms.sdk.execution.events.orchestrationevent.OrchestrationEvent
 import io.harness.pms.sdk.execution.events.plan.CreatePartialPlanRedisConsumer;
 import io.harness.pms.sdk.execution.events.progress.ProgressEventRedisConsumer;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
-import io.harness.polling.service.impl.PollingPerpetualTaskManager;
 import io.harness.polling.service.impl.PollingServiceImpl;
+import io.harness.polling.service.impl.PollingServiceObserverImpl;
 import io.harness.polling.service.intfc.PollingService;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
@@ -338,7 +335,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   private static void registerObservers(Injector injector) {
     // register Polling Framework Observer
     PollingServiceImpl pollingService = (PollingServiceImpl) injector.getInstance(Key.get(PollingService.class));
-    pollingService.getSubject().register(injector.getInstance(Key.get(PollingPerpetualTaskManager.class)));
+    pollingService.getSubject().register(injector.getInstance(Key.get(PollingServiceObserverImpl.class)));
   }
 
   private void registerMigrations(Injector injector) {
@@ -357,8 +354,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
           { add(InstanceMigrationProvider.class); }
           { add(UserMetadataMigrationProvider.class); }
           { add(LicenseManagerMigrationProvider.class); }
-          { add(SourceCodeManagerMigrationProvider.class); }
-          { add(GitSyncMigrationProvider.class); }
         })
         .build();
   }
@@ -500,8 +495,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         new HashMap<>();
     List<Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>>> orchestrationEventHandlersList =
         new ArrayList<>(Arrays.asList(CdngOrchestrationExecutionEventHandlerRegistrar.getEngineEventHandlers(),
-            DeploymentEventListenerRegistrar.getEngineEventHandlers(),
-            DeploymentEventGenerator.getEngineEventHandlers()));
+            DeploymentEventListenerRegistrar.getEngineEventHandlers()));
     orchestrationEventHandlersList.forEach(
         orchestrationEventHandlers -> mergeEventHandlers(orchestrationEventTypeSetHashMap, orchestrationEventHandlers));
     return orchestrationEventTypeSetHashMap;

@@ -2,8 +2,6 @@ package io.harness.engine.pms.tasks;
 
 import static java.lang.System.currentTimeMillis;
 
-import io.harness.annotations.dev.HarnessTeam;
-import io.harness.annotations.dev.OwnedBy;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.delegate.AccountId;
 import io.harness.delegate.CancelTaskRequest;
@@ -31,9 +29,7 @@ import java.util.function.Supplier;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.NotImplementedException;
 
-@OwnedBy(HarnessTeam.PIPELINE)
 @Slf4j
 public class NgDelegate2TaskExecutor implements TaskExecutor {
   @Inject private DelegateServiceBlockingStub delegateServiceBlockingStub;
@@ -87,7 +83,7 @@ public class NgDelegate2TaskExecutor implements TaskExecutor {
 
   @Override
   public void expireTask(Map<String, String> setupAbstractions, String taskId) {
-    throw new NotImplementedException("Expire task is not implemented");
+    // Needs to be implemented
   }
 
   private SubmitTaskRequest buildTaskRequestWithToken(SubmitTaskRequest request) {

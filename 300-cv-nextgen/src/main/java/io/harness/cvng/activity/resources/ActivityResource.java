@@ -10,14 +10,13 @@ import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivitySummaryDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.activity.services.api.ActivityService;
-import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ClusterType;
+import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
 import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.core.beans.DatasourceTypeDTO;
-import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
-import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.ng.beans.PageResponse;
 import io.harness.rest.RestResponse;
@@ -30,7 +29,6 @@ import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import javax.validation.Valid;
@@ -161,11 +159,11 @@ public class ActivityResource {
       @NotEmpty @NotNull @PathParam("activityId") String activityId, @NotNull @QueryParam("accountId") String accountId,
       @DefaultValue("false") @QueryParam("anomalousMetricsOnly") boolean anomalousMetricsOnly,
       @QueryParam("hostName") String hostName, @QueryParam("filter") String filter,
-      @QueryParam("healthSources") List<String> healthSourceIdentifiers,
+      @QueryParam("healthSource") DataSourceType dataSourceType,
       @QueryParam("pageNumber") @DefaultValue("0") int pageNumber,
       @QueryParam("pageSize") @DefaultValue("10") int pageSize) {
     return new RestResponse(activityService.getDeploymentActivityTimeSeriesData(
-        accountId, activityId, anomalousMetricsOnly, hostName, filter, healthSourceIdentifiers, pageNumber, pageSize));
+        accountId, activityId, anomalousMetricsOnly, hostName, filter, dataSourceType, pageNumber, pageSize));
   }
 
   @GET
@@ -180,27 +178,14 @@ public class ActivityResource {
   }
 
   @GET
-  @Path("/{activityId}/healthSources")
-  @Timed
-  @ExceptionMetered
-  @ApiOperation(value = "get health sources  for an activity", nickname = "getHealthSources")
-  public RestResponse<Set<HealthSourceDTO>> getHealthSources(
-      @NotNull @NotEmpty @PathParam("activityId") String activityId,
-      @NotNull @QueryParam("accountId") String accountId) {
-    return new RestResponse(activityService.healthSources(accountId, activityId));
-  }
-
-  @GET
   @Path("/{activityId}/clusters")
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "get logs for given activity", nickname = "getDeploymentLogAnalysisClusters")
   public RestResponse<List<LogAnalysisClusterChartDTO>> getDeploymentLogAnalysisClusters(
       @NotNull @NotEmpty @PathParam("activityId") String activityId, @NotNull @QueryParam("accountId") String accountId,
-      @QueryParam("hostName") String hostName, @QueryParam("healthSource") List<String> healthSourceIdentifiers,
-      @QueryParam("clusterType") List<ClusterType> clusterTypes) {
-    return new RestResponse(activityService.getDeploymentActivityLogAnalysisClusters(
-        accountId, activityId, hostName, healthSourceIdentifiers, clusterTypes));
+      @QueryParam("hostName") String hostName) {
+    return new RestResponse(activityService.getDeploymentActivityLogAnalysisClusters(accountId, activityId, hostName));
   }
 
   @Path("/{activityId}/deployment-log-analysis-data")
@@ -212,13 +197,8 @@ public class ActivityResource {
       @PathParam("activityId") String activityId, @NotNull @QueryParam("accountId") String accountId,
       @QueryParam("label") Integer label, @NotNull @QueryParam("pageNumber") int pageNumber,
       @NotNull @QueryParam("pageSize") int pageSize, @QueryParam("hostName") String hostName,
-      @QueryParam("healthSource") List<String> healthSourceIdentifiers,
-      @QueryParam("clusterType") ClusterType clusterType, @QueryParam("clusterTypes") List<ClusterType> clusterTypes) {
-    PageParams pageParams = PageParams.builder().page(pageNumber).size(pageSize).build();
-    if (clusterType != null) {
-      clusterTypes = Arrays.asList(clusterType);
-    }
+      @QueryParam("clusterType") DeploymentLogAnalysisDTO.ClusterType clusterType) {
     return new RestResponse(activityService.getDeploymentActivityLogAnalysisResult(
-        accountId, activityId, label, hostName, healthSourceIdentifiers, clusterTypes, pageParams));
+        accountId, activityId, label, pageNumber, pageSize, hostName, clusterType));
   }
 }

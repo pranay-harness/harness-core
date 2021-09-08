@@ -2977,7 +2977,7 @@ public class DelegateServiceImpl implements DelegateService {
    */
   @VisibleForTesting
   void handleEcsDelegateKeepAlivePacket(Delegate delegate) {
-    log.debug("Handling Keep alive packet ");
+    log.info("Handling Keep alive packet ");
     if (isBlank(delegate.getHostName()) || isBlank(delegate.getDelegateRandomToken()) || isBlank(delegate.getUuid())
         || isBlank(delegate.getSequenceNum())) {
       return;

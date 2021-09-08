@@ -62,7 +62,7 @@ public class QueryStatsServiceImpl implements QueryStatsService {
     return QueryStats.builder()
         .hash(latestQueryRecord.getHash())
         .serviceId(latestQueryRecord.getServiceName())
-        .version(latestQueryRecord.getMajorVersion())
+        .version(latestQueryRecord.getVersion())
         .parsedQuery(latestQueryRecord.getParsedQuery())
         .collectionName(latestQueryRecord.getCollectionName())
         .count((long) queryRecordEntityList.size())

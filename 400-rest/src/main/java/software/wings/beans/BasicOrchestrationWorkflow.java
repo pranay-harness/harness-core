@@ -32,7 +32,6 @@ public class BasicOrchestrationWorkflow extends CanaryOrchestrationWorkflow {
         .withGraph(getGraph())
         .withPreDeploymentSteps(getPreDeploymentSteps())
         .withRollbackProvisioners(getRollbackProvisioners())
-        .withRollbackProvisionersReverse(getRollbackProvisionersReverse())
         .withWorkflowPhaseIds(getWorkflowPhaseIds())
         .withWorkflowPhases(getWorkflowPhases())
         .withWorkflowPhaseIdMap(getWorkflowPhaseIdMap())
@@ -64,7 +63,6 @@ public class BasicOrchestrationWorkflow extends CanaryOrchestrationWorkflow {
     private List<Variable> derivedVariables = new ArrayList<>();
     private Set<EntityType> requiredEntityTypes;
     private PhaseStep rollbackProvisioners;
-    private PhaseStep rollbackProvisionersReverse;
 
     private BasicOrchestrationWorkflowBuilder() {}
     public static BasicOrchestrationWorkflowBuilder aBasicOrchestrationWorkflow() {
@@ -83,11 +81,6 @@ public class BasicOrchestrationWorkflow extends CanaryOrchestrationWorkflow {
 
     public BasicOrchestrationWorkflowBuilder withRollbackProvisioners(PhaseStep rollbackProvisioners) {
       this.rollbackProvisioners = rollbackProvisioners;
-      return this;
-    }
-
-    public BasicOrchestrationWorkflowBuilder withRollbackProvisionersReverse(PhaseStep rollbackProvisionersReverse) {
-      this.rollbackProvisionersReverse = rollbackProvisionersReverse;
       return this;
     }
 
@@ -174,7 +167,6 @@ public class BasicOrchestrationWorkflow extends CanaryOrchestrationWorkflow {
       basicOrchestrationWorkflow.setRequiredEntityTypes(requiredEntityTypes);
       basicOrchestrationWorkflow.setConcurrencyStrategy(concurrencyStrategy);
       basicOrchestrationWorkflow.setRollbackProvisioners(rollbackProvisioners);
-      basicOrchestrationWorkflow.setRollbackProvisionersReverse(rollbackProvisionersReverse);
       return basicOrchestrationWorkflow;
     }
   }

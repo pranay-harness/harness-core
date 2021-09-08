@@ -34,9 +34,7 @@ import io.harness.perpetualtask.k8s.watch.PodWatcher;
 import io.harness.perpetualtask.k8s.watch.WatcherFactory;
 import io.harness.perpetualtask.manifest.ManifestCollectionTaskParams;
 import io.harness.perpetualtask.manifest.ManifestPerpetualTaskExecutor;
-import io.harness.perpetualtask.polling.ArtifactCollectionTaskParamsNg;
 import io.harness.perpetualtask.polling.ManifestCollectionTaskParamsNg;
-import io.harness.perpetualtask.polling.artifact.ArtifactPerpetualTaskExecutorNg;
 import io.harness.perpetualtask.polling.manifest.ManifestPerpetualTaskExecutorNg;
 
 import com.google.inject.AbstractModule;
@@ -93,8 +91,6 @@ public class PerpetualTaskWorkerModule extends AbstractModule {
         .to(K8sInstanceSyncPerpetualTaskExecutor.class);
     mapBinder.addBinding(ManifestCollectionTaskParamsNg.class.getSimpleName())
         .to(ManifestPerpetualTaskExecutorNg.class);
-    mapBinder.addBinding(ArtifactCollectionTaskParamsNg.class.getSimpleName())
-        .to(ArtifactPerpetualTaskExecutorNg.class);
     install(new FactoryModuleBuilder()
                 .implement(PodWatcher.class, PodWatcher.class)
                 .implement(NodeWatcher.class, NodeWatcher.class)

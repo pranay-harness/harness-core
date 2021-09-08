@@ -1,7 +1,7 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
-    name = "gojunit",
+    name = "go_default_library",
     srcs = [
         "ingest.go",
         "ingesters.go",
@@ -11,20 +11,20 @@ go_library(
     ],
     importpath = "github.com/wings-software/portal/product/ci/addon/gojunit",
     visibility = ["//visibility:public"],
-    deps = ["//product/ci/ti-service/types"],
+    deps = ["//product/ci/ti-service/types:go_default_library"],
 )
 
 go_test(
-    name = "gojunit_test",
+    name = "go_default_test",
     srcs = [
         "ingest_test.go",
         "parse_test.go",
     ],
     data = glob(["testdata/**"]),
-    embed = [":gojunit"],
+    embed = [":go_default_library"],
     deps = [
-        "//product/ci/ti-service/types",
-        "@com_github_stretchr_testify//assert",
-        "@com_github_stretchr_testify//require",
+        "//product/ci/ti-service/types:go_default_library",
+        "@com_github_stretchr_testify//assert:go_default_library",
+        "@com_github_stretchr_testify//require:go_default_library",
     ],
 )

@@ -92,7 +92,6 @@ public class TerraformProvisionParameters implements TaskParameters, ActivityAcc
    */
   private boolean skipRefreshBeforeApplyingPlan;
   private boolean isGitHostConnectivityCheck;
-  private final boolean useTfConfigInspectLatestVersion;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

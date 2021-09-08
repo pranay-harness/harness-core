@@ -36,9 +36,9 @@ public class TerraformConfigInspectClientImpl implements TerraformConfigInspectC
   private static final String jsonArg = "--json";
 
   @Override
-  public List<String> parseFieldsUnderBlock(String directory, String category, boolean useLatestVersion) {
+  public List<String> parseFieldsUnderBlock(String directory, String category) {
     try {
-      String config = executeTerraformInspect(directory, useLatestVersion);
+      String config = executeTerraformInspect(directory);
       JSONObject parsedConfig = new JSONObject(config);
       JSONObject blockVariables = parsedConfig.getJSONObject(category);
       List<String> fields = new ArrayList<>(blockVariables.keySet());
@@ -53,8 +53,8 @@ public class TerraformConfigInspectClientImpl implements TerraformConfigInspectC
     }
   }
 
-  String executeTerraformInspect(String directory, boolean useLatestVersion) {
-    String cmd = InstallUtils.getTerraformConfigInspectPath(useLatestVersion);
+  String executeTerraformInspect(String directory) {
+    String cmd = InstallUtils.getTerraformConfigInspectPath();
     return executeShellCommand(HarnessStringUtils.join(SPACE, cmd, jsonArg, directory));
   }
 

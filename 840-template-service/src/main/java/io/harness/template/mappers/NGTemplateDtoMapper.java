@@ -12,7 +12,6 @@ import io.harness.gitsync.sdk.EntityGitDetailsMapper;
 import io.harness.jackson.JsonNodeUtils;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.template.beans.TemplateResponseDTO;
-import io.harness.template.beans.TemplateSummaryResponseDTO;
 import io.harness.template.beans.yaml.NGTemplateConfig;
 import io.harness.template.beans.yaml.NGTemplateInfoConfig;
 import io.harness.template.entity.TemplateEntity;
@@ -44,26 +43,6 @@ public class NGTemplateDtoMapper {
         .build();
   }
 
-  public TemplateSummaryResponseDTO prepareTemplateSummaryResponseDto(TemplateEntity templateEntity) {
-    return TemplateSummaryResponseDTO.builder()
-        .accountId(templateEntity.getAccountId())
-        .orgIdentifier(templateEntity.getOrgIdentifier())
-        .projectIdentifier(templateEntity.getProjectIdentifier())
-        .yaml(templateEntity.getYaml())
-        .identifier(templateEntity.getIdentifier())
-        .description(templateEntity.getDescription())
-        .name(templateEntity.getName())
-        .isStableTemplate(templateEntity.isStableTemplate())
-        .childType(templateEntity.getChildType())
-        .templateEntityType(templateEntity.getTemplateEntityType())
-        .templateScope(templateEntity.getTemplateScope())
-        .versionLabel(templateEntity.getVersionLabel())
-        .tags(TagMapper.convertToMap(templateEntity.getTags()))
-        .version(templateEntity.getVersion())
-        .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(templateEntity))
-        .build();
-  }
-
   public TemplateEntity toTemplateEntityResponse(
       String accountId, String orgId, String projectId, NGTemplateConfig templateConfig, String yaml) {
     validateTemplateYaml(templateConfig, orgId, projectId);
@@ -73,7 +52,7 @@ public class NGTemplateDtoMapper {
             .orgIdentifier(templateConfig.getTemplateInfoConfig().getOrgIdentifier())
             .projectIdentifier(templateConfig.getTemplateInfoConfig().getProjectIdentifier())
             .identifier(templateConfig.getTemplateInfoConfig().getIdentifier())
-            .versionLabel(templateConfig.getTemplateInfoConfig().getVersionLabel())
+            .label(templateConfig.getTemplateInfoConfig().getVersionLabel())
             .build();
     return TemplateEntity.builder()
         .yaml(yaml)
@@ -106,7 +85,8 @@ public class NGTemplateDtoMapper {
     try {
       NGTemplateConfig templateConfig = YamlPipelineUtils.read(templateYaml, NGTemplateConfig.class);
       return toTemplateEntityResponse(accountId, templateConfig.getTemplateInfoConfig().getOrgIdentifier(),
-          templateConfig.getTemplateInfoConfig().getProjectIdentifier(), templateConfig, templateYaml);
+          templateConfig.getTemplateInfoConfig().getProjectIdentifier(), templateConfig,
+          YamlPipelineUtils.getYamlString(templateConfig));
     } catch (IOException e) {
       throw new InvalidRequestException("Cannot create template entity due to " + e.getMessage());
     }
@@ -115,7 +95,8 @@ public class NGTemplateDtoMapper {
   public TemplateEntity toTemplateEntity(String accountId, String orgId, String projectId, String templateYaml) {
     try {
       NGTemplateConfig templateConfig = YamlPipelineUtils.read(templateYaml, NGTemplateConfig.class);
-      return toTemplateEntityResponse(accountId, orgId, projectId, templateConfig, templateYaml);
+      return toTemplateEntityResponse(
+          accountId, orgId, projectId, templateConfig, YamlPipelineUtils.getYamlString(templateConfig));
     } catch (IOException e) {
       throw new InvalidRequestException("Cannot create template entity due to " + e.getMessage());
     }
@@ -126,7 +107,8 @@ public class NGTemplateDtoMapper {
     try {
       NGTemplateConfig templateConfig = YamlPipelineUtils.read(templateYaml, NGTemplateConfig.class);
       validateTemplateYaml(templateConfig, orgId, projectId, templateIdentifier, versionLabel);
-      return toTemplateEntityResponse(accountId, orgId, projectId, templateConfig, templateYaml);
+      return toTemplateEntityResponse(
+          accountId, orgId, projectId, templateConfig, YamlPipelineUtils.getYamlString(templateConfig));
     } catch (IOException e) {
       throw new InvalidRequestException("Cannot create template entity due to " + e.getMessage());
     }

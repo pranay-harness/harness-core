@@ -54,9 +54,3 @@ java_library(
 run_tests()
 
 run_analysis()
-
-exports_files([
-    "event-service-config.yml",
-    "key.pem",
-    "cert.pem",
-])

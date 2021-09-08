@@ -35,7 +35,6 @@ import org.junit.experimental.categories.Category;
 public class InstallUtilsTest extends CategoryTest implements MockableTestMixin {
   DelegateConfiguration delegateConfiguration =
       DelegateConfiguration.builder().managerUrl("localhost").maxCachedArtifacts(10).build();
-  String terraformConfigInspectVersion = "v1.0";
 
   @Test
   @Owner(developers = VUK)
@@ -46,7 +45,7 @@ public class InstallUtilsTest extends CategoryTest implements MockableTestMixin 
     boolean useCdn = delegateConfiguration.isUseCdn();
 
     assertThat(useCdn).isFalse();
-    assertThat(InstallUtils.getTerraformConfigInspectDownloadUrl(delegateConfiguration, terraformConfigInspectVersion))
+    assertThat(InstallUtils.getTerraformConfigInspectDownloadUrl(delegateConfiguration))
         .isEqualTo(
             "https://app.harness.io/storage/harness-download/harness-terraform-config-inspect/v1.0/windows/amd64/terraform-config-inspect");
   }
@@ -64,22 +63,19 @@ public class InstallUtilsTest extends CategoryTest implements MockableTestMixin 
     try {
       setStaticFieldValue(SystemUtils.class, "IS_OS_WINDOWS", false);
       setStaticFieldValue(SystemUtils.class, "IS_OS_MAC", false);
-      assertThat(
-          InstallUtils.getTerraformConfigInspectDownloadUrl(delegateConfiguration, terraformConfigInspectVersion))
+      assertThat(InstallUtils.getTerraformConfigInspectDownloadUrl(delegateConfiguration))
           .isEqualTo(
               "https://app.harness.io/storage/harness-download/harness-terraform-config-inspect/v1.0/linux/amd64/terraform-config-inspect");
 
       setStaticFieldValue(SystemUtils.class, "IS_OS_WINDOWS", false);
       setStaticFieldValue(SystemUtils.class, "IS_OS_MAC", true);
-      assertThat(
-          InstallUtils.getTerraformConfigInspectDownloadUrl(delegateConfiguration, terraformConfigInspectVersion))
+      assertThat(InstallUtils.getTerraformConfigInspectDownloadUrl(delegateConfiguration))
           .isEqualTo(
               "https://app.harness.io/storage/harness-download/harness-terraform-config-inspect/v1.0/darwin/amd64/terraform-config-inspect");
 
       setStaticFieldValue(SystemUtils.class, "IS_OS_WINDOWS", true);
       setStaticFieldValue(SystemUtils.class, "IS_OS_MAC", false);
-      assertThat(
-          InstallUtils.getTerraformConfigInspectDownloadUrl(delegateConfiguration, terraformConfigInspectVersion))
+      assertThat(InstallUtils.getTerraformConfigInspectDownloadUrl(delegateConfiguration))
           .isEqualTo(
               "https://app.harness.io/storage/harness-download/harness-terraform-config-inspect/v1.0/windows/amd64/terraform-config-inspect");
     } finally {

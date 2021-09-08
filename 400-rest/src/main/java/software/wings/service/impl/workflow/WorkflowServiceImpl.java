@@ -42,7 +42,6 @@ import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.CanaryWorkflowExecutionAdvisor.ROLLBACK_PROVISIONERS;
-import static software.wings.beans.CanaryWorkflowExecutionAdvisor.ROLLBACK_PROVISIONERS_REVERSE;
 import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.EntityType.HELM_CHART;
 import static software.wings.beans.EntityType.SERVICE;
@@ -1620,20 +1619,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return rollbackProvisionerStep;
   }
 
-  /*
-  Generates rollback provisioners order in reverse of that in which they were deployed
-   */
-  @Override
-  public PhaseStep generateRollbackProvisionersReverse(
-      PhaseStep preDeploymentSteps, PhaseStepType phaseStepType, String phaseStepName) {
-    PhaseStep rollbackProvisionerPhaseStep =
-        generateRollbackProvisioners(preDeploymentSteps, phaseStepType, phaseStepName);
-    if (rollbackProvisionerPhaseStep != null && rollbackProvisionerPhaseStep.getSteps() != null) {
-      Collections.reverse(rollbackProvisionerPhaseStep.getSteps());
-    }
-    return rollbackProvisionerPhaseStep;
-  }
-
   private PhaseStep generateTerragruntRollbackProvisioners(
       PhaseStep preDeploymentSteps, PhaseStepType phaseStepType, String phaseStepName) {
     List<GraphNode> provisionerSteps = preDeploymentSteps.getSteps()
@@ -1818,12 +1803,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     orchestrationWorkflow.setPreDeploymentSteps(phaseStep);
     orchestrationWorkflow.setRollbackProvisioners(
         generateRollbackProvisioners(phaseStep, PhaseStepType.ROLLBACK_PROVISIONERS, ROLLBACK_PROVISIONERS));
-    String accountId = appService.getAccountIdByAppId(appId);
-    if (featureFlagService.isEnabled(FeatureName.ROLLBACK_PROVISIONER_AFTER_PHASES, accountId)) {
-      // Generate rollbackProvisionerReverse step to support ROLLBACK_PROVISIONER_AFTER_PHASES failure strategy
-      orchestrationWorkflow.setRollbackProvisionersReverse(generateRollbackProvisionersReverse(
-          phaseStep, PhaseStepType.ROLLBACK_PROVISIONERS, ROLLBACK_PROVISIONERS_REVERSE));
-    }
 
     orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow, false).getOrchestrationWorkflow();
@@ -1843,14 +1822,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     workflowServiceTemplateHelper.updateLinkedPhaseStepTemplate(
         phaseStep, orchestrationWorkflow.getPostDeploymentSteps());
     orchestrationWorkflow.setPostDeploymentSteps(phaseStep);
-
-    String accountId = appService.getAccountIdByAppId(appId);
-    if (featureFlagService.isEnabled(FeatureName.ROLLBACK_PROVISIONER_AFTER_PHASES, accountId)) {
-      // Generate rollbackProvisionerReverse step to support ROLLBACK_PROVISIONER_AFTER_PHASES failure strategy
-      orchestrationWorkflow.setRollbackProvisionersReverse(
-          generateRollbackProvisionersReverse(orchestrationWorkflow.getPreDeploymentSteps(),
-              PhaseStepType.ROLLBACK_PROVISIONERS, ROLLBACK_PROVISIONERS_REVERSE));
-    }
 
     orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow, false).getOrchestrationWorkflow();
@@ -1885,14 +1856,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (artifactCheckRequiredForDeployment(workflowPhase, orchestrationWorkflow)) {
       workflowServiceHelper.ensureArtifactCheckInPreDeployment(
           (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow());
-    }
-
-    String accountId = appService.getAccountIdByAppId(appId);
-    if (featureFlagService.isEnabled(FeatureName.ROLLBACK_PROVISIONER_AFTER_PHASES, accountId)) {
-      // Generate rollbackProvisionerReverse step to support ROLLBACK_PROVISIONER_AFTER_PHASES failure strategy
-      orchestrationWorkflow.setRollbackProvisionersReverse(
-          generateRollbackProvisionersReverse(orchestrationWorkflow.getPreDeploymentSteps(),
-              PhaseStepType.ROLLBACK_PROVISIONERS, ROLLBACK_PROVISIONERS_REVERSE));
     }
 
     orchestrationWorkflow =
@@ -2376,12 +2339,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
     notNullCheck(ORCHESTRATION_WORKFLOW, orchestrationWorkflow, USER);
-
-    String accountId = appService.getAccountIdByAppId(appId);
-    if (featureFlagService.isEnabled(FeatureName.ROLLBACK_PROVISIONER_AFTER_PHASES, accountId)) {
-      // Generate rollbackProvisionerReverse step to support ROLLBACK_PROVISIONER_AFTER_PHASES failure strategy
-      updatePreDeployment(appId, workflowId, orchestrationWorkflow.getPreDeploymentSteps());
-    }
 
     orchestrationWorkflow.setFailureStrategies(failureStrategies);
     orchestrationWorkflow =

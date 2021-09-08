@@ -54,7 +54,6 @@ import java.util.List;
 import java.util.Map;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -104,7 +103,6 @@ public class TerraformFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(FunctionalTests.class)
-  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void createTerraformPlanForApply() throws IOException {
     InfrastructureProvisioner terraformProvisioner = createTerraformProvisioner(true, false);
 
@@ -123,7 +121,6 @@ public class TerraformFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(FunctionalTests.class)
-  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void applyApprovedPlanThenDestroy() throws IOException {
     InfrastructureProvisioner terraformProvisioner = createTerraformProvisioner(true, false);
 
@@ -144,7 +141,6 @@ public class TerraformFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(FunctionalTests.class)
-  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void createTerraformPlanForDestroy() throws IOException {
     InfrastructureProvisioner terraformProvisioner = createTerraformProvisioner(true, false);
 
@@ -163,7 +159,6 @@ public class TerraformFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(FunctionalTests.class)
-  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void workflowWithCommitId() throws IOException {
     InfrastructureProvisioner terraformProvisioner = createTerraformProvisioner(false, false);
 
@@ -184,7 +179,6 @@ public class TerraformFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(FunctionalTests.class)
-  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void workflowWithEnvVars() throws IOException {
     InfrastructureProvisioner terraformProvisioner = createTerraformProvisioner(true, true);
 

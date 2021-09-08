@@ -123,13 +123,11 @@ def create_table_from_manifest(jsonData):
     map_tags = {}
     schema = []
     for column in manifestdata.get("columns", []):
-        name = column["name"].lower().strip()
-        name_converted = name
+        name = column["name"].lower()
         if reg.search(name):
             # This must be a TAG ex. aws:autoscaling:groupName
-            name_converted = re.sub(reg, "_", name)
-            name = "TAG_" + name_converted
-        name_for_map = name_converted
+            name = "TAG_" + re.sub(reg, "_", column["name"])
+        name_for_map = column["name"].lower()
         try:
             name = name + "_" + str(map_tags[name_for_map])
             map_tags[name_for_map] += 1

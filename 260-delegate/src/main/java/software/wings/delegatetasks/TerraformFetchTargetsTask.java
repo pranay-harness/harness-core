@@ -87,8 +87,8 @@ public class TerraformFetchTargetsTask extends AbstractDelegateRunnableTask {
 
       String absoluteModulePath =
           gitUtilsDelegate.resolveAbsoluteFilePath(gitOperationContext, parameters.getScriptPath());
-      List<String> targets = terraformConfigInspectService.parseFieldsUnderCategory(absoluteModulePath,
-          BLOCK_TYPE.MANAGED_RESOURCES.name().toLowerCase(), parameters.isUseTfConfigInspectLatestVersion());
+      List<String> targets = terraformConfigInspectService.parseFieldsUnderCategory(
+          absoluteModulePath, BLOCK_TYPE.MANAGED_RESOURCES.name().toLowerCase());
       return TerraformExecutionData.builder().targets(targets).build();
     } catch (WingsException e) {
       throw e;

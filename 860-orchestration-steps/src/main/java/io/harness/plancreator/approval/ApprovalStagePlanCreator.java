@@ -11,7 +11,6 @@ import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
-import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.steps.approval.stage.ApprovalStageSpecParameters;
@@ -64,10 +63,8 @@ public class ApprovalStagePlanCreator extends GenericStagePlanCreator {
     planCreationResponseMap.put(
         specPlanNode.getUuid(), PlanCreationResponse.builder().node(specPlanNode.getUuid(), specPlanNode).build());
 
-    planCreationResponseMap.put(executionField.getNode().getUuid(),
-        PlanCreationResponse.builder()
-            .dependencies(DependenciesUtils.toDependenciesProto(dependenciesNodeMap))
-            .build());
+    planCreationResponseMap.put(
+        executionField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(dependenciesNodeMap).build());
     return planCreationResponseMap;
   }
 }

@@ -21,7 +21,6 @@ import static io.harness.ng.core.invites.dto.InviteOperationResponse.INVITE_INVA
 import static io.harness.ng.core.invites.dto.InviteOperationResponse.USER_ALREADY_ADDED;
 import static io.harness.ng.core.invites.dto.InviteOperationResponse.USER_ALREADY_INVITED;
 import static io.harness.ng.core.invites.dto.InviteOperationResponse.USER_INVITED_SUCCESSFULLY;
-import static io.harness.persistence.AccountAccess.ACCOUNT_ID_KEY;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.app.ManagerCacheRegistrar.PRIMARY_CACHE_PREFIX;
@@ -3042,21 +3041,8 @@ public class UserServiceImpl implements UserService {
     return pageResponse.getResponse();
   }
 
-  public Map<String, String> populateUserPrincipalClaim(
-      User user, Map<String, String> claims, boolean persistOldAccountId) {
-    String oldAccountId = claims.get(ACCOUNT_ID_KEY);
-    // User Principal needed in token for environments without gateway as this token will be sent back to different
-    // microservices
-    addUserPrincipal(claims, user);
-    if (persistOldAccountId && isNotEmpty(oldAccountId)) {
-      claims.put(ACCOUNT_ID_KEY, oldAccountId);
-    }
-    return claims;
-  }
-
   @Override
-  public String generateJWTToken(
-      User user, Map<String, String> claims, JWT_CATEGORY category, boolean persistOldAccountId) {
+  public String generateJWTToken(User user, Map<String, String> claims, JWT_CATEGORY category) {
     String jwtPasswordSecret = secretManager.getJWTSecret(category);
     if (jwtPasswordSecret == null) {
       throw new InvalidRequestException(INCORRECT_PORTAL_SETUP);
@@ -3069,7 +3055,9 @@ public class UserServiceImpl implements UserService {
               .withIssuer(HARNESS_ISSUER)
               .withIssuedAt(new Date())
               .withExpiresAt(new Date(System.currentTimeMillis() + category.getValidityDuration()));
-      claims = populateUserPrincipalClaim(user, claims, persistOldAccountId);
+      // User Principal needed in token for environments without gateway as this token will be sent back to different
+      // microservices
+      addUserPrincipal(claims, user);
       if (claims != null && claims.size() > 0) {
         claims.forEach(jwtBuilder::withClaim);
       }

@@ -42,8 +42,6 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.tasks.BinaryResponseData;
 import io.harness.tasks.FailureResponseData;
 
-import software.wings.beans.appmanifest.StoreType;
-
 import com.esotericsoftware.kryo.Kryo;
 import java.time.ZonedDateTime;
 
@@ -59,7 +57,6 @@ public class CommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(FailureResponseData.class, 3007);
     kryo.register(KeyValuePair.class, 3008);
     kryo.register(ZonedDateTime.class, 71123);
-    kryo.register(StoreType.class, 5540);
 
     // Promoted Classes
     kryo.register(ArtifactoryServerException.class, 7214);

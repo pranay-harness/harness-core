@@ -38,7 +38,6 @@ public class GitConfigYamlHandler extends SourceRepoProviderYamlHandler<Yaml, Gi
             .commitMessage(gitConfig.getCommitMessage())
             .urlType(gitConfig.getUrlType())
             .delegateSelectors(gitConfig.getDelegateSelectors())
-            .providerType(gitConfig.getProviderType())
             .build();
     toYaml(yaml, settingAttribute, appId);
     return yaml;
@@ -66,7 +65,6 @@ public class GitConfigYamlHandler extends SourceRepoProviderYamlHandler<Yaml, Gi
             .commitMessage(yaml.getCommitMessage())
             .urlType(yaml.getUrlType())
             .delegateSelectors(yaml.getDelegateSelectors())
-            .providerType(yaml.getProviderType())
             .build();
     return buildSettingAttribute(accountId, changeContext.getChange().getFilePath(), uuid, config);
   }

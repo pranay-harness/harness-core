@@ -15,7 +15,6 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.YamlException;
 import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.utils.CommonPlanCreatorUtils;
@@ -23,7 +22,6 @@ import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
-import io.harness.pms.contracts.plan.YamlUpdates;
 import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
@@ -34,7 +32,6 @@ import io.harness.pms.sdk.core.plan.PlanNode.PlanNodeBuilder;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.utilities.ResourceConstraintUtility;
-import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
@@ -114,21 +111,11 @@ public class InfrastructurePmsPlanCreator {
       YamlField rcYamlField = constructResourceConstraintYamlField(infraSectionNode);
 
       adviserObtainments = getAdviserObtainmentFromMetaDataToResourceConstraint(rcYamlField, kryoSerializer);
-      try {
-        YamlUpdates yamlUpdates =
-            YamlUpdates.newBuilder()
-                .putFqnToYaml(rcYamlField.getYamlPath(), YamlUtils.writeYamlString(rcYamlField).replace("---\n", ""))
-                .build();
-        planCreationResponseMap.put(rcYamlField.getNode().getUuid(),
-            PlanCreationResponse.builder()
-                .dependencies(DependenciesUtils.toDependenciesProto(
-                    ImmutableMap.of(rcYamlField.getNode().getUuid(), rcYamlField)))
-                .yamlUpdates(yamlUpdates)
-                .build());
-      } catch (IOException e) {
-        throw new YamlException("Yaml created for resource constraint at " + rcYamlField.getYamlPath()
-            + " could not be converted into a yaml string");
-      }
+
+      planCreationResponseMap.put(rcYamlField.getNode().getUuid(),
+          PlanCreationResponse.builder()
+              .dependencies(ImmutableMap.of(rcYamlField.getNode().getUuid(), rcYamlField))
+              .build());
     }
 
     PlanNode infraSectionPlanNode = planNodeBuilder.adviserObtainments(adviserObtainments).build();
@@ -143,7 +130,7 @@ public class InfrastructurePmsPlanCreator {
   private YamlField constructResourceConstraintYamlField(YamlNode infraNode) {
     final String resourceUnit = "<+INFRA_KEY>";
     JsonNode resourceConstraintJsonNode = ResourceConstraintUtility.getResourceConstraintJsonNode(resourceUnit);
-    return new YamlField("step", new YamlNode("step", resourceConstraintJsonNode, infraNode.getParentNode()));
+    return new YamlField("step", new YamlNode(resourceConstraintJsonNode, infraNode.getParentNode()));
   }
 
   private List<AdviserObtainment> getAdviserObtainmentFromMetaDataToExecution(
@@ -224,8 +211,8 @@ public class InfrastructurePmsPlanCreator {
     for (YamlField stepYamlField : stepYamlFields) {
       Map<String, YamlField> stepYamlFieldMap = new HashMap<>();
       stepYamlFieldMap.put(stepYamlField.getNode().getUuid(), stepYamlField);
-      responseMap.put(stepYamlField.getNode().getUuid(),
-          PlanCreationResponse.builder().dependencies(DependenciesUtils.toDependenciesProto(stepYamlFieldMap)).build());
+      responseMap.put(
+          stepYamlField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(stepYamlFieldMap).build());
     }
 
     // Add Steps Node

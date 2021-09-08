@@ -2,11 +2,8 @@ package io.harness.pms.variables;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.annotations.dev.HarnessTeam;
-import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.plan.VariablesCreationBlobResponse;
 import io.harness.pms.contracts.plan.YamlOutputProperties;
-import io.harness.pms.variables.VariableMergeServiceResponse.ServiceExpressionProperties;
 import io.harness.pms.variables.VariableMergeServiceResponse.VariableResponseMapValue;
 
 import java.util.ArrayList;
@@ -15,11 +12,9 @@ import java.util.List;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
 
-@OwnedBy(HarnessTeam.PIPELINE)
 @UtilityClass
 public class VariableCreationBlobResponseUtils {
-  public VariableMergeServiceResponse getMergeServiceResponse(
-      String yaml, VariablesCreationBlobResponse response, Map<String, List<String>> serviceExpressionMap) {
+  public VariableMergeServiceResponse getMergeServiceResponse(String yaml, VariablesCreationBlobResponse response) {
     Map<String, VariableResponseMapValue> metadataMap = new LinkedHashMap<>();
     // Add Yaml Properties
     response.getYamlPropertiesMap().forEach(
@@ -45,7 +40,6 @@ public class VariableCreationBlobResponseUtils {
         .yaml(yaml)
         .metadataMap(metadataMap)
         .errorResponses(isNotEmpty(errorMessages) ? errorMessages : null)
-        .serviceExpressionPropertiesList(getExpressionsFromMap(serviceExpressionMap))
         .build();
   }
 
@@ -81,17 +75,6 @@ public class VariableCreationBlobResponseUtils {
     if (isNotEmpty(otherResponse.getYamlOutputPropertiesMap())) {
       otherResponse.getYamlOutputPropertiesMap().forEach(builder::putYamlOutputProperties);
     }
-  }
-
-  public List<ServiceExpressionProperties> getExpressionsFromMap(Map<String, List<String>> serviceExpressionMap) {
-    List<ServiceExpressionProperties> serviceExpressionProperties = new ArrayList<>();
-    for (Map.Entry<String, List<String>> entry : serviceExpressionMap.entrySet()) {
-      entry.getValue()
-          .stream()
-          .map(e -> ServiceExpressionProperties.builder().serviceName(entry.getKey()).expression(e).build())
-          .forEachOrdered(serviceExpressionProperties::add);
-    }
-    return serviceExpressionProperties;
   }
 
   public void mergeResolvedDependencies(

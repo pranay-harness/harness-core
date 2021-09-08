@@ -32,7 +32,6 @@ public class CanaryWorkflowYamlHandler extends WorkflowYamlHandler<CanaryWorkflo
             .withPostDeploymentSteps(workflowInfo.getPostDeploymentSteps())
             .withPreDeploymentSteps(workflowInfo.getPreDeploymentSteps())
             .withRollbackProvisioners(workflowInfo.getRollbackProvisioners())
-            .withRollbackProvisionersReverse(workflowInfo.getRollbackProvisionersReverse())
             .withRollbackWorkflowPhaseIdMap(workflowInfo.getRollbackPhaseMap())
             .withUserVariables(workflowInfo.getUserVariables())
             .withWorkflowPhases(workflowInfo.getPhaseList());

@@ -11,11 +11,9 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.pms.commons.events.PmsEventSender;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
-import io.harness.exception.YamlException;
 import io.harness.execution.PlanExecutionMetadata;
 import io.harness.pms.async.plan.PartialPlanResponseCallback;
 import io.harness.pms.contracts.plan.CreatePartialPlanEvent;
-import io.harness.pms.contracts.plan.Dependencies;
 import io.harness.pms.contracts.plan.ErrorResponse;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.PartialPlanResponse;
@@ -106,14 +104,8 @@ public class PlanCreatorMergeService {
     Map<String, PlanCreatorServiceInfo> services = pmsSdkHelper.getServices();
 
     YamlField pipelineField = YamlUtils.extractPipelineField(planExecutionMetadata.getProcessedYaml());
-    if (pipelineField.getNode().getUuid() == null) {
-      throw new YamlException("Processed pipeline yaml does not have uuid for the pipeline field");
-    }
-    Dependencies dependencies =
-        Dependencies.newBuilder()
-            .setYaml(planExecutionMetadata.getProcessedYaml())
-            .putDependencies(pipelineField.getNode().getUuid(), pipelineField.getNode().getYamlPath())
-            .build();
+    Map<String, YamlFieldBlob> dependencies = new HashMap<>();
+    dependencies.put(pipelineField.getNode().getUuid(), pipelineField.toFieldBlob());
     PlanCreationBlobResponse finalResponse = createPlanForDependenciesRecursive(accountId, orgIdentifier,
         projectIdentifier, services, dependencies, metadata, planExecutionMetadata.getTriggerPayload());
     validatePlanCreationBlobResponse(finalResponse);
@@ -140,31 +132,28 @@ public class PlanCreatorMergeService {
   }
 
   private PlanCreationBlobResponse createPlanForDependenciesRecursive(String accountId, String orgIdentifier,
-      String projectIdentifier, Map<String, PlanCreatorServiceInfo> services, Dependencies initialDependencies,
-      ExecutionMetadata metadata, TriggerPayload triggerPayload) {
+      String projectIdentifier, Map<String, PlanCreatorServiceInfo> services,
+      Map<String, YamlFieldBlob> initialDependencies, ExecutionMetadata metadata, TriggerPayload triggerPayload)
+      throws IOException {
     PlanCreationBlobResponse.Builder finalResponseBuilder =
-        PlanCreationBlobResponse.newBuilder().setDeps(initialDependencies);
-    if (EmptyPredicate.isEmpty(services) || EmptyPredicate.isEmpty(initialDependencies.getDependenciesMap())) {
+        PlanCreationBlobResponse.newBuilder().putAllDependencies(initialDependencies);
+    if (EmptyPredicate.isEmpty(services) || EmptyPredicate.isEmpty(initialDependencies)) {
       return finalResponseBuilder.build();
     }
-
     finalResponseBuilder.putAllContext(
         createInitialPlanCreationContext(accountId, orgIdentifier, projectIdentifier, metadata, triggerPayload));
-
-    for (int i = 0; i < MAX_DEPTH && EmptyPredicate.isNotEmpty(finalResponseBuilder.getDeps().getDependenciesMap());
-         i++) {
+    for (int i = 0; i < MAX_DEPTH && EmptyPredicate.isNotEmpty(finalResponseBuilder.getDependenciesMap()); i++) {
       PlanCreationBlobResponse currIterationResponse = createPlanForDependencies(services, finalResponseBuilder);
       PlanCreationBlobResponseUtils.addNodes(finalResponseBuilder, currIterationResponse.getNodesMap());
       PlanCreationBlobResponseUtils.mergeStartingNodeId(
           finalResponseBuilder, currIterationResponse.getStartingNodeId());
       PlanCreationBlobResponseUtils.mergeLayoutNodeInfo(finalResponseBuilder, currIterationResponse);
-      if (EmptyPredicate.isNotEmpty(finalResponseBuilder.getDeps().getDependenciesMap())) {
+      if (EmptyPredicate.isNotEmpty(finalResponseBuilder.getDependenciesMap())) {
         throw new InvalidRequestException(
-            PmsExceptionUtils.getUnresolvedDependencyPathsErrorMessage(finalResponseBuilder.getDeps()));
+            PmsExceptionUtils.getUnresolvedDependencyErrorMessage(finalResponseBuilder.getDependenciesMap().values()));
       }
       PlanCreationBlobResponseUtils.mergeContext(finalResponseBuilder, currIterationResponse.getContextMap());
-      PlanCreationBlobResponseUtils.addDependencies(finalResponseBuilder, currIterationResponse.getDeps());
-      PlanCreationBlobResponseUtils.mergeYamlUpdates(finalResponseBuilder, currIterationResponse.getYamlUpdates());
+      PlanCreationBlobResponseUtils.addDependencies(finalResponseBuilder, currIterationResponse.getDependenciesMap());
     }
 
     return finalResponseBuilder.build();
@@ -176,7 +165,7 @@ public class PlanCreatorMergeService {
     CompletableFutures<PlanCreationResponse> completableFutures = new CompletableFutures<>(executor);
 
     for (Map.Entry<String, PlanCreatorServiceInfo> serviceEntry : services.entrySet()) {
-      if (!pmsSdkHelper.containsSupportedDependencyByYamlPath(serviceEntry.getValue(), responseBuilder.getDeps())) {
+      if (!pmsSdkHelper.containsSupportedDependency(serviceEntry.getValue(), responseBuilder.getDependenciesMap())) {
         continue;
       }
 
@@ -184,7 +173,7 @@ public class PlanCreatorMergeService {
         try {
           return serviceEntry.getValue().getPlanCreationClient().createPlan(
               PlanCreationBlobRequest.newBuilder()
-                  .setDeps(responseBuilder.getDeps())
+                  .putAllDependencies(responseBuilder.getDependenciesMap())
                   .putAllContext(responseBuilder.getContextMap())
                   .build());
         } catch (StatusRuntimeException ex) {
@@ -221,9 +210,9 @@ public class PlanCreatorMergeService {
   }
 
   private void validatePlanCreationBlobResponse(PlanCreationBlobResponse finalResponse) {
-    if (EmptyPredicate.isNotEmpty(finalResponse.getDeps().getDependenciesMap())) {
+    if (EmptyPredicate.isNotEmpty(finalResponse.getDependenciesMap())) {
       throw new InvalidRequestException(
-          format("Unable to interpret nodes: %s", finalResponse.getDeps().getDependenciesMap().keySet().toString()));
+          format("Unable to interpret nodes: %s", finalResponse.getDependenciesMap().keySet().toString()));
     }
     if (EmptyPredicate.isEmpty(finalResponse.getStartingNodeId())) {
       throw new InvalidRequestException("Unable to find out starting node");

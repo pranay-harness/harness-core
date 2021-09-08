@@ -5,7 +5,6 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.CompoundMongoIndex;
-import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.ng.userprofile.commons.SCMType;
@@ -45,18 +44,16 @@ public abstract class SourceCodeManager implements PersistentEntity {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("uniqueIndex")
+                 .name("query_idx")
                  .unique(true)
                  .field(SCMKeys.userIdentifier)
                  .field(SCMKeys.name)
-                 .field(SCMKeys.accountIdentifier)
                  .build())
         .build();
   }
 
   @JsonIgnore @Id @org.mongodb.morphia.annotations.Id String id;
   @NotEmpty String userIdentifier;
-  @NotEmpty @FdIndex String accountIdentifier;
   String name;
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
@@ -71,7 +68,6 @@ public abstract class SourceCodeManager implements PersistentEntity {
     public void setCommonFieldsEntity(SourceCodeManager scm, SourceCodeManagerDTO scmDTO) {
       scm.setName(scmDTO.getName());
       scm.setUserIdentifier(scmDTO.getUserIdentifier());
-      scm.setAccountIdentifier(scmDTO.getAccountIdentifier());
     }
 
     public void setCommonFieldsDTO(SourceCodeManager scm, SourceCodeManagerDTO scmDTO) {
@@ -80,7 +76,6 @@ public abstract class SourceCodeManager implements PersistentEntity {
       scmDTO.setUserIdentifier(scm.getUserIdentifier());
       scmDTO.setCreatedAt(scm.getCreatedAt());
       scmDTO.setLastModifiedAt(scm.getLastModifiedAt());
-      scmDTO.setAccountIdentifier(scm.getAccountIdentifier());
     }
   }
 }

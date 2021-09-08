@@ -14,8 +14,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.annotations.dev.HarnessModule;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
@@ -36,7 +34,6 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
-@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class SSOSettingServiceTest extends WingsBaseTest {
   @Mock UserGroupService userGroupService;
   @Mock AuditServiceHelper auditServiceHelper;

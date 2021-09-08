@@ -47,10 +47,6 @@ public class VaultConnector extends Connector implements PersistentRegularIterab
   @Getter(AccessLevel.NONE) @NonFinal Long renewalIntervalMinutes;
   @Getter(AccessLevel.NONE) Boolean secretEngineManuallyConfigured;
   @Getter(AccessLevel.NONE) String basePath;
-  String namespace;
-  String sinkPath;
-
-  @Builder.Default Boolean useVaultAgent = Boolean.FALSE;
   @Setter @NonFinal Long renewedAt;
 
   public long getRenewedAt() {
@@ -90,9 +86,5 @@ public class VaultConnector extends Connector implements PersistentRegularIterab
       return;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
-  }
-
-  public Boolean isUseVaultAgent() {
-    return useVaultAgent == null ? Boolean.FALSE : useVaultAgent;
   }
 }

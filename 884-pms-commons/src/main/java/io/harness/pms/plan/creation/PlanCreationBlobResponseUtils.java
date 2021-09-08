@@ -4,33 +4,26 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.YamlException;
-import io.harness.pms.contracts.plan.Dependencies;
 import io.harness.pms.contracts.plan.GraphLayoutInfo;
 import io.harness.pms.contracts.plan.GraphLayoutNode;
 import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.contracts.plan.PlanNodeProto;
-import io.harness.pms.contracts.plan.YamlUpdates;
-import io.harness.pms.yaml.YamlNode;
-import io.harness.pms.yaml.YamlUtils;
+import io.harness.pms.contracts.plan.YamlFieldBlob;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
-import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @UtilityClass
-@Slf4j
 public class PlanCreationBlobResponseUtils {
   public void merge(PlanCreationBlobResponse.Builder builder, PlanCreationBlobResponse other) {
     if (other == null) {
       return;
     }
     addNodes(builder, other.getNodesMap());
-    addDependencies(builder, other.getDeps());
+    addDependencies(builder, other.getDependenciesMap());
     mergeStartingNodeId(builder, other.getStartingNodeId());
     mergeContext(builder, other.getContextMap());
     mergeLayoutNodeInfo(builder, other);
@@ -57,30 +50,26 @@ public class PlanCreationBlobResponseUtils {
   public PlanCreationBlobResponse addNode(PlanCreationBlobResponse.Builder builder, PlanNodeProto newNode) {
     // TODO: Add logic to update only if newNode has a more recent version.
     builder.putNodes(newNode.getUuid(), newNode);
-    removeDependency(builder, newNode.getUuid());
+    builder.removeDependencies(newNode.getUuid());
     return builder.build();
   }
 
-  public PlanCreationBlobResponse addDependencies(PlanCreationBlobResponse.Builder builder, Dependencies dependencies) {
-    if (dependencies == null || EmptyPredicate.isEmpty(dependencies.getDependenciesMap())) {
+  public PlanCreationBlobResponse addDependencies(
+      PlanCreationBlobResponse.Builder builder, Map<String, YamlFieldBlob> fieldBlobs) {
+    if (EmptyPredicate.isEmpty(fieldBlobs)) {
       return builder.build();
     }
-    dependencies.getDependenciesMap().forEach((key, value) -> addDependency(builder, key, value));
-    builder.setDeps(builder.getDeps().toBuilder().setYaml(dependencies.getYaml()).build());
+    fieldBlobs.forEach((key, value) -> addDependency(builder, key, value));
     return builder.build();
   }
 
-  public PlanCreationBlobResponse addDependency(PlanCreationBlobResponse.Builder builder, String nodeId, String path) {
+  public PlanCreationBlobResponse addDependency(
+      PlanCreationBlobResponse.Builder builder, String nodeId, YamlFieldBlob fieldBlob) {
     if (builder.containsNodes(nodeId)) {
       return builder.build();
     }
 
-    builder.setDeps(builder.getDeps().toBuilder().putDependencies(nodeId, path).build());
-    return builder.build();
-  }
-
-  public PlanCreationBlobResponse removeDependency(PlanCreationBlobResponse.Builder builder, String nodeId) {
-    builder.setDeps(builder.getDeps().toBuilder().removeDependencies(nodeId).build());
+    builder.putDependencies(nodeId, fieldBlob);
     return builder.build();
   }
 
@@ -121,33 +110,5 @@ public class PlanCreationBlobResponseUtils {
       layoutNodeInfo.putAllLayoutNodes(layoutMap);
       builder.setGraphLayoutInfo(layoutNodeInfo);
     }
-  }
-
-  public PlanCreationBlobResponse mergeYamlUpdates(
-      PlanCreationBlobResponse.Builder builder, YamlUpdates yamlUpdatesFromResponse) {
-    String pipelineJson = builder.getDeps().getYaml();
-    Map<String, String> fqnToJsonMap = yamlUpdatesFromResponse.getFqnToYamlMap();
-    String updatedPipelineJson = mergeYamlUpdates(pipelineJson, fqnToJsonMap);
-    builder.setDeps(builder.getDeps().toBuilder().setYaml(updatedPipelineJson).build());
-    return builder.build();
-  }
-
-  public String mergeYamlUpdates(String pipelineJson, Map<String, String> fqnToJsonMap) {
-    YamlNode pipelineNode;
-    try {
-      pipelineNode = YamlUtils.readTree(pipelineJson).getNode();
-    } catch (IOException e) {
-      log.error("Could not read the pipeline json:\n" + pipelineJson, e);
-      throw new YamlException("Could not read the pipeline json");
-    }
-    fqnToJsonMap.keySet().forEach(fqn -> {
-      try {
-        pipelineNode.replacePath(fqn, YamlUtils.readTree(fqnToJsonMap.get(fqn)).getNode().getCurrJsonNode());
-      } catch (IOException e) {
-        log.error("Could not read json provided for the fqn: " + fqn + ". Json:\n" + fqnToJsonMap.get(fqn), e);
-        throw new YamlException("Could not read json provided for the fqn: " + fqn);
-      }
-    });
-    return pipelineNode.toString();
   }
 }

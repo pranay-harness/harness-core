@@ -67,7 +67,7 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
   }
 
   @Override
-  public String consumeInternal(Ambiance ambiance, String name, String value, int levelsToKeep, String groupName) {
+  public String consumeInternal(Ambiance ambiance, String name, String value, int levelsToKeep) {
     Level producedBy = AmbianceUtils.obtainCurrentLevel(ambiance);
     if (levelsToKeep >= 0) {
       ambiance = AmbianceUtils.clone(ambiance, levelsToKeep);
@@ -78,11 +78,10 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
           mongoTemplate.insert(OutcomeInstance.builder()
                                    .uuid(generateUuid())
                                    .planExecutionId(ambiance.getPlanExecutionId())
-                                   .stageExecutionId(ambiance.getStageExecutionId())
+                                   .levels(ambiance.getLevelsList())
                                    .producedBy(producedBy)
                                    .name(name)
                                    .outcomeValue(PmsOutcome.parse(value))
-                                   .groupName(groupName)
                                    .levelRuntimeIdIdx(ResolverUtils.prepareLevelRuntimeIdIdx(ambiance.getLevelsList()))
                                    .build());
       return instance.getUuid();

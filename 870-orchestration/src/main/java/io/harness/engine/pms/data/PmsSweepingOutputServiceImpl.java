@@ -107,7 +107,7 @@ public class PmsSweepingOutputServiceImpl implements PmsSweepingOutputService {
   }
 
   @Override
-  public String consumeInternal(Ambiance ambiance, String name, String value, int levelsToKeep, String groupName) {
+  public String consumeInternal(Ambiance ambiance, String name, String value, int levelsToKeep) {
     if (levelsToKeep >= 0) {
       ambiance = AmbianceUtils.clone(ambiance, levelsToKeep);
     }
@@ -117,12 +117,10 @@ public class PmsSweepingOutputServiceImpl implements PmsSweepingOutputService {
           mongoTemplate.insert(ExecutionSweepingOutputInstance.builder()
                                    .uuid(generateUuid())
                                    .planExecutionId(ambiance.getPlanExecutionId())
-                                   .stageExecutionId(ambiance.getStageExecutionId())
-                                   .producedBy(AmbianceUtils.obtainCurrentLevel(ambiance))
+                                   .levels(ambiance.getLevelsList())
                                    .name(name)
                                    .valueOutput(PmsSweepingOutput.parse(value))
                                    .levelRuntimeIdIdx(ResolverUtils.prepareLevelRuntimeIdIdx(ambiance.getLevelsList()))
-                                   .groupName(groupName)
                                    .build());
       return instance.getUuid();
     } catch (DuplicateKeyException ex) {
