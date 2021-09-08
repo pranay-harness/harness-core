@@ -7,12 +7,8 @@ if [[ -v "{hostname}" ]]; then
    export HOSTNAME=$(hostname)
 fi
 
-if [[ -z "$JVM_MIN_MEMORY" ]]; then
-   export MIN_MEMORY=2096m
-fi
-
-if [[ -z "$JVM_MAX_MEMORY" ]]; then
-   export MAX_MEMORY=2096m
+if [[ -z "$MEMORY" ]]; then
+   export MEMORY=4096
 fi
 
 if [[ -z "$COMMAND" ]]; then
@@ -27,7 +23,7 @@ fi
 
 export GC_PARAMS=" -XX:+UseG1GC -XX:InitiatingHeapOccupancyPercent=40 -XX:MaxGCPauseMillis=1000 -Dfile.encoding=UTF-8"
 
-export JAVA_OPTS="-Xms${MIN_MEMORY} -Xmx${MAX_MEMORY} -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc $GC_PARAMS"
+export JAVA_OPTS="-Xms${MEMORY}m -Xmx${MEMORY}m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc $GC_PARAMS"
 
 JAVA_OPTS=$JAVA_OPTS" -Xbootclasspath/p:/opt/harness/alpn-boot-8.1.13.v20181017.jar"
 
