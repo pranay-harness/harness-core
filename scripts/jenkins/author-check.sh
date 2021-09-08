@@ -3,6 +3,9 @@ set -e
 
 git config --global log.mailmap true
 
+echo ${ghprbPullAuthorEmail}
+echo ${ghprbPullAuthorLogin}
+
 UNKNOWN_USERS=`\
 git log -1000 --oneline --format='%aN <%aE>' | sort -u |\
     grep -iv "^Aaditi Joag <aaditi.joag@harness.io>$" |\
