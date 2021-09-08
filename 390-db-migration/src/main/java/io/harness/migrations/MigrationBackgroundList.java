@@ -341,6 +341,7 @@ public class MigrationBackgroundList {
         .add(Pair.of(201, DelegateGroupIdentifierMigration.class))
         .add(Pair.of(202, DeleteInvalidArtifactStreams.class))
         .add(Pair.of(203, AccountNextGenEnabledMigration.class))
+        .add(Pair.of(204, DeleteOrphanPerpetualTaskMigration.class))
         .build();
   }
 }
