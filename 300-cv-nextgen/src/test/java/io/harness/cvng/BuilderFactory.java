@@ -417,8 +417,8 @@ public class BuilderFactory {
 
   private ChangeSourceDTOBuilder getChangeSourceDTOBuilder(ChangeSourceType changeSourceType) {
     return ChangeSourceDTO.builder()
-        .description(generateUuid())
         .identifier(generateUuid())
+        .name(generateUuid())
         .enabled(true)
         .type(changeSourceType);
   }

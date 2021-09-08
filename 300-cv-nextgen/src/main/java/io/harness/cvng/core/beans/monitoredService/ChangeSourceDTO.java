@@ -24,7 +24,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class ChangeSourceDTO {
   @NotEmpty String name;
   @NotEmpty String identifier;
-  String description;
   @JsonProperty(DATA_SOURCE_TYPE) ChangeSourceType type;
 
   boolean enabled;

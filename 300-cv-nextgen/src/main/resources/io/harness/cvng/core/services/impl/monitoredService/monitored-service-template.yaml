@@ -13,5 +13,4 @@ monitoredService:
       - name: Harness CD
         identifier: harness_cd
         type: HarnessCD
-        desc: Deployments from Harness CD
         enabled : true

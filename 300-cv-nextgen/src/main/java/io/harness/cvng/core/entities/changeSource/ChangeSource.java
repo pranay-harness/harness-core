@@ -69,7 +69,6 @@ public abstract class ChangeSource
   @NotNull String envIdentifier;
 
   @NotNull String identifier;
-  @NotNull String description;
   @NotNull ChangeSourceType type;
 
   boolean enabled;
@@ -83,8 +82,8 @@ public abstract class ChangeSource
           .set(ChangeSourceKeys.serviceIdentifier, changeSource.getServiceIdentifier())
           .set(ChangeSourceKeys.envIdentifier, changeSource.getEnvIdentifier())
           .set(ChangeSourceKeys.identifier, changeSource.getIdentifier())
-          .set(ChangeSourceKeys.description, changeSource.getDescription())
           .set(ChangeSourceKeys.type, changeSource.getType())
+          .set(ChangeSourceKeys.name, changeSource.getName())
           .set(ChangeSourceKeys.enabled, changeSource.isEnabled());
     }
   }

@@ -24,7 +24,6 @@ public class PagerDutyChangeSourceSpecTransformer
         .identifier(changeSourceDTO.getIdentifier())
         .name(changeSourceDTO.getName())
         .enabled(changeSourceDTO.isEnabled())
-        .description(changeSourceDTO.getDescription())
         .type(ChangeSourceType.PAGER_DUTY)
         .connectorIdentifier(pagerDutyChangeSourceSpec.getConnectorRef())
         .pagerDutyServiceId(pagerDutyChangeSourceSpec.getPagerDutyServiceId())
