@@ -9,7 +9,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionService;
-import io.harness.engine.executions.resume.ResumeStageInfo;
+import io.harness.engine.executions.retry.RetryStageInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
@@ -18,8 +18,8 @@ import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSPipelineServiceImpl;
 import io.harness.pms.pipeline.service.PMSYamlSchemaService;
 import io.harness.pms.plan.execution.PipelineExecuteHelper;
-import io.harness.pms.plan.execution.ResumeGroup;
-import io.harness.pms.plan.execution.ResumeInfo;
+import io.harness.pms.plan.execution.RetryGroup;
+import io.harness.pms.plan.execution.RetryInfo;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.repositories.pipeline.PMSPipelineRepositoryCustomImpl;
 import io.harness.rule.Owner;
@@ -65,9 +65,9 @@ public class PipelineExecuteHelperTest {
     }
   }
 
-  List<ResumeStageInfo> getFirstStageFailed() {
-    List<ResumeStageInfo> stageDetails = new ArrayList<>();
-    stageDetails.add(ResumeStageInfo.builder()
+  List<RetryStageInfo> getFirstStageFailed() {
+    List<RetryStageInfo> stageDetails = new ArrayList<>();
+    stageDetails.add(RetryStageInfo.builder()
                          .name("stage1")
                          .identifier("stage1")
                          .parentId("parent1")
@@ -77,9 +77,9 @@ public class PipelineExecuteHelperTest {
     return stageDetails;
   }
 
-  private List<ResumeStageInfo> getlastStageFailed() {
-    List<ResumeStageInfo> stageDetails = new ArrayList<>();
-    stageDetails.add(ResumeStageInfo.builder()
+  private List<RetryStageInfo> getlastStageFailed() {
+    List<RetryStageInfo> stageDetails = new ArrayList<>();
+    stageDetails.add(RetryStageInfo.builder()
                          .name("stage1")
                          .identifier("stage1")
                          .parentId("parent1")
@@ -87,7 +87,7 @@ public class PipelineExecuteHelperTest {
                          .status(ExecutionStatus.SUCCESS)
                          .createdAt(100L)
                          .build());
-    stageDetails.add(ResumeStageInfo.builder()
+    stageDetails.add(RetryStageInfo.builder()
                          .name("stage2")
                          .identifier("stage2")
                          .nextId("stage3")
@@ -95,7 +95,7 @@ public class PipelineExecuteHelperTest {
                          .status(ExecutionStatus.SUCCESS)
                          .createdAt(200L)
                          .build());
-    stageDetails.add(ResumeStageInfo.builder()
+    stageDetails.add(RetryStageInfo.builder()
                          .name("stage3")
                          .identifier("stage3")
                          .parentId("parent3")
@@ -105,23 +105,23 @@ public class PipelineExecuteHelperTest {
     return stageDetails;
   }
 
-  private List<ResumeStageInfo> getFirstStageParallelAndFailed() {
-    List<ResumeStageInfo> stageDetails = new ArrayList<>();
-    stageDetails.add(ResumeStageInfo.builder()
+  private List<RetryStageInfo> getFirstStageParallelAndFailed() {
+    List<RetryStageInfo> stageDetails = new ArrayList<>();
+    stageDetails.add(RetryStageInfo.builder()
                          .name("stage1")
                          .identifier("stage1")
                          .parentId("parent1")
                          .status(ExecutionStatus.SUCCESS)
                          .createdAt(100L)
                          .build());
-    stageDetails.add(ResumeStageInfo.builder()
+    stageDetails.add(RetryStageInfo.builder()
                          .name("stage2")
                          .identifier("stage2")
                          .parentId("parent1")
                          .status(ExecutionStatus.SUCCESS)
                          .createdAt(200L)
                          .build());
-    stageDetails.add(ResumeStageInfo.builder()
+    stageDetails.add(RetryStageInfo.builder()
                          .name("stage3")
                          .identifier("stage3")
                          .parentId("parent1")
@@ -131,9 +131,9 @@ public class PipelineExecuteHelperTest {
     return stageDetails;
   }
 
-  private List<ResumeStageInfo> getlastStageParallelAndFailed() {
-    List<ResumeStageInfo> stageDetails = new ArrayList<>();
-    stageDetails.add(ResumeStageInfo.builder()
+  private List<RetryStageInfo> getlastStageParallelAndFailed() {
+    List<RetryStageInfo> stageDetails = new ArrayList<>();
+    stageDetails.add(RetryStageInfo.builder()
                          .name("stage1")
                          .identifier("stage1")
                          .parentId("parent1")
@@ -141,7 +141,7 @@ public class PipelineExecuteHelperTest {
                          .status(ExecutionStatus.SUCCESS)
                          .createdAt(100L)
                          .build());
-    stageDetails.add(ResumeStageInfo.builder()
+    stageDetails.add(RetryStageInfo.builder()
                          .name("stage2")
                          .identifier("stage2")
                          .parentId("parent1")
@@ -149,7 +149,7 @@ public class PipelineExecuteHelperTest {
                          .status(ExecutionStatus.SUCCESS)
                          .createdAt(200L)
                          .build());
-    stageDetails.add(ResumeStageInfo.builder()
+    stageDetails.add(RetryStageInfo.builder()
                          .name("stage3")
                          .identifier("stage3")
                          .parentId("parent1")
@@ -158,7 +158,7 @@ public class PipelineExecuteHelperTest {
                          .createdAt(300L)
                          .build());
 
-    stageDetails.add(ResumeStageInfo.builder()
+    stageDetails.add(RetryStageInfo.builder()
                          .name("stage4")
                          .identifier("stage4")
                          .parentId("parent2")
@@ -166,7 +166,7 @@ public class PipelineExecuteHelperTest {
                          .status(ExecutionStatus.SUCCESS)
                          .createdAt(400L)
                          .build());
-    stageDetails.add(ResumeStageInfo.builder()
+    stageDetails.add(RetryStageInfo.builder()
                          .name("stage5")
                          .identifier("stage5")
                          .parentId("parent2")
@@ -174,7 +174,7 @@ public class PipelineExecuteHelperTest {
                          .status(ExecutionStatus.SUCCESS)
                          .createdAt(500L)
                          .build());
-    stageDetails.add(ResumeStageInfo.builder()
+    stageDetails.add(RetryStageInfo.builder()
                          .name("stage6")
                          .identifier("stage6")
                          .parentId("parent2")
@@ -183,21 +183,21 @@ public class PipelineExecuteHelperTest {
                          .createdAt(600L)
                          .build());
 
-    stageDetails.add(ResumeStageInfo.builder()
+    stageDetails.add(RetryStageInfo.builder()
                          .name("stage7")
                          .identifier("stage7")
                          .parentId("parent3")
                          .status(ExecutionStatus.SUCCESS)
                          .createdAt(700L)
                          .build());
-    stageDetails.add(ResumeStageInfo.builder()
+    stageDetails.add(RetryStageInfo.builder()
                          .name("stage8")
                          .identifier("stage8")
                          .parentId("parent3")
                          .status(ExecutionStatus.SUCCESS)
                          .createdAt(800L)
                          .build());
-    stageDetails.add(ResumeStageInfo.builder()
+    stageDetails.add(RetryStageInfo.builder()
                          .name("stage9")
                          .identifier("stage9")
                          .parentId("parent3")
@@ -208,9 +208,9 @@ public class PipelineExecuteHelperTest {
     return stageDetails;
   }
 
-  private List<ResumeStageInfo> getMixTypeStagesWithParallelFailed() {
-    List<ResumeStageInfo> stageDetails = new ArrayList<>();
-    stageDetails.add(ResumeStageInfo.builder()
+  private List<RetryStageInfo> getMixTypeStagesWithParallelFailed() {
+    List<RetryStageInfo> stageDetails = new ArrayList<>();
+    stageDetails.add(RetryStageInfo.builder()
                          .name("stage1")
                          .identifier("stage1")
                          .parentId("parent1")
@@ -218,7 +218,7 @@ public class PipelineExecuteHelperTest {
                          .status(ExecutionStatus.SUCCESS)
                          .createdAt(100L)
                          .build());
-    stageDetails.add(ResumeStageInfo.builder()
+    stageDetails.add(RetryStageInfo.builder()
                          .name("stage2")
                          .identifier("stage2")
                          .parentId("parent2")
@@ -226,7 +226,7 @@ public class PipelineExecuteHelperTest {
                          .status(ExecutionStatus.SUCCESS)
                          .createdAt(200L)
                          .build());
-    stageDetails.add(ResumeStageInfo.builder()
+    stageDetails.add(RetryStageInfo.builder()
                          .name("stage3")
                          .identifier("stage3")
                          .parentId("parent3")
@@ -235,21 +235,21 @@ public class PipelineExecuteHelperTest {
                          .createdAt(300L)
                          .build());
 
-    stageDetails.add(ResumeStageInfo.builder()
+    stageDetails.add(RetryStageInfo.builder()
                          .name("stage4")
                          .identifier("stage4")
                          .parentId("parent4")
                          .status(ExecutionStatus.SUCCESS)
                          .createdAt(400L)
                          .build());
-    stageDetails.add(ResumeStageInfo.builder()
+    stageDetails.add(RetryStageInfo.builder()
                          .name("stage5")
                          .identifier("stage5")
                          .parentId("parent4")
                          .status(ExecutionStatus.FAILED)
                          .createdAt(500L)
                          .build());
-    stageDetails.add(ResumeStageInfo.builder()
+    stageDetails.add(RetryStageInfo.builder()
                          .name("stage6")
                          .identifier("stage6")
                          .parentId("parent4")
@@ -260,9 +260,9 @@ public class PipelineExecuteHelperTest {
     return stageDetails;
   }
 
-  private List<ResumeStageInfo> getMixTypeStagesWithSeriesStageFailed() {
-    List<ResumeStageInfo> stageDetails = new ArrayList<>();
-    stageDetails.add(ResumeStageInfo.builder()
+  private List<RetryStageInfo> getMixTypeStagesWithSeriesStageFailed() {
+    List<RetryStageInfo> stageDetails = new ArrayList<>();
+    stageDetails.add(RetryStageInfo.builder()
                          .name("stage1")
                          .identifier("stage1")
                          .parentId("parent1")
@@ -270,7 +270,7 @@ public class PipelineExecuteHelperTest {
                          .status(ExecutionStatus.SUCCESS)
                          .createdAt(100L)
                          .build());
-    stageDetails.add(ResumeStageInfo.builder()
+    stageDetails.add(RetryStageInfo.builder()
                          .name("stage2")
                          .identifier("stage2")
                          .parentId("parent2")
@@ -278,7 +278,7 @@ public class PipelineExecuteHelperTest {
                          .status(ExecutionStatus.SUCCESS)
                          .createdAt(200L)
                          .build());
-    stageDetails.add(ResumeStageInfo.builder()
+    stageDetails.add(RetryStageInfo.builder()
                          .name("stage3")
                          .identifier("stage3")
                          .parentId("parent3")
@@ -287,7 +287,7 @@ public class PipelineExecuteHelperTest {
                          .createdAt(300L)
                          .build());
 
-    stageDetails.add(ResumeStageInfo.builder()
+    stageDetails.add(RetryStageInfo.builder()
                          .name("stage4")
                          .identifier("stage4")
                          .parentId("parent4")
@@ -295,7 +295,7 @@ public class PipelineExecuteHelperTest {
                          .status(ExecutionStatus.SUCCESS)
                          .createdAt(400L)
                          .build());
-    stageDetails.add(ResumeStageInfo.builder()
+    stageDetails.add(RetryStageInfo.builder()
                          .name("stage5")
                          .identifier("stage5")
                          .parentId("parent4")
@@ -303,7 +303,7 @@ public class PipelineExecuteHelperTest {
                          .status(ExecutionStatus.SUCCESS)
                          .createdAt(500L)
                          .build());
-    stageDetails.add(ResumeStageInfo.builder()
+    stageDetails.add(RetryStageInfo.builder()
                          .name("stage6")
                          .identifier("stage6")
                          .parentId("parent4")
@@ -312,7 +312,7 @@ public class PipelineExecuteHelperTest {
                          .createdAt(600L)
                          .build());
 
-    stageDetails.add(ResumeStageInfo.builder()
+    stageDetails.add(RetryStageInfo.builder()
                          .name("stage7")
                          .identifier("stage7")
                          .parentId("parent7")
@@ -320,7 +320,7 @@ public class PipelineExecuteHelperTest {
                          .status(ExecutionStatus.SUCCESS)
                          .createdAt(400L)
                          .build());
-    stageDetails.add(ResumeStageInfo.builder()
+    stageDetails.add(RetryStageInfo.builder()
                          .name("stage8")
                          .identifier("stage8")
                          .parentId("parent8")
@@ -328,7 +328,7 @@ public class PipelineExecuteHelperTest {
                          .status(ExecutionStatus.SUCCESS)
                          .createdAt(500L)
                          .build());
-    stageDetails.add(ResumeStageInfo.builder()
+    stageDetails.add(RetryStageInfo.builder()
                          .name("stage9")
                          .identifier("stage9")
                          .parentId("parent9")
@@ -342,152 +342,152 @@ public class PipelineExecuteHelperTest {
   @Owner(developers = PRASHANTSHARMA)
   @Category(UnitTests.class)
   public void testGetStagesSeries() {
-    List<ResumeStageInfo> stageDetails = new ArrayList<>();
+    List<RetryStageInfo> stageDetails = new ArrayList<>();
 
     // passing empty stageDetails
-    ResumeInfo resumeInfo = pipelineExecuteHelper.getResumeInfo(stageDetails);
-    assertThat(resumeInfo).isNotNull();
-    assertThat(resumeInfo.getGroups().size()).isEqualTo(0);
+    RetryInfo retryInfo = pipelineExecuteHelper.getRetryInfo(stageDetails);
+    assertThat(retryInfo).isNotNull();
+    assertThat(retryInfo.getGroups().size()).isEqualTo(0);
 
     // making first stage as empty
     stageDetails = getFirstStageFailed();
-    resumeInfo = pipelineExecuteHelper.getResumeInfo(stageDetails);
-    assertThat(resumeInfo).isNotNull();
-    assertThat(resumeInfo.getGroups().get(0).getInfo()).isEqualTo(stageDetails);
+    retryInfo = pipelineExecuteHelper.getRetryInfo(stageDetails);
+    assertThat(retryInfo).isNotNull();
+    assertThat(retryInfo.getGroups().get(0).getInfo()).isEqualTo(stageDetails);
 
     // making the last stageFailed
     stageDetails = getlastStageFailed();
-    resumeInfo = pipelineExecuteHelper.getResumeInfo(stageDetails);
-    assertThat(resumeInfo).isNotNull();
-    assertThat(resumeInfo.getGroups().size()).isEqualTo(3);
-    assertThat(resumeInfo.getGroups().get(0).getInfo().get(0)).isEqualTo(stageDetails.get(0));
+    retryInfo = pipelineExecuteHelper.getRetryInfo(stageDetails);
+    assertThat(retryInfo).isNotNull();
+    assertThat(retryInfo.getGroups().size()).isEqualTo(3);
+    assertThat(retryInfo.getGroups().get(0).getInfo().get(0)).isEqualTo(stageDetails.get(0));
   }
 
   @Test
   @Owner(developers = PRASHANTSHARMA)
   @Category(UnitTests.class)
   public void testGetStagesParallel() {
-    List<ResumeStageInfo> stageDetails = new ArrayList<>();
-    ResumeInfo resumeInfo;
+    List<RetryStageInfo> stageDetails = new ArrayList<>();
+    RetryInfo retryInfo;
 
     // making first stage as parallel and failed
     stageDetails = getFirstStageParallelAndFailed();
-    resumeInfo = pipelineExecuteHelper.getResumeInfo(stageDetails);
-    assertThat(resumeInfo).isNotNull();
-    List<ResumeGroup> resumeGroupList = resumeInfo.getGroups();
-    assertThat(resumeGroupList.get(0).getInfo()).isEqualTo(stageDetails);
+    retryInfo = pipelineExecuteHelper.getRetryInfo(stageDetails);
+    assertThat(retryInfo).isNotNull();
+    List<RetryGroup> retryGroupList = retryInfo.getGroups();
+    assertThat(retryGroupList.get(0).getInfo()).isEqualTo(stageDetails);
 
     // having more than once parallel stages. All stages in parallel
     stageDetails = getlastStageParallelAndFailed();
-    resumeInfo = pipelineExecuteHelper.getResumeInfo(stageDetails);
-    assertThat(resumeInfo).isNotNull();
-    resumeGroupList = resumeInfo.getGroups();
-    assertThat(resumeGroupList.size()).isEqualTo(3);
-    assertThat(resumeGroupList.get(0).getInfo().size()).isEqualTo(3);
-    assertThat(resumeGroupList.get(0).getInfo().get(0).getIdentifier()).isEqualTo("stage1");
-    assertThat(resumeGroupList.get(1).getInfo().get(0).getIdentifier()).isEqualTo("stage4");
-    assertThat(resumeGroupList.get(2).getInfo().get(0).getIdentifier()).isEqualTo("stage7");
+    retryInfo = pipelineExecuteHelper.getRetryInfo(stageDetails);
+    assertThat(retryInfo).isNotNull();
+    retryGroupList = retryInfo.getGroups();
+    assertThat(retryGroupList.size()).isEqualTo(3);
+    assertThat(retryGroupList.get(0).getInfo().size()).isEqualTo(3);
+    assertThat(retryGroupList.get(0).getInfo().get(0).getIdentifier()).isEqualTo("stage1");
+    assertThat(retryGroupList.get(1).getInfo().get(0).getIdentifier()).isEqualTo("stage4");
+    assertThat(retryGroupList.get(2).getInfo().get(0).getIdentifier()).isEqualTo("stage7");
   }
 
   @Test
   @Owner(developers = PRASHANTSHARMA)
   @Category(UnitTests.class)
   public void testGetStagesSeriesAndParallel() {
-    List<ResumeStageInfo> stageDetails = new ArrayList<>();
-    ResumeInfo resumeInfo;
+    List<RetryStageInfo> stageDetails = new ArrayList<>();
+    RetryInfo retryInfo;
 
     // parallel step failed after getting success for stages in series
     stageDetails = getMixTypeStagesWithParallelFailed();
-    resumeInfo = pipelineExecuteHelper.getResumeInfo(stageDetails);
-    assertThat(resumeInfo).isNotNull();
-    List<ResumeGroup> resumeGroupList = resumeInfo.getGroups();
-    assertThat(resumeGroupList.size()).isEqualTo(4);
-    assertThat(resumeGroupList.get(0).getInfo().get(0).getIdentifier()).isEqualTo("stage1");
-    assertThat(resumeGroupList.get(2).getInfo().get(0).getIdentifier()).isEqualTo("stage3");
-    assertThat(resumeGroupList.get(3).getInfo().size()).isEqualTo(3);
+    retryInfo = pipelineExecuteHelper.getRetryInfo(stageDetails);
+    assertThat(retryInfo).isNotNull();
+    List<RetryGroup> retryGroupList = retryInfo.getGroups();
+    assertThat(retryGroupList.size()).isEqualTo(4);
+    assertThat(retryGroupList.get(0).getInfo().get(0).getIdentifier()).isEqualTo("stage1");
+    assertThat(retryGroupList.get(2).getInfo().get(0).getIdentifier()).isEqualTo("stage3");
+    assertThat(retryGroupList.get(3).getInfo().size()).isEqualTo(3);
 
     // series stage failed having few stages in parallel before
     stageDetails = getMixTypeStagesWithSeriesStageFailed();
-    resumeInfo = pipelineExecuteHelper.getResumeInfo(stageDetails);
-    assertThat(resumeInfo).isNotNull();
-    resumeGroupList = resumeInfo.getGroups();
-    assertThat(resumeGroupList.size()).isEqualTo(7);
-    assertThat(resumeGroupList.get(0).getInfo().get(0).getIdentifier()).isEqualTo("stage1");
-    assertThat(resumeGroupList.get(2).getInfo().get(0).getIdentifier()).isEqualTo("stage3");
-    assertThat(resumeGroupList.get(3).getInfo().size()).isEqualTo(3);
-    assertThat(resumeGroupList.get(6).getInfo().get(0).getIdentifier()).isEqualTo("stage9");
+    retryInfo = pipelineExecuteHelper.getRetryInfo(stageDetails);
+    assertThat(retryInfo).isNotNull();
+    retryGroupList = retryInfo.getGroups();
+    assertThat(retryGroupList.size()).isEqualTo(7);
+    assertThat(retryGroupList.get(0).getInfo().get(0).getIdentifier()).isEqualTo("stage1");
+    assertThat(retryGroupList.get(2).getInfo().get(0).getIdentifier()).isEqualTo("stage3");
+    assertThat(retryGroupList.get(3).getInfo().size()).isEqualTo(3);
+    assertThat(retryGroupList.get(6).getInfo().get(0).getIdentifier()).isEqualTo("stage9");
   }
 
   @Test
   @Owner(developers = PRASHANTSHARMA)
   @Category(UnitTests.class)
-  public void testValidateResume() {
+  public void testValidateRetry() {
     // empty and null yaml values
-    assertThat(pipelineExecuteHelper.validateResume("updatedYaml", "")).isEqualTo(false);
-    assertThat(pipelineExecuteHelper.validateResume(null, "originalYaml")).isEqualTo(false);
+    assertThat(pipelineExecuteHelper.validateRetry("updatedYaml", "")).isEqualTo(false);
+    assertThat(pipelineExecuteHelper.validateRetry(null, "originalYaml")).isEqualTo(false);
 
     // same yaml
-    String updatedYamlFile = "resume-updated1.yaml";
+    String updatedYamlFile = "retry-updated1.yaml";
     String updatedYaml = readFile(updatedYamlFile);
 
-    String originalYamlFile = "resume-original1.yaml";
+    String originalYamlFile = "retry-original1.yaml";
     String originalYaml = readFile(originalYamlFile);
 
-    assertThat(pipelineExecuteHelper.validateResume(updatedYaml, originalYaml)).isEqualTo(true);
+    assertThat(pipelineExecuteHelper.validateRetry(updatedYaml, originalYaml)).isEqualTo(true);
 
     // updated the yaml - adding a stage
     // same yaml
-    String updatedYamlFile2 = "resume-updated2.yaml";
+    String updatedYamlFile2 = "retry-updated2.yaml";
     String updatedYaml2 = readFile(updatedYamlFile2);
 
-    String originalYamlFile2 = "resume-original2.yaml";
+    String originalYamlFile2 = "retry-original2.yaml";
     String originalYaml2 = readFile(originalYamlFile2);
 
-    assertThat(pipelineExecuteHelper.validateResume(updatedYaml2, originalYaml2)).isEqualTo(false);
+    assertThat(pipelineExecuteHelper.validateRetry(updatedYaml2, originalYaml2)).isEqualTo(false);
 
     // added step in on of the stage and changed the name of the stage
-    String updatedYamlFile3 = "resume-updated3.yaml";
+    String updatedYamlFile3 = "retry-updated3.yaml";
     String updatedYaml3 = readFile(updatedYamlFile3);
 
-    String originalYamlFile3 = "resume-original3.yaml";
+    String originalYamlFile3 = "retry-original3.yaml";
     String originalYaml3 = readFile(originalYamlFile3);
 
-    assertThat(pipelineExecuteHelper.validateResume(updatedYaml3, originalYaml3)).isEqualTo(true);
+    assertThat(pipelineExecuteHelper.validateRetry(updatedYaml3, originalYaml3)).isEqualTo(true);
 
     // updated the identifier
-    String updatedYamlFile4 = "resume-updated4.yaml";
+    String updatedYamlFile4 = "retry-updated4.yaml";
     String updatedYaml4 = readFile(updatedYamlFile4);
 
-    String originalYamlFile4 = "resume-original4.yaml";
+    String originalYamlFile4 = "retry-original4.yaml";
     String originalYaml4 = readFile(originalYamlFile4);
 
-    assertThat(pipelineExecuteHelper.validateResume(updatedYaml4, originalYaml4)).isEqualTo(false);
+    assertThat(pipelineExecuteHelper.validateRetry(updatedYaml4, originalYaml4)).isEqualTo(false);
 
     // shuffling of stages
-    String updatedYamlFile5 = "resume-updated5.yaml";
+    String updatedYamlFile5 = "retry-updated5.yaml";
     String updatedYaml5 = readFile(updatedYamlFile5);
 
-    String originalYamlFile5 = "resume-original5.yaml";
+    String originalYamlFile5 = "retry-original5.yaml";
     String originalYaml5 = readFile(originalYamlFile5);
 
-    assertThat(pipelineExecuteHelper.validateResume(updatedYaml5, originalYaml5)).isEqualTo(false);
+    assertThat(pipelineExecuteHelper.validateRetry(updatedYaml5, originalYaml5)).isEqualTo(false);
 
     // adding the stage in parallel
-    String updatedYamlFile6 = "resume-updated6.yaml";
+    String updatedYamlFile6 = "retry-updated6.yaml";
     String updatedYaml6 = readFile(updatedYamlFile6);
 
-    String originalYamlFile6 = "resume-original6.yaml";
+    String originalYamlFile6 = "retry-original6.yaml";
     String originalYaml6 = readFile(originalYamlFile6);
 
-    assertThat(pipelineExecuteHelper.validateResume(updatedYaml6, originalYaml6)).isEqualTo(false);
+    assertThat(pipelineExecuteHelper.validateRetry(updatedYaml6, originalYaml6)).isEqualTo(false);
 
     // shuffling of parallel stages
-    String updatedYamlFile7 = "resume-updated7.yaml";
+    String updatedYamlFile7 = "retry-updated7.yaml";
     String updatedYaml7 = readFile(updatedYamlFile7);
 
-    String originalYamlFile7 = "resume-original7.yaml";
+    String originalYamlFile7 = "retry-original7.yaml";
     String originalYaml7 = readFile(originalYamlFile7);
 
-    assertThat(pipelineExecuteHelper.validateResume(updatedYaml7, originalYaml7)).isEqualTo(false);
+    assertThat(pipelineExecuteHelper.validateRetry(updatedYaml7, originalYaml7)).isEqualTo(false);
   }
 }

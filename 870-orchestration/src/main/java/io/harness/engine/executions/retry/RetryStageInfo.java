@@ -1,4 +1,4 @@
-package io.harness.engine.executions.resume;
+package io.harness.engine.executions.retry;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -15,7 +15,7 @@ import lombok.experimental.FieldNameConstants;
 @FieldNameConstants(innerTypeName = "ResumeStageDetailKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(HarnessTeam.PIPELINE)
-public class ResumeStageInfo {
+public class RetryStageInfo {
   private String name;
   private String identifier;
   private ExecutionStatus status;
