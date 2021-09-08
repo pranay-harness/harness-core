@@ -1,5 +1,6 @@
 package io.harness.cvng.core.services.api.monitoredService;
 
+import io.harness.cvng.beans.MonitoredServiceType;
 import io.harness.cvng.core.beans.ChangeSummaryDTO;
 import io.harness.cvng.core.beans.HealthMonitoringFlagResponse;
 import io.harness.cvng.core.beans.change.event.ChangeEventDTO;
@@ -48,7 +49,7 @@ public interface MonitoredServiceService extends DeleteEntityByHandler<Monitored
 
   HealthScoreDTO getCurrentScore(ServiceEnvironmentParams serviceEnvironmentParams);
 
-  String getYamlTemplate(ProjectParams projectParams);
+  String getYamlTemplate(ProjectParams projectParams, MonitoredServiceType monitoredServiceType);
 
   List<HealthSourceDTO> getHealthSources(ServiceEnvironmentParams serviceEnvironmentParams);
   List<ChangeEventDTO> getChangeEvents(ProjectParams projectParams, String monitoredServiceIdentifier,

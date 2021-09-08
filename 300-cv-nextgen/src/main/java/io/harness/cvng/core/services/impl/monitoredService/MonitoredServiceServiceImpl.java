@@ -75,12 +75,18 @@ import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 
 public class MonitoredServiceServiceImpl implements MonitoredServiceService {
-  private static final String DEFAULT_YAML_TEMPLATE;
+  private static final String APPLICATION_DEFAULT_YAML_TEMPLATE;
+  private static final String INFRASTRUCTURE_DEFAULT_YAML_TEMPLATE;
+
   private static final int BUFFER_TIME_FOR_LATEST_HEALTH_SCORE = 5;
   static {
     try {
-      DEFAULT_YAML_TEMPLATE = Resources.toString(
-          MonitoredServiceServiceImpl.class.getResource("monitored-service-template.yaml"), StandardCharsets.UTF_8);
+      APPLICATION_DEFAULT_YAML_TEMPLATE = Resources.toString(
+          MonitoredServiceServiceImpl.class.getResource("application-monitored-service-template.yaml"),
+          StandardCharsets.UTF_8);
+      INFRASTRUCTURE_DEFAULT_YAML_TEMPLATE = Resources.toString(
+          MonitoredServiceServiceImpl.class.getResource("infrastructure-monitored-service-template.yaml"),
+          StandardCharsets.UTF_8);
     } catch (IOException e) {
       throw new IllegalStateException(e);
     }
@@ -657,9 +663,15 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     return HealthScoreDTO.builder().currentHealthScore(currentRiskScoreList.get(0)).build();
   }
 
-  public String getYamlTemplate(ProjectParams projectParams) {
-    // returning default yaml template, account/org/project specific templates can be generated later.
-    return StringUtils.replaceEach(DEFAULT_YAML_TEMPLATE, new String[] {"$projectIdentifier", "$orgIdentifier"},
+  @Override
+  public String getYamlTemplate(ProjectParams projectParams, MonitoredServiceType monitoredServiceType) {
+    if (MonitoredServiceType.INFRASTRUCTURE.equals(monitoredServiceType)) {
+      return StringUtils.replaceEach(INFRASTRUCTURE_DEFAULT_YAML_TEMPLATE,
+          new String[] {"$projectIdentifier", "$orgIdentifier"},
+          new String[] {projectParams.getProjectIdentifier(), projectParams.getOrgIdentifier()});
+    }
+    return StringUtils.replaceEach(APPLICATION_DEFAULT_YAML_TEMPLATE,
+        new String[] {"$projectIdentifier", "$orgIdentifier"},
         new String[] {projectParams.getProjectIdentifier(), projectParams.getOrgIdentifier()});
   }
 
