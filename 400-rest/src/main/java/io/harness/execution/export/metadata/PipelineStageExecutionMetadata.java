@@ -8,12 +8,11 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.sm.StateType.APPROVAL;
 import static software.wings.sm.StateType.APPROVAL_RESUME;
 
-import static java.lang.String.format;
-
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStage;
@@ -24,10 +23,13 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.Builder;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
 @Value
 @Builder
+@Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class PipelineStageExecutionMetadata implements GraphNodeVisitable {
   String stageName;
   String name;
@@ -114,8 +116,8 @@ public class PipelineStageExecutionMetadata implements GraphNodeVisitable {
   }
 
   private static void throwIncompatibleStagesException(PipelineExecution pipelineExecution) {
-    throw new InvalidRequestException(format(
-        "Unable to process export execution request. Pipeline execution [%s] has incompatible stages and stage executions",
-        pipelineExecution.getWorkflowExecutionId()));
+    log.error(
+        "Unable to process export execution request. Pipeline execution with pipelineId {} and workflow executionId {} has incompatible stages and stage executions",
+        pipelineExecution.getPipelineId(), pipelineExecution.getWorkflowExecutionId());
   }
 }
