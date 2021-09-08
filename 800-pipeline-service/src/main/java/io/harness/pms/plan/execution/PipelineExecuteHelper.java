@@ -12,7 +12,7 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionMetadataService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.executions.plan.PlanService;
-import io.harness.engine.executions.resume.ResumeStageInfo;
+import io.harness.engine.executions.retry.RetryStageInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecutionMetadata;
@@ -331,7 +331,7 @@ public class PipelineExecuteHelper {
     return orchestrationService.startExecutionV2(
         planCreationId, abstractions, executionMetadata, planExecutionMetadata);
   }
-  public boolean validateResume(String updatedYaml, String executedYaml) {
+  public boolean validateRetry(String updatedYaml, String executedYaml) {
     // compare fqn
     if (isEmpty(updatedYaml) || isEmpty(executedYaml)) {
       return false;
@@ -363,39 +363,39 @@ public class PipelineExecuteHelper {
     return true;
   }
 
-  public ResumeInfo getResumeStages(
+  public RetryInfo getRetryStages(
       String updatedYaml, String executedYaml, String planExecutionId, String pipelineIdentifier) {
     if (isEmpty(planExecutionId)) {
       return null;
     }
-    boolean isResumable = validateResume(updatedYaml, executedYaml);
+    boolean isResumable = validateRetry(updatedYaml, executedYaml);
     if (!isResumable) {
-      return ResumeInfo.builder().isResumable(isResumable).errorMessage("Pipeline is updated, cannot resume").build();
+      return RetryInfo.builder().isResumable(isResumable).errorMessage("Pipeline is updated, cannot retry").build();
     }
-    List<ResumeStageInfo> stageDetails = getStageDetails(planExecutionId);
+    List<RetryStageInfo> stageDetails = getStageDetails(planExecutionId);
 
-    return getResumeInfo(stageDetails);
+    return getRetryInfo(stageDetails);
   }
 
-  public ResumeInfo getResumeInfo(List<ResumeStageInfo> stageDetails) {
-    HashMap<String, List<ResumeStageInfo>> mapNextIdWithStageInfo = new LinkedHashMap<>();
-    for (ResumeStageInfo stageDetail : stageDetails) {
+  public RetryInfo getRetryInfo(List<RetryStageInfo> stageDetails) {
+    HashMap<String, List<RetryStageInfo>> mapNextIdWithStageInfo = new LinkedHashMap<>();
+    for (RetryStageInfo stageDetail : stageDetails) {
       String nextId = stageDetail.getNextId();
       if (isEmpty(nextId)) {
         nextId = LAST_STAGE_IDENTIFIER;
       }
-      List<ResumeStageInfo> stageList = mapNextIdWithStageInfo.getOrDefault(nextId, new ArrayList<>());
+      List<RetryStageInfo> stageList = mapNextIdWithStageInfo.getOrDefault(nextId, new ArrayList<>());
       stageList.add(stageDetail);
       mapNextIdWithStageInfo.put(nextId, stageList);
     }
-    List<ResumeGroup> resumeGroupList = new ArrayList<>();
-    for (Map.Entry<String, List<ResumeStageInfo>> entry : mapNextIdWithStageInfo.entrySet()) {
-      resumeGroupList.add(ResumeGroup.builder().info(entry.getValue()).build());
+    List<RetryGroup> retryGroupList = new ArrayList<>();
+    for (Map.Entry<String, List<RetryStageInfo>> entry : mapNextIdWithStageInfo.entrySet()) {
+      retryGroupList.add(RetryGroup.builder().info(entry.getValue()).build());
     }
-    return ResumeInfo.builder().isResumable(true).groups(resumeGroupList).build();
+    return RetryInfo.builder().isResumable(true).groups(retryGroupList).build();
   }
 
-  public List<ResumeStageInfo> getStageDetails(String planExecutionId) {
+  public List<RetryStageInfo> getStageDetails(String planExecutionId) {
     return nodeExecutionService.getStageDetailFromPlanExecutionId(planExecutionId);
   }
 
