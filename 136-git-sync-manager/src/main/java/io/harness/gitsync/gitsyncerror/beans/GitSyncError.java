@@ -6,6 +6,7 @@ import io.harness.EntityType;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EmbeddedUser;
 import io.harness.common.EntityReference;
 import io.harness.data.validator.Trimmed;
 import io.harness.git.model.ChangeType;
@@ -17,10 +18,11 @@ import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.CreatedAtAware;
+import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
+import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
-import io.harness.security.dto.Principal;
 
 import com.google.common.collect.ImmutableList;
 import java.util.Arrays;
@@ -49,7 +51,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @TypeAlias("io.harness.gitsync.gitsyncerror.beans.gitSyncError")
 @OwnedBy(PL)
 @StoreIn(DbAliases.NG_MANAGER)
-public class GitSyncError implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware {
+public class GitSyncError
+    implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware {
   @org.springframework.data.annotation.Id @org.mongodb.morphia.annotations.Id private String uuid;
   @Trimmed @NotEmpty private String accountIdentifier;
   // The repo details about the git sync error repo
@@ -70,9 +73,9 @@ public class GitSyncError implements PersistentEntity, UuidAware, CreatedAtAware
   @NotNull private GitSyncErrorType errorType;
   private GitSyncErrorDetails additionalErrorDetails;
 
-  @CreatedBy private Principal createdBy;
+  @CreatedBy private EmbeddedUser createdBy;
   @CreatedDate private long createdAt;
-  @LastModifiedBy private Principal lastUpdatedBy;
+  @LastModifiedBy private EmbeddedUser lastUpdatedBy;
   @LastModifiedDate private long lastUpdatedAt;
 
   public static final class GitSyncErrorKeys {

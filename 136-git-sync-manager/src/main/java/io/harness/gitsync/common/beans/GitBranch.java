@@ -4,10 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
-import io.harness.security.dto.Principal;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableList;
@@ -45,8 +45,8 @@ public class GitBranch {
   @NotNull String repoURL;
   @NotEmpty String branchName;
   @NotEmpty BranchSyncStatus branchSyncStatus;
-  @CreatedBy private Principal createdBy;
-  @LastModifiedBy private Principal lastUpdatedBy;
+  @CreatedBy private EmbeddedUser createdBy;
+  @LastModifiedBy private EmbeddedUser lastUpdatedBy;
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
   @Version Long version;
