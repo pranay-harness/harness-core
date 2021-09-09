@@ -3,6 +3,7 @@ package io.harness.engine.executions.node;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.engine.executions.retry.RetryStageInfo;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
@@ -63,4 +64,6 @@ public interface NodeExecutionService {
   boolean errorOutActiveNodes(String planExecutionId);
 
   boolean removeTimeoutInstances(String nodeExecutionId);
+
+  List<RetryStageInfo> getStageDetailFromPlanExecutionId(String planExecutionId);
 }

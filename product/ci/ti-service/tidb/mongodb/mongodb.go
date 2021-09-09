@@ -285,11 +285,6 @@ func (mdb *MongoDb) queryHelper(ctx context.Context, targetBranch, repo string, 
 	if err != nil {
 		return nil, false, err
 	}
-	if len(tnodes) != len(tids) {
-		// Log error message for debugging if we don't find a test ID in the node list
-		logger.FromContext(ctx).Errorw("number of elements in test IDs and retrieved nodes don't match",
-			"test IDs", tids, "nodes", tnodes, "length(test ids)", len(tids), "length(nodes)", len(tnodes))
-	}
 	for _, t := range tnodes {
 		result = append(result, types.RunnableTest{Pkg: t.Package, Class: t.Class})
 	}
@@ -1191,7 +1186,6 @@ func (mdb *MongoDb) mergeRelations(ctx context.Context, commit, branch, repo, ac
 	var srcRelation, destRelation []Relation
 	relIDToUpdate := utils.GetSliceDiff(sIDs, relToMove)
 	logger.FromContext(ctx).Infow("updating relations",
-		"relIDToUpdate", relIDToUpdate,
 		"len(sIDs)", len(sIDs),
 		"len(relToMove)", len(relToMove),
 		"repo", repo,
@@ -1282,7 +1276,6 @@ func (mdb *MongoDb) mergeVisEdges(ctx context.Context, commit, branch, repo, acc
 	var srcEdges, destEdges []VisEdge
 	edgeIDsToUpdate := utils.GetSliceDiff(sIDs, edgesToMove)
 	logger.FromContext(ctx).Infow("updating vis_edges",
-		"relIDToUpdate", edgeIDsToUpdate,
 		"len(sIDs)", len(sIDs),
 		"len(relToMove)", len(edgesToMove),
 		"repo", repo,

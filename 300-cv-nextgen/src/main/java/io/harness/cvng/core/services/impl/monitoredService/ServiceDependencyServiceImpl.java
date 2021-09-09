@@ -3,7 +3,7 @@ package io.harness.cvng.core.services.impl.monitoredService;
 import static io.harness.annotations.dev.HarnessTeam.CV;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceRef;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.MonitoredServiceRef;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.entities.ServiceDependency;
 import io.harness.cvng.core.entities.ServiceDependency.Key;
@@ -30,7 +30,7 @@ public class ServiceDependencyServiceImpl implements ServiceDependencyService {
 
   @Override
   public void updateDependencies(ProjectParams projectParams, String toMonitoredServiceIdentifier,
-      Set<ServiceRef> fromMonitoredServiceIdentifiers) {
+      Set<MonitoredServiceRef> fromMonitoredServiceIdentifiers) {
     List<ServiceDependency> dependencies = new ArrayList<>();
     fromMonitoredServiceIdentifiers.forEach(fromServiceIdentifier -> {
       dependencies.add(ServiceDependency.builder()
@@ -87,7 +87,7 @@ public class ServiceDependencyServiceImpl implements ServiceDependencyService {
   }
 
   @Override
-  public Set<ServiceRef> getDependentServicesForMonitoredService(
+  public Set<MonitoredServiceRef> getDependentServicesForMonitoredService(
       ProjectParams projectParams, String monitoredServiceIdentifier) {
     Query<ServiceDependency> query =
         hPersistence.createQuery(ServiceDependency.class)
@@ -97,7 +97,8 @@ public class ServiceDependencyServiceImpl implements ServiceDependencyService {
             .filter(ServiceDependencyKeys.toMonitoredServiceIdentifier, monitoredServiceIdentifier);
     List<ServiceDependency> dependencies = query.asList();
     return dependencies.stream()
-        .map(d -> ServiceRef.builder().monitoredServiceIdentifier(d.getFromMonitoredServiceIdentifier()).build())
+        .map(d
+            -> MonitoredServiceRef.builder().monitoredServiceIdentifier(d.getFromMonitoredServiceIdentifier()).build())
         .collect(Collectors.toSet());
   }
 

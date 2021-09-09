@@ -4,11 +4,13 @@ import static io.harness.cvng.core.beans.params.ServiceEnvironmentParams.builder
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.cvng.analysis.entities.LogAnalysisResult.LogAnalysisTag;
 import io.harness.cvng.beans.MonitoredServiceType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.ChangeSummaryDTO;
 import io.harness.cvng.core.beans.HealthMonitoringFlagResponse;
 import io.harness.cvng.core.beans.change.event.ChangeEventDTO;
+import io.harness.cvng.core.beans.monitoredService.AnomaliesSummaryDTO;
 import io.harness.cvng.core.beans.monitoredService.DurationDTO;
 import io.harness.cvng.core.beans.monitoredService.HealthScoreDTO;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
@@ -20,8 +22,12 @@ import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO.M
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceResponse;
 import io.harness.cvng.core.beans.monitoredService.RiskData;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
+import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
+import io.harness.cvng.core.beans.params.TimeRangeParams;
+import io.harness.cvng.core.beans.params.filterParams.LiveMonitoringLogAnalysisFilter;
+import io.harness.cvng.core.beans.params.filterParams.TimeSeriesAnalysisFilter;
 import io.harness.cvng.core.entities.MonitoredService;
 import io.harness.cvng.core.entities.MonitoredService.MonitoredServiceKeys;
 import io.harness.cvng.core.services.api.SetupUsageEventService;
@@ -31,6 +37,8 @@ import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceServic
 import io.harness.cvng.core.services.api.monitoredService.ServiceDependencyService;
 import io.harness.cvng.core.types.ChangeCategory;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
+import io.harness.cvng.dashboard.services.api.LogDashboardService;
+import io.harness.cvng.dashboard.services.api.TimeSeriesDashboardService;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
@@ -86,6 +94,8 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   @Inject private SetupUsageEventService setupUsageEventService;
   @Inject private ChangeSourceService changeSourceService;
   @Inject private Clock clock;
+  @Inject private TimeSeriesDashboardService timeSeriesDashboardService;
+  @Inject private LogDashboardService logDashboardService;
 
   @Override
   public MonitoredServiceResponse create(String accountId, MonitoredServiceDTO monitoredServiceDTO) {
@@ -108,16 +118,15 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
           monitoredServiceDTO.getSources().getHealthSources(), getMonitoredServiceEnableStatus());
     }
     if (isNotEmpty(monitoredServiceDTO.getDependencies())) {
-      serviceDependencyService.updateDependencies(environmentParams.getProjectParams(),
-          monitoredServiceDTO.getIdentifier(), monitoredServiceDTO.getDependencies());
+      serviceDependencyService.updateDependencies(
+          environmentParams, monitoredServiceDTO.getIdentifier(), monitoredServiceDTO.getDependencies());
     }
     if (isNotEmpty(monitoredServiceDTO.getSources().getChangeSources())) {
       changeSourceService.create(environmentParams, monitoredServiceDTO.getSources().getChangeSources());
     }
     saveMonitoredServiceEntity(accountId, monitoredServiceDTO);
-    setupUsageEventService.sendCreateEventsForMonitoredService(
-        environmentParams.getProjectParams(), monitoredServiceDTO);
-    return get(environmentParams.getProjectParams(), monitoredServiceDTO.getIdentifier());
+    setupUsageEventService.sendCreateEventsForMonitoredService(environmentParams, monitoredServiceDTO);
+    return get(environmentParams, monitoredServiceDTO.getIdentifier());
   }
 
   private boolean getMonitoredServiceEnableStatus() {
@@ -133,8 +142,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
                                                      .serviceIdentifier(monitoredServiceDTO.getServiceRef())
                                                      .environmentIdentifier(monitoredServiceDTO.getEnvironmentRef())
                                                      .build();
-    MonitoredService monitoredService =
-        getMonitoredService(environmentParams.getProjectParams(), monitoredServiceDTO.getIdentifier());
+    MonitoredService monitoredService = getMonitoredService(environmentParams, monitoredServiceDTO.getIdentifier());
     if (monitoredService == null) {
       throw new InvalidRequestException(String.format(
           "Monitored Source Entity  with identifier %s, accountId %s, orgIdentifier %s and projectIdentifier %s  is not present",
@@ -151,9 +159,8 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     updateHealthSources(monitoredService, monitoredServiceDTO);
     changeSourceService.update(environmentParams, monitoredServiceDTO.getSources().getChangeSources());
     updateMonitoredService(monitoredService, monitoredServiceDTO);
-    setupUsageEventService.sendCreateEventsForMonitoredService(
-        environmentParams.getProjectParams(), monitoredServiceDTO);
-    return get(environmentParams.getProjectParams(), monitoredServiceDTO.getIdentifier());
+    setupUsageEventService.sendCreateEventsForMonitoredService(environmentParams, monitoredServiceDTO);
+    return get(environmentParams, monitoredServiceDTO.getIdentifier());
   }
 
   private void updateMonitoredService(MonitoredService monitoredService, MonitoredServiceDTO monitoredServiceDTO) {
@@ -166,12 +173,18 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
       updateOperations.set(MonitoredServiceKeys.tags, TagMapper.convertToList(monitoredServiceDTO.getTags()));
     }
     if (monitoredServiceDTO.getSources() != null) {
-      List<String> updatedIdentifiers = monitoredServiceDTO.getSources()
-                                            .getHealthSources()
-                                            .stream()
-                                            .map(healthSource -> healthSource.getIdentifier())
-                                            .collect(Collectors.toList());
-      updateOperations.set(MonitoredServiceKeys.healthSourceIdentifiers, updatedIdentifiers);
+      List<String> updatedHealthSourceIdentifiers = monitoredServiceDTO.getSources()
+                                                        .getHealthSources()
+                                                        .stream()
+                                                        .map(healthSource -> healthSource.getIdentifier())
+                                                        .collect(Collectors.toList());
+      updateOperations.set(MonitoredServiceKeys.healthSourceIdentifiers, updatedHealthSourceIdentifiers);
+      List<String> updatedChangeSourceIdentifiers = monitoredServiceDTO.getSources()
+                                                        .getChangeSources()
+                                                        .stream()
+                                                        .map(changeSource -> changeSource.getIdentifier())
+                                                        .collect(Collectors.toList());
+      updateOperations.set(MonitoredServiceKeys.changeSourceIdentifiers, updatedChangeSourceIdentifiers);
     }
     if (isNotEmpty(monitoredServiceDTO.getDependencies())) {
       ProjectParams projectParams = ProjectParams.builder()
@@ -288,7 +301,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     if (monitoredService == null) {
       return null;
     }
-    return get(serviceEnvironmentParams.getProjectParams(), monitoredService.getIdentifier());
+    return get(serviceEnvironmentParams, monitoredService.getIdentifier());
   }
 
   @Override
@@ -657,6 +670,9 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
         monitoredServiceEntity.getOrgIdentifier(), monitoredServiceEntity.getProjectIdentifier(),
         monitoredServiceEntity.getIdentifier(), monitoredServiceEntity.getHealthSourceIdentifiers());
     return healthSources.stream()
+        .peek(healthSource
+            -> healthSource.setIdentifier(HealthSourceService.getNameSpacedIdentifier(
+                monitoredServiceEntity.getIdentifier(), healthSource.getIdentifier())))
         .map(healthSource -> HealthSourceDTO.toHealthSourceDTO(healthSource))
         .collect(Collectors.toList());
   }
@@ -693,5 +709,38 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
             .build();
     return changeSourceService.getChangeSummary(
         serviceEnvironmentParams, monitoredService.getChangeSourceIdentifiers(), startTime, endTime);
+  }
+
+  @Override
+  public AnomaliesSummaryDTO getAnomaliesSummary(
+      ProjectParams projectParams, String monitoredServiceIdentifier, TimeRangeParams timeRangeParams) {
+    MonitoredService monitoredService = getMonitoredService(projectParams, monitoredServiceIdentifier);
+    if (monitoredService == null) {
+      throw new InvalidRequestException(
+          String.format("Monitored Service not found for identifier %s", monitoredServiceIdentifier));
+    }
+    ServiceEnvironmentParams serviceEnvironmentParams =
+        ServiceEnvironmentParams.builderWithProjectParams(projectParams)
+            .serviceIdentifier(monitoredService.getServiceIdentifier())
+            .environmentIdentifier(monitoredService.getEnvironmentIdentifier())
+            .build();
+    PageParams pageParams = PageParams.builder().page(0).size(10).build();
+    LiveMonitoringLogAnalysisFilter liveMonitoringLogAnalysisFilter =
+        LiveMonitoringLogAnalysisFilter.builder()
+            .clusterTypes(Arrays.asList(LogAnalysisTag.UNKNOWN, LogAnalysisTag.UNEXPECTED))
+            .build();
+    long logAnomalousCount =
+        logDashboardService
+            .getAllLogsData(serviceEnvironmentParams, timeRangeParams, liveMonitoringLogAnalysisFilter, pageParams)
+            .getTotalItems();
+    TimeSeriesAnalysisFilter timeSeriesAnalysisFilter = TimeSeriesAnalysisFilter.builder().anomalous(true).build();
+    long timeSeriesAnomalousCount =
+        timeSeriesDashboardService
+            .getTimeSeriesMetricData(serviceEnvironmentParams, timeRangeParams, timeSeriesAnalysisFilter, pageParams)
+            .getTotalItems();
+    return AnomaliesSummaryDTO.builder()
+        .logsAnomalies(logAnomalousCount)
+        .timeSeriesAnomalies(timeSeriesAnomalousCount)
+        .build();
   }
 }

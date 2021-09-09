@@ -1,5 +1,6 @@
 package io.harness.cvng.dashboard.services.impl;
 
+import static io.harness.cvng.beans.DataSourceType.APP_DYNAMICS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.KANHAIYA;
@@ -50,12 +51,13 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import org.apache.commons.lang3.reflect.FieldUtils;
-import org.apache.groovy.util.Maps;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -435,9 +437,11 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTestBase {
     AppDynamicsCVConfig cvConfig = new AppDynamicsCVConfig();
     cvConfig.setUuid(cvConfigId);
     List<String> healthSourceIdentifiers = Arrays.asList(cvConfig.getIdentifier());
+    Map<String, DataSourceType> cvConfigToDataSourceTypeMap = new HashMap<>();
+    cvConfigToDataSourceTypeMap.put(cvConfigId, APP_DYNAMICS);
     when(cvConfigService.list(serviceEnvironmentParams, healthSourceIdentifiers)).thenReturn(Arrays.asList(cvConfig));
     when(cvConfigService.getDataSourceTypeForCVConfigs(serviceEnvironmentParams, Arrays.asList(cvConfigId)))
-        .thenReturn(Maps.of(cvConfigId, DataSourceType.APP_DYNAMICS));
+        .thenReturn(cvConfigToDataSourceTypeMap);
 
     TimeSeriesAnalysisFilter timeSeriesAnalysisFilter = TimeSeriesAnalysisFilter.builder()
                                                             .filter(null)
@@ -455,7 +459,7 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTestBase {
     assertThat(response.getContent().size()).isEqualTo(10);
 
     response.getContent().forEach(timeSeriesMetricDataDTO -> {
-      assertThat(timeSeriesMetricDataDTO.getDataSourceType()).isEqualTo(DataSourceType.APP_DYNAMICS);
+      assertThat(timeSeriesMetricDataDTO.getDataSourceType()).isEqualTo(APP_DYNAMICS);
     });
 
     timeSeriesAnalysisFilter = TimeSeriesAnalysisFilter.builder()
@@ -633,7 +637,8 @@ public class TimeSeriesDashboardServiceImplTest extends CvNextGenTestBase {
       Type type = new TypeToken<List<TimeSeriesRecord>>() {}.getType();
       List<TimeSeriesRecord> timeSeriesMLAnalysisRecords = gson.fromJson(br, type);
       timeSeriesMLAnalysisRecords.forEach(timeSeriesMLAnalysisRecord -> {
-        timeSeriesMLAnalysisRecord.setCvConfigId(cvConfigId);
+        // timeSeriesMLAnalysisRecord.setCvConfigId(cvConfigId);
+        timeSeriesMLAnalysisRecord.setVerificationTaskId(cvConfigId);
         timeSeriesMLAnalysisRecord.setBucketStartTime(Instant.parse("2020-07-07T02:40:00.000Z"));
         if (timeSeriesMLAnalysisRecord.getMetricName().equals("Calls per Minute")) {
           Random r = new Random();

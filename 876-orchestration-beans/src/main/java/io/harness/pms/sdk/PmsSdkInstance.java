@@ -50,6 +50,7 @@ public class PmsSdkInstance implements PersistentEntity, UuidAware {
 
   @NotNull @FdUniqueIndex String name;
   Map<String, Set<String>> supportedTypes;
+  Map<String, String> staticAliases;
   List<SdkStep> supportedSdkSteps;
 
   @Deprecated List<StepInfo> supportedSteps;

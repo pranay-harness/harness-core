@@ -2,6 +2,8 @@ package io.harness.cvng.core.transformer.changeEvent;
 
 import static io.harness.rule.OwnerRule.ABHIJITH;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.activity.entities.HarnessCDActivity;
@@ -9,7 +11,6 @@ import io.harness.cvng.core.beans.change.event.ChangeEventDTO;
 import io.harness.cvng.core.beans.change.event.metadata.HarnessCDEventMetaData;
 import io.harness.rule.Owner;
 
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -44,18 +45,30 @@ public class HarnessCDChangeEventTransformerTest {
   }
 
   private void verifyEqual(HarnessCDActivity harnessCDActivity, ChangeEventDTO changeEventDTO) {
-    Assertions.assertThat(harnessCDActivity.getAccountId()).isEqualTo(changeEventDTO.getAccountId());
-    Assertions.assertThat(harnessCDActivity.getOrgIdentifier()).isEqualTo(changeEventDTO.getOrgIdentifier());
-    Assertions.assertThat(harnessCDActivity.getProjectIdentifier()).isEqualTo(changeEventDTO.getProjectIdentifier());
-    Assertions.assertThat(harnessCDActivity.getEventTime().toEpochMilli()).isEqualTo(changeEventDTO.getEventTime());
-    Assertions.assertThat(harnessCDActivity.getType()).isEqualTo(changeEventDTO.getType().getActivityType());
-    Assertions.assertThat(harnessCDActivity.getActivityEndTime().toEpochMilli())
+    assertThat(harnessCDActivity.getAccountId()).isEqualTo(changeEventDTO.getAccountId());
+    assertThat(harnessCDActivity.getOrgIdentifier()).isEqualTo(changeEventDTO.getOrgIdentifier());
+    assertThat(harnessCDActivity.getProjectIdentifier()).isEqualTo(changeEventDTO.getProjectIdentifier());
+    assertThat(harnessCDActivity.getEventTime().toEpochMilli()).isEqualTo(changeEventDTO.getEventTime());
+    assertThat(harnessCDActivity.getType()).isEqualTo(changeEventDTO.getType().getActivityType());
+    assertThat(harnessCDActivity.getActivityEndTime().toEpochMilli())
         .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getDeploymentEndTime());
-    Assertions.assertThat(harnessCDActivity.getActivityStartTime().toEpochMilli())
+    assertThat(harnessCDActivity.getActivityStartTime().toEpochMilli())
         .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getDeploymentStartTime());
-    Assertions.assertThat(harnessCDActivity.getStageId())
+    assertThat(harnessCDActivity.getStageStepId())
+        .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getStageStepId());
+    assertThat(harnessCDActivity.getPlanExecutionId())
+        .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getPlanExecutionId());
+    assertThat(harnessCDActivity.getPipelineId())
+        .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getPipelineId());
+    assertThat(harnessCDActivity.getStageId())
         .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getStageId());
-    Assertions.assertThat(harnessCDActivity.getExecutionId())
-        .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getExecutionId());
+    assertThat(harnessCDActivity.getPlanExecutionId())
+        .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getPlanExecutionId());
+    assertThat(harnessCDActivity.getArtifactType())
+        .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getArtifactType());
+    assertThat(harnessCDActivity.getArtifactTag())
+        .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getArtifactTag());
+    assertThat(harnessCDActivity.getDeploymentStatus())
+        .isEqualTo(((HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData()).getStatus());
   }
 }

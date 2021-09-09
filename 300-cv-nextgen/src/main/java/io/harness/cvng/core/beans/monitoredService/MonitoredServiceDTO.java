@@ -35,15 +35,15 @@ public class MonitoredServiceDTO implements YamlDTO {
   @ApiModelProperty(required = true) @NotNull @EntityIdentifier String environmentRef;
   @ApiModelProperty(required = true) @NotNull @Size(max = 128) Map<String, String> tags;
   @Valid Sources sources;
-  @Valid Set<ServiceRef> dependencies;
+  @Valid Set<MonitoredServiceRef> dependencies;
 
   @Data
   @Builder
-  public static class ServiceRef {
+  public static class MonitoredServiceRef {
     @NonNull String monitoredServiceIdentifier;
   }
 
-  public Set<ServiceRef> getDependencies() {
+  public Set<MonitoredServiceRef> getDependencies() {
     if (dependencies == null) {
       return new HashSet<>();
     }

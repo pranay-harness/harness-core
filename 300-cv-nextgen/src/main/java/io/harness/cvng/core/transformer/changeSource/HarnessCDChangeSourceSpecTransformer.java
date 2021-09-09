@@ -19,7 +19,6 @@ public class HarnessCDChangeSourceSpecTransformer
         .identifier(changeSourceDTO.getIdentifier())
         .name(changeSourceDTO.getName())
         .enabled(changeSourceDTO.isEnabled())
-        .description(changeSourceDTO.getDescription())
         .type(ChangeSourceType.HARNESS_CD)
         .build();
   }

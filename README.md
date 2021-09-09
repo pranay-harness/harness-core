@@ -635,6 +635,19 @@ gazelle  # generates, updates BUILD.bazel
 ```lang=bash
 portal/tools/go/update_bazel_repo.sh go.mod
 ```
+
+* Using GOPATH
+
+Some editors like vscode requires the code to be structured in a `GOPATH` directory tree.
+In this case, you may use the `:gopath` target to generate a directory tree with
+symlinks to the original source files.
+
+```
+bazelisk build :gopath
+```
+
+You can then set the `GOPATH` in your editor to `bazel-bin/gopath`. If `bazel-bin` folder is not present in the root folder, use `$(bazel info bazel-bin)/gopath`.
+
 # How to enable aws sdk logging in Manager/Delegate app locally
 NOTE: Below changes are only recommended in local environment and changes shall not be pushed.
 

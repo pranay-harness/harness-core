@@ -9,7 +9,7 @@ import java.time.Instant;
 import java.util.List;
 
 public interface ChangeEventService {
-  Boolean register(String accountId, ChangeEventDTO changeEventDTO);
+  Boolean register(ChangeEventDTO changeEventDTO);
   List<ChangeEventDTO> get(ServiceEnvironmentParams serviceEnvironmentParams, List<String> changeSourceIdentifiers,
       Instant startTime, Instant endTime, List<ChangeCategory> changeCategories);
   ChangeSummaryDTO getChangeSummary(ServiceEnvironmentParams serviceEnvironmentParams,

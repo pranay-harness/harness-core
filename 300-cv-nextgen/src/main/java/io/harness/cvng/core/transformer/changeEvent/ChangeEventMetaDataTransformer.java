@@ -14,6 +14,7 @@ public abstract class ChangeEventMetaDataTransformer<E extends Activity, M exten
         .orgIdentifier(activity.getOrgIdentifier())
         .projectIdentifier(activity.getProjectIdentifier())
         .serviceIdentifier(activity.getServiceIdentifier())
+        .changeSourceIdentifier(activity.getChangeSourceIdentifier())
         .envIdentifier(activity.getEnvironmentIdentifier())
         .eventTime(activity.getEventTime().toEpochMilli())
         .type(ChangeSourceType.ofActivityType(activity.getType()))

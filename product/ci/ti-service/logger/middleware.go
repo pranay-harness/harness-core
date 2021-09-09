@@ -17,9 +17,9 @@ func Middleware(next http.Handler) http.Handler {
 		}
 		ctx := r.Context()
 		log := FromContext(ctx).With(zap.String("request-id", id))
-		accountID := r.FormValue("accountID")
+		accountID := r.FormValue("accountId")
 		log = log.With(
-			"accountID", accountID,
+			"accountId", accountID,
 			"method", r.Method,
 			"request", r.RequestURI,
 			"remote", r.RemoteAddr,
