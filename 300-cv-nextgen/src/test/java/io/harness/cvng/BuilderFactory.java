@@ -28,6 +28,7 @@ import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.MonitoredServiceDTOBuilder;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.MonitoredServiceRef;
 import io.harness.cvng.core.beans.monitoredService.changeSourceSpec.HarnessCDChangeSourceSpec;
+import io.harness.cvng.core.beans.monitoredService.changeSourceSpec.KubernetesChangeSourceSpec;
 import io.harness.cvng.core.beans.monitoredService.changeSourceSpec.PagerDutyChangeSourceSpec;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.AppDynamicsHealthSourceSpec;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceSpec;
@@ -49,6 +50,8 @@ import io.harness.cvng.core.entities.StackdriverLogCVConfig;
 import io.harness.cvng.core.entities.StackdriverLogCVConfig.StackdriverLogCVConfigBuilder;
 import io.harness.cvng.core.entities.changeSource.HarnessCDChangeSource;
 import io.harness.cvng.core.entities.changeSource.HarnessCDChangeSource.HarnessCDChangeSourceBuilder;
+import io.harness.cvng.core.entities.changeSource.KubernetesChangeSource;
+import io.harness.cvng.core.entities.changeSource.KubernetesChangeSource.KubernetesChangeSourceBuilder;
 import io.harness.cvng.core.entities.changeSource.PagerDutyChangeSource;
 import io.harness.cvng.core.entities.changeSource.PagerDutyChangeSource.PagerDutyChangeSourceBuilder;
 import io.harness.cvng.core.types.ChangeSourceType;
@@ -333,6 +336,18 @@ public class BuilderFactory {
         .type(ChangeSourceType.PAGER_DUTY);
   }
 
+  public KubernetesChangeSourceBuilder getKubernetesChangeSourceBuilder() {
+    return KubernetesChangeSource.builder()
+        .accountId(context.getAccountId())
+        .orgIdentifier(context.getOrgIdentifier())
+        .serviceIdentifier(context.getServiceIdentifier())
+        .enabled(true)
+        .type(ChangeSourceType.KUBERNETES)
+        .envIdentifier(context.getEnvIdentifier())
+        .connectorIdentifier(generateUuid())
+        .identifier(generateUuid());
+  }
+
   public ChangeSourceDTOBuilder getHarnessCDChangeSourceDTOBuilder() {
     return getChangeSourceDTOBuilder(ChangeSourceType.HARNESS_CD).spec(new HarnessCDChangeSourceSpec());
   }
@@ -343,6 +358,11 @@ public class BuilderFactory {
                   .connectorRef(randomAlphabetic(20))
                   .pagerDutyServiceId(randomAlphabetic(20))
                   .build());
+  }
+
+  public ChangeSourceDTOBuilder getKubernetesChangeSourceDTOBuilder() {
+    return getChangeSourceDTOBuilder(ChangeSourceType.KUBERNETES)
+        .spec(KubernetesChangeSourceSpec.builder().connectorRef(generateUuid()).build());
   }
 
   public HarnessCDActivityBuilder getHarnessCDActivityBuilder() {

@@ -111,7 +111,7 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     checkIfAlreadyPresent(
         accountId, environmentParams, monitoredServiceDTO.getIdentifier(), monitoredServiceDTO.getSources());
 
-    if (monitoredServiceDTO.getSources() != null) {
+    if (monitoredServiceDTO.getSources() != null && isNotEmpty(monitoredServiceDTO.getSources().getHealthSources())) {
       healthSourceService.create(accountId, monitoredServiceDTO.getOrgIdentifier(),
           monitoredServiceDTO.getProjectIdentifier(), monitoredServiceDTO.getEnvironmentRef(),
           monitoredServiceDTO.getServiceRef(), monitoredServiceDTO.getIdentifier(),
