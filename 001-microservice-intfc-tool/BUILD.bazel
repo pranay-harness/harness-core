@@ -38,6 +38,7 @@ java_binary(
         "//425-verification-commons:module",
         "//430-cv-nextgen-commons:module",
         "//440-connector-nextgen:module",
+        "//440-secret-management-service:module",
         "//441-cg-instance-sync:module",
         "//445-cg-connectors:module",
         "//450-ce-views:module",

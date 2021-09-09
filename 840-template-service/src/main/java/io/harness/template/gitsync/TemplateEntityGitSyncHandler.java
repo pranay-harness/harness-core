@@ -6,6 +6,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.NGTemplateReference;
 import io.harness.common.EntityReference;
 import io.harness.encryption.ScopeHelper;
+import io.harness.eventsframework.api.EventsFrameworkDownException;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.UnexpectedException;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.FileChange;
 import io.harness.gitsync.ScopeDetails;
@@ -88,12 +91,18 @@ public class TemplateEntityGitSyncHandler extends AbstractGitSdkEntityHandler<Te
 
   @Override
   public boolean delete(EntityReference entityReference) {
-    return false;
+    try {
+      NGTemplateReference reference = (NGTemplateReference) entityReference;
+      return templateService.delete(entityReference.getAccountIdentifier(), entityReference.getOrgIdentifier(),
+          entityReference.getProjectIdentifier(), entityReference.getIdentifier(), reference.getVersionLabel(), null);
+    } catch (EventsFrameworkDownException ex) {
+      throw new UnexpectedException("Producer shutdown: " + ExceptionUtils.getMessage(ex));
+    }
   }
 
   @Override
   public String getObjectIdOfYamlKey() {
-    return TemplateEntityKeys.isStableTemplate;
+    return TemplateEntityKeys.objectIdOfYaml;
   }
 
   @Override

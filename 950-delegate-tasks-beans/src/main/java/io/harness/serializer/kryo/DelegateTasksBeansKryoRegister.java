@@ -419,6 +419,7 @@ import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricDataValue;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
+import software.wings.service.impl.aws.model.AwsSubnet;
 import software.wings.service.impl.aws.model.AwsVPC;
 import software.wings.service.impl.elk.ElkIndexTemplate;
 import software.wings.service.impl.newrelic.NewRelicApplication;
@@ -899,5 +900,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(ElkConnector.class, 543436);
     kryo.register(AwsAsgGetRunningCountData.class, 7190);
     kryo.register(AwsVPC.class, 7319);
+    kryo.register(AwsSubnet.class, 7320);
   }
 }

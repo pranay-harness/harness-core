@@ -1,6 +1,8 @@
 package software.wings.licensing;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.license.CeLicenseInfo;
 
@@ -10,7 +12,8 @@ import software.wings.beans.LicenseInfo;
 import java.util.List;
 import org.hibernate.validator.constraints.NotEmpty;
 
-@TargetModule(HarnessModule._820_PLATFORM_SERVICE)
+@OwnedBy(HarnessTeam.GTM)
+@TargetModule(HarnessModule._945_ACCOUNT_MGMT)
 public interface LicenseService {
   String LICENSE_INFO = "LICENSE_INFO";
 

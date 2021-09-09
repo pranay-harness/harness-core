@@ -644,7 +644,6 @@ import software.wings.service.impl.aws.model.AwsS3ListBucketNamesResponse;
 import software.wings.service.impl.aws.model.AwsS3Request;
 import software.wings.service.impl.aws.model.AwsS3Request.AwsS3RequestType;
 import software.wings.service.impl.aws.model.AwsSecurityGroup;
-import software.wings.service.impl.aws.model.AwsSubnet;
 import software.wings.service.impl.aws.model.embed.AwsLambdaDetails;
 import software.wings.service.impl.aws.model.request.AwsCloudWatchStatisticsRequest;
 import software.wings.service.impl.aws.model.request.AwsLambdaDetailsRequest;
@@ -714,7 +713,6 @@ import software.wings.settings.validation.SlackConnectivityValidationAttributes;
 import software.wings.settings.validation.SmtpConnectivityValidationAttributes;
 import software.wings.settings.validation.SshConnectionConnectivityValidationAttributes;
 import software.wings.settings.validation.WinRmConnectivityValidationAttributes;
-import software.wings.sm.BarrierStatusData;
 import software.wings.sm.ElementNotifyResponseData;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterruptEffect;
@@ -1468,7 +1466,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ContainerCommandExecutionResponse.class, 7274);
     kryo.register(VerificationDataAnalysisResponse.class, 7275);
     kryo.register(ResourceConstraintStatusData.class, 7276);
-    kryo.register(BarrierStatusData.class, 7277);
+
     kryo.register(SetupSweepingOutputPcf.class, 7278);
     kryo.register(InfoVariables.class, 7279);
     kryo.register(SwapRouteRollbackSweepingOutputPcf.class, 7280);
@@ -1511,7 +1509,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(InstanaAnalyzeMetrics.class, 7315);
     kryo.register(InstanaAnalyzeMetrics.Item.class, 7316);
 
-    kryo.register(AwsSubnet.class, 7320);
     kryo.register(AwsSecurityGroup.class, 7321);
     kryo.register(SkipStateExecutionData.class, 7322);
     kryo.register(KustomizeConfig.class, 7323);

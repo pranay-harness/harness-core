@@ -4,7 +4,7 @@ go_library(
     name = "log-service_lib",
     srcs = ["main.go"],
     importpath = "github.com/wings-software/portal/product/log-service",
-    visibility = ["//visibility:private"],
+    visibility = ["//:__pkg__"],
     deps = [
         "//product/log-service/cli",
         "@com_github_joho_godotenv//autoload",

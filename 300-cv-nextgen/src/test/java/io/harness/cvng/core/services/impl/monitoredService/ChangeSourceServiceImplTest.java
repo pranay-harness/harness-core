@@ -90,18 +90,18 @@ public class ChangeSourceServiceImplTest extends CvNextGenTestBase {
   public void testUpdate() {
     ChangeSourceDTO changeSourceDto = builderFactory.getHarnessCDChangeSourceDTOBuilder().build();
     Set<ChangeSourceDTO> updateDtos = new HashSet<>(Arrays.asList(changeSourceDto));
-    String updatedDescription = "UPDATED_DESCRIPTION";
+    String updatedName = "UPDATED_NAME";
 
     changeSourceService.create(environmentParams, updateDtos);
     ChangeSource initialChangeSource = getChangeSourceFromDb(changeSourceDto.getIdentifier());
 
-    changeSourceDto.setDescription(updatedDescription);
+    changeSourceDto.setName(updatedName);
     changeSourceService.update(environmentParams, updateDtos);
     ChangeSource updatedChangeSource = getChangeSourceFromDb(changeSourceDto.getIdentifier());
 
     assertThat(updatedChangeSource.getUuid()).isEqualTo(initialChangeSource.getUuid());
     assertThat(updatedChangeSource.getCreatedAt()).isEqualTo(initialChangeSource.getCreatedAt());
-    assertThat(updatedChangeSource.getDescription()).isEqualTo(updatedDescription);
+    assertThat(updatedChangeSource.getName()).isEqualTo(updatedName);
   }
 
   @Test
