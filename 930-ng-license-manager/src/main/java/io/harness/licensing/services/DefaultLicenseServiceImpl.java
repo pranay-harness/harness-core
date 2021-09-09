@@ -6,6 +6,7 @@ import static java.lang.String.format;
 
 import io.harness.ModuleType;
 import io.harness.account.services.AccountService;
+import io.harness.beans.EmbeddedUser;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.licensing.Edition;
@@ -158,8 +159,7 @@ public class DefaultLicenseServiceImpl implements LicenseService {
     }
 
     ModuleLicense trialLicense = licenseObjectConverter.toEntity(trialLicenseDTO);
-    UserPrincipal userPrincipal = new UserPrincipal("", getEmailFromPrincipal(), "", "");
-    trialLicense.setCreatedBy(userPrincipal);
+    trialLicense.setCreatedBy(EmbeddedUser.builder().email(getEmailFromPrincipal()).build());
     ModuleLicense savedEntity = moduleLicenseRepository.save(trialLicense);
     sendSucceedTelemetryEvents(SUCCEED_START_TRIAL_OPERATION, savedEntity, accountIdentifier);
 
@@ -279,7 +279,7 @@ public class DefaultLicenseServiceImpl implements LicenseService {
     telemetryReporter.sendTrackEvent(FAILED_OPERATION, properties, null, Category.SIGN_UP);
   }
 
-  private void sendTrialEndEvents(ModuleLicense moduleLicense, UserPrincipal user) {
+  private void sendTrialEndEvents(ModuleLicense moduleLicense, EmbeddedUser user) {
     HashMap<String, Object> properties = new HashMap<>();
     String email = "unknown";
     if (user != null) {
