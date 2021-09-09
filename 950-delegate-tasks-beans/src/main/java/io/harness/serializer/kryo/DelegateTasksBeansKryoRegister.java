@@ -448,7 +448,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AwsElbListenerRuleData.class, 19035);
     kryo.register(AwsLoadBalancerDetails.class, 19024);
     kryo.register(AwsRegionCapability.class, 19008);
-    kryo.register(AwsSubnet.class, 7320);
     kryo.register(AzureVMSSGetVirtualMachineScaleSetParameters.class, 19075);
     kryo.register(AzureVMSSGetVirtualMachineScaleSetResponse.class, 19080);
     kryo.register(AzureVMSSListResourceGroupsNamesParameters.class, 19076);
