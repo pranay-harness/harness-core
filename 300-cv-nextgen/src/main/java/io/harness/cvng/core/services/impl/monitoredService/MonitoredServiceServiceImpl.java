@@ -173,12 +173,18 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
       updateOperations.set(MonitoredServiceKeys.tags, TagMapper.convertToList(monitoredServiceDTO.getTags()));
     }
     if (monitoredServiceDTO.getSources() != null) {
-      List<String> updatedIdentifiers = monitoredServiceDTO.getSources()
-                                            .getHealthSources()
-                                            .stream()
-                                            .map(healthSource -> healthSource.getIdentifier())
-                                            .collect(Collectors.toList());
-      updateOperations.set(MonitoredServiceKeys.healthSourceIdentifiers, updatedIdentifiers);
+      List<String> updatedHealthSourceIdentifiers = monitoredServiceDTO.getSources()
+                                                        .getHealthSources()
+                                                        .stream()
+                                                        .map(healthSource -> healthSource.getIdentifier())
+                                                        .collect(Collectors.toList());
+      updateOperations.set(MonitoredServiceKeys.healthSourceIdentifiers, updatedHealthSourceIdentifiers);
+      List<String> updatedChangeSourceIdentifiers = monitoredServiceDTO.getSources()
+                                                        .getChangeSources()
+                                                        .stream()
+                                                        .map(changeSource -> changeSource.getIdentifier())
+                                                        .collect(Collectors.toList());
+      updateOperations.set(MonitoredServiceKeys.changeSourceIdentifiers, updatedChangeSourceIdentifiers);
     }
     if (isNotEmpty(monitoredServiceDTO.getDependencies())) {
       ProjectParams projectParams = ProjectParams.builder()
@@ -664,6 +670,9 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
         monitoredServiceEntity.getOrgIdentifier(), monitoredServiceEntity.getProjectIdentifier(),
         monitoredServiceEntity.getIdentifier(), monitoredServiceEntity.getHealthSourceIdentifiers());
     return healthSources.stream()
+        .peek(healthSource
+            -> healthSource.setIdentifier(HealthSourceService.getNameSpacedIdentifier(
+                monitoredServiceEntity.getIdentifier(), healthSource.getIdentifier())))
         .map(healthSource -> HealthSourceDTO.toHealthSourceDTO(healthSource))
         .collect(Collectors.toList());
   }

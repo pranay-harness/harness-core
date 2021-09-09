@@ -29,6 +29,7 @@ import io.harness.pms.rbac.validator.PipelineRbacService;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.repositories.preflight.PreFlightRepository;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.sql.Date;
@@ -56,63 +57,6 @@ public class PreflightServiceImpl implements PreflightService {
   @Inject PMSPipelineService pmsPipelineService;
   @Inject PipelineSetupUsageHelper pipelineSetupUsageHelper;
   @Inject PipelineRbacService pipelineRbacServiceImpl;
-
-  public void updateStatus(String id, PreFlightStatus status, PreFlightEntityErrorInfo errorInfo) {
-    Criteria criteria = Criteria.where(PreFlightEntityKeys.uuid).is(id);
-    Update update = new Update();
-    update.set(PreFlightEntityKeys.preFlightStatus, status);
-    if (errorInfo != null) {
-      update.set(PreFlightEntityKeys.errorInfo, errorInfo);
-    }
-    if (status == PreFlightStatus.FAILURE || status == PreFlightStatus.SUCCESS) {
-      update.set(
-          PreFlightEntityKeys.validUntil, Date.from(OffsetDateTime.now().plus(Duration.ofMinutes(5)).toInstant()));
-    }
-    preFlightRepository.update(criteria, update);
-  }
-
-  @Override
-  public List<ConnectorCheckResponse> updateConnectorCheckResponses(String accountId, String orgId, String projectId,
-      String preflightEntityId, Map<String, Object> fqnToObjectMapMergedYaml, List<EntityDetail> connectorUsages) {
-    List<ConnectorCheckResponse> connectorCheckResponses =
-        connectorPreflightHandler.getConnectorCheckResponsesForReferredConnectors(
-            accountId, orgId, projectId, fqnToObjectMapMergedYaml, connectorUsages);
-    if (!EmptyPredicate.isEmpty(connectorCheckResponses)) {
-      Criteria criteria = Criteria.where(PreFlightEntityKeys.uuid).is(preflightEntityId);
-      Update update = new Update();
-      update.set(PreFlightEntityKeys.connectorCheckResponse, connectorCheckResponses);
-      preFlightRepository.update(criteria, update);
-    }
-    return connectorCheckResponses;
-  }
-
-  @Override
-  public PreFlightEntity saveInitialPreflightEntity(String accountId, String orgIdentifier, String projectIdentifier,
-      String pipelineIdentifier, String pipelineYaml, List<EntityDetail> entityDetails,
-      List<PipelineInputResponse> pipelineInputResponses) {
-    PreFlightEntity preFlightEntity =
-        PreFlightMapper.toEmptyEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineYaml);
-
-    preFlightEntity.setPipelineInputResponse(pipelineInputResponses);
-
-    List<EntityDetail> connectorUsages = entityDetails.stream()
-                                             .filter(entityDetail -> entityDetail.getType() == EntityType.CONNECTORS)
-                                             .collect(Collectors.toList());
-    List<ConnectorCheckResponse> connectorTemplates =
-        connectorPreflightHandler.getConnectorCheckResponseTemplate(connectorUsages);
-    preFlightEntity.setConnectorCheckResponse(connectorTemplates);
-    return preFlightRepository.save(preFlightEntity);
-  }
-
-  @Override
-  public PreFlightDTO getPreflightCheckResponse(String preflightCheckId) {
-    Optional<PreFlightEntity> optionalPreFlightEntity = preFlightRepository.findById(preflightCheckId);
-    if (!optionalPreFlightEntity.isPresent()) {
-      throw new InvalidRequestException("Could not find pre flight check data corresponding to id:" + preflightCheckId);
-    }
-    PreFlightEntity preFlightEntity = optionalPreFlightEntity.get();
-    return PreFlightMapper.toPreFlightDTO(preFlightEntity);
-  }
 
   @Override
   public String startPreflightCheck(@NotNull String accountId, @NotNull String orgIdentifier,
@@ -154,8 +98,65 @@ public class PreflightServiceImpl implements PreflightService {
     return preFlightEntitySaved.getUuid();
   }
 
-  private List<PipelineInputResponse> getPipelineInputResponses(
-      Map<String, InputSetErrorResponseDTOPMS> errorResponseMap) {
+  @Override
+  public PreFlightEntity saveInitialPreflightEntity(String accountId, String orgIdentifier, String projectIdentifier,
+      String pipelineIdentifier, String pipelineYaml, List<EntityDetail> entityDetails,
+      List<PipelineInputResponse> pipelineInputResponses) {
+    PreFlightEntity preFlightEntity =
+        PreFlightMapper.toEmptyEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineYaml);
+
+    preFlightEntity.setPipelineInputResponse(pipelineInputResponses);
+
+    List<EntityDetail> connectorUsages = entityDetails.stream()
+                                             .filter(entityDetail -> entityDetail.getType() == EntityType.CONNECTORS)
+                                             .collect(Collectors.toList());
+    List<ConnectorCheckResponse> connectorTemplates =
+        connectorPreflightHandler.getConnectorCheckResponseTemplate(connectorUsages);
+    preFlightEntity.setConnectorCheckResponse(connectorTemplates);
+    return preFlightRepository.save(preFlightEntity);
+  }
+
+  public void updateStatus(String id, PreFlightStatus status, PreFlightEntityErrorInfo errorInfo) {
+    Criteria criteria = Criteria.where(PreFlightEntityKeys.uuid).is(id);
+    Update update = new Update();
+    update.set(PreFlightEntityKeys.preFlightStatus, status);
+    if (errorInfo != null) {
+      update.set(PreFlightEntityKeys.errorInfo, errorInfo);
+    }
+    if (status == PreFlightStatus.FAILURE || status == PreFlightStatus.SUCCESS) {
+      update.set(
+          PreFlightEntityKeys.validUntil, Date.from(OffsetDateTime.now().plus(Duration.ofMinutes(5)).toInstant()));
+    }
+    preFlightRepository.update(criteria, update);
+  }
+
+  @Override
+  public List<ConnectorCheckResponse> updateConnectorCheckResponses(String accountId, String orgId, String projectId,
+      String preflightEntityId, Map<String, Object> fqnToObjectMapMergedYaml, List<EntityDetail> connectorUsages) {
+    List<ConnectorCheckResponse> connectorCheckResponses =
+        connectorPreflightHandler.getConnectorCheckResponsesForReferredConnectors(
+            accountId, orgId, projectId, fqnToObjectMapMergedYaml, connectorUsages);
+    if (!EmptyPredicate.isEmpty(connectorCheckResponses)) {
+      Criteria criteria = Criteria.where(PreFlightEntityKeys.uuid).is(preflightEntityId);
+      Update update = new Update();
+      update.set(PreFlightEntityKeys.connectorCheckResponse, connectorCheckResponses);
+      preFlightRepository.update(criteria, update);
+    }
+    return connectorCheckResponses;
+  }
+
+  @Override
+  public PreFlightDTO getPreflightCheckResponse(String preflightCheckId) {
+    Optional<PreFlightEntity> optionalPreFlightEntity = preFlightRepository.findById(preflightCheckId);
+    if (!optionalPreFlightEntity.isPresent()) {
+      throw new InvalidRequestException("Could not find pre flight check data corresponding to id:" + preflightCheckId);
+    }
+    PreFlightEntity preFlightEntity = optionalPreFlightEntity.get();
+    return PreFlightMapper.toPreFlightDTO(preFlightEntity);
+  }
+
+  @VisibleForTesting
+  List<PipelineInputResponse> getPipelineInputResponses(Map<String, InputSetErrorResponseDTOPMS> errorResponseMap) {
     List<PipelineInputResponse> res = new ArrayList<>();
     errorResponseMap.keySet().forEach(key -> {
       List<InputSetErrorDTOPMS> errors = errorResponseMap.get(key).getErrors();

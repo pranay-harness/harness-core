@@ -175,21 +175,22 @@ public class PlanExecutionResource {
   }
 
   @GET
-  @Path("/{planExecutionId}/resumeStages")
-  @ApiOperation(value = "Get resume stages for failed pipeline", nickname = "getResumeStages")
+  @Path("/{planExecutionId}/retryStages")
+  @ApiOperation(value = "Get retry stages for failed pipeline", nickname = "getRetryStages")
   @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_EXECUTE)
-  public ResponseDTO<ResumeInfo> getResumeStages(
+  public ResponseDTO<RetryInfo> getRetryStages(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier @NotEmpty String pipelineIdentifier,
-      @NotNull @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) throws IOException {
+      @NotNull @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId,
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) throws IOException {
     Optional<PipelineEntity> updatedPipelineEntity =
         pmsPipelineService.get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
 
     if (!updatedPipelineEntity.isPresent()) {
       return ResponseDTO.newResponse(
-          ResumeInfo.builder()
+          RetryInfo.builder()
               .isResumable(false)
               .errorMessage(String.format(
                   "Pipeline with the given ID: %s does not exist or has been deleted", pipelineIdentifier))
@@ -199,7 +200,7 @@ public class PlanExecutionResource {
 
     String executedPipeline = pipelineExecuteHelper.getYamlFromExecutionId(planExecutionId);
     return ResponseDTO.newResponse(
-        pipelineExecuteHelper.getResumeStages(updatedPipeline, executedPipeline, planExecutionId, pipelineIdentifier));
+        pipelineExecuteHelper.getRetryStages(updatedPipeline, executedPipeline, planExecutionId, pipelineIdentifier));
   }
 
   @POST

@@ -140,4 +140,8 @@ public class NextGenConfiguration extends Configuration {
   private static Set<String> getUniquePackages(Collection<Class<?>> classes) {
     return classes.stream().map(aClass -> aClass.getPackage().getName()).collect(toSet());
   }
+
+  public static Set<String> getUniquePackagesContainingResources() {
+    return getResourceClasses().stream().map(aClass -> aClass.getPackage().getName()).collect(toSet());
+  }
 }

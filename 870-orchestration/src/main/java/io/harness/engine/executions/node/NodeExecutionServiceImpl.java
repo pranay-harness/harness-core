@@ -17,7 +17,7 @@ import static org.springframework.data.mongodb.core.query.Query.query;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.plan.PlanExecutionMetadataService;
-import io.harness.engine.executions.resume.ResumeStageInfo;
+import io.harness.engine.executions.retry.RetryStageInfo;
 import io.harness.engine.observers.NodeExecutionStartObserver;
 import io.harness.engine.observers.NodeStartInfo;
 import io.harness.engine.observers.NodeStatusUpdateObserver;
@@ -446,7 +446,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   }
 
   @Override
-  public List<ResumeStageInfo> getStageDetailFromPlanExecutionId(String planExecutionId) {
+  public List<RetryStageInfo> getStageDetailFromPlanExecutionId(String planExecutionId) {
     Criteria criteria = Criteria.where(NodeExecutionKeys.planExecutionId)
                             .is(planExecutionId)
                             .and(NodeExecutionKeys.stepCategory)
@@ -459,25 +459,25 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     return fetchStageDetailFromNodeExecution(nodeExecutionList);
   }
 
-  public List<ResumeStageInfo> fetchStageDetailFromNodeExecution(List<NodeExecution> nodeExecutionList) {
-    List<ResumeStageInfo> stageDetails = new ArrayList<>();
+  public List<RetryStageInfo> fetchStageDetailFromNodeExecution(List<NodeExecution> nodeExecutionList) {
+    List<RetryStageInfo> stageDetails = new ArrayList<>();
 
     if (nodeExecutionList.size() == 0) {
-      throw new InvalidRequestException("No stage to resume");
+      throw new InvalidRequestException("No stage to retry");
     }
 
     for (NodeExecution nodeExecution : nodeExecutionList) {
       PlanNodeProto node = nodeExecution.getNode();
       String nextId = nodeExecution.getNextId();
       String parentId = nodeExecution.getParentId();
-      ResumeStageInfo stageDetail = ResumeStageInfo.builder()
-                                        .name(node.getName())
-                                        .identifier(node.getIdentifier())
-                                        .parentId(parentId)
-                                        .createdAt(nodeExecution.getCreatedAt())
-                                        .status(ExecutionStatus.getExecutionStatus(nodeExecution.getStatus()))
-                                        .nextId(nextId != null ? nextId : get(parentId).getNextId())
-                                        .build();
+      RetryStageInfo stageDetail = RetryStageInfo.builder()
+                                       .name(node.getName())
+                                       .identifier(node.getIdentifier())
+                                       .parentId(parentId)
+                                       .createdAt(nodeExecution.getCreatedAt())
+                                       .status(ExecutionStatus.getExecutionStatus(nodeExecution.getStatus()))
+                                       .nextId(nextId != null ? nextId : get(parentId).getNextId())
+                                       .build();
       stageDetails.add(stageDetail);
     }
     return stageDetails;

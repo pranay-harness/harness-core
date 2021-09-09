@@ -39,6 +39,7 @@ public class PmsSdkConfiguration {
   Class<? extends PipelineServiceInfoProvider> pipelineServiceInfoProviderClass;
   FilterCreationResponseMerger filterCreationResponseMerger;
   Map<StepType, Class<? extends Step>> engineSteps;
+  Map<String, String> staticAliases;
   Map<AdviserType, Class<? extends Adviser>> engineAdvisers;
   Map<FacilitatorType, Class<? extends Facilitator>> engineFacilitators;
   Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> engineEventHandlersMap;

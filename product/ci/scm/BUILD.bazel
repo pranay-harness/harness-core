@@ -4,7 +4,7 @@ go_library(
     name = "scm_lib",
     srcs = ["main.go"],
     importpath = "github.com/wings-software/portal/product/ci/scm",
-    visibility = ["//visibility:private"],
+    visibility = ["//:__pkg__"],
     deps = [
         "//commons/go/lib/logs",
         "//product/ci/scm/grpc",

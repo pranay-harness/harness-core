@@ -8,10 +8,10 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.ng.core.account.OauthProviderType;
 
 import software.wings.beans.sso.OauthSettings;
 import software.wings.security.authentication.AuthenticationUtils;
-import software.wings.security.authentication.OauthProviderType;
 import software.wings.security.saml.SSORequest;
 import software.wings.service.impl.SSOSettingServiceImpl;
 
