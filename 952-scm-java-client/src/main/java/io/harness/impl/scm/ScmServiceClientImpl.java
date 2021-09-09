@@ -364,7 +364,6 @@ public class ScmServiceClientImpl implements ScmServiceClient {
   private GetLatestCommitRequest getLatestCommitRequestObject(ScmConnector scmConnector, String branch, String ref) {
     final GetLatestCommitRequest.Builder getLatestCommitRequestBuilder =
         GetLatestCommitRequest.newBuilder()
-            .setBranch(branch)
             .setSlug(scmGitProviderHelper.getSlug(scmConnector))
             .setProvider(scmGitProviderMapper.mapToSCMGitProvider(scmConnector));
 

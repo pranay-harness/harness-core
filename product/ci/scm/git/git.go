@@ -207,30 +207,24 @@ func GetLatestCommit(ctx context.Context, request *pb.GetLatestCommitRequest, lo
 		if response == nil {
 			return nil, err
 		}
-        convertedCommit, err1 := converter.ConvertCommit(refResponse)
-        if err1 != nil {
-            log.Errorw("GetLatestCommit convert commit failure", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
-            return nil, err1
-        }
 		// this is an error from the git provider
 		out = &pb.GetLatestCommitResponse{
-			Commit:   convertedCommit,
-			Error:    err.Error(),
-			Status:   int32(response.Status),
+			Error:  err.Error(),
+			Status: int32(response.Status),
 		}
 		return out, nil
 	}
 
-    convertedCommit, err := converter.ConvertCommit(refResponse)
-    if err != nil {
-        log.Errorw("GetLatestCommit convert commit failure", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
-        return nil, err
-    }
+	commit, err := converter.ConvertCommit(refResponse)
+	if err != nil {
+		log.Errorw("GetLatestCommit convert commit failure", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		return nil, err
+	}
 	log.Infow("GetLatestCommit success", "slug", request.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start))
 
 	out = &pb.GetLatestCommitResponse{
-	    CommitId: refResponse.Sha,
-		Commit: convertedCommit,
+		CommitId: refResponse.Sha,
+		Commit:   commit,
 		Status:   int32(response.Status),
 	}
 	return out, nil

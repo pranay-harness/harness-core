@@ -189,7 +189,7 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
   @VisibleForTesting
   CodebaseSweepingOutput buildCommitShaCodebaseSweepingOutput(ScmGitRefTaskResponseData scmGitRefTaskResponseData)
       throws InvalidProtocolBufferException {
-    CodebaseSweepingOutput codebaseSweepingOutput;
+    CodebaseSweepingOutput codebaseSweepingOutput = null;
     final byte[] getLatestCommitResponseByteArray = scmGitRefTaskResponseData.getGetLatestCommitResponse();
     if (isEmpty(getLatestCommitResponseByteArray)) {
       throw new CIStageExecutionException("Codebase git commit information can't be obtained");
@@ -197,7 +197,7 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
     GetLatestCommitResponse listCommitsResponse = GetLatestCommitResponse.parseFrom(getLatestCommitResponseByteArray);
 
     if (listCommitsResponse.getCommit() == null || isEmpty(listCommitsResponse.getCommit().getSha())) {
-      throw new CIStageExecutionException("Codebase git commit information can't be obtained");
+      return codebaseSweepingOutput;
     }
     codebaseSweepingOutput =
         CodebaseSweepingOutput.builder()

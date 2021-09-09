@@ -213,10 +213,10 @@ public class TriggerExecutionHelper {
   @VisibleForTesting
   TriggerType findTriggerType(TriggerPayload triggerPayload) {
     TriggerType triggerType = WEBHOOK;
-    if (triggerPayload.getSourceType() == SourceType.CUSTOM_REPO) {
-      triggerType = WEBHOOK_CUSTOM;
-    } else if (triggerPayload.getType() == Type.SCHEDULED) {
+    if (triggerPayload.getType() == Type.SCHEDULED) {
       triggerType = TriggerType.SCHEDULER_CRON;
+    } else if (triggerPayload.getSourceType() == SourceType.CUSTOM_REPO) {
+      triggerType = WEBHOOK_CUSTOM;
     }
 
     return triggerType;

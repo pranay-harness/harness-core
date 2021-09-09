@@ -11,6 +11,7 @@ message TriggerPayload {
   Type type = 3;
   map<string, string> headers = 4;
   SourceType sourceType = 5;
+  int64 version = 6;
 }
 
 message ParsedPayload {

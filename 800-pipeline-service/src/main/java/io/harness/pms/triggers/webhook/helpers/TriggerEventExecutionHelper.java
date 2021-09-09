@@ -64,7 +64,8 @@ public class TriggerEventExecutionHelper {
       if (isNotEmpty(webhookEventMappingResponse.getTriggers())) {
         for (TriggerDetails triggerDetails : webhookEventMappingResponse.getTriggers()) {
           eventResponses.add(triggerPipelineExecution(triggerWebhookEvent, triggerDetails,
-              getTriggerPayloadForWebhookTrigger(webhookEventMappingResponse, triggerWebhookEvent),
+              getTriggerPayloadForWebhookTrigger(webhookEventMappingResponse, triggerWebhookEvent,
+                  triggerDetails.getNgTriggerEntity().getYmlVersion()),
               triggerWebhookEvent.getPayload()));
         }
       }
@@ -78,7 +79,7 @@ public class TriggerEventExecutionHelper {
 
   @VisibleForTesting
   TriggerPayload getTriggerPayloadForWebhookTrigger(
-      WebhookEventMappingResponse webhookEventMappingResponse, TriggerWebhookEvent triggerWebhookEvent) {
+      WebhookEventMappingResponse webhookEventMappingResponse, TriggerWebhookEvent triggerWebhookEvent, long version) {
     Builder builder = TriggerPayload.newBuilder().setType(Type.WEBHOOK);
 
     if (CUSTOM.getEntityMetadataName().equalsIgnoreCase(triggerWebhookEvent.getSourceRepoType())) {
@@ -101,6 +102,7 @@ public class TriggerEventExecutionHelper {
         builder.setParsedPayload(ParsedPayload.newBuilder().setPush(parseWebhookResponse.getPush()).build()).build();
       }
     }
+    builder.setVersion(version);
 
     return builder.setType(WEBHOOK).build();
   }

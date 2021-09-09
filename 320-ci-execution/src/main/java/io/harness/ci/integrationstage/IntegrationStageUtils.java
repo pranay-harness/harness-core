@@ -118,8 +118,8 @@ public class IntegrationStageUtils {
         return handleManualExecution(parameterFieldBuild, identifier);
       } else if (executionTriggerInfo.getTriggerType() == TriggerType.WEBHOOK) {
         ParsedPayload parsedPayload = triggerPayload.getParsedPayload();
-        if (treatWebhookAsManualExecutionWithContext(
-                connectorIdentifier, connectorUtils, planCreationContextValue, parsedPayload, codeBase)) {
+        if (treatWebhookAsManualExecutionWithContext(connectorIdentifier, connectorUtils, planCreationContextValue,
+                parsedPayload, codeBase, triggerPayload.getVersion())) {
           return handleManualExecution(parameterFieldBuild, identifier);
         }
 
@@ -133,8 +133,8 @@ public class IntegrationStageUtils {
         return handleManualExecution(parameterFieldBuild, identifier);
       } else if (executionTriggerInfo.getRerunInfo().getRootTriggerType() == TriggerType.WEBHOOK) {
         ParsedPayload parsedPayload = triggerPayload.getParsedPayload();
-        if (treatWebhookAsManualExecutionWithContext(
-                connectorIdentifier, connectorUtils, planCreationContextValue, parsedPayload, codeBase)) {
+        if (treatWebhookAsManualExecutionWithContext(connectorIdentifier, connectorUtils, planCreationContextValue,
+                parsedPayload, codeBase, triggerPayload.getVersion())) {
           return handleManualExecution(parameterFieldBuild, identifier);
         }
         return WebhookTriggerProcessorUtils.convertWebhookResponse(parsedPayload);
@@ -150,7 +150,7 @@ public class IntegrationStageUtils {
    */
 
   public boolean treatWebhookAsManualExecution(
-      ConnectorDetails connectorDetails, CodeBase codeBase, ParsedPayload parsedPayload) {
+      ConnectorDetails connectorDetails, CodeBase codeBase, ParsedPayload parsedPayload, long version) {
     String url = getGitURLFromConnector(connectorDetails, codeBase);
     WebhookExecutionSource webhookExecutionSource = WebhookTriggerProcessorUtils.convertWebhookResponse(parsedPayload);
     Build build = RunTimeInputHandler.resolveBuild(codeBase.getBuild());
@@ -168,15 +168,21 @@ public class IntegrationStageUtils {
         ParameterField<String> branch = ((BranchBuildSpec) build.getSpec()).getBranch();
         String branchString =
             RunTimeInputHandler.resolveStringParameter("branch", "Git Clone", "identifier", branch, false);
-        if (!branchString.equals(BRANCH_EXPRESSION)) {
-          return true;
+        if (isNotEmpty(branchString)) {
+          if (version >= 3l) {
+            return true;
+          } else {
+            return false;
+          }
+        } else {
+          throw new CIStageExecutionException("Branch should not be empty for branch build type");
         }
       }
 
       if (build.getType() == BuildType.TAG) {
         ParameterField<String> tag = ((TagBuildSpec) build.getSpec()).getTag();
         String tagString = RunTimeInputHandler.resolveStringParameter("tag", "Git Clone", "identifier", tag, false);
-        if (!isNotEmpty(tagString)) {
+        if (isNotEmpty(tagString)) {
           return true;
         } else {
           throw new CIStageExecutionException("Tag should not be empty for tag build type");
@@ -212,12 +218,12 @@ public class IntegrationStageUtils {
   }
 
   private boolean treatWebhookAsManualExecutionWithContext(String connectorIdentifier, ConnectorUtils connectorUtils,
-      PlanCreationContextValue planCreationContextValue, ParsedPayload parsedPayload, CodeBase codeBase) {
+      PlanCreationContextValue planCreationContextValue, ParsedPayload parsedPayload, CodeBase codeBase, long version) {
     BaseNGAccess baseNGAccess = IntegrationStageUtils.getBaseNGAccess(planCreationContextValue.getAccountIdentifier(),
         planCreationContextValue.getOrgIdentifier(), planCreationContextValue.getProjectIdentifier());
 
     ConnectorDetails connectorDetails = connectorUtils.getConnectorDetails(baseNGAccess, connectorIdentifier);
-    return treatWebhookAsManualExecution(connectorDetails, codeBase, parsedPayload);
+    return treatWebhookAsManualExecution(connectorDetails, codeBase, parsedPayload, version);
   }
 
   private BaseNGAccess getBaseNGAccess(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
