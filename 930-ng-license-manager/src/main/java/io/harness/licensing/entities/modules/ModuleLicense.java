@@ -4,6 +4,7 @@ import io.harness.ModuleType;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
 import io.harness.licensing.Edition;
 import io.harness.licensing.LicenseStatus;
@@ -13,7 +14,6 @@ import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.persistence.PersistentEntity;
-import io.harness.security.dto.UserPrincipal;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
@@ -48,8 +48,8 @@ public abstract class ModuleLicense implements PersistentEntity, NGAccountAccess
   @NotEmpty protected LicenseStatus status;
   @NotEmpty protected long startTime;
   @NotEmpty protected long expiryTime;
-  @CreatedBy protected UserPrincipal createdBy;
-  @LastModifiedBy protected UserPrincipal lastUpdatedBy;
+  @CreatedBy protected EmbeddedUser createdBy;
+  @LastModifiedBy protected EmbeddedUser lastUpdatedBy;
   @CreatedDate protected Long createdAt;
   @LastModifiedDate protected Long lastUpdatedAt;
 

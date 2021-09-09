@@ -5,11 +5,11 @@ import static io.harness.annotations.dev.HarnessTeam.GTM;
 import io.harness.ModuleType;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.Trimmed;
 import io.harness.ng.DbAliases;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.persistence.PersistentEntity;
-import io.harness.security.dto.Principal;
 
 import javax.validation.constraints.Size;
 import lombok.Builder;
@@ -38,6 +38,6 @@ public class FeedbackForm implements PersistentEntity, NGAccountAccess {
   @NotEmpty protected ModuleType moduleType;
   protected Integer score;
   @Size(max = 500) protected String suggestion;
-  @CreatedBy protected Principal createdBy;
+  @CreatedBy protected EmbeddedUser createdBy;
   @CreatedDate protected Long createdAt;
 }

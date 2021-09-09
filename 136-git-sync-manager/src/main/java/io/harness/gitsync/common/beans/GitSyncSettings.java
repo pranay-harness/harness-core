@@ -4,10 +4,10 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
-import io.harness.security.dto.Principal;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
@@ -54,9 +54,9 @@ public class GitSyncSettings {
   private String projectIdentifier;
   private String orgIdentifier;
   private Map<String, String> settings;
-  @CreatedBy private Principal createdBy;
+  @CreatedBy private EmbeddedUser createdBy;
   @CreatedDate private long createdAt;
-  @LastModifiedBy private Principal lastUpdatedBy;
+  @LastModifiedBy private EmbeddedUser lastUpdatedBy;
   @LastModifiedDate private long lastUpdatedAt;
   @Version Long version;
 
