@@ -53,6 +53,7 @@ public class ServiceDefinition implements Visitable {
     this.serviceSpec = serviceSpec;
   }
 
+  // fake xomment
   @Override
   public VisitableChildren getChildrenToWalk() {
     VisitableChildren children = VisitableChildren.builder().build();
