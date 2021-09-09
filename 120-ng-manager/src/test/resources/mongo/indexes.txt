@@ -374,6 +374,10 @@ gitSyncError {"name": "gitCommitId_idx_for_app_filter", "background": true} {"ac
 gitSyncError {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
 gitSyncError {"name": "previousErrors_idx", "background": true} {"accountId": 1, "gitSyncDirection": 1, "additionalErrorDetails.previousCommitIdsWithError": 1}
 gitSyncError {"name": "previousErrors_idx_for_app_filter", "background": true} {"accountId": 1, "appId": 1, "gitSyncDirection": 1, "additionalErrorDetails.previousCommitIdsWithError": 1}
+gitSyncErrorNG {"name": "accountId_commitId_repo_branch_filePath_unique_Index", "unique": true} {"accountIdentifier": 1, "additionalErrorDetails.gitCommitId": 1, "repoUrl": 1, "branchName": 1, "completeFilePath": 1}
+gitSyncErrorNG {"name": "accountId_errorType_repo_branch_sort_Index", "background": true} {"accountIdentifier": 1, "errorType": 1, "repoUrl": 1, "branchName": 1, "createdAt": -1}
+gitSyncErrorNG {"name": "accountId_orgId_projectId_errorType_repo_branch_sort_Index", "background": true} {"accountIdentifier": 1, "additionalErrorDetails.orgIdentifier": 1, "additionalErrorDetails.projectIdentifier": 1, "errorType": 1, "repoUrl": 1, "branchName": 1, "createdAt": -1}
+gitSyncErrorNG {"name": "accountId_repo_branch_filePath_Index", "background": true} {"accountIdentifier": 1, "repoUrl": 1, "branchName": 1, "completeFilePath": 1}
 gitSyncSettings {"name": "account_org_project_index", "unique": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1}
 gitSyncWebhook {"name": "appId_1", "background": true} {"appId": 1}
 gitSyncWebhook {"name": "createdAt_1", "background": true} {"createdAt": 1}
