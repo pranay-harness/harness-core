@@ -125,7 +125,7 @@ func TestGetLatestCommit(t *testing.T) {
 	defer ts.Close()
 
 	in := &pb.GetLatestCommitRequest{
-		Slug:   "tphoney/scm-test",
+		Slug: "tphoney/scm-test",
 		Type: &pb.GetLatestCommitRequest_Branch{
 			Branch: "main",
 		},

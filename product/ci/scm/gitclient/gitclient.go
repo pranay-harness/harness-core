@@ -77,7 +77,7 @@ func GetValidRef(p pb.Provider, inputRef, inputBranch string) (string, error) {
 		case *pb.Provider_BitbucketCloud:
 			return inputBranch, nil
 		case *pb.Provider_BitbucketServer:
-        			return inputBranch, nil
+			return inputBranch, nil
 		default:
 			return scm.ExpandRef(inputBranch, "refs/heads"), nil
 		}

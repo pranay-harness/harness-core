@@ -70,7 +70,7 @@ func TestGetLatestCommitBitbucketCloud(t *testing.T) {
 		t.Skip("Skipping, Acceptance test")
 	}
 	in := &pb.GetLatestCommitRequest{
-		Slug:   "tphoney/scm-test",
+		Slug: "tphoney/scm-test",
 		Type: &pb.GetLatestCommitRequest_Branch{
 			Branch: "main",
 		},

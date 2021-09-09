@@ -73,7 +73,7 @@ func TestGetLatestCommitGitlab(t *testing.T) {
 		t.Skip("Skipping, Acceptance test")
 	}
 	in := &pb.GetLatestCommitRequest{
-		Slug:   "tphoney/test_repo",
+		Slug: "tphoney/test_repo",
 		Type: &pb.GetLatestCommitRequest_Branch{
 			Branch: "main",
 		},
