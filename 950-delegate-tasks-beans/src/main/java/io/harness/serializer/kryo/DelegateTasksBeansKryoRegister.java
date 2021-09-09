@@ -901,6 +901,5 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(ElkConnector.class, 543436);
     kryo.register(AwsAsgGetRunningCountData.class, 7190);
     kryo.register(AwsVPC.class, 7319);
-    kryo.register(AwsSubnet.class, 7320);
   }
 }
