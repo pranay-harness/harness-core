@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.Trimmed;
 import io.harness.delegate.beans.connector.ConnectorType;
@@ -15,10 +16,11 @@ import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
+import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
+import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
-import io.harness.security.dto.Principal;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
@@ -49,7 +51,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @OwnedBy(DX)
 @StoreIn(DbAliases.NG_MANAGER)
 @FieldNameConstants(innerTypeName = "YamlGitConfigKeys")
-public class YamlGitConfig implements PersistentEntity, UuidAware, CreatedAtAware, UpdatedAtAware, AccountAccess {
+public class YamlGitConfig implements PersistentEntity, UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware,
+                                      UpdatedByAware, AccountAccess {
   @org.springframework.data.annotation.Id @org.mongodb.morphia.annotations.Id private String uuid;
   @NotEmpty @EntityIdentifier private String identifier;
   @NotEmpty private String name;
@@ -64,9 +67,9 @@ public class YamlGitConfig implements PersistentEntity, UuidAware, CreatedAtAwar
   List<YamlGitConfigDTO.RootFolder> rootFolders;
   YamlGitConfigDTO.RootFolder defaultRootFolder;
   @NotNull private ConnectorType gitConnectorType;
-  @CreatedBy private Principal createdBy;
+  @CreatedBy private EmbeddedUser createdBy;
   @CreatedDate private long createdAt;
-  @LastModifiedBy private Principal lastUpdatedBy;
+  @LastModifiedBy private EmbeddedUser lastUpdatedBy;
   @LastModifiedDate private long lastUpdatedAt;
   @Version Long version;
 

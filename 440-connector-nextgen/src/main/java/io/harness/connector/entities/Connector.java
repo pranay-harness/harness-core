@@ -3,6 +3,7 @@ package io.harness.connector.entities;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EmbeddedUser;
 import io.harness.connector.ConnectorActivityDetails;
 import io.harness.connector.ConnectorCategory;
 import io.harness.connector.ConnectorConnectivityDetails;
@@ -21,7 +22,6 @@ import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
 import io.harness.persistence.PersistentEntity;
-import io.harness.security.dto.Principal;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
@@ -67,8 +67,8 @@ public abstract class Connector implements PersistentEntity, NGAccountAccess, Gi
   @NotEmpty List<ConnectorCategory> categories;
   @NotNull @Singular @Size(max = 128) List<NGTag> tags;
   Set<String> delegateSelectors;
-  @CreatedBy private Principal createdBy;
-  @LastModifiedBy private Principal lastUpdatedBy;
+  @CreatedBy private EmbeddedUser createdBy;
+  @LastModifiedBy private EmbeddedUser lastUpdatedBy;
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
   @Version Long version;
