@@ -6,7 +6,10 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.manage.ManagedExecutorService;
+import io.harness.network.SafeHttpCall;
 import io.harness.ng.core.EntityDetail;
+import io.harness.opaclient.OpaServiceClient;
+import io.harness.opaclient.model.OpaEvaluationResponse;
 import io.harness.pms.inputset.InputSetErrorDTOPMS;
 import io.harness.pms.inputset.InputSetErrorResponseDTOPMS;
 import io.harness.pms.merger.helpers.MergeHelper;
@@ -29,6 +32,8 @@ import io.harness.pms.rbac.validator.PipelineRbacService;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.repositories.preflight.PreFlightRepository;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -57,6 +62,21 @@ public class PreflightServiceImpl implements PreflightService {
   @Inject PMSPipelineService pmsPipelineService;
   @Inject PipelineSetupUsageHelper pipelineSetupUsageHelper;
   @Inject PipelineRbacService pipelineRbacServiceImpl;
+  @Inject OpaServiceClient opaServiceClient;
+
+  private void runOpaPolicies(String pipelineYaml) {
+    OpaEvaluationResponse response;
+    try {
+      ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+      Object o = objectMapper.readValue(pipelineYaml, Object.class);
+      response = SafeHttpCall.executeWithExceptions(opaServiceClient.evaluate("pipeline", o));
+    } catch (Exception ex) {
+      throw new InvalidRequestException(ex.getMessage());
+    }
+    if (response.isDeny()) {
+      throw new InvalidRequestException("Opa Policies failed");
+    }
+  }
 
   @Override
   public String startPreflightCheck(@NotNull String accountId, @NotNull String orgIdentifier,
@@ -72,6 +92,7 @@ public class PreflightServiceImpl implements PreflightService {
     } else {
       pipelineYaml = MergeHelper.mergeInputSetIntoPipeline(pipelineEntity.get().getYaml(), inputSetPipelineYaml, false);
     }
+    runOpaPolicies(pipelineYaml);
     List<EntityDetail> entityDetails = pipelineSetupUsageHelper.getReferencesOfPipeline(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineYaml, null);
     pipelineRbacServiceImpl.validateStaticallyReferredEntities(
