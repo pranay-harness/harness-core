@@ -4,7 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import static java.lang.annotation.ElementType.FIELD;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -19,4 +21,5 @@ are the same
 @Target({FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public @interface IncludeFieldMap {}

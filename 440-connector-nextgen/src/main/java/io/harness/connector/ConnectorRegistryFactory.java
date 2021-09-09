@@ -3,7 +3,6 @@ package io.harness.connector;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.connector.heartbeat.ArgoConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.ArtifactoryValidationParamsProvider;
 import io.harness.connector.heartbeat.AwsKmsConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.AwsSecretManagerValidationParamsProvider;
@@ -25,8 +24,6 @@ import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
 import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsDTOToEntity;
 import io.harness.connector.mappers.appdynamicsmapper.AppDynamicsEntityToDTO;
-import io.harness.connector.mappers.argo.ArgoDTOToEntity;
-import io.harness.connector.mappers.argo.ArgoEntityToDTO;
 import io.harness.connector.mappers.artifactorymapper.ArtifactoryDTOToEntity;
 import io.harness.connector.mappers.artifactorymapper.ArtifactoryEntityToDTO;
 import io.harness.connector.mappers.awscodecommit.AwsCodeCommitDTOToEntity;
@@ -87,7 +84,6 @@ import io.harness.connector.mappers.splunkconnectormapper.SplunkDTOToEntity;
 import io.harness.connector.mappers.splunkconnectormapper.SplunkEntityToDTO;
 import io.harness.connector.mappers.sumologicmapper.SumoLogicDTOToEntity;
 import io.harness.connector.mappers.sumologicmapper.SumoLogicEntityToDTO;
-import io.harness.connector.validator.ArgoConnectorValidator;
 import io.harness.connector.validator.ArtifactoryConnectionValidator;
 import io.harness.connector.validator.AwsConnectorValidator;
 import io.harness.connector.validator.CEAwsConnectorValidator;
@@ -212,9 +208,6 @@ public class ConnectorRegistryFactory {
     registrar.put(ConnectorType.HTTP_HELM_REPO,
         new ConnectorRegistrar(ConnectorCategory.ARTIFACTORY, HttpHelmRepoConnectionValidator.class,
             HttpHelmConnectorValidationParamsProvider.class, HttpHelmDTOToEntity.class, HttpHelmEntityToDTO.class));
-    registrar.put(ConnectorType.ARGO_CONNECTOR,
-        new ConnectorRegistrar(ConnectorCategory.CLOUD_PROVIDER, ArgoConnectorValidator.class,
-            ArgoConnectorValidationParamsProvider.class, ArgoDTOToEntity.class, ArgoEntityToDTO.class));
     registrar.put(ConnectorType.PAGER_DUTY,
         new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
             CVConnectorParamsProvider.class, PagerDutyDTOToEntity.class, PagerDutyEntityToDTO.class));
