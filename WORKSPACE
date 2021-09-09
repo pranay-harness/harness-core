@@ -5272,7 +5272,7 @@ load(
 
 container_repositories()
 
-#========== Docker Rules Configuration End=========================
+#========== Docker Rules Configuration End==========================
 
 http_archive(
     name = "rules_pkg",
