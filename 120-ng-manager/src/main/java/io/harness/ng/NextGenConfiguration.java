@@ -112,6 +112,8 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty(value = "scopeAccessCheckEnabled", defaultValue = "false") private boolean isScopeAccessCheckEnabled;
   @JsonProperty("hostname") String hostname;
   @JsonProperty("basePathPrefix") String basePathPrefix;
+  @JsonProperty(value = "useDms", defaultValue = "false") private boolean useDms;
+  @JsonProperty("dmsGrpcClient") private GrpcClientConfig dmsGrpcClient;
 
   // [secondary-db]: Uncomment this and the corresponding config in yaml file if you want to connect to another database
   //  @JsonProperty("secondary-mongo") MongoConfig secondaryMongoConfig;
