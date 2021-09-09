@@ -65,6 +65,7 @@ public class K8ActivityCollectionPerpetualTaskExecutor implements PerpetualTaskE
       K8ActivityCollectionPerpetualTaskParams taskParams =
           AnyUtils.unpack(params.getCustomizedParams(), K8ActivityCollectionPerpetualTaskParams.class);
       log.info("Executing for !! activitySourceId: {}", taskParams.getDataCollectionWorkerId());
+
       watchMap.computeIfAbsent(taskId.getId(), id -> {
         CVDataCollectionInfo dataCollectionInfo =
             (CVDataCollectionInfo) kryoSerializer.asObject(taskParams.getDataCollectionInfo().toByteArray());

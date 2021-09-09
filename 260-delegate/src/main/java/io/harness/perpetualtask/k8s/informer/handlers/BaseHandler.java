@@ -274,14 +274,14 @@ public abstract class BaseHandler<ApiType extends KubernetesObject> implements R
 
   @Value
   @Builder
-  private static class ResourceDetails {
+  public static class ResourceDetails {
     String kind;
     String namespace;
     String name;
     String uid;
     String resourceVersion;
 
-    static ResourceDetails ofResource(Object resource) {
+    public static ResourceDetails ofResource(Object resource) {
       Map<String, Object> fieldValues = ReflectionUtils.getFieldValues(resource, ImmutableSet.of("kind", METADATA));
       String kind = (String) fieldValues.get("kind");
       V1ObjectMeta objectMeta = (V1ObjectMeta) fieldValues.computeIfAbsent(METADATA, k -> new V1ObjectMeta());
