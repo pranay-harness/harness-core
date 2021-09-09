@@ -82,8 +82,13 @@ public class CdServiceModule extends AbstractModule {
       }
     });
     install(DelegateServiceDriverModule.getInstance(false));
-    install(new DelegateServiceDriverGrpcClientModule(
-        config.getManagerServiceSecret(), config.getManagerTarget(), config.getManagerAuthority(), true));
+    if (config.isUseDms()) {
+      install(new DelegateServiceDriverGrpcClientModule(config.getDmsGrpcClient().getSecret(),
+          config.getDmsGrpcClient().getTarget(), config.getDmsGrpcClient().getAuthority(), true));
+    } else {
+      install(new DelegateServiceDriverGrpcClientModule(
+          config.getManagerServiceSecret(), config.getManagerTarget(), config.getManagerAuthority(), true));
+    }
   }
 
   @Provides
