@@ -601,6 +601,7 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .schedulingType(REGULAR)
             .filterExpander(query
                 -> query.filter(ChangeSource.ChangeSourceKeys.type, ChangeSourceType.KUBERNETES)
+                       .filter(ChangeSource.ChangeSourceKeys.dataCollectionRequired, true)
                        .criteria(ChangeSource.ChangeSourceKeys.dataCollectionTaskId)
                        .doesNotExist())
             .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
