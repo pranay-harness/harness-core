@@ -14,8 +14,10 @@ import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.core.execution.events.node.facilitate.Facilitator;
+import io.harness.pms.sdk.core.execution.expression.SdkFunctor;
 import io.harness.pms.sdk.core.registries.AdviserRegistry;
 import io.harness.pms.sdk.core.registries.FacilitatorRegistry;
+import io.harness.pms.sdk.core.registries.FunctorRegistry;
 import io.harness.pms.sdk.core.registries.OrchestrationEventHandlerRegistry;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
@@ -75,6 +77,17 @@ public class PmsSdkRegistryModule extends AbstractModule {
     }
     throw new GeneralException(String.format("Following steps missing step Category, please add the category: [%s]",
         stepsMissingStepCategory.stream().collect(Collectors.joining(","))));
+  }
+
+  @Provides
+  @Singleton
+  FunctorRegistry providesFunctorRegistry(Injector injector) {
+    FunctorRegistry functorRegistry = new FunctorRegistry();
+    Map<String, Class<? extends SdkFunctor>> sdkFunctors = config.getSdkFunctors();
+    if (EmptyPredicate.isNotEmpty(sdkFunctors)) {
+      sdkFunctors.forEach((functorKey, v) -> { functorRegistry.register(functorKey, injector.getInstance(v)); });
+    }
+    return functorRegistry;
   }
 
   @Provides

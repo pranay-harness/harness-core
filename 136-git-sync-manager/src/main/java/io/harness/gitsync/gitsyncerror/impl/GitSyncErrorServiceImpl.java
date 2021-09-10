@@ -1,11 +1,8 @@
 package io.harness.gitsync.gitsyncerror.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
+// import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.gitsync.common.beans.GitSyncDirection.GIT_TO_HARNESS;
-import static io.harness.gitsync.gitsyncerror.utils.GitSyncErrorUtils.getCommitIdOfError;
-
-import static org.apache.commons.collections4.ListUtils.emptyIfNull;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
@@ -15,14 +12,11 @@ import io.harness.gitsync.gitfileactivity.beans.GitFileActivity;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncError;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorType;
 import io.harness.gitsync.gitsyncerror.beans.GitToHarnessErrorDetails;
-import io.harness.gitsync.gitsyncerror.beans.HarnessToGitErrorDetails;
 import io.harness.gitsync.gitsyncerror.service.GitSyncErrorService;
 import io.harness.repositories.gitSyncError.GitSyncErrorRepository;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -43,8 +37,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   @Override
   public void deleteByAccountIdOrgIdProjectIdAndFilePath(
       String accountId, String orgId, String projectId, List<String> yamlFilePath) {
-    gitSyncErrorRepository.removeByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndCompleteFilePathIn(
-        accountId, orgId, projectId, yamlFilePath);
+    gitSyncErrorRepository.removeByAccountIdentifierAndCompleteFilePathIn(accountId, yamlFilePath);
   }
 
   @Override
@@ -72,7 +65,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
 
   private void addPreviousCommitDetailsToErrorDetails(GitFileChange failedGitFileChange,
       GitToHarnessErrorDetails gitToHarnessErrorDetails, GitSyncError previousGitSyncError) {
-    if (previousGitSyncError != null) {
+    /*if (previousGitSyncError != null) {
       if (!failedGitFileChange.isChangeFromAnotherCommit()) {
         GitToHarnessErrorDetails oldGitToHarnessErrorDetails =
             (GitToHarnessErrorDetails) previousGitSyncError.getAdditionalErrorDetails();
@@ -100,12 +93,12 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
       log.info("Creating a new error record for the file [{}] in account", failedGitFileChange.getFilePath());
       gitToHarnessErrorDetails.setPreviousErrors(Collections.emptyList());
       gitToHarnessErrorDetails.setPreviousCommitIdsWithError(Collections.emptyList());
-    }
+    }*/
   }
 
-  private HarnessToGitErrorDetails getHarnessToGitErrorDetails(GitFileChange failedChange, boolean fullSyncPath) {
+  /*private HarnessToGitErrorDetails getHarnessToGitErrorDetails(GitFileChange failedChange, boolean fullSyncPath) {
     return HarnessToGitErrorDetails.builder().fullSyncPath(fullSyncPath).build();
-  }
+  }*/
 
   private GitToHarnessErrorDetails getGitToHarnessErrorDetails(GitFileChange failedGitFileChange) {
     String failedCommitId = failedGitFileChange.getCommitId() != null ? failedGitFileChange.getCommitId() : "";

@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
@@ -14,7 +15,6 @@ import io.harness.ng.core.EntityDetail.EntityDetailKeys;
 import io.harness.ng.core.NGAccountAccess;
 import io.harness.ng.core.entitysetupusage.dto.SetupUsageDetail;
 import io.harness.persistence.PersistentEntity;
-import io.harness.security.dto.Principal;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
@@ -129,8 +129,8 @@ public class EntitySetupUsage implements PersistentEntity, NGAccountAccess {
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
   @Version Long version;
-  @CreatedBy private Principal createdBy;
-  @LastModifiedBy private Principal lastUpdatedBy;
+  @CreatedBy private EmbeddedUser createdBy;
+  @LastModifiedBy private EmbeddedUser lastUpdatedBy;
 
   @UtilityClass
   public static final class EntitySetupUsageKeys {
