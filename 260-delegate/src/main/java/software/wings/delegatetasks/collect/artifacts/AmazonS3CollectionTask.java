@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 
 /**
  * Created by rktummala on 7/30/17.
@@ -53,7 +54,7 @@ public class AmazonS3CollectionTask extends AbstractDelegateRunnableTask {
 
   @Override
   public ListNotifyResponseData run(Object[] parameters) {
-    return run((AmazonS3CollectionTaskParameters) parameters[0]);
+    throw new NotImplementedException("not implemented");
   }
 
   public ListNotifyResponseData run(
