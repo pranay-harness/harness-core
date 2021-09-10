@@ -27,7 +27,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AmazonS3CollectionTaskParameters implements TaskParameters, ExecutionCapabilityDemander {
   private AwsConfig awsConfig;
-  List<EncryptedDataDetail> encryptedDataDetails;
+  private List<EncryptedDataDetail> encryptedDataDetails;
   private String jobName;
   private List<String> artifactPaths;
 
