@@ -133,6 +133,7 @@ public class PmsSdkInitHelper {
         .setOrchestrationEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.ORCHESTRATION_EVENT))
         .setFacilitatorEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.FACILITATOR_EVENT))
         .putAllStaticAliases(CollectionUtils.emptyIfNull(sdkConfiguration.getStaticAliases()))
+        .addAllSdkFunctors(PmsSdkInitHelper.getSupportedSdkFunctorsList(sdkConfiguration))
         .setNodeStartEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.NODE_START))
         .setProgressEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.PROGRESS_EVENT))
         .setNodeAdviseEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.NODE_ADVISE))
@@ -141,6 +142,12 @@ public class PmsSdkInitHelper {
         .build();
   }
 
+  private static List<String> getSupportedSdkFunctorsList(PmsSdkConfiguration sdkConfiguration) {
+    if (sdkConfiguration.getSdkFunctors() == null) {
+      return new ArrayList<>();
+    }
+    return new ArrayList<>(sdkConfiguration.getSdkFunctors().keySet());
+  }
   private static List<SdkStep> mapToSdkStep(List<StepType> stepTypeList, List<StepInfo> stepInfos) {
     Map<String, StepType> stepTypeStringToStepType =
         stepTypeList.stream().collect(Collectors.toMap(StepType::getType, stepType -> stepType));
