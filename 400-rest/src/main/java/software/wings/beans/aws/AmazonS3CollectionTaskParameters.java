@@ -1,5 +1,9 @@
 package software.wings.beans.aws;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.TaskParameters;
@@ -15,6 +19,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
+@OwnedBy(HarnessTeam.DEL)
 @Data
 @Builder
 @NoArgsConstructor
