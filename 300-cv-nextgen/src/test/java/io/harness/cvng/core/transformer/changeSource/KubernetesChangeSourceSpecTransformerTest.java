@@ -9,7 +9,6 @@ import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
 import io.harness.cvng.core.beans.monitoredService.changeSourceSpec.KubernetesChangeSourceSpec;
-import io.harness.cvng.core.entities.changeSource.ChangeSource;
 import io.harness.cvng.core.entities.changeSource.KubernetesChangeSource;
 import io.harness.rule.Owner;
 
@@ -32,10 +31,12 @@ public class KubernetesChangeSourceSpecTransformerTest extends CvNextGenTestBase
   @Category(UnitTests.class)
   public void test_getEntity() {
     ChangeSourceDTO changeSourceDTO = builderFactory.getKubernetesChangeSourceDTOBuilder().build();
-    ChangeSource changeSource = kubernetesChangeSourceSpecTransformer.getEntity(
+    KubernetesChangeSource changeSource = kubernetesChangeSourceSpecTransformer.getEntity(
         builderFactory.getContext().getServiceEnvironmentParams(), changeSourceDTO);
     assertThat(changeSource.getClass()).isEqualTo(KubernetesChangeSource.class);
     assertThat(changeSource.getIdentifier()).isEqualTo(changeSourceDTO.getIdentifier());
+    assertThat(changeSource.getConnectorIdentifier())
+        .isEqualTo(((KubernetesChangeSourceSpec) changeSourceDTO.getSpec()).getConnectorRef());
     assertThat(changeSource.getAccountId()).isEqualTo(builderFactory.getContext().getAccountId());
     assertThat(changeSource.getProjectIdentifier()).isEqualTo(builderFactory.getContext().getProjectIdentifier());
     assertThat(changeSource.getServiceIdentifier()).isEqualTo(builderFactory.getContext().getServiceIdentifier());

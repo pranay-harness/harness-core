@@ -10,6 +10,7 @@ public class KubernetesChangeSourceSpecTransformer
     extends ChangeSourceSpecTransformer<KubernetesChangeSource, KubernetesChangeSourceSpec> {
   @Override
   public KubernetesChangeSource getEntity(ServiceEnvironmentParams environmentParams, ChangeSourceDTO changeSourceDTO) {
+    KubernetesChangeSourceSpec k8ChangeSourceSpec = (KubernetesChangeSourceSpec) changeSourceDTO.getSpec();
     return KubernetesChangeSource.builder()
         .accountId(environmentParams.getAccountIdentifier())
         .orgIdentifier(environmentParams.getOrgIdentifier())
@@ -20,7 +21,7 @@ public class KubernetesChangeSourceSpecTransformer
         .name(changeSourceDTO.getName())
         .enabled(changeSourceDTO.isEnabled())
         .type(ChangeSourceType.KUBERNETES)
-        .connectorIdentifier(changeSourceDTO.getIdentifier())
+        .connectorIdentifier(k8ChangeSourceSpec.getConnectorRef())
         .build();
   }
 
