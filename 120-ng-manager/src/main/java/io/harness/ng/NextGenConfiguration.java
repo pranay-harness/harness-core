@@ -51,6 +51,7 @@ public class NextGenConfiguration extends Configuration {
   public static final String SERVICE_ID = "ng-manager";
   public static final String BASE_PACKAGE = "io.harness.ng";
   public static final String CONNECTOR_PACKAGE = "io.harness.connector.apis.resource";
+  public static final String GITOPS_PROVIDER_RESOURCE_PACKAGE = "io.harness.gitopsprovider.resource";
   public static final String GIT_SYNC_PACKAGE = "io.harness.gitsync";
   public static final String CDNG_RESOURCES_PACKAGE = "io.harness.cdng";
   public static final String OVERLAY_INPUT_SET_RESOURCE_PACKAGE = "io.harness.ngpipeline";
@@ -133,9 +134,9 @@ public class NextGenConfiguration extends Configuration {
   }
 
   public static Collection<Class<?>> getResourceClasses() {
-    Reflections reflections = new Reflections(BASE_PACKAGE, CONNECTOR_PACKAGE, GIT_SYNC_PACKAGE, CDNG_RESOURCES_PACKAGE,
-        OVERLAY_INPUT_SET_RESOURCE_PACKAGE, YAML_PACKAGE, FILTER_PACKAGE, SIGNUP_PACKAGE, MOCKSERVER_PACKAGE,
-        ACCOUNT_PACKAGE, LICENSE_PACKAGE, POLLING_PACKAGE);
+    Reflections reflections = new Reflections(BASE_PACKAGE, CONNECTOR_PACKAGE, GITOPS_PROVIDER_RESOURCE_PACKAGE,
+        GIT_SYNC_PACKAGE, CDNG_RESOURCES_PACKAGE, OVERLAY_INPUT_SET_RESOURCE_PACKAGE, YAML_PACKAGE, FILTER_PACKAGE,
+        SIGNUP_PACKAGE, MOCKSERVER_PACKAGE, ACCOUNT_PACKAGE, LICENSE_PACKAGE, POLLING_PACKAGE);
     return reflections.getTypesAnnotatedWith(Path.class);
   }
 

@@ -26,6 +26,7 @@ import static io.harness.lock.DistributedLockImplementation.MONGO;
 import static java.lang.Boolean.TRUE;
 
 import io.harness.AccessControlClientModule;
+import io.harness.GitopsModule;
 import io.harness.Microservice;
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
@@ -421,6 +422,7 @@ public class NextGenModule extends AbstractModule {
         this.appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId(),
         appConfig.getSignupNotificationConfiguration(), appConfig.getAccessControlClientConfiguration()));
     install(ConnectorModule.getInstance());
+    install(new GitopsModule());
     install(new GitSyncModule());
     install(new DefaultOrganizationModule());
     install(new NGAggregateModule());

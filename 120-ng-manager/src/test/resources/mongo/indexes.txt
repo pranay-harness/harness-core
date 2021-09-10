@@ -382,6 +382,7 @@ gitSyncSettings {"name": "account_org_project_index", "unique": true} {"accountI
 gitSyncWebhook {"name": "appId_1", "background": true} {"appId": 1}
 gitSyncWebhook {"name": "createdAt_1", "background": true} {"createdAt": 1}
 gitToHarnessProgress {"name": "yamlChangeSetId_1", "background": true} {"yamlChangeSetId": 1}
+gitopsproviders {"name": "unique_accIdentifier_orgIdentifier_projectIdentifier_gitOpsProvider_idx", "unique": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1}
 governanceConfig {"name": "accountId_1", "background": true} {"accountId": 1}
 governanceConfig {"name": "enableNextCloseIterations_nextCloseIterations", "background": true} {"enableNextCloseIterations": 1, "nextCloseIterations": 1}
 governanceConfig {"name": "enableNextIterations_nextIterations", "background": true} {"enableNextIterations": 1, "nextIterations": 1}
