@@ -1,8 +1,11 @@
-package io.harness.ng.core.user;
+package io.harness.signup.dto;
 
 import static io.harness.annotations.dev.HarnessTeam.GTM;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.licensing.BillingFrequency;
+import io.harness.licensing.Edition;
+import io.harness.ng.core.user.SignupAction;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AccessLevel;
@@ -21,6 +24,9 @@ public class SignupInviteDTO {
   String email;
   String passwordHash;
   String intent;
+  SignupAction signupAction;
+  Edition edition;
+  BillingFrequency billingFrequency;
   boolean createdFromNG;
   boolean completed;
 }

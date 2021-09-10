@@ -104,7 +104,6 @@ import io.harness.ng.core.switchaccount.RestrictedSwitchAccountInfo;
 import io.harness.ng.core.switchaccount.SamlIdentificationInfo;
 import io.harness.ng.core.user.PasswordChangeDTO;
 import io.harness.ng.core.user.PasswordChangeResponse;
-import io.harness.ng.core.user.SignupInviteDTO;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.UuidAware;
@@ -112,6 +111,7 @@ import io.harness.remote.client.NGRestUtils;
 import io.harness.sanitizer.HtmlInputSanitizer;
 import io.harness.security.dto.UserPrincipal;
 import io.harness.serializer.KryoSerializer;
+import io.harness.signup.dto.SignupInviteDTO;
 import io.harness.usermembership.remote.UserMembershipClient;
 import io.harness.version.VersionInfoManager;
 
@@ -421,6 +421,9 @@ public class UserServiceImpl implements UserService {
       userInvite.setCreatedFromNG(true);
       userInvite.setSource(UserInviteSource.builder().type(SourceType.TRIAL).build());
       userInvite.setCompleted(false);
+      userInvite.setEdition(signupInvite.getEdition());
+      userInvite.setBillingFrequency(signupInvite.getBillingFrequency());
+      userInvite.setSignupAction(signupInvite.getSignupAction());
 
       String inviteId = wingsPersistence.save(userInvite);
       userInvite.setUuid(inviteId);
