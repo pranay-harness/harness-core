@@ -21,6 +21,7 @@ public class KubernetesChangeSourceSpecTransformer
         .name(changeSourceDTO.getName())
         .enabled(changeSourceDTO.isEnabled())
         .type(ChangeSourceType.KUBERNETES)
+        .dataCollectionRequired(true)
         .connectorIdentifier(k8ChangeSourceSpec.getConnectorRef())
         .build();
   }
