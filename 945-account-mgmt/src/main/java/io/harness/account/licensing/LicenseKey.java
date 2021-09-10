@@ -1,9 +1,7 @@
-package software.wings.licensing;
+package io.harness.account.licensing;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -12,9 +10,10 @@ import java.lang.annotation.Target;
 
 /**
  * Created by peeyushaggarwal on 3/22/17.
+ *
+ * Moved from 400-rest due to aeriform check. No usages for the licenseKey in CG or NG.
  */
 @Target({ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 @OwnedBy(HarnessTeam.GTM)
-@TargetModule(HarnessModule._945_ACCOUNT_MGMT)
 public @interface LicenseKey {}
