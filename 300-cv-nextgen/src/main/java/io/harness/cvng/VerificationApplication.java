@@ -28,6 +28,7 @@ import io.harness.cvng.activity.entities.ActivitySource.ActivitySourceKeys;
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
 import io.harness.cvng.activity.jobs.ActivityStatusJob;
 import io.harness.cvng.activity.jobs.K8ActivityCollectionHandler;
+import io.harness.cvng.activity.jobs.KubernetesChangeSourceCollectionHandler;
 import io.harness.cvng.beans.activity.ActivitySourceType;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.cdng.jobs.CVNGStepTaskHandler;
@@ -43,12 +44,15 @@ import io.harness.cvng.core.entities.DeletedCVConfig;
 import io.harness.cvng.core.entities.DeletedCVConfig.DeletedCVConfigKeys;
 import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask;
 import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask.MonitoringSourcePerpetualTaskKeys;
+import io.harness.cvng.core.entities.changeSource.ChangeSource;
+import io.harness.cvng.core.entities.changeSource.KubernetesChangeSource;
 import io.harness.cvng.core.jobs.CVConfigCleanupHandler;
 import io.harness.cvng.core.jobs.DataCollectionTaskCreateNextTaskHandler;
 import io.harness.cvng.core.jobs.DeploymentChangeEventConsumer;
 import io.harness.cvng.core.jobs.EntityCRUDStreamConsumer;
 import io.harness.cvng.core.jobs.MonitoringSourcePerpetualTaskHandler;
 import io.harness.cvng.core.services.CVNextGenConstants;
+import io.harness.cvng.core.types.ChangeSourceType;
 import io.harness.cvng.exception.BadRequestExceptionMapper;
 import io.harness.cvng.exception.ConstraintViolationExceptionMapper;
 import io.harness.cvng.exception.NotFoundExceptionMapper;
@@ -581,6 +585,30 @@ public class VerificationApplication extends Application<VerificationConfigurati
             .build();
     injector.injectMembers(activityCollectionIterator);
     dataCollectionExecutor.scheduleWithFixedDelay(() -> activityCollectionIterator.process(), 0, 30, TimeUnit.SECONDS);
+
+    KubernetesChangeSourceCollectionHandler k8ChangeSourceCollectionHandler =
+        injector.getInstance(KubernetesChangeSourceCollectionHandler.class);
+    PersistenceIterator changeSourceCollectionIterator =
+        MongoPersistenceIterator.<KubernetesChangeSource, MorphiaFilterExpander<KubernetesChangeSource>>builder()
+            .mode(PersistenceIterator.ProcessMode.PUMP)
+            .clazz(KubernetesChangeSource.class)
+            .fieldName(ChangeSource.ChangeSourceKeys.dataCollectionTaskIteration)
+            .targetInterval(ofMinutes(5))
+            .acceptableNoAlertDelay(ofMinutes(1))
+            .executorService(dataCollectionExecutor)
+            .semaphore(new Semaphore(5))
+            .handler(k8ChangeSourceCollectionHandler)
+            .schedulingType(REGULAR)
+            .filterExpander(query
+                -> query.filter(ChangeSource.ChangeSourceKeys.type, ChangeSourceType.KUBERNETES)
+                       .criteria(ChangeSource.ChangeSourceKeys.dataCollectionTaskId)
+                       .doesNotExist())
+            .persistenceProvider(injector.getInstance(MorphiaPersistenceProvider.class))
+            .redistribute(true)
+            .build();
+    injector.injectMembers(changeSourceCollectionIterator);
+    dataCollectionExecutor.scheduleWithFixedDelay(
+        () -> changeSourceCollectionIterator.process(), 0, 30, TimeUnit.SECONDS);
   }
 
   private void registerCreateNextDataCollectionTaskIterator(Injector injector) {

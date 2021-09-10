@@ -1,11 +1,15 @@
 package io.harness.cvng.core.services.impl.monitoredService;
 
+import io.harness.cvng.beans.DataCollectionConnectorBundle;
+import io.harness.cvng.beans.DataCollectionType;
+import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.beans.ChangeSummaryDTO;
 import io.harness.cvng.core.beans.change.event.ChangeEventDTO;
 import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.entities.changeSource.ChangeSource;
 import io.harness.cvng.core.entities.changeSource.ChangeSource.ChangeSourceKeys;
+import io.harness.cvng.core.entities.changeSource.KubernetesChangeSource;
 import io.harness.cvng.core.services.api.ChangeEventService;
 import io.harness.cvng.core.services.api.monitoredService.ChangeSourceService;
 import io.harness.cvng.core.transformer.changeSource.ChangeSourceEntityAndDTOTransformer;
@@ -34,6 +38,7 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
   @Inject private ChangeSourceEntityAndDTOTransformer changeSourceTransformer;
   @Inject private ChangeEventService changeEventService;
   @Inject private Map<ChangeSourceType, ChangeSource.UpdatableChangeSourceEntity> changeSourceUpdatableMap;
+  @Inject private VerificationManagerService verificationManagerService;
 
   @Override
   public void create(
@@ -108,6 +113,26 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
                               .filter(key -> !replaceable(key, newChangeSourceMap, existingChangeSourceMap))
                               .map(key -> existingChangeSourceMap.get(key).getUuid())
                               .collect(Collectors.toList())));
+  }
+
+  @Override
+  public void enqueueDataCollectionTask(KubernetesChangeSource changeSource) {
+    DataCollectionConnectorBundle dataCollectionConnectorBundle =
+        DataCollectionConnectorBundle.builder()
+            .dataCollectionType(DataCollectionType.KUBERNETES)
+            .connectorIdentifier(changeSource.getConnectorIdentifier())
+            .sourceIdentifier(changeSource.getIdentifier())
+            .dataCollectionWorkerId(changeSource.getUuid())
+            .build();
+    String dataCollectionTaskId = verificationManagerService.createDataCollectionTask(changeSource.getAccountId(),
+        changeSource.getOrgIdentifier(), changeSource.getProjectIdentifier(), dataCollectionConnectorBundle);
+
+    UpdateOperations<ChangeSource> updateOperations =
+        hPersistence.createUpdateOperations(ChangeSource.class)
+            .set(ChangeSourceKeys.dataCollectionTaskId, dataCollectionTaskId);
+    Query<ChangeSource> query =
+        hPersistence.createQuery(ChangeSource.class).filter(ChangeSourceKeys.uuid, changeSource.getUuid());
+    hPersistence.update(query, updateOperations);
   }
 
   @Override

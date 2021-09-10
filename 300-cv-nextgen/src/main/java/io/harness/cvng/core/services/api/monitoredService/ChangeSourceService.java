@@ -5,6 +5,7 @@ import io.harness.cvng.core.beans.change.event.ChangeEventDTO;
 import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.entities.changeSource.ChangeSource;
+import io.harness.cvng.core.entities.changeSource.KubernetesChangeSource;
 import io.harness.cvng.core.services.api.DeleteEntityByHandler;
 import io.harness.cvng.core.types.ChangeCategory;
 import io.harness.cvng.core.types.ChangeSourceType;
@@ -23,6 +24,8 @@ public interface ChangeSourceService extends DeleteEntityByHandler<ChangeSource>
   void delete(ServiceEnvironmentParams environmentParams, List<String> identifiers);
 
   void update(ServiceEnvironmentParams environmentParams, Set<ChangeSourceDTO> changeSourceDTOs);
+
+  void enqueueDataCollectionTask(KubernetesChangeSource changeSource);
 
   List<ChangeEventDTO> getChangeEvents(ServiceEnvironmentParams serviceEnvironmentParams,
       List<String> changeSourceIdentifiers, Instant startTime, Instant endTime, List<ChangeCategory> changeCategories);
