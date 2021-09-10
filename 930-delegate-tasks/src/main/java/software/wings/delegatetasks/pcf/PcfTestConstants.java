@@ -1,12 +1,9 @@
 package software.wings.delegatetasks.pcf;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.pcf.CfInternalConfig;
 
-@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(HarnessTeam.CDP)
 public interface PcfTestConstants {
   String URL = "URL";
