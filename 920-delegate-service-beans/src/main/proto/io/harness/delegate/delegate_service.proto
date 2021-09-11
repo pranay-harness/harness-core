@@ -8,7 +8,6 @@ option go_package = "920_delegate_service_beans";
 import "955-delegate-beans/src/main/proto/io/harness/delegate/account.proto";
 import "955-delegate-beans/src/main/proto/io/harness/delegate/capability.proto";
 import "955-delegate-beans/src/main/proto/io/harness/perpetualtask/perpetual_task.proto";
-import "955-delegate-beans/src/main/proto/io/harness/delegate/delegate.proto";
 
 import "920-delegate-service-beans/src/main/proto/io/harness/delegate/task.proto";
 import "920-delegate-service-beans/src/main/proto/io/harness/delegate/progress.proto";
@@ -38,8 +37,6 @@ service DelegateService {
   // This API is temporary to allow for querying objects from collections to allow for integration
   // before the rest of the micro services are promoted
   rpc ObtainDocument(ObtainDocumentRequest) returns (ObtainDocumentResponse);
-
-  rpc ProfileScriptExecutionInitiated(DelegateUpdateRequest) returns (DelegateUpdateResponse);
 }
 
 // Next ID: 11
@@ -194,15 +191,6 @@ message Document {
 
 message ObtainDocumentResponse {
   repeated Document documents = 1;
-}
-
-message DelegateUpdateRequest {
-  AccountId account_id = 1;
-  delegate.DelegateId delegate_id = 2;
-}
-
-message DelegateUpdateResponse {
-  bool success = 1;
 }
 
 // }}
