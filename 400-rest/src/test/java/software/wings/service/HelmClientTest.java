@@ -6,12 +6,12 @@ import static io.harness.rule.OwnerRule.ANUBHAW;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.task.helm.HelmCommandResponse;
 import io.harness.rule.Owner;
 
 import software.wings.helpers.ext.helm.HelmClient;
 import software.wings.helpers.ext.helm.HelmClientImpl;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
-import software.wings.helpers.ext.helm.response.HelmCommandResponse;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
@@ -34,7 +34,7 @@ public class HelmClientTest extends CategoryTest {
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldInstall() throws InterruptedException, IOException, TimeoutException, ExecutionException {
     //    HelmCommandResponse helmCommandResponse =
-    //        helmClient.install(HelmInstallCommandRequest.builder()
+    //        helmClient.install(HelmInstallCommandRequest.builder()HelmCommandTaskTest
     //                               .chartName("/Users/anubhaw/work/helm-charts/todolist")
     //                               .namespace("default")
     //                               .releaseName("rel1")

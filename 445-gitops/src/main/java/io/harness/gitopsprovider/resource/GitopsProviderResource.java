@@ -1,5 +1,6 @@
 package io.harness.gitopsprovider.resource;
 
+import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
 import static io.harness.gitopsprovider.accesscontrol.Permissions.CREATE_PROJECT_PERMISSION;
 import static io.harness.gitopsprovider.accesscontrol.Permissions.DELETE_PROJECT_PERMISSION;
 import static io.harness.gitopsprovider.accesscontrol.Permissions.EDIT_PROJECT_PERMISSION;
@@ -12,6 +13,9 @@ import io.harness.NGResourceFilterConstants;
 import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.NGAccessControlCheck;
 import io.harness.accesscontrol.ResourceIdentifier;
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
@@ -73,11 +77,11 @@ import org.springframework.data.domain.Sort;
 @OwnedBy(HarnessTeam.GITOPS)
 public class GitopsProviderResource {
   private final GitopsProviderService gitopsProviderService;
+  private final AccessControlClient accessControlClient;
 
   @GET
   @Path("{identifier}")
-  @ApiOperation(value = "Get GitOps Provider", nickname = "getGitopsProvider")
-  @NGAccessControlCheck(resourceType = PROJECT, permission = VIEW_PROJECT_PERMISSION)
+  @ApiOperation(value = "Get GitOps Provider", nickname = "getGitOpsProvider")
   public ResponseDTO<GitOpsProviderResponseDTO> get(
       @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @OrgIdentifier @QueryParam(
@@ -85,6 +89,8 @@ public class GitopsProviderResource {
       @ProjectIdentifier @QueryParam(
           NGCommonEntityConstants.PROJECT_KEY) @io.harness.accesscontrol.ProjectIdentifier String projectIdentifier,
       @EntityIdentifier @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier String identifier) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(PROJECT, identifier), VIEW_PROJECT_PERMISSION);
     Optional<GitOpsProviderResponseDTO> gitOpsProviderResponseDTO =
         gitopsProviderService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
     if (!gitOpsProviderResponseDTO.isPresent()) {
@@ -108,6 +114,8 @@ public class GitopsProviderResource {
           NGCommonEntityConstants.ORG_KEY) @io.harness.accesscontrol.OrgIdentifier String orgIdentifier,
       @ProjectIdentifier @QueryParam(
           NGCommonEntityConstants.PROJECT_KEY) @io.harness.accesscontrol.ProjectIdentifier String projectIdentifier) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(PROJECT, null), VIEW_PROJECT_PERMISSION);
     Pageable pageRequest;
     if (EmptyPredicate.isEmpty(sort)) {
       pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, GitOpsProviderKeys.createdAt));
@@ -120,25 +128,35 @@ public class GitopsProviderResource {
 
   @POST
   @ApiOperation(value = "Creates a GitOpsProvider", nickname = "createGitOpsProvider")
-  @NGAccessControlCheck(resourceType = PROJECT, permission = CREATE_PROJECT_PERMISSION)
   public ResponseDTO<GitOpsProviderResponseDTO> create(@Valid @NotNull GitOpsProviderDTO gitOpsProviderDTO,
       @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) @DefaultValue(
+          DEFAULT_ORG_IDENTIFIER) @io.harness.accesscontrol.OrgIdentifier String orgIdentifier,
+      @ProjectIdentifier @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @io.harness.accesscontrol.ProjectIdentifier String projectIdentifier,
       @BeanParam GitEntityCreateInfoDTO gitEntityCreateInfo) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(PROJECT, null), CREATE_PROJECT_PERMISSION);
     return ResponseDTO.newResponse(gitopsProviderService.create(gitOpsProviderDTO, accountIdentifier));
   }
 
   @PUT
   @ApiOperation(value = "Updates a GitOpsProvider", nickname = "updateGitOpsProvider")
-  @NGAccessControlCheck(resourceType = PROJECT, permission = EDIT_PROJECT_PERMISSION)
   public ResponseDTO<GitOpsProviderResponseDTO> update(@Valid @NotNull GitOpsProviderDTO gitopsProviderDTO,
       @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) @DefaultValue(
+          DEFAULT_ORG_IDENTIFIER) @io.harness.accesscontrol.OrgIdentifier String orgIdentifier,
+      @ProjectIdentifier @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @io.harness.accesscontrol.ProjectIdentifier String projectIdentifier,
       @BeanParam GitEntityCreateInfoDTO gitEntityCreateInfo) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(PROJECT, null), EDIT_PROJECT_PERMISSION);
     return ResponseDTO.newResponse(gitopsProviderService.update(gitopsProviderDTO, accountIdentifier));
   }
 
   @DELETE
   @Path("{identifier}")
-  @ApiOperation(value = "Deletes a GitOpsProvider", nickname = "deleteGitopsProvider")
+  @ApiOperation(value = "Deletes a GitOpsProvider", nickname = "deleteGitOpsProvider")
   @NGAccessControlCheck(resourceType = PROJECT, permission = DELETE_PROJECT_PERMISSION)
   public ResponseDTO<Boolean> delete(
       @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
@@ -147,6 +165,8 @@ public class GitopsProviderResource {
       @ProjectIdentifier @QueryParam(
           NGCommonEntityConstants.PROJECT_KEY) @io.harness.accesscontrol.ProjectIdentifier String projectIdentifier,
       @EntityIdentifier @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier String identifier) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(PROJECT, null), DELETE_PROJECT_PERMISSION);
     return ResponseDTO.newResponse(
         gitopsProviderService.delete(accountIdentifier, orgIdentifier, projectIdentifier, identifier));
   }
