@@ -1342,20 +1342,21 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
       boolean isTaskNg = !isEmpty(delegateTask.getSetupAbstractions())
           && Boolean.parseBoolean(delegateTask.getSetupAbstractions().get(NG));
 
-      if (isTaskNg) {
-        try {
-          String logStreamingAccountToken = logStreamingAccountTokenCache.get(delegateTask.getAccountId());
-
-          if (isNotBlank(logStreamingAccountToken)) {
-            delegateTaskPackageBuilder.logStreamingToken(logStreamingAccountToken);
-          }
-        } catch (ExecutionException e) {
-          log.warn("Unable to retrieve the log streaming service account token, while preparing delegate task package");
-          throw new InvalidRequestException(e.getMessage() + "\nPlease ensure log service is running.", e);
-        }
-
-        delegateTaskPackageBuilder.logStreamingAbstractions(delegateTask.getLogStreamingAbstractions());
-      }
+      //      if (isTaskNg) {
+      //        try {
+      //          String logStreamingAccountToken = logStreamingAccountTokenCache.get(delegateTask.getAccountId());
+      //
+      //          if (isNotBlank(logStreamingAccountToken)) {
+      //            delegateTaskPackageBuilder.logStreamingToken(logStreamingAccountToken);
+      //          }
+      //        } catch (ExecutionException e) {
+      //          log.warn("Unable to retrieve the log streaming service account token, while preparing delegate task
+      //          package"); throw new InvalidRequestException(e.getMessage() + "\nPlease ensure log service is
+      //          running.", e);
+      //        }
+      //
+      //        delegateTaskPackageBuilder.logStreamingAbstractions(delegateTask.getLogStreamingAbstractions());
+      //      }
 
       if (delegateTask.getData().getParameters() == null || delegateTask.getData().getParameters().length != 1
           || !(delegateTask.getData().getParameters()[0] instanceof TaskParameters)) {

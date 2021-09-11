@@ -131,9 +131,9 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
       default:
         throw new IllegalStateException("Invalid type " + bundle.getDataCollectionType());
     }
-    List<ExecutionCapability> executionCapabilities =
-        EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
-            encryptedDataDetailList, null);
+    List<ExecutionCapability> executionCapabilities = new ArrayList<>();
+    //        EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
+    //            encryptedDataDetailList, null);
     executionCapabilities.addAll(bundle.fetchRequiredExecutionCapabilities(null));
     return createPerpetualTaskExecutionBundle(
         perpetualTaskPack, executionCapabilities, orgIdentifier, projectIdentifier);
