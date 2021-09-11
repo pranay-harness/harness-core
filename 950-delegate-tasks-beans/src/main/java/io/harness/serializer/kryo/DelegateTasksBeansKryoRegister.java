@@ -284,6 +284,7 @@ import io.harness.delegate.task.git.GitFetchResponse;
 import io.harness.delegate.task.git.TaskStatus;
 import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.delegate.task.helm.HelmCommandFlag;
+import io.harness.delegate.task.helm.HelmCommandResponse;
 import io.harness.delegate.task.helm.HelmValuesFetchRequest;
 import io.harness.delegate.task.helm.HelmValuesFetchResponse;
 import io.harness.delegate.task.http.HttpStepResponse;
@@ -901,5 +902,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AwsAsgGetRunningCountData.class, 7190);
     kryo.register(AwsVPC.class, 7319);
     kryo.register(AwsSubnet.class, 7320);
+    kryo.register(HelmCommandResponse.class, 5261);
   }
 }
