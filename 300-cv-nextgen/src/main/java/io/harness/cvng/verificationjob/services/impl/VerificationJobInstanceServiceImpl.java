@@ -317,6 +317,28 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
         .collect(Collectors.toList());
   }
 
+  @Override
+  public List<String> createDemoInstances(List<VerificationJobInstance> verificationJobInstances) {
+    verificationJobInstances.forEach(
+        verificationJobInstance -> { verificationJobInstance.setExecutionStatus(ExecutionStatus.SUCCESS); });
+    List<String> verificationJobInstanceIds = create(verificationJobInstances);
+    verificationJobInstances.forEach(verificationJobInstance -> {
+      VerificationJob verificationJob = verificationJobInstance.getResolvedJob();
+      Preconditions.checkNotNull(verificationJob);
+      List<CVConfig> cvConfigs = getCVConfigsForVerificationJob(verificationJob);
+      Preconditions.checkState(isNotEmpty(cvConfigs), "No config is matching the criteria");
+      cvConfigs.forEach(cvConfig -> {
+        String verificationTaskId = verificationTaskService.create(
+            cvConfig.getAccountId(), cvConfig.getUuid(), verificationJobInstance.getUuid(), cvConfig.getType());
+        verificationJobInstanceAnalysisService.addDemoAnalysisData(
+            verificationTaskId, cvConfig, verificationJobInstance);
+      });
+
+      updateCVConfigMap(verificationJobInstance.getUuid(), cvConfigs);
+    });
+    return verificationJobInstanceIds;
+  }
+
   private void updateStatusIfDone(String verificationJobInstanceId) {
     VerificationJobInstance verificationJobInstance = getVerificationJobInstance(verificationJobInstanceId);
     if (verificationJobInstance.getExecutionStatus() != ExecutionStatus.RUNNING) {
@@ -510,6 +532,7 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
         return ActivityVerificationStatus.NOT_STARTED;
       case FAILED:
       case TIMEOUT:
+      case ABORTED:
         return ActivityVerificationStatus.ERROR;
       case RUNNING:
         return ActivityVerificationStatus.IN_PROGRESS;
@@ -787,6 +810,16 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     UpdateOperations<VerificationJobInstance> updateOperations =
         hPersistence.createUpdateOperations(VerificationJobInstance.class)
             .set(VerificationJobInstanceKeys.executionStatus, ExecutionStatus.RUNNING)
+            .set(VerificationJobInstanceKeys.cvConfigMap, cvConfigMap);
+    Query<VerificationJobInstance> query = hPersistence.createQuery(VerificationJobInstance.class)
+                                               .filter(VerificationJobInstanceKeys.uuid, verificationJobInstanceId);
+    hPersistence.update(query, updateOperations);
+  }
+  private void updateCVConfigMap(String verificationJobInstanceId, List<CVConfig> cvConfigs) {
+    Map<String, CVConfig> cvConfigMap =
+        cvConfigs.stream().collect(Collectors.toMap(CVConfig::getUuid, cvConfig -> cvConfig));
+    UpdateOperations<VerificationJobInstance> updateOperations =
+        hPersistence.createUpdateOperations(VerificationJobInstance.class)
             .set(VerificationJobInstanceKeys.cvConfigMap, cvConfigMap);
     Query<VerificationJobInstance> query = hPersistence.createQuery(VerificationJobInstance.class)
                                                .filter(VerificationJobInstanceKeys.uuid, verificationJobInstanceId);

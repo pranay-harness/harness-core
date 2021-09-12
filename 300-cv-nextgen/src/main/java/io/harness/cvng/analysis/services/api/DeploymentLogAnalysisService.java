@@ -7,6 +7,8 @@ import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.entities.DeploymentLogAnalysis;
 import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.filterParams.DeploymentLogAnalysisFilter;
+import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.ng.beans.PageResponse;
 
 import java.util.List;
@@ -31,4 +33,9 @@ public interface DeploymentLogAnalysisService {
 
   List<DeploymentLogAnalysis> getLatestDeploymentLogAnalysis(
       String accountId, String verificationJobInstanceId, DeploymentLogAnalysisFilter deploymentLogAnalysisFilter);
+
+  String getLogDemoTemplate(String verificationTaskId);
+
+  void addDemoAnalysisData(String verificationTaskId, CVConfig cvConfig,
+      VerificationJobInstance verificationJobInstance, String demoTemplatePath);
 }
