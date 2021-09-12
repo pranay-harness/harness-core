@@ -2978,7 +2978,7 @@ public class DelegateServiceImpl implements software.wings.service.intfc.Delegat
             destroyTheCurrentDelegate(accountId, delegateId, heartbeat.getDelegateConnectionId(), connectionMode);
             delegateConnectionDao.replaceWithNewerConnection(heartbeat.getDelegateConnectionId(), existingConnection);
           } else {
-            log.error("Two delegates with the same identity");
+            log.error("Two delegates with the same identity "+ delegateId);
           }
         } else {
           log.error("Delegate restarted");
