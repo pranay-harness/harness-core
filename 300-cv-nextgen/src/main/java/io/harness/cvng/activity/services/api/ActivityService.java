@@ -15,6 +15,7 @@ import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.ActivityType;
+import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.core.beans.DatasourceTypeDTO;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
 import io.harness.cvng.core.beans.params.PageParams;
@@ -88,4 +89,5 @@ public interface ActivityService {
 
   Long getCount(ServiceEnvironmentParams serviceEnvironmentParams, List<String> changeSourceIdentifiers,
       Instant startTime, Instant endTime, List<ActivityType> activityTypes);
+  String createActivityForDemo(Activity activity, ActivityVerificationStatus verificationStatus);
 }

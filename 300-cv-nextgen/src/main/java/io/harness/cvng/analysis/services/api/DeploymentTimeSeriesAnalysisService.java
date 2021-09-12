@@ -6,6 +6,8 @@ import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
 import io.harness.cvng.analysis.entities.DeploymentTimeSeriesAnalysis;
 import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.filterParams.DeploymentTimeSeriesAnalysisFilter;
+import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,4 +26,9 @@ public interface DeploymentTimeSeriesAnalysisService {
       String verificationJobInstanceId, DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter);
 
   TimeSeriesAnalysisSummary getAnalysisSummary(List<String> verificationJobInstanceIds);
+
+  String getTimeSeriesDemoTemplate(String verificationTaskId);
+
+  void addDemoAnalysisData(String verificationTaskId, CVConfig cvConfig,
+      VerificationJobInstance verificationJobInstance, String demoTemplatePath);
 }

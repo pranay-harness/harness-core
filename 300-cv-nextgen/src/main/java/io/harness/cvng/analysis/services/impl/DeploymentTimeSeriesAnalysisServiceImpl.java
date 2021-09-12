@@ -26,9 +26,16 @@ import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
+import io.harness.serializer.JsonUtils;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.io.Resources;
 import com.google.inject.Inject;
+import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -41,7 +48,6 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
-import javax.ws.rs.BadRequestException;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Sort;
 
@@ -123,6 +129,42 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
         .build();
   }
 
+  @Override
+  public String getTimeSeriesDemoTemplate(String verificationTaskId) {
+    List<DeploymentTimeSeriesAnalysis> deploymentTimeSeriesAnalyses =
+        hPersistence.createQuery(DeploymentTimeSeriesAnalysis.class)
+            .filter(DeploymentTimeSeriesAnalysisKeys.verificationTaskId, verificationTaskId)
+            .asList();
+    return JsonUtils.asJson(deploymentTimeSeriesAnalyses);
+  }
+
+  @Override
+  public void addDemoAnalysisData(String verificationTaskId, CVConfig cvConfig,
+      VerificationJobInstance verificationJobInstance, String demoTemplatePath) {
+    try {
+      String template = Resources.toString(this.getClass().getResource(demoTemplatePath), Charsets.UTF_8);
+      List<DeploymentTimeSeriesAnalysis> deploymentTimeSeriesAnalyses =
+          JsonUtils.asObject(template, new TypeReference<List<DeploymentTimeSeriesAnalysis>>() {});
+      Collections.sort(deploymentTimeSeriesAnalyses, Comparator.comparing(DeploymentTimeSeriesAnalysis::getStartTime));
+      Instant lastStartTime = deploymentTimeSeriesAnalyses.get(0).getStartTime();
+      int minute = 0;
+      for (DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis : deploymentTimeSeriesAnalyses) {
+        deploymentTimeSeriesAnalysis.setVerificationTaskId(verificationTaskId);
+        if (!lastStartTime.equals(deploymentTimeSeriesAnalysis.getStartTime())) {
+          lastStartTime = deploymentTimeSeriesAnalysis.getStartTime();
+          minute++;
+        }
+        deploymentTimeSeriesAnalysis.setStartTime(
+            verificationJobInstance.getStartTime().plus(Duration.ofMinutes(minute)));
+        deploymentTimeSeriesAnalysis.setEndTime(
+            deploymentTimeSeriesAnalysis.getStartTime().plus(Duration.ofMinutes(1)));
+      }
+      hPersistence.save(deploymentTimeSeriesAnalyses);
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
   private List<TransactionMetricInfo> getMetrics(String accountId, String verificationJobInstanceId,
       DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter) {
     List<DeploymentTimeSeriesAnalysis> latestDeploymentTimeSeriesAnalysis =
@@ -197,16 +239,6 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
         .totalItems(transactionMetricInfoList.size())
         .content(returnList)
         .build();
-  }
-
-  private void validateHostName(List<DeploymentTimeSeriesAnalysisDTO.HostInfo> hostSummaries, String hostName) {
-    if (StringUtils.isNotBlank(hostName)
-        && !hostSummaries.stream()
-                .filter(hostSummary -> hostName.equals(hostSummary.getHostName()))
-                .findFirst()
-                .isPresent()) {
-      throw new BadRequestException("Host Name ".concat(hostName).concat(" doesn't exist"));
-    }
   }
 
   private boolean filterHostData(
