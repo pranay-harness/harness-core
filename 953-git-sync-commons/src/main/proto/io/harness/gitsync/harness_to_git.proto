@@ -42,7 +42,7 @@ message FileInfo {
   bool is_new_branch = 6;
   google.protobuf.StringValue base_branch = 7;
   string folder_path = 8;
-  Principal principal = 9;
+  Principal user_principal = 9;
   map<string, string> context_map = 10;
   string yaml = 11;
   io.harness.gitsync.ChangeType change_type = 12;

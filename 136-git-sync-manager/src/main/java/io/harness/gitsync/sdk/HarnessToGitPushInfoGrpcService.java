@@ -1,23 +1,19 @@
 package io.harness.gitsync.sdk;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.gitsync.common.SecurityPrincipal.GIT_SYNC_SERVICE_NAME;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
 import io.harness.exception.ExceptionUtils;
-import io.harness.exception.InvalidRequestException;
 import io.harness.exception.exceptionmanager.ExceptionManager;
 import io.harness.gitsync.BranchDetails;
 import io.harness.gitsync.FileInfo;
 import io.harness.gitsync.HarnessToGitPushInfoServiceGrpc.HarnessToGitPushInfoServiceImplBase;
 import io.harness.gitsync.IsGitSyncEnabled;
-import io.harness.gitsync.Principal;
 import io.harness.gitsync.PushFileResponse;
 import io.harness.gitsync.PushInfo;
 import io.harness.gitsync.PushResponse;
 import io.harness.gitsync.RepoDetails;
-import io.harness.gitsync.ServicePrincipal;
 import io.harness.gitsync.common.service.HarnessToGitHelperService;
 import io.harness.logging.MdcContextSetter;
 import io.harness.manage.GlobalContextManager;
@@ -57,7 +53,7 @@ public class HarnessToGitPushInfoGrpcService extends HarnessToGitPushInfoService
     try (GlobalContextManager.GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard();
          MdcContextSetter ignore1 = new MdcContextSetter(request.getContextMapMap())) {
       log.debug("Grpc request received for pushFile");
-      setPrincipal(request);
+      setUserPrincipal(request);
       pushFileResponse = harnessToGitHelperService.pushFile(request);
       log.debug("Grpc request completed for pushFile");
     } catch (Exception e) {
@@ -77,28 +73,15 @@ public class HarnessToGitPushInfoGrpcService extends HarnessToGitPushInfoService
     responseObserver.onCompleted();
   }
 
-  private void setPrincipal(FileInfo request) {
-    final io.harness.security.dto.Principal principal = getPrincipal(request);
-    GlobalContextManager.upsertGlobalContextRecord(PrincipalContextData.builder().principal(principal).build());
+  private void setUserPrincipal(FileInfo request) {
+    final UserPrincipal userPrincipal = getUserPrincipal(request);
+    GlobalContextManager.upsertGlobalContextRecord(PrincipalContextData.builder().principal(userPrincipal).build());
   }
 
-  private io.harness.security.dto.Principal getPrincipal(FileInfo request) {
-    final Principal principalFromProto = request.getPrincipal();
-    if (principalFromProto.hasUserPrincipal()) {
-      final io.harness.gitsync.UserPrincipal userPrincipal = principalFromProto.getUserPrincipal();
-      return new UserPrincipal(userPrincipal.getUserId().getValue(), userPrincipal.getEmail().getValue(),
-          userPrincipal.getUserName().getValue(), request.getAccountId());
-    } else if (principalFromProto.hasServicePrincipal()) {
-      checkIfServicePrincipalIsValid(request.getPrincipal().getServicePrincipal());
-      return new io.harness.security.dto.ServicePrincipal(request.getPrincipal().getServicePrincipal().getName());
-    }
-    throw new InvalidRequestException("Only service or user principal allowed");
-  }
-
-  private void checkIfServicePrincipalIsValid(ServicePrincipal servicePrincipal) {
-    if (!GIT_SYNC_SERVICE_NAME.equals(servicePrincipal.getName())) {
-      throw new InvalidRequestException("Only git sync service principal is allowed for push");
-    }
+  private UserPrincipal getUserPrincipal(FileInfo request) {
+    final io.harness.gitsync.UserPrincipal principalFromProto = request.getUserPrincipal();
+    return new UserPrincipal(principalFromProto.getUserId().getValue(), principalFromProto.getEmail().getValue(),
+        principalFromProto.getUserName().getValue(), request.getAccountId());
   }
 
   @Override
