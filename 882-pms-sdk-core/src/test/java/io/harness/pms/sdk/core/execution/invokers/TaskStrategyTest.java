@@ -1,18 +1,20 @@
 package io.harness.pms.sdk.core.execution.invokers;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.rule.OwnerRule.PRASHANT;
+import static io.harness.pms.sdk.core.supporter.async.TestTaskStep.TASK_STEP_TYPE;
+import static io.harness.rule.OwnerRule.SAHIL;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
-import io.harness.pms.contracts.execution.ChildrenExecutableResponse;
-import io.harness.pms.contracts.execution.ChildrenExecutableResponse.Child;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
-import io.harness.pms.contracts.execution.events.SpawnChildrenRequest;
+import io.harness.pms.contracts.execution.events.QueueTaskRequest;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.plan.execution.SetupAbstractionKeys;
@@ -21,10 +23,11 @@ import io.harness.pms.sdk.core.execution.InvokerPackage;
 import io.harness.pms.sdk.core.execution.ResumePackage;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
 import io.harness.pms.sdk.core.registries.StepRegistry;
-import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
-import io.harness.pms.sdk.core.supporter.children.TestChildrenStep;
-import io.harness.pms.sdk.core.supporter.children.TestChildrenStepParameters;
+import io.harness.pms.sdk.core.supporter.async.TestStepParameters;
+import io.harness.pms.sdk.core.supporter.async.TestTaskStep;
+import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
 import io.harness.rule.Owner;
+import io.harness.waiter.StringNotifyResponseData;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -37,22 +40,56 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
-public class ChildrenStrategyTest extends PmsSdkCoreTestBase {
+@OwnedBy(HarnessTeam.PIPELINE)
+public class TaskStrategyTest extends PmsSdkCoreTestBase {
   @Mock private SdkNodeExecutionService sdkNodeExecutionService;
-  @Inject @InjectMocks private ChildrenStrategy childrenStrategy;
+  @Mock private AsyncWaitEngine asyncWaitEngine;
+  @Inject @InjectMocks private TaskStrategy taskStrategy;
 
   @Inject private StepRegistry stepRegistry;
 
   @Before
   public void setup() {
-    stepRegistry.register(TestChildrenStep.STEP_TYPE, new TestChildrenStep());
+    stepRegistry.register(TASK_STEP_TYPE, new TestTaskStep());
   }
 
   @Test
-  @Owner(developers = PRASHANT)
+  @Owner(developers = SAHIL)
   @Category(UnitTests.class)
   public void shouldTestStart() {
-    String childNodeId = generateUuid();
+    Ambiance ambiance = Ambiance.newBuilder()
+                            .putAllSetupAbstractions(setupAbstractions())
+                            .setPlanId(generateUuid())
+                            .addLevels(Level.newBuilder()
+                                           .setSetupId(generateUuid())
+                                           .setRuntimeId(generateUuid())
+                                           .setStepType(TASK_STEP_TYPE)
+                                           .setIdentifier(generateUuid())
+                                           .build())
+                            .build();
+    InvokerPackage invokerPackage = InvokerPackage.builder()
+                                        .ambiance(ambiance)
+                                        .executionMode(ExecutionMode.TASK)
+                                        .passThroughData(null)
+                                        .stepParameters(TestStepParameters.builder().param("TEST_PARAM").build())
+                                        .build();
+    ArgumentCaptor<String> planExecutionIdCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<String> nodeExecutionIdCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<QueueTaskRequest> spawnChildRequest = ArgumentCaptor.forClass(QueueTaskRequest.class);
+
+    taskStrategy.start(invokerPackage);
+    verify(sdkNodeExecutionService)
+        .queueTaskRequest(
+            planExecutionIdCaptor.capture(), nodeExecutionIdCaptor.capture(), spawnChildRequest.capture());
+
+    QueueTaskRequest request = spawnChildRequest.getValue();
+    assertThat(request.getStatus()).isEqualTo(Status.TASK_WAITING);
+  }
+
+  @Test
+  @Owner(developers = SAHIL)
+  @Category(UnitTests.class)
+  public void shouldTestResume() {
     Ambiance ambiance = Ambiance.newBuilder()
                             .putAllSetupAbstractions(setupAbstractions())
                             .setPlanId(generateUuid())
@@ -60,74 +97,29 @@ public class ChildrenStrategyTest extends PmsSdkCoreTestBase {
                             .addLevels(Level.newBuilder()
                                            .setSetupId(generateUuid())
                                            .setRuntimeId(generateUuid())
-                                           .setStepType(TestChildrenStep.STEP_TYPE)
+                                           .setStepType(TASK_STEP_TYPE)
                                            .setIdentifier(generateUuid())
                                            .build())
                             .build();
-    InvokerPackage invokerPackage =
-        InvokerPackage.builder()
-            .ambiance(ambiance)
-            .executionMode(ExecutionMode.CHILDREN)
-            .passThroughData(null)
-            .stepParameters(TestChildrenStepParameters.builder().parallelNodeId(childNodeId).build())
-            .build();
+    ResumePackage resumePackage = ResumePackage.builder()
+                                      .ambiance(ambiance)
+                                      .stepParameters(TestStepParameters.builder().param("TEST_PARAM").build())
+                                      .responseDataMap(ImmutableMap.of(generateUuid(),
+                                          StringNotifyResponseData.builder().data("someString").build()))
+                                      .build();
 
-    ArgumentCaptor<String> planExecutionIdCaptor = ArgumentCaptor.forClass(String.class);
-    ArgumentCaptor<String> nodeExecutionIdCaptor = ArgumentCaptor.forClass(String.class);
-    ArgumentCaptor<SpawnChildrenRequest> spawnChildrenRequestArgumentCaptor =
-        ArgumentCaptor.forClass(SpawnChildrenRequest.class);
-
-    childrenStrategy.start(invokerPackage);
-    Mockito.verify(sdkNodeExecutionService, Mockito.times(1))
-        .spawnChildren(planExecutionIdCaptor.capture(), nodeExecutionIdCaptor.capture(),
-            spawnChildrenRequestArgumentCaptor.capture());
-    assertThat(planExecutionIdCaptor.getValue()).isEqualTo(ambiance.getPlanExecutionId());
-    assertThat(nodeExecutionIdCaptor.getValue()).isEqualTo(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
-    SpawnChildrenRequest spawnChildrenRequest = spawnChildrenRequestArgumentCaptor.getValue();
-
-    ChildrenExecutableResponse children = spawnChildrenRequest.getChildren();
-    assertThat(children.getChildrenCount()).isEqualTo(1);
-    Child child = children.getChildrenList().get(0);
-    assertThat(child.getChildNodeId()).isEqualTo(childNodeId);
-  }
-
-  @Test
-  @Owner(developers = PRASHANT)
-  @Category(UnitTests.class)
-  public void shouldTestResume() {
-    String childNodeId = generateUuid();
-    Ambiance ambiance = Ambiance.newBuilder()
-                            .putAllSetupAbstractions(setupAbstractions())
-                            .setPlanId(generateUuid())
-                            .addLevels(Level.newBuilder()
-                                           .setSetupId(generateUuid())
-                                           .setRuntimeId(generateUuid())
-                                           .setStepType(TestChildrenStep.STEP_TYPE)
-                                           .setIdentifier(generateUuid())
-                                           .build())
-                            .build();
-    ResumePackage resumePackage =
-        ResumePackage.builder()
-            .ambiance(ambiance)
-            .stepParameters(TestChildrenStepParameters.builder().parallelNodeId(childNodeId).build())
-            .responseDataMap(ImmutableMap.of(generateUuid(),
-                StepResponseNotifyData.builder().nodeUuid(childNodeId).status(Status.SUCCEEDED).build()))
-            .build();
-
-    childrenStrategy.resume(resumePackage);
     ArgumentCaptor<String> planExecutionIdCaptor = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<String> nodeExecutionIdCaptor = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<StepResponseProto> stepResponseCaptor = ArgumentCaptor.forClass(StepResponseProto.class);
-
+    taskStrategy.resume(resumePackage);
     Mockito.verify(sdkNodeExecutionService, Mockito.times(1))
         .handleStepResponse(
             planExecutionIdCaptor.capture(), nodeExecutionIdCaptor.capture(), stepResponseCaptor.capture());
+
     assertThat(nodeExecutionIdCaptor.getValue()).isEqualTo(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
     assertThat(planExecutionIdCaptor.getValue()).isEqualTo(ambiance.getPlanExecutionId());
-
-    StepResponseProto stepResponseProto = stepResponseCaptor.getValue();
-    assertThat(stepResponseProto.getStatus()).isEqualTo(Status.SUCCEEDED);
   }
+
   private Map<String, String> setupAbstractions() {
     return ImmutableMap.<String, String>builder()
         .put(SetupAbstractionKeys.accountId, generateUuid())
