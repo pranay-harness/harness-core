@@ -72,6 +72,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotBlank;
 import retrofit2.http.Body;
 
@@ -86,6 +87,7 @@ import retrofit2.http.Body;
     })
 @NextGenManagerAuth
 @OwnedBy(HarnessTeam.DX)
+@Slf4j
 public class ConnectorResource {
   private static final String INCLUDE_ALL_CONNECTORS_ACCESSIBLE = "includeAllConnectorsAvailableAtScope";
   private final ConnectorService connectorService;
@@ -313,8 +315,14 @@ public class ConnectorResource {
       @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier) {
-    return ResponseDTO.newResponse(connectorHeartbeatService.getConnectorValidationParams(
-        accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier));
+    Optional<ConnectorValidationParams> connectorValidationParams =
+        connectorHeartbeatService.getConnectorValidationParams(
+            accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+    if (!connectorValidationParams.isPresent()) {
+      throw new InvalidRequestException("No such connector found.");
+    }
+
+    return ResponseDTO.newResponse(connectorValidationParams.get());
   }
 
   // TODO(UTSAV): will be moved to 340-ce-nextgen

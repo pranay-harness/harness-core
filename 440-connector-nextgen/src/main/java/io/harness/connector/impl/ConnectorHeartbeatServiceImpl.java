@@ -17,7 +17,6 @@ import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.AccountId;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
-import io.harness.exception.InvalidRequestException;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.perpetualtask.PerpetualTaskClientContextDetails;
 import io.harness.perpetualtask.PerpetualTaskExecutionBundle;
@@ -113,20 +112,19 @@ public class ConnectorHeartbeatServiceImpl implements ConnectorHeartbeatService 
   }
 
   @Override
-  public ConnectorValidationParams getConnectorValidationParams(
+  public Optional<ConnectorValidationParams> getConnectorValidationParams(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
     final Optional<ConnectorResponseDTO> connectorResponseDTO =
         connectorService.get(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     return connectorResponseDTO
         .map(connectorResponse -> {
           final ConnectorType connectorType = connectorResponse.getConnector().getConnectorType();
-          return connectorValidationParamsProviderMap.get(connectorType.getDisplayName())
-              .getConnectorValidationParams(connectorResponse.getConnector(),
-                  connectorResponse.getConnector().getName(), accountIdentifier, orgIdentifier, projectIdentifier);
+          return Optional.ofNullable(
+              connectorValidationParamsProviderMap.get(connectorType.getDisplayName())
+                  .getConnectorValidationParams(connectorResponse.getConnector(),
+                      connectorResponse.getConnector().getName(), accountIdentifier, orgIdentifier, projectIdentifier));
         })
-        .orElseThrow(()
-                         -> new InvalidRequestException(String.format(CONNECTOR_STRING, connectorIdentifier,
-                             accountIdentifier, orgIdentifier, projectIdentifier)));
+        .orElse(Optional.empty());
   }
 
   @Override
