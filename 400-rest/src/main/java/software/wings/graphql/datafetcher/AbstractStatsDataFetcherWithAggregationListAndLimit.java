@@ -46,6 +46,7 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndLimit<A, F, 
   private static final Integer DEFAULT_LIMIT = Integer.MAX_VALUE - 1;
   private static final Integer DEFAULT_OFFSET = 0;
   private static final boolean DEFAULT_INCLUDE_OTHERS = true;
+  private static final boolean DEFAULT_SKIP_ROUND_OFF = false;
   private static final String GROUP_BY = "groupBy";
   private static final String AGGREGATE_FUNCTION = "aggregateFunction";
   private static final String SORT_CRITERIA = "sortCriteria";
@@ -53,6 +54,7 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndLimit<A, F, 
   private static final String LIMIT = "limit";
   private static final String OFFSET = "offset";
   private static final String INCLUDE_OTHERS = "includeOthers";
+  private static final String SKIP_ROUND_OFF = "skipRoundOff";
   protected static final String EXCEPTION_MSG = "An error has occurred. Please contact the Harness support team.";
   private static final String EXCEPTION_MSG_DELIMITER = ";; ";
 
@@ -68,7 +70,8 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndLimit<A, F, 
       QLData qlData, Integer limit, boolean includeOthers);
 
   protected abstract QLData fetchSelectedFields(String accountId, List<A> aggregateFunction, List<F> filters,
-      List<G> groupBy, List<S> sort, Integer limit, Integer offset, DataFetchingEnvironment dataFetchingEnvironment);
+      List<G> groupBy, List<S> sort, Integer limit, Integer offset, boolean skipRoundOff,
+      DataFetchingEnvironment dataFetchingEnvironment);
 
   @Override
   public Object get(DataFetchingEnvironment dataFetchingEnvironment) throws Exception {
@@ -91,6 +94,7 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndLimit<A, F, 
       final Integer limit = fetchLimit(dataFetchingEnvironment, LIMIT);
       final Integer offset = fetchOffset(dataFetchingEnvironment, OFFSET);
       final boolean includeOthers = fetchIncludeOthers(dataFetchingEnvironment);
+      final boolean skipRoundOff = fetchSkipRoundOff(dataFetchingEnvironment);
 
       String accountId = utils.getAccountId(dataFetchingEnvironment);
       final String accountIdDataToFetch =
@@ -102,8 +106,8 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndLimit<A, F, 
 
            AutoLogContext ignore3 = new GroupByLogContext(groupByClass.getSimpleName(), OVERRIDE_ERROR);
            AutoLogContext ignore4 = new FilterLogContext(filterClass.getSimpleName(), OVERRIDE_ERROR)) {
-        QLData qlData = fetchSelectedFields(
-            accountIdDataToFetch, aggregateFunctions, filters, groupBy, sort, limit, offset, dataFetchingEnvironment);
+        QLData qlData = fetchSelectedFields(accountIdDataToFetch, aggregateFunctions, filters, groupBy, sort, limit,
+            offset, skipRoundOff, dataFetchingEnvironment);
         if (qlData == null) {
           qlData = fetch(accountIdDataToFetch, aggregateFunctions, filters, groupBy, sort, limit, offset);
         }
@@ -180,6 +184,14 @@ public abstract class AbstractStatsDataFetcherWithAggregationListAndLimit<A, F, 
     Object object = dataFetchingEnvironment.getArguments().get(INCLUDE_OTHERS);
     if (object == null) {
       return DEFAULT_INCLUDE_OTHERS;
+    }
+    return (boolean) object;
+  }
+
+  private boolean fetchSkipRoundOff(DataFetchingEnvironment dataFetchingEnvironment) {
+    Object object = dataFetchingEnvironment.getArguments().get(SKIP_ROUND_OFF);
+    if (object == null) {
+      return DEFAULT_SKIP_ROUND_OFF;
     }
     return (boolean) object;
   }

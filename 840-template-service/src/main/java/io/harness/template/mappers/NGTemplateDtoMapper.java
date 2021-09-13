@@ -73,7 +73,7 @@ public class NGTemplateDtoMapper {
             .orgIdentifier(templateConfig.getTemplateInfoConfig().getOrgIdentifier())
             .projectIdentifier(templateConfig.getTemplateInfoConfig().getProjectIdentifier())
             .identifier(templateConfig.getTemplateInfoConfig().getIdentifier())
-            .label(templateConfig.getTemplateInfoConfig().getVersionLabel())
+            .versionLabel(templateConfig.getTemplateInfoConfig().getVersionLabel())
             .build();
     return TemplateEntity.builder()
         .yaml(yaml)
@@ -106,8 +106,7 @@ public class NGTemplateDtoMapper {
     try {
       NGTemplateConfig templateConfig = YamlPipelineUtils.read(templateYaml, NGTemplateConfig.class);
       return toTemplateEntityResponse(accountId, templateConfig.getTemplateInfoConfig().getOrgIdentifier(),
-          templateConfig.getTemplateInfoConfig().getProjectIdentifier(), templateConfig,
-          YamlPipelineUtils.getYamlString(templateConfig));
+          templateConfig.getTemplateInfoConfig().getProjectIdentifier(), templateConfig, templateYaml);
     } catch (IOException e) {
       throw new InvalidRequestException("Cannot create template entity due to " + e.getMessage());
     }
@@ -116,8 +115,7 @@ public class NGTemplateDtoMapper {
   public TemplateEntity toTemplateEntity(String accountId, String orgId, String projectId, String templateYaml) {
     try {
       NGTemplateConfig templateConfig = YamlPipelineUtils.read(templateYaml, NGTemplateConfig.class);
-      return toTemplateEntityResponse(
-          accountId, orgId, projectId, templateConfig, YamlPipelineUtils.getYamlString(templateConfig));
+      return toTemplateEntityResponse(accountId, orgId, projectId, templateConfig, templateYaml);
     } catch (IOException e) {
       throw new InvalidRequestException("Cannot create template entity due to " + e.getMessage());
     }
@@ -128,8 +126,7 @@ public class NGTemplateDtoMapper {
     try {
       NGTemplateConfig templateConfig = YamlPipelineUtils.read(templateYaml, NGTemplateConfig.class);
       validateTemplateYaml(templateConfig, orgId, projectId, templateIdentifier, versionLabel);
-      return toTemplateEntityResponse(
-          accountId, orgId, projectId, templateConfig, YamlPipelineUtils.getYamlString(templateConfig));
+      return toTemplateEntityResponse(accountId, orgId, projectId, templateConfig, templateYaml);
     } catch (IOException e) {
       throw new InvalidRequestException("Cannot create template entity due to " + e.getMessage());
     }

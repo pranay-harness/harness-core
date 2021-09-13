@@ -197,7 +197,7 @@ public class InviteResource {
     InviteAcceptResponse inviteAcceptResponse = inviteService.acceptInvite(jwtToken);
     try {
       String decodedEmail = URLDecoder.decode(email, "UTF-8");
-      URI redirectURL = inviteService.getRedirectUrl(inviteAcceptResponse, decodedEmail, jwtToken);
+      URI redirectURL = inviteService.getRedirectUrl(inviteAcceptResponse, email, decodedEmail, jwtToken);
       return Response.seeOther(redirectURL).build();
     } catch (UnsupportedEncodingException e) {
       throw new InvalidRequestException("Unable to decode email");

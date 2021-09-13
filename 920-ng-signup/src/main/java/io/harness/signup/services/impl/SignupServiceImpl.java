@@ -21,7 +21,6 @@ import io.harness.exception.UserAlreadyPresentException;
 import io.harness.exception.WeakPasswordException;
 import io.harness.exception.WingsException;
 import io.harness.ng.core.dto.AccountDTO;
-import io.harness.ng.core.user.SignupInviteDTO;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserRequestDTO;
 import io.harness.notification.templates.PredefinedTemplate;
@@ -29,6 +28,7 @@ import io.harness.repositories.SignupVerificationTokenRepository;
 import io.harness.signup.data.UtmInfo;
 import io.harness.signup.dto.OAuthSignupDTO;
 import io.harness.signup.dto.SignupDTO;
+import io.harness.signup.dto.SignupInviteDTO;
 import io.harness.signup.dto.VerifyTokenResponseDTO;
 import io.harness.signup.entities.SignupVerificationToken;
 import io.harness.signup.notification.EmailType;
@@ -143,8 +143,14 @@ public class SignupServiceImpl implements SignupService {
     dto.setEmail(dto.getEmail().toLowerCase());
 
     String passwordHash = hashpw(dto.getPassword(), BCrypt.gensalt());
-    SignupInviteDTO signupRequest =
-        SignupInviteDTO.builder().email(dto.getEmail()).passwordHash(passwordHash).intent(dto.getIntent()).build();
+    SignupInviteDTO signupRequest = SignupInviteDTO.builder()
+                                        .email(dto.getEmail())
+                                        .passwordHash(passwordHash)
+                                        .intent(dto.getIntent())
+                                        .signupAction(dto.getSignupAction())
+                                        .edition(dto.getEdition())
+                                        .billingFrequency(dto.getBillingFrequency())
+                                        .build();
     try {
       getResponse(userClient.createNewSignupInvite(signupRequest));
     } catch (InvalidRequestException e) {
@@ -194,14 +200,6 @@ public class SignupServiceImpl implements SignupService {
 
     try {
       UserInfo userInfo = getResponse(userClient.completeSignupInvite(verificationToken.getEmail()));
-      boolean rbacSetupSuccessful =
-          busyPollUntilAccountRBACSetupCompletes(userInfo.getDefaultAccountId(), userInfo.getUuid());
-      if (FALSE.equals(rbacSetupSuccessful)) {
-        log.error(String.format(
-            "User [%s] couldn't be assigned account admin role in stipulated time", verificationToken.getEmail()));
-        throw new SignupException(String.format(
-            "User [%s] couldn't be assigned account admin role in stipulated time", verificationToken.getEmail()));
-      }
       verificationTokenRepository.delete(verificationToken);
 
       sendSucceedTelemetryEvent(
@@ -215,6 +213,8 @@ public class SignupServiceImpl implements SignupService {
           log.error("Failed to generate login url", e);
         }
       });
+
+      waitForRbacSetup(userInfo.getDefaultAccountId(), userInfo.getUuid(), userInfo.getEmail());
       log.info("Completed NG signup for {}", userInfo.getEmail());
       return userInfo;
     } catch (Exception e) {
@@ -223,10 +223,24 @@ public class SignupServiceImpl implements SignupService {
     }
   }
 
-  private boolean busyPollUntilAccountRBACSetupCompletes(String accountId, String userId) {
+  private void waitForRbacSetup(String accountId, String userId, String email) {
+    try {
+      boolean rbacSetupSuccessful = busyPollUntilAccountRBACSetupCompletes(accountId, userId, 100, 200);
+      if (FALSE.equals(rbacSetupSuccessful)) {
+        log.error("User [{}] couldn't be assigned account admin role in stipulated time", email);
+        throw new SignupException("Role assignment executes longer than usual, please try logging-in in few minutes");
+      }
+    } catch (Exception e) {
+      log.error(String.format("Failed to check rbac setup for account [%s]", accountId), e);
+      throw new SignupException("Role assignment executes longer than usual, please try logging-in in few minutes");
+    }
+  }
+
+  private boolean busyPollUntilAccountRBACSetupCompletes(
+      String accountId, String userId, int maxAttempts, long retryDurationInMillis) {
     RetryConfig config = RetryConfig.custom()
-                             .maxAttempts(100)
-                             .waitDuration(Duration.ofMillis(200))
+                             .maxAttempts(maxAttempts)
+                             .waitDuration(Duration.ofMillis(retryDurationInMillis))
                              .retryOnResult(FALSE::equals)
                              .retryExceptions(Exception.class)
                              .ignoreExceptions(IOException.class)
@@ -316,13 +330,6 @@ public class SignupServiceImpl implements SignupService {
     SignupDTO signupDTO = SignupDTO.builder().email(dto.getEmail()).utmInfo(dto.getUtmInfo()).build();
     AccountDTO account = createAccount(signupDTO);
     UserInfo oAuthUser = createOAuthUser(dto, account);
-    boolean rbacSetupSuccessful = busyPollUntilAccountRBACSetupCompletes(account.getIdentifier(), oAuthUser.getUuid());
-    if (FALSE.equals(rbacSetupSuccessful)) {
-      log.error(
-          String.format("User [%s] couldn't be assigned account admin role in stipulated time", oAuthUser.getEmail()));
-      throw new SignupException(
-          String.format("User [%s] couldn't be assigned account admin role in stipulated time", oAuthUser.getEmail()));
-    }
 
     sendSucceedTelemetryEvent(
         dto.getEmail(), dto.getUtmInfo(), account.getIdentifier(), oAuthUser, SignupType.OAUTH_FLOW);
@@ -336,6 +343,8 @@ public class SignupServiceImpl implements SignupService {
         log.error("Failed to generate login url", e);
       }
     });
+
+    waitForRbacSetup(oAuthUser.getDefaultAccountId(), oAuthUser.getUuid(), oAuthUser.getEmail());
     return oAuthUser;
   }
 

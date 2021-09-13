@@ -16,6 +16,5 @@ public interface GitSyncErrorRepository
   GitSyncError findByAccountIdentifierAndCompleteFilePathAndErrorType(
       String accountId, String yamlFilePath, GitSyncErrorType errorType);
 
-  Long removeByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndCompleteFilePathIn(
-      String accountId, String orgId, String projectId, List<String> yamlFilePath);
+  Long removeByAccountIdentifierAndCompleteFilePathIn(String accountId, List<String> yamlFilePath);
 }

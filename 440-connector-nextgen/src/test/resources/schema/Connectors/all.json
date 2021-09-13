@@ -56,6 +56,22 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "ArgoConnector": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "adapterUrl": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "ArtifactoryAuthCredentials": {
       "type": "object",
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -1342,6 +1358,7 @@
             "GcpCloudCost",
             "CEK8sCluster",
             "HttpHelmRepo",
+            "ArgoConnector",
             "NewRelic",
             "Datadog",
             "SumoLogic",
@@ -1363,6 +1380,22 @@
             "properties": {
               "spec": {
                 "$ref": "#/definitions/AppDynamicsConnectorDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "ArgoConnector"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/ArgoConnector"
               }
             }
           }

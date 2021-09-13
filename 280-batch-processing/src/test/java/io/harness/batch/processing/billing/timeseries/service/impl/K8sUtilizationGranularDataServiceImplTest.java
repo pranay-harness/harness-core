@@ -1,10 +1,13 @@
 package io.harness.batch.processing.billing.timeseries.service.impl;
 
-import static io.harness.rule.OwnerRule.HITESH;
 import static io.harness.rule.OwnerRule.ROHIT;
+import static io.harness.rule.OwnerRule.UTSAV;
 
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Answers.RETURNS_DEEP_STUBS;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -12,6 +15,7 @@ import io.harness.CategoryTest;
 import io.harness.batch.processing.billing.timeseries.data.InstanceUtilizationData;
 import io.harness.batch.processing.billing.timeseries.data.K8sGranularUtilizationData;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.utils.TimeUtils;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -24,10 +28,11 @@ import java.sql.SQLException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import lombok.extern.slf4j.Slf4j;
+import org.jooq.DSLContext;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -38,11 +43,13 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
+@Slf4j
 @RunWith(MockitoJUnitRunner.class)
 public class K8sUtilizationGranularDataServiceImplTest extends CategoryTest {
   @Inject @InjectMocks private K8sUtilizationGranularDataServiceImpl k8sUtilizationGranularDataService;
   @Mock private TimeScaleDBService timeScaleDBService;
   @Mock private PreparedStatement statement;
+  @Mock(answer = RETURNS_DEEP_STUBS) private DSLContext dslContext;
   @Mock private TimeUtils utils;
   @Mock ResultSet instanceIdsResultSet, aggregatedDataResultSet;
 
@@ -95,7 +102,7 @@ public class K8sUtilizationGranularDataServiceImplTest extends CategoryTest {
     when(statement.executeQuery(any())).thenReturn(aggregatedDataResultSet);
     Map<String, InstanceUtilizationData> instanceUtilizationDataMap =
         k8sUtilizationGranularDataService.getAggregatedUtilizationData(
-            ACCOUNTID, Collections.singletonList("INSTANCEID"), START_DATE, END_DATE);
+            ACCOUNTID, singletonList("INSTANCEID"), START_DATE, END_DATE);
     assertThat(instanceUtilizationDataMap.get("INSTANCEID").getClusterId()).isEqualTo("CLUSTERID");
   }
 
@@ -105,7 +112,7 @@ public class K8sUtilizationGranularDataServiceImplTest extends CategoryTest {
   public void testGetAggregatedUtilizationDataInvalidDBService() throws SQLException {
     when(timeScaleDBService.getDBConnection()).thenThrow(SQLException.class);
     assertThat(k8sUtilizationGranularDataService.getAggregatedUtilizationData(
-                   ACCOUNTID, Collections.singletonList("instance"), START_DATE, END_DATE))
+                   ACCOUNTID, singletonList("instance"), START_DATE, END_DATE))
         .isNull();
   }
 
@@ -115,17 +122,18 @@ public class K8sUtilizationGranularDataServiceImplTest extends CategoryTest {
   public void testCreateK8sGranularUtilizationData() throws SQLException {
     when(timeScaleDBService.isValid()).thenReturn(true);
     K8sGranularUtilizationData k8sGranularUtilizationData = K8sGranularUtilizationData();
-    boolean insert = k8sUtilizationGranularDataService.create(Collections.singletonList(k8sGranularUtilizationData));
+    boolean insert = k8sUtilizationGranularDataService.create(singletonList(k8sGranularUtilizationData));
     assertThat(insert).isTrue();
   }
 
   @Test
-  @Owner(developers = HITESH)
+  @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void testPurgeK8sGranularUtilizationData() throws SQLException {
-    when(timeScaleDBService.isValid()).thenReturn(true);
-    boolean insert = k8sUtilizationGranularDataService.purgeOldKubernetesUtilData();
-    assertThat(insert).isTrue();
+    when(dslContext.query(anyString()).execute()).thenReturn(10);
+
+    int count = k8sUtilizationGranularDataService.purgeOldKubernetesUtilData();
+    assertThat(count).isEqualTo(10);
   }
 
   @Test
@@ -135,7 +143,7 @@ public class K8sUtilizationGranularDataServiceImplTest extends CategoryTest {
     when(timeScaleDBService.isValid()).thenReturn(true);
     when(statement.executeBatch()).thenThrow(new SQLException());
     K8sGranularUtilizationData k8sGranularUtilizationData = K8sGranularUtilizationData();
-    boolean insert = k8sUtilizationGranularDataService.create(Collections.singletonList(k8sGranularUtilizationData));
+    boolean insert = k8sUtilizationGranularDataService.create(singletonList(k8sGranularUtilizationData));
     assertThat(insert).isFalse();
   }
 
@@ -145,8 +153,19 @@ public class K8sUtilizationGranularDataServiceImplTest extends CategoryTest {
   public void testInvalidDBService() {
     when(timeScaleDBService.isValid()).thenReturn(false);
     K8sGranularUtilizationData k8sGranularUtilizationData = K8sGranularUtilizationData();
-    boolean insert = k8sUtilizationGranularDataService.create(Collections.singletonList(k8sGranularUtilizationData));
+    boolean insert = k8sUtilizationGranularDataService.create(singletonList(k8sGranularUtilizationData));
     assertThat(insert).isFalse();
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testGetAggregatedUtilizationDataOfType() throws Exception {
+    Map<String, InstanceUtilizationData> utilizationDataMap =
+        k8sUtilizationGranularDataService.getAggregatedUtilizationDataOfType(
+            ACCOUNTID, InstanceType.K8S_PVC, Instant.now().toEpochMilli(), Instant.now().toEpochMilli());
+
+    assertThat(utilizationDataMap).isNotNull().isEmpty();
   }
 
   private K8sGranularUtilizationData K8sGranularUtilizationData() {

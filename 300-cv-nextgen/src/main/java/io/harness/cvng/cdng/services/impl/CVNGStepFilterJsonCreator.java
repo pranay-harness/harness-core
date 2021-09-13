@@ -5,6 +5,7 @@ import static io.harness.walktree.visitor.utilities.VisitorParentPathUtils.PATH_
 import io.harness.common.NGExpressionUtils;
 import io.harness.cvng.cdng.beans.CVNGStepInfo;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
+import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
@@ -46,10 +47,18 @@ public class CVNGStepFilterJsonCreator extends GenericStepPMSFilterJsonCreator {
     String serviceIdentifier = CVNGStepUtils.getServiceRefNode(stageLevelYamlNode).asText();
     String envIdentifier = CVNGStepUtils.getEnvRefNode(stageLevelYamlNode).asText();
 
+    ServiceEnvironmentParams serviceEnvironmentParams = ServiceEnvironmentParams.builder()
+                                                            .accountIdentifier(accountIdentifier)
+                                                            .orgIdentifier(orgIdentifier)
+                                                            .projectIdentifier(projectIdentifier)
+                                                            .serviceIdentifier(serviceIdentifier)
+                                                            .environmentIdentifier(envIdentifier)
+                                                            .build();
+
     if (!(NGExpressionUtils.isRuntimeOrExpressionField(serviceIdentifier)
             || NGExpressionUtils.isRuntimeOrExpressionField(envIdentifier))) {
-      MonitoredServiceDTO monitoredServiceDTO = monitoredServiceService.getMonitoredServiceDTO(
-          accountIdentifier, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier);
+      MonitoredServiceDTO monitoredServiceDTO =
+          monitoredServiceService.getMonitoredServiceDTO(serviceEnvironmentParams);
       Preconditions.checkNotNull(monitoredServiceDTO, "MonitoredService does not exist for service %s and env %s",
           serviceIdentifier, envIdentifier);
       Preconditions.checkState(!monitoredServiceDTO.getSources().getHealthSources().isEmpty(),

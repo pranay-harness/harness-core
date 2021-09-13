@@ -8,7 +8,6 @@ import static io.harness.pms.async.plan.PlanNotifyEventConsumer.PMS_PLAN_CREATIO
 import static io.harness.waiter.PmsNotifyEventListener.PMS_ORCHESTRATION;
 
 import static com.google.common.collect.ImmutableMap.of;
-import static java.util.Collections.singletonList;
 
 import io.harness.accesscontrol.NGAccessDeniedExceptionMapper;
 import io.harness.annotations.dev.OwnedBy;
@@ -24,6 +23,7 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionServiceImpl;
+import io.harness.engine.expressions.OrchestrationConstants;
 import io.harness.engine.interrupts.OrchestrationEndInterruptHandler;
 import io.harness.engine.timeouts.TimeoutInstanceRemover;
 import io.harness.event.OrchestrationEndGraphHandler;
@@ -148,6 +148,7 @@ import io.harness.yaml.YamlSdkInitHelper;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -290,7 +291,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
 
     Injector injector = Guice.createInjector(modules);
     registerEventListeners(injector);
-    registerWaitEnginePublishers(appConfig.isUseRedisForOrchestrationNotify(), injector);
+    registerWaitEnginePublishers(injector);
     registerScheduledJobs(injector, appConfig);
     registerCorsFilter(appConfig, environment);
     registerResources(environment, injector);
@@ -463,6 +464,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         .engineSteps(PipelineServiceStepRegistrar.getEngineSteps())
         .engineFacilitators(PipelineServiceFacilitatorRegistrar.getEngineFacilitators())
         .engineAdvisers(PipelineServiceUtilAdviserRegistrar.getEngineAdvisers())
+        .staticAliases(getStaticAliases())
         .engineEventHandlersMap(of())
         .executionSummaryModuleInfoProviderClass(PmsExecutionServiceInfoProvider.class)
         .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
@@ -470,6 +472,21 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         .orchestrationEventPoolConfig(
             ThreadPoolConfig.builder().corePoolSize(10).maxPoolSize(50).idleTime(120L).build())
         .build();
+  }
+
+  @VisibleForTesting
+  public Map<String, String> getStaticAliases() {
+    Map<String, String> aliases = new HashMap<>();
+    aliases.put(OrchestrationConstants.STAGE_SUCCESS,
+        "<+stage.currentStatus> == \"SUCCEEDED\" || <+stage.currentStatus> == \"IGNORE_FAILED\"");
+    aliases.put(OrchestrationConstants.STAGE_FAILURE,
+        "<+stage.currentStatus> == \"FAILED\" || <+stage.currentStatus> == \"ERRORED\" || <+stage.currentStatus> == \"EXPIRED\"");
+    aliases.put(OrchestrationConstants.PIPELINE_FAILURE,
+        "<+pipeline.currentStatus> == \"FAILED\" || <+pipeline.currentStatus> == \"ERRORED\" || <+pipeline.currentStatus> == \"EXPIRED\"");
+    aliases.put(OrchestrationConstants.PIPELINE_SUCCESS,
+        "<+pipeline.currentStatus> == \"SUCCEEDED\" || <+pipeline.currentStatus> == \"IGNORE_FAILED\"");
+    aliases.put(OrchestrationConstants.ALWAYS, "true");
+    return aliases;
   }
 
   private void registerGitSyncSdk(PipelineServiceConfiguration config, Injector injector, Environment environment) {
@@ -519,17 +536,12 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     queueListenerController.register(injector.getInstance(PmsNotifyEventListener.class), 3);
   }
 
-  private void registerWaitEnginePublishers(boolean shouldUseRedis, Injector injector) {
+  private void registerWaitEnginePublishers(Injector injector) {
     final QueuePublisher<NotifyEvent> publisher =
         injector.getInstance(Key.get(new TypeLiteral<QueuePublisher<NotifyEvent>>() {}));
     final NotifyQueuePublisherRegister notifyQueuePublisherRegister =
         injector.getInstance(NotifyQueuePublisherRegister.class);
-    if (shouldUseRedis) {
-      notifyQueuePublisherRegister.register(PMS_ORCHESTRATION, injector.getInstance(PmsNotifyEventPublisher.class));
-    } else {
-      notifyQueuePublisherRegister.register(
-          PMS_ORCHESTRATION, payload -> publisher.send(singletonList(PMS_ORCHESTRATION), payload));
-    }
+    notifyQueuePublisherRegister.register(PMS_ORCHESTRATION, injector.getInstance(PmsNotifyEventPublisher.class));
     notifyQueuePublisherRegister.register(PMS_PLAN_CREATION, injector.getInstance(PlanNotifyEventPublisher.class));
   }
 

@@ -1,7 +1,10 @@
 package io.harness.serializer.kryo;
 
-import io.harness.annotations.dev.HarnessTeam;
+import static io.harness.annotations.dev.HarnessModule._360_CG_MANAGER;
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.config.CCMConfig;
 import io.harness.ccm.license.CeLicenseInfo;
 import io.harness.ccm.license.CeLicenseType;
@@ -39,7 +42,6 @@ import software.wings.api.ClusterElement;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.CommandStepExecutionSummary;
 import software.wings.api.ContainerRollbackRequestElement;
-import software.wings.api.ContainerServiceData;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.ContinuePipelineResponseData;
 import software.wings.api.DeploymentType;
@@ -161,6 +163,7 @@ import software.wings.beans.AwsElbConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureContainerRegistry;
 import software.wings.beans.AzureKubernetesCluster;
+import software.wings.beans.AzureResourceGroup;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.Base;
 import software.wings.beans.BastionConnectionAttributes;
@@ -186,6 +189,7 @@ import software.wings.beans.ExecutionStrategy;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GcpKubernetesCluster;
 import software.wings.beans.GitConfig;
+import software.wings.beans.GitConfig.ProviderType;
 import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitValidationParameters;
@@ -206,7 +210,6 @@ import software.wings.beans.JenkinsSubTaskType;
 import software.wings.beans.JiraConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.LambdaTestEvent;
-import software.wings.beans.LicenseInfo;
 import software.wings.beans.Log;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.NewRelicConfig;
@@ -243,7 +246,6 @@ import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.appmanifest.ManifestFile;
-import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.approval.ConditionalOperator;
 import software.wings.beans.approval.Criteria;
 import software.wings.beans.approval.ServiceNowApprovalParams;
@@ -455,7 +457,6 @@ import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmReleaseHistoryCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmValuesFetchTaskParameters;
-import software.wings.helpers.ext.helm.response.HelmCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
@@ -518,8 +519,6 @@ import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.CustomLogDataCollectionInfo;
 import software.wings.service.impl.analysis.DataCollectionCallback;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
-import software.wings.service.impl.analysis.ElkConnector;
-import software.wings.service.impl.analysis.ElkValidationType;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.analysis.SetupTestNodeData;
@@ -546,7 +545,6 @@ import software.wings.service.impl.aws.model.AwsAmiServiceTrafficShiftAlbSetupRe
 import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesRequest;
 import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesResponse;
 import software.wings.service.impl.aws.model.AwsAmiTrafficShiftAlbSwitchRouteRequest;
-import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountRequest;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountResponse;
 import software.wings.service.impl.aws.model.AwsAsgListAllNamesRequest;
@@ -645,8 +643,6 @@ import software.wings.service.impl.aws.model.AwsS3ListBucketNamesResponse;
 import software.wings.service.impl.aws.model.AwsS3Request;
 import software.wings.service.impl.aws.model.AwsS3Request.AwsS3RequestType;
 import software.wings.service.impl.aws.model.AwsSecurityGroup;
-import software.wings.service.impl.aws.model.AwsSubnet;
-import software.wings.service.impl.aws.model.AwsVPC;
 import software.wings.service.impl.aws.model.embed.AwsLambdaDetails;
 import software.wings.service.impl.aws.model.request.AwsCloudWatchStatisticsRequest;
 import software.wings.service.impl.aws.model.request.AwsLambdaDetailsRequest;
@@ -670,7 +666,6 @@ import software.wings.service.impl.dynatrace.DynaTraceSetupTestNodeData;
 import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
 import software.wings.service.impl.elk.ElkDataCollectionInfo;
 import software.wings.service.impl.elk.ElkDataCollectionInfoV2;
-import software.wings.service.impl.elk.ElkIndexTemplate;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
 import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.service.impl.email.EmailNotificationCallBack;
@@ -717,7 +712,6 @@ import software.wings.settings.validation.SlackConnectivityValidationAttributes;
 import software.wings.settings.validation.SmtpConnectivityValidationAttributes;
 import software.wings.settings.validation.SshConnectionConnectivityValidationAttributes;
 import software.wings.settings.validation.WinRmConnectivityValidationAttributes;
-import software.wings.sm.BarrierStatusData;
 import software.wings.sm.ElementNotifyResponseData;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterruptEffect;
@@ -811,7 +805,8 @@ import io.kubernetes.client.openapi.ApiException;
 import java.time.Instant;
 
 @Deprecated
-@OwnedBy(HarnessTeam.PL)
+@OwnedBy(PL)
+@TargetModule(_360_CG_MANAGER)
 public class ManagerKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
@@ -839,7 +834,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(CommandStateExecutionData.class, 5093);
     kryo.register(CommandStepExecutionSummary.class, 5094);
     kryo.register(ContainerRollbackRequestElement.class, 4010);
-    kryo.register(ContainerServiceData.class, 5157);
     kryo.register(ContainerServiceElement.class, 5095);
     kryo.register(DeploymentType.class, 5096);
     kryo.register(EcsBGSetupData.class, 5611);
@@ -910,7 +904,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AppContainer.class, 5064);
     kryo.register(AppDynamicsConfig.class, 5074);
     kryo.register(ManifestFile.class, 5539);
-    kryo.register(StoreType.class, 5540);
     kryo.register(ArtifactFile.class, 5066);
     kryo.register(ArtifactStreamAttributes.class, 5007);
     kryo.register(AwsConfig.class, 5013);
@@ -1024,7 +1017,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(JiraConfig.class, 5581);
     kryo.register(KubernetesClusterConfig.class, 5244);
     kryo.register(LambdaTestEvent.class, 5604);
-    kryo.register(LicenseInfo.class, 5511);
     kryo.register(NameValuePair.class, 5226);
     kryo.register(NewRelicConfig.class, 5175);
     kryo.register(PcfConfig.class, 5296);
@@ -1122,7 +1114,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(HelmInstallCommandRequest.class, 5259);
     kryo.register(HelmReleaseHistoryCommandRequest.class, 5265);
     kryo.register(HelmRollbackCommandRequest.class, 5268);
-    kryo.register(HelmCommandResponse.class, 5261);
     kryo.register(HelmInstallCommandResponse.class, 5263);
     kryo.register(HelmReleaseHistoryCommandResponse.class, 5266);
     kryo.register(ReleaseInfo.class, 5264);
@@ -1144,8 +1135,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(CustomLogDataCollectionInfo.class, 5492);
     kryo.register(DataCollectionTaskResult.DataCollectionTaskStatus.class, 5185);
     kryo.register(DataCollectionTaskResult.class, 5184);
-    kryo.register(ElkConnector.class, 5216);
-    kryo.register(ElkValidationType.class, 5245);
     kryo.register(LogElement.class, 5486);
     kryo.register(SetupTestNodeData.class, 5530);
     kryo.register(TimeSeries.class, 5312);
@@ -1259,7 +1248,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(DynaTraceSetupTestNodeData.class, 5512);
     kryo.register(DynaTraceTimeSeries.class, 5239);
     kryo.register(ElkDataCollectionInfo.class, 5169);
-    kryo.register(ElkIndexTemplate.class, 5217);
     kryo.register(ElkLogFetchRequest.class, 5376);
     kryo.register(ElkQueryType.class, 5275);
     kryo.register(LogzDataCollectionInfo.class, 5170);
@@ -1396,7 +1384,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(K8sApplyResponse.class, 7187);
     kryo.register(AwsAsgGetRunningCountRequest.class, 7188);
     kryo.register(AwsAsgGetRunningCountResponse.class, 7189);
-    kryo.register(AwsAsgGetRunningCountData.class, 7190);
     kryo.register(StackDriverLogDataCollectionInfo.class, 7191);
     kryo.register(Artifact.class, 7192);
     kryo.register(Artifact.ContentStatus.class, 7193);
@@ -1477,7 +1464,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ContainerCommandExecutionResponse.class, 7274);
     kryo.register(VerificationDataAnalysisResponse.class, 7275);
     kryo.register(ResourceConstraintStatusData.class, 7276);
-    kryo.register(BarrierStatusData.class, 7277);
+
     kryo.register(SetupSweepingOutputPcf.class, 7278);
     kryo.register(InfoVariables.class, 7279);
     kryo.register(SwapRouteRollbackSweepingOutputPcf.class, 7280);
@@ -1490,6 +1477,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AzureArtifactsPackage.class, 7287);
     kryo.register(AzureArtifactsPackageVersion.class, 7288);
     kryo.register(AzureArtifactsCollectionTaskParameters.class, 7289);
+    kryo.register(AzureResourceGroup.class, 40016);
     kryo.register(UtmInfo.class, 7291);
 
     kryo.register(TerraformApplyMarkerParam.class, 7292);
@@ -1519,8 +1507,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(InstanaAnalyzeMetrics.class, 7315);
     kryo.register(InstanaAnalyzeMetrics.Item.class, 7316);
 
-    kryo.register(AwsVPC.class, 7319);
-    kryo.register(AwsSubnet.class, 7320);
     kryo.register(AwsSecurityGroup.class, 7321);
     kryo.register(SkipStateExecutionData.class, 7322);
     kryo.register(KustomizeConfig.class, 7323);
@@ -1704,5 +1690,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(StackStatus.class, 40113);
     kryo.register(EventsDeliveryCallback.class, 40014);
     kryo.register(PerpetualTaskBroadcastEvent.class, 40015);
+    kryo.register(ProviderType.class, 40022);
   }
 }

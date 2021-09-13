@@ -17,6 +17,7 @@ import javax.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
 
 @Data
@@ -34,15 +35,15 @@ public class MonitoredServiceDTO implements YamlDTO {
   @ApiModelProperty(required = true) @NotNull @EntityIdentifier String environmentRef;
   @ApiModelProperty(required = true) @NotNull @Size(max = 128) Map<String, String> tags;
   @Valid Sources sources;
-  @Valid Set<ServiceRef> dependencies;
+  @Valid Set<MonitoredServiceRef> dependencies;
 
   @Data
   @Builder
-  public static class ServiceRef {
-    @EntityIdentifier String serviceRef;
+  public static class MonitoredServiceRef {
+    @NonNull String monitoredServiceIdentifier;
   }
 
-  public Set<ServiceRef> getDependencies() {
+  public Set<MonitoredServiceRef> getDependencies() {
     if (dependencies == null) {
       return new HashSet<>();
     }

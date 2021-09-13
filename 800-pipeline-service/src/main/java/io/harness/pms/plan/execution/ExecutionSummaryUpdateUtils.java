@@ -3,6 +3,7 @@ package io.harness.pms.plan.execution;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionErrorInfo;
+import io.harness.dto.converter.FailureInfoDTOConverter;
 import io.harness.engine.utils.OrchestrationUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.ambiance.Level;
@@ -37,6 +38,9 @@ public class ExecutionSummaryUpdateUtils {
         update.set(
             PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".failureInfo",
             ExecutionErrorInfo.builder().message(nodeExecution.getFailureInfo().getErrorMessage()).build());
+        update.set(
+            PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".failureInfoDTO",
+            FailureInfoDTOConverter.toFailureInfoDTO(nodeExecution.getFailureInfo()));
       }
       if (status == ExecutionStatus.SKIPPED) {
         update.set(
@@ -67,6 +71,8 @@ public class ExecutionSummaryUpdateUtils {
       if (status == ExecutionStatus.FAILED) {
         update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.executionErrorInfo,
             ExecutionErrorInfo.builder().message(nodeExecution.getFailureInfo().getErrorMessage()).build());
+        update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.failureInfo,
+            FailureInfoDTOConverter.toFailureInfoDTO(nodeExecution.getFailureInfo()));
       }
     }
   }

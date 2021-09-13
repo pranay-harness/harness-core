@@ -1,7 +1,6 @@
 package io.harness.cvng.core.beans.change.event.metadata;
 
 import io.harness.cvng.core.types.ChangeSourceType;
-import io.harness.pms.contracts.execution.Status;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AccessLevel;
@@ -20,9 +19,13 @@ import lombok.experimental.SuperBuilder;
 public class HarnessCDEventMetaData extends ChangeEventMetaData {
   long deploymentStartTime;
   long deploymentEndTime;
-  String executionId;
+  String planExecutionId;
+  String pipelineId;
+  String stageStepId;
   String stageId;
-  Status status;
+  String artifactType;
+  String artifactTag;
+  String status;
 
   @Override
   public ChangeSourceType getType() {

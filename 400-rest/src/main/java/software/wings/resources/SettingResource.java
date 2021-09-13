@@ -103,7 +103,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Produces(APPLICATION_JSON)
 @Scope(ResourceType.SETTING)
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._410_CG_REST)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 public class SettingResource {
   private static final String LIMIT = "" + Integer.MAX_VALUE;
   private static final String CUSTOM_MAX_LIMIT = "1200";
@@ -554,7 +554,7 @@ public class SettingResource {
   @ExceptionMetered
   public RestResponse<Map<String, String>> listSubscriptions(
       @QueryParam("accountId") String accountId, @QueryParam("settingId") String settingId) {
-    return new RestResponse(azureResourceService.listSubscriptions(settingId));
+    return new RestResponse(azureResourceService.listSubscriptions(accountId, settingId));
   }
 
   @GET

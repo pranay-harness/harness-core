@@ -41,7 +41,7 @@
         <jacoco.merge.skip>true</jacoco.merge.skip>
         <jacoco.unit.skip>true</jacoco.unit.skip>
         <!-- https://harness.atlassian.net/browse/PL-13380 -->
-        <jetty.upgraded.version>9.4.35.v20201120</jetty.upgraded.version>
+        <jetty.upgraded.version>9.4.41.v20210516</jetty.upgraded.version>
         <jgit.version>5.3.0.201903130848-r</jgit.version>
         <jooq.version>3.14.8</jooq.version>
         <maven.build.timestamp.format>yyMMdd-HHmm</maven.build.timestamp.format>
@@ -876,6 +876,11 @@
                 <groupId>com.palominolabs.metrics</groupId>
                 <artifactId>metrics-guice</artifactId>
                 <version>3.2.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.rabbitmq</groupId>
+                <artifactId>amqp-client</artifactId>
+                <version>4.8.0</version>
             </dependency>
             <dependency>
                 <groupId>com.segment.analytics.java</groupId>

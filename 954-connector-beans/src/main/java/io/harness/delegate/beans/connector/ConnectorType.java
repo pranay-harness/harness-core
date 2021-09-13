@@ -40,6 +40,7 @@ public enum ConnectorType implements EntitySubtype {
   @JsonProperty("GcpCloudCost") GCP_CLOUD_COST("GcpCloudCost"),
   @JsonProperty("CEK8sCluster") CE_KUBERNETES_CLUSTER("CEK8sCluster"),
   @JsonProperty("HttpHelmRepo") HTTP_HELM_REPO("HttpHelmRepo"),
+  @JsonProperty("ArgoConnector") ARGO_CONNECTOR("ArgoConnector"),
   @JsonProperty("NewRelic") NEW_RELIC("NewRelic"),
   @JsonProperty("Datadog") DATADOG("Datadog"),
   @JsonProperty("SumoLogic") SUMOLOGIC("SumoLogic"),

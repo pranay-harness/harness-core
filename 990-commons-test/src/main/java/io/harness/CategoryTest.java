@@ -5,7 +5,6 @@ import static org.junit.rules.RuleChain.outerRule;
 
 import io.harness.data.presentation.ByteCountUtils;
 import io.harness.rule.CategoryTimeoutRule;
-import io.harness.rule.DistributeRule;
 import io.harness.rule.OwnerRule;
 import io.harness.rule.OwnerWatcherRule;
 import io.harness.rule.RepeatRule;
@@ -26,7 +25,6 @@ public class CategoryTest {
 
   @Rule public OwnerWatcherRule ownerWatcherRule = new OwnerWatcherRule();
   @Rule public TestName testName = new TestName();
-  @Rule public DistributeRule distributeRule = new DistributeRule();
 
   private RepeatRule repeatRule = new RepeatRule();
 

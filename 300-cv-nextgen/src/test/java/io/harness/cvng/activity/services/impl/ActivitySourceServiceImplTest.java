@@ -608,7 +608,8 @@ public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
         hPersistence.createQuery(KubernetesActivity.class, excludeAuthority).asList();
     Set<String> nullableFields = Sets.newHashSet(ActivityKeys.activityName, ActivityKeys.verificationJobRuntimeDetails,
         ActivityKeys.activityEndTime, ActivityKeys.tags, ActivityKeys.verificationSummary,
-        ActivityKeys.verificationIteration, ActivityKeys.verificationJobs);
+        ActivityKeys.verificationIteration, ActivityKeys.verificationJobs, ActivityKeys.changeSourceIdentifier,
+        ActivityKeys.eventTime);
     kubernetesActivities.forEach(activity -> {
       List<Field> fields = ReflectionUtils.getAllDeclaredAndInheritedFields(KubernetesActivity.class);
       fields.stream().filter(field -> !nullableFields.contains(field.getName())).forEach(field -> {

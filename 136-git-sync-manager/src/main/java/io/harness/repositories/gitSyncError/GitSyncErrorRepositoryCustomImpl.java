@@ -1,11 +1,9 @@
 package io.harness.repositories.gitSyncError;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.gitsync.gitsyncerror.beans.GitSyncErrorType.GIT_TO_HARNESS;
 
 import static org.springframework.data.mongodb.core.query.Query.query;
-import static org.springframework.data.mongodb.core.query.Update.update;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.git.model.ChangeType;
@@ -26,7 +24,6 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @OwnedBy(DX)
@@ -56,23 +53,24 @@ public class GitSyncErrorRepositoryCustomImpl implements GitSyncErrorRepositoryC
                             .and(GitSyncErrorKeys.errorType)
                             .is(GIT_TO_HARNESS);
     // todo @Deepak: Revisit this file while creating the git error service
-    Update update = update(GitSyncErrorKeys.yamlGitConfigRef, gitConnector)
-                        .set(GitSyncErrorKeys.branchName, branchName)
-                        .set(GitSyncErrorKeys.repoURL, repo)
-                        .set(GitSyncErrorKeys.rootFolder, rootFolder)
-                        .set(GitSyncErrorKeys.fullSyncPath, fullSyncPath)
-                        .set(GitSyncErrorKeys.yamlGitConfigRef, yamlGitConfigId);
-    update.setOnInsert(GitSyncErrorKeys.uuid, generateUuid())
-        .set(GitSyncErrorKeys.accountIdentifier, accountId)
-        .set(GitSyncErrorKeys.errorType, GIT_TO_HARNESS)
-        .set(GitSyncErrorKeys.completeFilePath, yamlFilePath)
-        .set(GitSyncErrorKeys.failureReason, errorMessage != null ? errorMessage : "Reason could not be captured.")
-        .set(GitSyncErrorKeys.projectIdentifier, projectId)
-        .set(GitSyncErrorKeys.orgIdentifier, orgId)
-        .set(GitSyncErrorKeys.additionalErrorDetails, gitSyncErrorDetails)
-        .set(GitSyncErrorKeys.changeType, changeType);
+    /* Update update = update(GitSyncErrorKeys.yamlGitConfigRef, gitConnector)
+                         .set(GitSyncErrorKeys.branchName, branchName)
+                         .set(GitSyncErrorKeys.repoURL, repo)
+                         .set(GitSyncErrorKeys.rootFolder, rootFolder)
+                         .set(GitSyncErrorKeys.fullSyncPath, fullSyncPath)
+                         .set(GitSyncErrorKeys.yamlGitConfigRef, yamlGitConfigId);
+     update.setOnInsert(GitSyncErrorKeys.uuid, generateUuid())
+         .set(GitSyncErrorKeys.accountIdentifier, accountId)
+         .set(GitSyncErrorKeys.errorType, GIT_TO_HARNESS)
+         .set(GitSyncErrorKeys.completeFilePath, yamlFilePath)
+         .set(GitSyncErrorKeys.failureReason, errorMessage != null ? errorMessage : "Reason could not be captured.")
+         .set(GitSyncErrorKeys.projectIdentifier, projectId)
+         .set(GitSyncErrorKeys.orgIdentifier, orgId)
+         .set(GitSyncErrorKeys.additionalErrorDetails, gitSyncErrorDetails)
+         .set(GitSyncErrorKeys.changeType, changeType);
 
-    return mongoTemplate.upsert(query(criteria), update, GitSyncError.class);
+     return mongoTemplate.upsert(query(criteria), update, GitSyncError.class);*/
+    return null;
   }
 
   @Override
@@ -89,11 +87,11 @@ public class GitSyncErrorRepositoryCustomImpl implements GitSyncErrorRepositoryC
                             .is(GitSyncErrorStatus.ACTIVE)
                             .and(GitSyncErrorKeys.branchName)
                             .is(branchName)
-                            .and(GitSyncErrorKeys.repoURL)
+                            .and(GitSyncErrorKeys.repoUrl)
                             .is(repo);
-    if (rootFolder != null) {
+    /*if (rootFolder != null) {
       criteria.and(GitSyncErrorKeys.rootFolder).is(rootFolder);
-    }
+    }*/
 
     return mongoTemplate.find(query(criteria), GitSyncError.class);
   }

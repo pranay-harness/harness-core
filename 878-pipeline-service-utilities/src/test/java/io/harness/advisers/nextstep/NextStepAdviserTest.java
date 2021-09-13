@@ -1,8 +1,12 @@
 package io.harness.advisers.nextstep;
 
+import static io.harness.pms.contracts.execution.Status.ABORTED;
+import static io.harness.pms.contracts.execution.Status.FAILED;
 import static io.harness.rule.OwnerRule.BRIJESH;
 
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 
@@ -15,6 +19,7 @@ import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.sdk.core.adviser.AdvisingEvent;
+import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
@@ -53,5 +58,18 @@ public class NextStepAdviserTest extends CategoryTest {
     AdviserResponse adviserResponse = nextStepAdviser.onAdviseEvent(advisingEvent);
     assertEquals(adviserResponse.getType(), AdviseType.NEXT_STEP);
     assertEquals(adviserResponse.getNextStepAdvise().getNextNodeId(), nextNodeId);
+  }
+
+  @Test
+  @Owner(developers = BRIJESH)
+  @Category(UnitTests.class)
+  public void testCanAdvice() {
+    AdvisingEvent advisingEvent = AdvisingEvent.builder().adviserParameters(null).toStatus(ABORTED).build();
+    assertFalse(nextStepAdviser.canAdvise(advisingEvent));
+    doReturn(OptionalSweepingOutput.builder().build())
+        .when(executionSweepingOutputService)
+        .resolveOptional(any(), any());
+    advisingEvent = AdvisingEvent.builder().adviserParameters(null).toStatus(FAILED).build();
+    assertTrue(nextStepAdviser.canAdvise(advisingEvent));
   }
 }

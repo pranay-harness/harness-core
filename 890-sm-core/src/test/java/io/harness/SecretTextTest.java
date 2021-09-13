@@ -2,6 +2,7 @@ package io.harness;
 
 import static io.harness.beans.SecretManagerCapabilities.CREATE_PARAMETERIZED_SECRET;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.MEENAKSHI;
 import static io.harness.rule.OwnerRule.UTKARSH;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -10,6 +11,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.MigrateSecretTask;
 import io.harness.beans.SecretManagerConfig;
@@ -44,6 +47,7 @@ import io.harness.security.encryption.SecretManagerType;
 import io.harness.serializer.KryoSerializer;
 
 import software.wings.beans.KmsConfig;
+import software.wings.beans.LocalEncryptionConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.security.EnvFilter;
 import software.wings.security.GenericEntityFilter;
@@ -59,6 +63,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 
+@OwnedBy(HarnessTeam.PL)
 public class SecretTextTest extends SMCoreTestBase {
   @Inject private HPersistence hPersistence;
   @Inject private KryoSerializer kryoSerializer;
@@ -153,6 +158,15 @@ public class SecretTextTest extends SMCoreTestBase {
         .build();
   }
 
+  private LocalEncryptionConfig getLocalEncryptionConfig(String accountId) {
+    return LocalEncryptionConfig.builder()
+        .uuid(accountId)
+        .accountId(accountId)
+        .scopedToAccount(false)
+        .usageRestrictions(UsageRestrictions.builder().build())
+        .build();
+  }
+
   @Test
   @Owner(developers = UTKARSH)
   @Category(UnitTests.class)
@@ -192,6 +206,45 @@ public class SecretTextTest extends SMCoreTestBase {
                 .secretScopes(secretText)
                 .inheritScopesFromSM(secretText.isInheritScopesFromSM())
                 .build());
+    verify(kmsEncryptorsRegistry, times(1)).getKmsEncryptor(config);
+    verify(kmsEncryptor, times(1)).encryptSecret(accountId, secretText.getValue(), config);
+    ArgumentCaptor<EncryptedData> captor = ArgumentCaptor.forClass(EncryptedData.class);
+    verify(mockSecretsAuditService, times(1)).logSecretCreateEvent(captor.capture());
+    EncryptedData capturedRecord = captor.getValue();
+    assertThat(capturedRecord).isNotNull();
+    assertThat(capturedRecord.getUuid()).isEqualTo(encryptedData.getUuid());
+  }
+
+  @Test
+  @Owner(developers = MEENAKSHI)
+  @Category(UnitTests.class)
+  public void testEncryptSecret() {
+    String accountId = generateUuid();
+    SecretText secretText = getInlineSecretText();
+    SecretManagerConfig config = getLocalEncryptionConfig(accountId);
+    EncryptedRecordData encryptedRecordData = EncryptedRecordData.builder()
+                                                  .encryptedValue(generateUuid().toCharArray())
+                                                  .encryptionKey(generateUuid())
+                                                  .build();
+
+    KmsEncryptor kmsEncryptor = mock(KmsEncryptor.class);
+    when(kmsEncryptor.encryptSecret(accountId, secretText.getValue(), config)).thenReturn(encryptedRecordData);
+    when(kmsEncryptorsRegistry.getKmsEncryptor(config)).thenReturn(kmsEncryptor);
+    when(mockSecretManagerConfigService.getSecretManager(accountId, accountId)).thenReturn(config);
+    EncryptedData encryptedData = secretService.encryptSecret(accountId, secretText, false);
+    assertThat(encryptedData).isNotNull();
+    assertThat(encryptedData.getName()).isEqualTo(secretText.getName());
+    assertThat(encryptedData.getAccountId()).isEqualTo(accountId);
+    assertThat(encryptedData.getEncryptionKey()).isEqualTo(encryptedRecordData.getEncryptionKey());
+    assertThat(encryptedData.getEncryptedValue()).isEqualTo(encryptedRecordData.getEncryptedValue());
+    assertThat(encryptedData.isScopedToAccount()).isEqualTo(secretText.isScopedToAccount());
+    assertThat(encryptedData.isInheritScopesFromSM()).isEqualTo(secretText.isInheritScopesFromSM());
+    assertThat(encryptedData.getUsageRestrictions()).isEqualTo(secretText.getUsageRestrictions());
+    assertThat(encryptedData.getKmsId()).isEqualTo(accountId);
+    assertThat(encryptedData.getEncryptionType()).isEqualTo(config.getEncryptionType());
+    assertThat(encryptedData.isInlineSecret()).isTrue();
+
+    verify(mockSecretManagerConfigService, times(1)).getSecretManager(accountId, accountId);
     verify(kmsEncryptorsRegistry, times(1)).getKmsEncryptor(config);
     verify(kmsEncryptor, times(1)).encryptSecret(accountId, secretText.getValue(), config);
     ArgumentCaptor<EncryptedData> captor = ArgumentCaptor.forClass(EncryptedData.class);

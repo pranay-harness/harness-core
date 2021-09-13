@@ -62,6 +62,8 @@ import io.harness.pms.expressions.PMSExpressionEvaluatorProvider;
 import io.harness.pms.jira.JiraStepHelperServiceImpl;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetServiceImpl;
+import io.harness.pms.opa.service.PMSOpaService;
+import io.harness.pms.opa.service.PMSOpaServiceImpl;
 import io.harness.pms.outbox.PipelineOutboxEventHandler;
 import io.harness.pms.pipeline.mappers.PipelineFilterPropertiesMapper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
@@ -205,15 +207,20 @@ public class PipelineServiceModule extends AbstractModule {
     install(OrchestrationStepsModule.getInstance(configuration.getOrchestrationStepConfig()));
     install(OrchestrationVisualizationModule.getInstance(configuration.getEventsFrameworkConfiguration()));
     install(PrimaryVersionManagerModule.getInstance());
-    install(new DelegateServiceDriverGrpcClientModule(configuration.getManagerServiceSecret(),
-        configuration.getManagerTarget(), configuration.getManagerAuthority(), true));
+    if (configuration.isUseDms()) {
+      install(new DelegateServiceDriverGrpcClientModule(configuration.getDmsGrpcClient().getSecret(),
+          configuration.getDmsGrpcClient().getTarget(), configuration.getDmsGrpcClient().getAuthority(), true));
+    } else {
+      install(new DelegateServiceDriverGrpcClientModule(configuration.getManagerServiceSecret(),
+          configuration.getManagerTarget(), configuration.getManagerAuthority(), true));
+    }
+
     install(new ConnectorResourceClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getNgManagerServiceSecret(), MANAGER.getServiceId(), ClientMode.PRIVILEGED));
     install(new SecretNGManagerClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
     install(NGTriggersModule.getInstance(configuration.getTriggerConfig(),
-        configuration.getPipelineServiceClientConfig(), configuration.getAuditClientConfig(),
-        configuration.getPipelineServiceSecret(), configuration.isEnableAudit()));
+        configuration.getPipelineServiceClientConfig(), configuration.getPipelineServiceSecret()));
     install(PersistentLockModule.getInstance());
     install(TimeModule.getInstance());
     install(FiltersModule.getInstance());
@@ -258,6 +265,7 @@ public class PipelineServiceModule extends AbstractModule {
     bind(PMSExecutionService.class).to(PMSExecutionServiceImpl.class);
     bind(PMSYamlSchemaService.class).to(PMSYamlSchemaServiceImpl.class);
     bind(ApprovalNotificationHandler.class).to(ApprovalNotificationHandlerImpl.class);
+    bind(PMSOpaService.class).to(PMSOpaServiceImpl.class);
     bind(ApprovalYamlSchemaService.class).to(ApprovalYamlSchemaServiceImpl.class).in(Singleton.class);
     bind(FeatureFlagYamlService.class).to(FeatureFlagYamlServiceImpl.class).in(Singleton.class);
 

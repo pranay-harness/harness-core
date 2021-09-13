@@ -12,4 +12,11 @@ import lombok.experimental.SuperBuilder;
 public class ServiceEnvironmentParams extends ProjectParams {
   @NonNull String serviceIdentifier;
   @NonNull String environmentIdentifier;
+
+  public static ServiceEnvironmentParamsBuilder builderWithProjectParams(ProjectParams projectParams) {
+    return ServiceEnvironmentParams.builder()
+        .orgIdentifier(projectParams.getOrgIdentifier())
+        .accountIdentifier(projectParams.getAccountIdentifier())
+        .projectIdentifier(projectParams.getProjectIdentifier());
+  }
 }

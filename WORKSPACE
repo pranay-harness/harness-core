@@ -10,7 +10,7 @@ http_archive(
     name = "com_github_bazelbuild_buildtools",
     sha256 = "932160d5694e688cb7a05ac38efba4b9a90470c75f39716d85fb1d2f95eec96d",
     strip_prefix = "buildtools-4.0.1",
-    url = "https://github.com/bazelbuild/buildtools/archive/refs/tags/4.0.1.zip",
+    url = "https://harness.jfrog.io/artifactory/bazel-buildtools-github/archive/refs/tags/4.0.1.zip",
 )
 
 # Download the Go rules
@@ -18,8 +18,8 @@ http_archive(
     name = "io_bazel_rules_go",
     sha256 = "7904dbecbaffd068651916dce77ff3437679f9d20e1a7956bff43826e7645fcc",
     urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/rules_go/releases/download/v0.25.1/rules_go-v0.25.1.tar.gz",
-        "https://github.com/bazelbuild/rules_go/releases/download/v0.25.1/rules_go-v0.25.1.tar.gz",
+        #"https://mirror.bazel.build/github.com/bazelbuild/rules_go/releases/download/v0.25.1/rules_go-v0.25.1.tar.gz",
+        "https://harness.jfrog.io/artifactory/rules-go-github/download/v0.25.1/rules_go-v0.25.1.tar.gz",
     ],
 )
 
@@ -27,8 +27,8 @@ http_archive(
     name = "bazel_gazelle",
     sha256 = "222e49f034ca7a1d1231422cdb67066b885819885c356673cb1f72f748a3c9d4",
     urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/bazel-gazelle/releases/download/v0.22.3/bazel-gazelle-v0.22.3.tar.gz",
-        "https://github.com/bazelbuild/bazel-gazelle/releases/download/v0.22.3/bazel-gazelle-v0.22.3.tar.gz",
+        #"https://mirror.bazel.build/github.com/bazelbuild/bazel-gazelle/releases/download/v0.22.3/bazel-gazelle-v0.22.3.tar.gz",
+        "https://harness.jfrog.io/artifactory/bazel-gazelle-github/download/v0.22.3/bazel-gazelle-v0.22.3.tar.gz",
     ],
 )
 
@@ -46,7 +46,7 @@ http_archive(
     name = "rules_proto_grpc",
     sha256 = "5f0f2fc0199810c65a2de148a52ba0aff14d631d4e8202f41aff6a9d590a471b",
     strip_prefix = "rules_proto_grpc-1.0.2",
-    urls = ["https://github.com/rules-proto-grpc/rules_proto_grpc/archive/1.0.2.tar.gz"],
+    urls = ["https://harness.jfrog.io/artifactory/rules-proto-grpc-github/archive/1.0.2.tar.gz"],
 )
 
 load("@rules_proto_grpc//:repositories.bzl", "rules_proto_grpc_repos", "rules_proto_grpc_toolchains")
@@ -3522,7 +3522,7 @@ http_archive(
     strip_prefix = "rules_rust-f37b9d6a552e9412285e627f30cb124e709f4f7a",
     urls = [
         # Master branch as of 2021-01-27
-        "https://github.com/bazelbuild/rules_rust/archive/f37b9d6a552e9412285e627f30cb124e709f4f7a.tar.gz",
+        "https://harness.jfrog.io/artifactory/rules-rust-github/archive/f37b9d6a552e9412285e627f30cb124e709f4f7a.tar.gz",
     ],
 )
 
@@ -4209,7 +4209,7 @@ http_archive(
     name = "rules_spring",
     sha256 = "9385652bb92d365675d1ca7c963672a8091dc5940a9e307104d3c92e7a789c8e",
     urls = [
-        "https://github.com/salesforce/rules_spring/releases/download/2.1.4/rules-spring-2.1.4.zip",
+        "https://harness.jfrog.io/artifactory/rules-spring-github/download/2.1.4/rules-spring-2.1.4.zip",
     ],
 )
 
@@ -4219,7 +4219,7 @@ http_archive(
     name = "rules_jvm_external",
     sha256 = "f36441aa876c4f6427bfb2d1f2d723b48e9d930b62662bf723ddfb8fc80f0140",
     strip_prefix = "rules_jvm_external-%s" % RULES_JVM_EXTERNAL_TAG,
-    url = "https://github.com/bazelbuild/rules_jvm_external/archive/%s.zip" % RULES_JVM_EXTERNAL_TAG,
+    url = "https://harness.jfrog.io/artifactory/rules-jvm-external-github/archive/%s.zip" % RULES_JVM_EXTERNAL_TAG,
 )
 
 load("@rules_jvm_external//:defs.bzl", "maven_install")
@@ -4242,6 +4242,7 @@ plain_artifacts = [
     "com.azure:azure-storage-common:12.9.0",
     "com.bertramlabs.plugins:hcl4j:0.1.7",
     "com.bettercloud:vault-java-driver:4.0.0",
+    "com.rabbitmq:amqp-client:jar:4.8.0",
     "com.bugsnag:bugsnag:3.6.2",
     "com.carrotsearch:hppc:0.8.1",
     "com.coveo:saml-client:3.0.2",
@@ -4469,7 +4470,6 @@ plain_artifacts = [
     "de.jkeylockmanager:jkeylockmanager:2.1.0",
     "dk.brics.automaton:automaton:1.11-8",
     "dnsjava:dnsjava:2.1.8",
-    "dom4j:dom4j:1.6.1",
     "es.moki.ratelimitj:ratelimitj-core:0.6.0",
     "es.moki.ratelimitj:ratelimitj-inmemory:0.6.0",
     "guru.nidi.com.kitfox:svgSalamander:1.1.3",
@@ -4659,7 +4659,7 @@ plain_artifacts = [
     "org.apache.commons:commons-lang3:3.7",
     "org.apache.commons:commons-math3:3.6.1",
     "org.apache.commons:commons-text:1.2",
-    "org.apache.cxf:cxf-core:3.3.5",
+    "org.apache.cxf:cxf-core:3.3.10",
     "org.apache.cxf:cxf-rt-bindings-soap:3.3.5",
     "org.apache.cxf:cxf-rt-bindings-xml:3.3.5",
     "org.apache.cxf:cxf-rt-databinding-jaxb:3.3.5",
@@ -4736,28 +4736,28 @@ plain_artifacts = [
     "org.conscrypt:conscrypt-openjdk-uber:2.5.1",
     "org.coursera:metrics-datadog:1.1.13",
     "org.cryptacular:cryptacular:1.1.4",
-    "org.eclipse.jetty.http2:http2-common:9.4.35.v20201120",
-    "org.eclipse.jetty.http2:http2-hpack:9.4.35.v20201120",
-    "org.eclipse.jetty.http2:http2-xxxxxxxx9.4.35.v20201120",
+    "org.eclipse.jetty.http2:http2-common:9.4.41.v20210516",
+    "org.eclipse.jetty.http2:http2-hpack:9.4.41.v20210516",
+    "org.eclipse.jetty.http2:http2-xxxxxxxx9.4.41.v20210516",
     "org.eclipse.jetty.toolchain.setuid:jetty-setuid-java:1.0.3",
-    "org.eclipse.jetty.websocket:websocket-api:9.4.35.v20201120",
-    "org.eclipse.jetty.websocket:websocket-client:9.4.35.v20201120",
-    "org.eclipse.jetty.websocket:websocket-common:9.4.35.v20201120",
-    "org.eclipse.jetty.websocket:websocket-xxxxxxxx9.4.35.v20201120",
-    "org.eclipse.jetty.websocket:websocket-servlet:9.4.35.v20201120",
-    "org.eclipse.jetty:jetty-alpn-openjdk8-xxxxxxxx9.4.35.v20201120",
-    "org.eclipse.jetty:jetty-alpn-xxxxxxxx9.4.35.v20201120",
-    "org.eclipse.jetty:jetty-client:9.4.35.v20201120",
-    "org.eclipse.jetty:jetty-continuation:9.4.35.v20201120",
-    "org.eclipse.jetty:jetty-http:9.4.35.v20201120",
-    "org.eclipse.jetty:jetty-io:9.4.35.v20201120",
-    "org.eclipse.jetty:jetty-security:9.4.35.v20201120",
-    "org.eclipse.jetty:jetty-xxxxxxxx9.4.35.v20201120",
-    "org.eclipse.jetty:jetty-servlet:9.4.35.v20201120",
-    "org.eclipse.jetty:jetty-servlets:9.4.35.v20201120",
-    "org.eclipse.jetty:jetty-util:9.4.35.v20201120",
-    "org.eclipse.jetty:jetty-webapp:9.4.35.v20201120",
-    "org.eclipse.jetty:jetty-xml:9.4.35.v20201120",
+    "org.eclipse.jetty.websocket:websocket-api:9.4.41.v20210516",
+    "org.eclipse.jetty.websocket:websocket-client:9.4.41.v20210516",
+    "org.eclipse.jetty.websocket:websocket-common:9.4.41.v20210516",
+    "org.eclipse.jetty.websocket:websocket-xxxxxxxx9.4.41.v20210516",
+    "org.eclipse.jetty.websocket:websocket-servlet:9.4.41.v20210516",
+    "org.eclipse.jetty:jetty-alpn-openjdk8-xxxxxxxx9.4.41.v20210516",
+    "org.eclipse.jetty:jetty-alpn-xxxxxxxx9.4.41.v20210516",
+    "org.eclipse.jetty:jetty-client:9.4.41.v20210516",
+    "org.eclipse.jetty:jetty-continuation:9.4.41.v20210516",
+    "org.eclipse.jetty:jetty-http:9.4.41.v20210516",
+    "org.eclipse.jetty:jetty-io:9.4.41.v20210516",
+    "org.eclipse.jetty:jetty-security:9.4.41.v20210516",
+    "org.eclipse.jetty:jetty-xxxxxxxx9.4.41.v20210516",
+    "org.eclipse.jetty:jetty-servlet:9.4.41.v20210516",
+    "org.eclipse.jetty:jetty-servlets:9.4.41.v20210516",
+    "org.eclipse.jetty:jetty-util:9.4.41.v20210516",
+    "org.eclipse.jetty:jetty-webapp:9.4.41.v20210516",
+    "org.eclipse.jetty:jetty-xml:9.4.41.v20210516",
     "org.eclipse.jgit:org.eclipse.jgit.http.apache:5.3.0.201903130848-r",
     "org.eclipse.jgit:org.eclipse.jgit:5.3.0.201903130848-r",
     "org.elasticsearch.client:elasticsearch-rest-client:7.7.0",
@@ -4913,6 +4913,12 @@ plain_artifacts = [
     "xml-apis:xml-apis:1.4.01",
     "xml-resolver:xml-resolver:1.2",
     "xpp3:xpp3:1.1.3.3",
+    "io.swagger.core.v3:swagger-jaxrs2:2.1.2",
+    "io.swagger.core.v3:swagger-jaxrs2-servlet-initializer-v2:2.1.2",
+    "io.swagger.core.v3:swagger-core:2.1.2",
+    "io.swagger.core.v3:swagger-annotations:2.1.2",
+    "io.swagger.core.v3:swagger-models:2.1.2",
+    "io.swagger.core.v3:swagger-integration:2.1.2",
 ]
 
 amazon_artifacts = [
@@ -5061,17 +5067,7 @@ maven_install(
         "org.mongodb:mongodb-driver": "@maven//:org_mongodb_mongo_java_driver",
     },
     repositories = [
-        "https://repo1.maven.org/maven2",
-        "https://dl.bintray.com/michaelklishin/maven",
-        "https://repo.spring.io/plugins-release",
-        "https://palantir.bintray.com/releases",
-        "https://oss.sonatype.org/content/repositories/releases",
-        "https://jitpack.io",
-        "https://jcenter.bintray.com",
-        "https://github.com/bkper/mvn-repo/raw/master/releases",
-        "http://packages.confluent.io/maven",
-        "https://harness.jfrog.io/harness/thirdparty-annonymous",
-        "https://harness.jfrog.io/harness/harness-public",
+        "https://harness.jfrog.io/artifactory/portal-maven",
     ],
     version_conflict_policy = "pinned",
 )
@@ -5087,16 +5083,7 @@ maven_install(
         "org.antlr:antlr4-runtime:4.8",
     ],
     repositories = [
-        "https://repo1.maven.org/maven2",
-        "https://harness.jfrog.io/harness/thirdparty-annonymous",
-        "https://dl.bintray.com/michaelklishin/maven",
-        "https://repo.spring.io/plugins-release",
-        "https://palantir.bintray.com/releases",
-        "https://oss.sonatype.org/content/repositories/releases",
-        "https://jitpack.io",
-        "https://jcenter.bintray.com",
-        "https://github.com/bkper/mvn-repo/raw/master/releases",
-        "http://packages.confluent.io/maven",
+        "https://harness.jfrog.io/artifactory/portal-maven",
     ],
     version_conflict_policy = "pinned",
 )
@@ -5108,16 +5095,7 @@ maven_install(
         "com.squareup.okhttp3:okhttp:4.9.0",
     ],
     repositories = [
-        "https://repo1.maven.org/maven2",
-        "https://harness.jfrog.io/harness/thirdparty-annonymous",
-        "https://dl.bintray.com/michaelklishin/maven",
-        "https://repo.spring.io/plugins-release",
-        "https://palantir.bintray.com/releases",
-        "https://oss.sonatype.org/content/repositories/releases",
-        "https://jitpack.io",
-        "https://jcenter.bintray.com",
-        "https://github.com/bkper/mvn-repo/raw/master/releases",
-        "http://packages.confluent.io/maven",
+        "https://harness.jfrog.io/artifactory/portal-maven",
     ],
     version_conflict_policy = "pinned",
 )
@@ -5137,8 +5115,7 @@ maven_install(
         "com.github.sevntu-checkstyle:sevntu-checks:1.35.0",
     ],
     repositories = [
-        "https://repo1.maven.org/maven2",
-        "https://harness.jfrog.io/harness/thirdparty-annonymous",
+        "https://harness.jfrog.io/artifactory/portal-maven",
     ],
 )
 
@@ -5154,7 +5131,7 @@ exports_files(["WORKSPACE"], visibility = ["//visibility:public"])
 """,
     sha256 = "f39b523c724d0e0047d238eb2bb17a9565a60574cf651206c867ee5fc000ab43",
     strip_prefix = "jdk8u242-b08",
-    urls = ["https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u242-b08/OpenJDK8U-jdk_x64_linux_hotspot_8u242b08.tar.gz"],
+    urls = ["https://harness.jfrog.io/artifactory/adoptjdk8u242-b08-github/download/jdk8u242-b08/OpenJDK8U-jdk_x64_linux_hotspot_8u242b08.tar.gz"],
 )
 
 http_archive(
@@ -5169,7 +5146,7 @@ java_runtime(
 """,
     sha256 = "06675b7d65bce0313ee1f2e888dd44267e8afeced75e0b39b5ad1f5fdff54e0b",
     strip_prefix = "jdk8u242-b08",
-    urls = ["https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u242-b08/OpenJDK8U-jdk_x64_mac_hotspot_8u242b08.tar.gz"],
+    urls = ["https://harness.jfrog.io/artifactory/adoptjdk8u242-b08-github/download/jdk8u242-b08/OpenJDK8U-jdk_x64_mac_hotspot_8u242b08.tar.gz"],
 )
 
 load("//tools/bazel/pmd:toolchains.bzl", "rules_pmd_toolchains")
@@ -5207,7 +5184,7 @@ filegroup(
     ],
     sha256 = "991c3f8ac97992f3d308fefeb03a64db462574eadbff34ce8bc5bb583d9903ff",
     strip_prefix = "Python-3.9.1",
-    urls = ["https://www.python.org/ftp/python/3.9.1/Python-3.9.1.tar.xz"],
+    urls = ["https://harness.jfrog.io/artifactory/python-remote/3.9.1/Python-3.9.1.tar.xz"],
 )
 
 register_toolchains("//:py_toolchain")
@@ -5218,7 +5195,7 @@ http_archive(
     name = "io_bazel_rules_docker",
     sha256 = "59d5b42ac315e7eadffa944e86e90c2990110a1c8075f1cd145f487e999d22b3",
     strip_prefix = "rules_docker-0.17.0",
-    urls = ["https://github.com/bazelbuild/rules_docker/releases/download/v0.17.0/rules_docker-v0.17.0.tar.gz"],
+    urls = ["https://harness.jfrog.io/artifactory/rules-docker-github/download/v0.17.0/rules_docker-v0.17.0.tar.gz"],
 )
 
 load(
@@ -5277,8 +5254,8 @@ http_archive(
     name = "rules_pkg",
     sha256 = "038f1caa773a7e35b3663865ffb003169c6a71dc995e39bf4815792f385d837d",
     urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/rules_pkg/releases/download/0.4.0/rules_pkg-0.4.0.tar.gz",
-        "https://github.com/bazelbuild/rules_pkg/releases/download/0.4.0/rules_pkg-0.4.0.tar.gz",
+        #"https://mirror.bazel.build/github.com/bazelbuild/rules_pkg/releases/download/0.4.0/rules_pkg-0.4.0.tar.gz",
+        "https://harness.jfrog.io/artifactory/rules-pkg-github/download/0.4.0/rules_pkg-0.4.0.tar.gz",
     ],
 )
 

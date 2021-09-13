@@ -137,7 +137,7 @@ public class CloudTimeSeriesStatsDataFetcher
   @Override
   protected QLData fetchSelectedFields(String accountId, List<CloudBillingAggregate> aggregateFunction,
       List<CloudBillingFilter> filters, List<CloudBillingGroupBy> groupBy, List<CloudBillingSortCriteria> sort,
-      Integer limit, Integer offset, DataFetchingEnvironment dataFetchingEnvironment) {
+      Integer limit, Integer offset, boolean skipRoundOff, DataFetchingEnvironment dataFetchingEnvironment) {
     return null;
   }
 

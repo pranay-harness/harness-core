@@ -11,6 +11,7 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -41,7 +42,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +57,6 @@ import okhttp3.Request;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpStatus;
-import org.json.JSONObject;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -64,7 +64,8 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 
 @Singleton
 @OwnedBy(HarnessTeam.CV)
-@TargetModule(HarnessModule._960_API_SERVICES)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@BreakDependencyOn("software.wings.service.impl.ThirdPartyApiCallLog")
 public class ElkDelegateServiceImpl implements ElkDelegateService {
   public static final int MAX_RECORDS = 10000;
 
@@ -152,28 +153,23 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
     final Map<String, ElkIndexTemplate> rv = new HashMap<>();
     for (Entry<String, Map<String, Object>> indexEntry : response.entrySet()) {
       if (indexEntry.getKey().charAt(0) != '.') {
-        JSONObject jsonObject = new JSONObject((Map) indexEntry.getValue().get("mappings"));
-        for (String key : jsonObject.keySet()) {
-          Object value = jsonObject.get(key);
-          if (value instanceof JSONObject) {
-            JSONObject outerObject = (JSONObject) value;
-            if (outerObject.has("properties")) {
-              ElkIndexTemplate indexTemplate = new ElkIndexTemplate();
-              if (indexEntry.getValue().containsKey("index_patterns")) {
-                // TODO picking only the first pattern. should pick all patterns
-                indexTemplate.setName(((ArrayList<String>) indexEntry.getValue().get("index_patterns")).get(0));
-              } else {
-                indexTemplate.setName((String) indexEntry.getValue().get("template"));
-              }
-              JSONObject propertiesObject = outerObject.getJSONObject("properties");
-              final Map<String, Object> propertiesMap = new HashMap<>();
-              for (String property : propertiesObject.keySet()) {
-                propertiesMap.put(property, propertiesObject.getJSONObject(property).toMap());
-              }
-              indexTemplate.setProperties(propertiesMap);
-              rv.put(indexTemplate.getName(), indexTemplate);
-            }
-          }
+        if (indexEntry.getValue().containsKey("index_patterns")) {
+          List<String> indexPatterns = (List<String>) indexEntry.getValue().get("index_patterns");
+          indexPatterns.forEach(indexPattern -> {
+            ElkIndexTemplate indexTemplate = new ElkIndexTemplate();
+            indexTemplate.setName(indexPattern);
+            indexTemplate.setProperties(
+                Collections
+                    .emptyMap()); // Just putting empty map to avoid changing the api. Only Keys are used in the UI.
+            rv.put(indexTemplate.getName(), indexTemplate);
+          });
+        } else {
+          ElkIndexTemplate indexTemplate = new ElkIndexTemplate();
+          indexTemplate.setName((String) indexEntry.getValue().get("template"));
+          indexTemplate.setProperties(
+              Collections
+                  .emptyMap()); // Just putting empty map to avoid changing the api. Only Keys are used in the UI.
+          rv.put(indexTemplate.getName(), indexTemplate);
         }
       }
     }

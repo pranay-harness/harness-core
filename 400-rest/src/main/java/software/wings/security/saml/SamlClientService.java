@@ -41,6 +41,7 @@ import org.hibernate.validator.constraints.NotBlank;
 @TargetModule(_950_NG_AUTHENTICATION_SERVICE)
 public class SamlClientService {
   public static final String SAML_REQUEST_URI_KEY = "SAMLRequest";
+  public static final String SAML_TRIGGER_TYPE = "triggerType"; // login or test
   @Inject AuthenticationUtils authenticationUtils;
   @Inject AccountServiceImpl accountServiceImpl;
   @Inject SSOSettingService ssoSettingService;
@@ -83,7 +84,7 @@ public class SamlClientService {
   public SSORequest generateSamlRequest(User user) {
     Account primaryAccount = authenticationUtils.getDefaultAccount(user);
     if (primaryAccount.getAuthenticationMechanism() == AuthenticationMechanism.SAML) {
-      return generateSamlRequestFromAccount(primaryAccount);
+      return generateSamlRequestFromAccount(primaryAccount, false);
     }
 
     throw new WingsException(ErrorCode.INVALID_AUTHENTICATION_MECHANISM, USER);
@@ -91,7 +92,7 @@ public class SamlClientService {
 
   public SSORequest generateTestSamlRequest(String accountId) {
     Account account = accountServiceImpl.get(accountId);
-    return generateSamlRequestFromAccount(account);
+    return generateSamlRequestFromAccount(account, true);
   }
 
   /**
@@ -100,12 +101,14 @@ public class SamlClientService {
    * @return SSORequest for redirection to SSO provider
    * @throws Exception error while creating request
    */
-  private SSORequest generateSamlRequestFromAccount(Account account) {
+  public SSORequest generateSamlRequestFromAccount(Account account, boolean isTestConnectionRequest) {
     SSORequest ssoRequest = new SSORequest();
+    String triggerType = isTestConnectionRequest ? "test" : "login";
     try {
       SamlClient samlClient = getSamlClientFromAccount(account);
       URIBuilder redirectionUri = new URIBuilder(samlClient.getIdentityProviderUrl());
       redirectionUri.addParameter(SAML_REQUEST_URI_KEY, encodeParamaeters(samlClient.getSamlRequest()));
+      redirectionUri.addParameter("RelayState", SAML_TRIGGER_TYPE + "=" + triggerType);
       ssoRequest.setIdpRedirectUrl(redirectionUri.toString());
       return ssoRequest;
     } catch (SamlException | URISyntaxException | IOException e) {

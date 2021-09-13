@@ -194,6 +194,14 @@ public class CIBuildStatusPushTask extends AbstractDelegateRunnableTask {
     }
   }
 
+  private String getGitlabApiURL(String url) {
+    if (url.contains("gitlab.com")) {
+      return GITLAB_API_URL;
+    } else {
+      String domain = GitClientHelper.getGitSCM(url);
+      return "https://" + domain + "/api/";
+    }
+  }
   private boolean sendBuildStatusToBitbucket(CIBuildStatusPushParameters ciBuildStatusPushParameters) {
     Map<String, Object> bodyObjectMap = new HashMap<>();
     bodyObjectMap.put(DESC, ciBuildStatusPushParameters.getDesc());
@@ -228,8 +236,11 @@ public class CIBuildStatusPushTask extends AbstractDelegateRunnableTask {
     String token = retrieveAuthToken(
         ciBuildStatusPushParameters.getGitSCMType(), ciBuildStatusPushParameters.getConnectorDetails());
 
+    GitlabConnectorDTO gitConfigDTO =
+        (GitlabConnectorDTO) ciBuildStatusPushParameters.getConnectorDetails().getConnectorConfig();
+
     if (isNotEmpty(token)) {
-      return gitlabService.sendStatus(GitlabConfig.builder().gitlabUrl(GITLAB_API_URL).build(),
+      return gitlabService.sendStatus(GitlabConfig.builder().gitlabUrl(getGitlabApiURL(gitConfigDTO.getUrl())).build(),
           ciBuildStatusPushParameters.getUserName(), token, null, ciBuildStatusPushParameters.getSha(),
           ciBuildStatusPushParameters.getOwner(), ciBuildStatusPushParameters.getRepo(), bodyObjectMap);
     } else {

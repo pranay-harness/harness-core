@@ -94,8 +94,11 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
   @Category(UnitTests.class)
   public void shouldTestTriggerExecution() {
     String planExecutionId = generateUuid();
-    Ambiance ambiance =
-        Ambiance.newBuilder().setPlanExecutionId(planExecutionId).putAllSetupAbstractions(prepareInputArgs()).build();
+    Ambiance ambiance = Ambiance.newBuilder()
+                            .setPlanExecutionId(planExecutionId)
+                            .putAllSetupAbstractions(prepareInputArgs())
+                            .addLevels(Level.newBuilder().setRuntimeId(generateUuid()).build())
+                            .build();
     PlanNodeProto planNode =
         PlanNodeProto.newBuilder()
             .setName("Test Node")

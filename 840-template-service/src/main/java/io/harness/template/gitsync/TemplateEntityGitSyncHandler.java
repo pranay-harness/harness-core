@@ -6,6 +6,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.NGTemplateReference;
 import io.harness.common.EntityReference;
 import io.harness.encryption.ScopeHelper;
+import io.harness.eventsframework.api.EventsFrameworkDownException;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.UnexpectedException;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.FileChange;
 import io.harness.gitsync.ScopeDetails;
@@ -13,6 +16,7 @@ import io.harness.gitsync.entityInfo.AbstractGitSdkEntityHandler;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.ng.core.EntityDetail;
 import io.harness.template.beans.yaml.NGTemplateConfig;
+import io.harness.template.beans.yaml.NGTemplateInfoConfig;
 import io.harness.template.entity.TemplateEntity;
 import io.harness.template.entity.TemplateEntity.TemplateEntityKeys;
 import io.harness.template.mappers.NGTemplateDtoMapper;
@@ -21,6 +25,7 @@ import io.harness.template.services.NGTemplateService;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 @OwnedBy(HarnessTeam.CDC)
@@ -66,7 +71,7 @@ public class TemplateEntityGitSyncHandler extends AbstractGitSdkEntityHandler<Te
                        .scope(ScopeHelper.getScope(
                            entity.getAccountIdentifier(), entity.getOrgIdentifier(), entity.getProjectIdentifier()))
                        .identifier(entity.getIdentifier())
-                       .label(entity.getVersionLabel())
+                       .versionLabel(entity.getVersionLabel())
                        .build())
         .build();
   }
@@ -86,12 +91,18 @@ public class TemplateEntityGitSyncHandler extends AbstractGitSdkEntityHandler<Te
 
   @Override
   public boolean delete(EntityReference entityReference) {
-    return false;
+    try {
+      NGTemplateReference reference = (NGTemplateReference) entityReference;
+      return templateService.delete(entityReference.getAccountIdentifier(), entityReference.getOrgIdentifier(),
+          entityReference.getProjectIdentifier(), entityReference.getIdentifier(), reference.getVersionLabel(), null);
+    } catch (EventsFrameworkDownException ex) {
+      throw new UnexpectedException("Producer shutdown: " + ExceptionUtils.getMessage(ex));
+    }
   }
 
   @Override
   public String getObjectIdOfYamlKey() {
-    return TemplateEntityKeys.isStableTemplate;
+    return TemplateEntityKeys.objectIdOfYaml;
   }
 
   @Override
@@ -121,6 +132,11 @@ public class TemplateEntityGitSyncHandler extends AbstractGitSdkEntityHandler<Te
 
   @Override
   public String getLastObjectIdIfExists(String accountIdentifier, String yaml) {
-    return null;
+    NGTemplateConfig yamlDTO = getYamlDTO(yaml);
+    NGTemplateInfoConfig templateInfoConfig = yamlDTO.getTemplateInfoConfig();
+    Optional<TemplateEntity> templateEntity = templateService.get(accountIdentifier,
+        templateInfoConfig.getOrgIdentifier(), templateInfoConfig.getProjectIdentifier(),
+        templateInfoConfig.getIdentifier(), templateInfoConfig.getVersionLabel(), false);
+    return templateEntity.map(TemplateEntity::getObjectIdOfYaml).orElse(null);
   }
 }

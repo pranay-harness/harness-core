@@ -78,6 +78,8 @@ public class ClusterDataToBigQueryTaskletTest extends BaseTaskletTest {
                                                   .storageUnallocatedCost(BigDecimal.ZERO)
                                                   .storageUtilizationValue(0D)
                                                   .storageRequest(0D)
+                                                  .maxStorageUtilizationValue(0D)
+                                                  .maxStorageRequest(0D)
                                                   .build();
 
     when(config.getBatchQueryConfig()).thenReturn(BatchQueryConfig.builder().queryBatchSize(BATCH_SIZE).build());

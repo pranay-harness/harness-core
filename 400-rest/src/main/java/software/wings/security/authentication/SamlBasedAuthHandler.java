@@ -4,6 +4,8 @@ import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SE
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
+import static software.wings.security.saml.SamlClientService.SAML_TRIGGER_TYPE;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
@@ -23,16 +25,22 @@ import software.wings.service.intfc.SSOSettingService;
 import com.coveo.saml.SamlClient;
 import com.coveo.saml.SamlException;
 import com.coveo.saml.SamlResponse;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.opensaml.core.xml.XMLObject;
@@ -56,18 +64,19 @@ public class SamlBasedAuthHandler implements AuthHandler {
   @Override
   public AuthenticationResponse authenticate(String... credentials) {
     try {
-      if (credentials == null || credentials.length < 2) {
+      if (credentials == null || !ImmutableList.of(2, 3, 4).contains(credentials.length)) {
+        log.error(
+            "Wrong number of arguments to saml authentication - " + (credentials == null ? 0 : credentials.length));
         throw new WingsException("Invalid arguments while authenticating using SAML");
       }
       String idpUrl = credentials[0];
       String samlResponseString = credentials[1];
-      String accountIdParam = null;
-      if (credentials.length == 3) {
-        accountIdParam = credentials[2];
-      }
+      String accountId = credentials.length == 3 ? credentials[2] : null;
+      String relayState = credentials.length == 4 ? credentials[3] : "";
+      Map<String, String> relayStateData = getRelayStateData(relayState);
 
-      User user = decodeResponseAndReturnUser(idpUrl, samlResponseString, accountIdParam);
-      String accountId = user == null ? null : user.getDefaultAccountId();
+      User user = decodeResponseAndReturnUser(idpUrl, samlResponseString, accountId);
+      accountId = StringUtils.isEmpty(accountId) ? (user == null ? null : user.getDefaultAccountId()) : accountId;
       String uuid = user == null ? null : user.getUuid();
       try (AutoLogContext ignore = new UserLogContext(accountId, uuid, OVERRIDE_ERROR)) {
         log.info("Authenticating via SAML");
@@ -79,12 +88,13 @@ public class SamlBasedAuthHandler implements AuthHandler {
         SamlSettings samlSettings = ssoSettingService.getSamlSettingsByAccountId(account.getUuid());
 
         // Occurs when SAML settings are being tested before being enabled
-        if (account.getAuthenticationMechanism() != io.harness.ng.core.account.AuthenticationMechanism.SAML) {
+        if (!relayStateData.getOrDefault(SAML_TRIGGER_TYPE, "").equals("login")
+            && account.getAuthenticationMechanism() != io.harness.ng.core.account.AuthenticationMechanism.SAML) {
           log.info("SAML test login successful for user: [{}]", user.getEmail());
           throw new WingsException(ErrorCode.SAML_TEST_SUCCESS_MECHANISM_NOT_ENABLED);
         }
         if (Objects.nonNull(samlSettings) && samlSettings.isAuthorizationEnabled()) {
-          List<String> userGroups = getUserGroupsForIdpUrl(idpUrl, samlResponseString, accountIdParam);
+          List<String> userGroups = getUserGroupsForIdpUrl(idpUrl, samlResponseString, accountId);
           SamlUserAuthorization samlUserAuthorization =
               SamlUserAuthorization.builder().email(user.getEmail()).userGroups(userGroups).build();
 
@@ -103,7 +113,23 @@ public class SamlBasedAuthHandler implements AuthHandler {
       }
     } catch (URISyntaxException e) {
       throw new WingsException("Saml Authentication Failed", e);
+    } catch (UnsupportedEncodingException e) {
+      throw new WingsException("Saml Authentication Failed while parsing RelayState", e);
     }
+  }
+
+  private Map<String, String> getRelayStateData(String relayState) throws UnsupportedEncodingException {
+    Map<String, String> relayStateData = new HashMap<>();
+    if (StringUtils.isEmpty(relayState)) {
+      return relayStateData;
+    }
+
+    String[] pairs = relayState.split("&");
+    for (String pair : pairs) {
+      String[] items = pair.split("=");
+      relayStateData.put(URLDecoder.decode(items[0], "UTF-8"), URLDecoder.decode(items[1], "UTF-8"));
+    }
+    return relayStateData;
   }
 
   private User decodeResponseAndReturnUser(String idpUrl, String samlResponseString, String accountId)

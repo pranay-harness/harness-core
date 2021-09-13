@@ -1,16 +1,21 @@
 package io.harness.cvng.core.services.impl.monitoredService;
 
+import io.harness.cvng.core.beans.ChangeSummaryDTO;
+import io.harness.cvng.core.beans.change.event.ChangeEventDTO;
 import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.entities.changeSource.ChangeSource;
 import io.harness.cvng.core.entities.changeSource.ChangeSource.ChangeSourceKeys;
+import io.harness.cvng.core.services.api.ChangeEventService;
 import io.harness.cvng.core.services.api.monitoredService.ChangeSourceService;
 import io.harness.cvng.core.transformer.changeSource.ChangeSourceEntityAndDTOTransformer;
+import io.harness.cvng.core.types.ChangeCategory;
 import io.harness.cvng.core.types.ChangeSourceType;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +32,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 public class ChangeSourceServiceImpl implements ChangeSourceService {
   @Inject private HPersistence hPersistence;
   @Inject private ChangeSourceEntityAndDTOTransformer changeSourceTransformer;
+  @Inject private ChangeEventService changeEventService;
   @Inject private Map<ChangeSourceType, ChangeSource.UpdatableChangeSourceEntity> changeSourceUpdatableMap;
 
   @Override
@@ -102,6 +108,19 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
                               .filter(key -> !replaceable(key, newChangeSourceMap, existingChangeSourceMap))
                               .map(key -> existingChangeSourceMap.get(key).getUuid())
                               .collect(Collectors.toList())));
+  }
+
+  @Override
+  public List<ChangeEventDTO> getChangeEvents(ServiceEnvironmentParams serviceEnvironmentParams,
+      List<String> changeSourceIdentifiers, Instant startTime, Instant endTime, List<ChangeCategory> changeCategories) {
+    return changeEventService.get(
+        serviceEnvironmentParams, changeSourceIdentifiers, startTime, endTime, changeCategories);
+  }
+
+  @Override
+  public ChangeSummaryDTO getChangeSummary(ServiceEnvironmentParams serviceEnvironmentParams,
+      List<String> changeSourceIdentifiers, Instant startTime, Instant endTime) {
+    return changeEventService.getChangeSummary(serviceEnvironmentParams, changeSourceIdentifiers, startTime, endTime);
   }
 
   private void update(ChangeSource newChangeSource, ChangeSource existingChangeSource) {

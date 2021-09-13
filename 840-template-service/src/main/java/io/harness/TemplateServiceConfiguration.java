@@ -62,6 +62,8 @@ public class TemplateServiceConfiguration extends Configuration {
   private boolean shouldDeployWithGitSync;
   private GitSdkConfiguration gitSdkConfiguration;
   private String managerServiceSecret;
+  private String managerTarget;
+  private String managerAuthority;
 
   public TemplateServiceConfiguration() {
     DefaultServerFactory defaultServerFactory = new DefaultServerFactory();

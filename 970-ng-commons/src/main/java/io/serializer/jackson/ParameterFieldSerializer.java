@@ -1,5 +1,8 @@
 package io.serializer.jackson;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.yaml.ParameterField;
 
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -7,6 +10,7 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import java.io.IOException;
 
+@OwnedBy(PIPELINE)
 public class ParameterFieldSerializer extends StdSerializer<ParameterField<?>> {
   private static final long serialVersionUID = 1L;
 

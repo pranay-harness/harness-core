@@ -1,13 +1,21 @@
 package io.harness.batch.processing.billing.timeseries.service.impl;
 
+import static io.harness.ccm.commons.utils.TimeUtils.toOffsetDateTime;
+import static io.harness.timescaledb.Tables.KUBERNETES_UTILIZATION_DATA;
+
+import static org.jooq.impl.DSL.avg;
+import static org.jooq.impl.DSL.max;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.billing.timeseries.data.InstanceUtilizationData;
 import io.harness.batch.processing.billing.timeseries.data.K8sGranularUtilizationData;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.utils.TimeUtils;
+import io.harness.ccm.commons.utils.TimescaleUtils;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
+import io.harness.timescaledb.tables.pojos.KubernetesUtilizationData;
 
 import com.google.inject.Singleton;
 import java.sql.Connection;
@@ -21,7 +29,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
+import org.jooq.DSLContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -32,9 +44,11 @@ import org.springframework.stereotype.Service;
 public class K8sUtilizationGranularDataServiceImpl {
   @Autowired private TimeScaleDBService timeScaleDBService;
   @Autowired private TimeUtils utils;
+  @Autowired private DSLContext dslContext;
 
   private static final int MAX_RETRY_COUNT = 2;
   private static final int BATCH_SIZE = 500;
+
   static final String INSERT_STATEMENT =
       "INSERT INTO KUBERNETES_UTILIZATION_DATA (STARTTIME, ENDTIME, CPU, MEMORY, MAXCPU, MAXMEMORY,  INSTANCEID, INSTANCETYPE, CLUSTERID, ACCOUNTID, SETTINGID, STORAGEREQUESTVALUE, STORAGEUSAGEVALUE, ACTUALINSTANCEID) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT DO NOTHING";
   static final String SELECT_DISTINCT_INSTANCEID =
@@ -42,11 +56,6 @@ public class K8sUtilizationGranularDataServiceImpl {
   static final String UTILIZATION_DATA_QUERY =
       "SELECT MAX(MAXCPU) as CPUUTILIZATIONMAX, MAX(MAXMEMORY) as MEMORYUTILIZATIONMAX, AVG(CPU) as CPUUTILIZATIONAVG, AVG(MEMORY) as MEMORYUTILIZATIONAVG, "
       + " SETTINGID, CLUSTERID, INSTANCEID, INSTANCETYPE FROM KUBERNETES_UTILIZATION_DATA WHERE ACCOUNTID = '%s' AND INSTANCEID IN ('%s') AND STARTTIME >= '%s' AND STARTTIME < '%s' "
-      + " GROUP BY SETTINGID, CLUSTERID, INSTANCEID, INSTANCETYPE ";
-
-  static final String UTILIZATION_DATA_QUERY_OF_INSTANCETYPE =
-      "SELECT AVG(STORAGEREQUESTVALUE) as STORAGEREQUESTVALUEAVG, AVG(STORAGEUSAGEVALUE) as STORAGEUSAGEVALUEAVG, "
-      + " SETTINGID, CLUSTERID, INSTANCEID, INSTANCETYPE FROM KUBERNETES_UTILIZATION_DATA WHERE ACCOUNTID = '%s' AND INSTANCETYPE = '%s' AND STARTTIME >= '%s' AND STARTTIME < '%s' "
       + " GROUP BY SETTINGID, CLUSTERID, INSTANCEID, INSTANCETYPE ";
 
   static final String PURGE_DATA_QUERY = "SELECT drop_chunks('kubernetes_utilization_data', interval '16 days')";
@@ -85,24 +94,8 @@ public class K8sUtilizationGranularDataServiceImpl {
     return successfulInsert;
   }
 
-  public boolean purgeOldKubernetesUtilData() {
-    boolean purgedK8sUtilData = false;
-    log.info("Purging old k8s util data !!");
-    if (timeScaleDBService.isValid()) {
-      int retryCount = 0;
-
-      while (retryCount < MAX_RETRY_COUNT && !purgedK8sUtilData) {
-        try (Connection connection = timeScaleDBService.getDBConnection();
-             Statement statement = connection.createStatement()) {
-          statement.execute(PURGE_DATA_QUERY);
-          purgedK8sUtilData = true;
-        } catch (SQLException e) {
-          log.error("Failed to execute query=[{}]", PURGE_DATA_QUERY, e);
-          retryCount++;
-        }
-      }
-    }
-    return purgedK8sUtilData;
+  public int purgeOldKubernetesUtilData() {
+    return TimescaleUtils.execute(dslContext.query(PURGE_DATA_QUERY));
   }
 
   private void updateInsertStatement(PreparedStatement statement, K8sGranularUtilizationData k8sGranularUtilizationData)
@@ -188,41 +181,52 @@ public class K8sUtilizationGranularDataServiceImpl {
     return null;
   }
 
+  @Getter
+  @ToString(callSuper = true)
+  protected static class AggregatedUtilizationData extends KubernetesUtilizationData {
+    private double avgstoragerequestvalue;
+    private double avgstorageusagevalue;
+    private double maxstoragerequestvalue;
+    private double maxstorageusagevalue;
+  }
+
+  @NotNull
   public Map<String, InstanceUtilizationData> getAggregatedUtilizationDataOfType(
       String accountId, InstanceType instanceType, long startDate, long endDate) {
-    ResultSet resultSet = null;
-    String query = String.format(UTILIZATION_DATA_QUERY_OF_INSTANCETYPE, accountId, instanceType.name(),
-        Instant.ofEpochMilli(startDate), Instant.ofEpochMilli(endDate));
+    List<AggregatedUtilizationData> aggregatedUtilizationData = TimescaleUtils.retryRun(
+        ()
+            -> dslContext
+                   .select(avg(KUBERNETES_UTILIZATION_DATA.STORAGEREQUESTVALUE).as("avgstoragerequestvalue"),
+                       avg(KUBERNETES_UTILIZATION_DATA.STORAGEUSAGEVALUE).as("avgstorageusagevalue"),
+                       max(KUBERNETES_UTILIZATION_DATA.STORAGEREQUESTVALUE).as("maxstoragerequestvalue"),
+                       max(KUBERNETES_UTILIZATION_DATA.STORAGEUSAGEVALUE).as("maxstorageusagevalue"),
+                       KUBERNETES_UTILIZATION_DATA.SETTINGID, KUBERNETES_UTILIZATION_DATA.CLUSTERID,
+                       KUBERNETES_UTILIZATION_DATA.INSTANCEID)
+                   .from(KUBERNETES_UTILIZATION_DATA)
+                   .where(KUBERNETES_UTILIZATION_DATA.ACCOUNTID.eq(accountId),
+                       KUBERNETES_UTILIZATION_DATA.INSTANCETYPE.eq(instanceType.name()),
+                       KUBERNETES_UTILIZATION_DATA.STARTTIME.ge(toOffsetDateTime(startDate)),
+                       KUBERNETES_UTILIZATION_DATA.STARTTIME.lt(toOffsetDateTime(endDate)))
+                   .groupBy(KUBERNETES_UTILIZATION_DATA.SETTINGID, KUBERNETES_UTILIZATION_DATA.CLUSTERID,
+                       KUBERNETES_UTILIZATION_DATA.INSTANCEID)
+                   .fetchInto(AggregatedUtilizationData.class));
 
-    Map<String, InstanceUtilizationData> instanceUtilizationDataMap = new HashMap<>();
+    Map<String, InstanceUtilizationData> utilizationDataMap = new HashMap<>();
 
-    try (Connection connection = timeScaleDBService.getDBConnection();
-         Statement statement = connection.createStatement()) {
-      resultSet = statement.executeQuery(query);
-      while (resultSet.next()) {
-        String instanceId = resultSet.getString("INSTANCEID");
-        String clusterId = resultSet.getString("CLUSTERID");
-        String settingId = resultSet.getString("SETTINGID");
-        double storageUsageAvg = resultSet.getDouble("STORAGEUSAGEVALUEAVG");
-        double storageRequestAvg = resultSet.getDouble("STORAGEREQUESTVALUEAVG");
-
-        instanceUtilizationDataMap.put(instanceId,
+    aggregatedUtilizationData.forEach(data
+        -> utilizationDataMap.put(data.getInstanceid(),
             InstanceUtilizationData.builder()
                 .accountId(accountId)
-                .clusterId(clusterId)
-                .settingId(settingId)
+                .clusterId(data.getClusterid())
+                .settingId(data.getSettingid())
                 .instanceType(instanceType.name())
-                .instanceId(instanceId)
-                .storageUsageAvgValue(storageUsageAvg)
-                .storageRequestAvgValue(storageRequestAvg)
-                .build());
-      }
-      return instanceUtilizationDataMap;
-    } catch (SQLException e) {
-      log.error("Error while fetching Aggregated Utilization Data : exception ", e);
-    } finally {
-      DBUtils.close(resultSet);
-    }
-    return null;
+                .instanceId(data.getInstanceid())
+                .storageUsageAvgValue(data.getAvgstorageusagevalue())
+                .storageRequestAvgValue(data.getAvgstoragerequestvalue())
+                .storageUsageMaxValue(data.getMaxstorageusagevalue())
+                .storageRequestMaxValue(data.getMaxstoragerequestvalue())
+                .build()));
+
+    return utilizationDataMap;
   }
 }

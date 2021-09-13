@@ -6,6 +6,8 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.core.services.api.UpdatableEntity;
 import io.harness.cvng.core.types.ChangeSourceType;
+import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
@@ -13,6 +15,8 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UpdatedAtAware;
 import io.harness.persistence.UuidAware;
 
+import com.google.common.collect.ImmutableList;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Data;
@@ -37,6 +41,21 @@ import org.mongodb.morphia.query.UpdateOperations;
 @StoreIn(DbAliases.CVNG)
 public abstract class ChangeSource
     implements PersistentEntity, UuidAware, AccountAccess, UpdatedAtAware, CreatedAtAware {
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(CompoundMongoIndex.builder()
+                 .name("unique_index")
+                 .field(ChangeSourceKeys.accountId)
+                 .field(ChangeSourceKeys.orgIdentifier)
+                 .field(ChangeSourceKeys.projectIdentifier)
+                 .field(ChangeSourceKeys.envIdentifier)
+                 .field(ChangeSourceKeys.serviceIdentifier)
+                 .field(ChangeSourceKeys.identifier)
+                 .unique(true)
+                 .build())
+        .build();
+  }
+
   @Id String uuid;
   long createdAt;
   long lastUpdatedAt;
@@ -50,7 +69,6 @@ public abstract class ChangeSource
   @NotNull String envIdentifier;
 
   @NotNull String identifier;
-  @NotNull String description;
   @NotNull ChangeSourceType type;
 
   boolean enabled;
@@ -64,8 +82,8 @@ public abstract class ChangeSource
           .set(ChangeSourceKeys.serviceIdentifier, changeSource.getServiceIdentifier())
           .set(ChangeSourceKeys.envIdentifier, changeSource.getEnvIdentifier())
           .set(ChangeSourceKeys.identifier, changeSource.getIdentifier())
-          .set(ChangeSourceKeys.description, changeSource.getDescription())
           .set(ChangeSourceKeys.type, changeSource.getType())
+          .set(ChangeSourceKeys.name, changeSource.getName())
           .set(ChangeSourceKeys.enabled, changeSource.isEnabled());
     }
   }

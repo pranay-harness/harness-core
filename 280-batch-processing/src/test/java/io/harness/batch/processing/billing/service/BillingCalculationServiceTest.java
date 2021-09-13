@@ -51,7 +51,6 @@ import java.util.List;
 import java.util.Map;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.data.Offset;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -681,15 +680,9 @@ public class BillingCalculationServiceTest extends CategoryTest {
     Assertions.assertThat(billingAmount.getPricingSource()).isEqualTo(PricingSource.HARDCODED);
   }
 
-  /**
-   * This test uses a network call at Host: https://lepton.appspot.com
-   * on connection failure this test will fail, to solve this apply <code>metaData = ImmutableMap.of();</code>
-   * so that default PricingSource.HARDCODED storage pricing is used without making a network call.
-   */
   @Test
   @Owner(developers = OwnerRule.UTSAV)
   @Category(UnitTests.class)
-  @Ignore("API 404, the API is offline currently, ignoring till correct fix")
   public void testGetPVTotalAndIdleCostWithNULLStopTime() {
     StorageResource storageResource = StorageResource.builder().capacity(STORAGE_CAPACITY).build();
     UtilizationData utilizationData = getStorageUtilization();
@@ -825,8 +818,8 @@ public class BillingCalculationServiceTest extends CategoryTest {
   private static UtilizationData getStorageUtilization() {
     return UtilizationData.builder()
         .avgStorageCapacityValue(STORAGE_CAPACITY)
-        .avgStorageRequestValue(STORAGE_REQUEST_VALUE)
-        .avgStorageUsageValue(STORAGE_UTIL_VALUE)
+        .maxStorageRequestValue(STORAGE_REQUEST_VALUE)
+        .maxStorageUsageValue(STORAGE_UTIL_VALUE)
         .build();
   }
 

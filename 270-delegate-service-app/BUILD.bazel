@@ -2,6 +2,8 @@ load("@rules_java//java:defs.bzl", "java_binary")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//:tools/bazel/macros.bzl", "run_analysis")
 
+HarnessTeam = "DEL"
+
 shared_dependencies = [
     "@maven//:com_google_guava_guava",
     "@maven//:io_netty_netty_all",
@@ -285,7 +287,6 @@ shared_dependencies = [
     "@maven//:de_jkeylockmanager_jkeylockmanager",
     "@maven//:dk_brics_automaton_automaton",
     "@maven//:dnsjava_dnsjava",
-    "@maven//:dom4j_dom4j",
     "@maven//:es_moki_ratelimitj_ratelimitj_core",
     "@maven//:es_moki_ratelimitj_ratelimitj_inmemory",
     "@maven//:guru_nidi_com_kitfox_svgSalamander",
@@ -672,6 +673,7 @@ java_library(
         ["src/test/**/*.java"],
     ),
     data = [
+        "//270-delegate-service-app/src/test/resources:resource",
         "//400-rest/src/test/resources:resource",
     ],
     resources = [
@@ -698,6 +700,7 @@ java_library(
         "@maven//:com_icegreen_greenmail",
         "@maven//:com_openpojo_openpojo",
         "@maven//:com_squareup_okhttp3_okhttp",
+        "@maven//:io_dropwizard_dropwizard_testing",
         "@maven//:io_github_benas_random_beans",
         "@maven//:io_grpc_grpc_testing",
         "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_grizzly2",

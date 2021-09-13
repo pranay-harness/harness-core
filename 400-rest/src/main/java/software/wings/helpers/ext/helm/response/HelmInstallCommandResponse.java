@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.container.ContainerInfo;
 import io.harness.delegate.task.helm.HelmChartInfo;
+import io.harness.delegate.task.helm.HelmCommandResponse;
 import io.harness.logging.CommandExecutionStatus;
 
 import java.util.List;

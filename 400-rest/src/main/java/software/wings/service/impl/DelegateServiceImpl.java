@@ -192,7 +192,6 @@ import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.DelegateSelectionLogsService;
-import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.DelegateTaskServiceClassic;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.FileService;
@@ -277,7 +276,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @BreakDependencyOn("software.wings.beans.User")
 @BreakDependencyOn("software.wings.beans.Event")
 @OwnedBy(DEL)
-public class DelegateServiceImpl implements DelegateService {
+public class DelegateServiceImpl implements software.wings.service.intfc.DelegateService {
   /**
    * The constant DELEGATE_DIR.
    */
@@ -925,6 +924,26 @@ public class DelegateServiceImpl implements DelegateService {
       log.warn("Sent self destruct command to rejected delegate {}.", delegateId);
     }
 
+    return updatedDelegate;
+  }
+
+  @Override
+  public Delegate profileScriptExecutionInitiated(String accountId, String delegateId) {
+    Delegate currentDelegate = persistence.createQuery(Delegate.class)
+                                   .filter(DelegateKeys.accountId, accountId)
+                                   .filter(DelegateKeys.uuid, delegateId)
+                                   .get();
+
+    Query<Delegate> updateQuery = persistence.createQuery(Delegate.class)
+                                      .filter(DelegateKeys.accountId, accountId)
+                                      .filter(DelegateKeys.uuid, delegateId);
+
+    UpdateOperations<Delegate> updateOperations =
+        persistence.createUpdateOperations(Delegate.class).set(DelegateKeys.profileExecutedAt, 0l);
+
+    log.debug("Clear profileExecutedAt property for delegate {}:{}", accountId, delegateId);
+    Delegate updatedDelegate = persistence.findAndModify(updateQuery, updateOperations, HPersistence.returnNewOptions);
+    auditServiceHelper.reportForAuditingUsingAccountId(accountId, currentDelegate, updatedDelegate, Type.UPDATE);
     return updatedDelegate;
   }
 
@@ -2516,7 +2535,9 @@ public class DelegateServiceImpl implements DelegateService {
 
     if (isNotBlank(delegate.getDelegateProfileId())) {
       DelegateProfile profile = delegateProfileService.get(accountId, delegate.getDelegateProfileId());
-      if (profile != null && (!profile.getUuid().equals(profileId) || profile.getLastUpdatedAt() > lastUpdatedAt)) {
+      if (profile != null
+          && (!profile.getUuid().equals(profileId) || profile.getLastUpdatedAt() > lastUpdatedAt
+              || delegate.getProfileExecutedAt() == 0L)) {
         Map<String, Object> context = new HashMap<>();
         context.put("secrets",
             SecretFunctor.builder()
@@ -2530,6 +2551,8 @@ public class DelegateServiceImpl implements DelegateService {
             .name(profile.getName())
             .profileLastUpdatedAt(profile.getLastUpdatedAt())
             .scriptContent(scriptContent)
+            .delegateId(delegateId)
+            .profileLastExecutedOnDelegate(delegate.getProfileExecutedAt())
             .build();
       }
     }

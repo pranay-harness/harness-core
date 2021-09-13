@@ -52,6 +52,7 @@ fi
 BAZEL_MODULES="\
   //270-verification:module \
   //280-batch-processing:module \
+  //290-dashboard-service:module \
   //300-cv-nextgen:module \
   //310-ci-manager:module \
   //320-ci-execution:module \
@@ -68,6 +69,7 @@ BAZEL_MODULES="\
   //425-verification-commons:module \
   //430-cv-nextgen-commons:module \
   //440-connector-nextgen:module \
+  //440-secret-management-service:module \
   //441-cg-instance-sync:module \
   //445-cg-connectors:module \
   //450-ce-views:module \
@@ -141,6 +143,7 @@ BAZEL_MODULES="\
   //950-ng-authentication-service:module \
   //950-ng-core:module \
   //950-ng-project-n-orgs:module \
+  //950-ng-signup-beans:module \
   //950-telemetry:module \
   //950-wait-engine:module \
   //950-walktree-visitor:module \
@@ -169,7 +172,6 @@ BAZEL_MODULES="\
   //960-ng-core-beans:module \
   //960-ng-license-beans:module \
   //960-ng-license-usage-beans:module \
-  //960-ng-signup-beans:module \
   //960-notification-beans/src/main/proto:all \
   //960-notification-beans:module \
   //960-persistence:module \
@@ -352,6 +354,7 @@ build_bazel_module 420-delegate-service
 build_bazel_module 425-verification-commons
 build_bazel_module 430-cv-nextgen-commons
 build_bazel_module 440-connector-nextgen
+build_bazel_module 440-secret-management-service
 build_bazel_module 445-cg-connectors
 build_bazel_module 450-ce-views
 build_bazel_module 460-capability

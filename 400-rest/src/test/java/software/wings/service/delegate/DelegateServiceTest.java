@@ -27,6 +27,7 @@ import static io.harness.rule.OwnerRule.NIKOLA;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SANJA;
+import static io.harness.rule.OwnerRule.VLAD;
 import static io.harness.rule.OwnerRule.VUK;
 import static io.harness.rule.OwnerRule.XIN;
 
@@ -110,6 +111,7 @@ import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.DuplicateDelegateException;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.FileMetadata;
+import io.harness.delegate.beans.FileUploadLimit;
 import io.harness.delegate.beans.K8sConfigDetails;
 import io.harness.delegate.beans.K8sPermissionType;
 import io.harness.delegate.beans.TaskData;
@@ -145,7 +147,6 @@ import io.harness.waiter.WaitNotifyEngine;
 import software.wings.FeatureTestHelper;
 import software.wings.WingsBaseTest;
 import software.wings.app.DelegateGrpcConfig;
-import software.wings.app.FileUploadLimit;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.Account;
@@ -2500,8 +2501,54 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldCheckForProfile() {
     when(configurationController.isNotPrimary()).thenReturn(Boolean.FALSE);
-    Delegate delegate =
-        Delegate.builder().uuid(DELEGATE_ID).accountId(ACCOUNT_ID).delegateProfileId("profile1").build();
+    Delegate delegate = Delegate.builder()
+                            .uuid(DELEGATE_ID)
+                            .accountId(ACCOUNT_ID)
+                            .delegateProfileId("profile1")
+                            .profileExecutedAt(10L)
+                            .build();
+    persistence.save(delegate);
+    DelegateProfile profile = builder().accountId(ACCOUNT_ID).name("A Profile").startupScript("rm -rf /*").build();
+    profile.setUuid("profile1");
+    profile.setLastUpdatedAt(100L);
+    when(delegateProfileService.get(ACCOUNT_ID, "profile1")).thenReturn(profile);
+
+    DelegateProfileParams init = delegateService.checkForProfile(ACCOUNT_ID, DELEGATE_ID, "", 0);
+    assertThat(init).isNotNull();
+    assertThat(init.getProfileId()).isEqualTo("profile1");
+    assertThat(init.getName()).isEqualTo("A Profile");
+    assertThat(init.getProfileLastUpdatedAt()).isEqualTo(100L);
+    assertThat(init.getScriptContent()).isEqualTo("rm -rf /*");
+
+    init = delegateService.checkForProfile(ACCOUNT_ID, DELEGATE_ID, "profile2", 200L);
+    assertThat(init).isNotNull();
+    assertThat(init.getProfileId()).isEqualTo("profile1");
+    assertThat(init.getName()).isEqualTo("A Profile");
+    assertThat(init.getProfileLastUpdatedAt()).isEqualTo(100L);
+    assertThat(init.getScriptContent()).isEqualTo("rm -rf /*");
+
+    init = delegateService.checkForProfile(ACCOUNT_ID, DELEGATE_ID, "profile1", 99L);
+    assertThat(init).isNotNull();
+    assertThat(init.getProfileId()).isEqualTo("profile1");
+    assertThat(init.getName()).isEqualTo("A Profile");
+    assertThat(init.getProfileLastUpdatedAt()).isEqualTo(100L);
+    assertThat(init.getScriptContent()).isEqualTo("rm -rf /*");
+
+    init = delegateService.checkForProfile(ACCOUNT_ID, DELEGATE_ID, "profile1", 100L);
+    assertThat(init).isNull();
+  }
+
+  @Test
+  @Owner(developers = VLAD)
+  @Category(UnitTests.class)
+  public void shouldCheckForProfileExecutedAt() {
+    when(configurationController.isNotPrimary()).thenReturn(Boolean.FALSE);
+    Delegate delegate = Delegate.builder()
+                            .uuid(DELEGATE_ID)
+                            .accountId(ACCOUNT_ID)
+                            .delegateProfileId("profile1")
+                            .profileExecutedAt(123456789l)
+                            .build();
     persistence.save(delegate);
     DelegateProfile profile = builder().accountId(ACCOUNT_ID).name("A Profile").startupScript("rm -rf /*").build();
     profile.setUuid("profile1");

@@ -2,7 +2,9 @@ package software.wings.beans.yaml;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import com.google.common.collect.Lists;
 import java.util.List;
@@ -10,6 +12,7 @@ import java.util.List;
 /**
  * @author rktummala on 10/17/17
  */
+@TargetModule(HarnessModule._957_CG_BEANS)
 @OwnedBy(DX)
 public interface YamlConstants {
   String PATH_DELIMITER = "/";

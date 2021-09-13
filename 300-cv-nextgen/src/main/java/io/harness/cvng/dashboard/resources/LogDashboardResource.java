@@ -6,6 +6,7 @@ import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.beans.params.TimeRangeParams;
+import io.harness.cvng.core.beans.params.filterParams.LiveMonitoringLogAnalysisFilter;
 import io.harness.cvng.dashboard.beans.AnalyzedLogDataDTO;
 import io.harness.cvng.dashboard.beans.LogDataByTag;
 import io.harness.cvng.dashboard.services.api.LogDashboardService;
@@ -149,8 +150,13 @@ public class LogDashboardResource {
                                           .endTime(Instant.ofEpochMilli(endTimeMillis))
                                           .build();
     PageParams pageParams = PageParams.builder().page(page).size(size).build();
+    LiveMonitoringLogAnalysisFilter liveMonitoringLogAnalysisFilter =
+        LiveMonitoringLogAnalysisFilter.builder()
+            .healthSourceIdentifiers(healthSourceIdentifiers)
+            .clusterTypes(clusterTypes)
+            .build();
 
     return new RestResponse<>(logDashboardService.getAllLogsData(
-        serviceEnvironmentParams, timeRangeParams, clusterTypes, healthSourceIdentifiers, pageParams));
+        serviceEnvironmentParams, timeRangeParams, liveMonitoringLogAnalysisFilter, pageParams));
   }
 }

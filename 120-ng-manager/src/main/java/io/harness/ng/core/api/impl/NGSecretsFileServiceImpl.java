@@ -6,10 +6,10 @@ import static io.harness.security.SimpleEncryption.CHARSET;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.delegate.beans.FileUploadLimit;
 import io.harness.file.beans.NGBaseFile;
 import io.harness.secrets.SecretsFileService;
 
-import software.wings.app.FileUploadLimit;
 import software.wings.service.intfc.FileService;
 
 import com.google.inject.Inject;

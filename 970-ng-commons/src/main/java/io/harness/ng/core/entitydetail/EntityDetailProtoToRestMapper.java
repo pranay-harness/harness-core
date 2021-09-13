@@ -3,10 +3,12 @@ package io.harness.ng.core.entitydetail;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.HarnessStringUtils.nullIfEmpty;
 import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.INPUT_SETS;
+import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.TEMPLATE;
 
 import io.harness.EntityType;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.InputSetReference;
+import io.harness.beans.NGTemplateReference;
 import io.harness.common.EntityReference;
 import io.harness.encryption.Scope;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
@@ -14,6 +16,7 @@ import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
 import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
 import io.harness.eventsframework.schemas.entity.InputSetReferenceProtoDTO;
 import io.harness.eventsframework.schemas.entity.ScopeProtoEnum;
+import io.harness.eventsframework.schemas.entity.TemplateReferenceProtoDTO;
 import io.harness.exception.UnknownEnumTypeException;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.event.EventProtoToEntityHelper;
@@ -44,6 +47,8 @@ public class EntityDetailProtoToRestMapper {
   private EntityReference createEntityReference(EntityDetailProtoDTO entityDetail) {
     if (entityDetail.getType() == INPUT_SETS) {
       return createInputSetRef(entityDetail.getInputSetRef());
+    } else if (entityDetail.getType() == TEMPLATE) {
+      return createTemplateRef(entityDetail.getTemplateRef());
     } else {
       return createIdentifierRef(entityDetail.getIdentifierRef());
     }
@@ -83,6 +88,17 @@ public class EntityDetailProtoToRestMapper {
         .orgIdentifier(nullIfEmpty(inputSetReference.getOrgIdentifier().getValue()))
         .projectIdentifier(nullIfEmpty(inputSetReference.getProjectIdentifier().getValue()))
         .pipelineIdentifier(inputSetReference.getPipelineIdentifier().getValue())
+        .build();
+  }
+
+  private NGTemplateReference createTemplateRef(TemplateReferenceProtoDTO templateReferenceProtoDTO) {
+    return NGTemplateReference.builder()
+        .accountIdentifier(templateReferenceProtoDTO.getAccountIdentifier().getValue())
+        .orgIdentifier(templateReferenceProtoDTO.getOrgIdentifier().getValue())
+        .projectIdentifier(templateReferenceProtoDTO.getProjectIdentifier().getValue())
+        .identifier(templateReferenceProtoDTO.getIdentifier().getValue())
+        .versionLabel(templateReferenceProtoDTO.getVersionLabel().getValue())
+        .scope(mapEventToRestScopeEnum(templateReferenceProtoDTO.getScope()))
         .build();
   }
 

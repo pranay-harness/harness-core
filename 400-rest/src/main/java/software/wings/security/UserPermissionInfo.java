@@ -5,7 +5,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.security.PermissionAttribute.PermissionType;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.dashboard.Action;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -20,6 +22,7 @@ import lombok.Data;
 @OwnedBy(PL)
 @Data
 @Builder
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class UserPermissionInfo {
   private String accountId;
   private AccountPermissionSummary accountPermissionSummary;

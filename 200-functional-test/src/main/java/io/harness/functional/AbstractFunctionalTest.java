@@ -23,7 +23,6 @@ import io.harness.beans.WorkflowType;
 import io.harness.ff.FeatureFlagService;
 import io.harness.multiline.MultilineStringMixin;
 import io.harness.rest.RestResponse;
-import io.harness.rule.DistributeRule;
 import io.harness.rule.FunctionalTestRule;
 import io.harness.rule.LifecycleRule;
 import io.harness.testframework.framework.CommandLibraryServiceExecutor;
@@ -100,7 +99,6 @@ public abstract class AbstractFunctionalTest extends CategoryTest implements Gra
   protected static User adminUser;
   @Rule public LifecycleRule lifecycleRule = new LifecycleRule();
   @Rule public FunctionalTestRule rule = new FunctionalTestRule(lifecycleRule.getClosingFactory());
-  @Rule public DistributeRule distributeRule = new DistributeRule();
 
   @Inject DataLoaderRegistryHelper dataLoaderRegistryHelper;
   @Inject AuthHandler authHandler;

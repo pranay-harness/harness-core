@@ -14,9 +14,10 @@ import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.ng.core.common.beans.Generation;
 import io.harness.ng.core.dto.UserInviteDTO;
 import io.harness.ng.core.invites.dto.InviteOperationResponse;
+import io.harness.ng.core.switchaccount.RestrictedSwitchAccountInfo;
 import io.harness.ng.core.user.PasswordChangeDTO;
 import io.harness.ng.core.user.PasswordChangeResponse;
-import io.harness.ng.core.user.SignupInviteDTO;
+import io.harness.signup.dto.SignupInviteDTO;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 
@@ -514,10 +515,12 @@ public interface UserService extends OwnedByAccount {
    *
    * @param user
    * @param claims Map of claims
+   * @param claims Persist accountId present in claims or not
    * @return
    */
 
-  String generateJWTToken(User user, Map<String, String> claims, @NotNull JWT_CATEGORY category);
+  String generateJWTToken(
+      User user, Map<String, String> claims, @NotNull JWT_CATEGORY category, boolean persistOldAccountId);
 
   /**
    *
@@ -628,4 +631,6 @@ public interface UserService extends OwnedByAccount {
 
   URI getInviteAcceptRedirectURL(InviteOperationResponse inviteResponse, UserInvite userInvite, String jwtToken)
       throws URISyntaxException;
+
+  RestrictedSwitchAccountInfo getSwitchAccountInfo(String accountId, String userId);
 }

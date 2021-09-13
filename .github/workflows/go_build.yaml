@@ -36,6 +36,11 @@ jobs:
           echo "Building golang product code using bazel..."
           bazel build //product/... --javacopt=' -XepDisableAllChecks'
 
+      - name: Building gopath
+        run: |
+          echo "Building gopath"
+          bazel build :gopath --javacopt=' -XepDisableAllChecks'
+
       - name: Testing commons
         run: |
           echo "Testing golang commons code using bazel..."

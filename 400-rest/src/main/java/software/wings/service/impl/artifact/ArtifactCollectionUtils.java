@@ -3,6 +3,7 @@ package software.wings.service.impl.artifact;
 import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.FeatureName.ARTIFACT_STREAM_DELEGATE_TIMEOUT;
+import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -400,9 +401,19 @@ public class ArtifactCollectionUtils {
         // All the new ECR artifact streams use cloud provider AWS settings for accesskey and secret
         if (SettingVariableTypes.AWS.name().equals(settingValue.getType())) {
           AwsConfig awsConfig = (AwsConfig) settingsService.get(settingId).getValue();
-          imageDetailsBuilder.password(
+          String authToken =
               getAmazonEcrAuthToken(awsConfig, secretManager.getEncryptionDetails(awsConfig, null, workflowExecutionId),
-                  imageUrl.substring(0, imageUrl.indexOf('.')), ecrArtifactStream.getRegion()));
+                  imageUrl.substring(0, imageUrl.indexOf('.')), ecrArtifactStream.getRegion());
+          imageDetailsBuilder.password(authToken);
+          if (featureFlagService.isEnabled(FeatureName.AMAZON_ECR_AUTH_REFACTOR, artifactStream.getAccountId())) {
+            // https://github.com/aws/aws-sdk-java/issues/818
+            String decodedString = new String(decodeBase64(authToken));
+            String username = decodedString.split(":")[0];
+            String password = decodedString.split(":")[1];
+            imageDetailsBuilder.username(username);
+            imageDetailsBuilder.password(password);
+            imageDetailsBuilder.registryUrl("https://" + imageUrl);
+          }
         } else {
           // There is a point when old ECR artifact streams would be using the old ECR Artifact Server
           // definition until migration happens. The deployment code handles both the cases.

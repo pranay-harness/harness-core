@@ -47,9 +47,8 @@ public class ServiceDependency implements PersistentEntity, UuidAware, AccountAc
                  .field(ServiceDependencyKeys.accountId)
                  .field(ServiceDependencyKeys.orgIdentifier)
                  .field(ServiceDependencyKeys.projectIdentifier)
-                 .field(ServiceDependencyKeys.environmentIdentifier)
-                 .field(ServiceDependencyKeys.fromServiceIdentifier)
-                 .field(ServiceDependencyKeys.toServiceIdentifier)
+                 .field(ServiceDependencyKeys.fromMonitoredServiceIdentifier)
+                 .field(ServiceDependencyKeys.toMonitoredServiceIdentifier)
                  .collation(
                      Collation.builder().locale(CollationLocale.ENGLISH).strength(CollationStrength.PRIMARY).build())
                  .build())
@@ -61,21 +60,12 @@ public class ServiceDependency implements PersistentEntity, UuidAware, AccountAc
                  .field(ServiceDependencyKeys.projectIdentifier)
                  .build())
         .add(CompoundMongoIndex.builder()
-                 .name("list_edges_by_env_idx")
-                 .unique(false)
-                 .field(ServiceDependencyKeys.accountId)
-                 .field(ServiceDependencyKeys.orgIdentifier)
-                 .field(ServiceDependencyKeys.projectIdentifier)
-                 .field(ServiceDependencyKeys.environmentIdentifier)
-                 .build())
-        .add(CompoundMongoIndex.builder()
                  .name("list_dependent_svc_idx")
                  .unique(false)
                  .field(ServiceDependencyKeys.accountId)
                  .field(ServiceDependencyKeys.orgIdentifier)
                  .field(ServiceDependencyKeys.projectIdentifier)
-                 .field(ServiceDependencyKeys.environmentIdentifier)
-                 .field(ServiceDependencyKeys.toServiceIdentifier)
+                 .field(ServiceDependencyKeys.toMonitoredServiceIdentifier)
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("list_dependencies_idx")
@@ -83,8 +73,7 @@ public class ServiceDependency implements PersistentEntity, UuidAware, AccountAc
                  .field(ServiceDependencyKeys.accountId)
                  .field(ServiceDependencyKeys.orgIdentifier)
                  .field(ServiceDependencyKeys.projectIdentifier)
-                 .field(ServiceDependencyKeys.environmentIdentifier)
-                 .field(ServiceDependencyKeys.fromServiceIdentifier)
+                 .field(ServiceDependencyKeys.fromMonitoredServiceIdentifier)
                  .build())
         .build();
   }
@@ -93,9 +82,8 @@ public class ServiceDependency implements PersistentEntity, UuidAware, AccountAc
   @NotNull String accountId;
   @EntityIdentifier String orgIdentifier;
   @EntityIdentifier String projectIdentifier;
-  @EntityIdentifier String environmentIdentifier;
-  @EntityIdentifier String fromServiceIdentifier;
-  @EntityIdentifier String toServiceIdentifier;
+  String fromMonitoredServiceIdentifier;
+  String toMonitoredServiceIdentifier;
 
   private long lastUpdatedAt;
   private long createdAt;
@@ -107,9 +95,8 @@ public class ServiceDependency implements PersistentEntity, UuidAware, AccountAc
     String accountId;
     String orgIdentifier;
     String projectIdentifier;
-    String environmentIdentifier;
-    String fromServiceIdentifier;
-    String toServiceIdentifier;
+    String fromMonitoredServiceIdentifier;
+    String toMonitoredServiceIdentifier;
   }
 
   @JsonIgnore
@@ -118,9 +105,8 @@ public class ServiceDependency implements PersistentEntity, UuidAware, AccountAc
         .accountId(accountId)
         .orgIdentifier(orgIdentifier)
         .projectIdentifier(projectIdentifier)
-        .environmentIdentifier(environmentIdentifier)
-        .fromServiceIdentifier(fromServiceIdentifier)
-        .toServiceIdentifier(toServiceIdentifier)
+        .fromMonitoredServiceIdentifier(fromMonitoredServiceIdentifier)
+        .toMonitoredServiceIdentifier(toMonitoredServiceIdentifier)
         .build();
   }
 }

@@ -544,7 +544,7 @@ public class NodeAndPodDetailsDataFetcher
   @Override
   protected QLData fetchSelectedFields(String accountId, List<QLCCMAggregationFunction> aggregateFunction,
       List<QLBillingDataFilter> filters, List<QLCCMGroupBy> groupBy, List<QLBillingSortCriteria> sort, Integer limit,
-      Integer offset, DataFetchingEnvironment dataFetchingEnvironment) {
+      Integer offset, boolean skipRoundOff, DataFetchingEnvironment dataFetchingEnvironment) {
     return null;
   }
 

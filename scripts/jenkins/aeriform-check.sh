@@ -61,6 +61,8 @@ then
      ;;
      "ONP") export HARNESS_TEAM="PL"
      ;;
+     "GIT") export HARNESS_TEAM="CDP"
+     ;;
   esac
 fi
 

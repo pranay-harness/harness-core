@@ -272,7 +272,6 @@ shared_dependencies = [
     "@maven//:de_jkeylockmanager_jkeylockmanager",
     "@maven//:dk_brics_automaton_automaton",
     "@maven//:dnsjava_dnsjava",
-    "@maven//:dom4j_dom4j",
     "@maven//:es_moki_ratelimitj_ratelimitj_core",
     "@maven//:es_moki_ratelimitj_ratelimitj_inmemory",
     "@maven//:guru_nidi_com_kitfox_svgSalamander",
@@ -631,6 +630,12 @@ shared_dependencies = [
     "@maven//:xpp3_xpp3",
     "@maven//:io_harness_ff_java_server_sdk",
     "@maven//:io_harness_cv_data_collection_dsl",
+    "@maven//:io_swagger_core_v3_swagger_jaxrs2",
+    "@maven//:io_swagger_core_v3_swagger_jaxrs2_servlet_initializer_v2",
+    "@maven//:io_swagger_core_v3_swagger_core",
+    "@maven//:io_swagger_core_v3_swagger_annotations",
+    "@maven//:io_swagger_core_v3_swagger_models",
+    "@maven//:io_swagger_core_v3_swagger_integration",
 ]
 
 java_binary(

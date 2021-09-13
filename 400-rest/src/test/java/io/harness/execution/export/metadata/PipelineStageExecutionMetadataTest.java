@@ -6,13 +6,15 @@ import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
-import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 
 import software.wings.api.ApprovalStateExecutionData;
@@ -29,6 +31,8 @@ import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class PipelineStageExecutionMetadataTest extends CategoryTest {
   @Test
   @Owner(developers = GARVIT)
@@ -55,14 +59,12 @@ public class PipelineStageExecutionMetadataTest extends CategoryTest {
     assertThat(PipelineStageExecutionMetadata.fromPipelineExecution(null)).isNull();
     assertThat(PipelineStageExecutionMetadata.fromPipelineExecution(aPipelineExecution().build())).isNull();
 
-    assertThatThrownBy(
-        ()
-            -> PipelineStageExecutionMetadata.fromPipelineExecution(
-                aPipelineExecution()
-                    .withPipeline(Pipeline.builder().build())
-                    .withPipelineStageExecutions(Collections.singletonList(PipelineStageExecution.builder().build()))
-                    .build()))
-        .isInstanceOf(InvalidRequestException.class);
+    assertThat(PipelineStageExecutionMetadata.fromPipelineExecution(
+                   aPipelineExecution()
+                       .withPipeline(Pipeline.builder().build())
+                       .withPipelineStageExecutions(Collections.singletonList(PipelineStageExecution.builder().build()))
+                       .build()))
+        .isNull();
 
     List<PipelineStageExecutionMetadata> pipelineStageExecutionMetadataList =
         PipelineStageExecutionMetadata.fromPipelineExecution(

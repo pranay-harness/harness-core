@@ -18,9 +18,9 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.delegate.beans.FileUploadLimit;
 import io.harness.rule.Owner;
 
-import software.wings.app.FileUploadLimit;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.BaseFile;
 import software.wings.service.intfc.FileService;

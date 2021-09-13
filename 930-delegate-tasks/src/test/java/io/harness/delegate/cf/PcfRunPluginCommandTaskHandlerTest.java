@@ -6,6 +6,7 @@ import static io.harness.delegate.cf.CfTestConstants.ORG;
 import static io.harness.delegate.cf.CfTestConstants.SPACE;
 import static io.harness.delegate.cf.CfTestConstants.URL;
 import static io.harness.delegate.cf.CfTestConstants.USER_NAME_DECRYPTED;
+import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.BOJANA;
 import static io.harness.rule.OwnerRule.IVAN;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
@@ -127,6 +128,38 @@ public class PcfRunPluginCommandTaskHandlerTest extends CategoryTest {
     final CfCommandExecutionResponse commandExecutionResponse = pcfRunPluginCommandTaskHandler.handleError(
         executionLogCallback, getPcfRunPluginCommandRequest(), new PivotalClientApiException(""));
     assertThat(commandExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
+  }
+
+  @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testNoSecretInLogs() {
+    String secretScript = "secret script";
+    String secretFilePath = "secretPath";
+    String secretContent = "secret content";
+    String secretRepoRoot = "root";
+
+    CfRunPluginCommandRequest pluginCommandRequest =
+        CfRunPluginCommandRequest.builder()
+            .pcfCommandType(PcfCommandType.SETUP)
+            .pcfConfig(getPcfConfig())
+            .organization(ORG)
+            .space(SPACE)
+            .accountId(ACCOUNT_ID)
+            .timeoutIntervalInMin(5)
+            .renderedScriptString(secretScript)
+            .encryptedDataDetails(null)
+            .fileDataList(
+                ImmutableList.of(FileData.builder().filePath(secretFilePath).fileContent(secretContent).build()))
+            .filePathsInScript(ImmutableList.of("/manifest.yml"))
+            .repoRoot(secretRepoRoot)
+            .build();
+
+    String errorMsg = pluginCommandRequest.toString();
+    assertThat(errorMsg.contains(secretScript)).isFalse();
+    assertThat(errorMsg.contains(secretFilePath)).isFalse();
+    assertThat(errorMsg.contains(secretContent)).isFalse();
+    assertThat(errorMsg.contains(secretRepoRoot)).isFalse();
   }
 
   @Test

@@ -852,7 +852,7 @@ public class CVConfigServiceImplTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = KANHAIYA)
   @Category(UnitTests.class)
-  public void testList_filteredWithIdentifiersWithNullIdentifiers() {
+  public void testList_fromServiceEnvironmentParams() {
     String identifierOne = "identifierOne";
     String identifierTwo = "identifierTwo";
     List<String> healthSourceIds = Arrays.asList(identifierOne, identifierTwo);
@@ -866,7 +866,7 @@ public class CVConfigServiceImplTest extends CvNextGenTestBase {
              .serviceIdentifier(serviceInstanceIdentifier)
              .envIdentifier(environmentIdentifier)
              .build());
-    List<CVConfig> cvConfigs = cvConfigService.list(serviceEnvironmentParams, null);
+    List<CVConfig> cvConfigs = cvConfigService.list(serviceEnvironmentParams);
     assertThat(cvConfigs).hasSize(2);
   }
 }
