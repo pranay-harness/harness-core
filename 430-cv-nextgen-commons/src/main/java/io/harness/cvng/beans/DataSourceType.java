@@ -7,20 +7,23 @@ import java.util.EnumSet;
 import java.util.List;
 
 public enum DataSourceType {
-  APP_DYNAMICS("Appdynamics", VerificationType.TIME_SERIES),
-  SPLUNK("Splunk", VerificationType.LOG),
-  STACKDRIVER("Stackdriver", VerificationType.TIME_SERIES),
-  STACKDRIVER_LOG("Stackdriver Log", VerificationType.LOG),
-  KUBERNETES("Kubernetes", VerificationType.TIME_SERIES),
-  NEW_RELIC("New Relic", VerificationType.TIME_SERIES),
-  PROMETHEUS("Prometheus", VerificationType.TIME_SERIES);
+  APP_DYNAMICS("Appdynamics", VerificationType.TIME_SERIES, "appdynamics"),
+  SPLUNK("Splunk", VerificationType.LOG, "splunk"),
+  STACKDRIVER("Stackdriver", VerificationType.TIME_SERIES, "prometheus"),
+  STACKDRIVER_LOG("Stackdriver Log", VerificationType.LOG, "splunk"),
+  KUBERNETES("Kubernetes", VerificationType.TIME_SERIES, "prometheus"),
+  NEW_RELIC("New Relic", VerificationType.TIME_SERIES, "appdynamics"),
+  PROMETHEUS("Prometheus", VerificationType.TIME_SERIES, "prometheus");
 
   private String displayName;
   private VerificationType verificationType;
+  // template prefix that should be used for demo data.
+  private String demoTemplatePrefix;
 
-  DataSourceType(String displayName, VerificationType verificationType) {
+  DataSourceType(String displayName, VerificationType verificationType, String demoTemplatePrefix) {
     this.displayName = displayName;
     this.verificationType = verificationType;
+    this.demoTemplatePrefix = demoTemplatePrefix;
   }
 
   public String getDisplayName() {
@@ -33,5 +36,9 @@ public enum DataSourceType {
 
   public static List<DataSourceType> getTimeSeriesTypes() {
     return new ArrayList<>(EnumSet.of(APP_DYNAMICS, STACKDRIVER, NEW_RELIC, PROMETHEUS));
+  }
+
+  public String getDemoTemplatePrefix() {
+    return demoTemplatePrefix;
   }
 }
