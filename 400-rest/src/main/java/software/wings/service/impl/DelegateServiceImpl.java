@@ -2667,6 +2667,22 @@ public class DelegateServiceImpl implements software.wings.service.intfc.Delegat
   }
 
   @Override
+  public List<String> obtainDelegateIdsUsingName(String accountId, String delegateName) {
+    try {
+      return persistence.createQuery(Delegate.class)
+          .filter(DelegateKeys.accountId, accountId)
+          .filter(DelegateKeys.delegateName, delegateName)
+          .asKeyList()
+          .stream()
+          .map(key -> (String) key.getId())
+          .collect(toList());
+    } catch (Exception e) {
+      log.error("Could not get delegates from DB.", e);
+      return null;
+    }
+  }
+
+  @Override
   public void saveDelegateTask(DelegateTask task, Status status) {
     delegateTaskServiceClassic.saveDelegateTask(task, status);
   }
