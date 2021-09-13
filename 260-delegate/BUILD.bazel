@@ -694,6 +694,9 @@ springboot(
         "//conditions:default": "io.harness.delegate.app.DelegateApplication",
     }),
     java_library = ":module",
+    tags = [
+        "oss",
+    ],
     visibility = ["//visibility:public"],
 )
 

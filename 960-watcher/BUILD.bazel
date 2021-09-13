@@ -15,6 +15,9 @@ java_binary(
         "//960-watcher/src/main/resources:resource",
     ],
     sign = True,
+    tags = [
+        "oss",
+    ],
     visibility = ["//visibility:public"],
     runtime_deps = [
         "//960-watcher/src/main/resources",
