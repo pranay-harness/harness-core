@@ -8,9 +8,15 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.concurrent.HTimeLimiter;
+import io.harness.cvng.activity.entities.Activity.ActivityUpdatableEntity;
 import io.harness.cvng.activity.entities.ActivitySource.ActivitySourceUpdatableEntity;
 import io.harness.cvng.activity.entities.CD10ActivitySource.CD10ActivitySourceUpdatableEntity;
 import io.harness.cvng.activity.entities.CDNGActivitySource.CDNGActivitySourceUpdatableEntity;
+import io.harness.cvng.activity.entities.CustomActivity.CustomActivityUpdatableEntity;
+import io.harness.cvng.activity.entities.DeploymentActivity.DeploymentActivityUpdatableEntity;
+import io.harness.cvng.activity.entities.HarnessCDActivity.HarnessCDActivityUpdatableEntity;
+import io.harness.cvng.activity.entities.InfrastructureActivity.InfrastructureActivityUpdatableEntity;
+import io.harness.cvng.activity.entities.KubernetesActivity.KubernetesActivityUpdatableEntity;
 import io.harness.cvng.activity.entities.KubernetesActivitySource.KubernetesActivitySourceUpdatableEntity;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.services.impl.ActivityServiceImpl;
@@ -46,11 +52,14 @@ import io.harness.cvng.analysis.services.impl.TrendAnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.VerificationJobInstanceAnalysisServiceImpl;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.activity.ActivitySourceType;
+import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.cdng.services.api.CVNGStepService;
 import io.harness.cvng.cdng.services.api.CVNGStepTaskService;
+import io.harness.cvng.cdng.services.api.VerifyStepDemoService;
 import io.harness.cvng.cdng.services.impl.CVNGStepServiceImpl;
 import io.harness.cvng.cdng.services.impl.CVNGStepTaskServiceImpl;
+import io.harness.cvng.cdng.services.impl.VerifyStepDemoServiceImpl;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.NextGenServiceImpl;
 import io.harness.cvng.client.VerificationManagerService;
@@ -64,9 +73,8 @@ import io.harness.cvng.core.entities.StackdriverCVConfig.StackDriverCVConfigUpda
 import io.harness.cvng.core.entities.StackdriverLogCVConfig.StackdriverLogCVConfigUpdatableEntity;
 import io.harness.cvng.core.entities.changeSource.ChangeSource;
 import io.harness.cvng.core.entities.changeSource.HarnessCDChangeSource;
+import io.harness.cvng.core.entities.changeSource.KubernetesChangeSource;
 import io.harness.cvng.core.entities.changeSource.PagerDutyChangeSource;
-import io.harness.cvng.core.entities.changeSource.event.ChangeEvent.ChangeEventUpdatableEntity;
-import io.harness.cvng.core.entities.changeSource.event.HarnessCDChangeEvent.HarnessCDChangeEventUpdatableEntity;
 import io.harness.cvng.core.jobs.AccountChangeEventMessageProcessor;
 import io.harness.cvng.core.jobs.ConnectorChangeEventMessageProcessor;
 import io.harness.cvng.core.jobs.ConsumerMessageProcessor;
@@ -76,7 +84,6 @@ import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.core.services.api.AppDynamicsService;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.CVConfigTransformer;
-import io.harness.cvng.core.services.api.CVEventService;
 import io.harness.cvng.core.services.api.CVNGLogService;
 import io.harness.cvng.core.services.api.CVNGYamlSchemaService;
 import io.harness.cvng.core.services.api.CVSetupService;
@@ -112,7 +119,6 @@ import io.harness.cvng.core.services.impl.AppDynamicsCVConfigTransformer;
 import io.harness.cvng.core.services.impl.AppDynamicsDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.AppDynamicsServiceImpl;
 import io.harness.cvng.core.services.impl.CVConfigServiceImpl;
-import io.harness.cvng.core.services.impl.CVEventServiceImpl;
 import io.harness.cvng.core.services.impl.CVNGLogServiceImpl;
 import io.harness.cvng.core.services.impl.CVNGYamlSchemaServiceImpl;
 import io.harness.cvng.core.services.impl.CVSetupServiceImpl;
@@ -157,6 +163,7 @@ import io.harness.cvng.core.transformer.changeEvent.HarnessCDChangeEventTransfor
 import io.harness.cvng.core.transformer.changeSource.ChangeSourceEntityAndDTOTransformer;
 import io.harness.cvng.core.transformer.changeSource.ChangeSourceSpecTransformer;
 import io.harness.cvng.core.transformer.changeSource.HarnessCDChangeSourceSpecTransformer;
+import io.harness.cvng.core.transformer.changeSource.KubernetesChangeSourceSpecTransformer;
 import io.harness.cvng.core.transformer.changeSource.PagerDutyChangeSourceSpecTransformer;
 import io.harness.cvng.core.types.ChangeSourceType;
 import io.harness.cvng.core.utils.monitoredService.AppDynamicsHealthSourceSpecTransformer;
@@ -404,7 +411,6 @@ public class CVServiceModule extends AbstractModule {
     bind(CVNGMigrationService.class).to(CVNGMigrationServiceImpl.class).in(Singleton.class);
     bind(TimeLimiter.class).toInstance(HTimeLimiter.create());
     bind(StackdriverService.class).to(StackdriverServiceImpl.class);
-    bind(CVEventService.class).to(CVEventServiceImpl.class);
     bind(RedisConfig.class)
         .annotatedWith(Names.named("lock"))
         .toInstance(verificationConfiguration.getEventsFrameworkConfiguration().getRedisConfig());
@@ -422,6 +428,7 @@ public class CVServiceModule extends AbstractModule {
         .to(ConnectorChangeEventMessageProcessor.class);
     bind(AlertRuleAnomalyService.class).to(AlertRuleAnomalyServiceImpl.class);
     bind(NewRelicService.class).to(NewRelicServiceImpl.class);
+    bind(VerifyStepDemoService.class).to(VerifyStepDemoServiceImpl.class);
     bind(String.class)
         .annotatedWith(Names.named("portalUrl"))
         .toInstance(verificationConfiguration.getPortalUrl().endsWith("/")
@@ -472,6 +479,8 @@ public class CVServiceModule extends AbstractModule {
         .to(HarnessCDChangeSource.UpdatableCDNGChangeSourceEntity.class);
     changeTypeSourceMapBinder.addBinding(ChangeSourceType.PAGER_DUTY)
         .to(PagerDutyChangeSource.UpdatablePagerDutyChangeSourceEntity.class);
+    changeTypeSourceMapBinder.addBinding(ChangeSourceType.KUBERNETES)
+        .to(KubernetesChangeSource.UpdatableKubernetesChangeSourceEntity.class);
 
     bind(ChangeSourceService.class).to(ChangeSourceServiceImpl.class);
     bind(ChangeSourceEntityAndDTOTransformer.class);
@@ -481,10 +490,22 @@ public class CVServiceModule extends AbstractModule {
     bind(ChangeSourceSpecTransformer.class)
         .annotatedWith(Names.named(ChangeSourceType.PAGER_DUTY.name()))
         .to(PagerDutyChangeSourceSpecTransformer.class);
+    bind(ChangeSourceSpecTransformer.class)
+        .annotatedWith(Names.named(ChangeSourceType.KUBERNETES.name()))
+        .to(KubernetesChangeSourceSpecTransformer.class);
 
-    MapBinder<ChangeSourceType, ChangeEventUpdatableEntity> changeTypeMongoUtilMapBinder =
-        MapBinder.newMapBinder(binder(), ChangeSourceType.class, ChangeEventUpdatableEntity.class);
-    changeTypeMongoUtilMapBinder.addBinding(ChangeSourceType.HARNESS_CD).to(HarnessCDChangeEventUpdatableEntity.class);
+    MapBinder<ActivityType, ActivityUpdatableEntity> activityTypeActivityUpdatableEntityMapBinder =
+        MapBinder.newMapBinder(binder(), ActivityType.class, ActivityUpdatableEntity.class);
+    activityTypeActivityUpdatableEntityMapBinder.addBinding(ActivityType.HARNESS_CD)
+        .to(HarnessCDActivityUpdatableEntity.class);
+    activityTypeActivityUpdatableEntityMapBinder.addBinding(ActivityType.DEPLOYMENT)
+        .to(DeploymentActivityUpdatableEntity.class);
+    activityTypeActivityUpdatableEntityMapBinder.addBinding(ActivityType.INFRASTRUCTURE)
+        .to(InfrastructureActivityUpdatableEntity.class);
+    activityTypeActivityUpdatableEntityMapBinder.addBinding(ActivityType.KUBERNETES)
+        .to(KubernetesActivityUpdatableEntity.class);
+    activityTypeActivityUpdatableEntityMapBinder.addBinding(ActivityType.CUSTOM)
+        .to(CustomActivityUpdatableEntity.class);
 
     bind(ChangeEventService.class).to(ChangeEventServiceImpl.class);
     bind(ChangeEventEntityAndDTOTransformer.class);

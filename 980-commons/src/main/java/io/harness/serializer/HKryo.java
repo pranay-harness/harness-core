@@ -240,7 +240,7 @@ public class HKryo extends Kryo {
   @Override
   public Registration register(Class type, int id) {
     if (getRegistration(id) != null) {
-      throw new IllegalStateException("The id is already used by " + getRegistration(id).getType());
+      throw new IllegalStateException("The id " + id + " is already used by " + getRegistration(id).getType());
     }
     return check(super.register(type, id), id);
   }

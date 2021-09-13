@@ -1,13 +1,17 @@
 package software.wings.service.intfc;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ng.core.account.AuthenticationMechanism;
+import io.harness.ng.core.account.OauthProviderType;
 
 import software.wings.beans.sso.LdapGroupResponse;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.LdapTestResponse;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.helpers.ext.ldap.LdapResponse;
-import software.wings.security.authentication.OauthProviderType;
 import software.wings.security.authentication.SSOConfig;
 
 import java.io.InputStream;
@@ -17,6 +21,8 @@ import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotBlank;
 
 // TODO: Refactor this to make it more abstract and common across different SSO providers
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public interface SSOService {
   SSOConfig uploadOauthConfiguration(String accountId, String filter, Set<OauthProviderType> allowedProviders);
 

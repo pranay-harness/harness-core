@@ -13,6 +13,7 @@ import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.beans.params.TimeRangeParams;
+import io.harness.cvng.core.beans.params.filterParams.TimeSeriesAnalysisFilter;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.TimeSeriesRecord;
 import io.harness.cvng.core.services.api.CVConfigService;
@@ -53,17 +54,21 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
 
   @Override
   public PageResponse<TimeSeriesMetricDataDTO> getTimeSeriesMetricData(
-      ServiceEnvironmentParams serviceEnvironmentParams, TimeRangeParams timeRangeParams, boolean anomalous,
-      List<String> healthSourceIdentifiersFilter, String filter, PageParams pageParams) {
-    List<String> cvConfigIds = cvConfigService.list(serviceEnvironmentParams, healthSourceIdentifiersFilter)
-                                   .stream()
-                                   .map(CVConfig::getUuid)
-                                   .collect(Collectors.toList());
+      ServiceEnvironmentParams serviceEnvironmentParams, TimeRangeParams timeRangeParams,
+      TimeSeriesAnalysisFilter timeSeriesAnalysisFilter, PageParams pageParams) {
+    List<CVConfig> cvConfigs;
+    if (timeSeriesAnalysisFilter.filterByHealthSourceIdentifiers()) {
+      cvConfigs = cvConfigService.list(serviceEnvironmentParams, timeSeriesAnalysisFilter.getHealthSourceIdentifiers());
+    } else {
+      cvConfigs = cvConfigService.list(serviceEnvironmentParams);
+    }
+    List<String> cvConfigIds = cvConfigs.stream().map(CVConfig::getUuid).collect(Collectors.toList());
     return getMetricData(cvConfigIds, serviceEnvironmentParams.getAccountIdentifier(),
         serviceEnvironmentParams.getProjectIdentifier(), serviceEnvironmentParams.getOrgIdentifier(),
         serviceEnvironmentParams.getEnvironmentIdentifier(), serviceEnvironmentParams.getServiceIdentifier(), null,
-        timeRangeParams.getStartTime(), timeRangeParams.getEndTime(), timeRangeParams.getStartTime(), anomalous,
-        pageParams.getPage(), pageParams.getSize(), filter);
+        timeRangeParams.getStartTime(), timeRangeParams.getEndTime(), timeRangeParams.getStartTime(),
+        timeSeriesAnalysisFilter.isAnomalous(), pageParams.getPage(), pageParams.getSize(),
+        timeSeriesAnalysisFilter.getFilter());
   }
 
   @Override
@@ -208,7 +213,7 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
                   .projectIdentifier(projectIdentifier)
                   .orgIdentifier(orgIdentifier)
                   .metricType(record.getMetricType())
-                  .dataSourceType(cvConfigIdToDataSourceTypeMap.get(record.getCvConfigId()))
+                  .dataSourceType(cvConfigIdToDataSourceTypeMap.get(record.getVerificationTaskId()))
                   .build());
         }
         TimeSeriesMetricDataDTO timeSeriesMetricDataDTO = transactionMetricDataMap.get(key);

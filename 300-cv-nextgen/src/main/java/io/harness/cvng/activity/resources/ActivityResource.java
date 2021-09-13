@@ -19,6 +19,8 @@ import io.harness.cvng.core.beans.DatasourceTypeDTO;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
 import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.ProjectParams;
+import io.harness.cvng.core.beans.params.filterParams.DeploymentLogAnalysisFilter;
+import io.harness.cvng.core.beans.params.filterParams.DeploymentTimeSeriesAnalysisFilter;
 import io.harness.ng.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
@@ -164,8 +166,17 @@ public class ActivityResource {
       @QueryParam("healthSources") List<String> healthSourceIdentifiers,
       @QueryParam("pageNumber") @DefaultValue("0") int pageNumber,
       @QueryParam("pageSize") @DefaultValue("10") int pageSize) {
+    PageParams pageParams = PageParams.builder().page(pageNumber).size(pageSize).build();
+    DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter =
+        DeploymentTimeSeriesAnalysisFilter.builder()
+            .healthSourceIdentifiers(healthSourceIdentifiers)
+            .filter(filter)
+            .anomalous(anomalousMetricsOnly)
+            .hostName(hostName)
+            .build();
+
     return new RestResponse(activityService.getDeploymentActivityTimeSeriesData(
-        accountId, activityId, anomalousMetricsOnly, hostName, filter, healthSourceIdentifiers, pageNumber, pageSize));
+        accountId, activityId, deploymentTimeSeriesAnalysisFilter, pageParams));
   }
 
   @GET
@@ -199,8 +210,14 @@ public class ActivityResource {
       @NotNull @NotEmpty @PathParam("activityId") String activityId, @NotNull @QueryParam("accountId") String accountId,
       @QueryParam("hostName") String hostName, @QueryParam("healthSource") List<String> healthSourceIdentifiers,
       @QueryParam("clusterType") List<ClusterType> clusterTypes) {
-    return new RestResponse(activityService.getDeploymentActivityLogAnalysisClusters(
-        accountId, activityId, hostName, healthSourceIdentifiers, clusterTypes));
+    DeploymentLogAnalysisFilter deploymentLogAnalysisFilter = DeploymentLogAnalysisFilter.builder()
+                                                                  .healthSourceIdentifiers(healthSourceIdentifiers)
+                                                                  .clusterTypes(clusterTypes)
+                                                                  .hostName(hostName)
+                                                                  .build();
+
+    return new RestResponse(
+        activityService.getDeploymentActivityLogAnalysisClusters(accountId, activityId, deploymentLogAnalysisFilter));
   }
 
   @Path("/{activityId}/deployment-log-analysis-data")
@@ -218,7 +235,13 @@ public class ActivityResource {
     if (clusterType != null) {
       clusterTypes = Arrays.asList(clusterType);
     }
+    DeploymentLogAnalysisFilter deploymentLogAnalysisFilter = DeploymentLogAnalysisFilter.builder()
+                                                                  .healthSourceIdentifiers(healthSourceIdentifiers)
+                                                                  .clusterTypes(clusterTypes)
+                                                                  .hostName(hostName)
+                                                                  .build();
+
     return new RestResponse(activityService.getDeploymentActivityLogAnalysisResult(
-        accountId, activityId, label, hostName, healthSourceIdentifiers, clusterTypes, pageParams));
+        accountId, activityId, label, deploymentLogAnalysisFilter, pageParams));
   }
 }

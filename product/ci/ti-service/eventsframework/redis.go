@@ -14,6 +14,7 @@ import (
 	pb "github.com/wings-software/portal/953-events-api/src/main/proto/io/harness/eventsframework/schemas/webhookpayloads"
 	scmpb "github.com/wings-software/portal/product/ci/scm/proto"
 	"github.com/wings-software/portal/product/ci/ti-service/db"
+	"github.com/wings-software/portal/product/ci/ti-service/logger"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 	"go.uber.org/zap"
 )
@@ -185,13 +186,17 @@ func (r *RedisBroker) getCallback(ctx context.Context, fn MergeCallbackFn, db db
 			source := pr.GetPr().GetSource() // Source branch
 			target := pr.GetPr().GetTarget() // Target branch for merge
 			sha := pr.GetPr().GetSha()       // Sha of the topmost commit in the commits list
+
+			// update ctx with log
+			log := r.log.With("request-id", sha, "accountId", accountId)
+
 			if repo == "" || source == "" || target == "" || sha == "" {
 				// These fields should always be populated
-				r.log.Errorw("[redis stream]: missing information for merge event", "account_id", accountId,
+				log.Errorw("[redis stream]: missing information for merge event", "account_id", accountId,
 					"repo", repo, "source", source, "target", target, "sha", sha)
 				return nil
 			}
-			r.log.Infow("[redis stream]: got a merge notification", "account_id", accountId,
+			log.Infow("[redis stream]: got a merge notification", "account_id", accountId,
 				"repo", repo, "source", source, "target", target, "sha", sha)
 			req := types.MergePartialCgRequest{AccountId: accountId,
 				TargetBranch: target, Repo: repo, Diff: types.DiffInfo{Sha: sha}}
@@ -207,11 +212,12 @@ func (r *RedisBroker) getCallback(ctx context.Context, fn MergeCallbackFn, db db
 			// Add this if statement once we start writing files with updated schema
 			//if len(req.Diff.Files) != 0 {
 			// Found the merge event with changed files
-			r.log.Infow("[redis stream]: calling merge CG", "account_id", accountId, "repo", repo,
+			log.Infow("[redis stream]: calling merge CG", "account_id", accountId, "repo", repo,
 				"source", source, "target", target, "sha", sha, "changed_files", req.Diff.Files)
-			err := fn(ctx, req)
+
+			err := fn(logger.WithContext(ctx, log), req)
 			if err != nil {
-				r.log.Errorw("[redis stream]: could not merge partial call graph to master", "account_id", accountId,
+				log.Errorw("[redis stream]: could not merge partial call graph to master", "account_id", accountId,
 					"repo", repo, "source", source, "target", target, "sha", sha, "changed_files", req.Diff.Files,
 					zap.Error(err))
 				return nil

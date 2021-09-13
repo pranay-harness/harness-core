@@ -6,6 +6,7 @@ shared_dependencies = [
     "@maven//:com_google_guava_guava",
     "@maven//:io_netty_netty_all",
 ] + [
+    "//889-yaml-commons:module",
     "//890-sm-core:module",
     "//900-git-sync-sdk:module",
     "//940-primary-version-manager:module",
@@ -74,6 +75,7 @@ java_library(
         "//990-commons-test:module",
         "@maven//:junit_junit",
         "@maven//:org_assertj_assertj_core",
+        "@maven//:org_jooq_joor",
         "@maven//:org_mockito_mockito_core",
         "@maven//:org_powermock_powermock_api_mockito",
     ],
@@ -82,3 +84,7 @@ java_library(
 run_tests()
 
 run_analysis()
+
+exports_files([
+    "config.yml",
+])

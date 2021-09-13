@@ -4,7 +4,7 @@ go_library(
     name = "engine_lib",
     srcs = ["main.go"],
     importpath = "github.com/wings-software/portal/product/ci/engine",
-    visibility = ["//visibility:private"],
+    visibility = ["//:__pkg__"],
     deps = [
         "//commons/go/lib/logs",
         "//commons/go/lib/metrics",

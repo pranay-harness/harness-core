@@ -1,5 +1,9 @@
 package software.wings.helpers.ext.artifactory;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Data;
@@ -10,6 +14,7 @@ import lombok.Data;
 @Data
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
+@OwnedBy(CDC)
 public class FolderPath {
   private String repo;
   private String path;

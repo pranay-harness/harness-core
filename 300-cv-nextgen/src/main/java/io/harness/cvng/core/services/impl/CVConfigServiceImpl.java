@@ -19,7 +19,6 @@ import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.entities.CVConfig.CVConfigUpdatableEntity;
 import io.harness.cvng.core.entities.DeletedCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
-import io.harness.cvng.core.services.api.CVEventService;
 import io.harness.cvng.core.services.api.DeletedCVConfigService;
 import io.harness.cvng.core.services.api.UpdatableEntity;
 import io.harness.cvng.core.services.api.VerificationTaskService;
@@ -54,7 +53,6 @@ public class CVConfigServiceImpl implements CVConfigService {
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private NextGenService nextGenService;
   @Inject private VerificationManagerService verificationManagerService;
-  @Inject private CVEventService eventService;
   @Inject private Map<DataSourceType, CVConfigUpdatableEntity> dataSourceTypeCVConfigMapBinder;
 
   @Override
@@ -63,14 +61,7 @@ public class CVConfigServiceImpl implements CVConfigService {
     cvConfig.validate();
     hPersistence.save(cvConfig);
     verificationTaskService.create(cvConfig.getAccountId(), cvConfig.getUuid(), cvConfig.getType());
-    sendScopedCreateEvent(cvConfig);
     return cvConfig;
-  }
-
-  private void sendScopedCreateEvent(CVConfig cvConfig) {
-    eventService.sendConnectorCreateEvent(cvConfig);
-    eventService.sendServiceCreateEvent(cvConfig);
-    eventService.sendEnvironmentCreateEvent(cvConfig);
   }
 
   @Override
@@ -330,12 +321,15 @@ public class CVConfigServiceImpl implements CVConfigService {
   }
 
   @Override
+  public List<CVConfig> list(ServiceEnvironmentParams serviceEnvironmentParams) {
+    Query<CVConfig> query = createQuery(serviceEnvironmentParams);
+    return query.asList();
+  }
+
+  @Override
   public List<CVConfig> list(ServiceEnvironmentParams serviceEnvironmentParams, List<String> identifiers) {
     Query<CVConfig> query = createQuery(serviceEnvironmentParams);
-
-    if (identifiers != null) {
-      query.field(CVConfigKeys.identifier).in(identifiers);
-    }
+    query.field(CVConfigKeys.identifier).in(identifiers);
     return query.asList();
   }
 

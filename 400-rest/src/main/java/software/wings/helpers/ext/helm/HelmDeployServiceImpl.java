@@ -24,6 +24,7 @@ import io.harness.beans.FileData;
 import io.harness.concurrent.HTimeLimiter;
 import io.harness.container.ContainerInfo;
 import io.harness.delegate.task.helm.HelmChartInfo;
+import io.harness.delegate.task.helm.HelmCommandResponse;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.ExceptionUtils;
@@ -69,7 +70,6 @@ import software.wings.helpers.ext.helm.request.HelmCommandRequest.HelmCommandTyp
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmReleaseHistoryCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
-import software.wings.helpers.ext.helm.response.HelmCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmListReleasesCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;

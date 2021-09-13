@@ -2,6 +2,11 @@ package software.wings.licensing;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.License;
 import software.wings.dl.WingsPersistence;
 
@@ -11,6 +16,8 @@ import java.util.List;
 /**
  * Created by peeyushaggarwal on 3/22/17.
  */
+@OwnedBy(HarnessTeam.GTM)
+@TargetModule(HarnessModule._945_ACCOUNT_MGMT)
 public class DatabaseLicenseProviderImpl implements LicenseProvider {
   @Inject private WingsPersistence wingsPersistence;
 

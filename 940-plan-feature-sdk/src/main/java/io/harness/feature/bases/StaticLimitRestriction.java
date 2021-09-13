@@ -1,12 +1,13 @@
 package io.harness.feature.bases;
 
 import io.harness.feature.constants.RestrictionType;
+import io.harness.feature.interfaces.LimitRestriction;
 import io.harness.feature.interfaces.StaticLimitInterface;
 
 import lombok.Getter;
 
 @Getter
-public class StaticLimitRestriction extends Restriction {
+public class StaticLimitRestriction extends Restriction implements LimitRestriction {
   long limit;
   StaticLimitInterface staticLimitInterface;
 

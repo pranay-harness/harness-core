@@ -23,6 +23,7 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionServiceImpl;
+import io.harness.engine.expressions.OrchestrationConstants;
 import io.harness.engine.interrupts.OrchestrationEndInterruptHandler;
 import io.harness.engine.timeouts.TimeoutInstanceRemover;
 import io.harness.event.OrchestrationEndGraphHandler;
@@ -147,6 +148,7 @@ import io.harness.yaml.YamlSdkInitHelper;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -462,6 +464,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         .engineSteps(PipelineServiceStepRegistrar.getEngineSteps())
         .engineFacilitators(PipelineServiceFacilitatorRegistrar.getEngineFacilitators())
         .engineAdvisers(PipelineServiceUtilAdviserRegistrar.getEngineAdvisers())
+        .staticAliases(getStaticAliases())
         .engineEventHandlersMap(of())
         .executionSummaryModuleInfoProviderClass(PmsExecutionServiceInfoProvider.class)
         .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
@@ -469,6 +472,21 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         .orchestrationEventPoolConfig(
             ThreadPoolConfig.builder().corePoolSize(10).maxPoolSize(50).idleTime(120L).build())
         .build();
+  }
+
+  @VisibleForTesting
+  public Map<String, String> getStaticAliases() {
+    Map<String, String> aliases = new HashMap<>();
+    aliases.put(OrchestrationConstants.STAGE_SUCCESS,
+        "<+stage.currentStatus> == \"SUCCEEDED\" || <+stage.currentStatus> == \"IGNORE_FAILED\"");
+    aliases.put(OrchestrationConstants.STAGE_FAILURE,
+        "<+stage.currentStatus> == \"FAILED\" || <+stage.currentStatus> == \"ERRORED\" || <+stage.currentStatus> == \"EXPIRED\"");
+    aliases.put(OrchestrationConstants.PIPELINE_FAILURE,
+        "<+pipeline.currentStatus> == \"FAILED\" || <+pipeline.currentStatus> == \"ERRORED\" || <+pipeline.currentStatus> == \"EXPIRED\"");
+    aliases.put(OrchestrationConstants.PIPELINE_SUCCESS,
+        "<+pipeline.currentStatus> == \"SUCCEEDED\" || <+pipeline.currentStatus> == \"IGNORE_FAILED\"");
+    aliases.put(OrchestrationConstants.ALWAYS, "true");
+    return aliases;
   }
 
   private void registerGitSyncSdk(PipelineServiceConfiguration config, Injector injector, Environment environment) {

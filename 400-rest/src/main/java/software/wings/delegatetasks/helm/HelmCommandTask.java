@@ -12,6 +12,7 @@ import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.delegate.task.helm.HelmCommandResponse;
 import io.harness.exception.HarnessException;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.logging.CommandExecutionStatus;
@@ -29,7 +30,6 @@ import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmReleaseHistoryCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
-import software.wings.helpers.ext.helm.response.HelmCommandResponse;
 
 import com.google.inject.Inject;
 import java.util.function.BooleanSupplier;

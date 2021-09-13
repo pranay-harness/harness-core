@@ -3,11 +3,16 @@ package software.wings.resources;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static io.harness.exception.WingsException.USER;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.WingsException;
+import io.harness.ng.core.switchaccount.RestrictedSwitchAccountInfo;
 import io.harness.rest.RestResponse;
 
 import software.wings.beans.Account;
@@ -52,6 +57,8 @@ import org.hibernate.validator.constraints.NotBlank;
 @Produces(MediaType.APPLICATION_JSON)
 @IdentityServiceAuth
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class IdentityServiceResource {
   private AuthenticationManager authenticationManager;
   private UserService userService;
@@ -144,6 +151,15 @@ public class IdentityServiceResource {
       @NotNull OauthUserInfo oauthUserInfo, @QueryParam("provider") String oauthProviderName) {
     User user = userService.signUpUserUsingOauth(oauthUserInfo, oauthProviderName);
     return new RestResponse<>(user.getPublicUser());
+  }
+
+  @GET
+  @Path("/restricted-switch-account-info")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<RestrictedSwitchAccountInfo> getSwitchAccountInfo(
+      @QueryParam("accountId") @NotBlank String accountId, @QueryParam("userId") String userId) {
+    return new RestResponse(userService.getSwitchAccountInfo(accountId, userId));
   }
 
   @GET

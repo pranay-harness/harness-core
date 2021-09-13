@@ -6,6 +6,7 @@ import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.beans.params.TimeRangeParams;
+import io.harness.cvng.core.beans.params.filterParams.TimeSeriesAnalysisFilter;
 import io.harness.cvng.dashboard.beans.TimeSeriesMetricDataDTO;
 import io.harness.cvng.dashboard.services.api.TimeSeriesDashboardService;
 import io.harness.ng.beans.PageResponse;
@@ -125,8 +126,13 @@ public class TimeseriesDashboardResource {
                                           .endTime(Instant.ofEpochMilli(endTimeMillis))
                                           .build();
     PageParams pageParams = PageParams.builder().page(page).size(size).build();
+    TimeSeriesAnalysisFilter timeSeriesAnalysisFilter = TimeSeriesAnalysisFilter.builder()
+                                                            .filter(filter)
+                                                            .anomalous(anomalous)
+                                                            .healthSourceIdentifiers(healthSourceIdentifiers)
+                                                            .build();
 
     return new RestResponse<>(timeSeriesDashboardService.getTimeSeriesMetricData(
-        serviceEnvironmentParams, timeRangeParams, anomalous, healthSourceIdentifiers, filter, pageParams));
+        serviceEnvironmentParams, timeRangeParams, timeSeriesAnalysisFilter, pageParams));
   }
 }

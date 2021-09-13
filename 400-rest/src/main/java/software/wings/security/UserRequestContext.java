@@ -2,7 +2,9 @@ package software.wings.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import java.util.Map;
 import java.util.Set;
@@ -15,6 +17,7 @@ import lombok.Data;
 @OwnedBy(PL)
 @Data
 @Builder
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class UserRequestContext {
   private String accountId;
   private boolean harnessSupportUser;

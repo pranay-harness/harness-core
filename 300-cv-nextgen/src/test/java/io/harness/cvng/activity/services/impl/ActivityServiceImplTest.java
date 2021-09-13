@@ -41,6 +41,7 @@ import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.Activity.ActivityKeys;
 import io.harness.cvng.activity.entities.CD10ActivitySource;
+import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.activity.entities.KubernetesActivity;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.source.services.api.ActivitySourceService;
@@ -1145,6 +1146,34 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
             123456L, 123456L, "tag");
   }
 
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testCreateActivityForDemo() {
+    List<String> verificationJobInstanceIds = Collections.singletonList(generateUuid());
+    when(verificationJobInstanceService.createDemoInstances(anyList())).thenReturn(verificationJobInstanceIds);
+    VerificationJob verificationJob = createVerificationJob();
+    DeploymentActivity deploymentActivity =
+        DeploymentActivity.builder()
+            .deploymentTag("tag")
+            .verificationStartTime(builderFactory.getClock().instant().minus(Duration.ofMinutes(5)).toEpochMilli())
+            .build();
+    deploymentActivity.setVerificationJobs(Arrays.asList(verificationJob));
+    deploymentActivity.setActivityStartTime(builderFactory.getClock().instant().minus(Duration.ofMinutes(10)));
+    deploymentActivity.setOrgIdentifier(orgIdentifier);
+    deploymentActivity.setAccountId(accountId);
+    deploymentActivity.setProjectIdentifier(projectIdentifier);
+    deploymentActivity.setServiceIdentifier(serviceIdentifier);
+    deploymentActivity.setEnvironmentIdentifier(envIdentifier);
+    deploymentActivity.setActivityName("CDNG demo activity");
+    deploymentActivity.setType(ActivityType.DEPLOYMENT);
+    String activityId =
+        activityService.createActivityForDemo(deploymentActivity, ActivityVerificationStatus.VERIFICATION_FAILED);
+    Activity activity = activityService.get(activityId);
+    assertThat(activity).isNotNull();
+    assertThat(activity.getVerificationJobInstanceIds()).isEqualTo(verificationJobInstanceIds);
+  }
+
   private DeploymentActivityDTO getDeploymentActivity(VerificationJob verificationJob) {
     List<VerificationJobRuntimeDetails> verificationJobDetails = new ArrayList<>();
     Map<String, String> runtimeParams = new HashMap<>();
@@ -1224,10 +1253,10 @@ public class ActivityServiceImplTest extends CvNextGenTestBase {
     testVerificationJob.setAccountId(accountId);
     testVerificationJob.setIdentifier("identifier");
     testVerificationJob.setJobName(generateUuid());
-    testVerificationJob.setDataSources(Lists.newArrayList(DataSourceType.APP_DYNAMICS));
+    testVerificationJob.setMonitoringSources(Collections.singletonList("monitoringIdentifier"));
     testVerificationJob.setSensitivity(Sensitivity.MEDIUM);
-    testVerificationJob.setServiceIdentifier("<+input>", true);
-    testVerificationJob.setEnvIdentifier("<+input>", true);
+    testVerificationJob.setServiceIdentifier(serviceIdentifier, false);
+    testVerificationJob.setEnvIdentifier(envIdentifier, false);
     testVerificationJob.setDuration(Duration.ofMinutes(5));
     testVerificationJob.setProjectIdentifier(projectIdentifier);
     testVerificationJob.setOrgIdentifier(orgIdentifier);

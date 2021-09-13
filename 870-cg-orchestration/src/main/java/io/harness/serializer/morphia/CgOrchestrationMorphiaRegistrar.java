@@ -13,6 +13,8 @@ import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.state.inspection.ExpressionVariableUsage;
 import io.harness.state.inspection.StateInspection;
 
+import software.wings.sm.BarrierStatusData;
+
 import java.util.Set;
 
 @OwnedBy(CDC)
@@ -30,5 +32,6 @@ public class CgOrchestrationMorphiaRegistrar implements MorphiaRegistrar {
   public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {
     h.put("state.inspection.ExpressionVariableUsage", ExpressionVariableUsage.class);
     w.put("beans.ShellScriptProvisionOutputVariables", ShellScriptProvisionOutputVariables.class);
+    w.put("sm.BarrierStatusData", BarrierStatusData.class);
   }
 }
