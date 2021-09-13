@@ -83,10 +83,11 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
         projectService.getProjectsCountPerOrganization(accountId, singletonList(orgId)).getOrDefault(orgId, 0);
     final long secretsCount = secretServiceV2.count(accountId, orgId, null);
     final long connectorsCount = defaultConnectorService.count(accountId, orgId, null);
-    final long delegateGroupCount = delegateDetailsService.getDelegateGroupCount(accountId, orgId, null);
-
+    // final long delegateGroupCount = delegateDetailsService.getDelegateGroupCount(accountId, orgId, null);
+    final long delegateGroupCount = 0;
     final Scope scope = Scope.builder().accountIdentifier(accountId).orgIdentifier(orgId).build();
-    final List<UserMetadataDTO> orgAdmins = ngUserService.listUsersHavingRole(scope, ORG_ADMIN_ROLE);
+    // final List<UserMetadataDTO> orgAdmins = ngUserService.listUsersHavingRole(scope, ORG_ADMIN_ROLE);
+    final List<UserMetadataDTO> orgAdmins = new ArrayList<>();
     final List<UserMetadataDTO> collaborators = ngUserService.listUsers(scope);
     collaborators.removeAll(orgAdmins);
 
@@ -113,7 +114,7 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
 
     List<Future<OrganizationAggregateDTO>> futures;
     try {
-      futures = executorService.invokeAll(tasks, 10, TimeUnit.SECONDS);
+      futures = executorService.invokeAll(tasks, 300, TimeUnit.SECONDS);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       return Page.empty();

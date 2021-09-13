@@ -114,7 +114,8 @@ public class AggregateProjectServiceImpl implements AggregateProjectService {
                              .build();
 
     List<UserMetadataDTO> collaborators = ngUserService.listUsers(projectScope);
-    List<UserMetadataDTO> projectAdmins = ngUserService.listUsersHavingRole(projectScope, PROJECT_ADMIN_ROLE);
+    List<UserMetadataDTO> projectAdmins =
+        new ArrayList<>(); // ngUserService.listUsersHavingRole(projectScope, PROJECT_ADMIN_ROLE);
     collaborators.removeAll(projectAdmins);
 
     return ProjectAggregateDTO.builder()
