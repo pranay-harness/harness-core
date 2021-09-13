@@ -947,6 +947,17 @@ public class DelegateServiceImpl implements software.wings.service.intfc.Delegat
     return updatedDelegate;
   }
 
+  @Override
+  public long fetchProfileExecutedAt(String accountId, String delegateId) {
+    Delegate delegate = persistence.createQuery(Delegate.class)
+                            .filter(DelegateKeys.accountId, accountId)
+                            .filter(DelegateKeys.uuid, delegateId)
+                            .get();
+
+    log.debug("Fetch profileExecutedAt property for delegate {}:{}", accountId, delegateId);
+    return delegate != null ? delegate.getProfileExecutedAt() : 0L;
+  }
+
   private DelegateInstanceStatus mapApprovalActionToDelegateStatus(DelegateApproval action) {
     if (DelegateApproval.ACTIVATE == action) {
       return DelegateInstanceStatus.ENABLED;

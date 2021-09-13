@@ -173,4 +173,6 @@ public interface DelegateService extends OwnedByAccount {
   DelegateGroup upsertDelegateGroup(String name, String accountId, DelegateSetupDetails delegateSetupDetails);
 
   Delegate profileScriptExecutionInitiated(String accountId, String delegateId);
+
+  long fetchProfileExecutedAt(String accountId, String delegateId);
 }
