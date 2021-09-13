@@ -4,6 +4,7 @@ import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 
 import io.harness.accesscontrol.AccessControlAdminClient;
@@ -185,7 +186,7 @@ public class NGAccountSetupService {
               .orgIdentifier(scope.getOrgIdentifier())
               .projectIdentifier(scope.getProjectIdentifier())
               .build(),
-          false, UserMembershipUpdateSource.SYSTEM);
+          emptyList(), emptyList(), UserMembershipUpdateSource.SYSTEM);
     } catch (DuplicateKeyException | DuplicateFieldException duplicateException) {
       // ignore
     }

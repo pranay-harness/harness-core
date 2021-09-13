@@ -14,7 +14,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -28,7 +27,6 @@ import io.harness.cvng.beans.job.TestVerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.client.NextGenService;
-import io.harness.cvng.core.services.api.CVEventService;
 import io.harness.cvng.verificationjob.entities.BlueGreenVerificationJob;
 import io.harness.cvng.verificationjob.entities.CanaryVerificationJob;
 import io.harness.cvng.verificationjob.entities.HealthVerificationJob;
@@ -50,13 +48,11 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 @OwnedBy(HarnessTeam.CV)
 public class VerificationJobServiceImplTest extends CvNextGenTestBase {
   @Mock private NextGenService nextGenService;
-  @Mock private CVEventService cvEventService;
   @Inject private HPersistence hPersistence;
   @Inject private VerificationJobService verificationJobService;
 
@@ -73,7 +69,6 @@ public class VerificationJobServiceImplTest extends CvNextGenTestBase {
     identifier = "test-verification-harness";
     accountId = generateUuid();
     FieldUtils.writeField(verificationJobService, "nextGenService", nextGenService, true);
-    FieldUtils.writeField(verificationJobService, "cvEventService", cvEventService, true);
   }
 
   @Test
@@ -177,10 +172,6 @@ public class VerificationJobServiceImplTest extends CvNextGenTestBase {
     assertThat(verificationJobService.getVerificationJobDTO(
                    accountId, orgIdentifier, projectIdentifier, verificationJobDTO.getIdentifier()))
         .isEqualTo(null);
-
-    ArgumentCaptor<VerificationJob> argumentCaptor = ArgumentCaptor.forClass(VerificationJob.class);
-    verify(cvEventService, times(1)).sendVerificationJobServiceDeleteEvent(argumentCaptor.capture());
-    verify(cvEventService, times(1)).sendVerificationJobEnvironmentDeleteEvent(argumentCaptor.capture());
   }
 
   @Test
@@ -196,10 +187,6 @@ public class VerificationJobServiceImplTest extends CvNextGenTestBase {
     assertThat(verificationJobService.getVerificationJobDTO(
                    accountId, orgIdentifier, projectIdentifier, verificationJobDTO.getIdentifier()))
         .isEqualTo(null);
-
-    ArgumentCaptor<VerificationJob> argumentCaptor = ArgumentCaptor.forClass(VerificationJob.class);
-    verify(cvEventService, times(0)).sendVerificationJobServiceDeleteEvent(argumentCaptor.capture());
-    verify(cvEventService, times(0)).sendVerificationJobEnvironmentDeleteEvent(argumentCaptor.capture());
   }
 
   @Test
@@ -422,10 +409,6 @@ public class VerificationJobServiceImplTest extends CvNextGenTestBase {
     assertThat(retrieveVerificationJob.getServiceIdentifier()).isEqualTo("serviceIdentifier");
     assertThat(retrieveVerificationJob.getJobName()).isEqualTo("job-name");
     assertThat(retrieveVerificationJob.getDuration()).isEqualTo(Duration.ZERO);
-
-    ArgumentCaptor<VerificationJob> argumentCaptor = ArgumentCaptor.forClass(VerificationJob.class);
-    verify(cvEventService, times(1)).sendVerificationJobServiceCreateEvent(argumentCaptor.capture());
-    verify(cvEventService, times(1)).sendVerificationJobEnvironmentCreateEvent(argumentCaptor.capture());
   }
 
   @Test
@@ -448,10 +431,6 @@ public class VerificationJobServiceImplTest extends CvNextGenTestBase {
     assertThat(retrieveVerificationJob.getServiceIdentifier()).isEqualTo("serviceIdentifier");
     assertThat(retrieveVerificationJob.getJobName()).isEqualTo("job-name");
     assertThat(retrieveVerificationJob.getDuration()).isEqualTo(Duration.ZERO);
-
-    ArgumentCaptor<VerificationJob> argumentCaptor = ArgumentCaptor.forClass(VerificationJob.class);
-    verify(cvEventService, times(0)).sendVerificationJobServiceCreateEvent(argumentCaptor.capture());
-    verify(cvEventService, times(0)).sendVerificationJobEnvironmentCreateEvent(argumentCaptor.capture());
   }
 
   @Test

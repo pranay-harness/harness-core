@@ -1,6 +1,8 @@
 package software.wings.beans.s3;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -17,6 +19,7 @@ import lombok.Value;
 
 @Value
 @Builder
+@OwnedBy(HarnessTeam.CDP)
 @TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class FetchS3FilesCommandParams implements TaskParameters, ExecutionCapabilityDemander {
   private List<S3FileRequest> s3FileRequests;

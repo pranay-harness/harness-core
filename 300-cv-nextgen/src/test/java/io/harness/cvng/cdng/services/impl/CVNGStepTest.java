@@ -6,6 +6,9 @@ import static io.harness.rule.OwnerRule.KAMAL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
@@ -20,6 +23,7 @@ import io.harness.cvng.cdng.entities.CVNGStepTask;
 import io.harness.cvng.cdng.entities.CVNGStepTask.CVNGStepTaskKeys;
 import io.harness.cvng.cdng.services.impl.CVNGStep.VerifyStepOutcome;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
+import io.harness.cvng.core.services.api.FeatureFlagService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.cvng.verificationjob.entities.TestVerificationJob;
@@ -141,6 +145,53 @@ public class CVNGStepTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testExecuteAsync_createActivity() {
     Ambiance ambiance = getAmbiance();
+    metricPackService.createDefaultMetricPackAndThresholds(accountId, orgIdentifier, projectIdentifier);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
+    StepInputPackage stepInputPackage = StepInputPackage.builder().build();
+    CVNGStepParameter cvngStepParameter = getCvngStepParameter();
+    AsyncExecutableResponse asyncExecutableResponse =
+        cvngStep.executeAsync(ambiance, cvngStepParameter, stepInputPackage, null);
+    assertThat(asyncExecutableResponse.getCallbackIdsList()).hasSize(1);
+    String activityId = asyncExecutableResponse.getCallbackIds(0);
+    CVNGStepTask cvngStepTask =
+        hPersistence.createQuery(CVNGStepTask.class).filter(CVNGStepTaskKeys.activityId, activityId).get();
+    assertThat(cvngStepTask.getStatus()).isEqualTo(CVNGStepTask.Status.IN_PROGRESS);
+    Activity activity = activityService.get(activityId);
+    assertThat(activity.getActivityStartTime()).isEqualTo(Instant.ofEpochMilli(activityStartTime));
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testExecuteAsync_createDemoActivityFFOn() throws IllegalAccessException {
+    FeatureFlagService featureFlagService = mock(FeatureFlagService.class);
+    when(featureFlagService.isFeatureFlagEnabled(eq(accountId), eq("CVNG_VERIFY_STEP_DEMO"))).thenReturn(true);
+    FieldUtils.writeField(cvngStep, "featureFlagService", featureFlagService, true);
+    Ambiance ambiance = getAmbiance("verify_dev");
+    metricPackService.createDefaultMetricPackAndThresholds(accountId, orgIdentifier, projectIdentifier);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
+    StepInputPackage stepInputPackage = StepInputPackage.builder().build();
+    CVNGStepParameter cvngStepParameter = getCvngStepParameter();
+    AsyncExecutableResponse asyncExecutableResponse =
+        cvngStep.executeAsync(ambiance, cvngStepParameter, stepInputPackage, null);
+    assertThat(asyncExecutableResponse.getCallbackIdsList()).hasSize(1);
+    String activityId = asyncExecutableResponse.getCallbackIds(0);
+    CVNGStepTask cvngStepTask =
+        hPersistence.createQuery(CVNGStepTask.class).filter(CVNGStepTaskKeys.activityId, activityId).get();
+    assertThat(cvngStepTask.getStatus()).isEqualTo(CVNGStepTask.Status.IN_PROGRESS);
+    Activity activity = activityService.get(activityId);
+    assertThat(activity.getActivityStartTime())
+        .isEqualTo(Instant.ofEpochMilli(activityStartTime).minus(Duration.ofMinutes(15)));
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testExecuteAsync_createDemoActivityFFOff() throws IllegalAccessException {
+    FeatureFlagService featureFlagService = mock(FeatureFlagService.class);
+    when(featureFlagService.isFeatureFlagEnabled(eq(accountId), eq("CVNG_VERIFY_STEP_DEMO"))).thenReturn(false);
+    FieldUtils.writeField(cvngStep, "featureFlagService", featureFlagService, true);
+    Ambiance ambiance = getAmbiance("verify_dev");
     metricPackService.createDefaultMetricPackAndThresholds(accountId, orgIdentifier, projectIdentifier);
     monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
@@ -340,7 +391,7 @@ public class CVNGStepTest extends CvNextGenTestBase {
     CVNGStepParameter cvngStepParameter = getCvngStepParameter();
     CVNGStepTask cvngStepTask = builderFactory.cvngStepTaskBuilder().build();
     hPersistence.save(cvngStepTask);
-    ActivityService activityService = Mockito.mock(ActivityService.class);
+    ActivityService activityService = mock(ActivityService.class);
     FieldUtils.writeField(cvngStep, "activityService", activityService, true);
 
     cvngStep.handleAbort(ambiance, cvngStepParameter,
@@ -361,8 +412,11 @@ public class CVNGStepTest extends CvNextGenTestBase {
         .deploymentTag(spec.getDeploymentTag())
         .build();
   }
-
   private Ambiance getAmbiance() {
+    return getAmbiance("verify");
+  }
+
+  private Ambiance getAmbiance(String verifyStepIdentifier) {
     HashMap<String, String> setupAbstractions = new HashMap<>();
     setupAbstractions.put("accountId", accountId);
     setupAbstractions.put("projectIdentifier", projectIdentifier);
@@ -377,6 +431,7 @@ public class CVNGStepTest extends CvNextGenTestBase {
                        .build())
         .addLevels(Level.newBuilder()
                        .setRuntimeId(generateUuid())
+                       .setIdentifier(verifyStepIdentifier)
                        .setStepType(StepType.newBuilder().setStepCategory(StepCategory.STEP).build())
                        .build())
         .putAllSetupAbstractions(setupAbstractions)

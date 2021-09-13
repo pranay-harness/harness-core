@@ -16,7 +16,7 @@
     <properties>
         <alpnboot.version>8.1.13.v20181017</alpnboot.version>
         <argLine>-Xmx1024m</argLine>
-        <aws.sdk.version>1.11.834</aws.sdk.version>
+        <aws.sdk.version>1.12.47</aws.sdk.version>
         <buildTimeStamp>${maven.build.timestamp}</buildTimeStamp>
         <categories>io.harness.category.element.UnitTests.class</categories>
         <categories.integration>io.harness.category.element.DeprecatedIntegrationTests.class</categories.integration>
@@ -35,6 +35,7 @@
         <grpc-testing.version>1.33.1</grpc-testing.version>
         <grpc.version>1.33.1</grpc.version>
         <guice.version>4.2.3</guice.version>
+        <http.component.version>4.5.13</http.component.version>
         <ibatis.core.version>3.0</ibatis.core.version>
         <jacoco.filename>jacoco</jacoco.filename>
         <jacoco.integration.skip>true</jacoco.integration.skip>
@@ -128,7 +129,7 @@
             <dependency>
                 <groupId>com.amazonaws</groupId>
                 <artifactId>aws-java-sdk-codecommit</artifactId>
-                <version>1.11.834</version>
+                <version>1.12.47</version>
                 <exclusions>
                     <exclusion>
                         <groupId>commons-logging</groupId>
@@ -338,7 +339,7 @@
             <dependency>
                 <groupId>com.amazonaws</groupId>
                 <artifactId>aws-java-sdk-sns</artifactId>
-                <version>1.11.834</version>
+                <version>1.12.47</version>
                 <exclusions>
                     <exclusion>
                         <groupId>commons-logging</groupId>
@@ -1330,6 +1331,11 @@
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>fluent-hc</artifactId>
                 <version>4.5.1</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpclient</artifactId>
+                <version>${http.component.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>

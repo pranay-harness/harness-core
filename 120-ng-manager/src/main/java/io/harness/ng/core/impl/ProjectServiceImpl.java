@@ -18,6 +18,8 @@ import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_P
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import static java.lang.Boolean.FALSE;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
@@ -50,6 +52,7 @@ import io.harness.ng.core.events.ProjectCreateEvent;
 import io.harness.ng.core.events.ProjectDeleteEvent;
 import io.harness.ng.core.events.ProjectRestoreEvent;
 import io.harness.ng.core.events.ProjectUpdateEvent;
+import io.harness.ng.core.invites.dto.RoleBinding;
 import io.harness.ng.core.remote.ProjectMapper;
 import io.harness.ng.core.remote.utils.ScopeAccessHelper;
 import io.harness.ng.core.services.OrganizationService;
@@ -77,7 +80,6 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -211,7 +213,7 @@ public class ProjectServiceImpl implements ProjectService {
                 .orgIdentifier(scope.getOrgIdentifier())
                 .projectIdentifier(scope.getProjectIdentifier())
                 .build(),
-            PROJECT_ADMIN_ROLE, SYSTEM);
+            singletonList(RoleBinding.builder().roleIdentifier(PROJECT_ADMIN_ROLE).build()), emptyList(), SYSTEM);
         break;
       case SERVICE_ACCOUNT:
         ngUserService.addServiceAccountToScope(principalId,
@@ -269,7 +271,7 @@ public class ProjectServiceImpl implements ProjectService {
     Page<UserMembership> userMembershipPage = ngUserService.listUserMemberships(criteria, Pageable.unpaged());
     List<UserMembership> userMembershipList = userMembershipPage.getContent();
     if (userMembershipList.isEmpty()) {
-      return getNGPageResponse(Page.empty(), Collections.emptyList());
+      return getNGPageResponse(Page.empty(), emptyList());
     }
     Criteria projectCriteria = Criteria.where(ProjectKeys.accountIdentifier).is(accountId);
     List<Criteria> criteriaList = new ArrayList<>();

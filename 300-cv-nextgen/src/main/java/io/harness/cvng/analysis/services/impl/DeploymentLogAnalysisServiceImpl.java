@@ -22,6 +22,7 @@ import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceServi
 import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.JsonUtils;
+import io.harness.utils.PageUtils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Charsets;
@@ -36,7 +37,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -104,7 +104,7 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
     List<LogAnalysisClusterDTO> logAnalysisClusters =
         getLogAnalysisResult(accountId, verificationJobInstanceId, label, deploymentLogAnalysisFilter);
 
-    return formPageResponse(logAnalysisClusters, pageParams.getPage(), pageParams.getSize());
+    return PageUtils.offsetAndLimit(logAnalysisClusters, pageParams.getPage(), pageParams.getSize());
   }
 
   private List<LogAnalysisClusterDTO> getLogAnalysisResult(String accountId, String verificationJobInstanceId,
@@ -174,30 +174,6 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
     }
   }
 
-  private PageResponse<LogAnalysisClusterDTO> formPageResponse(
-
-      List<LogAnalysisClusterDTO> logAnalysisClusters, int pageNumber, int size) {
-    List<LogAnalysisClusterDTO> returnList = new ArrayList<>();
-
-    int startIndex = pageNumber * size;
-    Iterator<LogAnalysisClusterDTO> iterator = logAnalysisClusters.iterator();
-    int i = 0;
-    while (iterator.hasNext()) {
-      LogAnalysisClusterDTO logAnalysisClusterDTO = iterator.next();
-      if (i >= startIndex && returnList.size() < size) {
-        returnList.add(logAnalysisClusterDTO);
-      }
-      i++;
-    }
-
-    return PageResponse.<LogAnalysisClusterDTO>builder()
-        .pageSize(size)
-        .pageIndex(pageNumber)
-        .totalPages(logAnalysisClusters.size() / size)
-        .totalItems(logAnalysisClusters.size())
-        .content(returnList)
-        .build();
-  }
   @Override
   @Nullable
   public DeploymentLogAnalysis getRecentHighestDeploymentLogAnalysis(
