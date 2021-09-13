@@ -1,8 +1,10 @@
 package software.wings.beans.command;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.ExceptionUtils;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.Misc;
@@ -36,6 +38,7 @@ import org.mongodb.morphia.annotations.Transient;
 @OwnedBy(CDP)
 @Slf4j
 @JsonTypeName("ECS_SETUP")
+@TargetModule(_930_DELEGATE_TASKS)
 public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
   @Inject @Transient private transient EcsSetupCommandHandler ecsSetupCommandHandler;
   @Inject @Transient private transient EcsBlueGreenSetupCommandHandler ecsBlueGreenSetupCommandHandler;
