@@ -3,20 +3,33 @@ package io.harness.cdng.k8s;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
+import static io.harness.rule.OwnerRule.ACHYUTH;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
+import io.harness.cdng.k8s.beans.HelmValuesFetchResponsePassThroughData;
+import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
+import io.harness.cdng.k8s.beans.StepExceptionPassThroughData;
+import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.task.k8s.K8sApplyRequest;
+import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sTaskType;
+import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.plancreator.steps.common.StepElementParameters;
+import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
+import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
@@ -118,6 +131,76 @@ public class K8sApplyStepTest extends AbstractK8sStepExecutorTestBase {
             .build();
 
     assertFilePathsValidation(stepElementParametersWithNullFilePaths);
+  }
+
+  @Test
+  @Owner(developers = ACHYUTH)
+  @Category(UnitTests.class)
+  public void testFinalizeExecutionWithSecurityContext() {
+    StepElementParameters stepElementParameters =
+        StepElementParameters.builder()
+            .spec(K8sApplyStepParameters.infoBuilder()
+                      .filePaths(ParameterField.createValueField(Arrays.asList("file1.yaml", "")))
+                      .build())
+            .timeout(ParameterField.ofNull())
+            .build();
+
+    StepExceptionPassThroughData passThroughData = StepExceptionPassThroughData.builder().errorMessage("abcd").build();
+    HelmValuesFetchResponsePassThroughData helmValuesFetchResponsePassThroughData =
+        HelmValuesFetchResponsePassThroughData.builder().build();
+    GitFetchResponsePassThroughData gitFetchResponsePassThroughData = GitFetchResponsePassThroughData.builder().build();
+
+    K8sExecutionPassThroughData k8sExecutionPassThroughData = K8sExecutionPassThroughData.builder().build();
+
+    final Exception thrownException = new GeneralException("Something went wrong");
+
+    when(k8sStepHelper.handleStepExceptionFailure(any()))
+        .thenReturn(StepResponse.builder().status(Status.FAILED).build());
+    StepResponse stepResponse = k8sApplyStep.finalizeExecutionWithSecurityContext(
+        ambiance, stepElementParameters, passThroughData, () -> { throw thrownException; });
+    assertThat(stepResponse.getStatus()).isEqualTo(Status.FAILED);
+
+    when(k8sStepHelper.handleHelmValuesFetchFailure(any()))
+        .thenReturn(StepResponse.builder().status(Status.FAILED).build());
+    StepResponse stepResponseHelm = k8sApplyStep.finalizeExecutionWithSecurityContext(
+        ambiance, stepElementParameters, helmValuesFetchResponsePassThroughData, () -> { throw thrownException; });
+    assertThat(stepResponseHelm.getStatus()).isEqualTo(Status.FAILED);
+
+    when(k8sStepHelper.handleGitTaskFailure(any())).thenReturn(StepResponse.builder().status(Status.FAILED).build());
+    StepResponse stepResponseGit = k8sApplyStep.finalizeExecutionWithSecurityContext(
+        ambiance, stepElementParameters, gitFetchResponsePassThroughData, () -> { throw thrownException; });
+    assertThat(stepResponseGit.getStatus()).isEqualTo(Status.FAILED);
+
+    when(k8sStepHelper.handleTaskException(any(), any(), any()))
+        .thenReturn(StepResponse.builder().status(Status.FAILED).build());
+    assertThat(k8sApplyStep.finalizeExecutionWithSecurityContext(
+                   ambiance, stepElementParameters, k8sExecutionPassThroughData, () -> { throw thrownException; }))
+        .isNotNull();
+
+    assertThat(
+        k8sApplyStep.finalizeExecutionWithSecurityContext(ambiance, stepElementParameters, k8sExecutionPassThroughData,
+            () -> {
+              return K8sDeployResponse.builder()
+                  .commandUnitsProgress(UnitProgressData.builder().build())
+                  .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+                  .build();
+            }))
+        .isNotNull();
+
+    assertThat(
+        k8sApplyStep.finalizeExecutionWithSecurityContext(ambiance, stepElementParameters, k8sExecutionPassThroughData,
+            () -> {
+              return K8sDeployResponse.builder()
+                  .commandUnitsProgress(UnitProgressData.builder().build())
+                  .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+                  .build();
+            }))
+        .isNotNull();
+
+    verify(k8sStepHelper, times(1)).handleStepExceptionFailure(any());
+    verify(k8sStepHelper, times(1)).handleHelmValuesFetchFailure(any());
+    verify(k8sStepHelper, times(1)).handleGitTaskFailure(any());
+    verify(k8sStepHelper, times(1)).handleTaskException(any(), any(), any());
   }
 
   private void assertFilePathsValidation(StepElementParameters stepElementParameters) {

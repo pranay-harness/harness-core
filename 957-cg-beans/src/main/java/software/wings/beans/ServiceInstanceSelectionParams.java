@@ -2,9 +2,7 @@ package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +11,6 @@ import java.util.List;
  * Created by anubhaw on 7/16/17.
  */
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._957_CG_BEANS)
 public class ServiceInstanceSelectionParams {
   private Integer count;
   private List<String> hostNames = new ArrayList<>();
