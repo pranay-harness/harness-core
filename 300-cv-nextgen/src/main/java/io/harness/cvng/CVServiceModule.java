@@ -84,7 +84,6 @@ import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.core.services.api.AppDynamicsService;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.CVConfigTransformer;
-import io.harness.cvng.core.services.api.CVEventService;
 import io.harness.cvng.core.services.api.CVNGLogService;
 import io.harness.cvng.core.services.api.CVNGYamlSchemaService;
 import io.harness.cvng.core.services.api.CVSetupService;
@@ -120,7 +119,6 @@ import io.harness.cvng.core.services.impl.AppDynamicsCVConfigTransformer;
 import io.harness.cvng.core.services.impl.AppDynamicsDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.AppDynamicsServiceImpl;
 import io.harness.cvng.core.services.impl.CVConfigServiceImpl;
-import io.harness.cvng.core.services.impl.CVEventServiceImpl;
 import io.harness.cvng.core.services.impl.CVNGLogServiceImpl;
 import io.harness.cvng.core.services.impl.CVNGYamlSchemaServiceImpl;
 import io.harness.cvng.core.services.impl.CVSetupServiceImpl;
@@ -413,7 +411,6 @@ public class CVServiceModule extends AbstractModule {
     bind(CVNGMigrationService.class).to(CVNGMigrationServiceImpl.class).in(Singleton.class);
     bind(TimeLimiter.class).toInstance(HTimeLimiter.create());
     bind(StackdriverService.class).to(StackdriverServiceImpl.class);
-    bind(CVEventService.class).to(CVEventServiceImpl.class);
     bind(RedisConfig.class)
         .annotatedWith(Names.named("lock"))
         .toInstance(verificationConfiguration.getEventsFrameworkConfiguration().getRedisConfig());

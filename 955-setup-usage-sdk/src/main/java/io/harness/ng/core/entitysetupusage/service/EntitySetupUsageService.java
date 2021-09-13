@@ -35,4 +35,6 @@ public interface EntitySetupUsageService {
 
   EntityReferencesDTO listAllReferredUsagesBatch(String accountIdentifier, List<String> referredByEntityFQNList,
       EntityType referredByEntityType, EntityType referredEntityType);
+
+  long deleteByReferredByEntityType(EntityType referredByEntityType);
 }
