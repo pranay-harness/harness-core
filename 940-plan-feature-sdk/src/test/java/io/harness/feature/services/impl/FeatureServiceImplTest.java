@@ -18,7 +18,6 @@ import io.harness.feature.bases.StaticLimitRestriction;
 import io.harness.feature.beans.FeatureDetailsDTO;
 import io.harness.feature.beans.RestrictionDTO;
 import io.harness.feature.cache.LicenseInfoCache;
-import io.harness.feature.configs.FeatureCollection;
 import io.harness.feature.constants.RestrictionType;
 import io.harness.feature.exceptions.LimitExceededException;
 import io.harness.feature.handlers.RestrictionHandlerFactory;
@@ -30,6 +29,7 @@ import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.List;
+import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -65,6 +65,8 @@ public class FeatureServiceImplTest extends CategoryTest {
                         return 3;
                       }
                     }))
+            .put(Edition.TEAM, new EnableDisableRestriction(RestrictionType.ENABLED, false))
+            .put(Edition.ENTERPRISE, new EnableDisableRestriction(RestrictionType.ENABLED, true))
             .build());
     ciFeature = new Feature(CI_FEATURE_NAME, "description", ModuleType.CI,
         ImmutableMap.<Edition, Restriction>builder()
@@ -145,7 +147,7 @@ public class FeatureServiceImplTest extends CategoryTest {
   @Owner(developers = ZHUO)
   @Category(UnitTests.class)
   public void testGetAllFeatureNames() {
-    List<String> result = featureService.getAllFeatureNames();
-    assertThat(result.size()).isEqualTo(FeatureCollection.values().length);
+    Set<String> result = featureService.getAllFeatureNames();
+    assertThat(result.size()).isEqualTo(3);
   }
 }

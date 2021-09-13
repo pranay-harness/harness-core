@@ -284,6 +284,7 @@ import io.harness.delegate.task.git.GitFetchResponse;
 import io.harness.delegate.task.git.TaskStatus;
 import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.delegate.task.helm.HelmCommandFlag;
+import io.harness.delegate.task.helm.HelmCommandResponse;
 import io.harness.delegate.task.helm.HelmValuesFetchRequest;
 import io.harness.delegate.task.helm.HelmValuesFetchResponse;
 import io.harness.delegate.task.http.HttpStepResponse;
@@ -448,7 +449,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AwsElbListenerRuleData.class, 19035);
     kryo.register(AwsLoadBalancerDetails.class, 19024);
     kryo.register(AwsRegionCapability.class, 19008);
-    kryo.register(AwsSubnet.class, 7320);
     kryo.register(AzureVMSSGetVirtualMachineScaleSetParameters.class, 19075);
     kryo.register(AzureVMSSGetVirtualMachineScaleSetResponse.class, 19080);
     kryo.register(AzureVMSSListResourceGroupsNamesParameters.class, 19076);
@@ -901,5 +901,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(ElkConnector.class, 543436);
     kryo.register(AwsAsgGetRunningCountData.class, 7190);
     kryo.register(AwsVPC.class, 7319);
+    kryo.register(AwsSubnet.class, 7320);
+    kryo.register(HelmCommandResponse.class, 5261);
   }
 }

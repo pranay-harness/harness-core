@@ -1,0 +1,501 @@
+[
+  {
+    "uuid": "hv7iXY_CRi-cgYw53nWGKA",
+    "createdAt": 1610530013911,
+    "lastUpdatedAt": 1611709601147,
+    "verificationTaskId": "4vr9e9z8S9SMI43sSs0YKw",
+    "startTime": 1610529540,
+    "endTime": 1610529600,
+    "risk": "LOW",
+    "score": 0,
+    "hostSummaries": [
+      {
+        "hostName": "harness-deployment-5f67d57589-4jc4c",
+        "primary": true,
+        "canary": false,
+        "risk": "LOW",
+        "score": 0.5004
+      },
+      {
+        "hostName": "harness-deployment-5f67d57589-gp4pd",
+        "primary": true,
+        "canary": false,
+        "risk": "LOW",
+        "score": 0.5894
+      },
+      {
+        "hostName": "harness-deployment-7445f86dbf-h8blt",
+        "primary": true,
+        "canary": false,
+        "risk": "LOW",
+        "score": 0.8394
+      },
+      {
+        "hostName": "harness-deployment-canary-7445f86dbf-ml857",
+        "primary": false,
+        "canary": true,
+        "risk": "LOW",
+        "score": 0.6174
+      },
+      {
+        "hostName": "harness-deployment-canary-56b5cc7c5b-9rpq7",
+        "primary": false,
+        "canary": true,
+        "risk": "LOW",
+        "score": 0.5004
+      }
+    ],
+    "transactionMetricSummaries": [
+      {
+        "transactionName": "/todolist/register",
+        "metricName": "Average Response Time (ms)",
+        "risk": "LOW",
+        "score": 0.5004,
+        "hostData": [
+          {
+            "hostName": "harness-deployment-canary-7445f86dbf-ml857",
+            "risk": "LOW",
+            "score": 0.5004,
+            "controlData": [
+              0.7999999999999999,
+              1,
+              0.8666666666666667,
+              1
+            ],
+            "testData": [
+              1,
+              0.6666666666666666,
+              1,
+              1
+            ],
+            "anomalous": false
+          },
+          {
+            "hostName": "harness-deployment-canary-56b5cc7c5b-9rpq7",
+            "risk": "LOW",
+            "score": 0.5004,
+            "controlData": [
+              0.7999999999999999,
+              1,
+              0.8666666666666667,
+              1
+            ],
+            "testData": [
+              0.6666666666666666,
+              1,
+              1,
+              1
+            ],
+            "anomalous": false
+          }
+        ],
+        "anomalous": false
+      },
+      {
+        "transactionName": "/todolist/register",
+        "metricName": "Calls per Minute",
+        "risk": "LOW",
+        "score": 0.5004,
+        "hostData": [
+          {
+            "hostName": "harness-deployment-canary-56b5cc7c5b-9rpq7",
+            "risk": "LOW",
+            "score": 0.5004,
+            "controlData": [
+              21.599999999999998,
+              22.400000000000002,
+              23.8,
+              22
+            ],
+            "testData": [
+              23,
+              24.333333333333332,
+              24.333333333333332,
+              29
+            ],
+            "anomalous": false
+          },
+          {
+            "hostName": "harness-deployment-canary-7445f86dbf-ml857",
+            "risk": "LOW",
+            "score": 0.5004,
+            "controlData": [
+              21.599999999999998,
+              22.400000000000002,
+              23.8,
+              25
+            ],
+            "testData": [
+              17.666666666666668,
+              27,
+              19.666666666666668,
+              24
+            ],
+            "anomalous": false
+          }
+        ],
+        "anomalous": false
+      },
+      {
+        "transactionName": "/todolist/requestLogin",
+        "metricName": "Average Response Time (ms)",
+        "risk": "LOW",
+        "score": 0.5004,
+        "hostData": [
+          {
+            "hostName": "harness-deployment-canary-7445f86dbf-ml857",
+            "risk": "LOW",
+            "score": 0.5004,
+            "controlData": [
+              0.8000000000000002,
+              0.7999999999999999,
+              0.8666666666666667,
+              1
+            ],
+            "testData": [
+              0.6666666666666666,
+              0.6666666666666666,
+              1,
+              0
+            ],
+            "anomalous": false
+          },
+          {
+            "hostName": "harness-deployment-canary-56b5cc7c5b-9rpq7",
+            "risk": "LOW",
+            "score": 0.5004,
+            "controlData": [
+              0.8000000000000002,
+              0.7999999999999999,
+              0.8666666666666667,
+              1
+            ],
+            "testData": [
+              0.6666666666666666,
+              0.6666666666666666,
+              0.6666666666666666,
+              1
+            ],
+            "anomalous": false
+          }
+        ],
+        "anomalous": false
+      },
+      {
+        "transactionName": "/todolist/requestLogin",
+        "metricName": "Calls per Minute",
+        "risk": "LOW",
+        "score": 0.5004,
+        "hostData": [
+          {
+            "hostName": "harness-deployment-canary-56b5cc7c5b-9rpq7",
+            "risk": "LOW",
+            "score": 0.5004,
+            "controlData": [
+              22.53333333333333,
+              23.133333333333336,
+              23.066666666666666,
+              1
+            ],
+            "testData": [
+              27,
+              28.666666666666668,
+              24.333333333333332,
+              25
+            ],
+            "anomalous": false
+          },
+          {
+            "hostName": "harness-deployment-canary-7445f86dbf-ml857",
+            "risk": "LOW",
+            "score": 0.5004,
+            "controlData": [
+              22.53333333333333,
+              23.133333333333336,
+              23.066666666666666,
+              20
+            ],
+            "testData": [
+              19.666666666666668,
+              24,
+              21.333333333333332,
+              19
+            ],
+            "anomalous": false
+          }
+        ],
+        "anomalous": false
+      },
+      {
+        "transactionName": "/todolist/inside",
+        "metricName": "Average Response Time (ms)",
+        "risk": "LOW",
+        "score": 0.5004,
+        "hostData": [
+          {
+            "hostName": "harness-deployment-canary-7445f86dbf-ml857",
+            "risk": "LOW",
+            "score": 0.5004,
+            "controlData": [
+              0,
+              0.13333333333333333,
+              0.06666666666666667,
+              1
+            ],
+            "testData": [
+              0.3333333333333333,
+              0,
+              0.3333333333333333,
+              0
+            ],
+            "anomalous": false
+          },
+          {
+            "hostName": "harness-deployment-canary-56b5cc7c5b-9rpq7",
+            "risk": "LOW",
+            "score": 0.5004,
+            "controlData": [
+              0,
+              0.13333333333333333,
+              0.06666666666666667,
+              1
+            ],
+            "testData": [
+              0.3333333333333333,
+              0,
+              0,
+              0
+            ],
+            "anomalous": false
+          }
+        ],
+        "anomalous": false
+      },
+      {
+        "transactionName": "/todolist/inside",
+        "metricName": "Calls per Minute",
+        "risk": "LOW",
+        "score": 0.5004,
+        "hostData": [
+          {
+            "hostName": "harness-deployment-canary-56b5cc7c5b-9rpq7",
+            "risk": "LOW",
+            "score": 0.5004,
+            "controlData": [
+              126.66666666666667,
+              122.06666666666666,
+              130.26666666666668,
+              140
+            ],
+            "testData": [
+              141,
+              150.66666666666666,
+              141.66666666666666,
+              145
+            ],
+            "anomalous": false
+          },
+          {
+            "hostName": "harness-deployment-canary-7445f86dbf-ml857",
+            "risk": "LOW",
+            "score": 0.5894,
+            "controlData": [
+              126.66666666666667,
+              122.06666666666666,
+              130.26666666666668,
+              140
+            ],
+            "testData": [
+              99.66666666666667,
+              145.66666666666666,
+              112.33333333333333,
+              126
+            ],
+            "anomalous": false
+          }
+        ],
+        "anomalous": false
+      },
+      {
+        "transactionName": "/todolist/inside",
+        "metricName": "Errors per Minute",
+        "risk": "LOW",
+        "score": 0.05000000000000001,
+        "hostData": [
+          {
+            "hostName": "harness-deployment-canary-56b5cc7c5b-9rpq7",
+            "risk": "LOW",
+            "score": 0.403,
+            "controlData": [
+              38.666666666666664,
+              38.06666666666667,
+              38.2,
+              36.2
+            ],
+            "testData": [
+              41.666666666666664,
+              44.333333333333336,
+              41.333333333333336,
+              40
+            ],
+            "anomalous": false
+          },
+          {
+            "hostName": "harness-deployment-canary-7445f86dbf-ml857",
+            "risk": "LOW",
+            "score": 0.20000000000000004,
+            "controlData": [
+              38.666666666666664,
+              38.06666666666667,
+              38.2,
+              0
+            ],
+            "testData": [
+              33,
+              44.666666666666664,
+              32.666666666666664,
+              38
+            ],
+            "anomalous": false
+          }
+        ],
+        "anomalous": false
+      },
+      {
+        "transactionName": "/todolist/exception",
+        "metricName": "Average Response Time (ms)",
+        "risk": "LOW",
+        "score": 0.5004,
+        "hostData": [
+          {
+            "hostName": "harness-deployment-canary-7445f86dbf-ml857",
+            "risk": "LOW",
+            "score": 0.6174,
+            "controlData": [
+              1000.9333333333334,
+              805.1999999999999,
+              879.7999999999998,
+              703
+            ],
+            "testData": [
+              2105.3333333333335,
+              738.6666666666666,
+              2159.6666666666665,
+              764
+            ],
+            "anomalous": false
+          },
+          {
+            "hostName": "harness-deployment-canary-56b5cc7c5b-9rpq7",
+            "risk": "LOW",
+            "score": 0.5004,
+            "controlData": [
+              1000.9333333333334,
+              805.1999999999999,
+              879.7999999999998,
+              864.098
+            ],
+            "testData": [
+              456.6666666666667,
+              386.6666666666667,
+              466.6666666666667,
+              702
+            ],
+            "anomalous": false
+          }
+        ],
+        "anomalous": false
+      },
+      {
+        "transactionName": "/todolist/exception",
+        "metricName": "Calls per Minute",
+        "risk": "LOW",
+        "score": 0,
+        "hostData": [
+          {
+            "hostName": "harness-deployment-canary-56b5cc7c5b-9rpq7",
+            "risk": "LOW",
+            "score": 0.5004,
+            "controlData": [
+              38.86666666666667,
+              38.06666666666666,
+              37.86666666666667,
+              36
+            ],
+            "testData": [
+              41.333333333333336,
+              44.333333333333336,
+              41.666666666666664,
+              40
+            ],
+            "anomalous": false
+          },
+          {
+            "hostName": "harness-deployment-canary-7445f86dbf-ml857",
+            "risk": "LOW",
+            "score": 0.5004,
+            "controlData": [
+              38.86666666666667,
+              38.06666666666666,
+              37.86666666666667,
+              33
+            ],
+            "testData": [
+              33,
+              45,
+              32.666666666666664,
+              38
+            ],
+            "anomalous": false
+          }
+        ],
+        "anomalous": false
+      },
+      {
+        "transactionName": "/todolist/exception",
+        "metricName": "Errors per Minute",
+        "risk": "LOW",
+        "score": 0.05000000000000001,
+        "hostData": [
+          {
+            "hostName": "harness-deployment-canary-56b5cc7c5b-9rpq7",
+            "risk": "LOW",
+            "score": 0.31999999999999995,
+            "controlData": [
+              38.86666666666667,
+              38.06666666666666,
+              37.86666666666667,
+              0
+            ],
+            "testData": [
+              41.333333333333336,
+              44.333333333333336,
+              41.666666666666664,
+              40
+            ],
+            "anomalous": false
+          },
+          {
+            "hostName": "harness-deployment-canary-7445f86dbf-ml857",
+            "risk": "LOW",
+            "score": 0.20000000000000004,
+            "controlData": [
+              38.86666666666667,
+              38.06666666666666,
+              37.86666666666667,
+              0
+            ],
+            "testData": [
+              33,
+              45,
+              32.666666666666664,
+              38
+            ],
+            "anomalous": false
+          }
+        ],
+        "anomalous": false
+      }
+    ]
+  }
+]

@@ -4913,13 +4913,19 @@ plain_artifacts = [
     "xml-apis:xml-apis:1.4.01",
     "xml-resolver:xml-resolver:1.2",
     "xpp3:xpp3:1.1.3.3",
+    "io.swagger.core.v3:swagger-jaxrs2:2.1.2",
+    "io.swagger.core.v3:swagger-jaxrs2-servlet-initializer-v2:2.1.2",
+    "io.swagger.core.v3:swagger-core:2.1.2",
+    "io.swagger.core.v3:swagger-annotations:2.1.2",
+    "io.swagger.core.v3:swagger-models:2.1.2",
+    "io.swagger.core.v3:swagger-integration:2.1.2",
 ]
 
 amazon_artifacts = [
     maven.artifact(
         group = "com.amazonaws",
         artifact = x,
-        version = "1.11.834",
+        version = "1.12.47",
         exclusions = [
             "commons-logging:commons-logging",
         ],

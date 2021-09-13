@@ -7,9 +7,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
+import io.harness.delegate.task.helm.HelmCommandResponse;
 import io.harness.logging.CommandExecutionStatus;
-
-import software.wings.helpers.ext.helm.response.HelmCommandResponse;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

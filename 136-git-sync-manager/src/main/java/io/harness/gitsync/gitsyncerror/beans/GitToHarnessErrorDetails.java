@@ -1,45 +1,31 @@
 package io.harness.gitsync.gitsyncerror.beans;
 
-import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.git.model.ChangeType;
 
-import java.util.List;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.experimental.FieldNameConstants;
-import org.mongodb.morphia.annotations.Transient;
+import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.data.annotation.TypeAlias;
 
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "GitToHarnessErrorDetailsKeys")
 @TypeAlias("io.harness.gitsync.gitsyncerror.beans.gitToHarnessErrorDetails")
-@OwnedBy(DX)
+@OwnedBy(PL)
 public class GitToHarnessErrorDetails implements GitSyncErrorDetails {
-  private String gitCommitId;
+  @NotEmpty private String gitCommitId;
   private Long commitTime;
   private String yamlContent;
   private String commitMessage;
-  @Transient private LatestErrorDetailForFile latestErrorDetailForFile;
-  private List<String> previousCommitIdsWithError;
-  private List<GitSyncError> previousErrors;
+  @Getter(value = AccessLevel.PRIVATE) @NotEmpty private boolean resolved;
+  private String resolvedByCommitId;
 
-  @Data
-  @Builder
-  private static class LatestErrorDetailForFile {
-    private String gitCommitId;
-    private ChangeType changeType;
-    private String failureReason;
-  }
-
-  public void populateCommitWithLatestErrorDetails(GitSyncError gitSyncError) {
-    this.setLatestErrorDetailForFile(
-        LatestErrorDetailForFile.builder()
-            .gitCommitId(((GitToHarnessErrorDetails) gitSyncError.getAdditionalErrorDetails()).getGitCommitId())
-            .changeType(gitSyncError.getChangeType())
-            .failureReason(gitSyncError.getFailureReason())
-            .build());
+  public boolean isResolved() {
+    return this.resolved;
   }
 }

@@ -6,8 +6,6 @@ import static io.harness.rule.OwnerRule.NEMANJA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
@@ -34,12 +32,9 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
 import org.reflections.Reflections;
 
 public class DeletedCVConfigServiceImplTest extends CvNextGenTestBase {
@@ -49,7 +44,6 @@ public class DeletedCVConfigServiceImplTest extends CvNextGenTestBase {
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private CVConfigService cvConfigService;
   @Inject private LogRecordService logRecordService;
-  @Mock private CVEventServiceImpl eventService;
 
   private String accountId;
   private String connectorId;
@@ -64,7 +58,6 @@ public class DeletedCVConfigServiceImplTest extends CvNextGenTestBase {
     this.productName = generateUuid();
     this.groupId = generateUuid();
     this.serviceInstanceIdentifier = generateUuid();
-    FieldUtils.writeField(deletedCVConfigServiceWithMocks, "eventService", eventService, true);
   }
 
   private DeletedCVConfig save(DeletedCVConfig deletedCVConfig) {
@@ -93,11 +86,6 @@ public class DeletedCVConfigServiceImplTest extends CvNextGenTestBase {
         .isInstanceOf(NullPointerException.class)
         .hasMessage("VerificationTask mapping does not exist for cvConfigId " + cvConfig.getUuid()
             + ". Please check cvConfigId");
-
-    ArgumentCaptor<CVConfig> argumentCaptor = ArgumentCaptor.forClass(CVConfig.class);
-    verify(eventService, times(1)).sendConnectorDeleteEvent(argumentCaptor.capture());
-    verify(eventService, times(1)).sendServiceDeleteEvent(argumentCaptor.capture());
-    verify(eventService, times(1)).sendEnvironmentDeleteEvent(argumentCaptor.capture());
   }
 
   @Test
@@ -126,11 +114,6 @@ public class DeletedCVConfigServiceImplTest extends CvNextGenTestBase {
     List<LogRecord> logRecords = hPersistence.createQuery(LogRecord.class).asList();
     assertThat(logRecords).hasSize(1);
     assertThat(logRecords.get(0).getVerificationTaskId()).isEqualTo(logRecord2.getVerificationTaskId());
-
-    ArgumentCaptor<CVConfig> argumentCaptor = ArgumentCaptor.forClass(CVConfig.class);
-    verify(eventService, times(1)).sendConnectorDeleteEvent(argumentCaptor.capture());
-    verify(eventService, times(1)).sendServiceDeleteEvent(argumentCaptor.capture());
-    verify(eventService, times(1)).sendEnvironmentDeleteEvent(argumentCaptor.capture());
   }
 
   @Test

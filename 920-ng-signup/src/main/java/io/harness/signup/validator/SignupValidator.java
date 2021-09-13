@@ -14,6 +14,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SignupException;
 import io.harness.exception.UserAlreadyPresentException;
 import io.harness.exception.WeakPasswordException;
+import io.harness.ng.core.user.SignupAction;
 import io.harness.remote.client.RestClientUtils;
 import io.harness.signup.dto.SignupDTO;
 import io.harness.user.remote.UserClient;
@@ -45,6 +46,7 @@ public class SignupValidator {
     validateEmail(dto.getEmail());
     validatePassword(dto.getPassword());
     validateIntent(dto);
+    validateSignupAction(dto);
   }
 
   public void validateEmail(String email) {
@@ -112,6 +114,28 @@ public class SignupValidator {
         ModuleType.fromString(dto.getIntent());
       } catch (IllegalArgumentException e) {
         throw new InvalidRequestException("Invalid intent", e);
+      }
+    }
+  }
+
+  private void validateSignupAction(SignupDTO dto) {
+    if (SignupAction.SUBSCRIBE.equals(dto.getSignupAction())) {
+      if (isBlank(dto.getIntent())) {
+        throw new SignupException("No module was specified for the trial. email=" + dto.getEmail());
+      }
+
+      if (dto.getBillingFrequency() == null) {
+        throw new SignupException("No billing frequency was specified for the subscription. email=" + dto.getEmail());
+      }
+    }
+
+    if (SignupAction.TRIAL.equals(dto.getSignupAction())) {
+      if (isBlank(dto.getIntent())) {
+        throw new SignupException("No module was specified for the trial. email=" + dto.getEmail());
+      }
+
+      if (dto.getEdition() == null) {
+        throw new SignupException("No edition was specified for the trial. email=" + dto.getEmail());
       }
     }
   }

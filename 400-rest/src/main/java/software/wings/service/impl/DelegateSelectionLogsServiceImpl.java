@@ -77,6 +77,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
   private static final String REJECTED = "Rejected";
   private static final String SELECTED = "Selected";
   private static final String ACCEPTED = "Accepted";
+  private static final String CONNECTED_BUT_INACTIVE = "Connected/Inactive";
 
   private static final String CAN_ASSIGN_GROUP_ID = "CAN_ASSIGN_GROUP_ID";
   private static final String NO_INCLUDE_SCOPE_MATCHED_GROUP_ID = "NO_INCLUDE_SCOPE_MATCHED_GROUP_ID";
@@ -90,6 +91,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
   private static final String TARGETED_DELEGATE_MATCHED_GROUP_ID = "TARGETED_DELEGATE_MATCHED_GROUP_ID";
   private static final String TARGETED_DELEGATE_NOT_MATCHED_GROUP_ID = "TARGETED_DELEGATE_NOT_MATCHED_GROUP_ID";
   private static final String TARGETED_OWNER_NOT_MATCHED_GROUP_ID = "TARGETED_OWNER_MATCHED_GROUP_ID";
+  private static final String STATUS_INACTIVE_GROUP_ID = "STATUS_INACTIVE_GROUP_ID";
 
   private final LoadingCache<ImmutablePair<String, String>, String> setupAbstractionsCache =
       CacheBuilder.newBuilder()
@@ -315,6 +317,13 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
     }
 
     return Optional.ofNullable(buildDelegateSelectionLogParamsList(delegateSelectionLog).get(0));
+  }
+
+  @Override
+  public void logInactiveDelegate(
+      @Nullable final BatchDelegateSelectionLog batch, final String accountId, final Set<String> delegateIds) {
+    final String message = "Delegate was busy with background work that was preventing it from executing tasks";
+    logBatch(batch, accountId, delegateIds, message, CONNECTED_BUT_INACTIVE, STATUS_INACTIVE_GROUP_ID);
   }
 
   @VisibleForTesting

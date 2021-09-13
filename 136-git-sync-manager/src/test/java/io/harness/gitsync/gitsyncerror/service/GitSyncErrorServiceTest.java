@@ -40,7 +40,6 @@ public class GitSyncErrorServiceTest extends CategoryTest {
     gitSyncErrorService.deleteByAccountIdOrgIdProjectIdAndFilePath(
         ACCOUNT_ID, null, null, Collections.singletonList("path"));
     verify(gitSyncErrorRepository, times(1))
-        .removeByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndCompleteFilePathIn(
-            ACCOUNT_ID, null, null, Collections.singletonList("path"));
+        .removeByAccountIdentifierAndCompleteFilePathIn(ACCOUNT_ID, Collections.singletonList("path"));
   }
 }

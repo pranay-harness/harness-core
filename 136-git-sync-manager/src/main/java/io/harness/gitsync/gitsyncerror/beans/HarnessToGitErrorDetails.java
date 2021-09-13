@@ -1,8 +1,9 @@
 package io.harness.gitsync.gitsyncerror.beans;
 
-import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.validator.Trimmed;
 
 import lombok.Builder;
 import lombok.Data;
@@ -15,7 +16,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @FieldNameConstants(innerTypeName = "HarnessToGitErrorDetailsKeys")
 @Document("harnessToGitErrorDetailsNG")
 @TypeAlias("io.harness.gitsync.gitsyncerror.beans.harnessToGitErrorDetails")
-@OwnedBy(DX)
+@OwnedBy(PL)
 public class HarnessToGitErrorDetails implements GitSyncErrorDetails {
-  private boolean fullSyncPath;
+  @Trimmed private String orgIdentifier;
+  @Trimmed private String projectIdentifier;
 }

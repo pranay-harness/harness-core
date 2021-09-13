@@ -69,6 +69,7 @@ directories:
   950-ng-authentication-service
   950-ng-core
   950-ng-project-n-orgs
+  950-ng-signup-beans
   950-telemetry
   950-wait-engine
   950-walktree-visitor
@@ -96,7 +97,6 @@ directories:
   960-ng-core-beans
   960-ng-license-beans
   960-ng-license-usage-beans
-  960-ng-signup-beans
   960-notification-beans
   960-persistence
   960-yaml-sdk
