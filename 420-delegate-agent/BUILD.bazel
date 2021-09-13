@@ -19,7 +19,6 @@ java_library(
         "//950-delegate-tasks-beans:module",
         "//950-log-client:module",
         "//955-delegate-beans:module",
-        "//957-cg-beans:module",
         "//959-file-service-commons:module",
         "//960-api-services:module",
         "//960-expression-service:module",
