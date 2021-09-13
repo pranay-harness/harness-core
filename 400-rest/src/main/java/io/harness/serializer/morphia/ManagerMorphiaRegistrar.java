@@ -265,7 +265,6 @@ import software.wings.beans.SpotInstConfig;
 import software.wings.beans.StringValue;
 import software.wings.beans.SumoConfig;
 import software.wings.beans.SystemCatalog;
-import software.wings.beans.TerraGroupProvisioners;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.TerragruntInfrastructureProvisioner;
 import software.wings.beans.User;
@@ -1021,7 +1020,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(TemplateVersion.class);
     set.add(TerraformConfig.class);
     set.add(TerraformInfrastructureProvisioner.class);
-    set.add(TerraGroupProvisioners.class);
     set.add(TerragruntConfig.class);
     set.add(TerragruntInfrastructureProvisioner.class);
     set.add(ThirdPartyApiCallLog.class);
