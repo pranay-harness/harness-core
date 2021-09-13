@@ -40,6 +40,7 @@ service DelegateService {
   rpc ObtainDocument(ObtainDocumentRequest) returns (ObtainDocumentResponse);
 
   rpc ProfileScriptExecutionInitiated(DelegateUpdateRequest) returns (DelegateUpdateResponse);
+  rpc FetchProfileExecutedAt(DelegateUpdateRequest) returns (DelegateProfileExecutedAtResponse);
 }
 
 // Next ID: 11
@@ -203,6 +204,10 @@ message DelegateUpdateRequest {
 
 message DelegateUpdateResponse {
   bool success = 1;
+}
+
+message DelegateProfileExecutedAtResponse {
+  int64 profileExecutedAt = 1;
 }
 
 // }}

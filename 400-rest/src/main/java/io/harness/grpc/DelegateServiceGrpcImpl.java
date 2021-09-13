@@ -13,6 +13,7 @@ import io.harness.delegate.CancelTaskRequest;
 import io.harness.delegate.CancelTaskResponse;
 import io.harness.delegate.CreatePerpetualTaskRequest;
 import io.harness.delegate.CreatePerpetualTaskResponse;
+import io.harness.delegate.DelegateProfileExecutedAtResponse;
 import io.harness.delegate.DelegateServiceGrpc.DelegateServiceImplBase;
 import io.harness.delegate.DelegateUpdateRequest;
 import io.harness.delegate.DelegateUpdateResponse;
@@ -385,6 +386,21 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
       responseObserver.onCompleted();
     } catch (Exception ex) {
       log.error("Unexpected error occurred while updating profile execution status on delegate.", ex);
+      responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
+    }
+  }
+
+  @Override
+  public void fetchProfileExecutedAt(
+      DelegateUpdateRequest request, StreamObserver<DelegateProfileExecutedAtResponse> responseObserver) {
+    try {
+      long profileExecutedAt =
+          delegateService.fetchProfileExecutedAt(request.getAccountId().getId(), request.getDelegateId().getId());
+      responseObserver.onNext(
+          DelegateProfileExecutedAtResponse.newBuilder().setProfileExecutedAt(profileExecutedAt).build());
+      responseObserver.onCompleted();
+    } catch (Exception ex) {
+      log.error("Unexpected error occurred while fetching profile execution time on delegate.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
     }
   }

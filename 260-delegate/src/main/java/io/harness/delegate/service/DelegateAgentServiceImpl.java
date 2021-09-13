@@ -1098,7 +1098,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
         if (profileParams != null) {
           initialProfileScriptExecuted.set(
-              !isEmpty(profileParams.getProfileId()) && profileParams.getProfileLastExecutedOnDelegate() != 0L);
+              !isEmpty(profileParams.getProfileId()) && resolveProfileExecutedAt(profileParams) != 0L);
         }
         if (response != null) {
           if (response.getResource() != null) {
@@ -1206,6 +1206,16 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           AccountId.newBuilder().setId(accountId).build(), DelegateId.newBuilder().setId(delegateId).build());
       log.info("Profile script execution initiated on delegate instance {}:{} ", accountId, delegateId);
     }
+  }
+
+  private long resolveProfileExecutedAt(DelegateProfileParams profileParams) {
+    long profileExecutedAt = profileParams.getProfileLastExecutedOnDelegate();
+    if (profileExecutedAt == 0L) {
+      profileExecutedAt = delegateServiceGrpcAgentClient.fetchProfileExecutedAt(
+          AccountId.newBuilder().setId(accountId).build(), DelegateId.newBuilder().setId(delegateId).build());
+    }
+    log.info("Profile script last executed on delegate {}:{} at {}", accountId, delegateId, profileExecutedAt);
+    return profileExecutedAt;
   }
 
   private void saveProfile(DelegateProfileParams profile, List<String> result) {
