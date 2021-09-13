@@ -8,6 +8,7 @@ import io.harness.cvng.activity.source.services.api.ActivitySourceService;
 import io.harness.cvng.activity.source.services.api.KubernetesActivitySourceService;
 import io.harness.cvng.beans.activity.KubernetesActivityDTO;
 import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
+import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.beans.change.KubernetesChangeEventDTO;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
@@ -66,8 +67,8 @@ public class KubernetesActivityResource {
   @DelegateAuth
   @Path("/change")
   @ApiOperation(value = "saves a  kubernetes change", nickname = "saveKubernetesChange")
-  public RestResponse<Boolean> saveKubernetesChange(@QueryParam("accountId") @NotNull String accountId,
-      @NotNull @Valid @Body KubernetesChangeEventDTO changeEventDTO) {
+  public RestResponse<Boolean> saveKubernetesChange(
+      @QueryParam("accountId") @NotNull String accountId, @NotNull @Valid @Body ChangeEventDTO changeEventDTO) {
     return new RestResponse<>(kubernetesActivitySourceService.saveKubernetesChange(accountId, changeEventDTO));
   }
 

@@ -23,7 +23,10 @@ import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.activity.KubernetesActivityDTO;
+import io.harness.cvng.beans.change.ChangeEventDTO;
+import io.harness.cvng.beans.change.ChangeSourceType;
 import io.harness.cvng.beans.change.KubernetesChangeEventDTO;
+import io.harness.cvng.beans.change.KubernetesChangeEventMetadata;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.services.api.monitoredService.ChangeSourceService;
 import io.harness.encryption.Scope;
@@ -104,14 +107,20 @@ public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySo
   }
 
   @Override
-  public boolean saveKubernetesChange(String accountId, KubernetesChangeEventDTO changeEventDTO) {
+  public boolean saveKubernetesChange(String accountId, ChangeEventDTO changeEventDTO) {
+    Preconditions.checkState(changeEventDTO.getType().equals(ChangeSourceType.KUBERNETES));
+    KubernetesChangeEventMetadata eventMetadata =
+        (KubernetesChangeEventMetadata) changeEventDTO.getChangeEventMetaData();
+
     KubernetesActivity activity = KubernetesActivity.builder()
                                       .accountId(changeEventDTO.getAccountId())
                                       .orgIdentifier(changeEventDTO.getOrgIdentifier())
                                       .projectIdentifier(changeEventDTO.getProjectIdentifier())
-                                      .oldYaml(changeEventDTO.getOldYaml())
-                                      .newYaml(changeEventDTO.getNewYaml())
+                                      .oldYaml(eventMetadata.getOldYaml())
+                                      .newYaml(eventMetadata.getNewYaml())
                                       .changeSourceIdentifier(changeEventDTO.getChangeSourceIdentifier())
+                                      .activityStartTime(Instant.now())
+                                      .activityName("Kubernetes Change event")
                                       .build();
     hPersistence.save(activity);
     return true;

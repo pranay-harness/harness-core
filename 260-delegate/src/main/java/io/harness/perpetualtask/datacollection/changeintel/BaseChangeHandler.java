@@ -2,10 +2,14 @@ package io.harness.perpetualtask.datacollection.changeintel;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.cvng.CVNGRequestExecutor;
 import io.harness.cvng.beans.CVDataCollectionInfo;
+import io.harness.cvng.beans.change.ChangeEventDTO;
+import io.harness.cvng.beans.change.ChangeSourceType;
 import io.harness.cvng.beans.change.KubernetesChangeEventDTO;
-import io.harness.cvng.beans.change.KubernetesChangeEventDTO.Action;
-import io.harness.cvng.beans.change.KubernetesChangeEventDTO.KubernetesResourceType;
+import io.harness.cvng.beans.change.KubernetesChangeEventMetadata;
+import io.harness.cvng.beans.change.KubernetesChangeEventMetadata.Action;
+import io.harness.cvng.beans.change.KubernetesChangeEventMetadata.KubernetesResourceType;
 import io.harness.perpetualtask.datacollection.K8ActivityCollectionPerpetualTaskParams;
 import io.harness.perpetualtask.k8s.informer.handlers.BaseHandler;
 import io.harness.perpetualtask.k8s.informer.handlers.K8sHandlerUtils;
@@ -13,6 +17,7 @@ import io.harness.perpetualtask.k8s.informer.handlers.K8sHandlerUtils.ResourceDe
 import io.harness.verificationclient.CVNextGenServiceClient;
 
 import com.google.inject.Inject;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import io.kubernetes.client.common.KubernetesObject;
 import io.kubernetes.client.informer.ResourceEventHandler;
 import io.kubernetes.client.openapi.models.V1DaemonSet;
@@ -37,6 +42,7 @@ import org.joor.Reflect;
 public class BaseChangeHandler<ApiType extends KubernetesObject> implements ResourceEventHandler<ApiType> {
   K8ActivityCollectionPerpetualTaskParams taskParams;
   @Inject K8sHandlerUtils k8sHandlerUtils;
+  @Inject private CVNGRequestExecutor cvngRequestExecutor;
   @Inject private CVNextGenServiceClient cvNextGenServiceClient;
 
   static {
@@ -112,19 +118,37 @@ public class BaseChangeHandler<ApiType extends KubernetesObject> implements Reso
   public void onDelete(ApiType apiType, boolean b) {}
 
   private void sendEvents(String oldYaml, String newYaml, KubernetesResourceType resourceType, Action action) {
-    KubernetesChangeEventDTO changeEventDTO = KubernetesChangeEventDTO.builder()
-                                                  .resourceType(resourceType)
-                                                  .action(action)
-                                                  .oldYaml(oldYaml)
-                                                  .newYaml(newYaml)
-                                                  .projectIdentifier("praveen")
-                                                  .orgIdentifier("cv")
-                                                  .serviceIdentifier("managerinfra")
-                                                  .envIdentifier("prod")
-                                                  .accountId(taskParams.getAccountId())
-                                                  .build();
+    //    KubernetesChangeEventDTO changeEventDTO = KubernetesChangeEventDTO.builder()
+    //                                                  .resourceType(resourceType)
+    //                                                  .action(action)
+    //                                                  .oldYaml(oldYaml)
+    //                                                  .newYaml(newYaml)
+    //                                                  .projectIdentifier("praveen")
+    //                                                  .orgIdentifier("cv")
+    //                                                  .serviceIdentifier("managerinfra")
+    //                                                  .envIdentifier("prod")
+    //                                                  .accountId(taskParams.getAccountId())
+    //                                                  .build();
 
-    cvNextGenServiceClient.saveKubernetesChangeEvents(
-        taskParams.getAccountId(), taskParams.getDataCollectionWorkerId(), changeEventDTO);
+    KubernetesChangeEventMetadata changeEventMetadata = KubernetesChangeEventMetadata.builder()
+                                                            .resourceType(resourceType)
+                                                            .action(action)
+                                                            .oldYaml(oldYaml)
+                                                            .newYaml(newYaml)
+
+                                                            .build();
+    ChangeEventDTO changeEventDTO = ChangeEventDTO.builder()
+                                        .projectIdentifier("praveen")
+                                        .orgIdentifier("cv")
+                                        .serviceIdentifier("managerinfra")
+                                        .envIdentifier("prod")
+                                        .accountId(taskParams.getAccountId())
+                                        .changeEventMetaData(changeEventMetadata)
+                                        .build();
+    Boolean resp = cvngRequestExecutor
+                       .executeWithRetry(cvNextGenServiceClient.saveKubernetesChangeEvents(
+                           taskParams.getAccountId(), taskParams.getDataCollectionWorkerId(), changeEventDTO))
+                       .getResource();
+    log.info("Response from CVNG : {}", resp);
   }
 }

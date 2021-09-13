@@ -51,11 +51,6 @@ public class KubernetesActivity extends Activity {
   public void validateActivityParams() {}
 
   @Override
-  public String getActivityName() {
-    return activities.size() + " kubernetes events";
-  }
-
-  @Override
   public boolean deduplicateEvents() {
     return true;
   }

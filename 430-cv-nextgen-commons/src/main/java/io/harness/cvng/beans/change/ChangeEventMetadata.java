@@ -12,7 +12,7 @@ import lombok.experimental.SuperBuilder;
 @Data
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonSubTypes({ @JsonSubTypes.Type(value = KubernetesChangeEventMetadata.class, name = "Kubernetes") })
+@JsonSubTypes({ @JsonSubTypes.Type(value = KubernetesChangeEventMetadata.class, name = "K8sCluster") })
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
 public abstract class ChangeEventMetadata {
