@@ -5,11 +5,15 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
+import io.harness.gitsync.common.beans.InfoForGitPush;
 import io.harness.gitsync.common.dtos.CreatePRDTO;
 import io.harness.gitsync.common.dtos.GitDiffResultFileListDTO;
 import io.harness.gitsync.common.dtos.GitFileChangeDTO;
 import io.harness.gitsync.common.dtos.GitFileContent;
 import io.harness.ng.beans.PageRequest;
+import io.harness.product.ci.scm.proto.CreateFileResponse;
+import io.harness.product.ci.scm.proto.DeleteFileResponse;
+import io.harness.product.ci.scm.proto.UpdateFileResponse;
 
 import java.util.List;
 import java.util.Set;
@@ -45,4 +49,10 @@ public interface ScmClientFacilitatorService {
   List<String> listCommits(YamlGitConfigDTO yamlGitConfigDTO, String branch);
 
   String getLatestCommit(YamlGitConfigDTO yamlGitConfigDTO, String branch);
+
+  CreateFileResponse createFile(InfoForGitPush infoForPush);
+
+  UpdateFileResponse updateFile(InfoForGitPush infoForPush);
+
+  DeleteFileResponse deleteFile(InfoForGitPush infoForPush);
 }
