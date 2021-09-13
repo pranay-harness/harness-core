@@ -24,9 +24,9 @@ import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.utils.CVNGObjectUtils;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
-import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.JsonUtils;
+import io.harness.utils.PageUtils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Charsets;
@@ -40,7 +40,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -72,7 +71,7 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
         getLatestDeploymentTimeSeriesAnalysis(accountId, verificationJobInstanceId, deploymentTimeSeriesAnalysisFilter);
     if (isEmpty(latestDeploymentTimeSeriesAnalysis)) {
       return TransactionMetricInfoSummaryPageDTO.builder()
-          .pageResponse(formPageResponse(Collections.emptyList(), pageParams.getPage(), pageParams.getSize()))
+          .pageResponse(PageUtils.offsetAndLimit(Collections.emptyList(), pageParams.getPage(), pageParams.getSize()))
           .build();
     }
     TimeRange deploymentTimeRange = TimeRange.builder()
@@ -94,7 +93,7 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
     }
 
     return TransactionMetricInfoSummaryPageDTO.builder()
-        .pageResponse(formPageResponse(transactionMetricInfoList, pageParams.getPage(), pageParams.getSize()))
+        .pageResponse(PageUtils.offsetAndLimit(transactionMetricInfoList, pageParams.getPage(), pageParams.getSize()))
         .deploymentTimeRange(deploymentTimeRange)
         .deploymentStartTime(deploymentTimeRange.getStartTime().toEpochMilli())
         .deploymentEndTime(deploymentTimeRange.getEndTime().toEpochMilli())
@@ -216,29 +215,6 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
     transactionMetricInfoList.sort(
         (d1, d2) -> Double.compare(d2.getTransactionMetric().getScore(), d1.getTransactionMetric().getScore()));
     return transactionMetricInfoList;
-  }
-
-  private PageResponse<TransactionMetricInfo> formPageResponse(
-      List<TransactionMetricInfo> transactionMetricInfoList, int pageNumber, int size) {
-    List<TransactionMetricInfo> returnList = new ArrayList<>();
-
-    int startIndex = pageNumber * size;
-    Iterator<TransactionMetricInfo> iterator = transactionMetricInfoList.iterator();
-    int i = 0;
-    while (iterator.hasNext()) {
-      TransactionMetricInfo transactionMetricInfo = iterator.next();
-      if (i >= startIndex && returnList.size() < size) {
-        returnList.add(transactionMetricInfo);
-      }
-      i++;
-    }
-    return PageResponse.<TransactionMetricInfo>builder()
-        .pageSize(size)
-        .pageIndex(pageNumber)
-        .totalPages(transactionMetricInfoList.size() / size)
-        .totalItems(transactionMetricInfoList.size())
-        .content(returnList)
-        .build();
   }
 
   private boolean filterHostData(
