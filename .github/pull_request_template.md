@@ -15,3 +15,4 @@ You can use the following comments to re-trigger PR Checks
 - tibootstrap2backup-ti2: `trigger ti2`
 - tibootstrap-ti3: `trigger ti3`
 - tibootstrap-ti4: `trigger ti4`
+- rebase PR: `/rebase`
