@@ -184,11 +184,6 @@ public class K8sRollingStep extends TaskChainExecutableWithRollbackAndRbac imple
     StepOutcome stepOutcome = instanceInfoService.saveServerInstancesIntoSweepingOutput(
         ambiance, K8sPodToServiceInstanceInfoMapper.toServerInstanceInfoList(k8sTaskResponse.getK8sPodList()));
 
-    K8sRollingStepParameters k8sRollingStepParameters = (K8sRollingStepParameters) stepElementParameters.getSpec();
-    k8sRollingStepParameters.setReleaseName(k8sStepHelper.getReleaseName(ambiance, k8sExecutionPassThroughData.getInfrastructure()));
-    k8sRollingStepParameters.setReleaseNumber(k8sTaskResponse.getReleaseNumber());
-    stepElementParameters.setSpec(k8sRollingStepParameters);
-
     return stepResponseBuilder.status(Status.SUCCEEDED)
         .stepOutcome(StepOutcome.builder().name(OutcomeExpressionConstants.OUTPUT).outcome(k8sRollingOutcome).build())
         .stepOutcome(stepOutcome)

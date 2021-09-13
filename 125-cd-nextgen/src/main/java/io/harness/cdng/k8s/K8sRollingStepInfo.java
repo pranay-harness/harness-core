@@ -39,8 +39,8 @@ public class K8sRollingStepInfo extends K8sRollingBaseStepInfo implements CDStep
 
   @Builder(builderMethodName = "infoBuilder")
   public K8sRollingStepInfo(ParameterField<Boolean> skipDryRun,
-      ParameterField<List<TaskSelectorYaml>> delegateSelectors, String canaryStepFqn, String releaseName, Integer releaseNumber) {
-    super(skipDryRun, delegateSelectors, canaryStepFqn, releaseName, releaseNumber);
+      ParameterField<List<TaskSelectorYaml>> delegateSelectors, String canaryStepFqn) {
+    super(skipDryRun, delegateSelectors, canaryStepFqn);
   }
 
   @Override

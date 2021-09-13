@@ -2,11 +2,8 @@ package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.SwaggerConstants.BOOLEAN_CLASSPATH;
-import static io.harness.beans.SwaggerConstants.STRING_CLASSPATH;
-import static io.harness.beans.SwaggerConstants.INTEGER_CLASSPATH;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.runtime;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
-import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.integer;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SwaggerConstants;
@@ -35,6 +32,4 @@ public class K8sRollingBaseStepInfo {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
   ParameterField<List<TaskSelectorYaml>> delegateSelectors;
   @JsonIgnore String canaryStepFqn;
-  @ApiModelProperty(dataType = STRING_CLASSPATH) @YamlSchemaTypes({string}) String releaseName;
-  @ApiModelProperty(dataType = INTEGER_CLASSPATH) @YamlSchemaTypes({integer}) Integer releaseNumber;
 }
