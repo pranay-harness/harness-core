@@ -60,6 +60,7 @@ import io.harness.cvng.core.entities.VerificationTask;
 import io.harness.cvng.core.entities.WebhookToken;
 import io.harness.cvng.core.entities.changeSource.ChangeSource;
 import io.harness.cvng.core.entities.changeSource.HarnessCDChangeSource;
+import io.harness.cvng.core.entities.changeSource.KubernetesChangeSource;
 import io.harness.cvng.core.entities.changeSource.PagerDutyChangeSource;
 import io.harness.cvng.dashboard.entities.HealthVerificationHeatMap;
 import io.harness.cvng.dashboard.entities.HeatMap;
@@ -162,6 +163,7 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(ServiceDependency.class);
     set.add(PagerDutyChangeSource.class);
     set.add(HarnessCDActivity.class);
+    set.add(KubernetesChangeSource.class);
   }
 
   @Override

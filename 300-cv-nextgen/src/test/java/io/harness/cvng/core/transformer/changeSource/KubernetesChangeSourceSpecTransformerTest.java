@@ -1,0 +1,55 @@
+package io.harness.cvng.core.transformer.changeSource;
+
+import static io.harness.rule.OwnerRule.ANJAN;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import io.harness.CvNextGenTestBase;
+import io.harness.category.element.UnitTests;
+import io.harness.cvng.BuilderFactory;
+import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
+import io.harness.cvng.core.beans.monitoredService.changeSourceSpec.KubernetesChangeSourceSpec;
+import io.harness.cvng.core.entities.changeSource.KubernetesChangeSource;
+import io.harness.rule.Owner;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+public class KubernetesChangeSourceSpecTransformerTest extends CvNextGenTestBase {
+  private BuilderFactory builderFactory;
+  private KubernetesChangeSourceSpecTransformer kubernetesChangeSourceSpecTransformer;
+
+  @Before
+  public void setup() {
+    kubernetesChangeSourceSpecTransformer = new KubernetesChangeSourceSpecTransformer();
+    builderFactory = BuilderFactory.getDefault();
+  }
+
+  @Test
+  @Owner(developers = ANJAN)
+  @Category(UnitTests.class)
+  public void test_getEntity() {
+    ChangeSourceDTO changeSourceDTO = builderFactory.getKubernetesChangeSourceDTOBuilder().build();
+    KubernetesChangeSource changeSource = kubernetesChangeSourceSpecTransformer.getEntity(
+        builderFactory.getContext().getServiceEnvironmentParams(), changeSourceDTO);
+    assertThat(changeSource.getClass()).isEqualTo(KubernetesChangeSource.class);
+    assertThat(changeSource.getIdentifier()).isEqualTo(changeSourceDTO.getIdentifier());
+    assertThat(changeSource.getConnectorIdentifier())
+        .isEqualTo(((KubernetesChangeSourceSpec) changeSourceDTO.getSpec()).getConnectorRef());
+    assertThat(changeSource.getAccountId()).isEqualTo(builderFactory.getContext().getAccountId());
+    assertThat(changeSource.getProjectIdentifier()).isEqualTo(builderFactory.getContext().getProjectIdentifier());
+    assertThat(changeSource.getServiceIdentifier()).isEqualTo(builderFactory.getContext().getServiceIdentifier());
+    assertThat(changeSource.getEnvIdentifier()).isEqualTo(builderFactory.getContext().getEnvIdentifier());
+    assertThat(changeSource.isEnabled()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ANJAN)
+  @Category(UnitTests.class)
+  public void test_getSpec() {
+    KubernetesChangeSource changeSource = builderFactory.getKubernetesChangeSourceBuilder().build();
+    KubernetesChangeSourceSpec changeSourceSpec = kubernetesChangeSourceSpecTransformer.getSpec(changeSource);
+    assertThat(changeSourceSpec.getConnectorRef()).isEqualTo(changeSource.getConnectorIdentifier());
+  }
+}

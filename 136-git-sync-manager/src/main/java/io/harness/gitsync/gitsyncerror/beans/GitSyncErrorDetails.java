@@ -1,7 +1,7 @@
 package io.harness.gitsync.gitsyncerror.beans;
 
-import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-@OwnedBy(DX)
+@OwnedBy(PL)
 public interface GitSyncErrorDetails {}

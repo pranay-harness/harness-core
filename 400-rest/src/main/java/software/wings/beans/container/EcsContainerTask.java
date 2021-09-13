@@ -11,7 +11,9 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.strip;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
@@ -66,6 +68,7 @@ import org.apache.commons.lang3.StringUtils;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("ECS")
 @EqualsAndHashCode(callSuper = true)
+@TargetModule(HarnessModule._955_DELEGATE_BEANS)
 public class EcsContainerTask extends ContainerTask {
   static final String DUMMY_EXECUTION_ROLE_ARN = "hv--execution-role--hv";
   static final String EXECUTION_ROLE_PLACEHOLDER_REGEX = "\\$\\{EXECUTION_ROLE}";

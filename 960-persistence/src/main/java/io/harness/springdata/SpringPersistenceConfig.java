@@ -9,7 +9,6 @@ import io.harness.annotation.HarnessRepo;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.MongoConfig;
-import io.harness.security.dto.Principal;
 
 import com.google.inject.Injector;
 import com.mongodb.MongoClient;
@@ -24,7 +23,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.CustomConversions;
-import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
@@ -90,10 +88,5 @@ public class SpringPersistenceConfig extends AbstractMongoConfiguration {
   @Override
   protected boolean autoIndexCreation() {
     return false;
-  }
-
-  @Bean
-  public AuditorAware<Principal> ngAuditorProvider() {
-    return new AuditorAwareImpl();
   }
 }

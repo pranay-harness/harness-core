@@ -457,7 +457,6 @@ import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmReleaseHistoryCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmValuesFetchTaskParameters;
-import software.wings.helpers.ext.helm.response.HelmCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
@@ -1115,7 +1114,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(HelmInstallCommandRequest.class, 5259);
     kryo.register(HelmReleaseHistoryCommandRequest.class, 5265);
     kryo.register(HelmRollbackCommandRequest.class, 5268);
-    kryo.register(HelmCommandResponse.class, 5261);
     kryo.register(HelmInstallCommandResponse.class, 5263);
     kryo.register(HelmReleaseHistoryCommandResponse.class, 5266);
     kryo.register(ReleaseInfo.class, 5264);

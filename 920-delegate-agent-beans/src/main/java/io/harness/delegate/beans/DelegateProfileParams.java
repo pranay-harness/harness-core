@@ -12,4 +12,6 @@ public class DelegateProfileParams {
   private String profileId;
   private long profileLastUpdatedAt;
   private String scriptContent;
+  private String delegateId;
+  private long profileLastExecutedOnDelegate;
 }

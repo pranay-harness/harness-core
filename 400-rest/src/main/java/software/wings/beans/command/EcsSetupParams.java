@@ -2,7 +2,9 @@ package software.wings.beans.command;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.k8s.model.ImageDetails;
 
 import software.wings.beans.AwsElbConfig;
@@ -17,6 +19,7 @@ import lombok.EqualsAndHashCode;
 @OwnedBy(CDP)
 @Data
 @EqualsAndHashCode(callSuper = true)
+@TargetModule(HarnessModule._955_DELEGATE_BEANS)
 public class EcsSetupParams extends ContainerSetupParams {
   private String taskFamily;
   private boolean useLoadBalancer;

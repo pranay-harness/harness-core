@@ -41,7 +41,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
@@ -124,6 +126,7 @@ import org.mockito.Spy;
 import org.mockito.stubbing.Answer;
 
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class CloudFormationCreateStackStateTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private GitUtilsManager gitUtilsManager;
@@ -138,6 +141,7 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
   @Spy private GitClientHelper gitClientHelper;
   @Spy private GitConfigHelperService gitConfigHelperService;
   @Spy private GitFileConfigHelperService gitFileConfigHelperService;
+  @Spy private S3UriParser s3UriParser;
   @Mock private SweepingOutputService sweepingOutputService;
   @Mock private LogService logService;
   @Mock private FeatureFlagService featureFlagService;

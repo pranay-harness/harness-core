@@ -221,4 +221,9 @@ public class EntitySetupUsageServiceImpl implements EntitySetupUsageService {
               })
               .collect(Collectors.toList());
   }
+
+  @Override
+  public long deleteByReferredByEntityType(EntityType referredByEntityType) {
+    return entityReferenceRepository.deleteAllByReferredByEntityType(referredByEntityType.getYamlName());
+  }
 }

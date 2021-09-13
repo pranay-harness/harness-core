@@ -689,6 +689,27 @@ public class ActivityServiceImpl implements ActivityService {
     return healthSourceDTOS;
   }
 
+  @Override
+  public String createActivityForDemo(Activity activity, ActivityVerificationStatus verificationStatus) {
+    activity.validate();
+    List<VerificationJobInstance> verificationJobInstances = new ArrayList<>();
+    activity.getVerificationJobs().forEach(verificationJob -> {
+      VerificationJobInstanceBuilder verificationJobInstanceBuilder = fillOutCommonJobInstanceProperties(
+          activity, verificationJob.resolveAdditionsFields(verificationJobInstanceService));
+      verificationJobInstanceBuilder.verificationStatus(verificationStatus);
+      validateJob(verificationJob);
+      activity.fillInVerificationJobInstanceDetails(verificationJobInstanceBuilder);
+
+      verificationJobInstances.add(verificationJobInstanceBuilder.build());
+    });
+    activity.setVerificationJobInstanceIds(
+        verificationJobInstanceService.createDemoInstances(verificationJobInstances));
+    hPersistence.save(activity);
+    log.info("Registered demo activity of type {} for account {}, project {}, org {}", activity.getType(),
+        activity.getAccountId(), activity.getProjectIdentifier(), activity.getOrgIdentifier());
+    return activity.getUuid();
+  }
+
   private List<String> getVerificationJobInstanceId(String activityId) {
     Preconditions.checkNotNull(activityId);
     Activity activity = get(activityId);

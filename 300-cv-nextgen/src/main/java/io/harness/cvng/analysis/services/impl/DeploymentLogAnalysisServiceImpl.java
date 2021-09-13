@@ -14,14 +14,24 @@ import io.harness.cvng.analysis.entities.DeploymentLogAnalysis.DeploymentLogAnal
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
 import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.filterParams.DeploymentLogAnalysisFilter;
+import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.utils.CVNGObjectUtils;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
+import io.harness.serializer.JsonUtils;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.io.Resources;
 import com.google.inject.Inject;
+import java.io.IOException;
+import java.net.URL;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -36,6 +46,8 @@ import javax.annotation.Nullable;
 import org.mongodb.morphia.query.Sort;
 
 public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisService {
+  private static final URL LOG_DEMO_TEMPLATE_PATH = DeploymentTimeSeriesAnalysisServiceImpl.class.getResource(
+      "/io/harness/cvng/analysis/service/impl/log_deployment_analysis_demo_template.json");
   public static final int DEFAULT_PAGE_SIZE = 10;
   @Inject private HPersistence hPersistence;
   @Inject private VerificationTaskService verificationTaskService;
@@ -231,6 +243,40 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
       }
     }
     return deploymentLogAnalyses;
+  }
+
+  @Override
+  public String getLogDemoTemplate(String verificationTaskId) {
+    List<DeploymentLogAnalysis> deploymentLogAnalyses =
+        hPersistence.createQuery(DeploymentLogAnalysis.class)
+            .filter(DeploymentLogAnalysisKeys.verificationTaskId, verificationTaskId)
+            .asList();
+    return JsonUtils.asJson(deploymentLogAnalyses);
+  }
+
+  @Override
+  public void addDemoAnalysisData(String verificationTaskId, CVConfig cvConfig,
+      VerificationJobInstance verificationJobInstance, String demoTemplatePath) {
+    try {
+      String template = Resources.toString(this.getClass().getResource(demoTemplatePath), Charsets.UTF_8);
+      List<DeploymentLogAnalysis> deploymentLogAnalyses =
+          JsonUtils.asObject(template, new TypeReference<List<DeploymentLogAnalysis>>() {});
+      deploymentLogAnalyses.sort(Comparator.comparing(DeploymentLogAnalysis::getStartTime));
+      Instant lastStartTime = deploymentLogAnalyses.get(0).getStartTime();
+      int minute = 0;
+      for (DeploymentLogAnalysis deploymentLogAnalysis : deploymentLogAnalyses) {
+        deploymentLogAnalysis.setVerificationTaskId(verificationTaskId);
+        if (!lastStartTime.equals(deploymentLogAnalysis.getStartTime())) {
+          lastStartTime = deploymentLogAnalysis.getStartTime();
+          minute++;
+        }
+        deploymentLogAnalysis.setStartTime(verificationJobInstance.getStartTime().plus(Duration.ofMinutes(minute)));
+        deploymentLogAnalysis.setEndTime(deploymentLogAnalysis.getStartTime().plus(Duration.ofMinutes(1)));
+      }
+      hPersistence.save(deploymentLogAnalyses);
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
+    }
   }
 
   private List<LogAnalysisClusterChartDTO> getLogAnalysisClusterChartList(

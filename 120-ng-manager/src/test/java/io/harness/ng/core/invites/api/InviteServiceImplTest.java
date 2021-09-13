@@ -16,7 +16,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeast;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -30,10 +29,9 @@ import io.harness.beans.Scope;
 import io.harness.category.element.UnitTests;
 import io.harness.invites.remote.InviteAcceptResponse;
 import io.harness.mongo.MongoConfig;
+import io.harness.ng.core.AccountOrgProjectHelper;
 import io.harness.ng.core.api.UserGroupService;
 import io.harness.ng.core.dto.AccountDTO;
-import io.harness.ng.core.entities.Organization;
-import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.invites.InviteType;
 import io.harness.ng.core.invites.JWTGeneratorUtils;
 import io.harness.ng.core.invites.api.impl.InviteServiceImpl;
@@ -41,8 +39,6 @@ import io.harness.ng.core.invites.dto.InviteOperationResponse;
 import io.harness.ng.core.invites.dto.RoleBinding;
 import io.harness.ng.core.invites.entities.Invite;
 import io.harness.ng.core.invites.entities.Invite.InviteKeys;
-import io.harness.ng.core.services.OrganizationService;
-import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.core.user.remote.dto.UserMetadataDTO;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.notification.NotificationResultWithStatus;
@@ -87,9 +83,8 @@ public class InviteServiceImplTest extends CategoryTest {
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private AccessControlClient accessControlClient;
   @Mock private NotificationClient notificationClient;
   @Mock private OutboxService outboxService;
-  @Mock private OrganizationService organizationService;
-  @Mock private ProjectService projectService;
   @Mock private UserGroupService userGroupService;
+  @Mock private AccountOrgProjectHelper accountOrgProjectHelper;
 
   private InviteService inviteService;
 
@@ -98,8 +93,8 @@ public class InviteServiceImplTest extends CategoryTest {
     MockitoAnnotations.initMocks(this);
     MongoConfig mongoConfig = MongoConfig.builder().uri("mongodb://localhost:27017/ng-harness").build();
     inviteService = new InviteServiceImpl(USER_VERIFICATION_SECRET, mongoConfig, jwtGeneratorUtils, ngUserService,
-        transactionTemplate, inviteRepository, notificationClient, accountClient, outboxService, organizationService,
-        projectService, accessControlClient, userClient, userGroupService, false);
+        transactionTemplate, inviteRepository, notificationClient, accountClient, outboxService, accessControlClient,
+        userClient, accountOrgProjectHelper, false);
 
     when(accountClient.getAccountDTO(any()).execute())
         .thenReturn(Response.success(new RestResponse(AccountDTO.builder()
@@ -107,13 +102,11 @@ public class InviteServiceImplTest extends CategoryTest {
                                                           .companyName(accountIdentifier)
                                                           .name(accountIdentifier)
                                                           .build())));
-    when(accountClient.getBaseUrl(any()).execute()).thenReturn(Response.success(new RestResponse("qa.harness.io")));
+    when(accountOrgProjectHelper.getBaseUrl(any())).thenReturn("qa.harness.io");
     when(notificationClient.sendNotificationAsync(any())).thenReturn(new NotificationResultWithStatus());
-    when(projectService.get(any(), any(), any())).thenReturn(Optional.of(Project.builder().name("Project").build()));
-    when(organizationService.get(any(), any()))
-        .thenReturn(Optional.of(Organization.builder().name("Organization").build()));
-    when(accountClient.getAccountDTO(any()).execute())
-        .thenReturn(Response.success(new RestResponse(AccountDTO.builder().name("Account").build())));
+    when(accountOrgProjectHelper.getProjectName(any(), any(), any())).thenReturn("Project");
+    when(accountOrgProjectHelper.getOrgName(any(), any())).thenReturn("Organization");
+    when(accountOrgProjectHelper.getAccountName(any())).thenReturn("Account");
   }
 
   private Invite getDummyInvite() {
@@ -404,12 +397,10 @@ public class InviteServiceImplTest extends CategoryTest {
     when(jwtGeneratorUtils.verifyJWTToken(any(), any())).thenReturn(Collections.singletonMap(InviteKeys.id, claim));
     when(inviteRepository.findFirstByIdAndDeleted(any(), any())).thenReturn(Optional.of(getDummyInvite()));
     when(ngUserService.getUserByEmail(any(), anyBoolean())).thenReturn(Optional.of(user));
-    doNothing().when(userGroupService).addUserToUserGroups(eq(scope), any(), any());
     boolean result = inviteService.completeInvite(Optional.of(getDummyInvite()));
 
     assertThat(result).isTrue();
     verify(inviteRepository, times(1)).updateInvite(idCapture.capture(), updateCapture.capture());
-    verify(userGroupService, times(1)).addUserToUserGroups(eq(scope), any(), any());
     assertThat(idCapture.getValue()).isEqualTo(inviteId);
     assertThat(updateCapture.getValue().modifies(InviteKeys.deleted)).isTrue();
   }

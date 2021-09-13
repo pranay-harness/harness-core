@@ -1,5 +1,10 @@
 package software.wings.beans.s3;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.eraro.ErrorCode;
@@ -9,6 +14,8 @@ import lombok.Data;
 
 @Data
 @Builder
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class FetchS3FilesExecutionResponse implements DelegateTaskNotifyResponseData {
   private S3FetchFileResult s3FetchFileResult;
   private FetchS3FilesCommandStatus commandStatus;

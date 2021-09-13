@@ -10,7 +10,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.activity.entities.CDNGActivitySource;
 import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.client.NextGenService;
-import io.harness.cvng.core.services.api.CVEventService;
 import io.harness.cvng.core.services.api.UpdatableEntity;
 import io.harness.cvng.verificationjob.entities.BlueGreenVerificationJob;
 import io.harness.cvng.verificationjob.entities.CanaryVerificationJob;
@@ -51,7 +50,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 public class VerificationJobServiceImpl implements VerificationJobService {
   @Inject private HPersistence hPersistence;
   @Inject private NextGenService nextGenService;
-  @Inject private CVEventService cvEventService;
   @Inject private Injector injector;
 
   @Override
@@ -72,7 +70,6 @@ public class VerificationJobServiceImpl implements VerificationJobService {
     try {
       verificationJob.validate();
       hPersistence.save(verificationJob);
-      sendScopedCreateEvent(verificationJob);
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(
           String.format(
@@ -107,22 +104,11 @@ public class VerificationJobServiceImpl implements VerificationJobService {
     VerificationJob temp = getVerificationJob(
         accountId, verificationJob.getOrgIdentifier(), verificationJob.getProjectIdentifier(), identifier);
     hPersistence.update(temp, updateOperations);
-    sendScopedCreateEvent(verificationJob);
   }
 
   @Override
   public void save(VerificationJob verificationJob) {
     hPersistence.save(verificationJob);
-    sendScopedCreateEvent(verificationJob);
-  }
-
-  private void sendScopedCreateEvent(VerificationJob verificationJob) {
-    if (!verificationJob.getEnvIdentifierRuntimeParam().isRuntimeParam()) {
-      cvEventService.sendVerificationJobEnvironmentCreateEvent(verificationJob);
-    }
-    if (!verificationJob.getServiceIdentifierRuntimeParam().isRuntimeParam()) {
-      cvEventService.sendVerificationJobServiceCreateEvent(verificationJob);
-    }
   }
 
   @Override
@@ -211,22 +197,11 @@ public class VerificationJobServiceImpl implements VerificationJobService {
   }
 
   public void delete(String accountId, String orgIdentifier, String projectIdentifier, String identifier) {
-    VerificationJob verificationJob = getVerificationJob(accountId, orgIdentifier, projectIdentifier, identifier);
-    sendScopedDeleteEvent(verificationJob);
     hPersistence.delete(hPersistence.createQuery(VerificationJob.class)
                             .filter(VerificationJobKeys.accountId, accountId)
                             .filter(VerificationJobKeys.orgIdentifier, orgIdentifier)
                             .filter(VerificationJobKeys.projectIdentifier, projectIdentifier)
                             .filter(VerificationJobKeys.identifier, identifier));
-  }
-
-  private void sendScopedDeleteEvent(VerificationJob verificationJob) {
-    if (!verificationJob.getEnvIdentifierRuntimeParam().isRuntimeParam()) {
-      cvEventService.sendVerificationJobEnvironmentDeleteEvent(verificationJob);
-    }
-    if (!verificationJob.getServiceIdentifierRuntimeParam().isRuntimeParam()) {
-      cvEventService.sendVerificationJobServiceDeleteEvent(verificationJob);
-    }
   }
 
   @Override
