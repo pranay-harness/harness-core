@@ -3,7 +3,6 @@ package io.harness.ng.core.invites.remote;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_USER_PERMISSION;
 import static io.harness.ng.accesscontrol.PlatformResourceTypes.USER;
-import static io.harness.ng.core.invites.mapper.InviteMapper.toInviteList;
 import static io.harness.ng.core.invites.mapper.InviteMapper.writeDTO;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -20,7 +19,6 @@ import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SortOrder;
-import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.invites.remote.InviteAcceptResponse;
 import io.harness.ng.accesscontrol.user.ACLAggregateFilter;
@@ -50,7 +48,6 @@ import io.swagger.annotations.ApiResponses;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
@@ -158,6 +155,7 @@ public class InviteResource {
     return ResponseDTO.newResponse(inviteDTOs);
   }
 
+  @Deprecated
   @POST
   @ApiOperation(value = "Add a new invite for the specified project/organization", nickname = "sendInvite")
   public ResponseDTO<List<InviteOperationResponse>> createInvitations(
@@ -166,16 +164,8 @@ public class InviteResource {
       @NotNull @Valid CreateInviteDTO createInviteDTO) {
     projectIdentifier = stripToNull(projectIdentifier);
     orgIdentifier = stripToNull(orgIdentifier);
-    List<InviteOperationResponse> inviteOperationResponses = new ArrayList<>();
-    List<Invite> invites = toInviteList(createInviteDTO, accountIdentifier, orgIdentifier, projectIdentifier);
-    for (Invite invite : invites) {
-      try {
-        InviteOperationResponse response = inviteService.create(invite);
-        inviteOperationResponses.add(response);
-      } catch (DuplicateFieldException ex) {
-        log.error("error: ", ex);
-      }
-    }
+    List<InviteOperationResponse> inviteOperationResponses =
+        inviteService.createInvitations(accountIdentifier, orgIdentifier, projectIdentifier, createInviteDTO);
     return ResponseDTO.newResponse(inviteOperationResponses);
   }
 

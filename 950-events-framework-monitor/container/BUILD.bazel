@@ -1,0 +1,127 @@
+load("@io_bazel_rules_docker//container:container.bzl", "container_image", "container_push")
+load("@io_bazel_rules_docker//docker/util:run.bzl", "container_run_and_commit_layer")
+load("@rules_pkg//:pkg.bzl", "pkg_tar")
+
+container_image(
+    name = "eventsapi_monitor",
+    base = "//dockerization/base-jdk:base_jdk",
+    cmd = ["./run.sh"],
+    layers = [
+        ":redis_layer",
+    ],
+    tags = [
+        "manual",
+        "no-cache",
+        "no-ide",
+    ],
+    tars = [
+        ":files",
+        ":scripts",
+    ],
+)
+
+pkg_tar(
+    name = "files",
+    srcs = [
+        "//950-events-framework-monitor:config.yml",
+        "//950-events-framework-monitor:redis/redislabs_ca.pem",
+    ],
+    files = {
+        "@alpn_boot_8.1.13.v20181017//file": "alpn-boot-8.1.13.v20181017.jar",
+        "//950-events-framework-monitor:module_deploy.jar": "eventsapi-monitor-capsule.jar",
+    },
+    mode = "0600",
+    owner = "65534.65534",
+    package_dir = "/opt/harness",
+    tags = [
+        "manual",
+        "no-cache",
+        "no-ide",
+    ],
+)
+
+pkg_tar(
+    name = "scripts",
+    srcs = glob([
+        "scripts/*",
+    ]),
+    mode = "0500",
+    owner = "65534.65534",
+    package_dir = "/opt/harness",
+    tags = [
+        "manual",
+        "no-cache",
+        "no-ide",
+    ],
+)
+
+container_run_and_commit_layer(
+    name = "redis_layer",
+    commands = [
+        "sh /opt/harness/install_redis.sh",
+    ],
+    image = ":redis_pre_install_image.tar",
+    tags = [
+        "manual",
+        "no-cache",
+        "no-ide",
+    ],
+)
+
+container_image(
+    name = "redis_pre_install_image",
+    base = "@openjdk_8u242//image",
+    layers = [
+        ":redis_installed_dependencies_layer",
+    ],
+    tags = [
+        "manual",
+        "no-cache",
+        "no-ide",
+    ],
+    tars = [
+        ":redis_files",
+    ],
+)
+
+container_run_and_commit_layer(
+    name = "redis_installed_dependencies_layer",
+    commands = [
+        "apk add --no-cache gcc make musl-dev linux-headers wget openssl openssl-dev",
+    ],
+    image = "@openjdk_8u242//image",
+    tags = [
+        "manual",
+        "no-cache",
+        "no-ide",
+    ],
+)
+
+pkg_tar(
+    name = "redis_files",
+    srcs = [
+        "//950-events-framework-monitor:redis/install_redis.sh",
+    ],
+    mode = "0500",
+    owner = "65534.65534",
+    package_dir = "/opt/harness",
+    tags = [
+        "manual",
+        "no-cache",
+        "no-ide",
+    ],
+)
+
+container_push(
+    name = "push",
+    format = "Docker",
+    image = "eventsapi_monitor",
+    registry = "us.gcr.io",
+    repository = "platform-205701/harness/eventsapi-monitor",
+    tag = "{STABLE_BUILD_NUMBER}",
+    tags = [
+        "manual",
+        "no-cache",
+        "no-ide",
+    ],
+)

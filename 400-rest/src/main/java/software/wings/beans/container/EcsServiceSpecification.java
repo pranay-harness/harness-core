@@ -3,7 +3,9 @@ package software.wings.beans.container;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.DeploymentSpecification;
 
@@ -22,6 +24,7 @@ import org.mongodb.morphia.annotations.Entity;
 @FieldNameConstants(innerTypeName = "EcsServiceSpecificationKeys")
 @Entity("ecsServiceSpecification")
 @HarnessEntity(exportable = true)
+@TargetModule(HarnessModule._955_DELEGATE_BEANS)
 public class EcsServiceSpecification extends DeploymentSpecification {
   public static final String ECS_REPLICA_SCHEDULING_STRATEGY = "REPLICA";
   @NotNull private String serviceId;

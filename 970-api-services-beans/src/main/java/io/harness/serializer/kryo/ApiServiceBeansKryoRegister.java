@@ -129,6 +129,7 @@ import com.amazonaws.services.ec2.model.CapacityReservationSpecificationResponse
 import com.amazonaws.services.ec2.model.CapacityReservationTargetResponse;
 import com.amazonaws.services.ec2.model.CpuOptions;
 import com.amazonaws.services.ec2.model.EbsInstanceBlockDevice;
+import com.amazonaws.services.ec2.model.EnclaveOptions;
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.GroupIdentifier;
 import com.amazonaws.services.ec2.model.HibernationOptions;
@@ -339,6 +340,7 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(KubernetesResourceId.class, 97031);
     kryo.register(HelmClientException.class, 97032);
     kryo.register(HelmCliCommandType.class, 97033);
+    kryo.register(EnclaveOptions.class, 97034);
 
     kryo.register(BuildOptions.class, 7414);
     kryo.register(BuiltImage.class, 7426);

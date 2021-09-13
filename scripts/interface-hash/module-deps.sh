@@ -1,13 +1,6 @@
 #!/usr/bin/env bash
 
-MODULE_NAME="//800-pipeline-service:module"
-declare -a LIST_OF_PROTO_FILES
-
-get_proto_files_of_module() {
-	LIST_OF_PROTO_FILES=`bazel query "deps($MODULE_NAME)" | grep -i "\.proto" | grep -i -v "com_google_protobuf"`
-}
-
-for PROTO_FILE in `bazel query "deps($MODULE_NAME)" | grep -i "\.proto" | grep -i -v "com_google_protobuf"`
+for PROTO_FILE in `bazel query "deps($1)" | grep -i "\.proto" | grep -i -v "com_google_protobuf"`
 	do
 		PROTO_FILE_2=`echo ${PROTO_FILE//\/\//}`
 		PROTO_FILE_3=`echo ${PROTO_FILE_2//:/\/}`

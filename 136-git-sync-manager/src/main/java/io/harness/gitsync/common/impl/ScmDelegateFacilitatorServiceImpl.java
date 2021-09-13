@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.IdentifierRef;
+import io.harness.beans.gitsync.GitFileDetails.GitFileDetailsBuilder;
 import io.harness.beans.gitsync.GitFilePathDetails;
 import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.connector.ConnectorResponseDTO;
@@ -26,10 +27,14 @@ import io.harness.delegate.task.scm.ScmGitRefTaskParams;
 import io.harness.delegate.task.scm.ScmGitRefTaskResponseData;
 import io.harness.delegate.task.scm.ScmPRTaskParams;
 import io.harness.delegate.task.scm.ScmPRTaskResponseData;
+import io.harness.delegate.task.scm.ScmPushTaskParams;
+import io.harness.delegate.task.scm.ScmPushTaskResponseData;
 import io.harness.exception.ExplanationException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
+import io.harness.git.model.ChangeType;
+import io.harness.gitsync.common.beans.InfoForGitPush;
 import io.harness.gitsync.common.dtos.CreatePRDTO;
 import io.harness.gitsync.common.dtos.GitDiffResultFileListDTO;
 import io.harness.gitsync.common.dtos.GitFileChangeDTO;
@@ -42,12 +47,15 @@ import io.harness.impl.ScmResponseStatusUtils;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.product.ci.scm.proto.CompareCommitsResponse;
+import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.product.ci.scm.proto.CreatePRResponse;
+import io.harness.product.ci.scm.proto.DeleteFileResponse;
 import io.harness.product.ci.scm.proto.FileBatchContentResponse;
 import io.harness.product.ci.scm.proto.FileContent;
 import io.harness.product.ci.scm.proto.GetLatestCommitResponse;
 import io.harness.product.ci.scm.proto.ListBranchesResponse;
 import io.harness.product.ci.scm.proto.ListCommitsResponse;
+import io.harness.product.ci.scm.proto.UpdateFileResponse;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.service.DelegateGrpcClientWrapper;
@@ -349,6 +357,89 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
       return GetLatestCommitResponse.parseFrom(scmGitRefTaskResponseData.getGetLatestCommitResponse()).getCommitId();
     } catch (InvalidProtocolBufferException e) {
       throw new UnexpectedException("Unexpected error occurred while doing scm operation");
+    }
+  }
+
+  @Override
+  public CreateFileResponse createFile(InfoForGitPush infoForPush) {
+    GitFileDetailsBuilder gitFileDetails = getGitFileDetails(infoForPush.getYaml(), infoForPush.getFilePath(),
+        infoForPush.getFolderPath(), infoForPush.getCommitMsg(), infoForPush.getBranch());
+    final List<EncryptedDataDetail> encryptionDetails = getEncryptedDataDetails(infoForPush.getAccountId(),
+        infoForPush.getOrgIdentifier(), infoForPush.getProjectIdentifier(), infoForPush.getScmConnector());
+    ScmPushTaskParams scmPushTaskParams = ScmPushTaskParams.builder()
+                                              .changeType(ChangeType.ADD)
+                                              .scmConnector(infoForPush.getScmConnector())
+                                              .gitFileDetails(gitFileDetails.build())
+                                              .encryptedDataDetails(encryptionDetails)
+                                              .isNewBranch(infoForPush.isNewBranch())
+                                              .baseBranch(infoForPush.getBaseBranch())
+                                              .build();
+
+    final DelegateTaskRequest delegateTaskRequest = getDelegateTaskRequest(infoForPush.getAccountId(),
+        infoForPush.getOrgIdentifier(), infoForPush.getProjectIdentifier(), scmPushTaskParams, TaskType.SCM_PUSH_TASK);
+
+    DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    ScmPushTaskResponseData scmPushTaskResponseData = (ScmPushTaskResponseData) responseData;
+    try {
+      return CreateFileResponse.parseFrom(scmPushTaskResponseData.getCreateFileResponse());
+    } catch (InvalidProtocolBufferException e) {
+      throw new UnexpectedException("Unexpected error occurred while doing scm operation", e);
+    }
+  }
+
+  @Override
+  public UpdateFileResponse updateFile(InfoForGitPush infoForPush) {
+    GitFileDetailsBuilder gitFileDetails = getGitFileDetails(infoForPush.getYaml(), infoForPush.getFilePath(),
+        infoForPush.getFolderPath(), infoForPush.getCommitMsg(), infoForPush.getBranch());
+    gitFileDetails.oldFileSha(infoForPush.getOldFileSha());
+    final List<EncryptedDataDetail> encryptionDetails = getEncryptedDataDetails(infoForPush.getAccountId(),
+        infoForPush.getOrgIdentifier(), infoForPush.getProjectIdentifier(), infoForPush.getScmConnector());
+    ScmPushTaskParams scmPushTaskParams = ScmPushTaskParams.builder()
+                                              .changeType(ChangeType.MODIFY)
+                                              .scmConnector(infoForPush.getScmConnector())
+                                              .gitFileDetails(gitFileDetails.build())
+                                              .encryptedDataDetails(encryptionDetails)
+                                              .isNewBranch(infoForPush.isNewBranch())
+                                              .baseBranch(infoForPush.getBaseBranch())
+                                              .build();
+
+    final DelegateTaskRequest delegateTaskRequest = getDelegateTaskRequest(infoForPush.getAccountId(),
+        infoForPush.getOrgIdentifier(), infoForPush.getProjectIdentifier(), scmPushTaskParams, TaskType.SCM_PUSH_TASK);
+
+    DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    ScmPushTaskResponseData scmPushTaskResponseData = (ScmPushTaskResponseData) responseData;
+    try {
+      return UpdateFileResponse.parseFrom(scmPushTaskResponseData.getUpdateFileResponse());
+    } catch (InvalidProtocolBufferException e) {
+      throw new UnexpectedException("Unexpected error occurred while doing scm operation", e);
+    }
+  }
+
+  @Override
+  public DeleteFileResponse deleteFile(InfoForGitPush infoForPush) {
+    GitFileDetailsBuilder gitFileDetails = getGitFileDetails(infoForPush.getYaml(), infoForPush.getFilePath(),
+        infoForPush.getFolderPath(), infoForPush.getCommitMsg(), infoForPush.getBranch());
+    gitFileDetails.oldFileSha(infoForPush.getOldFileSha());
+    final List<EncryptedDataDetail> encryptionDetails = getEncryptedDataDetails(infoForPush.getAccountId(),
+        infoForPush.getOrgIdentifier(), infoForPush.getProjectIdentifier(), infoForPush.getScmConnector());
+    ScmPushTaskParams scmPushTaskParams = ScmPushTaskParams.builder()
+                                              .changeType(ChangeType.DELETE)
+                                              .scmConnector(infoForPush.getScmConnector())
+                                              .gitFileDetails(gitFileDetails.build())
+                                              .encryptedDataDetails(encryptionDetails)
+                                              .isNewBranch(infoForPush.isNewBranch())
+                                              .baseBranch(infoForPush.getBaseBranch())
+                                              .build();
+
+    final DelegateTaskRequest delegateTaskRequest = getDelegateTaskRequest(infoForPush.getAccountId(),
+        infoForPush.getOrgIdentifier(), infoForPush.getProjectIdentifier(), scmPushTaskParams, TaskType.SCM_PUSH_TASK);
+
+    DelegateResponseData responseData = delegateGrpcClientWrapper.executeSyncTask(delegateTaskRequest);
+    ScmPushTaskResponseData scmPushTaskResponseData = (ScmPushTaskResponseData) responseData;
+    try {
+      return DeleteFileResponse.parseFrom(scmPushTaskResponseData.getDeleteFileResponse());
+    } catch (InvalidProtocolBufferException e) {
+      throw new UnexpectedException("Unexpected error occurred while doing scm operation", e);
     }
   }
 

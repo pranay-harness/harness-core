@@ -2,7 +2,7 @@ load("@io_bazel_rules_docker//container:container.bzl", "container_image", "cont
 load("@rules_pkg//:pkg.bzl", "pkg_tar")
 
 container_image(
-    name = "container",
+    name = "delegate_service_app",
     base = "//dockerization/base-jdk:base_jdk",
     cmd = ["./run.sh"],
     tags = [
@@ -55,7 +55,7 @@ pkg_tar(
 container_push(
     name = "push",
     format = "Docker",
-    image = "delegate-service-app",
+    image = "delegate_service_app",
     registry = "us.gcr.io",
     repository = "platform-205701/harness/delegate-service-app",
     tag = "{STABLE_BUILD_NUMBER}",

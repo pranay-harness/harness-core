@@ -23,9 +23,6 @@ import io.harness.gitsync.persistance.GitAwarePersistence;
 import io.harness.gitsync.persistance.GitAwarePersistenceNewImpl;
 import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.gitsync.persistance.GitSyncSdkServiceImpl;
-import io.harness.gitsync.scm.ScmDelegateGitHelper;
-import io.harness.gitsync.scm.ScmGitHelper;
-import io.harness.gitsync.scm.ScmManagerGitHelper;
 import io.harness.gitsync.sdk.GitSyncGrpcClientModule;
 import io.harness.gitsync.sdk.GitSyncSdkGrpcServerModule;
 import io.harness.ng.core.event.MessageListener;
@@ -35,9 +32,6 @@ import com.google.inject.name.Names;
 
 @OwnedBy(DX)
 public class GitSyncSdkModule extends AbstractModule {
-  public static final String SCM_ON_DELEGATE = "scmOnDelegate";
-  public static final String SCM_ON_MANAGER = "scmOnManager";
-
   private static volatile GitSyncSdkModule instance;
 
   static GitSyncSdkModule getInstance() {
@@ -62,8 +56,6 @@ public class GitSyncSdkModule extends AbstractModule {
         .annotatedWith(Names.named(GIT_CONFIG_STREAM + GIT_SYNC_SDK))
         .to(GitSyncConfigEventMessageListener.class);
     bind(GitAwarePersistence.class).to(GitAwarePersistenceNewImpl.class);
-    bind(ScmGitHelper.class).annotatedWith(Names.named(SCM_ON_MANAGER)).to(ScmManagerGitHelper.class);
-    bind(ScmGitHelper.class).annotatedWith(Names.named(SCM_ON_DELEGATE)).to(ScmDelegateGitHelper.class);
     bind(GitSyncSdkService.class).to(GitSyncSdkServiceImpl.class);
     bind(GitProcessingRequestService.class).to(GitProcessingRequestServiceImpl.class);
     bind(FullSyncSdkService.class).to(FullSyncSdkServiceImpl.class);
