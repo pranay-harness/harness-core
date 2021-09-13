@@ -2,9 +2,15 @@ package io.harness.perpetualtask.datacollection.changeintel;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.cvng.beans.CVDataCollectionInfo;
+import io.harness.cvng.beans.change.KubernetesChangeEventDTO;
+import io.harness.cvng.beans.change.KubernetesChangeEventDTO.Action;
+import io.harness.cvng.beans.change.KubernetesChangeEventDTO.KubernetesResourceType;
+import io.harness.perpetualtask.datacollection.K8ActivityCollectionPerpetualTaskParams;
 import io.harness.perpetualtask.k8s.informer.handlers.BaseHandler;
 import io.harness.perpetualtask.k8s.informer.handlers.K8sHandlerUtils;
 import io.harness.perpetualtask.k8s.informer.handlers.K8sHandlerUtils.ResourceDetails;
+import io.harness.verificationclient.CVNextGenServiceClient;
 
 import com.google.inject.Inject;
 import io.kubernetes.client.common.KubernetesObject;
@@ -20,14 +26,19 @@ import io.kubernetes.client.openapi.models.V1StatefulSet;
 import io.kubernetes.client.openapi.models.V1beta1CronJob;
 import io.kubernetes.client.util.Yaml;
 import java.util.Map;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.joor.Reflect;
 
 @Slf4j
+@Data
 @TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class BaseChangeHandler<ApiType extends KubernetesObject> implements ResourceEventHandler<ApiType> {
+  K8ActivityCollectionPerpetualTaskParams taskParams;
   @Inject K8sHandlerUtils k8sHandlerUtils;
+  @Inject private CVNextGenServiceClient cvNextGenServiceClient;
+
   static {
     initModelMap();
   }
@@ -54,23 +65,31 @@ public class BaseChangeHandler<ApiType extends KubernetesObject> implements Reso
   }
 
   @Override
-  public void onAdd(ApiType apiType) {
+  public void onAdd(ApiType newResource) {
     // handleMissingKindAndApiVersion
+    if (Reflect.on(newResource).get("kind") == null) {
+      Reflect.on(newResource).set("kind", "ReplicaSet");
+    }
+    if (Reflect.on(newResource).get("apiVersion") == null) {
+      Reflect.on(newResource).set("apiVersion", "apps/v1");
+    }
     log.info("onAdd of new resource");
-    log.info("New resource: {}", ResourceDetails.ofResource(apiType));
+    log.info("New resource: {}", ResourceDetails.ofResource(newResource));
+    String newYaml = k8sHandlerUtils.yamlDump(newResource);
+    sendEvents(null, newYaml, KubernetesResourceType.ReplicaSet, Action.Add);
   }
 
   @Override
   public void onUpdate(ApiType oldResource, ApiType newResource) {
     if (Reflect.on(oldResource).get("kind") == null) {
-      Reflect.on(oldResource).set("kind", "Deployment");
+      Reflect.on(oldResource).set("kind", "ReplicaSet");
     }
     if (Reflect.on(oldResource).get("apiVersion") == null) {
       Reflect.on(oldResource).set("apiVersion", "apps/v1");
     }
 
     if (Reflect.on(newResource).get("kind") == null) {
-      Reflect.on(newResource).set("kind", "Deployment");
+      Reflect.on(newResource).set("kind", "ReplicaSet");
     }
     if (Reflect.on(newResource).get("apiVersion") == null) {
       Reflect.on(newResource).set("apiVersion", "apps/v1");
@@ -85,9 +104,27 @@ public class BaseChangeHandler<ApiType extends KubernetesObject> implements Reso
     boolean specChanged = !StringUtils.equals(oldYaml, newYaml);
     if (specChanged) {
       log.info("Spec updated from {} to {}", oldYaml, newYaml);
+      sendEvents(oldYaml, newYaml, KubernetesResourceType.ReplicaSet, Action.Update);
     }
   }
 
   @Override
   public void onDelete(ApiType apiType, boolean b) {}
+
+  private void sendEvents(String oldYaml, String newYaml, KubernetesResourceType resourceType, Action action) {
+    KubernetesChangeEventDTO changeEventDTO = KubernetesChangeEventDTO.builder()
+                                                  .resourceType(resourceType)
+                                                  .action(action)
+                                                  .oldYaml(oldYaml)
+                                                  .newYaml(newYaml)
+                                                  .projectIdentifier("praveen")
+                                                  .orgIdentifier("cv")
+                                                  .serviceIdentifier("managerinfra")
+                                                  .envIdentifier("prod")
+                                                  .accountId(taskParams.getAccountId())
+                                                  .build();
+
+    cvNextGenServiceClient.saveKubernetesChangeEvents(
+        taskParams.getAccountId(), taskParams.getDataCollectionWorkerId(), changeEventDTO);
+  }
 }

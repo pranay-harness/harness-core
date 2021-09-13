@@ -19,7 +19,7 @@ public class KubernetesActivityDTO extends ActivityDTO {
   String kind;
   String activitySourceConfigId;
   String eventJson;
-  KubernetesEventType eventType;
+  @Deprecated KubernetesEventType eventType;
 
   @Override
   public ActivityType getType() {

@@ -26,8 +26,11 @@ public class KubernetesActivity extends Activity {
   String namespace;
   String workloadName;
   String kind;
-  Set<KubernetesActivityDTO> activities;
-  @FdIndex Instant bucketStartTime;
+  @Deprecated Set<KubernetesActivityDTO> activities;
+  @Deprecated @FdIndex Instant bucketStartTime;
+
+  String oldYaml;
+  String newYaml;
 
   @Override
   public ActivityType getType() {

@@ -6,6 +6,7 @@ import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.beans.ChangeSummaryDTO;
 import io.harness.cvng.core.beans.change.event.ChangeEventDTO;
 import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
+import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.entities.changeSource.ChangeSource;
 import io.harness.cvng.core.entities.changeSource.ChangeSource.ChangeSourceKeys;
@@ -18,6 +19,7 @@ import io.harness.cvng.core.types.ChangeSourceType;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.persistence.HPersistence;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.time.Instant;
 import java.util.Collections;
@@ -64,6 +66,18 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
         .stream()
         .map(changeSourceTransformer::getDto)
         .collect(Collectors.toSet());
+  }
+
+  public ChangeSourceDTO get(@NonNull ProjectParams projectParams, @NonNull String identifier) {
+    Preconditions.checkNotNull(identifier);
+
+    ChangeSource changeSource = hPersistence.createQuery(ChangeSource.class)
+                                    .filter(ChangeSourceKeys.identifier, identifier)
+                                    .filter(ChangeSourceKeys.accountId, projectParams.getAccountIdentifier())
+                                    .filter(ChangeSourceKeys.orgIdentifier, projectParams.getOrgIdentifier())
+                                    .filter(ChangeSourceKeys.projectIdentifier, projectParams.getProjectIdentifier())
+                                    .get();
+    return changeSourceTransformer.getDto(changeSource);
   }
 
   @Override

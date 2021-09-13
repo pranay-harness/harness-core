@@ -23,7 +23,9 @@ import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.activity.KubernetesActivityDTO;
+import io.harness.cvng.beans.change.KubernetesChangeEventDTO;
 import io.harness.cvng.client.VerificationManagerService;
+import io.harness.cvng.core.services.api.monitoredService.ChangeSourceService;
 import io.harness.encryption.Scope;
 import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
@@ -48,6 +50,7 @@ public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySo
   @Inject private HPersistence hPersistence;
   @Inject private ActivityService activityService;
   @Inject private ActivitySourceService activitySourceService;
+  @Inject private ChangeSourceService changeSourceService;
 
   @Override
   public boolean saveKubernetesActivities(
@@ -97,6 +100,20 @@ public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySo
         hPersistence.save(savedActivity);
       }
     });
+    return true;
+  }
+
+  @Override
+  public boolean saveKubernetesChange(String accountId, KubernetesChangeEventDTO changeEventDTO) {
+    KubernetesActivity activity = KubernetesActivity.builder()
+                                      .accountId(changeEventDTO.getAccountId())
+                                      .orgIdentifier(changeEventDTO.getOrgIdentifier())
+                                      .projectIdentifier(changeEventDTO.getProjectIdentifier())
+                                      .oldYaml(changeEventDTO.getOldYaml())
+                                      .newYaml(changeEventDTO.getNewYaml())
+                                      .changeSourceIdentifier(changeEventDTO.getChangeSourceIdentifier())
+                                      .build();
+    hPersistence.save(activity);
     return true;
   }
 

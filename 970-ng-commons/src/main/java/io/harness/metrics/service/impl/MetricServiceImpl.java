@@ -123,7 +123,7 @@ public class MetricServiceImpl implements MetricService {
 
     try {
       if (isNotEmpty(System.getenv(GOOGLE_APPLICATION_CREDENTIALS))) {
-        WILL_PUBLISH_METRICS = true;
+        // WILL_PUBLISH_METRICS = true;
         StackdriverStatsConfiguration configuration =
             StackdriverStatsConfiguration.builder()
                 .setExportInterval(Duration.fromMillis(TimeUnit.MINUTES.toMillis(1)))

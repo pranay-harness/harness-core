@@ -16,6 +16,7 @@ import io.harness.cvng.beans.LogRecordDTO;
 import io.harness.cvng.beans.TimeSeriesDataCollectionRecord;
 import io.harness.cvng.beans.activity.KubernetesActivityDTO;
 import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
+import io.harness.cvng.beans.change.KubernetesChangeEventDTO;
 import io.harness.cvng.beans.cvnglog.CVNGLogDTO;
 import io.harness.rest.RestResponse;
 
@@ -53,6 +54,10 @@ public interface CVNextGenServiceClient {
   @POST(KUBERNETES_RESOURCE + "/activities")
   Call<RestResponse<Boolean>> saveKubernetesActivities(@Query("accountId") String accountId,
       @Query("activitySourceId") String activitySourceId, @Body List<KubernetesActivityDTO> activityDTOS);
+
+  @POST(KUBERNETES_RESOURCE + "/change")
+  Call<RestResponse<Boolean>> saveKubernetesChangeEvents(@Query("accountId") String accountId,
+      @Query("changeSourceId") String changeSourceId, @Body KubernetesChangeEventDTO changeEventDTO);
 
   @GET(KUBERNETES_RESOURCE + "/source")
   Call<RestResponse<KubernetesActivitySourceDTO>> getKubernetesActivitySourceDTO(

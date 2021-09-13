@@ -23,6 +23,7 @@ import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskLogContext;
 import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.datacollection.changeintel.BaseChangeHandler;
+import io.harness.perpetualtask.k8s.informer.handlers.K8sHandlerUtils;
 import io.harness.perpetualtask.k8s.informer.handlers.V1DeploymentHandler;
 import io.harness.perpetualtask.k8s.watch.K8sWatchServiceDelegate.WatcherGroup;
 import io.harness.serializer.KryoSerializer;
@@ -32,6 +33,7 @@ import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.cvng.K8InfoDataService;
 
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import io.kubernetes.client.informer.ResourceEventHandler;
 import io.kubernetes.client.informer.SharedIndexInformer;
 import io.kubernetes.client.informer.SharedInformerFactory;
@@ -45,6 +47,8 @@ import io.kubernetes.client.openapi.models.V1Event;
 import io.kubernetes.client.openapi.models.V1EventList;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodList;
+import io.kubernetes.client.openapi.models.V1ReplicaSet;
+import io.kubernetes.client.openapi.models.V1ReplicaSetList;
 import io.kubernetes.client.util.CallGeneratorParams;
 import java.time.Instant;
 import java.util.Map;
@@ -65,6 +69,7 @@ public class K8ActivityCollectionPerpetualTaskExecutor implements PerpetualTaskE
   @Inject private KubernetesActivitiesStoreService kubernetesActivitiesStoreService;
   @Inject private CVNGRequestExecutor cvngRequestExecutor;
   @Inject private CVNextGenServiceClient cvNextGenServiceClient;
+  @Inject private Injector injector;
 
   @Override
   public PerpetualTaskResponse runOnce(
@@ -81,6 +86,7 @@ public class K8ActivityCollectionPerpetualTaskExecutor implements PerpetualTaskE
             (KubernetesClusterConfigDTO) dataCollectionInfo.getConnectorConfigDTO();
         KubernetesConfig kubernetesConfig = k8InfoDataService.getDecryptedKubernetesConfig(
             kubernetesClusterConfig, dataCollectionInfo.getEncryptedDataDetails());
+
         SharedInformerFactory factory = new SharedInformerFactory();
 
         //        KubernetesActivitySourceDTO activitySourceDTO =
@@ -92,13 +98,16 @@ public class K8ActivityCollectionPerpetualTaskExecutor implements PerpetualTaskE
         CoreV1Api coreV1Api = new CoreV1Api(apiClient);
         AppsV1Api appsV1Api = new AppsV1Api(apiClient);
 
-        SharedIndexInformer<V1Pod> nodeInformer =
+        SharedIndexInformer<V1ReplicaSet> nodeInformer =
             factory.sharedIndexInformerFor((CallGeneratorParams callGeneratorParams)
-                                               -> coreV1Api.listPodForAllNamespacesCall(null, null, null, null, null,
-                                                   null, callGeneratorParams.resourceVersion,
+                                               -> appsV1Api.listReplicaSetForAllNamespacesCall(null, null, null, null,
+                                                   null, null, callGeneratorParams.resourceVersion,
                                                    callGeneratorParams.timeoutSeconds, callGeneratorParams.watch, null),
-                V1Pod.class, V1PodList.class);
-        nodeInformer.addEventHandler(new BaseChangeHandler());
+                V1ReplicaSet.class, V1ReplicaSetList.class);
+        BaseChangeHandler eventHandler = new BaseChangeHandler();
+        eventHandler.setTaskParams(taskParams);
+        injector.injectMembers(eventHandler);
+        nodeInformer.addEventHandler(eventHandler);
 
         factory.startAllRegisteredInformers();
         return WatcherGroup.builder().watchId(id).sharedInformerFactory(factory).build();
