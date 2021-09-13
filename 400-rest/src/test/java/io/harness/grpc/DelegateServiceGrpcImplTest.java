@@ -62,7 +62,6 @@ import io.harness.shell.ScriptType;
 import io.harness.tasks.ProgressData;
 
 import software.wings.WingsBaseTest;
-import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.DelegateTaskServiceClassic;
 
@@ -111,7 +110,6 @@ public class DelegateServiceGrpcImplTest extends WingsBaseTest implements Mockab
   @Inject private KryoSerializer kryoSerializer;
   private DelegateSyncService delegateSyncService;
   private DelegateTaskService delegateTaskService;
-  private DelegateSelectionLogsService delegateSelectionLogsService;
 
   private Server server;
   private Logger mockClientLogger;
@@ -136,11 +134,11 @@ public class DelegateServiceGrpcImplTest extends WingsBaseTest implements Mockab
 
     delegateCallbackRegistry = mock(DelegateCallbackRegistry.class);
     perpetualTaskService = mock(PerpetualTaskService.class);
-    delegateService = mock(software.wings.service.intfc.DelegateService.class);
+    delegateService = mock(DelegateService.class);
     delegateTaskServiceClassic = mock(DelegateTaskServiceClassic.class);
     delegateTaskService = mock(DelegateTaskService.class);
     delegateServiceGrpcImpl = new DelegateServiceGrpcImpl(delegateCallbackRegistry, perpetualTaskService,
-        delegateService, delegateTaskService, kryoSerializer, delegateTaskServiceClassic, delegateSelectionLogsService);
+        delegateService, delegateTaskService, kryoSerializer, delegateTaskServiceClassic);
 
     server =
         InProcessServerBuilder.forName(serverName).directExecutor().addService(delegateServiceGrpcImpl).build().start();
