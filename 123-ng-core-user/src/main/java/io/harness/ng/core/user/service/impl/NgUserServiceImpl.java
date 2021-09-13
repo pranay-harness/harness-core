@@ -335,6 +335,9 @@ public class NgUserServiceImpl implements NgUserService {
 
   @Override
   public AddUsersResponse addUsers(Scope scope, AddUsersDTO addUsersDTO) {
+    if (isEmpty(addUsersDTO.getEmails())) {
+      return AddUsersResponse.EMPTY_RESPONSE;
+    }
     Criteria criteria = Criteria.where(UserMetadataKeys.email).in(addUsersDTO.getEmails());
     List<UserMetadata> userMetadataList = userMetadataRepository.findAll(criteria, Pageable.unpaged()).getContent();
 
@@ -486,6 +489,9 @@ public class NgUserServiceImpl implements NgUserService {
   }
 
   private List<String> getValidUserGroups(Scope scope, List<String> userGroupIdentifiers) {
+    if (isEmpty(userGroupIdentifiers)) {
+      return new ArrayList<>();
+    }
     Set<String> userGroupIdentifiersFilter = new HashSet<>(userGroupIdentifiers);
     UserGroupFilterDTO userGroupFilterDTO = UserGroupFilterDTO.builder()
                                                 .accountIdentifier(scope.getAccountIdentifier())
