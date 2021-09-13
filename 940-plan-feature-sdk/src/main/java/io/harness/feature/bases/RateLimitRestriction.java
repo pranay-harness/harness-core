@@ -2,13 +2,12 @@ package io.harness.feature.bases;
 
 import io.harness.feature.TimeUnit;
 import io.harness.feature.constants.RestrictionType;
-import io.harness.feature.interfaces.LimitRestriction;
 import io.harness.feature.interfaces.RateLimitInterface;
 
 import lombok.Getter;
 
 @Getter
-public class RateLimitRestriction extends Restriction implements LimitRestriction {
+public class RateLimitRestriction extends Restriction {
   long limit;
   TimeUnit timeUnit;
   RateLimitInterface rateLimitInterface;

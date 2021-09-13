@@ -22,8 +22,7 @@ public class StaticLimitRestrictionHandler implements RestrictionHandler {
   public void check(String accountIdentifier) {
     if (staticLimitRestriction.getStaticLimitInterface().getCurrentValue(accountIdentifier)
         >= staticLimitRestriction.getLimit()) {
-      throw new LimitExceededException(
-          String.format("Exceeded static limitation. Current Limit: %s", staticLimitRestriction.getLimit()));
+      throw new LimitExceededException("Exceeded feature's static limitation");
     }
   }
 

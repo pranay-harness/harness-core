@@ -23,8 +23,7 @@ public class RateLimitRestrictionHandler implements RestrictionHandler {
   @Override
   public void check(String accountIdentifier) {
     if (getCurrentCount(accountIdentifier) >= rateLimitRestriction.getLimit()) {
-      throw new LimitExceededException(
-          String.format("Exceeded rate limitation. Current Limit: %s", rateLimitRestriction.getLimit()));
+      throw new LimitExceededException("Exceeded feature's rate limitation");
     }
   }
 
