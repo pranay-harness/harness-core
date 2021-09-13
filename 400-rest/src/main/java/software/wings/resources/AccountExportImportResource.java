@@ -248,7 +248,8 @@ public class AccountExportImportResource {
     File zipFile = new File(Files.createTempDir(), zipFileName);
     FileOutputStream fileOutputStream = new FileOutputStream(zipFile);
     ZipOutputStream zipOutputStream = new ZipOutputStream(fileOutputStream);
-
+    log.info("Starting export for collection {} batchnumber {} and batchsize {} Hashcode for zipOutputStream {}",
+        collectionNameToBeExported, batchNumber, batchSize, zipOutputStream.hashCode());
     Map<String, Boolean> toBeExported = getToBeExported(exportMode, entityTypes);
     List<String> appIds = appService.getAppIdsByAccountId(accountId);
     if (batchSize == 0) {
@@ -360,12 +361,13 @@ public class AccountExportImportResource {
       }
     }
 
-    log.info("Flushing exported data into a zip file {}.", zipFileName);
+    log.info("Flushing exported data into a zip file {}. and hashcode {}", zipFileName, zipOutputStream.hashCode());
     zipOutputStream.flush();
     zipOutputStream.close();
     fileOutputStream.flush();
     fileOutputStream.close();
-    log.info("Finished flushing {} bytes of exported account data into a zip file {}.", zipFile.length(), zipFileName);
+    log.info("Finished flushing {} bytes of exported account data into a zip file {}. and hashcode {}",
+        zipFile.length(), zipFileName, zipOutputStream.hashCode());
 
     return Response.ok(zipFile, MediaType.APPLICATION_OCTET_STREAM)
         .header("content-disposition", "attachment; filename = " + zipFileName)
@@ -512,7 +514,8 @@ public class AccountExportImportResource {
       }
     }
 
-    log.info("Flushing exported data into a zip file {}.", zipFileName);
+    log.info("Flushing exported data into a zip file {} and hash of output stream {} ", zipFileName,
+        zipOutputStream.hashCode());
     zipOutputStream.flush();
     zipOutputStream.close();
     fileOutputStream.flush();
@@ -1135,7 +1138,16 @@ public class AccountExportImportResource {
         while ((len = zipInputStream.read(buffer)) > 0) {
           outputStream.write(buffer, 0, len);
         }
-        collectionDataMap.put(zipEntry.getName(), new String(outputStream.toByteArray(), Charset.defaultCharset()));
+        if (StringUtils.isNotBlank(zipEntry.getName())) {
+          String[] parts = zipEntry.getName().split("/");
+          String zipEntryName;
+          if (parts.length > 1) {
+            zipEntryName = parts[parts.length - 1];
+          } else {
+            zipEntryName = zipEntry.getName();
+          }
+          collectionDataMap.put(zipEntryName, new String(outputStream.toByteArray(), Charset.defaultCharset()));
+        }
       }
       return collectionDataMap;
     }
