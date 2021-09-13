@@ -215,6 +215,7 @@ import software.wings.beans.NameValuePair;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.Permission;
+import software.wings.beans.PerpetualTaskBroadcastEvent;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.PipelineStageExecutionAdvisor;
 import software.wings.beans.PrometheusConfig;
@@ -1688,6 +1689,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AzureContainerRegistry.class, 40013);
     kryo.register(StackStatus.class, 40113);
     kryo.register(EventsDeliveryCallback.class, 40014);
+    kryo.register(PerpetualTaskBroadcastEvent.class, 40015);
     kryo.register(ProviderType.class, 40022);
   }
 }
