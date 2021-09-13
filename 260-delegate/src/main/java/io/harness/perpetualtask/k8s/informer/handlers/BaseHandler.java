@@ -6,6 +6,7 @@ import io.harness.ccm.health.HealthStatusService;
 import io.harness.event.client.EventPublisher;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
+import io.harness.perpetualtask.k8s.informer.handlers.K8sHandlerUtils.ResourceDetails;
 import io.harness.perpetualtask.k8s.watch.K8sObjectReference;
 import io.harness.perpetualtask.k8s.watch.K8sWatchEvent;
 import io.harness.perpetualtask.k8s.watch.K8sWorkloadSpec;
@@ -13,6 +14,7 @@ import io.harness.reflection.ReflectionUtils;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.inject.Inject;
 import com.google.protobuf.Timestamp;
 import io.kubernetes.client.common.KubernetesObject;
 import io.kubernetes.client.informer.ResourceEventHandler;
@@ -39,10 +41,10 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.joor.Reflect;
-
 @Slf4j
 @TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public abstract class BaseHandler<ApiType extends KubernetesObject> implements ResourceEventHandler<ApiType> {
+  @Inject K8sHandlerUtils k8sHandlerUtils;
   private static final String METADATA = "metadata";
   public static final Integer VERSION = 1;
 
@@ -102,7 +104,7 @@ public abstract class BaseHandler<ApiType extends KubernetesObject> implements R
   @Override
   public void onAdd(ApiType resource) {
     handleMissingKindAndApiVersion(resource);
-    log.debug("Added resource: {}", ResourceDetails.ofResource(resource));
+    log.debug("Added resource: {}", K8sHandlerUtils.ResourceDetails.ofResource(resource));
     V1OwnerReference controller = getController(resource);
     if (controller != null) {
       log.debug("Skipping publish for resource added as it has controller: {}", controller);
@@ -270,28 +272,5 @@ public abstract class BaseHandler<ApiType extends KubernetesObject> implements R
       }
     }
     return null;
-  }
-
-  @Value
-  @Builder
-  private static class ResourceDetails {
-    String kind;
-    String namespace;
-    String name;
-    String uid;
-    String resourceVersion;
-
-    static ResourceDetails ofResource(Object resource) {
-      Map<String, Object> fieldValues = ReflectionUtils.getFieldValues(resource, ImmutableSet.of("kind", METADATA));
-      String kind = (String) fieldValues.get("kind");
-      V1ObjectMeta objectMeta = (V1ObjectMeta) fieldValues.computeIfAbsent(METADATA, k -> new V1ObjectMeta());
-      return ResourceDetails.builder()
-          .kind(kind)
-          .name(objectMeta.getName())
-          .namespace(objectMeta.getNamespace())
-          .uid(objectMeta.getUid())
-          .resourceVersion(objectMeta.getResourceVersion())
-          .build();
-    }
   }
 }
