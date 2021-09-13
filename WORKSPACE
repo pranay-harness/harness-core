@@ -4678,7 +4678,7 @@ plain_artifacts = [
     "org.apache.httpcomponents:httpcore-nio:4.4.14",
     "org.apache.httpcomponents:httpcore:4.4.14",
     "org.apache.httpcomponents:httpmime:4.5.13",
-    "org.mybatis:mybatis:jar:3.5.7",
+    "org.apache.ibatis:ibatis-core:3.0",
     "org.apache.kafka:connect-api:2.6.1",
     "org.apache.kafka:connect-runtime:2.6.1",
     "org.apache.kafka:kafka-clients:2.6.1",
