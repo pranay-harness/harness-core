@@ -50,7 +50,6 @@ public interface ScmClientFacilitatorService {
   List<String> listCommits(YamlGitConfigDTO yamlGitConfigDTO, String branch);
 
   Commit getLatestCommit(YamlGitConfigDTO yamlGitConfigDTO, String branch);
-  String getLatestCommit(YamlGitConfigDTO yamlGitConfigDTO, String branch);
 
   CreateFileResponse createFile(InfoForGitPush infoForPush);
 
