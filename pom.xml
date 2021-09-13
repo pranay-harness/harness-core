@@ -1523,7 +1523,7 @@
             <dependency>
                 <groupId>org.elasticsearch.client</groupId>
                 <artifactId>elasticsearch-rest-high-level-client</artifactId>
-                <version>7.11.1</version>
+                <version>7.7.0</version>
             </dependency>
             <dependency>
                 <groupId>org.glassfish.web</groupId>
