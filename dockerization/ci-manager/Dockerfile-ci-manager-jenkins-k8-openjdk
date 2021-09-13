@@ -21,4 +21,14 @@ USER 65534
 
 WORKDIR /opt/harness
 
+
+# set default environmental variables
+ENV TAKIPI_COLLECTOR_HOST=collector
+ENV TAKIPI_COLLECTOR_PORT=6060
+ENV JAVA_TOOL_OPTIONS=-agentpath:/opt/harness/takipi/lib/libTakipiAgent.so
+
+# Download and install the agent - extracts into the `takipi` folder.
+# NOTE: Use the correct Agent for your OS
+RUN curl -sL https://s3.amazonaws.com/app-takipi-com/deploy/linux/takipi-agent-latest.tar.gz | tar -xvzf - -C /opt/harness
+
 CMD [ "./run.sh" ]
