@@ -11,8 +11,6 @@ import static io.harness.rule.OwnerRule.VUK;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTestBase;
@@ -55,7 +53,6 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
 public class CVConfigServiceImplTest extends CvNextGenTestBase {
@@ -65,7 +62,6 @@ public class CVConfigServiceImplTest extends CvNextGenTestBase {
 
   @Mock private VerificationManagerService verificationManagerService;
 
-  @Mock private CVEventServiceImpl eventService;
   private String accountId;
   private String connectorIdentifier;
   private String productName;
@@ -122,7 +118,6 @@ public class CVConfigServiceImplTest extends CvNextGenTestBase {
     });
     FieldUtils.writeField(cvConfigService, "nextGenService", nextGenService, true);
     FieldUtils.writeField(cvConfigService, "verificationManagerService", verificationManagerService, true);
-    FieldUtils.writeField(cvConfigService, "eventService", eventService, true);
   }
 
   @Test
@@ -133,11 +128,6 @@ public class CVConfigServiceImplTest extends CvNextGenTestBase {
     CVConfig updated = save(cvConfig);
     CVConfig saved = cvConfigService.get(updated.getUuid());
     assertCommons(saved, cvConfig);
-
-    ArgumentCaptor<CVConfig> argumentCaptor = ArgumentCaptor.forClass(CVConfig.class);
-    verify(eventService, times(1)).sendConnectorCreateEvent(argumentCaptor.capture());
-    verify(eventService, times(1)).sendServiceCreateEvent(argumentCaptor.capture());
-    verify(eventService, times(1)).sendEnvironmentCreateEvent(argumentCaptor.capture());
   }
 
   private CVConfig save(CVConfig cvConfig) {
