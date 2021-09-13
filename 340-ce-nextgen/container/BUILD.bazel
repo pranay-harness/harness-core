@@ -2,7 +2,7 @@ load("@io_bazel_rules_docker//container:container.bzl", "container_image", "cont
 load("@rules_pkg//:pkg.bzl", "pkg_tar")
 
 container_image(
-    name = "container",
+    name = "ce_nextgen",
     base = "//dockerization/base-jdk:base_jdk",
     cmd = ["./run.sh"],
     tags = [
@@ -54,7 +54,7 @@ pkg_tar(
 container_push(
     name = "push",
     format = "Docker",
-    image = "ce-nextgen",
+    image = "ce_nextgen",
     registry = "us.gcr.io",
     repository = "platform-205701/harness/ce-nextgen",
     tag = "{STABLE_BUILD_NUMBER}",

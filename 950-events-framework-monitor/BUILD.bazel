@@ -299,3 +299,9 @@ java_binary(
 run_tests()
 
 run_analysis()
+
+exports_files([
+    "config.yml",
+    "redis/redislabs_ca.pem",
+    "redis/install_redis.sh",
+])
