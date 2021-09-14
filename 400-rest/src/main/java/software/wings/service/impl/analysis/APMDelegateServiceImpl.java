@@ -5,8 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.common.VerificationConstants.AZURE_BASE_URL;
 import static software.wings.common.VerificationConstants.AZURE_TOKEN_URL;
 
-import io.harness.annotations.dev.HarnessTeam;
-import io.harness.annotations.dev.OwnedBy;
 import io.harness.network.Http;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.JsonUtils;
@@ -36,7 +34,6 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 
 @Singleton
 @Slf4j
-@OwnedBy(HarnessTeam.CV)
 public class APMDelegateServiceImpl implements APMDelegateService {
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateLogService delegateLogService;
