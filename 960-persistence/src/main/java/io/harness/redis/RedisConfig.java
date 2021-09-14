@@ -22,6 +22,7 @@ public class RedisConfig {
   private String masterName;
   private String redisUrl;
   private List<String> sentinelUrls;
+  private int connectionMinimumIdleSize;
   private String envNamespace;
   private RedisReadMode readMode;
   private int nettyThreads;
