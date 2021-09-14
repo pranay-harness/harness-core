@@ -7,6 +7,8 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static java.util.stream.Collectors.toMap;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
@@ -48,6 +50,7 @@ import org.mongodb.morphia.query.Query;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CV)
 public class LogLabelingServiceImpl implements LogLabelingService {
   private static final SecureRandom random = new SecureRandom();
 

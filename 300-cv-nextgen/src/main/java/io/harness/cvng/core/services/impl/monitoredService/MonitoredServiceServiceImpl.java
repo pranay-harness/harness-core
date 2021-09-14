@@ -8,15 +8,18 @@ import io.harness.cvng.analysis.entities.LogAnalysisResult.LogAnalysisTag;
 import io.harness.cvng.beans.MonitoredServiceType;
 import io.harness.cvng.beans.change.ChangeCategory;
 import io.harness.cvng.beans.change.ChangeEventDTO;
+import io.harness.cvng.beans.change.ChangeSourceType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.ChangeSummaryDTO;
 import io.harness.cvng.core.beans.HealthMonitoringFlagResponse;
 import io.harness.cvng.core.beans.monitoredService.AnomaliesSummaryDTO;
+import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
 import io.harness.cvng.core.beans.monitoredService.DurationDTO;
 import io.harness.cvng.core.beans.monitoredService.HealthScoreDTO;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.HistoricalTrend;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceDependencyDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.Sources;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO.MonitoredServiceListItemDTOBuilder;
@@ -118,6 +121,12 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
           monitoredServiceDTO.getSources().getHealthSources(), getMonitoredServiceEnableStatus());
     }
     if (isNotEmpty(monitoredServiceDTO.getDependencies())) {
+      validateDependencyMetadata(ProjectParams.builder()
+                                     .accountIdentifier(accountId)
+                                     .orgIdentifier(monitoredServiceDTO.getOrgIdentifier())
+                                     .projectIdentifier(monitoredServiceDTO.getProjectIdentifier())
+                                     .build(),
+          monitoredServiceDTO.getDependencies());
       serviceDependencyService.updateDependencies(
           environmentParams, monitoredServiceDTO.getIdentifier(), monitoredServiceDTO.getDependencies());
     }
@@ -127,6 +136,36 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     saveMonitoredServiceEntity(accountId, monitoredServiceDTO);
     setupUsageEventService.sendCreateEventsForMonitoredService(environmentParams, monitoredServiceDTO);
     return get(environmentParams, monitoredServiceDTO.getIdentifier());
+  }
+
+  private void validateDependencyMetadata(ProjectParams projectParams, Set<ServiceDependencyDTO> dependencyDTOs) {
+    dependencyDTOs.forEach(dependencyDTO -> {
+      if (dependencyDTO.getDependencyMetadata() == null) {
+        return;
+      }
+      MonitoredServiceDTO monitoredServiceDTO =
+          get(projectParams, dependencyDTO.getMonitoredServiceIdentifier()).getMonitoredServiceDTO();
+      Preconditions.checkNotNull(monitoredServiceDTO.getSources());
+      Preconditions.checkNotNull(monitoredServiceDTO.getSources().getChangeSources());
+      Set<ChangeSourceType> changeSourceTypes = monitoredServiceDTO.getSources()
+                                                    .getChangeSources()
+                                                    .stream()
+                                                    .map(ChangeSourceDTO::getType)
+                                                    .collect(Collectors.toSet());
+      Set<ChangeSourceType> supportedChangeSources =
+          dependencyDTO.getDependencyMetadata().getSupportedChangeSourceTypes();
+      boolean isValid = false;
+      for (ChangeSourceType changeSourceType : supportedChangeSources) {
+        if (changeSourceTypes.contains(changeSourceType)) {
+          isValid = true;
+          break;
+        }
+      }
+      if (!isValid) {
+        throw new InvalidRequestException(
+            "Invalid dependency setup for monitoredSource " + dependencyDTO.getMonitoredServiceIdentifier());
+      }
+    });
   }
 
   private boolean getMonitoredServiceEnableStatus() {

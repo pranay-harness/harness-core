@@ -12,6 +12,8 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.service.impl.analysis.MLAnalysisType.LOG_ML;
 import static software.wings.service.impl.analysis.MLAnalysisType.TIME_SERIES;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
@@ -42,6 +44,7 @@ import org.mongodb.morphia.query.Sort;
  */
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CV)
 public class VerificationServiceImpl implements VerificationService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private DataStoreService dataStoreService;
