@@ -1,4 +1,4 @@
-package io.harness.pms.sdk.core.grpc.client;
+package io.harness.pms.utils;
 
 import static io.harness.rule.OwnerRule.GARVIT;
 
@@ -19,32 +19,32 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @OwnedBy(HarnessTeam.PIPELINE)
-public class PmsSdkGrpcClientUtilsTest extends CategoryTest {
+public class PmsGrpcClientUtilsTest extends CategoryTest {
   @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void shouldRetryAndProcessException() {
     RuntimeException throwable = new StatusRuntimeException(Status.UNAVAILABLE);
     ThrowingCall throwingCall1 = new ThrowingCall(throwable);
-    assertThatThrownBy(() -> PmsSdkGrpcClientUtils.retryAndProcessException(throwingCall1::call, 0))
+    assertThatThrownBy(() -> PmsGrpcClientUtils.retryAndProcessException(throwingCall1::call, 0))
         .isInstanceOf(WingsException.class);
     assertThat(throwingCall1.getCount()).isEqualTo(3);
 
     throwable = new StatusRuntimeException(Status.UNKNOWN);
     ThrowingCall throwingCall2 = new ThrowingCall(throwable);
-    assertThatThrownBy(() -> PmsSdkGrpcClientUtils.retryAndProcessException(throwingCall2::call, 0))
+    assertThatThrownBy(() -> PmsGrpcClientUtils.retryAndProcessException(throwingCall2::call, 0))
         .isInstanceOf(WingsException.class);
     assertThat(throwingCall2.getCount()).isEqualTo(3);
 
     throwable = new StatusRuntimeException(Status.INTERNAL);
     ThrowingCall throwingCall3 = new ThrowingCall(throwable);
-    assertThatThrownBy(() -> PmsSdkGrpcClientUtils.retryAndProcessException(throwingCall3::call, 0))
+    assertThatThrownBy(() -> PmsGrpcClientUtils.retryAndProcessException(throwingCall3::call, 0))
         .isInstanceOf(WingsException.class);
     assertThat(throwingCall3.getCount()).isEqualTo(1);
 
     throwable = new RuntimeException("error");
     ThrowingCall throwingCall4 = new ThrowingCall(throwable);
-    assertThatThrownBy(() -> PmsSdkGrpcClientUtils.retryAndProcessException(throwingCall4::call, 0))
+    assertThatThrownBy(() -> PmsGrpcClientUtils.retryAndProcessException(throwingCall4::call, 0))
         .isInstanceOf(WingsException.class);
     assertThat(throwingCall4.getCount()).isEqualTo(1);
   }

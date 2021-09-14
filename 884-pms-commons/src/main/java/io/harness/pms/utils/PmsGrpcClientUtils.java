@@ -1,4 +1,4 @@
-package io.harness.pms.sdk.core.grpc.client;
+package io.harness.pms.utils;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -19,7 +19,7 @@ import net.jodah.failsafe.RetryPolicy;
 @OwnedBy(HarnessTeam.PIPELINE)
 @UtilityClass
 @Slf4j
-public class PmsSdkGrpcClientUtils {
+public class PmsGrpcClientUtils {
   private static final RetryPolicy<Object> RETRY_POLICY = createRetryPolicy();
 
   public <T, R> R retryAndProcessException(Function<T, R> fn, T arg) {
