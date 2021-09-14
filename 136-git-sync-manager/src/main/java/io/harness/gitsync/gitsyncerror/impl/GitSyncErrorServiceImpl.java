@@ -31,13 +31,6 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   private GitSyncErrorRepository gitSyncErrorRepository;
 
   @Override
-  public void deleteByAccountIdOrgIdProjectIdAndFilePath(
-      String accountId, String orgId, String projectId, List<String> yamlFilePath) {
-    gitSyncErrorRepository.deleteByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndCompleteFilePathIn(
-        accountId, orgId, projectId, yamlFilePath);
-  }
-
-  @Override
   public void upsertGitSyncErrors(
       GitFileChange failedChange, String errorMessage, boolean fullSyncPath, YamlGitConfigDTO yamlGitConfig) {
     upsertGitToHarnessError(failedChange, errorMessage, yamlGitConfig);
