@@ -21,6 +21,7 @@ import io.harness.exception.UserAlreadyPresentException;
 import io.harness.exception.WeakPasswordException;
 import io.harness.exception.WingsException;
 import io.harness.ng.core.dto.AccountDTO;
+import io.harness.ng.core.user.SignupInviteDTO;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserRequestDTO;
 import io.harness.notification.templates.PredefinedTemplate;
@@ -28,7 +29,6 @@ import io.harness.repositories.SignupVerificationTokenRepository;
 import io.harness.signup.data.UtmInfo;
 import io.harness.signup.dto.OAuthSignupDTO;
 import io.harness.signup.dto.SignupDTO;
-import io.harness.signup.dto.SignupInviteDTO;
 import io.harness.signup.dto.VerifyTokenResponseDTO;
 import io.harness.signup.entities.SignupVerificationToken;
 import io.harness.signup.notification.EmailType;
@@ -143,14 +143,9 @@ public class SignupServiceImpl implements SignupService {
     dto.setEmail(dto.getEmail().toLowerCase());
 
     String passwordHash = hashpw(dto.getPassword(), BCrypt.gensalt());
-    SignupInviteDTO signupRequest = SignupInviteDTO.builder()
-                                        .email(dto.getEmail())
-                                        .passwordHash(passwordHash)
-                                        .intent(dto.getIntent())
-                                        .signupAction(dto.getSignupAction())
-                                        .edition(dto.getEdition())
-                                        .billingFrequency(dto.getBillingFrequency())
-                                        .build();
+    SignupInviteDTO signupRequest =
+        SignupInviteDTO.builder().email(dto.getEmail()).passwordHash(passwordHash).intent(dto.getIntent()).build();
+
     try {
       getResponse(userClient.createNewSignupInvite(signupRequest));
     } catch (InvalidRequestException e) {

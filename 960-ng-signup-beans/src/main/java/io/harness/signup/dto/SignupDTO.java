@@ -3,9 +3,6 @@ package io.harness.signup.dto;
 import static io.harness.annotations.dev.HarnessTeam.GTM;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.licensing.BillingFrequency;
-import io.harness.licensing.Edition;
-import io.harness.ng.core.user.SignupAction;
 import io.harness.signup.data.UtmInfo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -23,7 +20,4 @@ public class SignupDTO {
   String password;
   UtmInfo utmInfo;
   String intent;
-  SignupAction signupAction;
-  Edition edition;
-  BillingFrequency billingFrequency;
 }

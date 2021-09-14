@@ -18,7 +18,7 @@ import io.harness.ng.core.invites.dto.InviteOperationResponse;
 import io.harness.ng.core.switchaccount.RestrictedSwitchAccountInfo;
 import io.harness.ng.core.user.PasswordChangeDTO;
 import io.harness.ng.core.user.PasswordChangeResponse;
-import io.harness.signup.dto.SignupInviteDTO;
+import io.harness.ng.core.user.SignupInviteDTO;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 

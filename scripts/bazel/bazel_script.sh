@@ -143,7 +143,6 @@ BAZEL_MODULES="\
   //950-ng-authentication-service:module \
   //950-ng-core:module \
   //950-ng-project-n-orgs:module \
-  //950-ng-signup-beans:module \
   //950-telemetry:module \
   //950-wait-engine:module \
   //950-walktree-visitor:module \
@@ -172,6 +171,7 @@ BAZEL_MODULES="\
   //960-ng-core-beans:module \
   //960-ng-license-beans:module \
   //960-ng-license-usage-beans:module \
+  //960-ng-signup-beans:module \
   //960-notification-beans/src/main/proto:all \
   //960-notification-beans:module \
   //960-persistence:module \

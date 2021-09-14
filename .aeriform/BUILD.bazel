@@ -366,8 +366,6 @@ aeriform("//950-ng-project-n-orgs:module")
 
 aeriform("//950-ng-project-n-orgs:tests")
 
-aeriform("//950-ng-signup-beans:module")
-
 aeriform("//950-opa-client:module")
 
 aeriform("//950-opa-client:tests")
@@ -461,6 +459,8 @@ aeriform("//960-ng-core-beans:module")
 aeriform("//960-ng-license-beans:module")
 
 aeriform("//960-ng-license-usage-beans:module")
+
+aeriform("//960-ng-signup-beans:module")
 
 aeriform("//960-notification-beans:module")
 

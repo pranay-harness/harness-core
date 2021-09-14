@@ -32,9 +32,6 @@ public class UserInfo {
   boolean twoFactorAuthenticationEnabled;
   boolean emailVerified;
   @Getter(value = AccessLevel.PRIVATE) boolean locked;
-  String signupAction;
-  String edition;
-  String billingFrequency;
 
   public boolean isLocked() {
     return this.locked;

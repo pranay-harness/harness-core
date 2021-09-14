@@ -1,8 +1,7 @@
 workspace_type: java
 java_language_level: 8
 
-directories:
-  800-pipeline-service
+directories: 800-pipeline-service
   810-ng-triggers
   860-orchestration-steps
   860-orchestration-visualization
@@ -39,7 +38,6 @@ directories:
   950-log-client
   950-ng-core
   950-ng-project-n-orgs
-  950-ng-signup-beans
   950-opa-client
   950-wait-engine
   950-walktree-visitor
@@ -63,6 +61,7 @@ directories:
   960-api-services
   960-continuous-features
   960-ng-core-beans
+  960-ng-signup-beans
   960-notification-beans
   960-persistence
   960-yaml-sdk
@@ -83,8 +82,7 @@ directories:
 
 derive_targets_from_directories: false
 
-targets:
-  800-pipeline-service:module
+targets: 800-pipeline-service:module
   860-orchestration-steps:module
   860-orchestration-visualization:module
   870-orchestration:module
@@ -104,6 +102,4 @@ targets:
   960-persistence:module
   980-recaster:module
 
-
-import_run_configurations:
-  project/run-configurations/PipelineService.xml
+import_run_configurations: project/run-configurations/PipelineService.xml

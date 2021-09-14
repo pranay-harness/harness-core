@@ -1,8 +1,7 @@
 workspace_type: java
 java_language_level: 8
 
-directories:
-  120-ng-manager
+directories: 120-ng-manager
   121-instance
   122-ng-authentication-settings
   123-ng-core-user
@@ -69,7 +68,6 @@ directories:
   950-ng-authentication-service
   950-ng-core
   950-ng-project-n-orgs
-  950-ng-signup-beans
   950-opa-client
   950-telemetry
   950-wait-engine
@@ -98,6 +96,7 @@ directories:
   960-ng-core-beans
   960-ng-license-beans
   960-ng-license-usage-beans
+  960-ng-signup-beans
   960-notification-beans
   960-persistence
   960-yaml-sdk
@@ -119,13 +118,10 @@ directories:
 
 derive_targets_from_directories: false
 
-targets:
-  120-ng-manager:module
+targets: 120-ng-manager:module
   800-pipeline-service:module
 
-
-import_run_configurations:
-  project/run-configurations/Analyser_Service.xml
+import_run_configurations: project/run-configurations/Analyser_Service.xml
   project/run-configurations/DelegateApp.xml
   project/run-configurations/DelegateServiceApp.xml
   project/run-configurations/NextGenManager.xml
