@@ -281,13 +281,21 @@ for FILE in $(xargs <<<$SOURCE_FILES); do
   fi
 
   FILE_TYPE=$(awk '{gsub(/.*\//, ""); gsub(/.*\./, ""); print}' <<<"$FILE")
-  if [ "$FILE_TYPE" = "go" ]; then
+  if [ "$FILE_TYPE" = "cjs" ]; then # Common JavaScript
+    handle_slash_star
+  elif [ "$FILE_TYPE" = "css" ]; then
+    handle_slash_star
+  elif [ "$FILE_TYPE" = "go" ]; then
     handle_double_slash
   elif [ "$FILE_TYPE" = "groovy" ]; then
     handle_slash_star
   elif [ "$FILE_TYPE" = "java" ]; then
     handle_slash_star
   elif [ "$FILE_TYPE" = "js" ]; then
+    handle_slash_star
+  elif [ "$FILE_TYPE" = "jsx" ]; then
+    handle_slash_star
+  elif [ "$FILE_TYPE" = "mjs" ]; then # JavaScript
     handle_slash_star
   elif [ "$FILE_TYPE" = "pl" ]; then # Perl
     handle_hash
@@ -297,10 +305,16 @@ for FILE in $(xargs <<<$SOURCE_FILES); do
     handle_hash
   elif [ "$FILE_TYPE" = "rs" ]; then # Rust
     handle_double_slash
+  elif [ "$FILE_TYPE" = "scss" ]; then
+    handle_slash_star
   elif [ "$FILE_TYPE" = "sh" ]; then
     handle_hash
   elif [ "$FILE_TYPE" = "sql" ]; then
     handle_double_hyphen
+  elif [ "$FILE_TYPE" = "ts" ]; then
+    handle_slash_star
+  elif [ "$FILE_TYPE" = "tsx" ]; then
+    handle_slash_star
   else
     echo "Skipping file with extension '$FILE_TYPE' as it is not a supported filetype, file is $FILE"
   fi
