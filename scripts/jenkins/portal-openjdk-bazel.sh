@@ -20,6 +20,8 @@ copy_ce_nextgen_jars
 
 copy_ng_manager_jars
 
+copy_ng_dashboard_jars
+
 
 mkdir -p dist/delegate-service-app ;
 
