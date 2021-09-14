@@ -3,7 +3,7 @@ package io.harness.cvng.core.resources;
 import io.harness.annotations.ExposeInternalException;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cvng.core.beans.change.event.ChangeEventDTO;
+import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.core.services.api.ChangeEventService;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;

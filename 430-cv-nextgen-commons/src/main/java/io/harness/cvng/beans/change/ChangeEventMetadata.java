@@ -1,7 +1,4 @@
-package io.harness.cvng.core.beans.change.event.metadata;
-
-import io.harness.cvng.core.types.ChangeSourceType;
-
+package io.harness.cvng.beans.change;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -14,9 +11,12 @@ import lombok.experimental.SuperBuilder;
 @Data
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonSubTypes({ @JsonSubTypes.Type(value = HarnessCDEventMetaData.class, name = "HarnessCD") })
+@JsonSubTypes({
+  @JsonSubTypes.Type(value = KubernetesChangeEventMetadata.class, name = "K8sCluster")
+  , @JsonSubTypes.Type(value = HarnessCDEventMetadata.class, name = "HarnessCD")
+})
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
-public abstract class ChangeEventMetaData {
+public abstract class ChangeEventMetadata {
   @JsonIgnore public abstract ChangeSourceType getType();
 }

@@ -1,11 +1,11 @@
 package io.harness.cvng.core.transformer.changeEvent;
 
 import io.harness.cvng.activity.entities.Activity;
-import io.harness.cvng.core.beans.change.event.ChangeEventDTO;
-import io.harness.cvng.core.beans.change.event.metadata.ChangeEventMetaData;
-import io.harness.cvng.core.types.ChangeSourceType;
+import io.harness.cvng.beans.change.ChangeEventDTO;
+import io.harness.cvng.beans.change.ChangeEventMetadata;
+import io.harness.cvng.beans.change.ChangeSourceType;
 
-public abstract class ChangeEventMetaDataTransformer<E extends Activity, M extends ChangeEventMetaData> {
+public abstract class ChangeEventMetaDataTransformer<E extends Activity, M extends ChangeEventMetadata> {
   public abstract E getEntity(ChangeEventDTO changeEventDTO);
 
   public final ChangeEventDTO getDTO(E activity) {

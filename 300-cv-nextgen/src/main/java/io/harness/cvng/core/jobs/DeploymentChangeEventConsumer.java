@@ -1,10 +1,10 @@
 package io.harness.cvng.core.jobs;
 
-import io.harness.cvng.core.beans.change.event.ChangeEventDTO;
-import io.harness.cvng.core.beans.change.event.metadata.HarnessCDEventMetaData;
-import io.harness.cvng.core.beans.change.event.metadata.HarnessCDEventMetaData.HarnessCDEventMetaDataBuilder;
+import io.harness.cvng.beans.change.ChangeEventDTO;
+import io.harness.cvng.beans.change.ChangeSourceType;
+import io.harness.cvng.beans.change.HarnessCDEventMetadata;
+import io.harness.cvng.beans.change.HarnessCDEventMetadata.HarnessCDEventMetadataBuilder;
 import io.harness.cvng.core.services.api.ChangeEventService;
-import io.harness.cvng.core.types.ChangeSourceType;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.consumer.Message;
@@ -43,8 +43,8 @@ public class DeploymentChangeEventConsumer extends AbstractStreamConsumer {
   }
 
   private void registerChangeEvent(DeploymentEventDTO deploymentEventDTO) {
-    HarnessCDEventMetaDataBuilder harnessCDEventMetaDataBuilder =
-        HarnessCDEventMetaData.builder()
+    HarnessCDEventMetadataBuilder harnessCDEventMetaDataBuilder =
+        HarnessCDEventMetadata.builder()
             .deploymentEndTime(deploymentEventDTO.getDeploymentEndTime())
             .deploymentStartTime(deploymentEventDTO.getDeploymentStartTime())
             .status(deploymentEventDTO.getDeploymentStatus());
