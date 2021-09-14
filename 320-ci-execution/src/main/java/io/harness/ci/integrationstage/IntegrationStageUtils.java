@@ -201,6 +201,10 @@ public class IntegrationStageUtils {
     if (webhookExecutionSource.getWebhookEvent().getType() == PR) {
       PRWebhookEvent prWebhookEvent = (PRWebhookEvent) webhookExecutionSource.getWebhookEvent();
 
+      if (prWebhookEvent == null || prWebhookEvent.getRepository() == null
+          || prWebhookEvent.getRepository().getHttpURL() == null) {
+        return false;
+      }
       if (prWebhookEvent.getRepository().getHttpURL().equals(url)
           || prWebhookEvent.getRepository().getSshURL().equals(url)) {
         return true;
@@ -208,6 +212,10 @@ public class IntegrationStageUtils {
     } else if (webhookExecutionSource.getWebhookEvent().getType() == BRANCH) {
       BranchWebhookEvent branchWebhookEvent = (BranchWebhookEvent) webhookExecutionSource.getWebhookEvent();
 
+      if (branchWebhookEvent == null || branchWebhookEvent.getRepository() == null
+          || branchWebhookEvent.getRepository().getHttpURL() == null) {
+        return false;
+      }
       if (branchWebhookEvent.getRepository().getHttpURL().equals(url)
           || branchWebhookEvent.getRepository().getSshURL().equals(url)) {
         return true;

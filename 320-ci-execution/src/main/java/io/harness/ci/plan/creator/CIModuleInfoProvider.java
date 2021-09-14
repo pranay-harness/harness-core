@@ -97,7 +97,8 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
 
         if (liteEngineTaskStepInfo.getCiCodebase().getRepoName() != null) {
           repoName = liteEngineTaskStepInfo.getCiCodebase().getRepoName();
-        } else if (liteEngineTaskStepInfo.getCiCodebase().getConnectorRef() != null) {
+        }
+        if (liteEngineTaskStepInfo.getCiCodebase().getConnectorRef() != null) {
           try {
             ConnectorDetails connectorDetails = connectorUtils.getConnectorDetails(
                 baseNGAccess, liteEngineTaskStepInfo.getCiCodebase().getConnectorRef());
@@ -137,7 +138,7 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
       log.error("Failed to retrieve branch and tag for filtering", ex);
     }
 
-    if (executionTriggerInfo.getTriggerType() == TriggerType.WEBHOOK) {
+    if (executionSource != null && executionTriggerInfo.getTriggerType() == TriggerType.WEBHOOK) {
       WebhookExecutionSource webhookExecutionSource = (WebhookExecutionSource) executionSource;
       CIWebhookInfoDTO ciWebhookInfoDTO = CIModuleInfoMapper.getCIBuildResponseDTO(executionSource);
       author = ciWebhookInfoDTO.getAuthor();
