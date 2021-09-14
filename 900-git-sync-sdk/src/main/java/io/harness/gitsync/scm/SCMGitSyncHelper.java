@@ -117,7 +117,7 @@ public class SCMGitSyncHelper {
 
   private Principal getPrincipal() {
     final io.harness.security.dto.Principal sourcePrincipal = SourcePrincipalContextBuilder.getSourcePrincipal();
-    if (sourcePrincipal != null) {
+    if (sourcePrincipal == null) {
       throw new InvalidRequestException("Principal cannot be null");
     }
     final Principal.Builder principalBuilder = Principal.newBuilder();
