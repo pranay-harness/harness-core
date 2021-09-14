@@ -301,6 +301,9 @@
 320-ci-execution/src/main/java/io/harness/stateutils/buildstate/SecretUtils.java
 320-ci-execution/src/main/java/io/harness/util/CINgSecretManagerFunctor.java
 320-ci-execution/src/main/java/io/harness/util/LiteEngineSecretEvaluator.java
+360-cg-manager/src/main/java/software/wings/resources/secretsmanagement/GcpSecretsManagerResource.java
+360-cg-manager/src/main/java/software/wings/resources/secretsmanagement/GcpSecretsManagerResourceV2.java
+360-cg-manager/src/main/java/software/wings/scheduler/LdapGroupSyncJobHandler.java
 400-rest/src/main/java/io/harness/artifact/ArtifactCollectionPTaskClientParams.java
 400-rest/src/main/java/io/harness/artifact/ArtifactCollectionPTaskServiceClient.java
 400-rest/src/main/java/io/harness/artifact/ArtifactCollectionResponseHandler.java
@@ -464,7 +467,6 @@
 400-rest/src/main/java/software/wings/beans/ResourceConstraintUsage.java
 400-rest/src/main/java/software/wings/beans/RollingOrchestrationWorkflow.java
 400-rest/src/main/java/software/wings/beans/RuntimeInputsConfig.java
-400-rest/src/main/java/software/wings/beans/SecretManagerRuntimeParameters.java
 400-rest/src/main/java/software/wings/beans/Service.java
 400-rest/src/main/java/software/wings/beans/ServiceNowConfig.java
 400-rest/src/main/java/software/wings/beans/ServiceTemplate.java
@@ -577,7 +579,6 @@
 400-rest/src/main/java/software/wings/beans/sso/LdapConnectionSettings.java
 400-rest/src/main/java/software/wings/beans/sso/LdapGroupResponse.java
 400-rest/src/main/java/software/wings/beans/sso/LdapGroupSettings.java
-400-rest/src/main/java/software/wings/beans/sso/LdapLinkGroupRequest.java
 400-rest/src/main/java/software/wings/beans/sso/LdapSearchConfig.java
 400-rest/src/main/java/software/wings/beans/sso/LdapSettings.java
 400-rest/src/main/java/software/wings/beans/sso/LdapTestResponse.java
@@ -1047,7 +1048,6 @@
 400-rest/src/main/java/software/wings/helpers/ext/gcb/models/GcbBuildDetails.java
 400-rest/src/main/java/software/wings/helpers/ext/gcb/models/GcbBuildStatus.java
 400-rest/src/main/java/software/wings/helpers/ext/gcb/models/OperationMeta.java
-400-rest/src/main/java/software/wings/helpers/ext/gcb/models/Secret.java
 400-rest/src/main/java/software/wings/helpers/ext/gcs/GcsRestClient.java
 400-rest/src/main/java/software/wings/helpers/ext/gcs/GcsService.java
 400-rest/src/main/java/software/wings/helpers/ext/gcs/GcsServiceImpl.java
@@ -1121,8 +1121,6 @@
 400-rest/src/main/java/software/wings/resources/secretsmanagement/AwsSecretsManagerResource.java
 400-rest/src/main/java/software/wings/resources/secretsmanagement/AzureSecretsManagerResource.java
 400-rest/src/main/java/software/wings/resources/secretsmanagement/CustomSecretsManagerResource.java
-400-rest/src/main/java/software/wings/resources/secretsmanagement/GcpSecretsManagerResource.java
-400-rest/src/main/java/software/wings/resources/secretsmanagement/GcpSecretsManagerResourceV2.java
 400-rest/src/main/java/software/wings/resources/secretsmanagement/SecretManagementResource.java
 400-rest/src/main/java/software/wings/resources/secretsmanagement/SecretManagerResourceNG.java
 400-rest/src/main/java/software/wings/resources/secretsmanagement/SecretsResourceNG.java
@@ -1134,7 +1132,6 @@
 400-rest/src/main/java/software/wings/resources/stats/service/WeeklyTimeRangeChecker.java
 400-rest/src/main/java/software/wings/scheduler/AccountPasswordExpirationJob.java
 400-rest/src/main/java/software/wings/scheduler/LdapGroupSyncJob.java
-400-rest/src/main/java/software/wings/scheduler/LdapGroupSyncJobHandler.java
 400-rest/src/main/java/software/wings/scheduler/LdapGroupSyncJobHelper.java
 400-rest/src/main/java/software/wings/scheduler/ScheduledTriggerJob.java
 400-rest/src/main/java/software/wings/scheduler/ShellScriptApprovalService.java
@@ -1150,7 +1147,6 @@
 400-rest/src/main/java/software/wings/scim/ScimUserValuedObject.java
 400-rest/src/main/java/software/wings/security/AuthResponseFilter.java
 400-rest/src/main/java/software/wings/security/AuthenticationFilter.java
-400-rest/src/main/java/software/wings/security/SecretManager.java
 400-rest/src/main/java/software/wings/security/annotations/AdminPortalAuth.java
 400-rest/src/main/java/software/wings/security/annotations/ApiKeyAuthorized.java
 400-rest/src/main/java/software/wings/security/annotations/IdentityServiceAuth.java
@@ -1163,8 +1159,6 @@
 400-rest/src/main/java/software/wings/security/authentication/OauthAuthenticationResponse.java
 400-rest/src/main/java/software/wings/security/authentication/SSOConfig.java
 400-rest/src/main/java/software/wings/security/authentication/SamlBasedAuthHandler.java
-400-rest/src/main/java/software/wings/security/authentication/SamlUserAuthorization.java
-400-rest/src/main/java/software/wings/security/authentication/SsoRedirectRequest.java
 400-rest/src/main/java/software/wings/security/authentication/TwoFactorAuthenticationManager.java
 400-rest/src/main/java/software/wings/security/authentication/TwoFactorAuthenticationMechanism.java
 400-rest/src/main/java/software/wings/security/authentication/TwoFactorAuthenticationSettings.java
@@ -1707,12 +1701,10 @@
 400-rest/src/main/java/software/wings/service/intfc/security/EncryptedSettingAttributes.java
 400-rest/src/main/java/software/wings/service/intfc/security/GcpSecretsManagerService.java
 400-rest/src/main/java/software/wings/service/intfc/security/GcpSecretsManagerServiceV2.java
-400-rest/src/main/java/software/wings/service/intfc/security/LocalSecretManagerService.java
 400-rest/src/main/java/software/wings/service/intfc/security/NGSecretManagerService.java
 400-rest/src/main/java/software/wings/service/intfc/security/NGSecretService.java
 400-rest/src/main/java/software/wings/service/intfc/security/NGSecretServiceImpl.java
 400-rest/src/main/java/software/wings/service/intfc/security/SecretManagementDelegateService.java
-400-rest/src/main/java/software/wings/service/intfc/security/SecretManager.java
 400-rest/src/main/java/software/wings/service/intfc/servicenow/ServiceNowDelegateService.java
 400-rest/src/main/java/software/wings/service/intfc/servicenow/ServiceNowService.java
 400-rest/src/main/java/software/wings/service/intfc/slack/SlackActionHandler.java
@@ -2262,7 +2254,7 @@
 890-sm-core/src/main/java/io/harness/helpers/ext/vault/VaultSecretValue.java
 890-sm-core/src/main/java/io/harness/mappers/SecretManagerConfigMapper.java
 890-sm-core/src/main/java/io/harness/ng/SecretManagerConfigDTOMapper.java
-890-sm-core/src/main/java/io/harness/ng/SecretManagerConfigUpdateDTOMapper.java
+890-sm-core/src/main/java/io/harness/ng/SecretManagerConfigUpdateDTOMapper.javaß
 890-sm-core/src/main/java/io/harness/ng/core/api/NGSecretActivityService.java
 890-sm-core/src/main/java/io/harness/ng/core/api/NGSecretServiceV2.java
 890-sm-core/src/main/java/io/harness/ng/core/encryptors/NGManagerEncryptorHelper.java
@@ -2300,8 +2292,12 @@
 890-sm-core/src/main/java/io/harness/secrets/yamlhandlers/SecretYamlHandlerImpl.java
 890-sm-core/src/main/java/software/wings/beans/AwsSecretsManagerConfig.java
 890-sm-core/src/main/java/software/wings/beans/GcpSecretsManagerConfig.java
+890-sm-core/src/main/java/software/wings/beans/SecretManagerRuntimeParameters.java
+890-sm-core/src/main/java/software/wings/security/SecretManager.java
 890-sm-core/src/main/java/software/wings/service/impl/security/NGEncryptorService.java
 890-sm-core/src/main/java/software/wings/service/impl/security/NGEncryptorServiceImpl.java
+890-sm-core/src/main/java/software/wings/service/intfc/security/LocalSecretManagerService.java
+890-sm-core/src/main/java/software/wings/service/intfc/security/SecretManager.java
 900-git-sync-sdk/src/main/java/io/harness/gitsync/AbstractGitSyncSdkModule.java
 900-git-sync-sdk/src/main/java/io/harness/gitsync/GitSdkConfiguration.java
 900-git-sync-sdk/src/main/java/io/harness/gitsync/GitSyncEntitiesConfiguration.java
@@ -2846,6 +2842,9 @@
 950-delegate-tasks-beans/src/main/java/io/harness/ng/core/models/SecretTextSpec.java
 950-delegate-tasks-beans/src/main/java/io/harness/serializer/kryo/DelegateTasksBeansKryoRegister.java
 950-delegate-tasks-beans/src/main/resources/snippets/Secrets
+950-ng-authentication-service/src/main/java/software/wings/beans/sso/LdapLinkGroupRequest.java
+950-ng-authentication-service/src/main/java/software/wings/security/authentication/SamlUserAuthorization.java
+950-ng-authentication-service/src/main/java/software/wings/security/authentication/SsoRedirectRequest.java
 950-opa-client/src/main/java/io/harness/opaclient/OpaServiceConfiguration.java
 953-git-sync-commons/src/main/java/io/harness/gitsync/common/YamlProcessingLogContext.java
 953-git-sync-commons/src/main/java/io/harness/gitsync/common/beans/EntityWithCount.java
@@ -2913,6 +2912,7 @@
 970-api-services-beans/src/main/java/io/harness/security/encryption/SecretManagerType.java
 970-api-services-beans/src/main/java/io/harness/security/encryption/SecretUniqueIdentifier.java
 970-api-services-beans/src/main/java/io/harness/serializer/kryo/ApiServiceBeansKryoRegister.java
+970-api-services-beans/src/main/java/software/wings/helpers/ext/gcb/models/Secret.java
 970-api-services-beans/src/test/java/io/harness/jira/JiraIssueUtilsNGTest.java
 970-ng-commons/src/main/java/io/harness/encryption/SecretRefData.java
 970-ng-commons/src/main/java/io/harness/encryption/SecretRefDataHelper.java
