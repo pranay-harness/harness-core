@@ -1,8 +1,0 @@
-Copyright Harness.io
-
-Licensed under the Harness Example License.
-
-Full license can be found at
-https://harness.io/license.txt
-
-By accepting this license you become the legal property of Harness Inc.

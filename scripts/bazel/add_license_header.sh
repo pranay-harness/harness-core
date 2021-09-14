@@ -1,12 +1,4 @@
 #!/usr/bin/env bash
-# Copyright Harness.io
-# 
-# Licensed under the Harness Example License.
-# 
-# Full license can be found at
-# https://harness.io/license.txt
-# 
-# By accepting this license you become the legal property of Harness Inc.
 
 function usage {
   echo "Script to add license header to files"
@@ -66,9 +58,10 @@ if [ ! -r $PATH_TO_INPUT ]; then
   error_cannot_read_file "$PATH_TO_INPUT"
 fi
 
-function add_to_unprocessed_files {
-  if [ "$DRY_RUN" != "true" ]; then
-    echo "$FILE" >> $UNPROCESSED_FILES
+function print_possible_alternates {
+  POTENTIAL_ALTERNATE=$(find . -name "$(basename $FILE)")
+  if [ ! -z "$POTENTIAL_ALTERNATE" ]; then
+    echo "Has the file been moved to         $POTENTIAL_ALTERNATE"
   fi
 }
 
@@ -90,7 +83,6 @@ function read_header_double_slash {
 }
 
 function add_header_double_slash {
-  echo "Adding license header to $FILE"
   FILE_CONTENT=$(cat $FILE)
   write_file_header_and_content_double_slash
 }
@@ -98,10 +90,9 @@ function add_header_double_slash {
 function replace_header_double_slash {
   HEADER_WITHOUT_COMMENT_LITERAL=$(cut -c 4- <<<"$EXISTING_HEADER")
   if [ "$HEADER_WITHOUT_COMMENT_LITERAL" = "$LICENSE_TEXT" ]; then
-    echo "Skipping file as it already has the correct header $FILE"
+    return 0
   elif [ $(grep -m1 -ciE "(copyright|license)" <<<"$EXISTING_HEADER") -eq 1 ]; then
     echo "Skipping file as it already has a different license header $FILE"
-    add_to_unprocessed_files
   else
     add_header_double_slash
   fi
@@ -137,7 +128,6 @@ function read_header_slash_star {
 }
 
 function add_header_slash_star {
-  echo "Adding license header to $FILE"
   FILE_CONTENT=$(cat $FILE)
   write_file_header_and_content_slash_star
 }
@@ -145,10 +135,9 @@ function add_header_slash_star {
 function replace_header_slash_star {
   HEADER_WITHOUT_COMMENT_LITERAL=$(cut -c 4- <<<"$EXISTING_HEADER" | awk 'NR > 1 && NR < 10')
   if [ "$HEADER_WITHOUT_COMMENT_LITERAL" = "$LICENSE_TEXT" ]; then
-    echo "Skipping file as it already has the correct header $FILE"
+    return 0
   elif [ $(grep -m1 -ciE "(copyright|license)" <<<"$EXISTING_HEADER") -eq 1 ]; then
     echo "Skipping file as it already has a different license header $FILE"
-    add_to_unprocessed_files
   else
     add_header_slash_star
   fi
@@ -189,7 +178,6 @@ function read_header_hash {
 }
 
 function add_header_hash {
-  echo "Adding license header to $FILE"
   FILE_CONTENT=$(cat $FILE)
   write_file_header_and_content_hash
 }
@@ -197,10 +185,9 @@ function add_header_hash {
 function replace_header_hash {
   HEADER_WITHOUT_COMMENT_LITERAL=$(cut -c 3- <<<"$EXISTING_HEADER")
   if [ "$HEADER_WITHOUT_COMMENT_LITERAL" = "$LICENSE_TEXT" ]; then
-    echo "Skipping file as it already has the correct header $FILE"
+    return 0
   elif [ $(grep -m1 -ciE "(copyright|license)" <<<"$EXISTING_HEADER") -eq 1 ]; then
     echo "Skipping file as it already has a different license header $FILE"
-    add_to_unprocessed_files
   else
     add_header_hash
   fi
@@ -211,6 +198,7 @@ function write_file_header_and_content_hash {
     NEW_FILE="$FILE.new"
     if [ "$IS_MISSING_SHE_BANG" != "TRUE" ]; then
       head -1 <<<"$FILE_CONTENT" > $NEW_FILE
+      echo >> $NEW_FILE
     fi
     while read license_line; do
       echo "# $license_line" >> $NEW_FILE
@@ -243,7 +231,6 @@ function read_header_double_hyphen {
 }
 
 function add_header_double_hyphen {
-  echo "Adding license header to $FILE"
   FILE_CONTENT=$(cat $FILE)
   write_file_header_and_content_double_hyphen
 }
@@ -251,10 +238,9 @@ function add_header_double_hyphen {
 function replace_header_double_hyphen {
   HEADER_WITHOUT_COMMENT_LITERAL=$(cut -c 4- <<<"$EXISTING_HEADER")
   if [ "$HEADER_WITHOUT_COMMENT_LITERAL" = "$LICENSE_TEXT" ]; then
-    echo "Skipping file as it already has the correct header $FILE"
+    return 0
   elif [ $(grep -m1 -ciE "(copyright|license)" <<<"$EXISTING_HEADER") -eq 1 ]; then
     echo "Skipping file as it already has a different license header $FILE"
-    add_to_unprocessed_files
   else
     add_header_double_hyphen
   fi
@@ -279,19 +265,18 @@ function write_file_header_and_content_double_hyphen {
 LICENSE_TEXT=$(cat $PATH_TO_LICENSE)
 SOURCE_FILES=$(cat $PATH_TO_INPUT)
 PREVIOUSLY_OVERWRITTEN_HEADER=""
-UNPROCESSED_FILES="UNPROCESSED_FILES.txt"
-if [ "$DRY_RUN" != "true" ]; then
-  printf "" > $UNPROCESSED_FILES
-fi
 
 for FILE in $(xargs <<<$SOURCE_FILES); do
-  if [ ! -f "$FILE" ]; then
+  if [ ! -e "$FILE" ]; then
     echo "Skipping file as it does not exist $FILE"
-    add_to_unprocessed_files
+    print_possible_alternates
+    echo
+    continue
+  elif [ -d "$FILE" ]; then
+    echo "Skipping directory, only files are supported $FILE"
     continue
   elif [ ! -w "$FILE" ]; then
     echo "Skipping file as it is not writable $FILE"
-    add_to_unprocessed_files
     continue
   fi
 
@@ -306,6 +291,8 @@ for FILE in $(xargs <<<$SOURCE_FILES); do
     handle_slash_star
   elif [ "$FILE_TYPE" = "pl" ]; then # Perl
     handle_hash
+  elif [ "$FILE_TYPE" = "proto" ]; then
+    handle_double_slash
   elif [ "$FILE_TYPE" = "py" ]; then # Python
     handle_hash
   elif [ "$FILE_TYPE" = "rs" ]; then # Rust
@@ -316,6 +303,5 @@ for FILE in $(xargs <<<$SOURCE_FILES); do
     handle_double_hyphen
   else
     echo "Skipping file with extension '$FILE_TYPE' as it is not a supported filetype, file is $FILE"
-    add_to_unprocessed_files
   fi
 done
