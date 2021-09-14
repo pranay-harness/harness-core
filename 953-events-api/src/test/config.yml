@@ -33,6 +33,7 @@ eventsFramework:
     envNamespace: "test"
     readMode: MASTER
     nettyThreads: 16
+    connectionMinimumIdleSize: 10
     useScriptCache: true
     userName: ""
     password: ""

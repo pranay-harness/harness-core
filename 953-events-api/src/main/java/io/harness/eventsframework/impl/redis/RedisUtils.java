@@ -43,6 +43,7 @@ public class RedisUtils {
   public static final String REDIS_STREAM_INTERNAL_KEY = "o";
   public static final int MAX_DEAD_LETTER_QUEUE_SIZE = 50000;
   public static final int UNACKED_RETRY_COUNT = 10;
+  private static final int DEFAULT_MIN_CONNECTION_IDLE_SIZE = 5;
 
   public RedissonClient getClient(RedisConfig redisConfig) {
     Config config = new Config();
@@ -61,6 +62,9 @@ public class RedisUtils {
 
       // Default retry interval is 1500 milliseconds
       serverConfig.setRetryAttempts(10);
+
+      serverConfig.setConnectionMinimumIdleSize(
+          Math.max(DEFAULT_MIN_CONNECTION_IDLE_SIZE, redisConfig.getConnectionMinimumIdleSize()));
 
       RedisSSLConfig sslConfig = redisConfig.getSslConfig();
       if (sslConfig != null && sslConfig.isEnabled()) {
