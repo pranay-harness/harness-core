@@ -12,6 +12,8 @@ COPY apt-source-list /etc/apt/sources.list.d/kubernetes.list
 
 RUN apt-get update && apt-get install -y kubectl
 
+RUN apt-get install -y locales && locale-gen en_US.UTF-8 && export LANG=en_US.UTF-8
+
 RUN groupadd -r harness -g 1000560000 && useradd --no-log-init -r -u 1000560000 -g harness harness
 
 COPY scripts /opt/harness-delegate/
