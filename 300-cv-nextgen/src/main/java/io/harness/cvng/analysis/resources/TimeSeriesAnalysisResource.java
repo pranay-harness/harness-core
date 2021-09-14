@@ -9,6 +9,7 @@ import io.harness.cvng.analysis.beans.ServiceGuardTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesAnomalies;
 import io.harness.cvng.analysis.beans.TimeSeriesRecordDTO;
 import io.harness.cvng.analysis.entities.TimeSeriesCumulativeSums.MetricSum;
+import io.harness.cvng.analysis.entities.TimeSeriesRiskSummary;
 import io.harness.cvng.analysis.services.api.TimeSeriesAnalysisService;
 import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
 import io.harness.rest.RestResponse;
@@ -128,5 +129,21 @@ public class TimeSeriesAnalysisResource {
       DeploymentTimeSeriesAnalysisDTO analysisBody) {
     timeSeriesAnalysisService.saveAnalysis(taskId, analysisBody);
     return new RestResponse<>(null);
+  }
+
+  // The API below is exclusively written for ML testing and development process.
+
+  @GET
+  @Path("/timeseries-risk-summary-by-time")
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  @ApiOperation(value = "get risk analysis cumulative sums", nickname = "getRiskSummariesByTimeRange")
+  public RestResponse<List<TimeSeriesRiskSummary>> getRiskSummariesByTimeRange(
+      @QueryParam("verificationTaskId") String verificationTaskId,
+      @QueryParam("analysisStartTime") String epochStartInstant,
+      @QueryParam("analysisEndTime") String epochEndInstant) {
+    return new RestResponse<>(timeSeriesAnalysisService.getRiskSummariesByTimeRange(
+        verificationTaskId, Instant.parse(epochStartInstant), Instant.parse(epochEndInstant)));
   }
 }
