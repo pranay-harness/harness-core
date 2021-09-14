@@ -137,6 +137,8 @@ public interface DelegateService extends OwnedByAccount {
 
   List<String> obtainDelegateIds(String accountId, String sessionIdentifier);
 
+  List<String> obtainDelegateIdsUsingName(String accountId, String delegateName);
+
   void saveDelegateTask(DelegateTask task, DelegateTask.Status status);
 
   void clearCache(String accountId, String delegateId);
@@ -169,6 +171,4 @@ public interface DelegateService extends OwnedByAccount {
   void regenerateCapabilityPermissions(String accountId, String delegateId);
 
   DelegateGroup upsertDelegateGroup(String name, String accountId, DelegateSetupDetails delegateSetupDetails);
-
-  Delegate profileScriptExecutionInitiated(String accountId, String delegateId);
 }

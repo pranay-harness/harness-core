@@ -1,4 +1,4 @@
-package io.harness.cvng.core.types;
+package io.harness.cvng.beans.change;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

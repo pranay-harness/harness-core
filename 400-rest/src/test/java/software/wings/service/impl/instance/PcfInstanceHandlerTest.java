@@ -422,6 +422,133 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
     assertThat(capturedInstances.get(2).getLastArtifactName()).isEqualTo("old");
   }
 
+  // 2 instances will be updated in DB and 1 new instance will be added in DB
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testHandleOnDemandRollbackDeployment() throws PcfAppNotFoundException {
+    PageResponse<Instance> pageResponse = new PageResponse<>();
+    pageResponse.setResponse(asList());
+    String rollbackExecutionId = "rollbackExecutionId";
+    String stateExecutionInstanceId = "stateExecutionInstanceId";
+    String workflowExecutionId = "workfloeExecution_1";
+
+    doReturn(pageResponse).when(instanceService).list(any());
+    doReturn(getPcfInstanceInfosForNewDeployment())
+        .when(pcfHelperService)
+        .getApplicationDetails(anyString(), anyString(), anyString(), any(), any());
+    doReturn(getInstancesForAppAndInframapping())
+        .when(instanceService)
+        .getInstancesForAppAndInframapping(anyString(), anyString());
+
+    OnDemandRollbackInfo onDemandRollbackInfo =
+        OnDemandRollbackInfo.builder().onDemandRollback(true).rollbackExecutionId(rollbackExecutionId).build();
+
+    pcfInstanceHandler.handleNewDeployment(
+        Collections.singletonList(
+            DeploymentSummary.builder()
+                .deploymentInfo(
+                    PcfDeploymentInfo.builder().applicationGuild("GUID").applicationName(APP_NAME_1).build())
+                .accountId(ACCOUNT_ID)
+                .infraMappingId(INFRA_MAPPING_ID)
+                .workflowExecutionId(workflowExecutionId)
+                .stateExecutionInstanceId(stateExecutionInstanceId)
+                .artifactName("new")
+                .artifactBuildNum("1")
+                .build()),
+        false, onDemandRollbackInfo);
+
+    ArgumentCaptor<Instance> updatedCaptorInstance = ArgumentCaptor.forClass(Instance.class);
+    verify(instanceService, times(2)).saveOrUpdate(updatedCaptorInstance.capture());
+
+    ArgumentCaptor<Instance> savedCaptorInstance = ArgumentCaptor.forClass(Instance.class);
+    verify(instanceService, times(1)).save(savedCaptorInstance.capture());
+
+    Set<String> updatedExpectedKeys =
+        new HashSet<>(asList(PCF_APP_GUID_1 + ":" + PCF_INSTANCE_INDEX_0, PCF_APP_GUID_1 + ":" + PCF_INSTANCE_INDEX_1));
+    Set<String> savedExpectedKeys =
+        new HashSet<>(Collections.singletonList(PCF_APP_GUID_1 + ":" + PCF_INSTANCE_INDEX_2));
+
+    List<Instance> updatedInstances = updatedCaptorInstance.getAllValues();
+    assertThat(updatedExpectedKeys.contains(updatedInstances.get(0).getPcfInstanceKey().getId())).isTrue();
+    assertThat(updatedExpectedKeys.contains(updatedInstances.get(1).getPcfInstanceKey().getId())).isTrue();
+
+    List<Instance> saveInstances = savedCaptorInstance.getAllValues();
+    assertThat(savedExpectedKeys.contains(saveInstances.get(0).getPcfInstanceKey().getId())).isTrue();
+  }
+
+  // 3 new instances will be added in DB
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testHandleOnDemandRollbackDeploymentWithOnlyNewInstances() throws PcfAppNotFoundException {
+    PageResponse<Instance> pageResponse = new PageResponse<>();
+    pageResponse.setResponse(asList());
+    String rollbackExecutionId = "rollbackExecutionId";
+    String stateExecutionInstanceId = "stateExecutionInstanceId";
+    String workflowExecutionId = "workfloeExecution_1";
+
+    doReturn(pageResponse).when(instanceService).list(any());
+    doReturn(getPcfInstanceInfosForNewDeployment())
+        .when(pcfHelperService)
+        .getApplicationDetails(anyString(), anyString(), anyString(), any(), any());
+
+    OnDemandRollbackInfo onDemandRollbackInfo =
+        OnDemandRollbackInfo.builder().onDemandRollback(true).rollbackExecutionId(rollbackExecutionId).build();
+
+    pcfInstanceHandler.handleNewDeployment(
+        Collections.singletonList(
+            DeploymentSummary.builder()
+                .deploymentInfo(
+                    PcfDeploymentInfo.builder().applicationGuild("GUID").applicationName(APP_NAME_1).build())
+                .accountId(ACCOUNT_ID)
+                .infraMappingId(INFRA_MAPPING_ID)
+                .workflowExecutionId(workflowExecutionId)
+                .stateExecutionInstanceId(stateExecutionInstanceId)
+                .artifactName("new")
+                .artifactBuildNum("1")
+                .build()),
+        false, onDemandRollbackInfo);
+
+    ArgumentCaptor<Instance> savedCaptorInstance = ArgumentCaptor.forClass(Instance.class);
+    verify(instanceService, times(3)).save(savedCaptorInstance.capture());
+
+    Set<String> savedExpectedKeys = new HashSet<>(asList(PCF_APP_GUID_1 + ":" + PCF_INSTANCE_INDEX_0,
+        PCF_APP_GUID_1 + ":" + PCF_INSTANCE_INDEX_1, PCF_APP_GUID_1 + ":" + PCF_INSTANCE_INDEX_2));
+
+    List<Instance> saveInstances = savedCaptorInstance.getAllValues();
+    assertThat(savedExpectedKeys.contains(saveInstances.get(0).getPcfInstanceKey().getId())).isTrue();
+    assertThat(savedExpectedKeys.contains(saveInstances.get(1).getPcfInstanceKey().getId())).isTrue();
+    assertThat(savedExpectedKeys.contains(saveInstances.get(2).getPcfInstanceKey().getId())).isTrue();
+  }
+
+  private List<PcfInstanceInfo> getPcfInstanceInfosForNewDeployment() {
+    return asList(PcfInstanceInfo.builder()
+                      .organization(ORGANIZATION)
+                      .space(SPACE)
+                      .pcfApplicationName(APP_NAME_1)
+                      .pcfApplicationGuid(PCF_APP_GUID_1)
+                      .instanceIndex(PCF_INSTANCE_INDEX_0)
+                      .id(PCF_APP_GUID_1 + ":" + PCF_INSTANCE_INDEX_0)
+                      .build(),
+        PcfInstanceInfo.builder()
+            .organization(ORGANIZATION)
+            .space(SPACE)
+            .pcfApplicationName(APP_NAME_1)
+            .pcfApplicationGuid(PCF_APP_GUID_1)
+            .instanceIndex(PCF_INSTANCE_INDEX_1)
+            .id(PCF_APP_GUID_1 + ":" + PCF_INSTANCE_INDEX_1)
+            .build(),
+        PcfInstanceInfo.builder()
+            .organization(ORGANIZATION)
+            .space(SPACE)
+            .pcfApplicationName(APP_NAME_1)
+            .pcfApplicationGuid(PCF_APP_GUID_1)
+            .instanceIndex(PCF_INSTANCE_INDEX_2)
+            .id(PCF_APP_GUID_1 + ":" + PCF_INSTANCE_INDEX_2)
+            .build());
+  }
+
   @Test
   @Owner(developers = ANKIT)
   @Category(UnitTests.class)

@@ -142,6 +142,8 @@ aeriform("//441-cg-instance-sync:module")
 
 aeriform("//445-cg-connectors:module")
 
+aeriform("//445-gitops:module")
+
 aeriform("//450-ce-views:module")
 
 aeriform("//450-ce-views:tests")

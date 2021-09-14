@@ -710,7 +710,7 @@ public class InstanceHelper {
       return;
     }
 
-    log.info("Handling Instance sync response. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
+    log.debug("Handling Instance sync response. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
         infrastructureMapping.getUuid(), perpetualTaskRecord.getUuid());
 
     try (AcquiredLock<?> lock = persistentLocker.tryToAcquireLock(
@@ -724,7 +724,7 @@ public class InstanceHelper {
       handleInstanceSyncResponseFromPerpetualTask(infrastructureMapping, perpetualTaskRecord, response);
     }
 
-    log.info("Handled Instance sync response successfully. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
+    log.debug("Handled Instance sync response successfully. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
         infrastructureMapping.getUuid(), perpetualTaskRecord.getUuid());
   }
 

@@ -10,6 +10,10 @@ import io.harness.cvng.activity.entities.HarnessCDActivity.HarnessCDActivityBuil
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.MonitoredServiceDataSourceType;
 import io.harness.cvng.beans.MonitoredServiceType;
+import io.harness.cvng.beans.change.ChangeEventDTO;
+import io.harness.cvng.beans.change.ChangeEventDTO.ChangeEventDTOBuilder;
+import io.harness.cvng.beans.change.ChangeSourceType;
+import io.harness.cvng.beans.change.HarnessCDEventMetadata;
 import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.cdng.beans.CVNGStepInfo;
 import io.harness.cvng.cdng.beans.CVNGStepInfo.CVNGStepInfoBuilder;
@@ -17,9 +21,6 @@ import io.harness.cvng.cdng.beans.TestVerificationJobSpec;
 import io.harness.cvng.cdng.entities.CVNGStepTask;
 import io.harness.cvng.cdng.entities.CVNGStepTask.CVNGStepTaskBuilder;
 import io.harness.cvng.cdng.entities.CVNGStepTask.Status;
-import io.harness.cvng.core.beans.change.event.ChangeEventDTO;
-import io.harness.cvng.core.beans.change.event.ChangeEventDTO.ChangeEventDTOBuilder;
-import io.harness.cvng.core.beans.change.event.metadata.HarnessCDEventMetaData;
 import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
 import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO.ChangeSourceDTOBuilder;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
@@ -54,7 +55,6 @@ import io.harness.cvng.core.entities.changeSource.KubernetesChangeSource;
 import io.harness.cvng.core.entities.changeSource.KubernetesChangeSource.KubernetesChangeSourceBuilder;
 import io.harness.cvng.core.entities.changeSource.PagerDutyChangeSource;
 import io.harness.cvng.core.entities.changeSource.PagerDutyChangeSource.PagerDutyChangeSourceBuilder;
-import io.harness.cvng.core.types.ChangeSourceType;
 import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapBuilder;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution;
@@ -389,7 +389,7 @@ public class BuilderFactory {
   public ChangeEventDTOBuilder getHarnessCDChangeEventDTOBuilder() {
     return getChangeEventDTOBuilder()
         .type(ChangeSourceType.HARNESS_CD)
-        .changeEventMetaData(HarnessCDEventMetaData.builder()
+        .changeEventMetaData(HarnessCDEventMetadata.builder()
                                  .stageStepId("stage")
                                  .planExecutionId("executionId")
                                  .deploymentEndTime(Instant.now().toEpochMilli())
