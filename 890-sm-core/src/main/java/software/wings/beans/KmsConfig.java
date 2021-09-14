@@ -14,7 +14,9 @@ import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.helpers.GlobalSecretManagerUtils.GLOBAL_ACCOUNT_ID;
 import static io.harness.security.encryption.SecretManagerType.KMS;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SecretManagerCapabilities;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -59,6 +61,7 @@ import lombok.experimental.SuperBuilder;
 @ToString(exclude = {"accessKey", "secretKey", "kmsArn"})
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "KmsConfigKeys")
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class KmsConfig extends SecretManagerConfig {
   private static final String TASK_SELECTORS = "Task Selectors";
   @Attributes(title = "Name", required = true) private String name;
