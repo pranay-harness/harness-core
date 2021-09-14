@@ -1,6 +1,4 @@
-package io.harness.cvng.core.beans.change.event.metadata;
-
-import io.harness.cvng.core.types.ChangeSourceType;
+package io.harness.cvng.beans.change;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AccessLevel;
@@ -16,7 +14,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class HarnessCDEventMetaData extends ChangeEventMetaData {
+public class HarnessCDEventMetadata extends ChangeEventMetadata {
   long deploymentStartTime;
   long deploymentEndTime;
   String planExecutionId;

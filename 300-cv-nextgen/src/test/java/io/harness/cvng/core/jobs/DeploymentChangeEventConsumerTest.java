@@ -7,10 +7,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
-import io.harness.cvng.core.beans.change.event.ChangeEventDTO;
-import io.harness.cvng.core.beans.change.event.metadata.HarnessCDEventMetaData;
+import io.harness.cvng.beans.change.ChangeEventDTO;
+import io.harness.cvng.beans.change.ChangeSourceType;
+import io.harness.cvng.beans.change.HarnessCDEventMetadata;
 import io.harness.cvng.core.services.api.ChangeEventService;
-import io.harness.cvng.core.types.ChangeSourceType;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.eventsframework.schemas.deployment.DeploymentEventDTO;
 import io.harness.rule.Owner;
@@ -61,7 +61,7 @@ public class DeploymentChangeEventConsumerTest extends CvNextGenTestBase {
     assertThat(changeEventDTO.getEventTime()).isEqualTo(deploymentEventDTO.getDeploymentEndTime());
     assertThat(changeEventDTO.getType()).isEqualTo(ChangeSourceType.HARNESS_CD);
 
-    HarnessCDEventMetaData harnessCDEventMetaData = (HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData();
+    HarnessCDEventMetadata harnessCDEventMetaData = (HarnessCDEventMetadata) changeEventDTO.getChangeEventMetaData();
     assertThat(harnessCDEventMetaData.getDeploymentEndTime()).isEqualTo(deploymentEventDTO.getDeploymentEndTime());
     assertThat(harnessCDEventMetaData.getDeploymentStartTime()).isEqualTo(deploymentEventDTO.getDeploymentStartTime());
     assertThat(harnessCDEventMetaData.getStatus()).isEqualTo(deploymentEventDTO.getDeploymentStatus());
