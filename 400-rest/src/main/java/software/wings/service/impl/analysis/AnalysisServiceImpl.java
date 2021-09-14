@@ -18,6 +18,8 @@ import static software.wings.common.VerificationConstants.IGNORED_ERRORS_METRIC_
 import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkResponse;
 import static software.wings.service.impl.ThirdPartyApiCallLog.createApiCallLog;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
@@ -127,6 +129,7 @@ import org.mongodb.morphia.query.Sort;
  */
 @ValidateOnExecution
 @Slf4j
+@OwnedBy(HarnessTeam.CV)
 public class AnalysisServiceImpl implements AnalysisService {
   private static final double HIGH_RISK_THRESHOLD = 50;
   private static final double MEDIUM_RISK_THRESHOLD = 25;

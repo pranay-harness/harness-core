@@ -27,7 +27,7 @@ import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.MetricPackDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.MonitoredServiceDTOBuilder;
-import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.MonitoredServiceRef;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceDependencyDTO;
 import io.harness.cvng.core.beans.monitoredService.changeSourceSpec.HarnessCDChangeSourceSpec;
 import io.harness.cvng.core.beans.monitoredService.changeSourceSpec.KubernetesChangeSourceSpec;
 import io.harness.cvng.core.beans.monitoredService.changeSourceSpec.PagerDutyChangeSourceSpec;
@@ -157,8 +157,8 @@ public class BuilderFactory {
         .description(generateUuid())
         .serviceRef(context.getServiceIdentifier())
         .environmentRef(context.getEnvIdentifier())
-        .dependencies(Sets.newHashSet(MonitoredServiceRef.builder().monitoredServiceIdentifier("service1").build(),
-            MonitoredServiceRef.builder().monitoredServiceIdentifier("service2").build()))
+        .dependencies(Sets.newHashSet(ServiceDependencyDTO.builder().monitoredServiceIdentifier("service1").build(),
+            ServiceDependencyDTO.builder().monitoredServiceIdentifier("service2").build()))
         .sources(MonitoredServiceDTO.Sources.builder()
                      .healthSources(Arrays.asList(createHealthSource()).stream().collect(Collectors.toSet()))
                      .build());
