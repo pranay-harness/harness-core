@@ -1,5 +1,7 @@
 package io.harness.delegate.task.executioncapability;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
@@ -18,6 +20,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(HarnessTeam.DX)
 public class GitConnectionNGCapabilityChecker implements CapabilityCheck {
   @Inject private SecretDecryptionService decryptionService;
   @Inject private NGGitService gitService;
@@ -44,7 +47,7 @@ public class GitConnectionNGCapabilityChecker implements CapabilityCheck {
     }
     String accountId = delegateConfiguration.getAccountId();
     try {
-      gitService.validate(gitConfig, accountId, sshSessionConfig);
+      gitService.validateOrThrow(gitConfig, accountId, sshSessionConfig);
     } catch (Exception e) {
       return CapabilityResponse.builder().delegateCapability(capability).validated(false).build();
     }
