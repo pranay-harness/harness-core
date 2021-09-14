@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
+ */
+
 // start mongo client and run following command -> 'load("scripts/TestDB.js");'
 
 var DB = connect('127.0.0.1:27017/wings');

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
+ */
+
 package io.harness.cdng.k8s;
 
 import static io.harness.cdng.k8s.K8sScaleStep.K8S_SCALE_COMMAND_NAME;

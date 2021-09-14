@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
+ */
+
 package io.harness.perpetualtask.internal;
 
 import static io.harness.perpetualtask.internal.PerpetualTaskRecordHandler.FAIL_TO_ASSIGN_ANY_DELEGATE_TO_PERPETUAL_TASK;

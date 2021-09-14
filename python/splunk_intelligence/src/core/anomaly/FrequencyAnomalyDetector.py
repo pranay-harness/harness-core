@@ -1,3 +1,8 @@
+# Copyright 2021 Harness Inc.
+# 
+# Licensed under the Apache License, Version 2.0
+# http://www.apache.org/licenses/LICENSE-2.0
+
 import numpy as np
 
 from core.classifier.ThreeSigmaClassifier import ThreeSigmaClassifier
@@ -44,14 +49,3 @@ class FrequencyAnomalyDetector(object):
 # det = FrequencyAnomalyDetector()
 # det.fit_transform(1, np.array(x))
 # print(det.predict(1, np.array(y)))
-
-
-
-
-
-
-
-
-
-
-

@@ -1,3 +1,8 @@
+// Copyright 2021 Harness Inc.
+// 
+// Licensed under the Apache License, Version 2.0
+// http://www.apache.org/licenses/LICENSE-2.0
+
 // This file implements a parser for callgraph file. It reads all the files
 // in the callgraph directory, dedupes the data, and then returns Callgraph object
 package cg

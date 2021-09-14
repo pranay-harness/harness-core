@@ -1,3 +1,8 @@
+# Copyright 2021 Harness Inc.
+# 
+# Licensed under the Apache License, Version 2.0
+# http://www.apache.org/licenses/LICENSE-2.0
+
 import io
 import json
 import base64
@@ -266,4 +271,3 @@ def main(event, context):
         # updateDeletedVolumesInMainTable(client, awsEbsInventoryTableName, currentTime, jsonData["linkedAccountId"])
 
     print_("Completed")
-

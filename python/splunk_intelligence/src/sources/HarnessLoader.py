@@ -1,3 +1,8 @@
+# Copyright 2021 Harness Inc.
+# 
+# Licensed under the Apache License, Version 2.0
+# http://www.apache.org/licenses/LICENSE-2.0
+
 import ConfigParser
 import json
 import jwt
@@ -180,4 +185,3 @@ class HarnessLoader(object):
             raw_events.append(raw_event)
 
         return raw_events
-

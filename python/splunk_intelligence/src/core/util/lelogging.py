@@ -1,3 +1,8 @@
+# Copyright 2021 Harness Inc.
+# 
+# Licensed under the Apache License, Version 2.0
+# http://www.apache.org/licenses/LICENSE-2.0
+
 import logging
 import os
 from logging.handlers import RotatingFileHandler
@@ -18,4 +23,3 @@ if str(os.environ.get('learning_env')).lower() == 'on_prem':
 
 def get_log(name):
     return log
-

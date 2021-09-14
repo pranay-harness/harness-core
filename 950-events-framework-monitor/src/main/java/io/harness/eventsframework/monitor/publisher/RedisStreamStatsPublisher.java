@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
+ */
+
 package io.harness.eventsframework.monitor.publisher;
 
 import static io.harness.eventsframework.monitor.EventsFrameworkMonitorConstants.REDIS_STREAMS_AVERAGE_MESSAGE_SIZE;

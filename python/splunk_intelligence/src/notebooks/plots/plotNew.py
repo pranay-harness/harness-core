@@ -1,3 +1,8 @@
+# Copyright 2021 Harness Inc.
+# 
+# Licensed under the Apache License, Version 2.0
+# http://www.apache.org/licenses/LICENSE-2.0
+
 import pandas as pd
 import plotly as py
 from plotly import tools
@@ -115,8 +120,3 @@ def plot_AB(traces, subtitle_names):
     fig.append_trace(traces[1], 1, 2)
     fig['layout'].update(showlegend=False)
     py.offline.iplot(fig, filename='123')
-
-
-
-
-

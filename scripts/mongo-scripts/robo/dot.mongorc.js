@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
+ */
+
 /**
  * This is a set of shortcuts to mongo queries for use in Robo 3T.
  *

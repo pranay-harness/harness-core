@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
+ */
+
 package io.harness.eventsframework.monitor.context;
 
 import static io.harness.metrics.MetricConstants.METRIC_LABEL_PREFIX;

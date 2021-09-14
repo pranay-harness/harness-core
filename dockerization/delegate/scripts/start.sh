@@ -1,5 +1,11 @@
 #!/bin/bash -e
 
+# Copyright 2021 Harness Inc.
+# 
+# Licensed under the Apache License, Version 2.0
+# http://www.apache.org/licenses/LICENSE-2.0
+
+
 function jar_app_version() {
   JAR=$1
   if unzip -l $JAR | grep -q io/harness/versionInfo.yaml

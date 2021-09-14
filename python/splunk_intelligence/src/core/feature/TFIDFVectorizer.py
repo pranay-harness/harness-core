@@ -1,3 +1,8 @@
+# Copyright 2021 Harness Inc.
+# 
+# Licensed under the Apache License, Version 2.0
+# http://www.apache.org/licenses/LICENSE-2.0
+
 from core.util.lelogging import get_log
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.manifold import MDS

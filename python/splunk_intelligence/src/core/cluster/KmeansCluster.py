@@ -1,3 +1,8 @@
+# Copyright 2021 Harness Inc.
+# 
+# Licensed under the Apache License, Version 2.0
+# http://www.apache.org/licenses/LICENSE-2.0
+
 import numpy as np
 from core.distance.JaccardDistance import pairwise_jaccard_similarity
 from core.util.lelogging import get_log
@@ -103,10 +108,3 @@ class KmeansCluster(object):
         :return: the cluster assignments for the test samples
         """
         return self.km.predict(feature_matrix)
-
-
-
-
-
-
-

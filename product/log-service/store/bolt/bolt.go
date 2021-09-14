@@ -1,3 +1,8 @@
+// Copyright 2021 Harness Inc.
+// 
+// Licensed under the Apache License, Version 2.0
+// http://www.apache.org/licenses/LICENSE-2.0
+
 // Package bolt provides an embedded log datastore backed
 // by a Bolt database. This package should be used for
 // local testing purposes only and is not appropriate for

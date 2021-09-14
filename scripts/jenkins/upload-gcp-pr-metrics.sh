@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+# Copyright 2021 Harness Inc.
+# 
+# Licensed under the Apache License, Version 2.0
+# http://www.apache.org/licenses/LICENSE-2.0
+
+
 export START_TIME=`cat start_time.dat`
 export CHECK=${JOB_NAME}
 export PR=${ghprbPullId}

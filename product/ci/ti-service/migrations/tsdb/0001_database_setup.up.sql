@@ -1,3 +1,8 @@
+-- Copyright 2021 Harness Inc.
+-- 
+-- Licensed under the Apache License, Version 2.0
+-- http://www.apache.org/licenses/LICENSE-2.0
+
 -- enable uuid extension in postgresql
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;

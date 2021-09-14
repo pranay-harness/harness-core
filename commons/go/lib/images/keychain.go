@@ -1,3 +1,8 @@
+// Copyright 2021 Harness Inc.
+// 
+// Licensed under the Apache License, Version 2.0
+// http://www.apache.org/licenses/LICENSE-2.0
+
 package images
 
 // This file is taken from https://github.com/google/go-containerregistry/blob/master/pkg/authn/k8schain/k8schain.go#L135

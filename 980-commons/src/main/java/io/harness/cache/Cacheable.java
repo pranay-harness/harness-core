@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
+ */
+
 package io.harness.cache; // Cacheable in the key value sense object.
 //
 // Using key value storage is very commonly used to store cache objects. It is a nice separation of the

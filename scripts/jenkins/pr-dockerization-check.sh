@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Copyright 2021 Harness Inc.
+# 
+# Licensed under the Apache License, Version 2.0
+# http://www.apache.org/licenses/LICENSE-2.0
+
+
 function detect_unknown_urls(){
     if ! [[ "$1" =~ "app.harness.io" ]]; then #If curl or wget found then it will only allow app.harness.io
         echo "ERROR $2: Unknown URL Found in line: $line"

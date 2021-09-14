@@ -1,3 +1,8 @@
+// Copyright 2021 Harness Inc.
+// 
+// Licensed under the Apache License, Version 2.0
+// http://www.apache.org/licenses/LICENSE-2.0
+
 // This file has a Callgraph object which is used to upload callgraph from
 // addon to ti server. It also contains helper functions, FromStringMap which
 // takes avro decoded output and returns a Callgraph function. ToStringMap fn

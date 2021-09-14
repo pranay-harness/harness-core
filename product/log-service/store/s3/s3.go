@@ -1,3 +1,8 @@
+// Copyright 2021 Harness Inc.
+// 
+// Licensed under the Apache License, Version 2.0
+// http://www.apache.org/licenses/LICENSE-2.0
+
 // Package S3 provides a log storage driver backed by
 // S3 or a S3-compatible storage system.
 package s3

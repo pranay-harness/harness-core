@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+# Copyright 2021 Harness Inc.
+# 
+# Licensed under the Apache License, Version 2.0
+# http://www.apache.org/licenses/LICENSE-2.0
+
+
 CONFIG_FILE=/opt/harness/delegate-service-config.yml
 REDISSON_CACHE_FILE=/opt/harness/redisson-jcache.yaml
 
@@ -479,5 +485,3 @@ fi
 if [[ "" != "$OPENJDK_JRE_TAR_PATH" ]]; then
   yq write -i $CONFIG_FILE jreConfigs.openjdk8u242.jreTarPath "$OPENJDK_JRE_TAR_PATH"
 fi
-
-

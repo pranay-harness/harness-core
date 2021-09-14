@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
+ */
+
 package io.harness.accesscontrol.roles;
 
 import static io.harness.accesscontrol.permissions.PermissionFilter.IncludedInAllRolesFilter.PERMISSIONS_INCLUDED_IN_ALL_ROLES;

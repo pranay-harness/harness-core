@@ -1,3 +1,8 @@
+// Copyright 2021 Harness Inc.
+// 
+// Licensed under the Apache License, Version 2.0
+// http://www.apache.org/licenses/LICENSE-2.0
+
 // Package state contains state of addon logs which are not part of a step (right now, these are service and logs of the addon container itself).
 // Since there is a dependency on the gRPC server running on lite engine, pending logs are stopped before the lite engine server is stopped.
 package state

@@ -1,3 +1,8 @@
+-- Copyright 2021 Harness Inc.
+-- 
+-- Licensed under the Apache License, Version 2.0
+-- http://www.apache.org/licenses/LICENSE-2.0
+
 -- This table gives a snapshot of selection stats.
 -- The TI service responds to an API by returning the list of tests to be run after running selection algorithm
 -- It should also populate this table with high level stats for analytics purpose

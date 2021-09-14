@@ -1,3 +1,8 @@
+-- Copyright 2021 Harness Inc.
+-- 
+-- Licensed under the Apache License, Version 2.0
+-- http://www.apache.org/licenses/LICENSE-2.0
+
 DO
 $do$
     BEGIN
@@ -27,5 +32,3 @@ CREATE INDEX IF NOT EXISTS evaluation_idx2 ON evaluation(account_id, org_id, pro
 
 CREATE INDEX IF NOT EXISTS selection_idx2 ON selection(account_id, org_id, project_id, pipeline_id, build_id, stage_id, step_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS selection_idx3 ON selection(account_id, org_id, project_id, pipeline_id, stage_id, step_id, created_at DESC);
-
-

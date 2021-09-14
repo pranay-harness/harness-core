@@ -1,3 +1,8 @@
+# Copyright 2021 Harness Inc.
+# 
+# Licensed under the Apache License, Version 2.0
+# http://www.apache.org/licenses/LICENSE-2.0
+
 if [ -z "${JFROG_USERNAME}" ];
 then
   echo "data-collection credentials are not set. See https://harness.slack.com/archives/C8DHL8G8P/p1603265514093900"

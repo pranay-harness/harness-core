@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
+ */
+
 package io.harness.delegate.task.artifacts.docker;
 
 import static io.harness.artifacts.docker.service.DockerRegistryService.MAX_NO_OF_TAGS_PER_IMAGE;

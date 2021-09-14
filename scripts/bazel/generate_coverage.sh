@@ -1,5 +1,11 @@
 #!/usr/bin/env zsh
 
+# Copyright 2021 Harness Inc.
+# 
+# Licensed under the Apache License, Version 2.0
+# http://www.apache.org/licenses/LICENSE-2.0
+
+
 #Helper Function
 function help(){
   echo -e "USAGE: generate_coverage.sh <Module Name> \n\

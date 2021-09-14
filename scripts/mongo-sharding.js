@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
+ */
+
 // start mongo client and run following command -> 'load("scripts/mongo-sharding.js");'
 const conn = new Mongo('cluster0-shard-00-00-w7uwj.mongodb.net:37017');
 const db = conn.getDB('admin');
@@ -80,6 +87,3 @@ if (db.auth('dbadmin', 'W!ngs@tl@s')) {
 } else {
   print('Could not authenticate');
 }
-
-
-

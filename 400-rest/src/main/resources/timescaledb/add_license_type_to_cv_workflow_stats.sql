@@ -1,3 +1,8 @@
+-- Copyright 2021 Harness Inc.
+-- 
+-- Licensed under the Apache License, Version 2.0
+-- http://www.apache.org/licenses/LICENSE-2.0
+
 BEGIN;
 
 ALTER TABLE VERIFICATION_WORKFLOW_STATS ADD COLUMN IF NOT EXISTS LICENSE_TYPE VARCHAR(20);

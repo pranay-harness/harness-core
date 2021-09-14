@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
+ */
+
 package io.harness.watcher.service;
 
 import static io.harness.delegate.beans.DelegateConfiguration.Action.SELF_DESTRUCT;

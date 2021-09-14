@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+# Copyright 2021 Harness Inc.
+# 
+# Licensed under the Apache License, Version 2.0
+# http://www.apache.org/licenses/LICENSE-2.0
+
+
 if [[ -v "HZ_CLUSTER_NAME" ]]; then
 #If cluster name is not found , disable hazelcast .
     sed -i "s|<name>dev|<name>${HZ_CLUSTER_NAME}-hzcluster|" /opt/harness/hazelcast.xml

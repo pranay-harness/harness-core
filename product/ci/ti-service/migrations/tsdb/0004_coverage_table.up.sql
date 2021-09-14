@@ -1,3 +1,8 @@
+-- Copyright 2021 Harness Inc.
+-- 
+-- Licensed under the Apache License, Version 2.0
+-- http://www.apache.org/licenses/LICENSE-2.0
+
 -- This table gives details about files changed in the PR.
 -- It contains paths of the files as well as whether they were modified, added or deleted.
 -- Information in this table is required for the correct merging of the partial call

@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Copyright 2021 Harness Inc.
+# 
+# Licensed under the Apache License, Version 2.0
+# http://www.apache.org/licenses/LICENSE-2.0
+
+
 echo "Executing commands to setup correct directories and its permissions"
 
 if [[ -z $1 ]]; then
@@ -60,4 +66,3 @@ chown -R 999 $runtime_dir/mongo/*
 chmod 777 $runtime_dir/mongo/$mongodb_data_dir
 
 echo "##### Created and updated appropriate permissions for mongodb files and directories ######## "
-

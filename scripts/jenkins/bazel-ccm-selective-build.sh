@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+
+# Copyright 2021 Harness Inc.
+# 
+# Licensed under the Apache License, Version 2.0
+# http://www.apache.org/licenses/LICENSE-2.0
+
 set -ex
 
 SCRIPT_DIR="$(dirname $0)"
@@ -79,4 +85,3 @@ if [ "$DOCKERIZE" = "true" ] && [ "${BRANCH_IN_THE_TAG}" = "true" ] && [ "${BUIL
 then
   echo ${IMAGE_TAG} > dist/manager/image_tag.txt
 fi
-

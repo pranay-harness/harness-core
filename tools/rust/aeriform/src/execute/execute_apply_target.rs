@@ -1,3 +1,8 @@
+// Copyright 2021 Harness Inc.
+// 
+// Licensed under the Apache License, Version 2.0
+// http://www.apache.org/licenses/LICENSE-2.0
+
 use crate::execute::read_lines;
 use crate::java_class::{MODULE_IMPORT, TARGET_MODULE_IMPORT, TARGET_MODULE_PATTERN};
 use clap::Clap;

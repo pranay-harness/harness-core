@@ -1,3 +1,8 @@
+-- Copyright 2021 Harness Inc.
+-- 
+-- Licensed under the Apache License, Version 2.0
+-- http://www.apache.org/licenses/LICENSE-2.0
+
 DO
 $do$
 BEGIN
@@ -102,6 +107,3 @@ comment on column evaluation.criterion is 'why was this test selected/not_select
 SELECT create_hypertable('evaluation', 'created_at');
 
 CREATE INDEX IF NOT EXISTS evaluation_idx1 ON evaluation(account_id, org_id, project_id, pipeline_id, build_id, created_at DESC);
-
-
-

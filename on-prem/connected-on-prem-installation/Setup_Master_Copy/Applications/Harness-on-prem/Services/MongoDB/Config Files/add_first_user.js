@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
+ */
+
 use HARNESSDB;
 db.getCollection('accounts').insert({
     "_id" : "kmpySmUISimoRrJL6NL73w",

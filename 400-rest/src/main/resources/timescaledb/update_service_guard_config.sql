@@ -1,3 +1,8 @@
+-- Copyright 2021 Harness Inc.
+-- 
+-- Licensed under the Apache License, Version 2.0
+-- http://www.apache.org/licenses/LICENSE-2.0
+
 ---------- CONFIGURATION TABLE START -----------
 BEGIN;
 DROP TABLE IF EXISTS CV_CONFIGURATIONS;

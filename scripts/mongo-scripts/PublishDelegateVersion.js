@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
+ */
+
 const managerConfigQuery = { _id: "__GLOBAL_CONFIG_ID__" };
 const managerConfig = db.managerConfiguration.find(managerConfigQuery);
 const primaryVersion = managerConfig.next().primaryVersion;

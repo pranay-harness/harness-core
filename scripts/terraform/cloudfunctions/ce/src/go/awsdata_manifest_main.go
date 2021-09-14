@@ -1,3 +1,8 @@
+// Copyright 2021 Harness Inc.
+// 
+// Licensed under the Apache License, Version 2.0
+// http://www.apache.org/licenses/LICENSE-2.0
+
 // Package cloudFunction contains a Google Cloud Storage Cloud Function which handle AWS -> BQ Ingestion
 package cloudFunction
 

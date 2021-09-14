@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Copyright 2021 Harness Inc.
+# 
+# Licensed under the Apache License, Version 2.0
+# http://www.apache.org/licenses/LICENSE-2.0
+
+
 # JIRA: https://harness.atlassian.net/browse/BT-195
 # Description: Support multiple mongo deployments
 # Author: Diptiman Adak

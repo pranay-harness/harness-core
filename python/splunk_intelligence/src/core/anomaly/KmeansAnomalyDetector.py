@@ -1,3 +1,8 @@
+# Copyright 2021 Harness Inc.
+# 
+# Licensed under the Apache License, Version 2.0
+# http://www.apache.org/licenses/LICENSE-2.0
+
 import numpy as np
 from core.distance.JaccardDistance import jaccard_similarity, pairwise_jaccard_similarity
 from sklearn.metrics.pairwise import cosine_similarity

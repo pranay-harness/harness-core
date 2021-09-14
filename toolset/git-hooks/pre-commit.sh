@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+
+# Copyright 2021 Harness Inc.
+# 
+# Licensed under the Apache License, Version 2.0
+# http://www.apache.org/licenses/LICENSE-2.0
+
 #
 #This pre - commit hook checks if any versions of clang - format
 #are installed, and if so, uses the installed version to format

@@ -1,3 +1,8 @@
+# Copyright 2021 Harness Inc.
+# 
+# Licensed under the Apache License, Version 2.0
+# http://www.apache.org/licenses/LICENSE-2.0
+
 REGIONS=`aws ec2 describe-regions | grep RegionName | awk '{ print $2 }' | sed 's/.$//' | sed 's/^.//'`
 
 for REGION in $REGIONS

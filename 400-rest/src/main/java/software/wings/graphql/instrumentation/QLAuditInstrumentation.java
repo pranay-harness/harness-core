@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
+ */
+
 package software.wings.graphql.instrumentation;
 
 import static software.wings.security.AuthenticationFilter.API_KEY_HEADER;

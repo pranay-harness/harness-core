@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
+
+# Copyright 2021 Harness Inc.
+# 
+# Licensed under the Apache License, Version 2.0
+# http://www.apache.org/licenses/LICENSE-2.0
+
 pushd `dirname $0` > /dev/null && BASEDIR=$(pwd -L) && popd > /dev/null
 
 echo This script will install hooks that run scripts that could be updated without notice.

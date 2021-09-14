@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc.
+ * 
+ * Licensed under the Apache License, Version 2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
+ */
+
 package software.wings.sm.states.azure.artifact.container;
 
 import static io.harness.delegate.beans.connector.docker.DockerAuthType.USER_PASSWORD;

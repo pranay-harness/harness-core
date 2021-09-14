@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+# Copyright 2021 Harness Inc.
+# 
+# Licensed under the Apache License, Version 2.0
+# http://www.apache.org/licenses/LICENSE-2.0
+
+
 echo "Checking whether docker containers are up and running..."
 
 container_names=("mongoContainer" "harness-proxy" "harnessManager" "verificationService" "harness_ui" "learningEngine")
@@ -83,8 +89,3 @@ checkUIisUp
 checkManagerIsHealthy
 checkVerificationServiceIsHealthy
 checkDelegateAndApiVersionMatch
-
-
-
-
-

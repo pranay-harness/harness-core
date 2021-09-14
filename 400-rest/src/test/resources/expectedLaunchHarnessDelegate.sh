@@ -1,5 +1,11 @@
 #!/bin/bash -e
 
+# Copyright 2021 Harness Inc.
+# 
+# Licensed under the Apache License, Version 2.0
+# http://www.apache.org/licenses/LICENSE-2.0
+
+
 sudo docker pull harness/delegate:latest
 
 sudo docker run -d --restart unless-stopped --hostname=$(hostname -f | head -c 63) \

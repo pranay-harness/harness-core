@@ -1,3 +1,8 @@
+-- Copyright 2021 Harness Inc.
+-- 
+-- Licensed under the Apache License, Version 2.0
+-- http://www.apache.org/licenses/LICENSE-2.0
+
 BEGIN;
 CREATE TABLE IF NOT EXISTS COST_EVENT_DATA (
 	STARTTIME TIMESTAMPTZ NOT NULL,
@@ -29,4 +34,3 @@ CREATE TABLE IF NOT EXISTS COST_EVENT_DATA (
 COMMIT;
 
 SELECT CREATE_HYPERTABLE('COST_EVENT_DATA','starttime',if_not_exists => TRUE);
-

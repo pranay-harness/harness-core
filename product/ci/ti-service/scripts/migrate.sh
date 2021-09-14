@@ -1,3 +1,8 @@
+# Copyright 2021 Harness Inc.
+# 
+# Licensed under the Apache License, Version 2.0
+# http://www.apache.org/licenses/LICENSE-2.0
+
 ## If you want to start from migration version `x` (for saas if the migrations are already done manually),
 ## use SET_MONGO_MIGRATION_VERSION and SET_TSDB_MIGRATION_VERSION variables for setting the starting version of migrations
 

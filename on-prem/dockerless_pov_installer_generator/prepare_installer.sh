@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+# Copyright 2021 Harness Inc.
+# 
+# Licensed under the Apache License, Version 2.0
+# http://www.apache.org/licenses/LICENSE-2.0
+
+
 CURRENT_DIR=$PWD
 PROPERTY_FILE=$PWD/installer.properties
 VERSION_FILE=$PWD/version.properties
@@ -28,4 +34,3 @@ echo "watcher prepation completed for version : $WATCHER_VERSION "
 echo "Started generating installer............"
 sh generate_installer.sh
 echo "Installer generation successfull"
-
