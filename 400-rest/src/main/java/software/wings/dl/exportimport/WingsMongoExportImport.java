@@ -76,6 +76,7 @@ public class WingsMongoExportImport {
     while (cursor.hasNext()) {
       BasicDBObject basicDBObject = (BasicDBObject) cursor.next();
       records.add(basicDBObject.toJson());
+
       if (records.size() >= batchSize) {
         try {
           String zipEntryName = collectionName + "_" + i + JSON_FILE_SUFFIX;
@@ -113,9 +114,11 @@ public class WingsMongoExportImport {
     zipOutputStream.putNextEntry(zipEntryData);
     JsonArray jsonArrayRecord = convertStringListToJsonArray(records);
     String jsonString = gson.toJson(jsonArrayRecord);
+    log.info("Batch write started with data {} and hash {}", jsonString, zipOutputStream.hashCode());
     zipOutputStream.write(jsonString.getBytes(Charset.defaultCharset()));
     zipOutputStream.flush();
     fileOutputStream.flush();
+    log.info("Batch write ended for data hash {}", zipOutputStream.hashCode());
   }
 
   public boolean exportRecords(ZipOutputStream zipOutputStream, FileOutputStream fileOutputStream, DBObject filter,
