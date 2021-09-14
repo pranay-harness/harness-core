@@ -1,4 +1,4 @@
-package io.harness.dashboard.dtos;
+package io.harness.overviewdashboard.dtos;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -9,7 +9,6 @@ import lombok.Value;
 @Value
 @Builder
 @OwnedBy(HarnessTeam.PL)
-public class RateAndRateChangeInfo {
-  double rate;
-  double rateChangeRate;
+public class AccountInfo {
+  String accountIdentifier;
 }

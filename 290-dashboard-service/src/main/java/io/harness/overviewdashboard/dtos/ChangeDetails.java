@@ -1,4 +1,4 @@
-package io.harness.dashboard.dtos;
+package io.harness.overviewdashboard.dtos;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -9,9 +9,7 @@ import lombok.Value;
 @Value
 @Builder
 @OwnedBy(HarnessTeam.PL)
-public class DeploymentsOverview {
-  long runningCount;
-  long pendingApprovalsCount;
-  long manualInterventionsCount;
-  long failedCount;
+public class ChangeDetails {
+  long changeCount;
+  long changeRate;
 }

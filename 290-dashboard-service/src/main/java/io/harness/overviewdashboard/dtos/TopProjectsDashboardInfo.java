@@ -1,4 +1,4 @@
-package io.harness.dashboard.dtos;
+package io.harness.overviewdashboard.dtos;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -9,11 +9,9 @@ import lombok.Value;
 @Value
 @Builder
 @OwnedBy(HarnessTeam.PL)
-public class ServiceDashboardInfo {
-  ServiceInfo serviceInfo;
+public class TopProjectsDashboardInfo<T> {
   ProjectInfo projectInfo;
   OrgInfo orgInfo;
   AccountInfo accountInfo;
-
-  CountWithSuccessFailureDetails countWithSuccessFailureDetails;
+  T countDetails;
 }

@@ -14,7 +14,7 @@ import org.reflections.Reflections;
 @Getter
 @OwnedBy(HarnessTeam.PL)
 public class DashboardServiceConfig extends Configuration {
-  public static final String BASE_PACKAGE = "io/harness/dashboard/resources";
+  public static final String BASE_PACKAGE = "io/harness/overviewdashboard/resources";
 
   @JsonProperty("cdServiceClientConfig") private ServiceHttpClientConfig cdServiceClientConfig;
   @JsonProperty("ciServiceClientConfig") private ServiceHttpClientConfig ciServiceClientConfig;

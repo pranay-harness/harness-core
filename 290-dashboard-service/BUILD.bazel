@@ -3,6 +3,7 @@ load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//:tools/bazel/macros.bzl", "run_analysis")
 
 shared_dependencies = [
+    "//930-ng-core-clients:module",
     "//945-account-mgmt:module",
     "//948-access-control-sdk:module",
     "//960-persistence:module",
@@ -57,6 +58,7 @@ java_library(
         "@maven//:org_mockito_mockito_core",
         "@maven//:org_powermock_powermock_module_junit4",
         "@maven//:org_powermock_powermock_core",
+        "@maven//:org_powermock_powermock_api_mockito",
     ],
 )
 
