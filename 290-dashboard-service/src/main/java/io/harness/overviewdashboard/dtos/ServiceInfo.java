@@ -1,4 +1,4 @@
-package io.harness.dashboard.dtos;
+package io.harness.overviewdashboard.dtos;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -9,7 +9,7 @@ import lombok.Value;
 @Value
 @Builder
 @OwnedBy(HarnessTeam.PL)
-public class ChangeDetails {
-  long changeCount;
-  long changeRate;
+public class ServiceInfo {
+  String serviceName;
+  String ServiceInfo;
 }

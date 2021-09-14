@@ -1,4 +1,4 @@
-package io.harness.dashboard.dtos;
+package io.harness.overviewdashboard.dtos;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;

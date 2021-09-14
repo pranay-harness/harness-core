@@ -51,6 +51,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -151,6 +152,14 @@ public class UserResource {
       return ResponseDTO.newResponse(PageResponse.getEmptyPageResponse(pageRequest));
     }
     return ResponseDTO.newResponse(projectService.listProjectsForUser(userId.get(), accountId, pageRequest));
+  }
+
+  @GET
+  @Path("all-projects")
+  @ApiOperation(value = "get user all projects information", nickname = "getUserAllProjectsInfo")
+  public ResponseDTO<List<ProjectDTO>> getUserAllProjectsInfo(
+      @QueryParam("accountId") String accountId, @QueryParam("userId") String userId) {
+    return ResponseDTO.newResponse(projectService.listProjectsForUser(userId, accountId));
   }
 
   @POST

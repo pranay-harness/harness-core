@@ -80,6 +80,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -87,6 +88,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import org.apache.commons.lang3.tuple.Pair;
@@ -287,6 +289,37 @@ public class ProjectServiceImpl implements ProjectService {
     projectCriteria.orOperator(criteriaList.toArray(new Criteria[criteriaList.size()]));
     Page<Project> projectsPage = projectRepository.findAll(projectCriteria, PageUtils.getPageRequest(pageRequest));
     return getNGPageResponse(projectsPage.map(ProjectMapper::writeDTO));
+  }
+
+  @Override
+  public List<ProjectDTO> listProjectsForUser(String userId, String accountId) {
+    Criteria criteria = Criteria.where(UserMembershipKeys.userId)
+                            .is(userId)
+                            .and(UserMembershipKeys.scope + "." + ScopeKeys.accountIdentifier)
+                            .is(accountId)
+                            .and(UserMembershipKeys.scope + "." + ScopeKeys.orgIdentifier)
+                            .exists(true)
+                            .and(UserMembershipKeys.scope + "." + ScopeKeys.projectIdentifier)
+                            .exists(true);
+    Page<UserMembership> userMembershipPage = ngUserService.listUserMemberships(criteria, Pageable.unpaged());
+    List<UserMembership> userMembershipList = userMembershipPage.getContent();
+    if (userMembershipList.isEmpty()) {
+      return Collections.emptyList();
+    }
+    Criteria projectCriteria = Criteria.where(ProjectKeys.accountIdentifier).is(accountId);
+    List<Criteria> criteriaList = new ArrayList<>();
+    for (UserMembership userMembership : userMembershipList) {
+      Scope scope = userMembership.getScope();
+      criteriaList.add(Criteria.where(ProjectKeys.orgIdentifier)
+                           .is(scope.getOrgIdentifier())
+                           .and(ProjectKeys.identifier)
+                           .is(scope.getProjectIdentifier())
+                           .and(ProjectKeys.deleted)
+                           .is(false));
+    }
+    projectCriteria.orOperator(criteriaList.toArray(new Criteria[criteriaList.size()]));
+    List<Project> projectsList = projectRepository.findAll(projectCriteria);
+    return projectsList.stream().map(ProjectMapper::writeDTO).collect(Collectors.toList());
   }
 
   @Override

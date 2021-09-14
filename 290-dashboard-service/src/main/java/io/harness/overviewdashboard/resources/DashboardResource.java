@@ -1,4 +1,4 @@
-package io.harness.dashboard.resources;
+package io.harness.overviewdashboard.resources;
 
 import static io.harness.account.accesscontrol.AccountAccessControlPermissions.VIEW_ACCOUNT_PERMISSION;
 import static io.harness.account.accesscontrol.ResourceTypes.ACCOUNT;
@@ -9,12 +9,12 @@ import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.NGAccessControlCheck;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.dashboard.dtos.CountOverview;
-import io.harness.dashboard.dtos.DeploymentsStatsSummary;
-import io.harness.dashboard.dtos.TopProjectsPanel;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.overviewdashboard.dtos.CountOverview;
+import io.harness.overviewdashboard.dtos.DeploymentsStatsSummary;
+import io.harness.overviewdashboard.dtos.TopProjectsPanel;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.google.inject.Inject;
