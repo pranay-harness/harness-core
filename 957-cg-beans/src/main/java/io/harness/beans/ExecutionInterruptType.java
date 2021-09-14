@@ -1,9 +1,7 @@
 package io.harness.beans;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 
 /**
  * Describes different possible events for state.
@@ -11,7 +9,6 @@ import io.harness.annotations.dev.TargetModule;
  * @author Rishi
  */
 @OwnedBy(HarnessTeam.CDC)
-@TargetModule(HarnessModule._957_CG_BEANS)
 public enum ExecutionInterruptType {
   /**
    * Abort state event.
