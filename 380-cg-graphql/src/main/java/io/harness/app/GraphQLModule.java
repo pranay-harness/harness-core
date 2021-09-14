@@ -15,6 +15,12 @@ import software.wings.graphql.datafetcher.approval.ApproveOrRejectApprovalsDataF
 import software.wings.graphql.datafetcher.artifact.ArtifactCleanupDataFetcher;
 import software.wings.graphql.datafetcher.artifact.ArtifactConnectionDataFetcher;
 import software.wings.graphql.datafetcher.artifact.ArtifactDataFetcher;
+import software.wings.graphql.datafetcher.deploymentfreezewindow.CreateDeploymentFreezeWindowDataFetcher;
+import software.wings.graphql.datafetcher.deploymentfreezewindow.DeleteDeploymentFreezeWindowDataFetcher;
+import software.wings.graphql.datafetcher.deploymentfreezewindow.DeploymentFreezeWindowConnectionDataFetcher;
+import software.wings.graphql.datafetcher.deploymentfreezewindow.DeploymentFreezeWindowDataFetcher;
+import software.wings.graphql.datafetcher.deploymentfreezewindow.ToggleDeploymentFreezeWindowDataFetcher;
+import software.wings.graphql.datafetcher.deploymentfreezewindow.UpdateDeploymentFreezeWindowDataFetcher;
 import software.wings.graphql.datafetcher.event.CreateEventsConfigDataFetcher;
 import software.wings.graphql.datafetcher.event.DeleteEventsConfigDataFetcher;
 import software.wings.graphql.datafetcher.event.EventsConfigConnectionDataFetcher;
@@ -116,6 +122,12 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(ApprovalDetailsDataFetcher.class);
     bindDataFetcherWithAnnotation(DeploymentStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(ApproveOrRejectApprovalsDataFetcher.class);
+    bindDataFetcherWithAnnotation(CreateDeploymentFreezeWindowDataFetcher.class);
+    bindDataFetcherWithAnnotation(UpdateDeploymentFreezeWindowDataFetcher.class);
+    bindDataFetcherWithAnnotation(DeleteDeploymentFreezeWindowDataFetcher.class);
+    bindDataFetcherWithAnnotation(DeploymentFreezeWindowConnectionDataFetcher.class);
+    bindDataFetcherWithAnnotation(DeploymentFreezeWindowDataFetcher.class);
+    bindDataFetcherWithAnnotation(ToggleDeploymentFreezeWindowDataFetcher.class);
     binder()
         .bind(SecretManagerMutationDataFetcher.class)
         .annotatedWith(Names.named(SecretManagerDataFetchers.HASHICORP_VAULT_DATA_FETCHER.getName()))
