@@ -42,6 +42,9 @@ public class PlanCreationResponseBlobHelper {
     if (planCreationResponse.getGraphLayoutResponse() != null) {
       finalBlobResponseBuilder.setGraphLayoutInfo(planCreationResponse.getGraphLayoutResponse().getLayoutNodeInfo());
     }
+    if (planCreationResponse.getYamlUpdates() != null) {
+      finalBlobResponseBuilder.setYamlUpdates(planCreationResponse.getYamlUpdates());
+    }
     return finalBlobResponseBuilder.build();
   }
 }

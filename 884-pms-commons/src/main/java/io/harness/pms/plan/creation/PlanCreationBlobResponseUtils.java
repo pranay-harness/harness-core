@@ -21,6 +21,7 @@ import java.util.Map;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
+// Todo: Refactor this class. Readability is very bad for this class.
 @OwnedBy(HarnessTeam.PIPELINE)
 @UtilityClass
 @Slf4j
@@ -30,10 +31,22 @@ public class PlanCreationBlobResponseUtils {
       return;
     }
     addNodes(builder, other.getNodesMap());
-    addDependencies(builder, other.getDeps());
+    addDependenciesV2(builder, other);
     mergeStartingNodeId(builder, other.getStartingNodeId());
     mergeContext(builder, other.getContextMap());
     mergeLayoutNodeInfo(builder, other);
+    addYamlUpdates(builder, other);
+  }
+
+  public PlanCreationBlobResponse addYamlUpdates(
+      PlanCreationBlobResponse.Builder builder, PlanCreationBlobResponse currResponse) {
+    if (EmptyPredicate.isEmpty(currResponse.getYamlUpdates().getFqnToYamlMap())) {
+      return builder.build();
+    }
+    Map<String, String> yamlUpdateFqnMap = new HashMap<>(builder.getYamlUpdates().getFqnToYamlMap());
+    yamlUpdateFqnMap.putAll(currResponse.getYamlUpdates().getFqnToYamlMap());
+    builder.setYamlUpdates(YamlUpdates.newBuilder().putAllFqnToYaml(yamlUpdateFqnMap).build());
+    return builder.build();
   }
 
   public PlanCreationBlobResponse mergeContext(
@@ -61,12 +74,27 @@ public class PlanCreationBlobResponseUtils {
     return builder.build();
   }
 
-  public PlanCreationBlobResponse addDependencies(PlanCreationBlobResponse.Builder builder, Dependencies dependencies) {
-    if (dependencies == null || EmptyPredicate.isEmpty(dependencies.getDependenciesMap())) {
+  /**
+   * Performs the following operations:
+   * - Merges the dependencies we get from the currentResponse to the finalResponse
+   * - Updates the yaml for the finalResponse based on the yamlUpdates we get from currResponse so from next iteration,
+   * updated yaml will be used.
+   */
+  public PlanCreationBlobResponse addDependenciesV2(
+      PlanCreationBlobResponse.Builder builder, PlanCreationBlobResponse currResponse) {
+    Dependencies dependencies = currResponse.getDeps();
+    if (EmptyPredicate.isEmpty(dependencies.getDependenciesMap())) {
       return builder.build();
     }
     dependencies.getDependenciesMap().forEach((key, value) -> addDependency(builder, key, value));
-    builder.setDeps(builder.getDeps().toBuilder().setYaml(dependencies.getYaml()).build());
+
+    if (builder.getDeps() == null || EmptyPredicate.isEmpty(builder.getDeps().getYaml())) {
+      builder.setDeps(builder.getDeps().toBuilder().setYaml(dependencies.getYaml()).build());
+    } else {
+      String updatedPipelineJson =
+          mergeYamlUpdates(builder.getDeps().getYaml(), currResponse.getYamlUpdates().getFqnToYamlMap());
+      builder.setDeps(builder.getDeps().toBuilder().setYaml(updatedPipelineJson).build());
+    }
     return builder.build();
   }
 
@@ -123,16 +151,13 @@ public class PlanCreationBlobResponseUtils {
     }
   }
 
-  public PlanCreationBlobResponse mergeYamlUpdates(
-      PlanCreationBlobResponse.Builder builder, YamlUpdates yamlUpdatesFromResponse) {
-    String pipelineJson = builder.getDeps().getYaml();
-    Map<String, String> fqnToJsonMap = yamlUpdatesFromResponse.getFqnToYamlMap();
-    String updatedPipelineJson = mergeYamlUpdates(pipelineJson, fqnToJsonMap);
-    builder.setDeps(builder.getDeps().toBuilder().setYaml(updatedPipelineJson).build());
-    return builder.build();
-  }
-
+  /**
+   * Takes the current pipeline yaml and updates the yaml based on the fqn to yaml snippet passed in as param
+   */
   public String mergeYamlUpdates(String pipelineJson, Map<String, String> fqnToJsonMap) {
+    if (EmptyPredicate.isEmpty(fqnToJsonMap)) {
+      return pipelineJson;
+    }
     YamlNode pipelineNode;
     try {
       pipelineNode = YamlUtils.readTree(pipelineJson).getNode();
