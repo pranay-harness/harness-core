@@ -37,6 +37,12 @@ import io.harness.connector.ConnectorDTO;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.gitsync.ConnectorGitSyncHelper;
 import io.harness.controller.PrimaryVersionChangeScheduler;
+import io.harness.feature.client.PlanFeatureRegisterConfiguration;
+import io.harness.feature.client.example.ExampleUsageImpl;
+import io.harness.feature.client.services.PlanFeatureRegisterService;
+import io.harness.feature.client.usage.PlanFeatureUsageInterface;
+import io.harness.feature.constants.FeatureRestriction;
+import io.harness.feature.services.FeatureLoader;
 import io.harness.ff.FeatureFlagConfig;
 import io.harness.gitsync.AbstractGitSyncModule;
 import io.harness.gitsync.AbstractGitSyncSdkModule;
@@ -141,6 +147,7 @@ import software.wings.jersey.KryoFeature;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
@@ -335,6 +342,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerObservers(injector);
     registerOasResource(appConfig, environment, injector);
     registerManagedBeans(environment, injector);
+    initializePlanFeatureService(injector, appConfig);
+    initializePlanFeatureSDK(injector);
 
     registerMigrations(injector);
     MaintenanceController.forceMaintenance(false);
@@ -722,5 +731,20 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
                && resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(annotation) != null)
         || (resourceInfoAndRequest.getKey().getResourceClass() != null
             && resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(annotation) != null);
+  }
+
+  private void initializePlanFeatureService(Injector injector, NextGenConfiguration configuration) {
+    injector.getInstance(FeatureLoader.class).run(configuration);
+  }
+
+  private void initializePlanFeatureSDK(Injector injector) {
+    PlanFeatureRegisterConfiguration planFeatureClientConfiguration =
+        PlanFeatureRegisterConfiguration.builder()
+            .usageImplRegistrars(ImmutableMap.<FeatureRestriction, Class<? extends PlanFeatureUsageInterface>>builder()
+                                     .put(FeatureRestriction.TEST2, ExampleUsageImpl.class)
+                                     .put(FeatureRestriction.TEST3, ExampleUsageImpl.class)
+                                     .build())
+            .build();
+    injector.getInstance(PlanFeatureRegisterService.class).initialize(planFeatureClientConfiguration);
   }
 }

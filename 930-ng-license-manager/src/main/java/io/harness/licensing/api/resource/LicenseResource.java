@@ -14,7 +14,6 @@ import io.harness.licensing.beans.modules.ModuleLicenseDTO;
 import io.harness.licensing.beans.modules.StartTrialDTO;
 import io.harness.licensing.beans.response.CheckExpiryResultDTO;
 import io.harness.licensing.beans.summary.LicensesWithSummaryDTO;
-import io.harness.licensing.helpers.ModuleLicenseSummaryHelper;
 import io.harness.licensing.services.LicenseService;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -94,14 +93,7 @@ public class LicenseResource {
       @NotNull @PathParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(MODULE_TYPE_KEY) ModuleType moduleType) {
     validateModuleType(moduleType);
-
-    List<ModuleLicenseDTO> moduleLicenses = licenseService.getModuleLicenses(accountIdentifier, moduleType);
-    if (moduleLicenses.isEmpty()) {
-      return ResponseDTO.newResponse(null);
-    }
-
-    LicensesWithSummaryDTO response = ModuleLicenseSummaryHelper.generateSummary(moduleType, moduleLicenses);
-    return ResponseDTO.newResponse(response);
+    return ResponseDTO.newResponse(licenseService.getLicenseSummary(accountIdentifier, moduleType));
   }
 
   @GET

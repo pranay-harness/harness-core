@@ -112,6 +112,7 @@ BAZEL_MODULES="\
   //920-delegate-service-beans:module \
   //920-ng-signup:module \
   //925-access-control-service:module \
+  //925-plan-feature-service:module \
   //930-delegate-tasks:module \
   //930-ng-core-clients:module \
   //935-analyser-service:module \
@@ -124,6 +125,7 @@ BAZEL_MODULES="\
   //940-plan-feature-sdk:module \
   //940-resource-group-beans:module \
   //940-secret-manager-client:module \
+  //943-plan-feature-beans:module \
   //945-account-mgmt:module \
   //945-license-usage-sdk:module \
   //945-ng-audit-client:module \
