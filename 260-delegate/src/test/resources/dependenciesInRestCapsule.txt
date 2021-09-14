@@ -461,7 +461,7 @@ org.apache.lucene:lucene-backward-codecs:jar:8.7.0
 org.apache.lucene:lucene-core:jar:8.7.0
 org.apache.lucene:lucene-grouping:jar:8.7.0
 org.apache.lucene:lucene-highlighter:jar:8.7.0
-org.apache.lucene:lucene-joint:jar:8.7.0
+org.apache.lucene:lucene-join:jar:8.7.0
 org.apache.lucene:lucene-memory:jar:8.7.0
 org.apache.lucene:lucene-misc:jar:8.7.0
 org.apache.lucene:lucene-queries:jar:8.7.0
