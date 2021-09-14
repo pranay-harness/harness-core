@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+# Copyright 2021 Harness Inc.
+# 
+# Licensed under the Apache License, Version 2.0
+# http://www.apache.org/licenses/LICENSE-2.0
+
+
 function usage {
   echo "Script to add license header to files"
   echo
@@ -59,7 +65,7 @@ if [ ! -r $PATH_TO_INPUT ]; then
 fi
 
 function print_possible_alternates {
-  POTENTIAL_ALTERNATE=$(find . -name "$(basename $FILE)")
+  POTENTIAL_ALTERNATE=$(find . -name "$(basename "$FILE")")
   if [ ! -z "$POTENTIAL_ALTERNATE" ]; then
     echo "Has the file been moved to         $POTENTIAL_ALTERNATE"
   fi
@@ -79,11 +85,11 @@ function handle_double_slash {
 }
 
 function read_header_double_slash {
-  awk '{ if (/^\/\//) {print} else {exit} }' $FILE
+  awk '{ if (/^\/\//) {print} else {exit} }' "$FILE"
 }
 
 function add_header_double_slash {
-  FILE_CONTENT=$(cat $FILE)
+  FILE_CONTENT=$(cat "$FILE")
   write_file_header_and_content_double_slash
 }
 
@@ -102,11 +108,11 @@ function write_file_header_and_content_double_slash {
   if [ "$DRY_RUN" != "true" ]; then
     NEW_FILE="$FILE.new"
     while read license_line; do
-      echo "// $license_line" >> $NEW_FILE
+      echo "// $license_line" >> "$NEW_FILE"
     done <<<"$LICENSE_TEXT"
-    echo >> $NEW_FILE
-    echo "$FILE_CONTENT" >> $NEW_FILE
-    mv $NEW_FILE $FILE
+    echo >> "$NEW_FILE"
+    echo "$FILE_CONTENT" >> "$NEW_FILE"
+    mv "$NEW_FILE" "$FILE"
   fi
 }
 
@@ -124,11 +130,11 @@ function handle_slash_star {
 }
 
 function read_header_slash_star {
-  awk '{ if (/(\/\*| \*)/) {print} else {exit} }' $FILE
+  awk '{ if (/(\/\*| \*)/) {print} else {exit} }' "$FILE"
 }
 
 function add_header_slash_star {
-  FILE_CONTENT=$(cat $FILE)
+  FILE_CONTENT=$(cat "$FILE")
   write_file_header_and_content_slash_star
 }
 
@@ -146,14 +152,14 @@ function replace_header_slash_star {
 function write_file_header_and_content_slash_star {
   if [ "$DRY_RUN" != "true" ]; then
     NEW_FILE="$FILE.new"
-    echo "/*" > $NEW_FILE
+    echo "/*" > "$NEW_FILE"
     while read license_line; do
-      echo " * $license_line" >> $NEW_FILE
+      echo " * $license_line" >> "$NEW_FILE"
     done <<<"$LICENSE_TEXT"
-    echo " */" >> $NEW_FILE
-    echo >> $NEW_FILE
-    echo "$FILE_CONTENT" >> $NEW_FILE
-    mv $NEW_FILE $FILE
+    echo " */" >> "$NEW_FILE"
+    echo >> "$NEW_FILE"
+    echo "$FILE_CONTENT" >> "$NEW_FILE"
+    mv "$NEW_FILE" "$FILE"
   fi
 }
 
@@ -174,11 +180,11 @@ function handle_hash {
 }
 
 function read_header_hash {
-  awk '{ if (/^#/) {print} else {exit} }' $FILE
+  awk '{ if (/^#/) {print} else {exit} }' "$FILE"
 }
 
 function add_header_hash {
-  FILE_CONTENT=$(cat $FILE)
+  FILE_CONTENT=$(cat "$FILE")
   write_file_header_and_content_hash
 }
 
@@ -197,19 +203,19 @@ function write_file_header_and_content_hash {
   if [ "$DRY_RUN" != "true" ]; then
     NEW_FILE="$FILE.new"
     if [ "$IS_MISSING_SHE_BANG" != "TRUE" ]; then
-      head -1 <<<"$FILE_CONTENT" > $NEW_FILE
-      echo >> $NEW_FILE
+      head -1 <<<"$FILE_CONTENT" > "$NEW_FILE"
+      echo >> "$NEW_FILE"
     fi
     while read license_line; do
-      echo "# $license_line" >> $NEW_FILE
+      echo "# $license_line" >> "$NEW_FILE"
     done <<<"$LICENSE_TEXT"
-    echo >> $NEW_FILE
+    echo >> "$NEW_FILE"
     if [ "$IS_MISSING_SHE_BANG" != "TRUE" ]; then
-      echo "$FILE_CONTENT" | awk "NR > 1" >> $NEW_FILE
+      echo "$FILE_CONTENT" | awk "NR > 1" >> "$NEW_FILE"
     else
-      echo "$FILE_CONTENT" >> $NEW_FILE
+      echo "$FILE_CONTENT" >> "$NEW_FILE"
     fi
-    mv $NEW_FILE $FILE
+    mv "$NEW_FILE" "$FILE"
   fi
 }
 
@@ -227,11 +233,11 @@ function handle_double_hyphen {
 }
 
 function read_header_double_hyphen {
-  awk '{ if (/^--/) {print} else {exit} }' $FILE
+  awk '{ if (/^--/) {print} else {exit} }' "$FILE"
 }
 
 function add_header_double_hyphen {
-  FILE_CONTENT=$(cat $FILE)
+  FILE_CONTENT=$(cat "$FILE")
   write_file_header_and_content_double_hyphen
 }
 
@@ -250,11 +256,11 @@ function write_file_header_and_content_double_hyphen {
   if [ "$DRY_RUN" != "true" ]; then
     NEW_FILE="$FILE.new"
     while read license_line; do
-      echo "-- $license_line" >> $NEW_FILE
+      echo "-- $license_line" >> "$NEW_FILE"
     done <<<"$LICENSE_TEXT"
-    echo >> $NEW_FILE
-    echo "$FILE_CONTENT" >> $NEW_FILE
-    mv $NEW_FILE $FILE
+    echo >> "$NEW_FILE"
+    echo "$FILE_CONTENT" >> "$NEW_FILE"
+    mv "$NEW_FILE" "$FILE"
   fi
 }
 
@@ -266,7 +272,7 @@ LICENSE_TEXT=$(cat $PATH_TO_LICENSE)
 SOURCE_FILES=$(cat $PATH_TO_INPUT)
 PREVIOUSLY_OVERWRITTEN_HEADER=""
 
-for FILE in $(xargs <<<$SOURCE_FILES); do
+while read -r FILE; do
   if [ ! -e "$FILE" ]; then
     echo "Skipping file as it does not exist $FILE"
     print_possible_alternates
@@ -318,4 +324,4 @@ for FILE in $(xargs <<<$SOURCE_FILES); do
   else
     echo "Skipping file with extension '$FILE_TYPE' as it is not a supported filetype, file is $FILE"
   fi
-done
+done <<< "$SOURCE_FILES"
