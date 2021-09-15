@@ -3,6 +3,7 @@ package io.harness.pms.plan.execution.beans.dto;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.dto.FailureInfoDTO;
 import io.harness.pms.contracts.execution.ExecutionErrorInfo;
 import io.harness.pms.contracts.execution.run.NodeRunInfo;
 import io.harness.pms.contracts.execution.skip.SkipInfo;
@@ -40,5 +41,6 @@ public class GraphLayoutNodeDTO {
   SkipInfo skipInfo;
   NodeRunInfo nodeRunInfo;
   Boolean barrierFound;
-  ExecutionErrorInfo failureInfo;
+  @Deprecated ExecutionErrorInfo failureInfo;
+  FailureInfoDTO failureInfoDTO;
 }

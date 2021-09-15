@@ -24,7 +24,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
@@ -61,6 +63,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 public class AwsLambdaInstanceSyncPerpetualTaskCreatorTest extends CategoryTest {
   @Mock ServerlessInstanceService serverlessInstanceService;
   @Mock PerpetualTaskService perpetualTaskService;

@@ -34,7 +34,7 @@ harness-mongo:
   serverSelectionTimeout: 90000
   maxConnectionIdleTime: 600000
   connectionsPerHost: 300
-  indexManagerMode: AUTO
+  indexManagerMode: MANUAL
 
 events-mongo:
   uri: mongodb://localhost:30001/events
@@ -42,7 +42,7 @@ events-mongo:
   serverSelectionTimeout: 90000
   maxConnectionIdleTime: 600000
   connectionsPerHost: 300
-  indexManagerMode: AUTO
+  indexManagerMode: MANUAL
 
 cdc-mongo:
   uri: mongodb://localhost:30001/change-data-capture
@@ -50,7 +50,7 @@ cdc-mongo:
   serverSelectionTimeout: 90000
   maxConnectionIdleTime: 600000
   connectionsPerHost: 300
-  indexManagerMode: AUTO
+  indexManagerMode: MANUAL
 
 pms-harness:
   uri: mongodb://localhost:30001/pms-harness
@@ -58,7 +58,7 @@ pms-harness:
   serverSelectionTimeout: 90000
   maxConnectionIdleTime: 600000
   connectionsPerHost: 300
-  indexManagerMode: AUTO
+  indexManagerMode: MANUAL
 
 ng-harness:
   uri: mongodb://localhost:30001/ng-harness
@@ -66,7 +66,7 @@ ng-harness:
   serverSelectionTimeout: 90000
   maxConnectionIdleTime: 600000
   connectionsPerHost: 300
-  indexManagerMode: AUTO
+  indexManagerMode: MANUAL
 
 timescaledb:
   timescaledbUrl: "jdbc:postgresql://34.83.25.129:5432/harnessdev"

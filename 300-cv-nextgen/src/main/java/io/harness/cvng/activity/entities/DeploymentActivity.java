@@ -21,6 +21,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.FieldNameConstants;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @JsonTypeName("DEPLOYMENT")
 @FieldNameConstants(innerTypeName = "DeploymentActivityKeys")
@@ -86,5 +88,24 @@ public class DeploymentActivity extends Activity {
   @JsonIgnore
   public Instant getVerificationStartTime() {
     return Instant.ofEpochMilli(this.verificationStartTime);
+  }
+
+  public static class DeploymentActivityUpdatableEntity
+      extends ActivityUpdatableEntity<DeploymentActivity, DeploymentActivity> {
+    @Override
+    public Class getEntityClass() {
+      return DeploymentActivity.class;
+    }
+
+    @Override
+    public Query<DeploymentActivity> populateKeyQuery(Query<DeploymentActivity> query, DeploymentActivity changeEvent) {
+      throw new UnsupportedOperationException("DeploymentActivity events have no unique key");
+    }
+
+    @Override
+    public void setUpdateOperations(
+        UpdateOperations<DeploymentActivity> updateOperations, DeploymentActivity activity) {
+      setCommonUpdateOperations(updateOperations, activity);
+    }
   }
 }

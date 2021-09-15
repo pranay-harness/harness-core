@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class AwsElbConfig {
   private String loadBalancerName;
   private String targetGroupArn;

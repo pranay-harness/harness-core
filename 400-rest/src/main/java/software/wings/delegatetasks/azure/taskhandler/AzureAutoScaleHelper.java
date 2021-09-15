@@ -10,6 +10,8 @@ import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.client.AzureAutoScaleSettingsClient;
 import io.harness.azure.client.AzureComputeClient;
@@ -34,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @NoArgsConstructor
 @Slf4j
+@OwnedBy(HarnessTeam.CDP)
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class AzureAutoScaleHelper {
   @Inject private AzureAutoScaleSettingsClient azureAutoScaleSettingsClient;
@@ -50,15 +53,34 @@ public class AzureAutoScaleHelper {
         Optional<AutoscaleProfile> defaultAutoScaleProfileOp = azureAutoScaleSettingsClient.getDefaultAutoScaleProfile(
             azureConfig, setupTaskParameters.getSubscriptionId(), mostRecentActiveVMSS.resourceGroupName(),
             mostRecentActiveVMSS.id());
-        if (defaultAutoScaleProfileOp.isPresent()) {
-          return getMostRecentActiveVMSSInstanceLimits(
-              defaultAutoScaleProfileOp.get(), mostRecentActiveVMSS, logCallback);
-        }
+        return defaultAutoScaleProfileOp
+            .map(defaultAutoScaleProfile
+                -> getMostRecentActiveVMSSInstanceLimits(defaultAutoScaleProfile, mostRecentActiveVMSS, logCallback))
+            .orElse(getMostRecentActiveVMSSInstanceLimits(mostRecentActiveVMSS, logCallback));
       }
+
       return getDefaultVMSSInstanceLimits(logCallback);
     }
 
     return getWorkflowInputVMSSInstanceLimits(setupTaskParameters, logCallback);
+  }
+
+  private AzureVMSSAutoScaleSettingsData getMostRecentActiveVMSSInstanceLimits(
+      VirtualMachineScaleSet mostRecentActiveVMSS, ExecutionLogCallback logCallback) {
+    int minInstances = mostRecentActiveVMSS.capacity();
+    int maxInstances = mostRecentActiveVMSS.capacity();
+    int desiredInstances = mostRecentActiveVMSS.capacity();
+    String mostRecentActiveVMSSName = mostRecentActiveVMSS.name();
+
+    logCallback.saveExecutionLog(format("Using currently running min: [%d], max: [%d], desired: [%d] from VMSS: [%s]",
+                                     minInstances, maxInstances, desiredInstances, mostRecentActiveVMSSName),
+        INFO, SUCCESS);
+
+    return AzureVMSSAutoScaleSettingsData.builder()
+        .minInstances(minInstances)
+        .maxInstances(maxInstances)
+        .desiredInstances(desiredInstances)
+        .build();
   }
 
   private AzureVMSSAutoScaleSettingsData getMostRecentActiveVMSSInstanceLimits(AutoscaleProfile defaultAutoScaleProfile,

@@ -52,9 +52,9 @@
                             workload_info |
                             node_pool |
                             ce_recommendations |
-                            billing_data
+                            billing_data |
                             node_pool_aggregated |
-                            is_alive | time_bucket </includes>
+                            is_alive | time_bucket | anomalies </includes>
                             <excludes />
                             <inputSchema>public</inputSchema>
                         </database>

@@ -3,6 +3,9 @@ load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//:tools/bazel/macros.bzl", "run_analysis")
 
 shared_dependencies = [
+    "//930-ng-core-clients:module",
+    "//945-account-mgmt:module",
+    "//948-access-control-sdk:module",
     "//960-persistence:module",
     "//980-commons:module",
     "@maven//:io_dropwizard_dropwizard_configuration",
@@ -14,6 +17,10 @@ shared_dependencies = [
     "@maven//:com_google_cloud_google_cloud_bigquery",
     "@maven//:io_swagger_swagger_annotations",
     "@maven//:javax_ws_rs_javax_ws_rs_api",
+    "@maven//:org_slf4j_slf4j_api",
+    "@maven//:com_squareup_okhttp3_okhttp",
+    "@maven//:com_squareup_retrofit2_converter_jackson",
+    "@maven//:com_squareup_retrofit2_retrofit",
     "//:lombok",
 ]
 
@@ -51,6 +58,7 @@ java_library(
         "@maven//:org_mockito_mockito_core",
         "@maven//:org_powermock_powermock_module_junit4",
         "@maven//:org_powermock_powermock_core",
+        "@maven//:org_powermock_powermock_api_mockito",
     ],
 )
 

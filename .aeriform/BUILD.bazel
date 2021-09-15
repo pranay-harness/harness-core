@@ -66,6 +66,8 @@ aeriform("//280-batch-processing:tests")
 
 aeriform("//290-dashboard-service:module")
 
+aeriform("//290-dashboard-service:tests")
+
 aeriform("//300-cv-nextgen:module")
 
 aeriform("//300-cv-nextgen:tests")
@@ -134,9 +136,13 @@ aeriform("//440-connector-nextgen:module")
 
 aeriform("//440-connector-nextgen:tests")
 
+aeriform("//440-secret-management-service:module")
+
 aeriform("//441-cg-instance-sync:module")
 
 aeriform("//445-cg-connectors:module")
+
+aeriform("//445-gitops:module")
 
 aeriform("//450-ce-views:module")
 
@@ -360,6 +366,8 @@ aeriform("//950-ng-project-n-orgs:module")
 
 aeriform("//950-ng-project-n-orgs:tests")
 
+aeriform("//950-ng-signup-beans:module")
+
 aeriform("//950-opa-client:module")
 
 aeriform("//950-opa-client:tests")
@@ -453,8 +461,6 @@ aeriform("//960-ng-core-beans:module")
 aeriform("//960-ng-license-beans:module")
 
 aeriform("//960-ng-license-usage-beans:module")
-
-aeriform("//960-ng-signup-beans:module")
 
 aeriform("//960-notification-beans:module")
 

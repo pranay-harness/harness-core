@@ -11,6 +11,14 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
+filegroup(
+    name = "delegate_proxy_files",
+    srcs = glob([
+        "destination/storage/**/*",
+    ]),
+    visibility = ["//visibility:public"],
+)
+
 ########################################################################################################
 ####################################################  Go Starts Here    ####################################################
 ########################################################################################################
@@ -32,7 +40,7 @@ load("@bazel_gazelle//:def.bzl", "gazelle")
 # gazelle:prefix github.com/wings-software/portal
 gazelle(name = "gazelle")
 
-load("@io_bazel_rules_go//go:def.bzl", "nogo")
+load("@io_bazel_rules_go//go:def.bzl", "go_path", "nogo")
 
 buildifier(
     name = "buildifier",
@@ -42,6 +50,33 @@ nogo(
     name = "nogo_vet",
     vet = True,
     visibility = ["//visibility:public"],
+)
+
+# Reference: https://github.com/google/gvisor/blob/release-20210830.0/BUILD#L101
+
+# gopath defines a directory that is structured in a way that is compatible
+# with standard Go tools. Things like godoc, editors and refactor tools should
+# work as expected.
+#
+# The files in this tree are symlinks to the true sources.
+go_path(
+    name = "gopath",
+    mode = "link",
+    deps = [
+        # Main binaries.
+        #
+        # For reasons related to reproducibility of the generated
+        # files, in order to ensure that :gopath produces only a
+        # a single "pure" version of all files, we can only depend
+        # on go_library targets here, and not go_binary.
+
+        # Note: If any library is not referenced by below ones, then add them in this list.
+        "//product/ci/engine:engine_lib",
+        "//product/ci/addon:addon_lib",
+        "//product/ci/scm:scm_lib",
+        "//product/ci/ti-service:ti-service_lib",
+        "//product/log-service:log-service_lib",
+    ],
 )
 
 ########################################################################################################

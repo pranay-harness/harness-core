@@ -1,10 +1,9 @@
 package io.harness.cvng.core.services.impl.monitoredService;
 
 import static io.harness.annotations.dev.HarnessTeam.CV;
-import static io.harness.ng.core.utils.NGUtils.validate;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceRef;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceDependencyDTO;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.entities.ServiceDependency;
 import io.harness.cvng.core.entities.ServiceDependency.Key;
@@ -30,27 +29,25 @@ public class ServiceDependencyServiceImpl implements ServiceDependencyService {
   @Inject private HPersistence hPersistence;
 
   @Override
-  public void updateDependencies(String accountId, String orgIdentifier, String projectIdentifier,
-      String toServiceIdentifier, String envIdentifier, Set<ServiceRef> fromServiceIdentifiers) {
+  public void updateDependencies(ProjectParams projectParams, String toMonitoredServiceIdentifier,
+      Set<ServiceDependencyDTO> fromMonitoredServiceIdentifiers) {
     List<ServiceDependency> dependencies = new ArrayList<>();
-    fromServiceIdentifiers.forEach(fromServiceIdentifier -> {
+    fromMonitoredServiceIdentifiers.forEach(fromServiceIdentifier -> {
       dependencies.add(ServiceDependency.builder()
-                           .accountId(accountId)
-                           .orgIdentifier(orgIdentifier)
-                           .projectIdentifier(projectIdentifier)
-                           .environmentIdentifier(envIdentifier)
-                           .fromServiceIdentifier(fromServiceIdentifier.getServiceRef())
-                           .toServiceIdentifier(toServiceIdentifier)
+                           .accountId(projectParams.getAccountIdentifier())
+                           .orgIdentifier(projectParams.getOrgIdentifier())
+                           .projectIdentifier(projectParams.getProjectIdentifier())
+                           .fromMonitoredServiceIdentifier(fromServiceIdentifier.getMonitoredServiceIdentifier())
+                           .toMonitoredServiceIdentifier(toMonitoredServiceIdentifier)
+                           .serviceDependencyMetadata(fromServiceIdentifier.getDependencyMetadata())
                            .build());
     });
-    validate(dependencies);
     List<ServiceDependency> oldDependencies =
         hPersistence.createQuery(ServiceDependency.class)
-            .filter(ServiceDependencyKeys.accountId, accountId)
-            .filter(ServiceDependencyKeys.orgIdentifier, orgIdentifier)
-            .filter(ServiceDependencyKeys.projectIdentifier, projectIdentifier)
-            .filter(ServiceDependencyKeys.environmentIdentifier, envIdentifier)
-            .filter(ServiceDependencyKeys.toServiceIdentifier, toServiceIdentifier)
+            .filter(ServiceDependencyKeys.accountId, projectParams.getAccountIdentifier())
+            .filter(ServiceDependencyKeys.orgIdentifier, projectParams.getOrgIdentifier())
+            .filter(ServiceDependencyKeys.projectIdentifier, projectParams.getProjectIdentifier())
+            .filter(ServiceDependencyKeys.toMonitoredServiceIdentifier, toMonitoredServiceIdentifier)
             .asList();
     executeDBOperations(dependencies, oldDependencies);
   }
@@ -72,44 +69,53 @@ public class ServiceDependencyServiceImpl implements ServiceDependencyService {
   }
 
   @Override
-  public void deleteDependenciesForService(String accountId, String orgIdentifier, String projectIdentifier,
-      String serviceIdentifier, String envIdentifier) {
-    Query<ServiceDependency> toServiceQuery = hPersistence.createQuery(ServiceDependency.class)
-                                                  .filter(ServiceDependencyKeys.accountId, accountId)
-                                                  .filter(ServiceDependencyKeys.orgIdentifier, orgIdentifier)
-                                                  .filter(ServiceDependencyKeys.projectIdentifier, projectIdentifier)
-                                                  .filter(ServiceDependencyKeys.environmentIdentifier, envIdentifier)
-                                                  .filter(ServiceDependencyKeys.toServiceIdentifier, serviceIdentifier);
-    hPersistence.deleteOnServer(toServiceQuery);
+  public void deleteDependenciesForService(ProjectParams projectParams, String monitoredServiceIdentifier) {
+    Query<ServiceDependency> toServiceQuery =
+        hPersistence.createQuery(ServiceDependency.class)
+            .filter(ServiceDependencyKeys.accountId, projectParams.getAccountIdentifier())
+            .filter(ServiceDependencyKeys.orgIdentifier, projectParams.getOrgIdentifier())
+            .filter(ServiceDependencyKeys.projectIdentifier, projectParams.getProjectIdentifier())
+            .filter(ServiceDependencyKeys.toMonitoredServiceIdentifier, monitoredServiceIdentifier);
+    hPersistence.delete(toServiceQuery);
+
+    Query<ServiceDependency> fromServiceQuery =
+        hPersistence.createQuery(ServiceDependency.class)
+            .filter(ServiceDependencyKeys.accountId, projectParams.getAccountIdentifier())
+            .filter(ServiceDependencyKeys.orgIdentifier, projectParams.getOrgIdentifier())
+            .filter(ServiceDependencyKeys.projectIdentifier, projectParams.getProjectIdentifier())
+            .filter(ServiceDependencyKeys.fromMonitoredServiceIdentifier, monitoredServiceIdentifier);
+    hPersistence.delete(fromServiceQuery);
   }
 
   @Override
-  public Set<ServiceRef> getDependentServicesForMonitoredService(String accountId, String orgIdentifier,
-      String projectIdentifier, String serviceIdentifier, String envIdentifier) {
-    List<ServiceDependency> dependencies = getServiceDependencies(ProjectParams.builder()
-                                                                      .accountIdentifier(accountId)
-                                                                      .orgIdentifier(orgIdentifier)
-                                                                      .projectIdentifier(projectIdentifier)
-                                                                      .build(),
-        serviceIdentifier, envIdentifier);
+  public Set<ServiceDependencyDTO> getDependentServicesForMonitoredService(
+      ProjectParams projectParams, String monitoredServiceIdentifier) {
+    Query<ServiceDependency> query =
+        hPersistence.createQuery(ServiceDependency.class)
+            .filter(ServiceDependencyKeys.accountId, projectParams.getAccountIdentifier())
+            .filter(ServiceDependencyKeys.orgIdentifier, projectParams.getOrgIdentifier())
+            .filter(ServiceDependencyKeys.projectIdentifier, projectParams.getProjectIdentifier())
+            .filter(ServiceDependencyKeys.toMonitoredServiceIdentifier, monitoredServiceIdentifier);
+    List<ServiceDependency> dependencies = query.asList();
     return dependencies.stream()
-        .map(d -> ServiceRef.builder().serviceRef(d.getFromServiceIdentifier()).build())
+        .map(d
+            -> ServiceDependencyDTO.builder()
+                   .monitoredServiceIdentifier(d.getFromMonitoredServiceIdentifier())
+                   .dependencyMetadata(d.getServiceDependencyMetadata())
+                   .build())
         .collect(Collectors.toSet());
   }
 
   @Override
   public List<ServiceDependency> getServiceDependencies(
-      @NonNull ProjectParams projectParams, @Nullable String serviceIdentifier, @Nullable String envIdentifier) {
+      @NonNull ProjectParams projectParams, @Nullable List<String> monitoredServiceIdentifiers) {
     Query<ServiceDependency> query =
         hPersistence.createQuery(ServiceDependency.class)
             .filter(ServiceDependencyKeys.accountId, projectParams.getAccountIdentifier())
             .filter(ServiceDependencyKeys.orgIdentifier, projectParams.getOrgIdentifier())
             .filter(ServiceDependencyKeys.projectIdentifier, projectParams.getProjectIdentifier());
-    if (envIdentifier != null) {
-      query.filter(ServiceDependencyKeys.environmentIdentifier, envIdentifier);
-    }
-    if (serviceIdentifier != null) {
-      query.filter(ServiceDependencyKeys.toServiceIdentifier, serviceIdentifier);
+    if (monitoredServiceIdentifiers != null) {
+      query.field(ServiceDependencyKeys.toMonitoredServiceIdentifier).in(monitoredServiceIdentifiers);
     }
 
     return query.asList();

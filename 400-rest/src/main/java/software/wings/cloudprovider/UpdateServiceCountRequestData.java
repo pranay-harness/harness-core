@@ -2,7 +2,9 @@ package software.wings.cloudprovider;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
@@ -16,6 +18,7 @@ import lombok.Data;
 @OwnedBy(CDP)
 @Data
 @Builder
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class UpdateServiceCountRequestData {
   private String region;
   private String cluster;

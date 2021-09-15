@@ -3,6 +3,7 @@ package software.wings.service.delegate;
 import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.Delegate.DelegateBuilder;
+import static io.harness.rule.OwnerRule.ARPIT;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.MARKOM;
 import static io.harness.rule.OwnerRule.NICOLAS;
@@ -30,6 +31,7 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateEntityOwner;
@@ -45,6 +47,7 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.observer.Subject;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
+import io.harness.secrets.SecretsDao;
 import io.harness.service.intfc.DelegateProfileObserver;
 
 import software.wings.WingsBaseTest;
@@ -88,6 +91,7 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
   @Mock private Producer eventProducer;
   @InjectMocks @Inject private DelegateProfileServiceImpl delegateProfileService;
   @Inject private HPersistence persistence;
+  @Inject private SecretsDao secretsDao;
 
   private DelegateProfileBuilder createDelegateProfileBuilder() {
     return DelegateProfile.builder()
@@ -408,14 +412,21 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void testUpdateShouldUpdateProfile() {
-    // String uuid = generateUuid();
     String updatedName = "updatedName";
     String updatedDescription = "updatedDescription";
-    String updatedScript = "updatedScript";
+    String updatedScript =
+        "export AWS_ACCESS_KEY_ID=${secrets.getValue(\"dummySecret\")} export AWS_SECRET_ACCESS_KEY=${secrets.getValue(\"dummySecret2\")}";
     List<String> profileSelectors = Arrays.asList("selector1", "selector2");
 
+    EncryptedData dummySecret =
+        EncryptedData.builder().name("dummySecret").accountId(ACCOUNT_ID).scopedToAccount(true).build();
+    EncryptedData dummySecret2 =
+        EncryptedData.builder().name("dummySecret2").accountId(ACCOUNT_ID).scopedToAccount(true).build();
+    secretsDao.saveSecret(dummySecret);
+    secretsDao.saveSecret(dummySecret2);
+
     DelegateProfile delegateProfile =
-        createDelegateProfileBuilder() /*.uuid(uuid)*/.startupScript("script").approvalRequired(false).build();
+        createDelegateProfileBuilder().startupScript("script").approvalRequired(false).build();
     DelegateProfileScopingRule rule = DelegateProfileScopingRule.builder().description("test").build();
     delegateProfile.setScopingRules(Collections.singletonList(rule));
     persistence.save(delegateProfile);
@@ -438,31 +449,137 @@ public class DelegateProfileServiceTest extends WingsBaseTest {
     verify(delegateProfileSubject).fireInform(any(), any(DelegateProfile.class), any(DelegateProfile.class));
   }
 
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = ARPIT)
+  @Category(UnitTests.class)
+  public void testShouldNotUpdateProfileIfSecretUsedIsNotPresent() {
+    String updatedName = "updatedName";
+    String updatedDescription = "updatedDescription";
+    String updatedScript = "export AWS_ACCESS_KEY_ID=${secrets.getValue(\"dummySecret\")}";
+    DelegateProfile delegateProfile =
+        createDelegateProfileBuilder().startupScript("script").approvalRequired(false).build();
+    persistence.save(delegateProfile);
+
+    delegateProfile.setName(updatedName);
+    delegateProfile.setDescription(updatedDescription);
+    delegateProfile.setStartupScript(updatedScript);
+    delegateProfileService.update(delegateProfile);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = ARPIT)
+  @Category(UnitTests.class)
+  public void testShouldNotUpdateProfileIfSecretUsedIsNotScopedToAccount() {
+    String updatedName = "updatedName";
+    String updatedDescription = "updatedDescription";
+    String updatedScript = "export AWS_ACCESS_KEY_ID=${secrets.getValue(\"dummySecret\")}";
+    EncryptedData dummySecret =
+        EncryptedData.builder().name("dummySecret").accountId(ACCOUNT_ID).scopedToAccount(false).build();
+    secretsDao.saveSecret(dummySecret);
+    DelegateProfile delegateProfile =
+        createDelegateProfileBuilder().startupScript("script").approvalRequired(false).build();
+    persistence.save(delegateProfile);
+
+    delegateProfile.setName(updatedName);
+    delegateProfile.setDescription(updatedDescription);
+    delegateProfile.setStartupScript(updatedScript);
+    delegateProfileService.update(delegateProfile);
+  }
+
+  // TODO Remove two different profile tests for Cg and Ng seperately when the ScriptSecret check for ng has been
+  // developed (DEL-2401).
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
   public void testShouldAddProfile() {
     String profileName = "testProfileName";
+    String profileName2 = "testProfileName2";
     String profileDescription = "testProfileDescription";
-    String accountId = generateUuid();
     List<String> profileSelectors = Arrays.asList("testSelector1", "testSelector2");
 
-    DelegateProfile delegateProfile = createDelegateProfileBuilder()
-                                          .accountId(accountId)
-                                          .name(profileName)
-                                          .description(profileDescription)
-                                          .startupScript("script")
-                                          .selectors(profileSelectors)
-                                          .build();
+    DelegateProfile delegateCgProfileHavingSecret =
+        createDelegateProfileBuilder()
+            .accountId(ACCOUNT_ID)
+            .name(profileName)
+            .description(profileDescription)
+            .startupScript(
+                "script export AWS_ACCESS_KEY_ID=${secrets.getValue(\"dummySecret\")} export AWS_SECRET_ACCESS_KEY=${secrets.getValue(\"dummySecret2\")}")
+            .selectors(profileSelectors)
+            .ng(false)
+            .build();
 
-    DelegateProfile savedDelegateProfile = delegateProfileService.add(delegateProfile);
+    EncryptedData dummySecret =
+        EncryptedData.builder().name("dummySecret").accountId(ACCOUNT_ID).scopedToAccount(true).build();
+    EncryptedData dummySecret2 =
+        EncryptedData.builder().name("dummySecret2").accountId(ACCOUNT_ID).scopedToAccount(true).build();
+    secretsDao.saveSecret(dummySecret);
+    secretsDao.saveSecret(dummySecret2);
 
-    assertThat(savedDelegateProfile).isNotNull();
-    assertThat(savedDelegateProfile.getAccountId()).isEqualTo(accountId);
-    assertThat(savedDelegateProfile.getName()).isEqualTo(profileName);
-    assertThat(savedDelegateProfile.getDescription()).isEqualTo(profileDescription);
-    assertThat(savedDelegateProfile.getSelectors().size()).isEqualTo(2);
-    assertThat(savedDelegateProfile.getSelectors()).isEqualTo(profileSelectors);
+    DelegateProfile delegateNgProfileWithoutSecret = createDelegateProfileBuilder()
+                                                         .accountId(ACCOUNT_ID)
+                                                         .name(profileName2)
+                                                         .description(profileDescription)
+                                                         .startupScript("script")
+                                                         .selectors(profileSelectors)
+                                                         .ng(true)
+                                                         .build();
+
+    DelegateProfile savedCgDelegateProfile = delegateProfileService.add(delegateCgProfileHavingSecret);
+    DelegateProfile savedNgDelegateProfile = delegateProfileService.add(delegateNgProfileWithoutSecret);
+
+    assertThat(savedCgDelegateProfile).isNotNull();
+    assertThat(savedCgDelegateProfile.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(savedCgDelegateProfile.getName()).isEqualTo(profileName);
+    assertThat(savedCgDelegateProfile.getDescription()).isEqualTo(profileDescription);
+    assertThat(savedCgDelegateProfile.getSelectors().size()).isEqualTo(2);
+    assertThat(savedCgDelegateProfile.getSelectors()).isEqualTo(profileSelectors);
+
+    assertThat(savedNgDelegateProfile).isNotNull();
+    assertThat(savedNgDelegateProfile.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(savedNgDelegateProfile.getName()).isEqualTo(profileName2);
+    assertThat(savedNgDelegateProfile.getDescription()).isEqualTo(profileDescription);
+    assertThat(savedNgDelegateProfile.getSelectors().size()).isEqualTo(2);
+    assertThat(savedNgDelegateProfile.getSelectors()).isEqualTo(profileSelectors);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = ARPIT)
+  @Category(UnitTests.class)
+  public void testShouldNotAddCgProfileIfSecretUsedIsNotScopedToAccount() {
+    List<String> profileSelectors = Arrays.asList("testSelector1", "testSelector2");
+
+    DelegateProfile delegateCgProfileHavingSecret =
+        createDelegateProfileBuilder()
+            .accountId(ACCOUNT_ID)
+            .name("testProfileName")
+            .description("testProfileDescription")
+            .startupScript("script export AWS_ACCESS_KEY_ID=${secrets.getValue(\"dummySecret\")}")
+            .selectors(profileSelectors)
+            .ng(false)
+            .build();
+    EncryptedData dummySecret =
+        EncryptedData.builder().name("dummySecret").accountId(ACCOUNT_ID).scopedToAccount(false).build();
+    secretsDao.saveSecret(dummySecret);
+    delegateProfileService.add(delegateCgProfileHavingSecret);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = ARPIT)
+  @Category(UnitTests.class)
+  public void testShouldNotAddCgProfileIfSecretUsedIsNotPresent() {
+    List<String> profileSelectors = Arrays.asList("testSelector1", "testSelector2");
+
+    DelegateProfile delegateProfile =
+        createDelegateProfileBuilder()
+            .accountId(ACCOUNT_ID)
+            .name("testProfileName")
+            .description("testProfileDescription")
+            .startupScript("script export AWS_ACCESS_KEY_ID=${secrets.getValue(\"dummySecret\")}")
+            .selectors(profileSelectors)
+            .ng(false)
+            .build();
+
+    delegateProfileService.add(delegateProfile);
   }
 
   @Test

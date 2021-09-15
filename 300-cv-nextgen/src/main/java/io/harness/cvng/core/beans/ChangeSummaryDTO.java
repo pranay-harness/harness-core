@@ -1,6 +1,6 @@
 package io.harness.cvng.core.beans;
 
-import io.harness.cvng.core.types.ChangeCategory;
+import io.harness.cvng.beans.change.ChangeCategory;
 
 import java.util.Map;
 import lombok.Builder;

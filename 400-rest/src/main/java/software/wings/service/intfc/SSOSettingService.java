@@ -5,13 +5,13 @@ import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SE
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.ng.core.account.OauthProviderType;
 import io.harness.validation.Create;
 
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SamlSettings;
-import software.wings.security.authentication.OauthProviderType;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.util.Iterator;

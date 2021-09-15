@@ -92,11 +92,11 @@ import io.harness.connector.validator.ArtifactoryConnectionValidator;
 import io.harness.connector.validator.AwsConnectorValidator;
 import io.harness.connector.validator.CEAwsConnectorValidator;
 import io.harness.connector.validator.CEAzureConnectorValidator;
+import io.harness.connector.validator.CEGcpConnectorValidator;
 import io.harness.connector.validator.CEKubernetesConnectionValidator;
 import io.harness.connector.validator.CVConnectorValidator;
 import io.harness.connector.validator.ConnectionValidator;
 import io.harness.connector.validator.DockerConnectionValidator;
-import io.harness.connector.validator.GcpCloudCostConnectorValidator;
 import io.harness.connector.validator.GcpConnectorValidator;
 import io.harness.connector.validator.HttpHelmRepoConnectionValidator;
 import io.harness.connector.validator.JiraConnectorValidator;
@@ -207,7 +207,7 @@ public class ConnectorRegistryFactory {
         new ConnectorRegistrar(ConnectorCategory.CLOUD_COST, CEAzureConnectorValidator.class,
             NoOpConnectorValidationParamsProvider.class, CEAzureDTOToEntity.class, CEAzureEntityToDTO.class));
     registrar.put(ConnectorType.GCP_CLOUD_COST,
-        new ConnectorRegistrar(ConnectorCategory.CLOUD_COST, GcpCloudCostConnectorValidator.class,
+        new ConnectorRegistrar(ConnectorCategory.CLOUD_COST, CEGcpConnectorValidator.class,
             NoOpConnectorValidationParamsProvider.class, GcpCloudCostDTOToEntity.class, GcpCloudCostEntityToDTO.class));
     registrar.put(ConnectorType.HTTP_HELM_REPO,
         new ConnectorRegistrar(ConnectorCategory.ARTIFACTORY, HttpHelmRepoConnectionValidator.class,

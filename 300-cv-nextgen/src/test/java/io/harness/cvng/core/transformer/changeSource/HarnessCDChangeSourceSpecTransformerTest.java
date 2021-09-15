@@ -43,7 +43,6 @@ public class HarnessCDChangeSourceSpecTransformerTest {
     ChangeSourceDTO changeSourceDTO = builderFactory.getHarnessCDChangeSourceDTOBuilder().build();
     ChangeSource cdngChangeSource = changeSourceSpecTransformer.getEntity(environmentParams, changeSourceDTO);
     assertThat(cdngChangeSource.getClass()).isEqualTo(HarnessCDChangeSource.class);
-    assertThat(cdngChangeSource.getDescription()).isEqualTo(changeSourceDTO.getDescription());
     assertThat(cdngChangeSource.getIdentifier()).isEqualTo(changeSourceDTO.getIdentifier());
     assertThat(cdngChangeSource.getAccountId()).isEqualTo(builderFactory.getContext().getAccountId());
     assertThat(cdngChangeSource.getProjectIdentifier()).isEqualTo(builderFactory.getContext().getProjectIdentifier());

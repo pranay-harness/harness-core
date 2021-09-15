@@ -13,8 +13,8 @@ import io.harness.pms.contracts.service.SweepingOutputResolveBlobResponse;
 import io.harness.pms.contracts.service.SweepingOutputServiceGrpc.SweepingOutputServiceBlockingStub;
 import io.harness.pms.sdk.core.data.ExecutionSweepingOutput;
 import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
-import io.harness.pms.sdk.core.grpc.client.PmsSdkGrpcClientUtils;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
+import io.harness.pms.utils.PmsGrpcClientUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -32,7 +32,7 @@ public class ExecutionSweepingGrpcOutputService implements ExecutionSweepingOutp
   @Override
   public ExecutionSweepingOutput resolve(Ambiance ambiance, RefObject refObject) {
     SweepingOutputResolveBlobResponse resolve =
-        PmsSdkGrpcClientUtils.retryAndProcessException(sweepingOutputServiceBlockingStub::resolve,
+        PmsGrpcClientUtils.retryAndProcessException(sweepingOutputServiceBlockingStub::resolve,
             SweepingOutputResolveBlobRequest.newBuilder().setAmbiance(ambiance).setRefObject(refObject).build());
     return RecastOrchestrationUtils.fromJson(resolve.getStepTransput(), ExecutionSweepingOutput.class);
   }
@@ -47,14 +47,14 @@ public class ExecutionSweepingGrpcOutputService implements ExecutionSweepingOutp
     }
 
     SweepingOutputConsumeBlobResponse sweepingOutputConsumeBlobResponse =
-        PmsSdkGrpcClientUtils.retryAndProcessException(sweepingOutputServiceBlockingStub::consume, builder.build());
+        PmsGrpcClientUtils.retryAndProcessException(sweepingOutputServiceBlockingStub::consume, builder.build());
     return sweepingOutputConsumeBlobResponse.getResponse();
   }
 
   @Override
   public OptionalSweepingOutput resolveOptional(Ambiance ambiance, RefObject refObject) {
     OptionalSweepingOutputResolveBlobResponse resolve =
-        PmsSdkGrpcClientUtils.retryAndProcessException(sweepingOutputServiceBlockingStub::resolveOptional,
+        PmsGrpcClientUtils.retryAndProcessException(sweepingOutputServiceBlockingStub::resolveOptional,
             SweepingOutputResolveBlobRequest.newBuilder().setAmbiance(ambiance).setRefObject(refObject).build());
     return OptionalSweepingOutput.builder()
         .output(RecastOrchestrationUtils.fromJson(resolve.getStepTransput(), ExecutionSweepingOutput.class))

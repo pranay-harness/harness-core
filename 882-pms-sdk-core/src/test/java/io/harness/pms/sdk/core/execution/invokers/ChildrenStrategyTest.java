@@ -67,7 +67,7 @@ public class ChildrenStrategyTest extends PmsSdkCoreTestBase {
     InvokerPackage invokerPackage =
         InvokerPackage.builder()
             .ambiance(ambiance)
-            .executionMode(ExecutionMode.ASYNC)
+            .executionMode(ExecutionMode.CHILDREN)
             .passThroughData(null)
             .stepParameters(TestChildrenStepParameters.builder().parallelNodeId(childNodeId).build())
             .build();

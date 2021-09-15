@@ -2,7 +2,7 @@ package io.harness.cvng.core.beans.monitoredService.changeSourceSpec;
 
 import static io.harness.cvng.CVConstants.DATA_SOURCE_TYPE;
 
-import io.harness.cvng.core.types.ChangeSourceType;
+import io.harness.cvng.beans.change.ChangeSourceType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -18,7 +18,8 @@ import lombok.experimental.SuperBuilder;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonSubTypes({
   @JsonSubTypes.Type(value = HarnessCDChangeSourceSpec.class, name = "HarnessCD")
-  , @JsonSubTypes.Type(value = PagerDutyChangeSourceSpec.class, name = "PagerDuty")
+  , @JsonSubTypes.Type(value = PagerDutyChangeSourceSpec.class, name = "PagerDuty"),
+      @JsonSubTypes.Type(value = KubernetesChangeSourceSpec.class, name = "K8sCluster")
 })
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = DATA_SOURCE_TYPE, include = JsonTypeInfo.As.EXTERNAL_PROPERTY)
 public abstract class ChangeSourceSpec {

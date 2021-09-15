@@ -69,12 +69,19 @@ public final class LogAnalysisResult implements PersistentEntity, UuidAware, Cre
       return Risk.getRiskFromRiskScore(riskScore);
     }
 
-    public void setTag(LogAnalysisTag tag) {
-      this.tag = tag;
-      if (tag.equals(LogAnalysisTag.KNOWN)) {
-        this.riskScore = 0.0;
-      } else if (tag.equals(LogAnalysisTag.UNKNOWN)) {
-        this.riskScore = 1.0;
+    public static class AnalysisResultBuilder {
+      public AnalysisResultBuilder tag(LogAnalysisTag logAnalysisTag) {
+        setTag(logAnalysisTag);
+        return this;
+      }
+
+      public void setTag(LogAnalysisTag tag) {
+        this.tag = tag;
+        if (tag.equals(LogAnalysisTag.KNOWN)) {
+          this.riskScore = 0.0;
+        } else if (tag.equals(LogAnalysisTag.UNKNOWN)) {
+          this.riskScore = 1.0;
+        }
       }
     }
   }

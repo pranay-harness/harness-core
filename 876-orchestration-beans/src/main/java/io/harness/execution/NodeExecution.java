@@ -131,6 +131,10 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
     public static final String planExecutionId = NodeExecutionKeys.ambiance + "."
         + "planExecutionId";
 
+    public static final String stepCategory = NodeExecutionKeys.node + "."
+        + "stepType"
+        + "."
+        + "stepCategory";
     public static final String planNodeId = NodeExecutionKeys.node + "."
         + "uuid";
     public static final String planNodeIdentifier = NodeExecutionKeys.node + "."

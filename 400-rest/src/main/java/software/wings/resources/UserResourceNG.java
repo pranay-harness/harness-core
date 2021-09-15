@@ -17,7 +17,6 @@ import io.harness.mappers.AccountMapper;
 import io.harness.ng.core.dto.UserInviteDTO;
 import io.harness.ng.core.user.PasswordChangeDTO;
 import io.harness.ng.core.user.PasswordChangeResponse;
-import io.harness.ng.core.user.SignupInviteDTO;
 import io.harness.ng.core.user.TwoFactorAdminOverrideSettings;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserRequestDTO;
@@ -25,6 +24,7 @@ import io.harness.rest.RestResponse;
 import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.security.dto.UserPrincipal;
+import io.harness.signup.dto.SignupInviteDTO;
 import io.harness.user.remote.UserFilterNG;
 
 import software.wings.beans.User;
@@ -106,6 +106,19 @@ public class UserResourceNG {
     User createdUser = userService.completeNewSignupInvite(userInviteInDB);
     UserInfo userInfo = convertUserToNgUser(createdUser);
     userInfo.setIntent(userInviteInDB.getIntent());
+
+    if (userInviteInDB.getSignupAction() != null) {
+      userInfo.setSignupAction(userInviteInDB.getSignupAction());
+    }
+
+    if (userInviteInDB.getEdition() != null) {
+      userInfo.setEdition(userInviteInDB.getEdition());
+    }
+
+    if (userInviteInDB.getBillingFrequency() != null) {
+      userInfo.setBillingFrequency(userInviteInDB.getBillingFrequency());
+    }
+
     return new RestResponse<>(userInfo);
   }
 

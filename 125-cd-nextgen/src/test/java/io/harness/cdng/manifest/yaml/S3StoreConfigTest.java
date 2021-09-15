@@ -1,6 +1,7 @@
 package io.harness.cdng.manifest.yaml;
 
 import static io.harness.rule.OwnerRule.ABOSII;
+import static io.harness.rule.OwnerRule.ACHYUTH;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -57,5 +58,38 @@ public class S3StoreConfigTest extends CategoryTest {
     assertThat(result.getBucketName().getValue()).isEqualTo("bucket-name");
     assertThat(result.getRegion().getValue()).isEqualTo("region");
     assertThat(result.getFolderPath().getValue()).isEqualTo("folder-path");
+  }
+
+  @Test
+  @Owner(developers = ACHYUTH)
+  @Category(UnitTests.class)
+  public void testCloneInternal() {
+    S3StoreConfig origin = S3StoreConfig.builder()
+                               .connectorRef(ParameterField.createValueField("connector-ref"))
+                               .bucketName(ParameterField.createValueField("bucket-name"))
+                               .region(ParameterField.createValueField("region"))
+                               .folderPath(ParameterField.createValueField("folder-path"))
+                               .build();
+
+    S3StoreConfig originClone = (S3StoreConfig) origin.cloneInternal();
+
+    assertThat(originClone.getConnectorRef().getValue()).isEqualTo("connector-ref");
+    assertThat(originClone.getBucketName().getValue()).isEqualTo("bucket-name");
+    assertThat(originClone.getRegion().getValue()).isEqualTo("region");
+    assertThat(originClone.getFolderPath().getValue()).isEqualTo("folder-path");
+  }
+
+  @Test
+  @Owner(developers = ACHYUTH)
+  @Category(UnitTests.class)
+  public void testExtractConnectorRefs() {
+    S3StoreConfig origin = S3StoreConfig.builder()
+                               .connectorRef(ParameterField.createValueField("connector-ref"))
+                               .bucketName(ParameterField.createValueField("bucket-name"))
+                               .region(ParameterField.createValueField("region"))
+                               .folderPath(ParameterField.createValueField("folder-path"))
+                               .build();
+
+    assertThat(origin.extractConnectorRefs().get("connectorRef").getValue()).isEqualTo("connector-ref");
   }
 }

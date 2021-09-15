@@ -4,7 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import static software.wings.app.ManagerCacheRegistrar.TRIAL_EMAIL_CACHE;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.UserInvite;
 
@@ -18,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PL)
 @Slf4j
 @Singleton
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class SignupSpamChecker {
   private static final int REGISTRATION_SPAM_THRESHOLD = 3;
   @Inject @Named(TRIAL_EMAIL_CACHE) private Cache<String, Integer> trialEmailCache;

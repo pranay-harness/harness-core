@@ -2,7 +2,10 @@ package software.wings.helpers.ext.artifactory;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.artifactory.ArtifactoryConfigRequest;
 import io.harness.delegate.task.ListNotifyResponseData;
 
@@ -19,6 +22,9 @@ import org.apache.commons.lang3.tuple.Pair;
  * Created by sgurubelli on 6/27/17.
  */
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._960_API_SERVICES)
+@BreakDependencyOn("software.wings.beans.artifact.ArtifactStreamAttributes")
+@BreakDependencyOn("io.harness.delegate.task.ListNotifyResponseData")
 public interface ArtifactoryService {
   List<BuildDetails> getBuilds(ArtifactoryConfigRequest artifactoryConfig,
       ArtifactStreamAttributes artifactStreamAttributes, int maxNumberOfBuilds);

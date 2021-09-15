@@ -2,7 +2,9 @@ package software.wings.service.intfc.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.SecretChangeLog;
 import io.harness.helpers.ext.vault.SecretEngineSummary;
@@ -18,6 +20,7 @@ import java.util.List;
  * Created by rsingh on 11/2/17.
  */
 @OwnedBy(PL)
+@TargetModule(HarnessModule._890_SM_CORE)
 public interface VaultService {
   String saveOrUpdateVaultConfig(String accountId, VaultConfig vaultConfig, boolean validateBySavingTestSecret);
 

@@ -8,6 +8,7 @@ go_library(
     deps = [
         "//commons/go/lib/utils",
         "//product/ci/addon/parser/cg",
+        "//product/ci/ti-service/logger",
         "//product/ci/ti-service/types",
         "@com_github_kamva_mgm_v3//:mgm",
         "@com_github_mattn_go_zglob//:go-zglob",

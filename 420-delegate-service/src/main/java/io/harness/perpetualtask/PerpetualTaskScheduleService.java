@@ -4,7 +4,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.perpetualtask.PerpetualTaskScheduleConfig;
 
-@OwnedBy(HarnessTeam.PL)
+@OwnedBy(HarnessTeam.DEL)
 public interface PerpetualTaskScheduleService {
   PerpetualTaskScheduleConfig save(String accountId, String perpetualTaskType, long timeIntervalInMillis);
 

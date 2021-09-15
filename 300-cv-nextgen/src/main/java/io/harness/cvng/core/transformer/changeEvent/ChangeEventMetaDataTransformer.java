@@ -1,24 +1,26 @@
 package io.harness.cvng.core.transformer.changeEvent;
 
-import io.harness.cvng.core.beans.change.event.ChangeEventDTO;
-import io.harness.cvng.core.beans.change.event.metadata.ChangeEventMetaData;
-import io.harness.cvng.core.entities.changeSource.event.ChangeEvent;
+import io.harness.cvng.activity.entities.Activity;
+import io.harness.cvng.beans.change.ChangeEventDTO;
+import io.harness.cvng.beans.change.ChangeEventMetadata;
+import io.harness.cvng.beans.change.ChangeSourceType;
 
-public abstract class ChangeEventMetaDataTransformer<E extends ChangeEvent, M extends ChangeEventMetaData> {
+public abstract class ChangeEventMetaDataTransformer<E extends Activity, M extends ChangeEventMetadata> {
   public abstract E getEntity(ChangeEventDTO changeEventDTO);
 
-  public final ChangeEventDTO getDTO(E changeEvent) {
+  public final ChangeEventDTO getDTO(E activity) {
     return ChangeEventDTO.builder()
-        .accountId(changeEvent.getAccountId())
-        .orgIdentifier(changeEvent.getOrgIdentifier())
-        .projectIdentifier(changeEvent.getProjectIdentifier())
-        .serviceIdentifier(changeEvent.getServiceIdentifier())
-        .envIdentifier(changeEvent.getEnvIdentifier())
-        .eventTime(changeEvent.getEventTime().toEpochMilli())
-        .type(changeEvent.getType())
-        .changeEventMetaData(getMetadata(changeEvent))
+        .accountId(activity.getAccountId())
+        .orgIdentifier(activity.getOrgIdentifier())
+        .projectIdentifier(activity.getProjectIdentifier())
+        .serviceIdentifier(activity.getServiceIdentifier())
+        .changeSourceIdentifier(activity.getChangeSourceIdentifier())
+        .envIdentifier(activity.getEnvironmentIdentifier())
+        .eventTime(activity.getEventTime().toEpochMilli())
+        .type(ChangeSourceType.ofActivityType(activity.getType()))
+        .changeEventMetaData(getMetadata(activity))
         .build();
   }
 
-  protected abstract M getMetadata(E changeEvent);
+  protected abstract M getMetadata(E activity);
 }

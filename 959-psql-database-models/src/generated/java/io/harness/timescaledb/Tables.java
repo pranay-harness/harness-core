@@ -3,6 +3,7 @@
  */
 package io.harness.timescaledb;
 
+import io.harness.timescaledb.tables.Anomalies;
 import io.harness.timescaledb.tables.BillingData;
 import io.harness.timescaledb.tables.CeRecommendations;
 import io.harness.timescaledb.tables.KubernetesUtilizationData;
@@ -16,6 +17,11 @@ import io.harness.timescaledb.tables.WorkloadInfo;
  */
 @SuppressWarnings({"all", "unchecked", "rawtypes"})
 public class Tables {
+  /**
+   * The table <code>public.anomalies</code>.
+   */
+  public static final Anomalies ANOMALIES = Anomalies.ANOMALIES;
+
   /**
    * The table <code>public.billing_data</code>.
    */

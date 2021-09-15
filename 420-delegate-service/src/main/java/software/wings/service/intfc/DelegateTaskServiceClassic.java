@@ -3,9 +3,7 @@ package software.wings.service.intfc;
 import static io.harness.annotations.dev.HarnessTeam.DEL;
 
 import io.harness.annotations.dev.BreakDependencyOn;
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.capability.CapabilitySubjectPermission;
 import io.harness.delegate.beans.DelegateProgressData;
@@ -24,7 +22,6 @@ import java.util.Set;
 import javax.validation.Valid;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
-@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @OwnedBy(DEL)
 @BreakDependencyOn("software.wings.service.intfc.ownership.OwnedByAccount")
 public interface DelegateTaskServiceClassic extends OwnedByAccount {

@@ -11,6 +11,7 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
+        "//953-git-sync-commons/src/main/proto:953_git_sync_java_contracts_proto",
         "//954-connector-beans:module",
         "//970-api-services-beans:module",
         "//970-ng-commons:module",

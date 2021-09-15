@@ -1,8 +1,11 @@
 package software.wings.yaml.directory;
 
-import software.wings.service.intfc.yaml.YamlGitService;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.yaml.YamlVersion.Type;
 
+@OwnedBy(HarnessTeam.DX)
 public class ServiceLevelYamlNode extends AppLevelYamlNode {
   private String serviceId;
 
@@ -13,8 +16,8 @@ public class ServiceLevelYamlNode extends AppLevelYamlNode {
   }
 
   public ServiceLevelYamlNode(String accountId, String uuid, String appId, String serviceId, String name,
-      Class theClass, DirectoryPath directoryPath, YamlGitService yamlGitSyncService, Type yamlVersionType) {
-    super(accountId, uuid, appId, name, theClass, directoryPath, yamlGitSyncService, yamlVersionType);
+      Class theClass, DirectoryPath directoryPath, Type yamlVersionType) {
+    super(accountId, uuid, appId, name, theClass, directoryPath, yamlVersionType);
     this.serviceId = serviceId;
   }
 

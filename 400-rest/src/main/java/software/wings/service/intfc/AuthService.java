@@ -25,7 +25,7 @@ import javax.validation.constraints.NotNull;
  * Created by peeyushaggarwal on 8/18/16.
  */
 @OwnedBy(HarnessTeam.PL)
-@TargetModule(HarnessModule._360_CG_MANAGER)
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public interface AuthService {
   /**
    * Validate token auth token.
