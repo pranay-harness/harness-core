@@ -1133,6 +1133,10 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
       throw new InvalidRequestException("file content can't be empty for the type Connection Strings", USER);
     }
 
+    if (isEmpty(manifestFile.getFileContent()) && VALUES_YAML_KEY.equals(manifestFile.getFileName())) {
+      throw new InvalidRequestException("File content can't be empty for the type Yaml Values", USER);
+    }
+
     validateEnvAndServiceExists(appId, envId, serviceId);
 
     ApplicationManifest applicationManifest =
