@@ -3,6 +3,7 @@ package io.harness.cvng.core.resources;
 import io.harness.annotations.ExposeInternalException;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cvng.beans.MonitoredServiceType;
 import io.harness.cvng.beans.change.ChangeCategory;
 import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.core.beans.ChangeSummaryDTO;
@@ -253,12 +254,14 @@ public class MonitoredServiceResource {
   public RestResponse<String> yamlTemplate(
       @ApiParam(required = true) @NotNull @QueryParam("accountId") String accountId,
       @ApiParam(required = true) @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
-      @ApiParam(required = true) @NotNull @QueryParam("projectIdentifier") String projectIdentifier) {
+      @ApiParam(required = true) @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @ApiParam @QueryParam("type") MonitoredServiceType type) {
     return new RestResponse<>(monitoredServiceService.getYamlTemplate(ProjectParams.builder()
                                                                           .accountIdentifier(accountId)
                                                                           .orgIdentifier(orgIdentifier)
                                                                           .projectIdentifier(projectIdentifier)
-                                                                          .build()));
+                                                                          .build(),
+        type));
   }
 
   @GET

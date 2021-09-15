@@ -25,6 +25,7 @@ import io.harness.outbox.OutboxPollConfiguration;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.CEAwsSetupConfig;
 import io.harness.remote.CEAzureSetupConfig;
+import io.harness.remote.CEGcpSetupConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.resourcegroupclient.remote.ResourceGroupClientConfig;
 import io.harness.signup.SignupNotificationConfiguration;
@@ -81,6 +82,7 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty(value = "enableAuth", defaultValue = "true") private boolean enableAuth;
   @JsonProperty("ceAwsSetupConfig") private CEAwsSetupConfig ceAwsSetupConfig;
   @JsonProperty("ceAzureSetupConfig") private CEAzureSetupConfig ceAzureSetupConfig;
+  @JsonProperty("ceGcpSetupConfig") private CEGcpSetupConfig ceGcpSetupConfig;
   @JsonProperty(value = "enableAudit") private boolean enableAudit;
   @JsonProperty(value = "ngAuthUIEnabled") private boolean isNGAuthUIEnabled;
   @JsonProperty("pmsSdkGrpcServerConfig") private GrpcServerConfig pmsSdkGrpcServerConfig;

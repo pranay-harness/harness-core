@@ -15,5 +15,6 @@ public class DeploymentsStatsSummary {
   CountChangeDetails failureCountAndChangeRate;
   RateAndRateChangeInfo failureRateAndChangeRate;
   RateAndRateChangeInfo deploymentRateAndChangeRate;
+  DeploymentsOverview deploymentsOverview;
   List<TimeBasedStats> deploymentStats;
 }
