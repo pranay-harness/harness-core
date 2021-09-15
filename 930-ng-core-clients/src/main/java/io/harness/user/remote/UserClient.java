@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageResponse;
+import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.UserInviteDTO;
 import io.harness.ng.core.user.PasswordChangeDTO;
 import io.harness.ng.core.user.PasswordChangeResponse;
@@ -41,6 +42,7 @@ public interface UserClient {
   String USER_ENABLE_TWO_FACTOR_AUTH = "ng/user/enable-two-factor-auth";
   String USER_DISABLE_TWO_FACTOR_AUTH = "ng/user/disable-two-factor-auth";
   String USER_UNLOCK = "ng/user/unlock-user";
+  String ALL_PROJECTS_ACCESSIBLE_TO_USER_API = "ng/user/all-projects";
 
   @POST(USERS_API) Call<RestResponse<UserInfo>> createNewUser(@Body UserRequestDTO userRequest);
 
@@ -108,4 +110,8 @@ public interface UserClient {
   @PUT(USER_UNLOCK)
   Call<RestResponse<Optional<UserInfo>>> unlockUser(
       @Query(value = "email") String email, @Query("accountId") String accountId);
+
+  @GET(ALL_PROJECTS_ACCESSIBLE_TO_USER_API)
+  Call<RestResponse<List<ProjectDTO>>> getUserAllProjectsInfo(
+      @Query(value = "accountId") String accountId, @Query(value = "userId") String userId);
 }

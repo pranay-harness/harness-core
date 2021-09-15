@@ -1,0 +1,110 @@
+version: '3.7'
+
+services:
+
+  mongo:
+    image: mongo:4.2.8
+    command: -f /etc/mongod.conf
+    networks:
+      harness-network:
+    volumes:
+      - mongo_data:/data/db
+      - ./config/mongo/mongod.conf:/etc/mongod.conf
+
+  redis:
+    image: redis:6.2
+    expose:
+      - '6379'
+    networks:
+      harness-network:
+
+  proxy:
+    image: nginx:latest
+    expose:
+      - '80'
+    depends_on:
+      - delegate-proxy
+      - manager
+      - ui
+      - ng-manager
+      - ng-ui
+    networks:
+      harness-network:
+    ports:
+      - '80:80'
+    volumes:
+      - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf
+
+  manager:
+    image: bazel/360-cg-manager/container:manager
+    depends_on:
+      - mongo
+      - redis
+    env_file:
+      - environment/manager.env
+    environment:
+      - API_URL=${PUBLIC_URL:?err}
+    expose:
+      - '7145'
+      - '9090'
+      - '9879'
+      - '54327'
+    networks:
+      harness-network:
+
+  ng-manager:
+    image: bazel/120-ng-manager/container:ng_manager
+    depends_on:
+      - mongo
+      - pipeline-service
+      - redis
+    env_file: environment/ng-manager.env
+    expose:
+      - '7090'
+    networks:
+      harness-network:
+
+  pipeline-service:
+    image: bazel/800-pipeline-service/container:pipeline_service
+    depends_on:
+      - mongo
+      - redis
+    env_file: environment/pipeline-service.env
+    expose:
+      - '12001'
+      - '12011'
+    networks:
+      harness-network:
+
+  delegate-proxy:
+    image: harness/delegate-proxy-signed:71207
+    expose:
+      - '8080'
+    networks:
+      harness-network:
+
+  ui:
+    image: harness/ui-signed:70403
+    expose:
+      - '8080'
+    networks:
+      harness-network:
+
+  ng-ui:
+    image: harness/nextgenui:0.259.2
+    environment:
+      - API_URL=${PUBLIC_URL:?err}
+    expose:
+      - '8080'
+    networks:
+      harness-network:
+
+networks:
+  harness-network:
+    ipam:
+      config:
+        - subnet: 192.168.0.0/24
+
+volumes:
+  account_data:
+  mongo_data:

@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
-import io.harness.beans.ExecutionInterruptType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.ExecutionStatusResponseData;
 import io.harness.beans.OrchestrationWorkflowType;
@@ -31,7 +30,6 @@ public class CgOrchestrationKryoRegister implements KryoRegistrar {
     kryo.register(ExecutionStatusResponseData.class, 3102);
     kryo.register(SweepingOutput.class, 3101);
     kryo.register(RepairActionCode.class, 2528);
-    kryo.register(ExecutionInterruptType.class, 4000);
     kryo.register(ShellScriptProvisionOutputVariables.class, 40021);
 
     kryo.register(BarrierStatusData.class, 7277);

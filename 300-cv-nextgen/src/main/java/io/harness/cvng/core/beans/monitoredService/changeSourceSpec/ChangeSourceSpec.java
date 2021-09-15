@@ -2,7 +2,7 @@ package io.harness.cvng.core.beans.monitoredService.changeSourceSpec;
 
 import static io.harness.cvng.CVConstants.DATA_SOURCE_TYPE;
 
-import io.harness.cvng.core.types.ChangeSourceType;
+import io.harness.cvng.beans.change.ChangeSourceType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

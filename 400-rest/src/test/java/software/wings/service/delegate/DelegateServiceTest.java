@@ -27,7 +27,6 @@ import static io.harness.rule.OwnerRule.NIKOLA;
 import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SANJA;
-import static io.harness.rule.OwnerRule.VLAD;
 import static io.harness.rule.OwnerRule.VUK;
 import static io.harness.rule.OwnerRule.XIN;
 
@@ -1092,6 +1091,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .ip("127.0.0.1")
                                 .delegateGroupName(DELEGATE_GROUP_NAME)
                                 .delegateGroupId(delegateGroup.getUuid())
+                                .ng(true)
                                 .version(VERSION)
                                 .proxy(true)
                                 .pollingModeEnabled(true)
@@ -1140,6 +1140,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .delegateGroupName(DELEGATE_GROUP_NAME)
                                 .delegateGroupId(generateUuid())
                                 .version(VERSION)
+                                .ng(true)
                                 .proxy(true)
                                 .pollingModeEnabled(true)
                                 .sampleDelegate(true)
@@ -1177,6 +1178,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .delegateGroupId(generateUuid())
                                 .version(VERSION)
                                 .proxy(true)
+                                .ng(true)
                                 .pollingModeEnabled(true)
                                 .sampleDelegate(true)
                                 .build();
@@ -1197,6 +1199,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldRegisterExistingDelegateParams() {
     String accountId = generateUuid();
     DelegateParams params = DelegateParams.builder()
+                                .delegateId(generateUuid())
                                 .accountId(accountId)
                                 .hostName(HOST_NAME)
                                 .description(DESCRIPTION)
@@ -1204,6 +1207,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .ip("127.0.0.1")
                                 .delegateGroupName(DELEGATE_GROUP_NAME)
                                 .version(VERSION)
+                                .ng(false)
                                 .proxy(true)
                                 .pollingModeEnabled(true)
                                 .sampleDelegate(false)
@@ -1226,6 +1230,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(delegateFromDb.isProxy()).isEqualTo(params.isProxy());
     assertThat(delegateFromDb.isPolllingModeEnabled()).isEqualTo(params.isPollingModeEnabled());
     assertThat(delegateFromDb.isSampleDelegate()).isEqualTo(params.isSampleDelegate());
+    assertThat(delegateFromDb.isNg()).isEqualTo(params.isNg());
   }
 
   @Test
@@ -1283,6 +1288,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .delegateType(DOCKER_DELEGATE + "UPDATED")
                                 .ip("127.0.0.2")
                                 .delegateGroupName(DELEGATE_GROUP_NAME + "UPDATED")
+                                .ng(false)
                                 .version(VERSION + "UPDATED")
                                 .proxy(true)
                                 .pollingModeEnabled(true)
@@ -1319,6 +1325,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                             .delegateGroupName(DELEGATE_GROUP_NAME)
                             .version(VERSION)
                             .proxy(false)
+                            .ng(false)
                             .polllingModeEnabled(false)
                             .sampleDelegate(false)
                             .build();
@@ -1341,6 +1348,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .delegateGroupName(DELEGATE_GROUP_NAME + "UPDATED")
                                 .delegateRandomToken("13")
                                 .version(VERSION + "UPDATED")
+                                .ng(false)
                                 .proxy(true)
                                 .pollingModeEnabled(true)
                                 .sampleDelegate(false)
@@ -1359,6 +1367,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(delegateFromDb.isProxy()).isEqualTo(params.isProxy());
     assertThat(delegateFromDb.isPolllingModeEnabled()).isEqualTo(params.isPollingModeEnabled());
     assertThat(delegateFromDb.isSampleDelegate()).isEqualTo(params.isSampleDelegate());
+    assertThat(delegateFromDb.isNg()).isEqualTo(params.isNg());
   }
 
   @Test
@@ -1572,6 +1581,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                             .delegateType(DOCKER_DELEGATE)
                             .ip("127.0.0.1")
                             .delegateGroupName(DELEGATE_GROUP_NAME)
+                            .ng(false)
                             .version(VERSION)
                             .proxy(false)
                             .polllingModeEnabled(false)
@@ -1594,6 +1604,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .proxy(true)
                                 .pollingModeEnabled(true)
                                 .sampleDelegate(false)
+                                .ng(false)
                                 .build();
 
     delegateService.register(params);
@@ -1609,6 +1620,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(delegateFromDb.isProxy()).isEqualTo(params.isProxy());
     assertThat(delegateFromDb.isPolllingModeEnabled()).isEqualTo(params.isPollingModeEnabled());
     assertThat(delegateFromDb.isSampleDelegate()).isEqualTo(params.isSampleDelegate());
+    assertThat(delegateFromDb.isNg()).isFalse();
   }
 
   @Test
@@ -2501,54 +2513,8 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldCheckForProfile() {
     when(configurationController.isNotPrimary()).thenReturn(Boolean.FALSE);
-    Delegate delegate = Delegate.builder()
-                            .uuid(DELEGATE_ID)
-                            .accountId(ACCOUNT_ID)
-                            .delegateProfileId("profile1")
-                            .profileExecutedAt(10L)
-                            .build();
-    persistence.save(delegate);
-    DelegateProfile profile = builder().accountId(ACCOUNT_ID).name("A Profile").startupScript("rm -rf /*").build();
-    profile.setUuid("profile1");
-    profile.setLastUpdatedAt(100L);
-    when(delegateProfileService.get(ACCOUNT_ID, "profile1")).thenReturn(profile);
-
-    DelegateProfileParams init = delegateService.checkForProfile(ACCOUNT_ID, DELEGATE_ID, "", 0);
-    assertThat(init).isNotNull();
-    assertThat(init.getProfileId()).isEqualTo("profile1");
-    assertThat(init.getName()).isEqualTo("A Profile");
-    assertThat(init.getProfileLastUpdatedAt()).isEqualTo(100L);
-    assertThat(init.getScriptContent()).isEqualTo("rm -rf /*");
-
-    init = delegateService.checkForProfile(ACCOUNT_ID, DELEGATE_ID, "profile2", 200L);
-    assertThat(init).isNotNull();
-    assertThat(init.getProfileId()).isEqualTo("profile1");
-    assertThat(init.getName()).isEqualTo("A Profile");
-    assertThat(init.getProfileLastUpdatedAt()).isEqualTo(100L);
-    assertThat(init.getScriptContent()).isEqualTo("rm -rf /*");
-
-    init = delegateService.checkForProfile(ACCOUNT_ID, DELEGATE_ID, "profile1", 99L);
-    assertThat(init).isNotNull();
-    assertThat(init.getProfileId()).isEqualTo("profile1");
-    assertThat(init.getName()).isEqualTo("A Profile");
-    assertThat(init.getProfileLastUpdatedAt()).isEqualTo(100L);
-    assertThat(init.getScriptContent()).isEqualTo("rm -rf /*");
-
-    init = delegateService.checkForProfile(ACCOUNT_ID, DELEGATE_ID, "profile1", 100L);
-    assertThat(init).isNull();
-  }
-
-  @Test
-  @Owner(developers = VLAD)
-  @Category(UnitTests.class)
-  public void shouldCheckForProfileExecutedAt() {
-    when(configurationController.isNotPrimary()).thenReturn(Boolean.FALSE);
-    Delegate delegate = Delegate.builder()
-                            .uuid(DELEGATE_ID)
-                            .accountId(ACCOUNT_ID)
-                            .delegateProfileId("profile1")
-                            .profileExecutedAt(123456789l)
-                            .build();
+    Delegate delegate =
+        Delegate.builder().uuid(DELEGATE_ID).accountId(ACCOUNT_ID).delegateProfileId("profile1").build();
     persistence.save(delegate);
     DelegateProfile profile = builder().accountId(ACCOUNT_ID).name("A Profile").startupScript("rm -rf /*").build();
     profile.setUuid("profile1");

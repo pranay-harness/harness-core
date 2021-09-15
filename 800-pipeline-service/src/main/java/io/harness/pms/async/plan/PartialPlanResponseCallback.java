@@ -85,8 +85,8 @@ public class PartialPlanResponseCallback extends AsyncResponseCallback<PartialPl
           }
           PlanCreationBlobResponseUtils.mergeContext(
               finalResponseBuilder.getBlobResponseBuilder(), currIterationResponse.getContextMap());
-          PlanCreationBlobResponseUtils.addDependencies(
-              finalResponseBuilder.getBlobResponseBuilder(), currIterationResponse.getDeps());
+          PlanCreationBlobResponseUtils.addDependenciesV2(
+              finalResponseBuilder.getBlobResponseBuilder(), currIterationResponse);
         } else {
           finalResponseBuilder.setErrorResponse(
               ErrorResponse.newBuilder()
@@ -145,8 +145,8 @@ public class PartialPlanResponseCallback extends AsyncResponseCallback<PartialPl
         finalResponseBuilder.getBlobResponseBuilder(), currIterationResponse);
     PlanCreationBlobResponseUtils.mergeContext(
         finalResponseBuilder.getBlobResponseBuilder(), currIterationResponse.getContextMap());
-    PlanCreationBlobResponseUtils.addDependencies(
-        finalResponseBuilder.getBlobResponseBuilder(), currIterationResponse.getDeps());
+    PlanCreationBlobResponseUtils.addDependenciesV2(
+        finalResponseBuilder.getBlobResponseBuilder(), currIterationResponse);
     if (interimResponse.hasErrorResponse()) {
       ErrorResponse.Builder errorResponseBuilder = ErrorResponse.newBuilder();
       if (finalResponse.hasErrorResponse()) {

@@ -6,6 +6,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.ng.core.remote.ProjectMapper.toProject;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.KARAN;
+import static io.harness.rule.OwnerRule.MEET;
 import static io.harness.utils.PageTestUtils.getPage;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
@@ -319,5 +320,39 @@ public class ProjectServiceImplTest extends CategoryTest {
     assertNotNull(projectsResponse);
     assertEquals(
         projectsResponse.getContent(), projects.stream().map(ProjectMapper::writeDTO).collect(Collectors.toList()));
+  }
+
+  @Test
+  @Owner(developers = MEET)
+  @Category(UnitTests.class)
+  public void testListAllProjectsForUser() {
+    String user = generateUuid();
+    Principal principal = mock(Principal.class);
+    when(principal.getType()).thenReturn(PrincipalType.USER);
+    when(principal.getName()).thenReturn(user);
+    SourcePrincipalContextBuilder.setSourcePrincipal(principal);
+    Project proj1 =
+        Project.builder().name("P1").accountIdentifier("accId1").orgIdentifier("orgId1").identifier("id1").build();
+    Project proj2 =
+        Project.builder().name("P2").accountIdentifier("accId1").orgIdentifier("orgId2").identifier("id2").build();
+    List<Project> projects = Arrays.asList(proj1, proj2);
+    UserMembership userMembership1 =
+        UserMembership.builder()
+            .userId(user)
+            .scope(Scope.builder().accountIdentifier("accId1").orgIdentifier("orgId1").projectIdentifier("id1").build())
+            .build();
+    UserMembership userMembership2 =
+        UserMembership.builder()
+            .userId(user)
+            .scope(Scope.builder().accountIdentifier("accId1").orgIdentifier("orgId2").projectIdentifier("id2").build())
+            .build();
+    doReturn(new PageImpl<>(Arrays.asList(userMembership1, userMembership2)))
+        .when(ngUserService)
+        .listUserMemberships(any(), any());
+    doReturn(projects).when(projectService).list(any());
+    doReturn(projects).when(projectRepository).findAll((Criteria) any());
+    List<ProjectDTO> projectsResponse = projectService.listProjectsForUser(user, "account");
+    assertNotNull(projectsResponse);
+    assertEquals(projectsResponse, projects.stream().map(ProjectMapper::writeDTO).collect(Collectors.toList()));
   }
 }

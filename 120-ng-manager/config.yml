@@ -199,6 +199,9 @@ ceAzureSetupConfig:
   azureAppClientId: azureAppClientIdPlaceholder
   azureAppClientSecret: azureAppClientSecretplaceholder
 
+ceGcpSetupConfig:
+  gcpProjectId: gcpProjectIdPlaceHolder
+
 ciDefaultEntityConfiguration:
   harnessImageUseName: harnessdev
   harnessImagePassword: harnessPass

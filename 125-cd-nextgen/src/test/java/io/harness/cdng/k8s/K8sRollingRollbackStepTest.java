@@ -2,6 +2,7 @@ package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ABOSII;
+import static io.harness.rule.OwnerRule.ACHYUTH;
 import static io.harness.rule.OwnerRule.ANSHUL;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -10,17 +11,25 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.cdng.instance.info.InstanceInfoService;
 import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.k8s.beans.K8sRollingReleaseOutput;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
+import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
+import io.harness.delegate.task.k8s.K8sDeployResponse;
+import io.harness.delegate.task.k8s.K8sRollingDeployRollbackResponse;
 import io.harness.delegate.task.k8s.K8sRollingRollbackDeployRequest;
+import io.harness.k8s.model.K8sPod;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
@@ -28,9 +37,12 @@ import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
+import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -47,6 +59,7 @@ public class K8sRollingRollbackStepTest extends CategoryTest {
   @Mock private OutcomeService outcomeService;
   @Mock private ExecutionSweepingOutputService executionSweepingOutputService;
   @Mock private K8sStepHelper k8sStepHelper;
+  @Mock private InstanceInfoService instanceInfoService;
   @InjectMocks private K8sRollingRollbackStep k8sRollingRollbackStep;
 
   @Before
@@ -103,6 +116,36 @@ public class K8sRollingRollbackStepTest extends CategoryTest {
     OptionalSweepingOutput deploymentOutput = OptionalSweepingOutput.builder().found(false).build();
 
     testRollback(releaseOutput, deploymentOutput, "test", null);
+  }
+
+  @Test
+  @Owner(developers = ACHYUTH)
+  @Category(UnitTests.class)
+  public void testHandleTaskResultWithSecurityContext() throws Exception {
+    StepResponse stepResponse = k8sRollingRollbackStep.handleTaskResultWithSecurityContext(
+        ambiance, StepElementParameters.builder().build(), () -> {
+          return K8sDeployResponse.builder()
+              .commandUnitsProgress(UnitProgressData.builder().build())
+              .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+              .build();
+        });
+    assertThat(stepResponse.getStatus()).isEqualTo(Status.FAILED);
+
+    List<K8sPod> k8sPodList = new ArrayList<>();
+    k8sPodList.add(K8sPod.builder().name("Pod").namespace("default").build());
+
+    when(instanceInfoService.saveServerInstancesIntoSweepingOutput(any(), any()))
+        .thenReturn(StepResponse.StepOutcome.builder().name("abc").build());
+    stepResponse = k8sRollingRollbackStep.handleTaskResultWithSecurityContext(
+        ambiance, StepElementParameters.builder().build(), () -> {
+          return K8sDeployResponse.builder()
+              .k8sNGTaskResponse(K8sRollingDeployRollbackResponse.builder().k8sPodList(k8sPodList).build())
+              .commandUnitsProgress(UnitProgressData.builder().build())
+              .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+              .build();
+        });
+    assertThat(stepResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
+    assertThat(stepResponse.getStepOutcomes().contains(StepResponse.StepOutcome.builder().name("abc").build()));
   }
 
   private void testRollback(OptionalSweepingOutput releaseOutput, OptionalSweepingOutput deploymentOutput,

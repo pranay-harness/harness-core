@@ -3,7 +3,7 @@ load("@io_bazel_rules_docker//docker/util:run.bzl", "container_run_and_commit_la
 load("@rules_pkg//:pkg.bzl", "pkg_tar")
 
 container_image(
-    name = "container",
+    name = "event_server",
     base = "//dockerization/base-jdk:base_jdk",
     cmd = ["./run.sh"],
     layers = [
@@ -72,7 +72,7 @@ pkg_tar(
 container_push(
     name = "push",
     format = "Docker",
-    image = "event-server",
+    image = "event_server",
     registry = "us.gcr.io",
     repository = "platform-205701/harness/event-server",
     tag = "{STABLE_BUILD_NUMBER}",

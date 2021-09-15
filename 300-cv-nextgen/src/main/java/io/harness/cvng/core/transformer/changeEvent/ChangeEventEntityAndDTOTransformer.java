@@ -1,7 +1,7 @@
 package io.harness.cvng.core.transformer.changeEvent;
 
 import io.harness.cvng.activity.entities.Activity;
-import io.harness.cvng.core.beans.change.event.ChangeEventDTO;
+import io.harness.cvng.beans.change.ChangeEventDTO;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;

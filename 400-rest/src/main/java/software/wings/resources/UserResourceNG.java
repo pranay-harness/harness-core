@@ -108,15 +108,15 @@ public class UserResourceNG {
     userInfo.setIntent(userInviteInDB.getIntent());
 
     if (userInviteInDB.getSignupAction() != null) {
-      userInfo.setSignupAction(userInviteInDB.getSignupAction().name());
+      userInfo.setSignupAction(userInviteInDB.getSignupAction());
     }
 
     if (userInviteInDB.getEdition() != null) {
-      userInfo.setEdition(userInviteInDB.getEdition().name());
+      userInfo.setEdition(userInviteInDB.getEdition());
     }
 
     if (userInviteInDB.getBillingFrequency() != null) {
-      userInfo.setBillingFrequency(userInviteInDB.getBillingFrequency().name());
+      userInfo.setBillingFrequency(userInviteInDB.getBillingFrequency());
     }
 
     return new RestResponse<>(userInfo);

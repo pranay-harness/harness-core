@@ -1,10 +1,10 @@
 package io.harness.cvng.core.transformer.changeSource;
 
+import io.harness.cvng.beans.change.ChangeSourceType;
 import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
 import io.harness.cvng.core.beans.monitoredService.changeSourceSpec.KubernetesChangeSourceSpec;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.entities.changeSource.KubernetesChangeSource;
-import io.harness.cvng.core.types.ChangeSourceType;
 
 public class KubernetesChangeSourceSpecTransformer
     extends ChangeSourceSpecTransformer<KubernetesChangeSource, KubernetesChangeSourceSpec> {

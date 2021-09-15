@@ -130,3 +130,28 @@ function copy_change_data_capture_jars(){
 
 	cd ../..
 }
+
+function copy_ng_dashboard_jars(){
+	mkdir -p dist/ng-dashboard-service ;
+	cd dist/ng-dashboard-service
+
+	cp ${BAZEL_BIN}/290-dashboard-service/module_deploy.jar change-data-capture.jar
+	cp ../../290-dashboard-service/config.yml .
+
+	if [ -e ../../dockerization/ng-dashboard-service/Dockerfile-ng-dashboard-k8-openjdk ]
+	then
+	  cp ../../dockerization/ng-dashboard-service/Dockerfile-ng-dashboard-k8-openjdk Dockerfile
+	fi
+	  echo "Docker file for ng dashboard not found"
+
+	if [ -e ../../dockerization/ng-dashboard-service/Dockerfile-ng-dashboard-k8-gcr-openjdk ]
+	then
+	  cp ../../dockerization/ng-dashboard-service/Dockerfile-ng-dashboard-k8-gcr-openjdk Dockerfile-gcr
+	fi
+	  echo "Docker file for ng dashboard for gcr not found"
+	cp -r ../../dockerization/ng-dashboard-service/scripts/ .
+
+	copy_common_files
+
+	cd ../..
+}

@@ -33,6 +33,7 @@ import io.harness.cvng.analysis.beans.CanaryAdditionalInfo;
 import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.entities.DeploymentTimeSeriesAnalysis;
 import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
+import io.harness.cvng.analysis.services.api.VerificationJobInstanceAnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
@@ -88,6 +89,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -110,6 +112,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
   @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
+  @Inject private VerificationJobInstanceAnalysisService verificationJobInstanceAnalysisService;
 
   @Mock private Clock clock;
   private Instant fakeNow;
@@ -1082,6 +1085,10 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
     assertThat(saved.getVerificationStatus()).isEqualTo(ActivityVerificationStatus.VERIFICATION_FAILED);
     assertThat(saved.getCvConfigMap()).hasSize(1);
     assertThat(saved.getCvConfigMap()).containsKey(cvConfig.getUuid());
+    Optional<Risk> riskScore =
+        verificationJobInstanceAnalysisService.getLatestRiskScore(accountId, verificationJobInstanceIds.get(0));
+    assertThat(riskScore).isPresent();
+    assertThat(riskScore.get()).isEqualTo(Risk.HIGH);
   }
 
   private VerificationJobDTO newCanaryVerificationJobDTO() {
