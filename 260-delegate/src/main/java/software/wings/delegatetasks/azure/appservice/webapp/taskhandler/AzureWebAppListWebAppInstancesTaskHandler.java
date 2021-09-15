@@ -12,9 +12,7 @@ import io.harness.delegate.task.azure.appservice.webapp.response.AzureAppDeploym
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppListWebAppInstancesResponse;
 
 import software.wings.delegatetasks.azure.appservice.webapp.AbstractAzureWebAppTaskHandler;
-import software.wings.delegatetasks.azure.common.AzureAppServiceService;
 
-import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
 import lombok.NoArgsConstructor;
