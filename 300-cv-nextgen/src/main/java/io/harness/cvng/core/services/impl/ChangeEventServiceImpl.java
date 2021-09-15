@@ -46,11 +46,9 @@ public class ChangeEventServiceImpl implements ChangeEventService {
     if (!changeSourceDTOOptional.isPresent()) {
       return false;
     }
-    activityService.upsert(transformer.getEntity(changeEventDTO));
     if (StringUtils.isEmpty(changeEventDTO.getChangeSourceIdentifier())) {
       changeEventDTO.setChangeSourceIdentifier(changeSourceDTOOptional.get().getIdentifier());
     }
-    changeEventDTO.setChangeSourceIdentifier(changeSourceDTOOptional.get().getIdentifier());
     activityService.upsert(transformer.getEntity(changeEventDTO));
     return true;
   }
