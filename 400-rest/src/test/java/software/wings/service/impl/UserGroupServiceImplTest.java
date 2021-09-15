@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessModule._360_CG_MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -16,6 +17,7 @@ import static io.harness.rule.OwnerRule.NIKOLA;
 import static io.harness.rule.OwnerRule.RAMA;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.UJJAWAL;
+import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
 import static io.harness.rule.OwnerRule.VIKAS;
 import static io.harness.rule.OwnerRule.VOJIN;
 
@@ -26,6 +28,8 @@ import static software.wings.beans.security.UserGroup.DEFAULT_READ_ONLY_USER_GRO
 import static software.wings.beans.security.UserGroup.builder;
 import static software.wings.security.EnvFilter.FilterType.PROD;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
+import static software.wings.security.PermissionAttribute.PermissionType.ALL_APP_ENTITIES;
+import static software.wings.security.PermissionAttribute.PermissionType.APP_TEMPLATE;
 import static software.wings.security.PermissionAttribute.PermissionType.AUDIT_VIEWER;
 import static software.wings.security.PermissionAttribute.PermissionType.CE_ADMIN;
 import static software.wings.security.PermissionAttribute.PermissionType.CE_VIEWER;
@@ -101,7 +105,9 @@ import software.wings.security.GenericEntityFilter.FilterType;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserThreadLocal;
+import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.RoleService;
@@ -142,6 +148,8 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   private String user2Id = generateUuid();
   private String userId = generateUuid();
   private AppPermission envPermission = getEnvPermission();
+  private List<String> appIds = asList("appId1", "appId2");
+  private Set<Action> actions = new HashSet<>(Arrays.asList(Action.CREATE, Action.READ, Action.UPDATE, Action.DELETE));
 
   private Account account = anAccount()
                                 .withAccountName(ACCOUNT_NAME)
@@ -200,10 +208,12 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @Mock private LimitCheckerFactory limitCheckerFactory;
   @Mock private AuditServiceHelper auditServiceHelper;
   @Mock private CCMSettingService ccmSettingService;
+  @Mock private AppService appService;
 
   @Inject private HPersistence persistence;
   //  @InjectMocks @Inject private AccountService accountService = spy(AccountServiceImpl.class);
   @InjectMocks @Inject private UserService userService;
+  @InjectMocks @Inject private AuthHandler authHandler;
   @InjectMocks @Inject private UserGroupServiceImpl userGroupService;
   @Mock private UsageLimitedFeature rbacFeature;
 
@@ -294,6 +304,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testSaveAndGetForAdminWhenCeDisabled() {
     UserGroup savedUserGroup = userGroupService.save(userGroup1);
+    userGroupService.maskAppTemplatePermissions(userGroup1);
     assertThat(savedUserGroup)
         .isEqualToComparingOnlyGivenFields(userGroup1, "uuid", UserGroupKeys.accountId, UserGroupKeys.name,
             UserGroupKeys.description, UserGroupKeys.memberIds, UserGroupKeys.appPermissions);
@@ -309,6 +320,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testSaveAndGetForNonAdminWhenCeDisabled() {
     UserGroup savedUserGroup = userGroupService.save(userGroup2);
+    userGroupService.maskAppTemplatePermissions(userGroup2);
     assertThat(savedUserGroup)
         .isEqualToComparingOnlyGivenFields(userGroup2, "uuid", UserGroupKeys.accountId, UserGroupKeys.name,
             UserGroupKeys.description, UserGroupKeys.memberIds, UserGroupKeys.appPermissions);
@@ -326,6 +338,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     when(ccmSettingService.isCloudCostEnabled(eq(accountId))).thenReturn(true);
 
     UserGroup savedUserGroup = userGroupService.save(userGroup1);
+    userGroupService.maskAppTemplatePermissions(userGroup1);
     assertThat(savedUserGroup)
         .isEqualToComparingOnlyGivenFields(userGroup1, UserGroupKeys.accountId, UserGroupKeys.name,
             UserGroupKeys.description, UserGroupKeys.memberIds, UserGroupKeys.appPermissions, "uuid");
@@ -346,6 +359,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   public void testSaveAndGetForNonAdminWithCeEnabled() {
     when(ccmSettingService.isCloudCostEnabled(eq(accountId))).thenReturn(true);
     UserGroup savedUserGroup = userGroupService.save(userGroup2);
+    userGroupService.maskAppTemplatePermissions(userGroup2);
     assertThat(savedUserGroup)
         .isEqualToComparingOnlyGivenFields(userGroup2, UserGroupKeys.accountId, UserGroupKeys.name,
             UserGroupKeys.description, UserGroupKeys.memberIds, UserGroupKeys.appPermissions, "uuid");
@@ -363,12 +377,14 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testSaveAndGet() {
     UserGroup savedUserGroup = userGroupService.save(userGroup1);
+    userGroupService.maskAppTemplatePermissions(userGroup1);
     compare(userGroup1, savedUserGroup);
 
     UserGroup userGroupFromGet = userGroupService.get(accountId, userGroupId);
     compare(savedUserGroup, userGroupFromGet);
 
     savedUserGroup = userGroupService.save(userGroup2);
+    userGroupService.maskAppTemplatePermissions(userGroup2);
     compare(userGroup2, savedUserGroup);
 
     userGroupFromGet = userGroupService.get(accountId, userGroupId);
@@ -902,9 +918,10 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testPruneByApplication() {
     Set<AppPermission> appPermissions = new HashSet<>();
-    appPermissions.add(
-        createAppPermission(FilterType.SELECTED, PermissionType.ALL_APP_ENTITIES, Arrays.asList("111", "222", "333")));
-    appPermissions.add(createAppPermission(FilterType.SELECTED, PermissionType.ALL_APP_ENTITIES, Arrays.asList("444")));
+    appPermissions.add(createAppPermission(FilterType.SELECTED, PermissionType.ALL_APP_ENTITIES,
+        Arrays.asList("111", "222", "333"), Collections.emptySet()));
+    appPermissions.add(createAppPermission(
+        FilterType.SELECTED, PermissionType.ALL_APP_ENTITIES, Arrays.asList("444"), Collections.emptySet()));
 
     UserGroup userGroup = builder()
                               .accountId(accountId)
@@ -936,11 +953,12 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testRemoveEmptyAppPermissions() {
     Set<AppPermission> appPermissions = new HashSet<>();
-    appPermissions.add(
-        createAppPermission(FilterType.SELECTED, PermissionType.WORKFLOW, Arrays.asList("111", "222", "333")));
-    appPermissions.add(
-        createAppPermission(FilterType.SELECTED, PermissionType.ACCOUNT_MANAGEMENT, Collections.emptyList()));
-    appPermissions.add(createAppPermission(FilterType.SELECTED, PermissionType.DEPLOYMENT, Collections.emptyList()));
+    appPermissions.add(createAppPermission(
+        FilterType.SELECTED, PermissionType.WORKFLOW, Arrays.asList("111", "222", "333"), Collections.emptySet()));
+    appPermissions.add(createAppPermission(
+        FilterType.SELECTED, PermissionType.ACCOUNT_MANAGEMENT, Collections.emptyList(), Collections.emptySet()));
+    appPermissions.add(createAppPermission(
+        FilterType.SELECTED, PermissionType.DEPLOYMENT, Collections.emptyList(), Collections.emptySet()));
     assertThat(appPermissions.size()).isEqualTo(3);
 
     UserGroup userGroup = builder()
@@ -971,10 +989,12 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testPruneByApplicationAllPermissionsRemoved() {
     Set<AppPermission> appPermissions = new HashSet<>();
-    appPermissions.add(createAppPermission(FilterType.SELECTED, PermissionType.WORKFLOW, singletonList("111")));
-    appPermissions.add(
-        createAppPermission(FilterType.SELECTED, PermissionType.ACCOUNT_MANAGEMENT, Collections.emptyList()));
-    appPermissions.add(createAppPermission(FilterType.SELECTED, PermissionType.DEPLOYMENT, Collections.emptyList()));
+    appPermissions.add(createAppPermission(
+        FilterType.SELECTED, PermissionType.WORKFLOW, singletonList("111"), Collections.emptySet()));
+    appPermissions.add(createAppPermission(
+        FilterType.SELECTED, PermissionType.ACCOUNT_MANAGEMENT, Collections.emptyList(), Collections.emptySet()));
+    appPermissions.add(createAppPermission(
+        FilterType.SELECTED, PermissionType.DEPLOYMENT, Collections.emptyList(), Collections.emptySet()));
 
     UserGroup userGroup = builder()
                               .accountId(accountId)
@@ -1001,9 +1021,10 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testPruneByApplicationNotSelectedPermissionsAreNotRemoved() {
     Set<AppPermission> appPermissions = new HashSet<>();
-    appPermissions.add(createAppPermission(FilterType.ALL, PermissionType.WORKFLOW, null));
-    appPermissions.add(createAppPermission(FilterType.ALL, PermissionType.ACCOUNT_MANAGEMENT, null));
-    appPermissions.add(createAppPermission(FilterType.ALL, PermissionType.DEPLOYMENT, null));
+    appPermissions.add(createAppPermission(FilterType.ALL, PermissionType.WORKFLOW, null, Collections.emptySet()));
+    appPermissions.add(
+        createAppPermission(FilterType.ALL, PermissionType.ACCOUNT_MANAGEMENT, null, Collections.emptySet()));
+    appPermissions.add(createAppPermission(FilterType.ALL, PermissionType.DEPLOYMENT, null, Collections.emptySet()));
 
     UserGroup userGroup = builder()
                               .accountId(accountId)
@@ -1030,11 +1051,12 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testRemoveDeletedAppIds() {
     Set<AppPermission> appPermissions = new HashSet<>();
-    appPermissions.add(
-        createAppPermission(FilterType.SELECTED, PermissionType.WORKFLOW, Arrays.asList("111", "222", "333")));
-    appPermissions.add(
-        createAppPermission(FilterType.SELECTED, PermissionType.ACCOUNT_MANAGEMENT, Collections.emptyList()));
-    appPermissions.add(createAppPermission(FilterType.SELECTED, PermissionType.DEPLOYMENT, Collections.emptyList()));
+    appPermissions.add(createAppPermission(
+        FilterType.SELECTED, PermissionType.WORKFLOW, Arrays.asList("111", "222", "333"), Collections.emptySet()));
+    appPermissions.add(createAppPermission(
+        FilterType.SELECTED, PermissionType.ACCOUNT_MANAGEMENT, Collections.emptyList(), Collections.emptySet()));
+    appPermissions.add(createAppPermission(
+        FilterType.SELECTED, PermissionType.DEPLOYMENT, Collections.emptyList(), Collections.emptySet()));
     assertThat(appPermissions.size()).isEqualTo(3);
 
     UserGroup userGroup = builder()
@@ -1061,6 +1083,184 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     assertThat(cleanedGroup.getAppPermissions().size()).isEqualTo(1);
     assertThat(appIds.size()).isEqualTo(1);
     assertThat(appIds.containsAll(Arrays.asList("222"))).isTrue();
+  }
+
+  private List<AppPermission> getTemplateAppPermissions(Set<AppPermission> appPermissions) {
+    if (isEmpty(appPermissions)) {
+      return new ArrayList<>();
+    }
+    return appPermissions.stream()
+        .filter(appPermission
+            -> appPermission.getPermissionType() != null && appPermission.getPermissionType().equals(APP_TEMPLATE))
+        .collect(toList());
+  }
+
+  private void verifyApplicationTemplatePermissionsWithAllFilter(AppPermission templateAppPermission) {
+    assertThat(templateAppPermission.getPermissionType()).isEqualTo(APP_TEMPLATE);
+    assertThat(templateAppPermission.getAppFilter().getFilterType()).isEqualTo(FilterType.ALL);
+  }
+
+  private void verifyApplicationTemplatePermissionsWithSelectedFilter(AppPermission templateAppPermission) {
+    assertThat(templateAppPermission.getPermissionType()).isEqualTo(APP_TEMPLATE);
+    assertThat(templateAppPermission.getAppFilter().getFilterType()).isEqualTo(FilterType.SELECTED);
+  }
+
+  @Test
+  @Owner(developers = VARDAN_BANSAL)
+  @Category(UnitTests.class)
+  public void test_save_TC1() {
+    // User lacks TEMPLATE_MANAGEMENT Account Permission but has Application Permission on all applications
+    final UserGroup userGroup =
+        UserGroup.builder()
+            .accountId(accountId)
+            .uuid(userGroupId)
+            .name("Test User Group")
+            .accountPermissions(
+                AccountPermissions.builder().permissions(new HashSet<>(Arrays.asList(ACCOUNT_MANAGEMENT))).build())
+            .appPermissions(new HashSet<>(
+                Arrays.asList(createAppPermission(FilterType.ALL, ALL_APP_ENTITIES, Collections.emptyList(), actions))))
+            .build();
+    userGroupService.save(userGroup);
+
+    final Set<AppPermission> appPermissions = userGroup.getAppPermissions();
+    assertThat(appPermissions.size()).isEqualTo(2);
+    final List<AppPermission> templateAppPermissions = getTemplateAppPermissions(appPermissions);
+    assertThat(templateAppPermissions.size()).isEqualTo(1);
+
+    final AppPermission templateAppPermission = templateAppPermissions.get(0);
+    assertThat(templateAppPermission).isNotNull();
+    verifyApplicationTemplatePermissionsWithAllFilter(templateAppPermission);
+    assertThat(templateAppPermission.getActions().size()).isEqualTo(1);
+    assertThat(templateAppPermission.getActions().contains(Action.READ)).isEqualTo(true);
+  }
+
+  @Test
+  @Owner(developers = VARDAN_BANSAL)
+  @Category(UnitTests.class)
+  public void test_save_TC2() {
+    // User has TEMPLATE_MANAGEMENT Account Permission and Application Permission on all applications
+    final UserGroup userGroup =
+        UserGroup.builder()
+            .accountId(accountId)
+            .uuid(userGroupId)
+            .name("Test User Group")
+            .accountPermissions(AccountPermissions.builder()
+                                    .permissions(new HashSet<>(Arrays.asList(ACCOUNT_MANAGEMENT, TEMPLATE_MANAGEMENT)))
+                                    .build())
+            .appPermissions(new HashSet<>(
+                Arrays.asList(createAppPermission(FilterType.ALL, ALL_APP_ENTITIES, Collections.emptyList(), actions))))
+            .build();
+    userGroupService.save(userGroup);
+
+    final Set<AppPermission> appPermissions = userGroup.getAppPermissions();
+    assertThat(appPermissions.size()).isEqualTo(2);
+    final List<AppPermission> templateAppPermissions = getTemplateAppPermissions(appPermissions);
+    assertThat(templateAppPermissions.size()).isEqualTo(1);
+
+    final AppPermission templateAppPermission = templateAppPermissions.get(0);
+    assertThat(templateAppPermission).isNotNull();
+    verifyApplicationTemplatePermissionsWithAllFilter(templateAppPermission);
+    assertThat(templateAppPermission.getActions().size()).isEqualTo(4);
+    assertThat(templateAppPermission.getActions().containsAll(
+                   Arrays.asList(Action.CREATE, Action.READ, Action.UPDATE, Action.DELETE)))
+        .isEqualTo(true);
+  }
+
+  @Test
+  @Owner(developers = VARDAN_BANSAL)
+  @Category(UnitTests.class)
+  public void test_save_TC3() {
+    // User lacks TEMPLATE_MANAGEMENT Account Permission but has Application Permission on some applications
+    doReturn(appIds).when(appService).getAppIdsByAccountId(ACCOUNT_ID);
+    final UserGroup userGroup =
+        UserGroup.builder()
+            .accountId(ACCOUNT_ID)
+            .uuid(userGroupId)
+            .name("Test User Group")
+            .accountPermissions(
+                AccountPermissions.builder().permissions(new HashSet<>(Arrays.asList(ACCOUNT_MANAGEMENT))).build())
+            .appPermissions(new HashSet<>(Arrays.asList(
+                createAppPermission(FilterType.SELECTED, ALL_APP_ENTITIES, Arrays.asList("appId1"), actions))))
+            .build();
+    userGroupService.save(userGroup);
+
+    final Set<AppPermission> appPermissions = userGroup.getAppPermissions();
+    assertThat(appPermissions.size()).isEqualTo(2);
+    final List<AppPermission> templateAppPermissions = getTemplateAppPermissions(appPermissions);
+    assertThat(templateAppPermissions.size()).isEqualTo(1);
+
+    final AppPermission templateAppPermission = templateAppPermissions.get(0);
+    assertThat(templateAppPermission).isNotNull();
+    verifyApplicationTemplatePermissionsWithSelectedFilter(templateAppPermission);
+    assertThat(templateAppPermission.getAppFilter().getIds().containsAll(Arrays.asList("appId1"))).isEqualTo(true);
+    assertThat(templateAppPermission.getActions().size()).isEqualTo(1);
+    assertThat(templateAppPermission.getActions().containsAll(Arrays.asList(Action.READ))).isEqualTo(true);
+  }
+
+  @Test
+  @Owner(developers = VARDAN_BANSAL)
+  @Category(UnitTests.class)
+  public void test_save_TC4() {
+    // User has TEMPLATE_MANAGEMENT Account Permission and Application Permission on some applications
+    doReturn(appIds).when(appService).getAppIdsByAccountId(ACCOUNT_ID);
+    final UserGroup userGroup =
+        UserGroup.builder()
+            .accountId(ACCOUNT_ID)
+            .uuid(userGroupId)
+            .name("Test User Group")
+            .accountPermissions(AccountPermissions.builder()
+                                    .permissions(new HashSet<>(Arrays.asList(ACCOUNT_MANAGEMENT, TEMPLATE_MANAGEMENT)))
+                                    .build())
+            .appPermissions(new HashSet<>(Arrays.asList(
+                createAppPermission(FilterType.SELECTED, ALL_APP_ENTITIES, Arrays.asList("appId1"), actions))))
+            .build();
+    userGroupService.save(userGroup);
+
+    final Set<AppPermission> appPermissions = userGroup.getAppPermissions();
+    assertThat(appPermissions.size()).isEqualTo(2);
+    final List<AppPermission> templateAppPermissions = getTemplateAppPermissions(appPermissions);
+    assertThat(templateAppPermissions.size()).isEqualTo(1);
+
+    final AppPermission templateAppPermission = templateAppPermissions.get(0);
+    assertThat(templateAppPermission).isNotNull();
+    verifyApplicationTemplatePermissionsWithSelectedFilter(templateAppPermission);
+    assertThat(templateAppPermission.getAppFilter().getIds().containsAll(Arrays.asList("appId1"))).isEqualTo(true);
+    assertThat(templateAppPermission.getActions().size()).isEqualTo(4);
+    assertThat(templateAppPermission.getActions().containsAll(actions)).isEqualTo(true);
+  }
+
+  private void verifyNoApplicationTemplatePermissions(Set<PermissionType> permissions) {
+    final UserGroup userGroup = UserGroup.builder()
+                                    .accountId(ACCOUNT_ID)
+                                    .uuid(userGroupId)
+                                    .name("Test User Group")
+                                    .accountPermissions(AccountPermissions.builder().permissions(permissions).build())
+                                    .appPermissions(null)
+                                    .build();
+    userGroupService.save(userGroup);
+
+    final Set<AppPermission> appPermissions = userGroup.getAppPermissions();
+    assertThat(appPermissions).isNullOrEmpty();
+    final List<AppPermission> templateAppPermissions = getTemplateAppPermissions(appPermissions);
+    assertThat(templateAppPermissions).isNullOrEmpty();
+  }
+
+  @Test
+  @Owner(developers = VARDAN_BANSAL)
+  @Category(UnitTests.class)
+  public void test_save_TC5() {
+    // User lacks TEMPLATE_MANAGEMENT Account Permission and has no Application Permissions as well
+    doReturn(appIds).when(appService).getAppIdsByAccountId(ACCOUNT_ID);
+    verifyNoApplicationTemplatePermissions(new HashSet<>(Arrays.asList(ACCOUNT_MANAGEMENT)));
+  }
+
+  @Test
+  @Owner(developers = VARDAN_BANSAL)
+  @Category(UnitTests.class)
+  public void test_save_TC6() {
+    // User has TEMPLATE_MANAGEMENT Account Permission and but no Application Permissions
+    doReturn(appIds).when(appService).getAppIdsByAccountId(ACCOUNT_ID);
+    verifyNoApplicationTemplatePermissions(new HashSet<>(Arrays.asList(ACCOUNT_MANAGEMENT, TEMPLATE_MANAGEMENT)));
   }
 
   private Set<String> getAppIds(UserGroup userGroup) {
@@ -1094,13 +1294,13 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     return anUser().uuid(userId).appId(APP_ID).emailVerified(true).email(USER_EMAIL).accounts(asList(account)).build();
   }
 
-  private AppPermission createAppPermission(String filterType, PermissionType permissionType, List<String> appIds) {
+  private AppPermission createAppPermission(
+      String filterType, PermissionType permissionType, List<String> appIds, Set<Action> actions) {
     Set<String> ids = new HashSet<>();
     if (isNotEmpty(appIds)) {
       ids.addAll(appIds);
     }
-    return new AppPermission(
-        permissionType, new GenericEntityFilter(ids, filterType), new EnvFilter(), Collections.EMPTY_SET);
+    return new AppPermission(permissionType, new GenericEntityFilter(ids, filterType), new EnvFilter(), actions);
   }
 
   private UserGroup createUserGroup(List<String> memberIds) {
