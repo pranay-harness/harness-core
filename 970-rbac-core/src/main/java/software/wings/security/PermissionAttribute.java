@@ -388,9 +388,13 @@ public class PermissionAttribute {
      */
     PROVISIONER,
     /**
-     * Manage templates
+     * Manage Account templates
      */
     TEMPLATE_MANAGEMENT,
+    /**
+     * Manage Application templates
+     */
+    APP_TEMPLATE,
     /**
      * User Permission Read.
      */

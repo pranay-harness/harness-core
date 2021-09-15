@@ -15,6 +15,6 @@ public class AccessControlTestBase extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Rule public LifecycleRule lifecycleRule = new LifecycleRule();
   @Rule
-  public AccessControlApplicationRule connectorTestRule =
+  public AccessControlApplicationRule accessControlApplicationRule =
       new AccessControlApplicationRule(lifecycleRule.getClosingFactory());
 }

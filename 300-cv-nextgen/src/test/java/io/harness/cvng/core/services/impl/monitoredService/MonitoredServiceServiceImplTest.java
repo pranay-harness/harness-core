@@ -1,6 +1,7 @@
 package io.harness.cvng.core.services.impl.monitoredService;
 
 import static io.harness.rule.OwnerRule.ABHIJITH;
+import static io.harness.rule.OwnerRule.ANJAN;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.KANHAIYA;
 import static io.harness.rule.OwnerRule.SOWMYA;
@@ -151,6 +152,8 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
 
     FieldUtils.writeField(monitoredServiceService, "nextGenService", nextGenService, true);
     FieldUtils.writeField(monitoredServiceService, "setupUsageEventService", setupUsageEventService, true);
+    FieldUtils.writeField(changeSourceService, "changeSourceUpdateHandlerMap", new HashMap<>(), true);
+    FieldUtils.writeField(monitoredServiceService, "changeSourceService", changeSourceService, true);
   }
 
   @Test
@@ -824,6 +827,61 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     assertThat(healthSourceDTOS.get(0).getType()).isEqualTo(DataSourceType.APP_DYNAMICS);
     assertThat(healthSourceDTOS.get(0).getVerificationType()).isEqualTo(VerificationType.TIME_SERIES);
     assertThat(healthSourceDTOS.get(0).getName()).isEqualTo(healthSourceName);
+  }
+
+  @Test
+  @Owner(developers = ANJAN)
+  @Category(UnitTests.class)
+  public void testGetYamlTemplate() {
+    assert (monitoredServiceService.getYamlTemplate(projectParams, MonitoredServiceType.APPLICATION))
+        .equals("monitoredService:\n"
+            + "  identifier:\n"
+            + "  type: Application\n"
+            + "  name:\n"
+            + "  desc:\n"
+            + "  projectIdentifier: " + projectParams.getProjectIdentifier() + "\n"
+            + "  orgIdentifier: " + projectParams.getOrgIdentifier() + "\n"
+            + "  serviceRef:\n"
+            + "  environmentRef:\n"
+            + "  sources:\n"
+            + "    healthSources:\n"
+            + "    changeSources:\n"
+            + "      - name: Harness CD\n"
+            + "        identifier: harness_cd\n"
+            + "        type: HarnessCD\n"
+            + "        enabled : true\n");
+
+    assert (monitoredServiceService.getYamlTemplate(projectParams, MonitoredServiceType.INFRASTRUCTURE))
+        .equals("monitoredService:\n"
+            + "  identifier:\n"
+            + "  type: Infrastructure\n"
+            + "  name:\n"
+            + "  desc:\n"
+            + "  projectIdentifier: " + projectParams.getProjectIdentifier() + "\n"
+            + "  orgIdentifier: " + projectParams.getOrgIdentifier() + "\n"
+            + "  serviceRef:\n"
+            + "  environmentRef:\n"
+            + "  sources:\n"
+            + "    healthSources:\n"
+            + "    changeSources:\n");
+
+    assert (monitoredServiceService.getYamlTemplate(projectParams, null))
+        .equals("monitoredService:\n"
+            + "  identifier:\n"
+            + "  type: Application\n"
+            + "  name:\n"
+            + "  desc:\n"
+            + "  projectIdentifier: " + projectParams.getProjectIdentifier() + "\n"
+            + "  orgIdentifier: " + projectParams.getOrgIdentifier() + "\n"
+            + "  serviceRef:\n"
+            + "  environmentRef:\n"
+            + "  sources:\n"
+            + "    healthSources:\n"
+            + "    changeSources:\n"
+            + "      - name: Harness CD\n"
+            + "        identifier: harness_cd\n"
+            + "        type: HarnessCD\n"
+            + "        enabled : true\n");
   }
 
   MonitoredServiceDTO createMonitoredServiceDTO() {

@@ -2348,9 +2348,6 @@ public class DelegateServiceImpl implements DelegateService {
       delegateGroupId = delegateGroup.getUuid();
     }
 
-    // Check if delegate is NG delegate and set the flag to true, if needed
-    boolean isNgDelegate = isNotBlank(delegateParams.getSessionIdentifier());
-
     DelegateEntityOwner owner =
         DelegateEntityOwnerHelper.buildOwner(delegateParams.getOrgIdentifier(), delegateParams.getProjectIdentifier());
 
@@ -2361,7 +2358,7 @@ public class DelegateServiceImpl implements DelegateService {
             .sessionIdentifier(
                 isNotBlank(delegateParams.getSessionIdentifier()) ? delegateParams.getSessionIdentifier() : null)
             .owner(owner)
-            .ng(isNgDelegate)
+            .ng(delegateParams.isNg())
             .sizeDetails(sizeDetails)
             .description(delegateParams.getDescription())
             .ip(delegateParams.getIp())
