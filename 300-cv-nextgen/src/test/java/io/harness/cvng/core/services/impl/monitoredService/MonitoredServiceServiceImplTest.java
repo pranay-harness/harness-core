@@ -151,6 +151,8 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
 
     FieldUtils.writeField(monitoredServiceService, "nextGenService", nextGenService, true);
     FieldUtils.writeField(monitoredServiceService, "setupUsageEventService", setupUsageEventService, true);
+    FieldUtils.writeField(changeSourceService, "changeSourceUpdateHandlerMap", new HashMap<>(), true);
+    FieldUtils.writeField(monitoredServiceService, "changeSourceService", changeSourceService, true);
   }
 
   @Test

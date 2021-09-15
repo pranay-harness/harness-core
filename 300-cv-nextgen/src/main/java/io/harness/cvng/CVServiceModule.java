@@ -18,6 +18,7 @@ import io.harness.cvng.activity.entities.HarnessCDActivity.HarnessCDActivityUpda
 import io.harness.cvng.activity.entities.InfrastructureActivity.InfrastructureActivityUpdatableEntity;
 import io.harness.cvng.activity.entities.KubernetesActivity.KubernetesActivityUpdatableEntity;
 import io.harness.cvng.activity.entities.KubernetesActivitySource.KubernetesActivitySourceUpdatableEntity;
+import io.harness.cvng.activity.entities.PagerDutyActivity.PagerDutyActivityUpdatableEntity;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.services.impl.ActivityServiceImpl;
 import io.harness.cvng.activity.source.services.api.ActivitySourceService;
@@ -124,6 +125,7 @@ import io.harness.cvng.core.services.impl.CVNGLogServiceImpl;
 import io.harness.cvng.core.services.impl.CVNGYamlSchemaServiceImpl;
 import io.harness.cvng.core.services.impl.CVSetupServiceImpl;
 import io.harness.cvng.core.services.impl.ChangeEventServiceImpl;
+import io.harness.cvng.core.services.impl.ChangeSourceUpdateHandler;
 import io.harness.cvng.core.services.impl.DSConfigServiceImpl;
 import io.harness.cvng.core.services.impl.DataCollectionTaskServiceImpl;
 import io.harness.cvng.core.services.impl.DefaultDeleteEntityByHandler;
@@ -138,6 +140,7 @@ import io.harness.cvng.core.services.impl.NewRelicDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.NewRelicServiceImpl;
 import io.harness.cvng.core.services.impl.OnboardingServiceImpl;
 import io.harness.cvng.core.services.impl.PagerDutyServiceImpl;
+import io.harness.cvng.core.services.impl.PagerdutyChangeSourceUpdateHandler;
 import io.harness.cvng.core.services.impl.PrometheusCVConfigTransformer;
 import io.harness.cvng.core.services.impl.PrometheusDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.PrometheusServiceImpl;
@@ -161,6 +164,7 @@ import io.harness.cvng.core.services.impl.monitoredService.ServiceDependencyServ
 import io.harness.cvng.core.transformer.changeEvent.ChangeEventEntityAndDTOTransformer;
 import io.harness.cvng.core.transformer.changeEvent.ChangeEventMetaDataTransformer;
 import io.harness.cvng.core.transformer.changeEvent.HarnessCDChangeEventTransformer;
+import io.harness.cvng.core.transformer.changeEvent.PagerDutyChangeEventTransformer;
 import io.harness.cvng.core.transformer.changeSource.ChangeSourceEntityAndDTOTransformer;
 import io.harness.cvng.core.transformer.changeSource.ChangeSourceSpecTransformer;
 import io.harness.cvng.core.transformer.changeSource.HarnessCDChangeSourceSpecTransformer;
@@ -395,7 +399,6 @@ public class CVServiceModule extends AbstractModule {
     bind(ActivityService.class).to(ActivityServiceImpl.class);
     bind(AlertRuleService.class).to(AlertRuleServiceImpl.class);
     bind(LogDashboardService.class).to(LogDashboardServiceImpl.class);
-    bind(WebhookService.class).to(WebhookServiceImpl.class);
     bind(DeploymentTimeSeriesAnalysisService.class).to(DeploymentTimeSeriesAnalysisServiceImpl.class);
     bind(NextGenService.class).to(NextGenServiceImpl.class);
     bind(HostRecordService.class).to(HostRecordServiceImpl.class);
@@ -473,6 +476,7 @@ public class CVServiceModule extends AbstractModule {
     bind(SetupUsageEventService.class).to(SetupUsageEventServiceImpl.class);
     bind(CVNGStepService.class).to(CVNGStepServiceImpl.class);
     bind(PagerDutyService.class).to(PagerDutyServiceImpl.class);
+    bind(WebhookService.class).to(WebhookServiceImpl.class);
     MapBinder<ChangeSourceType, ChangeSource.UpdatableChangeSourceEntity> changeTypeSourceMapBinder =
         MapBinder.newMapBinder(binder(), ChangeSourceType.class, ChangeSource.UpdatableChangeSourceEntity.class);
     changeTypeSourceMapBinder.addBinding(ChangeSourceType.HARNESS_CD)
@@ -498,6 +502,8 @@ public class CVServiceModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), ActivityType.class, ActivityUpdatableEntity.class);
     activityTypeActivityUpdatableEntityMapBinder.addBinding(ActivityType.HARNESS_CD)
         .to(HarnessCDActivityUpdatableEntity.class);
+    activityTypeActivityUpdatableEntityMapBinder.addBinding(ActivityType.PAGER_DUTY)
+        .to(PagerDutyActivityUpdatableEntity.class);
     activityTypeActivityUpdatableEntityMapBinder.addBinding(ActivityType.DEPLOYMENT)
         .to(DeploymentActivityUpdatableEntity.class);
     activityTypeActivityUpdatableEntityMapBinder.addBinding(ActivityType.INFRASTRUCTURE)
@@ -507,11 +513,19 @@ public class CVServiceModule extends AbstractModule {
     activityTypeActivityUpdatableEntityMapBinder.addBinding(ActivityType.CUSTOM)
         .to(CustomActivityUpdatableEntity.class);
 
+    MapBinder<ChangeSourceType, ChangeSourceUpdateHandler> changeSourceUpdateHandlerMapBinder =
+        MapBinder.newMapBinder(binder(), ChangeSourceType.class, ChangeSourceUpdateHandler.class);
+    changeSourceUpdateHandlerMapBinder.addBinding(ChangeSourceType.PAGER_DUTY)
+        .to(PagerdutyChangeSourceUpdateHandler.class);
+
     bind(ChangeEventService.class).to(ChangeEventServiceImpl.class);
     bind(ChangeEventEntityAndDTOTransformer.class);
     bind(ChangeEventMetaDataTransformer.class)
         .annotatedWith(Names.named(ChangeSourceType.HARNESS_CD.name()))
         .to(HarnessCDChangeEventTransformer.class);
+    bind(ChangeEventMetaDataTransformer.class)
+        .annotatedWith(Names.named(ChangeSourceType.PAGER_DUTY.name()))
+        .to(PagerDutyChangeEventTransformer.class);
   }
 
   private void bindTheMonitoringSourceImportStatusCreators() {

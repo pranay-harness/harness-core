@@ -1,4 +1,5 @@
 package io.harness.cvng.beans.change;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -13,7 +14,8 @@ import lombok.experimental.SuperBuilder;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonSubTypes({
   @JsonSubTypes.Type(value = KubernetesChangeEventMetadata.class, name = "K8sCluster")
-  , @JsonSubTypes.Type(value = HarnessCDEventMetadata.class, name = "HarnessCD")
+  , @JsonSubTypes.Type(value = HarnessCDEventMetadata.class, name = "HarnessCD"),
+      @JsonSubTypes.Type(value = PagerDutyEventMetaData.class, name = "PagerDuty")
 })
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)

@@ -36,7 +36,6 @@ import lombok.NonNull;
 public interface ActivityService {
   Activity get(String activityId);
   Activity getByVerificationJobInstanceId(String verificationJobInstanceId);
-  String register(String accountId, String webhookToken, ActivityDTO activityDTO);
 
   String register(String accountId, ActivityDTO activityDTO);
   String register(Activity activity);
