@@ -36,6 +36,9 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureContainerRegistry;
+import software.wings.beans.AzureImageDefinition;
+import software.wings.beans.AzureImageGallery;
+import software.wings.beans.AzureResourceGroup;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -812,6 +815,55 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
     return getBuildService(settingAttribute)
         .listContainerRegistryNames((AzureConfig) settingValue, encryptedDataDetails, subscriptionId);
+  }
+
+  @Override
+  public Map<String, String> listSubscriptions(String settingId) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    if (!(settingValue instanceof AzureConfig)) {
+      return Collections.emptyMap();
+    }
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
+    return getBuildService(settingAttribute).listSubscriptions((AzureConfig) settingValue, encryptedDataDetails);
+  }
+
+  @Override
+  public List<AzureImageGallery> listImageGalleries(String settingId, String subscriptionId, String resourceGroupName) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    if (!(settingValue instanceof AzureConfig)) {
+      return Collections.emptyList();
+    }
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
+    return getBuildService(settingAttribute)
+        .listImageGalleries((AzureConfig) settingValue, encryptedDataDetails, subscriptionId, resourceGroupName);
+  }
+
+  @Override
+  public List<AzureResourceGroup> listResourceGroups(String settingId, String subscriptionId) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    if (!(settingValue instanceof AzureConfig)) {
+      return Collections.emptyList();
+    }
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
+    return getBuildService(settingAttribute)
+        .listResourceGroups((AzureConfig) settingValue, encryptedDataDetails, subscriptionId);
+  }
+
+  @Override
+  public List<AzureImageDefinition> listImageDefinitions(
+      String settingId, String subscriptionId, String resourceGroupName, String galleryName) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    if (!(settingValue instanceof AzureConfig)) {
+      return Collections.emptyList();
+    }
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
+    return getBuildService(settingAttribute)
+        .listImageDefinitions(
+            (AzureConfig) settingValue, encryptedDataDetails, subscriptionId, resourceGroupName, galleryName);
   }
 
   private boolean areDelegateSelectorsRequired(SettingAttribute settingAttribute) {

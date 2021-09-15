@@ -554,7 +554,7 @@ public class SettingResource {
   @ExceptionMetered
   public RestResponse<Map<String, String>> listSubscriptions(
       @QueryParam("accountId") String accountId, @QueryParam("settingId") String settingId) {
-    return new RestResponse(azureResourceService.listSubscriptions(settingId));
+    return new RestResponse(azureResourceService.listSubscriptions(accountId, settingId));
   }
 
   @GET

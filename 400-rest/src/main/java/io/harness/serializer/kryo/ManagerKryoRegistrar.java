@@ -161,6 +161,7 @@ import software.wings.beans.AwsElbConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureContainerRegistry;
 import software.wings.beans.AzureKubernetesCluster;
+import software.wings.beans.AzureResourceGroup;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.Base;
 import software.wings.beans.BastionConnectionAttributes;
@@ -1490,6 +1491,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AzureArtifactsPackage.class, 7287);
     kryo.register(AzureArtifactsPackageVersion.class, 7288);
     kryo.register(AzureArtifactsCollectionTaskParameters.class, 7289);
+    kryo.register(AzureResourceGroup.class, 40016);
     kryo.register(UtmInfo.class, 7291);
 
     kryo.register(TerraformApplyMarkerParam.class, 7292);
