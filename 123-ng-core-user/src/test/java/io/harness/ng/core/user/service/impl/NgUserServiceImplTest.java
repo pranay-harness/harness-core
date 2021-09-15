@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.ng.core.invites.mapper.RoleBindingMapper.createRoleAssignmentDTOs;
 import static io.harness.rule.OwnerRule.KARAN;
 
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
@@ -108,8 +109,8 @@ public class NgUserServiceImplTest extends CategoryTest {
     PageRequest pageRequest = PageRequest.builder().pageIndex(0).pageSize(10).build();
     Scope scope = Scope.builder().accountIdentifier(accountIdentifier).build();
     String userId = randomAlphabetic(10);
-    List<String> userIds = Collections.singletonList(userId);
-    List<UserMetadata> userMetadata = Collections.singletonList(UserMetadata.builder().userId(userId).build());
+    List<String> userIds = singletonList(userId);
+    List<UserMetadata> userMetadata = singletonList(UserMetadata.builder().userId(userId).build());
 
     final ArgumentCaptor<Criteria> userMembershipCriteriaArgumentCaptor = ArgumentCaptor.forClass(Criteria.class);
     final ArgumentCaptor<Criteria> userMetadataCriteriaArgumentCaptor = ArgumentCaptor.forClass(Criteria.class);
@@ -144,8 +145,8 @@ public class NgUserServiceImplTest extends CategoryTest {
     PageRequest pageRequest = PageRequest.builder().pageIndex(0).pageSize(10).build();
     Scope scope = Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build();
     String userId = randomAlphabetic(10);
-    List<String> userIds = Collections.singletonList(userId);
-    List<UserMetadata> userMetadata = Collections.singletonList(UserMetadata.builder().userId(userId).build());
+    List<String> userIds = singletonList(userId);
+    List<UserMetadata> userMetadata = singletonList(UserMetadata.builder().userId(userId).build());
 
     final ArgumentCaptor<Criteria> userMembershipCriteriaArgumentCaptor = ArgumentCaptor.forClass(Criteria.class);
     final ArgumentCaptor<Criteria> userMetadataCriteriaArgumentCaptor = ArgumentCaptor.forClass(Criteria.class);
@@ -202,8 +203,8 @@ public class NgUserServiceImplTest extends CategoryTest {
 
     return AddUsersDTO.builder()
         .emails(emails)
-        .userGroups(Collections.singletonList(userGroupIdentifier))
-        .roleBindings(Collections.singletonList(roleBinding))
+        .userGroups(singletonList(userGroupIdentifier))
+        .roleBindings(singletonList(roleBinding))
         .build();
   }
 
@@ -245,7 +246,7 @@ public class NgUserServiceImplTest extends CategoryTest {
     verify(userMetadataRepository, times(1)).findAll(any(), any());
     verify(ngUserService, times(1)).getUsersAtScope(any(), any());
 
-    assertDirectlyAddUsers(scope, Lists.newArrayList(emailAlreadyPartOfAccount));
+    assertDirectlyAddUsers(scope, Lists.newArrayList(emailAlreadyPartOfAccount), addUsersDTO.getUserGroups());
     assertDirectlyAddedNotification(
         notificationChannelArgumentCaptor, Lists.newArrayList(emailAlreadyPartOfAccount), "organizationname", orgName);
   }
@@ -258,19 +259,13 @@ public class NgUserServiceImplTest extends CategoryTest {
     when(accountOrgProjectHelper.getResourceScopeName(scope)).thenReturn(resourceName);
     when(accountOrgProjectHelper.getBaseUrl(accountIdentifier)).thenReturn("qa.harness.io");
 
-    UserGroupFilterDTO userGroupFilterDTO = UserGroupFilterDTO.builder()
-                                                .accountIdentifier(scope.getAccountIdentifier())
-                                                .orgIdentifier(scope.getOrgIdentifier())
-                                                .projectIdentifier(scope.getProjectIdentifier())
-                                                .identifierFilter(new HashSet<>(addUsersDTO.getUserGroups()))
-                                                .build();
-    List<UserGroup> userGroups =
-        addUsersDTO.getUserGroups()
-            .stream()
-            .map(userGroupIdentifier -> UserGroup.builder().identifier(userGroupIdentifier).build())
-            .collect(toList());
-    when(userGroupService.list(userGroupFilterDTO)).thenReturn(userGroups);
+    toBeDirectlyAddedUserIds.forEach(userIdAlreadyPartOfAccount -> {
+      doReturn(false).when(ngUserService).isUserAtScope(userIdAlreadyPartOfAccount, scope);
+      preAddUserToScope(userIdAlreadyPartOfAccount, scope, addUsersDTO.getRoleBindings(), addUsersDTO.getUserGroups());
+    });
+  }
 
+  private void preAddUserToScope(String userId, Scope scope, List<RoleBinding> roleBindings, List<String> userGroups) {
     List<Scope> parentScopes = new ArrayList<>();
     if (isNotEmpty(scope.getProjectIdentifier())) {
       parentScopes.add(Scope.of(scope.getAccountIdentifier(), scope.getOrgIdentifier(), null));
@@ -278,29 +273,37 @@ public class NgUserServiceImplTest extends CategoryTest {
     if (isNotEmpty(scope.getOrgIdentifier())) {
       parentScopes.add(Scope.of(scope.getAccountIdentifier(), null, null));
     }
+    when(userMetadataRepository.findDistinctByUserId(userId))
+        .thenReturn(Optional.of(UserMetadata.builder().userId(userId).build()));
+    doNothing()
+        .when(ngUserService)
+        .addUserToScopeInternal(userId, UserMembershipUpdateSource.USER, scope, getDefaultRoleIdentifier(scope));
 
-    toBeDirectlyAddedUserIds.forEach(userIdAlreadyPartOfAccount -> {
-      doReturn(false).when(ngUserService).isUserAtScope(userIdAlreadyPartOfAccount, scope);
-      when(userMetadataRepository.findDistinctByUserId(userIdAlreadyPartOfAccount))
-          .thenReturn(Optional.of(UserMetadata.builder().userId(userIdAlreadyPartOfAccount).build()));
-      doNothing()
-          .when(ngUserService)
-          .addUserToScopeInternal(
-              userIdAlreadyPartOfAccount, UserMembershipUpdateSource.USER, scope, getDefaultRoleIdentifier(scope));
+    parentScopes.forEach(parentScope
+        -> doNothing()
+               .when(ngUserService)
+               .addUserToScopeInternal(
+                   userId, UserMembershipUpdateSource.USER, parentScope, getDefaultRoleIdentifier(parentScope)));
+    doNothing()
+        .when(ngUserService)
+        .createRoleAssignments(userId, scope, createRoleAssignmentDTOs(roleBindings, userId));
 
-      parentScopes.forEach(parentScope
-          -> doNothing()
-                 .when(ngUserService)
-                 .addUserToScopeInternal(userIdAlreadyPartOfAccount, UserMembershipUpdateSource.USER, parentScope,
-                     getDefaultRoleIdentifier(parentScope)));
-      doNothing()
-          .when(ngUserService)
-          .createRoleAssignments(userIdAlreadyPartOfAccount, scope,
-              createRoleAssignmentDTOs(addUsersDTO.getRoleBindings(), userIdAlreadyPartOfAccount));
-      doNothing()
-          .when(userGroupService)
-          .addUserToUserGroups(scope, userIdAlreadyPartOfAccount, addUsersDTO.getUserGroups());
-    });
+    UserGroupFilterDTO userGroupFilterDTO =
+        UserGroupFilterDTO.builder()
+            .accountIdentifier(scope.getAccountIdentifier())
+            .orgIdentifier(scope.getOrgIdentifier())
+            .projectIdentifier(scope.getProjectIdentifier())
+            .identifierFilter(new HashSet<>(isEmpty(userGroups) ? new ArrayList<>() : userGroups))
+            .build();
+
+    List<UserGroup> userGroupsResult = isEmpty(userGroups)
+        ? new ArrayList<>()
+        : userGroups.stream()
+              .map(userGroupIdentifier -> UserGroup.builder().identifier(userGroupIdentifier).build())
+              .collect(toList());
+    when(userGroupService.list(userGroupFilterDTO)).thenReturn(userGroupsResult);
+
+    doNothing().when(userGroupService).addUserToUserGroups(scope, userId, userGroups);
   }
 
   private String getDefaultRoleIdentifier(Scope scope) {
@@ -321,17 +324,19 @@ public class NgUserServiceImplTest extends CategoryTest {
     return 1;
   }
 
-  private void assertDirectlyAddUsers(Scope scope, List<String> toBeDirectlyAddedUserIds) {
+  private void assertDirectlyAddUsers(Scope scope, List<String> toBeDirectlyAddedUserIds, List<String> userGroups) {
     verify(accountOrgProjectHelper, times(1)).getResourceScopeName(any());
     verify(accountOrgProjectHelper, times(1)).getBaseUrl(any());
     verify(ngUserService, times(toBeDirectlyAddedUserIds.size())).isUserAtScope(any(), any());
-    verify(userMetadataRepository, times(toBeDirectlyAddedUserIds.size())).findDistinctByUserId(any());
-    verify(ngUserService, times(toBeDirectlyAddedUserIds.size() * getRank(scope)))
-        .addUserToScopeInternal(any(), any(), any(), any());
-    verify(ngUserService, times(toBeDirectlyAddedUserIds.size())).createRoleAssignments(any(), any(), any());
-    verify(userGroupService, times(toBeDirectlyAddedUserIds.size())).list(any());
-    verify(userGroupService, times(toBeDirectlyAddedUserIds.size()))
-        .addUserToUserGroups(any(Scope.class), any(), any());
+    assertAddUserToScope(scope, toBeDirectlyAddedUserIds, userGroups);
+  }
+
+  private void assertAddUserToScope(Scope scope, List<String> userIds, List<String> userGroups) {
+    verify(userMetadataRepository, times(userIds.size())).findDistinctByUserId(any());
+    verify(ngUserService, times(userIds.size() * getRank(scope))).addUserToScopeInternal(any(), any(), any(), any());
+    verify(ngUserService, times(userIds.size())).createRoleAssignments(any(), any(), any());
+    verify(userGroupService, times(isEmpty(userGroups) ? 0 : userIds.size())).list(any());
+    verify(userGroupService, times(userIds.size())).addUserToUserGroups(any(Scope.class), any(), any());
   }
 
   private void assertDirectlyAddedNotification(ArgumentCaptor<NotificationChannel> notificationChannelArgumentCaptor,
@@ -369,7 +374,7 @@ public class NgUserServiceImplTest extends CategoryTest {
         .when(ngUserService)
         .getUsersAtScope(Sets.newHashSet(userIdAlreadyPartOfHarness), Scope.of(accountIdentifier, null, null));
 
-    assertInviteUser(scope, Collections.singletonList(emailAlreadyPartOfHarness), addUsersDTO);
+    assertInviteUser(scope, singletonList(emailAlreadyPartOfHarness), addUsersDTO);
   }
 
   @Test
@@ -390,7 +395,7 @@ public class NgUserServiceImplTest extends CategoryTest {
         .when(ngUserService)
         .getUsersAtScope(Sets.newHashSet(), Scope.of(accountIdentifier, null, null));
 
-    assertInviteUser(scope, Collections.singletonList(newEmail), addUsersDTO);
+    assertInviteUser(scope, singletonList(newEmail), addUsersDTO);
   }
 
   private void assertInviteUser(Scope scope, List<String> emailsExpectedToBeInvited, AddUsersDTO addUsersDTO) {
@@ -416,5 +421,16 @@ public class NgUserServiceImplTest extends CategoryTest {
     Collections.sort(toBeInvitedEmails);
     Collections.sort(emailsExpectedToBeInvited);
     assertEquals(emailsExpectedToBeInvited, toBeInvitedEmails);
+  }
+
+  @Test
+  @Owner(developers = KARAN)
+  @Category(UnitTests.class)
+  public void testAddUsersNullRoleBindingsAndUserGroups() {
+    Scope scope = Scope.of(accountIdentifier, orgIdentifier, null);
+    String userId = randomAlphabetic(10);
+    preAddUserToScope(userId, scope, new ArrayList<>(), new ArrayList<>());
+    ngUserService.addUserToScope(userId, scope, null, null, UserMembershipUpdateSource.USER);
+    assertAddUserToScope(scope, singletonList(userId), null);
   }
 }
