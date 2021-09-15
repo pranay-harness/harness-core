@@ -54,6 +54,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.authenticationservice.beans.LogoutResponse;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -176,7 +177,6 @@ import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.authentication.AuthenticationManager;
 import software.wings.security.authentication.AuthenticationUtils;
-import software.wings.security.authentication.LogoutResponse;
 import software.wings.security.authentication.TOTPAuthHandler;
 import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings;
@@ -421,9 +421,9 @@ public class UserServiceImpl implements UserService {
       userInvite.setCreatedFromNG(true);
       userInvite.setSource(UserInviteSource.builder().type(SourceType.TRIAL).build());
       userInvite.setCompleted(false);
-      userInvite.setEdition(signupInvite.getEdition());
-      userInvite.setBillingFrequency(signupInvite.getBillingFrequency());
-      userInvite.setSignupAction(signupInvite.getSignupAction());
+      userInvite.setEdition(signupInvite.getEdition().name());
+      userInvite.setBillingFrequency(signupInvite.getBillingFrequency().name());
+      userInvite.setSignupAction(signupInvite.getSignupAction().name());
 
       String inviteId = wingsPersistence.save(userInvite);
       userInvite.setUuid(inviteId);
@@ -699,6 +699,7 @@ public class UserServiceImpl implements UserService {
     userSummary.setUserLocked(user.isUserLocked());
     userSummary.setPasswordExpired(user.isPasswordExpired());
     userSummary.setImported(user.isImported());
+    userSummary.setDisabled(user.isDisabled());
     return userSummary;
   }
 

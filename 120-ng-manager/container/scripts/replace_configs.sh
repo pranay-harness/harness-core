@@ -297,6 +297,8 @@ replace_key_value ceAwsSetupConfig.destinationBucket $CE_AWS_DESTINATION_BUCKET
 
 replace_key_value ceAwsSetupConfig.templateURL $CE_AWS_TEMPLATE_URL
 
+replace_key_value ceGcpSetupConfig.gcpProjectId $CE_SETUP_CONFIG_GCP_PROJECT_ID
+
 replace_key_value accessControlClient.enableAccessControl "$ACCESS_CONTROL_ENABLED"
 
 replace_key_value accessControlClient.accessControlServiceConfig.baseUrl "$ACCESS_CONTROL_BASE_URL"

@@ -1,0 +1,181 @@
+extend type Mutation {
+  #Creates a new Deployment Freeze Window and returns it.
+  createDeploymentFreezeWindow(input: CreateDeploymentFreezeWindowInput!): CreateDeploymentFreezeWindowPayload
+    @dataFetcher(name: createDeploymentFreezeWindow)
+
+  #Updates an existing Deployment Freeze Window and returns it.
+  updateDeploymentFreezeWindow(input: UpdateDeploymentFreezeWindowInput!): UpdateDeploymentFreezeWindowPayload
+    @dataFetcher(name: updateDeploymentFreezeWindow)
+
+  #Deletes an existing Deployment Freeze Window.
+  deleteDeploymentFreezeWindow(input: DeleteDeploymentFreezeWindowInput!): DeleteDeploymentFreezeWindowPayload
+    @dataFetcher(name: deleteDeploymentFreezeWindow)
+
+  toggleDeploymentFreezeWindow(input: ToggleDeploymentFreezeWindowInput!): ToggleDeploymentFreezeWindowPayload
+    @dataFetcher(name: toggleDeploymentFreezeWindow)
+}
+
+extend type Query {
+  #Fetch details of a Deployment Freeze Window by id.
+  deploymentFreezeWindow(id: String!): DeploymentFreezeWindow @dataFetcher(name: deploymentFreezeWindow)
+
+  #Lists enabled/disabled Deployment Freeze Windows.
+  listDeploymentFreezeWindows(listEnabled: Boolean, limit: Int!, offset: Int): DeploymentFreezeWindowConnection
+    @dataFetcher(name: deploymentFreezeWindowConnection)
+
+  #Fetch details of a Deployment Freeze Window by name.
+  deploymentFreezeWindowByName(name: String!): DeploymentFreezeWindow @dataFetcher(name: deploymentFreezeWindow)
+}
+
+input CreateDeploymentFreezeWindowInput {
+  clientMutationId: String
+  name: String!
+  description: String
+  #Select appropriate Application(s), Environment(s), and Service(s) as applicable to the deployment freeze window.
+  freezeWindows: [FreezeWindowInput]!
+  #Input the time-based entities for the deployment freeze window.
+  setup: SetupInput!
+  notifyTo: [String]!
+}
+
+input UpdateDeploymentFreezeWindowInput {
+  clientMutationId: String
+  #Deployment freeze window id.
+  id: String!
+  name: String!
+  description: String
+  freezeWindows: [FreezeWindowInput]!
+  setup: SetupInput!
+  notifyTo: [String]!
+}
+
+input DeleteDeploymentFreezeWindowInput {
+  clientMutationId: String
+  #Deployment freeze window id.
+  id: String!
+}
+
+input ToggleDeploymentFreezeWindowInput {
+  clientMutationId: String
+  id: String!
+  applicable: Boolean!
+}
+
+input FreezeWindowInput {
+  #Input Application ids when 'appFilter' is selected as 'CUSTOM'.
+  appIds: [String]
+  #Select 'ALL' if you want to freeze for all applications else select 'CUSTOM'.
+  appFilter: AppFilterType
+  #Select the Environment Type to which the freeze window is to be applied. CUSTOM 'envTypeFilter' is applicable only when 'appFilter' is selected as 'CUSTOM' with a single application.
+  envTypeFilter: EnvironmentTypeFilterInput!
+  #Input Environment Ids when 'envTypeFilter' is selected as 'CUSTOM'.
+  envIds: [String]
+  freezeForAllServices: Boolean
+  servIds: [String]
+}
+
+enum EnvironmentTypeFilterInput {
+  ALL
+  ALL_PROD
+  ALL_NON_PROD
+  CUSTOM
+}
+
+input SetupInput {
+  #Input 'true' for Duration-Based deployment freeze windows else 'false' for Schedule-Based deployment freeze windows.
+  isDurationBased: Boolean!
+  #Input the duration in milliseconds only when 'isDurationBased' is 'true'.
+  duration: Long
+  #Input the start time of the freeze only when 'isDurationBased' is 'false'.
+  from: Long
+  #Input the end time of the freeze only when 'isDurationBased' is 'false'.
+  to: Long
+  #Input the frequency for a recurring deployment freeze window. If not recurring leave it be null.
+  freezeOccurrence: FreezeOccurrenceType
+  #Input 'true' for running this Scheduled-Based freeze window forever(max 5 Years from now) else input 'false' and enter the expiry time for the window.
+  untilForever: Boolean
+  #Input expiry time of the deployment freeze window if 'untilForever' is selected as 'false'.
+  expiryTime: Long
+}
+
+enum FreezeOccurrenceType {
+  DAILY
+  WEEKLY
+  MONTHLY
+  ANNUAL
+}
+
+type DeploymentFreezeWindow {
+  id: String
+  name: String
+  description: String
+  applicable: Boolean
+  notifyTo: [String]
+  freezeWindows: [FreezeWindow]
+  setup: Setup
+}
+
+type FreezeWindow {
+  appIds: [String]
+  appFilter: AppFilterType
+  envFilterType: EnvironmentFilterType
+  envIds: [String]
+  servFilter: ServiceFilterType
+  servIds: [String]
+}
+
+enum AppFilterType {
+  ALL
+  CUSTOM
+}
+
+enum EnvironmentFilterType {
+  ALL
+  ALL_PROD
+  ALL_NON_PROD
+  CUSTOM
+}
+
+enum ServiceFilterType {
+  ALL
+  CUSTOM
+}
+
+type Setup {
+  isDurationBased: Boolean
+  duration: Long
+  from: Long
+  to: Long
+  freezeOccurrence: FreezeOccurrenceType
+  untilForever: Boolean
+  endTime: Long
+}
+
+type CreateDeploymentFreezeWindowPayload {
+  clientMutationId: String
+  deploymentFreezeWindow: DeploymentFreezeWindow
+}
+
+type UpdateDeploymentFreezeWindowPayload {
+  clientMutationId: String
+  deploymentFreezeWindow: DeploymentFreezeWindow
+}
+
+type DeleteDeploymentFreezeWindowPayload {
+  clientMutationId: String
+}
+
+type ToggleDeploymentFreezeWindowPayload {
+  clientMutationId: String
+  deploymentFreezeWindow: DeploymentFreezeWindow
+}
+
+input DeploymentFreezeWindowFilter {
+  #Input 'true' to get all the enabled deployment freeze windows else 'false' to get all the disabled deployment freeze windows. If this input is not given, all the deployment freeze windows will be listed.
+  listEnabled: Boolean
+}
+
+type DeploymentFreezeWindowConnection {
+  pageInfo: PageInfo
+  nodes: [DeploymentFreezeWindow]
+}

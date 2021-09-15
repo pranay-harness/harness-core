@@ -28,6 +28,13 @@ public class CEGcpServiceAccountDao {
     return query.get();
   }
 
+  public CEGcpServiceAccount getByServiceAccountId(String serviceAccountEmail) {
+    Query<CEGcpServiceAccount> query = persistence.createQuery(CEGcpServiceAccount.class)
+                                           .field(CEGcpServiceAccountKeys.email)
+                                           .equal(serviceAccountEmail);
+    return query.get();
+  }
+
   public void setProjectId(String serviceAccountEmail, String projectId, String accountId) {
     Query<CEGcpServiceAccount> query = persistence.createQuery(CEGcpServiceAccount.class)
                                            .field(CEGcpServiceAccountKeys.accountId)

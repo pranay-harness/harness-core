@@ -3,7 +3,7 @@ package io.harness.cvng.core.services.impl.monitoredService;
 import static io.harness.annotations.dev.HarnessTeam.CV;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.MonitoredServiceRef;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceDependencyDTO;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.entities.ServiceDependency;
 import io.harness.cvng.core.entities.ServiceDependency.Key;
@@ -30,7 +30,7 @@ public class ServiceDependencyServiceImpl implements ServiceDependencyService {
 
   @Override
   public void updateDependencies(ProjectParams projectParams, String toMonitoredServiceIdentifier,
-      Set<MonitoredServiceRef> fromMonitoredServiceIdentifiers) {
+      Set<ServiceDependencyDTO> fromMonitoredServiceIdentifiers) {
     List<ServiceDependency> dependencies = new ArrayList<>();
     fromMonitoredServiceIdentifiers.forEach(fromServiceIdentifier -> {
       dependencies.add(ServiceDependency.builder()
@@ -39,6 +39,7 @@ public class ServiceDependencyServiceImpl implements ServiceDependencyService {
                            .projectIdentifier(projectParams.getProjectIdentifier())
                            .fromMonitoredServiceIdentifier(fromServiceIdentifier.getMonitoredServiceIdentifier())
                            .toMonitoredServiceIdentifier(toMonitoredServiceIdentifier)
+                           .serviceDependencyMetadata(fromServiceIdentifier.getDependencyMetadata())
                            .build());
     });
     List<ServiceDependency> oldDependencies =
@@ -87,7 +88,7 @@ public class ServiceDependencyServiceImpl implements ServiceDependencyService {
   }
 
   @Override
-  public Set<MonitoredServiceRef> getDependentServicesForMonitoredService(
+  public Set<ServiceDependencyDTO> getDependentServicesForMonitoredService(
       ProjectParams projectParams, String monitoredServiceIdentifier) {
     Query<ServiceDependency> query =
         hPersistence.createQuery(ServiceDependency.class)
@@ -98,7 +99,10 @@ public class ServiceDependencyServiceImpl implements ServiceDependencyService {
     List<ServiceDependency> dependencies = query.asList();
     return dependencies.stream()
         .map(d
-            -> MonitoredServiceRef.builder().monitoredServiceIdentifier(d.getFromMonitoredServiceIdentifier()).build())
+            -> ServiceDependencyDTO.builder()
+                   .monitoredServiceIdentifier(d.getFromMonitoredServiceIdentifier())
+                   .dependencyMetadata(d.getServiceDependencyMetadata())
+                   .build())
         .collect(Collectors.toSet());
   }
 

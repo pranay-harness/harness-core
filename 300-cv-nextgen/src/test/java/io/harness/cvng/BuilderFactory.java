@@ -7,6 +7,8 @@ import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 
 import io.harness.cvng.activity.entities.HarnessCDActivity;
 import io.harness.cvng.activity.entities.HarnessCDActivity.HarnessCDActivityBuilder;
+import io.harness.cvng.activity.entities.PagerDutyActivity;
+import io.harness.cvng.activity.entities.PagerDutyActivity.PagerDutyActivityBuilder;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.MonitoredServiceDataSourceType;
 import io.harness.cvng.beans.MonitoredServiceType;
@@ -14,6 +16,7 @@ import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.beans.change.ChangeEventDTO.ChangeEventDTOBuilder;
 import io.harness.cvng.beans.change.ChangeSourceType;
 import io.harness.cvng.beans.change.HarnessCDEventMetadata;
+import io.harness.cvng.beans.change.PagerDutyEventMetaData;
 import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.cdng.beans.CVNGStepInfo;
 import io.harness.cvng.cdng.beans.CVNGStepInfo.CVNGStepInfoBuilder;
@@ -27,7 +30,7 @@ import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.MetricPackDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.MonitoredServiceDTOBuilder;
-import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.MonitoredServiceRef;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceDependencyDTO;
 import io.harness.cvng.core.beans.monitoredService.changeSourceSpec.HarnessCDChangeSourceSpec;
 import io.harness.cvng.core.beans.monitoredService.changeSourceSpec.KubernetesChangeSourceSpec;
 import io.harness.cvng.core.beans.monitoredService.changeSourceSpec.PagerDutyChangeSourceSpec;
@@ -157,8 +160,8 @@ public class BuilderFactory {
         .description(generateUuid())
         .serviceRef(context.getServiceIdentifier())
         .environmentRef(context.getEnvIdentifier())
-        .dependencies(Sets.newHashSet(MonitoredServiceRef.builder().monitoredServiceIdentifier("service1").build(),
-            MonitoredServiceRef.builder().monitoredServiceIdentifier("service2").build()))
+        .dependencies(Sets.newHashSet(ServiceDependencyDTO.builder().monitoredServiceIdentifier("service1").build(),
+            ServiceDependencyDTO.builder().monitoredServiceIdentifier("service2").build()))
         .sources(MonitoredServiceDTO.Sources.builder()
                      .healthSources(Arrays.asList(createHealthSource()).stream().collect(Collectors.toSet()))
                      .build());
@@ -386,6 +389,22 @@ public class BuilderFactory {
         .activityStartTime(clock.instant());
   }
 
+  public PagerDutyActivityBuilder getPagerDutyActivityBuilder() {
+    return PagerDutyActivity.builder()
+        .accountId(context.getAccountId())
+        .orgIdentifier(context.getOrgIdentifier())
+        .projectIdentifier(context.getProjectIdentifier())
+        .serviceIdentifier(context.getServiceIdentifier())
+        .environmentIdentifier(context.getEnvIdentifier())
+        .eventTime(clock.instant())
+        .changeSourceIdentifier("changeSourceID")
+        .type(ChangeSourceType.HARNESS_CD.getActivityType())
+        .pagerDutyUrl("https://myurl.com/pagerduty/token")
+        .eventId("eventId")
+        .activityName("New pager duty incident")
+        .activityStartTime(clock.instant());
+  }
+
   public ChangeEventDTOBuilder getHarnessCDChangeEventDTOBuilder() {
     return getChangeEventDTOBuilder()
         .type(ChangeSourceType.HARNESS_CD)
@@ -401,6 +420,16 @@ public class BuilderFactory {
                                  .artifactType("artifactType")
                                  .artifactTag("artifactTag")
                                  .status("status")
+                                 .build());
+  }
+
+  public ChangeEventDTOBuilder getPagerDutyChangeEventDTOBuilder() {
+    return getChangeEventDTOBuilder()
+        .type(ChangeSourceType.PAGER_DUTY)
+        .changeEventMetaData(PagerDutyEventMetaData.builder()
+                                 .eventId("eventId")
+                                 .pagerDutyUrl("https://myurl.com/pagerduty/token")
+                                 .title("New pager duty incident")
                                  .build());
   }
 

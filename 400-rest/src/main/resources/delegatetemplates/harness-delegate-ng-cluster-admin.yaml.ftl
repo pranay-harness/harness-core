@@ -114,6 +114,8 @@ spec:
           value: ${deployMode}
         - name: DELEGATE_NAME
           value: ${delegateName}
+        - name: NEXT_GEN
+          value: "true"
         - name: DELEGATE_GROUP_ID
           value: ${delegateGroupId}
         - name: DELEGATE_DESCRIPTION

@@ -19,8 +19,8 @@ import io.harness.pms.contracts.service.OutcomeResolveOptionalBlobRequest;
 import io.harness.pms.contracts.service.OutcomeResolveOptionalBlobResponse;
 import io.harness.pms.sdk.core.data.OptionalOutcome;
 import io.harness.pms.sdk.core.data.Outcome;
-import io.harness.pms.sdk.core.grpc.client.PmsSdkGrpcClientUtils;
 import io.harness.pms.sdk.core.resolver.outcome.mapper.PmsOutcomeMapper;
+import io.harness.pms.utils.PmsGrpcClientUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -40,7 +40,7 @@ public class OutcomeGrpcServiceImpl implements OutcomeService {
   @Override
   public List<Outcome> findAllByRuntimeId(String planExecutionId, String runtimeId) {
     OutcomeFindAllBlobResponse allByRuntimeId =
-        PmsSdkGrpcClientUtils.retryAndProcessException(outcomeProtoServiceBlockingStub::findAllByRuntimeId,
+        PmsGrpcClientUtils.retryAndProcessException(outcomeProtoServiceBlockingStub::findAllByRuntimeId,
             OutcomeFindAllBlobRequest.newBuilder().setPlanExecutionId(planExecutionId).setRuntimeId(runtimeId).build());
     return PmsOutcomeMapper.convertJsonToOutcome(allByRuntimeId.getOutcomesList());
   }
@@ -48,7 +48,7 @@ public class OutcomeGrpcServiceImpl implements OutcomeService {
   @Override
   public List<Outcome> fetchOutcomes(List<String> outcomeInstanceIds) {
     OutcomeFetchOutcomesBlobResponse outcomeFetchOutcomesBlobResponse =
-        PmsSdkGrpcClientUtils.retryAndProcessException(outcomeProtoServiceBlockingStub::fetchOutcomes,
+        PmsGrpcClientUtils.retryAndProcessException(outcomeProtoServiceBlockingStub::fetchOutcomes,
             OutcomeFetchOutcomesBlobRequest.newBuilder().addAllOutcomeInstanceIds(outcomeInstanceIds).build());
     return PmsOutcomeMapper.convertJsonToOutcome(outcomeFetchOutcomesBlobResponse.getOutcomesList());
   }
@@ -56,7 +56,7 @@ public class OutcomeGrpcServiceImpl implements OutcomeService {
   @Override
   public Outcome fetchOutcome(@NonNull String outcomeInstanceId) {
     OutcomeFetchOutcomeBlobResponse outcomeFetchOutcomeBlobResponse =
-        PmsSdkGrpcClientUtils.retryAndProcessException(outcomeProtoServiceBlockingStub::fetchOutcome,
+        PmsGrpcClientUtils.retryAndProcessException(outcomeProtoServiceBlockingStub::fetchOutcome,
             OutcomeFetchOutcomeBlobRequest.newBuilder().setOutcomeInstanceId(outcomeInstanceId).build());
     return PmsOutcomeMapper.convertJsonToOutcome(outcomeFetchOutcomeBlobResponse.getOutcome());
   }
@@ -64,7 +64,7 @@ public class OutcomeGrpcServiceImpl implements OutcomeService {
   @Override
   public Outcome resolve(Ambiance ambiance, RefObject refObject) {
     OutcomeResolveBlobResponse resolve =
-        PmsSdkGrpcClientUtils.retryAndProcessException(outcomeProtoServiceBlockingStub::resolve,
+        PmsGrpcClientUtils.retryAndProcessException(outcomeProtoServiceBlockingStub::resolve,
             OutcomeResolveBlobRequest.newBuilder().setAmbiance(ambiance).setRefObject(refObject).build());
     return PmsOutcomeMapper.convertJsonToOutcome(resolve.getStepTransput());
   }
@@ -72,7 +72,7 @@ public class OutcomeGrpcServiceImpl implements OutcomeService {
   @Override
   public String consume(Ambiance ambiance, String name, Outcome value, String groupName) {
     OutcomeConsumeBlobResponse response =
-        PmsSdkGrpcClientUtils.retryAndProcessException(outcomeProtoServiceBlockingStub::consume,
+        PmsGrpcClientUtils.retryAndProcessException(outcomeProtoServiceBlockingStub::consume,
             OutcomeConsumeBlobRequest.newBuilder()
                 .setAmbiance(ambiance)
                 .setName(name)
@@ -85,7 +85,7 @@ public class OutcomeGrpcServiceImpl implements OutcomeService {
   @Override
   public OptionalOutcome resolveOptional(Ambiance ambiance, RefObject refObject) {
     OutcomeResolveOptionalBlobResponse response =
-        PmsSdkGrpcClientUtils.retryAndProcessException(outcomeProtoServiceBlockingStub::resolveOptional,
+        PmsGrpcClientUtils.retryAndProcessException(outcomeProtoServiceBlockingStub::resolveOptional,
             OutcomeResolveOptionalBlobRequest.newBuilder().setAmbiance(ambiance).setRefObject(refObject).build());
     return OptionalOutcome.builder()
         .found(response.getFound())
