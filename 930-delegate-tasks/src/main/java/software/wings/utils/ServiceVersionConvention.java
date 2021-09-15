@@ -4,11 +4,11 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static org.apache.commons.lang3.StringUtils.trim;
 
-import io.harness.annotations.dev.HarnessModule;
-import io.harness.annotations.dev.TargetModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.Misc;
 
-@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(HarnessTeam.DEL)
 public class ServiceVersionConvention {
   public static final String DELIMITER = "__";
 
