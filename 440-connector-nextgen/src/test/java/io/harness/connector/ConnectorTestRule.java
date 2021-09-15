@@ -35,6 +35,7 @@ import io.harness.outbox.api.OutboxService;
 import io.harness.persistence.HPersistence;
 import io.harness.remote.CEAwsSetupConfig;
 import io.harness.remote.CEAzureSetupConfig;
+import io.harness.remote.CEGcpSetupConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
@@ -204,6 +205,12 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
       @Singleton
       CEAzureSetupConfig ceAzureSetupConfig() {
         return CEAzureSetupConfig.builder().build();
+      }
+
+      @Provides
+      @Singleton
+      CEGcpSetupConfig ceGcpSetupConfig() {
+        return CEGcpSetupConfig.builder().build();
       }
 
       @Provides

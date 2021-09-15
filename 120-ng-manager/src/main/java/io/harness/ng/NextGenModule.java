@@ -178,6 +178,7 @@ import io.harness.polling.service.intfc.PollingService;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.CEAwsSetupConfig;
 import io.harness.remote.CEAzureSetupConfig;
+import io.harness.remote.CEGcpSetupConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.resourcegroupclient.ResourceGroupClientModule;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
@@ -348,6 +349,12 @@ public class NextGenModule extends AbstractModule {
   @Singleton
   CEAzureSetupConfig ceAzureSetupConfig() {
     return this.appConfig.getCeAzureSetupConfig();
+  }
+
+  @Provides
+  @Singleton
+  CEGcpSetupConfig ceGcpSetupConfig() {
+    return this.appConfig.getCeGcpSetupConfig();
   }
 
   @Override

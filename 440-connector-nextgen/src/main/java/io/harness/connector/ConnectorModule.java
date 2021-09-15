@@ -69,7 +69,6 @@ public class ConnectorModule extends AbstractModule {
       connectorValidationProviderMapBinder.addBinding(connectorType.getDisplayName())
           .to(ConnectorRegistryFactory.getConnectorValidationParamsProvider(connectorType));
     }
-
     bind(ConnectorService.class)
         .annotatedWith(Names.named(DEFAULT_CONNECTOR_SERVICE))
         .to(DefaultConnectorServiceImpl.class);
