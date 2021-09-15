@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.migration.NGMigration;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
+import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityKeys;
 import io.harness.utils.RetryUtils;
 
 import com.google.common.collect.ImmutableList;
@@ -27,8 +28,8 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
 @OwnedBy(PIPELINE)
-@Slf4j
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
+@Slf4j
 public class PMSTriggerMigration implements NGMigration {
   @Inject private final MongoTemplate mongoTemplate;
   private final RetryPolicy<Object> updateRetryPolicy = RetryUtils.getRetryPolicy(
@@ -56,10 +57,9 @@ public class PMSTriggerMigration implements NGMigration {
                                  .replace("branch: <+trigger.branch>", "number: <+trigger.prNumber>");
 
         Update update = new Update();
-        update.set(NGTriggerEntity.NGTriggerEntityKeys.yaml, updatedYaml);
+        update.set(NGTriggerEntityKeys.yaml, updatedYaml);
 
-        Query query1 =
-            new Query(Criteria.where(NGTriggerEntity.NGTriggerEntityKeys.uuid).is(ngTriggerEntity.getUuid()));
+        Query query1 = new Query(Criteria.where(NGTriggerEntityKeys.uuid).is(ngTriggerEntity.getUuid()));
         Failsafe.with(updateRetryPolicy)
             .get(()
                      -> mongoTemplate.findAndModify(

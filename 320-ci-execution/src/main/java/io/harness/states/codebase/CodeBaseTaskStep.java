@@ -13,12 +13,7 @@ import static java.util.Arrays.asList;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.execution.BranchWebhookEvent;
-import io.harness.beans.execution.ExecutionSource;
-import io.harness.beans.execution.ManualExecutionSource;
-import io.harness.beans.execution.PRWebhookEvent;
-import io.harness.beans.execution.WebhookEvent;
-import io.harness.beans.execution.WebhookExecutionSource;
+import io.harness.beans.execution.*;
 import io.harness.beans.sweepingoutputs.CodebaseSweepingOutput;
 import io.harness.beans.sweepingoutputs.CodebaseSweepingOutput.CodeBaseCommit;
 import io.harness.delegate.beans.TaskData;
@@ -50,16 +45,11 @@ import io.harness.pms.sdk.core.steps.executables.TaskExecutable;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
-import io.harness.product.ci.scm.proto.Commit;
-import io.harness.product.ci.scm.proto.FindPRResponse;
-import io.harness.product.ci.scm.proto.GetLatestCommitResponse;
-import io.harness.product.ci.scm.proto.ListCommitsInPRResponse;
-import io.harness.product.ci.scm.proto.PullRequest;
+import io.harness.product.ci.scm.proto.*;
 import io.harness.serializer.KryoSerializer;
 import io.harness.stateutils.buildstate.ConnectorUtils;
 import io.harness.steps.StepUtils;
 import io.harness.supplier.ThrowingSupplier;
-import io.harness.yaml.extended.ci.codebase.CodeBase;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -233,7 +223,6 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
   @VisibleForTesting
   CodebaseSweepingOutput buildCommitShaCodebaseSweepingOutput(ScmGitRefTaskResponseData scmGitRefTaskResponseData)
       throws InvalidProtocolBufferException {
-    CodebaseSweepingOutput codebaseSweepingOutput = null;
     final byte[] getLatestCommitResponseByteArray = scmGitRefTaskResponseData.getGetLatestCommitResponse();
     if (isEmpty(getLatestCommitResponseByteArray)) {
       throw new CIStageExecutionException("Codebase git commit information can't be obtained");
@@ -241,24 +230,22 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
     GetLatestCommitResponse listCommitsResponse = GetLatestCommitResponse.parseFrom(getLatestCommitResponseByteArray);
 
     if (listCommitsResponse.getCommit() == null || isEmpty(listCommitsResponse.getCommit().getSha())) {
-      return codebaseSweepingOutput;
+      return null;
     }
-    codebaseSweepingOutput =
-        CodebaseSweepingOutput.builder()
-            .branch(scmGitRefTaskResponseData.getBranch())
-            .commits(asList(CodeBaseCommit.builder()
-                                .id(listCommitsResponse.getCommit().getSha())
-                                .link(listCommitsResponse.getCommit().getLink())
-                                .message(listCommitsResponse.getCommit().getMessage())
-                                .ownerEmail(listCommitsResponse.getCommit().getAuthor().getEmail())
-                                .ownerName(listCommitsResponse.getCommit().getAuthor().getName())
-                                .ownerId(listCommitsResponse.getCommit().getAuthor().getLogin())
-                                .timeStamp(listCommitsResponse.getCommit().getAuthor().getDate().getSeconds())
-                                .build()))
-            .commitSha(listCommitsResponse.getCommit().getSha())
-            .repoUrl(scmGitRefTaskResponseData.getRepoUrl())
-            .build();
-    return codebaseSweepingOutput;
+    return CodebaseSweepingOutput.builder()
+        .branch(scmGitRefTaskResponseData.getBranch())
+        .commits(asList(CodeBaseCommit.builder()
+                            .id(listCommitsResponse.getCommit().getSha())
+                            .link(listCommitsResponse.getCommit().getLink())
+                            .message(listCommitsResponse.getCommit().getMessage())
+                            .ownerEmail(listCommitsResponse.getCommit().getAuthor().getEmail())
+                            .ownerName(listCommitsResponse.getCommit().getAuthor().getName())
+                            .ownerId(listCommitsResponse.getCommit().getAuthor().getLogin())
+                            .timeStamp(listCommitsResponse.getCommit().getAuthor().getDate().getSeconds())
+                            .build()))
+        .commitSha(listCommitsResponse.getCommit().getSha())
+        .repoUrl(scmGitRefTaskResponseData.getRepoUrl())
+        .build();
   }
 
   @VisibleForTesting

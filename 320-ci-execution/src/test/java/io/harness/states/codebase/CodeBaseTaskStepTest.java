@@ -7,15 +7,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.execution.BranchWebhookEvent;
-import io.harness.beans.execution.ManualExecutionSource;
-import io.harness.beans.execution.PRWebhookEvent;
+import io.harness.beans.execution.*;
 import io.harness.beans.execution.Repository;
-import io.harness.beans.execution.WebhookBaseAttributes;
-import io.harness.beans.execution.WebhookExecutionSource;
 import io.harness.beans.sweepingoutputs.CodebaseSweepingOutput;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
+import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.task.scm.GitRefType;
 import io.harness.delegate.task.scm.ScmGitRefTaskParams;
@@ -55,10 +53,13 @@ public class CodeBaseTaskStepTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldObtainTaskForBranchBuilds() {
     ManualExecutionSource executionSource = ManualExecutionSource.builder().branch("main").build();
-    ConnectorDetails connectorDetails =
-        ConnectorDetails.builder()
-            .connectorConfig(GithubConnectorDTO.builder().url("http://github.com/octocat/").build())
-            .build();
+    ConnectorDetails connectorDetails = ConnectorDetails.builder()
+                                            .connectorType(ConnectorType.GITHUB)
+                                            .connectorConfig(GithubConnectorDTO.builder()
+                                                                 .url("http://github.com/octocat/")
+                                                                 .connectionType(GitConnectionType.ACCOUNT)
+                                                                 .build())
+                                            .build();
 
     ScmGitRefTaskParams taskParams =
         codeBaseTaskStep.obtainTaskParameters(executionSource, connectorDetails, "hello-world");
@@ -73,10 +74,13 @@ public class CodeBaseTaskStepTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldObtainTaskForPRBuilds() {
     ManualExecutionSource executionSource = ManualExecutionSource.builder().prNumber("1").build();
-    ConnectorDetails connectorDetails =
-        ConnectorDetails.builder()
-            .connectorConfig(GithubConnectorDTO.builder().url("http://github.com/octocat/hello-world").build())
-            .build();
+    ConnectorDetails connectorDetails = ConnectorDetails.builder()
+                                            .connectorType(ConnectorType.GITHUB)
+                                            .connectorConfig(GithubConnectorDTO.builder()
+                                                                 .connectionType(GitConnectionType.ACCOUNT)
+                                                                 .url("http://github.com/octocat/hello-world")
+                                                                 .build())
+                                            .build();
 
     ScmGitRefTaskParams taskParams = codeBaseTaskStep.obtainTaskParameters(executionSource, connectorDetails, null);
     assertThat(taskParams).isNotNull();

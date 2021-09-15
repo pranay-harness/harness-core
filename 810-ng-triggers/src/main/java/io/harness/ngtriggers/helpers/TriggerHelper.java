@@ -79,8 +79,8 @@ public class TriggerHelper {
         jsonObject.put(TYPE, WEBHOOK_TYPE);
         jsonObject.put(REPO_URL, parsedPayload.getPush().getRepo().getLink());
         jsonObject.put(GIT_USER, parsedPayload.getPush().getSender().getLogin());
-        if (parsedPayload.getPush().getRepo().getBranch().startsWith("refs/tags/")) {
-          jsonObject.put(TAG, parsedPayload.getPush().getRepo().getBranch().replaceFirst("refs/tags/", ""));
+        if (parsedPayload.getPush().getRef().startsWith("refs/tags/")) {
+          jsonObject.put(TAG, parsedPayload.getPush().getRef().replaceFirst("refs/tags/", ""));
         }
         break;
       default:
