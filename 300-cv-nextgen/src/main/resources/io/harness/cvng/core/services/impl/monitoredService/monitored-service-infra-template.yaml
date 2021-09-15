@@ -1,0 +1,12 @@
+monitoredService:
+  identifier:
+  type: Infrastructure
+  name:
+  desc:
+  projectIdentifier: $projectIdentifier
+  orgIdentifier: $orgIdentifier
+  serviceRef:
+  environmentRef:
+  sources:
+    healthSources:
+    changeSources:

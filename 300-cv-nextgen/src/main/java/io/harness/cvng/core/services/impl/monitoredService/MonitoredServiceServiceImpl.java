@@ -78,12 +78,16 @@ import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 
 public class MonitoredServiceServiceImpl implements MonitoredServiceService {
-  private static final String DEFAULT_YAML_TEMPLATE;
+  private static final Map<MonitoredServiceType, String> MONITORED_SERVICE_YAML_TEMPLATE = new HashMap<>();
   private static final int BUFFER_TIME_FOR_LATEST_HEALTH_SCORE = 5;
   static {
     try {
-      DEFAULT_YAML_TEMPLATE = Resources.toString(
-          MonitoredServiceServiceImpl.class.getResource("monitored-service-template.yaml"), StandardCharsets.UTF_8);
+      MONITORED_SERVICE_YAML_TEMPLATE.put(MonitoredServiceType.APPLICATION,
+          Resources.toString(MonitoredServiceServiceImpl.class.getResource("monitored-service-template.yaml"),
+              StandardCharsets.UTF_8));
+      MONITORED_SERVICE_YAML_TEMPLATE.put(MonitoredServiceType.INFRASTRUCTURE,
+          Resources.toString(MonitoredServiceServiceImpl.class.getResource("monitored-service-infra-template.yaml"),
+              StandardCharsets.UTF_8));
     } catch (IOException e) {
       throw new IllegalStateException(e);
     }
@@ -696,9 +700,11 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     return HealthScoreDTO.builder().currentHealthScore(currentRiskScoreList.get(0)).build();
   }
 
-  public String getYamlTemplate(ProjectParams projectParams) {
+  public String getYamlTemplate(ProjectParams projectParams, MonitoredServiceType type) {
     // returning default yaml template, account/org/project specific templates can be generated later.
-    return StringUtils.replaceEach(DEFAULT_YAML_TEMPLATE, new String[] {"$projectIdentifier", "$orgIdentifier"},
+    String defaultTemplate = type == null ? MONITORED_SERVICE_YAML_TEMPLATE.get(MonitoredServiceType.APPLICATION)
+                                          : MONITORED_SERVICE_YAML_TEMPLATE.get(type);
+    return StringUtils.replaceEach(defaultTemplate, new String[] {"$projectIdentifier", "$orgIdentifier"},
         new String[] {projectParams.getProjectIdentifier(), projectParams.getOrgIdentifier()});
   }
 
