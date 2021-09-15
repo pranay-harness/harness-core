@@ -9,11 +9,7 @@ import lombok.Value;
 @Value
 @Builder
 @OwnedBy(HarnessTeam.PL)
-public class ServiceDashboardInfo {
-  ServiceInfo serviceInfo;
-  ProjectInfo projectInfo;
-  OrgInfo orgInfo;
-  AccountInfo accountInfo;
-
-  CountWithSuccessFailureDetails countWithSuccessFailureDetails;
+public class DeploymentsStatsOverview {
+  DeploymentsStatsSummary deploymentsStatsSummary;
+  MostActiveServicesList mostActiveServicesList;
 }

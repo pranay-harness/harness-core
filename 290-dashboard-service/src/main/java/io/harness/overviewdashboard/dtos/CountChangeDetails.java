@@ -10,5 +10,5 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @OwnedBy(HarnessTeam.PL)
 public class CountChangeDetails extends CountInfo {
-  ChangeDetails changeDetails;
+  CountChangeAndCountChangeRateInfo countChangeAndCountChangeRateInfo;
 }
