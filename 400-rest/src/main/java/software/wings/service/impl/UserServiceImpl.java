@@ -421,9 +421,9 @@ public class UserServiceImpl implements UserService {
       userInvite.setCreatedFromNG(true);
       userInvite.setSource(UserInviteSource.builder().type(SourceType.TRIAL).build());
       userInvite.setCompleted(false);
-      userInvite.setEdition(signupInvite.getEdition());
-      userInvite.setBillingFrequency(signupInvite.getBillingFrequency());
-      userInvite.setSignupAction(signupInvite.getSignupAction());
+      userInvite.setEdition(signupInvite.getEdition().name());
+      userInvite.setBillingFrequency(signupInvite.getBillingFrequency().name());
+      userInvite.setSignupAction(signupInvite.getSignupAction().name());
 
       String inviteId = wingsPersistence.save(userInvite);
       userInvite.setUuid(inviteId);
