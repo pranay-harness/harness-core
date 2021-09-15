@@ -1091,6 +1091,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .ip("127.0.0.1")
                                 .delegateGroupName(DELEGATE_GROUP_NAME)
                                 .delegateGroupId(delegateGroup.getUuid())
+                                .ng(true)
                                 .version(VERSION)
                                 .proxy(true)
                                 .pollingModeEnabled(true)
@@ -1139,6 +1140,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .delegateGroupName(DELEGATE_GROUP_NAME)
                                 .delegateGroupId(generateUuid())
                                 .version(VERSION)
+                                .ng(true)
                                 .proxy(true)
                                 .pollingModeEnabled(true)
                                 .sampleDelegate(true)
@@ -1176,6 +1178,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .delegateGroupId(generateUuid())
                                 .version(VERSION)
                                 .proxy(true)
+                                .ng(true)
                                 .pollingModeEnabled(true)
                                 .sampleDelegate(true)
                                 .build();
@@ -1196,6 +1199,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldRegisterExistingDelegateParams() {
     String accountId = generateUuid();
     DelegateParams params = DelegateParams.builder()
+                                .delegateId(generateUuid())
                                 .accountId(accountId)
                                 .hostName(HOST_NAME)
                                 .description(DESCRIPTION)
@@ -1203,6 +1207,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .ip("127.0.0.1")
                                 .delegateGroupName(DELEGATE_GROUP_NAME)
                                 .version(VERSION)
+                                .ng(false)
                                 .proxy(true)
                                 .pollingModeEnabled(true)
                                 .sampleDelegate(false)
@@ -1225,6 +1230,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(delegateFromDb.isProxy()).isEqualTo(params.isProxy());
     assertThat(delegateFromDb.isPolllingModeEnabled()).isEqualTo(params.isPollingModeEnabled());
     assertThat(delegateFromDb.isSampleDelegate()).isEqualTo(params.isSampleDelegate());
+    assertThat(delegateFromDb.isNg()).isEqualTo(params.isNg());
   }
 
   @Test
@@ -1282,6 +1288,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .delegateType(DOCKER_DELEGATE + "UPDATED")
                                 .ip("127.0.0.2")
                                 .delegateGroupName(DELEGATE_GROUP_NAME + "UPDATED")
+                                .ng(false)
                                 .version(VERSION + "UPDATED")
                                 .proxy(true)
                                 .pollingModeEnabled(true)
@@ -1318,6 +1325,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                             .delegateGroupName(DELEGATE_GROUP_NAME)
                             .version(VERSION)
                             .proxy(false)
+                            .ng(false)
                             .polllingModeEnabled(false)
                             .sampleDelegate(false)
                             .build();
@@ -1340,6 +1348,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .delegateGroupName(DELEGATE_GROUP_NAME + "UPDATED")
                                 .delegateRandomToken("13")
                                 .version(VERSION + "UPDATED")
+                                .ng(false)
                                 .proxy(true)
                                 .pollingModeEnabled(true)
                                 .sampleDelegate(false)
@@ -1358,6 +1367,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(delegateFromDb.isProxy()).isEqualTo(params.isProxy());
     assertThat(delegateFromDb.isPolllingModeEnabled()).isEqualTo(params.isPollingModeEnabled());
     assertThat(delegateFromDb.isSampleDelegate()).isEqualTo(params.isSampleDelegate());
+    assertThat(delegateFromDb.isNg()).isEqualTo(params.isNg());
   }
 
   @Test
@@ -1571,6 +1581,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                             .delegateType(DOCKER_DELEGATE)
                             .ip("127.0.0.1")
                             .delegateGroupName(DELEGATE_GROUP_NAME)
+                            .ng(false)
                             .version(VERSION)
                             .proxy(false)
                             .polllingModeEnabled(false)
@@ -1593,6 +1604,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .proxy(true)
                                 .pollingModeEnabled(true)
                                 .sampleDelegate(false)
+                                .ng(false)
                                 .build();
 
     delegateService.register(params);
@@ -1608,6 +1620,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(delegateFromDb.isProxy()).isEqualTo(params.isProxy());
     assertThat(delegateFromDb.isPolllingModeEnabled()).isEqualTo(params.isPollingModeEnabled());
     assertThat(delegateFromDb.isSampleDelegate()).isEqualTo(params.isSampleDelegate());
+    assertThat(delegateFromDb.isNg()).isFalse();
   }
 
   @Test

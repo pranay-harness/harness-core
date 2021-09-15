@@ -299,6 +299,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private final String delegateProjectIdentifier = System.getenv().get("DELEGATE_PROJECT_IDENTIFIER");
   private final String delegateSize = System.getenv().get("DELEGATE_SIZE");
   private final String delegateDescription = System.getenv().get("DELEGATE_DESCRIPTION");
+  // TODO remove this dependency of delegateNg on SESSION_ID once DEL-2413 has gone into prod for several weeks.
+  private final boolean delegateNg = isNotBlank(delegateSessionIdentifier)
+      || (isNotBlank(System.getenv().get("NEXT_GEN")) && Boolean.parseBoolean(System.getenv().get("NEXT_GEN")));
   private final int delegateTaskLimit = isNotBlank(System.getenv().get("DELEGATE_TASK_LIMIT"))
       ? Integer.parseInt(System.getenv().get("DELEGATE_TASK_LIMIT"))
       : 0;
@@ -532,6 +535,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                           .delegateType(DELEGATE_TYPE)
                                           //.proxy(set to true if there is a system proxy)
                                           .pollingModeEnabled(delegateConfiguration.isPollForTasks())
+                                          .ng(delegateNg)
                                           .sampleDelegate(isSample)
                                           .location(Paths.get("").toAbsolutePath().toString())
                                           .ceEnabled(Boolean.parseBoolean(System.getenv("ENABlE_CE")));

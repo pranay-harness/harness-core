@@ -34,6 +34,7 @@ public class DelegateParams {
   String location;
   long lastHeartBeat;
 
+  boolean ng;
   boolean sampleDelegate;
   boolean keepAlivePacket;
   boolean pollingModeEnabled;
