@@ -27,6 +27,7 @@ import io.harness.azure.model.AzureAppServiceConnectionString;
 import io.harness.delegate.beans.azure.mapper.AzureAppServiceConfigurationDTOMapper;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData;
+import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData.AzureAppServicePreDeploymentDataBuilder;
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureAppDeploymentData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.LogCallback;
@@ -64,7 +65,7 @@ public class AzureAppServiceService {
     try {
       validateSlotStatus(azureWebClientContext, slotName, targetSlotName, logCallback);
 
-      AzureAppServicePreDeploymentData.AzureAppServicePreDeploymentDataBuilder preDeploymentDataBuilder =
+      AzureAppServicePreDeploymentDataBuilder preDeploymentDataBuilder =
           getDefaultPreDeploymentDataBuilder(azureWebClientContext.getAppName(), slotName);
       saveApplicationSettings(
           azureWebClientContext, slotName, userAddedAppSettings, preDeploymentDataBuilder, logCallback);
@@ -85,8 +86,7 @@ public class AzureAppServiceService {
     }
   }
 
-  public AzureAppServicePreDeploymentData.AzureAppServicePreDeploymentDataBuilder getDefaultPreDeploymentDataBuilder(
-      String appName, String slotName) {
+  public AzureAppServicePreDeploymentDataBuilder getDefaultPreDeploymentDataBuilder(String appName, String slotName) {
     return AzureAppServicePreDeploymentData.builder()
         .deploymentProgressMarker(SAVE_CONFIGURATION.name())
         .slotName(slotName)
@@ -147,8 +147,7 @@ public class AzureAppServiceService {
 
   private void saveApplicationSettings(AzureWebClientContext azureWebClientContext, String slotName,
       Map<String, AzureAppServiceApplicationSetting> userAddedAppSettings,
-      AzureAppServicePreDeploymentData.AzureAppServicePreDeploymentDataBuilder preDeploymentDataBuilder,
-      LogCallback logCallback) {
+      AzureAppServicePreDeploymentDataBuilder preDeploymentDataBuilder, LogCallback logCallback) {
     Map<String, AzureAppServiceApplicationSetting> existingAppSettingsOnSlot =
         azureWebClient.listDeploymentSlotAppSettings(azureWebClientContext, slotName);
 
@@ -169,8 +168,7 @@ public class AzureAppServiceService {
 
   private void saveConnectionStrings(AzureWebClientContext azureWebClientContext, String slotName,
       Map<String, AzureAppServiceConnectionString> userAddedConnStrings,
-      AzureAppServicePreDeploymentData.AzureAppServicePreDeploymentDataBuilder preDeploymentDataBuilder,
-      LogCallback logCallback) {
+      AzureAppServicePreDeploymentDataBuilder preDeploymentDataBuilder, LogCallback logCallback) {
     Map<String, AzureAppServiceConnectionString> existingConnSettingsOnSlot =
         azureWebClient.listDeploymentSlotConnectionStrings(azureWebClientContext, slotName);
 
@@ -189,8 +187,7 @@ public class AzureAppServiceService {
   }
 
   private void saveDockerSettings(AzureWebClientContext azureWebClientContext, String slotName,
-      AzureAppServicePreDeploymentData.AzureAppServicePreDeploymentDataBuilder preDeploymentDataBuilder,
-      LogCallback logCallback) {
+      AzureAppServicePreDeploymentDataBuilder preDeploymentDataBuilder, LogCallback logCallback) {
     Map<String, AzureAppServiceApplicationSetting> dockerSettingsNeedBeUpdatedInRollback =
         azureWebClient.listDeploymentSlotDockerSettings(azureWebClientContext, slotName);
     String dockerImageNameAndTag =
@@ -203,8 +200,7 @@ public class AzureAppServiceService {
   }
 
   private void saveTrafficWeight(AzureWebClientContext azureWebClientContext, String slotName,
-      AzureAppServicePreDeploymentData.AzureAppServicePreDeploymentDataBuilder preDeploymentDataBuilder,
-      LogCallback logCallback) {
+      AzureAppServicePreDeploymentDataBuilder preDeploymentDataBuilder, LogCallback logCallback) {
     double slotTrafficWeight = azureWebClient.getDeploymentSlotTrafficWeight(azureWebClientContext, slotName);
     logCallback.saveExecutionLog(String.format("Saved existing Traffic percentage for slot - [%s]", slotName));
     preDeploymentDataBuilder.trafficWeight(slotTrafficWeight);
