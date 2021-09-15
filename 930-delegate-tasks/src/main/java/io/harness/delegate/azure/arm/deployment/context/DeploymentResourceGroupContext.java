@@ -2,9 +2,7 @@ package io.harness.delegate.azure.arm.deployment.context;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.context.AzureClientContext;
 import io.harness.azure.model.AzureDeploymentMode;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -16,7 +14,6 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(CDP)
 public class DeploymentResourceGroupContext extends DeploymentContext {
   private AzureClientContext azureClientContext;
