@@ -1,11 +1,5 @@
 #!/usr/bin/env bash
 
-# Copyright 2021 Harness Inc.
-# 
-# Licensed under the Apache License, Version 2.0
-# http://www.apache.org/licenses/LICENSE-2.0
-
-
 function usage {
   echo "Script to add license header to files"
   echo
@@ -114,9 +108,15 @@ function write_file_header_and_content_double_slash {
     NEW_FILE="$FILE.new"
     create_output_file
     while read license_line; do
-      echo "// $license_line" >> "$NEW_FILE"
+      if [ -z "$license_line" ]; then
+        echo "//" >> "$NEW_FILE"
+      else
+        echo "// $license_line" >> "$NEW_FILE"
+      fi
     done <<<"$LICENSE_TEXT"
-    echo >> "$NEW_FILE"
+    if [ ! -z "$(head -1 <<<"$FILE_CONTENT")" ]; then
+      echo >> "$NEW_FILE"
+    fi
     echo "$FILE_CONTENT" >> "$NEW_FILE"
     mv "$NEW_FILE" "$FILE"
   fi
@@ -161,10 +161,13 @@ function write_file_header_and_content_slash_star {
     create_output_file
     echo "/*" > "$NEW_FILE"
     while read license_line; do
-      echo " * $license_line" >> "$NEW_FILE"
+      if [ -z "$license_line" ]; then
+        echo " *" >> "$NEW_FILE"
+      else
+        echo " * $license_line" >> "$NEW_FILE"
+      fi
     done <<<"$LICENSE_TEXT"
     echo " */" >> "$NEW_FILE"
-    echo >> "$NEW_FILE"
     echo "$FILE_CONTENT" >> "$NEW_FILE"
     mv "$NEW_FILE" "$FILE"
   fi
@@ -212,17 +215,23 @@ function write_file_header_and_content_hash {
     create_output_file
     if [ "$IS_MISSING_SHE_BANG" != "TRUE" ]; then
       head -1 <<<"$FILE_CONTENT" > "$NEW_FILE"
-      echo >> "$NEW_FILE"
     fi
     while read license_line; do
-      echo "# $license_line" >> "$NEW_FILE"
+      if [ -z "$license_line" ]; then
+        echo "#" >> "$NEW_FILE"
+      else
+        echo "# $license_line" >> "$NEW_FILE"
+      fi
     done <<<"$LICENSE_TEXT"
-    echo >> "$NEW_FILE"
     if [ "$IS_MISSING_SHE_BANG" != "TRUE" ]; then
-      echo "$FILE_CONTENT" | awk "NR > 1" >> "$NEW_FILE"
+      REMAINING_FILE_CONTENT=$(echo "$FILE_CONTENT" | awk "NR > 1")
     else
-      echo "$FILE_CONTENT" >> "$NEW_FILE"
+      REMAINING_FILE_CONTENT="$FILE_CONTENT"
     fi
+    if [ ! -z "$(head -1 <<<"$REMAINING_FILE_CONTENT")" ]; then
+      echo >> "$NEW_FILE"
+    fi
+    echo "$REMAINING_FILE_CONTENT" >> "$NEW_FILE"
     mv "$NEW_FILE" "$FILE"
   fi
 }
