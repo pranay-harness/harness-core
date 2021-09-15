@@ -58,6 +58,10 @@ if [ ! -r $PATH_TO_INPUT ]; then
   error_cannot_read_file "$PATH_TO_INPUT"
 fi
 
+############################
+##  Common Functions      ##
+############################
+
 function print_possible_alternates {
   POTENTIAL_ALTERNATE=$(find . -name "$(basename "$FILE")")
   if [ ! -z "$POTENTIAL_ALTERNATE" ]; then
@@ -70,6 +74,34 @@ function create_output_file {
   : > "$NEW_FILE"
 }
 
+function add_header_if_required {
+  if [ "$HEADER_WITHOUT_COMMENT_SYMBOL" = "$LICENSE_TEXT" ]; then
+    return 0
+  elif [ $(grep -m1 -ciE "(copyright|license)" <<<"$EXISTING_HEADER") -eq 1 ]; then
+    echo "Skipping file as it already has a different license header $FILE"
+  else
+    $1
+  fi
+}
+
+function write_file_header {
+  while read license_line; do
+    if [ -z "$license_line" ]; then
+      echo "$SYMBOL" >> "$NEW_FILE"
+    else
+      echo "$SYMBOL $license_line" >> "$NEW_FILE"
+    fi
+  done <<<"$LICENSE_TEXT"
+}
+
+function write_remaining_file_content {
+  if [ ! -z "$(head -1 <<<"$FILE_CONTENT")" ]; then
+    echo >> "$NEW_FILE"
+  fi
+  echo "$FILE_CONTENT" >> "$NEW_FILE"
+  mv "$NEW_FILE" "$FILE"
+}
+
 ############################
 ##  Double Slash          ##
 ############################
@@ -77,9 +109,10 @@ function create_output_file {
 function handle_double_slash {
   EXISTING_HEADER=$(read_header_double_slash)
   if [ -z "$EXISTING_HEADER" ]; then
-    add_header_double_slash
+    write_file_double_slash
   else
-    replace_header_double_slash
+    HEADER_WITHOUT_COMMENT_SYMBOL=$(cut -c 4- <<<"$EXISTING_HEADER")
+    add_header_if_required "write_file_double_slash"
   fi
 }
 
@@ -87,38 +120,13 @@ function read_header_double_slash {
   awk '{ if (/^\/\//) {print} else {exit} }' "$FILE"
 }
 
-function add_header_double_slash {
-  FILE_CONTENT=$(cat "$FILE")
-  write_file_header_and_content_double_slash
-}
-
-function replace_header_double_slash {
-  HEADER_WITHOUT_COMMENT_LITERAL=$(cut -c 4- <<<"$EXISTING_HEADER")
-  if [ "$HEADER_WITHOUT_COMMENT_LITERAL" = "$LICENSE_TEXT" ]; then
-    return 0
-  elif [ $(grep -m1 -ciE "(copyright|license)" <<<"$EXISTING_HEADER") -eq 1 ]; then
-    echo "Skipping file as it already has a different license header $FILE"
-  else
-    add_header_double_slash
-  fi
-}
-
-function write_file_header_and_content_double_slash {
+function write_file_double_slash {
   if [ "$DRY_RUN" != "true" ]; then
     NEW_FILE="$FILE.new"
+    SYMBOL="//"
     create_output_file
-    while read license_line; do
-      if [ -z "$license_line" ]; then
-        echo "//" >> "$NEW_FILE"
-      else
-        echo "// $license_line" >> "$NEW_FILE"
-      fi
-    done <<<"$LICENSE_TEXT"
-    if [ ! -z "$(head -1 <<<"$FILE_CONTENT")" ]; then
-      echo >> "$NEW_FILE"
-    fi
-    echo "$FILE_CONTENT" >> "$NEW_FILE"
-    mv "$NEW_FILE" "$FILE"
+    write_file_header
+    write_remaining_file_content
   fi
 }
 
@@ -129,9 +137,10 @@ function write_file_header_and_content_double_slash {
 function handle_slash_star {
   EXISTING_HEADER=$(read_header_slash_star)
   if [ -z "$EXISTING_HEADER" ]; then
-    add_header_slash_star
+    write_file_slash_star
   else
-    replace_header_slash_star
+    HEADER_WITHOUT_COMMENT_SYMBOL=$(cut -c 4- <<<"$EXISTING_HEADER" | awk 'NR > 1')
+    add_header_if_required "write_file_slash_star"
   fi
 }
 
@@ -139,37 +148,15 @@ function read_header_slash_star {
   awk '{ if (/(\/\*| \*)/) {print} else {exit} }' "$FILE"
 }
 
-function add_header_slash_star {
-  FILE_CONTENT=$(cat "$FILE")
-  write_file_header_and_content_slash_star
-}
-
-function replace_header_slash_star {
-  HEADER_WITHOUT_COMMENT_LITERAL=$(cut -c 4- <<<"$EXISTING_HEADER" | awk 'NR > 1 && NR < 10')
-  if [ "$HEADER_WITHOUT_COMMENT_LITERAL" = "$LICENSE_TEXT" ]; then
-    return 0
-  elif [ $(grep -m1 -ciE "(copyright|license)" <<<"$EXISTING_HEADER") -eq 1 ]; then
-    echo "Skipping file as it already has a different license header $FILE"
-  else
-    add_header_slash_star
-  fi
-}
-
-function write_file_header_and_content_slash_star {
+function write_file_slash_star {
   if [ "$DRY_RUN" != "true" ]; then
     NEW_FILE="$FILE.new"
+    SYMBOL=" *"
     create_output_file
     echo "/*" > "$NEW_FILE"
-    while read license_line; do
-      if [ -z "$license_line" ]; then
-        echo " *" >> "$NEW_FILE"
-      else
-        echo " * $license_line" >> "$NEW_FILE"
-      fi
-    done <<<"$LICENSE_TEXT"
+    write_file_header
     echo " */" >> "$NEW_FILE"
-    echo "$FILE_CONTENT" >> "$NEW_FILE"
-    mv "$NEW_FILE" "$FILE"
+    write_remaining_file_content
   fi
 }
 
@@ -183,9 +170,10 @@ function handle_hash {
   IS_MISSING_SHE_BANG=$(test "$RAW_HEADER" = "$EXISTING_HEADER" && echo "TRUE")
 
   if [ -z "$EXISTING_HEADER" ]; then
-    add_header_hash
+    write_file_hash
   else
-    replace_header_hash
+    HEADER_WITHOUT_COMMENT_SYMBOL=$(cut -c 3- <<<"$EXISTING_HEADER")
+    add_header_if_required "write_file_hash"
   fi
 }
 
@@ -193,46 +181,19 @@ function read_header_hash {
   awk '{ if (/^#/) {print} else {exit} }' "$FILE"
 }
 
-function add_header_hash {
-  FILE_CONTENT=$(cat "$FILE")
-  write_file_header_and_content_hash
-}
-
-function replace_header_hash {
-  HEADER_WITHOUT_COMMENT_LITERAL=$(cut -c 3- <<<"$EXISTING_HEADER")
-  if [ "$HEADER_WITHOUT_COMMENT_LITERAL" = "$LICENSE_TEXT" ]; then
-    return 0
-  elif [ $(grep -m1 -ciE "(copyright|license)" <<<"$EXISTING_HEADER") -eq 1 ]; then
-    echo "Skipping file as it already has a different license header $FILE"
-  else
-    add_header_hash
-  fi
-}
-
-function write_file_header_and_content_hash {
+function write_file_hash {
   if [ "$DRY_RUN" != "true" ]; then
     NEW_FILE="$FILE.new"
+    SYMBOL="#"
     create_output_file
     if [ "$IS_MISSING_SHE_BANG" != "TRUE" ]; then
       head -1 <<<"$FILE_CONTENT" > "$NEW_FILE"
     fi
-    while read license_line; do
-      if [ -z "$license_line" ]; then
-        echo "#" >> "$NEW_FILE"
-      else
-        echo "# $license_line" >> "$NEW_FILE"
-      fi
-    done <<<"$LICENSE_TEXT"
+    write_file_header
     if [ "$IS_MISSING_SHE_BANG" != "TRUE" ]; then
-      REMAINING_FILE_CONTENT=$(echo "$FILE_CONTENT" | awk "NR > 1")
-    else
-      REMAINING_FILE_CONTENT="$FILE_CONTENT"
+      FILE_CONTENT=$(echo "$FILE_CONTENT" | awk "NR > 1")
     fi
-    if [ ! -z "$(head -1 <<<"$REMAINING_FILE_CONTENT")" ]; then
-      echo >> "$NEW_FILE"
-    fi
-    echo "$REMAINING_FILE_CONTENT" >> "$NEW_FILE"
-    mv "$NEW_FILE" "$FILE"
+    write_remaining_file_content
   fi
 }
 
@@ -243,9 +204,10 @@ function write_file_header_and_content_hash {
 function handle_double_hyphen {
   EXISTING_HEADER=$(read_header_double_hyphen)
   if [ -z "$EXISTING_HEADER" ]; then
-    add_header_double_hyphen
+    write_file_double_hyphen
   else
-    replace_header_double_hyphen
+    HEADER_WITHOUT_COMMENT_SYMBOL=$(cut -c 4- <<<"$EXISTING_HEADER")
+    add_header_if_required "write_file_double_hyphen"
   fi
 }
 
@@ -253,32 +215,13 @@ function read_header_double_hyphen {
   awk '{ if (/^--/) {print} else {exit} }' "$FILE"
 }
 
-function add_header_double_hyphen {
-  FILE_CONTENT=$(cat "$FILE")
-  write_file_header_and_content_double_hyphen
-}
-
-function replace_header_double_hyphen {
-  HEADER_WITHOUT_COMMENT_LITERAL=$(cut -c 4- <<<"$EXISTING_HEADER")
-  if [ "$HEADER_WITHOUT_COMMENT_LITERAL" = "$LICENSE_TEXT" ]; then
-    return 0
-  elif [ $(grep -m1 -ciE "(copyright|license)" <<<"$EXISTING_HEADER") -eq 1 ]; then
-    echo "Skipping file as it already has a different license header $FILE"
-  else
-    add_header_double_hyphen
-  fi
-}
-
-function write_file_header_and_content_double_hyphen {
+function write_file_double_hyphen {
   if [ "$DRY_RUN" != "true" ]; then
     NEW_FILE="$FILE.new"
+    SYMBOL="--"
     create_output_file
-    while read license_line; do
-      echo "-- $license_line" >> "$NEW_FILE"
-    done <<<"$LICENSE_TEXT"
-    echo >> "$NEW_FILE"
-    echo "$FILE_CONTENT" >> "$NEW_FILE"
-    mv "$NEW_FILE" "$FILE"
+    write_file_header
+    write_remaining_file_content
   fi
 }
 
@@ -305,6 +248,7 @@ while read -r FILE; do
   fi
 
   FILE_TYPE=$(awk '{gsub(/.*\//, ""); gsub(/.*\./, ""); print}' <<<"$FILE")
+  FILE_CONTENT=$(cat "$FILE")
   if [ "$FILE_TYPE" = "cjs" ]; then # Common JavaScript
     handle_slash_star
   elif [ "$FILE_TYPE" = "css" ]; then
