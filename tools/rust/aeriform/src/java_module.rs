@@ -90,7 +90,7 @@ pub fn modules() -> HashMap<String, JavaModule> {
     let modules = module_rules.iter().map(|(k, _)| k.clone()).collect::<HashSet<String>>();
 
     let data_collection_dsl = populate_from_external(
-        "https/harness.jfrog.io/harness/harness-public",
+        "https/harness.jfrog.io/artifactory/portal-maven",
         "io/harness/cv",
         "data-collection-dsl",
         "0.27-RELEASE",
@@ -98,7 +98,7 @@ pub fn modules() -> HashMap<String, JavaModule> {
     );
 
     let ff_java_server_sdk = populate_from_external(
-        "https/repo1.maven.org/maven2",
+        "https/harness.jfrog.io/artifactory/portal-maven",
         "io/harness",
         "ff-java-server-sdk",
         "1.0.3",

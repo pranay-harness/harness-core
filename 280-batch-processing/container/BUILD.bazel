@@ -2,7 +2,7 @@ load("@io_bazel_rules_docker//container:container.bzl", "container_image", "cont
 load("@rules_pkg//:pkg.bzl", "pkg_tar")
 
 container_image(
-    name = "container",
+    name = "batch_processing",
     base = "//dockerization/base-jdk:base_jdk",
     cmd = ["./run.sh"],
     tags = [
@@ -52,7 +52,7 @@ pkg_tar(
 container_push(
     name = "push",
     format = "Docker",
-    image = "batch-processing",
+    image = "batch_processing",
     registry = "us.gcr.io",
     repository = "platform-205701/harness/batch-processing",
     tag = "{STABLE_BUILD_NUMBER}",

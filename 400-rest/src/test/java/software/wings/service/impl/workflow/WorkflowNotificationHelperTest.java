@@ -5,9 +5,11 @@ import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ANUBHAW;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.HARSH;
+import static io.harness.rule.OwnerRule.MOUNIK;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
@@ -44,6 +46,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.OrchestrationWorkflowType;
+import io.harness.beans.WorkflowType;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.persistence.HQuery;
@@ -75,12 +78,15 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.states.ApprovalState.ApprovalStateType;
 import software.wings.sm.states.PhaseSubWorkflow;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -223,6 +229,24 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
                        ACCOUNT_ID, APP_ID, anApplication().accountId(ACCOUNT_ID).uuid(APP_ID).name(APP_NAME).build())
                    .getMessage())
         .isEqualTo(EXPECTED_APP_URL);
+  }
+
+  @Test
+  @Owner(developers = MOUNIK)
+  @Category(UnitTests.class)
+  public void shouldSendApprovalNotification() {
+    ApprovalStateType approvalStateType = ApprovalStateType.SERVICENOW;
+    when(executionContext.getWorkflowType()).thenReturn(WorkflowType.PIPELINE);
+    workflowNotificationHelper.sendApprovalNotification(
+        ACCOUNT_ID, WORKFLOW_NOTIFICATION, new HashMap<>(), executionContext, approvalStateType);
+    InformationNotification notification = InformationNotification.builder()
+                                               .appId(GLOBAL_APP_ID)
+                                               .accountId(ACCOUNT_ID)
+                                               .notificationTemplateId(WORKFLOW_NOTIFICATION.name())
+                                               .notificationTemplateVariables(new HashMap<>())
+                                               .build();
+
+    verify(notificationService).sendNotificationAsync(notification, new LinkedList<>());
   }
 
   @Test

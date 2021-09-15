@@ -8,7 +8,7 @@ import static io.harness.network.SafeHttpCall.execute;
 
 import static software.wings.beans.infrastructure.instance.InvocationCount.InvocationCountKey.INVOCATION_COUNT_KEY_LIST;
 
-import static java.lang.Boolean.TRUE;
+import static java.lang.Boolean.FALSE;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.joda.time.Seconds.secondsBetween;
@@ -51,7 +51,7 @@ import org.eclipse.jetty.server.Response;
 import org.joda.time.DateTime;
 
 @Slf4j
-@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._420_DELEGATE_AGENT)
 @OwnedBy(CDP)
 public class AwsLambdaInstanceSyncPerpetualTaskExecutor implements PerpetualTaskExecutor {
   @Inject private DelegateAgentManagerClient delegateAgentManagerClient;
@@ -224,7 +224,7 @@ public class AwsLambdaInstanceSyncPerpetualTaskExecutor implements PerpetualTask
                                           .region(taskParams.getRegion())
                                           .functionName(taskParams.getFunctionName())
                                           .qualifier(taskParams.getQualifier())
-                                          .loadAliases(TRUE)
+                                          .loadAliases(FALSE)
                                           .build();
     try {
       return awsLambdaHelperServiceDelegate.getFunctionDetails(request, true);

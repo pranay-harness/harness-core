@@ -70,6 +70,7 @@ directories:
   950-ng-core
   950-ng-project-n-orgs
   950-ng-signup-beans
+  950-opa-client
   950-telemetry
   950-wait-engine
   950-walktree-visitor

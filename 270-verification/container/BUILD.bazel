@@ -2,7 +2,7 @@ load("@io_bazel_rules_docker//container:container.bzl", "container_image", "cont
 load("@rules_pkg//:pkg.bzl", "pkg_tar")
 
 container_image(
-    name = "container",
+    name = "verification",
     base = "//dockerization/base-jdk:base_jdk",
     cmd = ["./run.sh"],
     tags = [

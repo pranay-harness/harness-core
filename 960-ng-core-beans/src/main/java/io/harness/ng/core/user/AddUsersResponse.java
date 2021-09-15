@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModel;
+import java.util.HashMap;
 import java.util.Map;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -19,5 +20,7 @@ import lombok.experimental.FieldDefaults;
 @ApiModel(value = "AddUsersResponse")
 @OwnedBy(PL)
 public class AddUsersResponse {
+  public static final AddUsersResponse EMPTY_RESPONSE =
+      AddUsersResponse.builder().addUserResponseMap(new HashMap<>()).build();
   Map<String, AddUserResponse> addUserResponseMap;
 }

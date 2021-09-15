@@ -12,7 +12,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
 import io.harness.category.element.UnitTests;
@@ -46,6 +48,7 @@ import org.mockito.Mock;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 public class AwsLambdaInstanceSyncPerpetualTaskClientTest extends WingsBaseTest {
   @Mock SecretManager secretManager;
   @Mock SettingsService settingsService;
@@ -81,7 +84,7 @@ public class AwsLambdaInstanceSyncPerpetualTaskClientTest extends WingsBaseTest 
                                           .region("us-east-1")
                                           .functionName("function")
                                           .qualifier("version")
-                                          .loadAliases(true)
+                                          .loadAliases(false)
                                           .build();
 
     assertThat(client.getValidationTask(getClientContext(), ACCOUNT_ID))

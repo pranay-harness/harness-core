@@ -9,8 +9,8 @@ import io.harness.pms.contracts.service.ExpressionEvaluateBlobResponse;
 import io.harness.pms.contracts.service.ExpressionRenderBlobRequest;
 import io.harness.pms.contracts.service.ExpressionRenderBlobResponse;
 import io.harness.pms.expression.EngineExpressionService;
-import io.harness.pms.sdk.core.grpc.client.PmsSdkGrpcClientUtils;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
+import io.harness.pms.utils.PmsGrpcClientUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -29,7 +29,7 @@ public class EngineGrpcExpressionService implements EngineExpressionService {
   @Override
   public String renderExpression(Ambiance ambiance, String expression, boolean skipUnresolvedExpressionsCheck) {
     ExpressionRenderBlobResponse expressionRenderBlobResponse =
-        PmsSdkGrpcClientUtils.retryAndProcessException(engineExpressionProtoServiceBlockingStub::renderExpression,
+        PmsGrpcClientUtils.retryAndProcessException(engineExpressionProtoServiceBlockingStub::renderExpression,
             ExpressionRenderBlobRequest.newBuilder()
                 .setAmbiance(ambiance)
                 .setExpression(expression)
@@ -41,7 +41,7 @@ public class EngineGrpcExpressionService implements EngineExpressionService {
   @Override
   public Object evaluateExpression(Ambiance ambiance, String expression) {
     ExpressionEvaluateBlobResponse expressionEvaluateBlobResponse =
-        PmsSdkGrpcClientUtils.retryAndProcessException(engineExpressionProtoServiceBlockingStub::evaluateExpression,
+        PmsGrpcClientUtils.retryAndProcessException(engineExpressionProtoServiceBlockingStub::evaluateExpression,
             ExpressionEvaluateBlobRequest.newBuilder().setAmbiance(ambiance).setExpression(expression).build());
     return RecastOrchestrationUtils.fromJson(expressionEvaluateBlobResponse.getValue(), Object.class);
   }

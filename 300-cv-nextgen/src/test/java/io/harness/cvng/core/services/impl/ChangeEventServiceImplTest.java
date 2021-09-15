@@ -7,11 +7,11 @@ import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.HarnessCDActivity;
+import io.harness.cvng.beans.change.ChangeCategory;
+import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.core.beans.ChangeSummaryDTO;
-import io.harness.cvng.core.beans.change.event.ChangeEventDTO;
 import io.harness.cvng.core.services.api.ChangeEventService;
 import io.harness.cvng.core.services.api.monitoredService.ChangeSourceService;
-import io.harness.cvng.core.types.ChangeCategory;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 

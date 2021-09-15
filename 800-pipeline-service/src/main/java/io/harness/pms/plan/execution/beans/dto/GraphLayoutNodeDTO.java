@@ -41,6 +41,6 @@ public class GraphLayoutNodeDTO {
   SkipInfo skipInfo;
   NodeRunInfo nodeRunInfo;
   Boolean barrierFound;
-  ExecutionErrorInfo failureInfo;
+  @Deprecated ExecutionErrorInfo failureInfo;
   FailureInfoDTO failureInfoDTO;
 }

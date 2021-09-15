@@ -13,7 +13,9 @@ import static software.wings.service.InstanceSyncConstants.TIMEOUT_SECONDS;
 
 import static java.lang.Long.parseLong;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
 import io.harness.perpetualtask.PerpetualTaskSchedule;
 import io.harness.perpetualtask.PerpetualTaskType;
@@ -45,6 +47,7 @@ import org.apache.commons.lang3.tuple.Pair;
 @Slf4j
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 public class AwsLambdaInstanceSyncPerpetualTaskCreator extends AbstractInstanceSyncPerpetualTaskCreator {
   @Inject ServerlessInstanceService serverlessInstanceService;
 

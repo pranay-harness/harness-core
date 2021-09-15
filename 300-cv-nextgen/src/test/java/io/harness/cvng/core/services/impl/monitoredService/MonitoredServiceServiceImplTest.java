@@ -21,15 +21,15 @@ import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.MonitoredServiceDataSourceType;
 import io.harness.cvng.beans.MonitoredServiceType;
+import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.ChangeSummaryDTO;
-import io.harness.cvng.core.beans.change.event.ChangeEventDTO;
 import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.MetricPackDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.MonitoredServiceDTOBuilder;
-import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.MonitoredServiceRef;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceDependencyDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.Sources;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.AppDynamicsHealthSourceSpec;
@@ -151,6 +151,8 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
 
     FieldUtils.writeField(monitoredServiceService, "nextGenService", nextGenService, true);
     FieldUtils.writeField(monitoredServiceService, "setupUsageEventService", setupUsageEventService, true);
+    FieldUtils.writeField(changeSourceService, "changeSourceUpdateHandlerMap", new HashMap<>(), true);
+    FieldUtils.writeField(monitoredServiceService, "changeSourceService", changeSourceService, true);
   }
 
   @Test
@@ -333,9 +335,9 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     assertThat(savedMonitoredServiceDTO).isEqualTo(monitoredServiceDTO);
     MonitoredService monitoredService = getMonitoredService(monitoredServiceDTO.getIdentifier());
     assertCommonMonitoredService(monitoredService, monitoredServiceDTO);
-    Set<MonitoredServiceRef> monitoredServiceRefs = serviceDependencyService.getDependentServicesForMonitoredService(
+    Set<ServiceDependencyDTO> serviceDependencyDTOS = serviceDependencyService.getDependentServicesForMonitoredService(
         builderFactory.getContext().getProjectParams(), monitoredServiceDTO.getIdentifier());
-    assertThat(monitoredServiceRefs).isEqualTo(monitoredServiceDTO.getDependencies());
+    assertThat(serviceDependencyDTOS).isEqualTo(monitoredServiceDTO.getDependencies());
   }
 
   @Test
@@ -847,8 +849,8 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
                     Arrays.asList(createHealthSource(CVMonitoringCategory.ERRORS)).stream().collect(Collectors.toSet()))
                 .build())
         .dependencies(
-            Sets.newHashSet(MonitoredServiceRef.builder().monitoredServiceIdentifier(randomAlphanumeric(20)).build(),
-                MonitoredServiceRef.builder().monitoredServiceIdentifier(randomAlphanumeric(20)).build()))
+            Sets.newHashSet(ServiceDependencyDTO.builder().monitoredServiceIdentifier(randomAlphanumeric(20)).build(),
+                ServiceDependencyDTO.builder().monitoredServiceIdentifier(randomAlphanumeric(20)).build()))
         .build();
   }
 

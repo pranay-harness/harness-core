@@ -1,0 +1,58 @@
+load("@io_bazel_rules_docker//container:container.bzl", "container_image", "container_push")
+load("@rules_pkg//:pkg.bzl", "pkg_tar")
+
+container_image(
+    name = "delegate_proxy",
+    base = "@nginx//image",
+    tags = [
+        "manual",
+        "no-cache",
+        "no-ide",
+    ],
+    tars = [
+        ":conf_file",
+        ":storage_files",
+    ],
+)
+
+pkg_tar(
+    name = "conf_file",
+    srcs = [
+        "nginx.conf",
+    ],
+    package_dir = "/etc/nginx",
+    tags = [
+        "manual",
+        "no-cache",
+        "no-ide",
+    ],
+)
+
+pkg_tar(
+    name = "storage_files",
+    srcs = [
+        "//:delegate_proxy_files",
+    ],
+    mode = "0644",
+    package_dir = "/www",
+    strip_prefix = "/destination",
+    tags = [
+        "manual",
+        "no-cache",
+        "no-ide",
+    ],
+)
+
+container_push(
+    name = "push",
+    format = "Docker",
+    image = "delegate_proxy",
+    registry = "us.gcr.io",
+    repository = "platform-205701/harness/delegate-proxy",
+    tag = "{STABLE_BUILD_NUMBER}",
+    tags = [
+        "manual",
+        "no-cache",
+        "no-ide",
+    ],
+)

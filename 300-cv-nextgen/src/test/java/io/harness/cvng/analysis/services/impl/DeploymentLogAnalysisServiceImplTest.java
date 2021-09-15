@@ -220,7 +220,7 @@ public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTestBase {
         accountId, verificationJobInstanceId, null, deploymentLogAnalysisFilter, pageParams);
 
     assertThat(pageResponse.getPageIndex()).isEqualTo(0);
-    assertThat(pageResponse.getTotalPages()).isEqualTo(0);
+    assertThat(pageResponse.getTotalPages()).isEqualTo(1);
     assertThat(pageResponse.getContent()).isNotNull();
     assertThat(pageResponse.getContent().size()).isEqualTo(3);
     assertThat(pageResponse.getContent().get(0).getLabel()).isEqualTo(3);
@@ -333,7 +333,7 @@ public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTestBase {
         accountId, verificationJobInstanceId, 1, deploymentLogAnalysisFilter, pageParams);
 
     assertThat(pageResponse.getPageIndex()).isEqualTo(0);
-    assertThat(pageResponse.getTotalPages()).isEqualTo(0);
+    assertThat(pageResponse.getTotalPages()).isEqualTo(1);
     assertThat(pageResponse.getContent()).isNotNull();
     assertThat(pageResponse.getContent().size()).isEqualTo(1);
     assertThat(pageResponse.getContent().get(0).getLabel()).isEqualTo(1);
@@ -382,7 +382,7 @@ public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTestBase {
         accountId, verificationJobInstanceId, null, deploymentLogAnalysisFilter, pageParams);
 
     assertThat(pageResponse.getPageIndex()).isEqualTo(0);
-    assertThat(pageResponse.getTotalPages()).isEqualTo(0);
+    assertThat(pageResponse.getTotalPages()).isEqualTo(1);
     assertThat(pageResponse.getContent()).isNotNull();
     assertThat(pageResponse.getContent().size()).isEqualTo(3);
   }
@@ -434,7 +434,7 @@ public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTestBase {
         accountId, verificationJobInstanceId, null, deploymentLogAnalysisFilter, pageParams);
 
     assertThat(pageResponse.getPageIndex()).isEqualTo(0);
-    assertThat(pageResponse.getTotalPages()).isEqualTo(0);
+    assertThat(pageResponse.getTotalPages()).isEqualTo(1);
     assertThat(pageResponse.getContent()).isNotNull();
     assertThat(pageResponse.getContent().size()).isEqualTo(1);
     assertThat(pageResponse.getContent().get(0).getLabel()).isEqualTo(4);
@@ -464,7 +464,7 @@ public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTestBase {
         accountId, verificationJobInstanceId, null, deploymentLogAnalysisFilter, pageParams);
 
     assertThat(pageResponse1.getPageIndex()).isEqualTo(0);
-    assertThat(pageResponse1.getTotalPages()).isEqualTo(2);
+    assertThat(pageResponse1.getTotalPages()).isEqualTo(3);
     assertThat(pageResponse1.getContent()).isNotNull();
     assertThat(pageResponse1.getContent().size()).isEqualTo(10);
 
@@ -473,7 +473,7 @@ public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTestBase {
         accountId, verificationJobInstanceId, null, deploymentLogAnalysisFilter, pageParams);
 
     assertThat(pageResponse2.getPageIndex()).isEqualTo(1);
-    assertThat(pageResponse2.getTotalPages()).isEqualTo(2);
+    assertThat(pageResponse2.getTotalPages()).isEqualTo(3);
     assertThat(pageResponse2.getContent()).isNotNull();
     assertThat(pageResponse2.getContent().size()).isEqualTo(10);
 
@@ -482,7 +482,7 @@ public class DeploymentLogAnalysisServiceImplTest extends CvNextGenTestBase {
         accountId, verificationJobInstanceId, null, deploymentLogAnalysisFilter, pageParams);
 
     assertThat(pageResponse3.getPageIndex()).isEqualTo(2);
-    assertThat(pageResponse3.getTotalPages()).isEqualTo(2);
+    assertThat(pageResponse3.getTotalPages()).isEqualTo(3);
     assertThat(pageResponse3.getContent()).isNotNull();
     assertThat(pageResponse3.getContent().size()).isEqualTo(5);
   }

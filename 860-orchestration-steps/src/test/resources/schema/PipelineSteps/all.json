@@ -3,6 +3,65 @@
   "discriminator": "type",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
+    "AddRuleYaml": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PatchInstruction"
+        },
+        {
+          "type": "object",
+          "required": [
+            "identifier",
+            "spec",
+            "type"
+          ],
+          "properties": {
+            "identifier": {
+              "type": "string"
+            },
+            "spec": {
+              "$ref": "#/definitions/AddRuleYamlSpec"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "AddRule"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AddRuleYamlSpec": {
+      "type": "object",
+      "required": [
+        "priority",
+        "uuid"
+      ],
+      "properties": {
+        "clauses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Clause"
+          }
+        },
+        "distribution": {
+          "$ref": "#/definitions/DistributionYamlSpec"
+        },
+        "priority": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "serve": {
+          "$ref": "#/definitions/Serve"
+        },
+        "uuid": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "AddSegmentToVariationTargetMapYaml": {
       "allOf": [
         {
@@ -180,6 +239,60 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "Clause": {
+      "type": "object",
+      "required": [
+        "attribute",
+        "id",
+        "negate",
+        "op",
+        "values"
+      ],
+      "properties": {
+        "attribute": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "negate": {
+          "type": "boolean"
+        },
+        "op": {
+          "type": "string"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ClauseYamlSpec": {
+      "type": "object",
+      "required": [
+        "attribute",
+        "op",
+        "values"
+      ],
+      "properties": {
+        "attribute": {
+          "type": "string"
+        },
+        "op": {
+          "type": "string"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "Condition": {
       "type": "object",
       "required": [
@@ -262,6 +375,49 @@
         }
       ]
     },
+    "Distribution": {
+      "type": "object",
+      "required": [
+        "bucketBy",
+        "variations"
+      ],
+      "properties": {
+        "bucketBy": {
+          "type": "string"
+        },
+        "variations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/WeightedVariation"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "DistributionYamlSpec": {
+      "type": "object",
+      "required": [
+        "bucketBy"
+      ],
+      "properties": {
+        "bucketBy": {
+          "type": "string"
+        },
+        "clauses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ClauseYamlSpec"
+          }
+        },
+        "variations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VariationYamlSpec"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "FlagConfigurationStepInfo": {
       "allOf": [
         {
@@ -286,6 +442,9 @@
               "items": {
                 "oneOf": [
                   {
+                    "$ref": "#/definitions/AddRuleYaml"
+                  },
+                  {
                     "$ref": "#/definitions/AddSegmentToVariationTargetMapYaml"
                   },
                   {
@@ -299,6 +458,9 @@
                   },
                   {
                     "$ref": "#/definitions/SetFeatureFlagStateYaml"
+                  },
+                  {
+                    "$ref": "#/definitions/UpdateRuleYaml"
                   }
                 ]
               }
@@ -714,6 +876,8 @@
           "type": "string",
           "enum": [
             "SetFeatureFlagState",
+            "AddRule",
+            "UpdateRule",
             "AddTargetsToVariationTargetMap",
             "RemoveTargetsToVariationTargetMap",
             "AddSegmentsToVariationTargetMap",
@@ -853,6 +1017,18 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "Serve": {
+      "type": "object",
+      "properties": {
+        "distribution": {
+          "$ref": "#/definitions/Distribution"
+        },
+        "variation": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "SetFeatureFlagStateYaml": {
       "allOf": [
         {
@@ -938,6 +1114,95 @@
         },
         "transitionName": {
           "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "UpdateRuleYaml": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PatchInstruction"
+        },
+        {
+          "type": "object",
+          "required": [
+            "identifier",
+            "spec",
+            "type"
+          ],
+          "properties": {
+            "identifier": {
+              "type": "string"
+            },
+            "spec": {
+              "$ref": "#/definitions/UpdateRuleYamlSpec"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "UpdateRule"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "UpdateRuleYamlSpec": {
+      "type": "object",
+      "required": [
+        "bucketBy",
+        "ruleID"
+      ],
+      "properties": {
+        "bucketBy": {
+          "type": "string"
+        },
+        "ruleID": {
+          "type": "string"
+        },
+        "serve": {
+          "$ref": "#/definitions/Serve"
+        },
+        "variations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/VariationYamlSpec"
+          }
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "VariationYamlSpec": {
+      "type": "object",
+      "required": [
+        "variation",
+        "weight"
+      ],
+      "properties": {
+        "variation": {
+          "type": "string"
+        },
+        "weight": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "WeightedVariation": {
+      "type": "object",
+      "required": [
+        "variation",
+        "weight"
+      ],
+      "properties": {
+        "variation": {
+          "type": "string"
+        },
+        "weight": {
+          "type": "integer",
+          "format": "int32"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
