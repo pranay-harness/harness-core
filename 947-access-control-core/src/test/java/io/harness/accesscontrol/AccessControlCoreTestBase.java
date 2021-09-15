@@ -11,10 +11,8 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
 @OwnedBy(PL)
-public class AccessControlTestBase extends CategoryTest {
+public class AccessControlCoreTestBase extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Rule public LifecycleRule lifecycleRule = new LifecycleRule();
-  @Rule
-  public AccessControlApplicationRule accessControlApplicationRule =
-      new AccessControlApplicationRule(lifecycleRule.getClosingFactory());
+  @Rule public AccessControlRule accessControlRule = new AccessControlRule(lifecycleRule.getClosingFactory());
 }
