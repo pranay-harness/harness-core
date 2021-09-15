@@ -124,7 +124,7 @@ public class SCMGitSyncHelper {
     switch (sourcePrincipal.getType()) {
       case USER:
         io.harness.security.dto.UserPrincipal userPrincipalFromContext =
-            ((io.harness.security.dto.UserPrincipal) sourcePrincipal);
+            (io.harness.security.dto.UserPrincipal) sourcePrincipal;
         final UserPrincipal userPrincipal = UserPrincipal.newBuilder()
                                                 .setEmail(StringValue.of(userPrincipalFromContext.getEmail()))
                                                 .setUserId(StringValue.of(userPrincipalFromContext.getName()))
