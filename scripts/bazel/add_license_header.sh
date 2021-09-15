@@ -85,11 +85,12 @@ function add_header_if_required {
 }
 
 function write_file_header {
+  FILE_DATE=$(git log -1 --format="%ad" --date=format:%Y -- "$FILE")
   while read license_line; do
     if [ -z "$license_line" ]; then
       echo "$SYMBOL" >> "$NEW_FILE"
     else
-      echo "$SYMBOL $license_line" >> "$NEW_FILE"
+      echo "$SYMBOL $license_line" | sed "s/<YEAR>/${FILE_DATE}/" >> "$NEW_FILE"
     fi
   done <<<"$LICENSE_TEXT"
 }
