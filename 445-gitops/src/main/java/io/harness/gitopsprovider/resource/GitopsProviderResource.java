@@ -113,7 +113,8 @@ public class GitopsProviderResource {
       @OrgIdentifier @QueryParam(
           NGCommonEntityConstants.ORG_KEY) @io.harness.accesscontrol.OrgIdentifier String orgIdentifier,
       @ProjectIdentifier @QueryParam(
-          NGCommonEntityConstants.PROJECT_KEY) @io.harness.accesscontrol.ProjectIdentifier String projectIdentifier) {
+          NGCommonEntityConstants.PROJECT_KEY) @io.harness.accesscontrol.ProjectIdentifier String projectIdentifier,
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(PROJECT, null), VIEW_PROJECT_PERMISSION);
     Pageable pageRequest;
@@ -123,7 +124,7 @@ public class GitopsProviderResource {
       pageRequest = PageUtils.getPageRequest(page, size, sort);
     }
     return ResponseDTO.newResponse(getNGPageResponse(
-        gitopsProviderService.list(pageRequest, accountIdentifier, orgIdentifier, projectIdentifier)));
+        gitopsProviderService.list(pageRequest, accountIdentifier, orgIdentifier, projectIdentifier, searchTerm)));
   }
 
   @POST
@@ -169,5 +170,18 @@ public class GitopsProviderResource {
         Resource.of(PROJECT, null), DELETE_PROJECT_PERMISSION);
     return ResponseDTO.newResponse(
         gitopsProviderService.delete(accountIdentifier, orgIdentifier, projectIdentifier, identifier));
+  }
+
+  @GET
+  @Path("validateUniqueIdentifier")
+  @ApiOperation(value = "Validate Identifier is unique", nickname = "validateProviderIdentifierIsUnique")
+  public ResponseDTO<Boolean> validateTheIdentifierIsUnique(
+      @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @QueryParam(NGCommonEntityConstants.IDENTIFIER_KEY) @EntityIdentifier String identifier) {
+    return gitopsProviderService.get(accountIdentifier, orgIdentifier, projectIdentifier, identifier).isPresent()
+        ? ResponseDTO.newResponse(false)
+        : ResponseDTO.newResponse(true);
   }
 }
