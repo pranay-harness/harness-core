@@ -118,7 +118,7 @@ message Execution {
   string account_id = 2;
 }
 
-message UpdateStateRequest {
+message NotifyStateChangeRequest {
   enum Action {
     UNKNOWN = 0;
     PAUSE = 1;
@@ -127,7 +127,7 @@ message UpdateStateRequest {
   Action action = 1;
 }
 
-message UpdateStateResponse {}
+message NotifyStateChangeResponse {}
 
 message GetImageEntrypointRequest {
   string id = 1;
@@ -168,10 +168,6 @@ message ExecuteStepRequest {
 message ExecuteStepResponse {}
 
 service LiteEngine {
-  // Synchronous RPC to execute a step
-  // Deprecated
-  rpc UpdateState(UpdateStateRequest) returns (UpdateStateResponse);
-
   // Synchronous RPC to fetch image entrypoint
   rpc GetImageEntrypoint(GetImageEntrypointRequest) returns (GetImageEntrypointResponse);
 
@@ -185,4 +181,7 @@ service LiteEngine {
   // It is idempotent such that if two requests are fired with same id, then
   // only one request will start execution of the step.
   rpc ExecuteStep(ExecuteStepRequest) returns (ExecuteStepResponse);
+
+  // Synchronous RPC to notify update in CI stage execution state.
+  rpc NotifyStateChange(NotifyStateChangeRequest) returns (NotifyStateChangeResponse);
 }

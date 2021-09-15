@@ -24,6 +24,7 @@ func ExecuteStepInAsync(ctx context.Context, in *pb.ExecuteStepRequest,
 		executionID := in.GetExecutionId()
 		if s.CanRun(executionID) {
 			executeStep(in, log, procWriter)
+			s.MarkAsComplete(executionID)
 		} else {
 			log.Infow("Job is already running with same execution ID",
 				"id", executionID, "arg", in)

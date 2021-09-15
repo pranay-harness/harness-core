@@ -1,0 +1,14 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "cleanup",
+    srcs = ["cleanup.go"],
+    importpath = "github.com/wings-software/portal/product/ci/engine/new/cleanup",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//product/ci/addon/grpc/client",
+        "//product/ci/addon/proto",
+        "@com_github_pkg_errors//:errors",
+        "@org_uber_go_zap//:zap",
+    ],
+)
