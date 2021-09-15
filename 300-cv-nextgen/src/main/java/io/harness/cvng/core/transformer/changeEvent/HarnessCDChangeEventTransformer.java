@@ -1,16 +1,16 @@
 package io.harness.cvng.core.transformer.changeEvent;
 
 import io.harness.cvng.activity.entities.HarnessCDActivity;
-import io.harness.cvng.core.beans.change.event.ChangeEventDTO;
-import io.harness.cvng.core.beans.change.event.metadata.HarnessCDEventMetaData;
+import io.harness.cvng.beans.change.ChangeEventDTO;
+import io.harness.cvng.beans.change.HarnessCDEventMetadata;
 
 import java.time.Instant;
 
 public class HarnessCDChangeEventTransformer
-    extends ChangeEventMetaDataTransformer<HarnessCDActivity, HarnessCDEventMetaData> {
+    extends ChangeEventMetaDataTransformer<HarnessCDActivity, HarnessCDEventMetadata> {
   @Override
   public HarnessCDActivity getEntity(ChangeEventDTO changeEventDTO) {
-    HarnessCDEventMetaData metaData = (HarnessCDEventMetaData) changeEventDTO.getChangeEventMetaData();
+    HarnessCDEventMetadata metaData = (HarnessCDEventMetadata) changeEventDTO.getChangeEventMetaData();
     return HarnessCDActivity.builder()
         .accountId(changeEventDTO.getAccountId())
         .activityName(
@@ -36,8 +36,8 @@ public class HarnessCDChangeEventTransformer
   }
 
   @Override
-  protected HarnessCDEventMetaData getMetadata(HarnessCDActivity activity) {
-    return HarnessCDEventMetaData.builder()
+  protected HarnessCDEventMetadata getMetadata(HarnessCDActivity activity) {
+    return HarnessCDEventMetadata.builder()
         .deploymentEndTime(activity.getActivityEndTime().toEpochMilli())
         .deploymentStartTime(activity.getActivityStartTime().toEpochMilli())
         .stageId(activity.getStageId())

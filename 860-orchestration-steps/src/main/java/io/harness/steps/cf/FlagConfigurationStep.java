@@ -7,7 +7,7 @@ import io.harness.OrchestrationStepConfig;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cf.CFApi;
-import io.harness.cf.openapi.model.Feature;
+import io.harness.cf.openapi.ApiException;
 import io.harness.cf.openapi.model.PatchInstruction;
 import io.harness.cf.openapi.model.PatchOperation;
 import io.harness.logging.CommandExecutionStatus;
@@ -26,15 +26,18 @@ import io.harness.pms.sdk.core.steps.executables.SyncExecutable;
 import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.security.JWTTokenServiceUtils;
 import io.harness.steps.OrchestrationStepTypes;
 import io.harness.steps.StepUtils;
+import io.harness.steps.cf.AddRuleYaml.AddRuleYamlSpec;
 import io.harness.steps.cf.AddSegmentToVariationTargetMapYaml.AddSegmentToVariationTargetMapYamlSpec;
 import io.harness.steps.cf.AddTargetsToVariationTargetMapYaml.AddTargetsToVariationTargetMapYamlSpec;
 import io.harness.steps.cf.PatchInstruction.Type;
 import io.harness.steps.cf.RemoveSegmentToVariationTargetMapYaml.RemoveSegmentToVariationTargetMapYamlSpec;
 import io.harness.steps.cf.RemoveTargetsToVariationTargetMapYaml.RemoveTargetsToVariationTargetMapYamlSpec;
 import io.harness.steps.cf.SetFeatureFlagStateYaml.SetFeatureFlagStateYamlSpec;
+import io.harness.steps.cf.UpdateRuleYaml.UpdateRuleYamlSpec;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -94,6 +97,19 @@ public class FlagConfigurationStep implements SyncExecutable<StepElementParamete
               format("setting flag state to %s", spec.getState().getValue()), LogLevel.INFO);
         }
 
+        if (patchInstruction.getType().equals(Type.ADD_RULE)) {
+          AddRuleYamlSpec spec = ((AddRuleYaml) patchInstruction).getSpec();
+          instructions.add(addRule(spec));
+          ngManagerLogCallback.saveExecutionLog(format("adding rule to flag"), LogLevel.INFO);
+        }
+
+        if (patchInstruction.getType().equals(Type.UPDATE_RULE)) {
+          UpdateRuleYamlSpec spec = ((UpdateRuleYaml) patchInstruction).getSpec();
+          PatchInstruction instruction = cfApi.updatePercentageRollout(spec.getRuleID().getValue(), spec.getServe());
+          instructions.add(instruction);
+          ngManagerLogCallback.saveExecutionLog(format("updating rule for flag"), LogLevel.INFO);
+        }
+
         if (patchInstruction.getType().equals(Type.ADD_TARGETS_TO_VARIATION_TARGET_MAP)) {
           if (patchInstruction instanceof AddTargetsToVariationTargetMapYaml) {
             AddTargetsToVariationTargetMapYamlSpec spec =
@@ -139,18 +155,31 @@ public class FlagConfigurationStep implements SyncExecutable<StepElementParamete
 
       addApiKeyHeader(cfApi);
 
-      Feature feature = cfApi.patchFeature(featureIdentifier, ambiance.getSetupAbstractionsMap().get("accountId"),
+      cfApi.patchFeature(featureIdentifier, ambiance.getSetupAbstractionsMap().get("accountId"),
           ambiance.getSetupAbstractionsMap().get("orgIdentifier"),
           ambiance.getSetupAbstractionsMap().get("projectIdentifier"),
           flagConfigurationStepParameters.getEnvironment().getValue(), patchOperation);
 
-      ngManagerLogCallback.saveExecutionLog(format("Update of Feature flag %s completed", feature.getName()),
+      ngManagerLogCallback.saveExecutionLog(format("Update of Feature flag %s completed", featureIdentifier),
           LogLevel.INFO, CommandExecutionStatus.SUCCESS);
 
-    } catch (Exception e) {
-      ngManagerLogCallback.saveExecutionLog(format("error updating flag because %s", e.getMessage()), LogLevel.ERROR);
+    } catch (ApiException e) {
+      log.error(format("error updating flag because %s", e.getResponseBody()));
       return StepResponse.builder()
-          .status(Status.FAILED)
+          .status(Status.ERRORED)
+          .failureInfo(FailureInfo.newBuilder().setErrorMessage(e.getResponseBody()).build())
+          .unitProgressList(Collections.singletonList(UnitProgress.newBuilder()
+                                                          .setUnitName(INFRASTRUCTURE_COMMAND_UNIT)
+                                                          .setStatus(UnitStatus.FAILURE)
+                                                          .setStartTime(startTime)
+                                                          .setEndTime(System.currentTimeMillis())
+                                                          .build()))
+          .build();
+
+    } catch (Exception e) {
+      log.error(format("error updating flag because %s", e.getMessage()));
+      return StepResponse.builder()
+          .status(Status.ERRORED)
           .failureInfo(FailureInfo.newBuilder().setErrorMessage(e.getMessage()).build())
           .unitProgressList(Collections.singletonList(UnitProgress.newBuilder()
                                                           .setUnitName(INFRASTRUCTURE_COMMAND_UNIT)
@@ -191,5 +220,14 @@ public class FlagConfigurationStep implements SyncExecutable<StepElementParamete
    */
   private static boolean parseStateAsBoolean(String state) {
     return (state != null) && state.equalsIgnoreCase("on");
+  }
+
+  private PatchInstruction addRule(AddRuleYamlSpec rule) {
+    Integer priority = 0;
+    if (ParameterField.isNull(rule.getPriority()) != true) {
+      priority = rule.getPriority().getValue();
+    }
+
+    return cfApi.addPercentageRollout(rule.getUuid().getValue(), priority, rule.getServe(), rule.getClauses());
   }
 }

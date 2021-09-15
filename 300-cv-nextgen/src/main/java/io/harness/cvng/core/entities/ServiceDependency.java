@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CV;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cvng.core.beans.dependency.ServiceDependencyMetadata;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.mongo.CollationLocale;
 import io.harness.mongo.CollationStrength;
@@ -84,7 +85,7 @@ public class ServiceDependency implements PersistentEntity, UuidAware, AccountAc
   @EntityIdentifier String projectIdentifier;
   String fromMonitoredServiceIdentifier;
   String toMonitoredServiceIdentifier;
-
+  ServiceDependencyMetadata serviceDependencyMetadata;
   private long lastUpdatedAt;
   private long createdAt;
 

@@ -4,8 +4,10 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cf.openapi.ApiClient;
 import io.harness.cf.openapi.api.DefaultApi;
+import io.harness.cf.openapi.model.Clause;
 import io.harness.cf.openapi.model.FeatureState;
 import io.harness.cf.openapi.model.PatchInstruction;
+import io.harness.cf.openapi.model.Serve;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -91,6 +93,20 @@ public class CFApi extends DefaultApi {
     return PatchInstruction.builder()
         .kind("removeSegmentToVariationTargetMap")
         .parameters(new RemoveSegmentToVariationMapParams(variation, segments))
+        .build();
+  }
+
+  public PatchInstruction addPercentageRollout(String uuid, int priority, Serve serve, List<Clause> clauses) {
+    return PatchInstruction.builder()
+        .kind("addRule")
+        .parameters(AddRuleParam.newPercentageRollout(uuid, priority, serve, clauses))
+        .build();
+  }
+
+  public PatchInstruction updatePercentageRollout(String uuid, Serve serve) {
+    return PatchInstruction.builder()
+        .kind("updateRule")
+        .parameters(UpdateRuleParam.updatePercentageRollout(uuid, serve))
         .build();
   }
 }

@@ -18,7 +18,4 @@ public interface GitSyncErrorService {
       String branchName, String rootFolder, long fromTimestamp);
 
   boolean deleteGitSyncErrors(List<String> errorIds, String accountId);
-
-  void deleteByAccountIdOrgIdProjectIdAndFilePath(
-      String accountId, String orgId, String projectId, List<String> yamlFilePath);
 }
