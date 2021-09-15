@@ -11,11 +11,8 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.licensing.BillingFrequency;
-import io.harness.licensing.Edition;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
-import io.harness.ng.core.user.SignupAction;
 import io.harness.persistence.AccountAccess;
 import io.harness.validation.Update;
 
@@ -100,11 +97,11 @@ public class UserInvite extends Base implements AccountAccess {
 
   @Getter @Setter private String intent;
 
-  @Getter @Setter private SignupAction signupAction;
+  @Getter @Setter private String signupAction;
 
-  @Getter @Setter private Edition edition;
+  @Getter @Setter private String edition;
 
-  @Getter @Setter private BillingFrequency billingFrequency;
+  @Getter @Setter private String billingFrequency;
 
   @Override
   public boolean equals(Object o) {
