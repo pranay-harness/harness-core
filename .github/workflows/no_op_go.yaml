@@ -14,7 +14,7 @@ jobs:
         uses: Sibz/github-status-action@v1
         with:
           authToken: ${{secrets.GITHUB_TOKEN}}
-          context: tibootstrap-ti0
+          context: runUnitTests0-unittest0
           description: 'Mark ti0 as success'
           state: 'success'
           sha: ${{github.event.pull_request.head.sha || github.sha}}
@@ -23,7 +23,7 @@ jobs:
         uses: Sibz/github-status-action@v1
         with:
           authToken: ${{secrets.GITHUB_TOKEN}}
-          context: tibootstrap1-ti1
+          context: runUnitTests1-unittest1
           description: 'Mark ti1 as success'
           state: 'success'
           sha: ${{github.event.pull_request.head.sha || github.sha}}
@@ -32,7 +32,7 @@ jobs:
         uses: Sibz/github-status-action@v1
         with:
           authToken: ${{secrets.GITHUB_TOKEN}}
-          context: tibootstrap2backup-ti2
+          context: runUnitTests2-unittest2
           description: 'Mark ti2 as success'
           state: 'success'
           sha: ${{github.event.pull_request.head.sha || github.sha}}
@@ -41,7 +41,7 @@ jobs:
         uses: Sibz/github-status-action@v1
         with:
           authToken: ${{secrets.GITHUB_TOKEN}}
-          context: tibootstrap3-ti3
+          context: runUnitTests3-unittest3
           description: 'Mark ti3 as success'
           state: 'success'
           sha: ${{github.event.pull_request.head.sha || github.sha}}
@@ -50,7 +50,7 @@ jobs:
         uses: Sibz/github-status-action@v1
         with:
           authToken: ${{secrets.GITHUB_TOKEN}}
-          context: tibootstrap4-ti4
+          context: runUnitTests4-unittest4
           description: 'Mark ti4 as success'
           state: 'success'
           sha: ${{github.event.pull_request.head.sha || github.sha}}
