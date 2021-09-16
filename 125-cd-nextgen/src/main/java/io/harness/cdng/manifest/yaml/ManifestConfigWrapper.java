@@ -1,5 +1,8 @@
 package io.harness.cdng.manifest.yaml;
 
+import io.harness.annotation.RecasterAlias;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.visitor.helpers.manifest.ManifestWrapperConfigVisitorHelper;
 import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
@@ -15,6 +18,8 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @SimpleVisitorHelper(helperClass = ManifestWrapperConfigVisitorHelper.class)
 @TypeAlias("manifestConfigWrapper")
+@RecasterAlias("io.harness.cdng.manifest.yaml.ManifestConfigWrapper")
+@OwnedBy(HarnessTeam.CDP)
 public class ManifestConfigWrapper implements Visitable {
   ManifestConfig manifest;
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;

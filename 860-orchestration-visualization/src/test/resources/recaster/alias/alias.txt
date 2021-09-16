@@ -10,3 +10,7 @@ io.harness.utils.DummySectionStepParameters
 io.harness.utils.DummyVisualizationOutcome
 io.harness.yaml.core.properties.NGProperties
 parameterField
+io.harness.yaml.core.failurestrategy.FailureStrategyConfig
+io.harness.yaml.core.failurestrategy.OnFailureConfig
+io.harness.yaml.core.failurestrategy.rollback.StageRollbackFailureActionConfig
+io.harness.yaml.core.failurestrategy.marksuccess.MarkAsSuccessFailureActionConfig
