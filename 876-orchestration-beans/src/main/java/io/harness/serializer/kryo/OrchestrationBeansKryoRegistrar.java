@@ -9,6 +9,7 @@ import io.harness.execution.NodeExecution;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.State;
 import io.harness.interrupts.InterruptEffect;
+import io.harness.pms.data.stepparameters.PmsStepParameters;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.timeout.trackers.active.ActiveTimeoutParameters;
 
@@ -37,5 +38,7 @@ public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(Interrupt.class, 87601);
     kryo.register(State.class, 87602);
     kryo.register(StepDetailInstance.class, 87603);
+
+    kryo.register(PmsStepParameters.class, 88405);
   }
 }
