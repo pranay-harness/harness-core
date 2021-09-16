@@ -2386,7 +2386,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   private String getVersionWithPatch() {
-    return versionInfoManager.getFullVersion();
+    if (multiVersion) {
+      return versionInfoManager.getFullVersion();
+    }
+    return getVersion();
   }
 
   private void initiateSelfDestruct() {
