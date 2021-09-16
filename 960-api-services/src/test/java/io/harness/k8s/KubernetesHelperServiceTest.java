@@ -20,6 +20,7 @@ import io.harness.k8s.oidc.OidcTokenRetriever;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.openshift.client.OpenShiftClient;
 import okhttp3.OkHttpClient;
@@ -120,5 +121,14 @@ public class KubernetesHelperServiceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testValidateCluster() {
     assertThatThrownBy(() -> helperService.validateCluster("")).isInstanceOf(InvalidArgumentsException.class);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.SATYAM)
+  @Category(UnitTests.class)
+  public void testToYAML() throws JsonProcessingException {
+    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
+    String str = KubernetesHelperService.toYaml(kubernetesConfig);
+    int a = 199;
   }
 }

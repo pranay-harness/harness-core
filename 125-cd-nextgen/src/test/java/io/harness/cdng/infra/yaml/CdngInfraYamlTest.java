@@ -1,6 +1,7 @@
 package io.harness.cdng.infra.yaml;
 
 import static io.harness.rule.OwnerRule.ACHYUTH;
+import static io.harness.rule.OwnerRule.HANTANG;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -11,6 +12,8 @@ import io.harness.category.element.UnitTests;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -58,5 +61,15 @@ public class CdngInfraYamlTest extends CategoryTest {
     assertThat(k8sGcpInfrastructure.extractConnectorRefs().get("connectorRef").getValue()).isEqualTo("connector");
 
     assertThat(k8SDirectInfrastructure.getConnectorRef().getValue()).isEqualTo("connectorDirect");
+  }
+
+  @Test
+  @Owner(developers = HANTANG)
+  @Category(UnitTests.class)
+  public void testJsonCreator() throws JsonProcessingException {
+    ObjectMapper mapper = new ObjectMapper();
+    String str = "{\"name\":\"Prakhar\", \"infrastructureType\":\"KubernetesdGcp\"}";
+    PojoClass testPOJO = mapper.readValue(str, PojoClass.class);
+    int a1 = 100;
   }
 }
