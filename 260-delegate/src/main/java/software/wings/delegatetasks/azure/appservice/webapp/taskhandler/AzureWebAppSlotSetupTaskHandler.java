@@ -27,7 +27,7 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.delegatetasks.azure.appservice.deployment.context.AzureAppServiceDockerDeploymentContext;
 import software.wings.delegatetasks.azure.appservice.deployment.context.AzureAppServicePackageDeploymentContext;
 import software.wings.delegatetasks.azure.appservice.webapp.AbstractAzureWebAppTaskHandler;
-import software.wings.delegatetasks.azure.common.ArtifactDownloaderLogService;
+import software.wings.delegatetasks.azure.common.ArtifactDownloaderServiceLogWrapper;
 import software.wings.delegatetasks.azure.common.AutoCloseableWorkingDirectory;
 import software.wings.delegatetasks.azure.common.AzureAppServiceService;
 import software.wings.delegatetasks.azure.common.AzureContainerRegistryService;
@@ -49,7 +49,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHandler {
-  @Inject private ArtifactDownloaderLogService artifactDownloaderLogService;
+  @Inject private ArtifactDownloaderServiceLogWrapper artifactDownloaderServiceLogWrapper;
   @Inject private AzureContainerRegistryService azureContainerRegistryService;
   @Inject private AzureAppServiceService azureAppServiceService;
 
@@ -195,7 +195,7 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
       ILogStreamingTaskClient logStreamingTaskClient) {
     ArtifactDownloaderContext artifactDownloaderContext =
         toArtifactDownloaderContext(azureWebAppSlotSetupParameters, streamAttributes, autoCloseableWorkingDirectory);
-    return artifactDownloaderLogService.fetchArtifactFileForDeploymentAndLog(
+    return artifactDownloaderServiceLogWrapper.fetchArtifactFileForDeploymentAndLog(
         artifactDownloaderContext, logStreamingTaskClient);
   }
 
