@@ -197,6 +197,7 @@ public class OrchestrationRegistrars {
   public static final List<Class<? extends Converter<?, ?>>> springConverters =
       ImmutableList.<Class<? extends Converter<?, ?>>>builder()
           .addAll(orchestrationConverters)
+          .addAll(OrchestrationBeansRegistrars.springConverters)
           .addAll(WaitEngineRegistrars.springConverters)
           .build();
 }
