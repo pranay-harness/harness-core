@@ -71,9 +71,10 @@ public class HealthSourceServiceImpl implements HealthSourceService {
   @Override
   public void delete(String accountId, String orgIdentifier, String projectIdentifier, String nameSpaceIdentifier,
       List<String> identifiers) {
-    identifiers.forEach(identifier
-        -> cvConfigService.deleteByIdentifier(accountId, orgIdentifier, projectIdentifier,
-            HealthSourceService.getNameSpacedIdentifier(nameSpaceIdentifier, identifier)));
+    identifiers.forEach(identifier -> {
+      String nameSpacedIdentifier = HealthSourceService.getNameSpacedIdentifier(nameSpaceIdentifier, identifier);
+      cvConfigService.deleteByIdentifier(accountId, orgIdentifier, projectIdentifier, nameSpacedIdentifier);
+    });
   }
 
   @Override
@@ -112,7 +113,7 @@ public class HealthSourceServiceImpl implements HealthSourceService {
             HealthSourceService.getNameSpacedIdentifier(nameSpaceIdentifier, identifier), orgIdentifier,
             projectIdentifier));
 
-    HealthSource healthSource = HealthSourceDTO.toHealthSource(cvConfigs.get(0), injector);
+    HealthSource healthSource = HealthSourceDTO.toHealthSource(cvConfigs, injector);
     healthSource.setIdentifier(identifier);
     return healthSource;
   }
