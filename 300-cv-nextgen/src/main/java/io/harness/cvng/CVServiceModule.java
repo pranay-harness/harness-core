@@ -164,6 +164,7 @@ import io.harness.cvng.core.services.impl.monitoredService.ServiceDependencyServ
 import io.harness.cvng.core.transformer.changeEvent.ChangeEventEntityAndDTOTransformer;
 import io.harness.cvng.core.transformer.changeEvent.ChangeEventMetaDataTransformer;
 import io.harness.cvng.core.transformer.changeEvent.HarnessCDChangeEventTransformer;
+import io.harness.cvng.core.transformer.changeEvent.KubernetesClusterChangeEventMetadataTransformer;
 import io.harness.cvng.core.transformer.changeEvent.PagerDutyChangeEventTransformer;
 import io.harness.cvng.core.transformer.changeSource.ChangeSourceEntityAndDTOTransformer;
 import io.harness.cvng.core.transformer.changeSource.ChangeSourceSpecTransformer;
@@ -523,6 +524,9 @@ public class CVServiceModule extends AbstractModule {
     bind(ChangeEventMetaDataTransformer.class)
         .annotatedWith(Names.named(ChangeSourceType.HARNESS_CD.name()))
         .to(HarnessCDChangeEventTransformer.class);
+    bind(ChangeEventMetaDataTransformer.class)
+        .annotatedWith(Names.named(ChangeSourceType.KUBERNETES.name()))
+        .to(KubernetesClusterChangeEventMetadataTransformer.class);
     bind(ChangeEventMetaDataTransformer.class)
         .annotatedWith(Names.named(ChangeSourceType.PAGER_DUTY.name()))
         .to(PagerDutyChangeEventTransformer.class);
