@@ -5,9 +5,12 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
 
+import software.wings.delegatetasks.CustomDataCollectionUtils;
+import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 
 import com.google.common.collect.Multimap;
+import java.text.ParseException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -38,7 +41,11 @@ public class APMResponseParser {
       log.info("Response Data is :  {}", data);
       for (APMMetricInfo metricInfo : data.getMetricInfos()) {
         VerificationResponseParser apmResponseParser = new VerificationResponseParser();
+        String timestampFormat = null;
         for (APMMetricInfo.ResponseMapper responseMapper : metricInfo.getResponseMappers().values()) {
+          if (responseMapper.getTimestampFormat() != null) {
+            timestampFormat = responseMapper.getTimestampFormat();
+          }
           if (!isEmpty(responseMapper.getJsonPath())) {
             apmResponseParser.put(
                 responseMapper.getJsonPath().split("\\."), responseMapper.getFieldName(), responseMapper.getRegexs());
@@ -52,14 +59,15 @@ public class APMResponseParser {
           continue;
         }
         createRecords(metricInfo.getResponseMappers().get("txnName").getFieldValue(), metricInfo.getMetricName(),
-            data.hostName, metricInfo.getTag(), data.groupName, output, resultMap);
+            data.hostName, metricInfo.getTag(), data.groupName, timestampFormat, output, resultMap);
       }
     }
     return resultMap.values();
   }
 
   private static void createRecords(String txnName, String metricName, String hostName, String tag, String groupName,
-      List<Multimap<String, Object>> response, Map<String, NewRelicMetricDataRecord> resultMap) {
+      String timestampFormat, List<Multimap<String, Object>> response,
+      Map<String, NewRelicMetricDataRecord> resultMap) {
     if (groupName == null) {
       final String errorMsg =
           "Unexpected null groupName received while parsing APMResponse. Please contact Harness Support.";
@@ -70,13 +78,7 @@ public class APMResponseParser {
       Iterator<Object> timestamps = record.containsKey("timestamp") ? record.get("timestamp").iterator() : null;
       Iterator<Object> values = record.get("value").iterator();
       while (values.hasNext()) {
-        long timestamp =
-            timestamps != null ? (long) VerificationResponseParser.cast(timestamps.next(), "timestamp") : 0;
-        long now = Timestamp.currentMinuteBoundary();
-        if (timestamp != 0 && String.valueOf(timestamp).length() < String.valueOf(now).length()) {
-          // Timestamp is in seconds. Convert to millis
-          timestamp = timestamp * 1000;
-        }
+        long timestamp = timestamps != null ? parseTimestamp(timestamps.next(), timestampFormat) : 0;
         txnName = record.containsKey("txnName") ? (String) record.get("txnName").iterator().next() : txnName;
         hostName = record.containsKey("host") ? (String) record.get("host").iterator().next() : hostName;
         String key = timestamp + ":" + txnName + ":" + hostName;
@@ -97,5 +99,29 @@ public class APMResponseParser {
         resultMap.get(key).getValues().put(metricName, (Double) VerificationResponseParser.cast(val, "value"));
       }
     }
+  }
+
+  private static long parseTimestamp(Object timestampObj, String timestampFormat) {
+    long timestamp;
+    try {
+      timestamp = (long) VerificationResponseParser.cast(timestampObj, "timestamp");
+    } catch (WingsException w) {
+      if (timestampFormat != null) {
+        String timestampStr = (String) timestampObj;
+        try {
+          timestamp = CustomDataCollectionUtils.parseTimestampfield(timestampStr, timestampFormat);
+        } catch (ParseException e) {
+          throw new DataCollectionException("Unable to parse date during data collection", e);
+        }
+      } else {
+        throw w;
+      }
+    }
+    long now = Timestamp.currentMinuteBoundary();
+    if (timestamp != 0 && String.valueOf(timestamp).length() < String.valueOf(now).length()) {
+      // Timestamp is in seconds. Convert to millis
+      timestamp = timestamp * 1000;
+    }
+    return timestamp;
   }
 }
