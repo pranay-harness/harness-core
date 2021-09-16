@@ -15,8 +15,8 @@ public interface GitopsProviderCrudService {
   Optional<GitOpsProviderResponseDTO> get(@NotNull String accountIdentifier, String orgIdentifier,
       @NotNull String projectIdentifier, @NotNull String connectorIdentifier);
 
-  Page<GitOpsProviderResponseDTO> list(
-      Pageable pageable, @NotNull String accountIdentifier, String orgIdentifier, @NotNull String projectIdentifier);
+  Page<GitOpsProviderResponseDTO> list(Pageable pageable, @NotNull String accountIdentifier, String orgIdentifier,
+      @NotNull String projectIdentifier, String searchTerm);
 
   GitOpsProviderResponseDTO create(@NotNull GitOpsProviderDTO connector, @NotNull String accountIdentifier);
 

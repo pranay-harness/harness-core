@@ -38,7 +38,7 @@ type TimeScaleDb struct {
 // New connects to timescaledb and returns a wrapped connection object.
 func New(username, password, host, port, dbName,
 	evalTable, coverageTable, selectionTable string,
-	enableSSL bool, sslCertPath string, log *zap.SugaredLogger) (*TimeScaleDb, error) {
+	enableSSL bool, sslMode, sslCertPath string, log *zap.SugaredLogger) (*TimeScaleDb, error) {
 	iport, err := strconv.ParseUint(port, 10, 64)
 	if err != nil {
 		return nil, err
@@ -47,7 +47,7 @@ func New(username, password, host, port, dbName,
 	ci := &db.ConnectionInfo{Application: "ti-svc", DBName: dbName,
 		User: username, Host: host, Password: password,
 		Port: uint(iport), Engine: "postgres",
-		EnableSSL: enableSSL, SSLCertPath: sslCertPath}
+		EnableSSL: enableSSL, SSLMode: sslMode, SSLCertPath: sslCertPath}
 	db, err := db.NewDB(ci, log)
 	if err != nil {
 		return nil, err

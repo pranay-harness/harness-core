@@ -9,7 +9,7 @@ import lombok.Value;
 @Value
 @Builder
 @OwnedBy(HarnessTeam.PL)
-public class CountAndChangeRateInfo {
-  long count;
+public class CountChangeAndCountChangeRateInfo {
+  long countChange;
   double countChangeRate;
 }

@@ -6,7 +6,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.category.element.UnitTests;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.sdk.core.PmsSdkCoreTestBase;
+import io.harness.pms.sdk.core.execution.expression.ExpressionResult;
 import io.harness.pms.sdk.core.execution.expression.SdkFunctor;
 import io.harness.registries.exceptions.DuplicateRegistryException;
 import io.harness.registries.exceptions.UnregisteredKeyAccessException;
@@ -45,5 +47,10 @@ public class FunctorRegistryTest extends PmsSdkCoreTestBase {
 
   @Value
   @Builder
-  private static class DummySdkFunctor implements SdkFunctor {}
+  private static class DummySdkFunctor implements SdkFunctor {
+    @Override
+    public ExpressionResult get(Ambiance ambiance, String... args) {
+      return null;
+    }
+  }
 }

@@ -17,17 +17,14 @@ import lombok.AllArgsConstructor;
 @Singleton
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 @OwnedBy(HarnessTeam.GITOPS)
-public class ConnectedGitOpsProviderEntityMapper implements GitOpsProviderEntityMapper {
+public class ConnectedGitOpsProviderEntityMapper extends AbstractGitOpsProviderEntityMapper {
   @Override
   public GitOpsProviderResponseDTO toGitOpsProvider(@NotNull GitOpsProvider gitopsProvider) {
-    return GitOpsProviderResponseDTO.builder()
-        .infoDTO(ConnectedArgoGitOpsInfoDTO.builder()
-                     .adapterUrl(((ConnectedArgoProvider) gitopsProvider).getAdapterUrl())
-                     .build())
-        .identifier(gitopsProvider.getIdentifier())
-        .orgIdentifier(gitopsProvider.getOrgIdentifier())
-        .projectIdentifier(gitopsProvider.getProjectIdentifier())
-        .build();
+    ConnectedArgoProvider argoProvider = (ConnectedArgoProvider) gitopsProvider;
+    GitOpsProviderResponseDTO responseDTO = new GitOpsProviderResponseDTO();
+    responseDTO.setInfoDTO(ConnectedArgoGitOpsInfoDTO.builder().adapterUrl(argoProvider.getAdapterUrl()).build());
+    setDtoFields(gitopsProvider, responseDTO);
+    return responseDTO;
   }
 
   @Override
@@ -37,10 +34,7 @@ public class ConnectedGitOpsProviderEntityMapper implements GitOpsProviderEntity
         ConnectedArgoProvider.builder()
             .adapterUrl(((ConnectedArgoGitOpsInfoDTO) gitopsProviderDTO.getInfoDTO()).getAdapterUrl())
             .build();
-    entity.setIdentifier(gitopsProviderDTO.getIdentifier());
-    entity.setAccountIdentifier(accountIdentifier);
-    entity.setProjectIdentifier(gitopsProviderDTO.getProjectIdentifier());
-    entity.setOrgIdentifier(gitopsProviderDTO.getOrgIdentifier());
+    setEntityFields(gitopsProviderDTO, entity, accountIdentifier);
     return entity;
   }
 }

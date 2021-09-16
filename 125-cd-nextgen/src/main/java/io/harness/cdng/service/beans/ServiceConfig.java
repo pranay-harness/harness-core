@@ -2,6 +2,7 @@ package io.harness.cdng.service.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SwaggerConstants;
 import io.harness.cdng.visitor.helpers.serviceconfig.ServiceConfigVisitorHelper;
@@ -30,6 +31,7 @@ import lombok.experimental.Wither;
 @OneOfField(fields = {"serviceDefinition", "useFromStage"})
 @SimpleVisitorHelper(helperClass = ServiceConfigVisitorHelper.class)
 @OwnedBy(CDC)
+@RecasterAlias("io.harness.cdng.service.beans.ServiceConfig")
 public class ServiceConfig implements OverridesApplier<ServiceConfig>, Visitable {
   @Wither private ServiceUseFromStage useFromStage;
 

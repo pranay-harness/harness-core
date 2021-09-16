@@ -41,7 +41,7 @@ public class GitOpsProviderDTO {
 
   @JsonProperty("spec")
   @JsonTypeInfo(
-      use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
+      use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXISTING_PROPERTY, visible = true)
   @NotNull
   GitOpsInfoDTO infoDTO;
 
