@@ -12,6 +12,7 @@ import lombok.Value;
 @Value
 @Builder
 public class WorkloadRecommendationDTO implements RecommendationDetailsDTO {
+  String id;
   @GraphQLQuery(description = "use items.containerRecommendation", deprecationReason = "")
   @Deprecated
   Map<String, ContainerRecommendation> containerRecommendations;

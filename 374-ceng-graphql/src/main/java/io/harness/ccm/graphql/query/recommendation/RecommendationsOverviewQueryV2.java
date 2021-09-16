@@ -2,8 +2,15 @@ package io.harness.ccm.graphql.query.recommendation;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.commons.utils.TimeUtils.offsetDateTimeNow;
+import static io.harness.ccm.views.entities.ViewFieldIdentifier.CLUSTER;
+import static io.harness.ccm.views.graphql.ViewsQueryHelper.getPerspectiveIdFromMetadataFilter;
+import static io.harness.ccm.views.service.impl.ViewsBillingServiceImpl.convertQLCEViewRuleToViewRule;
+import static io.harness.ccm.views.service.impl.ViewsBillingServiceImpl.getRuleFilters;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.timescaledb.Tables.CE_RECOMMENDATIONS;
+
+import static com.google.common.base.MoreObjects.firstNonNull;
+import static java.util.Collections.emptyList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.commons.beans.recommendation.RecommendationOverviewStats;
@@ -14,23 +21,37 @@ import io.harness.ccm.graphql.dto.recommendation.RecommendationItemDTO;
 import io.harness.ccm.graphql.dto.recommendation.RecommendationsDTO;
 import io.harness.ccm.graphql.utils.GraphQLUtils;
 import io.harness.ccm.graphql.utils.annotations.GraphQLApi;
+import io.harness.ccm.views.entities.CEView;
+import io.harness.ccm.views.entities.ViewCondition;
+import io.harness.ccm.views.entities.ViewIdCondition;
+import io.harness.ccm.views.entities.ViewRule;
+import io.harness.ccm.views.graphql.QLCEViewFilterWrapper;
+import io.harness.ccm.views.graphql.QLCEViewRule;
+import io.harness.ccm.views.service.CEViewService;
+import io.harness.exception.InvalidRequestException;
+import io.harness.queryconverter.SQLConverter;
 import io.harness.timescaledb.tables.records.CeRecommendationsRecord;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.sun.istack.internal.NotNull;
 import io.leangen.graphql.annotations.GraphQLArgument;
 import io.leangen.graphql.annotations.GraphQLContext;
 import io.leangen.graphql.annotations.GraphQLEnvironment;
 import io.leangen.graphql.annotations.GraphQLQuery;
 import io.leangen.graphql.execution.ResolutionEnvironment;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
-import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.Condition;
+import org.jooq.Table;
 import org.jooq.TableField;
+import org.jooq.impl.DSL;
 
 @Slf4j
 @Singleton
@@ -38,8 +59,10 @@ import org.jooq.TableField;
 @OwnedBy(CE)
 public class RecommendationsOverviewQueryV2 {
   @Inject private GraphQLUtils graphQLUtils;
+  @Inject private CEViewService viewService;
   @Inject private RecommendationService recommendationService;
-  private final Gson GSON = new Gson();
+
+  private static final Gson GSON = new Gson();
 
   @GraphQLQuery(name = "recommendationsV2", description = "The list of all types of recommendations for overview page")
   public RecommendationsDTO recommendations(
@@ -47,7 +70,7 @@ public class RecommendationsOverviewQueryV2 {
       @GraphQLEnvironment final ResolutionEnvironment env) {
     final String accountId = graphQLUtils.getAccountIdentifier(env);
 
-    Condition condition = applyCommonFilters(filter);
+    Condition condition = applyAllFilters(filter);
 
     final List<RecommendationItemDTO> items =
         recommendationService.listAll(accountId, condition, filter.getOffset(), filter.getLimit());
@@ -60,7 +83,7 @@ public class RecommendationsOverviewQueryV2 {
       @GraphQLEnvironment final ResolutionEnvironment env) {
     final String accountId = graphQLUtils.getAccountIdentifier(env);
 
-    Condition condition = applyCommonFilters(filter);
+    Condition condition = applyAllFilters(filter);
 
     return recommendationService.getStats(accountId, condition);
   }
@@ -81,15 +104,17 @@ public class RecommendationsOverviewQueryV2 {
   private int genericCountQuery(@NotNull final ResolutionEnvironment env) {
     final String accountId = graphQLUtils.getAccountIdentifier(env);
 
-    String filterAsJson = "{}";
-    if (env.dataFetchingEnvironment.getVariables().containsKey("filter")) {
-      filterAsJson = env.dataFetchingEnvironment.getVariables().get("filter").toString();
-    }
-    K8sRecommendationFilterDTO filter = GSON.fromJson(filterAsJson, K8sRecommendationFilterDTO.class);
+    K8sRecommendationFilterDTO filter = extractRecommendationFilter(env);
 
-    Condition condition = applyCommonFilters(filter);
+    Condition condition = applyAllFilters(filter);
 
     return recommendationService.getRecommendationsCount(accountId, condition);
+  }
+
+  private K8sRecommendationFilterDTO extractRecommendationFilter(final ResolutionEnvironment env) {
+    Object filter = env.dataFetchingEnvironment.getVariables().getOrDefault("filter", new HashMap<String, Object>());
+    JsonElement jsonElement = GSON.toJsonTree(filter);
+    return GSON.fromJson(jsonElement, K8sRecommendationFilterDTO.class);
   }
 
   @GraphQLQuery(name = "recommendationFilterStatsV2", description = "Possible filter values for each key")
@@ -99,13 +124,13 @@ public class RecommendationsOverviewQueryV2 {
       @GraphQLEnvironment final ResolutionEnvironment env) {
     final String accountId = graphQLUtils.getAccountIdentifier(env);
 
-    Condition condition = applyCommonFilters(filter);
+    Condition condition = applyAllFilters(filter);
 
     return recommendationService.getFilterStats(accountId, condition, columns, CE_RECOMMENDATIONS);
   }
 
   @NotNull
-  private Condition applyCommonFilters(@NotNull K8sRecommendationFilterDTO filter) {
+  private Condition applyAllFilters(@NotNull K8sRecommendationFilterDTO filter) {
     Condition condition = getValidRecommendationFilter();
 
     if (!isEmpty(filter.getIds())) {
@@ -115,34 +140,110 @@ public class RecommendationsOverviewQueryV2 {
         condition = condition.and(CE_RECOMMENDATIONS.RESOURCETYPE.in(enumToString(filter.getResourceTypes())));
       }
 
-      condition = appendStringFilter(condition, CE_RECOMMENDATIONS.CLUSTERNAME, filter.getClusterNames());
-      condition = appendStringFilter(condition, CE_RECOMMENDATIONS.NAMESPACE, filter.getNamespaces());
-      condition = appendStringFilter(condition, CE_RECOMMENDATIONS.NAME, filter.getNames());
-      condition = appendGreaterOrEqualFilter(condition, CE_RECOMMENDATIONS.MONTHLYSAVING, filter.getMinSaving());
-      condition = appendGreaterOrEqualFilter(condition, CE_RECOMMENDATIONS.MONTHLYCOST, filter.getMinCost());
+      condition = condition.and(constructInCondition(CE_RECOMMENDATIONS.CLUSTERNAME, filter.getClusterNames()));
+      condition = condition.and(constructInCondition(CE_RECOMMENDATIONS.NAMESPACE, filter.getNamespaces()));
+      condition = condition.and(constructInCondition(CE_RECOMMENDATIONS.NAME, filter.getNames()));
+      condition = condition.and(constructGreaterOrEqualFilter(CE_RECOMMENDATIONS.MONTHLYSAVING, filter.getMinSaving()));
+      condition = condition.and(constructGreaterOrEqualFilter(CE_RECOMMENDATIONS.MONTHLYCOST, filter.getMinCost()));
+    }
+
+    final Condition perspectiveCondition =
+        getPerspectiveCondition(firstNonNull(filter.getPerspectiveFilters(), emptyList()));
+    return condition.and(perspectiveCondition);
+  }
+
+  @NotNull
+  private Condition getPerspectiveCondition(@NotNull List<QLCEViewFilterWrapper> perspectiveFilters) {
+    final List<QLCEViewRule> qlCeViewRules = getRuleFilters(perspectiveFilters);
+    final List<ViewRule> combinedViewRuleList = convertQLCEViewRuleToViewRule(qlCeViewRules);
+
+    combinedViewRuleList.addAll(getPerspectiveRuleList(perspectiveFilters));
+
+    return constructViewRuleFilterCondition(combinedViewRuleList);
+  }
+
+  @NotNull
+  private List<ViewRule> getPerspectiveRuleList(@NotNull List<QLCEViewFilterWrapper> perspectiveFilters) {
+    final Optional<String> perspectiveId = getPerspectiveIdFromMetadataFilter(perspectiveFilters);
+
+    if (perspectiveId.isPresent()) {
+      final CEView perspective = viewService.get(perspectiveId.get());
+      if (perspective != null) {
+        return perspective.getViewRules();
+      }
+
+      throw new InvalidRequestException(String.format("perspectiveId=[%s] not present", perspectiveId.get()));
+    }
+
+    return emptyList();
+  }
+
+  @NotNull
+  private static Condition constructViewRuleFilterCondition(@NotNull List<ViewRule> viewRuleList) {
+    Condition condition = DSL.noCondition();
+
+    for (ViewRule viewRule : viewRuleList) {
+      condition = condition.or(constructViewFilterCondition(viewRule.getViewConditions()));
     }
 
     return condition;
   }
 
+  @NotNull
+  private static Condition constructViewFilterCondition(@NotNull List<ViewCondition> viewConditionList) {
+    Condition condition = DSL.noCondition();
+
+    for (ViewCondition viewCondition : viewConditionList) {
+      ViewIdCondition idCondition = (ViewIdCondition) viewCondition;
+
+      if (idCondition.getViewField().getIdentifier() == CLUSTER) {
+        condition = condition.and(constructViewFilterCondition(idCondition));
+      }
+    }
+
+    return condition;
+  }
+
+  private static Condition constructViewFilterCondition(ViewIdCondition viewIdCondition) {
+    final Table<?> table = CE_RECOMMENDATIONS;
+    final String fieldId = viewIdCondition.getViewField().getFieldId();
+
+    switch (viewIdCondition.getViewOperator()) {
+      case IN:
+        return SQLConverter.getField(fieldId, table).in(viewIdCondition.getValues());
+      case NOT_IN:
+        return SQLConverter.getField(fieldId, table).notIn(viewIdCondition.getValues());
+      case NOT_NULL:
+        return SQLConverter.getField(fieldId, table).isNotNull();
+      case NULL:
+        return SQLConverter.getField(fieldId, table).isNull();
+      default:
+        throw new InvalidRequestException(String.format("%s not implemented", viewIdCondition.getViewOperator()));
+    }
+  }
+
+  @NotNull
   private static List<String> enumToString(List<? extends Enum> list) {
     return list.stream().map(Enum::name).collect(Collectors.toList());
   }
 
-  private static Condition appendStringFilter(
-      Condition condition, TableField<CeRecommendationsRecord, String> field, List<String> value) {
+  @NotNull
+  private static Condition constructInCondition(TableField<CeRecommendationsRecord, String> field, List<String> value) {
     if (!isEmpty(value)) {
-      return condition.and(field.in(value));
+      return field.in(value);
     }
-    return condition;
+
+    return DSL.noCondition();
   }
 
-  private static Condition appendGreaterOrEqualFilter(
-      Condition condition, TableField<CeRecommendationsRecord, Double> field, Double value) {
+  @NotNull
+  private static Condition constructGreaterOrEqualFilter(
+      TableField<CeRecommendationsRecord, Double> field, Double value) {
     if (value != null) {
-      return condition.and(field.greaterOrEqual(value));
+      return field.greaterOrEqual(value);
     }
-    return condition;
+
+    return DSL.noCondition();
   }
 
   private static Condition getValidRecommendationFilter() {
