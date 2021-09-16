@@ -10,8 +10,8 @@ import static org.mockito.Mockito.when;
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
+import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.core.beans.ChangeSummaryDTO;
-import io.harness.cvng.core.beans.change.event.ChangeEventDTO;
 import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.entities.changeSource.ChangeSource;
@@ -90,18 +90,18 @@ public class ChangeSourceServiceImplTest extends CvNextGenTestBase {
   public void testUpdate() {
     ChangeSourceDTO changeSourceDto = builderFactory.getHarnessCDChangeSourceDTOBuilder().build();
     Set<ChangeSourceDTO> updateDtos = new HashSet<>(Arrays.asList(changeSourceDto));
-    String updatedDescription = "UPDATED_DESCRIPTION";
+    String updatedName = "UPDATED_NAME";
 
     changeSourceService.create(environmentParams, updateDtos);
     ChangeSource initialChangeSource = getChangeSourceFromDb(changeSourceDto.getIdentifier());
 
-    changeSourceDto.setDescription(updatedDescription);
+    changeSourceDto.setName(updatedName);
     changeSourceService.update(environmentParams, updateDtos);
     ChangeSource updatedChangeSource = getChangeSourceFromDb(changeSourceDto.getIdentifier());
 
     assertThat(updatedChangeSource.getUuid()).isEqualTo(initialChangeSource.getUuid());
     assertThat(updatedChangeSource.getCreatedAt()).isEqualTo(initialChangeSource.getCreatedAt());
-    assertThat(updatedChangeSource.getDescription()).isEqualTo(updatedDescription);
+    assertThat(updatedChangeSource.getName()).isEqualTo(updatedName);
   }
 
   @Test

@@ -49,7 +49,6 @@ import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.services.api.CVConfigService;
-import io.harness.cvng.core.services.impl.CVEventServiceImpl;
 import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.encryption.Scope;
@@ -81,7 +80,6 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mongodb.morphia.query.UpdateOperations;
 
@@ -94,7 +92,6 @@ public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
   @Inject private VerificationJobService verificationJobService;
   @Inject Injector injector;
   @Mock private VerificationManagerService verificationManagerService;
-  @Mock private CVEventServiceImpl cvEventService;
 
   private String accountId;
   private String orgIdentifier;
@@ -119,7 +116,6 @@ public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
     FieldUtils.writeField(activitySourceService, "verificationManagerService", verificationManagerService, true);
     FieldUtils.writeField(
         kubernetesActivitySourceService, "verificationManagerService", verificationManagerService, true);
-    FieldUtils.writeField(activitySourceService, "cvEventService", cvEventService, true);
     verificationJobService.createDefaultVerificationJobs(accountId, orgIdentifier, projectIdentifier);
   }
 
@@ -154,11 +150,6 @@ public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
     assertThat(activitySource.getName()).isEqualTo(kubernetesActivitySourceDTO.getName());
     assertThat(activitySource.getActivitySourceConfigs())
         .isEqualTo(kubernetesActivitySourceDTO.getActivitySourceConfigs());
-
-    ArgumentCaptor<KubernetesActivitySource> argumentCaptor = ArgumentCaptor.forClass(KubernetesActivitySource.class);
-    verify(cvEventService, times(1)).sendKubernetesActivitySourceConnectorCreateEvent(argumentCaptor.capture());
-    verify(cvEventService, times(1)).sendKubernetesActivitySourceServiceCreateEvent(argumentCaptor.capture());
-    verify(cvEventService, times(1)).sendKubernetesActivitySourceEnvironmentCreateEvent(argumentCaptor.capture());
 
     List<ActivitySourceDTO> activitySourceDTOS =
         activitySourceService.listActivitySources(accountId, orgIdentifier, projectIdentifier, 0, 10, null)
@@ -197,10 +188,6 @@ public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
     assertThat(activitySourceService.deleteActivitySource(
                    accountId, orgIdentifier, projectIdentifier, kubernetesActivitySourceDTO.getIdentifier()))
         .isTrue();
-
-    verify(cvEventService, times(1)).sendKubernetesActivitySourceConnectorDeleteEvent(argumentCaptor.capture());
-    verify(cvEventService, times(1)).sendKubernetesActivitySourceServiceDeleteEvent(argumentCaptor.capture());
-    verify(cvEventService, times(1)).sendKubernetesActivitySourceEnvironmentDeleteEvent(argumentCaptor.capture());
 
     activitySourceDTOS =
         activitySourceService.listActivitySources(accountId, orgIdentifier, projectIdentifier, 0, 10, null)
@@ -608,7 +595,8 @@ public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
         hPersistence.createQuery(KubernetesActivity.class, excludeAuthority).asList();
     Set<String> nullableFields = Sets.newHashSet(ActivityKeys.activityName, ActivityKeys.verificationJobRuntimeDetails,
         ActivityKeys.activityEndTime, ActivityKeys.tags, ActivityKeys.verificationSummary,
-        ActivityKeys.verificationIteration, ActivityKeys.verificationJobs);
+        ActivityKeys.verificationIteration, ActivityKeys.verificationJobs, ActivityKeys.changeSourceIdentifier,
+        ActivityKeys.eventTime);
     kubernetesActivities.forEach(activity -> {
       List<Field> fields = ReflectionUtils.getAllDeclaredAndInheritedFields(KubernetesActivity.class);
       fields.stream().filter(field -> !nullableFields.contains(field.getName())).forEach(field -> {

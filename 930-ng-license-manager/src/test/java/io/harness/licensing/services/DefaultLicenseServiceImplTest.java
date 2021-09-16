@@ -20,6 +20,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import io.harness.CategoryTest;
 import io.harness.ModuleType;
 import io.harness.account.services.AccountService;
+import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.licensing.Edition;
@@ -38,7 +39,6 @@ import io.harness.ng.core.account.DefaultExperience;
 import io.harness.ng.core.dto.AccountDTO;
 import io.harness.repositories.ModuleLicenseRepository;
 import io.harness.rule.Owner;
-import io.harness.security.dto.UserPrincipal;
 import io.harness.telemetry.TelemetryReporter;
 
 import com.google.common.collect.ImmutableList;
@@ -216,8 +216,7 @@ public class DefaultLicenseServiceImplTest extends CategoryTest {
     expiryModuleLicense.setEdition(Edition.ENTERPRISE);
     expiryModuleLicense.setLicenseType(LicenseType.TRIAL);
     expiryModuleLicense.setExpiryTime(0);
-    UserPrincipal userPrincipal = new UserPrincipal("", "test", "", "");
-    expiryModuleLicense.setCreatedBy(userPrincipal);
+    expiryModuleLicense.setCreatedBy(EmbeddedUser.builder().email("test").build());
 
     when(moduleLicenseRepository.findByAccountIdentifier(ACCOUNT_IDENTIFIER))
         .thenReturn(ImmutableList.<ModuleLicense>builder().add(expiryModuleLicense).build());

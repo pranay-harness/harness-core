@@ -14,6 +14,7 @@ import io.harness.cvng.migration.list.EnableExistingCVConfigs;
 import io.harness.cvng.migration.list.FixOrchestratorStatusMigration;
 import io.harness.cvng.migration.list.FixRuntimeParamInCanaryBlueGreenVerificationJob;
 import io.harness.cvng.migration.list.FixRuntimeParamsInDefaultHealthJob;
+import io.harness.cvng.migration.list.MigrateSetupEvents;
 import io.harness.cvng.migration.list.RecoverMonitoringSourceWorkerId;
 import io.harness.cvng.migration.list.RecreateMetricPackAndThresholdMigration;
 import io.harness.cvng.migration.list.UpdateActivitySourceTasksMigration;
@@ -58,6 +59,7 @@ public class CVNGBackgroundMigrationList {
         .add(Pair.of(19, CleanupDeprecatedDocuments.class))
         .add(Pair.of(20, CleanUpOldDocuments.class))
         .add(Pair.of(21, FixOrchestratorStatusMigration.class))
+        .add(Pair.of(22, MigrateSetupEvents.class))
         .build();
   }
 }

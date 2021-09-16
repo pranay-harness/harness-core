@@ -262,6 +262,10 @@ public final class VerificationJobInstance
   }
   public int getProgressPercentage() {
     // TODO: Reexamine this logic. This will return 0 for anything that's not marked as a final state.
+    if (getExecutionStatus() == ExecutionStatus.SUCCESS) {
+      // This is done for demo instance as it does not have progress logs yet.
+      return 100;
+    }
     List<ProgressLog> finalStateLogs = getFinalStateProgressLogs();
     if (finalStateLogs.isEmpty()) {
       return 0;

@@ -9,9 +9,9 @@ java_library(
     deps = [
         "//:lombok",
         "//948-access-control-sdk:module",
+        "//950-ng-signup-beans:module",
         "//956-feature-flag-beans:module",
         "//960-ng-core-beans:module",
-        "//960-ng-signup-beans:module",
         "//970-ng-commons:module",
         "//970-rbac-core:module",
         "//980-commons:module",

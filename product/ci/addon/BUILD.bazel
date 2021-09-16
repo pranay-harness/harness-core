@@ -4,7 +4,7 @@ go_library(
     name = "addon_lib",
     srcs = ["main.go"],
     importpath = "github.com/wings-software/portal/product/ci/addon",
-    visibility = ["//visibility:private"],
+    visibility = ["//:__pkg__"],
     deps = [
         "//commons/go/lib/logs",
         "//commons/go/lib/metrics",

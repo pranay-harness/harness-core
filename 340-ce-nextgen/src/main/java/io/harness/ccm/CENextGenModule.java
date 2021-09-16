@@ -268,8 +268,13 @@ public class CENextGenModule extends AbstractModule {
     });
 
     install(DelegateServiceDriverModule.getInstance(false));
-    install(new DelegateServiceDriverGrpcClientModule(configuration.getNgManagerServiceSecret(),
-        configuration.getGrpcClientConfig().getTarget(), configuration.getGrpcClientConfig().getAuthority(), true));
+    if (configuration.isUseDms()) {
+      install(new DelegateServiceDriverGrpcClientModule(configuration.getDmsGrpcClient().getSecret(),
+          configuration.getDmsGrpcClient().getTarget(), configuration.getDmsGrpcClient().getAuthority(), true));
+    } else {
+      install(new DelegateServiceDriverGrpcClientModule(configuration.getNgManagerServiceSecret(),
+          configuration.getGrpcClientConfig().getTarget(), configuration.getGrpcClientConfig().getAuthority(), true));
+    }
   }
 
   private DelegateCallbackToken getDelegateCallbackToken(

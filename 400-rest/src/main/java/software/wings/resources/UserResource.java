@@ -38,6 +38,7 @@ import io.harness.logging.ExceptionLogger;
 import io.harness.ng.core.common.beans.Generation;
 import io.harness.ng.core.dto.UserInviteDTO;
 import io.harness.ng.core.invites.dto.InviteOperationResponse;
+import io.harness.ng.core.switchaccount.SwitchAccountResponse;
 import io.harness.ng.core.user.TwoFactorAdminOverrideSettings;
 import io.harness.rest.RestResponse;
 import io.harness.rest.RestResponse.Builder;
@@ -602,6 +603,17 @@ public class UserResource {
         != null);
   }
 
+  @POST
+  @Path("restricted-switch-account")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<SwitchAccountResponse> restrictedSwitchAccount(
+      @HeaderParam(HttpHeaders.AUTHORIZATION) String authorization, @QueryParam("routingId") String accountId,
+      @Valid @NotNull SwitchAccountRequest switchAccountRequest) {
+    // Adding this endpoint for UI swagger generation
+    return new RestResponse<>(SwitchAccountResponse.builder().requiresReAuthentication(false).build());
+  }
+
   /**
    * Explicitly set default account for a logged in user. This means the user will be landed in the default account
    * after logged in next time.
@@ -855,7 +867,7 @@ public class UserResource {
   @ExceptionMetered
   public javax.ws.rs.core.Response samlLogin(@FormParam(value = "SAMLResponse") String samlResponse,
       @FormParam(value = "RelayState") String relayState, @Context HttpServletRequest request,
-      @Context HttpServletResponse response, @QueryParam("accountId") @NotEmpty String accountId) {
+      @Context HttpServletResponse response, @QueryParam("accountId") String accountId) {
     try {
       return authenticationManager.samlLogin(
           request.getHeader(com.google.common.net.HttpHeaders.REFERER), samlResponse, accountId, relayState);

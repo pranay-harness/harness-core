@@ -18,6 +18,8 @@ import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_P
 import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import static java.lang.Boolean.FALSE;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.group;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.newAggregation;
@@ -50,6 +52,7 @@ import io.harness.ng.core.events.ProjectCreateEvent;
 import io.harness.ng.core.events.ProjectDeleteEvent;
 import io.harness.ng.core.events.ProjectRestoreEvent;
 import io.harness.ng.core.events.ProjectUpdateEvent;
+import io.harness.ng.core.invites.dto.RoleBinding;
 import io.harness.ng.core.remote.ProjectMapper;
 import io.harness.ng.core.remote.utils.ScopeAccessHelper;
 import io.harness.ng.core.services.OrganizationService;
@@ -85,6 +88,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import org.apache.commons.lang3.tuple.Pair;
@@ -211,7 +215,7 @@ public class ProjectServiceImpl implements ProjectService {
                 .orgIdentifier(scope.getOrgIdentifier())
                 .projectIdentifier(scope.getProjectIdentifier())
                 .build(),
-            PROJECT_ADMIN_ROLE, SYSTEM);
+            singletonList(RoleBinding.builder().roleIdentifier(PROJECT_ADMIN_ROLE).build()), emptyList(), SYSTEM);
         break;
       case SERVICE_ACCOUNT:
         ngUserService.addServiceAccountToScope(principalId,
@@ -269,7 +273,7 @@ public class ProjectServiceImpl implements ProjectService {
     Page<UserMembership> userMembershipPage = ngUserService.listUserMemberships(criteria, Pageable.unpaged());
     List<UserMembership> userMembershipList = userMembershipPage.getContent();
     if (userMembershipList.isEmpty()) {
-      return getNGPageResponse(Page.empty(), Collections.emptyList());
+      return getNGPageResponse(Page.empty(), emptyList());
     }
     Criteria projectCriteria = Criteria.where(ProjectKeys.accountIdentifier).is(accountId);
     List<Criteria> criteriaList = new ArrayList<>();
@@ -285,6 +289,37 @@ public class ProjectServiceImpl implements ProjectService {
     projectCriteria.orOperator(criteriaList.toArray(new Criteria[criteriaList.size()]));
     Page<Project> projectsPage = projectRepository.findAll(projectCriteria, PageUtils.getPageRequest(pageRequest));
     return getNGPageResponse(projectsPage.map(ProjectMapper::writeDTO));
+  }
+
+  @Override
+  public List<ProjectDTO> listProjectsForUser(String userId, String accountId) {
+    Criteria criteria = Criteria.where(UserMembershipKeys.userId)
+                            .is(userId)
+                            .and(UserMembershipKeys.scope + "." + ScopeKeys.accountIdentifier)
+                            .is(accountId)
+                            .and(UserMembershipKeys.scope + "." + ScopeKeys.orgIdentifier)
+                            .exists(true)
+                            .and(UserMembershipKeys.scope + "." + ScopeKeys.projectIdentifier)
+                            .exists(true);
+    Page<UserMembership> userMembershipPage = ngUserService.listUserMemberships(criteria, Pageable.unpaged());
+    List<UserMembership> userMembershipList = userMembershipPage.getContent();
+    if (userMembershipList.isEmpty()) {
+      return Collections.emptyList();
+    }
+    Criteria projectCriteria = Criteria.where(ProjectKeys.accountIdentifier).is(accountId);
+    List<Criteria> criteriaList = new ArrayList<>();
+    for (UserMembership userMembership : userMembershipList) {
+      Scope scope = userMembership.getScope();
+      criteriaList.add(Criteria.where(ProjectKeys.orgIdentifier)
+                           .is(scope.getOrgIdentifier())
+                           .and(ProjectKeys.identifier)
+                           .is(scope.getProjectIdentifier())
+                           .and(ProjectKeys.deleted)
+                           .is(false));
+    }
+    projectCriteria.orOperator(criteriaList.toArray(new Criteria[criteriaList.size()]));
+    List<Project> projectsList = projectRepository.findAll(projectCriteria);
+    return projectsList.stream().map(ProjectMapper::writeDTO).collect(Collectors.toList());
   }
 
   @Override

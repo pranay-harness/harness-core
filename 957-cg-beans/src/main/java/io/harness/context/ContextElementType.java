@@ -1,16 +1,13 @@
 package io.harness.context;
 
-import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 
 /**
  * Describes what type of element is being repeated on.
  */
 @OwnedBy(CDC)
-@TargetModule(_957_CG_BEANS)
 public enum ContextElementType {
   /**
    * Service context element type.

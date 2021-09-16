@@ -2,9 +2,7 @@ package io.harness.plancreator.steps;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.plancreator.execution.ExecutionWrapperConfig;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -24,7 +22,6 @@ import org.springframework.data.annotation.TypeAlias;
 @NoArgsConstructor
 @JsonTypeName("parallel")
 // TODO this should go to yaml commons
-@TargetModule(HarnessModule._884_PMS_COMMONS)
 @OwnedBy(PIPELINE)
 @TypeAlias("io.harness.yaml.core.parallelStepElementConfig")
 public class ParallelStepElementConfig {

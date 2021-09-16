@@ -86,6 +86,7 @@ import io.harness.managerclient.HttpsCertRequirement.CertRequirement;
 import io.harness.network.Http;
 import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.ng.core.account.DefaultExperience;
+import io.harness.ng.core.account.OauthProviderType;
 import io.harness.observer.Subject;
 import io.harness.persistence.HIterator;
 import io.harness.reflection.ReflectionUtils;
@@ -140,7 +141,6 @@ import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.authentication.AccountSettingsResponse;
-import software.wings.security.authentication.OauthProviderType;
 import software.wings.service.impl.analysis.CVEnabledService;
 import software.wings.service.impl.event.AccountEntityEvent;
 import software.wings.service.impl.security.auth.AuthHandler;
@@ -939,9 +939,16 @@ public class AccountServiceImpl implements AccountService {
     }
 
     Account account = wingsPersistence.createQuery(Account.class, excludeAuthorityCount)
-                          .filter(AccountKeys.uuid, GLOBAL_ACCOUNT_ID)
+                          .filter(AccountKeys.uuid, accountId)
                           .project("delegateConfiguration", true)
                           .get();
+
+    if (account.getDelegateConfiguration() == null) {
+      account = wingsPersistence.createQuery(Account.class, excludeAuthorityCount)
+                    .filter(AccountKeys.uuid, GLOBAL_ACCOUNT_ID)
+                    .project("delegateConfiguration", true)
+                    .get();
+    }
 
     return account.getDelegateConfiguration();
   }

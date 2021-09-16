@@ -1,6 +1,7 @@
 package io.harness.cvng.core.beans.monitoredService;
 
 import io.harness.cvng.beans.MonitoredServiceType;
+import io.harness.cvng.core.beans.dependency.ServiceDependencyMetadata;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.NGEntityName;
 import io.harness.gitsync.beans.YamlDTO;
@@ -17,6 +18,7 @@ import javax.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
 
 @Data
@@ -34,15 +36,16 @@ public class MonitoredServiceDTO implements YamlDTO {
   @ApiModelProperty(required = true) @NotNull @EntityIdentifier String environmentRef;
   @ApiModelProperty(required = true) @NotNull @Size(max = 128) Map<String, String> tags;
   @Valid Sources sources;
-  @Valid Set<ServiceRef> dependencies;
+  @Valid Set<ServiceDependencyDTO> dependencies;
 
   @Data
   @Builder
-  public static class ServiceRef {
-    @EntityIdentifier String serviceRef;
+  public static class ServiceDependencyDTO {
+    @NonNull String monitoredServiceIdentifier;
+    ServiceDependencyMetadata dependencyMetadata;
   }
 
-  public Set<ServiceRef> getDependencies() {
+  public Set<ServiceDependencyDTO> getDependencies() {
     if (dependencies == null) {
       return new HashSet<>();
     }

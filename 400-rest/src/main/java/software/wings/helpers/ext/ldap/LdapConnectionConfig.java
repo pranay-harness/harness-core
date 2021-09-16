@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SE
 
 import io.harness.annotations.dev.TargetModule;
 
+// Could not move it because this class is used in watcher
 @TargetModule(_950_NG_AUTHENTICATION_SERVICE)
 public interface LdapConnectionConfig {
   int getConnectTimeout();

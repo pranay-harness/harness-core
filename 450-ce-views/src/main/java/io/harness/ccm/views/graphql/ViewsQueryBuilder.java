@@ -32,6 +32,7 @@ import static io.harness.ccm.views.utils.ClusterTableKeys.TIME_AGGREGATED_CPU_UT
 import static io.harness.ccm.views.utils.ClusterTableKeys.TIME_AGGREGATED_MEMORY_LIMIT;
 import static io.harness.ccm.views.utils.ClusterTableKeys.TIME_AGGREGATED_MEMORY_REQUEST;
 import static io.harness.ccm.views.utils.ClusterTableKeys.TIME_AGGREGATED_MEMORY_UTILIZATION_VALUE;
+import static io.harness.timescaledb.Tables.ANOMALIES;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.views.dao.ViewCustomFieldDao;
@@ -268,6 +269,27 @@ public class ViewsQueryBuilder {
 
     log.info("Total count query for view {}", selectQueryOuter.toString());
     return selectQueryOuter;
+  }
+
+  public String getAnomalyQuery(
+      List<ViewRule> rules, List<QLCEViewFilter> filters, List<QLCEViewTimeFilter> timeFilters) {
+    SelectQuery selectQuery = new SelectQuery();
+    selectQuery.addCustomFromTable(ANOMALIES.getName());
+    selectQuery.addAllColumns();
+
+    if (!rules.isEmpty()) {
+      selectQuery.addCondition(getConsolidatedRuleCondition(rules));
+    }
+
+    if (!filters.isEmpty()) {
+      decorateQueryWithFilters(selectQuery, filters);
+    }
+
+    if (!timeFilters.isEmpty()) {
+      decorateQueryWithTimeFilters(selectQuery, timeFilters, false);
+    }
+
+    return selectQuery.toString();
   }
 
   private List<ViewField> collectCustomFieldList(

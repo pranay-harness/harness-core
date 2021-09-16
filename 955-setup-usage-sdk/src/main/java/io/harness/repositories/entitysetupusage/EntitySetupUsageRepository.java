@@ -26,4 +26,6 @@ public interface EntitySetupUsageRepository
 
   long deleteAllByAccountIdentifierAndReferredByEntityFQNAndReferredByEntityTypeAndReferredEntityType(
       String accountIdentifier, String referredByEntityFQN, String referredByEntityType, String referredEntityType);
+
+  long deleteAllByReferredByEntityType(String referredByEntityType);
 }

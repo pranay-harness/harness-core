@@ -1,6 +1,7 @@
 package io.harness.cdng.manifest.yaml;
 
 import static io.harness.rule.OwnerRule.ABOSII;
+import static io.harness.rule.OwnerRule.ACHYUTH;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -51,5 +52,35 @@ public class GcsStoreConfigTest extends CategoryTest {
     assertThat(result.getConnectorRef().getValue()).isEqualTo("connector-ref");
     assertThat(result.getBucketName().getValue()).isEqualTo("bucket-name");
     assertThat(result.getFolderPath().getValue()).isEqualTo("folder-path");
+  }
+
+  @Test
+  @Owner(developers = ACHYUTH)
+  @Category(UnitTests.class)
+  public void testCloneInternal() {
+    GcsStoreConfig origin = GcsStoreConfig.builder()
+                                .connectorRef(ParameterField.createValueField("connector-ref"))
+                                .bucketName(ParameterField.createValueField("bucket-name"))
+                                .folderPath(ParameterField.createValueField("folder-path"))
+                                .build();
+
+    GcsStoreConfig originClone = (GcsStoreConfig) origin.cloneInternal();
+
+    assertThat(originClone.getConnectorRef().getValue()).isEqualTo("connector-ref");
+    assertThat(originClone.getBucketName().getValue()).isEqualTo("bucket-name");
+    assertThat(originClone.getFolderPath().getValue()).isEqualTo("folder-path");
+  }
+
+  @Test
+  @Owner(developers = ACHYUTH)
+  @Category(UnitTests.class)
+  public void testExtractConnectorRefs() {
+    GcsStoreConfig origin = GcsStoreConfig.builder()
+                                .connectorRef(ParameterField.createValueField("connector-ref"))
+                                .bucketName(ParameterField.createValueField("bucket-name"))
+                                .folderPath(ParameterField.createValueField("folder-path"))
+                                .build();
+
+    assertThat(origin.extractConnectorRefs().get("connectorRef").getValue()).isEqualTo("connector-ref");
   }
 }

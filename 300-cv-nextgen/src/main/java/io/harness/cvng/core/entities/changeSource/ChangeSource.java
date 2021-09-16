@@ -4,8 +4,8 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cvng.beans.change.ChangeSourceType;
 import io.harness.cvng.core.services.api.UpdatableEntity;
-import io.harness.cvng.core.types.ChangeSourceType;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
@@ -69,7 +69,6 @@ public abstract class ChangeSource
   @NotNull String envIdentifier;
 
   @NotNull String identifier;
-  @NotNull String description;
   @NotNull ChangeSourceType type;
 
   boolean enabled;
@@ -83,8 +82,8 @@ public abstract class ChangeSource
           .set(ChangeSourceKeys.serviceIdentifier, changeSource.getServiceIdentifier())
           .set(ChangeSourceKeys.envIdentifier, changeSource.getEnvIdentifier())
           .set(ChangeSourceKeys.identifier, changeSource.getIdentifier())
-          .set(ChangeSourceKeys.description, changeSource.getDescription())
           .set(ChangeSourceKeys.type, changeSource.getType())
+          .set(ChangeSourceKeys.name, changeSource.getName())
           .set(ChangeSourceKeys.enabled, changeSource.isEnabled());
     }
   }

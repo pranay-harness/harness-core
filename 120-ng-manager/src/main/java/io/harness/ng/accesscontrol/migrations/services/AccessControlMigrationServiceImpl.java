@@ -2,6 +2,8 @@ package io.harness.ng.accesscontrol.migrations.services;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import static java.util.Collections.emptyList;
+
 import io.harness.accesscontrol.AccessControlAdminClient;
 import io.harness.accesscontrol.principals.PrincipalDTO;
 import io.harness.accesscontrol.principals.PrincipalType;
@@ -232,7 +234,7 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
 
   private boolean hasAdmin(Scope scope) {
     List<UserMetadataDTO> admins = ngUserService.listUsersHavingRole(scope, getManagedAdminRole(scope));
-    log.info("Admins in scope {} are {}", scope, admins == null ? Collections.emptyList() : admins);
+    log.info("Admins in scope {} are {}", scope, admins == null ? emptyList() : admins);
     return !isEmpty(admins);
   }
 
@@ -300,7 +302,7 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
               .orgIdentifier(scope.getOrgIdentifier())
               .projectIdentifier(scope.getProjectIdentifier())
               .build(),
-          false, UserMembershipUpdateSource.SYSTEM);
+          emptyList(), emptyList(), UserMembershipUpdateSource.SYSTEM);
     } catch (DuplicateKeyException | DuplicateFieldException duplicateException) {
       // ignore
     }

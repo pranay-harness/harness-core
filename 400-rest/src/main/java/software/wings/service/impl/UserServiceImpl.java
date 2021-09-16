@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static io.harness.annotations.dev.HarnessModule._360_CG_MANAGER;
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.FeatureName.GTM_CD_ENABLED;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
@@ -54,6 +54,8 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.authenticationservice.beans.LogoutResponse;
+import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
@@ -92,13 +94,17 @@ import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.marketplace.gcp.procurement.GcpProcurementService;
 import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.ng.core.account.DefaultExperience;
+import io.harness.ng.core.account.OauthProviderType;
 import io.harness.ng.core.common.beans.Generation;
 import io.harness.ng.core.dto.UserInviteDTO;
 import io.harness.ng.core.invites.dto.InviteDTO;
 import io.harness.ng.core.invites.dto.InviteOperationResponse;
+import io.harness.ng.core.switchaccount.LdapIdentificationInfo;
+import io.harness.ng.core.switchaccount.OauthIdentificationInfo;
+import io.harness.ng.core.switchaccount.RestrictedSwitchAccountInfo;
+import io.harness.ng.core.switchaccount.SamlIdentificationInfo;
 import io.harness.ng.core.user.PasswordChangeDTO;
 import io.harness.ng.core.user.PasswordChangeResponse;
-import io.harness.ng.core.user.SignupInviteDTO;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.UuidAware;
@@ -106,6 +112,7 @@ import io.harness.remote.client.NGRestUtils;
 import io.harness.sanitizer.HtmlInputSanitizer;
 import io.harness.security.dto.UserPrincipal;
 import io.harness.serializer.KryoSerializer;
+import io.harness.signup.dto.SignupInviteDTO;
 import io.harness.usermembership.remote.UserMembershipClient;
 import io.harness.version.VersionInfoManager;
 
@@ -149,6 +156,7 @@ import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.UserGroup.UserGroupKeys;
+import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SamlSettings;
@@ -169,8 +177,6 @@ import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.authentication.AuthenticationManager;
 import software.wings.security.authentication.AuthenticationUtils;
-import software.wings.security.authentication.LogoutResponse;
-import software.wings.security.authentication.OauthProviderType;
 import software.wings.security.authentication.TOTPAuthHandler;
 import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings;
@@ -267,7 +273,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @ValidateOnExecution
 @Singleton
 @Slf4j
-@TargetModule(_360_CG_MANAGER)
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
 public class UserServiceImpl implements UserService {
   static final String ADD_TO_ACCOUNT_OR_GROUP_EMAIL_TEMPLATE_NAME = "add_group";
   static final String USER_PASSWORD_CHANGED_EMAIL_TEMPLATE_NAME = "password_changed";
@@ -415,6 +421,9 @@ public class UserServiceImpl implements UserService {
       userInvite.setCreatedFromNG(true);
       userInvite.setSource(UserInviteSource.builder().type(SourceType.TRIAL).build());
       userInvite.setCompleted(false);
+      userInvite.setEdition(signupInvite.getEdition().name());
+      userInvite.setBillingFrequency(signupInvite.getBillingFrequency().name());
+      userInvite.setSignupAction(signupInvite.getSignupAction().name());
 
       String inviteId = wingsPersistence.save(userInvite);
       userInvite.setUuid(inviteId);
@@ -690,6 +699,7 @@ public class UserServiceImpl implements UserService {
     userSummary.setUserLocked(user.isUserLocked());
     userSummary.setPasswordExpired(user.isPasswordExpired());
     userSummary.setImported(user.isImported());
+    userSummary.setDisabled(user.isDisabled());
     return userSummary;
   }
 
@@ -794,6 +804,43 @@ public class UserServiceImpl implements UserService {
     } else {
       return getCGDashboardUrl(accountId);
     }
+  }
+
+  @Override
+  public RestrictedSwitchAccountInfo getSwitchAccountInfo(String accountId, String userId) {
+    Account account = accountService.get(accountId);
+    RestrictedSwitchAccountInfo.Builder builder =
+        RestrictedSwitchAccountInfo.builder()
+            .skipReAuthentication(
+                featureFlagService.isEnabled(FeatureName.SKIP_SWITCH_ACCOUNT_REAUTHENTICATION, accountId))
+            .isHarnessSupportGroupUser(harnessUserGroupService.isHarnessSupportUser(userId))
+            .whitelistedDomains(accountService.getWhitelistedDomains(accountId))
+            .authenticationMechanism(account.getAuthenticationMechanism())
+            .isTwoFactorAuthEnabledForAccount(accountService.getTwoFactorEnforceInfo(accountId));
+
+    LdapSettings ldapSettings = ssoService.getLdapSettings(accountId);
+    if (ldapSettings != null) {
+      builder.ldapIdentificationInfo(LdapIdentificationInfo.builder()
+                                         .host(ldapSettings.getConnectionSettings().getHost())
+                                         .port(ldapSettings.getConnectionSettings().getPort())
+                                         .build());
+    }
+
+    SamlSettings samlSettings = ssoSettingService.getSamlSettingsByAccountId(accountId);
+    if (samlSettings != null) {
+      builder.samlIdentificationInfo(SamlIdentificationInfo.builder()
+                                         .origin(samlSettings.getOrigin())
+                                         .metaDataFile(samlSettings.getMetaDataFile())
+                                         .build());
+    }
+
+    OauthSettings oauthSettings = ssoSettingService.getOauthSettingsByAccountId(accountId);
+    if (oauthSettings != null) {
+      builder.oauthIdentificationInfo(
+          OauthIdentificationInfo.builder().providers(oauthSettings.getAllowedProviders()).build());
+    }
+
+    return builder.build();
   }
 
   private URI getUserInfoSubmitUrl(String accountId, String email, String jwtToken) throws URISyntaxException {
@@ -3499,7 +3546,6 @@ public class UserServiceImpl implements UserService {
     } else {
       query = getListUserQuery(accountId, includeUsersPendingInviteAcceptance);
     }
-    query.criteria(UserKeys.disabled).notEqual(true);
     applySortFilter(pageRequest, query);
     FindOptions findOptions = new FindOptions().skip(offset).limit(pageSize);
     List<User> userList = query.asList(findOptions);

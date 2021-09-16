@@ -19,6 +19,7 @@ import io.harness.cvng.activity.beans.DeploymentActivitySummaryDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.Activity.ActivityKeys;
+import io.harness.cvng.activity.entities.Activity.ActivityUpdatableEntity;
 import io.harness.cvng.activity.entities.CustomActivity;
 import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.activity.entities.DeploymentActivity.DeploymentActivityKeys;
@@ -26,7 +27,6 @@ import io.harness.cvng.activity.entities.InfrastructureActivity;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.alert.util.VerificationStatus;
-import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ClusterType;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
 import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
@@ -43,8 +43,10 @@ import io.harness.cvng.core.beans.DatasourceTypeDTO;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
 import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.ProjectParams;
+import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
+import io.harness.cvng.core.beans.params.filterParams.DeploymentLogAnalysisFilter;
+import io.harness.cvng.core.beans.params.filterParams.DeploymentTimeSeriesAnalysisFilter;
 import io.harness.cvng.core.entities.CVConfig;
-import io.harness.cvng.core.services.api.WebhookService;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
@@ -69,6 +71,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -78,6 +81,8 @@ import lombok.Data;
 import lombok.NonNull;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -87,7 +92,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 @OwnedBy(HarnessTeam.CV)
 public class ActivityServiceImpl implements ActivityService {
   private static final int RECENT_DEPLOYMENT_ACTIVITIES_RESULT_SIZE = 5;
-  @Inject private WebhookService webhookService;
   @Inject private HPersistence hPersistence;
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
   @Inject private VerificationJobService verificationJobService;
@@ -97,6 +101,7 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
   @Inject private DeploymentLogAnalysisService deploymentLogAnalysisService;
   @Inject private Injector injector;
+  @Inject private Map<ActivityType, ActivityUpdatableEntity> activityUpdatableEntityMap;
 
   @Override
   public Activity get(String activityId) {
@@ -112,12 +117,6 @@ public class ActivityServiceImpl implements ActivityService {
         .get();
   }
 
-  @Override
-  public String register(String accountId, String webhookToken, ActivityDTO activityDTO) {
-    webhookService.validateWebhookToken(
-        webhookToken, activityDTO.getProjectIdentifier(), activityDTO.getOrgIdentifier());
-    return register(accountId, activityDTO);
-  }
   @Override
   public String register(String accountId, ActivityDTO activityDTO) {
     Preconditions.checkNotNull(activityDTO);
@@ -616,15 +615,14 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public TransactionMetricInfoSummaryPageDTO getDeploymentActivityTimeSeriesData(String accountId, String activityId,
-      boolean anomalousMetricsOnly, String hostName, String filter, List<String> healthSourceIdentifiersFilter,
-      int pageNumber, int pageSize) {
+      DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter, PageParams pageParams) {
     List<String> verificationJobInstanceIds = getVerificationJobInstanceId(activityId);
     // TODO: We currently support only one verificationJobInstance per deployment. Hence this check. Revisit if that
     // changes later
     Preconditions.checkState(verificationJobInstanceIds.size() == 1,
         "We do not support more than one monitored source validation from deployment");
-    return deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceIds.get(0),
-        anomalousMetricsOnly, hostName, filter, healthSourceIdentifiersFilter, pageNumber);
+    return deploymentTimeSeriesAnalysisService.getMetrics(
+        accountId, verificationJobInstanceIds.get(0), deploymentTimeSeriesAnalysisFilter, pageParams);
   }
 
   @Override
@@ -635,28 +633,27 @@ public class ActivityServiceImpl implements ActivityService {
   }
 
   @Override
-  public List<LogAnalysisClusterChartDTO> getDeploymentActivityLogAnalysisClusters(String accountId, String activityId,
-      String hostName, List<String> healthSourceIdentifiersFilter, List<ClusterType> clusterTypesFilter) {
+  public List<LogAnalysisClusterChartDTO> getDeploymentActivityLogAnalysisClusters(
+      String accountId, String activityId, DeploymentLogAnalysisFilter deploymentLogAnalysisFilter) {
     List<String> verificationJobInstanceIds = getVerificationJobInstanceId(activityId);
     // TODO: We currently support only one verificationJobInstance per deployment. Hence this check. Revisit if that
     // changes later
     Preconditions.checkState(verificationJobInstanceIds.size() == 1,
         "We do not support more than one monitored source validation from deployment");
     return deploymentLogAnalysisService.getLogAnalysisClusters(
-        accountId, verificationJobInstanceIds.get(0), hostName, healthSourceIdentifiersFilter, clusterTypesFilter);
+        accountId, verificationJobInstanceIds.get(0), deploymentLogAnalysisFilter);
   }
 
   @Override
   public PageResponse<LogAnalysisClusterDTO> getDeploymentActivityLogAnalysisResult(String accountId, String activityId,
-      Integer label, String hostName, List<String> healthSourceIdentifiers, List<ClusterType> clusterTypes,
-      PageParams pageParams) {
+      Integer label, DeploymentLogAnalysisFilter deploymentLogAnalysisFilter, PageParams pageParams) {
     List<String> verificationJobInstanceIds = getVerificationJobInstanceId(activityId);
     // TODO: We currently support only one verificationJobInstance per deployment. Hence this check. Revisit if that
     // changes later
     Preconditions.checkState(verificationJobInstanceIds.size() == 1,
         "We do not support more than one monitored source validation from deployment");
-    return deploymentLogAnalysisService.getLogAnalysisResult(accountId, verificationJobInstanceIds.get(0), label,
-        hostName, healthSourceIdentifiers, clusterTypes, pageParams);
+    return deploymentLogAnalysisService.getLogAnalysisResult(
+        accountId, verificationJobInstanceIds.get(0), label, deploymentLogAnalysisFilter, pageParams);
   }
 
   @Override
@@ -682,6 +679,27 @@ public class ActivityServiceImpl implements ActivityService {
       });
     });
     return healthSourceDTOS;
+  }
+
+  @Override
+  public String createActivityForDemo(Activity activity, ActivityVerificationStatus verificationStatus) {
+    activity.validate();
+    List<VerificationJobInstance> verificationJobInstances = new ArrayList<>();
+    activity.getVerificationJobs().forEach(verificationJob -> {
+      VerificationJobInstanceBuilder verificationJobInstanceBuilder = fillOutCommonJobInstanceProperties(
+          activity, verificationJob.resolveAdditionsFields(verificationJobInstanceService));
+      verificationJobInstanceBuilder.verificationStatus(verificationStatus);
+      validateJob(verificationJob);
+      activity.fillInVerificationJobInstanceDetails(verificationJobInstanceBuilder);
+
+      verificationJobInstances.add(verificationJobInstanceBuilder.build());
+    });
+    activity.setVerificationJobInstanceIds(
+        verificationJobInstanceService.createDemoInstances(verificationJobInstances));
+    hPersistence.save(activity);
+    log.info("Registered demo activity of type {} for account {}, project {}, org {}", activity.getType(),
+        activity.getAccountId(), activity.getProjectIdentifier(), activity.getOrgIdentifier());
+    return activity.getUuid();
   }
 
   private List<String> getVerificationJobInstanceId(String activityId) {
@@ -728,6 +746,69 @@ public class ActivityServiceImpl implements ActivityService {
 
     activity.fromDTO(activityDTO);
     return activity;
+  }
+
+  @Override
+  public void upsert(Activity activity) {
+    ActivityUpdatableEntity activityUpdatableEntity = activityUpdatableEntityMap.get(activity.getType());
+    Optional<Activity> optionalFromDb =
+        StringUtils.isEmpty(activity.getUuid()) ? getFromDb(activity) : Optional.ofNullable(get(activity.getUuid()));
+    if (optionalFromDb.isPresent()) {
+      UpdateOperations<Activity> updateOperations =
+          hPersistence.createUpdateOperations(activityUpdatableEntity.getEntityClass());
+      activityUpdatableEntity.setUpdateOperations(updateOperations, activity);
+      hPersistence.update(optionalFromDb.get(), updateOperations);
+    } else {
+      register(activity);
+    }
+  }
+
+  @Override
+  public List<Activity> get(ServiceEnvironmentParams serviceEnvironmentParams, List<String> changeSourceIdentifiers,
+      Instant startTime, Instant endTime, List<ActivityType> activityTypes) {
+    Query<Activity> query = createQuery(serviceEnvironmentParams, changeSourceIdentifiers, startTime, endTime);
+    if (CollectionUtils.isNotEmpty(activityTypes)) {
+      query = query.field(ActivityKeys.type).in(activityTypes);
+    }
+    return query.asList();
+  }
+
+  @Override
+  public Long getCount(ServiceEnvironmentParams serviceEnvironmentParams, List<String> changeSourceIdentifiers,
+      Instant startTime, Instant endTime, List<ActivityType> activityTypes) {
+    Query<Activity> query = createQuery(serviceEnvironmentParams, changeSourceIdentifiers, startTime, endTime);
+    if (CollectionUtils.isNotEmpty(activityTypes)) {
+      query = query.field(ActivityKeys.type).in(activityTypes);
+    }
+    return query.count();
+  }
+
+  private Query<Activity> createQuery(ServiceEnvironmentParams serviceEnvironmentParams,
+      List<String> changeSourceIdentifiers, Instant startTime, Instant endTime) {
+    return createQuery(serviceEnvironmentParams)
+        .field(ActivityKeys.changeSourceIdentifier)
+        .in(changeSourceIdentifiers)
+        .field(ActivityKeys.eventTime)
+        .lessThan(endTime)
+        .field(ActivityKeys.eventTime)
+        .greaterThanOrEq(startTime);
+  }
+
+  private Query<Activity> createQuery(ServiceEnvironmentParams serviceEnvironmentParams) {
+    return hPersistence.createQuery(Activity.class)
+        .filter(ActivityKeys.accountId, serviceEnvironmentParams.getAccountIdentifier())
+        .filter(ActivityKeys.orgIdentifier, serviceEnvironmentParams.getOrgIdentifier())
+        .filter(ActivityKeys.projectIdentifier, serviceEnvironmentParams.getProjectIdentifier())
+        .filter(ActivityKeys.environmentIdentifier, serviceEnvironmentParams.getEnvironmentIdentifier())
+        .filter(ActivityKeys.serviceIdentifier, serviceEnvironmentParams.getServiceIdentifier());
+  }
+
+  private Optional<Activity> getFromDb(Activity activity) {
+    ActivityUpdatableEntity activityUpdatableEntity = activityUpdatableEntityMap.get(activity.getType());
+    return Optional.ofNullable(
+        (Activity) activityUpdatableEntity
+            .populateKeyQuery(hPersistence.createQuery(activityUpdatableEntity.getEntityClass()), activity)
+            .get());
   }
 
   @Value

@@ -155,6 +155,7 @@ public class InviteResource {
     return ResponseDTO.newResponse(inviteDTOs);
   }
 
+  @Deprecated
   @POST
   @ApiOperation(value = "Add a new invite for the specified project/organization", nickname = "sendInvite")
   public ResponseDTO<List<InviteOperationResponse>> createInvitations(

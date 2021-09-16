@@ -68,8 +68,8 @@ public class GitSyncConnectorHelper {
       ConnectorConfigDTO connectorConfig = connector.getConnectorConfig();
       if (connectorConfig instanceof ScmConnector) {
         ScmConnector gitConnectorConfig = (ScmConnector) connector.getConnectorConfig();
-        final ScmConnector scmConnector = decryptGitApiAccessHelper.decryptScmApiAccess(gitConnectorConfig, accountId,
-            gitSyncConfigDTO.getProjectIdentifier(), gitSyncConfigDTO.getOrganizationIdentifier());
+        final ScmConnector scmConnector = getDecryptedConnector(
+            accountId, connector.getOrgIdentifier(), connector.getProjectIdentifier(), gitConnectorConfig);
         scmConnector.setUrl(gitSyncConfigDTO.getRepo());
         return scmConnector;
       } else {
@@ -83,6 +83,11 @@ public class GitSyncConnectorHelper {
           "No connector found with the id %s, accountId %s, orgId %s, projectId %s", gitSyncConfigDTO.getIdentifier(),
           accountId, gitSyncConfigDTO.getOrganizationIdentifier(), gitSyncConfigDTO.getProjectIdentifier()));
     }
+  }
+
+  public ScmConnector getDecryptedConnector(
+      String accountId, String orgIdentifier, String projectIdentifier, ScmConnector connectorDTO) {
+    return decryptGitApiAccessHelper.decryptScmApiAccess(connectorDTO, accountId, projectIdentifier, orgIdentifier);
   }
 
   public ScmConnector getDecryptedConnector(

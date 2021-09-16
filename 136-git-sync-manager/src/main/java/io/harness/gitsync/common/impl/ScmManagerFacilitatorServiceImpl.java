@@ -6,6 +6,7 @@ import static io.harness.eraro.ErrorCode.PR_CREATION_ERROR;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FileContentBatchResponse;
 import io.harness.beans.IdentifierRef;
+import io.harness.beans.gitsync.GitFileDetails.GitFileDetailsBuilder;
 import io.harness.beans.gitsync.GitFilePathDetails;
 import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.connector.ConnectorResponseDTO;
@@ -16,6 +17,7 @@ import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.ExplanationException;
 import io.harness.exception.ScmException;
 import io.harness.exception.WingsException;
+import io.harness.gitsync.common.beans.InfoForGitPush;
 import io.harness.gitsync.common.dtos.CreatePRDTO;
 import io.harness.gitsync.common.dtos.GitDiffResultFileListDTO;
 import io.harness.gitsync.common.dtos.GitFileChangeDTO;
@@ -27,9 +29,12 @@ import io.harness.gitsync.common.helper.UserProfileHelper;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.impl.ScmResponseStatusUtils;
 import io.harness.product.ci.scm.proto.CompareCommitsResponse;
+import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.product.ci.scm.proto.CreatePRResponse;
+import io.harness.product.ci.scm.proto.DeleteFileResponse;
 import io.harness.product.ci.scm.proto.FileContent;
 import io.harness.product.ci.scm.proto.GetLatestCommitResponse;
+import io.harness.product.ci.scm.proto.UpdateFileResponse;
 import io.harness.service.ScmClient;
 import io.harness.tasks.DecryptGitApiAccessHelper;
 
@@ -170,5 +175,47 @@ public class ScmManagerFacilitatorServiceImpl extends AbstractScmClientFacilitat
     final GetLatestCommitResponse latestCommit = scmClient.getLatestCommit(decryptedConnector, branch);
     ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(latestCommit.getStatus(), latestCommit.getError());
     return latestCommit.getCommitId();
+  }
+
+  @Override
+  public CreateFileResponse createFile(InfoForGitPush infoForPush) {
+    ScmConnector decryptedConnector = gitSyncConnectorHelper.getDecryptedConnector(infoForPush.getAccountId(),
+        infoForPush.getOrgIdentifier(), infoForPush.getProjectIdentifier(), infoForPush.getScmConnector());
+    if (infoForPush.isNewBranch()) {
+      createBranch(infoForPush.getBranch(), infoForPush.getBaseBranch(), decryptedConnector);
+    }
+    final GitFileDetailsBuilder gitFileDetails = getGitFileDetails(infoForPush.getYaml(), infoForPush.getFilePath(),
+        infoForPush.getFolderPath(), infoForPush.getCommitMsg(), infoForPush.getBranch());
+    return scmClient.createFile(decryptedConnector, gitFileDetails.build());
+  }
+
+  @Override
+  public UpdateFileResponse updateFile(InfoForGitPush infoForPush) {
+    ScmConnector decryptedConnector = gitSyncConnectorHelper.getDecryptedConnector(infoForPush.getAccountId(),
+        infoForPush.getOrgIdentifier(), infoForPush.getProjectIdentifier(), infoForPush.getScmConnector());
+    if (infoForPush.isNewBranch()) {
+      createBranch(infoForPush.getBranch(), infoForPush.getBaseBranch(), decryptedConnector);
+    }
+    final GitFileDetailsBuilder gitFileDetails = getGitFileDetails(infoForPush.getYaml(), infoForPush.getFilePath(),
+        infoForPush.getFolderPath(), infoForPush.getCommitMsg(), infoForPush.getBranch());
+    gitFileDetails.oldFileSha(infoForPush.getOldFileSha());
+    return scmClient.updateFile(decryptedConnector, gitFileDetails.build());
+  }
+
+  @Override
+  public DeleteFileResponse deleteFile(InfoForGitPush infoForPush) {
+    ScmConnector decryptedConnector = gitSyncConnectorHelper.getDecryptedConnector(infoForPush.getAccountId(),
+        infoForPush.getOrgIdentifier(), infoForPush.getProjectIdentifier(), infoForPush.getScmConnector());
+    if (infoForPush.isNewBranch()) {
+      createBranch(infoForPush.getBranch(), infoForPush.getBaseBranch(), decryptedConnector);
+    }
+    final GitFileDetailsBuilder gitFileDetails = getGitFileDetails(infoForPush.getYaml(), infoForPush.getFilePath(),
+        infoForPush.getFolderPath(), infoForPush.getCommitMsg(), infoForPush.getBranch());
+    gitFileDetails.oldFileSha(infoForPush.getOldFileSha());
+    return scmClient.deleteFile(decryptedConnector, gitFileDetails.build());
+  }
+
+  private void createBranch(String branch, String baseBranch, ScmConnector scmConnector) {
+    scmClient.createNewBranch(scmConnector, branch, baseBranch);
   }
 }

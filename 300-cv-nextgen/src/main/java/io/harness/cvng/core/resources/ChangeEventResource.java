@@ -3,7 +3,7 @@ package io.harness.cvng.core.resources;
 import io.harness.annotations.ExposeInternalException;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cvng.core.beans.change.event.ChangeEventDTO;
+import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.core.services.api.ChangeEventService;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
@@ -38,6 +38,6 @@ public class ChangeEventResource {
   @ApiOperation(value = "register a ChangeEvent", nickname = "registerChangeEvent")
   public RestResponse<Boolean> register(@ApiParam(required = true) @NotNull @QueryParam("accountId") String accountId,
       @NotNull @Valid @Body ChangeEventDTO changeEventDTO) {
-    return new RestResponse<>(changeEventService.register(accountId, changeEventDTO));
+    return new RestResponse<>(changeEventService.register(changeEventDTO));
   }
 }

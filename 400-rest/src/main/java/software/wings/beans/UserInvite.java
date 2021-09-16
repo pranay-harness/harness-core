@@ -97,6 +97,12 @@ public class UserInvite extends Base implements AccountAccess {
 
   @Getter @Setter private String intent;
 
+  @Getter @Setter private String signupAction;
+
+  @Getter @Setter private String edition;
+
+  @Getter @Setter private String billingFrequency;
+
   @Override
   public boolean equals(Object o) {
     return super.equals(o) && true;

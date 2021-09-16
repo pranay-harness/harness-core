@@ -1,16 +1,17 @@
 package io.harness.cvng.core.services.impl.monitoredService;
 
+import io.harness.cvng.beans.change.ChangeCategory;
+import io.harness.cvng.beans.change.ChangeEventDTO;
+import io.harness.cvng.beans.change.ChangeSourceType;
 import io.harness.cvng.core.beans.ChangeSummaryDTO;
-import io.harness.cvng.core.beans.change.event.ChangeEventDTO;
 import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.entities.changeSource.ChangeSource;
 import io.harness.cvng.core.entities.changeSource.ChangeSource.ChangeSourceKeys;
 import io.harness.cvng.core.services.api.ChangeEventService;
 import io.harness.cvng.core.services.api.monitoredService.ChangeSourceService;
+import io.harness.cvng.core.services.impl.ChangeSourceUpdateHandler;
 import io.harness.cvng.core.transformer.changeSource.ChangeSourceEntityAndDTOTransformer;
-import io.harness.cvng.core.types.ChangeCategory;
-import io.harness.cvng.core.types.ChangeSourceType;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.persistence.HPersistence;
 
@@ -33,6 +34,7 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
   @Inject private HPersistence hPersistence;
   @Inject private ChangeSourceEntityAndDTOTransformer changeSourceTransformer;
   @Inject private ChangeEventService changeEventService;
+  @Inject private Map<ChangeSourceType, ChangeSourceUpdateHandler> changeSourceUpdateHandlerMap;
   @Inject private Map<ChangeSourceType, ChangeSource.UpdatableChangeSourceEntity> changeSourceUpdatableMap;
 
   @Override
@@ -44,6 +46,9 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
                                            .map(dto -> changeSourceTransformer.getEntity(environmentParams, dto))
                                            .collect(Collectors.toList());
     hPersistence.save(changeSources);
+    changeSources.stream()
+        .filter(changeSource -> changeSourceUpdateHandlerMap.containsKey(changeSource.getType()))
+        .forEach(changeSource -> changeSourceUpdateHandlerMap.get(changeSource.getType()).handleCreate(changeSource));
   }
 
   @Override
@@ -73,7 +78,14 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
 
   @Override
   public void delete(@NonNull ServiceEnvironmentParams environmentParams, @NonNull List<String> identifiers) {
-    mongoQuery(environmentParams).field(ChangeSourceKeys.identifier).in(identifiers).forEach(hPersistence::delete);
+    List<ChangeSource> changeSources =
+        mongoQuery(environmentParams).field(ChangeSourceKeys.identifier).in(identifiers).asList();
+    changeSources.forEach(changeSource -> {
+      hPersistence.delete(changeSource);
+      if (changeSourceUpdateHandlerMap.containsKey(changeSource.getType())) {
+        changeSourceUpdateHandlerMap.get(changeSource.getType()).handleDelete(changeSource);
+      }
+    });
   }
 
   @Override
@@ -94,20 +106,45 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
     newChangeSourceMap.keySet()
         .stream()
         .filter(key -> replaceable(key, newChangeSourceMap, existingChangeSourceMap))
-        .forEach(identifer -> update(newChangeSourceMap.get(identifer), existingChangeSourceMap.get(identifer)));
+        .forEach(identifer -> {
+          ChangeSource existingChangeSource = existingChangeSourceMap.get(identifer);
+          ChangeSource newChangeSource = newChangeSourceMap.get(identifer);
+          update(existingChangeSource, newChangeSource);
+          if (changeSourceUpdateHandlerMap.containsKey(newChangeSource.getType())) {
+            changeSourceUpdateHandlerMap.get(newChangeSource.getType())
+                .handleUpdate(existingChangeSource, newChangeSource);
+          }
+        });
 
-    hPersistence.save(newChangeSourceMap.keySet()
-                          .stream()
-                          .filter(key -> !replaceable(key, newChangeSourceMap, existingChangeSourceMap))
-                          .map(newChangeSourceMap::get)
-                          .collect(Collectors.toList()));
+    newChangeSourceMap.keySet()
+        .stream()
+        .filter(key -> !replaceable(key, newChangeSourceMap, existingChangeSourceMap))
+        .forEach(identifier -> {
+          ChangeSource changeSource = newChangeSourceMap.get(identifier);
+          hPersistence.save(changeSource);
+          if (changeSourceUpdateHandlerMap.containsKey(changeSource.getType())) {
+            changeSourceUpdateHandlerMap.get(changeSource.getType()).handleCreate(changeSource);
+          }
+        });
 
-    hPersistence.delete(
-        mongoQueryByUuids(existingChangeSourceMap.keySet()
-                              .stream()
-                              .filter(key -> !replaceable(key, newChangeSourceMap, existingChangeSourceMap))
-                              .map(key -> existingChangeSourceMap.get(key).getUuid())
-                              .collect(Collectors.toList())));
+    existingChangeSourceMap.keySet()
+        .stream()
+        .filter(key -> !replaceable(key, newChangeSourceMap, existingChangeSourceMap))
+        .forEach(identifier -> {
+          ChangeSource changeSource = existingChangeSourceMap.get(identifier);
+          hPersistence.delete(changeSource);
+          if (changeSourceUpdateHandlerMap.containsKey(changeSource.getType())) {
+            changeSourceUpdateHandlerMap.get(changeSource.getType()).handleDelete(changeSource);
+          }
+        });
+  }
+
+  protected void update(ChangeSource existingChangeSource, ChangeSource newChangeSource) {
+    UpdateOperations<ChangeSource> updateOperations = hPersistence.createUpdateOperations(ChangeSource.class);
+    changeSourceUpdatableMap.get(newChangeSource.getType()).setUpdateOperations(updateOperations, newChangeSource);
+    hPersistence.update(
+        hPersistence.createQuery(ChangeSource.class).filter(ChangeSourceKeys.uuid, existingChangeSource.getUuid()),
+        updateOperations);
   }
 
   @Override
@@ -123,14 +160,6 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
     return changeEventService.getChangeSummary(serviceEnvironmentParams, changeSourceIdentifiers, startTime, endTime);
   }
 
-  private void update(ChangeSource newChangeSource, ChangeSource existingChangeSource) {
-    UpdateOperations<ChangeSource> updateOperations = hPersistence.createUpdateOperations(ChangeSource.class);
-    changeSourceUpdatableMap.get(newChangeSource.getType()).setUpdateOperations(updateOperations, newChangeSource);
-    hPersistence.update(
-        hPersistence.createQuery(ChangeSource.class).filter(ChangeSourceKeys.uuid, existingChangeSource.getUuid()),
-        updateOperations);
-  }
-
   private void validate(Set<ChangeSourceDTO> changeSourceDTOs) {
     Optional<String> noUniqueIdentifier =
         changeSourceDTOs.stream()
@@ -144,10 +173,6 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
     if (noUniqueIdentifier.isPresent()) {
       throw new DuplicateFieldException(Pair.of(ChangeSourceKeys.identifier, noUniqueIdentifier.get()));
     }
-  }
-
-  private Query<ChangeSource> mongoQueryByUuids(List<String> uuids) {
-    return hPersistence.createQuery(ChangeSource.class).field(ChangeSourceKeys.uuid).in(uuids);
   }
 
   private Query<ChangeSource> mongoQuery(ServiceEnvironmentParams environmentParams) {

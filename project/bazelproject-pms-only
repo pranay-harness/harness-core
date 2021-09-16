@@ -39,6 +39,8 @@ directories:
   950-log-client
   950-ng-core
   950-ng-project-n-orgs
+  950-ng-signup-beans
+  950-opa-client
   950-wait-engine
   950-walktree-visitor
   951-ng-audit-commons
@@ -61,7 +63,6 @@ directories:
   960-api-services
   960-continuous-features
   960-ng-core-beans
-  960-ng-signup-beans
   960-notification-beans
   960-persistence
   960-yaml-sdk

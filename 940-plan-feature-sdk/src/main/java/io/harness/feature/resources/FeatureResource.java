@@ -18,6 +18,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import java.util.List;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -80,7 +81,7 @@ public class FeatureResource {
   @Path("/names")
   @ApiOperation(value = "Gets List of Feature Names", nickname = "getAllFeatureNames")
   @NGAccessControlCheck(resourceType = RESOURCE_TYPE, permission = PERMISSION)
-  public ResponseDTO<List<String>> getAllFeatureNames(
+  public ResponseDTO<Set<String>> getAllFeatureNames(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
     return ResponseDTO.newResponse(featureService.getAllFeatureNames());
   }

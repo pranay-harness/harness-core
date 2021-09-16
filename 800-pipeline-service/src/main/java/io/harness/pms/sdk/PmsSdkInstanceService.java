@@ -24,6 +24,7 @@ import io.harness.pms.pipeline.service.yamlschema.SchemaFetcher;
 import io.harness.pms.sdk.PmsSdkInstance.PmsSdkInstanceKeys;
 import io.harness.repositories.sdk.PmsSdkInstanceRepository;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.grpc.stub.StreamObserver;
@@ -78,7 +79,8 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
     responseObserver.onCompleted();
   }
 
-  private void saveSdkInstance(InitializeSdkRequest request) {
+  @VisibleForTesting
+  protected void saveSdkInstance(InitializeSdkRequest request) {
     Map<String, Set<String>> supportedTypes = new HashMap<>();
     if (EmptyPredicate.isNotEmpty(request.getSupportedTypesMap())) {
       for (Map.Entry<String, Types> entry : request.getSupportedTypesMap().entrySet()) {
@@ -97,6 +99,8 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
             .set(PmsSdkInstanceKeys.supportedStepTypes, getSupportedStepTypes(request.getSupportedStepsList()))
             .set(PmsSdkInstanceKeys.supportedSteps, getStepInfos(request.getSupportedStepsList()))
             .set(PmsSdkInstanceKeys.interruptConsumerConfig, request.getInterruptConsumerConfig())
+            .set(PmsSdkInstanceKeys.staticAliases, request.getStaticAliasesMap())
+            .set(PmsSdkInstanceKeys.sdkFunctors, request.getSdkFunctorsList())
             .set(PmsSdkInstanceKeys.orchestrationEventConsumerConfig, request.getOrchestrationEventConsumerConfig())
             .set(PmsSdkInstanceKeys.active, true)
             .set(PmsSdkInstanceKeys.sdkModuleInfo, request.getSdkModuleInfo())
@@ -150,6 +154,10 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
     Set<String> instanceNames = new HashSet<>();
     pmsSdkInstanceRepository.findByActive(true).forEach(instance -> instanceNames.add(instance.getName()));
     return instanceNames;
+  }
+
+  public List<PmsSdkInstance> getActiveInstances() {
+    return pmsSdkInstanceRepository.findByActive(true);
   }
 
   private List<StepInfo> getStepInfos(List<SdkStep> sdkSteps) {

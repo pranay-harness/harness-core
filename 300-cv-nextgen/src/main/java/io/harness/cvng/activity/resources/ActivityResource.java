@@ -14,15 +14,15 @@ import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ClusterType;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
 import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
-import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.core.beans.DatasourceTypeDTO;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
 import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.ProjectParams;
+import io.harness.cvng.core.beans.params.filterParams.DeploymentLogAnalysisFilter;
+import io.harness.cvng.core.beans.params.filterParams.DeploymentTimeSeriesAnalysisFilter;
 import io.harness.ng.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
-import io.harness.security.annotations.PublicApi;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
@@ -33,17 +33,14 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import org.hibernate.validator.constraints.NotEmpty;
-import retrofit2.http.Body;
 
 @Api(ACTIVITY_RESOURCE)
 @Path(ACTIVITY_RESOURCE)
@@ -52,17 +49,6 @@ import retrofit2.http.Body;
 @NextGenManagerAuth
 public class ActivityResource {
   @Inject private ActivityService activityService;
-
-  @POST
-  @Timed
-  @ExceptionMetered
-  @PublicApi
-  @Path("{webHookToken}")
-  @ApiOperation(value = "registers an activity", nickname = "registerActivity")
-  public RestResponse<String> registerActivity(@NotNull @PathParam("webHookToken") String webHookToken,
-      @NotNull @QueryParam("accountId") @Valid final String accountId, @Body ActivityDTO activityDTO) {
-    return new RestResponse<>(activityService.register(accountId, webHookToken, activityDTO));
-  }
 
   @GET
   @Path("recent-deployment-activity-verifications")
@@ -164,8 +150,17 @@ public class ActivityResource {
       @QueryParam("healthSources") List<String> healthSourceIdentifiers,
       @QueryParam("pageNumber") @DefaultValue("0") int pageNumber,
       @QueryParam("pageSize") @DefaultValue("10") int pageSize) {
+    PageParams pageParams = PageParams.builder().page(pageNumber).size(pageSize).build();
+    DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter =
+        DeploymentTimeSeriesAnalysisFilter.builder()
+            .healthSourceIdentifiers(healthSourceIdentifiers)
+            .filter(filter)
+            .anomalous(anomalousMetricsOnly)
+            .hostName(hostName)
+            .build();
+
     return new RestResponse(activityService.getDeploymentActivityTimeSeriesData(
-        accountId, activityId, anomalousMetricsOnly, hostName, filter, healthSourceIdentifiers, pageNumber, pageSize));
+        accountId, activityId, deploymentTimeSeriesAnalysisFilter, pageParams));
   }
 
   @GET
@@ -199,8 +194,14 @@ public class ActivityResource {
       @NotNull @NotEmpty @PathParam("activityId") String activityId, @NotNull @QueryParam("accountId") String accountId,
       @QueryParam("hostName") String hostName, @QueryParam("healthSource") List<String> healthSourceIdentifiers,
       @QueryParam("clusterType") List<ClusterType> clusterTypes) {
-    return new RestResponse(activityService.getDeploymentActivityLogAnalysisClusters(
-        accountId, activityId, hostName, healthSourceIdentifiers, clusterTypes));
+    DeploymentLogAnalysisFilter deploymentLogAnalysisFilter = DeploymentLogAnalysisFilter.builder()
+                                                                  .healthSourceIdentifiers(healthSourceIdentifiers)
+                                                                  .clusterTypes(clusterTypes)
+                                                                  .hostName(hostName)
+                                                                  .build();
+
+    return new RestResponse(
+        activityService.getDeploymentActivityLogAnalysisClusters(accountId, activityId, deploymentLogAnalysisFilter));
   }
 
   @Path("/{activityId}/deployment-log-analysis-data")
@@ -218,7 +219,13 @@ public class ActivityResource {
     if (clusterType != null) {
       clusterTypes = Arrays.asList(clusterType);
     }
+    DeploymentLogAnalysisFilter deploymentLogAnalysisFilter = DeploymentLogAnalysisFilter.builder()
+                                                                  .healthSourceIdentifiers(healthSourceIdentifiers)
+                                                                  .clusterTypes(clusterTypes)
+                                                                  .hostName(hostName)
+                                                                  .build();
+
     return new RestResponse(activityService.getDeploymentActivityLogAnalysisResult(
-        accountId, activityId, label, hostName, healthSourceIdentifiers, clusterTypes, pageParams));
+        accountId, activityId, label, deploymentLogAnalysisFilter, pageParams));
   }
 }

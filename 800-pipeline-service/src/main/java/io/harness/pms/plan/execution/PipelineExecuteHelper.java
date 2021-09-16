@@ -1,5 +1,6 @@
 package io.harness.pms.plan.execution;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 
@@ -7,9 +8,11 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.OrchestrationService;
+import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionMetadataService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.executions.plan.PlanService;
+import io.harness.engine.executions.retry.RetryStageInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecutionMetadata;
@@ -24,6 +27,8 @@ import io.harness.pms.exception.PmsExceptionUtils;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.helpers.PrincipalInfoHelper;
 import io.harness.pms.helpers.TriggeredByHelper;
+import io.harness.pms.merger.PipelineYamlConfig;
+import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.merger.helpers.MergeHelper;
 import io.harness.pms.ngpipeline.inputset.helpers.InputSetSanitizer;
 import io.harness.pms.ngpipeline.inputset.helpers.ValidateAndMergeHelper;
@@ -42,7 +47,11 @@ import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -64,6 +73,7 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 @Slf4j
 public class PipelineExecuteHelper {
+  private static final String LAST_STAGE_IDENTIFIER = "last_stage_identifier";
   private final PMSPipelineService pmsPipelineService;
   private final OrchestrationService orchestrationService;
   private final PlanCreatorMergeService planCreatorMergeService;
@@ -76,6 +86,7 @@ public class PipelineExecuteHelper {
   private final TriggeredByHelper triggeredByHelper;
   private final PlanExecutionService planExecutionService;
   private final PlanService planService;
+  private final NodeExecutionService nodeExecutionService;
 
   public PlanExecutionResponseDto runPipelineWithInputSetPipelineYaml(@NotNull String accountId,
       @NotNull String orgIdentifier, @NotNull String projectIdentifier, @NotNull String pipelineIdentifier,
@@ -319,6 +330,77 @@ public class PipelineExecuteHelper {
     }
     return orchestrationService.startExecutionV2(
         planCreationId, abstractions, executionMetadata, planExecutionMetadata);
+  }
+  public boolean validateRetry(String updatedYaml, String executedYaml) {
+    // compare fqn
+    if (isEmpty(updatedYaml) || isEmpty(executedYaml)) {
+      return false;
+    }
+
+    PipelineYamlConfig updatedConfig = new PipelineYamlConfig(updatedYaml);
+    PipelineYamlConfig executedConfig = new PipelineYamlConfig(executedYaml);
+
+    Map<FQN, Object> fqnToValueMapUpdatedYaml = updatedConfig.getFqnToValueMap();
+    Map<FQN, Object> fqnToValueMapExecutedYaml = executedConfig.getFqnToValueMap();
+
+    List<String> updateStageIdentifierList = new ArrayList<>();
+    for (FQN fqn : fqnToValueMapUpdatedYaml.keySet()) {
+      if (fqn.isStageIdentifier()) {
+        updateStageIdentifierList.add(fqn.display());
+      }
+    }
+
+    List<String> executedStageIdentifierList = new ArrayList<>();
+    for (FQN fqn : fqnToValueMapExecutedYaml.keySet()) {
+      if (fqn.isStageIdentifier()) {
+        executedStageIdentifierList.add(fqn.display());
+      }
+    }
+
+    if (!updateStageIdentifierList.equals(executedStageIdentifierList)) {
+      return false;
+    }
+    return true;
+  }
+
+  public RetryInfo getRetryStages(
+      String updatedYaml, String executedYaml, String planExecutionId, String pipelineIdentifier) {
+    if (isEmpty(planExecutionId)) {
+      return null;
+    }
+    boolean isResumable = validateRetry(updatedYaml, executedYaml);
+    if (!isResumable) {
+      return RetryInfo.builder().isResumable(isResumable).errorMessage("Pipeline is updated, cannot retry").build();
+    }
+    List<RetryStageInfo> stageDetails = getStageDetails(planExecutionId);
+
+    return getRetryInfo(stageDetails);
+  }
+
+  public RetryInfo getRetryInfo(List<RetryStageInfo> stageDetails) {
+    HashMap<String, List<RetryStageInfo>> mapNextIdWithStageInfo = new LinkedHashMap<>();
+    for (RetryStageInfo stageDetail : stageDetails) {
+      String nextId = stageDetail.getNextId();
+      if (isEmpty(nextId)) {
+        nextId = LAST_STAGE_IDENTIFIER;
+      }
+      List<RetryStageInfo> stageList = mapNextIdWithStageInfo.getOrDefault(nextId, new ArrayList<>());
+      stageList.add(stageDetail);
+      mapNextIdWithStageInfo.put(nextId, stageList);
+    }
+    List<RetryGroup> retryGroupList = new ArrayList<>();
+    for (Map.Entry<String, List<RetryStageInfo>> entry : mapNextIdWithStageInfo.entrySet()) {
+      retryGroupList.add(RetryGroup.builder().info(entry.getValue()).build());
+    }
+    return RetryInfo.builder().isResumable(true).groups(retryGroupList).build();
+  }
+
+  public List<RetryStageInfo> getStageDetails(String planExecutionId) {
+    return nodeExecutionService.getStageDetailFromPlanExecutionId(planExecutionId);
+  }
+
+  public String getYamlFromExecutionId(String planExecutionId) {
+    return planExecutionMetadataService.getYamlFromPlanExecutionId(planExecutionId);
   }
 
   @Data
