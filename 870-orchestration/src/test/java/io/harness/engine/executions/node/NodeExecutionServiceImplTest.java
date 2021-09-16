@@ -2,6 +2,7 @@ package io.harness.engine.executions.node;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.pms.contracts.execution.Status.ERRORED;
+import static io.harness.pms.contracts.execution.Status.RUNNING;
 import static io.harness.pms.contracts.execution.Status.SUCCEEDED;
 import static io.harness.rule.OwnerRule.ALEXEI;
 import static io.harness.rule.OwnerRule.PRASHANT;
@@ -107,6 +108,60 @@ public class NodeExecutionServiceImplTest extends OrchestrationTestBase {
     NodeExecution ne2 = nodeExecutionService.get(nodeExecutionId2);
     assertThat(ne2).isNotNull();
     assertThat(ne2.getStatus()).isEqualTo(SUCCEEDED);
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void shouldTestFinaAllNodesTrimmed() {
+    String nodeExecutionId1 = generateUuid();
+    String parentId1 = generateUuid();
+    String nodeExecutionId2 = generateUuid();
+    String parentId2 = generateUuid();
+    NodeExecution nodeExecution1 =
+        NodeExecution.builder()
+            .uuid(nodeExecutionId1)
+            .ambiance(AmbianceTestUtils.buildAmbiance())
+            .mode(ExecutionMode.SYNC)
+            .node(PlanNodeProto.newBuilder()
+                      .setUuid(generateUuid())
+                      .setName("name")
+                      .setIdentifier("dummy")
+                      .setStepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build())
+                      .build())
+            .startTs(System.currentTimeMillis())
+            .parentId(parentId1)
+            .status(Status.RUNNING)
+            .build();
+    NodeExecution nodeExecution2 =
+        NodeExecution.builder()
+            .uuid(nodeExecutionId2)
+            .ambiance(AmbianceTestUtils.buildAmbiance())
+            .mode(ExecutionMode.CHILD)
+            .node(PlanNodeProto.newBuilder()
+                      .setUuid(generateUuid())
+                      .setName("name")
+                      .setIdentifier("dummy")
+                      .setStepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build())
+                      .build())
+            .startTs(System.currentTimeMillis())
+            .parentId(parentId2)
+            .status(Status.SUCCEEDED)
+            .build();
+    nodeExecutionService.save(nodeExecution1);
+    nodeExecutionService.save(nodeExecution2);
+
+    List<NodeExecution> nodeExecutions =
+        nodeExecutionService.findAllNodeExecutionsTrimmed(AmbianceTestUtils.PLAN_EXECUTION_ID);
+    assertThat(nodeExecutions).hasSize(2);
+
+    NodeExecution ne1 = nodeExecutions.get(0);
+    assertThat(ne1).isNotNull();
+    assertThat(ne1.getUuid()).isEqualTo(nodeExecutionId1);
+    assertThat(ne1.getStatus()).isEqualTo(RUNNING);
+    assertThat(ne1.getParentId()).isEqualTo(parentId1);
+    assertThat(ne1.getMode()).isEqualTo(ExecutionMode.SYNC);
+    assertThat(ne1.getAmbiance()).isNull();
   }
 
   @Test

@@ -24,6 +24,7 @@ import io.harness.engine.executions.node.NodeExecutionServiceImpl;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionServiceImpl;
 import io.harness.engine.expressions.OrchestrationConstants;
+import io.harness.engine.interrupts.InterruptMonitor;
 import io.harness.engine.interrupts.OrchestrationEndInterruptHandler;
 import io.harness.engine.timeouts.TimeoutInstanceRemover;
 import io.harness.event.OrchestrationEndGraphHandler;
@@ -309,6 +310,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     injector.getInstance(BarrierServiceImpl.class).registerIterators();
     injector.getInstance(ApprovalInstanceHandler.class).registerIterators();
     injector.getInstance(ResourceRestraintPersistenceMonitor.class).registerIterators();
+    injector.getInstance(InterruptMonitor.class).registerIterators();
     injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
 
     log.info("Initializing gRPC servers...");
