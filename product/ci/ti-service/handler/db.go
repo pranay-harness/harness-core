@@ -67,7 +67,7 @@ func HandleSummary(adb db.Db) http.HandlerFunc {
 		ctx := r.Context()
 		log := logger.FromContext(ctx)
 		st := time.Now()
-		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam, reportParam, stepIdParam, stageIdParam)
+		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam, reportParam)
 		if err != nil {
 			WriteInternalError(w, err)
 			return
