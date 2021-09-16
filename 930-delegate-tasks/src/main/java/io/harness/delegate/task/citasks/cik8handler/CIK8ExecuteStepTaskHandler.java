@@ -1,10 +1,7 @@
 package io.harness.delegate.task.citasks.cik8handler;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-
-import static java.lang.String.format;
-
+import com.google.inject.Inject;
+import com.google.protobuf.InvalidProtocolBufferException;
 import io.harness.delegate.beans.ci.CIExecuteStepTaskParams;
 import io.harness.delegate.beans.ci.CIK8ExecuteStepTaskParams;
 import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
@@ -12,18 +9,18 @@ import io.harness.delegate.task.citasks.CIExecuteStepTaskHandler;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.product.ci.engine.proto.ExecuteStepRequest;
-import io.harness.product.ci.engine.proto.LiteEngineGrpc;
-
-import com.google.protobuf.InvalidProtocolBufferException;
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
-import io.grpc.internal.GrpcUtil;
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
-import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
-import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
+import okhttp3.Response;
+
+import javax.validation.constraints.NotNull;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
+
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 
 @Slf4j
 public class CIK8ExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
@@ -31,10 +28,35 @@ public class CIK8ExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
   public static final String DELEGATE_NAMESPACE = "DELEGATE_NAMESPACE";
   private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(2);
   private final int MAX_ATTEMPTS = 3;
+  @Inject
+  private HttpHelper httpHelper;
 
   @Override
   public Type getType() {
     return type;
+  }
+
+  public K8sTaskExecutionResponse callDrone(ExecuteStepRequest request) {
+    if (!request.getStep().hasRun()) {
+      throw new InvalidArgumentsException("Invalid step type");
+    }
+
+    Map<String, String> params = new HashMap<>();
+    params.put("command", request.getStep().getRun().getCommand());
+    params.put("image", request.getStep().getRun().getImage());
+
+    Response response = httpHelper.call("http://127.0.0.1:9191/execute_step", params);
+    if (response == null || !response.isSuccessful()) {
+
+      log.error("Response not Successful. Response body: {}", response);
+      return K8sTaskExecutionResponse.builder()
+              .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+              .build();
+    } else {
+      return K8sTaskExecutionResponse.builder()
+              .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+              .build();
+    }
   }
 
   @Override
@@ -62,6 +84,9 @@ public class CIK8ExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
     }
 
     final ExecuteStepRequest finalExecuteStepRequest = executeStepRequest;
+    return callDrone(executeStepRequest);
+
+    /*
     String target = format("%s:%d", cik8ExecuteStepTaskParams.getIp(), cik8ExecuteStepTaskParams.getPort());
     ManagedChannelBuilder managedChannelBuilder = ManagedChannelBuilder.forTarget(target).usePlaintext();
     if (!cik8ExecuteStepTaskParams.isLocal()) {
@@ -95,6 +120,8 @@ public class CIK8ExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
           .errorMessage(e.getMessage())
           .build();
     }
+
+     */
   }
 
   private String getNamespacedDelegateSvcEndpoint(String delegateSvcEndpoint) {

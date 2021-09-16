@@ -42,6 +42,8 @@ public class LiteEngineConnectionCapabilityCheck implements CapabilityCheck, Pro
   }
 
   private boolean isConnectibleLiteEngine(String ip, int port, boolean isLocal) {
+    return true;
+    /*
     String target = String.format("%s:%d", ip, port);
 
     ManagedChannelBuilder managedChannelBuilder = ManagedChannelBuilder.forTarget(target).usePlaintext();
@@ -64,5 +66,7 @@ public class LiteEngineConnectionCapabilityCheck implements CapabilityCheck, Pro
       log.error("Failed to connect to lite engine target {} with err: {}", target, e);
     }
     return false;
+
+     */
   }
 }

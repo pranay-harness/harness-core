@@ -6,6 +6,7 @@ package io.harness.delegate.task.citasks.cik8handler;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.beans.ci.k8s.PodStatus.Status.RUNNING;
 import static io.harness.delegate.task.citasks.cik8handler.SecretSpecBuilder.getSecretName;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
@@ -13,7 +14,9 @@ import static java.lang.String.format;
 
 import io.harness.delegate.beans.ci.CICleanupTaskParams;
 import io.harness.delegate.beans.ci.CIK8CleanupTaskParams;
+import io.harness.delegate.beans.ci.k8s.CiK8sTaskResponse;
 import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
+import io.harness.delegate.beans.ci.k8s.PodStatus;
 import io.harness.delegate.task.citasks.CICleanupTaskHandler;
 import io.harness.delegate.task.citasks.cik8handler.k8java.CIK8JavaClientHandler;
 import io.harness.k8s.apiclient.ApiClientFactory;
@@ -26,21 +29,44 @@ import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1Status;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.Response;
 
 @Slf4j
 public class CIK8CleanupTaskHandler implements CICleanupTaskHandler {
   @Inject private CIK8JavaClientHandler cik8JavaClientHandler;
   @Inject private K8sConnectorHelper k8sConnectorHelper;
   @Inject private ApiClientFactory apiClientFactory;
+  @Inject private HttpHelper httpHelper;
 
   @NotNull private CICleanupTaskHandler.Type type = CICleanupTaskHandler.Type.GCP_K8;
 
   @Override
   public CICleanupTaskHandler.Type getType() {
     return type;
+  }
+
+  public K8sTaskExecutionResponse callDrone(String podName, String namespace) {
+    Map<String, String> params = new HashMap<>();
+    params.put("podName", podName);
+    params.put("namespace", namespace);
+    Response response = httpHelper.call("http://127.0.0.1:9191/destroy", params);
+    if (response == null || !response.isSuccessful()) {
+
+      log.error("Response not Successful. Response body: {}", response);
+      return K8sTaskExecutionResponse.builder()
+              .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+              .build();
+    } else {
+      return K8sTaskExecutionResponse.builder()
+              .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+              .build();
+    }
   }
 
   @Override
@@ -56,34 +82,37 @@ public class CIK8CleanupTaskHandler implements CICleanupTaskHandler {
     }
 
     String podName = taskParams.getPodNameList().get(0);
-    try (AutoLogContext ignore1 = new K8LogContext(podName, null, OVERRIDE_ERROR)) {
-      try {
-        KubernetesConfig kubernetesConfig = k8sConnectorHelper.getKubernetesConfig(taskParams.getK8sConnector());
-        ApiClient apiClient = apiClientFactory.getClient(kubernetesConfig);
-        CoreV1Api coreV1Api = new CoreV1Api(apiClient);
 
-        boolean podsDeleted = deletePods(coreV1Api, namespace, taskParams.getPodNameList());
-        if (podsDeleted) {
-          boolean serviceDeleted = deleteServices(coreV1Api, namespace, taskParams.getServiceNameList());
-          boolean secretsDeleted =
-              deleteSecrets(coreV1Api, namespace, taskParams.getPodNameList(), taskParams.getCleanupContainerNames());
-          if (podsDeleted && serviceDeleted && secretsDeleted) {
-            return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
-          } else {
-            return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
-          }
-        } else {
-          log.error("Failed to delete pod {}", taskParams.getPodNameList());
-          return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
-        }
-      } catch (Exception ex) {
-        log.error("Exception in processing CI K8 delete setup task: {}", taskParams, ex);
-        return K8sTaskExecutionResponse.builder()
-            .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-            .errorMessage(ex.getMessage())
-            .build();
-      }
-    }
+    return callDrone(podName, namespace);
+
+//    try (AutoLogContext ignore1 = new K8LogContext(podName, null, OVERRIDE_ERROR)) {
+//      try {
+//        KubernetesConfig kubernetesConfig = k8sConnectorHelper.getKubernetesConfig(taskParams.getK8sConnector());
+//        ApiClient apiClient = apiClientFactory.getClient(kubernetesConfig);
+//        CoreV1Api coreV1Api = new CoreV1Api(apiClient);
+//
+//        boolean podsDeleted = deletePods(coreV1Api, namespace, taskParams.getPodNameList());
+//        if (podsDeleted) {
+//          boolean serviceDeleted = deleteServices(coreV1Api, namespace, taskParams.getServiceNameList());
+//          boolean secretsDeleted =
+//              deleteSecrets(coreV1Api, namespace, taskParams.getPodNameList(), taskParams.getCleanupContainerNames());
+//          if (podsDeleted && serviceDeleted && secretsDeleted) {
+//            return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
+//          } else {
+//            return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
+//          }
+//        } else {
+//          log.error("Failed to delete pod {}", taskParams.getPodNameList());
+//          return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
+//        }
+//      } catch (Exception ex) {
+//        log.error("Exception in processing CI K8 delete setup task: {}", taskParams, ex);
+//        return K8sTaskExecutionResponse.builder()
+//            .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+//            .errorMessage(ex.getMessage())
+//            .build();
+//      }
+//    }
   }
 
   private boolean deletePods(CoreV1Api coreV1Api, String namespace, List<String> podNameList) {

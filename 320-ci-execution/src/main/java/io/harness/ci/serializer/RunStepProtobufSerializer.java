@@ -84,6 +84,7 @@ public class RunStepProtobufSerializer implements ProtobufStepSerializer<RunStep
       protoShellType = ShellType.BASH;
     }
     runStepBuilder.setShellType(protoShellType);
+    runStepBuilder.setImage(RunTimeInputHandler.resolveStringParameter("Image", "Run", identifier, runStepInfo.getImage(), true));
 
     return UnitStep.newBuilder()
         .setAccountId(accountId)

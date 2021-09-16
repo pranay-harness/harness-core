@@ -137,7 +137,7 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
         "Created parked task {} and lite engine task {} for  step {}", parkedTaskId, liteEngineTaskId, stepIdentifier);
 
     return AsyncExecutableResponse.newBuilder()
-        .addCallbackIds(parkedTaskId)
+//        .addCallbackIds(parkedTaskId)
         .addCallbackIds(liteEngineTaskId)
         .addAllLogKeys(CollectionUtils.emptyIfNull(singletonList(logKey)))
         .build();
@@ -347,12 +347,13 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
   }
 
   private StepStatusTaskResponseData filterStepResponse(Map<String, ResponseData> responseDataMap) {
+    return StepStatusTaskResponseData.builder().stepStatus(StepStatus.builder().stepExecutionStatus(StepExecutionStatus.SUCCESS).build()).build();
     // Filter final response from step
-    return responseDataMap.entrySet()
-        .stream()
-        .filter(entry -> entry.getValue() instanceof StepStatusTaskResponseData)
-        .findFirst()
-        .map(obj -> (StepStatusTaskResponseData) obj.getValue())
-        .orElse(null);
+//    return responseDataMap.entrySet()
+//        .stream()
+//        .filter(entry -> entry.getValue() instanceof StepStatusTaskResponseData)
+//        .findFirst()
+//        .map(obj -> (StepStatusTaskResponseData) obj.getValue())
+//        .orElse(null);
   }
 }

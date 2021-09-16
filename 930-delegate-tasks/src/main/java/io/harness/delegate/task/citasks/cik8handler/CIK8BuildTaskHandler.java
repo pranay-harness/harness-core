@@ -65,6 +65,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.*;
 
 @Slf4j
 @Singleton
@@ -79,16 +80,37 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
   @Inject private ProxyVariableHelper proxyVariableHelper;
   @Inject private DelegateServiceTokenHelper delegateServiceTokenHelper;
   @Inject private ApiClientFactory apiClientFactory;
-
+  @Inject private HttpHelper httpHelper;
   @NotNull private Type type = CIBuildTaskHandler.Type.GCP_K8;
 
   private static final String DOCKER_CONFIG_KEY = ".dockercfg";
   private static final String HARNESS_IMAGE_SECRET = "HARNESS_IMAGE_SECRET";
   private static final String HARNESS_SECRETS_LIST = "HARNESS_SECRETS_LIST";
+  public static final MediaType APPLICATION_JSON = MediaType.parse("application/json; charset=utf-8");
 
   @Override
   public Type getType() {
     return type;
+  }
+
+  public K8sTaskExecutionResponse callDrone(String podName, String namespace) {
+    Map<String, String> params = new HashMap<>();
+    params.put("podName", podName);
+    params.put("namespace", namespace);
+    Response response = httpHelper.call("http://127.0.0.1:9191/initialize", params);
+    if (response == null || !response.isSuccessful()) {
+
+      log.error("Response not Successful. Response body: {}", response);
+      return K8sTaskExecutionResponse.builder()
+              .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+              .build();
+    } else {
+      CiK8sTaskResponse k8sTaskResponse = CiK8sTaskResponse.builder().podStatus(PodStatus.builder().status(RUNNING).ip("8.8.8.8").build()).podName(podName).build();
+      return K8sTaskExecutionResponse.builder()
+              .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+              .k8sTaskResponse(k8sTaskResponse)
+              .build();
+    }
   }
 
   public K8sTaskExecutionResponse executeTaskInternal(
@@ -102,6 +124,9 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     String namespace = podParams.getNamespace();
     String podName = podParams.getName();
 
+    return callDrone(podName, namespace);
+
+    /*
     K8sTaskExecutionResponse result;
     CiK8sTaskResponse k8sTaskResponse = null;
     try (AutoLogContext ignore1 = new K8LogContext(podParams.getName(), null, OVERRIDE_ERROR)) {
@@ -159,6 +184,8 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     }
     log.info("CI lite-engine task took: {} for pod: {} ", timer.stop(), podParams.getName());
     return result;
+
+     */
   }
 
   private void createServicePod(CoreV1Api coreV1Api, String namespace, CIK8ServicePodParams servicePodParams)
