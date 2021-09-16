@@ -326,8 +326,7 @@ public class LogDashboardServiceImpl implements LogDashboardService {
 
       // TODO:going forward this if condition needs to be removed as we are saving high riskScore for unknown and
       // unexpected tags in the db itself.
-      if (analysisResult.getTag().equals(LogAnalysisTag.UNKNOWN)
-          || analysisResult.getTag().equals(LogAnalysisTag.UNEXPECTED)) {
+      if (LogAnalysisTag.getAnomalousTags().contains(analysisResult.getTag())) {
         analysisResult.setRiskScore(1.0);
       }
       LogData data = LogData.builder()
