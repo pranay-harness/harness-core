@@ -209,9 +209,8 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
       return gitConfigDTO.getConnectionType();
     } else if (gitConnector.getConnectorType() == CODECOMMIT) {
       AwsCodeCommitConnectorDTO gitConfigDTO = (AwsCodeCommitConnectorDTO) gitConnector.getConnectorConfig();
-      GitConnectionType gitConnectionType =
-          gitConfigDTO.getUrlType() == AwsCodeCommitUrlType.REPO ? GitConnectionType.REPO : GitConnectionType.ACCOUNT;
-      return gitConnectionType;
+      return gitConfigDTO.getUrlType() == AwsCodeCommitUrlType.REPO ? GitConnectionType.REPO
+                                                                    : GitConnectionType.ACCOUNT;
     } else if (gitConnector.getConnectorType() == GIT) {
       GitConfigDTO gitConfigDTO = (GitConfigDTO) gitConnector.getConnectorConfig();
       return gitConfigDTO.getGitConnectionType();
