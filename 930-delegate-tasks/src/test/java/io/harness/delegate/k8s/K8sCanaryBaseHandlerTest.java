@@ -107,7 +107,7 @@ public class K8sCanaryBaseHandlerTest extends CategoryTest {
           KubernetesTaskException taskException = ExceptionUtils.cause(KubernetesTaskException.class, throwable);
           assertThat(hint).hasMessageContaining(KubernetesExceptionHints.CANARY_NO_WORKLOADS_FOUND);
           assertThat(explanation).hasMessageContaining(KubernetesExceptionExplanation.CANARY_NO_WORKLOADS_FOUND);
-          assertThat(taskException).hasMessageContaining(KubernetesExceptionMessages.CANARY_NO_WORKLOADS_FOUND);
+          assertThat(taskException).hasMessageContaining(KubernetesExceptionMessages.NO_WORKLOADS_FOUND);
 
           return true;
         });
@@ -140,7 +140,7 @@ public class K8sCanaryBaseHandlerTest extends CategoryTest {
           assertThat(explanation)
               .hasMessageContaining(format(KubernetesExceptionExplanation.CANARY_MULTIPLE_WORKLOADS, 2,
                   "Deployment/deployment, Deployment/deployment"));
-          assertThat(taskException).hasMessageContaining(KubernetesExceptionMessages.CANARY_MULTIPLE_WORKLOADS);
+          assertThat(taskException).hasMessageContaining(KubernetesExceptionMessages.MULTIPLE_WORKLOADS);
 
           return true;
         });

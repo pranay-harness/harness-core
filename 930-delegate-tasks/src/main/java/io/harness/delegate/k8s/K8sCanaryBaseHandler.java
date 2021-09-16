@@ -72,7 +72,7 @@ public class K8sCanaryBaseHandler {
         if (isErrorFrameworkEnabled) {
           throw NestedExceptionUtils.hintWithExplanationException(KubernetesExceptionHints.CANARY_NO_WORKLOADS_FOUND,
               KubernetesExceptionExplanation.CANARY_NO_WORKLOADS_FOUND,
-              new KubernetesTaskException(KubernetesExceptionMessages.CANARY_NO_WORKLOADS_FOUND));
+              new KubernetesTaskException(KubernetesExceptionMessages.NO_WORKLOADS_FOUND));
         }
       } else {
         logCallback.saveExecutionLog(
@@ -88,7 +88,7 @@ public class K8sCanaryBaseHandler {
           throw NestedExceptionUtils.hintWithExplanationException(KubernetesExceptionHints.CANARY_MULTIPLE_WORKLOADS,
               format(
                   KubernetesExceptionExplanation.CANARY_MULTIPLE_WORKLOADS, workloads.size(), workloadsPrintableList),
-              new KubernetesTaskException(KubernetesExceptionMessages.CANARY_MULTIPLE_WORKLOADS));
+              new KubernetesTaskException(KubernetesExceptionMessages.MULTIPLE_WORKLOADS));
         }
       }
       return false;

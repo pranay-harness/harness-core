@@ -13,6 +13,9 @@ public class KubernetesExceptionMessages {
   public final String APPLY_MANIFEST_FAILED = "Apply manifest failed";
   public final String WAIT_FOR_STEADY_STATE_FAILED = "Wait for steady state failed";
 
-  public final String CANARY_NO_WORKLOADS_FOUND = "Missing managed workload in kubernetes manifest";
-  public final String CANARY_MULTIPLE_WORKLOADS = "More than one workloads found in the manifests";
+  public final String NO_WORKLOADS_FOUND = "Missing managed workload in kubernetes manifest";
+  public final String MULTIPLE_WORKLOADS = "More than one workloads found in the manifests";
+  public final String NO_SERVICE_FOUND = "Missing service in kubernetes manifest";
+  public final String MULTIPLE_SERVICES = "Multiple unmarked services found in manifest";
+  public final String BG_CONFLICTING_SERVICE = "Found conflicting service [%s] in the cluster";
 }

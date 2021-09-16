@@ -3,6 +3,7 @@ package io.harness.delegate.task.k8s.exception;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.k8s.model.HarnessLabels;
 
 import lombok.experimental.UtilityClass;
 
@@ -31,4 +32,13 @@ public class KubernetesExceptionExplanation {
       "No workload found in the Manifests. Can't do Canary Deployment. Only Deployment, DeploymentConfig (OpenShift) and StatefulSet workloads are supported in Canary workflow type.";
   public final String CANARY_MULTIPLE_WORKLOADS =
       "Found %d workloads in manifest: [%s]. Canary deployment supports only one workload";
+  public final String BG_NO_WORKLOADS_FOUND =
+      "No workload found in the Manifests. Can't do  Blue/Green Deployment. Only Deployment, DeploymentConfig (OpenShift) and StatefulSet workloads are supported in Blue/Green deployment";
+  public final String BG_MULTIPLE_WORKLOADS =
+      "Found %d workloads in manifest: [%s]. Blue/Green Workflows support a single Deployment, DeploymentConfig (OpenShift) or StatefulSet workload only";
+  public final String BG_NO_SERVICE_FOUND = "Service is required for BlueGreen deployments";
+  public final String BG_MULTIPLE_PRIMARY_SERVICE =
+      "Found %s services in manifest: [%s]. Could not locate primary service";
+  public final String BG_CONFLICTING_SERVICE =
+      "For blue/green deployment, the label [" + HarnessLabels.color + "] is required in service selector";
 }
