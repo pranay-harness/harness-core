@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(CDP)
-public class ArtifactDownloaderLogService {
+public class ArtifactDownloaderServiceLogWrapper {
   @Inject private ArtifactDownloaderService artifactDownloaderService;
 
   public File fetchArtifactFileForDeploymentAndLog(
