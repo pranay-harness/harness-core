@@ -163,14 +163,8 @@ public class CIManagerServiceModule extends AbstractModule {
     install(new CIExecutionServiceModule(
         ciManagerConfiguration.getCiExecutionServiceConfig(), ciManagerConfiguration.getShouldConfigureWithPMS()));
     install(DelegateServiceDriverModule.getInstance(false));
-    if (ciManagerConfiguration.isUseDms()) {
-      install(new DelegateServiceDriverGrpcClientModule(ciManagerConfiguration.getDmsGrpcClient().getSecret(),
-          ciManagerConfiguration.getDmsGrpcClient().getTarget(),
-          ciManagerConfiguration.getDmsGrpcClient().getAuthority(), true));
-    } else {
-      install(new DelegateServiceDriverGrpcClientModule(ciManagerConfiguration.getManagerServiceSecret(),
-          ciManagerConfiguration.getManagerTarget(), ciManagerConfiguration.getManagerAuthority(), true));
-    }
+    install(new DelegateServiceDriverGrpcClientModule(ciManagerConfiguration.getManagerServiceSecret(),
+        ciManagerConfiguration.getManagerTarget(), ciManagerConfiguration.getManagerAuthority(), true));
 
     install(new TokenClientModule(ciManagerConfiguration.getNgManagerClientConfig(),
         ciManagerConfiguration.getNgManagerServiceSecret(), CI_MANAGER.getServiceId()));
