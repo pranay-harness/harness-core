@@ -18,7 +18,7 @@ type ConnectionInfo struct {
 	Port        uint   `json:"port" validate:"nonzero"`
 	Engine      string `json:"engine" validate:"nonzero"`
 	EnableSSL   bool   `json:"enable_ssl"`
-	SSLMode  	string `json:"ssl_mode"`
+	SSLMode     string `json:"ssl_mode"`
 	SSLCertPath string `json:"ssl_cert_path"`
 }
 

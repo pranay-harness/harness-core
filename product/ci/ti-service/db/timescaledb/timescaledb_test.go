@@ -142,18 +142,16 @@ func Test_Summary(t *testing.T) {
 	}
 	col := []string{"duration_ms", "status", "name"}
 	rows := sqlmock.NewRows(col).
-		AddRow(10, "failed", "t1").
+		AddRow(10, "error", "t1").
 		AddRow(25, "passed", "t2")
 	query := fmt.Sprintf(`
 		SELECT duration_ms, result, name FROM %s WHERE account_id = $1
 		AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND step_id = $6 AND stage_id = $7 AND report = $8;`, table)
-	t1 := types.TestSummary{Name: "t1", Status: types.StatusFailed}
-	t2 := types.TestSummary{Name: "t2", Status: types.StatusPassed}
-	summary := []types.TestSummary{t1, t2}
 	exp := types.SummaryResponse{
-		TotalTests: 2,
-		TimeMs:     35,
-		Tests:      summary,
+		TotalTests:      2,
+		TimeMs:          35,
+		FailedTests:     1,
+		SuccessfulTests: 1,
 	}
 	query = regexp.QuoteMeta(query)
 	mock.ExpectQuery(query).
@@ -163,7 +161,57 @@ func Test_Summary(t *testing.T) {
 	assert.Nil(t, err, nil)
 	assert.Equal(t, got.TotalTests, exp.TotalTests)
 	assert.Equal(t, got.TimeMs, exp.TimeMs)
-	assert.ElementsMatch(t, got.Tests, exp.Tests)
+	assert.Equal(t, got.FailedTests, exp.FailedTests)
+	assert.Equal(t, got.SuccessfulTests, exp.SuccessfulTests)
+}
+
+func Test_Summary_WithoutStepId(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	table := "tests"
+	account := "account"
+	org := "org"
+	project := "project"
+	pipeline := "pipeline"
+	build := "build"
+	report := "junit"
+	step := ""
+	stage := "stage"
+
+	log := zap.NewExample().Sugar()
+	logger.InitLogger(log)
+	db, mock, err := db.NewMockDB(log)
+	if err != nil {
+		t.Fatal(err)
+	}
+	col := []string{"duration_ms", "status", "name"}
+	rows := sqlmock.NewRows(col).
+		AddRow(10, "error", "t1").
+		AddRow(25, "passed", "t2").
+		AddRow(20, "skipped", "t3").
+		AddRow(10, "failed", "t4")
+	query := fmt.Sprintf(`
+		SELECT duration_ms, result, name FROM %s WHERE account_id = $1
+		AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND stage_id = $6 AND report = $7;`, table)
+	exp := types.SummaryResponse{
+		TotalTests:      4,
+		TimeMs:          65,
+		FailedTests:     2,
+		SuccessfulTests: 1,
+		SkippedTests:    1,
+	}
+	query = regexp.QuoteMeta(query)
+	mock.ExpectQuery(query).
+		WithArgs(account, org, project, pipeline, build, stage, report).WillReturnRows(rows)
+	tdb := &TimeScaleDb{Conn: db, EvalTable: table}
+	got, err := tdb.Summary(ctx, account, org, project, pipeline, build, step, stage, report)
+	assert.Nil(t, err, nil)
+	assert.Equal(t, got.TotalTests, exp.TotalTests)
+	assert.Equal(t, got.TimeMs, exp.TimeMs)
+	assert.Equal(t, got.FailedTests, exp.FailedTests)
+	assert.Equal(t, got.SuccessfulTests, exp.SuccessfulTests)
+	assert.Equal(t, got.SkippedTests, exp.SkippedTests)
 }
 
 func Test_GetTestCases(t *testing.T) {
