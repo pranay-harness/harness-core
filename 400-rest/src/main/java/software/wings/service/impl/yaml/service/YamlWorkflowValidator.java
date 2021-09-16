@@ -1,4 +1,4 @@
-package software.wings.service.impl.yaml.util;
+package software.wings.service.impl.yaml.service;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -17,6 +17,8 @@ import io.harness.exception.InvalidArgumentsException;
 
 import software.wings.beans.ARMSourceType;
 
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.constructor.SafeConstructor;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -26,7 +28,7 @@ import lombok.experimental.UtilityClass;
 
 @OwnedBy(CDP)
 @UtilityClass
-public class YamlWorkflowValidator {
+class YamlWorkflowValidator {
   public static final String PRE_DEPLOYMENT_STEPS = "preDeploymentSteps";
   public static final String TYPE = "type";
   public static final String PROPERTIES_KEY = "properties";
@@ -47,8 +49,11 @@ public class YamlWorkflowValidator {
   public static final String BRANCH = "branch";
   public static final String COMMIT_ID = "commitId";
 
-  public void validateWorkflowPreDeploymentSteps(Map<String, Object> yamlLoad) {
-    validateARMCreateResourcePreDeploymentStep(yamlLoad);
+  void validateWorkflowPreDeploymentSteps(String yamlString) {
+    Yaml yamlObj = new Yaml(new SafeConstructor());
+    LinkedHashMap<String, Object> loadedYaml = (LinkedHashMap<String, Object>) yamlObj.load(yamlString);
+
+    validateARMCreateResourcePreDeploymentStep(loadedYaml);
   }
 
   private void validateARMCreateResourcePreDeploymentStep(Map<String, Object> yamlLoad) {
