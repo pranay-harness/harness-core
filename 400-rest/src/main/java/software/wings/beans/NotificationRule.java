@@ -2,8 +2,10 @@ package software.wings.beans;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.yaml.BaseYaml;
@@ -22,6 +24,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class NotificationRule {
   private String uuid = generateUuid();
   private List<ExecutionStatus> conditions = new ArrayList<>();
