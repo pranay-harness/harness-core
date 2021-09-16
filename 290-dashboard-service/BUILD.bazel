@@ -3,6 +3,9 @@ load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//:tools/bazel/macros.bzl", "run_analysis")
 
 shared_dependencies = [
+    "//293-cdng-clients:module",
+    "//295-cdng-contracts:module",
+    "//888-pms-client:module",
     "//930-ng-core-clients:module",
     "//945-account-mgmt:module",
     "//948-access-control-sdk:module",
@@ -60,7 +63,6 @@ java_library(
     visibility = ["//visibility:public"],
     deps = shared_dependencies + [
         "module",
-        "//295-cdng-contracts:module",
         "//960-persistence:supporter-test",
         "//990-commons-test:module",
         "@maven//:io_dropwizard_dropwizard_testing",
