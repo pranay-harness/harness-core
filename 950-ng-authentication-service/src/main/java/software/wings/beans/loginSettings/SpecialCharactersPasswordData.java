@@ -1,14 +1,11 @@
 package software.wings.beans.loginSettings;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 
 import org.passay.CharacterData;
 
 @OwnedBy(HarnessTeam.PL)
-@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public enum SpecialCharactersPasswordData implements CharacterData {
   SpecialCharactersAllowedInPassword("INSUFFICIENT_SPECIAL_CHARECTERS", "~!@#$%^&*_-+=`|\\(){}[]:;\"'<>,.?/");
 
