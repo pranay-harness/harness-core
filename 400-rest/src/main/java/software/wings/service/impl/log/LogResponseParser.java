@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
 
+import software.wings.delegatetasks.CustomDataCollectionUtils;
 import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.apm.VerificationResponseParser;
@@ -13,11 +14,7 @@ import software.wings.sm.states.CustomLogVerificationState.ResponseMapper;
 
 import com.google.common.collect.Multimap;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -93,20 +90,6 @@ public class LogResponseParser {
     return logs;
   }
 
-  private long parseTimestampfield(String timestampStr, String timestampFormat) throws ParseException {
-    long timestamp;
-    try {
-      DateTimeFormatter df = DateTimeFormatter.ofPattern(timestampFormat);
-      timestamp = Instant.from(df.parse(timestampStr)).toEpochMilli();
-    } catch (Exception ex) {
-      log.debug("Exception while parsing using DateTimeFormatter, we will attempt with SimpleDateFormatter", ex);
-      SimpleDateFormat simpleDateFormat = new SimpleDateFormat(timestampFormat);
-      Date date = simpleDateFormat.parse(timestampStr);
-      timestamp = date.toInstant().toEpochMilli();
-    }
-    return timestamp;
-  }
-
   private void createRecords(List<Multimap<String, Object>> response, Map<String, LogElement> resultMap,
       String timestampFormat, boolean fixedHostName) {
     if (response == null) {
@@ -142,7 +125,7 @@ public class LogResponseParser {
         } catch (WingsException ex) {
           String timestampStr = (String) nextTimestamp;
           try {
-            timestamp = parseTimestampfield(timestampStr, timestampFormat);
+            timestamp = CustomDataCollectionUtils.parseTimestampfield(timestampStr, timestampFormat);
           } catch (ParseException e) {
             throw new DataCollectionException("Unable to parse date during data collection", e);
           }
