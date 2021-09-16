@@ -37,7 +37,7 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity("containerTasks")
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "ContainerTaskKeys")
-@TargetModule(HarnessModule._955_DELEGATE_BEANS)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public abstract class ContainerTask extends DeploymentSpecification implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
