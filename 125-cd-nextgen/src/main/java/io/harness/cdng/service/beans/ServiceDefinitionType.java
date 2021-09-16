@@ -38,7 +38,7 @@ public enum ServiceDefinitionType {
   private String yamlName;
   private List<ExecutionStrategyType> executionStrategies;
 
-  @JsonCreator
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
   public static ServiceDefinitionType getServiceDefinitionType(@JsonProperty("type") String yamlName) {
     for (ServiceDefinitionType serviceDefinitionType : ServiceDefinitionType.values()) {
       if (serviceDefinitionType.yamlName.equalsIgnoreCase(yamlName)) {

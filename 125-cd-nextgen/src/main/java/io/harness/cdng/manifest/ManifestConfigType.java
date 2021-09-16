@@ -32,7 +32,7 @@ public enum ManifestConfigType {
     return displayName;
   }
 
-  @JsonCreator
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
   public static ManifestConfigType getManifestConfigType(@JsonProperty("type") String displayName) {
     for (ManifestConfigType manifestConfigType : ManifestConfigType.values()) {
       if (manifestConfigType.displayName.equalsIgnoreCase(displayName)) {
