@@ -169,6 +169,8 @@ public class BuilderFactory {
             ServiceDependencyDTO.builder().monitoredServiceIdentifier("service2").build()))
         .sources(MonitoredServiceDTO.Sources.builder()
                      .healthSources(Arrays.asList(createHealthSource()).stream().collect(Collectors.toSet()))
+                     .changeSources(Sets.newHashSet(getPagerDutyChangeSourceDTOBuilder().build(),
+                         getHarnessCDChangeSourceDTOBuilder().build(), getKubernetesChangeSourceDTOBuilder().build()))
                      .build());
   }
 
