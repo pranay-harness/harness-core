@@ -348,6 +348,69 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   }
 
   @Override
+  public PageResponse<MonitoredServiceResponse> getList(
+      ProjectParams projectParams, String environmentIdentifier, Integer offset, Integer pageSize, String filter) {
+    List<MonitoredService> monitoredServiceEntities = getMonitoredServices(projectParams, environmentIdentifier);
+    if (isEmpty(monitoredServiceEntities)) {
+      throw new InvalidRequestException(
+          String.format("There are no Monitored Services for the environment: %s", environmentIdentifier));
+    }
+
+    PageResponse<MonitoredService> monitoredServiceEntitiesPageResponse =
+        PageUtils.offsetAndLimit(monitoredServiceEntities, offset, pageSize);
+
+    List<MonitoredServiceResponse> monitoredServiceResponses =
+        monitoredServiceEntitiesPageResponse.getContent()
+            .stream()
+            .map(monitoredServiceEntity -> {
+              ServiceEnvironmentParams environmentParams =
+                  builderWithProjectParams(projectParams)
+                      .serviceIdentifier(monitoredServiceEntity.getServiceIdentifier())
+                      .environmentIdentifier(monitoredServiceEntity.getEnvironmentIdentifier())
+                      .build();
+
+              MonitoredServiceDTO monitoredServiceDTO =
+                  MonitoredServiceDTO.builder()
+                      .name(monitoredServiceEntity.getName())
+                      .identifier(monitoredServiceEntity.getIdentifier())
+                      .orgIdentifier(monitoredServiceEntity.getOrgIdentifier())
+                      .projectIdentifier(monitoredServiceEntity.getProjectIdentifier())
+                      .environmentRef(monitoredServiceEntity.getEnvironmentIdentifier())
+                      .serviceRef(monitoredServiceEntity.getServiceIdentifier())
+                      .type(monitoredServiceEntity.getType())
+                      .description(monitoredServiceEntity.getDesc())
+                      .tags(TagMapper.convertToMap(monitoredServiceEntity.getTags()))
+                      .sources(
+                          Sources.builder()
+                              .healthSources(healthSourceService.get(monitoredServiceEntity.getAccountId(),
+                                  monitoredServiceEntity.getOrgIdentifier(),
+                                  monitoredServiceEntity.getProjectIdentifier(), monitoredServiceEntity.getIdentifier(),
+                                  monitoredServiceEntity.getHealthSourceIdentifiers()))
+                              .changeSources(changeSourceService.get(
+                                  environmentParams, monitoredServiceEntity.getChangeSourceIdentifiers()))
+                              .build())
+                      .dependencies(serviceDependencyService.getDependentServicesForMonitoredService(
+                          projectParams, monitoredServiceEntity.getIdentifier()))
+                      .build();
+              return MonitoredServiceResponse.builder()
+                  .monitoredService(monitoredServiceDTO)
+                  .createdAt(monitoredServiceEntity.getCreatedAt())
+                  .lastModifiedAt(monitoredServiceEntity.getLastUpdatedAt())
+                  .build();
+            })
+            .collect(Collectors.toList());
+
+    return PageResponse.<MonitoredServiceResponse>builder()
+        .pageSize(pageSize)
+        .pageIndex(offset)
+        .totalPages(monitoredServiceEntitiesPageResponse.getTotalPages())
+        .totalItems(monitoredServiceEntitiesPageResponse.getTotalItems())
+        .pageItemCount(monitoredServiceEntitiesPageResponse.getPageItemCount())
+        .content(monitoredServiceResponses)
+        .build();
+  }
+
+  @Override
   public MonitoredServiceDTO getMonitoredServiceDTO(ServiceEnvironmentParams serviceEnvironmentParams) {
     MonitoredServiceResponse monitoredServiceResponse = get(serviceEnvironmentParams);
     if (monitoredServiceResponse == null) {
@@ -374,6 +437,15 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
         .filter(MonitoredServiceKeys.serviceIdentifier, serviceEnvironmentParams.getServiceIdentifier())
         .filter(MonitoredServiceKeys.environmentIdentifier, serviceEnvironmentParams.getEnvironmentIdentifier())
         .get();
+  }
+
+  private List<MonitoredService> getMonitoredServices(ProjectParams projectParams, String environmentIdentifier) {
+    return hPersistence.createQuery(MonitoredService.class)
+        .filter(MonitoredServiceKeys.accountId, projectParams.getAccountIdentifier())
+        .filter(MonitoredServiceKeys.orgIdentifier, projectParams.getOrgIdentifier())
+        .filter(MonitoredServiceKeys.projectIdentifier, projectParams.getProjectIdentifier())
+        .filter(MonitoredServiceKeys.environmentIdentifier, environmentIdentifier)
+        .asList();
   }
 
   private void checkIfAlreadyPresent(
