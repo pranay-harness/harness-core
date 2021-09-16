@@ -260,6 +260,19 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     return updateResult.getModifiedCount();
   }
 
+  @Override
+  public List<NodeExecution> findAllNodeExecutionsTrimmed(String planExecutionId) {
+    Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
+                      .addCriteria(where(NodeExecutionKeys.oldRetry).is(false));
+    query.fields()
+        .include(NodeExecutionKeys.uuid)
+        .include(NodeExecutionKeys.status)
+        .include(NodeExecutionKeys.mode)
+        .include(NodeExecutionKeys.parentId)
+        .include(NodeExecutionKeys.oldRetry);
+    return mongoTemplate.find(query, NodeExecution.class);
+  }
+
   /**
    * Update the old execution -> set oldRetry flag set to true
    *

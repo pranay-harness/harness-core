@@ -13,6 +13,7 @@ import io.harness.engine.interrupts.AbortInterruptCallback;
 import io.harness.engine.interrupts.InterruptProcessingFailedException;
 import io.harness.engine.interrupts.handlers.publisher.InterruptEventPublisher;
 import io.harness.exception.InvalidRequestException;
+import io.harness.execution.ExecutionModeUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.interrupts.Interrupt;
@@ -26,6 +27,8 @@ import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import java.time.Duration;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -47,20 +50,20 @@ public class AbortHelper {
         log.error("Delegate Task Cannot be aborted for NodeExecutionId: {}", nodeExecution.getUuid());
       }
 
-      if (nodeExecution.getMode() == ExecutionMode.SYNC) {
+      if (nodeExecution.getMode() == ExecutionMode.SYNC || ExecutionModeUtils.isParentMode(nodeExecution.getMode())) {
         abortDiscontinuingNode(nodeExecution, interrupt.getUuid(), interrupt.getInterruptConfig());
         return;
       }
 
       String notifyId = interruptEventPublisher.publishEvent(nodeExecution.getUuid(), interrupt, ABORT);
-      waitNotifyEngine.waitForAllOn(publisherName,
-          AbortInterruptCallback.builder()
-              .nodeExecutionId(nodeExecution.getUuid())
-              .interruptId(interrupt.getUuid())
-              .interruptType(interrupt.getType())
-              .interruptConfig(interrupt.getInterruptConfig())
-              .build(),
-          notifyId);
+      AbortInterruptCallback abortCallback = AbortInterruptCallback.builder()
+                                                 .nodeExecutionId(nodeExecution.getUuid())
+                                                 .interruptId(interrupt.getUuid())
+                                                 .interruptType(interrupt.getType())
+                                                 .interruptConfig(interrupt.getInterruptConfig())
+                                                 .build();
+      waitNotifyEngine.waitForAllOnInList(
+          publisherName, abortCallback, Collections.singletonList(notifyId), Duration.ofMinutes(1));
     } catch (NodeExecutionUpdateFailedException ex) {
       throw new InterruptProcessingFailedException(InterruptType.ABORT_ALL,
           "Abort failed for execution Plan :" + nodeExecution.getAmbiance().getPlanExecutionId()
