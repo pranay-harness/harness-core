@@ -6,7 +6,6 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.change.ChangeSourceType;
 import io.harness.cvng.core.services.api.UpdatableEntity;
-import io.harness.cvng.core.types.ChangeSourceType;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
