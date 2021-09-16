@@ -50,7 +50,7 @@ import org.slf4j.Logger;
 @EqualsAndHashCode(callSuper = false)
 @Slf4j
 @OwnedBy(HarnessTeam.CV)
-@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @FieldNameConstants(innerTypeName = "PrometheusStateKeys")
 @BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class PrometheusState extends AbstractMetricAnalysisState {

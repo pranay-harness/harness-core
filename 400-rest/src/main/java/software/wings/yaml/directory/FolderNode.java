@@ -1,6 +1,8 @@
 package software.wings.yaml.directory;
 
-import software.wings.service.intfc.yaml.YamlGitService;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
@@ -8,6 +10,7 @@ import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 
+@OwnedBy(HarnessTeam.DX)
 public class FolderNode extends DirectoryNode {
   private boolean defaultToClosed;
   private List<DirectoryNode> children = new ArrayList<>();
@@ -25,15 +28,13 @@ public class FolderNode extends DirectoryNode {
     this.setRestName("folders");
   }
 
-  public FolderNode(
-      String accountId, String name, Class theClass, DirectoryPath directoryPath, YamlGitService yamlGitSyncService) {
-    super(accountId, name, theClass, directoryPath, yamlGitSyncService, NodeType.FOLDER);
+  public FolderNode(String accountId, String name, Class theClass, DirectoryPath directoryPath) {
+    super(accountId, name, theClass, directoryPath, NodeType.FOLDER);
     this.setRestName("folders");
   }
 
-  public FolderNode(String accountId, String name, Class theClass, DirectoryPath directoryPath, String appId,
-      YamlGitService yamlGitSyncService) {
-    super(accountId, name, theClass, directoryPath, yamlGitSyncService, NodeType.FOLDER);
+  public FolderNode(String accountId, String name, Class theClass, DirectoryPath directoryPath, String appId) {
+    super(accountId, name, theClass, directoryPath, NodeType.FOLDER);
     this.appId = appId;
     this.setRestName("folders");
   }

@@ -10,13 +10,20 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 
 import software.wings.beans.EntityType;
+import software.wings.beans.Service;
+import software.wings.beans.Service.ServiceKeys;
+import software.wings.beans.Workflow;
+import software.wings.beans.Workflow.WorkflowKeys;
 import software.wings.beans.infrastructure.instance.Instance;
+import software.wings.dl.WingsPersistence;
 import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.datafetcher.tag.TagHelper;
 import software.wings.graphql.schema.type.aggregation.QLIdFilter;
+import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.graphql.schema.type.aggregation.QLStringFilter;
 import software.wings.graphql.schema.type.aggregation.QLStringOperator;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
+import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentTypeFilter;
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceFilter;
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceTagFilter;
 import software.wings.graphql.schema.type.aggregation.instance.QLInstanceTagType;
@@ -25,8 +32,10 @@ import software.wings.graphql.schema.type.instance.QLInstanceType;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
@@ -41,6 +50,7 @@ import org.mongodb.morphia.query.Query;
 public class InstanceQueryHelper {
   @Inject protected DataFetcherUtils utils;
   @Inject protected TagHelper tagHelper;
+  @Inject WingsPersistence wingsPersistence;
 
   public void setQuery(String accountId, List<QLInstanceFilter> filters, Query query) {
     if (isEmpty(filters)) {
@@ -88,6 +98,63 @@ public class InstanceQueryHelper {
                 .operator(QLStringOperator.EQUALS)
                 .values(new String[] {instanceTypeFilter.name()})
                 .build());
+      }
+
+      if (filter.getEnvironmentType() != null) {
+        field = query.field("envType");
+        QLEnvironmentTypeFilter envTypeFilter = filter.getEnvironmentType();
+        utils.setEnumFilter(field, envTypeFilter);
+      }
+
+      if (filter.getDeploymentType() != null) {
+        List<String> deploymentTypes = Arrays.stream(filter.getDeploymentType().getValues())
+                                           .map(d -> d.name())
+                                           .distinct()
+                                           .collect(Collectors.toList());
+        List<String> serviceIds = wingsPersistence.createQuery(Service.class)
+                                      .filter(ServiceKeys.accountId, accountId)
+                                      .field(ServiceKeys.deploymentType)
+                                      .in(deploymentTypes)
+                                      .asList()
+                                      .stream()
+                                      .map(service -> service.getUuid())
+                                      .collect(Collectors.toList());
+        if (!serviceIds.isEmpty()) {
+          QLInstanceFilter newFilter =
+              QLInstanceFilter.builder()
+                  .service(
+                      QLIdFilter.builder().operator(QLIdOperator.IN).values(serviceIds.toArray(new String[0])).build())
+                  .build();
+          field = query.field("serviceId");
+          QLIdFilter newFilterService = newFilter.getService();
+          utils.setIdFilter(field, newFilterService);
+        }
+      }
+
+      if (filter.getOrchestrationWorkflowType() != null) {
+        List<String> orchestrationWorkflowTypes = Arrays.stream(filter.getOrchestrationWorkflowType().getValues())
+                                                      .map(d -> d.name())
+                                                      .distinct()
+                                                      .collect(Collectors.toList());
+        List<String> workflowIds = wingsPersistence.createQuery(Workflow.class)
+                                       .filter(WorkflowKeys.accountId, accountId)
+                                       .field(WorkflowKeys.orchestrationWorkflowType)
+                                       .in(orchestrationWorkflowTypes)
+                                       .asList()
+                                       .stream()
+                                       .map(w -> w.getUuid())
+                                       .collect(Collectors.toList());
+        if (!workflowIds.isEmpty()) {
+          QLInstanceFilter newFilter =
+              QLInstanceFilter.builder()
+                  .workflow(
+                      QLIdFilter.builder().operator(QLIdOperator.IN).values(workflowIds.toArray(new String[0])).build())
+                  .build();
+
+          field = query.field("lastWorkflowExecutionId");
+          QLIdFilter lastWorkflowExecutionIds = newFilter.getWorkflow();
+          utils.setIdFilter(field, lastWorkflowExecutionIds);
+        }
       }
 
       if (filter.getTag() != null) {

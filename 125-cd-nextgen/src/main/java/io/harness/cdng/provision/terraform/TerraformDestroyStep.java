@@ -4,7 +4,6 @@ import io.harness.EntityType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
-import io.harness.cdng.common.step.StepHelper;
 import io.harness.cdng.featureFlag.CDFeatureFlagHelper;
 import io.harness.common.ParameterFieldHelper;
 import io.harness.delegate.beans.TaskData;
@@ -35,6 +34,7 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.provision.TerraformConstants;
 import io.harness.serializer.KryoSerializer;
+import io.harness.steps.StepHelper;
 import io.harness.steps.StepUtils;
 import io.harness.supplier.ThrowingSupplier;
 import io.harness.utils.IdentifierRefHelper;
@@ -100,6 +100,7 @@ public class TerraformDestroyStep extends TaskExecutableWithRollbackAndRbac<Terr
   @Override
   public TaskRequest obtainTaskAfterRbac(
       Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
+    log.info("Running Obtain Inline Task for the Destroy Step");
     TerraformDestroyStepParameters parameters = (TerraformDestroyStepParameters) stepElementParameters.getSpec();
     helper.validateDestroyStepParamsInline(parameters);
     TerraformStepConfigurationType configurationType = parameters.getConfiguration().getType();
@@ -118,6 +119,7 @@ public class TerraformDestroyStep extends TaskExecutableWithRollbackAndRbac<Terr
 
   private TaskRequest obtainInlineTask(
       Ambiance ambiance, TerraformDestroyStepParameters parameters, StepElementParameters stepElementParameters) {
+    log.info("Running Obtain Inline Task for the Destroy Step");
     helper.validateDestroyStepConfigFilesInline(parameters);
     TerraformStepConfigurationParameters configuration = parameters.getConfiguration();
     TerraformExecutionDataParameters spec = configuration.getSpec();
@@ -157,6 +159,7 @@ public class TerraformDestroyStep extends TaskExecutableWithRollbackAndRbac<Terr
 
   private TaskRequest obtainInheritedTask(
       Ambiance ambiance, TerraformDestroyStepParameters parameters, StepElementParameters stepElementParameters) {
+    log.info("Running Obtain Inherited Task for the Destroy Step");
     TerraformTaskNGParametersBuilder builder = TerraformTaskNGParameters.builder().taskType(TFTaskType.DESTROY);
     builder.terraformCommandUnit(TerraformCommandUnit.Destroy);
     String accountId = AmbianceHelper.getAccountId(ambiance);
@@ -195,6 +198,7 @@ public class TerraformDestroyStep extends TaskExecutableWithRollbackAndRbac<Terr
 
   private TaskRequest obtainLastApplyTask(
       Ambiance ambiance, TerraformDestroyStepParameters parameters, StepElementParameters stepElementParameters) {
+    log.info("Getting the Last Apply Task for the Destroy Step");
     TerraformTaskNGParametersBuilder builder = TerraformTaskNGParameters.builder().taskType(TFTaskType.DESTROY);
     builder.terraformCommandUnit(TerraformCommandUnit.Destroy);
     String accountId = AmbianceHelper.getAccountId(ambiance);
@@ -232,6 +236,7 @@ public class TerraformDestroyStep extends TaskExecutableWithRollbackAndRbac<Terr
   public StepResponse handleTaskResultWithSecurityContext(Ambiance ambiance,
       StepElementParameters stepElementParameters, ThrowingSupplier<TerraformTaskNGResponse> responseSupplier)
       throws Exception {
+    log.info("Handling Task Result With Security Context for the Destroy Step");
     TerraformDestroyStepParameters parameters = (TerraformDestroyStepParameters) stepElementParameters.getSpec();
     StepResponseBuilder stepResponseBuilder = StepResponse.builder();
     TerraformTaskNGResponse terraformTaskNGResponse = responseSupplier.get();

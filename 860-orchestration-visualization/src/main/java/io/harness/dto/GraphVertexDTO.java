@@ -12,6 +12,10 @@ import io.harness.pms.contracts.execution.run.NodeRunInfo;
 import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.data.OrchestrationMap;
+import io.harness.pms.data.PmsOutcome;
+import io.harness.pms.data.stepdetails.PmsStepDetails;
+import io.harness.pms.data.stepparameters.PmsStepParameters;
+import io.harness.pms.utils.OrchestrationMapBackwardCompatibilityUtils;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -41,21 +45,30 @@ public class GraphVertexDTO {
   FailureInfoDTO failureInfo;
   SkipInfo skipInfo;
   NodeRunInfo nodeRunInfo;
-  OrchestrationMap stepParameters;
+  PmsStepParameters stepParameters;
   ExecutionMode mode;
 
   List<GraphDelegateSelectionLogParams> graphDelegateSelectionLogParams;
   List<ExecutableResponse> executableResponses;
   List<InterruptEffect> interruptHistories;
-  Map<String, OrchestrationMap> outcomes;
+  Map<String, PmsOutcome> outcomes;
   List<String> retryIds;
 
   List<UnitProgress> unitProgresses;
   OrchestrationMap progressData;
+  Map<String, PmsStepDetails> stepDetails;
 
   // skip
   SkipType skipType;
 
   // UI
   RepresentationStrategy representationStrategy = RepresentationStrategy.CAMELCASE;
+
+  public Map<String, OrchestrationMap> getOrchestrationMapOutcomes() {
+    return OrchestrationMapBackwardCompatibilityUtils.convertToOrchestrationMap(outcomes);
+  }
+
+  public Map<String, OrchestrationMap> getOrchestrationMapStepDetails() {
+    return OrchestrationMapBackwardCompatibilityUtils.convertToOrchestrationMap(stepDetails);
+  }
 }

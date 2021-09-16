@@ -16,7 +16,7 @@ import io.harness.errorhandling.NGErrorHelper;
 import io.harness.security.encryption.SecretDecryptionService;
 
 import com.google.inject.Inject;
-import groovy.lang.Singleton;
+import com.google.inject.Singleton;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Collections;

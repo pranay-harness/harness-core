@@ -6,6 +6,8 @@ import static software.wings.security.PermissionAttribute.Action.READ;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
@@ -45,6 +47,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Produces("application/json")
 @Consumes("application/json")
 @Scope(ResourceType.APPLICATION)
+@OwnedBy(HarnessTeam.CDC)
 public class ServiceTemplateResource {
   /**
    * The Service template service.

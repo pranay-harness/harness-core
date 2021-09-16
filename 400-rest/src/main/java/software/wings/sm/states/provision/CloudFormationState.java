@@ -91,7 +91,7 @@ import org.mongodb.morphia.query.Query;
 @FieldNameConstants(innerTypeName = "CloudFormationStateKeys")
 @OwnedBy(CDP)
 @Slf4j
-@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public abstract class CloudFormationState extends State {
   @Inject protected transient ActivityService activityService;
@@ -104,8 +104,7 @@ public abstract class CloudFormationState extends State {
   @Inject protected transient TemplateExpressionProcessor templateExpressionProcessor;
   @Inject protected transient WingsPersistence wingsPersistence;
   @Inject protected SweepingOutputService sweepingOutputService;
-
-  @Attributes(title = "Provisioner") @Getter @Setter protected String provisionerId;
+  @FieldNameConstants.Include @Attributes(title = "Provisioner") @Getter @Setter protected String provisionerId;
   @Attributes(title = "Region")
   @DefaultValue(AWS_DEFAULT_REGION)
   @Getter
@@ -382,9 +381,7 @@ public abstract class CloudFormationState extends State {
     if (isEmpty(provisionerId)) {
       results.put("Provisioner", "Provisioner must be provided.");
     }
-    if (isEmpty(awsConfigId)) {
-      results.put("AWS Cloud Provider", "AWS Cloud Provider must be provided.");
-    }
+    // if more fields need to validated, please make sure templatized fields are not broken.
     return results;
   }
 }

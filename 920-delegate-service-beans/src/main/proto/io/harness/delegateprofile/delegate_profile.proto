@@ -58,6 +58,20 @@ message DelegateProfileGrpc {
   int64 lastUpdatedAt = 18;
 }
 
+// Represents Delegate Profile Filter
+message DelegateProfileFilterGrpc {
+  delegate.AccountId account_id = 1;
+  string name = 2;
+  string description = 3;
+  bool approval_required = 4;
+  repeated ProfileSelector selectors = 5;
+  string identifier = 6;
+  bool ng = 7;
+  owner.OrgIdentifier orgIdentifier = 8;
+  owner.ProjectIdentifier projectIdentifier = 9;
+  map<string, string> filterTags = 10;
+}
+
 message DelegateProfilePageResponseGrpc {
   paging.PageRequestGrpc page_request = 1;
   int64 total = 2;

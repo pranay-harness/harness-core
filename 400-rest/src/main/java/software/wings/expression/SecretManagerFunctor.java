@@ -11,7 +11,9 @@ import static software.wings.expression.SecretManagerFunctorInterface.obtainExpr
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.FeatureName;
 import io.harness.data.encoding.EncodingUtils;
@@ -41,6 +43,7 @@ import lombok.Value;
 @OwnedBy(CDC)
 @Value
 @Builder
+@TargetModule(HarnessModule._940_SECRET_MANAGER_CLIENT)
 public class SecretManagerFunctor implements ExpressionFunctor, SecretManagerFunctorInterface {
   private SecretManagerMode mode;
   private FeatureFlagService featureFlagService;

@@ -29,7 +29,14 @@ public class StackdriverDataCollectionInfo extends TimeSeriesDataCollectionInfo<
     List<String> filterList = new ArrayList<>();
     List<List<String>> groupByFieldsList = new ArrayList<>();
     Map<String, List<String>> groupByResponseList = new HashMap<>();
+    List<String> serviceInstanceFieldList = new ArrayList<>();
+    Map<String, String> serviceInstanceResponseFields = new HashMap<>();
     metricDefinitions.forEach(metricDefinition -> {
+      if (this.isCollectHostData() && metricDefinition.getServiceInstanceField() != null) {
+        serviceInstanceFieldList.add(metricDefinition.getServiceInstanceField());
+        serviceInstanceResponseFields.put(metricDefinition.getMetricName(),
+            metricDefinition.getServiceInstanceField().replace("\"", "").replace("label", "labels"));
+      }
       crossSeriesReducerList.add(
           checkForNullAndReturnValue(metricDefinition.getAggregation().getCrossSeriesReducer(), ""));
       perSeriesAlignerList.add(checkForNullAndReturnValue(metricDefinition.getAggregation().getPerSeriesAligner(), ""));
@@ -55,6 +62,13 @@ public class StackdriverDataCollectionInfo extends TimeSeriesDataCollectionInfo<
     dslEnvVariables.put("groupByResponseList", groupByResponseList);
     dslEnvVariables.put("filterList", filterList);
 
+    if (this.isCollectHostData()) {
+      Preconditions.checkState(serviceInstanceFieldList.size() == filterList.size(),
+          "Not all metrics have the service instance field defined. We will not be able to collect host level metrics");
+      dslEnvVariables.put("serviceInstanceFields", serviceInstanceFieldList);
+      dslEnvVariables.put("serviceInstanceResponseFields", serviceInstanceResponseFields);
+    }
+    dslEnvVariables.put("collectHostData", Boolean.toString(this.isCollectHostData()));
     Preconditions.checkState(crossSeriesReducerList.size() == perSeriesAlignerList.size()
             && crossSeriesReducerList.size() == filterList.size(),
         "CrossSeriesReducer, PerSeriesAligner, Filter should all have same length");

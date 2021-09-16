@@ -1,14 +1,20 @@
 package io.harness.cvng.cdng.services.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.ABHIJITH;
 import static io.harness.rule.OwnerRule.KAMAL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
+import io.harness.cvng.activity.entities.Activity;
+import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.cdng.beans.CVNGStepParameter;
@@ -17,6 +23,7 @@ import io.harness.cvng.cdng.entities.CVNGStepTask;
 import io.harness.cvng.cdng.entities.CVNGStepTask.CVNGStepTaskKeys;
 import io.harness.cvng.cdng.services.impl.CVNGStep.VerifyStepOutcome;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
+import io.harness.cvng.core.services.api.FeatureFlagService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.cvng.verificationjob.entities.TestVerificationJob;
@@ -31,6 +38,8 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureData;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.failure.FailureType;
+import io.harness.pms.contracts.steps.StepCategory;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
@@ -40,11 +49,14 @@ import io.harness.rule.Owner;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mockito;
 
 public class CVNGStepTest extends CvNextGenTestBase {
   private CVNGStep cvngStep;
@@ -52,6 +64,7 @@ public class CVNGStepTest extends CvNextGenTestBase {
   @Inject private HPersistence hPersistence;
   @Inject private MonitoredServiceService monitoredServiceService;
   @Inject private MetricPackService metricPackService;
+  @Inject private ActivityService activityService;
   private BuilderFactory builderFactory;
   private String accountId;
   private String projectIdentifier;
@@ -59,6 +72,7 @@ public class CVNGStepTest extends CvNextGenTestBase {
   private String serviceIdentifier;
   private String envIdentifier;
   private MonitoredServiceDTO monitoredServiceDTO;
+  long activityStartTime;
 
   @Before
   public void setup() {
@@ -71,6 +85,7 @@ public class CVNGStepTest extends CvNextGenTestBase {
     serviceIdentifier = builderFactory.getContext().getServiceIdentifier();
     envIdentifier = builderFactory.getContext().getEnvIdentifier();
     monitoredServiceDTO = builderFactory.monitoredServiceDTOBuilder().build();
+    activityStartTime = builderFactory.getClock().instant().minus(Duration.ofMinutes(3)).toEpochMilli();
   }
   @Test
   @Owner(developers = KAMAL)
@@ -92,11 +107,29 @@ public class CVNGStepTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testExecuteAsync_skipWhenMonitoredServiceRefIsEmpty() {
+  public void testExecuteAsync_whenHealthSourcesAreEmpty() {
+    monitoredServiceService.createDefault(
+        builderFactory.getContext().getProjectParams(), serviceIdentifier, envIdentifier);
     Ambiance ambiance = getAmbiance();
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     CVNGStepParameter cvngStepParameter = getCvngStepParameter();
-    cvngStepParameter.setMonitoredServiceRef(ParameterField.createValueField(""));
+    AsyncExecutableResponse asyncExecutableResponse =
+        cvngStep.executeAsync(ambiance, cvngStepParameter, stepInputPackage, null);
+    assertThat(asyncExecutableResponse.getCallbackIdsList()).hasSize(1);
+    String callbackId = asyncExecutableResponse.getCallbackIds(0);
+    CVNGStepTask cvngStepTask =
+        hPersistence.createQuery(CVNGStepTask.class).filter(CVNGStepTaskKeys.callbackId, callbackId).get();
+    assertThat(cvngStepTask.getStatus()).isEqualTo(CVNGStepTask.Status.IN_PROGRESS);
+    assertThat(cvngStepTask.isSkip()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testExecuteAsync_skipWhenMonitoredServiceDoesNotExists() {
+    Ambiance ambiance = getAmbiance();
+    StepInputPackage stepInputPackage = StepInputPackage.builder().build();
+    CVNGStepParameter cvngStepParameter = getCvngStepParameter();
     AsyncExecutableResponse asyncExecutableResponse =
         cvngStep.executeAsync(ambiance, cvngStepParameter, stepInputPackage, null);
     assertThat(asyncExecutableResponse.getCallbackIdsList()).hasSize(1);
@@ -113,7 +146,7 @@ public class CVNGStepTest extends CvNextGenTestBase {
   public void testExecuteAsync_createActivity() {
     Ambiance ambiance = getAmbiance();
     metricPackService.createDefaultMetricPackAndThresholds(accountId, orgIdentifier, projectIdentifier);
-    monitoredServiceService.create(accountId, monitoredServiceDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     CVNGStepParameter cvngStepParameter = getCvngStepParameter();
     AsyncExecutableResponse asyncExecutableResponse =
@@ -123,21 +156,55 @@ public class CVNGStepTest extends CvNextGenTestBase {
     CVNGStepTask cvngStepTask =
         hPersistence.createQuery(CVNGStepTask.class).filter(CVNGStepTaskKeys.activityId, activityId).get();
     assertThat(cvngStepTask.getStatus()).isEqualTo(CVNGStepTask.Status.IN_PROGRESS);
+    Activity activity = activityService.get(activityId);
+    assertThat(activity.getActivityStartTime()).isEqualTo(Instant.ofEpochMilli(activityStartTime));
   }
 
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  public void testExecuteAsync_monitoringServiceRefDoesNotMatch() {
-    Ambiance ambiance = getAmbiance();
+  public void testExecuteAsync_createDemoActivityFFOn() throws IllegalAccessException {
+    FeatureFlagService featureFlagService = mock(FeatureFlagService.class);
+    when(featureFlagService.isFeatureFlagEnabled(eq(accountId), eq("CVNG_VERIFY_STEP_DEMO"))).thenReturn(true);
+    FieldUtils.writeField(cvngStep, "featureFlagService", featureFlagService, true);
+    Ambiance ambiance = getAmbiance("verify_dev");
     metricPackService.createDefaultMetricPackAndThresholds(accountId, orgIdentifier, projectIdentifier);
-    monitoredServiceService.create(accountId, monitoredServiceDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
     StepInputPackage stepInputPackage = StepInputPackage.builder().build();
     CVNGStepParameter cvngStepParameter = getCvngStepParameter();
-    cvngStepParameter.setMonitoredServiceRef(ParameterField.createValueField("monitoredService"));
-    assertThatThrownBy(() -> cvngStep.executeAsync(ambiance, cvngStepParameter, stepInputPackage, null))
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessage("Invalid monitored service identifier for service %s and env %s", serviceIdentifier, envIdentifier);
+    AsyncExecutableResponse asyncExecutableResponse =
+        cvngStep.executeAsync(ambiance, cvngStepParameter, stepInputPackage, null);
+    assertThat(asyncExecutableResponse.getCallbackIdsList()).hasSize(1);
+    String activityId = asyncExecutableResponse.getCallbackIds(0);
+    CVNGStepTask cvngStepTask =
+        hPersistence.createQuery(CVNGStepTask.class).filter(CVNGStepTaskKeys.activityId, activityId).get();
+    assertThat(cvngStepTask.getStatus()).isEqualTo(CVNGStepTask.Status.IN_PROGRESS);
+    Activity activity = activityService.get(activityId);
+    assertThat(activity.getActivityStartTime())
+        .isEqualTo(Instant.ofEpochMilli(activityStartTime).minus(Duration.ofMinutes(15)));
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testExecuteAsync_createDemoActivityFFOff() throws IllegalAccessException {
+    FeatureFlagService featureFlagService = mock(FeatureFlagService.class);
+    when(featureFlagService.isFeatureFlagEnabled(eq(accountId), eq("CVNG_VERIFY_STEP_DEMO"))).thenReturn(false);
+    FieldUtils.writeField(cvngStep, "featureFlagService", featureFlagService, true);
+    Ambiance ambiance = getAmbiance("verify_dev");
+    metricPackService.createDefaultMetricPackAndThresholds(accountId, orgIdentifier, projectIdentifier);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
+    StepInputPackage stepInputPackage = StepInputPackage.builder().build();
+    CVNGStepParameter cvngStepParameter = getCvngStepParameter();
+    AsyncExecutableResponse asyncExecutableResponse =
+        cvngStep.executeAsync(ambiance, cvngStepParameter, stepInputPackage, null);
+    assertThat(asyncExecutableResponse.getCallbackIdsList()).hasSize(1);
+    String activityId = asyncExecutableResponse.getCallbackIds(0);
+    CVNGStepTask cvngStepTask =
+        hPersistence.createQuery(CVNGStepTask.class).filter(CVNGStepTaskKeys.activityId, activityId).get();
+    assertThat(cvngStepTask.getStatus()).isEqualTo(CVNGStepTask.Status.IN_PROGRESS);
+    Activity activity = activityService.get(activityId);
+    assertThat(activity.getActivityStartTime()).isEqualTo(Instant.ofEpochMilli(activityStartTime));
   }
 
   @Test
@@ -316,6 +383,22 @@ public class CVNGStepTest extends CvNextGenTestBase {
     assertThat(verifyStepOutcome).isEqualTo(expected);
   }
 
+  @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void testHandleAbort() throws IllegalAccessException {
+    Ambiance ambiance = getAmbiance();
+    CVNGStepParameter cvngStepParameter = getCvngStepParameter();
+    CVNGStepTask cvngStepTask = builderFactory.cvngStepTaskBuilder().build();
+    hPersistence.save(cvngStepTask);
+    ActivityService activityService = mock(ActivityService.class);
+    FieldUtils.writeField(cvngStep, "activityService", activityService, true);
+
+    cvngStep.handleAbort(ambiance, cvngStepParameter,
+        AsyncExecutableResponse.newBuilder().addCallbackIds(cvngStepTask.getCallbackId()).build());
+    Mockito.verify(activityService).abort(cvngStepTask.getActivityId());
+  }
+
   private CVNGStepParameter getCvngStepParameter() {
     TestVerificationJobSpec spec = TestVerificationJobSpec.builder()
                                        .deploymentTag(randomParameter())
@@ -327,19 +410,30 @@ public class CVNGStepTest extends CvNextGenTestBase {
         .envIdentifier(ParameterField.createValueField(envIdentifier))
         .verificationJobBuilder(getVerificationJobBuilder())
         .deploymentTag(spec.getDeploymentTag())
-        .monitoredServiceRef(ParameterField.createValueField(monitoredServiceDTO.getIdentifier()))
         .build();
   }
-
   private Ambiance getAmbiance() {
-    String uuid = generateUuid();
+    return getAmbiance("verify");
+  }
+
+  private Ambiance getAmbiance(String verifyStepIdentifier) {
     HashMap<String, String> setupAbstractions = new HashMap<>();
     setupAbstractions.put("accountId", accountId);
     setupAbstractions.put("projectIdentifier", projectIdentifier);
     setupAbstractions.put("orgIdentifier", orgIdentifier);
+
     return Ambiance.newBuilder()
-        .addAllLevels(Collections.singletonList(Level.newBuilder().setRuntimeId(uuid).build()))
         .setPlanExecutionId(generateUuid())
+        .addLevels(Level.newBuilder()
+                       .setRuntimeId(generateUuid())
+                       .setStartTs(activityStartTime)
+                       .setStepType(StepType.newBuilder().setStepCategory(StepCategory.STAGE).build())
+                       .build())
+        .addLevels(Level.newBuilder()
+                       .setRuntimeId(generateUuid())
+                       .setIdentifier(verifyStepIdentifier)
+                       .setStepType(StepType.newBuilder().setStepCategory(StepCategory.STEP).build())
+                       .build())
         .putAllSetupAbstractions(setupAbstractions)
         .build();
   }

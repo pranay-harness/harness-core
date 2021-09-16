@@ -8,6 +8,8 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
 import static software.wings.service.impl.ArtifactStreamServiceImpl.ARTIFACT_STREAM_DEBUG_LOG;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.ff.FeatureFlagService;
 
@@ -34,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author rktummala on 10/09/17
  */
 @Slf4j
+@OwnedBy(HarnessTeam.CDC)
 public abstract class ArtifactStreamYamlHandler<Y extends Yaml, B extends ArtifactStream>
     extends BaseYamlHandler<Y, B> {
   @Inject SettingsService settingsService;

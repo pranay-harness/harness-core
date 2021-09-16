@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.core.common.beans.NGTag.NGTagKeys;
+import static io.harness.pms.pipeline.service.PMSPipelineServiceStepHelper.LIBRARY;
 
 import static java.lang.String.format;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
@@ -18,15 +19,20 @@ import io.harness.exception.ExplanationException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.InvalidYamlException;
 import io.harness.exception.ScmException;
+import io.harness.git.model.ChangeType;
 import io.harness.gitsync.helpers.GitContextHelper;
 import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.observer.Subject;
+import io.harness.pms.contracts.steps.StepInfo;
+import io.harness.pms.pipeline.CommonStepInfo;
 import io.harness.pms.pipeline.ExecutionSummaryInfo;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.PipelineFilterPropertiesDto;
 import io.harness.pms.pipeline.StepCategory;
+import io.harness.pms.pipeline.StepPalleteFilterWrapper;
 import io.harness.pms.pipeline.StepPalleteInfo;
+import io.harness.pms.pipeline.StepPalleteModuleInfo;
 import io.harness.pms.pipeline.mappers.PipelineYamlDtoMapper;
 import io.harness.pms.pipeline.observer.PipelineActionObserver;
 import io.harness.pms.sdk.PmsSdkInstanceService;
@@ -38,6 +44,7 @@ import io.harness.repositories.pipeline.PMSPipelineRepository;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import lombok.Getter;
@@ -60,6 +67,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   @Inject private PMSPipelineServiceStepHelper pmsPipelineServiceStepHelper;
   @Inject private GitSyncSdkService gitSyncSdkService;
   @Inject @Getter private final Subject<PipelineActionObserver> pipelineSubject = new Subject<>();
+  @Inject private CommonStepInfo commonStepInfo;
 
   private static final String DUP_KEY_EXP_FORMAT_STRING =
       "Pipeline [%s] under Project[%s], Organization [%s] already exists";
@@ -110,12 +118,14 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   }
 
   @Override
-  public PipelineEntity updatePipelineYaml(PipelineEntity pipelineEntity) {
+  public PipelineEntity updatePipelineYaml(PipelineEntity pipelineEntity, ChangeType changeType) {
     PMSPipelineServiceHelper.validatePresenceOfRequiredFields(pipelineEntity.getAccountId(),
         pipelineEntity.getOrgIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineEntity.getIdentifier());
 
     if (GitContextHelper.getGitEntityInfo() != null && GitContextHelper.getGitEntityInfo().isNewBranch()) {
-      return makePipelineUpdateCall(pipelineEntity);
+      // sending old entity as null here because a new mongo entity will be created. If audit trail needs to be added
+      // to git synced projects, a get call needs to be added here to the base branch of this pipeline update
+      return makePipelineUpdateCall(pipelineEntity, null, changeType);
     }
     Optional<PipelineEntity> optionalOriginalEntity =
         pmsPipelineRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(
@@ -131,14 +141,15 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
                                     .withDescription(pipelineEntity.getDescription())
                                     .withTags(pipelineEntity.getTags());
 
-    return makePipelineUpdateCall(tempEntity);
+    return makePipelineUpdateCall(tempEntity, entityToUpdate, changeType);
   }
 
-  private PipelineEntity makePipelineUpdateCall(PipelineEntity pipelineEntity) {
+  private PipelineEntity makePipelineUpdateCall(
+      PipelineEntity pipelineEntity, PipelineEntity oldEntity, ChangeType changeType) {
     try {
       PipelineEntity entityWithUpdatedInfo = pmsPipelineServiceHelper.updatePipelineInfo(pipelineEntity);
       PipelineEntity updatedResult = pmsPipelineRepository.updatePipelineYaml(
-          entityWithUpdatedInfo, PipelineYamlDtoMapper.toDto(entityWithUpdatedInfo));
+          entityWithUpdatedInfo, oldEntity, PipelineYamlDtoMapper.toDto(entityWithUpdatedInfo), changeType);
 
       if (updatedResult == null) {
         throw new InvalidRequestException(format(
@@ -245,6 +256,37 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
       }
       stepCategory.addStepCategory(pmsPipelineServiceStepHelper.calculateStepsForCategory(
           entry.getValue().getModuleName(), entry.getValue().getStepTypes(), accountId));
+    }
+    return stepCategory;
+  }
+
+  @Override
+  public StepCategory getStepsV2(String accountId, StepPalleteFilterWrapper stepPalleteFilterWrapper) {
+    Map<String, StepPalleteInfo> serviceInstanceNameToSupportedSteps =
+        pmsSdkInstanceService.getModuleNameToStepPalleteInfo();
+    if (stepPalleteFilterWrapper.getStepPalleteModuleInfos().isEmpty()) {
+      // Return all the steps.
+      return pmsPipelineServiceStepHelper.getAllSteps(accountId, serviceInstanceNameToSupportedSteps);
+    }
+    StepCategory stepCategory = StepCategory.builder().name(LIBRARY).build();
+    for (StepPalleteModuleInfo request : stepPalleteFilterWrapper.getStepPalleteModuleInfos()) {
+      String module = request.getModule();
+      String category = request.getCategory();
+      List<StepInfo> stepInfoList = serviceInstanceNameToSupportedSteps.get(module).getStepTypes();
+      if (EmptyPredicate.isEmpty(stepInfoList)) {
+        continue;
+      }
+      if (EmptyPredicate.isNotEmpty(category)) {
+        stepCategory.addStepCategory(pmsPipelineServiceStepHelper.calculateStepsForModuleBasedOnCategoryV2(
+            module, category, stepInfoList, accountId));
+      } else {
+        stepCategory.addStepCategory(
+            pmsPipelineServiceStepHelper.calculateStepsForCategory(module, stepInfoList, accountId));
+      }
+    }
+    if (stepPalleteFilterWrapper.isShouldShowCommonSteps()) {
+      stepCategory.addStepCategory(pmsPipelineServiceStepHelper.calculateStepsForCategory(
+          "Common", commonStepInfo.getCommonSteps(stepPalleteFilterWrapper.getCommonStepCategory()), accountId));
     }
     return stepCategory;
   }

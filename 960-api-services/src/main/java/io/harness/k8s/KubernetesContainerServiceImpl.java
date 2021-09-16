@@ -1166,19 +1166,23 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   private V1ConfigMap replaceConfigMap(KubernetesConfig kubernetesConfig, V1ConfigMap definition) {
     String name = definition.getMetadata().getName();
     log.info("Replacing config map [{}]", name);
-    ApiClient apiClient = kubernetesHelperService.getApiClient(kubernetesConfig);
-    try {
-      return new CoreV1Api(apiClient).replaceNamespacedConfigMap(
-          name, kubernetesConfig.getNamespace(), definition, null, null, null);
-    } catch (ApiException exception) {
-      String configMapDef = definition.getMetadata() != null && isNotEmpty(definition.getMetadata().getName())
-          ? format("%s/ConfigMap/%s", kubernetesConfig.getNamespace(), definition.getMetadata().getName())
-          : "ConfigMap";
-      String message = format("Failed to replace %s. Code: %s, message: %s", configMapDef, exception.getCode(),
-          exception.getResponseBody());
-      log.error(message);
-      throw new InvalidRequestException(message, exception, USER);
-    }
+    final Supplier<V1ConfigMap> v1ConfigMapSupplier = Retry.decorateSupplier(retry, () -> {
+      ApiClient apiClient = kubernetesHelperService.getApiClient(kubernetesConfig);
+      try {
+        return new CoreV1Api(apiClient).replaceNamespacedConfigMap(
+            name, kubernetesConfig.getNamespace(), definition, null, null, null);
+      } catch (ApiException exception) {
+        String configMapDef = definition.getMetadata() != null && isNotEmpty(definition.getMetadata().getName())
+            ? format("%s/ConfigMap/%s", kubernetesConfig.getNamespace(), definition.getMetadata().getName())
+            : "ConfigMap";
+        String message = format("Failed to replace %s. Code: %s, message: %s", configMapDef, exception.getCode(),
+            exception.getResponseBody());
+        log.error(message);
+        throw new InvalidRequestException(message, exception, USER);
+      }
+    });
+
+    return v1ConfigMapSupplier.get();
   }
 
   private V1ConfigMap createConfigMap(KubernetesConfig kubernetesConfig, V1ConfigMap definition) {

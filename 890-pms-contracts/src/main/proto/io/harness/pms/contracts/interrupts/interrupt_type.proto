@@ -21,4 +21,6 @@ enum InterruptType {
   END_EXECUTION = 15;
   MARK_EXPIRED = 17;
   CUSTOM_FAILURE = 18;
+
+  EXPIRE_ALL = 19;
 }

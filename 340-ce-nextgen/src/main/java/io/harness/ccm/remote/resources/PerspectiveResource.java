@@ -3,6 +3,7 @@ package io.harness.ccm.remote.resources;
 import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.commons.utils.BigQueryHelper.UNIFIED_TABLE;
 
+import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.commons.utils.BigQueryHelper;
@@ -59,8 +60,8 @@ public class PerspectiveResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Create perspective", nickname = "createPerspective")
-  public RestResponse<CEView> create(@QueryParam("accountId") String accountId, @QueryParam("clone") boolean clone,
-      @Valid @RequestBody CEView ceView) {
+  public RestResponse<CEView> create(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @QueryParam("clone") boolean clone, @Valid @RequestBody CEView ceView) {
     ceView.setAccountId(accountId);
     if (clone) {
       // reset these fields which gets set downstream appropriately
@@ -80,8 +81,8 @@ public class PerspectiveResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Get perspective", nickname = "getPerspective")
-  public RestResponse<CEView> get(
-      @QueryParam("accountId") String accountId, @QueryParam("perspectiveId") String perspectiveId) {
+  public RestResponse<CEView> get(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @QueryParam("perspectiveId") String perspectiveId) {
     return new RestResponse<>(ceViewService.get(perspectiveId));
   }
 
@@ -89,7 +90,8 @@ public class PerspectiveResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Update perspective", nickname = "updatePerspective")
-  public RestResponse<CEView> update(@QueryParam("accountId") String accountId, @Valid @RequestBody CEView ceView) {
+  public RestResponse<CEView> update(
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId, @Valid @RequestBody CEView ceView) {
     ceView.setAccountId(accountId);
     log.info(ceView.toString());
     return new RestResponse<>(updateTotalCost(ceViewService.update(ceView)));
@@ -99,8 +101,8 @@ public class PerspectiveResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Delete perspective", nickname = "deletePerspective")
-  public RestResponse<String> delete(
-      @QueryParam("accountId") String accountId, @QueryParam("perspectiveId") String perspectiveId) {
+  public RestResponse<String> delete(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @QueryParam("perspectiveId") String perspectiveId) {
     ceViewService.delete(perspectiveId, accountId);
     ceReportScheduleService.deleteAllByView(perspectiveId, accountId);
     viewCustomFieldService.deleteByViewId(perspectiveId, accountId);

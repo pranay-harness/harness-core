@@ -2,6 +2,7 @@ package io.harness.gitsync.events;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_CONFIG_STREAM;
+import static io.harness.gitsync.AbstractGitSyncSdkModule.GIT_SYNC_SDK;
 
 import io.harness.AuthorizationServiceHeader;
 import io.harness.annotations.dev.OwnedBy;
@@ -32,8 +33,8 @@ public class GitSyncConfigStreamConsumer implements Runnable {
   private final QueueController queueController;
 
   @Inject
-  public GitSyncConfigStreamConsumer(@Named(GIT_CONFIG_STREAM) Consumer redisConsumer,
-      @Named(GIT_CONFIG_STREAM) MessageListener gitSyncConfigStreamCConsumer,
+  public GitSyncConfigStreamConsumer(@Named(GIT_CONFIG_STREAM + GIT_SYNC_SDK) Consumer redisConsumer,
+      @Named(GIT_CONFIG_STREAM + GIT_SYNC_SDK) MessageListener gitSyncConfigStreamCConsumer,
       @Named("git-msvc") AuthorizationServiceHeader authorizationServiceHeader, QueueController queueController) {
     this.redisConsumer = redisConsumer;
     this.queueController = queueController;

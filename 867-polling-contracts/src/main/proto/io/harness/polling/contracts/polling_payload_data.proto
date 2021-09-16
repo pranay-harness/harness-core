@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package io.harness.polling.contracts;
+
+option java_multiple_files = true;
+
+message PollingPayloadData {
+  Type type = 1;
+  string connectorRef = 2;
+  oneof Payload {
+    HttpHelmPayload httpHelmPayload = 3;
+    EcrPayload ecrPayload = 4;
+    GcsHelmPayload gcsHelmPayload = 5;
+    S3HelmPayload s3HelmPayload = 6;
+    DockerHubPayload dockerHubPayload = 7;
+    GcrPayload gcrPayload = 8;
+  }
+}
+
+enum Type {
+  UNDEFINED = 0;
+  HTTP_HELM = 1;
+  ECR = 2;
+  GCS_HELM = 3;
+  S3_HELM = 4;
+  DOCKER_HUB = 5;
+  GCR = 6;
+}
+
+message HttpHelmPayload {
+  string chartName = 1;
+  HelmVersion helmVersion = 2;
+}
+
+message EcrPayload {
+  string imagePath = 1;
+  string region = 2;
+}
+
+message GcsHelmPayload {
+  string chartName = 1;
+  string bucketName = 2;
+  HelmVersion helmVersion = 3;
+  string folderPath = 5;
+}
+
+message S3HelmPayload {
+  string chartName = 1;
+  string bucketName = 2;
+  string region = 3;
+  HelmVersion helmVersion = 4;
+  string folderPath = 5;
+}
+
+enum HelmVersion {
+  V2 = 0;
+  V3 = 1;
+}
+
+message DockerHubPayload {
+  string imagePath = 1;
+}
+
+message GcrPayload {
+  string imagePath = 1;
+  string registryHostname = 2;
+}

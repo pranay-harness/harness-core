@@ -1,8 +1,8 @@
 package io.harness.batch.processing.pricing.service.support;
 
-import io.harness.batch.processing.billing.service.PricingData;
-import io.harness.batch.processing.pricing.data.VMComputePricingInfo;
-import io.harness.batch.processing.pricing.data.ZonePrice;
+import io.harness.batch.processing.pricing.PricingData;
+import io.harness.batch.processing.pricing.banzai.VMComputePricingInfo;
+import io.harness.batch.processing.pricing.banzai.ZonePrice;
 import io.harness.ccm.commons.beans.Resource;
 import io.harness.ccm.commons.beans.billing.InstanceCategory;
 import io.harness.ccm.commons.constants.CloudProvider;

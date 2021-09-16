@@ -1,6 +1,6 @@
 package software.wings.beans.appmanifest;
 
-import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotation.HarnessEntity;
@@ -38,7 +38,7 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity("applicationManifests")
 @HarnessEntity(exportable = true)
 @OwnedBy(CDP)
-@TargetModule(_871_CG_BEANS)
+@TargetModule(_957_CG_BEANS)
 public class ApplicationManifest extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
@@ -66,6 +66,7 @@ public class ApplicationManifest extends Base implements AccountAccess {
   private KustomizeConfig kustomizeConfig;
   private CustomSourceConfig customSourceConfig;
   @Nullable private HelmCommandFlagConfig helmCommandFlag;
+  private String helmValuesYamlFilePaths;
 
   private Boolean pollForChanges;
   @Transient private String serviceName;
@@ -90,6 +91,7 @@ public class ApplicationManifest extends Base implements AccountAccess {
                                        .pollForChanges(this.pollForChanges)
                                        .skipVersioningForAllK8sObjects(this.skipVersioningForAllK8sObjects)
                                        .helmCommandFlag(HelmCommandFlagConfig.cloneFrom(this.helmCommandFlag))
+                                       .helmValuesYamlFilePaths(this.helmValuesYamlFilePaths)
                                        .name(this.name)
                                        .build();
     manifest.setAppId(this.appId);
@@ -109,11 +111,12 @@ public class ApplicationManifest extends Base implements AccountAccess {
     private CustomSourceConfig customSourceConfig;
     private Boolean skipVersioningForAllK8sObjects;
     private HelmCommandFlagConfig helmCommandFlag;
+    private String helmValuesYamlFilePaths;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String storeType, GitFileConfig gitFileConfig,
         HelmChartConfig helmChartConfig, KustomizeConfig kustomizeConfig, CustomSourceConfig customSourceConfig,
-        HelmCommandFlagConfig helmCommandFlag, Boolean skipVersioningForAllK8sObjects) {
+        HelmCommandFlagConfig helmCommandFlag, Boolean skipVersioningForAllK8sObjects, String helmValuesYamlFilePaths) {
       super(type, harnessApiVersion);
       this.storeType = storeType;
       this.gitFileConfig = gitFileConfig;
@@ -122,6 +125,7 @@ public class ApplicationManifest extends Base implements AccountAccess {
       this.customSourceConfig = customSourceConfig;
       this.skipVersioningForAllK8sObjects = skipVersioningForAllK8sObjects;
       this.helmCommandFlag = helmCommandFlag;
+      this.helmValuesYamlFilePaths = helmValuesYamlFilePaths;
     }
   }
 }

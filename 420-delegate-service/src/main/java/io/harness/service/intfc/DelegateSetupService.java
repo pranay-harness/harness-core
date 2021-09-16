@@ -2,10 +2,12 @@ package io.harness.service.intfc;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.PageRequest;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateGroup;
 import io.harness.delegate.beans.DelegateGroupDetails;
 import io.harness.delegate.beans.DelegateGroupListing;
+import io.harness.delegate.filter.DelegateFilterPropertiesDTO;
 
 import software.wings.beans.SelectorType;
 
@@ -14,6 +16,8 @@ import java.util.Map;
 
 @OwnedBy(HarnessTeam.DEL)
 public interface DelegateSetupService {
+  long getDelegateGroupCount(String accountId, String orgId, String projectId);
+
   DelegateGroupListing listDelegateGroupDetails(String accountId, String orgId, String projectId);
 
   DelegateGroupListing listDelegateGroupDetailsUpTheHierarchy(String accountId, String orgId, String projectId);
@@ -38,4 +42,8 @@ public interface DelegateSetupService {
 
   DelegateGroupDetails updateDelegateGroup(
       String accountId, String orgId, String projectId, String identifier, DelegateGroupDetails delegateGroupDetails);
+
+  DelegateGroupListing listDelegateGroupDetailsV2(String accountId, String orgId, String projectId,
+      String filterIdentifier, String searchTerm, DelegateFilterPropertiesDTO delegateFilterPropertiesDTO,
+      PageRequest<DelegateGroupDetails> pageRequest);
 }

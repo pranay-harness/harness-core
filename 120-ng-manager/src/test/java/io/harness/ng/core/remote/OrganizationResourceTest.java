@@ -118,13 +118,13 @@ public class OrganizationResourceTest extends CategoryTest {
     organization.setVersion((long) 0);
     ArgumentCaptor<OrganizationFilterDTO> argumentCaptor = ArgumentCaptor.forClass(OrganizationFilterDTO.class);
 
-    when(organizationService.list(eq(accountIdentifier), any(), any()))
+    when(organizationService.listPermittedOrgs(eq(accountIdentifier), any(), any()))
         .thenReturn(getPage(singletonList(organization), 1));
 
     ResponseDTO<PageResponse<OrganizationResponse>> response =
         organizationResource.list(accountIdentifier, Collections.EMPTY_LIST, searchTerm, pageRequest);
 
-    verify(organizationService, times(1)).list(eq(accountIdentifier), any(), argumentCaptor.capture());
+    verify(organizationService, times(1)).listPermittedOrgs(eq(accountIdentifier), any(), argumentCaptor.capture());
     OrganizationFilterDTO organizationFilterDTO = argumentCaptor.getValue();
 
     assertEquals(searchTerm, organizationFilterDTO.getSearchTerm());

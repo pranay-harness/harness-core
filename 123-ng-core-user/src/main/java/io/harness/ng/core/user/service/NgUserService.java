@@ -2,11 +2,13 @@ package io.harness.ng.core.user.service;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTO;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
+import io.harness.ng.core.invites.dto.RoleBinding;
+import io.harness.ng.core.user.AddUsersDTO;
+import io.harness.ng.core.user.AddUsersResponse;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserMembershipUpdateSource;
 import io.harness.ng.core.user.entities.UserMembership;
@@ -29,6 +31,8 @@ public interface NgUserService {
   Optional<UserMetadataDTO> getUserByEmail(String emailId, boolean fetchFromCurrentGen);
 
   Optional<UserMetadataDTO> getUserMetadata(String userId);
+
+  AddUsersResponse addUsers(Scope scope, AddUsersDTO addUsersDTO);
 
   /**
    * Use this method with caution, verify that the pageable sort is able to make use of the indexes.
@@ -57,14 +61,8 @@ public interface NgUserService {
 
   Page<UserMembership> listUserMemberships(Criteria criteria, Pageable pageable);
 
-  void addUserToScope(String user, Scope scope, String roleIdentifier, UserMembershipUpdateSource source);
-
-  void addUserToScope(String userId, Scope scope, boolean postCreation, UserMembershipUpdateSource source);
-
-  void addUserToScope(
-      String userId, Scope scope, List<RoleAssignmentDTO> roleAssignmentDTOs, UserMembershipUpdateSource source);
-
-  boolean isUserInAccount(String accountId, String userId);
+  void addUserToScope(String userId, Scope scope, List<RoleBinding> roleBindings, List<String> userGroups,
+      UserMembershipUpdateSource source);
 
   boolean isUserAtScope(String userId, Scope scope);
 
@@ -73,4 +71,6 @@ public interface NgUserService {
   boolean removeUserFromScope(String userId, Scope scope, UserMembershipUpdateSource source);
 
   boolean isUserPasswordSet(String accountIdentifier, String email);
+
+  List<String> listUserAccountIds(String userId);
 }

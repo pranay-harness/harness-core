@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"strings"
 	"sync"
 
 	"github.com/wings-software/portal/product/log-service/stream"
@@ -68,6 +69,18 @@ func (s *Streamer) Tail(ctx context.Context, key string) (<-chan *stream.Line, <
 		return nil, nil
 	}
 	return stream.subscribe(ctx)
+}
+
+func (s *Streamer) ListPrefix(ctx context.Context, prefix string) ([]string, error) {
+	s.Lock()
+	defer s.Unlock()
+	keys := []string{}
+	for k := range s.streams {
+		if strings.HasPrefix(k, prefix) {
+			keys = append(keys, k)
+		}
+	}
+	return keys, nil
 }
 
 func (s *Streamer) CopyTo(ctx context.Context, key string, wc io.WriteCloser) error {

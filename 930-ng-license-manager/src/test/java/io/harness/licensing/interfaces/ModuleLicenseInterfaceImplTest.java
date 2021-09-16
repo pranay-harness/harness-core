@@ -8,16 +8,17 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.CategoryTest;
+import io.harness.ModuleType;
 import io.harness.category.element.UnitTests;
 import io.harness.licensing.Edition;
 import io.harness.licensing.LicenseStatus;
 import io.harness.licensing.LicenseType;
-import io.harness.licensing.ModuleType;
 import io.harness.licensing.beans.modules.CDModuleLicenseDTO;
 import io.harness.licensing.beans.modules.CEModuleLicenseDTO;
 import io.harness.licensing.beans.modules.CFModuleLicenseDTO;
 import io.harness.licensing.beans.modules.CIModuleLicenseDTO;
 import io.harness.licensing.beans.modules.ModuleLicenseDTO;
+import io.harness.licensing.beans.modules.types.CDLicenseType;
 import io.harness.licensing.interfaces.clients.ModuleLicenseClient;
 import io.harness.licensing.interfaces.clients.local.CDLocalClient;
 import io.harness.licensing.interfaces.clients.local.CELocalClient;
@@ -34,7 +35,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 public class ModuleLicenseInterfaceImplTest extends CategoryTest {
-  @InjectMocks ModuleLicenseInterfaceImpl moduleLicenseInterface;
+  @InjectMocks ModuleLicenseImpl moduleLicenseInterface;
   @Mock Map<ModuleType, ModuleLicenseClient> clientMap;
 
   @Before
@@ -93,8 +94,6 @@ public class ModuleLicenseInterfaceImplTest extends CategoryTest {
   public void testStartTrialOnCE() {
     when(clientMap.get(ModuleType.CE)).thenReturn(new CELocalClient());
     ModuleLicenseDTO expectedDTO = CEModuleLicenseDTO.builder()
-                                       .numberOfCluster(UNLIMITED)
-                                       .dataRetentionInDays(1825)
                                        .spendLimit(Long.valueOf(UNLIMITED))
                                        .accountIdentifier(ACCOUNT_IDENTIFIER)
                                        .moduleType(ModuleType.CE)
@@ -117,8 +116,8 @@ public class ModuleLicenseInterfaceImplTest extends CategoryTest {
   public void testStartTrialOnCD() {
     when(clientMap.get(ModuleType.CD)).thenReturn(new CDLocalClient());
     ModuleLicenseDTO expectedDTO = CDModuleLicenseDTO.builder()
+                                       .cdLicenseType(CDLicenseType.SERVICES)
                                        .workloads(100)
-                                       .deploymentsPerDay(UNLIMITED)
                                        .accountIdentifier(ACCOUNT_IDENTIFIER)
                                        .moduleType(ModuleType.CD)
                                        .licenseType(LicenseType.TRIAL)

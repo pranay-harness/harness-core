@@ -12,6 +12,9 @@ import static software.wings.sm.states.DynatraceState.TEST_HOST_NAME;
 
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.context.ContextElementType;
@@ -59,6 +62,8 @@ import org.slf4j.Logger;
  */
 @Slf4j
 @FieldNameConstants(innerTypeName = "CloudWatchStateKeys")
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class CloudWatchState extends AbstractMetricAnalysisState {
   @Inject private transient AwsHelperService awsHelperService;
   @Inject private transient CloudWatchService cloudWatchService;

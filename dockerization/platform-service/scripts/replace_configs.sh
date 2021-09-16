@@ -88,6 +88,10 @@ if [[ "" != "$SMTP_PASSWORD" ]]; then
   yq write -i $CONFIG_FILE notificationServiceConfig.smtp.password "$SMTP_PASSWORD"
 fi
 
+if [[ "" != "$SMTP_USE_SSL" ]]; then
+  yq write -i $CONFIG_FILE notificationServiceConfig.smtp.useSSL "$SMTP_USE_SSL"
+fi
+
 if [[ "" != "$OVERRIDE_PREDEFINED_TEMPLATES" ]]; then
   yq write -i $CONFIG_FILE notificationServiceConfig.seedDataConfiguration.shouldOverrideAllPredefinedTemplates "$OVERRIDE_PREDEFINED_TEMPLATES"
 fi
@@ -118,6 +122,22 @@ fi
 
 if [[ "" != "$GRPC_MANAGER_AUTHORITY" ]]; then
   yq write -i $CONFIG_FILE notificationServiceConfig.delegateServiceGrpcConfig.authority $GRPC_MANAGER_AUTHORITY
+fi
+
+if [[ "" != "$DMS_GRPC_SECRET" ]]; then
+  yq write -i $CONFIG_FILE dmsGrpcClient.secret "$DMS_GRPC_SECRET"
+fi
+
+if [[ "" != "$DMS_GRPC_TARGET" ]]; then
+  yq write -i $CONFIG_FILE dmsGrpcClient.target "$DMS_GRPC_TARGET"
+fi
+
+if [[ "" != "$DMS_GRPC_AUTHORITY" ]]; then
+  yq write -i $CONFIG_FILE dmsGrpcClient.authority "$DMS_GRPC_AUTHORITY"
+fi
+
+if [[ "" != "$USE_DMS" ]]; then
+  yq write -i $CONFIG_FILE useDms "$USE_DMS"
 fi
 
 if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
@@ -222,6 +242,10 @@ replace_key_value resourceGroupServiceConfig.resourceClients.pipeline-service.se
 replace_key_value resourceGroupServiceConfig.resourceClients.manager.baseUrl "$MANAGER_CLIENT_BASEURL"
 
 replace_key_value resourceGroupServiceConfig.resourceClients.manager.secret "$NEXT_GEN_MANAGER_SECRET"
+
+replace_key_value resourceGroupServiceConfig.resourceClients.resourceGroup.baseUrl "$RESOURCE_GROUP_CLIENT_BASEURL"
+
+replace_key_value resourceGroupServiceConfig.resourceClients.resourceGroup.secret "$RESOURCE_GROUP_SECRET"
 
 replace_key_value resourceGroupServiceConfig.mongo.uri "${RESOURCE_GROUP_MONGO_URI//\\&/&}"
 

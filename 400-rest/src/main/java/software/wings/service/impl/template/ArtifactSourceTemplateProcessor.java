@@ -9,6 +9,8 @@ import static software.wings.common.TemplateConstants.LATEST_TAG;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HIterator;
@@ -38,6 +40,7 @@ import org.apache.commons.lang3.NotImplementedException;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CDC)
 public class ArtifactSourceTemplateProcessor extends AbstractTemplateProcessor {
   @Inject ArtifactStreamService artifactStreamService;
   @Inject TemplateHelper templateHelper;

@@ -7,6 +7,8 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.governance.pipeline.service.model.PipelineGovernanceConfig;
 import io.harness.rule.Owner;
@@ -18,6 +20,7 @@ import java.lang.reflect.Method;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.CDC)
 public class PipelineGovernanceResourceTest extends CategoryTest {
   @Test
   @Owner(developers = HINGER)

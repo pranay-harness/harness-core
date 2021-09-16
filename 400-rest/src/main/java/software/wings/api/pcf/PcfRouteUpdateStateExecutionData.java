@@ -3,7 +3,9 @@ package software.wings.api.pcf;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.pcf.CfRouteUpdateRequestConfigData;
 import io.harness.delegate.task.pcf.CfCommandRequest;
@@ -25,6 +27,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class PcfRouteUpdateStateExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData {
   private String activityId;
   private String accountId;
@@ -69,7 +72,7 @@ public class PcfRouteUpdateStateExecutionData extends StateExecutionData impleme
 
     if (pcfRouteUpdateRequestConfigData.isStandardBlueGreen()) {
       stringBuilder.append('{')
-          .append(pcfRouteUpdateRequestConfigData.getNewApplicatiaonName())
+          .append(pcfRouteUpdateRequestConfigData.getNewApplicationName())
           .append(" : ")
           .append(isRollback ? pcfRouteUpdateRequestConfigData.getTempRoutes()
                              : pcfRouteUpdateRequestConfigData.getFinalRoutes())

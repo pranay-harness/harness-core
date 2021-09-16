@@ -2,6 +2,7 @@ package io.harness.cdng.infra.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -15,6 +16,7 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("k8sDirectInfraMapping")
 @JsonTypeName("k8sDirectInfraMapping")
 @OwnedBy(CDC)
+@RecasterAlias("io.harness.cdng.infra.beans.K8sDirectInfraMapping")
 public class K8sDirectInfraMapping implements InfraMapping {
   @Id private String uuid;
   private String accountId;

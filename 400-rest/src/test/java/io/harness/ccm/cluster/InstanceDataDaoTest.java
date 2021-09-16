@@ -9,8 +9,8 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
-import io.harness.ccm.cluster.dao.InstanceDataDao;
 import io.harness.ccm.commons.beans.Resource;
+import io.harness.ccm.commons.dao.InstanceDataDao;
 import io.harness.ccm.commons.entities.batch.InstanceData;
 import io.harness.rule.Owner;
 

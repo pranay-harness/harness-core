@@ -1,14 +1,14 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
 go_library(
-    name = "go_default_library",
+    name = "cli",
     srcs = ["cli.go"],
     importpath = "github.com/wings-software/portal/product/log-service/cli",
     visibility = ["//visibility:public"],
     deps = [
-        "//product/log-service/cli/xxxxxxxxgo_default_library",
-        "//product/log-service/cli/store:go_default_library",
-        "//product/log-service/cli/stream:go_default_library",
-        "@in_gopkg_alecthomas_kingpin_v2//:go_default_library",
+        "//product/log-service/cli/server",
+        "//product/log-service/cli/store",
+        "//product/log-service/cli/stream",
+        "@in_gopkg_alecthomas_kingpin_v2//:kingpin_v2",
     ],
 )

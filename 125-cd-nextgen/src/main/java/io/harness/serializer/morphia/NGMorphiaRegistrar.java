@@ -26,6 +26,7 @@ import io.harness.cdng.service.beans.StageOverridesConfig;
 import io.harness.cdng.service.steps.ServiceStepParameters;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
+import io.harness.polling.bean.PollingDocument;
 
 import java.util.Set;
 
@@ -39,6 +40,7 @@ public class NGMorphiaRegistrar implements MorphiaRegistrar {
     set.add(DockerArtifactSource.class);
     set.add(ArtifactSource.class);
     set.add(TerraformConfig.class);
+    set.add(PollingDocument.class);
   }
 
   @Override
@@ -61,5 +63,6 @@ public class NGMorphiaRegistrar implements MorphiaRegistrar {
     h.put("cdng.infra.beans.InfraUseFromStage", InfraUseFromStage.class);
     h.put("cdng.infra.steps.InfraStepParameters", InfraStepParameters.class);
     h.put("io.harness.cdng.provision.terraform.TerraformConfig", TerraformConfig.class);
+    h.put("io.harness.polling.bean.PollingDocument", PollingDocument.class);
   }
 }

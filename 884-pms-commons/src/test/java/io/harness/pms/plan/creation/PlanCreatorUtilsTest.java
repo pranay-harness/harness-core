@@ -1,10 +1,13 @@
 package io.harness.pms.plan.creation;
 
+import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.SAHIL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
@@ -12,23 +15,24 @@ import io.harness.pms.yaml.YamlUtils;
 import io.harness.rule.Owner;
 
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Resources;
 import java.io.IOException;
 import java.net.URL;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class PlanCreatorUtilsTest extends CategoryTest {
   @Test
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
-  public void testgetStageConfig() throws IOException {
-    ClassLoader classLoader = this.getClass().getClassLoader();
-    final URL testFile = classLoader.getResource("pipeline.yaml");
-    String yamlContent = Resources.toString(testFile, Charsets.UTF_8);
-    YamlField yamlField = YamlUtils.readTree(YamlUtils.injectUuid(yamlContent));
+  public void testGetStageConfig() throws IOException {
     // Pipeline Node
-    YamlNode pipelineNode = yamlField.getNode().getField("pipeline").getNode();
+    YamlNode pipelineNode = getPipelineNode();
 
     // Stages Node
     YamlField stagesNode = pipelineNode.getField("stages");
@@ -42,5 +46,52 @@ public class PlanCreatorUtilsTest extends CategoryTest {
 
     YamlField actualStage1Field = PlanCreatorUtils.getStageConfig(serviceNode, stage1Field.getNode().getIdentifier());
     assertThat(actualStage1Field).isEqualTo(stage1Field);
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testSupportsField() throws IOException {
+    YamlField stageField = getPipelineNode().getField("stages").getNode().asArray().get(0).getField("stage");
+    assertThat(PlanCreatorUtils.supportsField(null, stageField)).isFalse();
+    assertThat(PlanCreatorUtils.supportsField(ImmutableMap.of("random", ImmutableSet.of("random")), stageField))
+        .isFalse();
+    assertThat(PlanCreatorUtils.supportsField(ImmutableMap.of("stage", ImmutableSet.of("random")), stageField))
+        .isFalse();
+    assertThat(
+        PlanCreatorUtils.supportsField(ImmutableMap.of("stage", ImmutableSet.of("random", "Deployment")), stageField))
+        .isTrue();
+  }
+
+  @Test
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testGetStepYamlFields() throws IOException {
+    List<YamlNode> stepNodes = getPipelineNode()
+                                   .getField("stages")
+                                   .getNode()
+                                   .asArray()
+                                   .get(0)
+                                   .getField("stage")
+                                   .getNode()
+                                   .getField("spec")
+                                   .getNode()
+                                   .getField("execution")
+                                   .getNode()
+                                   .getField("steps")
+                                   .getNode()
+                                   .asArray();
+    List<YamlField> stepFields = PlanCreatorUtils.getStepYamlFields(stepNodes);
+    assertThat(stepFields.size()).isEqualTo(4);
+    assertThat(stepFields.stream().map(YamlField::getName).collect(Collectors.toList()))
+        .containsExactly("step", "step", "step", "parallel");
+  }
+
+  private YamlNode getPipelineNode() throws IOException {
+    ClassLoader classLoader = this.getClass().getClassLoader();
+    final URL testFile = classLoader.getResource("pipeline.yaml");
+    String yamlContent = Resources.toString(testFile, Charsets.UTF_8);
+    YamlField yamlField = YamlUtils.readTree(YamlUtils.injectUuid(yamlContent));
+    return yamlField.getNode().getField("pipeline").getNode();
   }
 }

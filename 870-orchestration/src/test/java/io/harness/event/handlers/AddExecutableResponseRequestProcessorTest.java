@@ -8,6 +8,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
@@ -29,7 +30,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 @OwnedBy(HarnessTeam.PIPELINE)
-public class AddExecutableResponseRequestProcessorTest {
+public class AddExecutableResponseRequestProcessorTest extends CategoryTest {
   @Mock private NodeExecutionService nodeExecutionService;
   @InjectMocks AddExecutableResponseRequestProcessor addExecutableResponseEventHandler;
 

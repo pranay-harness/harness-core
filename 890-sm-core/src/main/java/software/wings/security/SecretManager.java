@@ -58,6 +58,8 @@ public class SecretManager {
         return configuration.getJwtExternalServiceSecret();
       case SSO_REDIRECT:
         return configuration.getJwtSsoRedirectSecret();
+      case INVITE_SECRET:
+        return configuration.getJwtAuthSecret();
       case AUTH_SECRET:
         return configuration.getJwtAuthSecret();
       case JIRA_SERVICE_SECRET:

@@ -12,6 +12,8 @@ import static org.mockito.Mockito.verify;
 import io.harness.ModuleType;
 import io.harness.OrchestrationModuleConfig;
 import io.harness.OrchestrationTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.eventsframework.api.Producer;
@@ -31,6 +33,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class PmsEventSenderTest extends OrchestrationTestBase {
   @Inject PmsEventSender eventSender;
   @Inject MongoTemplate mongoTemplate;
@@ -44,8 +47,7 @@ public class PmsEventSenderTest extends OrchestrationTestBase {
         PmsSdkInstance.builder()
             .name(ModuleType.PMS.name())
             .supportedTypes(new HashMap<>())
-            .supportedSteps(new ArrayList<>())
-            .supportedStepTypes(new ArrayList<>())
+            .supportedSdkSteps(new ArrayList<>())
             .interruptConsumerConfig(
                 ConsumerConfig.newBuilder().setRedis(Redis.newBuilder().setTopicName(TOPIC1).build()).build())
             .orchestrationEventConsumerConfig(
@@ -78,8 +80,7 @@ public class PmsEventSenderTest extends OrchestrationTestBase {
     doReturn(PmsSdkInstance.builder()
                  .name(ModuleType.PMS.name())
                  .supportedTypes(new HashMap<>())
-                 .supportedSteps(new ArrayList<>())
-                 .supportedStepTypes(new ArrayList<>())
+                 .supportedSdkSteps(new ArrayList<>())
                  .interruptConsumerConfig(
                      ConsumerConfig.newBuilder().setRedis(Redis.newBuilder().setTopicName(TOPIC1).build()).build())
                  .orchestrationEventConsumerConfig(

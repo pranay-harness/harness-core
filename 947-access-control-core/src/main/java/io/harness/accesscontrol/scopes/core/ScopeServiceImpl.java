@@ -2,8 +2,9 @@ package io.harness.accesscontrol.scopes.core;
 
 import static io.harness.accesscontrol.scopes.core.Scope.PATH_DELIMITER;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.accesscontrol.scopes.core.persistence.ScopeDBO;
+import io.harness.accesscontrol.scopes.core.persistence.ScopeDao;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidArgumentsException;
@@ -12,60 +13,55 @@ import io.harness.exception.InvalidRequestException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
 @OwnedBy(HarnessTeam.PL)
 @Singleton
 @ValidateOnExecution
 public class ScopeServiceImpl implements ScopeService {
-  private final Map<Integer, ScopeLevel> scopeLevelsByRank;
+  private final ScopeDao scopeDao;
   private final Map<String, ScopeLevel> scopeLevelsByResourceType;
   private final Map<String, ScopeLevel> scopeLevels;
-  private final int lowestLevel;
 
   @Inject
-  public ScopeServiceImpl(Map<String, ScopeLevel> scopeLevels) {
+  public ScopeServiceImpl(ScopeDao scopeDao, Map<String, ScopeLevel> scopeLevels) {
+    this.scopeDao = scopeDao;
     this.scopeLevels = scopeLevels;
-    this.scopeLevelsByRank = new HashMap<>();
     this.scopeLevelsByResourceType = new HashMap<>();
-    scopeLevels.values().forEach(scopeLevel -> scopeLevelsByRank.put(scopeLevel.getRank(), scopeLevel));
     scopeLevels.values().forEach(scopeLevel -> scopeLevelsByResourceType.put(scopeLevel.getResourceType(), scopeLevel));
-    if (scopeLevelsByRank.get(0) == null) {
-      throw new InvalidArgumentsException("No root scope level has been registered");
-    }
-    lowestLevel = scopeLevelsByRank.keySet().stream().max(Comparator.naturalOrder()).orElse(0);
   }
 
   @Override
-  public Scope buildScopeFromParams(ScopeParams scopeParams) {
-    Map<String, String> params = scopeParams.getParams();
-    ScopeLevel rootScopeLevel = scopeLevelsByRank.get(0);
-    String rootInstanceId = params.get(rootScopeLevel.getParamName());
-    if (isEmpty(rootInstanceId)) {
-      throw new InvalidRequestException(
-          String.format("The %s is not provided in the scope parameters", rootScopeLevel.getParamName()));
-    }
-    Scope scope = Scope.builder().level(rootScopeLevel).instanceId(rootInstanceId).parentScope(null).build();
-    for (int currentLevel = 1; currentLevel <= lowestLevel; currentLevel++) {
-      ScopeLevel scopeLevel = scopeLevelsByRank.get(currentLevel);
-      if (scopeLevel != null) {
-        String instanceId = params.get(scopeLevel.getParamName());
-        if (isNotEmpty(instanceId)) {
-          scope = Scope.builder().level(scopeLevel).instanceId(instanceId).parentScope(scope).build();
-        }
-      }
-    }
-    return scope;
+  public long saveAll(List<Scope> scopes) {
+    List<ScopeDBO> scopesList = scopes.stream().map(this::fromScope).collect(Collectors.toList());
+    return scopeDao.saveAll(scopesList);
   }
 
   @Override
-  public Scope buildScopeFromScopeIdentifier(String scopeIdentifier) {
-    List<String> scopeIdentifierElements = Arrays.asList(scopeIdentifier.split(PATH_DELIMITER));
+  public Scope getOrCreate(Scope scope) {
+    ScopeDBO scopeDBO = fromScope(scope);
+    return toScope(scopeDao.createIfNotPresent(scopeDBO));
+  }
+
+  @Override
+  public boolean isPresent(String identifier) {
+    return scopeDao.get(identifier).isPresent();
+  }
+
+  @Override
+  public Optional<Scope> deleteIfPresent(String identifier) {
+    return scopeDao.delete(identifier).flatMap(s -> Optional.of(toScope(s)));
+  }
+
+  @Override
+  public Scope buildScopeFromScopeIdentifier(String identifier) {
+    List<String> scopeIdentifierElements = Arrays.asList(identifier.split(PATH_DELIMITER));
     if (scopeIdentifierElements.size() < 3) {
       return null;
     }
@@ -96,5 +92,13 @@ public class ScopeServiceImpl implements ScopeService {
   @Override
   public Set<String> getAllScopeLevels() {
     return scopeLevels.keySet();
+  }
+
+  private Scope toScope(ScopeDBO scopeDBO) {
+    return buildScopeFromScopeIdentifier(scopeDBO.getIdentifier());
+  }
+
+  private ScopeDBO fromScope(Scope scope) {
+    return ScopeDBO.builder().identifier(scope.toString()).build();
   }
 }

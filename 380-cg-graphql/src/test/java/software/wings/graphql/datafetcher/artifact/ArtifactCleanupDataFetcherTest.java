@@ -10,6 +10,8 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.AccessDeniedException;
 import io.harness.exception.InvalidRequestException;
@@ -26,7 +28,6 @@ import software.wings.graphql.datafetcher.DataFetcherUtils;
 import software.wings.graphql.schema.mutation.artifact.ArtifactCleanUpPayload;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.UserThreadLocal;
-import software.wings.service.impl.artifact.ArtifactCleanupServiceSyncImpl;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.AuthService;
 
@@ -41,17 +42,17 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
+@OwnedBy(HarnessTeam.CDC)
 public class ArtifactCleanupDataFetcherTest extends AbstractDataFetcherTestBase {
   @Mock DataFetcherUtils utils;
   @Mock AuthRuleGraphQL authRuleInstrumentation;
-  @Mock private ArtifactCleanupServiceSyncImpl artifactCleanupService;
   @Mock private ArtifactCleanupHandler artifactCleanupHandler;
   @Mock private AuthService authService;
   @Mock private ArtifactStreamService artifactStreamService;
   @InjectMocks
   @Spy
-  ArtifactCleanupDataFetcher artifactCleanupDataFetcher = new ArtifactCleanupDataFetcher(
-      artifactCleanupService, artifactStreamService, artifactCleanupHandler, authService);
+  ArtifactCleanupDataFetcher artifactCleanupDataFetcher =
+      new ArtifactCleanupDataFetcher(artifactStreamService, artifactCleanupHandler, authService);
 
   @Before
   public void setUp() throws Exception {

@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.analysis.beans.LogClusterLevel;
 import io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStatus;
@@ -27,7 +28,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class ServiceGuardLogClusterStateTest {
+public class ServiceGuardLogClusterStateTest extends CategoryTest {
   private String verificationTaskId;
   private Instant startTime;
   private Instant endTime;

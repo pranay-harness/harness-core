@@ -228,6 +228,13 @@ grpcDelegateServiceClientConfig:
   target: localhost:9880
   authority: localhost
 
+grpcDMSClientConfig:
+  target: localhost:15011
+  authority: localhost
+
+dmsSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+
+
 logStreamingServiceConfig:
   baseUrl: http://localhost:8079
   serviceToken: token
@@ -239,10 +246,6 @@ accessControlClient:
     connectTimeOutSeconds: 15
     readTimeOutSeconds: 15
   accessControlServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
-
-cvngClientConfig:
-  baseUrl: https://localhost:6060/cv/
-  cvNgServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
 eventsFramework:
   redis:

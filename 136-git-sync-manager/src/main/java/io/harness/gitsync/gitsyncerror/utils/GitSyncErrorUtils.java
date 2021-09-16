@@ -1,10 +1,10 @@
 package io.harness.gitsync.gitsyncerror.utils;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.gitsync.common.beans.GitSyncDirection.GIT_TO_HARNESS;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncError;
+import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorType;
 import io.harness.gitsync.gitsyncerror.beans.GitToHarnessErrorDetails;
 
 import lombok.experimental.UtilityClass;
@@ -18,7 +18,7 @@ public class GitSyncErrorUtils {
   public static final Long DEFAULT_COMMIT_TIME = 0L;
 
   public static boolean isGitToHarnessSyncError(GitSyncError gitSyncError) {
-    return GIT_TO_HARNESS == gitSyncError.getGitSyncDirection();
+    return GitSyncErrorType.GIT_TO_HARNESS == gitSyncError.getErrorType();
   }
 
   public static String getCommitIdOfError(GitSyncError error) {

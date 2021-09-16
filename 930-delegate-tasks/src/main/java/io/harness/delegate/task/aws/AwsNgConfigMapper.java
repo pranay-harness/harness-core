@@ -3,6 +3,8 @@ package io.harness.delegate.task.aws;
 import static io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsAuthType.ACCESS_KEY_AND_SECRET_KEY;
 import static io.harness.utils.FieldWithPlainTextOrSecretValueHelper.getSecretAsStringFromPlainTextOrSecretRef;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.aws.AwsAccessKeyCredential;
 import io.harness.aws.AwsConfig;
 import io.harness.aws.CrossAccountAccess;
@@ -24,6 +26,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
 
+@OwnedBy(HarnessTeam.DX)
 @Singleton
 public class AwsNgConfigMapper {
   @Inject private SecretDecryptionService secretDecryptionService;
@@ -59,6 +62,12 @@ public class AwsNgConfigMapper {
                                                         config.getAccessKey(), config.getAccessKeyRef()))
                                                     .secretKey(getDecryptedValueWithNullCheck(secretKeyRef))
                                                     .build())
+                        .build();
+        break;
+      case IRSA:
+        awsConfig = AwsConfig.builder()
+                        .isIRSA(true)
+                        .crossAccountAccess(mapCrossAccountAccess(credential.getCrossAccountAccess()))
                         .build();
         break;
       default:

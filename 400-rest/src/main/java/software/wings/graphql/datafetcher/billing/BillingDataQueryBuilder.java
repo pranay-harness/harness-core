@@ -145,6 +145,11 @@ public class BillingDataQueryBuilder {
     if (isGroupByEntityPresent(groupBy, QLCCMEntityGroupBy.WorkloadName)
         && !isGroupByEntityPresent(groupBy, QLCCMEntityGroupBy.Namespace)) {
       groupBy.add(0, QLCCMEntityGroupBy.Namespace);
+    } else if (isGroupByEntityPresent(groupBy, QLCCMEntityGroupBy.Namespace)) {
+      filters.add(
+          QLBillingDataFilter.builder()
+              .instanceType(QLIdFilter.builder().operator(QLIdOperator.NOT_IN).values(new String[] {"K8S_PV"}).build())
+              .build());
     }
     // Reorder group by entity list to first group by cluster/application
     groupBy = getGroupByOrderedByDrillDown(groupBy);

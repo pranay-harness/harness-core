@@ -19,12 +19,13 @@ import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
+import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.serializer.KryoSerializer;
-import io.harness.steps.common.NGForkStep;
 import io.harness.steps.fork.ForkStepParameters;
+import io.harness.steps.fork.NGForkStep;
 
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
@@ -61,7 +62,8 @@ public class ParallelPlanCreator extends ChildrenPlanCreator<YamlField> {
     for (YamlField yamlField : dependencyNodeIdsList) {
       Map<String, YamlField> yamlFieldMap = new HashMap<>();
       yamlFieldMap.put(yamlField.getNode().getUuid(), yamlField);
-      responseMap.put(yamlField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(yamlFieldMap).build());
+      responseMap.put(yamlField.getNode().getUuid(),
+          PlanCreationResponse.builder().dependencies(DependenciesUtils.toDependenciesProto(yamlFieldMap)).build());
     }
 
     return responseMap;

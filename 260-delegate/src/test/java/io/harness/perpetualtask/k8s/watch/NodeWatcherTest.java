@@ -140,6 +140,7 @@ public class NodeWatcherTest extends CategoryTest {
       assertThat(HTimestamps.toMillis(nodeInfo.getCreationTime())).isEqualTo(TIMESTAMP.getMillis());
       assertThat(nodeInfo.getLabelsMap()).isEqualTo(LABELS);
       assertThat(mapArgumentCaptor.getValue().containsKey(CLUSTER_ID_IDENTIFIER));
+      assertThat(mapArgumentCaptor.getValue().containsKey(UID));
     });
 
     assertThat(captor.getAllValues().get(1)).isInstanceOfSatisfying(NodeEvent.class, nodeEvent -> {
@@ -148,6 +149,7 @@ public class NodeWatcherTest extends CategoryTest {
       assertThat(nodeEvent.getType()).isEqualTo(EVENT_TYPE_START);
       assertThat(HTimestamps.toMillis(nodeEvent.getTimestamp())).isEqualTo(TIMESTAMP.getMillis());
       assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
+      assertThat(mapArgumentCaptor.getValue().keySet()).contains(UID);
     });
 
     sharedInformerFactory.stopAllRegisteredInformers();
@@ -201,6 +203,7 @@ public class NodeWatcherTest extends CategoryTest {
       assertThat(HTimestamps.toMillis(nodeInfo.getCreationTime())).isEqualTo(TIMESTAMP.getMillis());
       assertThat(nodeInfo.getLabelsMap()).isEqualTo(LABELS);
       assertThat(mapArgumentCaptor.getValue().containsKey(CLUSTER_ID_IDENTIFIER));
+      assertThat(mapArgumentCaptor.getValue().containsKey(UID));
     });
 
     // invoked because we are initializing with one node.
@@ -210,6 +213,7 @@ public class NodeWatcherTest extends CategoryTest {
       assertThat(nodeEvent.getType()).isEqualTo(EVENT_TYPE_START);
       assertThat(HTimestamps.toMillis(nodeEvent.getTimestamp())).isEqualTo(TIMESTAMP.getMillis());
       assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
+      assertThat(mapArgumentCaptor.getValue().keySet()).contains(UID);
     });
 
     assertThat(captor.getAllValues().get(2)).isInstanceOfSatisfying(NodeEvent.class, nodeEvent -> {
@@ -218,6 +222,7 @@ public class NodeWatcherTest extends CategoryTest {
       assertThat(nodeEvent.getType()).isEqualTo(EVENT_TYPE_STOP);
       assertThat(HTimestamps.toMillis(nodeEvent.getTimestamp())).isEqualTo(TIMESTAMP.plusMillis(100).getMillis());
       assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
+      assertThat(mapArgumentCaptor.getValue().keySet()).contains(UID);
     });
 
     sharedInformerFactory.stopAllRegisteredInformers();
@@ -271,6 +276,7 @@ public class NodeWatcherTest extends CategoryTest {
       assertThat(HTimestamps.toMillis(nodeInfo.getCreationTime())).isEqualTo(TIMESTAMP.getMillis());
       assertThat(nodeInfo.getLabelsMap()).isEqualTo(LABELS);
       assertThat(mapArgumentCaptor.getValue().containsKey(CLUSTER_ID_IDENTIFIER));
+      assertThat(mapArgumentCaptor.getValue().containsKey(UID));
     });
 
     // invoked because we are initializing with one node
@@ -280,6 +286,7 @@ public class NodeWatcherTest extends CategoryTest {
       assertThat(nodeEvent.getType()).isEqualTo(EVENT_TYPE_START);
       assertThat(HTimestamps.toMillis(nodeEvent.getTimestamp())).isEqualTo(TIMESTAMP.getMillis());
       assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
+      assertThat(mapArgumentCaptor.getValue().keySet()).contains(UID);
     });
 
     sharedInformerFactory.stopAllRegisteredInformers();
@@ -301,6 +308,7 @@ public class NodeWatcherTest extends CategoryTest {
       assertThat(HTimestamps.toMillis(nodeInfo.getCreationTime())).isEqualTo(TIMESTAMP.getMillis());
       assertThat(nodeInfo.getLabelsMap()).isEqualTo(LABELS);
       assertThat(mapArgumentCaptor.getValue().containsKey(CLUSTER_ID_IDENTIFIER));
+      assertThat(mapArgumentCaptor.getValue().containsKey(UID));
     });
   }
 
@@ -321,6 +329,7 @@ public class NodeWatcherTest extends CategoryTest {
       assertThat(nodeEvent.getType()).isEqualTo(EVENT_TYPE_STOP);
       assertThat(HTimestamps.toMillis(nodeEvent.getTimestamp())).isEqualTo(TIMESTAMP.getMillis());
       assertThat(mapArgumentCaptor.getValue().containsKey(CLUSTER_ID_IDENTIFIER));
+      assertThat(mapArgumentCaptor.getValue().containsKey(UID));
     });
   }
 

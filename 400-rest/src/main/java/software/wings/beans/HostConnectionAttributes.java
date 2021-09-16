@@ -1,10 +1,12 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.shell.AuthenticationScheme.SSH_KEY;
 
 import static software.wings.audit.ResourceType.CONNECTION_ATTRIBUTES;
 import static software.wings.settings.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.encryption.Encrypted;
 import io.harness.expression.ExpressionEvaluator;
@@ -37,6 +39,7 @@ import lombok.ToString;
 @Data
 @ToString(exclude = {"key", "passphrase", "sshPassword", "kerberosPassword"})
 @EqualsAndHashCode(callSuper = false)
+@TargetModule(_957_CG_BEANS)
 public class HostConnectionAttributes extends SettingValue implements EncryptableSetting {
   public static final String KEY_KEY = "key";
   public static final String KEY_PASSPHRASE = "passphrase";

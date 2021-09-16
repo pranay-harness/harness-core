@@ -10,6 +10,8 @@ import java.util.EnumSet;
 
 @OwnedBy(HarnessTeam.DX)
 public class ExplanationException extends WingsException {
+  public static String EXPLANATION_IRSA_ROLE_CHECK =
+      "IRSA capability for delegate doesn't exist or doesn't have required permissions to perform the activity";
   public static final String EXPLANATION_EMPTY_ACCESS_KEY = "Access key cannot be empty";
   public static String EXPLANATION_EMPTY_SECRET_KEY = "Secret key cannot be empty";
   public static String EXPLANATION_AWS_AM_ROLE_CHECK =

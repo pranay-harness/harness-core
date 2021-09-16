@@ -1,6 +1,9 @@
 package io.harness.ng.core.artifacts.resources.docker;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import io.harness.NGCommonEntityConstants;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.cdng.artifact.resources.docker.dtos.DockerBuildDetailsDTO;
 import io.harness.cdng.artifact.resources.docker.dtos.DockerRequestDTO;
@@ -34,6 +37,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(CDC)
 @Api("artifacts")
 @Path("/artifacts/docker")
 @Produces({"application/json", "application/yaml"})
@@ -146,7 +150,7 @@ public class DockerArtifactResource {
     return ResponseDTO.newResponse(isValidArtifactImage);
   }
 
-  @GET
+  @POST
   @Path("validateArtifact")
   @ApiOperation(value = "Validate docker artifact with tag/tagregx if given", nickname = "validateArtifactForDocker")
   public ResponseDTO<Boolean> validateArtifact(@QueryParam("imagePath") String imagePath,

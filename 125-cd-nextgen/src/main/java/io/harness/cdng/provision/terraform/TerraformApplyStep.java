@@ -4,7 +4,6 @@ import io.harness.EntityType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
-import io.harness.cdng.common.step.StepHelper;
 import io.harness.cdng.featureFlag.CDFeatureFlagHelper;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.ParameterFieldHelper;
@@ -36,6 +35,7 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.provision.TerraformConstants;
 import io.harness.serializer.KryoSerializer;
+import io.harness.steps.StepHelper;
 import io.harness.steps.StepUtils;
 import io.harness.supplier.ThrowingSupplier;
 import io.harness.utils.IdentifierRefHelper;
@@ -101,6 +101,7 @@ public class TerraformApplyStep extends TaskExecutableWithRollbackAndRbac<Terraf
   public TaskRequest obtainTaskAfterRbac(
       Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
     TerraformApplyStepParameters stepParameters = (TerraformApplyStepParameters) stepElementParameters.getSpec();
+    log.info("Starting execution Obtain Task after Rbac for the Apply Step");
     helper.validateApplyStepParamsInline(stepParameters);
     TerraformStepConfigurationType configurationType = stepParameters.getConfiguration().getType();
     switch (configurationType) {
@@ -117,6 +118,7 @@ public class TerraformApplyStep extends TaskExecutableWithRollbackAndRbac<Terraf
   private TaskRequest obtainInlineTask(
       Ambiance ambiance, TerraformApplyStepParameters stepParameters, StepElementParameters stepElementParameters) {
     helper.validateApplyStepConfigFilesInline(stepParameters);
+    log.info("Obtaining Inline Task for the Apply Step");
     TerraformStepConfigurationParameters configuration = stepParameters.getConfiguration();
     TerraformExecutionDataParameters spec = configuration.getSpec();
     TerraformTaskNGParametersBuilder builder = TerraformTaskNGParameters.builder();
@@ -156,6 +158,7 @@ public class TerraformApplyStep extends TaskExecutableWithRollbackAndRbac<Terraf
 
   private TaskRequest obtainInheritedTask(
       Ambiance ambiance, TerraformApplyStepParameters stepParameters, StepElementParameters stepElementParameters) {
+    log.info("Obtaining Inherited Task for the Apply Step");
     TerraformTaskNGParametersBuilder builder =
         TerraformTaskNGParameters.builder().taskType(TFTaskType.APPLY).terraformCommandUnit(TerraformCommandUnit.Apply);
     String accountId = AmbianceHelper.getAccountId(ambiance);
@@ -197,6 +200,7 @@ public class TerraformApplyStep extends TaskExecutableWithRollbackAndRbac<Terraf
   public StepResponse handleTaskResultWithSecurityContext(Ambiance ambiance,
       StepElementParameters stepElementParameters, ThrowingSupplier<TerraformTaskNGResponse> responseSupplier)
       throws Exception {
+    log.info("Handling Task Result With Security Context for the Apply Step");
     TerraformApplyStepParameters stepParameters = (TerraformApplyStepParameters) stepElementParameters.getSpec();
     TerraformStepConfigurationType configurationType = stepParameters.getConfiguration().getType();
     switch (configurationType) {
@@ -251,6 +255,7 @@ public class TerraformApplyStep extends TaskExecutableWithRollbackAndRbac<Terraf
 
   private StepResponse handleTaskResultInline(Ambiance ambiance, TerraformApplyStepParameters stepParameters,
       ThrowingSupplier<TerraformTaskNGResponse> responseSupplier) throws Exception {
+    log.info("Handling Task Result Inline for the Apply Step");
     StepResponseBuilder stepResponseBuilder = createStepResponseBuilder(responseSupplier);
     TerraformTaskNGResponse terraformTaskNGResponse = responseSupplier.get();
     List<UnitProgress> unitProgresses = terraformTaskNGResponse.getUnitProgressData() == null
@@ -270,6 +275,7 @@ public class TerraformApplyStep extends TaskExecutableWithRollbackAndRbac<Terraf
 
   private StepResponse handleTaskResultInherited(Ambiance ambiance, TerraformApplyStepParameters stepParameters,
       ThrowingSupplier<TerraformTaskNGResponse> responseSupplier) throws Exception {
+    log.info("Handling Task Result Inherited for the Apply Step");
     StepResponseBuilder stepResponseBuilder = createStepResponseBuilder(responseSupplier);
     TerraformTaskNGResponse terraformTaskNGResponse = responseSupplier.get();
     List<UnitProgress> unitProgresses = terraformTaskNGResponse.getUnitProgressData() == null

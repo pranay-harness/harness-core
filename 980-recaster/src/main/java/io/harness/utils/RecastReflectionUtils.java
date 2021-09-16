@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.RecasterMap;
 import io.harness.core.AliasRegistry;
 import io.harness.core.Recaster;
+import io.harness.exceptions.RecasterException;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -108,10 +109,12 @@ public class RecastReflectionUtils {
       if (componentClass != null) {
         return Array.newInstance(componentClass, 0).getClass();
       } else {
-        return null;
+        String recastFilePath = type.getTypeName();
+        throw new RecasterException("Class for value is not found for - " + recastFilePath);
       }
     } else {
-      return null;
+      String recastFilePath = type.getTypeName();
+      throw new RecasterException("Class for value is not found for - " + recastFilePath);
     }
   }
 
@@ -133,6 +136,8 @@ public class RecastReflectionUtils {
         c = Class.forName(documentIdentifier, true, Thread.currentThread().getContextClassLoader());
       } catch (ClassNotFoundException e) {
         log.warn("Class not found defined in dbObj: ", e);
+        String recastFilePath = String.valueOf(recasterMap.getOrDefault(RecasterMap.RECAST_CLASS_KEY, ""));
+        throw new RecasterException("Class for value is not found for - " + recastFilePath, e);
       }
     }
     return (Class<T>) c;
@@ -267,15 +272,6 @@ public class RecastReflectionUtils {
     }
 
     return recasterAlias.value();
-  }
-
-  public static <T> void setIdentifier(Map<String, Object> map, Class<T> clazz) {
-    String recasterAliasValue = obtainRecasterAliasValueOrNull(clazz);
-    if (recasterAliasValue != null) {
-      map.put(Recaster.RECAST_CLASS_KEY, recasterAliasValue);
-    } else {
-      map.put(Recaster.RECAST_CLASS_KEY, clazz.getName());
-    }
   }
 
   @Nullable

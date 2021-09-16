@@ -22,6 +22,7 @@ import software.wings.service.impl.ContainerServiceParams;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
@@ -46,6 +47,7 @@ public class HelmValuesFetchTaskParameters implements TaskParameters, ActivityAc
   @Expression(ALLOW_SECRETS) private String helmCommandFlags;
 
   private HelmChartConfigParams helmChartConfigTaskParams;
+  private Map<String, List<String>> mapK8sValuesLocationToFilePaths;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
@@ -55,6 +57,10 @@ public class HelmValuesFetchTaskParameters implements TaskParameters, ActivityAc
       capabilities.addAll(helmChartConfigTaskParams.fetchRequiredExecutionCapabilities(maskingEvaluator));
       if (isBindTaskFeatureSet && containerServiceParams != null) {
         capabilities.addAll(containerServiceParams.fetchRequiredExecutionCapabilities(maskingEvaluator));
+      }
+      // Todo: investigate if it can break existing workflows
+      if (isNotEmpty(delegateSelectors)) {
+        capabilities.add(SelectorCapability.builder().selectors(delegateSelectors).build());
       }
     } else {
       if (mergeCapabilities) {

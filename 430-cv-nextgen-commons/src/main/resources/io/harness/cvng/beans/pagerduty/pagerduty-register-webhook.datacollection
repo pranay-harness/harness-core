@@ -1,0 +1,27 @@
+Var validationUrl = concat(Env:baseUrl, "webhook_subscriptions")
+Var bodyMap = {}
+Var subs = {}
+
+Var delivery = {}
+Var:delivery.put("type", "http_delivery_method")
+Var:delivery.put("url", Env:url)
+
+Var events = []
+Var:events.append("incident.triggered")
+
+Var filter = {}
+Var:filter.put("id", Env:pagerDutyServiceId)
+Var:filter.put("type", "service_reference")
+
+Var:subs.put("delivery_method", Var:delivery)
+Var:subs.put("description", "Sends PagerDuty v3 webhook events to harness")
+Var:subs.put("events", Var:events)
+Var:subs.put("type", "webhook_subscription")
+Var:subs.put("filter", Var:filter)
+
+Var:bodyMap.put("webhook_subscription", Var:subs)
+
+print Var:bodyMap
+Var result = sync-call(url=Var:validationUrl, header=Env:commonHeaders, body=Var:bodyMap)
+Var id = extract(Var:result, $.webhook_subscription.id)
+return Var:id

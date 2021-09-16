@@ -8,7 +8,9 @@ import static software.wings.beans.Variable.VariableBuilder.aVariable;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.artifact.ArtifactStreamSummary;
 
@@ -19,6 +21,7 @@ import java.util.Map;
 import lombok.Data;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @Data
 @JsonInclude(NON_NULL)
 public class Variable {

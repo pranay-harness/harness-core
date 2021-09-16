@@ -15,7 +15,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>959-cg-beans</artifactId>
+            <artifactId>957-cg-beans</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

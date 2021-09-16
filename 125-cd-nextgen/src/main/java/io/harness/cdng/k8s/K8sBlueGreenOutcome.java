@@ -2,6 +2,7 @@ package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.sdk.core.data.ExecutionSweepingOutput;
 import io.harness.pms.sdk.core.data.Outcome;
@@ -16,11 +17,12 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @TypeAlias("k8sBlueGreenOutcome")
 @JsonTypeName("k8sBlueGreenOutcome")
+@RecasterAlias("io.harness.cdng.k8s.K8sBlueGreenOutcome")
 public class K8sBlueGreenOutcome implements Outcome, ExecutionSweepingOutput {
-  private int releaseNumber;
-  private String releaseName;
-  private String primaryServiceName;
-  private String stageServiceName;
-  private String stageColor;
-  private String primaryColor;
+  int releaseNumber;
+  String releaseName;
+  String primaryServiceName;
+  String stageServiceName;
+  String stageColor;
+  String primaryColor;
 }

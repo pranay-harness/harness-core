@@ -46,6 +46,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -209,16 +210,12 @@ public class MailServiceImpl implements ChannelService {
   private List<String> resolveRecipients(NotificationRequest notificationRequest) {
     NotificationRequest.Email emailDetails = notificationRequest.getEmail();
     List<String> recipients = new ArrayList<>(emailDetails.getEmailIdsList());
-    if (isNotEmpty(emailDetails.getUserGroupIdsList())) {
-      List<String> resolvedRecipients = notificationSettingsService.getNotificationSettingsForGroups(
-          emailDetails.getUserGroupIdsList(), NotificationChannelType.EMAIL, notificationRequest.getAccountId());
-      recipients.addAll(resolvedRecipients);
-    } else {
+    if (isNotEmpty(emailDetails.getUserGroupList())) {
       List<String> resolvedRecipients = notificationSettingsService.getNotificationRequestForUserGroups(
           emailDetails.getUserGroupList(), NotificationChannelType.EMAIL, notificationRequest.getAccountId());
       recipients.addAll(resolvedRecipients);
     }
-    return recipients;
+    return recipients.stream().distinct().collect(Collectors.toList());
   }
 
   @Getter

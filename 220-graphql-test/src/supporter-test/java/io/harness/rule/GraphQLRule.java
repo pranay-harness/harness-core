@@ -18,7 +18,6 @@ import io.harness.cf.AbstractCfModule;
 import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
 import io.harness.commandlibrary.client.CommandLibraryServiceHttpClient;
-import io.harness.cvng.client.CVNGServiceClient;
 import io.harness.delegate.authenticator.DelegateTokenAuthenticatorImpl;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.marketo.MarketoConfig;
@@ -136,6 +135,10 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
         GrpcClientConfig.builder().target("localhost:9880").authority("localhost").build());
     configuration.setGrpcClientConfig(
         GrpcClientConfig.builder().target("localhost:9880").authority("localhost").build());
+
+    configuration.setGrpcDMSClientConfig(
+        GrpcClientConfig.builder().target("localhost:15011").authority("localhost").build());
+    configuration.setDmsSecret("dummy_key");
 
     configuration.setLogStreamingServiceConfig(
         LogStreamingServiceConfig.builder().baseUrl("http://localhost:8079").serviceToken("token").build());
@@ -256,8 +259,6 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
       protected void configure() {
         bind(BroadcasterFactory.class).toInstance(mock(BroadcasterFactory.class));
         bind(CommandLibraryServiceHttpClient.class).toInstance(mock(CommandLibraryServiceHttpClient.class));
-        CVNGServiceClient mockCVNGServiceClient = mock(CVNGServiceClient.class);
-        bind(CVNGServiceClient.class).toInstance(mockCVNGServiceClient);
       }
     });
 

@@ -13,5 +13,4 @@ public interface ClusterRecordService {
   boolean delete(String accountId, String ceK8sConnectorIdentifier);
   ClusterRecord getByCEK8sIdentifier(String accountId, String ceK8sConnectorIdentifier);
   ClusterRecord attachTask(ClusterRecord clusterRecord, String taskId);
-  ClusterRecord resetTask(ClusterRecord clusterRecord, String taskId);
 }

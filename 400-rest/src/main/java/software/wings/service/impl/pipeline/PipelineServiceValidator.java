@@ -12,7 +12,9 @@ import static software.wings.sm.StateType.APPROVAL;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.ExplanationException;
 import io.harness.exception.HintException;
 import io.harness.exception.InvalidRequestException;
@@ -37,6 +39,7 @@ import org.jetbrains.annotations.NotNull;
 
 @OwnedBy(CDC)
 @Singleton
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class PipelineServiceValidator {
   @Inject UserGroupService userGroupService;
 

@@ -1,9 +1,13 @@
 package io.harness.grpc;
 
+import static io.harness.annotations.dev.HarnessTeam.DEL;
 import static io.harness.delegate.DelegateServiceGrpc.DelegateServiceBlockingStub;
 import static io.harness.delegateprofile.DelegateProfileServiceGrpc.DelegateProfileServiceBlockingStub;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.DelegateServiceGrpc;
+import io.harness.delegatedetails.DelegateDetailsServiceGrpc;
+import io.harness.delegatedetails.DelegateDetailsServiceGrpc.DelegateDetailsServiceBlockingStub;
 import io.harness.delegateprofile.DelegateProfileServiceGrpc;
 import io.harness.govern.ProviderModule;
 import io.harness.grpc.auth.ServiceAuthCallCredentials;
@@ -26,6 +30,7 @@ import javax.net.ssl.SSLException;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(DEL)
 public class DelegateServiceDriverGrpcClientModule extends ProviderModule {
   private final String serviceSecret;
   private final String target;
@@ -45,6 +50,7 @@ public class DelegateServiceDriverGrpcClientModule extends ProviderModule {
   protected void configure() {
     bind(DelegateServiceGrpcClient.class).in(Singleton.class);
     bind(DelegateProfileServiceGrpcClient.class).in(Singleton.class);
+    bind(DelegateDetailsServiceGrpcClient.class).in(Singleton.class);
   }
 
   @Named("delegate-service-channel")
@@ -108,6 +114,14 @@ public class DelegateServiceDriverGrpcClientModule extends ProviderModule {
     return DelegateProfileServiceGrpc.newBlockingStub(channel).withCallCredentials(callCredentials);
   }
 
+  @Provides
+  @Singleton
+  DelegateDetailsServiceBlockingStub delegateDetailsServiceBlockingStub(
+      @Named("delegate-service-channel") Channel channel,
+      @Named("dds-call-credentials") CallCredentials callCredentials) {
+    return DelegateDetailsServiceGrpc.newBlockingStub(channel).withCallCredentials(callCredentials);
+  }
+
   @Named("ds-call-credentials")
   @Provides
   @Singleton
@@ -120,6 +134,13 @@ public class DelegateServiceDriverGrpcClientModule extends ProviderModule {
   @Singleton
   CallCredentials dpsCallCredentials() {
     return new ServiceAuthCallCredentials(serviceSecret, new ServiceTokenGenerator(), "delegate-profile-service");
+  }
+
+  @Named("dds-call-credentials")
+  @Provides
+  @Singleton
+  CallCredentials ddsCallCredentials() {
+    return new ServiceAuthCallCredentials(serviceSecret, new ServiceTokenGenerator(), "delegate-details-service");
   }
 
   @Named("driver-installed-in-ng-service")

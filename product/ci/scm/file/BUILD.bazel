@@ -1,21 +1,21 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
-    name = "go_default_library",
+    name = "file",
     srcs = ["file.go"],
     importpath = "github.com/wings-software/portal/product/ci/scm/file",
     visibility = ["//visibility:public"],
     deps = [
-        "//commons/go/lib/utils:go_default_library",
-        "//product/ci/scm/gitclient:go_default_library",
-        "//product/ci/scm/proto:go_default_library",
-        "@com_github_drone_go_scm//scm:go_default_library",
-        "@org_uber_go_zap//:go_default_library",
+        "//commons/go/lib/utils",
+        "//product/ci/scm/gitclient",
+        "//product/ci/scm/proto",
+        "@com_github_drone_go_scm//scm",
+        "@org_uber_go_zap//:zap",
     ],
 )
 
 go_test(
-    name = "go_default_test",
+    name = "file_test",
     srcs = [
         "bitbucket_cloud_test.go",
         "file_test.go",
@@ -31,11 +31,11 @@ go_test(
         "testdata/FileUpdateNoMatch.json",
         "testdata/FileUpdateSource.json",
     ],
-    embed = [":go_default_library"],
+    embed = [":file"],
     deps = [
-        "//commons/go/lib/logs:go_default_library",
-        "//product/ci/scm/proto:go_default_library",
-        "@com_github_stretchr_testify//assert:go_default_library",
-        "@org_uber_go_zap//:go_default_library",
+        "//commons/go/lib/logs",
+        "//product/ci/scm/proto",
+        "@com_github_stretchr_testify//assert",
+        "@org_uber_go_zap//:zap",
     ],
 )

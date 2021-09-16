@@ -1,7 +1,10 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import static software.wings.beans.BlueGreenOrchestrationWorkflow.BlueGreenOrchestrationWorkflowBuilder.aBlueGreenOrchestrationWorkflow;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.OrchestrationWorkflowType;
 
 import software.wings.beans.concurrency.ConcurrencyStrategy;
@@ -13,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@OwnedBy(CDC)
 @JsonTypeName("BLUE_GREEN")
 public class BlueGreenOrchestrationWorkflow extends CanaryOrchestrationWorkflow {
   public BlueGreenOrchestrationWorkflow() {
@@ -25,6 +29,7 @@ public class BlueGreenOrchestrationWorkflow extends CanaryOrchestrationWorkflow 
         .withGraph(getGraph())
         .withPreDeploymentSteps(getPreDeploymentSteps())
         .withRollbackProvisioners(getRollbackProvisioners())
+        .withRollbackProvisionersReverse(getRollbackProvisionersReverse())
         .withWorkflowPhaseIds(getWorkflowPhaseIds())
         .withWorkflowPhases(getWorkflowPhases())
         .withWorkflowPhaseIdMap(getWorkflowPhaseIdMap())
@@ -56,6 +61,7 @@ public class BlueGreenOrchestrationWorkflow extends CanaryOrchestrationWorkflow 
     private List<Variable> derivedVariables = new ArrayList<>();
     private Set<EntityType> requiredEntityTypes;
     private PhaseStep rollbackProvisioners;
+    private PhaseStep rollbackProvisionersReverse;
 
     private BlueGreenOrchestrationWorkflowBuilder() {}
     public static BlueGreenOrchestrationWorkflowBuilder aBlueGreenOrchestrationWorkflow() {
@@ -74,6 +80,12 @@ public class BlueGreenOrchestrationWorkflow extends CanaryOrchestrationWorkflow 
 
     public BlueGreenOrchestrationWorkflowBuilder withRollbackProvisioners(PhaseStep rollbackProvisioners) {
       this.rollbackProvisioners = rollbackProvisioners;
+      return this;
+    }
+
+    public BlueGreenOrchestrationWorkflowBuilder withRollbackProvisionersReverse(
+        PhaseStep rollbackProvisionersReverse) {
+      this.rollbackProvisionersReverse = rollbackProvisionersReverse;
       return this;
     }
 
@@ -160,6 +172,7 @@ public class BlueGreenOrchestrationWorkflow extends CanaryOrchestrationWorkflow 
       blueGreenOrchestrationWorkflow.setRequiredEntityTypes(requiredEntityTypes);
       blueGreenOrchestrationWorkflow.setConcurrencyStrategy(concurrencyStrategy);
       blueGreenOrchestrationWorkflow.setRollbackProvisioners(rollbackProvisioners);
+      blueGreenOrchestrationWorkflow.setRollbackProvisionersReverse(rollbackProvisionersReverse);
       return blueGreenOrchestrationWorkflow;
     }
   }

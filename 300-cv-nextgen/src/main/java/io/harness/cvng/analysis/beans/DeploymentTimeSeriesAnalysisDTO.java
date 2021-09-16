@@ -1,5 +1,6 @@
 package io.harness.cvng.analysis.beans;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -10,7 +11,7 @@ import lombok.Value;
 @Value
 @Builder
 public class DeploymentTimeSeriesAnalysisDTO {
-  int risk;
+  @JsonDeserialize(using = RiskDeserializer.class) int risk;
   public Risk getRisk() {
     return Risk.valueOf(risk);
   }
@@ -38,7 +39,7 @@ public class DeploymentTimeSeriesAnalysisDTO {
     String hostName;
     boolean primary;
     boolean canary;
-    int risk;
+    @JsonDeserialize(using = RiskDeserializer.class) int risk;
     public Risk getRisk() {
       return Risk.valueOf(risk);
     }
@@ -49,7 +50,7 @@ public class DeploymentTimeSeriesAnalysisDTO {
   @Builder
   public static class HostData implements Comparable<HostData> {
     String hostName;
-    int risk;
+    @JsonDeserialize(using = RiskDeserializer.class) int risk;
     public Risk getRisk() {
       return Risk.valueOf(risk);
     }
@@ -77,7 +78,7 @@ public class DeploymentTimeSeriesAnalysisDTO {
   public static class TransactionMetricHostData {
     String transactionName;
     String metricName;
-    int risk;
+    @JsonDeserialize(using = RiskDeserializer.class) int risk;
     public Risk getRisk() {
       return Risk.valueOf(this.risk);
     }
@@ -85,6 +86,13 @@ public class DeploymentTimeSeriesAnalysisDTO {
     Double score;
     // TODO: For load test, this is overall data. Figure out a better name that suits for both canary and load test
     List<HostData> hostData;
+
+    public List<HostData> getHostData() {
+      if (hostData == null) {
+        return Collections.emptyList();
+      }
+      return hostData;
+    }
 
     public boolean isAnomalous() {
       return getRisk().getValue() >= Risk.MEDIUM.getValue();

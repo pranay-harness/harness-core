@@ -15,6 +15,7 @@ public class ActivityVerificationSummary {
   int errors;
   int progress;
   int notStarted;
+  int aborted;
   long remainingTimeMs;
   int progressPercentage;
   Long startTime;
@@ -30,6 +31,8 @@ public class ActivityVerificationSummary {
       return ActivityVerificationStatus.ERROR;
     } else if (failed > 0) {
       return ActivityVerificationStatus.VERIFICATION_FAILED;
+    } else if (aborted > 0) {
+      return ActivityVerificationStatus.ABORTED;
     }
     return ActivityVerificationStatus.NOT_STARTED;
   }

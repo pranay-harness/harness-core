@@ -1,6 +1,6 @@
 package io.harness.ngtriggers.eventmapper.impl;
 
-import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.SCM_SERVICE_CONNECTION_FAILED;
+import static io.harness.ngtriggers.beans.response.TriggerEventResponse.FinalStatus.SCM_SERVICE_CONNECTION_FAILED;
 import static io.harness.rule.OwnerRule.ADWAIT;
 
 import static io.grpc.Status.UNAVAILABLE;

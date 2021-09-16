@@ -13,7 +13,7 @@ import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
-import io.harness.yaml.utils.YamlPipelineUtils;
+import io.harness.utils.YamlPipelineUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -46,7 +46,7 @@ public class YamlExpressionResolveHelper {
 
         JsonNode resolvedYamlNode = yamlField.getNode().getCurrJsonNode();
         YamlUtils.removeUuid(resolvedYamlNode);
-        return YamlPipelineUtils.writeString(resolvedYamlNode).replace("---\n", "").replace("\"", "");
+        return YamlPipelineUtils.writeString(resolvedYamlNode).replace("---\n", "");
 
       } catch (IOException ex) {
         log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);

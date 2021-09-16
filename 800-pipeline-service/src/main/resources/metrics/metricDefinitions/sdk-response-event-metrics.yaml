@@ -2,8 +2,8 @@ name: SdkResponse Event Metrics
 identifier: sdk_response_event
 metricGroup: sdk_event_group
 metrics:
-  - metricName: sdk_response_event_queue_time
-    metricDefinition: Time for which Sdk Response Event was in the queue.
+  - metricName: sdk_response_event_service_time
+    metricDefinition: Time for which Sdk Response Event was processed by the service.
     type: LastValue
     unit: count
   - metricName: sdk_response_event_time_in_queue

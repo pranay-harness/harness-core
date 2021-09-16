@@ -1,5 +1,6 @@
 package io.harness.service;
 
+import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_DIRECT;
 import static io.harness.rule.OwnerRule.JASMEET;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,10 +10,12 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.entities.ArtifactDetails;
-import io.harness.entities.instance.Instance;
+import io.harness.entities.Instance;
+import io.harness.entities.instanceinfo.K8sInstanceInfo;
 import io.harness.models.BuildsByEnvironment;
 import io.harness.models.EnvBuildInstanceCount;
-import io.harness.models.InstancesByBuildId;
+import io.harness.models.InstanceDTOsByBuildId;
+import io.harness.models.InstanceDetailsByBuildId;
 import io.harness.models.dashboard.InstanceCountDetailsByEnvTypeBase;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.repositories.instance.InstanceRepository;
@@ -46,15 +49,17 @@ public class InstanceDashboardServiceTest extends InstancesTestBase {
         .accountIdentifier(ACCOUNT_IDENTIFIER)
         .orgIdentifier(ORG_IDENTIFIER)
         .projectIdentifier(PROJECT_IDENTIFIER)
-        .serviceId(SERVICE_IDENTIFIER)
-        .envId(envId)
+        .serviceIdentifier(SERVICE_IDENTIFIER)
+        .envIdentifier(envId)
         .envName("envName")
         .envType(envType)
+        .infrastructureKind(KUBERNETES_DIRECT)
         .primaryArtifact(ArtifactDetails.builder().tag(tag).build())
         .createdAt(0L)
         .deletedAt(10L)
         .createdAt(0L)
         .lastModifiedAt(0L)
+        .instanceInfo(K8sInstanceInfo.builder().podName("podName").releaseName("releaseName").build())
         .build();
   }
 
@@ -73,9 +78,9 @@ public class InstanceDashboardServiceTest extends InstancesTestBase {
 
     assertThat(environments.size()).isEqualTo(5);
     for (BuildsByEnvironment buildsByEnv : environments) {
-      List<InstancesByBuildId> instanceByBuilds = buildsByEnv.getBuilds();
+      List<InstanceDTOsByBuildId> instanceByBuilds = buildsByEnv.getBuilds();
       assertThat(instanceByBuilds.size()).isEqualTo(4);
-      for (InstancesByBuildId instanceByBuild : instanceByBuilds) {
+      for (InstanceDTOsByBuildId instanceByBuild : instanceByBuilds) {
         assertThat(instanceByBuild.getInstances().size()).isEqualTo(2);
       }
     }
@@ -108,7 +113,7 @@ public class InstanceDashboardServiceTest extends InstancesTestBase {
             ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, SERVICE_IDENTIFIER, 5);
     assertThat(uniqueEnvIdBuildIdCombinationsWithInstanceCounts.size()).isGreaterThan(0);
     uniqueEnvIdBuildIdCombinationsWithInstanceCounts.forEach(uniqueEnvIdBuildIdCombinationsWithInstanceCount -> {
-      final String envId = uniqueEnvIdBuildIdCombinationsWithInstanceCount.getEnvId();
+      final String envId = uniqueEnvIdBuildIdCombinationsWithInstanceCount.getEnvIdentifier();
       final String buildId = uniqueEnvIdBuildIdCombinationsWithInstanceCount.getTag();
       final int count = uniqueEnvIdBuildIdCombinationsWithInstanceCount.getCount();
       final int expectedCount = mock.getOrDefault(envId, new HashMap<>()).getOrDefault(buildId, 0);
@@ -135,7 +140,7 @@ public class InstanceDashboardServiceTest extends InstancesTestBase {
 
     String inputEnvName = "envId1";
     List<String> inputBuildIds = Arrays.asList("buildId1", "buildId2");
-    List<InstancesByBuildId> result;
+    List<InstanceDetailsByBuildId> result;
 
     // Invalid cases that should return no results
 
@@ -181,8 +186,11 @@ public class InstanceDashboardServiceTest extends InstancesTestBase {
     });
 
     InstanceCountDetailsByEnvTypeBase instanceCountDetailsByEnvTypeBase =
-        instanceDashboardService.getActiveServiceInstanceCountBreakdown(
-            ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, SERVICE_IDENTIFIER, 5);
+        instanceDashboardService
+            .getActiveServiceInstanceCountBreakdown(
+                ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, Arrays.asList(SERVICE_IDENTIFIER), 5)
+            .getInstanceCountDetailsByEnvTypeBaseMap()
+            .get(SERVICE_IDENTIFIER);
     assertThat(instanceCountDetailsByEnvTypeBase.getTotalInstances()).isEqualTo(mockList.size());
     assertThat(instanceCountDetailsByEnvTypeBase.getNonProdInstances()).isEqualTo(3);
     assertThat(instanceCountDetailsByEnvTypeBase.getProdInstances()).isEqualTo(1);

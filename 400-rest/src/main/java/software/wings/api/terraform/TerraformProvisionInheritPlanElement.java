@@ -1,8 +1,10 @@
 package software.wings.api.terraform;
 
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.context.ContextElementType;
 import io.harness.provision.TfVarSource;
 import io.harness.security.encryption.EncryptedRecordData;
@@ -21,6 +23,7 @@ import lombok.EqualsAndHashCode;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @OwnedBy(CDP)
+@TargetModule(_957_CG_BEANS)
 public class TerraformProvisionInheritPlanElement implements ContextElement {
   private String entityId;
   private String provisionerId;

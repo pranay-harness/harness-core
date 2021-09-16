@@ -2,7 +2,9 @@ package software.wings.expression;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.expression.ExpressionEvaluator;
@@ -24,6 +26,7 @@ import lombok.Value;
 
 @OwnedBy(CDC)
 @Value
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ManagerPreExecutionExpressionEvaluator extends ExpressionEvaluator {
   private final ExpressionFunctor secretManagerFunctor;
   private final ExpressionFunctor ngSecretManagerFunctor;

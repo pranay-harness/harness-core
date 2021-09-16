@@ -243,6 +243,17 @@ public class NGSecretServiceV2Impl implements NGSecretServiceV2 {
         criteria, PageUtils.getPageRequest(page, size, Collections.singletonList(SecretKeys.createdAt + ",desc")));
   }
 
+  @Override
+  public long count(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    Criteria criteria = Criteria.where(SecretKeys.accountIdentifier)
+                            .is(accountIdentifier)
+                            .and(SecretKeys.orgIdentifier)
+                            .is(orgIdentifier)
+                            .and(SecretKeys.projectIdentifier)
+                            .is(projectIdentifier);
+    return secretRepository.count(criteria);
+  }
+
   public Map<String, String> buildAbstractions(
       String accountIdIdentifier, String orgIdentifier, String projectIdentifier) {
     Map<String, String> abstractions = new HashMap<>(2);

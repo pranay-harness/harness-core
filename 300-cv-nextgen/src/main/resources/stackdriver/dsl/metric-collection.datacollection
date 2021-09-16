@@ -30,9 +30,15 @@ while Var:index !=  Var:lengthOfItems {
 
   Var url = concat(Env:baseUrl, Env:project, "/timeSeries")
   Var groupBys = Env:groupByFieldsList[Var:index]
+  if Env:collectHostData == "true" {
+    Var serviceInstanceField = Env:serviceInstanceFields[Var:index]
+    Var:groupBys.append(Var:serviceInstanceField)
+  }
+
   if Var:groupBys != Var:tempList {
     Var:params.put("aggregation.groupByFields", Var:groupBys)
   }
+
 
   Request metricRequest = new Request(url=Var:url, header=Var:header, options=Var:params)
   Var:requests.append(Var:metricRequest)
@@ -60,13 +66,27 @@ foreach metricResponse in Var:metricResponses {
         txnName = concat(Var:metricName, "")
       }
 
+      Var hostname = ""
+      if Env:collectHostData == "true" {
+        Var serviceInstanceResponseField = Env:serviceInstanceResponseFields.get(Var:metricName)
+        Var serviceInstancePath = concat("$.", Var:serviceInstanceResponseField)
+        hostname = extract(Var:timeseries, Var:serviceInstancePath)
+        print Var:hostname
+      }
+
       Var points = extract(Var:timeseries, $.points)
       foreach point in Var:points {
           Var val = extract(Var:point, $.value.doubleValue)
           Var timestamp = extract(Var:point, $.interval.endTime)
           Var timeStampVal = string-to-time(Var:timestamp)
-          Var tsRecord = new TimeseriesRecord(txnName=Var:txnName, metricName=Var:metricName, metricValue=Var:val, timestamp=Var:timeStampVal)
-          Var:returnList.append(Var:tsRecord)
+          if Env:collectHostData != "true" {
+              Var tsRecord = new TimeseriesRecord(txnName=Var:txnName, metricName=Var:metricName, metricValue=Var:val, timestamp=Var:timeStampVal)
+              Var:returnList.append(Var:tsRecord)
+          }
+          if Env:collectHostData == "true" {
+            Var tsRecord = new TimeseriesRecord(txnName=Var:txnName, metricName=Var:metricName, metricValue=Var:val, timestamp=Var:timeStampVal, host=Var:hostname)
+            Var:returnList.append(Var:tsRecord)
+          }
       }
   }
 }

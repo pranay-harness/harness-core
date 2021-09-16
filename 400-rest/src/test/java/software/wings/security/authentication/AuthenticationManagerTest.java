@@ -28,6 +28,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.configuration.DeployMode;
 import io.harness.eraro.ErrorCode;
@@ -65,6 +67,7 @@ import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class AuthenticationManagerTest extends WingsBaseTest {
   private static final String NON_EXISTING_USER = "nonExistingUser";
   private static final String PASSWORD_WITH_SPECIAL_CHARECTERS = "prefix:suffix:abc_+=./,!@#$%^&&*(Z)";
@@ -189,7 +192,7 @@ public class AuthenticationManagerTest extends WingsBaseTest {
     when(account1.getAuthenticationMechanism()).thenReturn(io.harness.ng.core.account.AuthenticationMechanism.SAML);
     SSORequest SSORequest = new SSORequest();
     SSORequest.setIdpRedirectUrl("TestURL");
-    when(SAML_CLIENT_SERVICE.generateSamlRequest(mockUser)).thenReturn(SSORequest);
+    when(SAML_CLIENT_SERVICE.generateSamlRequestFromAccount(account1, false)).thenReturn(SSORequest);
     loginTypeResponse = authenticationManager.getLoginTypeResponse("testUser");
     assertThat(loginTypeResponse.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.SAML);
     assertThat(loginTypeResponse.getSSORequest()).isNotNull();

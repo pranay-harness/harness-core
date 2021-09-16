@@ -2,7 +2,9 @@ package software.wings.service.intfc;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.validation.Create;
@@ -24,6 +26,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
  * ArtifactStreamService.
  */
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public interface ArtifactStreamService extends OwnedByService {
   PageResponse<ArtifactStream> list(PageRequest<ArtifactStream> req);
 
@@ -97,4 +100,6 @@ public interface ArtifactStreamService extends OwnedByService {
   List<String> getArtifactStreamParameters(String artifactStreamId);
 
   void deleteArtifacts(String accountId, ArtifactStream artifactStream);
+
+  ArtifactStream fetchByArtifactSourceVariableValue(String appId, String variableValue);
 }

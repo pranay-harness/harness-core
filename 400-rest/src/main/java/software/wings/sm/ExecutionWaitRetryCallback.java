@@ -5,7 +5,9 @@ import static io.harness.beans.ExecutionInterruptType.RETRY;
 
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.OldNotifyCallback;
 
@@ -18,6 +20,7 @@ import java.util.Map;
  * @author Rishi
  */
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ExecutionWaitRetryCallback implements OldNotifyCallback {
   @Inject private ExecutionInterruptManager executionInterruptManager;
 

@@ -1,6 +1,5 @@
 package io.harness.core.ci.services;
 
-import io.harness.app.beans.entities.AuthorInfo;
 import io.harness.app.beans.entities.BuildActiveInfo;
 import io.harness.app.beans.entities.BuildCount;
 import io.harness.app.beans.entities.BuildExecutionInfo;
@@ -16,6 +15,7 @@ import io.harness.app.beans.entities.RepositoryBuildInfo;
 import io.harness.app.beans.entities.RepositoryInfo;
 import io.harness.app.beans.entities.RepositoryInformation;
 import io.harness.app.beans.entities.StatusAndTime;
+import io.harness.ng.core.dashboard.AuthorInfo;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.timescaledb.DBUtils;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -205,7 +205,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
         .commit(commit)
         .commitID(commit_id)
         .startTs(startTs)
-        .endTs(endTs)
+        .endTs(endTs == -1L ? null : endTs)
         .author(author)
         .status(status)
         .build();
@@ -222,7 +222,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
         .author(author)
         .startTs(startTs)
         .status(status)
-        .endTs(endTs)
+        .endTs(endTs == -1 ? null : endTs)
         .build();
   }
 
@@ -556,7 +556,7 @@ public class CIOverviewDashboardServiceImpl implements CIOverviewDashboardServic
       if (totalBuild > 0) {
         LastRepositoryInfo lastRepositoryInfo = LastRepositoryInfo.builder()
                                                     .StartTime(lastCommitTime)
-                                                    .EndTime(lastCommitEndTime)
+                                                    .EndTime(lastCommitEndTime == -1L ? null : lastCommitEndTime)
                                                     .status(lastStatus)
                                                     .author(author)
                                                     .commit(lastCommit)

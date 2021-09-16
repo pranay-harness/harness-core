@@ -15,18 +15,23 @@ import io.harness.pms.contracts.plan.InitializeSdkRequest;
 import io.harness.pms.contracts.plan.InitializeSdkResponse;
 import io.harness.pms.contracts.plan.PmsServiceGrpc.PmsServiceImplBase;
 import io.harness.pms.contracts.plan.Types;
+import io.harness.pms.contracts.steps.SdkStep;
+import io.harness.pms.contracts.steps.StepInfo;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.exception.InitializeSdkException;
 import io.harness.pms.pipeline.StepPalleteInfo;
 import io.harness.pms.pipeline.service.yamlschema.SchemaFetcher;
 import io.harness.pms.sdk.PmsSdkInstance.PmsSdkInstanceKeys;
 import io.harness.repositories.sdk.PmsSdkInstanceRepository;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.grpc.stub.StreamObserver;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -74,7 +79,8 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
     responseObserver.onCompleted();
   }
 
-  private void saveSdkInstance(InitializeSdkRequest request) {
+  @VisibleForTesting
+  protected void saveSdkInstance(InitializeSdkRequest request) {
     Map<String, Set<String>> supportedTypes = new HashMap<>();
     if (EmptyPredicate.isNotEmpty(request.getSupportedTypesMap())) {
       for (Map.Entry<String, Types> entry : request.getSupportedTypesMap().entrySet()) {
@@ -89,9 +95,12 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
     Query query = query(where(PmsSdkInstanceKeys.name).is(request.getName()));
     Update update =
         update(PmsSdkInstanceKeys.supportedTypes, supportedTypes)
-            .set(PmsSdkInstanceKeys.supportedSteps, request.getSupportedStepsList())
-            .set(PmsSdkInstanceKeys.supportedStepTypes, request.getSupportedStepTypesList())
+            .set(PmsSdkInstanceKeys.supportedSdkSteps, request.getSupportedStepsList())
+            .set(PmsSdkInstanceKeys.supportedStepTypes, getSupportedStepTypes(request.getSupportedStepsList()))
+            .set(PmsSdkInstanceKeys.supportedSteps, getStepInfos(request.getSupportedStepsList()))
             .set(PmsSdkInstanceKeys.interruptConsumerConfig, request.getInterruptConsumerConfig())
+            .set(PmsSdkInstanceKeys.staticAliases, request.getStaticAliasesMap())
+            .set(PmsSdkInstanceKeys.sdkFunctors, request.getSdkFunctorsList())
             .set(PmsSdkInstanceKeys.orchestrationEventConsumerConfig, request.getOrchestrationEventConsumerConfig())
             .set(PmsSdkInstanceKeys.active, true)
             .set(PmsSdkInstanceKeys.sdkModuleInfo, request.getSdkModuleInfo())
@@ -100,7 +109,8 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
             .set(PmsSdkInstanceKeys.nodeStartEventConsumerConfig, request.getNodeStartEventConsumerConfig())
             .set(PmsSdkInstanceKeys.progressEventConsumerConfig, request.getProgressEventConsumerConfig())
             .set(PmsSdkInstanceKeys.nodeAdviseEventConsumerConfig, request.getNodeAdviseEventConsumerConfig())
-            .set(PmsSdkInstanceKeys.nodeResumeEventConsumerConfig, request.getNodeResumeEventConsumerConfig());
+            .set(PmsSdkInstanceKeys.nodeResumeEventConsumerConfig, request.getNodeResumeEventConsumerConfig())
+            .set(PmsSdkInstanceKeys.startPlanCreationEventConsumerConfig, request.getPlanCreationEventConsumerConfig());
     mongoTemplate.findAndModify(
         query, update, new FindAndModifyOptions().upsert(true).returnNew(true), PmsSdkInstance.class);
   }
@@ -114,12 +124,23 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
 
   public Map<String, StepPalleteInfo> getModuleNameToStepPalleteInfo() {
     Map<String, StepPalleteInfo> instances = new HashMap<>();
-    pmsSdkInstanceRepository.findByActive(true).forEach(instance
-        -> instances.put(instance.getName(),
-            StepPalleteInfo.builder()
-                .moduleName(instance.getSdkModuleInfo().getDisplayName())
-                .stepTypes(instance.getSupportedSteps())
-                .build()));
+    pmsSdkInstanceRepository.findByActive(true).forEach(instance -> {
+      List<StepInfo> stepTypes;
+      if (EmptyPredicate.isEmpty(instance.getSupportedSdkSteps())) {
+        stepTypes = instance.getSupportedSteps();
+      } else {
+        stepTypes = instance.getSupportedSdkSteps()
+                        .stream()
+                        .filter(SdkStep::getIsPartOfStepPallete)
+                        .map(SdkStep::getStepInfo)
+                        .collect(Collectors.toList());
+      }
+      instances.put(instance.getName(),
+          StepPalleteInfo.builder()
+              .moduleName(instance.getSdkModuleInfo().getDisplayName())
+              .stepTypes(stepTypes)
+              .build());
+    });
     return instances;
   }
 
@@ -133,5 +154,20 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
     Set<String> instanceNames = new HashSet<>();
     pmsSdkInstanceRepository.findByActive(true).forEach(instance -> instanceNames.add(instance.getName()));
     return instanceNames;
+  }
+
+  public List<PmsSdkInstance> getActiveInstances() {
+    return pmsSdkInstanceRepository.findByActive(true);
+  }
+
+  private List<StepInfo> getStepInfos(List<SdkStep> sdkSteps) {
+    return sdkSteps.stream()
+        .filter(SdkStep::getIsPartOfStepPallete)
+        .map(SdkStep::getStepInfo)
+        .collect(Collectors.toList());
+  }
+
+  private List<StepType> getSupportedStepTypes(List<SdkStep> sdkSteps) {
+    return sdkSteps.stream().map(SdkStep::getStepType).collect(Collectors.toList());
   }
 }

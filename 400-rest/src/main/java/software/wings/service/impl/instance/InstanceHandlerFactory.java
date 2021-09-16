@@ -5,6 +5,8 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.AmiDeploymentType.SPOTINST;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.UnexpectedException;
 
 import software.wings.beans.AwsAmiInfrastructureMapping;
@@ -18,6 +20,7 @@ import com.google.inject.Singleton;
 import java.util.Set;
 
 @Singleton
+@TargetModule(HarnessModule._441_CG_INSTANCE_SYNC)
 public class InstanceHandlerFactory implements InstanceHandlerFactoryService {
   private ContainerInstanceHandler containerInstanceHandler;
   private AwsInstanceHandler awsInstanceHandler;

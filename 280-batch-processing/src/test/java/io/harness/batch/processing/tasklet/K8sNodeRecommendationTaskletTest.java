@@ -11,10 +11,11 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.batch.processing.pricing.client.BanzaiRecommenderClient;
-import io.harness.batch.processing.pricing.data.VMComputePricingInfo;
-import io.harness.batch.processing.pricing.data.ZonePrice;
-import io.harness.batch.processing.pricing.service.intfc.VMPricingService;
+import io.harness.batch.processing.pricing.banzai.BanzaiRecommenderClient;
+import io.harness.batch.processing.pricing.banzai.VMComputePricingInfo;
+import io.harness.batch.processing.pricing.banzai.ZonePrice;
+import io.harness.batch.processing.pricing.vmpricing.VMPricingService;
+import io.harness.batch.processing.tasklet.util.ClusterHelper;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.beans.billing.InstanceCategory;
 import io.harness.ccm.commons.beans.recommendation.K8sServiceProvider;
@@ -52,10 +53,12 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
   @Mock private K8sRecommendationDAO k8sRecommendationDAO;
   @Mock private VMPricingService vmPricingService;
   @Mock private RecommendationCrudService recommendationCrudService;
+  @Mock private ClusterHelper clusterHelper;
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private BanzaiRecommenderClient banzaiRecommenderClient;
   @InjectMocks private K8sNodeRecommendationTasklet tasklet;
 
   private static final String NODE_POOL_NAME = "nodePoolName";
+  private static final String CLUSTER_NAME = "clusterName";
   private static final String CLUSTER_ID = "clusterId";
   private static final Gson GSON = new Gson();
 
@@ -107,10 +110,13 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
     // #calculateAndSaveRecommendation
     String entityUuid = "entityUuid";
     when(k8sRecommendationDAO.getServiceProvider(any(), eq(nodePoolId))).thenReturn(k8sServiceProvider);
+    when(clusterHelper.fetchClusterName(eq(CLUSTER_ID))).thenReturn(CLUSTER_NAME);
     when(k8sRecommendationDAO.insertNodeRecommendationResponse(
              any(), eq(nodePoolId), eq(request), eq(k8sServiceProvider), eq(getRecommendationResponse())))
         .thenReturn(entityUuid);
-    doNothing().when(recommendationCrudService).upsertNodeRecommendation(eq(entityUuid), any(), eq(nodePoolId), any());
+    doNothing()
+        .when(recommendationCrudService)
+        .upsertNodeRecommendation(eq(entityUuid), any(), eq(nodePoolId), eq(CLUSTER_NAME), any());
   }
 
   @Test
@@ -144,7 +150,7 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
     // execution.
     verify(banzaiRecommenderClient, times(1)).getRecommendation(any(), any(), any(), any());
     verify(k8sRecommendationDAO, times(0)).insertNodeRecommendationResponse(any(), any(), any(), any(), any());
-    verify(recommendationCrudService, times(0)).upsertNodeRecommendation(any(), any(), any(), any());
+    verify(recommendationCrudService, times(0)).upsertNodeRecommendation(any(), any(), any(), any(), any());
   }
 
   @Test
@@ -182,7 +188,8 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
     // savings stats as 0 in timescaleDB
     ArgumentCaptor<RecommendationOverviewStats> statsCaptor =
         ArgumentCaptor.forClass(RecommendationOverviewStats.class);
-    verify(recommendationCrudService, times(1)).upsertNodeRecommendation(any(), any(), any(), statsCaptor.capture());
+    verify(recommendationCrudService, times(1))
+        .upsertNodeRecommendation(any(), any(), any(), any(), statsCaptor.capture());
 
     final RecommendationOverviewStats stats = statsCaptor.getValue();
     assertThat(stats).isNotNull();
@@ -247,7 +254,7 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
 
     ArgumentCaptor<RecommendationOverviewStats> captor = ArgumentCaptor.forClass(RecommendationOverviewStats.class);
 
-    verify(recommendationCrudService, times(1)).upsertNodeRecommendation(any(), any(), any(), captor.capture());
+    verify(recommendationCrudService, times(1)).upsertNodeRecommendation(any(), any(), any(), any(), captor.capture());
 
     RecommendationOverviewStats stats = captor.getValue();
     assertThat(stats).isNotNull();

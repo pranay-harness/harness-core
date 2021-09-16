@@ -19,6 +19,8 @@ then
      ;;
      "CCE") export HARNESS_TEAM="CE"
      ;;
+     "PIE") export HARNESS_TEAM="PIPELINE"
+     ;;
      "CCM") export HARNESS_TEAM="CE"
      ;;
      "CDC") export HARNESS_TEAM="CDC"
@@ -59,6 +61,8 @@ then
      ;;
      "ONP") export HARNESS_TEAM="PL"
      ;;
+     "GIT") export HARNESS_TEAM="CDP"
+     ;;
   esac
 fi
 
@@ -70,9 +74,9 @@ fi
 
 if [ -z "${ghprbTargetBranch}" ]
 then
-  if which hub > /dev/null
+  if which hub &>/dev/null
   then
-    ghprbTargetBranch=`hub pr show --format=%B`
+    ghprbTargetBranch=`hub pr show --format=%B` || true
   fi
 fi
 
@@ -82,19 +86,31 @@ then
 fi
 
 BASE_SHA=`git merge-base origin/${ghprbTargetBranch} HEAD`
-TRACK_FILES=`git diff --diff-filter=ACM --name-status ${BASE_SHA}..HEAD | grep ".java$" | awk '{ print "--location-class-filter "$2}' | tr '\n' ' '`
+
+FIXES=$(git diff ${BASE_SHA}..HEAD | grep '+@BreakDependencyOn\|+@TargetModule' | wc -l)
+
+TMP_FILE=$(mktemp)
+
+git diff --diff-filter=ACM --name-status ${BASE_SHA}..HEAD | grep ".java$" | awk '{ print $2}' > $TMP_FILE
+TRACK_FILES=`while read file; do echo $(git log --pretty=format:%ad -n 1 --date=format:'%Y%m%d%H%M%S' -- $file) $file; done < $TMP_FILE | sort | head -n 5 | awk '{ print "--location-class-filter "$2}'`
 
 scripts/bazel/prepare_aeriform.sh
 
 scripts/bazel/aeriform.sh analyze \
   --kind-filter Critical \
+  --top-blockers=25 \
   --exit-code
+
+if [ $FIXES -gt 9 ]
+then
+  echo "$FIXES is enough for one PR"
+  exit 0
+fi
 
 if [ ! -z "$TRACK_FILES" ]
 then
 	scripts/bazel/aeriform.sh analyze \
     ${TRACK_FILES} \
-    --kind-filter Critical \
     --kind-filter ToDo \
     --exit-code
 
@@ -103,5 +119,21 @@ then
     --team-filter ${HARNESS_TEAM} \
     --kind-filter AutoAction \
     --kind-filter Error \
+    --kind-filter Warning \
     --exit-code
+fi
+
+RENAMED_FILES=$(git diff --diff-filter=R --name-status ${BASE_SHA}..HEAD | wc -l)
+
+if [ $RENAMED_FILES -eq 0 ]
+then
+  OWNED_BY_FIXES=$(git diff ${BASE_SHA}..HEAD | grep '+@OwnedBy' | wc -l)
+  if [ $OWNED_BY_FIXES -lt 5 ]
+  then
+    scripts/bazel/aeriform.sh analyze \
+      --team-filter ${HARNESS_TEAM} \
+      --kind-filter AutoAction \
+      --auto-actionable-command \
+      --exit-code
+  fi
 fi

@@ -1,8 +1,12 @@
 package software.wings.helpers.ext.url;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.configuration.DeployMode;
 import io.harness.ff.FeatureFlagService;
 
+import software.wings.app.PortalConfig;
 import software.wings.app.UrlConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.User;
@@ -27,10 +31,12 @@ import org.apache.commons.lang3.StringUtils;
 @NoArgsConstructor
 @AllArgsConstructor
 @Slf4j
+@OwnedBy(PL)
 public class SubdomainUrlHelper implements SubdomainUrlHelperIntfc {
   @Inject private AccountService accountService;
   @Inject private UrlConfiguration urlConfiguration;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private PortalConfig portalConfig;
 
   /**
    * Returns Portal URL
@@ -43,8 +49,22 @@ public class SubdomainUrlHelper implements SubdomainUrlHelperIntfc {
     // set baseUrl equal to URL of portal
     log.info("Generating Portal URL for account {}", accountId);
     String portalUrl = appendSeparatorToUrl(getPortalUrl(accountId));
-    log.info("Returning {} from getPortalBaseUrl", portalUrl);
+    log.info("Returning {} from getPortalBaseUrl for account {}", portalUrl, accountId);
     return portalUrl;
+  }
+
+  /**
+   * Returns Gateway public URL
+   * @param accountId
+   * @return Base URL for gateway
+   */
+  @Override
+  public String getGatewayBaseUrl(String accountId) {
+    log.info("Generating Gateway base URL for account {}", accountId);
+    String portalUrl = appendSeparatorToUrl(getPortalUrl(accountId));
+    String gatewayUrl = portalUrl + portalConfig.getGatewayPathPrefix();
+    log.info("Returning {} from getGatewayBaseUrl for account {}", gatewayUrl, accountId);
+    return gatewayUrl;
   }
 
   @Override

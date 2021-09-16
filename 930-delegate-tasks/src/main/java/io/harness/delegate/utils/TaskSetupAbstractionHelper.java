@@ -5,7 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 
-import groovy.lang.Singleton;
+import com.google.inject.Singleton;
 
 @Singleton
 @OwnedBy(PL)

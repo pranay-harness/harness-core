@@ -100,7 +100,7 @@ public class PMSInputSetRepositoryCustomImpl implements PMSInputSetRepositoryCus
   }
 
   @Override
-  public InputSetEntity update(InputSetEntity entityToUpdate, InputSetYamlDTO yamlDTO) {
+  public InputSetEntity update(InputSetEntity entityToUpdate, InputSetYamlDTO yamlDTO, ChangeType changeType) {
     Supplier<OutboxEvent> functor = null;
     if (!gitSyncSdkService.isGitSyncEnabled(entityToUpdate.getAccountIdentifier(), entityToUpdate.getOrgIdentifier(),
             entityToUpdate.getProjectIdentifier())) {
@@ -126,7 +126,7 @@ public class PMSInputSetRepositoryCustomImpl implements PMSInputSetRepositoryCus
     }
 
     return gitAwarePersistence.save(
-        entityToUpdate, entityToUpdate.getYaml(), ChangeType.MODIFY, InputSetEntity.class, functor);
+        entityToUpdate, entityToUpdate.getYaml(), changeType, InputSetEntity.class, functor);
   }
 
   @Override

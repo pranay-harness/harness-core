@@ -1,5 +1,6 @@
 package software.wings.service.impl.security.customsecretsmanager;
 
+import static io.harness.annotations.dev.HarnessModule._360_CG_MANAGER;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.UTKARSH;
 import static io.harness.security.encryption.EncryptionType.CUSTOM;
@@ -19,6 +20,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
 import io.harness.encryptors.CustomEncryptor;
@@ -47,11 +51,8 @@ import software.wings.service.intfc.template.TemplateService;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -59,7 +60,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(_360_CG_MANAGER)
 public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
   @Mock private AccountService accountService;
   @Mock private CustomEncryptorsRegistry customEncryptorsRegistry;
@@ -119,8 +121,11 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
     return persistence.save(settingAttribute);
   }
 
-  private List<String> obtainDelegateSelectors() {
-    return Arrays.asList("test1", "test2");
+  private Set<String> obtainDelegateSelectors() {
+    Set<String> set = new HashSet<>();
+    set.add("test1");
+    set.add("test2");
+    return set;
   }
 
   @Test
@@ -166,7 +171,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
                                             .templateId(templateId)
-                                            .delegateSelectors(new ArrayList<>())
+                                            .delegateSelectors(new HashSet<>())
                                             .executeOnDelegate(true)
                                             .isConnectorTemplatized(false)
                                             .testVariables(testVariables)
@@ -183,7 +188,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
-                                            .delegateSelectors(new ArrayList<>())
+                                            .delegateSelectors(new HashSet<>())
                                             .templateId(generateUuid())
                                             .executeOnDelegate(true)
                                             .isConnectorTemplatized(false)
@@ -202,7 +207,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
-                                            .delegateSelectors(new ArrayList<>())
+                                            .delegateSelectors(new HashSet<>())
                                             .templateId(templateId)
                                             .executeOnDelegate(true)
                                             .isConnectorTemplatized(false)
@@ -222,7 +227,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
-                                            .delegateSelectors(new ArrayList<>())
+                                            .delegateSelectors(new HashSet<>())
                                             .templateId(templateId)
                                             .executeOnDelegate(true)
                                             .isConnectorTemplatized(false)
@@ -241,7 +246,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
 
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager@")
-                                            .delegateSelectors(new ArrayList<>())
+                                            .delegateSelectors(new HashSet<>())
                                             .templateId(templateId)
                                             .executeOnDelegate(true)
                                             .isConnectorTemplatized(false)
@@ -333,7 +338,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
                                             .templateId(templateId)
-                                            .delegateSelectors(new ArrayList<>())
+                                            .delegateSelectors(new HashSet<>())
                                             .executeOnDelegate(false)
                                             .isConnectorTemplatized(false)
                                             .host("app.harness.io")
@@ -355,7 +360,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
                                             .templateId(templateId)
-                                            .delegateSelectors(new ArrayList<>())
+                                            .delegateSelectors(new HashSet<>())
                                             .executeOnDelegate(false)
                                             .isConnectorTemplatized(false)
                                             .host("app.harness.io")
@@ -377,7 +382,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
                                             .templateId(templateId)
-                                            .delegateSelectors(new ArrayList<>())
+                                            .delegateSelectors(new HashSet<>())
                                             .executeOnDelegate(false)
                                             .isConnectorTemplatized(false)
                                             .host("app.harness.io")
@@ -399,7 +404,7 @@ public class CustomSecretsManagerServiceImplTest extends WingsBaseTest {
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
                                             .templateId(templateId)
-                                            .delegateSelectors(new ArrayList<>())
+                                            .delegateSelectors(new HashSet<>())
                                             .executeOnDelegate(false)
                                             .isConnectorTemplatized(false)
                                             .connectorId(connectorId)

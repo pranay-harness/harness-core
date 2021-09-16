@@ -1,10 +1,16 @@
 package software.wings.beans.trigger;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public enum ReleaseAction {
   CREATED("Created", "created"),
   PUBLISHED("Published", "published"),

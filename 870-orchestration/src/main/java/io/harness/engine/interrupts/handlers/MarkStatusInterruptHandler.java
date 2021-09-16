@@ -38,7 +38,7 @@ public abstract class MarkStatusInterruptHandler implements InterruptHandler {
   @Override
   public Interrupt registerInterrupt(Interrupt interrupt) {
     Interrupt savedInterrupt = validateAndSave(interrupt);
-    return handleInterrupt(savedInterrupt);
+    return handleInterruptForNodeExecution(savedInterrupt, interrupt.getNodeExecutionId());
   }
 
   private Interrupt validateAndSave(@Valid @NonNull Interrupt interrupt) {
@@ -58,17 +58,18 @@ public abstract class MarkStatusInterruptHandler implements InterruptHandler {
   }
 
   @Override
-  public Interrupt handleInterruptForNodeExecution(Interrupt interrupt, String nodeExecutionId) {
-    throw new UnsupportedOperationException(interrupt.getType() + " handling Not required for node individually");
+  public Interrupt handleInterrupt(Interrupt interrupt) {
+    throw new UnsupportedOperationException(interrupt.getType() + " handling Not required on plan");
   }
 
-  protected Interrupt handleInterruptStatus(Interrupt interrupt, Status status) {
-    return handleInterruptStatus(interrupt, status, EnumSet.noneOf(Status.class));
+  protected Interrupt handleInterruptStatus(Interrupt interrupt, String nodeExecutionId, Status status) {
+    return handleInterruptStatus(interrupt, nodeExecutionId, status, EnumSet.noneOf(Status.class));
   }
 
-  protected Interrupt handleInterruptStatus(Interrupt interrupt, Status status, EnumSet<Status> overrideStatusSet) {
+  protected Interrupt handleInterruptStatus(
+      Interrupt interrupt, String nodeExecutionId, Status status, EnumSet<Status> overrideStatusSet) {
     try {
-      NodeExecution nodeExecution = nodeExecutionService.update(interrupt.getNodeExecutionId(),
+      NodeExecution nodeExecution = nodeExecutionService.update(nodeExecutionId,
           ops
           -> ops.addToSet(NodeExecutionKeys.interruptHistories,
               InterruptEffect.builder()

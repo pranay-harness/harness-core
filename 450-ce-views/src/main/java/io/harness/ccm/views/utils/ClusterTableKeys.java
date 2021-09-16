@@ -1,5 +1,10 @@
 package io.harness.ccm.views.utils;
 
+import static io.harness.annotations.dev.HarnessTeam.CE;
+
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(CE)
 public class ClusterTableKeys {
   public static final String CLUSTER_TABLE = "clusterData";
   public static final String CLUSTER_TABLE_HOURLY = "clusterDataHourly";
@@ -51,14 +56,14 @@ public class ClusterTableKeys {
   public static final String UNALLOCATED_COST = "unallocatedcost";
   public static final String SYSTEM_COST = "systemCost";
   public static final String NETWORK_COST = "networkCost";
-  public static final String MAX_CPU_UTILIZATION_VALUE = "maxCpuUtilizationValue";
-  public static final String MAX_MEMORY_UTILIZATION_VALUE = "maxMemoryUtilizationValue";
-  public static final String AVG_CPU_UTILIZATION_VALUE = "avgCpuUtilizationValue";
-  public static final String AVG_MEMORY_UTILIZATION_VALUE = "avgMemoryUtilizationValue";
-  public static final String CPU_REQUEST = "cpuRequest";
-  public static final String MEMORY_REQUEST = "memoryRequest";
-  public static final String CPU_LIMIT = "cpuLimit";
-  public static final String MEMORY_LIMIT = "memoryLimit";
+  public static final String MAX_CPU_UTILIZATION_VALUE = "maxcpuutilizationvalue";
+  public static final String MAX_MEMORY_UTILIZATION_VALUE = "maxmemoryutilizationvalue";
+  public static final String AVG_CPU_UTILIZATION_VALUE = "avgcpuutilizationvalue";
+  public static final String AVG_MEMORY_UTILIZATION_VALUE = "avgmemoryutilizationvalue";
+  public static final String CPU_REQUEST = "cpurequest";
+  public static final String MEMORY_REQUEST = "memoryrequest";
+  public static final String CPU_LIMIT = "cpulimit";
+  public static final String MEMORY_LIMIT = "memorylimit";
   public static final String STORAGE_COST = "storagecost";
   public static final String STORAGE_ACTUAL_IDLE_COST = "storageactualidlecost";
   public static final String STORAGE_UTILIZATION_VALUE = "storageUtilizationValue";
@@ -66,19 +71,32 @@ public class ClusterTableKeys {
   public static final String STORAGE_UNALLOCATED_COST = "storageunallocatedcost";
   public static final String MEMORY_UNALLOCATED_COST = "memoryunallocatedcost";
   public static final String CPU_UNALLOCATED_COST = "cpuunallocatedcost";
-  public static final String EFFECTIVE_CPU_REQUEST = "effectiveCpuRequest";
-  public static final String EFFECTIVE_MEMORY_REQUEST = "effectiveMemoryRequest";
-  public static final String EFFECTIVE_CPU_LIMIT = "effectiveCpuLimit";
-  public static final String EFFECTIVE_MEMORY_LIMIT = "effectiveMemoryLimit";
-  public static final String EFFECTIVE_CPU_UTILIZATION_VALUE = "effectiveCpuUtilizationValue";
-  public static final String EFFECTIVE_MEMORY_UTILIZATION_VALUE = "effectiveMemoryUtilizationValue";
+  public static final String EFFECTIVE_CPU_REQUEST = "cpurequest*usagedurationseconds";
+  public static final String EFFECTIVE_MEMORY_REQUEST = "memoryrequest*usagedurationseconds";
+  public static final String EFFECTIVE_CPU_LIMIT = "cpulimit*usagedurationseconds";
+  public static final String EFFECTIVE_MEMORY_LIMIT = "memorylimit*usagedurationseconds";
+  public static final String EFFECTIVE_CPU_UTILIZATION_VALUE = "avgcpuutilizationvalue*usagedurationseconds";
+  public static final String EFFECTIVE_MEMORY_UTILIZATION_VALUE = "avgmemoryutilizationvalue*usagedurationseconds";
+  public static final String COUNT = "totalCount";
+  public static final String COUNT_INNER = "totalCountInner";
+  public static final String PRICING_SOURCE = "pricingsource";
 
   // Some default constants
   public static final String DEFAULT_STRING_VALUE = "";
+  public static final double DEFAULT_DOUBLE_VALUE = -1d;
   public static final String ID_SEPARATOR = ":";
+
+  // Alias names for aggregation
+  public static final String TIME_AGGREGATED_CPU_REQUEST = "timeAggregatedCpuRequest";
+  public static final String TIME_AGGREGATED_MEMORY_REQUEST = "timeAggregatedMemoryRequest";
+  public static final String TIME_AGGREGATED_CPU_LIMIT = "timeAggregatedCpuLimit";
+  public static final String TIME_AGGREGATED_MEMORY_LIMIT = "timeAggregatedMemoryLimit";
+  public static final String TIME_AGGREGATED_CPU_UTILIZATION_VALUE = "timeAggregatedCpuUtilizationValue";
+  public static final String TIME_AGGREGATED_MEMORY_UTILIZATION_VALUE = "timeAggregatedMemoryUtilizationValue";
 
   // Group by Names
   public static final String GROUP_BY_CLUSTER_NAME = "Cluster Name";
+  public static final String GROUP_BY_CLUSTER_ID = "Cluster Id";
   public static final String GROUP_BY_NAMESPACE = "Namespace";
   public static final String GROUP_BY_NAMESPACE_ID = "Namespace Id";
   public static final String GROUP_BY_WORKLOAD_NAME = "Workload Name";
@@ -91,9 +109,14 @@ public class ClusterTableKeys {
   public static final String GROUP_BY_ECS_TASK = "ECS Task";
   public static final String GROUP_BY_ECS_TASK_ID = "ECS Task Id";
   public static final String GROUP_BY_NODE = "Node";
+  public static final String GROUP_BY_POD = "Pod";
+  public static final String GROUP_BY_STORAGE = "Storage";
   public static final String GROUP_BY_APPLICATION = "Application";
   public static final String GROUP_BY_SERVICE = "Service";
   public static final String GROUP_BY_ENVIRONMENT = "Environment";
   public static final String GROUP_BY_CLOUD_PROVIDER = "Cloud Provider";
   public static final String GROUP_BY_PRODUCT = "Product";
+  public static final String GROUP_BY_INSTANCE_ID = "Instance Id";
+  public static final String GROUP_BY_INSTANCE_NAME = "Instance Name";
+  public static final String GROUP_BY_INSTANCE_TYPE = "Instance Type";
 }

@@ -2,7 +2,9 @@ package software.wings.yaml.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -16,6 +18,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = false)
 @JsonTypeName("WEBHOOK")
 @JsonPropertyOrder({"harnessApiVersion"})
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class WebhookEventTriggerConditionYaml extends TriggerConditionYaml {
   private String repositoryType;
   private List<String> eventType = new ArrayList<>();

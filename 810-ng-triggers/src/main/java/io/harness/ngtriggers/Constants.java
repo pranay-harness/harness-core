@@ -38,6 +38,7 @@ public interface Constants {
   String HEADER = "header";
   String REPO_URL = "repoUrl";
   String GIT_USER = "gitUser";
+  String TAG = "tag";
   String PR_TITLE = "prTitle";
   String SOURCE_TYPE = "sourceType";
 
@@ -66,4 +67,9 @@ public interface Constants {
   String TRIGGER_KEY = "triggerIdentifier";
 
   String DOT_GIT = ".git";
+  String MANIFEST = "Manifest";
+  String ARTIFACT = "Artifact";
+
+  String MANIFEST_VERSION = "<+trigger.manifest.version>";
+  String ARTIFACT_VERSION = "<+trigger.artifact.build>";
 }

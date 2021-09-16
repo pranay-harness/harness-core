@@ -21,6 +21,7 @@ import io.harness.delegate.beans.connector.CEFeatures;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.cek8s.CEKubernetesClusterConfigDTO;
 import io.harness.eventsframework.entity_crud.EntityChangeDTO;
+import io.harness.ff.FeatureFlagService;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.rule.Owner;
 
@@ -53,6 +54,7 @@ public class EntityChangeHandlerTest extends CategoryTest {
 
   @Mock NGClusterRecordHandler clusterRecordHandler;
   @Mock K8sWatchTaskResourceClient k8sWatchTaskResourceClient;
+  @Mock FeatureFlagService featureFlagService;
   @Mock Call<ResponseDTO<String>> responseDTOCall;
   @Mock Call<ResponseDTO<Boolean>> booleanResponseCall;
 
@@ -100,6 +102,7 @@ public class EntityChangeHandlerTest extends CategoryTest {
                  .build())
         .when(entityChangeHandler)
         .getConnectorConfigDTO(baseK8sEntityChangeDTO);
+    doReturn(true).when(featureFlagService).isEnabled(any(), any());
   }
 
   @Test

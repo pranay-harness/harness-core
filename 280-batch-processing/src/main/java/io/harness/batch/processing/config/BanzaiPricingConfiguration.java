@@ -2,7 +2,7 @@ package io.harness.batch.processing.config;
 
 import static io.harness.network.Http.getOkHttpClientBuilder;
 
-import io.harness.batch.processing.pricing.client.BanzaiPricingClient;
+import io.harness.batch.processing.pricing.banzai.BanzaiPricingClient;
 import io.harness.network.Http;
 
 import java.util.concurrent.TimeUnit;

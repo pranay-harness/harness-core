@@ -3,6 +3,7 @@ package io.harness.gitsync.core.service;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.gitsync.common.beans.GitSyncDirection;
 import io.harness.gitsync.core.beans.GitCommit.GitCommitProcessingStatus;
 import io.harness.gitsync.core.dtos.GitCommitDTO;
 
@@ -26,6 +27,9 @@ public interface GitCommitService {
       String accountId, String repo, String branchName, List<GitCommitProcessingStatus> status);
 
   boolean isCommitAlreadyProcessed(String accountId, String headCommit, String repo, String branch);
+
+  Optional<GitCommitDTO> findLastGitCommit(
+      String accountIdentifier, String repo, String branchName, GitSyncDirection gitSyncDirection);
 
   Optional<GitCommitDTO> findLastGitCommit(String accountIdentifier, String repo, String branchName);
 

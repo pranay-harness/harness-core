@@ -1,7 +1,9 @@
 package io.harness.commandlibrary.server.app;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.lock.DistributedLockImplementation.MONGO;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.commandlibrary.server.service.impl.CommandServiceImpl;
 import io.harness.commandlibrary.server.service.impl.CommandStoreServiceImpl;
@@ -24,6 +26,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.MongoDataStoreServiceImpl;
 import software.wings.service.impl.security.NoOpSecretManagerImpl;
 import software.wings.service.intfc.DataStoreService;
+import software.wings.service.intfc.security.EncryptedSettingAttributes;
 import software.wings.service.intfc.security.SecretManager;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -40,6 +43,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+@OwnedBy(PL)
 public class CommandLibraryServerModule extends AbstractModule {
   private CommandLibraryServerConfig configuration;
 
@@ -56,6 +60,7 @@ public class CommandLibraryServerModule extends AbstractModule {
     bind(HPersistence.class).to(WingsMongoPersistence.class);
     bind(WingsPersistence.class).to(WingsMongoPersistence.class);
     bind(SecretManager.class).to(NoOpSecretManagerImpl.class);
+    bind(EncryptedSettingAttributes.class).to(NoOpSecretManagerImpl.class);
     bind(Clock.class).toInstance(Clock.systemUTC());
 
     bind(TimeLimiter.class).toInstance(HTimeLimiter.create());

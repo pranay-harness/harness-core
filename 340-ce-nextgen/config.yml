@@ -105,6 +105,13 @@ grpcClient:
   target: localhost:9880
   authority: localhost
 
+useDms: false
+dmsGrpcClient:
+  target: localhost:9890
+  authority: localhost
+  secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+
+
 # has to be comma ',' delimited flags
 featureFlagsEnabled: ""
 deployMode: KUBERNETES
@@ -123,6 +130,7 @@ featureFlagConfig:
 
 gcpConfig:
   gcpProjectId: gcpProjectIdPlaceHolder
+  gcpAwsConnectorCrudPubSubTopic: "ce-aws-connector-crud"
 
 ceAzureSetupConfig:
   azureAppClientId: azureAppClientIdPlaceholder

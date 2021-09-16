@@ -2,7 +2,9 @@ package io.harness.workers.background;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.iterator.PersistentIterable;
 import io.harness.mongo.EntityProcessController;
 import io.harness.persistence.AccountAccess;
@@ -15,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(PL)
+@TargetModule(HarnessModule._945_ACCOUNT_MGMT)
 public class AccountStatusBasedEntityProcessController<T extends PersistentIterable & AccountAccess>
     implements EntityProcessController<T> {
   private final AccountService accountService;

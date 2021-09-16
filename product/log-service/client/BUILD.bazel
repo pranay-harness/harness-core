@@ -1,7 +1,7 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
 go_library(
-    name = "go_default_library",
+    name = "client",
     srcs = [
         "client.go",
         "http.go",
@@ -9,8 +9,8 @@ go_library(
     importpath = "github.com/wings-software/portal/product/log-service/client",
     visibility = ["//visibility:public"],
     deps = [
-        "//product/log-service/logger:go_default_library",
-        "//product/log-service/stream:go_default_library",
-        "@com_github_cenkalti_backoff_v4//:go_default_library",
+        "//product/log-service/logger",
+        "//product/log-service/stream",
+        "@com_github_cenkalti_backoff_v4//:backoff",
     ],
 )

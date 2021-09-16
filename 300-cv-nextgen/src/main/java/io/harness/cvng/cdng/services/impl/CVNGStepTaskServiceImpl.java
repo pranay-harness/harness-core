@@ -44,6 +44,11 @@ public class CVNGStepTaskServiceImpl implements CVNGStepTaskService {
     }
   }
 
+  @Override
+  public CVNGStepTask getByCallBackId(String callBackId) {
+    return hPersistence.createQuery(CVNGStepTask.class).filter(CVNGStepTaskKeys.callbackId, callBackId).get();
+  }
+
   private void markDone(String uuid) {
     updateStatus(uuid, Status.DONE);
   }

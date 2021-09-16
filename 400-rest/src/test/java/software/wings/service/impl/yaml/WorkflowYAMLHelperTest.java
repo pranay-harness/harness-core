@@ -1,16 +1,20 @@
 package software.wings.service.impl.yaml;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.POOJA;
+import static io.harness.rule.OwnerRule.PRABU;
 
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
@@ -21,8 +25,12 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.VARIABLE_VALUE;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
@@ -33,8 +41,12 @@ import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.Variable;
+import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.DockerArtifactStream;
+import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.security.UserGroup;
 import software.wings.infra.InfrastructureDefinition;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -51,6 +63,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_YAML)
 public class WorkflowYAMLHelperTest extends WingsBaseTest {
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private EnvironmentService environmentService;
@@ -58,6 +72,7 @@ public class WorkflowYAMLHelperTest extends WingsBaseTest {
   @Mock private InfrastructureDefinitionService infrastructureDefinitionService;
   @Mock private UserGroupService userGroupService;
   @Mock private SettingsService settingsService;
+  @Mock private ArtifactStreamService artifactStreamService;
 
   @InjectMocks @Inject private WorkflowYAMLHelper workflowYAMLHelper;
 
@@ -364,5 +379,63 @@ public class WorkflowYAMLHelperTest extends WingsBaseTest {
     assertThat(workflowYAMLHelper.getWorkflowVariableValueBean(
                    ACCOUNT_ID, ENV_ID, APP_ID, EntityType.SERVICE.name(), VARIABLE_VALUE, false, null))
         .isEqualTo(VARIABLE_VALUE);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldGetWorkflowVariableYAMLArtifactStream() {
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID))
+        .thenReturn(DockerArtifactStream.builder()
+                        .uuid(ARTIFACT_STREAM_ID)
+                        .name(ARTIFACT_STREAM_NAME)
+                        .serviceId(SERVICE_ID)
+                        .build());
+
+    when(serviceResourceService.getName(APP_ID, SERVICE_ID)).thenReturn(SERVICE_NAME);
+    assertThat(
+        workflowYAMLHelper.getWorkflowVariableValueYaml(APP_ID, ARTIFACT_STREAM_ID, EntityType.ARTIFACT_STREAM, false))
+        .isEqualTo(ARTIFACT_STREAM_NAME + " (" + SERVICE_NAME + ")");
+
+    when(serviceResourceService.getName(APP_ID, SERVICE_ID)).thenReturn(null);
+    assertThat(
+        workflowYAMLHelper.getWorkflowVariableValueYaml(APP_ID, ARTIFACT_STREAM_ID, EntityType.ARTIFACT_STREAM, false))
+        .isEqualTo(ARTIFACT_STREAM_ID);
+
+    when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(null);
+    assertThat(
+        workflowYAMLHelper.getWorkflowVariableValueYaml(APP_ID, ARTIFACT_STREAM_ID, EntityType.ARTIFACT_STREAM, false))
+        .isEqualTo(ARTIFACT_STREAM_ID);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldGetWorkflowVariableYAMLArtifactStreamUuid() {
+    Variable variable = aVariable().name("test").entityType(EntityType.ARTIFACT_STREAM).build();
+    when(artifactStreamService.fetchByArtifactSourceVariableValue(APP_ID, ARTIFACT_STREAM_NAME))
+        .thenReturn(DockerArtifactStream.builder().uuid(ARTIFACT_STREAM_ID).build());
+
+    assertThat(workflowYAMLHelper.getWorkflowVariableValueBean(ACCOUNT_ID, ENV_ID, APP_ID,
+                   EntityType.ARTIFACT_STREAM.name(), ARTIFACT_STREAM_NAME, false, variable))
+        .isEqualTo(ARTIFACT_STREAM_ID);
+
+    ArtifactStream artifactStream = NexusArtifactStream.builder().uuid(ARTIFACT_STREAM_ID).build();
+    artifactStream.setArtifactStreamParameterized(true);
+    when(artifactStreamService.fetchByArtifactSourceVariableValue(APP_ID, ARTIFACT_STREAM_NAME))
+        .thenReturn(artifactStream);
+    assertThatThrownBy(()
+                           -> workflowYAMLHelper.getWorkflowVariableValueBean(ACCOUNT_ID, ENV_ID, APP_ID,
+                               EntityType.ARTIFACT_STREAM.name(), ARTIFACT_STREAM_NAME, variable))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Parameterized Artifact Source cannot be used as a value for Artifact template variable");
+
+    when(artifactStreamService.fetchByArtifactSourceVariableValue(APP_ID, ARTIFACT_STREAM_NAME)).thenReturn(null);
+    assertThatThrownBy(()
+                           -> workflowYAMLHelper.getWorkflowVariableValueBean(ACCOUNT_ID, ENV_ID, APP_ID,
+                               EntityType.ARTIFACT_STREAM.name(), ARTIFACT_STREAM_NAME, variable))
+        .isInstanceOf(GeneralException.class)
+        .hasMessage(
+            "Artifact Stream [ARTIFACT_STREAM_NAME] associated with the Artifact Collection State does not exist");
   }
 }

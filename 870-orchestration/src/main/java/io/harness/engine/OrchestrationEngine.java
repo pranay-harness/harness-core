@@ -18,7 +18,6 @@ import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.facilitation.FacilitationHelper;
 import io.harness.engine.facilitation.RunPreFacilitationChecker;
 import io.harness.engine.facilitation.SkipPreFacilitationChecker;
-import io.harness.engine.facilitation.facilitator.publisher.FacilitateEventPublisher;
 import io.harness.engine.observers.OrchestrationEndObserver;
 import io.harness.engine.pms.advise.AdviseHandlerFactory;
 import io.harness.engine.pms.advise.AdviserResponseHandler;
@@ -93,7 +92,6 @@ public class OrchestrationEngine {
   @Inject private EndNodeExecutionHelper endNodeExecutionHelper;
   @Inject private ExceptionManager exceptionManager;
   @Inject private FacilitationHelper facilitationHelper;
-  @Inject private FacilitateEventPublisher facilitateEventPublisher;
   @Inject private NodeStartHelper startHelper;
   @Inject private NodeAdviseHelper adviseHelper;
   @Inject private NodeResumeHelper resumeHelper;
@@ -112,7 +110,7 @@ public class OrchestrationEngine {
       previousNodeExecution = nodeExecutionService.update(AmbianceUtils.obtainCurrentRuntimeId(ambiance),
           ops -> ops.set(NodeExecutionKeys.nextId, uuid).set(NodeExecutionKeys.endTs, System.currentTimeMillis()));
     }
-    Ambiance cloned = reBuildAmbiance(ambiance, node, uuid);
+    Ambiance cloned = AmbianceUtils.cloneForFinish(ambiance, LevelUtils.buildLevelFromPlanNode(uuid, node));
     NodeExecution nodeExecution =
         NodeExecution.builder()
             .uuid(uuid)
@@ -129,13 +127,6 @@ public class OrchestrationEngine {
     executorService.submit(ExecutionEngineDispatcher.builder().ambiance(cloned).orchestrationEngine(this).build());
   }
 
-  private Ambiance reBuildAmbiance(Ambiance ambiance, PlanNodeProto node, String uuid) {
-    Ambiance cloned =
-        AmbianceUtils.obtainCurrentRuntimeId(ambiance) == null ? ambiance : AmbianceUtils.cloneForFinish(ambiance);
-    cloned = cloned.toBuilder().addLevels(LevelUtils.buildLevelFromPlanNode(uuid, node)).build();
-    return cloned;
-  }
-
   // Start to Facilitators
   private void facilitateAndStartStep(Ambiance ambiance, NodeExecution nodeExecution) {
     try (AutoLogContext ignore = AmbianceUtils.autoLogContext(ambiance)) {
@@ -145,22 +136,17 @@ public class OrchestrationEngine {
         return;
       }
       log.info("Proceeding with  Execution. Reason : {}", check.getReason());
+
       PlanNodeProto node = nodeExecution.getNode();
       String stepParameters = node.getStepParameters();
       boolean skipUnresolvedExpressionsCheck = node.getSkipUnresolvedExpressionsCheck();
-      log.info("Starting to Resolve step parameters");
-      Object resolvedStepParameters = stepParameters == null
-          ? null
-          : pmsEngineExpressionService.resolve(
-              ambiance, NodeExecutionUtils.extractObject(stepParameters), skipUnresolvedExpressionsCheck);
-      log.info("Step Parameter Resolution complete");
+      log.info("Starting to Resolve step parameters and Inputs");
+      Object resolvedStepParameters = pmsEngineExpressionService.resolve(
+          ambiance, NodeExecutionUtils.extractObject(stepParameters), skipUnresolvedExpressionsCheck);
 
-      log.info("Starting to Resolve step inputs");
-      Object resolvedStepInputs = node.getStepInputs() == null
-          ? null
-          : pmsEngineExpressionService.resolve(
-              ambiance, NodeExecutionUtils.extractObject(node.getStepInputs()), skipUnresolvedExpressionsCheck);
-      log.info("Step Inputs Resolution complete");
+      Object resolvedStepInputs = pmsEngineExpressionService.resolve(
+          ambiance, NodeExecutionUtils.extractObject(node.getStepInputs()), skipUnresolvedExpressionsCheck);
+      log.info("Step Parameters and Inputs Resolution complete");
 
       NodeExecution updatedNodeExecution =
           Preconditions.checkNotNull(nodeExecutionService.update(nodeExecution.getUuid(), ops -> {
@@ -168,11 +154,8 @@ public class OrchestrationEngine {
             setUnset(ops, NodeExecutionKeys.resolvedStepInputs, resolvedStepInputs);
           }));
 
-      if (facilitationHelper.customFacilitatorPresent(node)) {
-        facilitateEventPublisher.publishEvent(updatedNodeExecution.getUuid());
-      } else {
-        facilitationHelper.facilitateExecution(updatedNodeExecution);
-      }
+      facilitationHelper.facilitateExecution(updatedNodeExecution);
+
     } catch (Exception exception) {
       log.error("Exception Occurred in facilitateAndStartStep NodeExecutionId : {}, PlanExecutionId: {}",
           AmbianceUtils.obtainCurrentRuntimeId(ambiance), ambiance.getPlanExecutionId(), exception);
@@ -195,7 +178,7 @@ public class OrchestrationEngine {
     NodeExecution nodeExecution = nodeExecutionService.update(
         nodeExecutionId, ops -> ops.set(NodeExecutionKeys.mode, facilitatorResponse.getExecutionMode()));
     Ambiance ambiance = nodeExecution.getAmbiance();
-    if (facilitatorResponse.getInitialWait() != null && facilitatorResponse.getInitialWait().getSeconds() != 0) {
+    if (facilitatorResponse.getInitialWait().getSeconds() != 0) {
       // Update Status
       Preconditions.checkNotNull(
           nodeExecutionService.updateStatusWithOps(AmbianceUtils.obtainCurrentRuntimeId(ambiance), Status.TIMED_WAITING,
@@ -331,7 +314,7 @@ public class OrchestrationEngine {
 
   public void handleAdvise(String nodeExecutionId, AdviserResponse adviserResponse) {
     NodeExecution nodeExecution = Preconditions.checkNotNull(
-        nodeExecutionService.get(nodeExecutionId), "NodeExecution not foung for id: " + nodeExecutionId);
+        nodeExecutionService.get(nodeExecutionId), "NodeExecution not found for id: " + nodeExecutionId);
     try (AutoLogContext autoLogContext = AmbianceUtils.autoLogContext(nodeExecution.getAmbiance())) {
       if (adviserResponse.getType() == AdviseType.UNKNOWN) {
         log.warn("Got null advise for node execution with id {}", nodeExecutionId);

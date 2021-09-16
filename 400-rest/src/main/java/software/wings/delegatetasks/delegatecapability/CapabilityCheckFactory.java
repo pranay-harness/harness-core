@@ -14,6 +14,7 @@ import io.harness.delegate.task.executioncapability.HelmInstallationCapabilityCh
 import io.harness.delegate.task.executioncapability.HttpConnectionExecutionCapabilityCheck;
 import io.harness.delegate.task.executioncapability.KustomizeCapabilityCheck;
 import io.harness.delegate.task.executioncapability.LiteEngineConnectionCapabilityCheck;
+import io.harness.delegate.task.executioncapability.NoOpCapabilityCheck;
 import io.harness.delegate.task.executioncapability.PcfAutoScalarCapabilityCheck;
 import io.harness.delegate.task.executioncapability.PcfConnectivityCapabilityCheck;
 import io.harness.delegate.task.executioncapability.PcfInstallationCapabilityCheck;
@@ -61,6 +62,7 @@ public class CapabilityCheckFactory {
   @Inject KustomizeCapabilityCheck kustomizeCapabilityCheck;
   @Inject SmbConnectionCapabilityCheck smbConnectionCapabilityCheck;
   @Inject GitConnectionNGCapabilityChecker gitConnectionNGCapabilityCheck;
+  @Inject NoOpCapabilityCheck noOpCapabilityCheck;
 
   public CapabilityCheck obtainCapabilityCheck(CapabilityType capabilityCheckType) {
     switch (capabilityCheckType) {
@@ -110,6 +112,8 @@ public class CapabilityCheckFactory {
         return gitConnectionNGCapabilityCheck;
       case LITE_ENGINE:
         return liteEngineConnectionCapabilityCheck;
+      case SELECTORS:
+        return noOpCapabilityCheck;
       default:
         return null;
     }

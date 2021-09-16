@@ -17,6 +17,7 @@ import io.harness.ccm.commons.entities.billing.BillingDataPipelineRecord;
 import io.harness.ccm.commons.entities.billing.Budget;
 import io.harness.ccm.commons.entities.billing.CECloudAccount;
 import io.harness.ccm.commons.entities.billing.CECluster;
+import io.harness.ccm.commons.entities.billing.CEGcpServiceAccount;
 import io.harness.ccm.commons.entities.billing.CloudBillingTransferRun;
 import io.harness.ccm.commons.entities.events.CeExceptionRecord;
 import io.harness.ccm.commons.entities.events.PublishedMessage;
@@ -48,6 +49,7 @@ public class CECommonsMorphiaRegistrar implements MorphiaRegistrar {
     set.add(Budget.class);
     set.add(CECloudAccount.class);
     set.add(CECluster.class);
+    set.add(CEGcpServiceAccount.class);
     set.add(CloudBillingTransferRun.class);
     set.add(AWSConnectorToBucketMapping.class);
 

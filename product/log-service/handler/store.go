@@ -14,6 +14,7 @@ import (
 func HandleUpload(store store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
+		st := time.Now()
 
 		accountID := r.FormValue(accountIDParam)
 		key := CreateAccountSeparatedKey(accountID, r.FormValue(keyParam))
@@ -27,6 +28,11 @@ func HandleUpload(store store.Store) http.HandlerFunc {
 			return
 		}
 
+		logger.FromRequest(r).
+			WithField("key", key).
+			WithField("latency", time.Since(st)).
+			WithField("time", time.Now().Format(time.RFC3339)).
+			Infoln("api: successfully uploaded object")
 		w.WriteHeader(http.StatusNoContent)
 	}
 }
@@ -36,6 +42,7 @@ func HandleUpload(store store.Store) http.HandlerFunc {
 func HandleUploadLink(store store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
+		st := time.Now()
 
 		accountID := r.FormValue(accountIDParam)
 		key := CreateAccountSeparatedKey(accountID, r.FormValue(keyParam))
@@ -51,6 +58,11 @@ func HandleUploadLink(store store.Store) http.HandlerFunc {
 			return
 		}
 
+		logger.FromRequest(r).
+			WithField("key", key).
+			WithField("latency", time.Since(st)).
+			WithField("time", time.Now().Format(time.RFC3339)).
+			Infoln("api: successfully created upload link")
 		WriteJSON(w, struct {
 			Link    string        `json:"link"`
 			Expires time.Duration `json:"expires"`
@@ -59,9 +71,10 @@ func HandleUploadLink(store store.Store) http.HandlerFunc {
 }
 
 // HandleDownload returns an http.HandlerFunc that downloads
-// a blob fromt the datastore and copies to the http.Response.
+// a blob from the datastore and copies to the http.Response.
 func HandleDownload(store store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		st := time.Now()
 		h := w.Header()
 		h.Set("Access-Control-Allow-Origin", "*")
 		ctx := r.Context()
@@ -77,9 +90,15 @@ func HandleDownload(store store.Store) http.HandlerFunc {
 			WriteNotFound(w, err)
 			logger.FromRequest(r).
 				WithError(err).
-				Debugln("api: cannot download the object")
+				WithField("key", key).
+				Errorln("api: cannot download the object")
 		} else {
 			io.Copy(w, out)
+			logger.FromRequest(r).
+				WithField("key", key).
+				WithField("latency", time.Since(st)).
+				WithField("time", time.Now().Format(time.RFC3339)).
+				Infoln("api: successfully downloaded object")
 		}
 	}
 }
@@ -89,6 +108,7 @@ func HandleDownload(store store.Store) http.HandlerFunc {
 func HandleDownloadLink(store store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h := w.Header()
+		st := time.Now()
 		h.Set("Access-Control-Allow-Origin", "*")
 		ctx := r.Context()
 
@@ -106,6 +126,11 @@ func HandleDownloadLink(store store.Store) http.HandlerFunc {
 			return
 		}
 
+		logger.FromRequest(r).
+			WithField("key", key).
+			WithField("latency", time.Since(st)).
+			WithField("time", time.Now().Format(time.RFC3339)).
+			Infoln("api: successfully created download url")
 		WriteJSON(w, struct {
 			Link    string        `json:"link"`
 			Expires time.Duration `json:"expires"`
@@ -118,6 +143,7 @@ func HandleDownloadLink(store store.Store) http.HandlerFunc {
 func HandleDelete(store store.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h := w.Header()
+		st := time.Now()
 		h.Set("Access-Control-Allow-Origin", "*")
 		ctx := r.Context()
 
@@ -133,6 +159,11 @@ func HandleDelete(store store.Store) http.HandlerFunc {
 			return
 		}
 
+		logger.FromRequest(r).
+			WithField("key", key).
+			WithField("latency", time.Since(st)).
+			WithField("time", time.Now().Format(time.RFC3339)).
+			Infoln("api: successfully deleted object")
 		w.WriteHeader(http.StatusNoContent)
 	}
 }

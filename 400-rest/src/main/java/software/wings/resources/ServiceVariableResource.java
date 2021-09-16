@@ -2,6 +2,8 @@ package software.wings.resources;
 
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
@@ -40,6 +42,7 @@ import javax.ws.rs.QueryParam;
 // ToBeRevisited
 // Both service and env overrides variables use the same rest end points. So, no annotation can be determined
 @Scope(ResourceType.APPLICATION)
+@OwnedBy(HarnessTeam.CDC)
 public class ServiceVariableResource {
   @Inject private ServiceVariableService serviceVariablesService;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;

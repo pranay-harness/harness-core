@@ -1,6 +1,12 @@
 package io.harness.pms.sdk.core;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.exceptionmanager.exceptionhandler.ExceptionHandler;
 import io.harness.pms.sdk.PmsSdkModuleUtils;
+import io.harness.pms.sdk.core.exception.InvalidYamlExceptionHandler;
+import io.harness.pms.sdk.core.execution.SdkGraphVisualizationDataService;
+import io.harness.pms.sdk.core.execution.SdkGraphVisualizationDataServiceImpl;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionServiceImpl;
 import io.harness.pms.sdk.core.interrupt.PMSInterruptService;
@@ -17,10 +23,12 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
+import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class PmsSdkCoreModule extends AbstractModule {
   private static PmsSdkCoreModule instance;
   private final PmsSdkCoreConfig config;
@@ -48,9 +56,15 @@ public class PmsSdkCoreModule extends AbstractModule {
     bind(OutcomeService.class).to(OutcomeGrpcServiceImpl.class).in(Singleton.class);
     bind(ExecutionSweepingOutputService.class).to(ExecutionSweepingGrpcOutputService.class).in(Singleton.class);
     bind(SdkNodeExecutionService.class).to(SdkNodeExecutionServiceImpl.class).in(Singleton.class);
+    bind(SdkGraphVisualizationDataService.class).to(SdkGraphVisualizationDataServiceImpl.class).in(Singleton.class);
+
     install(
         PmsSdkCoreEventsFrameworkModule.getInstance(config.getEventsFrameworkConfiguration(), config.getServiceName()));
     bind(SdkResponseEventPublisher.class).to(RedisSdkResponseEventPublisher.class);
+    MapBinder<Class<? extends Exception>, ExceptionHandler> exceptionHandlerMapBinder = MapBinder.newMapBinder(
+        binder(), new TypeLiteral<Class<? extends Exception>>() {}, new TypeLiteral<ExceptionHandler>() {});
+    InvalidYamlExceptionHandler.exceptions().forEach(
+        exception -> exceptionHandlerMapBinder.addBinding(exception).to(InvalidYamlExceptionHandler.class));
   }
 
   @Provides
@@ -62,9 +76,17 @@ public class PmsSdkCoreModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @Named(PmsSdkModuleUtils.SDK_EXECUTOR_NAME)
-  public ExecutorService sdkExecutorService() {
-    return ThreadPool.create(5, 20, 120L, TimeUnit.SECONDS,
+  @Named(PmsSdkModuleUtils.CORE_EXECUTOR_NAME)
+  public ExecutorService coreExecutorService() {
+    return ThreadPool.create(config.getExecutionPoolConfig(),
+        new ThreadFactoryBuilder().setNameFormat("PmsSdkCoreEventListener-%d").build());
+  }
+
+  @Provides
+  @Singleton
+  @Named(PmsSdkModuleUtils.ORCHESTRATION_EVENT_EXECUTOR_NAME)
+  public ExecutorService orchestrationEventExecutorService() {
+    return ThreadPool.create(config.getOrchestrationEventPoolConfig(),
         new ThreadFactoryBuilder().setNameFormat("PmsSdkOrchestrationEventListener-%d").build());
   }
 }

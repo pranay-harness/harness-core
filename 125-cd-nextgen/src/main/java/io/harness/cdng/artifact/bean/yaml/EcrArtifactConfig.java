@@ -3,8 +3,9 @@ package io.harness.cdng.artifact.bean.yaml;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.delegate.task.artifacts.ArtifactSourceConstants.ECR_NAME;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.common.SwaggerConstants;
+import io.harness.beans.SwaggerConstants;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
 import io.harness.cdng.artifact.utils.ArtifactUtils;
 import io.harness.data.validator.EntityIdentifier;
@@ -42,6 +43,7 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("ecrArtifactConfig")
 @OwnedBy(CDC)
 @OneOfField(fields = {"tag", "tagRegex"})
+@RecasterAlias("io.harness.cdng.artifact.bean.yaml.EcrArtifactConfig")
 public class EcrArtifactConfig implements ArtifactConfig, Visitable, WithConnectorRef {
   /**
    * AWS connector to connect to Google Container Registry.

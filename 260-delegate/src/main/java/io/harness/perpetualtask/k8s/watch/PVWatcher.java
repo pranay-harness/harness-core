@@ -1,6 +1,7 @@
 package io.harness.perpetualtask.k8s.watch;
 
 import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
+import static io.harness.ccm.health.HealthStatusService.UID;
 import static io.harness.perpetualtask.k8s.watch.PVEvent.EventType.EVENT_TYPE_EXPANSION;
 import static io.harness.perpetualtask.k8s.watch.PVEvent.EventType.EVENT_TYPE_STOP;
 
@@ -166,7 +167,8 @@ public class PVWatcher implements ResourceEventHandler<V1PersistentVolume> {
             .putAllStorageClassParams(firstNonNull(getStorageClassParameters(persistentVolume), Collections.emptyMap()))
             .setCapacity(K8sResourceUtils.getStorageCapacity(persistentVolume.getSpec()))
             .build();
-    eventPublisher.publishMessage(pvInfo, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));
+    eventPublisher.publishMessage(pvInfo, timestamp,
+        ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId, UID, persistentVolume.getMetadata().getUid()));
   }
 
   private String getClaimNamespace(V1PersistentVolumeSpec spec) {
@@ -194,7 +196,7 @@ public class PVWatcher implements ResourceEventHandler<V1PersistentVolume> {
                           .build();
 
     log.debug("Publishing : {}", pvEvent.getEventType());
-    eventPublisher.publishMessage(pvEvent, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));
+    eventPublisher.publishMessage(pvEvent, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId, UID, uid));
   }
 
   public PVInfo.PVType getPvType(V1PersistentVolumeSpec spec) {

@@ -13,7 +13,9 @@ import static software.wings.sm.states.ApprovalState.APPROVAL_STATE_TYPE_VARIABL
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.HarnessException;
 import io.harness.exception.InvalidRequestException;
@@ -36,6 +38,7 @@ import software.wings.beans.template.dto.ImportedTemplateDetails;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
+import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.template.TemplateExpressionYamlHandler;
@@ -51,6 +54,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.StepType;
 import software.wings.sm.states.ApprovalState.ApprovalStateKeys;
 import software.wings.sm.states.ApprovalState.ApprovalStateType;
+import software.wings.sm.states.ArtifactCollectionState.ArtifactCollectionStateKeys;
 import software.wings.yaml.workflow.StepYaml;
 
 import com.google.common.collect.Lists;
@@ -75,6 +79,7 @@ import org.apache.commons.lang3.StringUtils;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._870_CG_YAML)
 public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
   private static final String SERVICE_NOW_CREATE_UPDATE_PARAMS = "serviceNowCreateUpdateParams";
   @Inject YamlHandlerFactory yamlHandlerFactory;
@@ -245,6 +250,22 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
         ArtifactStream artifactStream = artifactStreamService.get(artifactStreamId);
         notNullCheck("Artifact stream is null for the given id:" + artifactStreamId, artifactStream, USER);
         validateMandatoryFieldsWithParameterizedArtifactStream(outputProperties, artifactStreamId, artifactStream);
+      } else {
+        List<Map<String, Object>> templateExpressions =
+            (List<Map<String, Object>>) outputProperties.get("templateExpressions");
+        if (isEmpty(templateExpressions)
+            || templateExpressions.stream().noneMatch(templateExpression
+                -> ArtifactCollectionStateKeys.artifactStreamId.equals(templateExpression.get("fieldName")))) {
+          throw new InvalidRequestException("Artifact source must either have a value or be templatized");
+        }
+        templateExpressions.stream()
+            .filter(templateExpression
+                -> !ManagerExpressionEvaluator.matchesVariablePattern((String) templateExpression.get("expression")))
+            .findAny()
+            .ifPresent(templateExpression -> {
+              throw new InvalidRequestException("Template variable:[" + templateExpression.get("expression")
+                  + "] is not valid, should start with ${ and end with }, can have a-z,A-Z,0-9,-_");
+            });
       }
     }
   }

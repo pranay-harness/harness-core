@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
+import io.harness.steps.environment.EnvironmentOutcome;
 
 import javax.annotation.Nonnull;
 import lombok.experimental.UtilityClass;
@@ -11,7 +12,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 @OwnedBy(CDC)
 public class EnvironmentMapper {
-  public EnvironmentOutcome toOutcome(@Nonnull EnvironmentYaml environmentYaml) {
+  public io.harness.steps.environment.EnvironmentOutcome toOutcome(@Nonnull EnvironmentYaml environmentYaml) {
     return EnvironmentOutcome.builder()
         .identifier(environmentYaml.getIdentifier())
         .name(environmentYaml.getName() != null ? environmentYaml.getName() : "")

@@ -26,8 +26,8 @@ import io.harness.accesscontrol.commons.migration.AccessControlMigrationProvider
 import io.harness.accesscontrol.principals.serviceaccounts.iterators.ServiceAccountReconciliationIterator;
 import io.harness.accesscontrol.principals.usergroups.iterators.UserGroupReconciliationIterator;
 import io.harness.accesscontrol.principals.users.iterators.UserReconciliationIterator;
-import io.harness.accesscontrol.principals.users.migration.UserBootstrapMigrationService;
 import io.harness.accesscontrol.resources.resourcegroups.iterators.ResourceGroupReconciliationIterator;
+import io.harness.accesscontrol.scopes.harness.iterators.ScopeReconciliationIterator;
 import io.harness.accesscontrol.support.reconciliation.SupportPreferenceReconciliationIterator;
 import io.harness.accesscontrol.support.reconciliation.SupportRoleAssignmentsReconciliationService;
 import io.harness.aggregator.AggregatorService;
@@ -176,6 +176,7 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     injector.getInstance(UserReconciliationIterator.class).registerIterators();
     injector.getInstance(ServiceAccountReconciliationIterator.class).registerIterators();
     injector.getInstance(SupportPreferenceReconciliationIterator.class).registerIterators();
+    injector.getInstance(ScopeReconciliationIterator.class).registerIterators();
   }
 
   public void registerScheduledJobs(Injector injector) {
@@ -211,7 +212,6 @@ public class AccessControlApplication extends Application<AccessControlConfigura
       environment.lifecycle().manage(injector.getInstance(UserMembershipEventListenerService.class));
     }
     environment.lifecycle().manage(injector.getInstance(OutboxEventPollService.class));
-    environment.lifecycle().manage(injector.getInstance(UserBootstrapMigrationService.class));
     environment.lifecycle().manage(injector.getInstance(SupportRoleAssignmentsReconciliationService.class));
   }
 
@@ -219,6 +219,7 @@ public class AccessControlApplication extends Application<AccessControlConfigura
     environment.jersey().register(EarlyEofExceptionMapper.class);
     environment.jersey().register(ConstraintViolationExceptionMapper.class);
     environment.jersey().register(JerseyViolationExceptionMapperV2.class);
+    environment.jersey().register(NGAccessDeniedExceptionMapper.class);
     environment.jersey().register(WingsExceptionMapperV2.class);
     environment.jersey().register(GenericExceptionMapperV2.class);
   }

@@ -4,16 +4,19 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
+import static io.harness.rule.OwnerRule.MEET;
 import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.RAMA;
 
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACCOUNT_1_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACCOUNT_2_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACCOUNT_3_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_1_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_2_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_3_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_4_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_5_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_6_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_NAME;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.COMPUTE_PROVIDER_NAME;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.CONTAINER_1_ID;
@@ -24,12 +27,16 @@ import static software.wings.service.impl.instance.InstanceSyncTestConstants.CON
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.CONTAINER_6_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.CONTAINER_7_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.CONTAINER_8_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.ENV_10_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ENV_1_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ENV_2_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ENV_3_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ENV_4_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ENV_5_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ENV_6_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.ENV_7_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.ENV_8_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.ENV_9_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ENV_NAME;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_1_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INFRA_MAPPING_1_NAME;
@@ -50,7 +57,15 @@ import static software.wings.service.impl.instance.InstanceSyncTestConstants.INF
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INSTANCE_10_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INSTANCE_11_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INSTANCE_12_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.INSTANCE_13_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.INSTANCE_14_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.INSTANCE_15_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.INSTANCE_16_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.INSTANCE_17_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.INSTANCE_18_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.INSTANCE_19_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INSTANCE_1_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.INSTANCE_20_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INSTANCE_2_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INSTANCE_3_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INSTANCE_4_ID;
@@ -60,6 +75,23 @@ import static software.wings.service.impl.instance.InstanceSyncTestConstants.INS
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INSTANCE_8_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.INSTANCE_9_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.KUBE_CLUSTER;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.LAST_ARTIFACT_BUILD_1_NUM;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.LAST_ARTIFACT_BUILD_2_NUM;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.LAST_ARTIFACT_BUILD_3_NUM;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.LAST_WORKFLOW_EXECUTION_1_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.LAST_WORKFLOW_EXECUTION_1_NAME;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.LAST_WORKFLOW_EXECUTION_2_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.LAST_WORKFLOW_EXECUTION_2_NAME;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_10_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_10_NAME;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_11_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_11_NAME;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_12_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_12_NAME;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_13_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_13_NAME;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_14_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_14_NAME;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_1_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_2_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_3_ID;
@@ -67,6 +99,8 @@ import static software.wings.service.impl.instance.InstanceSyncTestConstants.SER
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_5_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_6_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_7_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_9_ID;
+import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_9_NAME;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
@@ -142,7 +176,9 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
+import software.wings.service.impl.instance.CompareEnvironmentAggregationResponseInfo;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl;
+import software.wings.service.impl.instance.ServiceInfoResponseSummary;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
@@ -156,6 +192,7 @@ import software.wings.sm.PipelineSummary;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -314,6 +351,47 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
             .helmChartInfo(HelmChartInfo.builder().name(CHART_NAME).repoUrl(REPO_URL).version("1").build())
             .build());
     persistence.save(instance17);
+    Instance instance18 = buildInstanceToTestCompareServicesByEnvironment(INSTANCE_13_ID, ACCOUNT_3_ID, APP_6_ID,
+        ENV_7_ID, SERVICE_9_ID, SERVICE_9_NAME, LAST_ARTIFACT_BUILD_1_NUM, LAST_WORKFLOW_EXECUTION_1_ID,
+        LAST_WORKFLOW_EXECUTION_1_NAME, INFRA_MAPPING_1_ID, INFRA_MAPPING_1_NAME, false);
+    persistence.save(instance18);
+    Instance instance19 = buildInstanceToTestCompareServicesByEnvironment(INSTANCE_14_ID, ACCOUNT_3_ID, APP_6_ID,
+        ENV_8_ID, SERVICE_10_ID, SERVICE_10_NAME, LAST_ARTIFACT_BUILD_2_NUM, LAST_WORKFLOW_EXECUTION_2_ID,
+        LAST_WORKFLOW_EXECUTION_2_NAME, INFRA_MAPPING_2_ID, INFRA_MAPPING_2_NAME, false);
+    persistence.save(instance19);
+    Instance instance20 = buildInstanceToTestCompareServicesByEnvironment(INSTANCE_15_ID, ACCOUNT_3_ID, APP_6_ID,
+        ENV_9_ID, SERVICE_10_ID, SERVICE_10_NAME, LAST_ARTIFACT_BUILD_3_NUM, LAST_WORKFLOW_EXECUTION_2_ID,
+        LAST_WORKFLOW_EXECUTION_2_NAME, INFRA_MAPPING_2_ID, INFRA_MAPPING_2_NAME, false);
+    persistence.save(instance20);
+    Instance instance21 = buildInstanceToTestCompareServicesByEnvironment(INSTANCE_16_ID, ACCOUNT_3_ID, APP_6_ID,
+        ENV_10_ID, SERVICE_9_ID, SERVICE_9_NAME, LAST_ARTIFACT_BUILD_1_NUM, LAST_WORKFLOW_EXECUTION_1_ID,
+        LAST_WORKFLOW_EXECUTION_1_NAME, INFRA_MAPPING_1_ID, INFRA_MAPPING_1_NAME, false);
+    persistence.save(instance21);
+    Instance instance22 = buildInstanceToTestCompareServicesByEnvironment(INSTANCE_17_ID, ACCOUNT_3_ID, APP_6_ID,
+        ENV_10_ID, SERVICE_11_ID, SERVICE_11_NAME, LAST_ARTIFACT_BUILD_1_NUM, LAST_WORKFLOW_EXECUTION_1_ID,
+        LAST_WORKFLOW_EXECUTION_1_NAME, INFRA_MAPPING_1_ID, INFRA_MAPPING_1_NAME, false);
+    persistence.save(instance22);
+    Instance instance23 = buildInstanceToTestCompareServicesByEnvironment(INSTANCE_18_ID, ACCOUNT_3_ID, APP_6_ID,
+        ENV_10_ID, SERVICE_12_ID, SERVICE_12_NAME, LAST_ARTIFACT_BUILD_1_NUM, LAST_WORKFLOW_EXECUTION_1_ID,
+        LAST_WORKFLOW_EXECUTION_1_NAME, INFRA_MAPPING_1_ID, INFRA_MAPPING_1_NAME, false);
+    persistence.save(instance23);
+    Instance instance24 = buildInstanceToTestCompareServicesByEnvironment(INSTANCE_19_ID, ACCOUNT_3_ID, APP_6_ID,
+        ENV_10_ID, SERVICE_13_ID, SERVICE_13_NAME, LAST_ARTIFACT_BUILD_1_NUM, LAST_WORKFLOW_EXECUTION_1_ID,
+        LAST_WORKFLOW_EXECUTION_1_NAME, INFRA_MAPPING_1_ID, INFRA_MAPPING_1_NAME, false);
+    persistence.save(instance24);
+    Instance instance25 = buildInstanceToTestCompareServicesByEnvironment(INSTANCE_20_ID, ACCOUNT_3_ID, APP_6_ID,
+        ENV_10_ID, SERVICE_14_ID, SERVICE_14_NAME, LAST_ARTIFACT_BUILD_1_NUM, LAST_WORKFLOW_EXECUTION_1_ID,
+        LAST_WORKFLOW_EXECUTION_1_NAME, INFRA_MAPPING_1_ID, INFRA_MAPPING_1_NAME, false);
+    persistence.save(instance25);
+
+    WorkflowExecution workflowExecution1 = buildWorkflowExecution(LAST_WORKFLOW_EXECUTION_1_ID);
+    persistence.save(workflowExecution1);
+    WorkflowExecution workflowExecution2 = buildWorkflowExecution(LAST_WORKFLOW_EXECUTION_2_ID);
+    persistence.save(workflowExecution2);
+  }
+
+  private WorkflowExecution buildWorkflowExecution(String workflowId) {
+    return WorkflowExecution.builder().uuid(workflowId).workflowId(workflowId).build();
   }
 
   private Instance buildInstance(String instanceId, String accountId, String appId, String serviceId, String envId,
@@ -357,6 +435,25 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
                           .controllerName("controllerName:0")
                           .podName(containerId)
                           .build())
+        .build();
+  }
+
+  private Instance buildInstanceToTestCompareServicesByEnvironment(String instanceId, String accountId, String appId,
+      String envId, String serviceId, String serviceName, String lastArtifactBuildNum, String lastWorkflowExecutionId,
+      String lastWorkflowExecutionName, String infraMappingId, String infraMappingName, boolean isDeleted) {
+    return Instance.builder()
+        .uuid(instanceId)
+        .accountId(accountId)
+        .appId(appId)
+        .envId(envId)
+        .serviceId(serviceId)
+        .serviceName(serviceName)
+        .lastArtifactBuildNum(lastArtifactBuildNum)
+        .lastWorkflowExecutionId(lastWorkflowExecutionId)
+        .lastWorkflowExecutionName(lastWorkflowExecutionName)
+        .infraMappingId(infraMappingId)
+        .infraMappingName(infraMappingName)
+        .isDeleted(isDeleted)
         .build();
   }
 
@@ -753,5 +850,100 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
     DeploymentHistory deploymentHistory3 = deploymentHistories.get(2);
     assertThat(deploymentHistory3.getManifest()).isNull();
     assertThat(deploymentHistory3.getArtifact()).isNull();
+  }
+
+  @Test
+  @Owner(developers = MEET)
+  @Category(UnitTests.class)
+  public void shallGetCompareServicesByEnvironment() {
+    PageResponse<CompareEnvironmentAggregationResponseInfo> compareEnvironmentAggregationResponseInfos =
+        dashboardService.getCompareServicesByEnvironment(ACCOUNT_3_ID, APP_6_ID, ENV_7_ID, ENV_8_ID, 0, 5);
+    List<ServiceInfoResponseSummary> ExpectedServiceResponseInfoSummary1 = new ArrayList<>();
+    ExpectedServiceResponseInfoSummary1.add(ServiceInfoResponseSummary.builder()
+                                                .lastArtifactBuildNum(LAST_ARTIFACT_BUILD_2_NUM)
+                                                .lastWorkflowExecutionId(LAST_WORKFLOW_EXECUTION_2_ID)
+                                                .lastWorkflowExecutionName(LAST_WORKFLOW_EXECUTION_2_NAME)
+                                                .infraMappingId(INFRA_MAPPING_2_ID)
+                                                .infraMappingName(INFRA_MAPPING_2_NAME)
+                                                .build());
+    Map<String, List<ServiceInfoResponseSummary>> ExpectedEnvInfo1 = new HashMap<>();
+    ExpectedEnvInfo1.put(ENV_7_ID, new ArrayList<>());
+    ExpectedEnvInfo1.put(ENV_8_ID, ExpectedServiceResponseInfoSummary1);
+    CompareEnvironmentAggregationResponseInfo ExpectedCompareEnvironmentAggregationResponseInfo1 =
+        CompareEnvironmentAggregationResponseInfo.builder()
+            .serviceId(SERVICE_10_ID)
+            .serviceName(SERVICE_10_NAME)
+            .count("1")
+            .envInfo(ExpectedEnvInfo1)
+            .build();
+    List<ServiceInfoResponseSummary> ExpectedServiceResponseInfoSummary2 = new ArrayList<>();
+    ExpectedServiceResponseInfoSummary2.add(ServiceInfoResponseSummary.builder()
+                                                .lastArtifactBuildNum(LAST_ARTIFACT_BUILD_1_NUM)
+                                                .lastWorkflowExecutionId(LAST_WORKFLOW_EXECUTION_1_ID)
+                                                .lastWorkflowExecutionName(LAST_WORKFLOW_EXECUTION_1_NAME)
+                                                .infraMappingId(INFRA_MAPPING_1_ID)
+                                                .infraMappingName(INFRA_MAPPING_1_NAME)
+                                                .build());
+    Map<String, List<ServiceInfoResponseSummary>> ExpectedEnvInfo2 = new HashMap<>();
+    ExpectedEnvInfo2.put(ENV_7_ID, ExpectedServiceResponseInfoSummary2);
+    ExpectedEnvInfo2.put(ENV_8_ID, new ArrayList<>());
+    CompareEnvironmentAggregationResponseInfo ExpectedCompareEnvironmentAggregationResponseInfo2 =
+        CompareEnvironmentAggregationResponseInfo.builder()
+            .serviceId(SERVICE_9_ID)
+            .serviceName(SERVICE_9_NAME)
+            .count("1")
+            .envInfo(ExpectedEnvInfo2)
+            .build();
+    assertThat(compareEnvironmentAggregationResponseInfos).hasSize(2);
+    CompareEnvironmentAggregationResponseInfo compareEnvironmentAggregationResponseInfo1 =
+        compareEnvironmentAggregationResponseInfos.get(0);
+    assertThat(compareEnvironmentAggregationResponseInfo1)
+        .isEqualTo(ExpectedCompareEnvironmentAggregationResponseInfo1);
+    CompareEnvironmentAggregationResponseInfo compareEnvironmentAggregationResponseInfo2 =
+        compareEnvironmentAggregationResponseInfos.get(1);
+    assertThat(compareEnvironmentAggregationResponseInfo2)
+        .isEqualTo(ExpectedCompareEnvironmentAggregationResponseInfo2);
+
+    PageResponse<CompareEnvironmentAggregationResponseInfo> compareEnvironmentAggregationResponseInfos1 =
+        dashboardService.getCompareServicesByEnvironment(ACCOUNT_3_ID, APP_6_ID, ENV_8_ID, ENV_9_ID, 0, 5);
+    List<ServiceInfoResponseSummary> ExpectedServiceResponseInfoSummary3 = new ArrayList<>();
+    ExpectedServiceResponseInfoSummary3.add(ServiceInfoResponseSummary.builder()
+                                                .lastArtifactBuildNum(LAST_ARTIFACT_BUILD_2_NUM)
+                                                .lastWorkflowExecutionId(LAST_WORKFLOW_EXECUTION_2_ID)
+                                                .lastWorkflowExecutionName(LAST_WORKFLOW_EXECUTION_2_NAME)
+                                                .infraMappingId(INFRA_MAPPING_2_ID)
+                                                .infraMappingName(INFRA_MAPPING_2_NAME)
+                                                .build());
+    List<ServiceInfoResponseSummary> ExpectedServiceResponseInfoSummary4 = new ArrayList<>();
+    ExpectedServiceResponseInfoSummary4.add(ServiceInfoResponseSummary.builder()
+                                                .lastArtifactBuildNum(LAST_ARTIFACT_BUILD_3_NUM)
+                                                .lastWorkflowExecutionId(LAST_WORKFLOW_EXECUTION_2_ID)
+                                                .lastWorkflowExecutionName(LAST_WORKFLOW_EXECUTION_2_NAME)
+                                                .infraMappingId(INFRA_MAPPING_2_ID)
+                                                .infraMappingName(INFRA_MAPPING_2_NAME)
+                                                .build());
+    Map<String, List<ServiceInfoResponseSummary>> ExpectedEnvInfo3 = new HashMap<>();
+    ExpectedEnvInfo3.put(ENV_8_ID, ExpectedServiceResponseInfoSummary3);
+    ExpectedEnvInfo3.put(ENV_9_ID, ExpectedServiceResponseInfoSummary4);
+    CompareEnvironmentAggregationResponseInfo ExpectedCompareEnvironmentAggregationResponseInfo3 =
+        CompareEnvironmentAggregationResponseInfo.builder()
+            .serviceId(SERVICE_10_ID)
+            .serviceName(SERVICE_10_NAME)
+            .count("2")
+            .envInfo(ExpectedEnvInfo3)
+            .build();
+    assertThat(compareEnvironmentAggregationResponseInfos1).hasSize(1);
+    CompareEnvironmentAggregationResponseInfo compareEnvironmentAggregationResponseInfo3 =
+        compareEnvironmentAggregationResponseInfos1.get(0);
+    assertThat(compareEnvironmentAggregationResponseInfo3)
+        .isEqualTo(ExpectedCompareEnvironmentAggregationResponseInfo3);
+
+    PageResponse<CompareEnvironmentAggregationResponseInfo> compareEnvironmentAggregationResponseInfos2 =
+        dashboardService.getCompareServicesByEnvironment(ACCOUNT_3_ID, APP_6_ID, ENV_9_ID, ENV_10_ID, 0, 5);
+    assertThat(compareEnvironmentAggregationResponseInfos2).hasSize(5);
+
+    PageResponse<CompareEnvironmentAggregationResponseInfo> compareEnvironmentAggregationResponseInfos3 =
+        dashboardService.getCompareServicesByEnvironment(ACCOUNT_3_ID, APP_6_ID, ENV_9_ID, ENV_10_ID, 5, 5);
+    assertThat(compareEnvironmentAggregationResponseInfos3).hasSize(1);
   }
 }

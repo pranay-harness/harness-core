@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sSwapServiceSelectorsRequest;
 import io.harness.delegate.task.k8s.K8sTaskType;
@@ -59,24 +60,36 @@ public class K8sBGSwapServicesStep extends TaskExecutableWithRollbackAndRbac<K8s
   @Override
   public TaskRequest obtainTaskAfterRbac(
       Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
-    OptionalOutcome optionalOutcome = outcomeService.resolveOptional(
-        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.K8S_BG_SWAP_SERVICES_OUTCOME));
-    boolean stepInRollbackSection = StepUtils.isStepInRollbackSection(ambiance);
-    if (stepInRollbackSection && !optionalOutcome.isFound()) {
-      return TaskRequest.newBuilder()
-          .setSkipTaskRequest(SkipTaskRequest.newBuilder().setMessage(SKIP_BG_SWAP_SERVICES_STEP_EXECUTION).build())
-          .build();
+    K8sBGSwapServicesStepParameters k8sBGSwapServicesStepParameters =
+        (K8sBGSwapServicesStepParameters) stepElementParameters.getSpec();
+    String bgSwapServicesFqn = k8sBGSwapServicesStepParameters.getBlueGreenSwapServicesStepFqn();
+    if (EmptyPredicate.isNotEmpty(bgSwapServicesFqn)) {
+      OptionalOutcome optionalOutcome = outcomeService.resolveOptional(ambiance,
+          RefObjectUtils.getOutcomeRefObject(
+              bgSwapServicesFqn + "." + OutcomeExpressionConstants.K8S_BG_SWAP_SERVICES_OUTCOME));
+
+      boolean stepInRollbackSection = StepUtils.isStepInRollbackSection(ambiance);
+      if (stepInRollbackSection && !optionalOutcome.isFound()) {
+        return TaskRequest.newBuilder()
+            .setSkipTaskRequest(SkipTaskRequest.newBuilder().setMessage(SKIP_BG_SWAP_SERVICES_STEP_EXECUTION).build())
+            .build();
+      }
     }
 
-    OptionalSweepingOutput optionalSweepingOutput = executionSweepingOutputService.resolveOptional(
-        ambiance, RefObjectUtils.getSweepingOutputRefObject(OutcomeExpressionConstants.K8S_BLUE_GREEN_OUTCOME));
+    String bgStepFqn = k8sBGSwapServicesStepParameters.getBlueGreenStepFqn();
+    if (EmptyPredicate.isEmpty(bgStepFqn)) {
+      throw new InvalidRequestException(BG_STEP_MISSING_ERROR, USER);
+    }
+
+    OptionalSweepingOutput optionalSweepingOutput = executionSweepingOutputService.resolveOptional(ambiance,
+        RefObjectUtils.getSweepingOutputRefObject(bgStepFqn + "." + OutcomeExpressionConstants.K8S_BLUE_GREEN_OUTCOME));
     if (!optionalSweepingOutput.isFound()) {
       throw new InvalidRequestException(BG_STEP_MISSING_ERROR, USER);
     }
     K8sBlueGreenOutcome k8sBlueGreenOutcome = (K8sBlueGreenOutcome) optionalSweepingOutput.getOutput();
 
     InfrastructureOutcome infrastructure = k8sStepHelper.getInfrastructureOutcome(ambiance);
-
+    String releaseName = k8sStepHelper.getReleaseName(ambiance, infrastructure);
     K8sSwapServiceSelectorsRequest swapServiceSelectorsRequest =
         K8sSwapServiceSelectorsRequest.builder()
             .service1(k8sBlueGreenOutcome.getPrimaryServiceName())
@@ -87,6 +100,7 @@ public class K8sBGSwapServicesStep extends TaskExecutableWithRollbackAndRbac<K8s
             .timeoutIntervalInMin(K8sStepHelper.getTimeoutInMin(stepElementParameters))
             .build();
 
+    k8sStepHelper.publishReleaseNameStepDetails(ambiance, releaseName);
     return k8sStepHelper
         .queueK8sTask(stepElementParameters, swapServiceSelectorsRequest, ambiance,
             K8sExecutionPassThroughData.builder().infrastructure(infrastructure).build())
@@ -115,7 +129,7 @@ public class K8sBGSwapServicesStep extends TaskExecutableWithRollbackAndRbac<K8s
       stepResponseBuilder.stepOutcome(StepResponse.StepOutcome.builder()
                                           .name(OutcomeExpressionConstants.K8S_BG_SWAP_SERVICES_OUTCOME)
                                           .outcome(bgSwapServicesOutcome)
-                                          .group(StepOutcomeGroup.STAGE.name())
+                                          .group(StepOutcomeGroup.STEP.name())
                                           .build());
     }
 

@@ -334,7 +334,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
       taskSetupAbstractionsPrintable.append(entity.getKey() + ":" + entity.getValue() + "; ");
     }
     String logSequence = batch != null && isNotBlank(batch.getTaskId()) ? batch.getTaskId() : generateUuid();
-    log.info(logSequence + " - Starting profile scoping rules match with task abstractions {}.",
+    log.debug("{} - Starting profile scoping rules match with task abstractions {}.", logSequence,
         taskSetupAbstractionsPrintable.toString());
 
     Set<String> failedRulesDescriptions = new HashSet<>();
@@ -715,9 +715,9 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
                     .set(DelegateConnectionResultKeys.validUntil, DelegateConnectionResult.getValidUntilTime());
             DelegateConnectionResult result = persistence.findAndModify(query, updateOperations, findAndModifyOptions);
             if (result != null) {
-              log.info("Whitelist entry refreshed");
+              log.debug("Whitelist entry refreshed");
             } else {
-              log.info("Whitelist entry was not updated");
+              log.debug("Whitelist entry was not updated");
             }
           }
         }

@@ -1,5 +1,8 @@
 package io.harness.nexus.model;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import java.io.Serializable;
 import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -14,6 +17,7 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "data")
 @XmlAccessorType(XmlAccessType.FIELD)
 @lombok.Data
+@OwnedBy(HarnessTeam.CDC)
 public class Data implements Serializable {
   private String type;
   private boolean leaf;

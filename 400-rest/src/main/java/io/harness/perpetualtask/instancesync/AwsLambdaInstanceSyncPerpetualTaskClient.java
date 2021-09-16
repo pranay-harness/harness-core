@@ -7,11 +7,13 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.service.InstanceSyncConstants.HARNESS_APPLICATION_ID;
 import static software.wings.service.InstanceSyncConstants.INFRASTRUCTURE_MAPPING_ID;
 
-import static java.lang.Boolean.TRUE;
+import static java.lang.Boolean.FALSE;
 import static java.lang.Long.parseLong;
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.TaskData;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
@@ -42,6 +44,7 @@ import lombok.experimental.FieldDefaults;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 public class AwsLambdaInstanceSyncPerpetualTaskClient implements PerpetualTaskServiceClient {
   public static final String FUNCTION_NAME = "functionName";
   public static final String QUALIFIER = "qualifier";
@@ -79,7 +82,7 @@ public class AwsLambdaInstanceSyncPerpetualTaskClient implements PerpetualTaskSe
                                           .region(perpetualTaskData.getRegion())
                                           .functionName(perpetualTaskData.getFunctionName())
                                           .qualifier(perpetualTaskData.getQualifier())
-                                          .loadAliases(TRUE)
+                                          .loadAliases(FALSE)
                                           .build();
 
     return DelegateTask.builder()

@@ -125,7 +125,8 @@ public class ManifestsPlanCreator {
               new ManifestInfoBuilder(ManifestStepParameters.builder()
                                           .identifier(mc.getIdentifier())
                                           .type(mc.getType().getDisplayName())
-                                          .spec(mc.getSpec())));
+                                          .spec(mc.getSpec())
+                                          .order(this.manifests.size())));
         });
       }
     }
@@ -182,7 +183,9 @@ public class ManifestsPlanCreator {
       for (ManifestConfigWrapper manifestConfigWrapper : manifestConfigList) {
         ManifestConfig mc = manifestConfigWrapper.getManifest();
         ManifestInfoBuilder manifestInfoBuilder = manifests.computeIfAbsent(mc.getIdentifier(),
-            identifier -> new ManifestInfoBuilder(ManifestStepParameters.builder().identifier(identifier)));
+            identifier
+            -> new ManifestInfoBuilder(
+                ManifestStepParameters.builder().order(manifests.size()).identifier(identifier)));
         consumer.accept(manifestInfoBuilder.getBuilder(), mc.getSpec());
       }
     }

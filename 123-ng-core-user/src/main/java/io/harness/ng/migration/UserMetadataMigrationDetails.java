@@ -1,5 +1,7 @@
 package io.harness.ng.migration;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.migration.MigrationDetails;
 import io.harness.migration.NGMigration;
 import io.harness.migration.beans.MigrationType;
@@ -9,6 +11,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.List;
 import org.apache.commons.lang3.tuple.Pair;
 
+@OwnedBy(HarnessTeam.PL)
 public class UserMetadataMigrationDetails implements MigrationDetails {
   @Override
   public MigrationType getMigrationTypeName() {
@@ -17,7 +20,7 @@ public class UserMetadataMigrationDetails implements MigrationDetails {
 
   @Override
   public boolean isBackground() {
-    return false;
+    return true;
   }
 
   @Override

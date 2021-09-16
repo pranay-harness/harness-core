@@ -9,6 +9,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.AccountId;
 import io.harness.delegateprofile.AddProfileRequest;
 import io.harness.delegateprofile.AddProfileResponse;
+import io.harness.delegateprofile.DelegateProfileFilterGrpc;
 import io.harness.delegateprofile.DelegateProfileGrpc;
 import io.harness.delegateprofile.DelegateProfilePageResponseGrpc;
 import io.harness.delegateprofile.DelegateProfileServiceGrpc.DelegateProfileServiceBlockingStub;
@@ -18,6 +19,7 @@ import io.harness.delegateprofile.GetProfileRequest;
 import io.harness.delegateprofile.GetProfileResponse;
 import io.harness.delegateprofile.GetProfileV2Request;
 import io.harness.delegateprofile.ListProfilesRequest;
+import io.harness.delegateprofile.ListProfilesRequestV2;
 import io.harness.delegateprofile.ListProfilesResponse;
 import io.harness.delegateprofile.ProfileId;
 import io.harness.delegateprofile.ProfileIdentifier;
@@ -52,8 +54,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(HarnessTeam.DEL)
 public class DelegateProfileServiceGrpcClient {
-  private DelegateProfileServiceBlockingStub delegateProfileServiceBlockingStub;
-  private KryoSerializer kryoSerializer;
+  private final DelegateProfileServiceBlockingStub delegateProfileServiceBlockingStub;
+  private final KryoSerializer kryoSerializer;
 
   @Inject
   public DelegateProfileServiceGrpcClient(
@@ -76,6 +78,22 @@ public class DelegateProfileServiceGrpcClient {
       }
 
       ListProfilesResponse listProfilesResponse = delegateProfileServiceBlockingStub.listProfiles(builder.build());
+
+      return listProfilesResponse.getResponse();
+    } catch (StatusRuntimeException ex) {
+      throw new DelegateServiceDriverException(getMessage(ex), ex);
+    }
+  }
+
+  public DelegateProfilePageResponseGrpc listProfilesV2(
+      String searchTerm, DelegateProfileFilterGrpc filterProperties, PageRequestGrpc pageRequest) {
+    try {
+      ListProfilesRequestV2.Builder builder = ListProfilesRequestV2.newBuilder()
+                                                  .setSearchTerm(searchTerm)
+                                                  .setFilterProperties(filterProperties)
+                                                  .setPageRequest(pageRequest);
+
+      ListProfilesResponse listProfilesResponse = delegateProfileServiceBlockingStub.listProfilesV2(builder.build());
 
       return listProfilesResponse.getResponse();
     } catch (StatusRuntimeException ex) {

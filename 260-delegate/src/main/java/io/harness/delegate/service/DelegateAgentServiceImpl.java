@@ -259,6 +259,17 @@ import retrofit2.Response;
 @TargetModule(HarnessModule._420_DELEGATE_AGENT)
 @BreakDependencyOn("software.wings.delegatetasks.validation.DelegateConnectionResult")
 @BreakDependencyOn("io.harness.delegate.beans.Delegate")
+@BreakDependencyOn("io.harness.delegate.beans.DelegateScripts")
+@BreakDependencyOn("io.harness.delegate.beans.FileBucket")
+@BreakDependencyOn("io.harness.delegate.message.Message")
+@BreakDependencyOn("io.harness.delegate.message.MessageConstants")
+@BreakDependencyOn("io.harness.delegate.message.MessageService")
+@BreakDependencyOn("io.harness.delegate.message.MessengerType")
+@BreakDependencyOn("software.wings.beans.DelegateTaskFactory")
+@BreakDependencyOn("software.wings.beans.command.Command")
+@BreakDependencyOn("software.wings.delegatetasks.validation.DelegateValidateTask")
+@BreakDependencyOn("software.wings.delegatetasks.LogSanitizer")
+@BreakDependencyOn("software.wings.service.intfc.security.EncryptionService")
 @OwnedBy(HarnessTeam.DEL)
 public class DelegateAgentServiceImpl implements DelegateAgentService {
   private static final int POLL_INTERVAL_SECONDS = 3;
@@ -288,6 +299,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private final String delegateProjectIdentifier = System.getenv().get("DELEGATE_PROJECT_IDENTIFIER");
   private final String delegateSize = System.getenv().get("DELEGATE_SIZE");
   private final String delegateDescription = System.getenv().get("DELEGATE_DESCRIPTION");
+  // TODO remove this dependency of delegateNg on SESSION_ID once DEL-2413 has gone into prod for several weeks.
+  private final boolean delegateNg = isNotBlank(delegateSessionIdentifier)
+      || (isNotBlank(System.getenv().get("NEXT_GEN")) && Boolean.parseBoolean(System.getenv().get("NEXT_GEN")));
   private final int delegateTaskLimit = isNotBlank(System.getenv().get("DELEGATE_TASK_LIMIT"))
       ? Integer.parseInt(System.getenv().get("DELEGATE_TASK_LIMIT"))
       : 0;
@@ -303,6 +317,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   @Inject @Named("heartbeatExecutor") private ScheduledExecutorService heartbeatExecutor;
   @Inject @Named("localHeartbeatExecutor") private ScheduledExecutorService localHeartbeatExecutor;
+  @Inject @Named("watcherUpgradeExecutor") private ScheduledExecutorService watcherUpgradeExecutor;
   @Inject @Named("upgradeExecutor") private ScheduledExecutorService upgradeExecutor;
   @Inject @Named("inputExecutor") private ScheduledExecutorService inputExecutor;
   @Inject @Named("rescheduleExecutor") private ScheduledExecutorService rescheduleExecutor;
@@ -314,6 +329,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   @Inject @Named("artifactExecutor") private ExecutorService artifactExecutor;
   @Inject @Named("timeoutExecutor") private ExecutorService timeoutEnforcement;
   @Inject @Named("grpcServiceExecutor") private ExecutorService grpcServiceExecutor;
+  @Inject @Named("taskProgressExecutor") private ExecutorService taskProgressExecutor;
   @Inject private ExecutorService syncExecutor;
 
   @Inject private SignalService signalService;
@@ -428,6 +444,13 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                  : "[New] Timed out waiting for go-ahead. Proceeding anyway");
         messageService.removeData(DELEGATE_DASH + getProcessId(), DELEGATE_IS_NEW);
         startLocalHeartbeat();
+        watcherUpgradeExecutor.scheduleWithFixedDelay(() -> {
+          try {
+            watcherUpgrade(false);
+          } catch (Exception e) {
+            log.error("Error while upgrading watcher", e);
+          }
+        }, 0, 60, TimeUnit.MINUTES);
       } else {
         log.info("Delegate process started");
         if (delegateConfiguration.isGrpcServiceEnabled()) {
@@ -436,26 +459,31 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         }
       }
 
-      if (delegateConfiguration.isClientToolsDownloadDisabled()) {
-        kubectlInstalled = true;
-        goTemplateInstalled = true;
-        harnessPywinrmInstalled = true;
-        helmInstalled = true;
-        chartMuseumInstalled = true;
-        tfConfigInspectInstalled = true;
-        ocInstalled = true;
-        kustomizeInstalled = true;
-        scmInstalled = true;
+      if (!delegateConfiguration.isInstallClientToolsInBackground()) {
+        log.info("Client tools will be installed synchronously, before delegate registers");
+        if (delegateConfiguration.isClientToolsDownloadDisabled()) {
+          kubectlInstalled = true;
+          goTemplateInstalled = true;
+          harnessPywinrmInstalled = true;
+          helmInstalled = true;
+          chartMuseumInstalled = true;
+          tfConfigInspectInstalled = true;
+          ocInstalled = true;
+          kustomizeInstalled = true;
+          scmInstalled = true;
+        } else {
+          kubectlInstalled = installKubectl(delegateConfiguration);
+          goTemplateInstalled = installGoTemplateTool(delegateConfiguration);
+          harnessPywinrmInstalled = installHarnessPywinrm(delegateConfiguration);
+          helmInstalled = installHelm(delegateConfiguration);
+          chartMuseumInstalled = installChartMuseum(delegateConfiguration);
+          tfConfigInspectInstalled = installTerraformConfigInspect(delegateConfiguration);
+          ocInstalled = installOc(delegateConfiguration);
+          kustomizeInstalled = installKustomize(delegateConfiguration);
+          scmInstalled = installScm(delegateConfiguration);
+        }
       } else {
-        kubectlInstalled = installKubectl(delegateConfiguration);
-        goTemplateInstalled = installGoTemplateTool(delegateConfiguration);
-        harnessPywinrmInstalled = installHarnessPywinrm(delegateConfiguration);
-        helmInstalled = installHelm(delegateConfiguration);
-        chartMuseumInstalled = installChartMuseum(delegateConfiguration);
-        tfConfigInspectInstalled = installTerraformConfigInspect(delegateConfiguration);
-        ocInstalled = installOc(delegateConfiguration);
-        kustomizeInstalled = installKustomize(delegateConfiguration);
-        scmInstalled = installScm(delegateConfiguration);
+        log.info("Client tools will be installed in the background, while delegate registers");
       }
 
       logCfCliConfiguration();
@@ -507,6 +535,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                           .delegateType(DELEGATE_TYPE)
                                           //.proxy(set to true if there is a system proxy)
                                           .pollingModeEnabled(delegateConfiguration.isPollForTasks())
+                                          .ng(delegateNg)
                                           .sampleDelegate(isSample)
                                           .location(Paths.get("").toAbsolutePath().toString())
                                           .ceEnabled(Boolean.parseBoolean(System.getenv("ENABlE_CE")));
@@ -574,81 +603,66 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
       startProfileCheck();
 
-      if (!kubectlInstalled || !goTemplateInstalled || !helmInstalled || !chartMuseumInstalled
-          || !tfConfigInspectInstalled || !harnessPywinrmInstalled || !scmInstalled) {
+      if (!areAllClientToolsInstalled()) {
         systemExecutor.submit(() -> {
-          boolean kubectl = kubectlInstalled;
-          boolean goTemplate = goTemplateInstalled;
-          boolean helm = helmInstalled;
-          boolean chartMuseum = chartMuseumInstalled;
-          boolean tfConfigInspect = tfConfigInspectInstalled;
-          boolean oc = ocInstalled;
-          boolean kustomize = kustomizeInstalled;
-          boolean harnessPywinrm = harnessPywinrmInstalled;
-          boolean scm = scmInstalled;
-
           int retries = CLIENT_TOOL_RETRIES;
-          while ((!kubectl || !goTemplate || !helm || !chartMuseum || !tfConfigInspect || !harnessPywinrm || !scm)
-              && retries > 0) {
+          while (!areAllClientToolsInstalled() && retries > 0) {
             sleep(ofSeconds(15L));
-            if (!kubectl) {
-              kubectl = installKubectl(delegateConfiguration);
+            if (!kubectlInstalled) {
+              kubectlInstalled = installKubectl(delegateConfiguration);
             }
-            if (!goTemplate) {
-              goTemplate = installGoTemplateTool(delegateConfiguration);
+            if (!goTemplateInstalled) {
+              goTemplateInstalled = installGoTemplateTool(delegateConfiguration);
             }
-            if (!harnessPywinrm) {
-              harnessPywinrm = installHarnessPywinrm(delegateConfiguration);
+            if (!harnessPywinrmInstalled) {
+              harnessPywinrmInstalled = installHarnessPywinrm(delegateConfiguration);
             }
-            if (!helm) {
-              helm = installHelm(delegateConfiguration);
+            if (!helmInstalled) {
+              helmInstalled = installHelm(delegateConfiguration);
             }
-            if (!chartMuseum) {
-              chartMuseum = installChartMuseum(delegateConfiguration);
+            if (!chartMuseumInstalled) {
+              chartMuseumInstalled = installChartMuseum(delegateConfiguration);
             }
-            if (!tfConfigInspect) {
-              tfConfigInspect = installTerraformConfigInspect(delegateConfiguration);
+            if (!tfConfigInspectInstalled) {
+              tfConfigInspectInstalled = installTerraformConfigInspect(delegateConfiguration);
             }
-            if (!tfConfigInspect) {
-              tfConfigInspect = installTerraformConfigInspect(delegateConfiguration);
+            if (!ocInstalled) {
+              ocInstalled = installOc(delegateConfiguration);
             }
-            if (!oc) {
-              oc = installOc(delegateConfiguration);
+            if (!kustomizeInstalled) {
+              kustomizeInstalled = installKustomize(delegateConfiguration);
             }
-            if (!kustomize) {
-              kustomize = installKustomize(delegateConfiguration);
+            if (!scmInstalled) {
+              scmInstalled = installScm(delegateConfiguration);
             }
-            if (!scm) {
-              scm = installScm(delegateConfiguration);
-            }
-
             retries--;
           }
 
-          if (!kubectl) {
+          if (!kubectlInstalled) {
             log.error("Failed to install kubectl after {} retries", CLIENT_TOOL_RETRIES);
           }
-          if (!goTemplate) {
+          if (!goTemplateInstalled) {
             log.error("Failed to install go-template after {} retries", CLIENT_TOOL_RETRIES);
           }
-
-          if (!harnessPywinrm) {
+          if (!harnessPywinrmInstalled) {
             log.error("Failed to install harness-pywinrm after {} retries", CLIENT_TOOL_RETRIES);
           }
-
-          if (!helm) {
+          if (!helmInstalled) {
             log.error("Failed to install helm after {} retries", CLIENT_TOOL_RETRIES);
           }
-          if (!chartMuseum) {
+          if (!chartMuseumInstalled) {
             log.error("Failed to install chartMuseum after {} retries", CLIENT_TOOL_RETRIES);
           }
-          if (!tfConfigInspect) {
+          if (!tfConfigInspectInstalled) {
             log.error("Failed to install tf-config-inspect after {} retries", CLIENT_TOOL_RETRIES);
           }
-          if (!kustomize) {
+          if (!ocInstalled) {
+            log.error("Failed to install oc after {} retries", CLIENT_TOOL_RETRIES);
+          }
+          if (!kustomizeInstalled) {
             log.error("Failed to install kustomize after {} retries", CLIENT_TOOL_RETRIES);
           }
-          if (!scm) {
+          if (!scmInstalled) {
             log.error("Failed to install scm after {} retries", CLIENT_TOOL_RETRIES);
           }
         });
@@ -681,6 +695,11 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     } catch (RuntimeException | IOException e) {
       log.error("Exception while starting/running delegate", e);
     }
+  }
+
+  public boolean areAllClientToolsInstalled() {
+    return kubectlInstalled && goTemplateInstalled && helmInstalled && chartMuseumInstalled && tfConfigInspectInstalled
+        && ocInstalled && kustomizeInstalled && harnessPywinrmInstalled && scmInstalled;
   }
 
   private RequestBuilder prepareRequestBuilder() {
@@ -886,7 +905,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       log.warn("Delegate used revoked token. It will be frozen and drained.");
       freeze();
     } else if (!StringUtils.equals(message, "X")) {
-      log.info("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
+      if (log.isDebugEnabled()) {
+        log.debug("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
+      }
       try {
         DelegateTaskEvent delegateTaskEvent = JsonUtils.asObject(message, DelegateTaskEvent.class);
         try (TaskLogContext ignore = new TaskLogContext(delegateTaskEvent.getDelegateTaskId(), OVERRIDE_ERROR)) {
@@ -1443,48 +1464,54 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   private void startLocalHeartbeat() {
-    localHeartbeatExecutor.scheduleAtFixedRate(() -> {
-      try {
-        systemExecutor.submit(() -> {
-          Map<String, Object> statusData = new HashMap<>();
-          if (selfDestruct.get()) {
-            statusData.put(DELEGATE_SELF_DESTRUCT, true);
-          } else {
-            statusData.put(DELEGATE_HEARTBEAT, clock.millis());
-            statusData.put(DELEGATE_VERSION, getVersion());
-            statusData.put(DELEGATE_IS_NEW, false);
-            statusData.put(DELEGATE_RESTART_NEEDED, doRestartDelegate());
-            statusData.put(DELEGATE_UPGRADE_NEEDED, upgradeNeeded.get());
-            statusData.put(DELEGATE_UPGRADE_PENDING, upgradePending.get());
-            statusData.put(DELEGATE_SHUTDOWN_PENDING, !acquireTasks.get());
-            if (switchStorage.get() && !switchStorageMsgSent) {
-              statusData.put(DELEGATE_SWITCH_STORAGE, TRUE);
-              switchStorageMsgSent = true;
-            }
-            if (sendJreInformationToWatcher) {
-              log.debug("Sending Delegate JRE: {} MigrateTo JRE: {} to watcher", System.getProperty(JAVA_VERSION),
-                  migrateToJreVersion);
-              statusData.put(DELEGATE_JRE_VERSION, System.getProperty(JAVA_VERSION));
-              statusData.put(MIGRATE_TO_JRE_VERSION, migrateToJreVersion);
-            }
-            if (upgradePending.get()) {
-              statusData.put(DELEGATE_UPGRADE_STARTED, upgradeStartedAt);
-            }
-            if (!acquireTasks.get()) {
-              statusData.put(DELEGATE_SHUTDOWN_STARTED, stoppedAcquiringAt);
-            }
-            if (isNotBlank(migrateTo)) {
-              statusData.put(DELEGATE_MIGRATE, migrateTo);
-            }
-          }
-          messageService.putAllData(DELEGATE_DASH + getProcessId(), statusData);
-          watchWatcher();
-        });
-      } catch (Exception e) {
-        log.error("Exception while scheduling local heartbeat", e);
+    localHeartbeatExecutor.scheduleAtFixedRate(this::submit, 0, 10, TimeUnit.SECONDS);
+  }
+
+  private void submit() {
+    try {
+      log.info("Starting local heartbeat.");
+      systemExecutor.submit(this::fillStatusData);
+    } catch (Exception e) {
+      log.error("Exception while scheduling local heartbeat", e);
+    }
+    logCurrentTasks();
+  }
+
+  private void fillStatusData() {
+    log.info("Filling status data.");
+    Map<String, Object> statusData = new HashMap<>();
+    if (selfDestruct.get()) {
+      statusData.put(DELEGATE_SELF_DESTRUCT, true);
+    } else {
+      statusData.put(DELEGATE_HEARTBEAT, clock.millis());
+      statusData.put(DELEGATE_VERSION, getVersionWithPatch());
+      statusData.put(DELEGATE_IS_NEW, false);
+      statusData.put(DELEGATE_RESTART_NEEDED, doRestartDelegate());
+      statusData.put(DELEGATE_UPGRADE_NEEDED, upgradeNeeded.get());
+      statusData.put(DELEGATE_UPGRADE_PENDING, upgradePending.get());
+      statusData.put(DELEGATE_SHUTDOWN_PENDING, !acquireTasks.get());
+      if (switchStorage.get() && !switchStorageMsgSent) {
+        statusData.put(DELEGATE_SWITCH_STORAGE, TRUE);
+        switchStorageMsgSent = true;
       }
-      logCurrentTasks();
-    }, 0, 10, TimeUnit.SECONDS);
+      if (sendJreInformationToWatcher) {
+        log.debug("Sending Delegate JRE: {} MigrateTo JRE: {} to watcher", System.getProperty(JAVA_VERSION),
+            migrateToJreVersion);
+        statusData.put(DELEGATE_JRE_VERSION, System.getProperty(JAVA_VERSION));
+        statusData.put(MIGRATE_TO_JRE_VERSION, migrateToJreVersion);
+      }
+      if (upgradePending.get()) {
+        statusData.put(DELEGATE_UPGRADE_STARTED, upgradeStartedAt);
+      }
+      if (!acquireTasks.get()) {
+        statusData.put(DELEGATE_SHUTDOWN_STARTED, stoppedAcquiringAt);
+      }
+      if (isNotBlank(migrateTo)) {
+        statusData.put(DELEGATE_MIGRATE, migrateTo);
+      }
+    }
+    messageService.putAllData(DELEGATE_DASH + getProcessId(), statusData);
+    watchWatcher();
   }
 
   private void watchWatcher() {
@@ -1493,7 +1520,11 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     boolean heartbeatTimedOut = clock.millis() - watcherHeartbeat > WATCHER_HEARTBEAT_TIMEOUT;
     if (heartbeatTimedOut) {
       log.warn("Watcher heartbeat not seen for {} seconds", WATCHER_HEARTBEAT_TIMEOUT / 1000L);
+      watcherUpgrade(true);
     }
+  }
+
+  private void watcherUpgrade(boolean heartbeatTimedOut) {
     String watcherVersion = messageService.getData(WATCHER_DATA, WATCHER_VERSION, String.class);
     String expectedVersion = findExpectedWatcherVersion();
     if (StringUtils.equals(expectedVersion, watcherVersion)) {
@@ -1505,8 +1536,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           WATCHER_VERSION_MATCH_TIMEOUT / 1000L, watcherVersion, expectedVersion);
     }
 
-    boolean multiVersionRestartNeeded =
-        multiVersion && clock.millis() - startTime > WATCHER_VERSION_MATCH_TIMEOUT && !new File(getVersion()).exists();
+    boolean multiVersionRestartNeeded = multiVersion && clock.millis() - startTime > WATCHER_VERSION_MATCH_TIMEOUT
+        && !new File(getVersionWithPatch()).exists();
 
     if (heartbeatTimedOut || versionMatchTimedOut
         || (multiVersionRestartNeeded && multiVersionWatcherStarted.compareAndSet(false, true))) {
@@ -1835,12 +1866,16 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       // Delay response if already working on many tasks
       sleep(ofMillis(100 * Math.min(currentlyExecutingTasks.size() + currentlyValidatingTasks.size(), 10)));
 
-      log.info("Try to acquire DelegateTask - accountId: {}", accountId);
+      if (log.isDebugEnabled()) {
+        log.debug("Try to acquire DelegateTask - accountId: {}", accountId);
+      }
 
       DelegateTaskPackage delegateTaskPackage =
           delegateExecute(delegateAgentManagerClient.acquireTask(delegateId, delegateTaskId, accountId));
       if (delegateTaskPackage == null || delegateTaskPackage.getData() == null) {
-        log.info("Delegate task data not available - accountId: {}", delegateTaskEvent.getAccountId());
+        if (log.isDebugEnabled()) {
+          log.debug("Delegate task data not available - accountId: {}", delegateTaskEvent.getAccountId());
+        }
         return;
       }
 
@@ -1919,7 +1954,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private Consumer<List<DelegateConnectionResult>> getPostValidationFunction(
       DelegateTaskEvent delegateTaskEvent, String taskId) {
     return delegateConnectionResults -> {
-      try (AutoLogContext logContext = new TaskLogContext(taskId, OVERRIDE_ERROR)) {
+      try (AutoLogContext ignored = new TaskLogContext(taskId, OVERRIDE_ERROR)) {
+        // Tools might be installed asynchronously, so get the flag early on
+        final boolean areAllClientToolsInstalled = areAllClientToolsInstalled();
         currentlyValidatingTasks.remove(taskId);
         currentlyValidatingFutures.remove(taskId);
         log.info("Removed from validating futures on post validation");
@@ -1946,7 +1983,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
               try {
                 log.info("Manager check whether to fail task");
                 execute(delegateAgentManagerClient.failIfAllDelegatesFailed(
-                    delegateId, delegateTaskEvent.getDelegateTaskId(), accountId));
+                    delegateId, delegateTaskEvent.getDelegateTaskId(), accountId, areAllClientToolsInstalled));
               } catch (IOException e) {
                 log.error("Unable to tell manager to check whether to fail for task", e);
               }
@@ -1985,7 +2022,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       return;
     }
 
-    log.info("DelegateTask acquired - accountId: {}, taskType: {}", accountId, taskData.getTaskType());
+    if (log.isDebugEnabled()) {
+      log.debug("DelegateTask acquired - accountId: {}, taskType: {}", accountId, taskData.getTaskType());
+    }
     Pair<String, Set<String>> activitySecrets = obtainActivitySecrets(delegateTaskPackage);
     Optional<LogSanitizer> sanitizer = getLogSanitizer(activitySecrets);
     ILogStreamingTaskClient logStreamingTaskClient = getLogStreamingTaskClient(activitySecrets, delegateTaskPackage);
@@ -2001,7 +2040,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     injector.injectMembers(delegateRunnableTask);
     ExecutorService executorService = selectExecutorService(taskData);
     Future taskFuture = executorService.submit(delegateRunnableTask);
-    log.info("Task future in executeTask: done:{}, cancelled:{}", taskFuture.isDone(), taskFuture.isCancelled());
+    if (taskFuture.isCancelled()) {
+      log.warn("Task future in executeTask: done:{}, cancelled:{}", taskFuture.isDone(), taskFuture.isCancelled());
+    }
     currentlyExecutingFutures.put(delegateTaskPackage.getDelegateTaskId(), taskFuture);
     updateCounterIfLessThanCurrent(maxExecutingFuturesCount, currentlyExecutingFutures.size());
 
@@ -2052,6 +2093,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             .logStreamingSanitizer(LogStreamingSanitizer.builder().secrets(activitySecrets.getRight()).build())
             .baseLogKey(logBaseKey)
             .logService(delegateLogService)
+            .taskProgressExecutor(taskProgressExecutor)
             .appId(appId)
             .activityId(activityId);
 
@@ -2188,7 +2230,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       }
 
       if (!currentlyExecutingTasks.containsKey(delegateTaskPackage.getDelegateTaskId())) {
-        log.info("Adding task to executing tasks");
+        log.debug("Adding task to executing tasks");
         currentlyExecutingTasks.put(delegateTaskPackage.getDelegateTaskId(), delegateTaskPackage);
         updateCounterIfLessThanCurrent(maxExecutingTasksCount, currentlyExecutingTasks.size());
         if (sanitizer != null) {
@@ -2246,7 +2288,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         }
         currentlyExecutingTasks.remove(taskId);
         if (currentlyExecutingFutures.remove(taskId) != null) {
-          log.info("Removed from executing futures on post execution");
+          log.debug("Removed from executing futures on post execution");
         }
         if (response != null && response.errorBody() != null && !response.isSuccessful()) {
           response.errorBody().close();
@@ -2327,7 +2369,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private void removeDelegateVersionFromCapsule() {
     try {
-      cleanup(new File(System.getProperty("capsule.dir")).getParentFile(), getVersion(), upgradeVersion, "delegate-");
+      cleanup(new File(System.getProperty("capsule.dir")).getParentFile(), getVersionWithPatch(), upgradeVersion,
+          "delegate-");
     } catch (Exception ex) {
       log.error("Failed to clean delegate version [{}] from Capsule", upgradeVersion, ex);
     }
@@ -2344,6 +2387,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private String getVersion() {
     return versionInfoManager.getVersionInfo().getVersion();
+  }
+
+  private String getVersionWithPatch() {
+    return versionInfoManager.getFullVersion();
   }
 
   private void initiateSelfDestruct() {

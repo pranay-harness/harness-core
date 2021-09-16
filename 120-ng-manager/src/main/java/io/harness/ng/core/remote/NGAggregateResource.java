@@ -1,11 +1,13 @@
 package io.harness.ng.core.remote;
 
 import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
+import static io.harness.account.accesscontrol.AccountAccessControlPermissions.VIEW_ACCOUNT_PERMISSION;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_ORGANIZATION_PERMISSION;
 import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_PROJECT_PERMISSION;
 import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_USERGROUP_PERMISSION;
+import static io.harness.ng.accesscontrol.PlatformResourceTypes.ACCOUNT;
 import static io.harness.ng.accesscontrol.PlatformResourceTypes.ORGANIZATION;
 import static io.harness.ng.accesscontrol.PlatformResourceTypes.PROJECT;
 import static io.harness.ng.accesscontrol.PlatformResourceTypes.USERGROUP;
@@ -29,9 +31,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SortOrder;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
+import io.harness.ng.core.api.AggregateAccountResourceService;
 import io.harness.ng.core.api.AggregateOrganizationService;
 import io.harness.ng.core.api.AggregateProjectService;
 import io.harness.ng.core.api.AggregateUserGroupService;
+import io.harness.ng.core.dto.AccountResourcesDTO;
 import io.harness.ng.core.dto.AggregateACLRequest;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -91,6 +95,7 @@ public class NGAggregateResource {
   private final AggregateUserGroupService aggregateUserGroupService;
   private final OrganizationService organizationService;
   private final AccessControlClient accessControlClient;
+  private final AggregateAccountResourceService aggregateAccountResourceService;
 
   @GET
   @Path("projects/{identifier}")
@@ -148,10 +153,9 @@ public class NGAggregateResource {
 
   @GET
   @Path("organizations")
-  @NGAccessControlCheck(resourceType = ORGANIZATION, permission = VIEW_ORGANIZATION_PERMISSION)
   @ApiOperation(value = "Get OrganizationAggregateDTO list", nickname = "getOrganizationAggregateDTOList")
   public ResponseDTO<PageResponse<OrganizationAggregateDTO>> list(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @BeanParam PageRequest pageRequest) {
     OrganizationFilterDTO organizationFilterDTO = OrganizationFilterDTO.builder().searchTerm(searchTerm).build();
     if (isEmpty(pageRequest.getSortOrders())) {
@@ -231,7 +235,7 @@ public class NGAggregateResource {
     List<PermissionCheckDTO> permissionChecks = orgIdentifiers.stream()
                                                     .map(oi
                                                         -> PermissionCheckDTO.builder()
-                                                               .permission(VIEW_PROJECT_PERMISSION)
+                                                               .permission(VIEW_ORGANIZATION_PERMISSION)
                                                                .resourceIdentifier(oi)
                                                                .resourceScope(resourceScope)
                                                                .resourceType(ORGANIZATION)
@@ -243,5 +247,14 @@ public class NGAggregateResource {
         .filter(AccessControlDTO::isPermitted)
         .map(AccessControlDTO::getResourceIdentifier)
         .collect(Collectors.toSet());
+  }
+
+  @GET
+  @Path("/account-resources")
+  @NGAccessControlCheck(resourceType = ACCOUNT, permission = VIEW_ACCOUNT_PERMISSION)
+  @ApiOperation(value = "Gets count of account resources", nickname = "getAccountResourcesCount")
+  public ResponseDTO<AccountResourcesDTO> getAccountResourcesCount(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
+    return ResponseDTO.newResponse(aggregateAccountResourceService.getAccountResourcesDTO(accountIdentifier));
   }
 }

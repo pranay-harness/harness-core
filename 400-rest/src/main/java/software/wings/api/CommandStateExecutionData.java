@@ -6,7 +6,9 @@ import static io.harness.govern.Switch.unhandled;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.logging.CommandExecutionStatus;
 
@@ -40,6 +42,7 @@ import org.mongodb.morphia.annotations.Transient;
  * Created by peeyushaggarwal on 6/17/16.
  */
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @EqualsAndHashCode(callSuper = true)

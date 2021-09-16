@@ -7,6 +7,8 @@ import static io.harness.exception.WingsException.USER;
 
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
@@ -75,6 +77,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Produces(APPLICATION_JSON)
 @Scope(ResourceType.APPLICATION)
 @AuthRule(permissionType = PermissionType.SERVICE)
+@OwnedBy(HarnessTeam.CDC)
 public class ServiceResource {
   private ServiceResourceService serviceResourceService;
   @Inject ApplicationManifestService applicationManifestService;

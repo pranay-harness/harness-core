@@ -257,8 +257,8 @@ public class GitEntityServiceImpl implements GitEntityService {
   public boolean save(String accountId, EntityDetail entityDetail, YamlGitConfigDTO yamlGitConfig, String folderPath,
       String filePath, String commitId, String branchName) {
     final Optional<GitFileLocation> gitFileLocation =
-        gitFileLocationRepository.findByEntityGitPathAndGitSyncConfigIdAndAccountId(
-            filePath, yamlGitConfig.getIdentifier(), accountId);
+        gitFileLocationRepository.findByEntityGitPathAndGitSyncConfigIdAndAccountIdAndBranch(
+            filePath, yamlGitConfig.getIdentifier(), accountId, branchName);
     String completeFilePath = createFilePath(folderPath, filePath);
     // todo(abhinav): changeisDefault to value which comes when
     final GitFileLocation fileLocation = GitFileLocation.builder()

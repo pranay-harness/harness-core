@@ -2,6 +2,7 @@ package io.harness.waiter;
 
 import static java.util.Arrays.asList;
 
+import io.harness.TimeoutEngineModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.config.PublisherConfiguration;
@@ -57,5 +58,6 @@ public class WaiterModule extends AbstractModule {
   @Override
   protected void configure() {
     install(QueueModule.getInstance());
+    install(TimeoutEngineModule.getInstance());
   }
 }

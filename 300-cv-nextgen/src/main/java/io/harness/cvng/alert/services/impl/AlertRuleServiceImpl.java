@@ -308,7 +308,7 @@ public class AlertRuleServiceImpl implements AlertRuleService {
             .team(Team.CV)
             .templateId("pd_test")
             .templateData(Collections.emptyMap())
-            .userGroupIds(Collections.emptyList())
+            .userGroups(Collections.emptyList())
             .build());
   }
 
@@ -320,7 +320,7 @@ public class AlertRuleServiceImpl implements AlertRuleService {
             .team(Team.CV)
             .templateId("slack_vanilla")
             .templateData(Collections.singletonMap("message", alertMessage))
-            .userGroupIds(Collections.emptyList())
+            .userGroups(Collections.emptyList())
             .build());
   }
 

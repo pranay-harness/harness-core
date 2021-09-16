@@ -1,6 +1,6 @@
 package io.harness.ngtriggers.beans.dto.eventmapping;
 
-import io.harness.ngtriggers.beans.response.WebhookEventResponse;
+import io.harness.ngtriggers.beans.response.TriggerEventResponse;
 
 import java.util.List;
 import lombok.AccessLevel;
@@ -13,5 +13,5 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class WebhookEventProcessingResult {
   boolean mappedToTriggers;
-  List<WebhookEventResponse> responses;
+  List<TriggerEventResponse> responses;
 }

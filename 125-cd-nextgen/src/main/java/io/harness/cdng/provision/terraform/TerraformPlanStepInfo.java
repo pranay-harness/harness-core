@@ -1,5 +1,6 @@
 package io.harness.cdng.provision.terraform;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.pipeline.CDStepInfo;
@@ -32,6 +33,7 @@ import lombok.experimental.FieldDefaults;
 @OwnedBy(HarnessTeam.CDP)
 @JsonTypeName(StepSpecTypeConstants.TERRAFORM_PLAN)
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@RecasterAlias("io.harness.cdng.provision.terraform.TerraformPlanStepInfo")
 public class TerraformPlanStepInfo extends TerraformPlanBaseStepInfo implements CDStepInfo, WithConnectorRef {
   @NotNull @JsonProperty("configuration") TerraformPlanExecutionData terraformPlanExecutionData;
 

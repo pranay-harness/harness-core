@@ -10,11 +10,11 @@ import io.harness.cdng.creator.plan.stage.DeploymentStageConfig;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.service.beans.ServiceDefinition;
 import io.harness.cdng.service.beans.ServiceYaml;
-import io.harness.exception.InvalidYamlException;
 import io.harness.filters.GenericStageFilterJsonCreator;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.cdng.sample.cd.creator.filters.CdFilter;
 import io.harness.pms.cdng.sample.cd.creator.filters.CdFilter.CdFilterBuilder;
+import io.harness.pms.exception.runtime.InvalidYamlRuntimeException;
 import io.harness.pms.pipeline.filter.PipelineFilter;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.filter.creation.beans.FilterCreationContext;
@@ -46,7 +46,7 @@ public class DeploymentStageFilterJsonCreator extends GenericStageFilterJsonCrea
         && (deploymentStageConfig.getServiceConfig().getServiceRef() == null
             || deploymentStageConfig.getServiceConfig().getServiceRef().fetchFinalValue() == null)
         && deploymentStageConfig.getServiceConfig().getUseFromStage() == null) {
-      throw new InvalidYamlException(format(
+      throw new InvalidYamlRuntimeException(format(
           "One of service, serviceRef and useFromStage should be present in stage [%s]. Please add it and try again",
           YamlUtils.getFullyQualifiedName(filterCreationContext.getCurrentField().getNode())));
     }
@@ -61,13 +61,14 @@ public class DeploymentStageFilterJsonCreator extends GenericStageFilterJsonCrea
 
     PipelineInfrastructure infrastructure = deploymentStageConfig.getInfrastructure();
     if (infrastructure == null) {
-      throw new InvalidYamlException(format("Infrastructure cannot be null in stage [%s]. Please add it and try again",
-          YamlUtils.getFullyQualifiedName(filterCreationContext.getCurrentField().getNode())));
+      throw new InvalidYamlRuntimeException(
+          format("Infrastructure cannot be null in stage [%s]. Please add it and try again",
+              YamlUtils.getFullyQualifiedName(filterCreationContext.getCurrentField().getNode())));
     }
     if (infrastructure.getEnvironment() == null
         && (infrastructure.getEnvironmentRef() == null || infrastructure.getEnvironmentRef().fetchFinalValue() == null)
         && infrastructure.getUseFromStage() == null) {
-      throw new InvalidYamlException(format(
+      throw new InvalidYamlRuntimeException(format(
           "One of environment, environment and useFromStage should be present in stage [%s]. Please add it and try again",
           YamlUtils.getFullyQualifiedName(filterCreationContext.getCurrentField().getNode())));
     }

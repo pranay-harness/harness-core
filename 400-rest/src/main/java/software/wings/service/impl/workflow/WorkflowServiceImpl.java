@@ -42,6 +42,7 @@ import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.CanaryWorkflowExecutionAdvisor.ROLLBACK_PROVISIONERS;
+import static software.wings.beans.CanaryWorkflowExecutionAdvisor.ROLLBACK_PROVISIONERS_REVERSE;
 import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.EntityType.HELM_CHART;
 import static software.wings.beans.EntityType.SERVICE;
@@ -77,7 +78,6 @@ import static software.wings.sm.StateType.SHELL_SCRIPT;
 import static software.wings.sm.StateType.TERRAFORM_ROLLBACK;
 import static software.wings.sm.StateType.TERRAGRUNT_ROLLBACK;
 import static software.wings.sm.StateType.values;
-import static software.wings.sm.StepType.ARM_CREATE_RESOURCE;
 import static software.wings.sm.StepType.ASG_AMI_ALB_SHIFT_SWITCH_ROUTES;
 import static software.wings.sm.StepType.ASG_AMI_ROLLBACK_ALB_SHIFT_SWITCH_ROUTES;
 import static software.wings.sm.StepType.ASG_AMI_SERVICE_ALB_SHIFT_DEPLOY;
@@ -1618,6 +1618,20 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return rollbackProvisionerStep;
   }
 
+  /*
+  Generates rollback provisioners order in reverse of that in which they were deployed
+   */
+  @Override
+  public PhaseStep generateRollbackProvisionersReverse(
+      PhaseStep preDeploymentSteps, PhaseStepType phaseStepType, String phaseStepName) {
+    PhaseStep rollbackProvisionerPhaseStep =
+        generateRollbackProvisioners(preDeploymentSteps, phaseStepType, phaseStepName);
+    if (rollbackProvisionerPhaseStep != null && rollbackProvisionerPhaseStep.getSteps() != null) {
+      Collections.reverse(rollbackProvisionerPhaseStep.getSteps());
+    }
+    return rollbackProvisionerPhaseStep;
+  }
+
   private PhaseStep generateTerragruntRollbackProvisioners(
       PhaseStep preDeploymentSteps, PhaseStepType phaseStepType, String phaseStepName) {
     List<GraphNode> provisionerSteps = preDeploymentSteps.getSteps()
@@ -1802,6 +1816,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     orchestrationWorkflow.setPreDeploymentSteps(phaseStep);
     orchestrationWorkflow.setRollbackProvisioners(
         generateRollbackProvisioners(phaseStep, PhaseStepType.ROLLBACK_PROVISIONERS, ROLLBACK_PROVISIONERS));
+    String accountId = appService.getAccountIdByAppId(appId);
+    if (featureFlagService.isEnabled(FeatureName.ROLLBACK_PROVISIONER_AFTER_PHASES, accountId)) {
+      // Generate rollbackProvisionerReverse step to support ROLLBACK_PROVISIONER_AFTER_PHASES failure strategy
+      orchestrationWorkflow.setRollbackProvisionersReverse(generateRollbackProvisionersReverse(
+          phaseStep, PhaseStepType.ROLLBACK_PROVISIONERS, ROLLBACK_PROVISIONERS_REVERSE));
+    }
 
     orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow, false).getOrchestrationWorkflow();
@@ -1821,6 +1841,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     workflowServiceTemplateHelper.updateLinkedPhaseStepTemplate(
         phaseStep, orchestrationWorkflow.getPostDeploymentSteps());
     orchestrationWorkflow.setPostDeploymentSteps(phaseStep);
+
+    String accountId = appService.getAccountIdByAppId(appId);
+    if (featureFlagService.isEnabled(FeatureName.ROLLBACK_PROVISIONER_AFTER_PHASES, accountId)) {
+      // Generate rollbackProvisionerReverse step to support ROLLBACK_PROVISIONER_AFTER_PHASES failure strategy
+      orchestrationWorkflow.setRollbackProvisionersReverse(
+          generateRollbackProvisionersReverse(orchestrationWorkflow.getPreDeploymentSteps(),
+              PhaseStepType.ROLLBACK_PROVISIONERS, ROLLBACK_PROVISIONERS_REVERSE));
+    }
 
     orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow, false).getOrchestrationWorkflow();
@@ -1855,6 +1883,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (artifactCheckRequiredForDeployment(workflowPhase, orchestrationWorkflow)) {
       workflowServiceHelper.ensureArtifactCheckInPreDeployment(
           (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow());
+    }
+
+    String accountId = appService.getAccountIdByAppId(appId);
+    if (featureFlagService.isEnabled(FeatureName.ROLLBACK_PROVISIONER_AFTER_PHASES, accountId)) {
+      // Generate rollbackProvisionerReverse step to support ROLLBACK_PROVISIONER_AFTER_PHASES failure strategy
+      orchestrationWorkflow.setRollbackProvisionersReverse(
+          generateRollbackProvisionersReverse(orchestrationWorkflow.getPreDeploymentSteps(),
+              PhaseStepType.ROLLBACK_PROVISIONERS, ROLLBACK_PROVISIONERS_REVERSE));
     }
 
     orchestrationWorkflow =
@@ -2338,6 +2374,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
     notNullCheck(ORCHESTRATION_WORKFLOW, orchestrationWorkflow, USER);
+
+    String accountId = appService.getAccountIdByAppId(appId);
+    if (featureFlagService.isEnabled(FeatureName.ROLLBACK_PROVISIONER_AFTER_PHASES, accountId)) {
+      // Generate rollbackProvisionerReverse step to support ROLLBACK_PROVISIONER_AFTER_PHASES failure strategy
+      updatePreDeployment(appId, workflowId, orchestrationWorkflow.getPreDeploymentSteps());
+    }
 
     orchestrationWorkflow.setFailureStrategies(failureStrategies);
     orchestrationWorkflow =
@@ -4215,18 +4257,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       filteredSelectNode = fetchStepTypeFromInfraMappingTypeForSelectNode(workflowPhase, workflow.getAppId());
     }
     List<StepType> filteredStepTypes = filterSelectNodesStep(stepTypesList, filteredSelectNode);
-    filteredStepTypes = filterARMStepTypes(filteredStepTypes, workflow.getAccountId());
-
     StepType[] stepTypes = filteredStepTypes.stream().toArray(StepType[] ::new);
     return calculateCategorySteps(workflow.getAccountId(), favorites, recent, stepTypes, workflowPhase,
         workflow.getAppId(), workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType());
-  }
-
-  private List<StepType> filterARMStepTypes(List<StepType> steps, String accountId) {
-    if (featureFlagService.isEnabled(FeatureName.AZURE_ARM, accountId)) {
-      return steps;
-    }
-    return steps.stream().filter(step -> step != ARM_CREATE_RESOURCE).collect(toList());
   }
 
   public WorkflowCategorySteps calculateCategorySteps(String accountId, Set<String> favorites,
@@ -4241,8 +4274,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                         .favorite(isNotEmpty(favorites) && favorites.contains(step.getType()))
                                         .available(true)
                                         .build();
-        if (!step.getType().equals(StateType.CVNG.name())
-            || featureFlagService.isEnabled(FeatureName.ENABLE_CVNG_INTEGRATION, accountId)) {
+        if (!step.getType().equals(
+                StateType.CVNG.name())) { // TODO: Hiding it for now. We can remove it after few months.
           if (shouldHideStep(step, accountId)) {
             continue;
           }
@@ -4323,10 +4356,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       // not adding category if there are no steps
       if (isNotEmpty(stepIds)) {
         String displayName = workflowStepType.getDisplayName();
-        if ((workflowStepType.equals(WorkflowStepType.APM) || workflowStepType.equals(WorkflowStepType.LOG))
-            && featureFlagService.isEnabled(FeatureName.ENABLE_CVNG_INTEGRATION, accountId)) {
-          displayName = "Harness CV 1.0 - " + displayName;
-        }
         categories.add(
             WorkflowCategoryStepsMeta.builder().id(workflowStepType.name()).name(displayName).stepIds(stepIds).build());
       }

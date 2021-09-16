@@ -1,5 +1,6 @@
 package software.wings.service.impl.security;
 
+import static io.harness.annotations.dev.HarnessModule._360_CG_MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -13,6 +14,7 @@ import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.settings.SettingVariableTypes.GCP_SECRETS_MANAGER;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.EncryptedDataParent;
@@ -52,6 +54,7 @@ import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.query.Query;
 
 @OwnedBy(PL)
+@TargetModule(_360_CG_MANAGER)
 @Singleton
 @Slf4j
 public class GcpSecretsManagerServiceV2Impl extends AbstractSecretServiceImpl implements GcpSecretsManagerServiceV2 {
@@ -127,6 +130,7 @@ public class GcpSecretsManagerServiceV2Impl extends AbstractSecretServiceImpl im
     savedGcpSecretManagerConfig.setName(gcpSecretsManagerConfig.getName());
     savedGcpSecretManagerConfig.setDefault(gcpSecretsManagerConfig.isDefault());
     savedGcpSecretManagerConfig.setUsageRestrictions(gcpSecretsManagerConfig.getUsageRestrictions());
+    savedGcpSecretManagerConfig.setDelegateSelectors(gcpSecretsManagerConfig.getDelegateSelectors());
 
     if (SECRET_MASK.equals(String.valueOf(gcpSecretsManagerConfig.getCredentials()))) {
       updateCallWithMaskedSecretKey = true;

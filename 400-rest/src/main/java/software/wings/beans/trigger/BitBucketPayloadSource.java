@@ -2,7 +2,9 @@ package software.wings.beans.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.trigger.WebhookSource.BitBucketEventType;
 
@@ -16,6 +18,7 @@ import lombok.Value;
 @JsonTypeName("BITBUCKET")
 @Value
 @Builder
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class BitBucketPayloadSource implements PayloadSource {
   @NotNull private Type type = Type.BITBUCKET;
   public List<BitBucketEventType> bitBucketEvents;

@@ -1,12 +1,12 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library")
 
 go_library(
-    name = "go_default_library",
+    name = "mocks",
     srcs = ["reporter.go"],
     importpath = "github.com/wings-software/portal/product/ci/addon/testreports/mocks",
     visibility = ["//visibility:public"],
     deps = [
-        "//product/ci/ti-service/types:go_default_library",
-        "@com_github_golang_mock//gomock:go_default_library",
+        "//product/ci/ti-service/types",
+        "@com_github_golang_mock//gomock",
     ],
 )

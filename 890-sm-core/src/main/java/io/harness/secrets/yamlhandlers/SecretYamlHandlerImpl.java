@@ -104,7 +104,7 @@ public class SecretYamlHandlerImpl implements SecretYamlHandler {
       } else {
         return secretsDao.getSecretByName(accountId, encryptedDataRef).<SecretManagementException>orElseThrow(() -> {
           throw new SecretManagementException(RESOURCE_NOT_FOUND,
-              String.format("Could not find secret with id %s in account %s", encryptedDataRef, accountId), USER);
+              String.format("Could not find secret: %s in account: %s", encryptedDataRef, accountId), USER);
         });
       }
     }

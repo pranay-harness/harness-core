@@ -2,9 +2,10 @@ package io.harness.cdng.provision.terraform;
 
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.common.SwaggerConstants;
+import io.harness.beans.SwaggerConstants;
 import io.harness.cdng.provision.terraform.TerraformExecutionDataParameters.TerraformExecutionDataParametersBuilder;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
@@ -30,6 +31,7 @@ import org.apache.commons.lang3.StringUtils;
 @NoArgsConstructor
 @OwnedBy(HarnessTeam.CDP)
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@RecasterAlias("io.harness.cdng.provision.terraform.TerraformExecutionData")
 public class TerraformExecutionData {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> workspace;
   @NotNull @JsonProperty("configFiles") TerraformConfigFilesWrapper terraformConfigFilesWrapper;

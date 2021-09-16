@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.FileBucket.TERRAFORM_STATE;
+import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
 import static io.harness.logging.LogLevel.INFO;
 import static io.harness.provision.TerraformConstants.TERRAFORM_STATE_FILE_NAME;
 import static io.harness.provision.TerraformConstants.WORKSPACE_STATE_FILE_PATH_FORMAT;
@@ -41,6 +42,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
+import java.io.PushbackInputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -146,7 +148,7 @@ public class TerragruntProvisionTaskHelper {
   public static void copyFilesToWorkingDirectory(String sourceDir, String destinationDir) throws IOException {
     File dest = new File(destinationDir);
     File src = new File(sourceDir);
-    FileUtils.deleteDirectory(dest);
+    deleteDirectoryAndItsContentIfExists(dest.getAbsolutePath());
     FileUtils.copyDirectory(src, dest);
     FileIo.waitForDirectoryToBeAccessibleOutOfProcess(dest.getPath(), 10);
   }
@@ -201,7 +203,14 @@ public class TerragruntProvisionTaskHelper {
     if (parameters.getCurrentStateFileId() != null) {
       try (InputStream stateRemoteInputStream = delegateFileManager.downloadByFileId(
                TERRAFORM_STATE, parameters.getCurrentStateFileId(), parameters.getAccountId())) {
-        FileUtils.copyInputStreamToFile(stateRemoteInputStream, tfStateFile);
+        PushbackInputStream pushbackInputStream = new PushbackInputStream(stateRemoteInputStream);
+        int firstByte = pushbackInputStream.read();
+        if (firstByte == -1) {
+          FileUtils.deleteQuietly(tfStateFile);
+        } else {
+          pushbackInputStream.unread(firstByte);
+          FileUtils.copyInputStreamToFile(pushbackInputStream, tfStateFile);
+        }
       }
     } else {
       FileUtils.deleteQuietly(tfStateFile);

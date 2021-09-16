@@ -7,6 +7,7 @@ import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogHelper.doneColoring;
 import static software.wings.beans.LogWeight.Bold;
 
+import static java.lang.System.currentTimeMillis;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -21,13 +22,31 @@ import io.harness.network.SafeHttpCall;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.DelegateLogService;
 
-import java.io.OutputStream;
-import java.time.OffsetDateTime;
-import java.util.Arrays;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import lombok.Builder;
+import lombok.Builder.Default;
 import lombok.extern.slf4j.Slf4j;
-import org.zeroturnaround.exec.stream.LogOutputStream;
+import org.jetbrains.annotations.NotNull;
 
+/**
+ * There are certain assumptions for this client to work
+ * 1. Each delegate task creates a separate task client
+ * 2. the usage of this client is
+ *    -> open stream
+ *    -> write line
+ *    -> close stream
+ * concurrent usage of open and close stream will result in loss of logs
+ */
 @Builder
 @Slf4j
 @TargetModule(HarnessModule._420_DELEGATE_AGENT)
@@ -35,35 +54,58 @@ public class LogStreamingTaskClient implements ILogStreamingTaskClient {
   private final DelegateLogService logService;
   private final LogStreamingClient logStreamingClient;
   private final LogStreamingSanitizer logStreamingSanitizer;
+  private final ExecutorService taskProgressExecutor;
   private final String token;
   private final String accountId;
   private final String baseLogKey;
+  private ScheduledExecutorService scheduledExecutorService;
   @Deprecated private final String appId;
   @Deprecated private final String activityId;
 
   private final ITaskProgressClient taskProgressClient;
 
+  @Default private final Map<String, List<LogLine>> logCache = new HashMap<>();
+
   @Override
   public void openStream(String baseLogKeySuffix) {
-    String logKey =
-        baseLogKey + (isBlank(baseLogKeySuffix) ? "" : String.format(COMMAND_UNIT_PLACEHOLDER, baseLogKeySuffix));
+    String logKey = getLogKey(baseLogKeySuffix);
 
     try {
       SafeHttpCall.executeWithExceptions(logStreamingClient.openLogStream(token, accountId, logKey));
     } catch (Exception ex) {
       log.error("Unable to open log stream for account {} and key {}", accountId, logKey, ex);
     }
+    scheduledExecutorService = new ScheduledThreadPoolExecutor(1,
+        new ThreadFactoryBuilder().setNameFormat("log-streaming-client-%d").setPriority(Thread.NORM_PRIORITY).build());
+    scheduledExecutorService.scheduleAtFixedRate(this::dispatchLogs, 0, 100, TimeUnit.MILLISECONDS);
   }
 
   @Override
   public void closeStream(String baseLogKeySuffix) {
-    String logKey =
-        baseLogKey + (isBlank(baseLogKeySuffix) ? "" : String.format(COMMAND_UNIT_PLACEHOLDER, baseLogKeySuffix));
+    String logKey = getLogKey(baseLogKeySuffix);
 
+    // we don't want workflow steps to hang because of any log reasons. Putting a safety net just in case
+    long startTime = currentTimeMillis();
+    synchronized (logCache) {
+      while (logCache.containsKey(logKey) && currentTimeMillis() < startTime + TimeUnit.SECONDS.toMillis(5)) {
+        log.debug("for {} the logs are not drained yet. sleeping...", logKey);
+        try {
+          logCache.wait(100);
+        } catch (InterruptedException e) {
+          // ignore
+        }
+      }
+    }
+    if (logCache.containsKey(logKey)) {
+      log.error("log cache was not drained for {}. num of keys in map {}. This will result in missing logs", logKey,
+          logCache.size());
+    }
     try {
       SafeHttpCall.executeWithExceptions(logStreamingClient.closeLogStream(token, accountId, logKey, true));
     } catch (Exception ex) {
       log.error("Unable to close log stream for account {} and key {}", accountId, logKey, ex);
+    } finally {
+      scheduledExecutorService.shutdownNow();
     }
   }
 
@@ -73,18 +115,39 @@ public class LogStreamingTaskClient implements ILogStreamingTaskClient {
       throw new InvalidArgumentsException("Log line parameter is mandatory.");
     }
 
-    String logKey =
-        baseLogKey + (isBlank(baseLogKeySuffix) ? "" : String.format(COMMAND_UNIT_PLACEHOLDER, baseLogKeySuffix));
+    String logKey = getLogKey(baseLogKeySuffix);
 
     logStreamingSanitizer.sanitizeLogMessage(logLine);
     colorLog(logLine);
 
-    try {
-      SafeHttpCall.executeWithExceptions(
-          logStreamingClient.pushMessage(token, accountId, logKey, Arrays.asList(logLine)));
-    } catch (Exception ex) {
-      log.error("Unable to push message to log stream for account {} and key {}", accountId, logKey, ex);
+    synchronized (logCache) {
+      if (!logCache.containsKey(logKey)) {
+        logCache.put(logKey, new ArrayList<>());
+      }
+      logCache.get(logKey).add(logLine);
     }
+  }
+
+  @VisibleForTesting
+  void dispatchLogs() {
+    synchronized (logCache) {
+      for (Iterator<Map.Entry<String, List<LogLine>>> iterator = logCache.entrySet().iterator(); iterator.hasNext();) {
+        Map.Entry<String, List<LogLine>> next = iterator.next();
+        try {
+          SafeHttpCall.executeWithExceptions(
+              logStreamingClient.pushMessage(token, accountId, next.getKey(), next.getValue()));
+        } catch (Exception ex) {
+          log.error("Unable to push message to log stream for account {} and key {}", accountId, next.getKey(), ex);
+        }
+        iterator.remove();
+      }
+      logCache.notifyAll();
+    }
+  }
+
+  @NotNull
+  private String getLogKey(String baseLogKeySuffix) {
+    return baseLogKey + (isBlank(baseLogKeySuffix) ? "" : String.format(COMMAND_UNIT_PLACEHOLDER, baseLogKeySuffix));
   }
 
   private void colorLog(LogLine logLine) {
@@ -96,20 +159,6 @@ public class LogStreamingTaskClient implements ILogStreamingTaskClient {
     }
     message = doneColoring(message);
     logLine.setMessage(message);
-  }
-
-  @Override
-  public OutputStream obtainLogOutputStream(LogLevel logLevel, String baseLogKeySuffix) {
-    return new LogOutputStream() {
-      private LogLevel level = logLevel == null ? LogLevel.INFO : logLevel;
-      private String logKeySuffix = baseLogKeySuffix;
-
-      @Override
-      protected void processLine(String line) {
-        writeLogLine(LogLine.builder().level(level).message(line).timestamp(OffsetDateTime.now().toInstant()).build(),
-            logKeySuffix);
-      }
-    };
   }
 
   @Override
@@ -125,5 +174,10 @@ public class LogStreamingTaskClient implements ILogStreamingTaskClient {
   @Override
   public ITaskProgressClient obtainTaskProgressClient() {
     return taskProgressClient;
+  }
+
+  @Override
+  public ExecutorService obtainTaskProgressExecutor() {
+    return taskProgressExecutor;
   }
 }

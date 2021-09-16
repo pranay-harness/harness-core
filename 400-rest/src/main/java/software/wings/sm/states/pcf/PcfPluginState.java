@@ -4,14 +4,13 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.IGNORE_PCF_CONNECTION_CONTEXT_CACHE;
 import static io.harness.beans.FeatureName.LIMIT_PCF_THREADS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.pcf.CfCommandUnitConstants.FetchFiles;
+import static io.harness.pcf.CfCommandUnitConstants.FetchGitFiles;
 import static io.harness.pcf.CfCommandUnitConstants.Pcfplugin;
 import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 
 import static software.wings.beans.TaskType.GIT_FETCH_FILES_TASK;
 import static software.wings.beans.TaskType.PCF_COMMAND_TASK;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
 
@@ -98,7 +97,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -111,7 +109,7 @@ import org.apache.commons.collections4.MapUtils;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class PcfPluginState extends State {
   @Inject private transient DelegateService delegateService;
@@ -176,8 +174,6 @@ public class PcfPluginState extends State {
 
     // render script
     String rawScript = pcfStateHelper.removeCommentedLineFromScript(scriptString);
-    final String renderedScript = renderedScript(
-        rawScript, context, StateExecutionContext.builder().stateExecutionData(pcfPluginStateExecutionData).build());
     // find out the paths from the script
     final ApplicationManifest serviceManifest = applicationManifestUtils.getApplicationManifestForService(context);
     final boolean serviceManifestRemote = isServiceManifestRemote(serviceManifest);
@@ -185,9 +181,9 @@ public class PcfPluginState extends State {
     final Activity activity = createActivity(context, serviceManifestRemote);
     String repoRoot = "/";
     if (serviceManifestRemote) {
-      repoRoot = context.renderExpression(getRepoRoot(serviceManifest));
+      repoRoot = getRepoRoot(serviceManifest);
     }
-    final List<String> pathsFromScript = findPathFromScript(renderedScript, repoRoot);
+    final List<String> pathsFromScript = findPathFromScript(rawScript, repoRoot);
 
     if (!pathsFromScript.isEmpty() && serviceManifestRemote) {
       //  fire task to fetch remote files
@@ -200,11 +196,6 @@ public class PcfPluginState extends State {
   private String getRepoRoot(ApplicationManifest serviceManifest) {
     final GitFileConfig gitFileConfig = serviceManifest.getGitFileConfig();
     return "/" + toRelativePath(defaultIfEmpty(gitFileConfig.getFilePath(), "/").trim());
-  }
-
-  private String renderedScript(
-      String scriptString, ExecutionContext context, StateExecutionContext stateExecutionContext) {
-    return context.renderExpression(scriptString, stateExecutionContext);
   }
 
   @VisibleForTesting
@@ -255,10 +246,12 @@ public class PcfPluginState extends State {
 
   private ExecutionResponse executeGitTask(ExecutionContext context, ApplicationManifest serviceManifest,
       String activityId, List<String> pathsFromScript, String rawScriptString, String repoRoot) {
+    int expressionFunctorToken = HashGenerator.generateIntegerHash();
     final Map<K8sValuesLocation, ApplicationManifest> appManifestMap =
         prepareManifestForGitFetchTask(serviceManifest, pathsFromScript);
     final DelegateTask gitFetchFileTask = pcfStateHelper.createGitFetchFileAsyncTask(
         context, appManifestMap, activityId, isSelectionLogsTrackingForTasksEnabled());
+    gitFetchFileTask.getData().setExpressionFunctorToken(expressionFunctorToken);
     gitFetchFileTask.setTags(resolveTags(getTags(), null));
 
     PcfPluginStateExecutionData stateExecutionData =
@@ -273,7 +266,12 @@ public class PcfPluginState extends State {
             .tagList(getTags())
             .repoRoot(repoRoot)
             .build();
-
+    StateExecutionContext stateExecutionContext = StateExecutionContext.builder()
+                                                      .stateExecutionData(stateExecutionData)
+                                                      .adoptDelegateDecryption(true)
+                                                      .expressionFunctorToken(expressionFunctorToken)
+                                                      .build();
+    renderDelegateTask(context, gitFetchFileTask, stateExecutionContext);
     // resolve template variables
     stateExecutionData.setTemplateVariable(templateUtils.processTemplateVariables(context, getTemplateVariables()));
 
@@ -293,7 +291,8 @@ public class PcfPluginState extends State {
     List<String> gitFiles = pathsFromScript.stream().map(this::toRelativePath).collect(Collectors.toList());
     // in case root folder is accessed, remove all the file paths
     if (gitFiles.contains("")) {
-      gitFiles = Collections.singletonList("");
+      gitFiles = new ArrayList<>();
+      gitFiles.add("");
     }
     serviceManifest.getGitFileConfig().setFilePathList(gitFiles);
     serviceManifest.getGitFileConfig().setFilePath(null);
@@ -446,7 +445,7 @@ public class PcfPluginState extends State {
   private List<FileData> prepareFilesForTransfer(
       ApplicationManifest serviceManifest, List<String> pathsFromScript, ExecutionContext context) {
     if (EmptyPredicate.isEmpty(pathsFromScript)) {
-      return Collections.emptyList();
+      return new ArrayList<>();
     }
     Map<String, String> pathToContentMap;
     if (isServiceManifestRemote(serviceManifest)) {
@@ -454,16 +453,13 @@ public class PcfPluginState extends State {
     } else {
       pathToContentMap = getLocalFilesForTransfer(serviceManifest, pathsFromScript);
     }
-    // once file string are available, render them
-    final Map<String, String> renderedContentMap =
-        MapUtils.emptyIfNull(pathToContentMap)
-            .entrySet()
-            .stream()
-            .collect(Collectors.toMap(Entry::getKey, entry -> context.renderExpression(entry.getValue())));
-    // create the file data out of it
-    return renderedContentMap.entrySet()
+    if (EmptyPredicate.isEmpty(pathToContentMap)) {
+      return new ArrayList<>();
+    }
+
+    return pathToContentMap.entrySet()
         .stream()
-        .map(entry -> FileData.builder().filePath(entry.getKey()).fileBytes(entry.getValue().getBytes(UTF_8)).build())
+        .map(entry -> FileData.builder().filePath(entry.getKey()).fileContent(entry.getValue()).build())
         .collect(Collectors.toList());
   }
 
@@ -564,7 +560,7 @@ public class PcfPluginState extends State {
     final Builder<CommandUnit> canaryCommandUnitsBuilder = ImmutableList.builder();
 
     if (remoteStoreType) {
-      canaryCommandUnitsBuilder.add(new PcfDummyCommandUnit(FetchFiles));
+      canaryCommandUnitsBuilder.add(new PcfDummyCommandUnit(FetchGitFiles));
     }
     canaryCommandUnitsBuilder.add(new PcfDummyCommandUnit(Pcfplugin));
     return canaryCommandUnitsBuilder.build();

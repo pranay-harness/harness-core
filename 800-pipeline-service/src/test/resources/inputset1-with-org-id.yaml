@@ -1,0 +1,57 @@
+inputSet:
+  identifier: input1
+  name: this name
+  description: this has a description too
+  orgIdentifier: orgId
+  tags:
+    company: harness
+    kind : normal
+  pipeline:
+    identifier: "Test_Pipline11"
+    variables:
+      - name: "port2"
+        value: 8080
+    stages:
+      - stage:
+          identifier: "qaStage"
+          spec:
+            execution:
+              steps:
+                - step:
+                    identifier: "httpStep1"
+                    spec:
+                      url: www.bing.com
+      - parallel:
+          - stage:
+              identifier: "qaStage3"
+              spec:
+                service:
+                  identifier: "manager"
+                  serviceDefinition:
+                    spec:
+                      manifests:
+                        - manifest:
+                            identifier: baseValues
+                            type: K8sManifest
+                            spec:
+                              store:
+                                type: Git
+                                spec:
+                                  connectorRef: my_git_connector
+                                  gitFetchType: Branch
+                                  branch: master
+                                  paths:
+                                    - test/spec
+                        - manifest:
+                            identifier: qaOverride
+                            type: Values
+                            spec:
+                              store:
+                                type: Git
+                                spec:
+                                  connectorRef: my_git_connector
+                                  gitFetchType: Branch
+                                  branch: master
+                                  paths:
+                                    - test/baseValues.yaml
+                                    - test/qa/values_1.yaml

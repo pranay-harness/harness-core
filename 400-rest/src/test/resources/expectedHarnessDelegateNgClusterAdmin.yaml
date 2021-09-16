@@ -45,6 +45,7 @@ metadata:
   namespace: harness-delegate-ng
 spec:
   replicas: 8
+  podManagementPolicy: Parallel
   selector:
     matchLabels:
       harness.io/app: harness-delegate
@@ -59,16 +60,16 @@ spec:
         harness.io/name: harness-delegate
     spec:
       containers:
-      - image: harness/delegate:ng
+      - image: harness/delegate:latest
         imagePullPolicy: Always
         name: harness-delegate-instance
         resources:
           limits:
             cpu: "0.5"
-            memory: "1650Mi"
+            memory: "2560Mi"
           requests:
-            cpu: "0.45"
-            memory: "1550Mi"
+            cpu: "0.5"
+            memory: "2560Mi"
         readinessProbe:
           exec:
             command:
@@ -87,6 +88,8 @@ spec:
           periodSeconds: 10
           failureThreshold: 2
         env:
+        - name: JAVA_OPTS
+          value: "-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=2 -Xms64M"
         - name: ACCOUNT_ID
           value: ACCOUNT_ID
         - name: ACCOUNT_SECRET
@@ -107,6 +110,8 @@ spec:
           value: KUBERNETES
         - name: DELEGATE_NAME
           value: harness-delegate
+        - name: NEXT_GEN
+          value: "true"
         - name: DELEGATE_GROUP_ID
           value: delegateGroupId1
         - name: DELEGATE_DESCRIPTION
@@ -179,6 +184,8 @@ spec:
           value: "0"
         - name: CLIENT_TOOLS_DOWNLOAD_DISABLED
           value: "false"
+        - name: INSTALL_CLIENT_TOOLS_IN_BACKGROUND
+          value: "true"
         - name: DELEGATE_NAMESPACE
           valueFrom:
             fieldRef:

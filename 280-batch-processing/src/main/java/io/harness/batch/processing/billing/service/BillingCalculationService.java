@@ -1,15 +1,12 @@
 package io.harness.batch.processing.billing.service;
 
-import static io.harness.ccm.commons.beans.InstanceType.K8S_NODE;
-import static io.harness.ccm.commons.beans.InstanceType.K8S_POD;
-import static io.harness.ccm.commons.beans.InstanceType.K8S_PV;
-import static io.harness.ccm.commons.beans.InstanceType.K8S_PVC;
-
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.batch.processing.billing.service.intfc.InstancePricingStrategy;
 import io.harness.batch.processing.ccm.ClusterType;
-import io.harness.batch.processing.ccm.PricingSource;
+import io.harness.batch.processing.pricing.InstancePricingStrategy;
+import io.harness.batch.processing.pricing.InstancePricingStrategyFactory;
+import io.harness.batch.processing.pricing.PricingData;
+import io.harness.batch.processing.pricing.PricingSource;
 import io.harness.ccm.commons.beans.CostAttribution;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.StorageResource;
@@ -32,13 +29,13 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 public class BillingCalculationService {
-  private final InstancePricingStrategyContext instancePricingStrategyContext;
+  private final InstancePricingStrategyFactory instancePricingStrategyFactory;
 
   private final AtomicInteger atomicTripper = new AtomicInteger(0);
 
   @Autowired
-  public BillingCalculationService(InstancePricingStrategyContext instancePricingStrategyContext) {
-    this.instancePricingStrategyContext = instancePricingStrategyContext;
+  public BillingCalculationService(InstancePricingStrategyFactory instancePricingStrategyFactory) {
+    this.instancePricingStrategyFactory = instancePricingStrategyFactory;
   }
 
   public String getInstanceClusterIdKey(String instanceId, String clusterId) {
@@ -70,34 +67,34 @@ public class BillingCalculationService {
     }
     if (null == parentInstanceActiveSecond || parentInstanceActiveSecond == 0) {
       parentInstanceActiveSecond = instanceActiveSeconds;
-      if (instanceData.getInstanceType() == K8S_POD) {
+      if (instanceData.getInstanceType() == InstanceType.K8S_POD) {
         log.warn("Instance parent active time is 0 {} {}", instanceData.getInstanceId(), startTime);
         parentInstanceActiveSecond = 24 * 3600D;
       }
     }
 
-    PricingData pricingData =
+    io.harness.batch.processing.pricing.PricingData pricingData =
         getPricingData(instanceData, startTime, endTime, instanceActiveSeconds, parentInstanceActiveSecond);
 
     return getBillingAmount(instanceData, utilizationData, pricingData, instanceActiveSeconds);
   }
 
-  private PricingData getPricingData(InstanceData instanceData, Instant startTime, Instant endTime,
-      double instanceActiveSeconds, double parentInstanceActiveSecond) {
+  private io.harness.batch.processing.pricing.PricingData getPricingData(InstanceData instanceData, Instant startTime,
+      Instant endTime, double instanceActiveSeconds, double parentInstanceActiveSecond) {
     InstancePricingStrategy instancePricingStrategy =
-        instancePricingStrategyContext.getInstancePricingStrategy(instanceData.getInstanceType());
+        instancePricingStrategyFactory.getInstancePricingStrategy(instanceData.getInstanceType());
 
     return instancePricingStrategy.getPricePerHour(
         instanceData, startTime, endTime, instanceActiveSeconds, parentInstanceActiveSecond);
   }
 
-  BillingData getBillingAmount(InstanceData instanceData, UtilizationData utilizationData, PricingData pricingData,
-      double instanceActiveSeconds) {
+  BillingData getBillingAmount(InstanceData instanceData, UtilizationData utilizationData,
+      io.harness.batch.processing.pricing.PricingData pricingData, double instanceActiveSeconds) {
     Double cpuUnit = 0D;
     Double memoryMb = 0D;
     Double storageMb = 0D;
 
-    if (K8S_PV.equals(instanceData.getInstanceType())) {
+    if (InstanceType.K8S_PV.equals(instanceData.getInstanceType())) {
       storageMb = instanceData.getStorageResource().getCapacity();
     } else if (null != instanceData.getTotalResource()) {
       cpuUnit = instanceData.getTotalResource().getCpuUnits();
@@ -123,7 +120,8 @@ public class BillingCalculationService {
     PricingSource pricingSource =
         null != pricingData.getPricingSource() ? pricingData.getPricingSource() : PricingSource.PUBLIC_API;
     double networkCost = 0;
-    if (ImmutableList.of(K8S_NODE, K8S_PV, K8S_PVC).contains(instanceData.getInstanceType())) {
+    if (ImmutableList.of(InstanceType.K8S_NODE, InstanceType.K8S_PV, InstanceType.K8S_PVC)
+            .contains(instanceData.getInstanceType())) {
       networkCost = pricingData.getNetworkCost();
     }
 
@@ -140,7 +138,7 @@ public class BillingCalculationService {
   BillingAmountBreakup getBillingAmountBreakupForResource(InstanceData instanceData, BigDecimal billingAmount,
       double instanceCpu, double instanceMemory, double instanceStorage, double instanceActiveSeconds,
       PricingData pricingData) {
-    if (K8S_PV.equals(instanceData.getInstanceType())) {
+    if (InstanceType.K8S_PV.equals(instanceData.getInstanceType())) {
       return BillingAmountBreakup.builder()
           .billingAmount(billingAmount)
           .cpuBillingAmount(BigDecimal.ZERO)
@@ -222,10 +220,10 @@ public class BillingCalculationService {
           * (1 - utilizationData.getAvgMemoryUtilization()));
     }
 
-    double storageRequest = utilizationData.getAvgStorageRequestValue();
-    double storageUsage = utilizationData.getAvgStorageUsageValue();
+    double storageRequest = utilizationData.getMaxStorageRequestValue();
+    double storageUsage = utilizationData.getMaxStorageUsageValue();
     StorageResource storageResource = instanceData.getStorageResource();
-    if (instanceData.getInstanceType() == K8S_PV) {
+    if (instanceData.getInstanceType() == InstanceType.K8S_PV) {
       // in one cases (with NFS PV), the PV.Capacity is much less than claimed PVC.Request
       if (storageUsage <= storageRequest && storageRequest <= storageResource.getCapacity()
           && storageResource.getCapacity() > 0) {
@@ -244,8 +242,7 @@ public class BillingCalculationService {
           // But from Pod stats client we see that the request is 250 GB ( = 256000.0 / 1024.0) This
           // inconsistency is unknown. "But is very frequent" in NFS and some non-GCP based PV's
           log.warn("THIS IS HARMLESS, Inconsistent PV storage value data; Usage:{}, Request:{}, InstanceData:{}",
-              utilizationData.getAvgStorageUsageValue(), utilizationData.getAvgStorageRequestValue(),
-              instanceData.toString());
+              utilizationData.getMaxStorageUsageValue(), utilizationData.getMaxStorageRequestValue(), instanceData);
         }
       }
     }

@@ -8,8 +8,10 @@ import io.harness.beans.EventDetail;
 import io.harness.beans.EventPayload;
 import io.harness.beans.EventStatus;
 
+import software.wings.service.intfc.ownership.OwnedByApplication;
+
 @OwnedBy(CDC)
-public interface EventService {
+public interface EventService extends OwnedByApplication {
   void deliverEvent(String accountId, String appId, EventPayload payload);
 
   void deliverEvent(String accountId, String appId, EventConfig eventConfig, EventPayload payload);

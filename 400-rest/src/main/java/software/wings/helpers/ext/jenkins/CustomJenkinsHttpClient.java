@@ -1,9 +1,11 @@
 package software.wings.helpers.ext.jenkins;
 
+import static io.harness.annotations.dev.HarnessModule._960_API_SERVICES;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.network.Http;
 
 import com.offbytwo.jenkins.client.JenkinsHttpClient;
@@ -25,6 +27,7 @@ import org.apache.http.protocol.BasicHttpContext;
  * To accept Untrusted certificates from delegate
  */
 @OwnedBy(CDC)
+@TargetModule(_960_API_SERVICES)
 public class CustomJenkinsHttpClient extends JenkinsHttpClient {
   public CustomJenkinsHttpClient(URI uri, HttpClientBuilder builder) {
     super(uri, builder);

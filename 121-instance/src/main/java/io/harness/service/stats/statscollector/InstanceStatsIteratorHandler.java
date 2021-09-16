@@ -3,9 +3,12 @@ package io.harness.service.stats.statscollector;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 
 import static java.time.Duration.ofMinutes;
+import static java.time.Duration.ofSeconds;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.entities.DeploymentAccounts;
+import io.harness.entities.DeploymentAccounts.DeploymentAccountsKeys;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
@@ -15,13 +18,6 @@ import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.filter.MorphiaFilterExpander;
 import io.harness.mongo.iterator.provider.MorphiaPersistenceProvider;
-import io.harness.workers.background.AccountLevelEntityProcessController;
-
-import software.wings.beans.Account;
-import software.wings.beans.Account.AccountKeys;
-import software.wings.beans.AccountStatus;
-import software.wings.beans.LicenseInfo;
-import software.wings.service.intfc.AccountService;
 
 import com.google.common.base.Stopwatch;
 import com.google.inject.Inject;
@@ -33,13 +29,12 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 @OwnedBy(HarnessTeam.DX)
-public class InstanceStatsIteratorHandler implements Handler<Account> {
+public class InstanceStatsIteratorHandler implements Handler<DeploymentAccounts> {
   public static final long TWO_MONTH_IN_MILLIS = 5184000000L;
   public static final String LOCK_KEY = "INSTANCE_STATS_ITERATOR:";
 
   private PersistenceIteratorFactory persistenceIteratorFactory;
-  private AccountService accountService;
-  private MorphiaPersistenceProvider<Account> persistenceProvider;
+  private MorphiaPersistenceProvider<DeploymentAccounts> persistenceProvider;
   private PersistentLocker persistentLocker;
   private InstanceStatsCollectorImpl instanceStatsCollector;
 
@@ -51,30 +46,23 @@ public class InstanceStatsIteratorHandler implements Handler<Account> {
             .interval(ofMinutes(10))
             .build(),
         InstanceStatsIteratorHandler.class,
-        MongoPersistenceIterator.<Account, MorphiaFilterExpander<Account>>builder()
-            .clazz(Account.class)
-            .fieldName(AccountKeys.instanceStatsMetricsPublisherInteration)
+        MongoPersistenceIterator.<DeploymentAccounts, MorphiaFilterExpander<DeploymentAccounts>>builder()
+            .clazz(DeploymentAccounts.class)
+            .fieldName(DeploymentAccountsKeys.instanceStatsMetricsPublisherIteration)
             .targetInterval(ofMinutes(10))
-            // TODO check acceptableNoAlertDelay
-            .acceptableNoAlertDelay(ofMinutes(120))
-            .acceptableExecutionTime(ofMinutes(5))
+            .acceptableExecutionTime(ofSeconds(30))
+            .acceptableNoAlertDelay(ofSeconds(30))
             .handler(this)
-            .entityProcessController(new AccountLevelEntityProcessController(accountService))
             .schedulingType(REGULAR)
             .persistenceProvider(persistenceProvider)
             .redistribute(true));
   }
 
   @Override
-  public void handle(Account account) {
-    String accountId = account.getUuid();
+  public void handle(DeploymentAccounts deploymentAccounts) {
+    String accountId = deploymentAccounts.getAccountIdentifier();
     try (AutoLogContext ignore = new AccountLogContext(accountId, AutoLogContext.OverrideBehavior.OVERRIDE_ERROR)) {
-      if (account.getLicenseInfo() == null || account.getLicenseInfo().getAccountStatus() == null
-          || shouldSkipStatsCollection(account.getLicenseInfo())) {
-        log.info("Skipping instance stats since the account is not active");
-      } else {
-        log.info("Running instance stats metrics iterator");
-      }
+      log.info("Running instance stats metrics iterator");
       createStats(accountId);
     } catch (Exception exception) {
       log.error("Failed to publish instance stats metrics {}", exception);
@@ -99,19 +87,5 @@ public class InstanceStatsIteratorHandler implements Handler<Account> {
         log.error("Unable to publish instance stats to timescale, time taken : {}", sw.elapsed(TimeUnit.MILLISECONDS));
       }
     }
-  }
-
-  private boolean shouldSkipStatsCollection(LicenseInfo licenseInfo) {
-    if (AccountStatus.ACTIVE.equals(licenseInfo.getAccountStatus())) {
-      return false;
-    } else if (AccountStatus.DELETED.equals(licenseInfo.getAccountStatus())
-        || AccountStatus.INACTIVE.equals(licenseInfo.getAccountStatus())
-        || AccountStatus.MARKED_FOR_DELETION.equals(licenseInfo.getAccountStatus())) {
-      return true;
-    } else if (AccountStatus.EXPIRED.equals(licenseInfo.getAccountStatus())
-        && System.currentTimeMillis() > (licenseInfo.getExpiryTime() + TWO_MONTH_IN_MILLIS)) {
-      return true;
-    }
-    return false;
   }
 }

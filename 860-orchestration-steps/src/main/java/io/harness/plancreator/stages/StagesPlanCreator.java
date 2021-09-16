@@ -13,6 +13,7 @@ import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
@@ -38,8 +39,10 @@ public class StagesPlanCreator extends ChildrenPlanCreator<StagesConfig> {
     for (YamlField stageYamlField : stageYamlFields) {
       Map<String, YamlField> stageYamlFieldMap = new HashMap<>();
       stageYamlFieldMap.put(stageYamlField.getNode().getUuid(), stageYamlField);
-      responseMap.put(
-          stageYamlField.getNode().getUuid(), PlanCreationResponse.builder().dependencies(stageYamlFieldMap).build());
+      responseMap.put(stageYamlField.getNode().getUuid(),
+          PlanCreationResponse.builder()
+              .dependencies(DependenciesUtils.toDependenciesProto(stageYamlFieldMap))
+              .build());
     }
     return responseMap;
   }

@@ -27,9 +27,6 @@ public class CurrentUserHelper {
   @Inject private UserClient userClient;
 
   public EmbeddedUser getFromSecurityContext() {
-    if (!configuration.isEnableAuth()) {
-      return DEFAULT_EMBEDDED_USER;
-    }
     if (SourcePrincipalContextBuilder.getSourcePrincipal() == null
         || !USER.equals(SourcePrincipalContextBuilder.getSourcePrincipal().getType())) {
       throw new InvalidRequestException("Unable to fetch current user");

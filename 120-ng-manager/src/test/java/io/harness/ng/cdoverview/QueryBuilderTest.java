@@ -5,6 +5,7 @@ import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
@@ -18,7 +19,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @OwnedBy(HarnessTeam.CDC)
-public class QueryBuilderTest {
+public class QueryBuilderTest extends CategoryTest {
   private static final long HOUR_IN_MS = 60 * 60 * 1000;
   private static final long DAY_IN_MS = 24 * HOUR_IN_MS;
 
@@ -82,23 +83,25 @@ public class QueryBuilderTest {
     List<String> pendingStatusList =
         Arrays.asList(ExecutionStatus.INTERVENTIONWAITING.name(), ExecutionStatus.APPROVALWAITING.name());
 
+    String columnsExecutionStatus = new CDOverviewDashboardServiceImpl().executionStatusCdTimeScaleColumns();
+
     // failedStatusList
-    String expectedQueryResult =
-        "select id,name,pipelineidentifier,startts,endTs,status,planexecutionid from pipeline_execution_summary_cd where accountid='accountId' and orgidentifier='orgId' and projectidentifier='projectId' and status in ('FAILED','ABORTED','EXPIRED') and startts is not null ORDER BY startts DESC LIMIT 20;";
+    String expectedQueryResult = "select " + columnsExecutionStatus
+        + " from pipeline_execution_summary_cd where accountid='accountId' and orgidentifier='orgId' and projectidentifier='projectId' and status in ('FAILED','ABORTED','EXPIRED') and startts is not null ORDER BY startts DESC LIMIT 20;";
     String queryResult = new CDOverviewDashboardServiceImpl().queryBuilderStatus(
         "accountId", "orgId", "projectId", 20, failedStatusList);
     assertThat(queryResult).isEqualTo(expectedQueryResult);
 
     // activeStatusList
-    expectedQueryResult =
-        "select id,name,pipelineidentifier,startts,endTs,status,planexecutionid from pipeline_execution_summary_cd where accountid='accountId' and orgidentifier='orgId' and projectidentifier='projectId' and status in ('RUNNING') and startts is not null ORDER BY startts DESC LIMIT 20;";
+    expectedQueryResult = "select " + columnsExecutionStatus
+        + " from pipeline_execution_summary_cd where accountid='accountId' and orgidentifier='orgId' and projectidentifier='projectId' and status in ('RUNNING') and startts is not null ORDER BY startts DESC LIMIT 20;";
     queryResult = new CDOverviewDashboardServiceImpl().queryBuilderStatus(
         "accountId", "orgId", "projectId", 20, activeStatusList);
     assertThat(queryResult).isEqualTo(expectedQueryResult);
 
     // pending
-    expectedQueryResult =
-        "select id,name,pipelineidentifier,startts,endTs,status,planexecutionid from pipeline_execution_summary_cd where accountid='accountId' and orgidentifier='orgId' and projectidentifier='projectId' and status in ('INTERVENTIONWAITING','APPROVALWAITING') and startts is not null ORDER BY startts DESC LIMIT 20;";
+    expectedQueryResult = "select " + columnsExecutionStatus
+        + " from pipeline_execution_summary_cd where accountid='accountId' and orgidentifier='orgId' and projectidentifier='projectId' and status in ('INTERVENTIONWAITING','APPROVALWAITING') and startts is not null ORDER BY startts DESC LIMIT 20;";
     queryResult = new CDOverviewDashboardServiceImpl().queryBuilderStatus(
         "accountId", "orgId", "projectId", 20, pendingStatusList);
     assertThat(queryResult).isEqualTo(expectedQueryResult);
@@ -250,7 +253,7 @@ public class QueryBuilderTest {
   @Category(UnitTests.class)
   public void testQueryBuilderServiceDeployments() {
     String expectedQueryResult =
-        "select status, time_entity, COUNT(*) as numberOfRecords from (select service_status as status, service_startts as execution_time, time_bucket_gapfill(86400000, service_startts, 1620000000000, 1620950400000) as time_entity, pipeline_execution_summary_cd_id  from service_infra_info where pipeline_execution_summary_cd_id in (select id from pipeline_execution_summary_cd where accountid='account' and orgidentifier='org' and projectidentifier='project') and service_startts>=1620000000000 and service_startts<1620950400000) as innertable group by status, time_entity;";
+        "select status, time_entity, COUNT(*) as numberOfRecords from (select service_status as status, service_startts as execution_time, time_bucket_gapfill(86400000, service_startts, 1620000000000, 1620950400000) as time_entity, pipeline_execution_summary_cd_id  from service_infra_info where pipeline_execution_summary_cd_id in (select id from pipeline_execution_summary_cd where accountid='account' and orgidentifier='org' and projectidentifier='project') and accountid='account' and orgidentifier='org' and projectidentifier='project' and service_startts>=1620000000000 and service_startts<1620950400000) as innertable group by status, time_entity;";
     String queryResult = new CDOverviewDashboardServiceImpl().queryBuilderServiceDeployments(
         "account", "org", "project", 1620000000000L, 1620950400000L, 1, null);
     assertThat(queryResult).isEqualTo(expectedQueryResult);

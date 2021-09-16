@@ -1,0 +1,63 @@
+{
+  "artifactStreamType": "CUSTOM",
+  "uuid": null,
+  "appId": "enNqyqWOTqqoHBYiVgvjcw",
+  "createdBy": null,
+  "createdAt": 0,
+  "lastUpdatedBy": null,
+  "lastUpdatedAt": 0,
+  "artifactStreamId": null,
+  "sourceName": "custom-test",
+  "settingId": null,
+  "artifactServerName": null,
+  "name": "custom-test",
+  "autoPopulate": false,
+  "serviceId": null,
+  "service": null,
+  "autoDownload": false,
+  "autoApproveForProduction": false,
+  "metadataOnly": true,
+  "failedCronAttempts": 0,
+  "nextIteration": 0,
+  "nextCleanupIteration": 0,
+  "templateUuid": null,
+  "templateVersion": null,
+  "templateVariables": [],
+  "accountId": "px7xd_BFRCi-pfWPYXVjvw",
+  "keywords": [
+    "custom-test",
+    "custom"
+  ],
+  "artifactCount": 0,
+  "artifacts": null,
+  "sample": false,
+  "perpetualTaskId": null,
+  "collectionStatus": null,
+  "artifactStreamParameterized": false,
+  "scripts": [
+    {
+      "action": null,
+      "scriptString": "# Shell Script is expected to query the custom artifact repository\n# and save available artifacts in specific format at \n# ${ARTIFACT_RESULT_PATH} file path. Harness will read the file, \n# process it and make those artifacts available for deployment\n#\n# Harness is expected to initialize ${ARTIFACT_RESULT_PATH}\n# environment variable - a random unique file path on delegate,\n# so script execution can save the result.\n#\n#\n#\ncurl -X GET \"http://nexus3.dev.harness.io:8081/service/rest/v1/components?repository=maven-releases\" -H \"accept: application/json\" > ${ARTIFACT_RESULT_PATH}",
+      "timeout": "60",
+      "customRepositoryMapping": {
+        "artifactRoot": "$.items",
+        "buildNoPath": "version",
+        "artifactAttributes": [
+          {
+            "relativePath": "repository",
+            "mappedAttribute": "repository"
+          },
+          {
+            "relativePath": "assets[0].downloadUrl",
+            "mappedAttribute": "URL"
+          },
+          {
+            "relativePath": "assets[0].path",
+            "mappedAttribute": "path"
+          }
+        ]
+      }
+    }
+  ],
+  "tags": []
+}

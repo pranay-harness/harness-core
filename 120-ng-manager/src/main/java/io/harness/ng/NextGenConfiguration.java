@@ -25,6 +25,7 @@ import io.harness.outbox.OutboxPollConfiguration;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.CEAwsSetupConfig;
 import io.harness.remote.CEAzureSetupConfig;
+import io.harness.remote.CEGcpSetupConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.resourcegroupclient.remote.ResourceGroupClientConfig;
 import io.harness.signup.SignupNotificationConfiguration;
@@ -51,6 +52,7 @@ public class NextGenConfiguration extends Configuration {
   public static final String SERVICE_ID = "ng-manager";
   public static final String BASE_PACKAGE = "io.harness.ng";
   public static final String CONNECTOR_PACKAGE = "io.harness.connector.apis.resource";
+  public static final String GITOPS_PROVIDER_RESOURCE_PACKAGE = "io.harness.gitopsprovider.resource";
   public static final String GIT_SYNC_PACKAGE = "io.harness.gitsync";
   public static final String CDNG_RESOURCES_PACKAGE = "io.harness.cdng";
   public static final String OVERLAY_INPUT_SET_RESOURCE_PACKAGE = "io.harness.ngpipeline";
@@ -60,6 +62,7 @@ public class NextGenConfiguration extends Configuration {
   public static final String MOCKSERVER_PACKAGE = "io.harness.ng.core.acl.mockserver";
   public static final String ACCOUNT_PACKAGE = "io.harness.account.resource";
   public static final String LICENSE_PACKAGE = "io.harness.licensing.api.resource";
+  public static final String POLLING_PACKAGE = "io.harness.polling.resource";
 
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @Setter @JsonProperty("mongo") private MongoConfig mongoConfig;
@@ -79,6 +82,7 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty(value = "enableAuth", defaultValue = "true") private boolean enableAuth;
   @JsonProperty("ceAwsSetupConfig") private CEAwsSetupConfig ceAwsSetupConfig;
   @JsonProperty("ceAzureSetupConfig") private CEAzureSetupConfig ceAzureSetupConfig;
+  @JsonProperty("ceGcpSetupConfig") private CEGcpSetupConfig ceGcpSetupConfig;
   @JsonProperty(value = "enableAudit") private boolean enableAudit;
   @JsonProperty(value = "ngAuthUIEnabled") private boolean isNGAuthUIEnabled;
   @JsonProperty("pmsSdkGrpcServerConfig") private GrpcServerConfig pmsSdkGrpcServerConfig;
@@ -108,6 +112,11 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("signupNotificationConfiguration")
   private SignupNotificationConfiguration signupNotificationConfiguration;
   @JsonProperty("cacheConfig") private CacheConfig cacheConfig;
+  @JsonProperty(value = "scopeAccessCheckEnabled", defaultValue = "false") private boolean isScopeAccessCheckEnabled;
+  @JsonProperty("hostname") String hostname;
+  @JsonProperty("basePathPrefix") String basePathPrefix;
+  @JsonProperty(value = "useDms", defaultValue = "false") private boolean useDms;
+  @JsonProperty("dmsGrpcClient") private GrpcClientConfig dmsGrpcClient;
 
   // [secondary-db]: Uncomment this and the corresponding config in yaml file if you want to connect to another database
   //  @JsonProperty("secondary-mongo") MongoConfig secondaryMongoConfig;
@@ -118,8 +127,8 @@ public class NextGenConfiguration extends Configuration {
     String resourcePackage = String.join(",", getUniquePackages(getResourceClasses()));
     defaultSwaggerBundleConfiguration.setResourcePackage(resourcePackage);
     defaultSwaggerBundleConfiguration.setSchemes(new String[] {"https", "http"});
-    defaultSwaggerBundleConfiguration.setHost(
-        "localhost"); // TODO, we should set the appropriate host here ex: qa.harness.io etc
+    defaultSwaggerBundleConfiguration.setHost(hostname);
+    defaultSwaggerBundleConfiguration.setUriPrefix(basePathPrefix);
     defaultSwaggerBundleConfiguration.setTitle("CD NextGen API Reference");
     defaultSwaggerBundleConfiguration.setVersion("2.0");
 
@@ -127,13 +136,17 @@ public class NextGenConfiguration extends Configuration {
   }
 
   public static Collection<Class<?>> getResourceClasses() {
-    Reflections reflections = new Reflections(BASE_PACKAGE, CONNECTOR_PACKAGE, GIT_SYNC_PACKAGE, CDNG_RESOURCES_PACKAGE,
-        OVERLAY_INPUT_SET_RESOURCE_PACKAGE, YAML_PACKAGE, FILTER_PACKAGE, SIGNUP_PACKAGE, MOCKSERVER_PACKAGE,
-        ACCOUNT_PACKAGE, LICENSE_PACKAGE);
+    Reflections reflections = new Reflections(BASE_PACKAGE, CONNECTOR_PACKAGE, GITOPS_PROVIDER_RESOURCE_PACKAGE,
+        GIT_SYNC_PACKAGE, CDNG_RESOURCES_PACKAGE, OVERLAY_INPUT_SET_RESOURCE_PACKAGE, YAML_PACKAGE, FILTER_PACKAGE,
+        SIGNUP_PACKAGE, MOCKSERVER_PACKAGE, ACCOUNT_PACKAGE, LICENSE_PACKAGE, POLLING_PACKAGE);
     return reflections.getTypesAnnotatedWith(Path.class);
   }
 
   private static Set<String> getUniquePackages(Collection<Class<?>> classes) {
     return classes.stream().map(aClass -> aClass.getPackage().getName()).collect(toSet());
+  }
+
+  public static Set<String> getUniquePackagesContainingResources() {
+    return getResourceClasses().stream().map(aClass -> aClass.getPackage().getName()).collect(toSet());
   }
 }

@@ -14,11 +14,9 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Builder
 public class InstanceSyncPerpetualTaskInfoDTO {
+  String id;
   String accountIdentifier;
-  String orgIdentifier;
-  String projectIdentifier;
   String infrastructureMappingId;
-  List<String> deploymentSummaryIdList;
   List<DeploymentInfoDetailsDTO> deploymentInfoDetailsDTOList;
   String perpetualTaskId;
   long createdAt;

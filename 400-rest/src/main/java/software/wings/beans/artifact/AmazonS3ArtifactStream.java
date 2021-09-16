@@ -9,7 +9,10 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.ff.FeatureFlagService;
 
@@ -25,6 +28,8 @@ import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(CDC)
+@BreakDependencyOn("io.harness.ff.FeatureFlagService")
+@TargetModule(HarnessModule._957_CG_BEANS)
 @JsonTypeName("AMAZON_S3")
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -53,6 +58,20 @@ public class AmazonS3ArtifactStream extends ArtifactStream {
     return isBlank(getSourceName())
         ? format("%s_%s_%s", getSourceName(), buildNum, new SimpleDateFormat(dateFormat).format(new Date()))
         : format("%s_%s_%s", getJobname(), buildNum, new SimpleDateFormat(dateFormat).format(new Date()));
+  }
+
+  @Override
+  public ArtifactStream cloneInternal() {
+    return builder()
+        .appId(getAppId())
+        .accountId(getAccountId())
+        .name(getName())
+        .sourceName(getSourceName())
+        .settingId(getSettingId())
+        .keywords(getKeywords())
+        .jobname(jobname)
+        .artifactPaths(artifactPaths)
+        .build();
   }
 
   @Override

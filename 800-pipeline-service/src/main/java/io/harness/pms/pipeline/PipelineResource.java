@@ -22,6 +22,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.filter.dto.FilterPropertiesDTO;
+import io.harness.git.model.ChangeType;
 import io.harness.gitsync.interceptor.GitEntityCreateInfoDTO;
 import io.harness.gitsync.interceptor.GitEntityDeleteInfoDTO;
 import io.harness.gitsync.interceptor.GitEntityFindInfoDTO;
@@ -35,6 +36,7 @@ import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.gitsync.PmsGitSyncBranchContextGuard;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
+import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetYamlWithTemplateDTO;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.mappers.ExecutionGraphMapper;
 import io.harness.pms.pipeline.mappers.NodeExecutionToExecutioNodeMapper;
@@ -197,7 +199,7 @@ public class PipelineResource implements YamlSchemaResource {
     // validate unique fqn in yaml
     pmsYamlSchemaService.validateUniqueFqn(yaml);
 
-    PipelineEntity updatedEntity = pmsPipelineService.updatePipelineYaml(withVersion);
+    PipelineEntity updatedEntity = pmsPipelineService.updatePipelineYaml(withVersion, ChangeType.MODIFY);
 
     return ResponseDTO.newResponse(updatedEntity.getVersion().toString(), updatedEntity.getIdentifier());
   }
@@ -284,6 +286,14 @@ public class PipelineResource implements YamlSchemaResource {
   }
 
   @POST
+  @Path("/steps/v2")
+  @ApiOperation(value = "Get Steps for given modules Version 2", nickname = "getStepsV2")
+  public ResponseDTO<StepCategory> getStepsV2(
+      @QueryParam("accountId") String accountId, StepPalleteFilterWrapper stepPalleteFilterWrapper) {
+    return ResponseDTO.newResponse(pmsPipelineService.getStepsV2(accountId, stepPalleteFilterWrapper));
+  }
+
+  @POST
   @Path("/execution/summary")
   @ApiOperation(value = "Gets Executions list", nickname = "getListOfExecutions")
   @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
@@ -320,8 +330,10 @@ public class PipelineResource implements YamlSchemaResource {
     Page<PipelineExecutionSummaryDTO> planExecutionSummaryDTOS =
         pmsExecutionService.getPipelineExecutionSummaryEntity(criteria, pageRequest)
             .map(e
-                -> PipelineExecutionSummaryDtoMapper.toDto(
-                    e, pmsGitSyncHelper.getEntityGitDetailsFromBytes(e.getGitSyncBranchContext())));
+                -> PipelineExecutionSummaryDtoMapper.toDto(e,
+                    e.getEntityGitDetails() != null
+                        ? e.getEntityGitDetails()
+                        : pmsGitSyncHelper.getEntityGitDetailsFromBytes(e.getGitSyncBranchContext())));
 
     return ResponseDTO.newResponse(planExecutionSummaryDTOS);
   }
@@ -375,7 +387,23 @@ public class PipelineResource implements YamlSchemaResource {
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
       @QueryParam("resolveExpressions") @DefaultValue("false") boolean resolveExpressions,
       @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
-    return pmsExecutionService.getInputSetYaml(accountId, orgId, projectId, planExecutionId, false, resolveExpressions);
+    return pmsExecutionService
+        .getInputSetYamlWithTemplate(accountId, orgId, projectId, planExecutionId, false, resolveExpressions)
+        .getInputSetYaml();
+  }
+
+  @GET
+  @Path("/execution/{planExecutionId}/inputsetV2")
+  @ApiOperation(value = "Gets  inputsetYaml", nickname = "getInputsetYamlV2")
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
+  public ResponseDTO<InputSetYamlWithTemplateDTO> getInputsetYamlV2(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
+      @QueryParam("resolveExpressions") @DefaultValue("false") boolean resolveExpressions,
+      @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
+    return ResponseDTO.newResponse(pmsExecutionService.getInputSetYamlWithTemplate(
+        accountId, orgId, projectId, planExecutionId, false, resolveExpressions));
   }
 
   @GET

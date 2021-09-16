@@ -3,7 +3,6 @@ package io.harness.cvng.analysis.services.impl;
 import static io.harness.cvng.CVConstants.SERVICE_BASE_URL;
 import static io.harness.cvng.analysis.CVAnalysisConstants.LOG_CLUSTER_RESOURCE;
 import static io.harness.cvng.core.utils.DateTimeUtils.instantToEpochMinute;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -29,7 +28,6 @@ import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.AnalysisProgressLog;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.ProgressLog;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
-import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;
@@ -54,7 +52,6 @@ public class LogClusterServiceImpl implements LogClusterService {
   @Inject private LogRecordService logRecordService;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
-  @Inject private VerificationJobService verificationJobService;
 
   @Override
   public List<String> scheduleL1ClusteringTasks(AnalysisInput input) {
@@ -101,11 +98,6 @@ public class LogClusterServiceImpl implements LogClusterService {
   }
 
   private Optional<LogClusterLearningEngineTask> buildDeploymentClusterTasksForLogL2Clustering(AnalysisInput input) {
-    List<LogClusterDTO> clusterLogs = getClusteredLogData(
-        input.getVerificationTaskId(), input.getStartTime(), input.getEndTime(), LogClusterLevel.L1);
-    if (isEmpty(clusterLogs)) {
-      return Optional.empty();
-    }
     VerificationJobInstance verificationJobInstance = verificationJobInstanceService.getVerificationJobInstance(
         verificationTaskService.getVerificationJobInstanceId(input.getVerificationTaskId()));
     // test data for test verification will be different

@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
-import static io.harness.beans.FeatureName.DISABLE_DELEGATE_SELECTION_LOG;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.delegate.beans.NgSetupFields.NG;
 
@@ -20,7 +19,6 @@ import io.harness.delegate.beans.DelegateSelectionLogParams;
 import io.harness.delegate.beans.DelegateSelectionLogParams.DelegateSelectionLogParamsBuilder;
 import io.harness.delegate.beans.DelegateSelectionLogResponse;
 import io.harness.delegate.beans.ProfileScopingRulesDetails;
-import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
 import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.selection.log.DelegateSelectionLog;
@@ -71,7 +69,6 @@ import org.jetbrains.annotations.NotNull;
 @OwnedBy(DEL)
 public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsService {
   @Inject private HPersistence persistence;
-  @Inject private FeatureFlagService featureFlagService;
   @Inject private DelegateService delegateService;
   @Inject private DelegateCache delegateCache;
 
@@ -131,24 +128,8 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
         processSetupAbstractions(batch.getTaskMetadata().getSetupAbstractions()));
 
     try {
-      if (featureFlagService.isNotEnabled(
-              DISABLE_DELEGATE_SELECTION_LOG, batch.getDelegateSelectionLogs().iterator().next().getAccountId())) {
-        persistence.saveIgnoringDuplicateKeys(batch.getDelegateSelectionLogs());
-        persistence.insertIgnoringDuplicateKeys(batch.getTaskMetadata());
-        log.info("Batch saved successfully");
-      } else {
-        batch.getDelegateSelectionLogs()
-            .stream()
-            .map(selectionLog
-                -> String.format(
-                    "Delegate selection log: delegates %s for account: %s and taskId: %s %s with note: %s at: %s",
-                    selectionLog.getDelegateIds(), selectionLog.getAccountId(), selectionLog.getTaskId(),
-                    selectionLog.getConclusion(), selectionLog.getMessage(),
-                    LocalDateTime.ofInstant(
-                        Instant.ofEpochMilli(selectionLog.getEventTimestamp()), ZoneId.systemDefault())))
-            .distinct()
-            .forEach(log::info);
-      }
+      persistence.saveIgnoringDuplicateKeys(batch.getDelegateSelectionLogs());
+      persistence.insertIgnoringDuplicateKeys(batch.getTaskMetadata());
     } catch (Exception exception) {
       log.error("Error while saving into Database ", exception);
     }
@@ -371,7 +352,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
       final Set<String> delegateIds, final Map<String, DelegateSelectionLogMetadata> metadata, final String message,
       final String conclusion, final String groupId) {
     if (batch == null) {
-      log.info("SelectionLog (no taskId): {}, Conclusion {}, groupId {}", message, conclusion, groupId);
+      log.debug("SelectionLog (no taskId): {}, Conclusion {}, groupId {}", message, conclusion, groupId);
       return;
     }
 
@@ -441,5 +422,20 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
     }
 
     return delegateSelectionLogParamsList;
+  }
+
+  private String constructSelectionLogString(DelegateSelectionLog selectionLog) {
+    return new StringBuilder()
+        .append("Delegate selection log: delegates ")
+        .append(selectionLog.getDelegateIds())
+        .append(" for account: ")
+        .append(selectionLog.getAccountId())
+        .append(" and taskId: ")
+        .append(String.join(" ", selectionLog.getTaskId(), selectionLog.getConclusion()))
+        .append("with note: ")
+        .append(selectionLog.getMessage())
+        .append(" at ")
+        .append(LocalDateTime.ofInstant(Instant.ofEpochMilli(selectionLog.getEventTimestamp()), ZoneId.systemDefault()))
+        .toString();
   }
 }

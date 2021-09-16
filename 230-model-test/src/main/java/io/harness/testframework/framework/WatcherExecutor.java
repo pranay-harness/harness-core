@@ -8,6 +8,8 @@ import static io.harness.testframework.framework.utils.ExecutorUtils.addJar;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.filesystem.FileIo;
 import io.harness.resource.Project;
 import io.harness.threading.Poller;
@@ -27,6 +29,7 @@ import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 
 @UtilityClass
 @Slf4j
+@OwnedBy(HarnessTeam.DEL)
 public class WatcherExecutor {
   private static boolean failedAlready;
   private static volatile Process watcherProcess;
@@ -52,8 +55,8 @@ public class WatcherExecutor {
           return;
         }
         log.info("Execute the watcher from {}", directory);
-        final Path jar = Paths.get(directory.getPath(), "250-watcher", "target", "watcher-capsule.jar");
-        final Path config = Paths.get(directory.getPath(), "250-watcher", "config-watcher.yml");
+        final Path jar = Paths.get(directory.getPath(), "960-watcher", "target", "watcher-capsule.jar");
+        final Path config = Paths.get(directory.getPath(), "960-watcher", "config-watcher.yml");
 
         List<String> command = new ArrayList<>();
         command.add("java");

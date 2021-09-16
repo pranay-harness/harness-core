@@ -6,12 +6,15 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.sm.StateType.PHASE;
 import static software.wings.sm.StateType.PHASE_STEP;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.DelegateTaskDetails;
 import io.harness.exception.InvalidRequestException;
-import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HIterator;
 
 import software.wings.api.PhaseElement;
@@ -21,7 +24,6 @@ import software.wings.beans.ServiceInstance;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.execution.WorkflowExecutionInfo;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiryController;
@@ -51,13 +53,13 @@ import org.jetbrains.annotations.Nullable;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Sort;
 
+@OwnedBy(HarnessTeam.CDC)
 @Singleton
 @ValidateOnExecution
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class StateExecutionServiceImpl implements StateExecutionService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowExecutionService workflowExecutionService;
-  @Inject private FeatureFlagService featureFlagService;
-  @Inject private AppService appService;
   @Inject private SweepingOutputService sweepingOutputService;
 
   @Override

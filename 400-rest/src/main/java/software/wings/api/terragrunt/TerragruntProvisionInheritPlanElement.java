@@ -1,8 +1,8 @@
 package software.wings.api.terragrunt;
 
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.context.ContextElementType;
@@ -23,7 +23,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@TargetModule(_957_CG_BEANS)
 public class TerragruntProvisionInheritPlanElement implements ContextElement {
   private String entityId;
   private String provisionerId;

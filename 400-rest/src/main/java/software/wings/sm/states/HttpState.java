@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.FeatureName.SOCKET_HTTP_STATE_TIMEOUT;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtils.trimStrings;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
@@ -106,7 +107,7 @@ import org.mongodb.morphia.annotations.Transient;
 @FieldNameConstants(innerTypeName = "HttpStateKeys")
 @Attributes
 @Slf4j
-@TargetModule(HarnessModule._860_ORCHESTRATION_STEPS)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class HttpState extends State implements SweepingOutputStateMixin {
   private static final String ASSERTION_ERROR_MSG =
@@ -367,14 +368,18 @@ public class HttpState extends State implements SweepingOutputStateMixin {
     String finalMethod = getFinalMethod(context);
     String infrastructureMappingId = context.fetchInfraMappingId();
 
-    Integer stateTimeout = getTimeoutMillis();
     int taskSocketTimeout = socketTimeoutMillis;
     String warningMessage = null;
-    if (stateTimeout != null && taskSocketTimeout >= stateTimeout) {
-      taskSocketTimeout = stateTimeout - 1000;
+    if (featureFlagService.isEnabled(SOCKET_HTTP_STATE_TIMEOUT, context.getAccountId())) {
+      taskSocketTimeout = getTimeoutMillis() - 1000;
     } else {
-      warningMessage = "State timeout is greater than " + socketTimeoutMillis / 1000
-          + " sec. Defaulting  socket timeout to " + socketTimeoutMillis / 1000 + " sec.";
+      Integer stateTimeout = getTimeoutMillis();
+      if (stateTimeout != null && taskSocketTimeout >= stateTimeout) {
+        taskSocketTimeout = stateTimeout - 1000;
+      } else {
+        warningMessage = "State timeout is greater than " + socketTimeoutMillis / 1000
+            + " sec. Defaulting  socket timeout to " + socketTimeoutMillis / 1000 + " sec.";
+      }
     }
 
     List<String> renderedTags = newArrayList();

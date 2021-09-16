@@ -1,5 +1,6 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.validation.Validator.notNullCheck;
@@ -9,6 +10,9 @@ import static software.wings.service.impl.instance.InstanceSyncFlow.MANUAL;
 import static software.wings.service.impl.instance.InstanceSyncFlow.NEW_DEPLOYMENT;
 import static software.wings.service.impl.instance.InstanceSyncFlow.PERPETUAL_TASK;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.FeatureName;
 import io.harness.ff.FeatureFlagService;
@@ -55,10 +59,9 @@ import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
-/**
- * @author rktummala on 01/30/18
- */
 @Slf4j
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._441_CG_INSTANCE_SYNC)
 public abstract class InstanceHandler {
   @Inject protected InstanceHelper instanceHelper;
   @Inject protected InstanceService instanceService;

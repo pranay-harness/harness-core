@@ -40,9 +40,9 @@ public class UtilizationDataServiceImpl {
   private static final int BATCH_SIZE = 500;
 
   static final String INSERT_STATEMENT =
-      "INSERT INTO UTILIZATION_DATA (STARTTIME, ENDTIME, ACCOUNTID, MAXCPU, MAXMEMORY, AVGCPU, AVGMEMORY, INSTANCEID, INSTANCETYPE, CLUSTERID, SETTINGID, MAXCPUVALUE, MAXMEMORYVALUE, AVGCPUVALUE, AVGMEMORYVALUE, AVGSTORAGECAPACITYVALUE ,AVGSTORAGEUSAGEVALUE, AVGSTORAGEREQUESTVALUE) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT DO NOTHING";
+      "INSERT INTO UTILIZATION_DATA (STARTTIME, ENDTIME, ACCOUNTID, MAXCPU, MAXMEMORY, AVGCPU, AVGMEMORY, INSTANCEID, INSTANCETYPE, CLUSTERID, SETTINGID, MAXCPUVALUE, MAXMEMORYVALUE, AVGCPUVALUE, AVGMEMORYVALUE, AVGSTORAGECAPACITYVALUE, AVGSTORAGEUSAGEVALUE, AVGSTORAGEREQUESTVALUE, MAXSTORAGEUSAGEVALUE, MAXSTORAGEREQUESTVALUE) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT DO NOTHING";
   private static final String UTILIZATION_DATA_QUERY =
-      "SELECT MAX(MAXCPU) as MAXCPUUTILIZATION, MAX(MAXMEMORY) as MAXMEMORYUTILIZATION, AVG(AVGCPU) as AVGCPUUTILIZATION, AVG(AVGMEMORY) as AVGMEMORYUTILIZATION, MAX(MAXCPUVALUE) as MAXCPUVALUE, MAX(MAXMEMORYVALUE) as MAXMEMORYVALUE, AVG(AVGCPUVALUE) as AVGCPUVALUE, AVG(AVGMEMORYVALUE) as AVGMEMORYVALUE, AVG(AVGSTORAGECAPACITYVALUE) as AVGSTORAGECAPACITYVALUE ,AVG(AVGSTORAGEUSAGEVALUE) as AVGSTORAGEUSAGEVALUE, AVG(AVGSTORAGEREQUESTVALUE) as AVGSTORAGEREQUESTVALUE, INSTANCEID FROM UTILIZATION_DATA WHERE ACCOUNTID = '%s' AND SETTINGID = '%s' AND CLUSTERID = '%s' AND INSTANCEID IN ('%s') AND STARTTIME >= '%s' AND STARTTIME < '%s' GROUP BY INSTANCEID;";
+      "SELECT MAX(MAXCPU) as MAXCPUUTILIZATION, MAX(MAXMEMORY) as MAXMEMORYUTILIZATION, AVG(AVGCPU) as AVGCPUUTILIZATION, AVG(AVGMEMORY) as AVGMEMORYUTILIZATION, MAX(MAXCPUVALUE) as MAXCPUVALUE, MAX(MAXMEMORYVALUE) as MAXMEMORYVALUE, AVG(AVGCPUVALUE) as AVGCPUVALUE, AVG(AVGMEMORYVALUE) as AVGMEMORYVALUE, AVG(AVGSTORAGECAPACITYVALUE) as AVGSTORAGECAPACITYVALUE ,AVG(AVGSTORAGEUSAGEVALUE) as AVGSTORAGEUSAGEVALUE, AVG(AVGSTORAGEREQUESTVALUE) as AVGSTORAGEREQUESTVALUE ,MAX(MAXSTORAGEUSAGEVALUE) as MAXSTORAGEUSAGEVALUE, MAX(MAXSTORAGEREQUESTVALUE) as MAXSTORAGEREQUESTVALUE, INSTANCEID FROM UTILIZATION_DATA WHERE ACCOUNTID = '%s' AND SETTINGID = '%s' AND CLUSTERID = '%s' AND INSTANCEID IN ('%s') AND STARTTIME >= '%s' AND STARTTIME < '%s' GROUP BY INSTANCEID;";
 
   public boolean create(List<InstanceUtilizationData> instanceUtilizationDataList) {
     boolean successfulInsert = false;
@@ -95,6 +95,8 @@ public class UtilizationDataServiceImpl {
     statement.setDouble(16, instanceUtilizationData.getStorageCapacityAvgValue());
     statement.setDouble(17, instanceUtilizationData.getStorageUsageAvgValue());
     statement.setDouble(18, instanceUtilizationData.getStorageRequestAvgValue());
+    statement.setDouble(19, instanceUtilizationData.getStorageUsageMaxValue());
+    statement.setDouble(20, instanceUtilizationData.getStorageRequestMaxValue());
   }
 
   public Map<String, UtilizationData> getUtilizationDataForInstances(List<? extends InstanceData> instanceDataList,
@@ -141,6 +143,9 @@ public class UtilizationDataServiceImpl {
           double avgStorageUsageValue = resultSet.getDouble("AVGSTORAGEUSAGEVALUE");
           double avgStorageRequestValue = resultSet.getDouble("AVGSTORAGEREQUESTVALUE");
 
+          double maxStorageUsageValue = resultSet.getDouble("MAXSTORAGEUSAGEVALUE");
+          double maxStorageRequestValue = resultSet.getDouble("MAXSTORAGEREQUESTVALUE");
+
           if (serviceArnToInstanceIds.get(instanceId) != null) {
             serviceArnToInstanceIds.get(instanceId)
                 .forEach(instance
@@ -157,6 +162,8 @@ public class UtilizationDataServiceImpl {
                             .avgStorageCapacityValue(avgStorageCapacityValue)
                             .avgStorageRequestValue(avgStorageRequestValue)
                             .avgStorageUsageValue(avgStorageUsageValue)
+                            .maxStorageRequestValue(maxStorageRequestValue)
+                            .maxStorageUsageValue(maxStorageUsageValue)
                             .build()));
           }
         }

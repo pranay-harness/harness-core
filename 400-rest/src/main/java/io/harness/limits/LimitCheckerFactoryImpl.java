@@ -2,7 +2,9 @@ package io.harness.limits;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.limits.checker.MongoStaticLimitChecker;
 import io.harness.limits.checker.rate.MongoSlidingWindowRateLimitChecker;
 import io.harness.limits.configuration.InvalidLimitConfigurationException;
@@ -24,6 +26,7 @@ import javax.annotation.ParametersAreNonnullByDefault;
 @OwnedBy(PL)
 @Singleton
 @ParametersAreNonnullByDefault
+@TargetModule(HarnessModule._955_ACCOUNT_MGMT)
 public class LimitCheckerFactoryImpl implements LimitCheckerFactory {
   @Inject private LimitConfigurationService configuredLimitService;
   @Inject private WingsPersistence wingsPersistence;

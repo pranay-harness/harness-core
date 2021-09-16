@@ -5,12 +5,16 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.dtos.deploymentinfo.DeploymentInfoDTO;
 
 import lombok.Builder;
-import lombok.Value;
+import lombok.Getter;
 
 @OwnedBy(HarnessTeam.DX)
-@Value
+@Getter
 @Builder
 public class DeploymentInfoDetailsDTO {
   DeploymentInfoDTO deploymentInfoDTO;
   long lastUsedAt;
+
+  public void setLastUsedAt(long lastUsedAt) {
+    this.lastUsedAt = lastUsedAt;
+  }
 }

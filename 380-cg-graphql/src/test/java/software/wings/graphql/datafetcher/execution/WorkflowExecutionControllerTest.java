@@ -10,11 +10,13 @@ import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.APP_MANIFEST_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_SOURCE_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.FREEZE_WINDOW_ID;
+import static software.wings.utils.WingsTestConstants.HELM_CHART_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_DEFINITION_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -52,22 +54,28 @@ import software.wings.beans.Variable;
 import software.wings.beans.VariableType;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
+import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.CustomArtifactStream;
 import software.wings.beans.deployment.DeploymentMetadata;
+import software.wings.beans.deployment.DeploymentMetadata.DeploymentMetadataKeys;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.schema.mutation.execution.input.QLArtifactIdInput;
 import software.wings.graphql.schema.mutation.execution.input.QLArtifactInputType;
 import software.wings.graphql.schema.mutation.execution.input.QLArtifactValueInput;
 import software.wings.graphql.schema.mutation.execution.input.QLBuildNumberInput;
 import software.wings.graphql.schema.mutation.execution.input.QLExecutionType;
+import software.wings.graphql.schema.mutation.execution.input.QLManifestInputType;
+import software.wings.graphql.schema.mutation.execution.input.QLManifestValueInput;
 import software.wings.graphql.schema.mutation.execution.input.QLServiceInput;
 import software.wings.graphql.schema.mutation.execution.input.QLStartExecutionInput;
 import software.wings.graphql.schema.mutation.execution.input.QLVariableInput;
 import software.wings.graphql.schema.mutation.execution.input.QLVariableValue;
 import software.wings.graphql.schema.mutation.execution.input.QLVariableValueType;
+import software.wings.graphql.schema.mutation.execution.input.QLVersionNumberInput;
 import software.wings.graphql.schema.mutation.execution.payload.QLStartExecutionPayload;
+import software.wings.graphql.schema.query.QLServiceInputsForExecutionParams;
 import software.wings.graphql.schema.type.QLExecutionStatus;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.security.auth.AuthHandler;
@@ -80,10 +88,13 @@ import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.applicationmanifest.HelmChartService;
 
 import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
@@ -107,21 +118,13 @@ public class WorkflowExecutionControllerTest extends WingsBaseTest {
   @Inject @InjectMocks ExecutionController executionController;
   @Mock FeatureFlagService featureFlagService;
   @Inject @InjectMocks WorkflowExecutionController workflowExecutionController = new WorkflowExecutionController();
-
-  @NotNull
-  private Workflow getWorkflow() {
-    return aWorkflow()
-        .uuid(WORKFLOW_ID)
-        .appId(APP_ID)
-        .orchestrationWorkflow(Mockito.mock(CanaryOrchestrationWorkflow.class))
-        .build();
-  }
+  @Mock HelmChartService helmChartService;
 
   @Test
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void shouldStartWorkflowWithArtifact() {
-    QLStartExecutionInput qlStartExecutionInput = getStartExecutionInput();
+    QLStartExecutionInput qlStartExecutionInput = getStartExecutionInputWithoutManifest();
     Workflow workflow = getWorkflow();
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
     ArgumentCaptor<ExecutionArgs> captor = ArgumentCaptor.forClass(ExecutionArgs.class);
@@ -161,7 +164,7 @@ public class WorkflowExecutionControllerTest extends WingsBaseTest {
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void shouldStartWorkflowWithoutArtifact() {
-    QLStartExecutionInput qlStartExecutionInput = getStartExecutionInput();
+    QLStartExecutionInput qlStartExecutionInput = getStartExecutionInputWithoutManifest();
     Workflow workflow = getWorkflow();
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
     ArgumentCaptor<ExecutionArgs> captor = ArgumentCaptor.forClass(ExecutionArgs.class);
@@ -182,7 +185,7 @@ public class WorkflowExecutionControllerTest extends WingsBaseTest {
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void shouldThrowDeploymentFreezeExceptionForFrozenEnv() {
-    QLStartExecutionInput qlStartExecutionInput = getStartExecutionInput();
+    QLStartExecutionInput qlStartExecutionInput = getStartExecutionInputWithoutManifest();
     Workflow workflow = getWorkflow();
     workflow.setEnvId(ENV_ID);
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
@@ -207,7 +210,7 @@ public class WorkflowExecutionControllerTest extends WingsBaseTest {
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void shouldThrowErrorForArtifactMissing() {
-    QLStartExecutionInput qlStartExecutionInput = getStartExecutionInput();
+    QLStartExecutionInput qlStartExecutionInput = getStartExecutionInputWithoutManifest();
     Workflow workflow = getWorkflow();
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
     ArgumentCaptor<ExecutionArgs> captor = ArgumentCaptor.forClass(ExecutionArgs.class);
@@ -475,7 +478,198 @@ public class WorkflowExecutionControllerTest extends WingsBaseTest {
     assertThat(startExecutionPayload.getWarningMessage()).isNotBlank();
   }
 
-  private QLStartExecutionInput getStartExecutionInput() {
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldPopulateArtifactAndManifestNeededServiceIds() {
+    QLServiceInputsForExecutionParams params = QLServiceInputsForExecutionParams.builder()
+                                                   .executionType(QLExecutionType.WORKFLOW)
+                                                   .applicationId(APP_ID)
+                                                   .entityId(WORKFLOW_ID)
+                                                   .build();
+    Workflow workflow = getWorkflow();
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
+    when(workflowService.fetchDeploymentMetadata(eq(APP_ID), eq(workflow), any(), eq(null), eq(null), eq(false),
+             eq(null), eq(DeploymentMetadata.Include.ARTIFACT_SERVICE)))
+        .thenReturn(DeploymentMetadata.builder()
+                        .artifactRequiredServiceIds(Arrays.asList(SERVICE_ID, SERVICE_ID + 2))
+                        .manifestRequiredServiceIds(Arrays.asList(SERVICE_ID, SERVICE_ID + 3))
+                        .build());
+    Map<String, List<String>> requiredServiceMap =
+        workflowExecutionController.getArtifactAndManifestNeededServices(params);
+    assertThat(requiredServiceMap).isNotNull();
+    assertThat(requiredServiceMap.get(DeploymentMetadataKeys.artifactRequiredServices))
+        .containsExactlyInAnyOrder(SERVICE_ID, SERVICE_ID + 2);
+    assertThat(requiredServiceMap.get(DeploymentMetadataKeys.manifestRequiredServiceIds))
+        .containsExactlyInAnyOrder(SERVICE_ID, SERVICE_ID + 3);
+  }
+
+  @NotNull
+  private Workflow getWorkflow() {
+    return aWorkflow()
+        .uuid(WORKFLOW_ID)
+        .appId(APP_ID)
+        .orchestrationWorkflow(Mockito.mock(CanaryOrchestrationWorkflow.class))
+        .build();
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldStartWorkflowWithManifest() {
+    QLStartExecutionInput qlStartExecutionInput = getStartExecutionInputWithManifest();
+    Workflow workflow = getWorkflow();
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
+    ArgumentCaptor<ExecutionArgs> captor = ArgumentCaptor.forClass(ExecutionArgs.class);
+
+    when(workflowExecutionService.triggerEnvExecution(eq(APP_ID), eq(null), captor.capture(), eq(null)))
+        .thenReturn(WorkflowExecution.builder().uuid(WORKFLOW_EXECUTION_ID).status(ExecutionStatus.RUNNING).build());
+    when(workflowService.fetchDeploymentMetadata(
+             eq(APP_ID), eq(workflow), any(), eq(null), eq(null), eq(DeploymentMetadata.Include.ARTIFACT_SERVICE)))
+        .thenReturn(
+            DeploymentMetadata.builder().manifestRequiredServiceIds(Arrays.asList(SERVICE_ID, SERVICE_ID + 2)).build());
+    when(serviceResourceService.get(eq(APP_ID), anyString()))
+        .thenAnswer(invocationOnMock
+            -> Service.builder()
+                   .appId(APP_ID)
+                   .name(invocationOnMock.getArgumentAt(1, String.class))
+                   .uuid(invocationOnMock.getArgumentAt(1, String.class))
+                   .build());
+    when(helmChartService.getByChartVersion(APP_ID, SERVICE_ID, APP_MANIFEST_NAME, "1.0"))
+        .thenReturn(HelmChart.builder().uuid(HELM_CHART_ID).build());
+    when(helmChartService.get(APP_ID, HELM_CHART_ID + 2))
+        .thenReturn(HelmChart.builder().uuid(HELM_CHART_ID + 2).build());
+
+    QLStartExecutionPayload startExecutionPayload =
+        workflowExecutionController.startWorkflowExecution(qlStartExecutionInput, MutationContext.builder().build());
+    assertThat(startExecutionPayload).isNotNull();
+    assertThat(startExecutionPayload.getExecution().getStatus()).isEqualTo(QLExecutionStatus.RUNNING);
+    assertThat(captor.getValue().getHelmCharts().stream().map(HelmChart::getUuid).collect(Collectors.toList()))
+        .containsExactlyInAnyOrder(HELM_CHART_ID, HELM_CHART_ID + 2);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldStartWorkflowWithoutManifest() {
+    QLStartExecutionInput qlStartExecutionInput = getStartExecutionInputWithoutManifest();
+    Workflow workflow = getWorkflow();
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
+    ArgumentCaptor<ExecutionArgs> captor = ArgumentCaptor.forClass(ExecutionArgs.class);
+
+    when(workflowExecutionService.triggerEnvExecution(eq(APP_ID), eq(null), captor.capture(), eq(null)))
+        .thenReturn(WorkflowExecution.builder().uuid(WORKFLOW_EXECUTION_ID).status(ExecutionStatus.RUNNING).build());
+    when(workflowService.fetchDeploymentMetadata(
+             eq(APP_ID), eq(workflow), any(), eq(null), eq(null), eq(DeploymentMetadata.Include.ARTIFACT_SERVICE)))
+        .thenReturn(DeploymentMetadata.builder().build());
+
+    QLStartExecutionPayload startExecutionPayload =
+        workflowExecutionController.startWorkflowExecution(qlStartExecutionInput, MutationContext.builder().build());
+    assertThat(startExecutionPayload).isNotNull();
+    assertThat(startExecutionPayload.getExecution().getStatus()).isEqualTo(QLExecutionStatus.RUNNING);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowErrorForManifestMissing() {
+    QLStartExecutionInput qlStartExecutionInput = getStartExecutionInputWithManifest();
+    Workflow workflow = getWorkflow();
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
+    ArgumentCaptor<ExecutionArgs> captor = ArgumentCaptor.forClass(ExecutionArgs.class);
+
+    when(workflowExecutionService.triggerEnvExecution(eq(APP_ID), eq(null), captor.capture(), eq(null)))
+        .thenReturn(WorkflowExecution.builder().uuid(WORKFLOW_EXECUTION_ID).status(ExecutionStatus.RUNNING).build());
+    when(workflowService.fetchDeploymentMetadata(
+             eq(APP_ID), eq(workflow), any(), eq(null), eq(null), eq(DeploymentMetadata.Include.ARTIFACT_SERVICE)))
+        .thenReturn(DeploymentMetadata.builder()
+                        .manifestRequiredServiceIds(Arrays.asList(SERVICE_ID + 3, SERVICE_ID + 2))
+                        .build());
+
+    when(serviceResourceService.get(eq(APP_ID), anyString()))
+        .thenAnswer(invocationOnMock
+            -> Service.builder()
+                   .appId(APP_ID)
+                   .name(invocationOnMock.getArgumentAt(1, String.class))
+                   .uuid(invocationOnMock.getArgumentAt(1, String.class))
+                   .build());
+    assertThatThrownBy(()
+                           -> workflowExecutionController.startWorkflowExecution(
+                               qlStartExecutionInput, MutationContext.builder().build()))
+        .isInstanceOf(GeneralException.class)
+        .hasMessage("ServiceInput required for service: SERVICE_ID3");
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldThrowErrorForInvalidHelmChart() {
+    QLStartExecutionInput qlStartExecutionInput = getStartExecutionInputWithManifest();
+    Workflow workflow = getWorkflow();
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
+    ArgumentCaptor<ExecutionArgs> captor = ArgumentCaptor.forClass(ExecutionArgs.class);
+
+    when(workflowExecutionService.triggerEnvExecution(eq(APP_ID), eq(null), captor.capture(), eq(null)))
+        .thenReturn(WorkflowExecution.builder().uuid(WORKFLOW_EXECUTION_ID).status(ExecutionStatus.RUNNING).build());
+    when(workflowService.fetchDeploymentMetadata(
+             eq(APP_ID), eq(workflow), any(), eq(null), eq(null), eq(DeploymentMetadata.Include.ARTIFACT_SERVICE)))
+        .thenReturn(
+            DeploymentMetadata.builder().manifestRequiredServiceIds(Arrays.asList(SERVICE_ID, SERVICE_ID + 2)).build());
+
+    when(serviceResourceService.get(eq(APP_ID), anyString()))
+        .thenAnswer(invocationOnMock
+            -> Service.builder()
+                   .appId(APP_ID)
+                   .name(invocationOnMock.getArgumentAt(1, String.class))
+                   .uuid(invocationOnMock.getArgumentAt(1, String.class))
+                   .build());
+    when(helmChartService.getByChartVersion(APP_ID, SERVICE_ID, APP_MANIFEST_NAME, "2.0"))
+        .thenReturn(HelmChart.builder().uuid(HELM_CHART_ID).build());
+    when(helmChartService.get(APP_ID, HELM_CHART_ID + 2))
+        .thenReturn(HelmChart.builder().uuid(HELM_CHART_ID + 2).build());
+
+    assertThatThrownBy(()
+                           -> workflowExecutionController.startWorkflowExecution(
+                               qlStartExecutionInput, MutationContext.builder().build()))
+        .isInstanceOf(GeneralException.class)
+        .hasMessage("Cannot find helm chart for specified version number: 1.0");
+
+    when(helmChartService.get(APP_ID, HELM_CHART_ID + 2)).thenReturn(null);
+    when(helmChartService.getByChartVersion(APP_ID, SERVICE_ID, APP_MANIFEST_NAME, "1.0"))
+        .thenReturn(HelmChart.builder().uuid(HELM_CHART_ID).build());
+    assertThatThrownBy(()
+                           -> workflowExecutionController.startWorkflowExecution(
+                               qlStartExecutionInput, MutationContext.builder().build()))
+        .isInstanceOf(GeneralException.class)
+        .hasMessage("Cannot find helm chart for specified Id: HELM_CHART_ID2. Might be deleted");
+  }
+
+  private QLStartExecutionInput getStartExecutionInputWithManifest() {
+    return QLStartExecutionInput.builder()
+        .executionType(QLExecutionType.WORKFLOW)
+        .applicationId(APP_ID)
+        .entityId(WORKFLOW_ID)
+        .serviceInputs(Arrays.asList(QLServiceInput.builder()
+                                         .name(SERVICE_ID)
+                                         .manifestValueInput(QLManifestValueInput.builder()
+                                                                 .valueType(QLManifestInputType.VERSION_NUMBER)
+                                                                 .versionNumber(QLVersionNumberInput.builder()
+                                                                                    .versionNumber("1.0")
+                                                                                    .appManifestName(APP_MANIFEST_NAME)
+                                                                                    .build())
+                                                                 .build())
+                                         .build(),
+            QLServiceInput.builder()
+                .name(SERVICE_ID + 2)
+                .manifestValueInput(QLManifestValueInput.builder()
+                                        .valueType(QLManifestInputType.HELM_CHART_ID)
+                                        .helmChartId(HELM_CHART_ID + 2)
+                                        .build())
+                .build()))
+        .build();
+  }
+
+  private QLStartExecutionInput getStartExecutionInputWithoutManifest() {
     return QLStartExecutionInput.builder()
         .executionType(QLExecutionType.WORKFLOW)
         .applicationId(APP_ID)

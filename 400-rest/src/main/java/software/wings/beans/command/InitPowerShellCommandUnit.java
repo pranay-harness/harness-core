@@ -1,7 +1,11 @@
 package software.wings.beans.command;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.validation.Validator.notNullCheck;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.WingsException;
 import io.harness.logging.CommandExecutionStatus;
 
@@ -11,6 +15,9 @@ import com.google.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
 import org.mongodb.morphia.annotations.Transient;
+
+@OwnedBy(CDP)
+@TargetModule(_930_DELEGATE_TASKS)
 public class InitPowerShellCommandUnit extends AbstractCommandUnit {
   @Inject @Transient private transient CommandUnitHelper commandUnitHelper;
   public static final transient String INIT_POWERSHELL_UNIT_NAME = "Initialize";

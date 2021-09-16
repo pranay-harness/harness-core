@@ -447,7 +447,19 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   private double computeRiskScore(MetricAnalysisRecord mlAnalysisResponse) {
-    return mlAnalysisResponse.getOverallMetricScores().values().stream().mapToDouble(score -> score).max().orElse(-1.0);
+    double keyScore = -1.0;
+    if (isNotEmpty(mlAnalysisResponse.getKeyTransactionMetricScores())) {
+      keyScore =
+          mlAnalysisResponse.getKeyTransactionMetricScores()
+              .values()
+              .stream()
+              .mapToDouble(metricKeys -> metricKeys.values().stream().mapToDouble(value -> value).max().orElse(-1.0))
+              .max()
+              .orElse(-1.0);
+    }
+    double overallScore =
+        mlAnalysisResponse.getOverallMetricScores().values().stream().mapToDouble(value -> value).max().orElse(-1.0);
+    return Math.max(keyScore, overallScore);
   }
 
   @Override

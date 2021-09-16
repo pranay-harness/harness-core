@@ -578,9 +578,7 @@ public class PipelineServiceImpl implements PipelineService {
     Pipeline pipeline = readPipelineWithResolvedVariables(appId, pipelineId, pipelineVariables, false, null);
 
     // checking pipeline for loops and replacing looped states with multiple parallel states.
-    boolean isRuntimeEnabled =
-        featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, pipeline.getAccountId());
-    PipelineServiceHelper.updatePipelineWithLoopedState(pipeline, isRuntimeEnabled);
+    PipelineServiceHelper.updatePipelineWithLoopedState(pipeline);
     return pipeline;
   }
 
@@ -602,9 +600,7 @@ public class PipelineServiceImpl implements PipelineService {
     Pipeline pipeline =
         readPipelineWithResolvedVariables(appId, pipelineId, pipelineVariables, preExecutionChecks, null);
     // checking pipeline for loops and replacing looped states with multiple parallel states.
-    boolean isRuntimeEnabled =
-        featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, pipeline.getAccountId());
-    PipelineServiceHelper.updatePipelineWithLoopedState(pipeline, isRuntimeEnabled);
+    PipelineServiceHelper.updatePipelineWithLoopedState(pipeline);
     return pipeline;
   }
 
@@ -612,11 +608,11 @@ public class PipelineServiceImpl implements PipelineService {
       Map<String, String> pipelineVariables, boolean preExecutionChecks, Map<String, Workflow> workflowCache) {
     Pipeline pipeline = wingsPersistence.getWithAppId(Pipeline.class, appId, pipelineId);
     notNullCheck("Pipeline does not exist", pipeline, USER);
-    readPipelineWithResolvedVariables(appId, pipeline, pipelineVariables, workflowCache, preExecutionChecks);
+    readPipelineWithResolvedVariables(pipeline, pipelineVariables, workflowCache, preExecutionChecks);
     return pipeline;
   }
 
-  private void readPipelineWithResolvedVariables(String appId, Pipeline pipeline, Map<String, String> pipelineVariables,
+  private void readPipelineWithResolvedVariables(Pipeline pipeline, Map<String, String> pipelineVariables,
       Map<String, Workflow> workflowCache, boolean preExecutionChecks) {
     List<Service> services = new ArrayList<>();
     List<String> serviceIds = new ArrayList<>();
@@ -648,12 +644,10 @@ public class PipelineServiceImpl implements PipelineService {
           pipelineStage.setValidationMessage(workflow.getOrchestrationWorkflow().getValidationMessage());
         }
 
-        boolean isRuntimeEnabled =
-            featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, pipeline.getAccountId());
         if (preExecutionChecks) {
           WorkflowServiceHelper.checkWorkflowVariablesOverrides(pipelineStageElement,
               workflow.getOrchestrationWorkflow().getUserVariables(), pipelineStageElement.getWorkflowVariables(),
-              pipelineVariables, isRuntimeEnabled);
+              pipelineVariables);
         }
 
         Map<String, String> resolvedWorkflowStepVariables =
@@ -661,7 +655,7 @@ public class PipelineServiceImpl implements PipelineService {
                 pipelineStageElement.getWorkflowVariables(), pipelineVariables);
         pipelineStageElement.setWorkflowVariables(resolvedWorkflowStepVariables);
 
-        PipelineServiceHelper.updateLoopingInfo(pipelineStage, workflow, infraDefinitionIds, isRuntimeEnabled);
+        PipelineServiceHelper.updateLoopingInfo(pipelineStage, workflow, infraDefinitionIds);
 
         if (BUILD != workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType()) {
           resolveServices(services, serviceIds, resolvedWorkflowStepVariables, workflow);
@@ -1010,12 +1004,11 @@ public class PipelineServiceImpl implements PipelineService {
     List<String> runtimeVariables = pse.getRuntimeInputsConfig() != null
         ? pse.getRuntimeInputsConfig().getRuntimeInputVariables()
         : new ArrayList<>();
-    boolean runtimeInputs = featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, workflow.getAccountId());
     for (Variable variable : workflowVariables) {
       notEmptyCheck("Empty variable name", variable.getName());
       String value = pseWorkflowVariables.get(variable.getName());
       boolean isRuntime = false;
-      if (runtimeInputs && isNotEmpty(runtimeVariables) && runtimeVariables.contains(variable.getName())) {
+      if (isNotEmpty(runtimeVariables) && runtimeVariables.contains(variable.getName())) {
         isRuntime = true;
       }
       if (variable.obtainEntityType() == null) {
@@ -1775,7 +1768,7 @@ public class PipelineServiceImpl implements PipelineService {
   @Override
   public DeploymentMetadata fetchDeploymentMetadata(
       String appId, Pipeline pipeline, Map<String, String> pipelineVariables) {
-    readPipelineWithResolvedVariables(appId, pipeline, pipelineVariables, null, false);
+    readPipelineWithResolvedVariables(pipeline, pipelineVariables, null, false);
     return fetchDeploymentMetadata(appId, pipeline, null, null, false, null, null);
   }
 
@@ -1992,8 +1985,7 @@ public class PipelineServiceImpl implements PipelineService {
           keywords.add(workflow.getDescription());
           List<Service> resolvedServiceForWorkflow =
               resolveServices(services, serviceIds, stageElement.getWorkflowVariables(), workflow);
-          if (featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, accountId)
-              && stageElement.getRuntimeInputsConfig() != null) {
+          if (stageElement.getRuntimeInputsConfig() != null) {
             pipelineServiceValidator.validateRuntimeInputsConfig(
                 stageElement, accountId, workflow.getOrchestrationWorkflow().getUserVariables());
           }

@@ -4,11 +4,9 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateInsightsBarDetails;
 import io.harness.delegate.beans.DelegateInsightsDetails;
-import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
 import io.harness.service.intfc.DelegateCache;
 import io.harness.service.intfc.DelegateInsightsService;
@@ -38,43 +36,38 @@ import org.mongodb.morphia.query.UpdateOperations;
 public class DelegateInsightsServiceImpl
     implements DelegateInsightsService, DelegateTaskStatusObserver, PerpetualTaskStateObserver {
   @Inject private HPersistence persistence;
-  @Inject private FeatureFlagService featureFlagService;
   @Inject private DelegateCache delegateCache;
 
   @Override
   public void onTaskAssigned(String accountId, String taskId, String delegateId, long taskTimeout) {
-    if (featureFlagService.isEnabled(FeatureName.DELEGATE_INSIGHTS_ENABLED, accountId)) {
-      String delegateGroupId = obtainDelegateGroupId(accountId, delegateId);
+    String delegateGroupId = obtainDelegateGroupId(accountId, delegateId);
 
-      DelegateTaskUsageInsights delegateTaskUsageInsightsCreateEvent = createDelegateTaskUsageInsightsEvent(
-          accountId, taskId, delegateId, delegateGroupId, 0, DelegateTaskUsageInsightsEventType.STARTED);
+    DelegateTaskUsageInsights delegateTaskUsageInsightsCreateEvent = createDelegateTaskUsageInsightsEvent(
+        accountId, taskId, delegateId, delegateGroupId, 0, DelegateTaskUsageInsightsEventType.STARTED);
 
-      DelegateTaskUsageInsights delegateTaskUsageInsightsUnknownEvent = createDelegateTaskUsageInsightsEvent(
-          accountId, taskId, delegateId, delegateGroupId, taskTimeout, DelegateTaskUsageInsightsEventType.UNKNOWN);
+    DelegateTaskUsageInsights delegateTaskUsageInsightsUnknownEvent = createDelegateTaskUsageInsightsEvent(
+        accountId, taskId, delegateId, delegateGroupId, taskTimeout, DelegateTaskUsageInsightsEventType.UNKNOWN);
 
-      persistence.save(delegateTaskUsageInsightsCreateEvent);
-      persistence.save(delegateTaskUsageInsightsUnknownEvent);
-    }
+    persistence.save(delegateTaskUsageInsightsCreateEvent);
+    persistence.save(delegateTaskUsageInsightsUnknownEvent);
   }
 
   @Override
   public void onTaskCompleted(
       String accountId, String taskId, String delegateId, DelegateTaskUsageInsightsEventType eventType) {
-    if (featureFlagService.isEnabled(FeatureName.DELEGATE_INSIGHTS_ENABLED, accountId)) {
-      Query<DelegateTaskUsageInsights> filterQuery =
-          persistence.createQuery(DelegateTaskUsageInsights.class)
-              .filter(DelegateTaskUsageInsightsKeys.accountId, accountId)
-              .filter(DelegateTaskUsageInsightsKeys.taskId, taskId)
-              .filter(DelegateTaskUsageInsightsKeys.delegateId, delegateId)
-              .filter(DelegateTaskUsageInsightsKeys.eventType, DelegateTaskUsageInsightsEventType.UNKNOWN);
+    Query<DelegateTaskUsageInsights> filterQuery =
+        persistence.createQuery(DelegateTaskUsageInsights.class)
+            .filter(DelegateTaskUsageInsightsKeys.accountId, accountId)
+            .filter(DelegateTaskUsageInsightsKeys.taskId, taskId)
+            .filter(DelegateTaskUsageInsightsKeys.delegateId, delegateId)
+            .filter(DelegateTaskUsageInsightsKeys.eventType, DelegateTaskUsageInsightsEventType.UNKNOWN);
 
-      UpdateOperations<DelegateTaskUsageInsights> updateOperations =
-          persistence.createUpdateOperations(DelegateTaskUsageInsights.class)
-              .set(DelegateTaskUsageInsightsKeys.eventType, eventType)
-              .set(DelegateTaskUsageInsightsKeys.timestamp, System.currentTimeMillis());
+    UpdateOperations<DelegateTaskUsageInsights> updateOperations =
+        persistence.createUpdateOperations(DelegateTaskUsageInsights.class)
+            .set(DelegateTaskUsageInsightsKeys.eventType, eventType)
+            .set(DelegateTaskUsageInsightsKeys.timestamp, System.currentTimeMillis());
 
-      persistence.findAndModify(filterQuery, updateOperations, HPersistence.returnNewOptions);
-    }
+    persistence.findAndModify(filterQuery, updateOperations, HPersistence.returnNewOptions);
   }
 
   @Override
@@ -108,26 +101,23 @@ public class DelegateInsightsServiceImpl
   public DelegateInsightsDetails retrieveDelegateInsightsDetails(
       String accountId, String delegateGroupId, long startTimestamp) {
     List<DelegateInsightsBarDetails> insightsBarDetails = new ArrayList<>();
+    Map<Long, List<DelegateInsightsSummary>> delegateGroupInsights =
+        persistence.createQuery(DelegateInsightsSummary.class)
+            .filter(DelegateInsightsSummaryKeys.accountId, accountId)
+            .filter(DelegateInsightsSummaryKeys.delegateGroupId, delegateGroupId)
+            .field(DelegateInsightsSummaryKeys.periodStartTime)
+            .greaterThan(startTimestamp)
+            .asList()
+            .stream()
+            .collect(Collectors.groupingBy(DelegateInsightsSummary::getPeriodStartTime));
 
-    if (featureFlagService.isEnabled(FeatureName.DELEGATE_INSIGHTS_ENABLED, accountId)) {
-      Map<Long, List<DelegateInsightsSummary>> delegateGroupInsights =
-          persistence.createQuery(DelegateInsightsSummary.class)
-              .filter(DelegateInsightsSummaryKeys.accountId, accountId)
-              .filter(DelegateInsightsSummaryKeys.delegateGroupId, delegateGroupId)
-              .field(DelegateInsightsSummaryKeys.periodStartTime)
-              .greaterThan(startTimestamp)
-              .asList()
-              .stream()
-              .collect(Collectors.groupingBy(DelegateInsightsSummary::getPeriodStartTime));
+    for (Map.Entry<Long, List<DelegateInsightsSummary>> mapEntry : delegateGroupInsights.entrySet()) {
+      DelegateInsightsBarDetails barInsights =
+          DelegateInsightsBarDetails.builder().timeStamp(mapEntry.getKey()).build();
+      mapEntry.getValue().forEach(
+          event -> barInsights.getCounts().add(Pair.of(event.getInsightsType(), event.getCount())));
 
-      for (Map.Entry<Long, List<DelegateInsightsSummary>> mapEntry : delegateGroupInsights.entrySet()) {
-        DelegateInsightsBarDetails barInsights =
-            DelegateInsightsBarDetails.builder().timeStamp(mapEntry.getKey()).build();
-        mapEntry.getValue().forEach(
-            event -> barInsights.getCounts().add(Pair.of(event.getInsightsType(), event.getCount())));
-
-        insightsBarDetails.add(barInsights);
-      }
+      insightsBarDetails.add(barInsights);
     }
 
     return DelegateInsightsDetails.builder().insights(insightsBarDetails).build();

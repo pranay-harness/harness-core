@@ -1,5 +1,6 @@
 package software.wings.resources.graphql;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.SHUBHANSHU;
 
 import static java.lang.String.format;
@@ -10,11 +11,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 
+import software.wings.app.MainConfiguration;
 import software.wings.beans.User;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.features.RestApiFeature;
@@ -41,11 +44,13 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.dataloader.DataLoaderRegistry;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(PL)
 public class GraphQLResourceTest extends CategoryTest {
   private static final GraphQLProvider GRAPH_QL_PROVIDER = mockGraphQLProvider();
   private static final FeatureFlagService FEATURE_FLAG_SERVICE = mock(FeatureFlagService.class);
@@ -54,6 +59,7 @@ public class GraphQLResourceTest extends CategoryTest {
   private static final GraphQLUtils GRAPH_QL_UTILS = mock(GraphQLUtils.class);
   @Named(RestApiFeature.FEATURE_NAME) private static final PremiumFeature PREMIUM_FEATURE = mock(PremiumFeature.class);
   private static HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
+  private static final MainConfiguration MAIN_CONFIGURATION = mock(MainConfiguration.class);
 
   private static final String ACCOUNT_ID = "ACCOUNT_ID";
   private static final String USER_ID = "USER_ID";
@@ -65,7 +71,7 @@ public class GraphQLResourceTest extends CategoryTest {
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
           .instance(new GraphQLResource(GRAPH_QL_PROVIDER, FEATURE_FLAG_SERVICE, API_KEY_SERVICE,
-              DATA_LOADER_REGISTRY_HELPER, PREMIUM_FEATURE, GRAPH_QL_UTILS))
+              DATA_LOADER_REGISTRY_HELPER, PREMIUM_FEATURE, GRAPH_QL_UTILS, MAIN_CONFIGURATION))
           .instance(new AbstractBinder() {
             @Override
             protected void configure() {
@@ -73,6 +79,7 @@ public class GraphQLResourceTest extends CategoryTest {
             }
           })
           .type(WingsExceptionMapper.class)
+          .type(MultiPartFeature.class)
           .build();
 
   @Before

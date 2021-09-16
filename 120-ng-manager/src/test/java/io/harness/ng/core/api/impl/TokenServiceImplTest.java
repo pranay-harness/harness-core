@@ -14,12 +14,15 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.harness.NgManagerTestBase;
+import io.harness.account.services.AccountService;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.core.AccountOrgProjectValidator;
+import io.harness.ng.core.account.ServiceAccountConfig;
 import io.harness.ng.core.api.ApiKeyService;
 import io.harness.ng.core.api.TokenService;
 import io.harness.ng.core.common.beans.ApiKeyType;
+import io.harness.ng.core.dto.AccountDTO;
 import io.harness.ng.core.dto.TokenDTO;
 import io.harness.ng.core.entities.ApiKey;
 import io.harness.ng.core.entities.Token;
@@ -58,6 +61,7 @@ public class TokenServiceImplTest extends NgManagerTestBase {
   private AccountOrgProjectValidator accountOrgProjectValidator;
   private TransactionTemplate transactionTemplate;
   private Token token;
+  private AccountService accountService;
 
   @Before
   public void setup() throws IllegalAccessException {
@@ -72,6 +76,7 @@ public class TokenServiceImplTest extends NgManagerTestBase {
     outboxService = mock(OutboxService.class);
     accountOrgProjectValidator = mock(AccountOrgProjectValidator.class);
     transactionTemplate = mock(TransactionTemplate.class);
+    accountService = mock(AccountService.class);
 
     tokenDTO = TokenDTO.builder()
                    .accountIdentifier(accountIdentifier)
@@ -109,6 +114,7 @@ public class TokenServiceImplTest extends NgManagerTestBase {
     FieldUtils.writeField(tokenService, "outboxService", outboxService, true);
     FieldUtils.writeField(tokenService, "accountOrgProjectValidator", accountOrgProjectValidator, true);
     FieldUtils.writeField(tokenService, "transactionTemplate", transactionTemplate, true);
+    FieldUtils.writeField(tokenService, "accountService", accountService, true);
   }
 
   @Test
@@ -118,6 +124,11 @@ public class TokenServiceImplTest extends NgManagerTestBase {
     ApiKey apiKey = ApiKey.builder().defaultTimeToExpireToken(Duration.ofDays(2).toMillis()).build();
     apiKey.setUuid(randomAlphabetic(10));
     doReturn(apiKey).when(apiKeyService).getApiKey(any(), any(), any(), any(), any(), any());
+    AccountDTO accountDTO =
+        AccountDTO.builder()
+            .serviceAccountConfig(ServiceAccountConfig.builder().apiKeyLimit(5).tokenLimit(5).build())
+            .build();
+    doReturn(accountDTO).when(accountService).getAccount(any());
     Token newToken = TokenDTOMapper.getTokenFromDTO(tokenDTO, Duration.ofDays(2).toMillis());
     newToken.setUuid(randomAlphabetic(10));
     doReturn(newToken).when(tokenRepository).save(any());
@@ -140,6 +151,11 @@ public class TokenServiceImplTest extends NgManagerTestBase {
     Token newToken = TokenDTOMapper.getTokenFromDTO(tokenDTO, Duration.ofDays(2).toMillis());
     newToken.setUuid(randomAlphabetic(10));
     doReturn(newToken).when(tokenRepository).save(any());
+    AccountDTO accountDTO =
+        AccountDTO.builder()
+            .serviceAccountConfig(ServiceAccountConfig.builder().apiKeyLimit(5).tokenLimit(5).build())
+            .build();
+    doReturn(accountDTO).when(accountService).getAccount(any());
     String tokenString =
         tokenService.rotateToken(accountIdentifier, orgIdentifier, projectIdentifier, ApiKeyType.SERVICE_ACCOUNT,
             parentIdentifier, tokenDTO.getApiKeyIdentifier(), identifier, Instant.now().plusMillis(1000));
@@ -162,6 +178,11 @@ public class TokenServiceImplTest extends NgManagerTestBase {
     Token newToken = TokenDTOMapper.getTokenFromDTO(tokenDTO, Duration.ofDays(2).toMillis());
     newToken.setUuid(randomAlphabetic(10));
     doReturn(newToken).when(tokenRepository).save(any());
+    AccountDTO accountDTO =
+        AccountDTO.builder()
+            .serviceAccountConfig(ServiceAccountConfig.builder().apiKeyLimit(5).tokenLimit(5).build())
+            .build();
+    doReturn(accountDTO).when(accountService).getAccount(any());
     String tokenString = tokenService.createToken(tokenDTO);
     assertThat(tokenString).startsWith(USER.getValue());
     assertThat(tokenString).contains(token.getUuid());
@@ -186,6 +207,11 @@ public class TokenServiceImplTest extends NgManagerTestBase {
     Token newToken = TokenDTOMapper.getTokenFromDTO(tokenDTO, Duration.ofDays(2).toMillis());
     newToken.setUuid(randomAlphabetic(10));
     doReturn(newToken).when(tokenRepository).save(any());
+    AccountDTO accountDTO =
+        AccountDTO.builder()
+            .serviceAccountConfig(ServiceAccountConfig.builder().apiKeyLimit(5).tokenLimit(5).build())
+            .build();
+    doReturn(accountDTO).when(accountService).getAccount(any());
     String tokenString = tokenService.rotateToken(accountIdentifier, orgIdentifier, projectIdentifier, USER,
         parentIdentifier, tokenDTO.getApiKeyIdentifier(), identifier, Instant.now().plusMillis(1000));
     assertThat(tokenString).startsWith(USER.getValue());

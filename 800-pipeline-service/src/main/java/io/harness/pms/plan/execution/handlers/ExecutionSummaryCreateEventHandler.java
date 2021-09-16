@@ -14,6 +14,8 @@ import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.GraphLayoutNode;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.gitsync.PmsGitSyncHelper;
+import io.harness.pms.merger.helpers.TemplateHelper;
 import io.harness.pms.pipeline.ExecutionSummaryInfo;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.mappers.GraphLayoutDtoMapper;
@@ -43,16 +45,18 @@ public class ExecutionSummaryCreateEventHandler implements OrchestrationStartObs
   private final PlanExecutionService planExecutionService;
   private final NodeTypeLookupService nodeTypeLookupService;
   private final PmsExecutionSummaryRespository pmsExecutionSummaryRespository;
+  private final PmsGitSyncHelper pmsGitSyncHelper;
 
   @Inject
   public ExecutionSummaryCreateEventHandler(PMSPipelineService pmsPipelineService, PlanService planService,
       PlanExecutionService planExecutionService, NodeTypeLookupService nodeTypeLookupService,
-      PmsExecutionSummaryRespository pmsExecutionSummaryRespository) {
+      PmsExecutionSummaryRespository pmsExecutionSummaryRespository, PmsGitSyncHelper pmsGitSyncHelper) {
     this.pmsPipelineService = pmsPipelineService;
     this.planService = planService;
     this.planExecutionService = planExecutionService;
     this.nodeTypeLookupService = nodeTypeLookupService;
     this.pmsExecutionSummaryRespository = pmsExecutionSummaryRespository;
+    this.pmsGitSyncHelper = pmsGitSyncHelper;
   }
 
   @Override
@@ -100,6 +104,7 @@ public class ExecutionSummaryCreateEventHandler implements OrchestrationStartObs
             .planExecutionId(planExecutionId)
             .name(pipelineEntity.get().getName())
             .inputSetYaml(orchestrationStartInfo.getPlanExecutionMetadata().getInputSetYaml())
+            .pipelineTemplate(TemplateHelper.createTemplateFromPipeline(pipelineEntity.get().getYaml()))
             .internalStatus(Status.NO_OP)
             .status(ExecutionStatus.NOTSTARTED)
             .startTs(planExecution.getStartTs())
@@ -108,7 +113,7 @@ public class ExecutionSummaryCreateEventHandler implements OrchestrationStartObs
             .projectIdentifier(projectId)
             .orgIdentifier(orgId)
             .executionTriggerInfo(metadata.getTriggerInfo())
-            .gitSyncBranchContext(metadata.getGitSyncBranchContext())
+            .entityGitDetails(pmsGitSyncHelper.getEntityGitDetailsFromBytes(metadata.getGitSyncBranchContext()))
             .tags(pipelineEntity.get().getTags())
             .modules(new ArrayList<>(modules))
             .build();

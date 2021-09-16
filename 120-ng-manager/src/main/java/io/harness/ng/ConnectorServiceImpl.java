@@ -234,7 +234,7 @@ public class ConnectorServiceImpl implements ConnectorService {
       }
 
       ConnectorResponseDTO connectorResponse =
-          getConnectorService(connectorInfo.getConnectorType()).update(connector, accountIdentifier);
+          getConnectorService(connectorInfo.getConnectorType()).update(connector, accountIdentifier, gitChangeType);
       if (isDefaultBranchConnector) {
         ConnectorInfoDTO savedConnector = connectorResponse.getConnector();
         createConnectorUpdateActivity(accountIdentifier, savedConnector);
@@ -439,6 +439,11 @@ public class ConnectorServiceImpl implements ConnectorService {
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
     return defaultConnectorService.validateTheIdentifierIsUnique(
         accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
+  }
+
+  @Override
+  public long count(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    return defaultConnectorService.count(accountIdentifier, orgIdentifier, projectIdentifier);
   }
 
   @Override

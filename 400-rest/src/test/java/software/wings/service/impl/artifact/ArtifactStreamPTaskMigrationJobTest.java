@@ -1,5 +1,6 @@
 package software.wings.service.impl.artifact;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -19,6 +20,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.ff.FeatureFlagService;
@@ -45,6 +47,7 @@ import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 
+@OwnedBy(CDC)
 public class ArtifactStreamPTaskMigrationJobTest extends CategoryTest {
   @Mock private ArtifactStreamPTaskHelper artifactStreamPTaskHelper;
   @Mock private WingsPersistence mockWingsPersistence;

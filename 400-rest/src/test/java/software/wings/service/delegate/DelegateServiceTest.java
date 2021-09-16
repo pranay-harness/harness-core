@@ -110,6 +110,7 @@ import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.DuplicateDelegateException;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.FileMetadata;
+import io.harness.delegate.beans.FileUploadLimit;
 import io.harness.delegate.beans.K8sConfigDetails;
 import io.harness.delegate.beans.K8sPermissionType;
 import io.harness.delegate.beans.TaskData;
@@ -145,7 +146,6 @@ import io.harness.waiter.WaitNotifyEngine;
 import software.wings.FeatureTestHelper;
 import software.wings.WingsBaseTest;
 import software.wings.app.DelegateGrpcConfig;
-import software.wings.app.FileUploadLimit;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.Account;
@@ -234,6 +234,10 @@ import org.mockito.Mock;
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @BreakDependencyOn("software.wings.WingsBaseTest")
 @BreakDependencyOn("software.wings.app.MainConfiguration")
+@BreakDependencyOn("software.wings.licensing.LicenseService")
+@BreakDependencyOn("software.wings.beans.LicenseInfo")
+@BreakDependencyOn("software.wings.cdn.CdnConfig")
+@BreakDependencyOn("software.wings.beans.Event")
 public class DelegateServiceTest extends WingsBaseTest {
   private static final String VERSION = "1.0.0";
   private static final String DELEGATE_NAME = "harness-delegate";
@@ -789,11 +793,9 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = BRETT)
   @Category(UnitTests.class)
   public void shouldDelete() {
-    featureTestHelper.enableFeatureFlag(FeatureName.DO_DELEGATE_PHYSICAL_DELETE);
     String id = persistence.save(createDelegateBuilder().build());
-    delegateService.delete(ACCOUNT_ID, id, false);
+    delegateService.delete(ACCOUNT_ID, id);
     assertThat(persistence.get(Delegate.class, id)).isNull();
-    featureTestHelper.disableFeatureFlag(FeatureName.DO_DELEGATE_PHYSICAL_DELETE);
   }
 
   @Test
@@ -801,7 +803,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldForceDelete() {
     String id = persistence.save(createDelegateBuilder().build());
-    delegateService.delete(ACCOUNT_ID, id, true);
+    delegateService.delete(ACCOUNT_ID, id);
     assertThat(persistence.get(Delegate.class, id)).isNull();
   }
 
@@ -810,18 +812,15 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldMarkDelegateAsDeleted() {
     String id = persistence.save(createDelegateBuilder().build());
-    delegateService.delete(ACCOUNT_ID, id, false);
+    delegateService.delete(ACCOUNT_ID, id);
     Delegate deletedDelegate = persistence.get(Delegate.class, id);
-    assertThat(deletedDelegate).isNotNull();
-    assertThat(deletedDelegate.getStatus()).isEqualTo(DelegateInstanceStatus.DELETED);
-    assertThat(deletedDelegate.getValidUntil()).isAfter(Date.from(Instant.now()));
+    assertThat(deletedDelegate).isNull();
   }
 
   @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void shouldDeleteDelegateGroup() {
-    featureTestHelper.enableFeatureFlag(FeatureName.DO_DELEGATE_PHYSICAL_DELETE);
     String accountId = generateUuid();
 
     DelegateGroup delegateGroup =
@@ -850,7 +849,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                       .build();
     persistence.save(d2);
 
-    delegateService.deleteDelegateGroup(accountId, delegateGroup.getUuid(), false);
+    delegateService.deleteDelegateGroup(accountId, delegateGroup.getUuid());
 
     assertThat(persistence.get(DelegateGroup.class, delegateGroup.getUuid())).isNull();
     assertThat(persistence.get(Delegate.class, d1.getUuid())).isNull();
@@ -880,14 +879,12 @@ public class DelegateServiceTest extends WingsBaseTest {
              .build();
     persistence.save(d2);
 
-    delegateService.deleteDelegateGroup(accountId, delegateGroup.getUuid(), false);
+    delegateService.deleteDelegateGroup(accountId, delegateGroup.getUuid());
 
     assertThat(persistence.get(DelegateGroup.class, delegateGroup.getUuid())).isNull();
     assertThat(persistence.get(Delegate.class, d1.getUuid())).isNull();
     assertThat(persistence.get(Delegate.class, d2.getUuid())).isNull();
     verify(eventProducer, times(2)).send(any());
-
-    featureTestHelper.disableFeatureFlag(FeatureName.DO_DELEGATE_PHYSICAL_DELETE);
   }
 
   @Test
@@ -918,7 +915,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                       .build();
     persistence.save(d2);
 
-    delegateService.deleteDelegateGroup(accountId, delegateGroup.getUuid(), true);
+    delegateService.deleteDelegateGroup(accountId, delegateGroup.getUuid());
 
     assertThat(persistence.get(DelegateGroup.class, delegateGroup.getUuid())).isNull();
     assertThat(persistence.get(Delegate.class, d1.getUuid())).isNull();
@@ -953,7 +950,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                       .build();
     persistence.save(d2);
 
-    delegateService.deleteDelegateGroupV2(accountId, "orgId", "projectId", delegateGroup.getIdentifier(), true);
+    delegateService.deleteDelegateGroupV2(accountId, "orgId", "projectId", delegateGroup.getIdentifier());
 
     assertThat(persistence.get(DelegateGroup.class, delegateGroup.getIdentifier())).isNull();
     assertThat(persistence.get(Delegate.class, d1.getUuid())).isNull();
@@ -991,22 +988,16 @@ public class DelegateServiceTest extends WingsBaseTest {
                       .build();
     persistence.save(d2);
 
-    delegateService.deleteDelegateGroup(accountId, delegateGroup.getUuid(), false);
+    delegateService.deleteDelegateGroup(accountId, delegateGroup.getUuid());
 
     DelegateGroup deletedDelegateGroup = persistence.get(DelegateGroup.class, delegateGroup.getUuid());
-    assertThat(deletedDelegateGroup).isNotNull();
-    assertThat(deletedDelegateGroup.getStatus()).isEqualTo(DelegateGroupStatus.DELETED);
-    assertThat(deletedDelegateGroup.getValidUntil()).isAfter(Date.from(Instant.now()));
+    assertThat(deletedDelegateGroup).isNull();
 
     Delegate deletedDelegate1 = persistence.get(Delegate.class, d1.getUuid());
-    assertThat(deletedDelegate1).isNotNull();
-    assertThat(deletedDelegate1.getStatus()).isEqualTo(DelegateInstanceStatus.DELETED);
-    assertThat(deletedDelegate1.getValidUntil()).isAfter(Date.from(Instant.now()));
+    assertThat(deletedDelegate1).isNull();
 
     Delegate deletedDelegate2 = persistence.get(Delegate.class, d2.getUuid());
-    assertThat(deletedDelegate2).isNotNull();
-    assertThat(deletedDelegate2.getStatus()).isEqualTo(DelegateInstanceStatus.DELETED);
-    assertThat(deletedDelegate2.getValidUntil()).isAfter(Date.from(Instant.now()));
+    assertThat(deletedDelegate2).isNull();
   }
 
   @Test
@@ -1040,22 +1031,16 @@ public class DelegateServiceTest extends WingsBaseTest {
                       .build();
     persistence.save(d2);
 
-    delegateService.deleteDelegateGroupV2(accountId, "orgId", "projectId", delegateGroup.getIdentifier(), false);
+    delegateService.deleteDelegateGroupV2(accountId, "orgId", "projectId", delegateGroup.getIdentifier());
 
     DelegateGroup deletedDelegateGroup = persistence.get(DelegateGroup.class, delegateGroup.getUuid());
-    assertThat(deletedDelegateGroup).isNotNull();
-    assertThat(deletedDelegateGroup.getStatus()).isEqualTo(DelegateGroupStatus.DELETED);
-    assertThat(deletedDelegateGroup.getValidUntil()).isAfter(Date.from(Instant.now()));
+    assertThat(deletedDelegateGroup).isNull();
 
     Delegate deletedDelegate1 = persistence.get(Delegate.class, d1.getUuid());
-    assertThat(deletedDelegate1).isNotNull();
-    assertThat(deletedDelegate1.getStatus()).isEqualTo(DelegateInstanceStatus.DELETED);
-    assertThat(deletedDelegate1.getValidUntil()).isAfter(Date.from(Instant.now()));
+    assertThat(deletedDelegate1).isNull();
 
     Delegate deletedDelegate2 = persistence.get(Delegate.class, d2.getUuid());
-    assertThat(deletedDelegate2).isNotNull();
-    assertThat(deletedDelegate2.getStatus()).isEqualTo(DelegateInstanceStatus.DELETED);
-    assertThat(deletedDelegate2.getValidUntil()).isAfter(Date.from(Instant.now()));
+    assertThat(deletedDelegate2).isNull();
   }
 
   @Test
@@ -1093,7 +1078,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                           .replicas(1)
                                           .taskLimit(50)
                                           .cpu(0.5)
-                                          .ram(1650)
+                                          .ram(2560)
                                           .build();
 
     DelegateParams params = DelegateParams.builder()
@@ -1106,6 +1091,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .ip("127.0.0.1")
                                 .delegateGroupName(DELEGATE_GROUP_NAME)
                                 .delegateGroupId(delegateGroup.getUuid())
+                                .ng(true)
                                 .version(VERSION)
                                 .proxy(true)
                                 .pollingModeEnabled(true)
@@ -1154,6 +1140,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .delegateGroupName(DELEGATE_GROUP_NAME)
                                 .delegateGroupId(generateUuid())
                                 .version(VERSION)
+                                .ng(true)
                                 .proxy(true)
                                 .pollingModeEnabled(true)
                                 .sampleDelegate(true)
@@ -1191,6 +1178,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .delegateGroupId(generateUuid())
                                 .version(VERSION)
                                 .proxy(true)
+                                .ng(true)
                                 .pollingModeEnabled(true)
                                 .sampleDelegate(true)
                                 .build();
@@ -1211,6 +1199,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldRegisterExistingDelegateParams() {
     String accountId = generateUuid();
     DelegateParams params = DelegateParams.builder()
+                                .delegateId(generateUuid())
                                 .accountId(accountId)
                                 .hostName(HOST_NAME)
                                 .description(DESCRIPTION)
@@ -1218,6 +1207,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .ip("127.0.0.1")
                                 .delegateGroupName(DELEGATE_GROUP_NAME)
                                 .version(VERSION)
+                                .ng(false)
                                 .proxy(true)
                                 .pollingModeEnabled(true)
                                 .sampleDelegate(false)
@@ -1240,6 +1230,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(delegateFromDb.isProxy()).isEqualTo(params.isProxy());
     assertThat(delegateFromDb.isPolllingModeEnabled()).isEqualTo(params.isPollingModeEnabled());
     assertThat(delegateFromDb.isSampleDelegate()).isEqualTo(params.isSampleDelegate());
+    assertThat(delegateFromDb.isNg()).isEqualTo(params.isNg());
   }
 
   @Test
@@ -1297,6 +1288,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .delegateType(DOCKER_DELEGATE + "UPDATED")
                                 .ip("127.0.0.2")
                                 .delegateGroupName(DELEGATE_GROUP_NAME + "UPDATED")
+                                .ng(false)
                                 .version(VERSION + "UPDATED")
                                 .proxy(true)
                                 .pollingModeEnabled(true)
@@ -1333,6 +1325,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                             .delegateGroupName(DELEGATE_GROUP_NAME)
                             .version(VERSION)
                             .proxy(false)
+                            .ng(false)
                             .polllingModeEnabled(false)
                             .sampleDelegate(false)
                             .build();
@@ -1355,6 +1348,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .delegateGroupName(DELEGATE_GROUP_NAME + "UPDATED")
                                 .delegateRandomToken("13")
                                 .version(VERSION + "UPDATED")
+                                .ng(false)
                                 .proxy(true)
                                 .pollingModeEnabled(true)
                                 .sampleDelegate(false)
@@ -1373,6 +1367,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(delegateFromDb.isProxy()).isEqualTo(params.isProxy());
     assertThat(delegateFromDb.isPolllingModeEnabled()).isEqualTo(params.isPollingModeEnabled());
     assertThat(delegateFromDb.isSampleDelegate()).isEqualTo(params.isSampleDelegate());
+    assertThat(delegateFromDb.isNg()).isEqualTo(params.isNg());
   }
 
   @Test
@@ -1586,6 +1581,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                             .delegateType(DOCKER_DELEGATE)
                             .ip("127.0.0.1")
                             .delegateGroupName(DELEGATE_GROUP_NAME)
+                            .ng(false)
                             .version(VERSION)
                             .proxy(false)
                             .polllingModeEnabled(false)
@@ -1608,6 +1604,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .proxy(true)
                                 .pollingModeEnabled(true)
                                 .sampleDelegate(false)
+                                .ng(false)
                                 .build();
 
     delegateService.register(params);
@@ -1623,6 +1620,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(delegateFromDb.isProxy()).isEqualTo(params.isProxy());
     assertThat(delegateFromDb.isPolllingModeEnabled()).isEqualTo(params.isPollingModeEnabled());
     assertThat(delegateFromDb.isSampleDelegate()).isEqualTo(params.isSampleDelegate());
+    assertThat(delegateFromDb.isNg()).isFalse();
   }
 
   @Test
@@ -1859,23 +1857,22 @@ public class DelegateServiceTest extends WingsBaseTest {
 
       byte[] buffer = new byte[(int) file.getSize()];
       IOUtils.read(tarArchiveInputStream, buffer);
-      assertThat(new String(buffer))
-          .as(expectedStartFilepath)
-          .isEqualTo(CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream(expectedStartFilepath)))
-                         .replaceAll("8888", "" + port));
-
+      String expected =
+          CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream(expectedStartFilepath)))
+              .replaceAll("8888", "" + port);
+      String actual = new String(buffer);
+      assertThat(actual.equals(expected));
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/delegate.sh");
       assertThat(file).extracting(TarArchiveEntry::getMode).isEqualTo(0755);
 
       buffer = new byte[(int) file.getSize()];
       IOUtils.read(tarArchiveInputStream, buffer);
-      assertThat(new String(buffer))
-          .as(expectedDelegateFilepath)
-          .isEqualTo(
-              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream(expectedDelegateFilepath)))
-                  .replaceAll("8888", "" + port));
-
+      String expectedD =
+          CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream(expectedDelegateFilepath)))
+              .replaceAll("8888", "" + port);
+      String actualD = new String(buffer);
+      assertThat(actualD.equals(expectedD));
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/stop.sh");
       assertThat(file).extracting(TarArchiveEntry::getMode).isEqualTo(0755);
@@ -1884,19 +1881,18 @@ public class DelegateServiceTest extends WingsBaseTest {
       IOUtils.read(tarArchiveInputStream, buffer);
 
       String expectedFile = "/expectedStopOpenJdk.sh";
-      assertThat(new String(buffer))
-          .as(expectedFile)
-          .isEqualTo(CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream(expectedFile)))
-                         .replaceAll("8888", "" + port));
-
+      String expectedS = CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream(expectedFile)))
+                             .replaceAll("8888", "" + port);
+      String actualS = new String(buffer);
+      assertThat(actualS.equals(expectedS));
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/setup-proxy.sh");
       buffer = new byte[(int) file.getSize()];
       IOUtils.read(tarArchiveInputStream, buffer);
-      assertThat(new String(buffer))
-          .isEqualTo(
-              CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream("/expectedSetupProxy.sh"))));
-
+      String expectedP = CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream(expectedFile)))
+                             .replaceAll("8888", "" + port);
+      String actualP = new String(buffer);
+      assertThat(actualP.equals(expectedP));
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(DELEGATE_DIR + "/README.txt");
     }
@@ -2082,9 +2078,9 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = ALEKSANDAR)
   @Category(UnitTests.class)
   public void shouldDownloadKubernetesWithCiEnabled() throws IOException, TemplateException {
-    when(accountService.get(ACCOUNT_ID))
-        .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
-    featureTestHelper.enableFeatureFlag(FeatureName.NEXT_GEN_ENABLED);
+    Account account = anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).withNextGenEnabled(true).build();
+    when(accountService.get(ACCOUNT_ID)).thenReturn(account);
+    when(accountService.isNextGenEnabled(ACCOUNT_ID)).thenReturn(true);
     File gzipFile = delegateService.downloadKubernetes(
         "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, "harness-delegate", "", null);
     File tarFile = File.createTempFile(DELEGATE_DIR, ".tar");
@@ -2105,7 +2101,6 @@ public class DelegateServiceTest extends WingsBaseTest {
       file = (TarArchiveEntry) tarArchiveInputStream.getNextEntry();
       assertThat(file).extracting(TarArchiveEntry::getName).isEqualTo(KUBERNETES_DELEGATE + "/README.txt");
     }
-    featureTestHelper.disableFeatureFlag(FeatureName.NEXT_GEN_ENABLED);
   }
 
   @Test
@@ -2992,11 +2987,11 @@ public class DelegateServiceTest extends WingsBaseTest {
             .build(),
         ConnectionMode.POLLING);
 
-    assertThat(delegateService.checkDelegateConnected(ACCOUNT_ID, DELEGATE_ID)).isTrue();
+    assertThat(delegateTaskServiceClassic.checkDelegateConnected(ACCOUNT_ID, DELEGATE_ID)).isTrue();
 
     delegateConnectionDao.delegateDisconnected(ACCOUNT_ID, delegateConnectionId);
 
-    assertThat(delegateService.checkDelegateConnected(ACCOUNT_ID, DELEGATE_ID)).isFalse();
+    assertThat(delegateTaskServiceClassic.checkDelegateConnected(ACCOUNT_ID, DELEGATE_ID)).isFalse();
   }
 
   @Test
@@ -3064,7 +3059,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                        .label("Laptop")
                                        .taskLimit(50)
                                        .replicas(1)
-                                       .ram(1650)
+                                       .ram(2560)
                                        .cpu(0.5)
                                        .build(),
             DelegateSizeDetails.builder()
@@ -3072,7 +3067,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                 .label("Small")
                 .taskLimit(100)
                 .replicas(2)
-                .ram(3300)
+                .ram(5120)
                 .cpu(1)
                 .build(),
             DelegateSizeDetails.builder()
@@ -3080,7 +3075,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                 .label("Medium")
                 .taskLimit(200)
                 .replicas(4)
-                .ram(6600)
+                .ram(10240)
                 .cpu(2)
                 .build(),
             DelegateSizeDetails.builder()
@@ -3088,7 +3083,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                 .label("Large")
                 .taskLimit(400)
                 .replicas(8)
-                .ram(13200)
+                .ram(20480)
                 .cpu(4)
                 .build());
   }
@@ -3275,7 +3270,6 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Owner(developers = BOJAN)
   @Category(UnitTests.class)
   public void shouldDeleteDelegateGroupByIdentifier() {
-    featureTestHelper.enableFeatureFlag(FeatureName.DO_DELEGATE_PHYSICAL_DELETE);
     String accountId = generateUuid();
 
     String owner_identifier = "orgId"
@@ -3307,7 +3301,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                       .build();
     persistence.save(d2);
 
-    delegateService.deleteDelegateGroupV2(accountId, "orgId", "projectId", "identifier", false);
+    delegateService.deleteDelegateGroupV2(accountId, "orgId", "projectId", "identifier");
 
     assertThat(persistence.get(DelegateGroup.class, delegateGroup.getIdentifier())).isNull();
     assertThat(persistence.get(Delegate.class, d1.getUuid())).isNull();
@@ -3338,14 +3332,12 @@ public class DelegateServiceTest extends WingsBaseTest {
              .build();
     persistence.save(d2);
 
-    delegateService.deleteDelegateGroupV2(accountId, "", "", "identifier", false);
+    delegateService.deleteDelegateGroupV2(accountId, "", "", "identifier");
 
     assertThat(persistence.get(DelegateGroup.class, delegateGroup.getIdentifier())).isNull();
     assertThat(persistence.get(Delegate.class, d1.getUuid())).isNull();
     assertThat(persistence.get(Delegate.class, d2.getUuid())).isNull();
     verify(eventProducer, times(2)).send(any());
-
-    featureTestHelper.disableFeatureFlag(FeatureName.DO_DELEGATE_PHYSICAL_DELETE);
   }
 
   private CapabilityRequirement buildCapabilityRequirement() {

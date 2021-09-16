@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 
@@ -9,6 +9,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.data.validator.Trimmed;
 import io.harness.expression.Expression;
 import io.harness.yaml.BaseYaml;
+import io.harness.yaml.YamlKeepEmptyAsIs;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +30,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@TargetModule(_871_CG_BEANS)
+@TargetModule(_957_CG_BEANS)
 @OwnedBy(CDC)
 @FieldNameConstants(innerTypeName = "NameValuePairKeys")
 public class NameValuePair {
@@ -37,7 +38,7 @@ public class NameValuePair {
   /*
     Value can only be of type String or in encrypted format
   */
-  @NotNull @Expression(ALLOW_SECRETS) private String value;
+  @YamlKeepEmptyAsIs @NotNull @Expression(ALLOW_SECRETS) private String value;
 
   /*
    Could be TEXT / ENCRYPTED_TEXT

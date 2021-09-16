@@ -69,8 +69,7 @@ public class PauseAllInterruptHandlerTest extends OrchestrationTestBase {
 
     assertThatThrownBy(() -> pauseAllInterruptHandler.registerInterrupt(interrupt))
         .isInstanceOf(InvalidRequestException.class)
-        .hasMessageContaining(
-            String.format("Stage [%s] already has PAUSE_ALL interrupt", interrupt.getNodeExecutionId()));
+        .hasMessageContaining("Execution already has PAUSE_ALL interrupt for node");
   }
 
   @Test

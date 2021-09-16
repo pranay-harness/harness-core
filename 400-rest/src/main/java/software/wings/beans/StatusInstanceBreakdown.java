@@ -2,7 +2,9 @@ package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 
 import java.util.ArrayList;
@@ -12,6 +14,7 @@ import java.util.List;
  * Created by rishi on 8/20/16.
  */
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class StatusInstanceBreakdown {
   private ExecutionStatus status;
   private int instanceCount;

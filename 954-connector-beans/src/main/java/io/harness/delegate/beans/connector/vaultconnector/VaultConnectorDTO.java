@@ -1,11 +1,13 @@
 package io.harness.delegate.beans.connector.vaultconnector;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.exception.WingsException.USER;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
@@ -34,7 +36,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @Builder
-@ToString(exclude = {"authToken", "secretId"})
+@ToString(exclude = {"authToken", "secretId", "sinkPath"})
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
@@ -51,9 +53,16 @@ public class VaultConnectorDTO extends ConnectorConfigDTO implements DelegateSel
   private boolean isDefault;
   private int secretEngineVersion;
   private Set<String> delegateSelectors;
+  private String namespace;
+  private String sinkPath;
+  private boolean useVaultAgent;
 
   public AccessType getAccessType() {
-    return isNotEmpty(appRoleId) ? AccessType.APP_ROLE : AccessType.TOKEN;
+    if (useVaultAgent) {
+      return AccessType.VAULT_AGENT;
+    } else {
+      return isNotEmpty(appRoleId) ? AccessType.APP_ROLE : AccessType.TOKEN;
+    }
   }
 
   @Override
@@ -78,6 +87,16 @@ public class VaultConnectorDTO extends ConnectorConfigDTO implements DelegateSel
     }
     if (isReadOnly && isDefault) {
       throw new InvalidRequestException("Read only secret manager cannot be set as default", INVALID_REQUEST, USER);
+    }
+    if (isUseVaultAgent()) {
+      if (isBlank(getSinkPath())) {
+        throw new InvalidRequestException(
+            "You must provide a sink path to read token if you are using VaultAgent", INVALID_REQUEST, USER);
+      }
+      if (isEmpty(getDelegateSelectors())) {
+        throw new InvalidRequestException(
+            "You must provide a delegate selector to read token if you are using VaultAgent", INVALID_REQUEST, USER);
+      }
     }
   }
 }

@@ -1,0 +1,48 @@
+inputSet:
+  identifier: input2
+  description : this description
+  pipeline:
+    identifier: "Test_Pipline11"
+    variables:
+      - name: "port2"
+        value: 8000
+    stages:
+      - stage:
+          identifier: "qaStage"
+          spec:
+            execution:
+              steps:
+                - step:
+                    identifier: "httpStep1"
+                    spec:
+                      url: www.google.com
+                - parallel:
+                    - step:
+                        identifier: "httpStep2"
+                        spec:
+                          method: POST
+                - step:
+                    identifier: "httpStep11"
+                    spec:
+                      socketTimeoutMillis: 60000
+      - parallel:
+          - stage:
+              identifier: "qaStage2"
+              spec:
+                execution:
+                  steps:
+                    - step:
+                        identifier: "httpStep4"
+                        spec:
+                          method: GET
+                service:
+                  identifier: "manager"
+                  serviceDefinition:
+                    spec:
+                      manifests:
+                        - manifest:
+                            identifier: "baseValues"
+                            spec:
+                              store:
+                                spec:
+                                  connectorRef: defaultConn

@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 )
 

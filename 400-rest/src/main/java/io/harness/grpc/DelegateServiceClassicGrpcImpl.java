@@ -7,27 +7,28 @@ import io.harness.delegate.DelegateClassicTaskRequest;
 import io.harness.delegate.DelegateTaskGrpc;
 import io.harness.delegate.ExecuteTaskResponse;
 import io.harness.delegate.QueueTaskResponse;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.serializer.KryoSerializer;
 
-import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.DelegateTaskServiceClassic;
 
+import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import io.grpc.stub.StreamObserver;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(HarnessTeam.DEL)
-
 public class DelegateServiceClassicGrpcImpl extends DelegateTaskGrpc.DelegateTaskImplBase {
-  private KryoSerializer kryoSerializer;
-  private DelegateService delegateService;
+  @Inject private KryoSerializer kryoSerializer;
+  @Inject private DelegateTaskServiceClassic delegateTaskServiceClassic;
 
   @Override
   public void queueTask(DelegateClassicTaskRequest request, StreamObserver<QueueTaskResponse> responseObserver) {
     try {
       DelegateTask task = (DelegateTask) kryoSerializer.asInflatedObject(request.getDelegateTaskKryo().toByteArray());
 
-      delegateService.queueTask(task);
+      delegateTaskServiceClassic.queueTask(task);
 
       responseObserver.onNext(QueueTaskResponse.newBuilder().setUuid(task.getUuid()).build());
       responseObserver.onCompleted();
@@ -42,10 +43,10 @@ public class DelegateServiceClassicGrpcImpl extends DelegateTaskGrpc.DelegateTas
   public void executeTask(DelegateClassicTaskRequest request, StreamObserver<ExecuteTaskResponse> responseObserver) {
     try {
       DelegateTask task = (DelegateTask) kryoSerializer.asInflatedObject(request.getDelegateTaskKryo().toByteArray());
-      ExecuteTaskResponse executeTaskResponse = delegateService.executeTask(task);
+      DelegateResponseData delegateResponseData = delegateTaskServiceClassic.executeTask(task);
       responseObserver.onNext(
           ExecuteTaskResponse.newBuilder()
-              .setDelegateTaskResponseKryo(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(executeTaskResponse)))
+              .setDelegateTaskResponseKryo(ByteString.copyFrom(kryoSerializer.asDeflatedBytes(delegateResponseData)))
               .build());
       responseObserver.onCompleted();
     } catch (Exception ex) {

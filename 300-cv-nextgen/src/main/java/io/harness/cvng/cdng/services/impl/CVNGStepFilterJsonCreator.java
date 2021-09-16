@@ -2,8 +2,10 @@ package io.harness.cvng.cdng.services.impl;
 
 import static io.harness.walktree.visitor.utilities.VisitorParentPathUtils.PATH_CONNECTOR;
 
+import io.harness.common.NGExpressionUtils;
 import io.harness.cvng.cdng.beans.CVNGStepInfo;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
+import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
@@ -14,6 +16,7 @@ import io.harness.pms.filter.creation.FilterCreationResponse;
 import io.harness.pms.sdk.core.filter.creation.beans.FilterCreationContext;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
+import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
 
 import com.google.common.base.Preconditions;
@@ -40,9 +43,26 @@ public class CVNGStepFilterJsonCreator extends GenericStepPMSFilterJsonCreator {
     List<EntityDetailProtoDTO> result = new ArrayList<>();
     // This is handling the case when the monitoring service is defined. Runtime case needs to be handled separately
     // https://harness.atlassian.net/browse/CDNG-10512
-    if (cvngStepInfo.getMonitoredServiceRef().getValue() != null) {
-      MonitoredServiceDTO monitoredServiceDTO = monitoredServiceService.getMonitoredServiceDTO(
-          accountIdentifier, orgIdentifier, projectIdentifier, cvngStepInfo.getMonitoredServiceRef().getValue());
+    YamlNode stageLevelYamlNode = getStageSpecYamlNode(filterCreationContext.getCurrentField().getNode());
+    String serviceIdentifier = CVNGStepUtils.getServiceRefNode(stageLevelYamlNode).asText();
+    String envIdentifier = CVNGStepUtils.getEnvRefNode(stageLevelYamlNode).asText();
+
+    ServiceEnvironmentParams serviceEnvironmentParams = ServiceEnvironmentParams.builder()
+                                                            .accountIdentifier(accountIdentifier)
+                                                            .orgIdentifier(orgIdentifier)
+                                                            .projectIdentifier(projectIdentifier)
+                                                            .serviceIdentifier(serviceIdentifier)
+                                                            .environmentIdentifier(envIdentifier)
+                                                            .build();
+
+    if (!(NGExpressionUtils.isRuntimeOrExpressionField(serviceIdentifier)
+            || NGExpressionUtils.isRuntimeOrExpressionField(envIdentifier))) {
+      MonitoredServiceDTO monitoredServiceDTO =
+          monitoredServiceService.getMonitoredServiceDTO(serviceEnvironmentParams);
+      Preconditions.checkNotNull(monitoredServiceDTO, "MonitoredService does not exist for service %s and env %s",
+          serviceIdentifier, envIdentifier);
+      Preconditions.checkState(!monitoredServiceDTO.getSources().getHealthSources().isEmpty(),
+          "No health sources exists for monitoredService for service %s and env %s", serviceIdentifier, envIdentifier);
       monitoredServiceDTO.getSources().getHealthSources().forEach(healthSource -> {
         String connectorIdentifier = healthSource.getSpec().getConnectorRef();
         String fullQualifiedDomainName =
@@ -54,5 +74,14 @@ public class CVNGStepFilterJsonCreator extends GenericStepPMSFilterJsonCreator {
       });
     }
     return FilterCreationResponse.builder().referredEntities(result).build();
+  }
+
+  private YamlNode getStageSpecYamlNode(YamlNode yamlNode) {
+    Preconditions.checkNotNull(yamlNode, "Invalid yaml. Can't find stage spec.");
+    if (yamlNode.getField(CVNGStepUtils.STAGE_KEY) != null) {
+      return yamlNode.getField(CVNGStepUtils.STAGE_KEY).getNode();
+    } else {
+      return getStageSpecYamlNode(yamlNode.getParentNode());
+    }
   }
 }

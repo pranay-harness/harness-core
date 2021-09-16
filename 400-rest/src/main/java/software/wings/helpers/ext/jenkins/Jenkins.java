@@ -1,8 +1,10 @@
 package software.wings.helpers.ext.jenkins;
 
+import static io.harness.annotations.dev.HarnessModule._960_API_SERVICES;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.command.JenkinsTaskParams;
@@ -23,6 +25,7 @@ import org.apache.commons.lang3.tuple.Pair;
  * Created by peeyushaggarwal on 5/12/16.
  */
 @OwnedBy(CDC)
+@TargetModule(_960_API_SERVICES)
 public interface Jenkins {
   /**
    * Gets the job with details.

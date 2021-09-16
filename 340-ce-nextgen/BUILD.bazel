@@ -23,10 +23,12 @@ shared_dependencies = [
     "//970-ng-commons:module",
     "//980-commons:module",
     "@maven//:com_google_inject_guice",
+    "@maven//:com_google_cloud_google_cloud_pubsub",
     "@maven//:com_squareup_retrofit2_retrofit",
     "@maven//:io_swagger_swagger_annotations",
     "@maven//:javax_ws_rs_javax_ws_rs_api",
     "@maven//:io_dropwizard_dropwizard_core",
+    "@maven//:com_smoketurner_dropwizard_swagger",
     "@maven//:org_freemarker_freemarker",
     "@maven//:org_springframework_data_spring_data_mongodb",
     "@maven//:org_springframework_guice_spring_guice",
@@ -78,3 +80,8 @@ java_library(
 run_tests()
 
 run_analysis()
+
+exports_files([
+    "keystore.jks",
+    "config.yml",
+])

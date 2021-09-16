@@ -4,7 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import static software.wings.api.AwsCodeDeployRequestElement.AWS_CODE_DEPLOY_REQUEST_PARAM;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.context.ContextElementType;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -23,6 +25,7 @@ import java.util.List;
  * Created by rishi on 6/26/17.
  */
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class AwsCodeDeployRollback extends AwsCodeDeployState {
   public AwsCodeDeployRollback(String name) {
     super(name, StateType.AWS_CODEDEPLOY_ROLLBACK.name());

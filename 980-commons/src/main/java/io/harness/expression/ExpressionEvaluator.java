@@ -1,8 +1,10 @@
 package io.harness.expression;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.InvalidRequestException.USER;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 
@@ -25,13 +27,14 @@ import org.apache.commons.text.StrSubstitutor;
 /**
  * The Class ExpressionEvaluator.
  */
+@OwnedBy(CDC)
 public class ExpressionEvaluator {
   public static final String DEFAULT_ARTIFACT_VARIABLE_NAME = "artifact";
   public static final String DEFAULT_HELMCHART_VARIABLE_NAME = "helmChart";
   public static final String ARTIFACT_FILE_NAME_VARIABLE = "ARTIFACT_FILE_NAME";
   public static final String ROLLBACK_ARTIFACT_FILE_NAME_VARIABLE = "ROLLBACK_ARTIFACT_FILE_NAME";
 
-  public static final Pattern wingsVariablePattern = Pattern.compile("\\$\\{[^{}]*}");
+  public static final Pattern wingsVariablePattern = Pattern.compile("\\$\\{[^{}]+}");
   public static final Pattern variableNamePattern = Pattern.compile("^[-_a-zA-Z][-_\\w]*$");
   private static final Pattern serviceDefaultArtifactVariablePattern = Pattern.compile("\\$\\{artifact[.}]");
   private static final Pattern serviceArtifactVariablePattern = Pattern.compile("\\$\\{artifacts\\.([^.{}]+)[.}]");

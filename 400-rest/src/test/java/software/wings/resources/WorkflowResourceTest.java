@@ -20,6 +20,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
@@ -49,6 +51,7 @@ import org.mockito.Captor;
  * Created by rishi on 12/28/16.
  */
 @Slf4j
+@OwnedBy(HarnessTeam.CDC)
 public class WorkflowResourceTest extends WingsBaseTest {
   private static final WorkflowService WORKFLOW_SERVICE = mock(WorkflowService.class);
   private static final AuthService AUTH_SERVICE = mock(AuthService.class);

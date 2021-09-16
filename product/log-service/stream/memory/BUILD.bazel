@@ -1,7 +1,7 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
-    name = "go_default_library",
+    name = "memory",
     srcs = [
         "memory.go",
         "stream.go",
@@ -9,20 +9,20 @@ go_library(
     ],
     importpath = "github.com/wings-software/portal/product/log-service/stream/memory",
     visibility = ["//visibility:public"],
-    deps = ["//product/log-service/stream:go_default_library"],
+    deps = ["//product/log-service/stream"],
 )
 
 go_test(
-    name = "go_default_test",
+    name = "memory_test",
     srcs = [
         "memory_test.go",
         "stream_test.go",
         "sub_test.go",
     ],
-    embed = [":go_default_library"],
+    embed = [":memory"],
     deps = [
-        "//product/log-service/stream:go_default_library",
-        "@com_github_google_go_cmp//cmp:go_default_library",
-        "@com_github_stretchr_testify//assert:go_default_library",
+        "//product/log-service/stream",
+        "@com_github_google_go_cmp//cmp",
+        "@com_github_stretchr_testify//assert",
     ],
 )

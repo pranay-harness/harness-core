@@ -1,0 +1,25 @@
+pipeline:
+  identifier: Test_2
+  stages:
+  - stage:
+      identifier: Test
+      type: CI
+      spec:
+        serviceDependencies:
+        - identifier: Service_Dependency
+          type: Service
+          description: asdasd
+          spec:
+            connectorRef: Test_3_new
+            image: asd
+            privileged: true
+            resources:
+              limits:
+                memory: 128Mi
+                cpu: "0.2"
+            envVariables:
+              asd: asd
+            entrypoint:
+            - ads
+            args:
+            - asd

@@ -110,9 +110,8 @@ public class OrganizationResource {
 
   @GET
   @ApiOperation(value = "Get Organization list", nickname = "getOrganizationList")
-  @NGAccessControlCheck(resourceType = ORGANIZATION, permission = VIEW_ORGANIZATION_PERMISSION)
   public ResponseDTO<PageResponse<OrganizationResponse>> list(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers,
       @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @BeanParam PageRequest pageRequest) {
     OrganizationFilterDTO organizationFilterDTO =
@@ -125,10 +124,9 @@ public class OrganizationResource {
       pageRequest.setSortOrders(ImmutableList.of(harnessManagedOrder, nameOrder));
       organizationFilterDTO.setIgnoreCase(true);
     }
-    Page<OrganizationResponse> organizations =
-        organizationService.list(accountIdentifier, getPageRequest(pageRequest), organizationFilterDTO)
-            .map(OrganizationMapper::toResponseWrapper);
-    return ResponseDTO.newResponse(getNGPageResponse(organizations));
+    Page<Organization> orgsPage =
+        organizationService.listPermittedOrgs(accountIdentifier, getPageRequest(pageRequest), organizationFilterDTO);
+    return ResponseDTO.newResponse(getNGPageResponse(orgsPage.map(OrganizationMapper::toResponseWrapper)));
   }
 
   @PUT

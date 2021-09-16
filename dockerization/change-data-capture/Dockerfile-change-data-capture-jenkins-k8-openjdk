@@ -1,5 +1,5 @@
 # to be used when building in Jenkins
-FROM harness/serverjre_8:242python
+FROM harness/alpine:safe-alpine3.12-sec1338
 
 # Add the capsule JAR and config.yml
 COPY change-data-capture.jar config.yml  /opt/harness/
@@ -11,6 +11,13 @@ COPY scripts /opt/harness
 
 RUN chmod +x /opt/harness/*.sh
 RUN mkdir -p /opt/harness/plugins
+
+RUN addgroup -S 65534 && adduser -S 65534 -G 65534
+RUN chown -R 65534:65534 /opt/harness/ /tmp
+
+RUN chmod 700 -R /opt/harness/
+RUN chmod 700 -R /tmp
+USER 65534
 
 WORKDIR /opt/harness
 

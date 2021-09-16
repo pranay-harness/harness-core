@@ -42,15 +42,13 @@ public class ChangeSetHelperServiceImpl implements GitSdkInterface {
     String yaml = changeSet.getYaml();
     switch (changeSet.getChangeType()) {
       case ADD:
-        entityGitPersistenceHelperService.save(changeSet.getAccountId(), yaml);
+      case MODIFY:
+        entityGitPersistenceHelperService.upsert(changeSet.getAccountId(), yaml);
         break;
       case DELETE:
         final EntityDetailProtoDTO entityRefForDeletion = changeSet.getEntityRefForDeletion();
         final EntityDetail entityDetailDTO = entityDetailProtoToRestMapper.createEntityDetailDTO(entityRefForDeletion);
         entityGitPersistenceHelperService.delete(entityDetailDTO.getEntityRef());
-        break;
-      case MODIFY:
-        entityGitPersistenceHelperService.update(changeSet.getAccountId(), yaml);
         break;
       case UNRECOGNIZED:
       default:

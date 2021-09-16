@@ -8,6 +8,7 @@ import static org.junit.runners.Parameterized.Parameters;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -43,7 +44,7 @@ import org.mockito.Mockito;
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @OwnedBy(HarnessTeam.CDC)
 @RunWith(Parameterized.class)
-public class GcbStepYamlBuilderTest {
+public class GcbStepYamlBuilderTest extends CategoryTest {
   private final ChangeContext<StepYaml> changeContext;
 
   @Rule public final ExpectedException exception = ExpectedException.none();

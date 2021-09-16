@@ -2,7 +2,6 @@ package io.harness.serializer.kryo;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.CIPipelineSetupParameters;
 import io.harness.beans.build.CIPipelineDetails;
 import io.harness.beans.build.PublishedArtifact;
 import io.harness.beans.dependencies.CIServiceInfo;
@@ -56,8 +55,6 @@ import io.harness.beans.sweepingoutputs.StepTaskDetails;
 import io.harness.beans.yaml.extended.CustomSecretVariable;
 import io.harness.beans.yaml.extended.CustomTextVariable;
 import io.harness.beans.yaml.extended.CustomVariable;
-import io.harness.beans.yaml.extended.artifact.DockerHubArtifactStreamYaml;
-import io.harness.beans.yaml.extended.connector.GitConnectorYaml;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml.K8sDirectInfraYamlSpec;
@@ -80,7 +77,6 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(K8PodDetails.class, 100001);
     kryo.register(ContextElement.class, 100002);
     kryo.register(BuildEnvSetupStepInfo.class, 100003);
-    kryo.register(CIPipelineSetupParameters.class, 100004);
     kryo.register(CleanupStepInfo.class, 100005);
     kryo.register(LiteEngineTaskStepInfo.class, 100008);
     kryo.register(RunStepInfo.class, 100011);
@@ -96,9 +92,6 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(PodSetupInfo.PodSetupParams.class, 100027);
     kryo.register(ContainerDefinitionInfo.class, 100028);
     kryo.register(ContainerImageDetails.class, 100029);
-    kryo.register(GitConnectorYaml.class, 100037);
-    kryo.register(GitConnectorYaml.Spec.class, 100038);
-    kryo.register(GitConnectorYaml.Spec.AuthScheme.class, 100039);
     kryo.register(K8sDirectInfraYaml.class, 100040);
     kryo.register(K8sDirectInfraYamlSpec.class, 100041);
     kryo.register(WebhookExecutionSource.class, 100044);
@@ -109,8 +102,6 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(BranchWebhookEvent.class, 100049);
     kryo.register(CIPipelineDetails.class, 100050);
     kryo.register(PublishedArtifact.class, 100051);
-    kryo.register(DockerHubArtifactStreamYaml.class, 100052);
-    kryo.register(DockerHubArtifactStreamYaml.Spec.class, 100053);
     kryo.register(GitVariables.class, 100054);
     kryo.register(WebhookTriggerExecutionInputSet.class, 100055);
     kryo.register(ExecutionSource.Type.class, 100056);

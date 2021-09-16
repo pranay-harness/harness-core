@@ -1,6 +1,6 @@
 # Any edit in this file should accompany an increment in version.
 name: rolesConfiguration
-version: 4
+version: 11
 roles:
     - identifier: _project_admin
       name: Project Admin
@@ -85,6 +85,7 @@ roles:
         - core_user_view
         - core_role_view
         - core_resourcegroup_view
+        - core_serviceaccount_view
       allowedScopeLevels:
         - project
       managed: true
@@ -96,7 +97,6 @@ roles:
         - core_organization_view
         - core_organization_edit
         - core_organization_delete
-        - core_project_view
         - core_project_create
         - core_secret_view
         - core_secret_edit
@@ -143,8 +143,6 @@ roles:
       description: View an organization
       permissions:
         - core_organization_view
-        - core_project_view
-        - core_project_create
         - core_secret_view
         - core_connector_view
         - core_delegate_view
@@ -156,6 +154,7 @@ roles:
         - core_user_view
         - core_role_view
         - core_resourcegroup_view
+        - core_serviceaccount_view
       allowedScopeLevels:
         - organization
       managed: true
@@ -164,7 +163,6 @@ roles:
       description: Administer an account
       permissions:
         - core_user_invite
-        - core_organization_view
         - core_organization_create
         - core_secret_view
         - core_secret_edit
@@ -209,6 +207,8 @@ roles:
         - core_serviceaccount_manageapikey
         - core_account_view
         - core_account_edit
+        - core_dashboards_view
+        - core_dashboards_edit
       allowedScopeLevels:
         - account
       managed: true
@@ -216,7 +216,6 @@ roles:
       name: Account Viewer
       description: View an account
       permissions:
-        - core_organization_view
         - core_secret_view
         - core_connector_view
         - core_delegate_view
@@ -231,6 +230,7 @@ roles:
         - core_license_view
         - core_authsetting_view
         - core_account_view
+        - core_serviceaccount_view
       allowedScopeLevels:
         - account
       managed: true

@@ -2,7 +2,9 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.FeatureName.AWS_OVERRIDE_REGION;
+import static io.harness.beans.FeatureName.AZURE_CLOUD_PROVIDER_VALIDATION_ON_DELEGATE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedFields;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
@@ -21,6 +23,7 @@ import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.ccm.config.CCMSettingService;
 import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
@@ -102,6 +105,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.aws.manager.AwsEc2HelperServiceManager;
+import software.wings.service.intfc.azure.manager.AzureVMSSHelperServiceManager;
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -119,8 +123,11 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.lang.reflect.Field;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.mapping.Mapper;
@@ -160,6 +167,7 @@ public class SettingValidationService {
   @Inject private SettingServiceHelper settingServiceHelper;
   @Inject private AwsHelperResourceService awsHelperResourceService;
   @Inject private SSHVaultService sshVaultService;
+  @Inject private AzureVMSSHelperServiceManager azureVMSSHelperServiceManager;
 
   public ValidationResult validateConnectivity(SettingAttribute settingAttribute) {
     SettingValue settingValue = settingAttribute.getValue();
@@ -266,7 +274,20 @@ public class SettingValidationService {
         gcpHelperServiceManager.validateCredential((GcpConfig) settingValue, encryptedDataDetails);
       }
     } else if (settingValue instanceof AzureConfig) {
-      azureHelperService.validateAzureAccountCredential((AzureConfig) settingValue, encryptedDataDetails);
+      if (featureFlagService.isEnabled(AZURE_CLOUD_PROVIDER_VALIDATION_ON_DELEGATE, settingAttribute.getAccountId())) {
+        try {
+          AzureConfig azureConfig = (AzureConfig) settingValue;
+          // Need to add these modifications to azure config for secret to get resolved on delegate side
+          azureConfig.setDecrypted(false);
+          azureConfig.setKey(null);
+          List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(azureConfig, null, null);
+          azureVMSSHelperServiceManager.listSubscriptions(azureConfig, encryptionDetails, null);
+        } catch (Exception e) {
+          azureHelperService.handleAzureAuthenticationException(e);
+        }
+      } else {
+        azureHelperService.validateAzureAccountCredential((AzureConfig) settingValue, encryptedDataDetails);
+      }
     } else if (settingValue instanceof PcfConfig) {
       if (!((PcfConfig) settingValue).isSkipValidation()) {
         validatePcfConfig((PcfConfig) settingValue, encryptedDataDetails);
@@ -367,8 +388,12 @@ public class SettingValidationService {
   }
 
   private void validateDelegateSelectorsProvided(SettingValue settingValue) {
-    if (isEmpty(((KubernetesClusterConfig) settingValue).getDelegateSelectors())) {
+    Set<String> delegateSelectors = ((KubernetesClusterConfig) settingValue).getDelegateSelectors();
+    if (isEmpty(delegateSelectors)) {
       throw new InvalidRequestException("No Delegate Selector Provided.", USER);
+    }
+    if (isEmpty(delegateSelectors.stream().filter(EmptyPredicate::isNotEmpty).collect(Collectors.toSet()))) {
+      throw new InvalidRequestException("No or Empty Delegate Selector Provided.", USER);
     }
   }
 
@@ -504,7 +529,29 @@ public class SettingValidationService {
             throw new InvalidRequestException("Private key is not specified", USER);
           }
         }
+        validateIfSpecifiedSecretsExist(hostConnectionAttributes);
       }
+    }
+  }
+
+  private void validateIfSpecifiedSecretsExist(HostConnectionAttributes hostConnectionAttributes) {
+    if (isNotEmpty(hostConnectionAttributes.getEncryptedKey())
+        && null
+            == secretManager.getSecretById(
+                hostConnectionAttributes.getAccountId(), hostConnectionAttributes.getEncryptedKey())) {
+      throw new InvalidRequestException("Specified Encrypted SSH key File doesn't exist", USER);
+    }
+    if (isNotEmpty(hostConnectionAttributes.getEncryptedPassphrase())
+        && null
+            == secretManager.getSecretById(
+                hostConnectionAttributes.getAccountId(), hostConnectionAttributes.getEncryptedPassphrase())) {
+      throw new InvalidRequestException("Specified Encrypted Passphrase field doesn't exist", USER);
+    }
+    if (isNotEmpty(hostConnectionAttributes.getEncryptedSshPassword())
+        && null
+            == secretManager.getSecretById(
+                hostConnectionAttributes.getAccountId(), hostConnectionAttributes.getEncryptedSshPassword())) {
+      throw new InvalidRequestException("Specified password field doesn't exist", USER);
     }
   }
 
@@ -547,6 +594,19 @@ public class SettingValidationService {
 
       taskParams.setConnectorConfig(connectorSettingAttribute.getValue());
       taskParams.setConnectorEncryptedDataDetails(connectorEncryptedDataDetails);
+
+      // valid as delegate selectors in cloud provider doesn't support expression
+      if (connectorSettingAttribute.getValue() instanceof AwsConfig) {
+        AwsConfig awsConfig = (AwsConfig) connectorSettingAttribute.getValue();
+        if (isNotEmpty(awsConfig.getTag())) {
+          taskParams.setDelegateSelectors(Collections.singleton(awsConfig.getTag()));
+        }
+      } else if (connectorSettingAttribute.getValue() instanceof GcpConfig) {
+        GcpConfig gcpConfig = (GcpConfig) connectorSettingAttribute.getValue();
+        if (isNotEmpty(gcpConfig.getDelegateSelectors())) {
+          taskParams.setDelegateSelectors(new HashSet<>(gcpConfig.getDelegateSelectors()));
+        }
+      }
     }
 
     return taskParams;

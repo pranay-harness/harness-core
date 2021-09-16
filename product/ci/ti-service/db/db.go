@@ -28,7 +28,7 @@ type Db interface {
 
 	// WriteSelectedTests writes selected test information to the underlying DB.
 	WriteSelectedTests(ctx context.Context, accountID, orgId, projectId, pipelineId, buildId,
-		stageId, stepId string, selected types.SelectTestsResp, timeMs int64, upsert bool) error
+		stageId, stepId, repo, source, target string, selected types.SelectTestsResp, timeMs int, upsert bool) error
 
 	// GetSelectionOverview retrieves an overview of the selected tests for the corresponding build.
 	GetSelectionOverview(ctx context.Context, accountID, orgId, projectId, pipelineId, buildId, stepId, stageId string) (types.SelectionOverview, error)
@@ -38,10 +38,9 @@ type Db interface {
 	WriteDiffFiles(ctx context.Context, accountID, orgId, projectId, pipelineId,
 		buildId, stageId, stepId string, diff types.DiffInfo) error
 
-	// GetDiffFiles gets the list of modified files corresponding to a list of commits
-	// accountID. This is required while merging a partial call graph corresponding to a
-	// push request to remove deleted files from the master call graph.
-	GetDiffFiles(ctx context.Context, accountID string, sha []string) (types.DiffInfo, error)
+	// GetDiffFiles gets the list of modified files corresponding to a build.
+	GetDiffFiles(ctx context.Context, accountID, orgId, projectId, pipelineId,
+		buildId, stageId, stepId string) (types.DiffInfo, error)
 
 	// GetReportsInfo returns steps/stages which have reports to show
 	GetReportsInfo(ctx context.Context, accountID, orgId, projectId, pipelineId,

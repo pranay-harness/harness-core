@@ -9,9 +9,7 @@ import io.harness.ccm.commons.beans.JobConstants;
 import io.harness.ccm.commons.beans.recommendation.NodePoolId;
 import io.harness.ccm.commons.beans.recommendation.RecommendationOverviewStats;
 import io.harness.ccm.commons.beans.recommendation.ResourceId;
-import io.harness.ccm.commons.entities.ClusterRecord;
 import io.harness.ccm.commons.entities.k8s.recommendation.K8sWorkloadRecommendation;
-import io.harness.ccm.commons.service.intf.ClusterRecordService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -28,13 +26,10 @@ import lombok.NonNull;
 @OwnedBy(HarnessTeam.CE)
 public class RecommendationCrudServiceImpl implements RecommendationCrudService {
   @Inject private K8sRecommendationDAO k8sRecommendationDAO;
-  @Inject private ClusterRecordService clusterRecordService;
 
   @Override
-  public void upsertWorkloadRecommendation(
-      @NonNull String uuid, @NonNull ResourceId workloadId, @NonNull K8sWorkloadRecommendation recommendation) {
-    final String clusterName = fetchClusterName(workloadId.getClusterId());
-
+  public void upsertWorkloadRecommendation(@NonNull String uuid, @NonNull ResourceId workloadId,
+      @NonNull String clusterName, @NonNull K8sWorkloadRecommendation recommendation) {
     final Double monthlyCost = calculateMonthlyCost(recommendation);
     final Double monthlySaving =
         ofNullable(recommendation.getEstimatedSavings()).map(BigDecimal::doubleValue).orElse(null);
@@ -45,19 +40,10 @@ public class RecommendationCrudServiceImpl implements RecommendationCrudService 
   }
 
   @Override
-  public void upsertNodeRecommendation(
-      String entityUuid, JobConstants jobConstants, NodePoolId nodePoolId, RecommendationOverviewStats stats) {
-    final String clusterName = fetchClusterName(nodePoolId.getClusterid());
-
+  public void upsertNodeRecommendation(String entityUuid, JobConstants jobConstants, NodePoolId nodePoolId,
+      String clusterName, RecommendationOverviewStats stats) {
     k8sRecommendationDAO.upsertCeRecommendation(
         entityUuid, jobConstants, nodePoolId, clusterName, stats, Instant.ofEpochMilli(jobConstants.getJobEndTime()));
-  }
-
-  @Nullable
-  private String fetchClusterName(String clusterId) {
-    final ClusterRecord clusterRecord = clusterRecordService.get(clusterId);
-    // better return clusterId than null for cg connectors, to facilitate debugging during ng migration
-    return ofNullable(clusterRecord).map(ClusterRecord::getClusterName).orElse(clusterId);
   }
 
   @Nullable

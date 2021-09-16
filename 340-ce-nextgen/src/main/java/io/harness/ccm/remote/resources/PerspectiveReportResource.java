@@ -2,6 +2,7 @@ package io.harness.ccm.remote.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
 
+import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.views.entities.CEReportSchedule;
 import io.harness.ccm.views.service.CEReportScheduleService;
@@ -43,6 +44,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 @OwnedBy(CE)
 public class PerspectiveReportResource {
   private CEReportScheduleService ceReportScheduleService;
+  private static final String accountIdPathParam = "{" + NGCommonEntityConstants.ACCOUNT_KEY + "}";
 
   @Inject
   public PerspectiveReportResource(CEReportScheduleService ceReportScheduleService) {
@@ -51,11 +53,11 @@ public class PerspectiveReportResource {
 
   @GET
   @Timed
-  @Path("{accountId}")
+  @Path(accountIdPathParam)
   @ExceptionMetered
   @ApiOperation(value = "Get perspective reports", nickname = "getReportSetting")
   public RestResponse<List<CEReportSchedule>> getReportSetting(@QueryParam("perspectiveId") String perspectiveId,
-      @QueryParam("reportId") String reportId, @PathParam("accountId") String accountId) {
+      @QueryParam("reportId") String reportId, @PathParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId) {
     if (perspectiveId != null) {
       return new RestResponse<>(ceReportScheduleService.getReportSettingByView(perspectiveId, accountId));
     } else if (reportId != null) {
@@ -75,11 +77,12 @@ public class PerspectiveReportResource {
 
   @DELETE
   @Timed
-  @Path("{accountId}")
+  @Path(accountIdPathParam)
   @ExceptionMetered
   @ApiOperation(value = "Delete perspective reports", nickname = "deleteReportSetting")
   public RestResponse<String> deleteReportSetting(@QueryParam("reportId") String reportId,
-      @QueryParam("perspectiveId") String perspectiveId, @PathParam("accountId") String accountId) {
+      @QueryParam("perspectiveId") String perspectiveId,
+      @PathParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId) {
     if (perspectiveId != null) {
       ceReportScheduleService.deleteAllByView(perspectiveId, accountId);
       return new RestResponse<>("Successfully deleted the record");
@@ -95,16 +98,16 @@ public class PerspectiveReportResource {
   }
 
   @POST
-  @Path("{accountId}")
+  @Path(accountIdPathParam)
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Create perspective reports", nickname = "createReportSetting")
   public RestResponse<List<CEReportSchedule>> createReportSetting(
-      @PathParam("accountId") String accountId, @Valid @RequestBody CEReportSchedule schedule) {
+      @PathParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId, @Valid @RequestBody CEReportSchedule schedule) {
     List<CEReportSchedule> ceList = new ArrayList<>();
     try {
       CronSequenceGenerator cronSequenceGenerator = new CronSequenceGenerator(schedule.getUserCron());
-      ceList.add(ceReportScheduleService.createReportSetting(cronSequenceGenerator, accountId, schedule));
+      ceList.add(ceReportScheduleService.createReportSetting(accountId, schedule));
       return new RestResponse<>(ceList);
     } catch (IllegalArgumentException e) {
       log.error("ERROR", e);
@@ -116,15 +119,15 @@ public class PerspectiveReportResource {
   }
 
   @PUT
-  @Path("{accountId}")
+  @Path(accountIdPathParam)
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Update perspective reports", nickname = "updateReportSetting")
   public RestResponse<List<CEReportSchedule>> updateReportSetting(
-      @PathParam("accountId") String accountId, @Valid @RequestBody CEReportSchedule schedule) {
+      @PathParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId, @Valid @RequestBody CEReportSchedule schedule) {
     try {
       CronSequenceGenerator cronSequenceGenerator = new CronSequenceGenerator(schedule.getUserCron());
-      return new RestResponse<>(ceReportScheduleService.update(cronSequenceGenerator, accountId, schedule));
+      return new RestResponse<>(ceReportScheduleService.update(accountId, schedule));
     } catch (IllegalArgumentException e) {
       log.warn(String.valueOf(e));
       RestResponse<List<CEReportSchedule>> rr = new RestResponse<>();

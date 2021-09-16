@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.EnvironmentType.NON_PROD;
 import static io.harness.beans.EnvironmentType.PROD;
 import static io.harness.beans.ExecutionStatus.FAILED;
@@ -7,6 +8,7 @@ import static io.harness.beans.ExecutionStatus.PAUSED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.POOJA;
 import static io.harness.rule.OwnerRule.PRASHANT;
 
@@ -42,6 +44,9 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionInterruptType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.WorkflowType;
@@ -86,6 +91,8 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class WorkflowExecutionServiceRollbackTest extends WingsBaseTest {
   @InjectMocks @Inject private WorkflowExecutionService workflowExecutionService;
 
@@ -185,6 +192,21 @@ public class WorkflowExecutionServiceRollbackTest extends WingsBaseTest {
     assertThat(rollbackConfirmation.isValid()).isFalse();
     assertThat(rollbackConfirmation.getValidationMessage())
         .isEqualTo("Cannot trigger Rollback for RolledBack execution");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testOnDemandRollbackConfirmationHavingRolledBackExecution() {
+    WorkflowExecution workflowExecution = createNewWorkflowExecution(false);
+    String workflowId = persistence.save(workflowExecution);
+    WorkflowExecution workflowExecutionRolledBack = createNewWorkflowExecution(true);
+    workflowExecutionRolledBack.setOriginalExecution(WorkflowExecutionInfo.builder().executionId(workflowId).build());
+    persistence.save(workflowExecutionRolledBack);
+
+    assertThatThrownBy(() -> workflowExecutionService.getOnDemandRollbackConfirmation(APP_ID, workflowExecution))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Rollback Execution is not available as already Rolled back");
   }
 
   @Test

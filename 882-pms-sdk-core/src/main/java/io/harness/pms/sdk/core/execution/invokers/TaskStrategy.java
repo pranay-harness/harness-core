@@ -27,10 +27,12 @@ import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
 
 import com.google.inject.Inject;
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 
 @SuppressWarnings({"rawtypes", "unchecked"})
 @OwnedBy(PIPELINE)
+@Slf4j
 public class TaskStrategy extends ProgressableStrategy {
   @Inject private SdkNodeExecutionService sdkNodeExecutionService;
   @Inject private StepRegistry stepRegistry;
@@ -54,6 +56,7 @@ public class TaskStrategy extends ProgressableStrategy {
       stepResponse = taskExecutable.handleTaskResult(
           ambiance, resumePackage.getStepParameters(), buildResponseDataSupplier(resumePackage.getResponseDataMap()));
     } catch (Exception e) {
+      log.error("Exception occurred while calling handleTaskResult", e);
       stepResponse = strategyHelper.handleException(e);
     }
     sdkNodeExecutionService.handleStepResponse(ambiance.getPlanExecutionId(),

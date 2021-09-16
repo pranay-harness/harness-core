@@ -10,5 +10,9 @@ import lombok.Value;
 @Builder
 public class PerspectiveTrendStats {
   StatsInfo cost;
+  StatsInfo idleCost;
+  StatsInfo unallocatedCost;
+  StatsInfo systemCost;
+  StatsInfo utilizedCost;
   EfficiencyScoreStats efficiencyScoreStats;
 }

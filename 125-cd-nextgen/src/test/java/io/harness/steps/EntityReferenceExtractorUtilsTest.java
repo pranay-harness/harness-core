@@ -11,8 +11,8 @@ import io.harness.cdng.CDNGTestBase;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.sdk.preflight.PreFlightCheckMetadata;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.preflight.PreFlightCheckMetadata;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableMap;

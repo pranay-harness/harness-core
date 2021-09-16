@@ -39,6 +39,7 @@ import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.HostRecordDTO;
 import io.harness.cvng.beans.activity.ActivityType;
+import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.job.BlueGreenVerificationJobDTO;
 import io.harness.cvng.beans.job.CanaryVerificationJobDTO;
 import io.harness.cvng.beans.job.HealthVerificationJobDTO;
@@ -47,6 +48,7 @@ import io.harness.cvng.beans.job.TestVerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.core.beans.LoadTestAdditionalInfo;
+import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.HostRecordService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
@@ -734,6 +736,23 @@ public class VerificationJobInstanceAnalysisServiceImplTest extends CvNextGenTes
       risks.add(CategoryRisk.builder().category(cvMonitoringCategory).risk(-1.0).build());
     }
     assertThat(healthAdditionalInfo.getPostActivityRisks()).isEqualTo(risks);
+  }
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testAddDemoAnalysisData() {
+    CVConfig cvConfig = builderFactory.splunkCVConfigBuilder().uuid(cvConfigId).build();
+    VerificationJobInstance verificationJobInstance = builderFactory.verificationJobInstanceBuilder().build();
+    verificationJobInstance.setExecutionStatus(VerificationJobInstance.ExecutionStatus.SUCCESS);
+    verificationJobInstance.setVerificationStatus(ActivityVerificationStatus.VERIFICATION_PASSED);
+    verificationJobInstanceService.create(verificationJobInstance);
+    verificationJobInstanceAnalysisService.addDemoAnalysisData(
+        verificationTaskService.create(
+            accountId, cvConfig.getUuid(), verificationJobInstance.getUuid(), cvConfig.getType()),
+        cvConfig, verificationJobInstance);
+    assertThat(
+        verificationJobInstanceAnalysisService.getLatestRiskScore(accountId, verificationJobInstance.getUuid()).get())
+        .isEqualTo(Risk.LOW);
   }
 
   private HostRecordDTO createHostRecordDTO(Set<String> preDeploymentHosts, String verificationTaskId) {

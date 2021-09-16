@@ -1,12 +1,19 @@
 package software.wings.beans.appmanifest;
 
+import static io.harness.annotations.dev.HarnessModule._950_DELEGATE_TASKS_BEANS;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.pcf.model.PcfConstants.VARS_YML;
 
 import static software.wings.beans.appmanifest.ManifestFile.VALUES_YAML_KEY;
 import static software.wings.beans.yaml.YamlConstants.OC_PARAMS_FILE;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.yaml.YamlConstants;
 
+@OwnedBy(CDP)
+@TargetModule(_950_DELEGATE_TASKS_BEANS)
 public enum AppManifestKind {
   // K8sManifest is not specific to K8s, this simply represents a service manifest, pcf, ecs and k8s use the same enum
   // for service spec. We could not rename it to manifest only because its already saved in DB.

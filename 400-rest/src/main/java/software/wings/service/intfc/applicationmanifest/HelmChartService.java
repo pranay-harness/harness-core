@@ -1,7 +1,9 @@
 package software.wings.service.intfc.applicationmanifest;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 
@@ -15,6 +17,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 @OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public interface HelmChartService extends OwnedByApplicationManifest {
   HelmChart create(@Valid HelmChart helmChart);
 
@@ -40,4 +43,6 @@ public interface HelmChartService extends OwnedByApplicationManifest {
   HelmChart getLastCollectedManifestMatchingRegex(String accountId, String appManifestId, String versionRegex);
 
   HelmChart getManifestByVersionNumber(String accountId, String appManifestId, String versionNumber);
+
+  HelmChart getByChartVersion(String appId, String serviceId, String appManifestName, String chartVersion);
 }

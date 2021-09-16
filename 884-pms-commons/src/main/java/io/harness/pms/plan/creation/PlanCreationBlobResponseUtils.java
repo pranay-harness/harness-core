@@ -1,65 +1,115 @@
 package io.harness.pms.plan.creation;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.YamlException;
+import io.harness.pms.contracts.plan.Dependencies;
 import io.harness.pms.contracts.plan.GraphLayoutInfo;
 import io.harness.pms.contracts.plan.GraphLayoutNode;
 import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.contracts.plan.PlanNodeProto;
-import io.harness.pms.contracts.plan.YamlFieldBlob;
+import io.harness.pms.contracts.plan.YamlUpdates;
+import io.harness.pms.yaml.YamlNode;
+import io.harness.pms.yaml.YamlUtils;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 
+// Todo: Refactor this class. Readability is very bad for this class.
+@OwnedBy(HarnessTeam.PIPELINE)
 @UtilityClass
+@Slf4j
 public class PlanCreationBlobResponseUtils {
   public void merge(PlanCreationBlobResponse.Builder builder, PlanCreationBlobResponse other) {
     if (other == null) {
       return;
     }
     addNodes(builder, other.getNodesMap());
-    addDependencies(builder, other.getDependenciesMap());
+    addDependenciesV2(builder, other);
     mergeStartingNodeId(builder, other.getStartingNodeId());
     mergeContext(builder, other.getContextMap());
     mergeLayoutNodeInfo(builder, other);
+    addYamlUpdates(builder, other);
   }
 
-  public void mergeContext(
+  public PlanCreationBlobResponse addYamlUpdates(
+      PlanCreationBlobResponse.Builder builder, PlanCreationBlobResponse currResponse) {
+    if (EmptyPredicate.isEmpty(currResponse.getYamlUpdates().getFqnToYamlMap())) {
+      return builder.build();
+    }
+    Map<String, String> yamlUpdateFqnMap = new HashMap<>(builder.getYamlUpdates().getFqnToYamlMap());
+    yamlUpdateFqnMap.putAll(currResponse.getYamlUpdates().getFqnToYamlMap());
+    builder.setYamlUpdates(YamlUpdates.newBuilder().putAllFqnToYaml(yamlUpdateFqnMap).build());
+    return builder.build();
+  }
+
+  public PlanCreationBlobResponse mergeContext(
       PlanCreationBlobResponse.Builder builder, Map<String, PlanCreationContextValue> contextValueMap) {
     if (EmptyPredicate.isEmpty(contextValueMap)) {
-      return;
+      return builder.build();
     }
     builder.putAllContext(contextValueMap);
+    return builder.build();
   }
 
-  public void addNodes(PlanCreationBlobResponse.Builder builder, Map<String, PlanNodeProto> newNodes) {
+  public PlanCreationBlobResponse addNodes(
+      PlanCreationBlobResponse.Builder builder, Map<String, PlanNodeProto> newNodes) {
     if (EmptyPredicate.isEmpty(newNodes)) {
-      return;
+      return builder.build();
     }
     newNodes.values().forEach(newNode -> addNode(builder, newNode));
+    return builder.build();
   }
 
-  public void addNode(PlanCreationBlobResponse.Builder builder, PlanNodeProto newNode) {
+  public PlanCreationBlobResponse addNode(PlanCreationBlobResponse.Builder builder, PlanNodeProto newNode) {
     // TODO: Add logic to update only if newNode has a more recent version.
     builder.putNodes(newNode.getUuid(), newNode);
-    builder.removeDependencies(newNode.getUuid());
+    removeDependency(builder, newNode.getUuid());
+    return builder.build();
   }
 
-  public void addDependencies(PlanCreationBlobResponse.Builder builder, Map<String, YamlFieldBlob> fieldBlobs) {
-    if (EmptyPredicate.isEmpty(fieldBlobs)) {
-      return;
+  /**
+   * Performs the following operations:
+   * - Merges the dependencies we get from the currentResponse to the finalResponse
+   * - Updates the yaml for the finalResponse based on the yamlUpdates we get from currResponse so from next iteration,
+   * updated yaml will be used.
+   */
+  public PlanCreationBlobResponse addDependenciesV2(
+      PlanCreationBlobResponse.Builder builder, PlanCreationBlobResponse currResponse) {
+    Dependencies dependencies = currResponse.getDeps();
+    if (EmptyPredicate.isEmpty(dependencies.getDependenciesMap())) {
+      return builder.build();
     }
-    fieldBlobs.forEach((key, value) -> addDependency(builder, key, value));
+    dependencies.getDependenciesMap().forEach((key, value) -> addDependency(builder, key, value));
+
+    if (builder.getDeps() == null || EmptyPredicate.isEmpty(builder.getDeps().getYaml())) {
+      builder.setDeps(builder.getDeps().toBuilder().setYaml(dependencies.getYaml()).build());
+    } else {
+      String updatedPipelineJson =
+          mergeYamlUpdates(builder.getDeps().getYaml(), currResponse.getYamlUpdates().getFqnToYamlMap());
+      builder.setDeps(builder.getDeps().toBuilder().setYaml(updatedPipelineJson).build());
+    }
+    return builder.build();
   }
 
-  public void addDependency(PlanCreationBlobResponse.Builder builder, String nodeId, YamlFieldBlob fieldBlob) {
+  public PlanCreationBlobResponse addDependency(PlanCreationBlobResponse.Builder builder, String nodeId, String path) {
     if (builder.containsNodes(nodeId)) {
-      return;
+      return builder.build();
     }
 
-    builder.putDependencies(nodeId, fieldBlob);
+    builder.setDeps(builder.getDeps().toBuilder().putDependencies(nodeId, path).build());
+    return builder.build();
+  }
+
+  public PlanCreationBlobResponse removeDependency(PlanCreationBlobResponse.Builder builder, String nodeId) {
+    builder.setDeps(builder.getDeps().toBuilder().removeDependencies(nodeId).build());
+    return builder.build();
   }
 
   public void mergeStartingNodeId(PlanCreationBlobResponse.Builder builder, String otherStartingNodeId) {
@@ -99,5 +149,30 @@ public class PlanCreationBlobResponseUtils {
       layoutNodeInfo.putAllLayoutNodes(layoutMap);
       builder.setGraphLayoutInfo(layoutNodeInfo);
     }
+  }
+
+  /**
+   * Takes the current pipeline yaml and updates the yaml based on the fqn to yaml snippet passed in as param
+   */
+  public String mergeYamlUpdates(String pipelineJson, Map<String, String> fqnToJsonMap) {
+    if (EmptyPredicate.isEmpty(fqnToJsonMap)) {
+      return pipelineJson;
+    }
+    YamlNode pipelineNode;
+    try {
+      pipelineNode = YamlUtils.readTree(pipelineJson).getNode();
+    } catch (IOException e) {
+      log.error("Could not read the pipeline json:\n" + pipelineJson, e);
+      throw new YamlException("Could not read the pipeline json");
+    }
+    fqnToJsonMap.keySet().forEach(fqn -> {
+      try {
+        pipelineNode.replacePath(fqn, YamlUtils.readTree(fqnToJsonMap.get(fqn)).getNode().getCurrJsonNode());
+      } catch (IOException e) {
+        log.error("Could not read json provided for the fqn: " + fqn + ". Json:\n" + fqnToJsonMap.get(fqn), e);
+        throw new YamlException("Could not read json provided for the fqn: " + fqn);
+      }
+    });
+    return pipelineNode.toString();
   }
 }

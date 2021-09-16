@@ -151,14 +151,16 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.FieldNameConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.mongodb.morphia.query.Query;
 
+@FieldNameConstants(onlyExplicitlyIncluded = true, innerTypeName = "TerraformProvisionStateKeys")
 @Slf4j
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public abstract class TerraformProvisionState extends State {
   @Inject private transient AppService appService;
@@ -184,11 +186,15 @@ public abstract class TerraformProvisionState extends State {
   @Inject protected TerraformPlanHelper terraformPlanHelper;
   @Inject protected transient MainConfiguration configuration;
 
-  @Attributes(title = "Provisioner") @Getter @Setter String provisionerId;
+  @FieldNameConstants.Include @Attributes(title = "Provisioner") @Getter @Setter String provisionerId;
 
-  @Attributes(title = "Variables") @Getter @Setter private List<NameValuePair> variables;
-  @Attributes(title = "Backend Configs") @Getter @Setter private List<NameValuePair> backendConfigs;
-  @Getter @Setter private List<NameValuePair> environmentVariables;
+  @Attributes(title = "Variables") @FieldNameConstants.Include @Getter @Setter private List<NameValuePair> variables;
+  @Attributes(title = "Backend Configs")
+  @FieldNameConstants.Include
+  @Getter
+  @Setter
+  private List<NameValuePair> backendConfigs;
+  @FieldNameConstants.Include @Getter @Setter private List<NameValuePair> environmentVariables;
   @Getter @Setter private List<String> targets;
 
   @Getter @Setter private List<String> tfVarFiles;
@@ -617,6 +623,7 @@ public abstract class TerraformProvisionState extends State {
       if (isNotEmpty(branch)) {
         gitConfig.setBranch(branch);
       }
+
     } else {
       throw new InvalidRequestException("No commit id found in context inherit tf plan element.");
     }
@@ -658,6 +665,14 @@ public abstract class TerraformProvisionState extends State {
         ? getSecretManagerContainingTfPlan(terraformProvisioner.getKmsId(), context.getAccountId())
         : null;
 
+    TfVarSource tfVarSource = element.getTfVarSource();
+    if (tfVarSource != null && TfVarSourceType.GIT.equals(tfVarSource.getTfVarSourceType())) {
+      setTfVarGitFileConfig(((TfVarGitSource) element.getTfVarSource()).getGitFileConfig());
+      if (getTfVarGitFileConfig() != null) {
+        tfVarSource = fetchTfVarGitSource(context);
+      }
+    }
+
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
     TerraformProvisionParameters parameters =
         TerraformProvisionParameters.builder()
@@ -683,7 +698,7 @@ public abstract class TerraformProvisionState extends State {
             .encryptedEnvironmentVariables(encryptedEnvVars)
             .targets(targets)
             .tfVarFiles(element.getTfVarFiles())
-            .tfVarSource(element.getTfVarSource())
+            .tfVarSource(tfVarSource)
             .runPlanOnly(false)
             .exportPlanToApplyStep(false)
             .workspace(workspace)
@@ -1197,6 +1212,7 @@ public abstract class TerraformProvisionState extends State {
     if (isEmpty(provisionerId)) {
       results.put("Provisioner", "Provisioner must be provided.");
     }
+    // if more fields need to validated, please make sure templatized fields are not broken.
     return results;
   }
 }

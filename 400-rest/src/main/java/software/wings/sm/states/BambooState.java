@@ -13,7 +13,9 @@ import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.Environment.GLOBAL_ENV_ID;
 import static software.wings.sm.StateType.BAMBOO;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
@@ -66,6 +68,7 @@ import org.mongodb.morphia.annotations.Transient;
  */
 @OwnedBy(CDC)
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class BambooState extends State {
   @Attributes(title = "Bamboo Server") private String bambooConfigId;
 

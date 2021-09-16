@@ -10,6 +10,7 @@ import io.harness.gitsync.sdk.EntityGitDetails;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.Wither;
 
@@ -21,8 +22,8 @@ import lombok.experimental.Wither;
 public class GitEntityInfo {
   String branch;
   String yamlGitConfigId;
-  String folderPath;
-  String filePath;
+  @Setter String folderPath;
+  @Setter String filePath;
   String commitMsg;
   String lastObjectId; // required in case of update file
   boolean isNewBranch;

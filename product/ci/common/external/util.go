@@ -86,6 +86,9 @@ func GetNudges() []logs.Nudge {
 		logs.NewNudge("[Kk]illed", "Increase memory resources for the step", errors.New("Out of memory")),
 		logs.NewNudge(".*git.* SSL certificate problem",
 			"Set sslVerify to false in CI codebase properties", errors.New("SSL certificate error")),
+		logs.NewNudge("Cannot connect to the Docker daemon",
+			"Setup dind if it's not running. If dind is running, privileged should be set to true",
+			errors.New("Could not connect to the docker daemon")),
 	}
 }
 

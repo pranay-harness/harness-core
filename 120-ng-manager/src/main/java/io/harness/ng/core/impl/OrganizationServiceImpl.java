@@ -14,6 +14,8 @@ import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPL
 import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_POLICY;
 
 import static java.lang.Boolean.FALSE;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.accesscontrol.clients.AccessControlClient;
@@ -33,7 +35,9 @@ import io.harness.ng.core.events.OrganizationCreateEvent;
 import io.harness.ng.core.events.OrganizationDeleteEvent;
 import io.harness.ng.core.events.OrganizationRestoreEvent;
 import io.harness.ng.core.events.OrganizationUpdateEvent;
+import io.harness.ng.core.invites.dto.RoleBinding;
 import io.harness.ng.core.remote.OrganizationMapper;
+import io.harness.ng.core.remote.utils.ScopeAccessHelper;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.outbox.api.OutboxService;
@@ -57,6 +61,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import org.apache.commons.lang3.tuple.Pair;
@@ -77,18 +82,20 @@ public class OrganizationServiceImpl implements OrganizationService {
   private final ResourceGroupClient resourceGroupClient;
   private final NgUserService ngUserService;
   private final AccessControlClient accessControlClient;
+  private final ScopeAccessHelper scopeAccessHelper;
 
   @Inject
   public OrganizationServiceImpl(OrganizationRepository organizationRepository, OutboxService outboxService,
       @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate,
       @Named("PRIVILEGED") ResourceGroupClient resourceGroupClient, NgUserService ngUserService,
-      AccessControlClient accessControlClient) {
+      AccessControlClient accessControlClient, ScopeAccessHelper scopeAccessHelper) {
     this.organizationRepository = organizationRepository;
     this.outboxService = outboxService;
     this.transactionTemplate = transactionTemplate;
     this.resourceGroupClient = resourceGroupClient;
     this.ngUserService = ngUserService;
     this.accessControlClient = accessControlClient;
+    this.scopeAccessHelper = scopeAccessHelper;
   }
 
   @Override
@@ -173,7 +180,7 @@ public class OrganizationServiceImpl implements OrganizationService {
                 .orgIdentifier(scope.getOrgIdentifier())
                 .projectIdentifier(scope.getProjectIdentifier())
                 .build(),
-            ORG_ADMIN_ROLE, SYSTEM);
+            singletonList(RoleBinding.builder().roleIdentifier(ORG_ADMIN_ROLE).build()), emptyList(), SYSTEM);
         break;
       case SERVICE_ACCOUNT:
         ngUserService.addServiceAccountToScope(principalId,
@@ -257,13 +264,22 @@ public class OrganizationServiceImpl implements OrganizationService {
   }
 
   @Override
-  public Page<Organization> list(
+  public Page<Organization> listPermittedOrgs(
       String accountIdentifier, Pageable pageable, OrganizationFilterDTO organizationFilterDTO) {
     Criteria criteria = createOrganizationFilterCriteria(Criteria.where(OrganizationKeys.accountIdentifier)
                                                              .is(accountIdentifier)
                                                              .and(OrganizationKeys.deleted)
-                                                             .ne(Boolean.TRUE),
+                                                             .is(FALSE),
         organizationFilterDTO);
+    List<Scope> orgs = organizationRepository.findAllOrgs(criteria);
+    List<String> permittedOrgsIds =
+        scopeAccessHelper.getPermittedScopes(orgs).stream().map(Scope::getOrgIdentifier).collect(Collectors.toList());
+    criteria.and(OrganizationKeys.identifier).in(permittedOrgsIds);
+
+    if (permittedOrgsIds.isEmpty()) {
+      return Page.empty();
+    }
+
     return organizationRepository.findAll(
         criteria, pageable, organizationFilterDTO != null && organizationFilterDTO.isIgnoreCase());
   }

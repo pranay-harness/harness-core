@@ -178,7 +178,7 @@ function setupDelegateJars(){
 
       done
 
-      for version in v1.0; do
+      for version in v1.0 v1.1; do
 
         echo "Copying terraform-config-inspect v${version} binaries for ${platform}"
 
@@ -206,7 +206,7 @@ function setupDelegateJars(){
 
       done
 
-      for version in abf4ce53; do
+      for version in b276dd03; do
 
         echo "Copying scm ${version} binaries for ${platform}"
 

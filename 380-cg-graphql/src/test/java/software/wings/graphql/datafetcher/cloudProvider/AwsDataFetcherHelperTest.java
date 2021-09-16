@@ -84,6 +84,8 @@ public class AwsDataFetcherHelperTest extends WingsBaseTest {
     assertThat(config.getCrossAccountAttributes().getCrossAccountRoleArn()).isEqualTo(ARN);
     assertThat(config.getCrossAccountAttributes().getExternalId()).isEqualTo(EXTERN_ID);
     assertThat(config.getDefaultRegion()).isEqualTo(DEFAULT_REGION);
+    assertThat(config.isUseEc2IamCredentials()).isFalse();
+    assertThat(config.isUseIRSA()).isFalse();
   }
 
   @Test(expected = InvalidRequestException.class)

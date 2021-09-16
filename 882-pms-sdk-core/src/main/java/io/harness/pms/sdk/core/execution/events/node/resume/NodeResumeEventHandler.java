@@ -39,6 +39,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.protobuf.ByteString;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.NonNull;
@@ -52,15 +53,6 @@ public class NodeResumeEventHandler extends PmsBaseEventHandler<NodeResumeEvent>
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
   @Inject private ExecutableProcessorFactory executableProcessorFactory;
   @Inject private KryoSerializer kryoSerializer;
-
-  @Override
-  protected Map<String, String> extractMetricContext(NodeResumeEvent message) {
-    return ImmutableMap.<String, String>builder()
-        .put("accountId", AmbianceUtils.getAccountId(message.getAmbiance()))
-        .put("orgIdentifier", AmbianceUtils.getOrgIdentifier(message.getAmbiance()))
-        .put("projectIdentifier", AmbianceUtils.getProjectIdentifier(message.getAmbiance()))
-        .build();
-  }
 
   @Override
   protected String getMetricPrefix(NodeResumeEvent message) {
@@ -126,20 +118,24 @@ public class NodeResumeEventHandler extends PmsBaseEventHandler<NodeResumeEvent>
             .stepInputPackage(engineObtainmentHelper.obtainInputPackage(event.getAmbiance(), event.getRefObjectsList()))
             .responseDataMap(response);
 
-    // TODO (prashant) : Change ChildChainResponse Pass through data handling
     if (event.hasChainDetails()) {
       io.harness.pms.contracts.resume.ChainDetails chainDetailsProto = event.getChainDetails();
       ChainDetailsBuilder chainDetailsBuilder = ChainDetails.builder().shouldEnd(calculateIsEnd(event, response));
       if (EmptyPredicate.isNotEmpty(chainDetailsProto.getPassThroughData())) {
-        chainDetailsBuilder.passThroughData(
-            (PassThroughData) kryoSerializer.asObject(chainDetailsProto.getPassThroughData().toByteArray()));
+        ByteString passThroughBytes = chainDetailsProto.getPassThroughData();
+        if (event.getExecutionMode() == ExecutionMode.CHILD_CHAIN) {
+          chainDetailsBuilder.passThroughBytes(passThroughBytes);
+        } else if (event.getExecutionMode() == ExecutionMode.TASK_CHAIN) {
+          chainDetailsBuilder.passThroughData(
+              RecastOrchestrationUtils.fromBytes(passThroughBytes.toByteArray(), PassThroughData.class));
+        }
       }
       builder.chainDetails(chainDetailsBuilder.build());
     }
     return builder.build();
   }
 
-  private boolean calculateIsEnd(NodeResumeEvent event, Map<String, ResponseData> response) {
+  public boolean calculateIsEnd(NodeResumeEvent event, Map<String, ResponseData> response) {
     if (event.getExecutionMode() != ExecutionMode.CHILD_CHAIN) {
       return event.getChainDetails().getIsEnd();
     }

@@ -40,6 +40,9 @@ public class StatusUtils {
   private final EnumSet<Status> FINALIZABLE_STATUSES = EnumSet.of(QUEUED, RUNNING, PAUSING, PAUSED, ASYNC_WAITING,
       APPROVAL_WAITING, RESOURCE_WAITING, INTERVENTION_WAITING, TASK_WAITING, TIMED_WAITING, DISCONTINUING, PAUSING);
 
+  private final EnumSet<Status> ABORT_AND_EXPIRE_STATUSES = EnumSet.of(RUNNING, PAUSING, PAUSED, ASYNC_WAITING,
+      APPROVAL_WAITING, RESOURCE_WAITING, INTERVENTION_WAITING, TASK_WAITING, TIMED_WAITING, DISCONTINUING, PAUSING);
+
   private final EnumSet<Status> POSITIVE_STATUSES = EnumSet.of(SUCCEEDED, SKIPPED, SUSPENDED, IGNORE_FAILED);
 
   private final EnumSet<Status> BROKE_STATUSES = EnumSet.of(FAILED, ERRORED, EXPIRED, APPROVAL_REJECTED);
@@ -103,6 +106,10 @@ public class StatusUtils {
 
   public EnumSet<Status> graphUpdateStatuses() {
     return GRAPH_UPDATE_STATUSES;
+  }
+
+  public EnumSet<Status> abortAndExpireStatuses() {
+    return ABORT_AND_EXPIRE_STATUSES;
   }
 
   public EnumSet<Status> nodeAllowedStartSet(Status status) {

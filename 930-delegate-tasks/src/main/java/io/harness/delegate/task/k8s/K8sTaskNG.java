@@ -1,6 +1,7 @@
 package io.harness.delegate.task.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
@@ -36,6 +37,7 @@ import io.harness.security.encryption.SecretDecryptionService;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
@@ -67,7 +69,9 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
   @Override
   public K8sDeployResponse run(TaskParameters parameters) {
     K8sDeployRequest k8sDeployRequest = (K8sDeployRequest) parameters;
-    CommandUnitsProgress commandUnitsProgress = CommandUnitsProgress.builder().build();
+    CommandUnitsProgress commandUnitsProgress = k8sDeployRequest.getCommandUnitsProgress() != null
+        ? k8sDeployRequest.getCommandUnitsProgress()
+        : CommandUnitsProgress.builder().build();
 
     log.info("Starting task execution for Command {}", k8sDeployRequest.getTaskType().name());
     decryptRequestDTOs(k8sDeployRequest);
@@ -185,16 +189,22 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
 
       case S3_HELM:
         S3HelmStoreDelegateConfig s3HelmStoreConfig = (S3HelmStoreDelegateConfig) storeDelegateConfig;
-        for (DecryptableEntity decryptableEntity : s3HelmStoreConfig.getAwsConnector().getDecryptableEntities()) {
-          decryptionService.decrypt(decryptableEntity, s3HelmStoreConfig.getEncryptedDataDetails());
+        List<DecryptableEntity> s3DecryptableEntityList = s3HelmStoreConfig.getAwsConnector().getDecryptableEntities();
+        if (isNotEmpty(s3DecryptableEntityList)) {
+          for (DecryptableEntity decryptableEntity : s3DecryptableEntityList) {
+            decryptionService.decrypt(decryptableEntity, s3HelmStoreConfig.getEncryptedDataDetails());
+          }
         }
         break;
 
       case GCS_HELM:
         GcsHelmStoreDelegateConfig gcsHelmStoreDelegateConfig = (GcsHelmStoreDelegateConfig) storeDelegateConfig;
-        for (DecryptableEntity decryptableEntity :
-            gcsHelmStoreDelegateConfig.getGcpConnector().getDecryptableEntities()) {
-          decryptionService.decrypt(decryptableEntity, gcsHelmStoreDelegateConfig.getEncryptedDataDetails());
+        List<DecryptableEntity> gcsDecryptableEntityList =
+            gcsHelmStoreDelegateConfig.getGcpConnector().getDecryptableEntities();
+        if (isNotEmpty(gcsDecryptableEntityList)) {
+          for (DecryptableEntity decryptableEntity : gcsDecryptableEntityList) {
+            decryptionService.decrypt(decryptableEntity, gcsHelmStoreDelegateConfig.getEncryptedDataDetails());
+          }
         }
         break;
 

@@ -1,6 +1,8 @@
 package io.harness.functional;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.beans.PageRequest.PageRequestBuilder;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static software.wings.api.DeploymentType.SSH;
@@ -9,6 +11,7 @@ import static software.wings.beans.BlueGreenOrchestrationWorkflow.BlueGreenOrche
 import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
+import static software.wings.beans.PhaseStepType.AMI_SWITCH_AUTOSCALING_GROUP_ROUTES;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
 import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
@@ -27,6 +30,9 @@ import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBAC
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.SETUP;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.SHELL_SCRIPT;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.VERIFY_SERVICE;
+import static software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
+import static software.wings.sm.StateType.APPROVAL;
+import static software.wings.sm.StateType.AWS_AMI_ROLLBACK_SWITCH_ROUTES;
 import static software.wings.sm.StateType.AWS_NODE_SELECT;
 import static software.wings.sm.StateType.COMMAND;
 import static software.wings.sm.StateType.ECS_RUN_TASK;
@@ -34,8 +40,13 @@ import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
 
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter;
 import io.harness.beans.WorkflowType;
 import io.harness.delegate.beans.pcf.ResizeStrategy;
 import io.harness.exception.InvalidRequestException;
@@ -59,7 +70,9 @@ import software.wings.beans.template.Template;
 import software.wings.beans.template.command.PcfCommandTemplate;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
+import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 
 import com.google.api.client.util.Lists;
@@ -77,6 +90,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.awaitility.Awaitility;
 import org.hibernate.validator.constraints.NotEmpty;
 
+@OwnedBy(CDP)
 @Singleton
 public class WorkflowUtils {
   private static final long TEST_TIMEOUT_IN_MINUTES = 8;
@@ -89,10 +103,14 @@ public class WorkflowUtils {
   static final String ECS_RUN_TASK_SETUP_CONSTANT = "ECS Run Task Setup";
   static final String UPGRADE_CONTAINERS_CONSTANT = "Upgrade Containers";
   static final String DEPLOY_CONTAINERS_CONSTANT = "Deploy Containers";
+  static final String ROLLBACK_SERVICE_CONSTANT = "Rollback Service";
+  static final String DEPLOY_SERVICE_CONSTANT = "Deploy Service";
   static final String SELECT_NODES_CONSTANT = "Select Node";
+  static final String APPROVAL_CONSTANT = "Approval";
 
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private TemplateGenerator templateGenerator;
+  @Inject private StateExecutionService stateExecutionService;
 
   public WorkflowExecution checkForWorkflowSuccess(WorkflowExecution workflowExecution) {
     WorkflowExecution finalWorkflowExecution = awaitAndFetchFinalWorkflowExecution(workflowExecution);
@@ -773,6 +791,115 @@ public class WorkflowUtils {
         .build();
   }
 
+  public Workflow createAwsAmiBGRollbackWorkflow(
+      String name, Service service, InfrastructureDefinition infrastructureDefinition) {
+    List<PhaseStep> phaseSteps = new ArrayList<>();
+    phaseSteps.add(aPhaseStep(PhaseStepType.AMI_AUTOSCALING_GROUP_SETUP,
+        " Setup AutoScaling "
+            + "Group")
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(StateType.AWS_AMI_SERVICE_SETUP.toString())
+                                    .name("Ami Setup")
+                                    .properties(ImmutableMap.<String, Object>builder()
+                                                    .put("autoScalingGroupName",
+                                                        "${app.name}_${service"
+                                                            + ".name}_${env.name}")
+                                                    .put("maxInstances", 1)
+                                                    .put("desiredInstances", 1)
+                                                    .put("resizeStrategy", "RESIZE_NEW_FIRST")
+                                                    .put("minInstances", 0)
+                                                    .put("autoScalingSteadyStateTimeout", 10)
+                                                    .put("useCurrentRunningCount", false)
+                                                    .build())
+
+                                    .build())
+                       .build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.DEPLOY_SERVICE, "Deploy")
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .name("deploy")
+                                    .type(StateType.AWS_AMI_SERVICE_DEPLOY.toString())
+                                    .properties(ImmutableMap.<String, Object>builder()
+                                                    .put("instanceCount", 1)
+                                                    .put("instanceUnitType", "COUNT")
+                                                    .build())
+                                    .build())
+                       .build());
+    phaseSteps.add(aPhaseStep(PhaseStepType.VERIFY_SERVICE, "Verify Service").build());
+    phaseSteps.add(
+        aPhaseStep(PhaseStepType.AMI_SWITCH_AUTOSCALING_GROUP_ROUTES, "Swap Routes")
+            .addStep(GraphNode.builder()
+                         .id(generateUuid())
+                         .name("swap asg")
+                         .type(StateType.AWS_AMI_SWITCH_ROUTES.toString())
+                         .properties(ImmutableMap.<String, Object>builder().put("downsizeOldAsg", true).build())
+                         .build())
+            .build());
+
+    List<String> userGroups = Collections.singletonList("uK63L5CVSAa1-BkC4rXoRg");
+    phaseSteps.add(aPhaseStep(WRAP_UP, WRAP_UP_CONSTANT)
+                       .addStep(GraphNode.builder()
+                                    .id(generateUuid())
+                                    .type(APPROVAL.name())
+                                    .name(APPROVAL_CONSTANT)
+                                    .properties(ImmutableMap.<String, Object>builder()
+                                                    .put("timeoutMillis", 60000)
+                                                    .put("approvalStateType", "USER_GROUP")
+                                                    .put("userGroups", userGroups)
+                                                    .build())
+                                    .build())
+                       .build());
+
+    WorkflowPhase workflowPhase = aWorkflowPhase()
+                                      .serviceId(service.getUuid())
+                                      .deploymentType(DeploymentType.AMI)
+                                      .daemonSet(false)
+                                      .infraDefinitionId(infrastructureDefinition.getUuid())
+                                      .infraDefinitionName(infrastructureDefinition.getName())
+                                      .phaseSteps(phaseSteps)
+                                      .build();
+
+    List<PhaseStep> rollbackPhaseStep = new ArrayList<>();
+    rollbackPhaseStep.add(aPhaseStep(AMI_SWITCH_AUTOSCALING_GROUP_ROUTES, ROLLBACK_SERVICE_CONSTANT)
+                              .withStatusForRollback(ExecutionStatus.SUCCESS)
+                              .withRollback(true)
+                              .withPhaseStepNameForRollback(DEPLOY_SERVICE_CONSTANT)
+                              .addStep(GraphNode.builder()
+                                           .id(generateUuid())
+                                           .name("Rollback Autoscaling Group Route")
+                                           .type(AWS_AMI_ROLLBACK_SWITCH_ROUTES.name())
+                                           .rollback(true)
+                                           .origin(true)
+                                           .properties(ImmutableMap.<String, Object>builder().build())
+                                           .build())
+                              .build());
+    rollbackPhaseStep.add(aPhaseStep(WRAP_UP, WRAP_UP_CONSTANT).withRollback(true).build());
+
+    Map<String, WorkflowPhase> workflowPhaseIdMap = new HashMap<>();
+    workflowPhaseIdMap.put(workflowPhase.getUuid(),
+        aWorkflowPhase()
+            .rollback(true)
+            .phaseSteps(rollbackPhaseStep)
+            .serviceId(service.getUuid())
+            .deploymentType(DeploymentType.AMI)
+            .infraDefinitionId(infrastructureDefinition.getUuid())
+            .build());
+
+    return aWorkflow()
+        .name(name + System.currentTimeMillis())
+        .workflowType(WorkflowType.ORCHESTRATION)
+        .appId(service.getAppId())
+        .envId(infrastructureDefinition.getEnvId())
+        .infraDefinitionId(infrastructureDefinition.getUuid())
+        .serviceId(service.getUuid())
+        .orchestrationWorkflow(aBlueGreenOrchestrationWorkflow()
+                                   .addWorkflowPhase(workflowPhase)
+                                   .withRollbackWorkflowPhaseIdMap(workflowPhaseIdMap)
+                                   .build())
+        .build();
+  }
+
   public Workflow createBasicWorkflow(String name, Service service, InfrastructureDefinition infrastructureDefinition) {
     Workflow workflow = aWorkflow()
                             .name(name + System.currentTimeMillis())
@@ -1151,5 +1278,24 @@ public class WorkflowUtils {
         .expressionAllowed(false)
         .metadata(metaData)
         .build();
+  }
+
+  public void assertRollbackInWorkflowExecution(WorkflowExecution workflowExecution) {
+    assertThat(workflowExecution).isNotNull();
+    assertThat(workflowExecution.getStatus()).isEqualTo(ExecutionStatus.FAILED);
+    PageRequest<StateExecutionInstance> stateExecutionInstancePageRequest =
+        PageRequestBuilder.aPageRequest()
+            .addFilter(StateExecutionInstanceKeys.executionUuid, SearchFilter.Operator.EQ, workflowExecution.getUuid())
+            .addFilter(StateExecutionInstanceKeys.rollback, SearchFilter.Operator.EQ, true)
+            .addFilter(StateExecutionInstanceKeys.stateType, SearchFilter.Operator.EQ, "PHASE")
+            .build();
+
+    PageResponse<StateExecutionInstance> stateExecutionInstancePageResponse =
+        stateExecutionService.list(stateExecutionInstancePageRequest);
+
+    List<StateExecutionInstance> stateExecutionInstances = stateExecutionInstancePageResponse.getResponse();
+    for (StateExecutionInstance stateExecutionInstance : stateExecutionInstances) {
+      assertThat(stateExecutionInstance.getStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    }
   }
 }

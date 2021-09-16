@@ -51,6 +51,10 @@ if [[ "" != "$MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE mongo.uri "${MONGO_URI//\\&/&}"
 fi
 
+if [[ "" != "$MONGO_TRACE_MODE" ]]; then
+  yq write -i $CONFIG_FILE mongo.traceMode $MONGO_TRACE_MODE
+fi
+
 if [[ "" != "$MONGO_CONNECT_TIMEOUT" ]]; then
   yq write -i $CONFIG_FILE mongo.connectTimeout $MONGO_CONNECT_TIMEOUT
 fi
@@ -229,6 +233,24 @@ if [[ "" != "$FILE_STORAGE_CLUSTER_NAME" ]]; then
   yq write -i $CONFIG_FILE fileServiceConfiguration.clusterName "$FILE_STORAGE_CLUSTER_NAME"
 fi
 
+
+if [[ "" != "$DMS_GRPC_SECRET" ]]; then
+  yq write -i $CONFIG_FILE dmsGrpcClient.secret "$DMS_GRPC_SECRET"
+fi
+
+if [[ "" != "$DMS_GRPC_TARGET" ]]; then
+  yq write -i $CONFIG_FILE dmsGrpcClient.target "$DMS_GRPC_TARGET"
+fi
+
+if [[ "" != "$DMS_GRPC_AUTHORITY" ]]; then
+  yq write -i $CONFIG_FILE dmsGrpcClient.authority "$DMS_GRPC_AUTHORITY"
+fi
+
+if [[ "" != "$USE_DMS" ]]; then
+  yq write -i $CONFIG_FILE useDms "$USE_DMS"
+fi
+
+
 yq delete -i $REDISSON_CACHE_FILE codec
 
 if [[ "$REDIS_SCRIPT_CACHE" == "false" ]]; then
@@ -293,6 +315,8 @@ replace_key_value ceAwsSetupConfig.destinationBucket $CE_AWS_DESTINATION_BUCKET
 
 replace_key_value ceAwsSetupConfig.templateURL $CE_AWS_TEMPLATE_URL
 
+replace_key_value ceGcpSetupConfig.gcpProjectId $CE_SETUP_CONFIG_GCP_PROJECT_ID
+
 replace_key_value accessControlClient.enableAccessControl "$ACCESS_CONTROL_ENABLED"
 
 replace_key_value accessControlClient.accessControlServiceConfig.baseUrl "$ACCESS_CONTROL_BASE_URL"
@@ -354,3 +378,4 @@ replace_key_value featureFlagConfig.syncFeaturesToCF "$SYNC_FEATURES_TO_CF"
 replace_key_value ceAzureSetupConfig.azureAppClientId "$AZURE_APP_CLIENT_ID"
 replace_key_value ceAzureSetupConfig.azureAppClientSecret "$AZURE_APP_CLIENT_SECRET"
 replace_key_value pipelineServiceClientConfig.baseUrl "$PIPELINE_SERVICE_CLIENT_BASEURL"
+replace_key_value scopeAccessCheckEnabled "${SCOPE_ACCESS_CHECK:-true}"

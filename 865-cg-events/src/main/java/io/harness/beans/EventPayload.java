@@ -16,6 +16,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EventPayload {
+  private String id;
   private String version = "v1";
   private String eventType;
   private EventPayloadData data;

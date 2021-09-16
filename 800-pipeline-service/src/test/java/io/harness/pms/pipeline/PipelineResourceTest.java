@@ -22,7 +22,9 @@ import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.JsonSchemaValidationException;
+import io.harness.git.model.ChangeType;
 import io.harness.gitsync.interceptor.GitEntityFindInfoDTO;
+import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
@@ -77,6 +79,7 @@ public class PipelineResourceTest extends CategoryTest {
   PipelineEntity entityWithVersion;
   PipelineExecutionSummaryEntity executionSummaryEntity;
   OrchestrationGraphDTO orchestrationGraph;
+  EntityGitDetails entityGitDetails;
 
   @Before
   public void setUp() throws IOException {
@@ -94,6 +97,13 @@ public class PipelineResourceTest extends CategoryTest {
                  .name(PIPELINE_IDENTIFIER)
                  .yaml(yaml)
                  .build();
+
+    entityGitDetails = EntityGitDetails.builder()
+                           .branch("branch")
+                           .repoIdentifier("repo")
+                           .filePath("file.yaml")
+                           .rootFolder("root/.harness/")
+                           .build();
 
     entityWithVersion = PipelineEntity.builder()
                             .accountId(ACCOUNT_ID)
@@ -115,6 +125,7 @@ public class PipelineResourceTest extends CategoryTest {
                                  .planExecutionId(PLAN_EXECUTION_ID)
                                  .name(PLAN_EXECUTION_ID)
                                  .runSequence(0)
+                                 .entityGitDetails(entityGitDetails)
                                  .build();
 
     orchestrationGraph = OrchestrationGraphDTO.builder()
@@ -198,7 +209,7 @@ public class PipelineResourceTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testUpdatePipeline() throws IOException {
-    doReturn(entityWithVersion).when(pmsPipelineService).updatePipelineYaml(entity);
+    doReturn(entityWithVersion).when(pmsPipelineService).updatePipelineYaml(entity, ChangeType.MODIFY);
     ResponseDTO<String> responseDTO = pipelineResource.updatePipeline(
         null, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, null, yaml);
     assertThat(responseDTO.getData()).isEqualTo(PIPELINE_IDENTIFIER);
@@ -327,7 +338,12 @@ public class PipelineResourceTest extends CategoryTest {
         .when(pmsExecutionService)
         .getPipelineExecutionSummaryEntity(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PLAN_EXECUTION_ID, false);
     doReturn(orchestrationGraph).when(pmsExecutionService).getOrchestrationGraph(STAGE_NODE_ID, PLAN_EXECUTION_ID);
-    doReturn(Optional.of(PipelineEntity.builder().build()))
+    doReturn(Optional.of(PipelineEntity.builder()
+                             .branch("branch")
+                             .yamlGitConfigRef("repo")
+                             .filePath("file.yaml")
+                             .rootFolder("root/.harness/")
+                             .build()))
         .when(pmsPipelineService)
         .get(anyString(), anyString(), anyString(), anyString(), anyBoolean());
 

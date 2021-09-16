@@ -110,7 +110,7 @@ public class PipelineExecutionUpdateEventHandler implements OrchestrationEventHa
   private RetryPolicy<Object> getRetryPolicy(String failedAttemptMessage, String failureMessage) {
     return new RetryPolicy<>()
         .handle(Exception.class)
-        .withBackoff(15, 60, ChronoUnit.SECONDS)
+        .withBackoff(10, 60, ChronoUnit.MINUTES)
         .withMaxAttempts(MAX_ATTEMPTS)
         .onFailedAttempt(event -> log.info(failedAttemptMessage, event.getAttemptCount(), event.getLastFailure()))
         .onFailure(event -> log.error(failureMessage, event.getAttemptCount(), event.getFailure()));

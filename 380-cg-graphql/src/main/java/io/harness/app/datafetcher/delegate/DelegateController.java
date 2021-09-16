@@ -71,13 +71,10 @@ public class DelegateController {
   public static void populateDelegateScope(
       String accountId, QLAddDelegateScopeInput delegateScopeInput, DelegateScopeBuilder delegateScopeBuilder) {
     List<TaskGroup> taskGroupList = new ArrayList<>();
-    if (!isEmpty(delegateScopeInput.getTaskGroups())) {
-      taskGroupList = delegateScopeInput.getTaskGroups()
-                          .stream()
-                          .filter(Objects::nonNull)
-                          .map(taskGroup -> taskGroupMapping().get(taskGroup.name()))
-                          .collect(Collectors.toList());
+    if (delegateScopeInput.getTaskGroup() != null) {
+      taskGroupList.add(taskGroupMapping().get(delegateScopeInput.getTaskGroup().name()));
     }
+
     List<String> applicationList = new ArrayList<>();
     if (delegateScopeInput.getApplication() != null) {
       applicationList = Arrays.asList(delegateScopeInput.getApplication().getValues());

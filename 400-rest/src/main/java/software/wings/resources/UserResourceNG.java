@@ -12,11 +12,11 @@ import io.harness.beans.FeatureFlag;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.UnauthorizedException;
 import io.harness.mappers.AccountMapper;
 import io.harness.ng.core.dto.UserInviteDTO;
 import io.harness.ng.core.user.PasswordChangeDTO;
 import io.harness.ng.core.user.PasswordChangeResponse;
-import io.harness.ng.core.user.SignupInviteDTO;
 import io.harness.ng.core.user.TwoFactorAdminOverrideSettings;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserRequestDTO;
@@ -24,6 +24,7 @@ import io.harness.rest.RestResponse;
 import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.security.dto.UserPrincipal;
+import io.harness.signup.dto.SignupInviteDTO;
 import io.harness.user.remote.UserFilterNG;
 
 import software.wings.beans.User;
@@ -105,6 +106,19 @@ public class UserResourceNG {
     User createdUser = userService.completeNewSignupInvite(userInviteInDB);
     UserInfo userInfo = convertUserToNgUser(createdUser);
     userInfo.setIntent(userInviteInDB.getIntent());
+
+    if (userInviteInDB.getSignupAction() != null) {
+      userInfo.setSignupAction(userInviteInDB.getSignupAction());
+    }
+
+    if (userInviteInDB.getEdition() != null) {
+      userInfo.setEdition(userInviteInDB.getEdition());
+    }
+
+    if (userInviteInDB.getBillingFrequency() != null) {
+      userInfo.setBillingFrequency(userInviteInDB.getBillingFrequency());
+    }
+
     return new RestResponse<>(userInfo);
   }
 
@@ -150,8 +164,13 @@ public class UserResourceNG {
   @GET
   @Path("/{userId}")
   public RestResponse<Optional<UserInfo>> getUser(@PathParam("userId") String userId) {
-    User user = userService.get(userId);
-    return new RestResponse<>(Optional.ofNullable(convertUserToNgUser(user)));
+    try {
+      User user = userService.get(userId);
+      return new RestResponse<>(Optional.ofNullable(convertUserToNgUser(user)));
+    } catch (UnauthorizedException ex) {
+      log.warn("User is not found in database {}", userId);
+      return new RestResponse<>(Optional.empty());
+    }
   }
 
   @GET

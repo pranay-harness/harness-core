@@ -1,9 +1,12 @@
 package io.harness.delegate.beans;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 @OwnedBy(HarnessTeam.DEL)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public enum FileBucket {
   LOB,
   ARTIFACTS,

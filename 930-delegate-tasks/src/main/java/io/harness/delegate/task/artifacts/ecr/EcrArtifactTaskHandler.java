@@ -2,6 +2,7 @@ package io.harness.delegate.task.artifacts.ecr;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.delegate.beans.connector.awsconnector.AwsCredentialType.INHERIT_FROM_DELEGATE;
+import static io.harness.delegate.beans.connector.awsconnector.AwsCredentialType.IRSA;
 import static io.harness.delegate.beans.connector.awsconnector.AwsCredentialType.MANUAL_CREDENTIALS;
 import static io.harness.utils.FieldWithPlainTextOrSecretValueHelper.getSecretAsStringFromPlainTextOrSecretRef;
 
@@ -155,6 +156,8 @@ public class EcrArtifactTaskHandler extends DelegateArtifactTaskHandler<EcrArtif
                                 .build();
       } else if (INHERIT_FROM_DELEGATE == credential.getAwsCredentialType()) {
         awsInternalConfig.setUseEc2IamCredentials(true);
+      } else if (IRSA == credential.getAwsCredentialType()) {
+        awsInternalConfig.setUseIRSA(true);
       }
     }
     AmazonCloudWatchClientBuilder builder =

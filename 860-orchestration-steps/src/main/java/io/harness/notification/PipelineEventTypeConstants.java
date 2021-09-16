@@ -1,5 +1,9 @@
 package io.harness.notification;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(HarnessTeam.PIPELINE)
 public interface PipelineEventTypeConstants {
   String ALL_EVENTS = "AllEvents";
   String PIPELINE_START = "PipelineStart";
@@ -10,4 +14,5 @@ public interface PipelineEventTypeConstants {
   String STAGE_START = "StageStart";
   String STAGE_FAILED = "StageFailed";
   String STEP_FAILED = "StepFailed";
+  String PIPELINE_END = "PipelineEnd";
 }

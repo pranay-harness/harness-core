@@ -16,7 +16,6 @@ import io.harness.migration.NGMigration;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -38,15 +37,10 @@ public class RoleAssignmentScopeAdditionMigration implements NGMigration {
   public void migrate() {
     int pageSize = 1000;
     int pageIndex = 0;
-    long totalPages;
+    Pageable pageable = PageRequest.of(pageIndex, pageSize);
+    Criteria criteria = Criteria.where(RoleAssignmentDBOKeys.scopeLevel).exists(false);
     do {
-      Pageable pageable = PageRequest.of(pageIndex, pageSize);
-      Criteria criteria = Criteria.where(RoleAssignmentDBOKeys.scopeLevel).exists(false);
-      Page<RoleAssignmentDBO> roleAssignmentDBOPage = roleAssignmentRepository.findAll(criteria, pageable);
-      pageIndex++;
-      totalPages = roleAssignmentDBOPage.getTotalPages();
-
-      List<RoleAssignmentDBO> roleAssignmentList = roleAssignmentDBOPage.getContent();
+      List<RoleAssignmentDBO> roleAssignmentList = roleAssignmentRepository.findAll(criteria, pageable).getContent();
       if (isEmpty(roleAssignmentList)) {
         return;
       }
@@ -55,6 +49,7 @@ public class RoleAssignmentScopeAdditionMigration implements NGMigration {
         roleAssignmentRepository.updateById(
             roleAssignment.getId(), update(RoleAssignmentDBOKeys.scopeLevel, scope.getLevel().toString()));
       }
-    } while (pageIndex < totalPages);
+      pageIndex++;
+    } while (true);
   }
 }

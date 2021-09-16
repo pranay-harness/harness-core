@@ -4,18 +4,29 @@ import static io.harness.beans.serializer.RunTimeInputHandler.UNRESOLVED_PARAMET
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveIntegerParameter;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveMapParameter;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveStringParameter;
+import static io.harness.beans.sweepingoutputs.CISweepingOutputNames.CODEBASE;
 import static io.harness.beans.sweepingoutputs.CISweepingOutputNames.CODE_BASE_CONNECTOR_REF;
 import static io.harness.beans.sweepingoutputs.ContainerPortDetails.PORT_DETAILS;
 import static io.harness.beans.sweepingoutputs.PodCleanupDetails.CLEANUP_DETAILS;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_AWS_REGION;
+import static io.harness.common.BuildEnvironmentConstants.DRONE_BUILD_EVENT;
+import static io.harness.common.BuildEnvironmentConstants.DRONE_COMMIT_AUTHOR;
+import static io.harness.common.BuildEnvironmentConstants.DRONE_COMMIT_AUTHOR_AVATAR;
+import static io.harness.common.BuildEnvironmentConstants.DRONE_COMMIT_AUTHOR_EMAIL;
+import static io.harness.common.BuildEnvironmentConstants.DRONE_COMMIT_BEFORE;
+import static io.harness.common.BuildEnvironmentConstants.DRONE_COMMIT_BRANCH;
+import static io.harness.common.BuildEnvironmentConstants.DRONE_COMMIT_REF;
+import static io.harness.common.BuildEnvironmentConstants.DRONE_COMMIT_SHA;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_NETRC_MACHINE;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_NETRC_PORT;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_NETRC_USERNAME;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_REMOTE_URL;
+import static io.harness.common.BuildEnvironmentConstants.DRONE_SOURCE_BRANCH;
+import static io.harness.common.BuildEnvironmentConstants.DRONE_TAG;
+import static io.harness.common.BuildEnvironmentConstants.DRONE_TARGET_BRANCH;
 import static io.harness.common.CIExecutionConstants.ACCOUNT_ID_ATTR;
 import static io.harness.common.CIExecutionConstants.AWS_CODE_COMMIT_URL_REGEX;
 import static io.harness.common.CIExecutionConstants.BUILD_NUMBER_ATTR;
-import static io.harness.common.CIExecutionConstants.GIT_URL_SUFFIX;
 import static io.harness.common.CIExecutionConstants.HARNESS_ACCOUNT_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_BUILD_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_LOG_PREFIX_VARIABLE;
@@ -29,7 +40,6 @@ import static io.harness.common.CIExecutionConstants.LABEL_REGEX;
 import static io.harness.common.CIExecutionConstants.LOG_SERVICE_ENDPOINT_VARIABLE;
 import static io.harness.common.CIExecutionConstants.LOG_SERVICE_TOKEN_VARIABLE;
 import static io.harness.common.CIExecutionConstants.ORG_ID_ATTR;
-import static io.harness.common.CIExecutionConstants.PATH_SEPARATOR;
 import static io.harness.common.CIExecutionConstants.PIPELINE_EXECUTION_ID_ATTR;
 import static io.harness.common.CIExecutionConstants.PIPELINE_ID_ATTR;
 import static io.harness.common.CIExecutionConstants.POD_MAX_WAIT_UNTIL_READY_SECS;
@@ -61,6 +71,7 @@ import io.harness.beans.environment.pod.PodSetupInfo;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.beans.sweepingoutputs.CodeBaseConnectorRefSweepingOutput;
+import io.harness.beans.sweepingoutputs.CodebaseSweepingOutput;
 import io.harness.beans.sweepingoutputs.ContainerPortDetails;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
@@ -106,10 +117,10 @@ import io.harness.k8s.model.ImageDetails;
 import io.harness.logserviceclient.CILogServiceUtils;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.NGAccess;
-import io.harness.ngpipeline.common.AmbianceHelper;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.rbac.PipelineRbacHelper;
+import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
@@ -161,7 +172,7 @@ public class K8BuildSetupUtils {
     K8PodDetails k8PodDetails = (K8PodDetails) executionSweepingOutputResolver.resolve(
         ambiance, RefObjectUtils.getSweepingOutputRefObject(ContextElement.podDetails));
 
-    NGAccess ngAccess = AmbianceHelper.getNgAccess(ambiance);
+    NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);
     Infrastructure infrastructure = liteEngineTaskStepInfo.getInfrastructure();
 
     if (infrastructure == null || ((K8sDirectInfraYaml) infrastructure).getSpec() == null) {
@@ -204,7 +215,7 @@ public class K8BuildSetupUtils {
     ParameterField<String> timeout = k8sDirectInfraYaml.getSpec().getInitTimeout();
 
     int podWaitUntilReadyTimeout = POD_MAX_WAIT_UNTIL_READY_SECS;
-    if (timeout != null && timeout.fetchFinalValue() != null) {
+    if (timeout != null && timeout.fetchFinalValue() != null && isNotEmpty((String) timeout.fetchFinalValue())) {
       long timeoutInMillis = Timeout.fromString((String) timeout.fetchFinalValue()).getTimeoutInMillis();
       podWaitUntilReadyTimeout = (int) (timeoutInMillis / 1000);
     }
@@ -232,9 +243,10 @@ public class K8BuildSetupUtils {
 
     ConnectorDetails gitConnector = getGitConnector(ngAccess, ciCodebase, skipGitClone);
     Map<String, String> gitEnvVars = getGitEnvVariables(gitConnector, ciCodebase);
+    Map<String, String> runtimeCodebaseVars = getRuntimeCodebaseVars(ambiance);
 
     List<CIK8ContainerParams> containerParamsList = getContainerParamsList(k8PodDetails, podSetupInfo, ngAccess,
-        harnessInternalImageConnector, gitEnvVars, liteEngineTaskStepInfo, logPrefix, ambiance);
+        harnessInternalImageConnector, gitEnvVars, runtimeCodebaseVars, liteEngineTaskStepInfo, logPrefix, ambiance);
 
     CIK8ContainerParams setupAddOnContainerParams = internalContainerParamsProvider.getSetupAddonContainerParams(
         harnessInternalImageConnector, podSetupInfo.getVolumeToMountPath(), podSetupInfo.getWorkDirPath());
@@ -290,14 +302,68 @@ public class K8BuildSetupUtils {
         .build();
   }
 
+  private Map<String, String> getRuntimeCodebaseVars(Ambiance ambiance) {
+    Map<String, String> codebaseRuntimeVars = new HashMap<>();
+
+    OptionalSweepingOutput optionalSweepingOutput =
+        executionSweepingOutputResolver.resolveOptional(ambiance, RefObjectUtils.getOutcomeRefObject(CODEBASE));
+    if (!optionalSweepingOutput.isFound()) {
+      return codebaseRuntimeVars;
+    }
+
+    CodebaseSweepingOutput codebaseSweeping = (CodebaseSweepingOutput) optionalSweepingOutput.getOutput();
+    if (isNotEmpty(codebaseSweeping.getBranch())) {
+      codebaseRuntimeVars.put(DRONE_COMMIT_BRANCH, codebaseSweeping.getBranch());
+    }
+
+    if (!isEmpty(codebaseSweeping.getTag())) {
+      codebaseRuntimeVars.put(DRONE_TAG, codebaseSweeping.getTag());
+      codebaseRuntimeVars.put(DRONE_BUILD_EVENT, "tag");
+    }
+
+    if (!isEmpty(codebaseSweeping.getTargetBranch())) {
+      codebaseRuntimeVars.put(DRONE_TARGET_BRANCH, codebaseSweeping.getTargetBranch());
+    }
+
+    if (!isEmpty(codebaseSweeping.getSourceBranch())) {
+      codebaseRuntimeVars.put(DRONE_SOURCE_BRANCH, codebaseSweeping.getSourceBranch());
+    }
+
+    if (!isEmpty(codebaseSweeping.getSourceBranch())) {
+      codebaseRuntimeVars.put(DRONE_SOURCE_BRANCH, codebaseSweeping.getSourceBranch());
+    }
+    if (!isEmpty(codebaseSweeping.getGitUserEmail())) {
+      codebaseRuntimeVars.put(DRONE_COMMIT_AUTHOR_EMAIL, codebaseSweeping.getGitUserEmail());
+    }
+    if (!isEmpty(codebaseSweeping.getGitUserAvatar())) {
+      codebaseRuntimeVars.put(DRONE_COMMIT_AUTHOR_AVATAR, codebaseSweeping.getGitUserAvatar());
+    }
+
+    if (!isEmpty(codebaseSweeping.getGitUserId())) {
+      codebaseRuntimeVars.put(DRONE_COMMIT_AUTHOR, codebaseSweeping.getGitUserId());
+    }
+    if (isNotEmpty(codebaseSweeping.getBaseCommitSha())) {
+      codebaseRuntimeVars.put(DRONE_COMMIT_BEFORE, codebaseSweeping.getBaseCommitSha());
+    }
+    if (isNotEmpty(codebaseSweeping.getCommitRef())) {
+      codebaseRuntimeVars.put(DRONE_COMMIT_REF, codebaseSweeping.getCommitRef());
+    }
+    if (isNotEmpty(codebaseSweeping.getCommitSha())) {
+      codebaseRuntimeVars.put(DRONE_COMMIT_SHA, codebaseSweeping.getCommitSha());
+    }
+
+    return codebaseRuntimeVars;
+  }
+
   public List<CIK8ContainerParams> getContainerParamsList(K8PodDetails k8PodDetails, PodSetupInfo podSetupInfo,
       NGAccess ngAccess, ConnectorDetails harnessInternalImageConnector, Map<String, String> gitEnvVars,
-      LiteEngineTaskStepInfo liteEngineTaskStepInfo, String logPrefix, Ambiance ambiance) {
+      Map<String, String> runtimeCodebaseVars, LiteEngineTaskStepInfo liteEngineTaskStepInfo, String logPrefix,
+      Ambiance ambiance) {
     String accountId = AmbianceUtils.getAccountId(ambiance);
     Map<String, String> logEnvVars = getLogServiceEnvVariables(k8PodDetails, accountId);
     Map<String, String> tiEnvVars = getTIServiceEnvVariables(accountId);
-    Map<String, String> commonEnvVars =
-        getCommonStepEnvVariables(k8PodDetails, gitEnvVars, podSetupInfo.getWorkDirPath(), logPrefix, ambiance);
+    Map<String, String> commonEnvVars = getCommonStepEnvVariables(
+        k8PodDetails, gitEnvVars, runtimeCodebaseVars, podSetupInfo.getWorkDirPath(), logPrefix, ambiance);
     Map<String, ConnectorConversionInfo> stepConnectors =
         ((K8BuildJobEnvInfo) liteEngineTaskStepInfo.getBuildJobEnvInfo()).getStepConnectorRefs();
 
@@ -388,7 +454,7 @@ public class K8BuildSetupUtils {
       Map<String, String> volumeToMountPath, String workDirPath, String logPrefix,
       List<SecretVariableDetails> secretVariableDetails,
       Map<String, ConnectorDetails> githubApiTokenFunctorConnectors) {
-    Map<String, String> envVars = new HashMap<>(commonEnvVars);
+    Map<String, String> envVars = new HashMap<>();
     if (isNotEmpty(containerDefinitionInfo.getEnvVars())) {
       envVars.putAll(containerDefinitionInfo.getEnvVars()); // Put customer input env variables
     }
@@ -418,7 +484,7 @@ public class K8BuildSetupUtils {
         getSecretVariableDetails(ngAccess, containerDefinitionInfo, secretVariableDetails);
 
     Map<String, String> envVarsWithSecretRef = removeEnvVarsWithSecretRef(envVars);
-
+    envVars.putAll(commonEnvVars); //  commonEnvVars needs to be put in end because they overrides webhook parameters
     if (containerDefinitionInfo.getContainerType() == CIContainerType.SERVICE) {
       envVars.put(HARNESS_SERVICE_LOG_KEY_VARIABLE,
           format("%s/serviceId:%s", logPrefix, containerDefinitionInfo.getStepIdentifier()));
@@ -550,7 +616,7 @@ public class K8BuildSetupUtils {
 
   @NotNull
   private Map<String, String> getCommonStepEnvVariables(K8PodDetails k8PodDetails, Map<String, String> gitEnvVars,
-      String workDirPath, String logPrefix, Ambiance ambiance) {
+      Map<String, String> runtimeCodebaseVars, String workDirPath, String logPrefix, Ambiance ambiance) {
     Map<String, String> envVars = new HashMap<>();
     final String accountID = AmbianceUtils.getAccountId(ambiance);
     final String orgID = AmbianceUtils.getOrgIdentifier(ambiance);
@@ -561,6 +627,9 @@ public class K8BuildSetupUtils {
 
     // Add git connector environment variables
     envVars.putAll(gitEnvVars);
+
+    // Add runtime git vars, i.e. manual pull request execution data.
+    envVars.putAll(runtimeCodebaseVars);
 
     // Add other environment variables needed in the containers
     envVars.put(HARNESS_WORKSPACE, workDirPath);
@@ -609,7 +678,7 @@ public class K8BuildSetupUtils {
 
   private Map<String, String> retrieveGitSCMEnvVar(CodeBase ciCodebase, GitConnectionType connectionType, String url) {
     Map<String, String> envVars = new HashMap<>();
-    String gitUrl = getGitURL(ciCodebase, connectionType, url);
+    String gitUrl = IntegrationStageUtils.getGitURL(ciCodebase, connectionType, url);
     String domain = GitClientHelper.getGitSCM(gitUrl);
     String port = GitClientHelper.getGitSCMPort(gitUrl);
     if (port != null) {
@@ -674,7 +743,8 @@ public class K8BuildSetupUtils {
 
   private Map<String, String> retrieveGitEnvVar(GitConfigDTO gitConfigDTO, CodeBase ciCodebase) {
     Map<String, String> envVars = new HashMap<>();
-    String gitUrl = getGitURL(ciCodebase, gitConfigDTO.getGitConnectionType(), gitConfigDTO.getUrl());
+    String gitUrl =
+        IntegrationStageUtils.getGitURL(ciCodebase, gitConfigDTO.getGitConnectionType(), gitConfigDTO.getUrl());
     String domain = GitClientHelper.getGitSCM(gitUrl);
 
     envVars.put(DRONE_REMOTE_URL, gitUrl);
@@ -696,7 +766,7 @@ public class K8BuildSetupUtils {
     Map<String, String> envVars = new HashMap<>();
     GitConnectionType gitConnectionType =
         gitConfigDTO.getUrlType() == AwsCodeCommitUrlType.REPO ? GitConnectionType.REPO : GitConnectionType.ACCOUNT;
-    String gitUrl = getGitURL(ciCodebase, gitConnectionType, gitConfigDTO.getUrl());
+    String gitUrl = IntegrationStageUtils.getGitURL(ciCodebase, gitConnectionType, gitConfigDTO.getUrl());
 
     envVars.put(DRONE_REMOTE_URL, gitUrl);
     envVars.put(DRONE_AWS_REGION, getAwsCodeCommitRegion(gitConfigDTO.getUrl()));
@@ -711,42 +781,6 @@ public class K8BuildSetupUtils {
           "Unsupported aws code commit connector auth" + gitConfigDTO.getAuthentication().getAuthType());
     }
     return envVars;
-  }
-
-  private String retrieveGenericGitConnectorURL(CodeBase ciCodebase, GitConnectionType connectionType, String url) {
-    String gitUrl;
-    if (connectionType == GitConnectionType.REPO) {
-      gitUrl = url;
-    } else if (connectionType == GitConnectionType.ACCOUNT) {
-      if (ciCodebase == null) {
-        throw new IllegalArgumentException("CI codebase spec is not set");
-      }
-
-      if (isEmpty(ciCodebase.getRepoName())) {
-        throw new IllegalArgumentException("Repo name is not set in CI codebase spec");
-      }
-
-      String repoName = ciCodebase.getRepoName();
-      if (url.endsWith(PATH_SEPARATOR)) {
-        gitUrl = url + repoName;
-      } else {
-        gitUrl = url + PATH_SEPARATOR + repoName;
-      }
-    } else {
-      throw new InvalidArgumentsException(
-          format("Invalid connection type for git connector: %s", connectionType.toString()), WingsException.USER);
-    }
-
-    return gitUrl;
-  }
-
-  private String getGitURL(CodeBase ciCodebase, GitConnectionType connectionType, String url) {
-    String gitUrl = retrieveGenericGitConnectorURL(ciCodebase, connectionType, url);
-
-    if (!url.endsWith(GIT_URL_SUFFIX)) {
-      gitUrl += GIT_URL_SUFFIX;
-    }
-    return gitUrl;
   }
 
   private String getAwsCodeCommitRegion(String url) {

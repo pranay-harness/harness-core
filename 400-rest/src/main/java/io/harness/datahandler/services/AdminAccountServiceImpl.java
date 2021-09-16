@@ -1,7 +1,11 @@
 package io.harness.datahandler.services;
 
+import static io.harness.annotations.dev.HarnessModule._955_ACCOUNT_MGMT;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureFlag;
 import io.harness.beans.PageRequest;
 import io.harness.ccm.license.CeLicenseInfo;
@@ -30,9 +34,11 @@ import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
+@OwnedBy(PL)
 @ValidateOnExecution
 @Singleton
 @Slf4j
+@TargetModule(_955_ACCOUNT_MGMT)
 public class AdminAccountServiceImpl implements AdminAccountService {
   @Inject private AccountService accountService;
   @Inject private UserService userService;
@@ -167,5 +173,11 @@ public class AdminAccountServiceImpl implements AdminAccountService {
   @Override
   public boolean updateCompanyName(String accountId, String companyName) {
     return accountService.updateCompanyName(accountId, companyName);
+  }
+
+  @Override
+  public boolean enableOrDisableNextGen(String accountId, boolean enabled) {
+    accountService.updateNextGenEnabled(accountId, enabled);
+    return true;
   }
 }

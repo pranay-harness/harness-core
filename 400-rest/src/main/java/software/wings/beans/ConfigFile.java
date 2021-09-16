@@ -1,8 +1,13 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.security.encryption.EncryptionType;
@@ -47,6 +52,8 @@ import org.mongodb.morphia.annotations.Transient;
 @FieldNameConstants(innerTypeName = "ConfigFileKeys")
 @Entity(value = "configFiles", noClassnameStored = true)
 @HarnessEntity(exportable = true)
+@OwnedBy(CDC)
+@TargetModule(_957_CG_BEANS)
 public class ConfigFile extends BaseFile implements EncryptableSetting {
   public static final String DEFAULT_TEMPLATE_ID = "__TEMPLATE_ID";
 

@@ -2,9 +2,7 @@ package io.harness.serializer.morphia;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.cluster.entities.AzureKubernetesCluster;
 import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
@@ -16,7 +14,6 @@ import io.harness.ccm.communication.entities.CESlackWebhook;
 import io.harness.ccm.config.GcpBillingAccount;
 import io.harness.ccm.config.GcpOrganization;
 import io.harness.ccm.config.GcpServiceAccount;
-import io.harness.cvng.state.CVNGVerificationTask;
 import io.harness.dashboard.DashboardSettings;
 import io.harness.delegate.task.ListNotifyResponseData;
 import io.harness.event.reconciliation.deployment.DeploymentReconRecord;
@@ -26,7 +23,6 @@ import io.harness.marketplace.gcp.procurement.pubsub.ProcurementPubsubMessage;
 import io.harness.mongo.index.migrator.AggregateResult;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
-import io.harness.notifications.NotificationReceiverInfo;
 
 import software.wings.api.ARMStateExecutionData;
 import software.wings.api.AmiServiceDeployElement;
@@ -255,7 +251,6 @@ import software.wings.beans.RuntimeInputsConfig;
 import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.ScalyrConfig;
 import software.wings.beans.Schema;
-import software.wings.beans.SecretManagerRuntimeParameters;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceNowConfig;
@@ -270,7 +265,6 @@ import software.wings.beans.SpotInstConfig;
 import software.wings.beans.StringValue;
 import software.wings.beans.SumoConfig;
 import software.wings.beans.SystemCatalog;
-import software.wings.beans.TerraGroupProvisioners;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.TerragruntInfrastructureProvisioner;
 import software.wings.beans.User;
@@ -387,7 +381,6 @@ import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
-import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.infrastructure.CloudFormationRollbackConfig;
@@ -587,7 +580,6 @@ import software.wings.service.impl.yaml.gitdiff.gitaudit.AuditYamlHelperForFaile
 import software.wings.service.impl.yaml.gitdiff.gitaudit.AuditYamlHelperForFailedChanges.InfraMappingWithOnlyAuditNeededData;
 import software.wings.service.impl.yaml.gitdiff.gitaudit.AuditYamlHelperForFailedChanges.ProvisionerWithOnlyAuditNeededData;
 import software.wings.sm.AwsLambdaVerification;
-import software.wings.sm.BarrierStatusData;
 import software.wings.sm.ElementNotifyResponseData;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionResumeAllCallback;
@@ -806,7 +798,6 @@ import java.security.Principal;
 import java.util.Set;
 
 @OwnedBy(PL)
-@TargetModule(HarnessModule._360_CG_MANAGER)
 public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
   private String cf = "helpers.ext.cloudformation.";
 
@@ -947,7 +938,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(InstanceStatsSnapshot.class);
     set.add(InstanceSyncPerpetualTaskInfo.class);
     set.add(JenkinsArtifactStream.class);
-    set.add(KeywordsAware.class);
     set.add(KubernetesContainerTask.class);
     set.add(LabeledLogRecord.class);
     set.add(LambdaSpecification.class);
@@ -974,7 +964,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(Notification.class);
     set.add(NotificationBatch.class);
     set.add(NotificationGroup.class);
-    set.add(NotificationReceiverInfo.class);
     set.add(NotificationRulesStatus.class);
     set.add(OauthSettings.class);
     set.add(PcfInfrastructureMapping.class);
@@ -1031,7 +1020,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(TemplateVersion.class);
     set.add(TerraformConfig.class);
     set.add(TerraformInfrastructureProvisioner.class);
-    set.add(TerraGroupProvisioners.class);
     set.add(TerragruntConfig.class);
     set.add(TerragruntInfrastructureProvisioner.class);
     set.add(ThirdPartyApiCallLog.class);
@@ -1060,11 +1048,9 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(YamlHistory.class);
     set.add(YamlSuccessfulChange.class);
     set.add(YamlVersion.class);
-    set.add(SecretManagerRuntimeParameters.class);
     set.add(HelmChart.class);
     set.add(GCPMarketplaceCustomer.class);
     set.add(DeletedEntity.class);
-    set.add(CVNGVerificationTask.class);
     set.add(ARMInfrastructureProvisioner.class);
     set.add(AccessRequest.class);
   }
@@ -1427,7 +1413,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("service.impl.WorkflowExecutionUpdate", WorkflowExecutionUpdate.class);
     w.put("service.impl.yaml.GitCommandCallback", GitCommandCallback.class);
     w.put("sm.AwsLambdaVerification", AwsLambdaVerification.class);
-    w.put("sm.BarrierStatusData", BarrierStatusData.class);
     w.put("sm.ElementNotifyResponseData", ElementNotifyResponseData.class);
     w.put("sm.ExecutionResumeAllCallback", ExecutionResumeAllCallback.class);
     w.put("sm.ExecutionStatusData", ExecutionStatusData.class);

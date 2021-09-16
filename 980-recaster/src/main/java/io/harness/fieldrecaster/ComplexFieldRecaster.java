@@ -70,8 +70,8 @@ public class ComplexFieldRecaster implements FieldRecaster {
   }
 
   private Map<String, Object> obtainEncodedValueInternal(Recaster recaster, CastedField cf, Object fieldValue) {
-    Map<String, Object> recastedMap = new LinkedHashMap<>();
-    RecastReflectionUtils.setIdentifier(recastedMap, cf.getType());
+    RecasterMap recastedMap = new RecasterMap();
+    recastedMap.setIdentifier(cf.getType());
     recastedMap.put(Recaster.ENCODED_VALUE, recaster.getTransformer().encode(cf.getType(), fieldValue, cf));
     return recastedMap;
   }

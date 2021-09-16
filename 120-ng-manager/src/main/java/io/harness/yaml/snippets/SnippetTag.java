@@ -30,6 +30,7 @@ public enum SnippetTag implements YamlSnippetTags {
   gcp,
   aws,
   awskms,
+  awssecretmanager,
   artifactory,
   jira,
   nexus,
@@ -46,5 +47,7 @@ public enum SnippetTag implements YamlSnippetTags {
   prometheus,
   datadog,
   sumologic,
-  dynatrace
+  dynatrace,
+  pagerduty,
+  argoconnector
 }

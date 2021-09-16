@@ -2,14 +2,17 @@ package software.wings.beans;
 
 import static software.wings.beans.Permission.Builder.aPermission;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 
-/**
- * Created by rishi on 3/13/17.
- */
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._970_RBAC_CORE)
 public enum RoleType {
   ACCOUNT_ADMIN("Account Administrator", "Account Adminitrator members have all the access within account"),
   APPLICATION_ADMIN("Application Administrator",

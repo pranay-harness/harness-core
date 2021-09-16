@@ -9,6 +9,7 @@ import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import static com.amazonaws.services.cloudformation.model.StackStatus.UPDATE_ROLLBACK_COMPLETE;
+import static com.amazonaws.services.cloudformation.model.StackStatus.UPDATE_ROLLBACK_FAILED;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -61,6 +62,7 @@ import com.amazonaws.services.cloudformation.model.DescribeStacksRequest;
 import com.amazonaws.services.cloudformation.model.Output;
 import com.amazonaws.services.cloudformation.model.Stack;
 import com.amazonaws.services.cloudformation.model.StackEvent;
+import com.amazonaws.services.cloudformation.model.UpdateStackResult;
 import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.Collections;
@@ -308,6 +310,9 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
         .doReturn(updateCompleteList)
         .when(mockAwsHelperService)
         .getAllStacks(anyString(), any(), any());
+    UpdateStackResult updateStackResult = new UpdateStackResult();
+    updateStackResult.setStackId("StackId1");
+    doReturn(updateStackResult).when(mockAwsHelperService).updateStack(anyString(), any(), any());
     doReturn("Body").when(mockAwsCFHelperServiceDelegate).getStackBody(any(), anyString(), anyString());
 
     CloudFormationCommandExecutionResponse response = createStackHandler.execute(request, null);
@@ -318,6 +323,106 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
     assertThat(formationCommandResponse instanceof CloudFormationCreateStackResponse).isTrue();
     CloudFormationCreateStackResponse createStackResponse =
         (CloudFormationCreateStackResponse) formationCommandResponse;
+    ExistingStackInfo existingStackInfo = createStackResponse.getExistingStackInfo();
+    assertThat(existingStackInfo).isNotNull();
+    assertThat(existingStackInfo.isStackExisted()).isTrue();
+    assertThat("Body").isEqualTo(existingStackInfo.getOldStackBody());
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testUpdateStackWithExistingStackInUpdateRollbackCompleteState() {
+    String templateBody = "Template Body";
+    char[] accessKey = "abcd".toCharArray();
+    char[] secretKey = "pqrs".toCharArray();
+    String stackNameSuffix = "Stack Name 00";
+    CloudFormationCreateStackRequest request =
+        CloudFormationCreateStackRequest.builder()
+            .commandType(CloudFormationCommandType.CREATE_STACK)
+            .accountId(ACCOUNT_ID)
+            .appId(APP_ID)
+            .activityId(ACTIVITY_ID)
+            .commandName("Create Stack")
+            .awsConfig(AwsConfig.builder().accessKey(accessKey).accountId(ACCOUNT_ID).secretKey(secretKey).build())
+            .timeoutInMs(10 * 60 * 1000)
+            .createType(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY)
+            .data(templateBody)
+            .stackNameSuffix(stackNameSuffix)
+            .build();
+    List<Stack> exitingList =
+        singletonList(new Stack().withStackStatus("CREATE_COMPLETE").withStackName("HarnessStack-" + stackNameSuffix));
+    List<Stack> updateCompleteList =
+        singletonList(new Stack().withStackStatus("UPDATE_ROLLBACK_COMPLETE").withStackId("stackId1"));
+    doReturn(exitingList)
+        .doReturn(updateCompleteList)
+        .when(mockAwsHelperService)
+        .getAllStacks(anyString(), any(), any());
+    UpdateStackResult updateStackResult = new UpdateStackResult();
+    doReturn(updateStackResult).when(mockAwsHelperService).updateStack(anyString(), any(), any());
+    doReturn("Body").when(mockAwsCFHelperServiceDelegate).getStackBody(any(), anyString(), anyString());
+
+    CloudFormationCommandExecutionResponse response = createStackHandler.execute(request, null);
+    assertThat(response).isNotNull();
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+    CloudFormationCommandResponse formationCommandResponse = response.getCommandResponse();
+    assertThat(formationCommandResponse).isNotNull();
+    assertThat(formationCommandResponse instanceof CloudFormationCreateStackResponse).isTrue();
+    CloudFormationCreateStackResponse createStackResponse =
+        (CloudFormationCreateStackResponse) formationCommandResponse;
+    assertThat(createStackResponse.getStackId()).isEqualTo("stackId1");
+    ExistingStackInfo existingStackInfo = createStackResponse.getExistingStackInfo();
+    assertThat(existingStackInfo).isNotNull();
+    assertThat(existingStackInfo.isStackExisted()).isTrue();
+    assertThat("Body").isEqualTo(existingStackInfo.getOldStackBody());
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testUpdateStackWithExistingStackInUpdateRollbackFailedState() {
+    String templateBody = "Template Body";
+    char[] accessKey = "abcd".toCharArray();
+    char[] secretKey = "pqrs".toCharArray();
+    String stackNameSuffix = "Stack Name 00";
+    CloudFormationCreateStackRequest request =
+        CloudFormationCreateStackRequest.builder()
+            .commandType(CloudFormationCommandType.CREATE_STACK)
+            .accountId(ACCOUNT_ID)
+            .appId(APP_ID)
+            .activityId(ACTIVITY_ID)
+            .commandName("Create Stack")
+            .awsConfig(AwsConfig.builder().accessKey(accessKey).accountId(ACCOUNT_ID).secretKey(secretKey).build())
+            .timeoutInMs(10 * 60 * 1000)
+            .createType(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY)
+            .data(templateBody)
+            .stackNameSuffix(stackNameSuffix)
+            .build();
+    List<Stack> exitingList =
+        singletonList(new Stack().withStackStatus("CREATE_COMPLETE").withStackName("HarnessStack-" + stackNameSuffix));
+    List<Stack> updateCompleteList =
+        singletonList(new Stack().withStackStatus("UPDATE_ROLLBACK_FAILED").withStackId("stackId1"));
+    doReturn(exitingList)
+        .doReturn(updateCompleteList)
+        .when(mockAwsHelperService)
+        .getAllStacks(anyString(), any(), any());
+    UpdateStackResult updateStackResult = new UpdateStackResult();
+    doReturn(updateStackResult).when(mockAwsHelperService).updateStack(anyString(), any(), any());
+    doReturn("Body").when(mockAwsCFHelperServiceDelegate).getStackBody(any(), anyString(), anyString());
+
+    CloudFormationCommandExecutionResponse response = createStackHandler.execute(request, null);
+    assertThat(response).isNotNull();
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
+    assertThat(response.getErrorMessage())
+        .isEqualTo(
+            "# Existing stack with name null is already in status: UPDATE_ROLLBACK_FAILED, therefore exiting with failure");
+    CloudFormationCommandResponse formationCommandResponse = response.getCommandResponse();
+    assertThat(formationCommandResponse).isNotNull();
+    assertThat(formationCommandResponse instanceof CloudFormationCreateStackResponse).isTrue();
+    CloudFormationCreateStackResponse createStackResponse =
+        (CloudFormationCreateStackResponse) formationCommandResponse;
+    assertThat(createStackResponse.getStackId()).isEqualTo("stackId1");
+    assertThat(createStackResponse.getStackStatus()).isEqualTo(UPDATE_ROLLBACK_FAILED.name());
     ExistingStackInfo existingStackInfo = createStackResponse.getExistingStackInfo();
     assertThat(existingStackInfo).isNotNull();
     assertThat(existingStackInfo.isStackExisted()).isTrue();
@@ -355,6 +460,9 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
         .doReturn(updateCompleteList)
         .when(mockAwsHelperService)
         .getAllStacks(anyString(), any(), any());
+    UpdateStackResult updateStackResult = new UpdateStackResult();
+    updateStackResult.setStackId("StackId1");
+    doReturn(updateStackResult).when(mockAwsHelperService).updateStack(anyString(), any(), any());
     doReturn("Body").when(mockAwsCFHelperServiceDelegate).getStackBody(any(), anyString(), anyString());
 
     CloudFormationCommandExecutionResponse response = createStackHandler.execute(request, null);
@@ -403,6 +511,9 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
         .doReturn(updateCompleteList)
         .when(mockAwsHelperService)
         .getAllStacks(anyString(), any(), any());
+    UpdateStackResult updateStackResult = new UpdateStackResult();
+    updateStackResult.setStackId("StackId1");
+    doReturn(updateStackResult).when(mockAwsHelperService).updateStack(anyString(), any(), any());
     doReturn("Body").when(mockAwsCFHelperServiceDelegate).getStackBody(any(), anyString(), anyString());
 
     CloudFormationCommandExecutionResponse response = createStackHandler.execute(request, null);
@@ -853,6 +964,10 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
         .doReturn(updateCompleteList)
         .when(mockAwsHelperService)
         .getAllStacks(anyString(), any(), any());
+
+    UpdateStackResult updateStackResult = new UpdateStackResult();
+    updateStackResult.setStackId("StackId1");
+    doReturn(updateStackResult).when(mockAwsHelperService).updateStack(anyString(), any(), any());
     doReturn("Body").when(mockAwsCFHelperServiceDelegate).getStackBody(any(), anyString(), anyString());
 
     CloudFormationCommandExecutionResponse response = createStackHandler.execute(request, null);

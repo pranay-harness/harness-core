@@ -16,7 +16,10 @@ import lombok.Data;
 public class OrganizationAggregateDTO {
   @NotNull OrganizationResponse organizationResponse;
   int projectsCount;
-
+  long connectorsCount;
+  long secretsCount;
+  long delegatesCount;
+  long templatesCount;
   List<UserMetadataDTO> admins;
   List<UserMetadataDTO> collaborators;
 }

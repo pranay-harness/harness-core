@@ -23,6 +23,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
@@ -62,6 +64,7 @@ import org.mockito.Mock;
 /**
  * Created by anubhaw on 12/8/16.
  */
+@OwnedBy(HarnessTeam.CDC)
 public class BambooServiceTest extends WingsBaseTest {
   @Rule
   public WireMockRule wireMockRule = new WireMockRule(WireMockConfiguration.wireMockConfig()

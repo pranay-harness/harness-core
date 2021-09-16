@@ -1,10 +1,13 @@
 package io.harness.entities;
 
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.entities.deploymentinfo.DeploymentInfo;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
+import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -22,17 +25,21 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "DeploymentSummaryKeys")
-@Entity(value = "deploymentSummary", noClassnameStored = true)
+@Entity(value = "deploymentSummaryNG", noClassnameStored = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@Document("deploymentSummary")
+@Document("deploymentSummaryNG")
+@StoreIn(DbAliases.NG_MANAGER)
 @OwnedBy(HarnessTeam.DX)
 public class DeploymentSummary implements PersistentEntity {
   public static List<MongoIndex> mongoIndexes() {
-    // TODO add more indexes
     return ImmutableList.<MongoIndex>builder()
+        .add(SortCompoundMongoIndex.builder()
+                 .name("idx_instanceSyncKey_createdAt")
+                 .field(DeploymentSummaryKeys.instanceSyncKey)
+                 .descSortField(DeploymentSummaryKeys.createdAt)
+                 .build())
         .add(CompoundMongoIndex.builder()
-                 .name("unique_account_org_project_id")
-                 .unique(true)
+                 .name("idx_accountIdentifier_orgIdentifier_projectIdentifier")
                  .field(DeploymentSummaryKeys.accountIdentifier)
                  .field(DeploymentSummaryKeys.orgIdentifier)
                  .field(DeploymentSummaryKeys.projectIdentifier)
@@ -50,8 +57,10 @@ public class DeploymentSummary implements PersistentEntity {
   private String deployedById;
   private String deployedByName;
   private String infrastructureMappingId;
+  private String instanceSyncKey;
   private long deployedAt;
   private DeploymentInfo deploymentInfo;
+  boolean isRollbackDeployment;
   @CreatedDate long createdAt;
   @LastModifiedDate long lastModifiedAt;
 }

@@ -20,8 +20,8 @@ import io.harness.product.ci.engine.proto.RunStep;
 import io.harness.product.ci.engine.proto.ShellType;
 import io.harness.product.ci.engine.proto.StepContext;
 import io.harness.product.ci.engine.proto.UnitStep;
+import io.harness.utils.TimeoutUtils;
 import io.harness.yaml.core.timeout.Timeout;
-import io.harness.yaml.core.timeout.TimeoutUtils;
 import io.harness.yaml.core.variables.OutputNGVariable;
 
 import com.google.inject.Inject;

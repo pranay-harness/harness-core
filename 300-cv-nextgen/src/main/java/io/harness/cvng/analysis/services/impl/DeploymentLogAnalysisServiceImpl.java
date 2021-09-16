@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.LogsAnalysisSummary;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.Cluster;
+import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ClusterSummary;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ResultSummary;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
@@ -11,26 +12,42 @@ import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.entities.DeploymentLogAnalysis;
 import io.harness.cvng.analysis.entities.DeploymentLogAnalysis.DeploymentLogAnalysisKeys;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
+import io.harness.cvng.core.beans.params.PageParams;
+import io.harness.cvng.core.beans.params.filterParams.DeploymentLogAnalysisFilter;
+import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.utils.CVNGObjectUtils;
+import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
+import io.harness.serializer.JsonUtils;
+import io.harness.utils.PageUtils;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.io.Resources;
 import com.google.inject.Inject;
+import java.io.IOException;
+import java.net.URL;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
-import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Sort;
 
 public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisService {
+  private static final URL LOG_DEMO_TEMPLATE_PATH = DeploymentTimeSeriesAnalysisServiceImpl.class.getResource(
+      "/io/harness/cvng/analysis/service/impl/log_deployment_analysis_demo_template.json");
   public static final int DEFAULT_PAGE_SIZE = 10;
   @Inject private HPersistence hPersistence;
   @Inject private VerificationTaskService verificationTaskService;
@@ -49,68 +66,73 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
 
   @Override
   public List<LogAnalysisClusterChartDTO> getLogAnalysisClusters(
-      String accountId, String verificationJobInstanceId, String hostName) {
+      String accountId, String verificationJobInstanceId, DeploymentLogAnalysisFilter deploymentLogAnalysisFilter) {
     List<DeploymentLogAnalysis> latestDeploymentLogAnalysis =
-        getLatestDeploymentLogAnalysis(accountId, verificationJobInstanceId);
+        getLatestDeploymentLogAnalysis(accountId, verificationJobInstanceId, deploymentLogAnalysisFilter);
     if (isEmpty(latestDeploymentLogAnalysis)) {
       return Collections.emptyList();
     }
 
-    boolean shouldFilterByHostName = StringUtils.isNotBlank(hostName);
-
     List<LogAnalysisClusterChartDTO> allClusters = new ArrayList<>();
-
     for (DeploymentLogAnalysis deploymentLogAnalysis : latestDeploymentLogAnalysis) {
       List<LogAnalysisClusterChartDTO> logAnalysisClusterChartDTOList =
-          getLogAnalysisClusterChartList(deploymentLogAnalysis, hostName, shouldFilterByHostName);
+          getLogAnalysisClusterChartList(deploymentLogAnalysis, deploymentLogAnalysisFilter.getHostName());
 
-      if (shouldFilterByHostName) {
-        logAnalysisClusterChartDTOList.forEach(logAnalysisClusterChartDTO
-            -> deploymentLogAnalysis.getHostSummaries()
-                   .stream()
-                   .filter(hostSummary -> hostName.equals(hostSummary.getHost()))
-                   .findFirst()
-                   .ifPresent(hostSummary
-                       -> updateClusterChartDTOWithRisk(logAnalysisClusterChartDTO, hostSummary.getResultSummary())));
+      Map<Integer, ClusterSummary> clusterSummaryMap = new HashMap<>();
+      deploymentLogAnalysis.getResultSummary().getTestClusterSummaries().forEach(
+          clusterSummary -> { clusterSummaryMap.put(clusterSummary.getLabel(), clusterSummary); });
 
-      } else {
-        logAnalysisClusterChartDTOList.forEach(logAnalysisClusterChartDTO
-            -> updateClusterChartDTOWithRisk(logAnalysisClusterChartDTO, deploymentLogAnalysis.getResultSummary()));
-      }
-      allClusters.addAll(logAnalysisClusterChartDTOList);
+      logAnalysisClusterChartDTOList.forEach(logAnalysisClusterChartDTO -> {
+        if (clusterSummaryMap.containsKey(logAnalysisClusterChartDTO.getLabel())
+            && (!deploymentLogAnalysisFilter.filterByClusterType()
+                || deploymentLogAnalysisFilter.getClusterTypes().contains(
+                    clusterSummaryMap.get(logAnalysisClusterChartDTO.getLabel()).getClusterType()))) {
+          logAnalysisClusterChartDTO.setRisk(
+              clusterSummaryMap.get(logAnalysisClusterChartDTO.getLabel()).getRiskLevel());
+          logAnalysisClusterChartDTO.setClusterType(
+              clusterSummaryMap.get(logAnalysisClusterChartDTO.getLabel()).getClusterType());
+          allClusters.add(logAnalysisClusterChartDTO);
+        }
+      });
     }
-
     return allClusters;
   }
 
   @Override
-  public PageResponse<LogAnalysisClusterDTO> getLogAnalysisResult(
-      String accountId, String verificationJobInstanceId, Integer label, int pageNumber, String hostName) {
+  public PageResponse<LogAnalysisClusterDTO> getLogAnalysisResult(String accountId, String verificationJobInstanceId,
+      Integer label, DeploymentLogAnalysisFilter deploymentLogAnalysisFilter, PageParams pageParams) {
     List<LogAnalysisClusterDTO> logAnalysisClusters =
-        getLogAnalysisResult(accountId, verificationJobInstanceId, label, hostName);
+        getLogAnalysisResult(accountId, verificationJobInstanceId, label, deploymentLogAnalysisFilter);
 
-    return formPageResponse(logAnalysisClusters, pageNumber, DEFAULT_PAGE_SIZE);
+    return PageUtils.offsetAndLimit(logAnalysisClusters, pageParams.getPage(), pageParams.getSize());
   }
 
-  private List<LogAnalysisClusterDTO> getLogAnalysisResult(
-      String accountId, String verificationJobInstanceId, Integer label, String hostName) {
+  private List<LogAnalysisClusterDTO> getLogAnalysisResult(String accountId, String verificationJobInstanceId,
+      Integer label, DeploymentLogAnalysisFilter deploymentLogAnalysisFilter) {
     List<DeploymentLogAnalysis> latestDeploymentLogAnalysis =
-        getLatestDeploymentLogAnalysis(accountId, verificationJobInstanceId);
+        getLatestDeploymentLogAnalysis(accountId, verificationJobInstanceId, deploymentLogAnalysisFilter);
     if (isEmpty(latestDeploymentLogAnalysis)) {
       return Collections.emptyList();
     }
-    boolean shouldFilterByHostName = StringUtils.isNotBlank(hostName);
+    boolean shouldFilterByHostName = deploymentLogAnalysisFilter.filterByHostName();
     List<LogAnalysisClusterDTO> logAnalysisClusters = new ArrayList<>();
 
     for (DeploymentLogAnalysis deploymentLogAnalysis : latestDeploymentLogAnalysis) {
       deploymentLogAnalysis.getResultSummary().setLabelToControlDataMap();
       if (shouldFilterByHostName) {
-        logAnalysisClusters.addAll(getHostSpecificLogAnalysisClusters(deploymentLogAnalysis, label, hostName));
+        logAnalysisClusters.addAll(getHostSpecificLogAnalysisClusters(
+            deploymentLogAnalysis, label, deploymentLogAnalysisFilter.getHostName()));
       } else {
         logAnalysisClusters.addAll(getOverallLogAnalysisClusters(deploymentLogAnalysis, label));
       }
     }
-
+    if (deploymentLogAnalysisFilter.filterByClusterType()) {
+      logAnalysisClusters =
+          logAnalysisClusters.stream()
+              .filter(
+                  logAnalysis -> deploymentLogAnalysisFilter.getClusterTypes().contains(logAnalysis.getClusterType()))
+              .collect(Collectors.toList());
+    }
     logAnalysisClusters.sort((a, b) -> Double.compare(b.getScore(), a.getScore()));
     return logAnalysisClusters;
   }
@@ -123,8 +145,8 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
     Preconditions.checkNotNull(
         verificationJobInstanceIds, "Missing verificationJobInstanceIds when looking for summary");
     verificationJobInstanceIds.forEach(verificationJobInstanceId -> {
-      List<LogAnalysisClusterDTO> logAnalysisClusters =
-          getLogAnalysisResult(accountId, verificationJobInstanceId, null, "");
+      List<LogAnalysisClusterDTO> logAnalysisClusters = getLogAnalysisResult(
+          accountId, verificationJobInstanceId, null, DeploymentLogAnalysisFilter.builder().build());
       int anomClusters = 0, totalClusters = 0;
       for (LogAnalysisClusterDTO logAnalysisClusterDTO : logAnalysisClusters) {
         if (logAnalysisClusterDTO.getRisk().isGreaterThan(Risk.LOW)) {
@@ -152,30 +174,6 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
     }
   }
 
-  private PageResponse<LogAnalysisClusterDTO> formPageResponse(
-
-      List<LogAnalysisClusterDTO> logAnalysisClusters, int pageNumber, int size) {
-    List<LogAnalysisClusterDTO> returnList = new ArrayList<>();
-
-    int startIndex = pageNumber * size;
-    Iterator<LogAnalysisClusterDTO> iterator = logAnalysisClusters.iterator();
-    int i = 0;
-    while (iterator.hasNext()) {
-      LogAnalysisClusterDTO logAnalysisClusterDTO = iterator.next();
-      if (i >= startIndex && returnList.size() < size) {
-        returnList.add(logAnalysisClusterDTO);
-      }
-      i++;
-    }
-
-    return PageResponse.<LogAnalysisClusterDTO>builder()
-        .pageSize(size)
-        .pageIndex(pageNumber)
-        .totalPages(logAnalysisClusters.size() / size)
-        .totalItems(logAnalysisClusters.size())
-        .content(returnList)
-        .build();
-  }
   @Override
   @Nullable
   public DeploymentLogAnalysis getRecentHighestDeploymentLogAnalysis(
@@ -197,9 +195,19 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
 
   @Override
   public List<DeploymentLogAnalysis> getLatestDeploymentLogAnalysis(
-      String accountId, String verificationJobInstanceId) {
+      String accountId, String verificationJobInstanceId, DeploymentLogAnalysisFilter deploymentLogAnalysisFilter) {
     Set<String> verificationTaskIds =
         verificationTaskService.maybeGetVerificationTaskIds(accountId, verificationJobInstanceId);
+    if (deploymentLogAnalysisFilter.filterByHealthSourceIdentifiers()) {
+      List<String> cvConfigIds = verificationJobInstanceService.getCVConfigIdsForVerificationJobInstance(
+          verificationJobInstanceId, deploymentLogAnalysisFilter.getHealthSourceIdentifiers());
+      verificationTaskIds =
+          verificationTaskIds.stream()
+              .filter(verificationTaskId
+                  -> cvConfigIds.contains(verificationTaskService.get(verificationTaskId).getCvConfigId()))
+              .collect(Collectors.toSet());
+    }
+
     List<DeploymentLogAnalysis> deploymentLogAnalyses = new ArrayList<>();
     for (String taskId : verificationTaskIds) {
       DeploymentLogAnalysis logAnalysis = hPersistence.createQuery(DeploymentLogAnalysis.class)
@@ -213,33 +221,59 @@ public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisSe
     return deploymentLogAnalyses;
   }
 
-  private LogAnalysisClusterChartDTO updateClusterChartDTOWithRisk(
-      LogAnalysisClusterChartDTO logAnalysisClusterChartDTO, ResultSummary resultSummary) {
-    resultSummary.getTestClusterSummaries()
-        .stream()
-        .filter(clusterSummary -> logAnalysisClusterChartDTO.getLabel() == clusterSummary.getLabel())
-        .findFirst()
-        .ifPresent(clusterSummary -> logAnalysisClusterChartDTO.setRisk(clusterSummary.getRiskLevel()));
-    return logAnalysisClusterChartDTO;
+  @Override
+  public String getLogDemoTemplate(String verificationTaskId) {
+    List<DeploymentLogAnalysis> deploymentLogAnalyses =
+        hPersistence.createQuery(DeploymentLogAnalysis.class)
+            .filter(DeploymentLogAnalysisKeys.verificationTaskId, verificationTaskId)
+            .asList();
+    return JsonUtils.asJson(deploymentLogAnalyses);
+  }
+
+  @Override
+  public void addDemoAnalysisData(String verificationTaskId, CVConfig cvConfig,
+      VerificationJobInstance verificationJobInstance, String demoTemplatePath) {
+    try {
+      String template = Resources.toString(this.getClass().getResource(demoTemplatePath), Charsets.UTF_8);
+      List<DeploymentLogAnalysis> deploymentLogAnalyses =
+          JsonUtils.asObject(template, new TypeReference<List<DeploymentLogAnalysis>>() {});
+      deploymentLogAnalyses.sort(Comparator.comparing(DeploymentLogAnalysis::getStartTime));
+      Instant lastStartTime = deploymentLogAnalyses.get(0).getStartTime();
+      int minute = 0;
+      for (DeploymentLogAnalysis deploymentLogAnalysis : deploymentLogAnalyses) {
+        deploymentLogAnalysis.setVerificationTaskId(verificationTaskId);
+        if (!lastStartTime.equals(deploymentLogAnalysis.getStartTime())) {
+          lastStartTime = deploymentLogAnalysis.getStartTime();
+          minute++;
+        }
+        deploymentLogAnalysis.setStartTime(verificationJobInstance.getStartTime().plus(Duration.ofMinutes(minute)));
+        deploymentLogAnalysis.setEndTime(deploymentLogAnalysis.getStartTime().plus(Duration.ofMinutes(1)));
+      }
+      hPersistence.save(deploymentLogAnalyses);
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
+    }
   }
 
   private List<LogAnalysisClusterChartDTO> getLogAnalysisClusterChartList(
-      DeploymentLogAnalysis deploymentLogAnalysis, String hostName, boolean shouldFilterByHostName) {
+      DeploymentLogAnalysis deploymentLogAnalysis, String hostName) {
+    Map<Integer, Cluster> labelToClusterMap = new HashMap<>();
+    deploymentLogAnalysis.getClusters().forEach(cluster -> labelToClusterMap.put(cluster.getLabel(), cluster));
+
     List<LogAnalysisClusterChartDTO> logAnalysisClusterChartDTOList = new ArrayList<>();
-    deploymentLogAnalysis.getClusters().forEach(cluster
-        -> deploymentLogAnalysis.getClusterCoordinates()
-               .stream()
-               .filter(clusterCoordinates
-                   -> (shouldFilterByHostName ? clusterCoordinates.getHost().equals(hostName) : Boolean.TRUE)
-                       && (cluster.getLabel() == clusterCoordinates.getLabel()))
-               .forEach(clusterCoordinates
-                   -> logAnalysisClusterChartDTOList.add(LogAnalysisClusterChartDTO.builder()
-                                                             .label(cluster.getLabel())
-                                                             .text(cluster.getText())
-                                                             .hostName(clusterCoordinates.getHost())
-                                                             .x(clusterCoordinates.getX())
-                                                             .y(clusterCoordinates.getY())
-                                                             .build())));
+    deploymentLogAnalysis.getClusterCoordinates()
+        .stream()
+        .filter(clusterCoordinate -> hostName == null || clusterCoordinate.getHost().equals(hostName))
+        .forEach(clusterCoordinate -> {
+          Cluster cluster = labelToClusterMap.get(clusterCoordinate.getLabel());
+          logAnalysisClusterChartDTOList.add(LogAnalysisClusterChartDTO.builder()
+                                                 .label(cluster.getLabel())
+                                                 .text(cluster.getText())
+                                                 .hostName(clusterCoordinate.getHost())
+                                                 .x(clusterCoordinate.getX())
+                                                 .y(clusterCoordinate.getY())
+                                                 .build());
+        });
     return logAnalysisClusterChartDTOList;
   }
 

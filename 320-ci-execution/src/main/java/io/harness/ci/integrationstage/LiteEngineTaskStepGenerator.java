@@ -1,5 +1,7 @@
 package io.harness.ci.integrationstage;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.environment.BuildJobEnvInfo;
@@ -44,22 +46,22 @@ public class LiteEngineTaskStepGenerator {
     if (isFirstPod) {
       return LiteEngineTaskStepInfo.builder()
           .identifier(LITE_ENGINE_TASK + liteEngineCounter)
+          .name(LITE_ENGINE_TASK + liteEngineCounter)
           .infrastructure(infrastructure)
           .ciCodebase(ciCodebase)
           .skipGitClone(!gitClone)
           .usePVC(usePVC)
           .buildJobEnvInfo(buildJobEnvInfo)
-          .steps(null)
           .executionElementConfig(executionElement)
           .timeout(getTimeout(infrastructure))
           .build();
     } else {
       return LiteEngineTaskStepInfo.builder()
           .identifier(LITE_ENGINE_TASK + liteEngineCounter)
+          .name(LITE_ENGINE_TASK + liteEngineCounter)
           .buildJobEnvInfo(buildJobEnvInfo)
           .infrastructure(infrastructure)
           .usePVC(usePVC)
-          .steps(null)
           .executionElementConfig(executionElement)
           .timeout(getTimeout(infrastructure))
           .build();
@@ -78,7 +80,7 @@ public class LiteEngineTaskStepGenerator {
     ParameterField<String> timeout = ((K8sDirectInfraYaml) infrastructure).getSpec().getInitTimeout();
 
     int timeoutInMillis = LiteEngineTaskStepInfo.DEFAULT_TIMEOUT;
-    if (timeout != null && timeout.fetchFinalValue() != null) {
+    if (timeout != null && timeout.fetchFinalValue() != null && isNotEmpty((String) timeout.fetchFinalValue())) {
       timeoutInMillis = (int) Timeout.fromString((String) timeout.fetchFinalValue()).getTimeoutInMillis();
     }
     return timeoutInMillis;

@@ -9,7 +9,10 @@ import static io.harness.constants.Constants.X_GIT_LAB_EVENT;
 import static io.harness.constants.Constants.X_HARNESS_TRIGGER_ID;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.ngtriggers.beans.source.NGTriggerType.ARTIFACT;
+import static io.harness.ngtriggers.beans.source.NGTriggerType.MANIFEST;
 import static io.harness.ngtriggers.beans.source.NGTriggerType.WEBHOOK;
 import static io.harness.ngtriggers.beans.source.WebhookTriggerType.AWS_CODECOMMIT;
 import static io.harness.ngtriggers.beans.source.WebhookTriggerType.BITBUCKET;
@@ -29,10 +32,12 @@ import io.harness.exception.TriggerException;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.ngtriggers.beans.config.NGTriggerConfig;
 import io.harness.ngtriggers.beans.config.NGTriggerConfigV2;
+import io.harness.ngtriggers.beans.dto.BuildDetails;
 import io.harness.ngtriggers.beans.dto.LastTriggerExecutionDetails;
 import io.harness.ngtriggers.beans.dto.NGTriggerDetailsResponseDTO;
 import io.harness.ngtriggers.beans.dto.NGTriggerDetailsResponseDTO.NGTriggerDetailsResponseDTOBuilder;
 import io.harness.ngtriggers.beans.dto.NGTriggerResponseDTO;
+import io.harness.ngtriggers.beans.dto.PollingConfig;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.dto.WebhookDetails;
 import io.harness.ngtriggers.beans.dto.WebhookDetails.WebhookDetailsBuilder;
@@ -42,6 +47,7 @@ import io.harness.ngtriggers.beans.entity.TriggerEventHistory;
 import io.harness.ngtriggers.beans.entity.TriggerEventHistory.TriggerEventHistoryKeys;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent.TriggerWebhookEventBuilder;
+import io.harness.ngtriggers.beans.entity.metadata.BuildMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.CronMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.CustomMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.GitMetadata;
@@ -51,6 +57,12 @@ import io.harness.ngtriggers.beans.entity.metadata.WebhookMetadata.WebhookMetada
 import io.harness.ngtriggers.beans.source.NGTriggerSourceV2;
 import io.harness.ngtriggers.beans.source.NGTriggerType;
 import io.harness.ngtriggers.beans.source.WebhookTriggerType;
+import io.harness.ngtriggers.beans.source.artifact.ArtifactTriggerConfig;
+import io.harness.ngtriggers.beans.source.artifact.ArtifactTypeSpec;
+import io.harness.ngtriggers.beans.source.artifact.GcrArtifactSpec;
+import io.harness.ngtriggers.beans.source.artifact.HelmManifestSpec;
+import io.harness.ngtriggers.beans.source.artifact.ManifestTriggerConfig;
+import io.harness.ngtriggers.beans.source.artifact.ManifestTypeSpec;
 import io.harness.ngtriggers.beans.source.scheduled.CronTriggerSpec;
 import io.harness.ngtriggers.beans.source.scheduled.ScheduledTriggerConfig;
 import io.harness.ngtriggers.beans.source.webhook.v2.WebhookTriggerConfigV2;
@@ -59,9 +71,9 @@ import io.harness.ngtriggers.beans.target.TargetType;
 import io.harness.ngtriggers.helpers.WebhookConfigHelper;
 import io.harness.ngtriggers.utils.WebhookEventPayloadParser;
 import io.harness.repositories.spring.TriggerEventHistoryRepository;
+import io.harness.utils.YamlPipelineUtils;
 import io.harness.webhook.WebhookConfigProvider;
 import io.harness.webhook.WebhookHelper;
-import io.harness.yaml.utils.YamlPipelineUtils;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -166,6 +178,35 @@ public class NGTriggerElementMapper {
     return TriggerDetails.builder().ngTriggerConfigV2(config).ngTriggerEntity(ngTriggerEntity).build();
   }
 
+  public TriggerDetails toTriggerDetails(NGTriggerEntity ngTriggerEntity) {
+    NGTriggerConfigV2 config = toTriggerConfigV2(ngTriggerEntity.getYaml());
+    return TriggerDetails.builder().ngTriggerConfigV2(config).ngTriggerEntity(ngTriggerEntity).build();
+  }
+
+  public TriggerDetails mergeTriggerEntity(NGTriggerEntity existingEntity, String newYaml) {
+    NGTriggerConfigV2 config = toTriggerConfigV2(newYaml);
+    NGTriggerEntity entity = toTriggerEntity(existingEntity.getAccountId(), existingEntity.getOrgIdentifier(),
+        existingEntity.getProjectIdentifier(), existingEntity.getIdentifier(), newYaml);
+
+    copyEntityFieldsOutsideOfYml(existingEntity, entity);
+    return TriggerDetails.builder().ngTriggerConfigV2(config).ngTriggerEntity(entity).build();
+  }
+
+  public void copyEntityFieldsOutsideOfYml(NGTriggerEntity existingEntity, NGTriggerEntity newEntity) {
+    if (newEntity.getType() == ARTIFACT || newEntity.getType() == MANIFEST) {
+      PollingConfig existingPollingConfig = existingEntity.getMetadata().getBuildMetadata().getPollingConfig();
+
+      if (existingPollingConfig != null && isNotEmpty(existingPollingConfig.getSignature())) {
+        newEntity.getMetadata().getBuildMetadata().getPollingConfig().setSignature(
+            existingPollingConfig.getSignature());
+      }
+      if (existingPollingConfig != null && isNotEmpty(existingPollingConfig.getPollingDocId())) {
+        newEntity.getMetadata().getBuildMetadata().getPollingConfig().setPollingDocId(
+            existingPollingConfig.getPollingDocId());
+      }
+    }
+  }
+
   public NGTriggerEntity toTriggerEntity(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier, String yaml) {
     NGTriggerConfigV2 config = toTriggerConfigV2(yaml);
@@ -226,6 +267,33 @@ public class NGTriggerElementMapper {
         CronTriggerSpec cronTriggerSpec = (CronTriggerSpec) scheduledTriggerConfig.getSpec();
         return NGTriggerMetadata.builder()
             .cron(CronMetadata.builder().expression(cronTriggerSpec.getExpression()).build())
+            .build();
+      case ARTIFACT:
+        ArtifactTypeSpec artifactTypeSpec = ((ArtifactTriggerConfig) triggerSource.getSpec()).getSpec();
+        String artifactSourceType = null;
+        if (GcrArtifactSpec.class.isAssignableFrom(artifactTypeSpec.getClass())) {
+          artifactSourceType = artifactTypeSpec.getClass().getName();
+        }
+        return NGTriggerMetadata.builder()
+            .buildMetadata(BuildMetadata.builder()
+                               .type(ARTIFACT)
+                               .buildSourceType(artifactSourceType)
+                               .pollingConfig(PollingConfig.builder().buildRef(EMPTY).signature(generateUuid()).build())
+                               .build())
+            .build();
+      case MANIFEST:
+        ManifestTypeSpec manifestTypeSpec = ((ManifestTriggerConfig) triggerSource.getSpec()).getSpec();
+        String manifestSourceType = null;
+        if (HelmManifestSpec.class.isAssignableFrom(manifestTypeSpec.getClass())) {
+          manifestSourceType = manifestTypeSpec.getClass().getName();
+        }
+
+        return NGTriggerMetadata.builder()
+            .buildMetadata(BuildMetadata.builder()
+                               .type(MANIFEST)
+                               .buildSourceType(manifestSourceType)
+                               .pollingConfig(PollingConfig.builder().buildRef(EMPTY).signature(generateUuid()).build())
+                               .build())
             .build();
       default:
         throw new InvalidRequestException("Type " + triggerSource.getType().toString() + " is invalid");
@@ -349,6 +417,7 @@ public class NGTriggerElementMapper {
                               : StringUtils.EMPTY)
             .tags(TagMapper.convertToMap(ngTriggerEntity.getTags()))
             .enabled(ngTriggerEntity.getEnabled() == null || ngTriggerEntity.getEnabled())
+            .triggerStatus(ngTriggerEntity.getTriggerStatus())
             .webhookUrl(webhookUrl);
 
     // Webhook Details
@@ -356,6 +425,13 @@ public class NGTriggerElementMapper {
       WebhookDetailsBuilder webhookDetails = WebhookDetails.builder();
       webhookDetails.webhookSourceRepo(ngTriggerEntity.getMetadata().getWebhook().getType()).build();
       ngTriggerDetailsResponseDTO.webhookDetails(webhookDetails.build());
+      ngTriggerDetailsResponseDTO.registrationStatus(
+          ngTriggerEntity.getMetadata().getWebhook().getRegistrationStatus());
+    } else if (ngTriggerEntity.getType() == MANIFEST || ngTriggerEntity.getType() == ARTIFACT) {
+      ngTriggerDetailsResponseDTO.buildDetails(
+          BuildDetails.builder()
+              .buildType(ngTriggerEntity.getMetadata().getBuildMetadata().getBuildSourceType())
+              .build());
     }
 
     Optional<TriggerEventHistory> triggerEventHistory = fetchLatestExecutionForTrigger(ngTriggerEntity);

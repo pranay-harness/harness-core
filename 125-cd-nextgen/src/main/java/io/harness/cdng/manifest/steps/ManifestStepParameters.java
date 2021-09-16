@@ -1,5 +1,6 @@
 package io.harness.cdng.manifest.steps;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.yaml.ManifestAttributes;
@@ -15,10 +16,12 @@ import org.springframework.data.annotation.TypeAlias;
 @Value
 @Builder
 @TypeAlias("manifestStepParameters")
+@RecasterAlias("io.harness.cdng.manifest.steps.ManifestStepParameters")
 public class ManifestStepParameters implements StepParameters {
   String identifier;
   String type;
   ManifestAttributes spec;
   @Singular List<ManifestAttributes> overrideSets;
   ManifestAttributes stageOverride;
+  int order;
 }

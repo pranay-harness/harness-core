@@ -26,7 +26,6 @@ import io.harness.govern.ServersModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
-import io.harness.ngpipeline.common.NGPipelineObjectMapperHelper;
 import io.harness.outbox.api.OutboxService;
 import io.harness.outbox.api.impl.OutboxDaoImpl;
 import io.harness.outbox.api.impl.OutboxServiceImpl;
@@ -49,6 +48,7 @@ import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
+import io.harness.utils.NGObjectMapperHelper;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
@@ -121,7 +121,7 @@ public class PipelineServiceTestRule implements InjectorRuleMixin, MethodRule, M
       @Singleton
       OutboxService getOutboxService(OutboxEventRepository outboxEventRepository) {
         return new OutboxServiceImpl(
-            new OutboxDaoImpl(outboxEventRepository), NGPipelineObjectMapperHelper.NG_PIPELINE_OBJECT_MAPPER);
+            new OutboxDaoImpl(outboxEventRepository), NGObjectMapperHelper.NG_PIPELINE_OBJECT_MAPPER);
       }
 
       @Provides

@@ -10,26 +10,34 @@ import (
 	"time"
 
 	"github.com/wings-software/portal/product/log-service/stream"
+
+	"github.com/go-co-op/gocron"
 	// TODO (vistaar): Move to redis v8. v8 accepts ctx in all calls.
 	// There is some bazel issue with otel library with v8, need to move it once that is resolved.
 	"github.com/go-redis/redis/v7"
-	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
 const (
-	keyExpiryTimeSeconds = 5 * 60 * 60 * (time.Second) // How long each key exists in redis
+	defaultKeyExpiryTimeSeconds = 5 * 60 * 60 // We keep each key in redis for 5 hours
 	// Polling time for each thread to wait for read before getting freed up. This should not be too large to avoid
 	// redis clients getting occupied for long.
 	readPollTime  = 100 * time.Millisecond
 	tailMaxTime   = 1 * time.Hour // maximum duration a tail can last
 	bufferSize    = 50            // buffer for slow consumers
 	maxStreamSize = 5000          // Maximum number of entries in each stream (ring buffer)
+	// Maximum number of keys that we will return with a given prefix. If there are more than maxPrefixes keys with a given prefix,
+	// only the first maxPrefixes keys will be returned.
+	maxPrefixes = 200
 	// max. number of concurrent connections that Redis can handle. This limit is set to 10k by default on the latest
 	// Redis servers. To increase it, make sure it gets increased on the server side as well.
 	connectionPool = 5000
 	entryKey       = "line"
+
+	// Redis TTL error values
+	TTL_NOT_SET          = -1
+	TTL_KEY_DOESNT_EXIST = -2
 )
 
 type Redis struct {
@@ -43,9 +51,14 @@ func New(endpoint, password string) *Redis {
 		DB:       0,
 		PoolSize: connectionPool,
 	})
-	return &Redis{
+	rc := &Redis{
 		Client: rdb,
 	}
+	logrus.Infof("starting expiry watcher thread on Redis instance")
+	s := gocron.NewScheduler(time.UTC)
+	s.Every(defaultKeyExpiryTimeSeconds).Seconds().Do(rc.expiryWatcher, defaultKeyExpiryTimeSeconds*time.Second)
+	s.StartAsync()
+	return rc
 }
 
 // Create creates a redis stream and sets an expiry on it.
@@ -69,11 +82,7 @@ func (r *Redis) Create(ctx context.Context, key string) error {
 		return errors.Wrap(err, fmt.Sprintf("could not create stream with key: %s", key))
 	}
 
-	// Set a TTL for the stream
-	res := r.Client.Expire(key, keyExpiryTimeSeconds)
-	if err := res.Err(); err != nil {
-		return errors.Wrap(err, fmt.Sprintf("could not set expiry for key: %s", key))
-	}
+	r.setExpiry(key, defaultKeyExpiryTimeSeconds*time.Second)
 	return nil
 }
 
@@ -93,7 +102,7 @@ func (r *Redis) Delete(ctx context.Context, key string) error {
 
 // Write writes information into the Redis stream
 func (r *Redis) Write(ctx context.Context, key string, lines ...*stream.Line) error {
-	var errors error
+	var werr error
 	exists := r.Client.Exists(key)
 	if exists.Err() != nil || exists.Val() == 0 {
 		return stream.ErrNotFound
@@ -110,10 +119,12 @@ func (r *Redis) Write(ctx context.Context, key string, lines ...*stream.Line) er
 		}
 		resp := r.Client.XAdd(arg)
 		if err := resp.Err(); err != nil {
-			errors = multierror.Append(errors, err)
+			werr = fmt.Errorf("could not write to stream with key: %s. Error: %s", key, err)
 		}
 	}
-	return errors
+
+	r.setExpiry(key, defaultKeyExpiryTimeSeconds*time.Second)
+	return werr
 }
 
 // Read returns back all the lines in the stream. If tail is specifed as true, it keeps watching and doesn't
@@ -183,6 +194,41 @@ func (r *Redis) Exists(ctx context.Context, key string) error {
 		return stream.ErrNotFound
 	}
 	return nil
+}
+
+func (r *Redis) ListPrefix(ctx context.Context, prefix string) ([]string, error) {
+	// Return all the keys with the given prefix
+	l := []string{}
+	if len(prefix) == 0 {
+		return l, nil
+	}
+	if prefix[len(prefix)-1] != '*' {
+		prefix = prefix + "*"
+	}
+
+	var cursor uint64
+	keyM := make(map[string]struct{})
+	for {
+		var keys []string
+		var err error
+		// Scan upto 10 keys at a time
+		keys, cursor, err = r.Client.Scan(cursor, prefix, 10).Result()
+		if err != nil {
+			return l, err
+		}
+		for _, k := range keys {
+			if _, ok := keyM[k]; ok {
+				continue
+			}
+			keyM[k] = struct{}{}
+			l = append(l, k)
+		}
+		if cursor == 0 || len(l) > maxPrefixes {
+			break
+		}
+	}
+
+	return l, nil
 }
 
 // CopyTo copies the contents from the redis stream to the writer
@@ -258,4 +304,62 @@ func (r *Redis) Info(ctx context.Context) *stream.Info {
 		}
 	}
 	return info
+}
+
+// Helper function to set an expiry to a key if it's not already set
+func (r *Redis) setExpiry(key string, expiry time.Duration) error {
+	ttl := r.Client.TTL(key)
+	if ttl.Err() != nil {
+		logrus.Errorf("could not retrieve TTL for key: %s. Error: %s", key, ttl.Err())
+		return ttl.Err()
+	}
+
+	resp, err := ttl.Result()
+	if err != nil {
+		logrus.Errorf("could not retrieve result for key: %s. Error: %s", key, err)
+		return err
+	}
+
+	// Only set an expiry if the expiry is not already set
+	if resp == TTL_KEY_DOESNT_EXIST {
+		return errors.New("could not set expiry as key doesn't exist")
+	} else if resp == TTL_NOT_SET {
+		// Set a TTL for the stream
+		res := r.Client.Expire(key, expiry)
+		if err := res.Err(); err != nil {
+			logrus.Errorf("could not set expiry on key: %s. Error: %s", key, err)
+			return errors.Wrap(err, fmt.Sprintf("could not set expiry for key: %s", key))
+		}
+	} else {
+		return errors.New("could not set expiry as it is already set")
+	}
+	return nil
+}
+
+// Scan all the keys and set an expiry on them if it's not set
+func (r *Redis) expiryWatcher(expiry time.Duration) {
+	logrus.Infof("running expiry watcher thread")
+	st := time.Now()
+	var cursor uint64
+	cnt := 0
+	for {
+		var keys []string
+		var err error
+		// Scan upto 10 keys at a time
+		keys, cursor, err = r.Client.Scan(cursor, "*", 10).Result()
+		if err != nil {
+			logrus.Error(errors.Wrap(err, "error in expiry watcher thread"))
+			return
+		}
+		for _, k := range keys {
+			if err := r.setExpiry(k, expiry); err == nil {
+				logrus.Infof("set an expiry %s on non-volatile key: %s", expiry, k)
+				cnt++
+			}
+		}
+		if cursor == 0 {
+			break
+		}
+	}
+	logrus.Infof("done running expiry watcher thread in %s time and expired %d keys", time.Since(st), cnt)
 }

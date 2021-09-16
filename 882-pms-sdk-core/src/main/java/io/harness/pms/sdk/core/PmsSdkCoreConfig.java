@@ -7,6 +7,7 @@ import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.redis.RedisConfig;
+import io.harness.threading.ThreadPoolConfig;
 
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -20,6 +21,9 @@ public class PmsSdkCoreConfig {
   SdkDeployMode sdkDeployMode;
   GrpcServerConfig grpcServerConfig;
   GrpcClientConfig grpcClientConfig;
+  ThreadPoolConfig executionPoolConfig;
+  ThreadPoolConfig orchestrationEventPoolConfig;
+
   @Default
   EventsFrameworkConfiguration eventsFrameworkConfiguration =
       EventsFrameworkConfiguration.builder()

@@ -47,6 +47,7 @@ import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketSshCredentials
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketUsernameTokenApiAccessDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitSSHAuthenticationDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
 import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
@@ -98,7 +99,7 @@ public class ConnectorUtils {
   private final SecretUtils secretUtils;
 
   private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(2);
-  private final int MAX_ATTEMPTS = 3;
+  private final int MAX_ATTEMPTS = 6;
 
   @Inject
   public ConnectorUtils(ConnectorResourceClient connectorResourceClient, SecretUtils secretUtils,
@@ -219,6 +220,23 @@ public class ConnectorUtils {
       AwsCodeCommitConnectorDTO gitConfigDTO = (AwsCodeCommitConnectorDTO) gitConnector.getConnectorConfig();
       return gitConfigDTO.getUrl();
     } else {
+      throw new CIStageExecutionException("scmType " + gitConnector.getConnectorType() + "is not supported.");
+    }
+  }
+
+  public boolean hasApiAccess(ConnectorDetails gitConnector) {
+    if (gitConnector.getConnectorType() == GITHUB) {
+      GithubConnectorDTO gitConfigDTO = (GithubConnectorDTO) gitConnector.getConnectorConfig();
+      return gitConfigDTO.getApiAccess() != null;
+    } else if (gitConnector.getConnectorType() == BITBUCKET) {
+      BitbucketConnectorDTO gitConfigDTO = (BitbucketConnectorDTO) gitConnector.getConnectorConfig();
+      return gitConfigDTO.getApiAccess() != null;
+    } else if (gitConnector.getConnectorType() == GITLAB) {
+      GitlabConnectorDTO gitConfigDTO = (GitlabConnectorDTO) gitConnector.getConnectorConfig();
+      return gitConfigDTO.getApiAccess() != null;
+    } else if (gitConnector.getConnectorType() == GIT || gitConnector.getConnectorType() == CODECOMMIT) {
+      return false;
+    } else {
       throw new CIStageExecutionException("scmType " + gitConnector.getConnectorType() + "is not supported");
     }
   }
@@ -249,6 +267,8 @@ public class ConnectorUtils {
       encryptedDataDetails = secretManagerClientService.getEncryptionDetails(ngAccess, awsManualConfigSpecDTO);
       return connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails).build();
     } else if (awsCredentialDTO.getAwsCredentialType() == AwsCredentialType.INHERIT_FROM_DELEGATE) {
+      return connectorDetailsBuilder.build();
+    } else if (awsCredentialDTO.getAwsCredentialType() == AwsCredentialType.IRSA) {
       return connectorDetailsBuilder.build();
     }
     throw new InvalidArgumentsException(format("Unsupported aws credential type:[%s] on connector:[%s]",
@@ -411,8 +431,21 @@ public class ConnectorUtils {
     List<EncryptedDataDetail> encryptedDataDetails;
     GitConfigDTO gitConfigDTO = (GitConfigDTO) connectorDTO.getConnectorInfo().getConnectorConfig();
     GitAuthenticationDTO gitAuth = gitConfigDTO.getGitAuth();
-    encryptedDataDetails = secretManagerClientService.getEncryptionDetails(ngAccess, gitAuth);
-    return connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails).build();
+    if (gitConfigDTO.getGitAuthType() == GitAuthType.HTTP) {
+      encryptedDataDetails = secretManagerClientService.getEncryptionDetails(ngAccess, gitAuth);
+      return connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails).build();
+    } else if (gitConfigDTO.getGitAuthType() == GitAuthType.SSH) {
+      GitSSHAuthenticationDTO gitSSHAuthenticationDTO = (GitSSHAuthenticationDTO) gitAuth;
+      SSHKeyDetails sshKey = secretUtils.getSshKey(ngAccess, gitSSHAuthenticationDTO.getEncryptedSshKey());
+      connectorDetailsBuilder.sshKeyDetails(sshKey);
+      if (sshKey.getSshKeyReference().getEncryptedPassphrase() != null) {
+        throw new CIStageExecutionException(
+            "Unsupported ssh key format, passphrase is unsupported in git connector: " + gitConfigDTO.getGitAuthType());
+      }
+      return connectorDetailsBuilder.build();
+    } else {
+      throw new CIStageExecutionException("Unsupported git connector auth" + gitConfigDTO.getGitAuthType());
+    }
   }
 
   private ConnectorDetails getDockerConnectorDetails(

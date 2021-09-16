@@ -76,6 +76,10 @@ if [[ "" != "$MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE mongo.uri "${MONGO_URI//\\&/&}"
 fi
 
+if [[ "" != "$MONGO_TRACE_MODE" ]]; then
+  yq write -i $CONFIG_FILE mongo.traceMode $MONGO_TRACE_MODE
+fi
+
 if [[ "" != "$MONGO_SSL_CONFIG" ]]; then
   yq write -i $CONFIG_FILE mongo.mongoSSLConfig.mongoSSLEnabled "$MONGO_SSL_CONFIG"
 fi
@@ -281,9 +285,6 @@ if [[ "" != "$jwtNextGenManagerSecret" ]]; then
   yq write -i $CONFIG_FILE portal.jwtNextGenManagerSecret "$jwtNextGenManagerSecret"
 fi
 
-if [[ "" != "$jwtNextGenManagerSecret" ]]; then
-  yq write -i $CONFIG_FILE cvngClientConfig.cvNgServiceSecret "$jwtNextGenManagerSecret"
-fi
 
 if [[ "" != "$FEATURES" ]]; then
   yq write -i $CONFIG_FILE featuresEnabled "$FEATURES"
@@ -311,6 +312,10 @@ fi
 
 if [[ "" != "$SMTP_PASSWORD" ]]; then
   yq write -i $CONFIG_FILE smtp.password "$SMTP_PASSWORD"
+fi
+
+if [[ "" != "$SMTP_USE_SSL" ]]; then
+  yq write -i $CONFIG_FILE smtp.useSSL "$SMTP_USE_SSL"
 fi
 
 if [[ "" != "$MARKETO_ENABLED" ]]; then
@@ -784,6 +789,30 @@ if [[ "" != "$DELEGATE_SERVICE_AUTHORITY" ]]; then
   yq write -i $CONFIG_FILE grpcDelegateServiceClientConfig.authority "$DELEGATE_SERVICE_AUTHORITY"
 fi
 
+if [[ "" != "$DELEGATE_SERVICE_MANAGEMENT_AUTHORITY" ]]; then
+  yq write -i $CONFIG_FILE grpcDMSClientConfig.authority "$DELEGATE_SERVICE_MANAGEMENT_AUTHORITY"
+fi
+
+if [[ "" != "$DELEGATE_SERVICE_MANAGEMENT_TARGET" ]]; then
+  yq write -i $CONFIG_FILE grpcDMSClientConfig.target "$DELEGATE_SERVICE_MANAGEMENT_TARGET"
+fi
+
+if [[ "" != "$DELEGATE_SERVICE_MANAGEMENT_SECRET" ]]; then
+  yq write -i $CONFIG_FILE dmsSecret "$DELEGATE_SERVICE_MANAGEMENT_SECRET"
+fi
+
+if [[ "" != "$DMS_GRPC_SECRET" ]]; then
+  yq write -i $CONFIG_FILE dmsGrpcClient.secret "$DMS_GRPC_SECRET"
+fi
+
+if [[ "" != "$DMS_GRPC_TARGET" ]]; then
+  yq write -i $CONFIG_FILE dmsGrpcClient.target "$DMS_GRPC_TARGET"
+fi
+
+if [[ "" != "$DMS_GRPC_AUTHORITY" ]]; then
+  yq write -i $CONFIG_FILE dmsGrpcClient.authority "$DMS_GRPC_AUTHORITY"
+fi
+
 if [[ "" != "$DELEGATE_GRPC_TARGET" ]]; then
   yq write -i $CONFIG_FILE grpcOnpremDelegateClientConfig.target "$DELEGATE_GRPC_TARGET"
 fi
@@ -858,15 +887,26 @@ replace_key_value eventsFramework.redis.password $EVENTS_FRAMEWORK_REDIS_PASSWOR
 replace_key_value eventsFramework.redis.sslConfig.enabled $EVENTS_FRAMEWORK_REDIS_SSL_ENABLED
 replace_key_value eventsFramework.redis.sslConfig.CATrustStorePath $EVENTS_FRAMEWORK_REDIS_SSL_CA_TRUST_STORE_PATH
 replace_key_value eventsFramework.redis.sslConfig.CATrustStorePassword $EVENTS_FRAMEWORK_REDIS_SSL_CA_TRUST_STORE_PASSWORD
+replace_key_value ngAuthUIEnabled "$HARNESS_ENABLE_NG_AUTH_UI_PLACEHOLDER"
+replace_key_value portal.gatewayPathPrefix "$GATEWAY_PATH_PREFIX"
+replace_key_value portal.zendeskBaseUrl "$ZENDESK_BASE_URL"
 
 if [[ "" != "$NG_MANAGER_BASE_URL" ]]; then
   yq write -i $CONFIG_FILE ngManagerServiceHttpClientConfig.baseUrl "$NG_MANAGER_BASE_URL"
 fi
 
-if [[ "" != "$CVNG_BASE_URL" ]]; then
-  yq write -i $CONFIG_FILE cvngClientConfig.baseUrl "$CVNG_BASE_URL"
-fi
-
 if [[ "" != "$ENABLE_USER_CHANGESTREAM" ]]; then
   yq write -i $CONFIG_FILE userChangeStreamEnabled "$ENABLE_USER_CHANGESTREAM"
+fi
+
+if [[ "" != "$DISABLE_DELEGATE_MGMT_IN_MANAGER" ]]; then
+  yq write -i $CONFIG_FILE disableDelegateMgmtInManager "$DISABLE_DELEGATE_MGMT_IN_MANAGER"
+fi
+
+if [[ "" != "$LDAP_GROUP_SYNC_INTERVAL" ]]; then
+  yq write -i $CONFIG_FILE ldapSyncJobConfig.syncInterval "$LDAP_GROUP_SYNC_INTERVAL"
+fi
+
+if [[ "" != "$LDAP_GROUP_SYNC_POOL_SIZE" ]]; then
+  yq write -i $CONFIG_FILE ldapSyncJobConfig.poolSize "$LDAP_GROUP_SYNC_POOL_SIZE"
 fi

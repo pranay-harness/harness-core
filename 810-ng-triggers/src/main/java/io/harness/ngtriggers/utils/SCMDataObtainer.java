@@ -102,7 +102,7 @@ public class SCMDataObtainer implements GitProviderBaseDataObtainer {
     if (ScmConnector.class.isAssignableFrom(connectorDetails.getConnectorConfig().getClass())) {
       ScmGitRefTaskParams scmGitRefTaskParams = ScmGitRefTaskParams.builder()
                                                     .prNumber(number)
-                                                    .gitRefType(GitRefType.PULL_REQUEST)
+                                                    .gitRefType(GitRefType.PULL_REQUEST_COMMITS)
                                                     .encryptedDataDetails(connectorDetails.getEncryptedDataDetails())
                                                     .scmConnector((ScmConnector) connectorDetails.getConnectorConfig())
                                                     .build();

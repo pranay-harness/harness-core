@@ -27,11 +27,11 @@ import lombok.extern.slf4j.Slf4j;
 public class PmsFeatureFlagHelper implements PmsFeatureFlagService {
   @Inject private AccountClient accountClient;
 
-  private static final int CACHE_EVICTION_TIME_HOUR = 2;
+  private static final int CACHE_EVICTION_TIME_HOUR = 1;
 
   private final LoadingCache<String, Set<String>> featureFlagCache =
       CacheBuilder.newBuilder()
-          .expireAfterAccess(CACHE_EVICTION_TIME_HOUR, TimeUnit.HOURS)
+          .expireAfterWrite(CACHE_EVICTION_TIME_HOUR, TimeUnit.HOURS)
           .build(new CacheLoader<String, Set<String>>() {
             @Override
             public Set<String> load(@org.jetbrains.annotations.NotNull final String accountId) {

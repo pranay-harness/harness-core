@@ -21,10 +21,8 @@ import static software.wings.beans.LogWeight.Bold;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.pcf.CfAppSetupTimeDetails;
@@ -64,7 +62,6 @@ import org.cloudfoundry.operations.applications.ApplicationSummary;
 @NoArgsConstructor
 @Singleton
 @Slf4j
-@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(HarnessTeam.CDP)
 public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
   @Override
@@ -95,23 +92,7 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
       }
 
       CfRequestConfig cfRequestConfig =
-          CfRequestConfig.builder()
-              .userName(String.valueOf(pcfConfig.getUsername()))
-              .password(String.valueOf(pcfConfig.getPassword()))
-              .endpointUrl(pcfConfig.getEndpointUrl())
-              .orgName(commandRollbackRequest.getOrganization())
-              .spaceName(commandRollbackRequest.getSpace())
-              .timeOutIntervalInMins(commandRollbackRequest.getTimeoutIntervalInMin() == null
-                      ? 10
-                      : commandRollbackRequest.getTimeoutIntervalInMin())
-              .cfHomeDirPath(workingDirectory.getAbsolutePath())
-              .useCFCLI(commandRollbackRequest.isUseCfCLI())
-              .cfCliPath(pcfCommandTaskBaseHelper.getCfCliPathOnDelegate(
-                  cfCommandRequest.isUseCfCLI(), cfCommandRequest.getCfCliVersion()))
-              .cfCliVersion(cfCommandRequest.getCfCliVersion())
-              .limitPcfThreads(commandRollbackRequest.isLimitPcfThreads())
-              .ignorePcfConnectionContextCache(commandRollbackRequest.isIgnorePcfConnectionContextCache())
-              .build();
+          buildCfRequestConfig(cfCommandRequest, commandRollbackRequest, workingDirectory, pcfConfig);
 
       // Will be used if app autoscalar is configured
       CfAppAutoscalarRequestData autoscalarRequestData =
@@ -156,17 +137,20 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
       cfDeployCommandResponse.setInstanceDataUpdated(cfServiceDataUpdated);
       cfDeployCommandResponse.getPcfInstanceElements().addAll(pcfInstanceElements);
 
-      if (isRollbackCompleted(commandRollbackRequest, cfRequestConfig)) {
-        renameApps(cfRequestConfig, commandRollbackRequest, executionLogCallback);
+      if (commandRollbackRequest.isStandardBlueGreenWorkflow()) {
+        deleteNewApp(cfRequestConfig, commandRollbackRequest, executionLogCallback);
+      } else {
+        // for basic & canary
+        if (isRollbackCompleted(commandRollbackRequest, cfRequestConfig)) {
+          deleteNewApp(cfRequestConfig, commandRollbackRequest, executionLogCallback);
+          renameApps(cfRequestConfig, commandRollbackRequest, executionLogCallback);
+        }
       }
 
       executionLogCallback.saveExecutionLog("\n\n--------- PCF Rollback completed successfully", INFO, SUCCESS);
 
-    } catch (IOException | PivotalClientApiException e) {
+    } catch (Exception e) {
       exception = e;
-      logExceptionMessage(executionLogCallback, commandRollbackRequest, exception);
-    } catch (Exception ex) {
-      exception = ex;
       logExceptionMessage(executionLogCallback, commandRollbackRequest, exception);
     } finally {
       executionLogCallback = logStreamingTaskClient.obtainLogCallback(Wrapup);
@@ -192,6 +176,37 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
         .errorMessage(cfDeployCommandResponse.getOutput())
         .pcfCommandResponse(cfDeployCommandResponse)
         .build();
+  }
+
+  private CfRequestConfig buildCfRequestConfig(CfCommandRequest cfCommandRequest,
+      CfCommandRollbackRequest commandRollbackRequest, File workingDirectory, CfInternalConfig pcfConfig) {
+    return CfRequestConfig.builder()
+        .userName(String.valueOf(pcfConfig.getUsername()))
+        .password(String.valueOf(pcfConfig.getPassword()))
+        .endpointUrl(pcfConfig.getEndpointUrl())
+        .orgName(commandRollbackRequest.getOrganization())
+        .spaceName(commandRollbackRequest.getSpace())
+        .timeOutIntervalInMins(commandRollbackRequest.getTimeoutIntervalInMin() == null
+                ? 10
+                : commandRollbackRequest.getTimeoutIntervalInMin())
+        .cfHomeDirPath(workingDirectory.getAbsolutePath())
+        .useCFCLI(commandRollbackRequest.isUseCfCLI())
+        .cfCliPath(pcfCommandTaskBaseHelper.getCfCliPathOnDelegate(
+            cfCommandRequest.isUseCfCLI(), cfCommandRequest.getCfCliVersion()))
+        .cfCliVersion(cfCommandRequest.getCfCliVersion())
+        .limitPcfThreads(commandRollbackRequest.isLimitPcfThreads())
+        .ignorePcfConnectionContextCache(commandRollbackRequest.isIgnorePcfConnectionContextCache())
+        .build();
+  }
+
+  private void deleteNewApp(CfRequestConfig cfRequestConfig, CfCommandRollbackRequest commandRollbackRequest,
+      LogCallback logCallback) throws PivotalClientApiException {
+    // app downsized - to be deleted
+    CfAppSetupTimeDetails newApp = commandRollbackRequest.getNewApplicationDetails();
+
+    cfRequestConfig.setApplicationName(newApp.getApplicationName());
+    logCallback.saveExecutionLog("Deleting application " + encodeColor(newApp.getApplicationName()));
+    pcfDeploymentManager.deleteApplication(cfRequestConfig);
   }
 
   private boolean isRollbackCompleted(CfCommandRollbackRequest commandRollbackRequest, CfRequestConfig cfRequestConfig)
@@ -221,13 +236,6 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
 
   private void renameApps(CfRequestConfig cfRequestConfig, CfCommandRollbackRequest commandRollbackRequest,
       LogCallback logCallback) throws PivotalClientApiException {
-    // app downsized - to be deleted
-    CfAppSetupTimeDetails newApp = commandRollbackRequest.getNewApplicationDetails();
-
-    cfRequestConfig.setApplicationName(newApp.getApplicationName());
-    logCallback.saveExecutionLog("Deleting application " + encodeColor(newApp.getApplicationName()));
-    pcfDeploymentManager.deleteApplication(cfRequestConfig);
-
     if (commandRollbackRequest.isNonVersioning()) {
       logCallback.saveExecutionLog("\n# Reverting app names");
       // app upsized - to be renamed

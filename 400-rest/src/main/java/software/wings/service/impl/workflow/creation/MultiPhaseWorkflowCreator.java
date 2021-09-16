@@ -6,7 +6,9 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ff.FeatureFlagService;
 import io.harness.serializer.MapperUtils;
 
@@ -24,6 +26,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @Slf4j
 public class MultiPhaseWorkflowCreator extends WorkflowCreator {
   @Inject private FeatureFlagService featureFlagService;

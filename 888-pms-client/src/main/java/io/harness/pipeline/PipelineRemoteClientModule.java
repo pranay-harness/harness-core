@@ -2,9 +2,7 @@ package io.harness.pipeline;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.pipeline.remote.PipelineServiceClient;
 import io.harness.pipeline.remote.PipelineServiceHttpClientFactory;
 import io.harness.remote.client.ServiceHttpClientConfig;
@@ -15,7 +13,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 
-@TargetModule(HarnessModule._888_PMS_CLIENT)
 @OwnedBy(PIPELINE)
 public class PipelineRemoteClientModule extends AbstractModule {
   private final ServiceHttpClientConfig serviceHttpClientConfig;

@@ -21,6 +21,7 @@ import software.wings.beans.GcpSecretsManagerConfig;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.LocalEncryptionConfig;
 import software.wings.beans.SSHVaultConfig;
+import software.wings.beans.SecretManagerRuntimeParameters;
 import software.wings.beans.VaultConfig;
 
 import java.util.Set;
@@ -45,6 +46,7 @@ public class SMCoreMorphiaRegistrar implements MorphiaRegistrar {
     set.add(BaseVaultConfig.class);
     set.add(MigrateSecretTask.class);
     set.add(NGEncryptedData.class);
+    set.add(SecretManagerRuntimeParameters.class);
   }
   @Override
   public void registerImplementationClasses(MorphiaRegistrarHelperPut h, MorphiaRegistrarHelperPut w) {

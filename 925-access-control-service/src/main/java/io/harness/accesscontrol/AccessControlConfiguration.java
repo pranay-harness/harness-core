@@ -10,7 +10,9 @@ import io.harness.accesscontrol.principals.serviceaccounts.ServiceAccountClientC
 import io.harness.accesscontrol.principals.usergroups.UserGroupClientConfiguration;
 import io.harness.accesscontrol.principals.users.UserClientConfiguration;
 import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupClientConfiguration;
-import io.harness.accesscontrol.support.AccountClientConfiguration;
+import io.harness.accesscontrol.scopes.harness.AccountClientConfiguration;
+import io.harness.accesscontrol.scopes.harness.OrganizationClientConfiguration;
+import io.harness.accesscontrol.scopes.harness.ProjectClientConfiguration;
 import io.harness.aggregator.AggregatorConfiguration;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ff.FeatureFlagClientConfiguration;
@@ -62,6 +64,8 @@ public class AccessControlConfiguration extends Configuration {
   @JsonProperty("resourceGroupClient") private ResourceGroupClientConfiguration resourceGroupClientConfiguration;
   @JsonProperty("userClient") private UserClientConfiguration userClientConfiguration;
   @JsonProperty("userGroupClient") private UserGroupClientConfiguration userGroupClientConfiguration;
+  @JsonProperty("projectClient") private ProjectClientConfiguration projectClientConfiguration;
+  @JsonProperty("organizationClient") private OrganizationClientConfiguration organizationClientConfiguration;
   @JsonProperty("accountClient") private AccountClientConfiguration accountClientConfiguration;
   @JsonProperty("notificationConfig") private NotificationConfig notificationConfig;
   @JsonProperty("aggregatorModuleConfig") private AggregatorConfiguration aggregatorConfiguration;

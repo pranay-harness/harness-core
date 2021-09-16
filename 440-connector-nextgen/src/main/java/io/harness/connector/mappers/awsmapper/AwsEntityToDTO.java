@@ -1,7 +1,10 @@
 package io.harness.connector.mappers.awsmapper;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.entities.embedded.awsconnector.AwsAccessKeyCredential;
 import io.harness.connector.entities.embedded.awsconnector.AwsConfig;
+import io.harness.connector.entities.embedded.awsconnector.AwsIRSACredential;
 import io.harness.connector.entities.embedded.awsconnector.AwsIamCredential;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
@@ -15,6 +18,7 @@ import io.harness.exception.InvalidRequestException;
 
 import com.google.inject.Singleton;
 
+@OwnedBy(HarnessTeam.DX)
 @Singleton
 public class AwsEntityToDTO implements ConnectorEntityToDTOMapper<AwsConnectorDTO, AwsConfig> {
   @Override
@@ -27,6 +31,9 @@ public class AwsEntityToDTO implements ConnectorEntityToDTOMapper<AwsConnectorDT
         break;
       case MANUAL_CREDENTIALS:
         awsCredentialDTOBuilder = buildManualCredential((AwsAccessKeyCredential) connector.getCredential());
+        break;
+      case IRSA:
+        awsCredentialDTOBuilder = buildIRSA((AwsIRSACredential) connector.getCredential());
         break;
       default:
         throw new InvalidRequestException("Invalid Credential type.");
@@ -52,5 +59,9 @@ public class AwsEntityToDTO implements ConnectorEntityToDTOMapper<AwsConnectorDT
 
   private AwsCredentialDTOBuilder buildInheritFromDelegate(AwsIamCredential credential) {
     return AwsCredentialDTO.builder().awsCredentialType(AwsCredentialType.INHERIT_FROM_DELEGATE).config(null);
+  }
+
+  private AwsCredentialDTOBuilder buildIRSA(AwsIRSACredential credential) {
+    return AwsCredentialDTO.builder().awsCredentialType(AwsCredentialType.IRSA).config(null);
   }
 }

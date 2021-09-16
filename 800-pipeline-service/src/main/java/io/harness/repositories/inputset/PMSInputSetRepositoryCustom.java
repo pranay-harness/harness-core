@@ -3,6 +3,7 @@ package io.harness.repositories.inputset;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.git.model.ChangeType;
 import io.harness.pms.inputset.gitsync.InputSetYamlDTO;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 
@@ -28,7 +29,7 @@ public interface PMSInputSetRepositoryCustom {
   findByAccountIdAndOrgIdentifierAndProjectIdentifierAndPipelineIdentifierAndIdentifierAndDeletedNot(String accountId,
       String orgIdentifier, String projectIdentifier, String pipelineIdentifier, String identifier, boolean notDeleted);
 
-  InputSetEntity update(InputSetEntity entityToUpdate, InputSetYamlDTO yamlDTO);
+  InputSetEntity update(InputSetEntity entityToUpdate, InputSetYamlDTO yamlDTO, ChangeType changeType);
 
   InputSetEntity switchValidationFlag(Criteria criteria, Update update);
 

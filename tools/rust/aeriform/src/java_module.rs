@@ -80,6 +80,7 @@ pub fn model_names() -> HashMap<String, String> {
                 target.split_whitespace().nth(0).unwrap().to_string(),
             )
         })
+        .filter(|(name, _)| name.rfind("/").unwrap_or(0) == 1)
         .collect::<HashMap<String, String>>()
 }
 
@@ -89,18 +90,18 @@ pub fn modules() -> HashMap<String, JavaModule> {
     let modules = module_rules.iter().map(|(k, _)| k.clone()).collect::<HashSet<String>>();
 
     let data_collection_dsl = populate_from_external(
-        "https/harness.jfrog.io/harness/harness-public",
+        "https/harness.jfrog.io/artifactory/portal-maven",
         "io/harness/cv",
         "data-collection-dsl",
-        "0.26-RELEASE",
+        "0.27-RELEASE",
         Some("CV".to_string()),
     );
 
     let ff_java_server_sdk = populate_from_external(
-        "https/repo1.maven.org/maven2",
+        "https/harness.jfrog.io/artifactory/portal-maven",
         "io/harness",
         "ff-java-server-sdk",
-        "1.0.0",
+        "1.0.3",
         Some("CE".to_string()),
     );
 

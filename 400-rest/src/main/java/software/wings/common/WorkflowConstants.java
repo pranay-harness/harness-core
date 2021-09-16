@@ -1,7 +1,15 @@
 package software.wings.common;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import java.util.regex.Pattern;
 
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public interface WorkflowConstants {
   String K8S_DEPLOYMENT_ROLLING = "Rollout Deployment";
   String K8S_DEPLOYMENT_ROLLING_ROLLBACK = "Rollback Deployment";

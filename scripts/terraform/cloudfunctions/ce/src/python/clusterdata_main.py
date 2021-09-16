@@ -123,6 +123,8 @@ def create_dataset_and_tables(jsonData):
             createTable(client, table_ref)
         else:
             print_("%s table exists" % table_ref)
+            if table_ref == cluster_data_aggregated_table_ref:
+                alterTableAggregated(jsonData)
 
 
 def ingest_data_from_avro(jsonData):
@@ -300,7 +302,8 @@ def ingest_aggregated_data(jsonData):
                         STORAGEUTILIZATIONVALUE, STORAGEREQUEST, STORAGECOST, MEMORYUNALLOCATEDCOST, CPUUNALLOCATEDCOST, 
                         CPUBILLINGAMOUNT, MEMORYBILLINGAMOUNT, ACCOUNTID, CLUSTERID, CLUSTERNAME, CLUSTERTYPE, 
                         REGION, NAMESPACE, WORKLOADNAME, WORKLOADTYPE,  INSTANCETYPE, APPID, SERVICEID, ENVID, 
-                        CLOUDPROVIDERID, LAUNCHTYPE, CLOUDSERVICENAME, INSTANCENAME)  
+                        CLOUDPROVIDERID, LAUNCHTYPE, CLOUDSERVICENAME, INSTANCENAME, CLOUDPROVIDER, NETWORKCOST, APPNAME,
+                        SERVICENAME, ENVNAME, LABELS)  
                      SELECT SUM(MEMORYACTUALIDLECOST) as MEMORYACTUALIDLECOST, SUM(CPUACTUALIDLECOST) as CPUACTUALIDLECOST, 
                         max(STARTTIME) as STARTTIME, max(ENDTIME) as ENDTIME, sum(BILLINGAMOUNT) as BILLINGAMOUNT, 
                         sum(ACTUALIDLECOST) as ACTUALIDLECOST, sum(UNALLOCATEDCOST) as UNALLOCATEDCOST, 
@@ -310,13 +313,15 @@ def ingest_aggregated_data(jsonData):
                         SUM(MEMORYUNALLOCATEDCOST) as MEMORYUNALLOCATEDCOST, SUM(CPUUNALLOCATEDCOST) as CPUUNALLOCATEDCOST, 
                         SUM(CPUBILLINGAMOUNT) as CPUBILLINGAMOUNT, SUM(MEMORYBILLINGAMOUNT) as MEMORYBILLINGAMOUNT, 
                         ACCOUNTID, CLUSTERID, CLUSTERNAME, CLUSTERTYPE, REGION, NAMESPACE, WORKLOADNAME, WORKLOADTYPE,  
-                        INSTANCETYPE, APPID, SERVICEID, ENVID, CLOUDPROVIDERID, LAUNCHTYPE, CLOUDSERVICENAME, INSTANCENAME 
+                        INSTANCETYPE, APPID, SERVICEID, ENVID, CLOUDPROVIDERID, LAUNCHTYPE, CLOUDSERVICENAME, INSTANCENAME,
+                        CLOUDPROVIDER, SUM(networkcost) AS NETWORKCOST, APPNAME, SERVICENAME, ENVNAME, ANY_VALUE(labels) as LABELS
                     FROM %s 
                     WHERE STARTTIME = UNIX_MILLIS(TIMESTAMP(DATETIME(%s, %s, %s, %s, 00, 00))) 
                         AND INSTANCETYPE IN ("K8S_POD", 
                         "ECS_CONTAINER_INSTANCE", "ECS_TASK_EC2", "ECS_TASK_FARGATE", "K8S_POD_FARGATE") 
                     GROUP BY ACCOUNTID, CLUSTERID, CLUSTERNAME, CLUSTERTYPE, REGION, NAMESPACE, WORKLOADNAME, 
-                        WORKLOADTYPE, INSTANCETYPE, APPID, SERVICEID, ENVID, CLOUDPROVIDERID, LAUNCHTYPE, CLOUDSERVICENAME, INSTANCENAME ;
+                        WORKLOADTYPE, INSTANCETYPE, APPID, SERVICEID, ENVID, CLOUDPROVIDERID, LAUNCHTYPE, CLOUDSERVICENAME, 
+                        INSTANCENAME, CLOUDPROVIDER, APPNAME, SERVICENAME, ENVNAME ;
                     """ % (jsonData["tableIdAggregated"], jsonData["tableId"], jsonData["fileYear"], jsonData["fileMonth"], jsonData["fileDay"],
                            jsonData["fileHour"])
 
@@ -335,7 +340,8 @@ def ingest_aggregated_data(jsonData):
                             STORAGEUTILIZATIONVALUE, STORAGEREQUEST, STORAGECOST, MEMORYUNALLOCATEDCOST, CPUUNALLOCATEDCOST, 
                             CPUBILLINGAMOUNT, MEMORYBILLINGAMOUNT, ACCOUNTID, CLUSTERID, CLUSTERNAME, CLUSTERTYPE, REGION, 
                             NAMESPACE, WORKLOADNAME, WORKLOADTYPE,  INSTANCETYPE, APPID, SERVICEID, ENVID, CLOUDPROVIDERID, 
-                            LAUNCHTYPE, CLOUDSERVICENAME, INSTANCEID, INSTANCENAME) 
+                            LAUNCHTYPE, CLOUDSERVICENAME, INSTANCEID, INSTANCENAME, CLOUDPROVIDER, NETWORKCOST, APPNAME,
+                            SERVICENAME, ENVNAME, LABELS) 
                         SELECT SUM(MEMORYACTUALIDLECOST) as MEMORYACTUALIDLECOST, SUM(CPUACTUALIDLECOST) as CPUACTUALIDLECOST, 
                             max(STARTTIME) as STARTTIME, max(ENDTIME) as ENDTIME, sum(BILLINGAMOUNT) as BILLINGAMOUNT, 
                             sum(ACTUALIDLECOST) as ACTUALIDLECOST, sum(UNALLOCATEDCOST) as UNALLOCATEDCOST, sum(SYSTEMCOST) as SYSTEMCOST, 
@@ -345,12 +351,13 @@ def ingest_aggregated_data(jsonData):
                             SUM(CPUUNALLOCATEDCOST) as CPUUNALLOCATEDCOST, SUM(CPUBILLINGAMOUNT) as CPUBILLINGAMOUNT, 
                             SUM(MEMORYBILLINGAMOUNT) as MEMORYBILLINGAMOUNT, ACCOUNTID, CLUSTERID, CLUSTERNAME, CLUSTERTYPE, 
                             REGION, NAMESPACE, WORKLOADNAME, WORKLOADTYPE,  INSTANCETYPE, APPID, SERVICEID, ENVID, 
-                            CLOUDPROVIDERID, LAUNCHTYPE, CLOUDSERVICENAME, INSTANCEID, INSTANCENAME 
+                            CLOUDPROVIDERID, LAUNCHTYPE, CLOUDSERVICENAME, INSTANCEID, INSTANCENAME, CLOUDPROVIDER,
+                            SUM(networkcost) AS NETWORKCOST, APPNAME, SERVICENAME, ENVNAME, ANY_VALUE(labels) as LABELS
                         FROM %s 
                         WHERE STARTTIME = UNIX_MILLIS(TIMESTAMP(DATETIME(%s, %s, %s, %s, 00, 00))) and INSTANCETYPE IN ("K8S_NODE", "K8S_PV") 
                         GROUP BY ACCOUNTID, CLUSTERID, CLUSTERNAME, CLUSTERTYPE, REGION, NAMESPACE, WORKLOADNAME, 
                             WORKLOADTYPE, INSTANCETYPE, APPID, SERVICEID, ENVID, CLOUDPROVIDERID, LAUNCHTYPE, 
-                            CLOUDSERVICENAME, INSTANCEID, INSTANCENAME ;
+                            CLOUDSERVICENAME, INSTANCEID, INSTANCENAME, CLOUDPROVIDER, APPNAME, SERVICENAME, ENVNAME ;
                         """ % (jsonData["tableIdAggregated"], jsonData["tableId"], jsonData["fileYear"], jsonData["fileMonth"], jsonData["fileDay"],
                                jsonData["fileHour"])
 
@@ -364,11 +371,15 @@ def ingest_aggregated_data(jsonData):
         print_(e)
 
 
-def alterTable(jsonData):
-    print_("Altering %s Table" % jsonData["tableId"])
+def alterTableAggregated(jsonData):
+    print_("Altering %s Table" % jsonData["tableIdAggregated"])
     query = "ALTER TABLE `%s` \
-            ADD COLUMN IF NOT EXISTS storageactualidlecost FLOAT64;" % (jsonData["tableId"])
-
+            ADD COLUMN IF NOT EXISTS networkcost FLOAT64, \
+            ADD COLUMN IF NOT EXISTS appname STRING, \
+            ADD COLUMN IF NOT EXISTS servicename STRING, \
+            ADD COLUMN IF NOT EXISTS envname STRING, \
+            ADD COLUMN IF NOT EXISTS cloudprovider STRING, \
+            ADD COLUMN IF NOT EXISTS labels ARRAY<STRUCT<key STRING, value STRING>>;" % (jsonData["tableIdAggregated"])
     try:
         query_job = client.query(query)
         print_(query_job.job_id)
@@ -377,7 +388,7 @@ def alterTable(jsonData):
         print_(query)
         print_(e)
     else:
-        print_("Finished altering %s table" % jsonData["tableId"])
+        print_("Finished altering %s table" % jsonData["tableIdAggregated"])
 
 
 MONTHMAP = {

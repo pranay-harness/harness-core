@@ -1,34 +1,22 @@
 package tasks
 
 import (
+	"bufio"
 	"context"
-	"encoding/json"
-	"fmt"
-	"io"
-	"io/ioutil"
 	"os"
+	"strings"
 	"time"
 
-	"github.com/ghodss/yaml"
-	grpc_retry "github.com/grpc-ecosystem/go-grpc-middleware/retry"
-	"github.com/pkg/errors"
 	"github.com/wings-software/portal/commons/go/lib/exec"
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/metrics"
 	"github.com/wings-software/portal/commons/go/lib/utils"
-	"github.com/wings-software/portal/product/ci/addon/testreports"
-	"github.com/wings-software/portal/product/ci/addon/testreports/junit"
-	"github.com/wings-software/portal/product/ci/common/external"
-	"github.com/wings-software/portal/product/ci/engine/consts"
-	grpcclient "github.com/wings-software/portal/product/ci/engine/grpc/client"
-	pb "github.com/wings-software/portal/product/ci/engine/proto"
-	"github.com/wings-software/portal/product/ci/ti-service/types"
+	"github.com/wings-software/portal/product/ci/addon/resolver"
 	"go.uber.org/zap"
 )
 
 var (
-	mlog     = metrics.Log
-	newJunit = junit.New
+	mlog = metrics.Log
 )
 
 func runCmd(ctx context.Context, cmd exec.Command, stepID string, commands []string, retryCount int32, startTime time.Time,
@@ -82,211 +70,75 @@ func runCmd(ctx context.Context, cmd exec.Command, stepID string, commands []str
 	return nil
 }
 
-func collectCg(ctx context.Context, stepID, cgDir string, timeMs int64, log *zap.SugaredLogger) error {
-	repo, err := external.GetRepo()
+// resolveExprInEnv resolves secrets present in environment variables
+func resolveExprInEnv(env map[string]string) (
+	map[string]string, error) {
+	envVarMap := getEnvVars()
+	for k, v := range env {
+		envVarMap[k] = v
+	}
+
+	// Resolves secret in environment variables e.g. foo-${ngSecretManager.obtain("secret", 1234)}
+	resolvedSecretMap, err := resolver.ResolveSecretInMapValues(envVarMap)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	isManual := external.IsManualExecution()
-	sha, err := external.GetSha()
-	if err != nil && !isManual {
-		return err
-	}
-	source, err := external.GetSourceBranch()
-	if err != nil && !isManual {
-		return err
-	} else if isManual {
-		source, err = external.GetBranch()
-		if err != nil {
-			return err
-		}
-	}
-	target, err := external.GetTargetBranch()
-	if err != nil && !isManual {
-		return err
-	} else if isManual {
-		target, err = external.GetBranch()
-		if err != nil {
-			return err
-		}
-	}
-	// Create TI proxy client (lite engine)
-	client, err := grpcclient.NewTiProxyClient(consts.LiteEnginePort, log)
-	if err != nil {
-		return err
-	}
-	defer client.CloseConn()
-	req := &pb.UploadCgRequest{
-		StepId: stepID,
-		Repo:   repo,
-		Sha:    sha,
-		Source: source,
-		Target: target,
-		CgDir:  cgDir,
-		TimeMs: timeMs,
-	}
-	log.Infow(fmt.Sprintf("sending cgRequest %s to lite engine", req.GetCgDir()))
-	_, err = client.Client().UploadCg(ctx, req)
-	if err != nil {
-		return errors.Wrap(err, "failed to upload cg to ti server")
-	}
-	return nil
+
+	return resolvedSecretMap, nil
 }
 
-func collectTestReports(ctx context.Context, reports []*pb.Report, stepID string, log *zap.SugaredLogger) error {
-	// Test cases from reports are identified at a per-step level and won't cause overwriting/clashes
-	// at the backend.
-	if len(reports) == 0 {
-		return nil
-	}
-	// Create TI proxy client (lite engine)
-	client, err := grpcclient.NewTiProxyClient(consts.LiteEnginePort, log)
+// resolveExprInCmd resolves secret present in command
+func resolveExprInCmd(cmd string) (string, error) {
+	resolvedCmd, err := resolver.ResolveSecretInString(cmd)
 	if err != nil {
-		return err
+		return "", err
 	}
-	defer client.CloseConn()
-	repo, _ := external.GetRepo() // Add repo if it exists, otherwise keep it empty
-	sha, _ := external.GetSha()   // Add sha if it exists, otherwise keep it empty
-	for _, report := range reports {
-		var rep testreports.TestReporter
-		var err error
 
-		x := report.GetType() // pass in report type in proto when other reports are reqd
-		switch x {
-		case pb.Report_UNKNOWN:
-			return errors.New("report type is unknown")
-		case pb.Report_JUNIT:
-			rep = newJunit(report.GetPaths(), log)
-		}
-
-		var tests []string
-		testc := rep.GetTests(ctx)
-		for t := range testc {
-			jt, _ := json.Marshal(t)
-			tests = append(tests, string(jt))
-		}
-
-		if len(tests) == 0 {
-			return nil // We're not erroring even if we can't find any tests to report
-		}
-
-		stream, err := client.Client().WriteTests(ctx, grpc_retry.Disable())
-		if err != nil {
-			return err
-		}
-		var curr []string
-		for _, t := range tests {
-			curr = append(curr, t)
-			if len(curr)%batchSize == 0 {
-				in := &pb.WriteTestsRequest{StepId: stepID, Tests: curr, Repo: repo, Sha: sha}
-				if serr := stream.Send(in); serr != nil {
-					log.Errorw("write tests RPC failed", zap.Error(serr))
-				}
-				curr = []string{} // ignore RPC failures, try to write whatever you can
-			}
-		}
-		if len(curr) > 0 {
-			in := &pb.WriteTestsRequest{StepId: stepID, Tests: curr, Repo: repo, Sha: sha}
-			if serr := stream.Send(in); serr != nil {
-				log.Errorw("write tests RPC failed", zap.Error(serr))
-			}
-			curr = []string{}
-		}
-
-		// Close the stream and receive result
-		_, err = stream.CloseAndRecv()
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+	return resolvedCmd, nil
 }
 
-// selectTests takes a list of files which were changed as input and gets the tests
-// to be run corresponding to that.
-func selectTests(ctx context.Context, files []types.File, runSelected bool, stepID string, log *zap.SugaredLogger, fs filesystem.FileSystem) (types.SelectTestsResp, error) {
-	res := types.SelectTestsResp{}
-	isManual := external.IsManualExecution()
-	repo, err := external.GetRepo()
-	if err != nil {
-		return res, err
-	}
-	// For webhook executions, all the below variables should be set
-	sha, err := external.GetSha()
-	if err != nil && !isManual {
-		return res, err
-	}
-	source, err := external.GetSourceBranch()
-	if err != nil && !isManual {
-		return res, err
-	}
-	target, err := external.GetTargetBranch()
-	if err != nil && !isManual {
-		return res, err
-	} else if isManual {
-		target, err = external.GetBranch()
-		if err != nil {
-			return res, err
+// Returns environment variables as a map with key as environment variable name
+// and value as environment variable value.
+func getEnvVars() map[string]string {
+	m := make(map[string]string)
+	// os.Environ returns a copy of strings representing the environment in form
+	// "key=value". Converting it into a map.
+	for _, e := range os.Environ() {
+		if i := strings.Index(e, "="); i >= 0 {
+			m[e[:i]] = e[i+1:]
 		}
 	}
-	// Create TI proxy client (lite engine)
-	client, err := grpcclient.NewTiProxyClient(consts.LiteEnginePort, log)
-	if err != nil {
-		return res, err
-	}
-	defer client.CloseConn()
-	// Get TI config
-	ticonfig, err := getTiConfig(fs)
-	if err != nil {
-		return res, err
-	}
-	b, err := json.Marshal(&types.SelectTestsReq{SelectAll: !runSelected, Files: files, TiConfig: ticonfig})
-	if err != nil {
-		return res, err
-	}
-	req := &pb.SelectTestsRequest{
-		StepId:       stepID,
-		Repo:         repo,
-		Sha:          sha,
-		SourceBranch: source,
-		TargetBranch: target,
-		Body:         string(b),
-	}
-	resp, err := client.Client().SelectTests(ctx, req)
-	if err != nil {
-		return types.SelectTestsResp{}, err
-	}
-	var selection types.SelectTestsResp
-	err = json.Unmarshal([]byte(resp.Selected), &selection)
-	if err != nil {
-		log.Errorw("could not unmarshal select tests response on addon", zap.Error(err))
-		return types.SelectTestsResp{}, err
-	}
-	return selection, nil
+	return m
 }
 
-func getTiConfig(fs filesystem.FileSystem) (types.TiConfig, error) {
-	wrkspcPath, err := external.GetWrkspcPath()
-	res := types.TiConfig{}
+// Fetches map of env variable and value from OutputFile.
+// OutputFile stores all env variable and value
+func fetchOutputVariables(outputFile string, fs filesystem.FileSystem, log *zap.SugaredLogger) (
+	map[string]string, error) {
+	envVarMap := make(map[string]string)
+	f, err := fs.Open(outputFile)
 	if err != nil {
-		return res, errors.Wrap(err, "could not get ti config")
+		log.Errorw("Failed to open output file", zap.Error(err))
+		return nil, err
 	}
-	path := fmt.Sprintf("%s/%s", wrkspcPath, tiConfigPath)
-	_, err = os.Stat(path)
-	if os.IsNotExist(err) {
-		return res, nil
+	defer f.Close()
+
+	s := bufio.NewScanner(f)
+	for s.Scan() {
+		line := s.Text()
+		sa := strings.Split(line, " ")
+		if len(sa) < 2 {
+			log.Warnw(
+				"output variable does not exist",
+				"variable", sa[0],
+			)
+		} else {
+			envVarMap[sa[0]] = line[len(sa[0])+1:]
+		}
 	}
-	var data []byte
-	err = fs.ReadFile(path, func(r io.Reader) error {
-		data, err = ioutil.ReadAll(r)
-		return err
-	})
-	if err != nil {
-		return res, errors.Wrap(err, "could not read ticonfig file")
+	if err := s.Err(); err != nil {
+		log.Errorw("Failed to create scanner from output file", zap.Error(err))
+		return nil, err
 	}
-	err = yaml.Unmarshal(data, &res)
-	if err != nil {
-		return res, errors.Wrap(err, "could not unmarshal ticonfig file")
-	}
-	return res, nil
+	return envVarMap, nil
 }

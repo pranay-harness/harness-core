@@ -2,7 +2,9 @@ package software.wings.service.impl.jira;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.jira.JiraAction;
 import io.harness.jira.JiraCustomFieldValue;
 
@@ -18,6 +20,7 @@ import lombok.NoArgsConstructor;
  * Created by Pranjal on 05/13/2019
  */
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NoArgsConstructor

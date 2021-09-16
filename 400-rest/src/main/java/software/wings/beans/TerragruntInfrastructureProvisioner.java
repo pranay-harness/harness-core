@@ -28,7 +28,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("TERRAGRUNT")
-@TargetModule(HarnessModule._871_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class TerragruntInfrastructureProvisioner extends InfrastructureProvisioner implements TerraGroupProvisioners {
   public static final String VARIABLE_KEY = "terragrunt";
   @NotEmpty private String sourceRepoSettingId;

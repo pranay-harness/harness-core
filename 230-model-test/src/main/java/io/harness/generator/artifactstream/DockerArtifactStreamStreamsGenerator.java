@@ -1,7 +1,10 @@
 package io.harness.generator.artifactstream;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.SettingGenerator;
@@ -16,6 +19,7 @@ import software.wings.beans.artifact.DockerArtifactStream;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+@OwnedBy(CDP)
 @Singleton
 public class DockerArtifactStreamStreamsGenerator implements ArtifactStreamsGenerator {
   @Inject private SettingGenerator settingGenerator;
@@ -24,6 +28,25 @@ public class DockerArtifactStreamStreamsGenerator implements ArtifactStreamsGene
   @Override
   public ArtifactStream ensureArtifactStream(Seed seed, Owners owners) {
     return ensureArtifactStream(seed, owners, false);
+  }
+
+  @Override
+  public ArtifactStream ensureArtifactStream(Seed seed, Owners owners, String serviceName, boolean atConnector) {
+    Service service = owners.obtainServiceByServiceName(serviceName);
+    Application application = owners.obtainApplication();
+    final SettingAttribute settingAttribute =
+        settingGenerator.ensurePredefined(seed, owners, Settings.HARNESS_DOCKER_REGISTRY);
+
+    ArtifactStream artifactStream = DockerArtifactStream.builder()
+                                        .appId(atConnector ? GLOBAL_APP_ID : application.getUuid())
+                                        .name(atConnector ? "nginx-atConnector" : "nginx")
+                                        .serviceId(atConnector    ? settingAttribute.getUuid()
+                                                : service != null ? service.getUuid()
+                                                                  : null)
+                                        .settingId(settingAttribute.getUuid())
+                                        .imageName("library/nginx")
+                                        .build();
+    return ensureArtifactStream(seed, artifactStream, owners);
   }
 
   @Override

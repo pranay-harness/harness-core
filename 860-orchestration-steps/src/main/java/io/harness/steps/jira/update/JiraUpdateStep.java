@@ -21,6 +21,7 @@ import io.harness.pms.rbac.PipelineRbacHelper;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.steps.StepSpecTypeConstants;
+import io.harness.steps.StepUtils;
 import io.harness.steps.jira.JiraStepHelperService;
 import io.harness.steps.jira.JiraStepUtils;
 import io.harness.supplier.ThrowingSupplier;
@@ -67,7 +68,8 @@ public class JiraUpdateStep extends TaskExecutableWithRollbackAndRbac<JiraTaskNG
             .transitionName(specParameters.getTransitionTo() == null
                     ? null
                     : (String) specParameters.getTransitionTo().getTransitionName().fetchFinalValue())
-            .fields(JiraStepUtils.processJiraFieldsInParameters(specParameters.getFields()));
+            .fields(JiraStepUtils.processJiraFieldsInParameters(specParameters.getFields()))
+            .delegateSelectors(StepUtils.getDelegateSelectorList(specParameters.getDelegateSelectors()));
     return jiraStepHelperService.prepareTaskRequest(paramsBuilder, ambiance,
         specParameters.getConnectorRef().getValue(), stepParameters.getTimeout().getValue(), "Jira Task: Update Issue");
   }

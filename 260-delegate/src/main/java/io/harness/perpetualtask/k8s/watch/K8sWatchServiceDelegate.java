@@ -7,7 +7,6 @@ import io.harness.k8s.model.KubernetesConfig;
 import io.harness.perpetualtask.k8s.informer.ClusterDetails;
 import io.harness.perpetualtask.k8s.informer.SharedInformerFactoryFactory;
 import io.harness.perpetualtask.k8s.metrics.client.impl.DefaultK8sMetricsClient;
-import io.harness.perpetualtask.k8s.utils.K8sClusterHelper;
 import io.harness.serializer.KryoSerializer;
 
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
@@ -99,13 +98,14 @@ public class K8sWatchServiceDelegate {
 
       String kubeSystemUid = getKubeSystemUid(k8sMetricsClient);
 
-      ClusterDetails clusterDetails = ClusterDetails.builder()
-                                          .cloudProviderId(params.getCloudProviderId())
-                                          .clusterId(params.getClusterId())
-                                          .clusterName(params.getClusterName())
-                                          .kubeSystemUid(kubeSystemUid)
-                                          .isSeen(K8sClusterHelper.isSeen(params.getClusterId(), kubeSystemUid))
-                                          .build();
+      ClusterDetails clusterDetails =
+          ClusterDetails.builder()
+              .cloudProviderId(params.getCloudProviderId())
+              .clusterId(params.getClusterId())
+              .clusterName(params.getClusterName())
+              .kubeSystemUid(kubeSystemUid)
+              .isSeen(false) // TODO(UTSAV): [TEMP] K8sClusterHelper.isSeen(params.getClusterId(), kubeSystemUid)
+              .build();
 
       SharedInformerFactory sharedInformerFactory =
           sharedInformerFactoryFactory.createSharedInformerFactory(apiClient, clusterDetails);
@@ -138,7 +138,7 @@ public class K8sWatchServiceDelegate {
       sharedInformerFactory.startAllRegisteredInformers();
 
       // cluster is seen/old now, any new onAdd event older than 2 hours will be ignored.
-      K8sClusterHelper.setAsSeen(params.getClusterId(), kubeSystemUid);
+      // TODO(UTSAV): TEMP K8sClusterHelper.setAsSeen(params.getClusterId(), kubeSystemUid);
       return WatcherGroup.builder().watchId(id).sharedInformerFactory(sharedInformerFactory).build();
     });
 

@@ -2,7 +2,9 @@ package software.wings.sm.states.pcf;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 import io.harness.delegate.beans.pcf.CfRouteUpdateRequestConfigData;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -18,6 +20,7 @@ import lombok.Data;
 @Data
 @Builder
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class PcfRouteUpdateQueueRequestData {
   private Application app;
   private PcfConfig pcfConfig;

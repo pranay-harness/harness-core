@@ -2,9 +2,15 @@ package io.harness.ng.core.api.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.ARVIND;
+import static io.harness.rule.OwnerRule.KARAN;
+import static io.harness.rule.OwnerRule.REETIKA;
+import static io.harness.utils.PageTestUtils.getPage;
 
+import static java.util.Collections.emptyList;
+import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
@@ -15,9 +21,12 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import io.harness.CategoryTest;
 import io.harness.accesscontrol.AccessControlAdminClient;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.UserGroupDTO;
+import io.harness.ng.core.dto.UserGroupFilterDTO;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.entities.UserGroup;
 import io.harness.ng.core.user.service.NgUserService;
@@ -32,6 +41,7 @@ import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
@@ -42,6 +52,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.transaction.support.TransactionTemplate;
 import retrofit2.Call;
@@ -55,7 +66,7 @@ public class UserGroupServiceImplTest extends CategoryTest {
   @Mock private AccessControlAdminClient accessControlAdminClient;
   @Mock private TransactionTemplate transactionTemplate;
   @Mock private NgUserService ngUserService;
-  @Inject @InjectMocks private UserGroupServiceImpl userGroupService;
+  @Spy @Inject @InjectMocks private UserGroupServiceImpl userGroupService;
 
   private static final String ACCOUNT_IDENTIFIER = "A1";
   private static final String ORG_IDENTIFIER = "O1";
@@ -111,7 +122,7 @@ public class UserGroupServiceImplTest extends CategoryTest {
     users.add("u1");
     assertThatThrownBy(() -> userGroupService.create(userGroupDTO))
         .isInstanceOf(InvalidArgumentsException.class)
-        .hasMessageContaining("Duplicate users provided");
+        .hasMessageContaining("Duplicate users");
   }
 
   @Test
@@ -174,7 +185,56 @@ public class UserGroupServiceImplTest extends CategoryTest {
     assertThat(users.size()).isEqualTo(2);
 
     userInfos.add(UserInfo.builder().uuid("u2").build());
-    userGroupService.addMember(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, userGroupIdentifier, "u2");
-    assertThat(users.size()).isEqualTo(2);
+    try {
+      userGroupService.addMember(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, userGroupIdentifier, "u2");
+      fail("Expected failure as user already present.");
+    } catch (InvalidRequestException exception) {
+      // all good here
+    }
+  }
+
+  @Test
+  @Owner(developers = REETIKA)
+  @Category(UnitTests.class)
+  public void testListUserGroups() throws IOException {
+    String searchTerm = randomAlphabetic(5);
+    final ArgumentCaptor<Criteria> userGroupCriteriaArgumentCaptor = ArgumentCaptor.forClass(Criteria.class);
+
+    when(userGroupRepository.findAll(any(Criteria.class), any())).thenReturn(getPage(emptyList(), 0));
+    userGroupService.list(UserGroupFilterDTO.builder()
+                              .accountIdentifier(ACCOUNT_IDENTIFIER)
+                              .orgIdentifier(ORG_IDENTIFIER)
+                              .projectIdentifier(PROJECT_IDENTIFIER)
+                              .searchTerm(searchTerm)
+                              .identifierFilter(new HashSet<>(Arrays.asList("UG1", "UG2")))
+                              .build());
+    verify(userGroupRepository, times(1)).findAll(userGroupCriteriaArgumentCaptor.capture(), any());
+  }
+
+  @Test
+  @Owner(developers = KARAN)
+  @Category(UnitTests.class)
+  public void testAddUserToUserGroups() {
+    Scope scope = Scope.of(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER);
+    String userId = "userId";
+    List<String> userGroups = new ArrayList<>();
+    for (int i = 0; i < 5; i++) {
+      String userGroupId = randomAlphabetic(10);
+      userGroups.add(userGroupId);
+      doReturn(i % 2 == 0)
+          .when(userGroupService)
+          .checkMember(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, userGroupId, userId);
+      if (i % 2 == 1) {
+        doReturn(UserGroup.builder().identifier(userGroupId).build())
+            .when(userGroupService)
+            .addMember(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, userGroupId, userId);
+      }
+    }
+    userGroupService.addUserToUserGroups(scope, userId, userGroups);
+    for (int i = 0; i < 5; i++) {
+      String userGroupId = userGroups.get(i);
+      verify(userGroupService, times(i % 2))
+          .addMember(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER, userGroupId, userId);
+    }
   }
 }

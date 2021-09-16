@@ -9,10 +9,11 @@ import "955-delegate-beans/src/main/proto/io/harness/delegate/account.proto";
 import "920-delegate-service-beans/src/main/proto/io/harness/delegateprofile/delegate_profile.proto";
 import "920-delegate-service-beans/src/main/proto/io/harness/paging/paging.proto";
 import "920-delegate-service-beans/src/main/proto/io/harness/owner/owner.proto";
-import "io/harness/virtualstack/virtual_stack.proto";
+import "980-commons/src/main/proto/io/harness/virtualstack/virtual_stack.proto";
 
 service DelegateProfileService {
   rpc ListProfiles(ListProfilesRequest) returns (ListProfilesResponse);
+  rpc ListProfilesV2(ListProfilesRequestV2) returns (ListProfilesResponse);
   rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
   rpc AddProfile(AddProfileRequest) returns (AddProfileResponse);
   rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
@@ -36,6 +37,12 @@ message ListProfilesRequest {
 
 message ListProfilesResponse {
   DelegateProfilePageResponseGrpc response = 1;
+}
+
+message ListProfilesRequestV2 {
+  string searchTerm = 1;
+  DelegateProfileFilterGrpc filterProperties = 2;
+  paging.PageRequestGrpc page_request = 3;
 }
 
 message GetProfileRequest {

@@ -10,11 +10,16 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.event.handlers.AddExecutableResponseRequestProcessor;
+import io.harness.event.handlers.AddStepDetailsInstanceRequestProcessor;
 import io.harness.event.handlers.AdviserResponseRequestProcessor;
 import io.harness.event.handlers.ErrorEventRequestProcessor;
 import io.harness.event.handlers.FacilitateResponseRequestProcessor;
+import io.harness.event.handlers.HandleProgressRequestProcessor;
 import io.harness.event.handlers.HandleStepResponseRequestProcessor;
 import io.harness.event.handlers.ResumeNodeExecutionRequestProcessor;
+import io.harness.event.handlers.SpawnChildRequestProcessor;
+import io.harness.event.handlers.SpawnChildrenRequestProcessor;
+import io.harness.event.handlers.SuspendChainRequestProcessor;
 import io.harness.pms.contracts.execution.events.SdkResponseEventType;
 import io.harness.rule.Owner;
 
@@ -25,7 +30,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 @OwnedBy(HarnessTeam.PIPELINE)
@@ -48,8 +52,6 @@ public class SdkResponseProcessorFactoryTest extends OrchestrationTestBase {
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
   public void testGetHandler() {
-    Mockito.when(injector.getInstance(AddExecutableResponseRequestProcessor.class)).thenReturn(null);
-
     sdkNodeExecutionEventHandlerFactory.getHandler(SdkResponseEventType.ADD_EXECUTABLE_RESPONSE);
     verify(injector).getInstance(AddExecutableResponseRequestProcessor.class);
 
@@ -67,5 +69,20 @@ public class SdkResponseProcessorFactoryTest extends OrchestrationTestBase {
 
     sdkNodeExecutionEventHandlerFactory.getHandler(SdkResponseEventType.HANDLE_FACILITATE_RESPONSE);
     verify(injector).getInstance(FacilitateResponseRequestProcessor.class);
+
+    sdkNodeExecutionEventHandlerFactory.getHandler(SdkResponseEventType.SUSPEND_CHAIN);
+    verify(injector).getInstance(SuspendChainRequestProcessor.class);
+
+    sdkNodeExecutionEventHandlerFactory.getHandler(SdkResponseEventType.SPAWN_CHILD);
+    verify(injector).getInstance(SpawnChildRequestProcessor.class);
+
+    sdkNodeExecutionEventHandlerFactory.getHandler(SdkResponseEventType.SPAWN_CHILDREN);
+    verify(injector).getInstance(SpawnChildrenRequestProcessor.class);
+
+    sdkNodeExecutionEventHandlerFactory.getHandler(SdkResponseEventType.HANDLE_PROGRESS);
+    verify(injector).getInstance(HandleProgressRequestProcessor.class);
+
+    sdkNodeExecutionEventHandlerFactory.getHandler(SdkResponseEventType.ADD_STEP_DETAILS_INSTANCE_REQUEST);
+    verify(injector).getInstance(AddStepDetailsInstanceRequestProcessor.class);
   }
 }

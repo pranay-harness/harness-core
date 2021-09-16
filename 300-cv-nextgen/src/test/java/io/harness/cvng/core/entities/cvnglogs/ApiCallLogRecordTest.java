@@ -6,6 +6,7 @@ import static io.harness.rule.OwnerRule.KANHAIYA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
@@ -21,7 +22,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @OwnedBy(HarnessTeam.CV)
-public class ApiCallLogRecordTest {
+public class ApiCallLogRecordTest extends CategoryTest {
   private String name;
   private String value;
   private Instant requestTime;

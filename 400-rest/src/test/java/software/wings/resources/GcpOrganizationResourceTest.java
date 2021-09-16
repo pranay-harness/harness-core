@@ -8,6 +8,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.config.GcpOrganization;
 import io.harness.ccm.config.GcpOrganizationService;
@@ -24,7 +25,7 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-public class GcpOrganizationResourceTest {
+public class GcpOrganizationResourceTest extends CategoryTest {
   private String accountId = "ACCOUNT_ID";
   private String gcpOrganizationUuid = "GCP_ORGANIZATION_UUID";
   private GcpOrganization gcpOrganization;

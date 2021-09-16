@@ -151,12 +151,17 @@ public class ScmGitProviderMapper {
     if (githubService == null) {
       throw new NotImplementedException("Token for Github App is only supported on delegate");
     }
-    return githubService.getToken(GithubAppConfig.builder()
-                                      .appId(apiAccessDTO.getApplicationId())
-                                      .installationId(apiAccessDTO.getInstallationId())
-                                      .privateKey(String.valueOf(apiAccessDTO.getPrivateKeyRef().getDecryptedValue()))
-                                      .githubUrl(GitClientHelper.getGithubApiURL(githubConnector.getUrl()))
-                                      .build());
+
+    try {
+      return githubService.getToken(GithubAppConfig.builder()
+                                        .appId(apiAccessDTO.getApplicationId())
+                                        .installationId(apiAccessDTO.getInstallationId())
+                                        .privateKey(String.valueOf(apiAccessDTO.getPrivateKeyRef().getDecryptedValue()))
+                                        .githubUrl(GitClientHelper.getGithubApiURL(githubConnector.getUrl()))
+                                        .build());
+    } catch (Exception ex) {
+      throw new InvalidArgumentsException("Failed to generate token for github connector via git hub app ");
+    }
   }
 
   private String getAccessToken(GithubConnectorDTO githubConnector) {

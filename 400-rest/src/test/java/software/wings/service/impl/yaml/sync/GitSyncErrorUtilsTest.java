@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.DEEPAK;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -15,7 +16,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 
-public class GitSyncErrorUtilsTest {
+public class GitSyncErrorUtilsTest extends CategoryTest {
   @InjectMocks @Inject GitSyncErrorUtils gitSyncErrorUtils;
   public static final String EMPTY_STR = "";
   @Test

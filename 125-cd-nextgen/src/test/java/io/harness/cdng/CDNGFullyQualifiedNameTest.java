@@ -1,15 +1,17 @@
 package io.harness.cdng;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.rule.OwnerRule.SAHIL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.pms.merger.fqn.FQN;
-import io.harness.pms.merger.helpers.FQNUtils;
+import io.harness.pms.merger.helpers.FQNMapGenerator;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
@@ -37,6 +39,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(PIPELINE)
 public class CDNGFullyQualifiedNameTest extends CDNGTestBase {
   @Inject SimpleVisitorFactory factory;
   private final String ACCOUNT = "ACCOUNT";
@@ -91,7 +94,7 @@ public class CDNGFullyQualifiedNameTest extends CDNGTestBase {
 
   private void validateFqnIsGeneratedUsingFQNUtils(String pipelineYaml) throws IOException {
     Map<FQN, Object> fqnObjectMap =
-        FQNUtils.generateFQNMap(YamlUtils.readTree(pipelineYaml).getNode().getCurrJsonNode());
+        FQNMapGenerator.generateFQNMap(YamlUtils.readTree(pipelineYaml).getNode().getCurrJsonNode());
     Map<String, Object> fqnToObjectMapMergedYaml = new HashMap<>();
     fqnObjectMap.keySet().forEach(fqn -> fqnToObjectMapMergedYaml.put(fqn.getExpressionFqn(), fqnObjectMap.get(fqn)));
 

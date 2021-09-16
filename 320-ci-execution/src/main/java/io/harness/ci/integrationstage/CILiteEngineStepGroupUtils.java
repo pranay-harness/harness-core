@@ -15,6 +15,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.execution.ExecutionSource;
+import io.harness.beans.execution.ManualExecutionSource;
 import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.serializer.RunTimeInputHandler;
 import io.harness.beans.stages.IntegrationStageConfig;
@@ -129,6 +130,7 @@ public class CILiteEngineStepGroupUtils {
       String uuid = generateUuid();
       String jsonString = JsonPipelineUtils.writeJsonString(StepElementConfig.builder()
                                                                 .identifier(LITE_ENGINE_TASK + liteEngineCounter)
+                                                                .name(LITE_ENGINE_TASK + liteEngineCounter)
                                                                 .uuid(generateUuid())
                                                                 .type("liteEngineTask")
                                                                 .stepSpecType(liteEngineTaskStepInfo)
@@ -203,8 +205,14 @@ public class CILiteEngineStepGroupUtils {
       throw new CIStageExecutionException("Codebase is mandatory with enabled cloneCodebase flag");
     }
     Integer depth = ciCodebase.getDepth();
-    if (depth == null && ciExecutionArgs.getExecutionSource().getType() != ExecutionSource.Type.WEBHOOK) {
-      depth = GIT_CLONE_MANUAL_DEPTH;
+    ExecutionSource executionSource = ciExecutionArgs.getExecutionSource();
+    if (depth == null) {
+      if (executionSource.getType() == ExecutionSource.Type.MANUAL) {
+        ManualExecutionSource manualExecutionSource = (ManualExecutionSource) executionSource;
+        if (isNotEmpty(manualExecutionSource.getBranch()) || isNotEmpty(manualExecutionSource.getTag())) {
+          depth = GIT_CLONE_MANUAL_DEPTH;
+        }
+      }
     }
 
     if (depth != null) {

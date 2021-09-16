@@ -1,7 +1,14 @@
 package io.harness.delegate.cf;
 
-import static io.harness.delegate.cf.PcfCommandTaskHandlerTest.USER_NAME_DECRYPTED;
+import static io.harness.delegate.cf.CfTestConstants.ACCOUNT_ID;
+import static io.harness.delegate.cf.CfTestConstants.CF_PATH;
+import static io.harness.delegate.cf.CfTestConstants.ORG;
+import static io.harness.delegate.cf.CfTestConstants.SPACE;
+import static io.harness.delegate.cf.CfTestConstants.URL;
+import static io.harness.delegate.cf.CfTestConstants.USER_NAME_DECRYPTED;
+import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.BOJANA;
+import static io.harness.rule.OwnerRule.IVAN;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,7 +44,9 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 
 import com.google.common.collect.ImmutableList;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -50,13 +59,6 @@ import org.mockito.Spy;
 
 @OwnedBy(HarnessTeam.CDP)
 public class PcfRunPluginCommandTaskHandlerTest extends CategoryTest {
-  private static final String USERNMAE = "USERNAME";
-  public static final String URL = "URL";
-  public static final String ACCOUNT_ID = "ACCOUNT_ID";
-  public static final String ORG = "ORG";
-  public static final String SPACE = "SPACE";
-  public static final String RUNNING = "RUNNING";
-
   @Mock private CfDeploymentManager pcfDeploymentManager;
   @Mock private PcfCommandTaskBaseHelper pcfCommandTaskHelper;
   @Mock EncryptedDataDetail encryptedDataDetail;
@@ -79,7 +81,7 @@ public class PcfRunPluginCommandTaskHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
-  public void test_executeTaskInternal() throws PivotalClientApiException {
+  public void test_executeTaskInternal() throws PivotalClientApiException, IOException {
     doNothing()
         .when(pcfDeploymentManager)
         .runPcfPluginScript(any(CfRunPluginScriptRequestData.class), Mockito.eq(executionLogCallback));
@@ -97,7 +99,7 @@ public class PcfRunPluginCommandTaskHandlerTest extends CategoryTest {
         .isEqualTo("cf create-service " + pcfRunPluginScriptRequestData.getWorkingDirectory() + "/manifest.yml");
 
     verify(pcfRunPluginCommandTaskHandler, times(1))
-        .saveFilesInWorkingDirectory(
+        .saveFilesInWorkingDirectoryStringContent(
             anyListOf(FileData.class), eq(pcfRunPluginScriptRequestData.getWorkingDirectory()));
   }
 
@@ -129,6 +131,38 @@ public class PcfRunPluginCommandTaskHandlerTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = ANIL)
+  @Category(UnitTests.class)
+  public void testNoSecretInLogs() {
+    String secretScript = "secret script";
+    String secretFilePath = "secretPath";
+    String secretContent = "secret content";
+    String secretRepoRoot = "root";
+
+    CfRunPluginCommandRequest pluginCommandRequest =
+        CfRunPluginCommandRequest.builder()
+            .pcfCommandType(PcfCommandType.SETUP)
+            .pcfConfig(getPcfConfig())
+            .organization(ORG)
+            .space(SPACE)
+            .accountId(ACCOUNT_ID)
+            .timeoutIntervalInMin(5)
+            .renderedScriptString(secretScript)
+            .encryptedDataDetails(null)
+            .fileDataList(
+                ImmutableList.of(FileData.builder().filePath(secretFilePath).fileContent(secretContent).build()))
+            .filePathsInScript(ImmutableList.of("/manifest.yml"))
+            .repoRoot(secretRepoRoot)
+            .build();
+
+    String errorMsg = pluginCommandRequest.toString();
+    assertThat(errorMsg.contains(secretScript)).isFalse();
+    assertThat(errorMsg.contains(secretFilePath)).isFalse();
+    assertThat(errorMsg.contains(secretContent)).isFalse();
+    assertThat(errorMsg.contains(secretRepoRoot)).isFalse();
+  }
+
+  @Test
   @Owner(developers = BOJANA)
   @Category(UnitTests.class)
   public void testExecuteTaskInternalInvalidArgumentsException() {
@@ -141,5 +175,49 @@ public class PcfRunPluginCommandTaskHandlerTest extends CategoryTest {
       assertThat(invalidArgumentsException.getParams())
           .containsValue("cfCommandRequest: Must be instance of CfPluginCommandRequest");
     }
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testPrepareFinalScriptWithRepoRoot() {
+    String script = "${service.cli} create-service-push --service-manifest\n"
+        + "${service.manifest.repoRoot}/manifests";
+    String workingDirPath = "working-dir-path";
+    String finalScript =
+        pcfRunPluginCommandTaskHandler.prepareFinalScript(script, workingDirPath, StringUtils.EMPTY, CF_PATH);
+    assertThat(finalScript)
+        .isEqualTo("cf-path/cf create-service-push --service-manifest\n"
+            + "working-dir-path/manifests");
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testPrepareFinalScriptWithDeployYaml() {
+    String script = "${service.cli} create-service-push --service-manifest\n"
+        + "${service.manifest}/manifests/deploy.yml --no-push";
+    String repoRoot = "root-path/rd";
+    String finalScript =
+        pcfRunPluginCommandTaskHandler.prepareFinalScript(script, StringUtils.EMPTY, repoRoot, CF_PATH);
+    assertThat(finalScript)
+        .isEqualTo("cf-path/cf create-service-push --service-manifest\n"
+            + "root-path/rd/manifests/deploy.yml --no-push");
+  }
+
+  @Test
+  @Owner(developers = IVAN)
+  @Category(UnitTests.class)
+  public void testPrepareFinalScript() {
+    String script = "${service.cli} create-service-push --service-manifest\n"
+        + "${service.manifest.repoRoot}/manifests\n"
+        + "${service.manifest}/manifests/deploy.yml --no-push";
+    String workingDirPath = "working-dir-path/";
+    String repoRoot = "root-path/rd";
+    String finalScript = pcfRunPluginCommandTaskHandler.prepareFinalScript(script, workingDirPath, repoRoot, CF_PATH);
+    assertThat(finalScript)
+        .isEqualTo("cf-path/cf create-service-push --service-manifest\n"
+            + "working-dir-path//manifests\n"
+            + "working-dir-path/root-path/rd/manifests/deploy.yml --no-push");
   }
 }

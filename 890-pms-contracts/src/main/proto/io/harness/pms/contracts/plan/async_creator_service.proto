@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package io.harness.pms.contracts.plan;
+
+option java_multiple_files = true;
+
+import "io/harness/pms/contracts/plan/plan_creation_service.proto";
+
+message CreatePartialPlanEvent {
+  map<string, YamlFieldBlob> dependencies = 1;
+  map<string, PlanCreationContextValue> context = 2;
+  AsyncCreatorType type = 3;
+  string notifyId = 4;
+  string planCreationId = 5;
+}
+
+enum AsyncCreatorType {
+  INVALID = 0;
+  PLAN_CREATION = 1;
+}
+
+message PartialPlanResponse {
+  string notifyId = 1;
+  oneof response {
+    ErrorResponse errorResponse = 2;
+    PlanCreationBlobResponse blobResponse = 3;
+  }
+  AsyncCreatorType type = 4;
+  string planCreationId = 5;
+}

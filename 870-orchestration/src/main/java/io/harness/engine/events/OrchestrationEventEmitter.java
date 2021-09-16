@@ -7,7 +7,6 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.pms.commons.events.PmsEventSender;
 import io.harness.logging.AutoLogContext;
-import io.harness.pms.PmsFeatureFlagService;
 import io.harness.pms.contracts.execution.events.OrchestrationEvent;
 import io.harness.pms.events.base.PmsEventCategory;
 import io.harness.pms.execution.utils.OrchestrationEventUtils;
@@ -21,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class OrchestrationEventEmitter {
   @Inject private PmsEventSender eventSender;
-  @Inject private PmsFeatureFlagService pmsFeatureFlagService;
 
   public void emitEvent(OrchestrationEvent event) {
     try (AutoLogContext ignore = OrchestrationEventUtils.obtainLogContext(event)) {

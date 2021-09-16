@@ -7,6 +7,7 @@ import static io.harness.delegate.utils.RbacConstants.DELEGATE_CONFIG_VIEW_PERMI
 
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
+import io.harness.NGResourceFilterConstants;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
@@ -16,6 +17,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.beans.DelegateProfileDetailsNg;
 import io.harness.delegate.beans.ScopingRuleDetailsNg;
+import io.harness.delegate.filter.DelegateProfileFilterPropertiesDTO;
 import io.harness.ng.core.api.DelegateProfileManagerNgService;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.rest.RestResponse;
@@ -39,6 +41,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import org.hibernate.validator.constraints.NotEmpty;
+import retrofit2.http.Body;
 
 @Path("/v2")
 @Api("/v2")
@@ -175,5 +178,23 @@ public class DelegateConfigNgV2Resource {
         Resource.of(DELEGATE_CONFIG_RESOURCE_TYPE, null), DELEGATE_CONFIG_VIEW_PERMISSION);
 
     return new RestResponse<>(delegateProfileManagerNgService.list(accountId, pageRequest, orgId, projectId));
+  }
+
+  @POST
+  @ApiOperation(value = "Lists the delegate configs with filter", nickname = "listDelegateConfigsNgV2WithFilter")
+  @Timed
+  @Path("/accounts/{accountId}/delegate-configs/listV2")
+  @ExceptionMetered
+  public RestResponse<PageResponse<DelegateProfileDetailsNg>> listV2(@PathParam("accountId") @NotEmpty String accountId,
+      @QueryParam("orgId") String orgId, @QueryParam("projectId") String projectId,
+      @QueryParam(NGResourceFilterConstants.FILTER_KEY) String filterIdentifier,
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @Body DelegateProfileFilterPropertiesDTO delegateProfileFilterPropertiesDTO,
+      @BeanParam PageRequest<DelegateProfileDetailsNg> pageRequest) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
+        Resource.of(DELEGATE_CONFIG_RESOURCE_TYPE, null), DELEGATE_CONFIG_VIEW_PERMISSION);
+
+    return new RestResponse<>(delegateProfileManagerNgService.listV2(
+        accountId, orgId, projectId, filterIdentifier, searchTerm, delegateProfileFilterPropertiesDTO, pageRequest));
   }
 }

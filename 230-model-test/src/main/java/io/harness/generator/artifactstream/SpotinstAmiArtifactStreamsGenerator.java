@@ -1,7 +1,10 @@
 package io.harness.generator.artifactstream;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.Randomizer.Seed;
 import io.harness.generator.SettingGenerator;
@@ -16,6 +19,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(CDP)
 public class SpotinstAmiArtifactStreamsGenerator implements ArtifactStreamsGenerator {
   @Inject private ArtifactStreamGeneratorHelper artifactStreamGeneratorHelper;
   @Inject private SettingGenerator settingGenerator;
@@ -49,6 +53,11 @@ public class SpotinstAmiArtifactStreamsGenerator implements ArtifactStreamsGener
   @Override
   public ArtifactStream ensureArtifactStream(Seed seed, Owners owners) {
     return ensureArtifactStream(seed, owners, false);
+  }
+
+  @Override
+  public ArtifactStream ensureArtifactStream(Seed seed, Owners owners, String serviceName, boolean atConnector) {
+    return null;
   }
 
   @Override

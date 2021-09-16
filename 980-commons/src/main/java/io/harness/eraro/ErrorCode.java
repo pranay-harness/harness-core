@@ -186,6 +186,8 @@ public enum ErrorCode {
 
   ABORT_ALL_ALREADY,
 
+  EXPIRE_ALL_ALREADY,
+
   RETRY_FAILED,
 
   UNKNOWN_ARTIFACT_TYPE,
@@ -562,7 +564,8 @@ public enum ErrorCode {
   JIRA_CLIENT_ERROR,
   SCM_NOT_MODIFIED,
   JIRA_STEP_ERROR,
-  BUCKET_SERVER_ERROR;
+  BUCKET_SERVER_ERROR,
+  GIT_SYNC_ERROR;
 
   private Status status = BAD_REQUEST;
   private String description;

@@ -2,7 +2,9 @@ package software.wings.yaml.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.trigger.CustomPayloadExpression;
 import software.wings.beans.trigger.PayloadSource.Type;
@@ -19,6 +21,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("GITHUB")
 @JsonPropertyOrder({"harnessApiVersion"})
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class GithubPayloadSourceYaml extends PayloadSourceYaml {
   private List<WebhookEventYaml> events;
   private List<CustomPayloadExpression> customPayloadExpressions;

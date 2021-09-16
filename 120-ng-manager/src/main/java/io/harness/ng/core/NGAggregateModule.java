@@ -5,9 +5,11 @@ import static io.harness.ng.core.user.service.impl.NgUserServiceImpl.THREAD_POOL
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.manage.ManagedExecutorService;
+import io.harness.ng.core.api.AggregateAccountResourceService;
 import io.harness.ng.core.api.AggregateOrganizationService;
 import io.harness.ng.core.api.AggregateProjectService;
 import io.harness.ng.core.api.AggregateUserGroupService;
+import io.harness.ng.core.api.impl.AggregateAccountResourceServiceImpl;
 import io.harness.ng.core.api.impl.AggregateOrganizationServiceImpl;
 import io.harness.ng.core.api.impl.AggregateProjectServiceImpl;
 import io.harness.ng.core.api.impl.AggregateUserGroupServiceImpl;
@@ -33,6 +35,7 @@ public class NGAggregateModule extends AbstractModule {
         .toInstance(new ManagedExecutorService(Executors.newFixedThreadPool(poolSize)));
     bind(AggregateProjectService.class).to(AggregateProjectServiceImpl.class);
     bind(AggregateOrganizationService.class).to(AggregateOrganizationServiceImpl.class);
+    bind(AggregateAccountResourceService.class).to(AggregateAccountResourceServiceImpl.class);
     bind(AggregateUserGroupService.class).to(AggregateUserGroupServiceImpl.class);
   }
 }

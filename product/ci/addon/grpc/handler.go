@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/wings-software/portal/commons/go/lib/logs"
 	addonlogs "github.com/wings-software/portal/product/ci/addon/logs"
 	pb "github.com/wings-software/portal/product/ci/addon/proto"
 	"github.com/wings-software/portal/product/ci/addon/tasks"
@@ -67,22 +68,15 @@ func (h *handler) ExecuteStep(ctx context.Context, in *pb.ExecuteStepRequest) (*
 			Output:     stepOutput,
 			NumRetries: numRetries,
 		}
-		rl.Writer.Close()
-		// Try to improve the error message
-		if err != nil && rl.Writer.Error() != nil {
-			err = fmt.Errorf("%w\n\n%s", err, rl.Writer.Error().Error())
-		}
+		err = close(rl.Writer, err)
 		return response, err
 	case *enginepb.UnitStep_RunTests:
-		numRetries, err := newRunTestsTask(in.GetStep(), in.GetTmpFilePath(), rl.BaseLogger, rl.Writer, false, h.log).Run(ctx)
+		stepOutput, numRetries, err := newRunTestsTask(in.GetStep(), in.GetTmpFilePath(), rl.BaseLogger, rl.Writer, false, h.log).Run(ctx)
 		response := &pb.ExecuteStepResponse{
+			Output:     stepOutput,
 			NumRetries: numRetries,
 		}
-		rl.Writer.Close()
-		// Try to improve the error message
-		if err != nil && rl.Writer.Error() != nil {
-			err = fmt.Errorf("%w\n\n%s", err, rl.Writer.Error().Error())
-		}
+		err = close(rl.Writer, err)
 		return response, err
 	case *enginepb.UnitStep_Plugin:
 		artifact, numRetries, err := newPluginTask(in.GetStep(), in.GetPrevStepOutputs(), rl.BaseLogger, rl.Writer, false, h.log).Run(ctx)
@@ -90,15 +84,31 @@ func (h *handler) ExecuteStep(ctx context.Context, in *pb.ExecuteStepRequest) (*
 			Artifact:   artifact,
 			NumRetries: numRetries,
 		}
-		rl.Writer.Close()
-		// Try to improve the error message
-		if err != nil && rl.Writer.Error() != nil {
-			err = fmt.Errorf("%w\n\n%s", err, rl.Writer.Error().Error())
-		}
+		err = close(rl.Writer, err)
 		return response, err
 	case nil:
 		return &pb.ExecuteStepResponse{}, fmt.Errorf("UnitStep is not set")
 	default:
 		return &pb.ExecuteStepResponse{}, fmt.Errorf("UnitStep has unexpected type %T", x)
 	}
+}
+
+// Close log stream and enhance the error message if failures were encountered while
+// trying to close the log stream.
+func close(w logs.StreamWriter, err error) error {
+	logErr := w.Close()
+	// Try to improve the error message by adding any context we found in the logs
+	if err != nil && w.Error() != nil {
+		err = fmt.Errorf("%w\n\n%s", err, w.Error().Error())
+	}
+	// If log upload fails, the build should be marked as failure
+	if logErr != nil {
+		if err != nil {
+			// Wrap error with log upload error
+			err = fmt.Errorf("%w\n%s", err, logErr)
+		} else {
+			err = logErr
+		}
+	}
+	return err
 }

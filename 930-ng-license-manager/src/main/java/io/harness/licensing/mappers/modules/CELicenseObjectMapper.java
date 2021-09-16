@@ -13,19 +13,11 @@ import com.google.inject.Singleton;
 public class CELicenseObjectMapper implements LicenseObjectMapper<CEModuleLicense, CEModuleLicenseDTO> {
   @Override
   public CEModuleLicenseDTO toDTO(CEModuleLicense entity) {
-    return CEModuleLicenseDTO.builder()
-        .numberOfCluster(entity.getNumberOfCluster())
-        .spendLimit(entity.getSpendLimit())
-        .dataRetentionInDays(entity.getDataRetentionInDays())
-        .build();
+    return CEModuleLicenseDTO.builder().spendLimit(entity.getSpendLimit()).build();
   }
 
   @Override
   public CEModuleLicense toEntity(CEModuleLicenseDTO dto) {
-    return CEModuleLicense.builder()
-        .numberOfCluster(dto.getNumberOfCluster())
-        .spendLimit(dto.getSpendLimit())
-        .dataRetentionInDays(dto.getDataRetentionInDays())
-        .build();
+    return CEModuleLicense.builder().spendLimit(dto.getSpendLimit()).build();
   }
 }

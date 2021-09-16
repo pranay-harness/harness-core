@@ -132,14 +132,4 @@ public class CVConfigResource {
     return new RestResponse<>(cvConfigService.getDataSourcetypes(
         accountId, projectIdentifier, orgIdentifier, environmentIdentifier, serviceIdentifier, monitoringCategory));
   }
-
-  @PUT
-  @Path("/cleanup-perpetual-task")
-  @Timed
-  @ExceptionMetered
-  @ApiOperation(value = "deletes perpetual tasks for the cvConfigs", nickname = "deletePerpetualTasksForCVConfigs")
-  public RestResponse<List<String>> deletePerpetualTasks(
-      @QueryParam("accountId") @Valid final String accountId, @Body List<String> cvConfigIds) {
-    return new RestResponse<>(cvConfigService.cleanupPerpetualTasks(accountId, cvConfigIds));
-  }
 }

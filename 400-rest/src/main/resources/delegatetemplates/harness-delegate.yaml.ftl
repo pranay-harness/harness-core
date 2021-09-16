@@ -88,6 +88,8 @@ spec:
           periodSeconds: 10
           failureThreshold: 2
         env:
+        - name: JAVA_OPTS
+          value: "-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=2 -Xms64M"
         - name: ACCOUNT_ID
           value: ${accountId}
         - name: ACCOUNT_SECRET
@@ -166,6 +168,8 @@ spec:
           value: "${grpcServiceConnectorPort}"
         - name: CLIENT_TOOLS_DOWNLOAD_DISABLED
           value: "false"
+        - name: INSTALL_CLIENT_TOOLS_IN_BACKGROUND
+          value: "true"
         - name: DELEGATE_NAMESPACE
           valueFrom:
             fieldRef:

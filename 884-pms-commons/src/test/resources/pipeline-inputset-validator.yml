@@ -1,0 +1,10 @@
+pipeline:
+  name: Test Pipline
+  identifier: Test_Pipline11
+  variables:
+  - name: var1
+    value: val1
+    type: String
+  - name: var2
+    value: <+input>.allowedValues(a,b)
+    type: String

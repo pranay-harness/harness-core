@@ -2,7 +2,9 @@ package io.harness.pms.sdk.core.resolver.outcome.mapper;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
-import io.harness.pms.data.OrchestrationMap;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.pms.data.PmsOutcome;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
@@ -13,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @UtilityClass
 public class PmsOutcomeMapper {
   public String convertOutcomeValueToJson(Outcome outcome) {
@@ -34,13 +37,13 @@ public class PmsOutcomeMapper {
     return outcomes;
   }
 
-  public Map<String, OrchestrationMap> convertJsonToOrchestrationMap(Map<String, String> outcomeAsJsonList) {
+  public Map<String, PmsOutcome> convertJsonToOrchestrationMap(Map<String, String> outcomeAsJsonList) {
     if (isEmpty(outcomeAsJsonList)) {
       return Collections.emptyMap();
     }
-    Map<String, OrchestrationMap> outcomes = new LinkedHashMap<>();
+    Map<String, PmsOutcome> outcomes = new LinkedHashMap<>();
     for (Map.Entry<String, String> entry : outcomeAsJsonList.entrySet()) {
-      outcomes.put(entry.getKey(), entry.getValue() == null ? null : OrchestrationMap.parse(entry.getValue()));
+      outcomes.put(entry.getKey(), entry.getValue() == null ? null : PmsOutcome.parse(entry.getValue()));
     }
     return outcomes;
   }

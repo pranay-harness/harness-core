@@ -12,7 +12,6 @@ import io.harness.pms.contracts.execution.events.QueueTaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.execution.ChainDetails;
-import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.InvokerPackage;
 import io.harness.pms.sdk.core.execution.ProgressableStrategy;
 import io.harness.pms.sdk.core.execution.ResumePackage;
@@ -23,7 +22,7 @@ import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
-import io.harness.serializer.KryoSerializer;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
@@ -37,8 +36,6 @@ import org.apache.commons.collections4.CollectionUtils;
 public class TaskChainStrategy extends ProgressableStrategy {
   @Inject private SdkNodeExecutionService sdkNodeExecutionService;
   @Inject private StepRegistry stepRegistry;
-  @Inject private EngineObtainmentHelper engineObtainmentHelper;
-  @Inject private KryoSerializer kryoSerializer;
   @Inject private StrategyHelper strategyHelper;
 
   @Override
@@ -65,6 +62,7 @@ public class TaskChainStrategy extends ProgressableStrategy {
         stepResponse = taskChainExecutable.finalizeExecution(ambiance, stepParameters,
             chainDetails.getPassThroughData(), buildResponseDataSupplier(resumePackage.getResponseDataMap()));
       } catch (Exception e) {
+        log.error("Exception occurred while calling finalizeExecution, nodeExecutionId: {}", nodeExecutionId, e);
         stepResponse = strategyHelper.handleException(e);
       }
       sdkNodeExecutionService.handleStepResponse(
@@ -76,6 +74,7 @@ public class TaskChainStrategy extends ProgressableStrategy {
                 chainDetails.getPassThroughData(), buildResponseDataSupplier(resumePackage.getResponseDataMap()));
         handleResponse(ambiance, stepParameters, chainResponse);
       } catch (Exception e) {
+        log.error("Exception occurred while calling executeNextLink, nodeExecutionId: {}", nodeExecutionId, e);
         sdkNodeExecutionService.handleStepResponse(ambiance.getPlanExecutionId(), nodeExecutionId,
             StepResponseMapper.toStepResponseProto(strategyHelper.handleException(e)));
       }
@@ -92,6 +91,7 @@ public class TaskChainStrategy extends ProgressableStrategy {
         stepResponse = taskChainExecutable.finalizeExecution(
             ambiance, stepParameters, taskChainResponse.getPassThroughData(), () -> null);
       } catch (Exception e) {
+        log.error("Exception occurred while calling finalizeExecution, nodeExecutionId: {}", nodeExecutionId, e);
         stepResponse = strategyHelper.handleException(e);
       }
       sdkNodeExecutionService.handleStepResponse(ambiance.getPlanExecutionId(), nodeExecutionId,
@@ -99,8 +99,8 @@ public class TaskChainStrategy extends ProgressableStrategy {
           ExecutableResponse.newBuilder()
               .setTaskChain(TaskChainExecutableResponse.newBuilder()
                                 .setChainEnd(true)
-                                .setPassThroughData(
-                                    ByteString.copyFrom(kryoSerializer.asBytes(taskChainResponse.getPassThroughData())))
+                                .setPassThroughData(ByteString.copyFrom(
+                                    RecastOrchestrationUtils.toBytes(taskChainResponse.getPassThroughData())))
                                 .addAllLogKeys(CollectionUtils.emptyIfNull(taskChainResponse.getLogKeys()))
                                 .addAllUnits(CollectionUtils.emptyIfNull(taskChainResponse.getUnits()))
                                 .build())
@@ -116,7 +116,7 @@ public class TaskChainStrategy extends ProgressableStrategy {
                     .setTaskCategory(taskChainResponse.getTaskRequest().getTaskCategory())
                     .setChainEnd(taskChainResponse.isChainEnd())
                     .setPassThroughData(
-                        ByteString.copyFrom(kryoSerializer.asBytes(taskChainResponse.getPassThroughData())))
+                        ByteString.copyFrom(RecastOrchestrationUtils.toBytes(taskChainResponse.getPassThroughData())))
                     .addAllLogKeys(CollectionUtils.emptyIfNull(taskRequest.getDelegateTaskRequest().getLogKeysList()))
                     .addAllUnits(CollectionUtils.emptyIfNull(taskRequest.getDelegateTaskRequest().getUnitsList()))
                     .setTaskName(taskRequest.getDelegateTaskRequest().getTaskName())

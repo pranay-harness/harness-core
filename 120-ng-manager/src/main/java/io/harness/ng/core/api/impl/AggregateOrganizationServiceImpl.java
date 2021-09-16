@@ -1,12 +1,16 @@
 package io.harness.ng.core.api.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 
 import static java.util.Collections.singletonList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
+import io.harness.connector.services.ConnectorService;
 import io.harness.ng.core.api.AggregateOrganizationService;
+import io.harness.ng.core.api.DelegateDetailsService;
+import io.harness.ng.core.api.NGSecretServiceV2;
 import io.harness.ng.core.dto.OrganizationAggregateDTO;
 import io.harness.ng.core.dto.OrganizationFilterDTO;
 import io.harness.ng.core.entities.Organization;
@@ -41,14 +45,23 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
   private static final String ORG_ADMIN_ROLE = "_organization_admin";
   private final OrganizationService organizationService;
   private final ProjectService projectService;
+  private final NGSecretServiceV2 secretServiceV2;
+  private final ConnectorService defaultConnectorService;
+  private final DelegateDetailsService delegateDetailsService;
   private final NgUserService ngUserService;
   private final ExecutorService executorService;
 
   @Inject
-  public AggregateOrganizationServiceImpl(OrganizationService organizationService, ProjectService projectService,
-      NgUserService ngUserService, @Named("aggregate-orgs") ExecutorService executorService) {
+  public AggregateOrganizationServiceImpl(final OrganizationService organizationService,
+      final ProjectService projectService, final NGSecretServiceV2 secretService,
+      @Named(DEFAULT_CONNECTOR_SERVICE) final ConnectorService defaultConnectorService,
+      final DelegateDetailsService delegateDetailsService, final NgUserService ngUserService,
+      @Named("aggregate-orgs") final ExecutorService executorService) {
     this.organizationService = organizationService;
     this.projectService = projectService;
+    this.secretServiceV2 = secretService;
+    this.defaultConnectorService = defaultConnectorService;
+    this.delegateDetailsService = delegateDetailsService;
     this.ngUserService = ngUserService;
     this.executorService = executorService;
   }
@@ -63,23 +76,27 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
   }
 
   private OrganizationAggregateDTO buildAggregateDTO(final Organization organization) {
-    int projectsCount = projectService
-                            .getProjectsCountPerOrganization(
-                                organization.getAccountIdentifier(), singletonList(organization.getIdentifier()))
-                            .getOrDefault(organization.getIdentifier(), 0);
+    final String accountId = organization.getAccountIdentifier();
+    final String orgId = organization.getIdentifier();
 
-    Scope scope = Scope.builder()
-                      .accountIdentifier(organization.getAccountIdentifier())
-                      .orgIdentifier(organization.getIdentifier())
-                      .build();
-    List<UserMetadataDTO> orgAdmins = ngUserService.listUsersHavingRole(scope, ORG_ADMIN_ROLE);
-    List<UserMetadataDTO> collaborators = ngUserService.listUsers(scope);
+    final int projectsCount =
+        projectService.getProjectsCountPerOrganization(accountId, singletonList(orgId)).getOrDefault(orgId, 0);
+    final long secretsCount = secretServiceV2.count(accountId, orgId, null);
+    final long connectorsCount = defaultConnectorService.count(accountId, orgId, null);
+    final long delegateGroupCount = delegateDetailsService.getDelegateGroupCount(accountId, orgId, null);
+
+    final Scope scope = Scope.builder().accountIdentifier(accountId).orgIdentifier(orgId).build();
+    final List<UserMetadataDTO> orgAdmins = ngUserService.listUsersHavingRole(scope, ORG_ADMIN_ROLE);
+    final List<UserMetadataDTO> collaborators = ngUserService.listUsers(scope);
     collaborators.removeAll(orgAdmins);
 
     return OrganizationAggregateDTO.builder()
         .organizationResponse(OrganizationMapper.toResponseWrapper(organization))
         .projectsCount(projectsCount)
         .admins(orgAdmins)
+        .secretsCount(secretsCount)
+        .connectorsCount(connectorsCount)
+        .delegatesCount(delegateGroupCount)
         .collaborators(collaborators)
         .build();
   }
@@ -87,11 +104,12 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
   @Override
   public Page<OrganizationAggregateDTO> listOrganizationAggregateDTO(
       String accountIdentifier, Pageable pageable, OrganizationFilterDTO organizationFilterDTO) {
-    Page<Organization> organizations = organizationService.list(accountIdentifier, pageable, organizationFilterDTO);
-    List<Organization> organizationList = organizations.toList();
+    Page<Organization> permittedOrgs =
+        organizationService.listPermittedOrgs(accountIdentifier, pageable, organizationFilterDTO);
+    List<Organization> organizationList = permittedOrgs.getContent();
 
     List<Callable<OrganizationAggregateDTO>> tasks = new ArrayList<>();
-    organizations.forEach(org -> tasks.add(() -> buildAggregateDTO(org)));
+    organizationList.forEach(org -> tasks.add(() -> buildAggregateDTO(org)));
 
     List<Future<OrganizationAggregateDTO>> futures;
     try {
@@ -123,6 +141,6 @@ public class AggregateOrganizationServiceImpl implements AggregateOrganizationSe
       }
     }
 
-    return new PageImpl<>(aggregates, organizations.getPageable(), organizations.getTotalElements());
+    return new PageImpl<>(aggregates, permittedOrgs.getPageable(), permittedOrgs.getTotalElements());
   }
 }

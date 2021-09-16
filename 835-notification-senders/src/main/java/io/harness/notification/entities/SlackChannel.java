@@ -1,8 +1,12 @@
 package io.harness.notification.entities;
 
 import static io.harness.NotificationRequest.Slack;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.notification.NotificationChannelType;
+import io.harness.notification.dtos.UserGroup;
+import io.harness.notification.mapper.NotificationUserGroupMapper;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -12,20 +16,21 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+@OwnedBy(PL)
 @Data
 @Builder
 @EqualsAndHashCode()
 @JsonTypeName("Slack")
 public class SlackChannel implements Channel {
   List<String> slackWebHookUrls;
-  List<String> userGroupIds;
+  List<UserGroup> userGroups;
   Map<String, String> templateData;
   @Override
   public Object toObjectofProtoSchema() {
     return Slack.newBuilder()
         .addAllSlackWebHookUrls(slackWebHookUrls)
-        .addAllUserGroupIds(userGroupIds)
         .putAllTemplateData(templateData)
+        .addAllUserGroup(NotificationUserGroupMapper.toProto(userGroups))
         .build();
   }
 
@@ -38,8 +43,8 @@ public class SlackChannel implements Channel {
   public static SlackChannel toSlackEntity(Slack slackDetails) {
     return SlackChannel.builder()
         .slackWebHookUrls(slackDetails.getSlackWebHookUrlsList())
-        .userGroupIds(slackDetails.getUserGroupIdsList())
         .templateData(slackDetails.getTemplateDataMap())
+        .userGroups(NotificationUserGroupMapper.toEntity(slackDetails.getUserGroupList()))
         .build();
   }
 }

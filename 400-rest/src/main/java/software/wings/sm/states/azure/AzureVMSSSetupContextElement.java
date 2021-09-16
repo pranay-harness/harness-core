@@ -1,5 +1,8 @@
 package software.wings.sm.states.azure;
 
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
+
+import io.harness.annotations.dev.TargetModule;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.pcf.ResizeStrategy;
 import io.harness.delegate.task.azure.AzureVMSSPreDeploymentData;
@@ -23,6 +26,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@TargetModule(_957_CG_BEANS)
 public class AzureVMSSSetupContextElement implements ContextElement {
   private String uuid;
   private String name;

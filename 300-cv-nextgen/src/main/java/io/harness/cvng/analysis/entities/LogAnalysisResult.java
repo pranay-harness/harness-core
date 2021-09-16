@@ -2,6 +2,7 @@ package io.harness.cvng.analysis.entities;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
+import io.harness.cvng.analysis.beans.Risk;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
@@ -13,8 +14,10 @@ import io.harness.persistence.UuidAware;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -61,6 +64,26 @@ public final class LogAnalysisResult implements PersistentEntity, UuidAware, Cre
     private long label;
     private LogAnalysisTag tag;
     private int count;
+    private double riskScore;
+    public Risk getRisk() {
+      return Risk.getRiskFromRiskScore(riskScore);
+    }
+
+    public static class AnalysisResultBuilder {
+      public AnalysisResultBuilder tag(LogAnalysisTag logAnalysisTag) {
+        setTag(logAnalysisTag);
+        return this;
+      }
+
+      public void setTag(LogAnalysisTag tag) {
+        this.tag = tag;
+        if (tag.equals(LogAnalysisTag.KNOWN)) {
+          this.riskScore = 0.0;
+        } else if (tag.equals(LogAnalysisTag.UNKNOWN)) {
+          this.riskScore = 1.0;
+        }
+      }
+    }
   }
 
   public enum LogAnalysisTag {
@@ -76,6 +99,10 @@ public final class LogAnalysisResult implements PersistentEntity, UuidAware, Cre
 
     public boolean isMoreSevereThan(LogAnalysisTag other) {
       return this.severity > other.severity;
+    }
+
+    public static Set<LogAnalysisTag> getAnomalousTags() {
+      return Sets.newHashSet(UNKNOWN, UNEXPECTED);
     }
   }
 }

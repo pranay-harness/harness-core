@@ -6,7 +6,6 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.pms.serializer.kryo.PmsContractsKryoRegistrar;
 import io.harness.serializer.kryo.OrchestrationBeansKryoRegistrar;
 import io.harness.serializer.morphia.OrchestrationBeansMorphiaRegistrar;
-import io.harness.serializer.morphia.PmsCommonsMorphiaRegistrar;
 
 import com.google.common.collect.ImmutableSet;
 import lombok.experimental.UtilityClass;
@@ -33,7 +32,7 @@ public class OrchestrationBeansRegistrars {
           .addAll(PersistenceRegistrars.morphiaRegistrars)
           .addAll(TimeoutEngineRegistrars.morphiaRegistrars)
           .addAll(DelegateServiceBeansRegistrars.morphiaRegistrars)
-          .add(PmsCommonsMorphiaRegistrar.class)
+          .addAll(PmsCommonsModuleRegistrars.morphiaRegistrars)
           .add(PmsSdkCoreMorphiaRegistrar.class)
           .addAll(WaitEngineRegistrars.morphiaRegistrars)
           .add(OrchestrationBeansMorphiaRegistrar.class)

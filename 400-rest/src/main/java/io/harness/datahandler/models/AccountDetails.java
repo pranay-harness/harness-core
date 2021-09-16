@@ -24,4 +24,5 @@ public class AccountDetails {
   private DefaultExperience defaultExperience;
   private LicenseInfo licenseInfo;
   private CeLicenseInfo ceLicenseInfo;
+  private int activeServiceCount;
 }

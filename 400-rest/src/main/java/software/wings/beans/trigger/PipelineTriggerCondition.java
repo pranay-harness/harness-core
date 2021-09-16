@@ -4,7 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import static software.wings.beans.trigger.TriggerConditionType.PIPELINE_COMPLETION;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
@@ -16,6 +18,7 @@ import org.hibernate.validator.constraints.NotEmpty;
  * Created by sgurubelli on 10/25/17.
  */
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 @JsonTypeName("PIPELINE_COMPLETION")
 @Data
 @Builder

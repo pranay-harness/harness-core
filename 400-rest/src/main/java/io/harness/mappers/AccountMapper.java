@@ -22,6 +22,8 @@ public class AccountMapper {
         .companyName(account.getCompanyName())
         .defaultExperience(account.getDefaultExperience())
         .authenticationMechanism(account.getAuthenticationMechanism())
+        .isNextGenEnabled(account.isNextGenEnabled())
+        .serviceAccountConfig(account.getServiceAccountConfig())
         .build();
   }
 
@@ -31,6 +33,8 @@ public class AccountMapper {
         .withAccountName(dto.getName())
         .withCompanyName(dto.getCompanyName())
         .withDefaultExperience(dto.getDefaultExperience())
+        .withNextGenEnabled(dto.isNextGenEnabled())
+        .withServiceAccountConfig(dto.getServiceAccountConfig())
         .build();
   }
 
@@ -40,6 +44,8 @@ public class AccountMapper {
         .accountName(account.getAccountName())
         .companyName(account.getCompanyName())
         .createdFromNG(account.isCreatedFromNG())
+        .isNextGenEnabled(account.isNextGenEnabled())
+        .defaultExperience(account.getDefaultExperience())
         .build();
   }
 }

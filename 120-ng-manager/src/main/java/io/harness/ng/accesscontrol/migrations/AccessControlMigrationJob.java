@@ -39,7 +39,7 @@ public class AccessControlMigrationJob implements Managed {
       log.error("Error while dropping accessControlMigrations/accessControlPreferences collection", exception);
     }
 
-    executorService.scheduleWithFixedDelay(this::run, 15, 60, TimeUnit.MINUTES);
+    executorService.scheduleWithFixedDelay(this::run, 15, 720, TimeUnit.MINUTES);
   }
 
   private void run() {

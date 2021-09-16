@@ -21,6 +21,7 @@ import io.harness.connector.stats.ConnectorStatistics;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.awskmsconnector.AwsKmsConnectorDTO;
+import io.harness.delegate.beans.connector.awssecretmanager.AwsSecretManagerDTO;
 import io.harness.delegate.beans.connector.azurekeyvaultconnector.AzureKeyVaultConnectorDTO;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
@@ -126,6 +127,8 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
         return ((GcpKmsConnectorDTO) connector.getConnectorConfig()).isDefault();
       case AWS_KMS:
         return ((AwsKmsConnectorDTO) connector.getConnectorConfig()).isDefault();
+      case AWS_SECRET_MANAGER:
+        return ((AwsSecretManagerDTO) connector.getConnectorConfig()).isDefault();
       case LOCAL:
         return ((LocalConnectorDTO) connector.getConnectorConfig()).isDefault();
       default:
@@ -284,6 +287,11 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
     return defaultConnectorService.list(page, size, accountIdentifier, filterProperties, orgIdentifier,
         projectIdentifier, filterIdentifier, searchTerm, includeAllConnectorsAccessibleAtScope,
         getDistinctFromBranches);
+  }
+
+  @Override
+  public long count(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    return defaultConnectorService.count(accountIdentifier, orgIdentifier, projectIdentifier);
   }
 
   @Override

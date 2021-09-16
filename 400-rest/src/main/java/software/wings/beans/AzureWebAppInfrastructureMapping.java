@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.validation.Validator.ensureType;
 import static io.harness.validation.Validator.notNullCheck;
@@ -32,7 +32,7 @@ import org.apache.commons.lang3.StringUtils;
 @EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(innerTypeName = "AzureWebAppsInfrastructureMappingKeys")
 @OwnedBy(CDP)
-@TargetModule(_871_CG_BEANS)
+@TargetModule(_957_CG_BEANS)
 public class AzureWebAppInfrastructureMapping extends InfrastructureMapping {
   @Trimmed @Attributes(title = "SubscriptionId") @Getter @Setter private String subscriptionId;
   @Trimmed @Attributes(title = "Resource Group") @Getter @Setter private String resourceGroup;

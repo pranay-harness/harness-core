@@ -29,6 +29,7 @@ public class StackDriverMetricDefinition {
   String metricName;
   String filter;
   Aggregation aggregation;
+  String serviceInstanceField;
 
   @Data
   @Builder

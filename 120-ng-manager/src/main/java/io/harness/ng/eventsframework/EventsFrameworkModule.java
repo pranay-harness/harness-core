@@ -4,10 +4,12 @@ import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_BRANCH_HOOK_EVENT_STREAM;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_BRANCH_HOOK_EVENT_STREAM_MAX_TOPIC_SIZE;
+import static io.harness.eventsframework.EventsFrameworkConstants.GIT_CONFIG_STREAM;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_PR_EVENT_STREAM;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_PR_EVENT_STREAM_MAX_TOPIC_SIZE;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_PUSH_EVENT_STREAM;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_PUSH_EVENT_STREAM_MAX_TOPIC_SIZE;
+import static io.harness.eventsframework.EventsFrameworkConstants.INSTANCE_STATS;
 import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM;
 import static io.harness.eventsframework.EventsFrameworkConstants.WEBHOOK_EVENTS_STREAM_MAX_TOPIC_SIZE;
 
@@ -43,7 +45,7 @@ public class EventsFrameworkModule extends AbstractModule {
           .toInstance(
               NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
       bind(Consumer.class)
-          .annotatedWith(Names.named(EventsFrameworkConstants.FEATURE_FLAG_STREAM))
+          .annotatedWith(Names.named(EventsFrameworkConstants.NG_ACCOUNT_SETUP))
           .toInstance(
               NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
       bind(Producer.class)
@@ -78,6 +80,9 @@ public class EventsFrameworkModule extends AbstractModule {
           .annotatedWith(Names.named(WEBHOOK_EVENTS_STREAM))
           .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
       bind(Producer.class)
+          .annotatedWith(Names.named(EventsFrameworkConstants.POLLING_EVENTS_STREAM))
+          .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
+      bind(Producer.class)
           .annotatedWith(Names.named(GIT_PUSH_EVENT_STREAM))
           .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
       bind(Producer.class)
@@ -86,6 +91,17 @@ public class EventsFrameworkModule extends AbstractModule {
       bind(Producer.class)
           .annotatedWith(Names.named(GIT_BRANCH_HOOK_EVENT_STREAM))
           .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
+      bind(Consumer.class)
+          .annotatedWith(Names.named(GIT_CONFIG_STREAM))
+          .toInstance(
+              NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
+      bind(Producer.class)
+          .annotatedWith(Names.named(EventsFrameworkConstants.INSTANCE_STATS))
+          .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
+      bind(Consumer.class)
+          .annotatedWith(Names.named(INSTANCE_STATS))
+          .toInstance(
+              NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
     } else {
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
@@ -97,10 +113,10 @@ public class EventsFrameworkModule extends AbstractModule {
               EventsFrameworkConstants.ENTITY_CRUD_MAX_PROCESSING_TIME,
               EventsFrameworkConstants.ENTITY_CRUD_READ_BATCH_SIZE));
       bind(Consumer.class)
-          .annotatedWith(Names.named(EventsFrameworkConstants.FEATURE_FLAG_STREAM))
-          .toInstance(RedisConsumer.of(EventsFrameworkConstants.FEATURE_FLAG_STREAM, NG_MANAGER.getServiceId(),
-              redisConfig, EventsFrameworkConstants.FEATURE_FLAG_MAX_PROCESSING_TIME,
-              EventsFrameworkConstants.FEATURE_FLAG_READ_BATCH_SIZE));
+          .annotatedWith(Names.named(EventsFrameworkConstants.NG_ACCOUNT_SETUP))
+          .toInstance(RedisConsumer.of(EventsFrameworkConstants.ENTITY_CRUD, "NG_ACCOUNT_SETUP_GROUP", redisConfig,
+              EventsFrameworkConstants.NG_ACCOUNT_SETUP_MAX_PROCESSING_TIME,
+              EventsFrameworkConstants.NG_ACCOUNT_SETUP_READ_BATCH_SIZE));
       bind(Consumer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.USERMEMBERSHIP))
           .toInstance(RedisConsumer.of(EventsFrameworkConstants.USERMEMBERSHIP, NG_MANAGER.getServiceId(), redisConfig,
@@ -143,6 +159,10 @@ public class EventsFrameworkModule extends AbstractModule {
           .toInstance(RedisProducer.of(
               WEBHOOK_EVENTS_STREAM, redisConfig, WEBHOOK_EVENTS_STREAM_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId()));
       bind(Producer.class)
+          .annotatedWith(Names.named(EventsFrameworkConstants.POLLING_EVENTS_STREAM))
+          .toInstance(RedisProducer.of(EventsFrameworkConstants.POLLING_EVENTS_STREAM, redisConfig,
+              EventsFrameworkConstants.POLLING_EVENTS_STREAM_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId()));
+      bind(Producer.class)
           .annotatedWith(Names.named(GIT_PUSH_EVENT_STREAM))
           .toInstance(RedisProducer.of(
               GIT_PUSH_EVENT_STREAM, redisConfig, GIT_PUSH_EVENT_STREAM_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId()));
@@ -159,6 +179,23 @@ public class EventsFrameworkModule extends AbstractModule {
           .annotatedWith(Names.named(GIT_BRANCH_HOOK_EVENT_STREAM))
           .toInstance(RedisProducer.of(GIT_BRANCH_HOOK_EVENT_STREAM, redisConfig,
               GIT_BRANCH_HOOK_EVENT_STREAM_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId()));
+      bind(Consumer.class)
+          .annotatedWith(Names.named(GIT_CONFIG_STREAM))
+          .toInstance(RedisConsumer.of(GIT_CONFIG_STREAM, NG_MANAGER.getServiceId(), redisConfig,
+              EventsFrameworkConstants.GIT_CONFIG_STREAM_PROCESSING_TIME,
+              EventsFrameworkConstants.GIT_CONFIG_STREAM_READ_BATCH_SIZE));
+      bind(Producer.class)
+          .annotatedWith(Names.named(INSTANCE_STATS))
+          .toInstance(RedisProducer.of(
+              INSTANCE_STATS, redisConfig, EventsFrameworkConstants.DEFAULT_TOPIC_SIZE, NG_MANAGER.getServiceId()));
+      bind(Consumer.class)
+          .annotatedWith(Names.named(INSTANCE_STATS))
+          .toInstance(RedisConsumer.of(INSTANCE_STATS, NG_MANAGER.getServiceId(), redisConfig,
+              EventsFrameworkConstants.DEFAULT_MAX_PROCESSING_TIME, EventsFrameworkConstants.DEFAULT_READ_BATCH_SIZE));
+      bind(Producer.class)
+          .annotatedWith(Names.named(EventsFrameworkConstants.CD_DEPLOYMENT_EVENT))
+          .toInstance(RedisProducer.of(EventsFrameworkConstants.CD_DEPLOYMENT_EVENT, redisConfig,
+              EventsFrameworkConstants.CD_DEPLOYMENT_EVENT_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId()));
     }
   }
 }

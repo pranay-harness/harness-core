@@ -6,9 +6,10 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.ccm.CCMJobConstants;
-import io.harness.batch.processing.pricing.client.BanzaiRecommenderClient;
-import io.harness.batch.processing.pricing.data.VMComputePricingInfo;
-import io.harness.batch.processing.pricing.service.intfc.VMPricingService;
+import io.harness.batch.processing.pricing.banzai.BanzaiRecommenderClient;
+import io.harness.batch.processing.pricing.banzai.VMComputePricingInfo;
+import io.harness.batch.processing.pricing.vmpricing.VMPricingService;
+import io.harness.batch.processing.tasklet.util.ClusterHelper;
 import io.harness.ccm.commons.beans.JobConstants;
 import io.harness.ccm.commons.beans.billing.InstanceCategory;
 import io.harness.ccm.commons.beans.recommendation.K8sServiceProvider;
@@ -45,6 +46,7 @@ public class K8sNodeRecommendationTasklet implements Tasklet {
   @Autowired private RecommendationCrudService recommendationCrudService;
   @Autowired private BanzaiRecommenderClient banzaiRecommenderClient;
   @Autowired private VMPricingService vmPricingService;
+  @Autowired private ClusterHelper clusterHelper;
 
   private JobConstants jobConstants;
 
@@ -106,7 +108,8 @@ public class K8sNodeRecommendationTasklet implements Tasklet {
     RecommendationOverviewStats stats = getMonthlyCostAndSaving(serviceProvider, recommendation);
     log.info("The monthly stat is: {}", stats);
 
-    recommendationCrudService.upsertNodeRecommendation(mongoEntityId, jobConstants, nodePoolId, stats);
+    final String clusterName = clusterHelper.fetchClusterName(nodePoolId.getClusterid());
+    recommendationCrudService.upsertNodeRecommendation(mongoEntityId, jobConstants, nodePoolId, clusterName, stats);
   }
 
   private K8sServiceProvider getCurrentNodePoolConfiguration(@NonNull NodePoolId nodePoolId) {

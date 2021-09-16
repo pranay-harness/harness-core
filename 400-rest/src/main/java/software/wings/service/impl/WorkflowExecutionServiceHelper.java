@@ -21,7 +21,6 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
@@ -108,20 +107,15 @@ public class WorkflowExecutionServiceHelper {
 
     Map<String, String> oldWorkflowVariablesValueMap = workflowExecution.getExecutionArgs().getWorkflowVariables();
     if (isEmpty(oldWorkflowVariablesValueMap)) {
-      if (featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, workflowExecution.getAccountId())) {
-        boolean changed = false;
-        for (Variable variable : workflowVariables) {
-          if (!Boolean.TRUE.equals(variable.getRuntimeInput()) && variable.isMandatory()) {
-            changed = true;
-            break;
-          }
+      boolean changed = false;
+      for (Variable variable : workflowVariables) {
+        if (!Boolean.TRUE.equals(variable.getRuntimeInput()) && variable.isMandatory()) {
+          changed = true;
+          break;
         }
-
-        return new WorkflowVariablesMetadata(workflowVariables, changed);
-      } else {
-        return new WorkflowVariablesMetadata(
-            workflowVariables, workflowVariables.stream().anyMatch(variable -> ENTITY == variable.getType()));
       }
+
+      return new WorkflowVariablesMetadata(workflowVariables, changed);
     }
 
     boolean changed = populateWorkflowVariablesValues(workflowVariables, new HashMap<>(oldWorkflowVariablesValueMap));

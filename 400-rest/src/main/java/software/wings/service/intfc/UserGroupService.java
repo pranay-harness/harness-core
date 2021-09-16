@@ -1,5 +1,10 @@
 package software.wings.service.intfc;
 
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 
@@ -24,6 +29,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 /**
  * Created by rishi
  */
+@OwnedBy(PL)
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
 public interface UserGroupService extends OwnedByAccount, OwnedByApplication {
   /**
    * Save.
@@ -157,6 +164,8 @@ public interface UserGroupService extends OwnedByAccount, OwnedByApplication {
 
   boolean verifyUserAuthorizedToAcceptOrRejectApproval(String accountId, List<String> userGroupIds);
 
+  boolean verifyApiKeyAuthorizedToAcceptOrRejectApproval(List<String> apiKeysUserGroupIds, List<String> userGroupIds);
+
   UserGroup linkToSsoGroup(@NotBlank String accountId, @NotBlank String userGroupId, @NotNull SSOType ssoType,
       @NotBlank String ssoId, @NotBlank String ssoGroupId, @NotBlank String ssoGroupName);
 
@@ -188,4 +197,8 @@ public interface UserGroupService extends OwnedByAccount, OwnedByApplication {
   boolean deleteNonAdminUserGroups(String accountId);
 
   boolean deleteUserGroupsByName(String accountId, List<String> userGroupsToRetain);
+
+  void maskCePermissions(UserGroup userGroup);
+
+  void maskAppTemplatePermissions(UserGroup userGroup);
 }

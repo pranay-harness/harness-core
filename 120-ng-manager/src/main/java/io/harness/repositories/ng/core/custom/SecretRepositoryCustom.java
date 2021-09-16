@@ -12,4 +12,5 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @OwnedBy(PL)
 public interface SecretRepositoryCustom {
   Page<Secret> findAll(Criteria criteria, Pageable pageable);
+  long count(Criteria criteria);
 }

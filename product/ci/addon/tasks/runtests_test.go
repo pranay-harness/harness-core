@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	mexec "github.com/wings-software/portal/commons/go/lib/exec"
 	"os"
 	"testing"
 	"time"
@@ -14,9 +13,9 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
 	"github.com/wings-software/portal/commons/go/lib/exec"
+	mexec "github.com/wings-software/portal/commons/go/lib/exec"
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/logs"
-	"github.com/wings-software/portal/commons/go/lib/utils"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 	"go.uber.org/zap"
@@ -97,7 +96,7 @@ instrPackages: p1, p2, p3`
 }
 
 func TestGetMavenCmd(t *testing.T) {
-	ctrl, _ := gomock.WithContext(context.Background(), t)
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
 
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
@@ -190,7 +189,74 @@ instrPackages: p1, p2, p3`
 			addonLogger:          log.Sugar(),
 		}
 
-		got, err := r.getMavenCmd(tc.tests)
+		got, err := r.getMavenCmd(ctx, tc.tests, false)
+		if tc.expectedErr == (err == nil) {
+			t.Fatalf("%s: expected error: %v, got: %v", tc.name, tc.expectedErr, got)
+		}
+		assert.Equal(t, got, tc.want)
+	}
+}
+
+func TestGetMavenCmd_Manual(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	fs := filesystem.NewMockFileSystem(ctrl)
+
+	tmpFilePath := "/test/tmp"
+	packages := "p1, p2, p3"
+
+	expDir := fmt.Sprintf(outDir, tmpFilePath)
+	expData := `outDir: /test/tmp/ti/callgraph/
+logLevel: 0
+logConsole: false
+writeTo: COVERAGE_JSON
+instrPackages: p1, p2, p3`
+	fs.EXPECT().MkdirAll(expDir, os.ModePerm).Return(nil).AnyTimes()
+	mf := filesystem.NewMockFile(ctrl)
+	mf.EXPECT().Write([]byte(expData)).Return(0, nil).AnyTimes()
+	fs.EXPECT().Create("/test/tmp/config.ini").Return(mf, nil).AnyTimes()
+
+	tests := []struct {
+		name                 string // description of test
+		args                 string
+		runOnlySelectedTests bool
+		want                 string
+		expectedErr          bool
+		tests                []types.RunnableTest
+	}{
+		{
+			name:                 "run all tests with empty test list and no -Duser parameters",
+			args:                 "clean test",
+			runOnlySelectedTests: false,
+			want:                 "mvn clean test",
+			expectedErr:          false,
+			tests:                []types.RunnableTest{},
+		},
+		{
+			name:                 "run selected tests with zero tests and -Duser parameters",
+			args:                 "clean test -Duser.timezone=US/Mountain -Duser.locale=en/US",
+			runOnlySelectedTests: true,
+			want:                 "mvn clean test -Duser.timezone=US/Mountain -Duser.locale=en/US",
+			expectedErr:          false,
+			tests:                []types.RunnableTest{},
+		},
+	}
+
+	for _, tc := range tests {
+		r := runTestsTask{
+			id:                   "id",
+			runOnlySelectedTests: tc.runOnlySelectedTests,
+			fs:                   fs,
+			tmpFilePath:          tmpFilePath,
+			args:                 tc.args,
+			packages:             packages,
+			log:                  log.Sugar(),
+			addonLogger:          log.Sugar(),
+		}
+
+		got, err := r.getMavenCmd(ctx, tc.tests, true)
 		if tc.expectedErr == (err == nil) {
 			t.Fatalf("%s: expected error: %v, got: %v", tc.name, tc.expectedErr, got)
 		}
@@ -207,6 +273,7 @@ func TestGetCmd_WithNoFilesChanged(t *testing.T) {
 	ctrl, ctx := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
 
+	outputFile := "test.out"
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	fs := filesystem.NewMockFileSystem(ctrl)
 
@@ -262,15 +329,13 @@ instrPackages: p1, p2, p3`
 		return false
 	}
 
-	want, err := utils.GetLoggableCmd(`set -e
+	want := `set -xe
 export TMPDIR=/test/tmp
+export HARNESS_JAVA_AGENT=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini
 echo x
 mvn -am -DargLine=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini clean test
-echo y`)
-	if err != nil {
-		t.Fatalf("could not get loggable cmd for %s", want)
-	}
-	got, err := r.getCmd(ctx)
+echo y`
+	got, err := r.getCmd(ctx, outputFile)
 	assert.Nil(t, err)
 	assert.Equal(t, r.runOnlySelectedTests, false) // If no errors, we should run only selected tests
 	assert.Equal(t, got, want)
@@ -280,6 +345,7 @@ func TestGetCmd_SelectAll(t *testing.T) {
 	ctrl, ctx := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
 
+	outputFile := "test.out"
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	fs := filesystem.NewMockFileSystem(ctrl)
 
@@ -335,15 +401,13 @@ instrPackages: p1, p2, p3`
 		return false
 	}
 
-	want, err := utils.GetLoggableCmd(`set -e
+	want := `set -xe
 export TMPDIR=/test/tmp
+export HARNESS_JAVA_AGENT=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini
 echo x
 mvn -am -DargLine=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini clean test
-echo y`)
-	if err != nil {
-		t.Fatalf("could not get loggable cmd for %s", want)
-	}
-	got, err := r.getCmd(ctx)
+echo y`
+	got, err := r.getCmd(ctx, outputFile)
 	assert.Nil(t, err)
 	assert.Equal(t, r.runOnlySelectedTests, false) // Since selection returns all the tests
 	assert.Equal(t, got, want)
@@ -353,6 +417,7 @@ func TestGetCmd_RunAll(t *testing.T) {
 	ctrl, ctx := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
 
+	outputFile := "test.out"
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	fs := filesystem.NewMockFileSystem(ctrl)
 
@@ -403,15 +468,13 @@ instrPackages: p1, p2, p3`
 		return false
 	}
 
-	want, err := utils.GetLoggableCmd(`set -e
+	want := `set -xe
 export TMPDIR=/test/tmp
+export HARNESS_JAVA_AGENT=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini
 echo x
 mvn -am -DargLine=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini clean test
-echo y`)
-	if err != nil {
-		t.Fatalf("could not get loggable cmd for %s", want)
-	}
-	got, err := r.getCmd(ctx)
+echo y`
+	got, err := r.getCmd(ctx, outputFile)
 	assert.Nil(t, err)
 	assert.Equal(t, r.runOnlySelectedTests, false) // Since there was an error in execution
 	assert.Equal(t, got, want)
@@ -421,22 +484,12 @@ func TestGetCmd_ManualExecution(t *testing.T) {
 	ctrl, ctx := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
 
+	outputFile := "test.out"
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	fs := filesystem.NewMockFileSystem(ctrl)
 
 	tmpFilePath := "/test/tmp"
 	packages := "p1, p2, p3"
-
-	expDir := fmt.Sprintf(outDir, tmpFilePath)
-	expData := `outDir: /test/tmp/ti/callgraph/
-logLevel: 0
-logConsole: false
-writeTo: COVERAGE_JSON
-instrPackages: p1, p2, p3`
-	fs.EXPECT().MkdirAll(expDir, os.ModePerm).Return(nil).AnyTimes()
-	mf := filesystem.NewMockFile(ctrl)
-	mf.EXPECT().Write([]byte(expData)).Return(0, nil).AnyTimes()
-	fs.EXPECT().Create("/test/tmp/config.ini").Return(mf, nil).AnyTimes()
 
 	diffFiles, _ := json.Marshal([]types.File{{Name: "abc.java", Status: types.FileModified}})
 
@@ -471,15 +524,13 @@ instrPackages: p1, p2, p3`
 		return true
 	}
 
-	want, err := utils.GetLoggableCmd(`set -e
+	want := `set -xe
 export TMPDIR=/test/tmp
+export HARNESS_JAVA_AGENT=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini
 echo x
-mvn -am -DargLine=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini clean test
-echo y`)
-	if err != nil {
-		t.Fatalf("could not get loggable cmd for %s", want)
-	}
-	got, err := r.getCmd(ctx)
+mvn clean test
+echo y`
+	got, err := r.getCmd(ctx, outputFile)
 	assert.Nil(t, err)
 	assert.Equal(t, r.runOnlySelectedTests, false) // Since it's a manual execution
 	assert.Equal(t, got, want)
@@ -489,6 +540,7 @@ func TestGetCmd_ErrorIncorrectBuildTool(t *testing.T) {
 	ctrl, ctx := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
 
+	outputFile := "test.out"
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
 	fs := filesystem.NewMockFileSystem(ctrl)
 
@@ -539,7 +591,7 @@ instrPackages: p1, p2, p3`
 		return false
 	}
 
-	_, err := r.getCmd(ctx)
+	_, err := r.getCmd(ctx, outputFile)
 	assert.NotNil(t, err)
 }
 
@@ -661,7 +713,7 @@ instrPackages: p1, p2, p3`
 	defer func() {
 		collectCgFn = oldCollectCg
 	}()
-	collectCgFn = func(ctx context.Context, stepID, collectcgDir string, timeTakenMs int64, log *zap.SugaredLogger) error {
+	collectCgFn = func(ctx context.Context, stepID, collectDataDir string, timeTakenMs int64, log *zap.SugaredLogger) error {
 		called += 1
 		return nil
 	}
@@ -676,7 +728,7 @@ instrPackages: p1, p2, p3`
 		return nil
 	}
 
-	_, err := r.Run(ctx)
+	_, _, err := r.Run(ctx)
 	assert.Nil(t, err)
 	assert.Equal(t, called, 2) // Make sure both CG collection and report collection are called
 }
@@ -763,9 +815,18 @@ instrPackages: p1, p2, p3`
 	defer func() {
 		collectCgFn = oldCollectCg
 	}()
-	collectCgFn = func(ctx context.Context, stepID, collectcgDir string, timeTakenMs int64, log *zap.SugaredLogger) error {
+	collectCgFn = func(ctx context.Context, stepID, collectDataDir string, timeTakenMs int64, log *zap.SugaredLogger) error {
 		called += 1
 		return nil
+	}
+
+	// Set isManual to false
+	oldIsManual := isManualFn
+	defer func() {
+		isManualFn = oldIsManual
+	}()
+	isManualFn = func() bool {
+		return false
 	}
 
 	// Mock test reports
@@ -778,7 +839,7 @@ instrPackages: p1, p2, p3`
 		return nil
 	}
 
-	_, err := r.Run(ctx)
+	_, _, err := r.Run(ctx)
 	assert.Equal(t, err, expErr)
 	assert.Equal(t, called, 2) // makes ure both functions are called even on failure
 }
@@ -864,8 +925,17 @@ instrPackages: p1, p2, p3`
 		collectCgFn = oldCollectCg
 	}()
 	errCg := errors.New("could not collect CG")
-	collectCgFn = func(ctx context.Context, stepID, collectcgDir string, timeTakenMs int64, log *zap.SugaredLogger) error {
+	collectCgFn = func(ctx context.Context, stepID, collectDataDir string, timeTakenMs int64, log *zap.SugaredLogger) error {
 		return errCg
+	}
+
+	// Set isManual to false
+	oldIsManual := isManualFn
+	defer func() {
+		isManualFn = oldIsManual
+	}()
+	isManualFn = func() bool {
+		return false
 	}
 
 	// Mock test reports
@@ -877,7 +947,7 @@ instrPackages: p1, p2, p3`
 		return nil
 	}
 
-	_, err := r.Run(ctx)
+	_, _, err := r.Run(ctx)
 	assert.Equal(t, err, errCg)
 }
 
@@ -965,6 +1035,15 @@ instrPackages: p1, p2, p3`
 		return nil
 	}
 
+	// Set isManual to false
+	oldIsManual := isManualFn
+	defer func() {
+		isManualFn = oldIsManual
+	}()
+	isManualFn = func() bool {
+		return false
+	}
+
 	// Mock test reports
 	errReport := errors.New("could not collect reports")
 	oldReports := collectTestReportsFn
@@ -975,6 +1054,6 @@ instrPackages: p1, p2, p3`
 		return errReport
 	}
 
-	_, err := r.Run(ctx)
+	_, _, err := r.Run(ctx)
 	assert.Equal(t, err, errReport)
 }

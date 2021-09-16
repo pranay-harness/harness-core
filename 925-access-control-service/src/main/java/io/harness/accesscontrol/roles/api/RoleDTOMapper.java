@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.accesscontrol.roles.Role;
 import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.accesscontrol.scopes.core.ScopeService;
-import io.harness.accesscontrol.scopes.harness.ScopeDTOMapper;
+import io.harness.accesscontrol.scopes.harness.ScopeMapper;
 import io.harness.annotations.dev.OwnedBy;
 
 import com.google.inject.Inject;
@@ -36,7 +36,7 @@ public class RoleDTOMapper {
                   .description(object.getDescription())
                   .tags(object.getTags())
                   .build())
-        .scope(ScopeDTOMapper.toDTO(scope))
+        .scope(ScopeMapper.toDTO(scope))
         .harnessManaged(object.isManaged())
         .createdAt(object.getCreatedAt())
         .lastModifiedAt(object.getLastModifiedAt())

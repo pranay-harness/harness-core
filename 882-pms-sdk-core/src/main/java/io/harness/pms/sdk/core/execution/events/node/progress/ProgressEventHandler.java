@@ -30,15 +30,6 @@ public class ProgressEventHandler extends PmsBaseEventHandler<ProgressEvent> {
   @Inject private KryoSerializer kryoSerializer;
 
   @Override
-  protected Map<String, String> extractMetricContext(ProgressEvent message) {
-    return ImmutableMap.<String, String>builder()
-        .put("accountId", AmbianceUtils.getAccountId(message.getAmbiance()))
-        .put("orgIdentifier", AmbianceUtils.getOrgIdentifier(message.getAmbiance()))
-        .put("projectIdentifier", AmbianceUtils.getProjectIdentifier(message.getAmbiance()))
-        .build();
-  }
-
-  @Override
   protected String getMetricPrefix(ProgressEvent message) {
     return "progress_event";
   }

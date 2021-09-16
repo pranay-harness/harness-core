@@ -110,6 +110,9 @@ iteratorsConfig:
   supportPreferenceIteratorConfig:
     enabled: ${SUPPORTPREFERENCE_ITERATOR_ENABLED:-true}
     targetIntervalInSeconds: ${SUPPORTPREFERENCE_ITERATOR_INTERVAL:-600}
+  scopeIteratorConfig:
+    enabled: ${SCOPE_ITERATOR_ENABLED:-true}
+    targetIntervalInSeconds: ${SCOPE_ITERATOR_INTERVAL:-600}
 
 accountClient:
   accountServiceConfig:
@@ -151,6 +154,22 @@ userGroupClient:
     readTimeOutSeconds: 15
     enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
   userGroupServiceSecret: ${USER_GROUP_CLIENT_SERVICE_SECRET:-IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM}
+
+projectClient:
+  projectServiceConfig:
+    baseUrl: ${PROJECT_CLIENT_BASE_URL:-https://localhost:7090}
+    connectTimeOutSeconds: 15
+    readTimeOutSeconds: 15
+    enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
+  projectServiceSecret: ${PROJECT_CLIENT_SERVICE_SECRET:-IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM}
+
+organizationClient:
+  organizationServiceConfig:
+    baseUrl: ${ORGANIZATION_CLIENT_BASE_URL:-https://localhost:7090}
+    connectTimeOutSeconds: 15
+    readTimeOutSeconds: 15
+    enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
+  organizationServiceSecret: ${ORGANIZATION_CLIENT_SERVICE_SECRET:-IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM}
 
 notificationConfig:
   slackWebhookUrl: ${NOTIFICATION_SLACK_WEBHOOK_URL:-https://hooks.slack.com/services/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}
@@ -203,7 +222,7 @@ featureFlagClientConfiguration:
     readTimeOutSeconds: 15
     enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
   featureFlagServiceSecret: ${FEATURE_FLAG_CLIENT_SECRET:-IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM}
-  
+
 serviceAccountClient:
   serviceAccountServiceConfig:
     baseUrl: ${SERVICEACCOUNT_CLIENT_BASE_URL:-https://localhost:7090}

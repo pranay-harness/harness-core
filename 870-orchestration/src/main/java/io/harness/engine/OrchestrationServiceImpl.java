@@ -11,7 +11,6 @@ import io.harness.engine.interrupts.InterruptManager;
 import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.engine.observers.OrchestrationStartObserver;
 import io.harness.engine.observers.beans.OrchestrationStartInfo;
-import io.harness.engine.utils.TransactionUtils;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecutionMetadata;
 import io.harness.interrupts.Interrupt;
@@ -24,6 +23,7 @@ import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.triggers.TriggerPayload;
+import io.harness.springdata.TransactionHelper;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -43,7 +43,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
   @Inject private InterruptManager interruptManager;
   @Inject private PlanService planService;
   @Inject private PlanExecutionMetadataService planExecutionMetadataService;
-  @Inject private TransactionUtils transactionUtils;
+  @Inject private TransactionHelper transactionHelper;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
 
   @Getter private final Subject<OrchestrationStartObserver> orchestrationStartSubject = new Subject<>();
@@ -53,6 +53,11 @@ public class OrchestrationServiceImpl implements OrchestrationService {
       ExecutionMetadata metadata, PlanExecutionMetadata planExecutionMetadata) {
     Plan savedPlan = planService.save(plan);
     return executePlan(savedPlan, setupAbstractions, metadata, planExecutionMetadata);
+  }
+
+  public PlanExecution startExecutionV2(String planId, Map<String, String> setupAbstractions,
+      ExecutionMetadata metadata, PlanExecutionMetadata planExecutionMetadata) {
+    return executePlan(planService.fetchPlan(planId), setupAbstractions, metadata, planExecutionMetadata);
   }
 
   private PlanExecution executePlan(@Valid Plan plan, Map<String, String> setupAbstractions, ExecutionMetadata metadata,
@@ -102,7 +107,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
                                       .metadata(metadata)
                                       .build();
 
-    return transactionUtils.performTransaction(() -> {
+    return transactionHelper.performTransaction(() -> {
       planExecutionMetadataService.save(planExecutionMetadata);
       return planExecutionService.save(planExecution);
     });

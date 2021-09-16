@@ -5,6 +5,7 @@ import static java.util.Arrays.asList;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.changestreamsframework.ChangeEvent;
+import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -16,6 +17,80 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.CI)
 @Slf4j
 public class PlanExecutionSummaryChangeDataHandler extends AbstractChangeDataHandler {
+  public static void commonHandlerTriggerInfo(Map<String, String> columnValueMapping, DBObject dbObject) {
+    if ((dbObject.get(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.executionTriggerInfo)) != null) {
+      DBObject executionTriggerInfoObject =
+          (DBObject) dbObject.get(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.executionTriggerInfo);
+      if (executionTriggerInfoObject.get("triggerType") != null) {
+        columnValueMapping.put("trigger_type", executionTriggerInfoObject.get("triggerType").toString());
+      }
+      if (executionTriggerInfoObject.get("triggeredBy") != null) {
+        DBObject triggeredByObject = (DBObject) executionTriggerInfoObject.get("triggeredBy");
+        if (triggeredByObject.get("identifier") != null) {
+          columnValueMapping.put("moduleInfo_author_id", triggeredByObject.get("identifier").toString());
+        }
+      }
+    }
+  }
+
+  public static void commonHandlerRepoInfo(Map<String, String> columnValueMapping, DBObject dbObject) {
+    DBObject ciObject = (DBObject) (((BasicDBObject) dbObject.get("moduleInfo")).get("ci"));
+    DBObject ciExecutionInfo = (DBObject) ciObject.get("ciExecutionInfoDTO");
+
+    if (ciObject.get("repoName") != null) {
+      columnValueMapping.put("moduleInfo_repository", ciObject.get("repoName").toString());
+    }
+
+    if (ciObject.get("branch") != null) {
+      columnValueMapping.put("moduleinfo_branch_name", ciObject.get("branch").toString());
+    }
+
+    if (ciExecutionInfo != null) {
+      DBObject branch = (DBObject) (ciExecutionInfo.get("branch"));
+
+      HashMap firstCommit = null;
+      String commits = "commits";
+      if (branch != null && branch.get(commits) != null && ((List) branch.get(commits)).size() > 0) {
+        firstCommit = (HashMap) ((List) branch.get(commits)).get(0);
+        if (firstCommit != null) {
+          if (firstCommit.get("id") != null) {
+            columnValueMapping.put("moduleInfo_branch_commit_id", firstCommit.get("id").toString());
+          }
+          if (firstCommit.get("message") != null) {
+            columnValueMapping.put("moduleInfo_branch_commit_message", firstCommit.get("message").toString());
+          }
+        }
+      } else if (ciExecutionInfo.get("pullRequest") != null) {
+        DBObject pullRequestObject = (DBObject) ciExecutionInfo.get("pullRequest");
+
+        if (pullRequestObject.get("sourceBranch") != null) {
+          columnValueMapping.put("source_branch", pullRequestObject.get("sourceBranch").toString());
+        }
+
+        if (pullRequestObject.get(commits) != null && ((List) pullRequestObject.get(commits)).size() > 0) {
+          firstCommit = (HashMap) ((List) pullRequestObject.get(commits)).get(0);
+          if (firstCommit != null) {
+            if (firstCommit.get("id") != null) {
+              columnValueMapping.put("moduleInfo_branch_commit_id", firstCommit.get("id").toString());
+            }
+            if (firstCommit.get("message") != null) {
+              columnValueMapping.put("moduleInfo_branch_commit_message", firstCommit.get("message").toString());
+            }
+          }
+        }
+      }
+      DBObject author = (DBObject) (ciExecutionInfo.get("author"));
+      if (author != null) {
+        columnValueMapping.put("moduleInfo_author_id", author.get("id").toString());
+        columnValueMapping.put("author_name", author.get("name").toString());
+        columnValueMapping.put("author_avatar", author.get("avatar").toString());
+      }
+      if (ciExecutionInfo.get("event") != null) {
+        columnValueMapping.put("moduleInfo_event", ciExecutionInfo.get("event").toString());
+      }
+    }
+  }
+
   @Override
   public Map<String, String> getColumnValueMapping(ChangeEvent<?> changeEvent, String[] fields) {
     if (changeEvent == null) {
@@ -63,56 +138,11 @@ public class PlanExecutionSummaryChangeDataHandler extends AbstractChangeDataHan
     if (dbObject.get("moduleInfo") != null) {
       if (((BasicDBObject) dbObject.get("moduleInfo")).get("ci") != null) {
         columnValueMapping.put("moduleInfo_type", "CI");
-        DBObject ciObject = (DBObject) (((BasicDBObject) dbObject.get("moduleInfo")).get("ci"));
-        DBObject ciExecutionInfo = (DBObject) ciObject.get("ciExecutionInfoDTO");
+        // TriggerTypeInfo
+        commonHandlerTriggerInfo(columnValueMapping, dbObject);
 
-        if (ciObject.get("repoName") != null) {
-          columnValueMapping.put("moduleInfo_repository", ciObject.get("repoName").toString());
-        }
-
-        if (ciObject.get("branch") != null) {
-          columnValueMapping.put("moduleinfo_branch_name", ciObject.get("branch").toString());
-        }
-
-        if (ciExecutionInfo != null) {
-          DBObject branch = (DBObject) (ciExecutionInfo.get("branch"));
-
-          HashMap firstCommit = null;
-          String commits = "commits";
-          if (branch != null && branch.get(commits) != null && ((List) branch.get(commits)).size() > 0) {
-            firstCommit = (HashMap) ((List) branch.get(commits)).get(0);
-            if (firstCommit != null) {
-              if (firstCommit.get("id") != null) {
-                columnValueMapping.put("moduleInfo_branch_commit_id", firstCommit.get("id").toString());
-              }
-              if (firstCommit.get("message") != null) {
-                columnValueMapping.put("moduleInfo_branch_commit_message", firstCommit.get("message").toString());
-              }
-            }
-          } else if (ciExecutionInfo.get("pullRequest") != null) {
-            DBObject pullRequestObject = (DBObject) ciExecutionInfo.get("pullRequest");
-            if (pullRequestObject.get(commits) != null && ((List) pullRequestObject.get(commits)).size() > 0) {
-              firstCommit = (HashMap) ((List) pullRequestObject.get(commits)).get(0);
-              if (firstCommit != null) {
-                if (firstCommit.get("id") != null) {
-                  columnValueMapping.put("moduleInfo_branch_commit_id", firstCommit.get("id").toString());
-                }
-                if (firstCommit.get("message") != null) {
-                  columnValueMapping.put("moduleInfo_branch_commit_message", firstCommit.get("message").toString());
-                }
-              }
-            }
-          }
-          DBObject author = (DBObject) (ciExecutionInfo.get("author"));
-          if (author != null) {
-            columnValueMapping.put("moduleInfo_author_id", author.get("id").toString());
-            columnValueMapping.put("author_name", author.get("name").toString());
-            columnValueMapping.put("author_avatar", author.get("avatar").toString());
-          }
-          if (ciExecutionInfo.get("event") != null) {
-            columnValueMapping.put("moduleInfo_event", ciExecutionInfo.get("event").toString());
-          }
-        }
+        // repoInfo
+        commonHandlerRepoInfo(columnValueMapping, dbObject);
       } else {
         return null;
       }

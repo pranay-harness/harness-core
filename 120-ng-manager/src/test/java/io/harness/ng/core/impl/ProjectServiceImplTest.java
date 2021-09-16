@@ -6,6 +6,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.ng.core.remote.ProjectMapper.toProject;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.KARAN;
+import static io.harness.rule.OwnerRule.MEET;
 import static io.harness.utils.PageTestUtils.getPage;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
@@ -15,6 +16,7 @@ import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
+import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -42,6 +44,7 @@ import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.entities.Project.ProjectKeys;
 import io.harness.ng.core.remote.ProjectMapper;
+import io.harness.ng.core.remote.utils.ScopeAccessHelper;
 import io.harness.ng.core.services.OrganizationService;
 import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.service.NgUserService;
@@ -93,13 +96,15 @@ public class ProjectServiceImplTest extends CategoryTest {
   @Mock private ResourceGroupClient resourceGroupClient;
   @Mock private NgUserService ngUserService;
   @Mock private AccessControlClient accessControlClient;
+  @Mock private ScopeAccessHelper scopeAccessHelper;
   private ProjectServiceImpl projectService;
 
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
     projectService = spy(new ProjectServiceImpl(projectRepository, organizationService, transactionTemplate,
-        outboxService, ngUserService, resourceGroupClient, accessControlClient));
+        outboxService, ngUserService, resourceGroupClient, accessControlClient, scopeAccessHelper));
+    when(scopeAccessHelper.getPermittedScopes(any())).then(returnsFirstArg());
   }
 
   private ProjectDTO createProjectDTO(String orgIdentifier, String identifier) {
@@ -233,18 +238,18 @@ public class ProjectServiceImplTest extends CategoryTest {
     String orgIdentifier = randomAlphabetic(10);
     String searchTerm = randomAlphabetic(5);
     ArgumentCaptor<Criteria> criteriaArgumentCaptor = ArgumentCaptor.forClass(Criteria.class);
-
+    when(projectRepository.findAllProjects(any(Criteria.class))).thenReturn(Collections.emptyList());
     when(projectRepository.findAll(any(Criteria.class), any(Pageable.class))).thenReturn(getPage(emptyList(), 0));
 
     Set<String> orgIdentifiers = Collections.singleton(orgIdentifier);
-    Page<Project> projectPage = projectService.list(accountIdentifier, unpaged(),
+    Page<Project> projectPage = projectService.listPermittedProjects(accountIdentifier, unpaged(),
         ProjectFilterDTO.builder().orgIdentifiers(orgIdentifiers).searchTerm(searchTerm).moduleType(CD).build());
 
-    verify(projectRepository, times(1)).findAll(criteriaArgumentCaptor.capture(), any(Pageable.class));
+    verify(projectRepository, times(1)).findAllProjects(criteriaArgumentCaptor.capture());
 
     Criteria criteria = criteriaArgumentCaptor.getValue();
     Document criteriaObject = criteria.getCriteriaObject();
-
+    System.out.println(criteriaObject);
     assertEquals(5, criteriaObject.size());
     assertEquals(accountIdentifier, criteriaObject.get(ProjectKeys.accountIdentifier));
     assertTrue(criteriaObject.containsKey(ProjectKeys.orgIdentifier));
@@ -315,5 +320,39 @@ public class ProjectServiceImplTest extends CategoryTest {
     assertNotNull(projectsResponse);
     assertEquals(
         projectsResponse.getContent(), projects.stream().map(ProjectMapper::writeDTO).collect(Collectors.toList()));
+  }
+
+  @Test
+  @Owner(developers = MEET)
+  @Category(UnitTests.class)
+  public void testListAllProjectsForUser() {
+    String user = generateUuid();
+    Principal principal = mock(Principal.class);
+    when(principal.getType()).thenReturn(PrincipalType.USER);
+    when(principal.getName()).thenReturn(user);
+    SourcePrincipalContextBuilder.setSourcePrincipal(principal);
+    Project proj1 =
+        Project.builder().name("P1").accountIdentifier("accId1").orgIdentifier("orgId1").identifier("id1").build();
+    Project proj2 =
+        Project.builder().name("P2").accountIdentifier("accId1").orgIdentifier("orgId2").identifier("id2").build();
+    List<Project> projects = Arrays.asList(proj1, proj2);
+    UserMembership userMembership1 =
+        UserMembership.builder()
+            .userId(user)
+            .scope(Scope.builder().accountIdentifier("accId1").orgIdentifier("orgId1").projectIdentifier("id1").build())
+            .build();
+    UserMembership userMembership2 =
+        UserMembership.builder()
+            .userId(user)
+            .scope(Scope.builder().accountIdentifier("accId1").orgIdentifier("orgId2").projectIdentifier("id2").build())
+            .build();
+    doReturn(new PageImpl<>(Arrays.asList(userMembership1, userMembership2)))
+        .when(ngUserService)
+        .listUserMemberships(any(), any());
+    doReturn(projects).when(projectService).list(any());
+    doReturn(projects).when(projectRepository).findAll((Criteria) any());
+    List<ProjectDTO> projectsResponse = projectService.listProjectsForUser(user, "account");
+    assertNotNull(projectsResponse);
+    assertEquals(projectsResponse, projects.stream().map(ProjectMapper::writeDTO).collect(Collectors.toList()));
   }
 }

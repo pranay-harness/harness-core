@@ -14,6 +14,7 @@ import io.harness.exceptions.DuplicateAliasException;
 import io.harness.rule.Owner;
 import io.harness.utils.RecastReflectionUtils;
 
+import java.util.LinkedHashMap;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import org.junit.Test;
@@ -38,6 +39,16 @@ public class AliasRegistryTest extends RecasterTestBase {
 
     assertThatThrownBy(() -> aliasRegistry.register(DummyWithAliasDuplicated.class))
         .isInstanceOf(DuplicateAliasException.class);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestShouldContainAlias() {
+    aliasRegistry.addPackages("io.harness");
+
+    assertThat(aliasRegistry.shouldContainAlias(DummyWithoutAlias.class)).isTrue();
+    assertThat(aliasRegistry.shouldContainAlias(LinkedHashMap.class)).isFalse();
   }
 
   @Builder

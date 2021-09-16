@@ -1,17 +1,17 @@
 package io.harness.ngtriggers.helpers;
 
-import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.EXCEPTION_WHILE_PROCESSING;
-import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.FAILED_TO_FETCH_PR_DETAILS;
-import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.INVALID_PAYLOAD;
-import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.INVALID_RUNTIME_INPUT_YAML;
-import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_ENABLED_TRIGGER_FOR_PROJECT;
-import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_ENABLED_TRIGGER_FOR_SOURCEREPO_TYPE;
-import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_EVENT_ACTION;
-import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_PAYLOAD_CONDITIONS;
-import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_REPO;
-import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.SCM_SERVICE_CONNECTION_FAILED;
-import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.TARGET_DID_NOT_EXECUTE;
-import static io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus.TARGET_EXECUTION_REQUESTED;
+import static io.harness.ngtriggers.beans.response.TriggerEventResponse.FinalStatus.EXCEPTION_WHILE_PROCESSING;
+import static io.harness.ngtriggers.beans.response.TriggerEventResponse.FinalStatus.FAILED_TO_FETCH_PR_DETAILS;
+import static io.harness.ngtriggers.beans.response.TriggerEventResponse.FinalStatus.INVALID_PAYLOAD;
+import static io.harness.ngtriggers.beans.response.TriggerEventResponse.FinalStatus.INVALID_RUNTIME_INPUT_YAML;
+import static io.harness.ngtriggers.beans.response.TriggerEventResponse.FinalStatus.NO_ENABLED_TRIGGER_FOR_PROJECT;
+import static io.harness.ngtriggers.beans.response.TriggerEventResponse.FinalStatus.NO_ENABLED_TRIGGER_FOR_SOURCEREPO_TYPE;
+import static io.harness.ngtriggers.beans.response.TriggerEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_EVENT_ACTION;
+import static io.harness.ngtriggers.beans.response.TriggerEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_PAYLOAD_CONDITIONS;
+import static io.harness.ngtriggers.beans.response.TriggerEventResponse.FinalStatus.NO_MATCHING_TRIGGER_FOR_REPO;
+import static io.harness.ngtriggers.beans.response.TriggerEventResponse.FinalStatus.SCM_SERVICE_CONNECTION_FAILED;
+import static io.harness.ngtriggers.beans.response.TriggerEventResponse.FinalStatus.TARGET_DID_NOT_EXECUTE;
+import static io.harness.ngtriggers.beans.response.TriggerEventResponse.FinalStatus.TARGET_EXECUTION_REQUESTED;
 import static io.harness.ngtriggers.beans.target.TargetType.PIPELINE;
 import static io.harness.rule.OwnerRule.ADWAIT;
 
@@ -24,8 +24,8 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
 import io.harness.ngtriggers.beans.response.TargetExecutionSummary;
-import io.harness.ngtriggers.beans.response.WebhookEventResponse;
-import io.harness.ngtriggers.beans.response.WebhookEventResponse.FinalStatus;
+import io.harness.ngtriggers.beans.response.TriggerEventResponse;
+import io.harness.ngtriggers.beans.response.TriggerEventResponse.FinalStatus;
 import io.harness.ngtriggers.beans.scm.ParsePayloadResponse;
 import io.harness.ngtriggers.beans.scm.ParsePayloadResponse.ParsePayloadResponseBuilder;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
@@ -57,7 +57,7 @@ public class WebhookEventResponseHelperTest extends CategoryTest {
     TargetExecutionSummary summary = TargetExecutionSummary.builder().build();
     String message = "msg";
 
-    WebhookEventResponse webhookEventResponse = WebhookEventResponseHelper.toResponse(
+    TriggerEventResponse webhookEventResponse = TriggerEventResponseHelper.toResponse(
         status, triggerWebhookEvent, ngPipelineExecutionResponseDTO, ngTriggerEntity, message, summary);
 
     assertThat(webhookEventResponse).isNotNull();
@@ -75,12 +75,12 @@ public class WebhookEventResponseHelperTest extends CategoryTest {
     assertThat(webhookEventResponse.isExceptionOccurred()).isFalse();
 
     webhookEventResponse =
-        WebhookEventResponseHelper.toResponse(status, triggerWebhookEvent, null, ngTriggerEntity, message, summary);
+        TriggerEventResponseHelper.toResponse(status, triggerWebhookEvent, null, ngTriggerEntity, message, summary);
     assertThat(webhookEventResponse.isExceptionOccurred()).isTrue();
 
     // test is NgTriggerEntity is null, no NPE is thrown
     webhookEventResponse =
-        WebhookEventResponseHelper.toResponse(status, triggerWebhookEvent, null, null, message, summary);
+        TriggerEventResponseHelper.toResponse(status, triggerWebhookEvent, null, null, message, summary);
     assertThat(webhookEventResponse).isNotNull();
   }
 
@@ -88,16 +88,16 @@ public class WebhookEventResponseHelperTest extends CategoryTest {
   @Owner(developers = ADWAIT)
   @Category(UnitTests.class)
   public void testIsFinalStatusAnEvent() {
-    assertThat(WebhookEventResponseHelper.isFinalStatusAnEvent(INVALID_PAYLOAD)).isTrue();
-    assertThat(WebhookEventResponseHelper.isFinalStatusAnEvent(NO_MATCHING_TRIGGER_FOR_REPO)).isTrue();
-    assertThat(WebhookEventResponseHelper.isFinalStatusAnEvent(INVALID_RUNTIME_INPUT_YAML)).isTrue();
-    assertThat(WebhookEventResponseHelper.isFinalStatusAnEvent(TARGET_DID_NOT_EXECUTE)).isTrue();
-    assertThat(WebhookEventResponseHelper.isFinalStatusAnEvent(NO_MATCHING_TRIGGER_FOR_PAYLOAD_CONDITIONS)).isTrue();
-    assertThat(WebhookEventResponseHelper.isFinalStatusAnEvent(NO_ENABLED_TRIGGER_FOR_SOURCEREPO_TYPE)).isTrue();
-    assertThat(WebhookEventResponseHelper.isFinalStatusAnEvent(NO_MATCHING_TRIGGER_FOR_EVENT_ACTION)).isTrue();
-    assertThat(WebhookEventResponseHelper.isFinalStatusAnEvent(NO_ENABLED_TRIGGER_FOR_PROJECT)).isTrue();
-    assertThat(WebhookEventResponseHelper.isFinalStatusAnEvent(EXCEPTION_WHILE_PROCESSING)).isTrue();
-    assertThat(WebhookEventResponseHelper.isFinalStatusAnEvent(FAILED_TO_FETCH_PR_DETAILS)).isTrue();
+    assertThat(TriggerEventResponseHelper.isFinalStatusAnEvent(INVALID_PAYLOAD)).isTrue();
+    assertThat(TriggerEventResponseHelper.isFinalStatusAnEvent(NO_MATCHING_TRIGGER_FOR_REPO)).isTrue();
+    assertThat(TriggerEventResponseHelper.isFinalStatusAnEvent(INVALID_RUNTIME_INPUT_YAML)).isTrue();
+    assertThat(TriggerEventResponseHelper.isFinalStatusAnEvent(TARGET_DID_NOT_EXECUTE)).isTrue();
+    assertThat(TriggerEventResponseHelper.isFinalStatusAnEvent(NO_MATCHING_TRIGGER_FOR_PAYLOAD_CONDITIONS)).isTrue();
+    assertThat(TriggerEventResponseHelper.isFinalStatusAnEvent(NO_ENABLED_TRIGGER_FOR_SOURCEREPO_TYPE)).isTrue();
+    assertThat(TriggerEventResponseHelper.isFinalStatusAnEvent(NO_MATCHING_TRIGGER_FOR_EVENT_ACTION)).isTrue();
+    assertThat(TriggerEventResponseHelper.isFinalStatusAnEvent(NO_ENABLED_TRIGGER_FOR_PROJECT)).isTrue();
+    assertThat(TriggerEventResponseHelper.isFinalStatusAnEvent(EXCEPTION_WHILE_PROCESSING)).isTrue();
+    assertThat(TriggerEventResponseHelper.isFinalStatusAnEvent(FAILED_TO_FETCH_PR_DETAILS)).isTrue();
   }
 
   @Test
@@ -113,15 +113,15 @@ public class WebhookEventResponseHelperTest extends CategoryTest {
             .exceptionOccured(true)
             .exception(new InvalidRequestException("test"));
 
-    WebhookEventResponse webhookEventResponse =
-        WebhookEventResponseHelper.prepareResponseForScmException(parsePayloadResponse.build());
+    TriggerEventResponse webhookEventResponse =
+        TriggerEventResponseHelper.prepareResponseForScmException(parsePayloadResponse.build());
     assertThat(webhookEventResponse.isExceptionOccurred()).isTrue();
     assertThat(webhookEventResponse.getMessage()).isEqualTo("test");
     assertThat(webhookEventResponse.getFinalStatus()).isEqualTo(INVALID_PAYLOAD);
     assertThat(webhookEventResponse.getPayload()).isEqualTo("payload");
 
     parsePayloadResponse.exception(new StatusRuntimeException(UNAVAILABLE));
-    webhookEventResponse = WebhookEventResponseHelper.prepareResponseForScmException(parsePayloadResponse.build());
+    webhookEventResponse = TriggerEventResponseHelper.prepareResponseForScmException(parsePayloadResponse.build());
     assertThat(webhookEventResponse.isExceptionOccurred()).isTrue();
     assertThat(webhookEventResponse.getFinalStatus()).isEqualTo(SCM_SERVICE_CONNECTION_FAILED);
     assertThat(webhookEventResponse.getPayload()).isEqualTo("payload");

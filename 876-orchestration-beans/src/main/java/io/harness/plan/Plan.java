@@ -10,6 +10,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
+import io.harness.pms.contracts.plan.ErrorResponse;
 import io.harness.pms.contracts.plan.GraphLayoutInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 
@@ -68,6 +69,9 @@ public class Plan implements PersistentEntity {
 
   @Wither @CreatedDate Long createdAt;
   @Wither @Version Long version;
+
+  @Builder.Default boolean valid = true;
+  ErrorResponse errorResponse;
 
   public boolean isEmpty() {
     return EmptyPredicate.isEmpty(nodes);

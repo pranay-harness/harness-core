@@ -12,6 +12,7 @@ import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.tasks.ResponseData;
 
+import com.google.protobuf.ByteString;
 import java.util.Map;
 
 /**
@@ -44,8 +45,8 @@ public interface ChildChainExecutable<T extends StepParameters> extends Step<T> 
   ChildChainExecutableResponse executeFirstChild(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage);
 
   ChildChainExecutableResponse executeNextChild(Ambiance ambiance, T stepParameters, StepInputPackage inputPackage,
-      PassThroughData passThroughData, Map<String, ResponseData> responseDataMap);
+      ByteString passThroughData, Map<String, ResponseData> responseDataMap);
 
   StepResponse finalizeExecution(
-      Ambiance ambiance, T stepParameters, PassThroughData passThroughData, Map<String, ResponseData> responseDataMap);
+      Ambiance ambiance, T stepParameters, ByteString passThroughData, Map<String, ResponseData> responseDataMap);
 }

@@ -8,6 +8,7 @@ import static io.harness.beans.SearchFilter.Operator.GE;
 import static io.harness.beans.SearchFilter.Operator.HAS;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.beans.WorkflowType.ORCHESTRATION;
+import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.NO_APPS_ASSIGNED;
@@ -18,13 +19,16 @@ import static io.harness.validation.Validator.notNullCheck;
 import static software.wings.beans.Base.CREATED_AT_KEY;
 import static software.wings.beans.EntityType.APPLICATION;
 import static software.wings.beans.EntityType.ARTIFACT;
+import static software.wings.beans.infrastructure.instance.Instance.InstanceKeys;
 import static software.wings.features.DeploymentHistoryFeature.FEATURE_NAME;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
+import static org.mongodb.morphia.aggregation.Group.first;
 import static org.mongodb.morphia.aggregation.Group.grouping;
+import static org.mongodb.morphia.aggregation.Group.sum;
 import static org.mongodb.morphia.aggregation.Projection.projection;
 import static org.mongodb.morphia.query.Sort.ascending;
 import static org.mongodb.morphia.query.Sort.descending;
@@ -91,6 +95,9 @@ import software.wings.features.DeploymentHistoryFeature;
 import software.wings.features.api.RestrictedFeature;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
+import software.wings.service.impl.instance.CompareEnvironmentAggregationInfo.CompareEnvironmentAggregationInfoKeys;
+import software.wings.service.impl.instance.ServiceInfoResponseSummary.ServiceInfoResponseSummaryBuilder;
+import software.wings.service.impl.instance.ServiceInfoSummary.ServiceInfoSummaryKeys;
 import software.wings.service.impl.instance.ServiceInstanceCount.EnvType;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
@@ -115,6 +122,11 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.mongodb.AggregationOptions;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
+import com.mongodb.ReadPreference;
+import com.mongodb.TagSet;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -122,6 +134,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
@@ -159,6 +172,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   @Inject @Named(FEATURE_NAME) private RestrictedFeature deploymentHistoryFeature;
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private TagSet mongoTagSet;
 
   @Override
   public InstanceSummaryStats getAppInstanceSummaryStats(
@@ -926,20 +940,14 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     // Find the timestamp of latest instance alive at toTimestamp
     long rhsCreatedAt = getCreatedTimeOfInstanceAtTimestamp(accountId, toTimestamp, query, false);
 
-    query = wingsPersistence.createQuery(Instance.class);
-    query.field("accountId").equal(accountId);
-    query.field(Instance.CREATED_AT_KEY).greaterThanOrEq(lhsCreatedAt);
-    query.field(Instance.CREATED_AT_KEY).lessThanOrEq(rhsCreatedAt);
-    query.project("appId", true);
-
-    List<Instance> instanceList = new ArrayList<>();
-    try (HIterator<Instance> iterator = new HIterator<>(query.fetch())) {
-      for (Instance instance : iterator) {
-        instanceList.add(instance);
-      }
-    }
-
-    Set<String> appIdsFromInstances = instanceList.stream().map(Instance::getAppId).collect(Collectors.toSet());
+    DBCollection dbCollection = wingsPersistence.getCollection(Instance.class);
+    BasicDBObject instanceQuery = new BasicDBObject();
+    List<BasicDBObject> conditions = new ArrayList<>();
+    conditions.add(new BasicDBObject(InstanceKeys.accountId, accountId));
+    conditions.add(new BasicDBObject(Instance.CREATED_AT_KEY, new BasicDBObject("$gte", lhsCreatedAt)));
+    conditions.add(new BasicDBObject(Instance.CREATED_AT_KEY, new BasicDBObject("$lte", rhsCreatedAt)));
+    instanceQuery.put("$and", conditions);
+    Set<String> appIdsFromInstances = new HashSet<>(dbCollection.distinct(InstanceKeys.appId, instanceQuery));
 
     List<Application> appsByAccountId = appService.getAppsByAccountId(accountId);
     Set<String> existingApps = appsByAccountId.stream().map(Application::getUuid).collect(Collectors.toSet());
@@ -1225,6 +1233,130 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     }
     query.filter("accountId", accountId);
     query.filter("serviceId", serviceId);
+    return query;
+  }
+  @Override
+  public PageResponse<CompareEnvironmentAggregationResponseInfo> getCompareServicesByEnvironment(
+      String accountId, String appId, String envId1, String envId2, int offset, int limit) {
+    ReadPreference readPreference;
+    if (Objects.isNull(mongoTagSet)) {
+      readPreference = ReadPreference.secondaryPreferred();
+    } else {
+      readPreference = ReadPreference.secondary(mongoTagSet);
+    }
+    Query<Instance> query;
+    try {
+      query = getQueryForCompareServicesByEnvironment(appId, envId1, envId2);
+    } catch (NoResultFoundException nre) {
+      return getEmptyPageResponse();
+    }
+
+    List<CompareEnvironmentAggregationInfo> instanceInfoList = new ArrayList<>();
+    AggregationPipeline aggregationPipeline =
+        wingsPersistence.getDatastore(query.getEntityClass())
+            .createAggregation(Instance.class)
+            .match(query)
+            .group(Group.id(grouping(InstanceKeys.serviceId), grouping(InstanceKeys.envId),
+                       grouping(InstanceKeys.lastArtifactBuildNum), grouping(InstanceKeys.infraMappingId),
+                       grouping(InstanceKeys.lastWorkflowExecutionId)),
+                grouping("count", accumulator("$sum", 1)),
+                grouping(InstanceKeys.serviceName, first(InstanceKeys.serviceName)),
+                grouping(InstanceKeys.lastWorkflowExecutionName, first(InstanceKeys.lastWorkflowExecutionName)),
+                grouping(InstanceKeys.infraMappingName, first(InstanceKeys.infraMappingName)))
+            .group(Group.id(grouping(InstanceKeys.serviceId, "_id." + InstanceKeys.serviceId)),
+                grouping(CompareEnvironmentAggregationInfoKeys.serviceId, first("_id." + InstanceKeys.serviceId)),
+                grouping(CompareEnvironmentAggregationInfoKeys.serviceName, first(InstanceKeys.serviceName)),
+                grouping(CompareEnvironmentAggregationInfoKeys.count, sum(CompareEnvironmentAggregationInfoKeys.count)),
+                grouping(CompareEnvironmentAggregationInfoKeys.serviceInfoSummaries,
+                    grouping("$push", projection(ServiceInfoSummaryKeys.serviceName, InstanceKeys.serviceName),
+                        projection(ServiceInfoSummaryKeys.envId, "_id." + InstanceKeys.envId),
+                        projection(
+                            ServiceInfoSummaryKeys.lastArtifactBuildNum, "_id." + InstanceKeys.lastArtifactBuildNum),
+                        projection(ServiceInfoSummaryKeys.lastWorkflowExecutionId,
+                            "_id." + InstanceKeys.lastWorkflowExecutionId),
+                        projection(
+                            ServiceInfoSummaryKeys.lastWorkflowExecutionName, InstanceKeys.lastWorkflowExecutionName),
+                        projection(ServiceInfoSummaryKeys.infraMappingId, "_id." + InstanceKeys.infraMappingId),
+                        projection(ServiceInfoSummaryKeys.infraMappingName, InstanceKeys.infraMappingName))))
+            .sort(Sort.ascending(InstanceKeys.serviceName));
+
+    aggregationPipeline.skip(offset);
+    aggregationPipeline.limit(limit);
+
+    final Iterator<CompareEnvironmentAggregationInfo> aggregate =
+        HPersistence.retry(()
+                               -> aggregationPipeline.aggregate(CompareEnvironmentAggregationInfo.class,
+                                   AggregationOptions.builder().build(), readPreference));
+    aggregate.forEachRemaining(instanceInfoList::add);
+
+    List<CompareEnvironmentAggregationResponseInfo> responseList = new ArrayList<>();
+    for (CompareEnvironmentAggregationInfo instanceInfo : instanceInfoList) {
+      responseList.add(CompareEnvironmentAggregationResponseInfo.builder()
+                           .serviceId(instanceInfo.getServiceId())
+                           .serviceName(instanceInfo.getServiceName())
+                           .count(instanceInfo.getCount())
+                           .envInfo(emptyIfNull(instanceInfo.getServiceInfoSummaries())
+                                        .stream()
+                                        .collect(Collectors.groupingBy(ServiceInfoSummary::getEnvId,
+                                            Collectors.mapping(item -> createServiceSummary(item), toList()))))
+                           .build());
+    }
+
+    emptyIfNull(responseList)
+        .stream()
+        .map(item -> {
+          item.envInfo.computeIfAbsent(envId1, k -> new ArrayList<>());
+          item.envInfo.computeIfAbsent(envId2, k -> new ArrayList<>());
+          return item;
+        })
+        .collect(toList());
+
+    List<String> serviceList = new ArrayList<>();
+    AggregationPipeline aggregationPipelineCount = wingsPersistence.getDatastore(query.getEntityClass())
+                                                       .createAggregation(Instance.class)
+                                                       .match(query)
+                                                       .group(Group.id(grouping(InstanceKeys.serviceId)));
+    final Iterator<String> aggregateForCount =
+        HPersistence.retry(() -> aggregationPipelineCount.aggregate(String.class));
+    aggregateForCount.forEachRemaining(serviceList::add);
+
+    return aPageResponse()
+        .withResponse(responseList)
+        .withOffset(Integer.toString(offset))
+        .withLimit(Integer.toString(limit))
+        .withTotal(serviceList.size())
+        .build();
+  }
+
+  private ServiceInfoResponseSummary createServiceSummary(ServiceInfoSummary item) {
+    String lastWorkflowExecutionId = item.getLastWorkflowExecutionId();
+    // To fetch last execution
+    WorkflowExecution lastWorkflowExecution = null;
+
+    if (isNotEmpty(lastWorkflowExecutionId)) {
+      lastWorkflowExecution = wingsPersistence.createQuery(WorkflowExecution.class)
+                                  .filter(WorkflowExecutionKeys.uuid, lastWorkflowExecutionId)
+                                  .get();
+    }
+
+    ServiceInfoResponseSummaryBuilder serviceInfoResponseSummaryBuilder =
+        ServiceInfoResponseSummary.builder()
+            .lastArtifactBuildNum(item.getLastArtifactBuildNum())
+            .infraMappingName(item.getInfraMappingName())
+            .infraMappingId(item.getInfraMappingId());
+
+    if (lastWorkflowExecution != null) {
+      serviceInfoResponseSummaryBuilder.lastWorkflowExecutionId(item.getLastWorkflowExecutionId())
+          .lastWorkflowExecutionName(item.getLastWorkflowExecutionName());
+    }
+    return serviceInfoResponseSummaryBuilder.build();
+  }
+
+  private Query<Instance> getQueryForCompareServicesByEnvironment(String appId, String envId1, String envId2) {
+    Query<Instance> query = wingsPersistence.createQuery(Instance.class);
+    query.filter(InstanceKeys.appId, appId);
+    query.filter(InstanceKeys.isDeleted, false);
+    query.or(query.criteria(InstanceKeys.envId).equal(envId1), query.criteria(InstanceKeys.envId).equal(envId2));
     return query;
   }
 }

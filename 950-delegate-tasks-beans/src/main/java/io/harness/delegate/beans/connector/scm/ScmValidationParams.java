@@ -1,5 +1,8 @@
 package io.harness.delegate.beans.connector.scm;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
@@ -15,6 +18,7 @@ import lombok.Value;
 
 @Value
 @Builder
+@OwnedBy(CI)
 public class ScmValidationParams implements ConnectorValidationParams, ExecutionCapabilityDemander {
   ScmConnector scmConnector;
   GitConfigDTO gitConfigDTO;
@@ -24,7 +28,7 @@ public class ScmValidationParams implements ConnectorValidationParams, Execution
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    return GitCapabilityHelper.fetchRequiredExecutionCapabilities(maskingEvaluator, gitConfigDTO);
+    return GitCapabilityHelper.fetchRequiredExecutionCapabilitiesSimpleCheck(gitConfigDTO);
   }
 
   @Override

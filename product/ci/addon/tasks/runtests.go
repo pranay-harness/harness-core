@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -66,6 +67,8 @@ type runTestsTask struct {
 	packages             string // Packages ti will generate callgraph for
 	annotations          string // Annotations to identify tests for instrumentation
 	runOnlySelectedTests bool   // Flag to be used for disabling testIntelligence and running all tests
+	envVarOutputs        []string
+	environment          map[string]string
 	logMetrics           bool
 	log                  *zap.SugaredLogger
 	addonLogger          *zap.SugaredLogger
@@ -103,6 +106,8 @@ func NewRunTestsTask(step *pb.UnitStep, tmpFilePath string, log *zap.SugaredLogg
 		packages:             r.GetPackages(),
 		annotations:          r.GetTestAnnotations(),
 		runOnlySelectedTests: r.GetRunOnlySelectedTests(),
+		envVarOutputs:        r.GetEnvVarOutputs(),
+		environment:          r.GetEnvironment(),
 		cmdContextFactory:    exec.OsCommandContextGracefulWithLog(log),
 		logMetrics:           logMetrics,
 		log:                  log,
@@ -112,36 +117,41 @@ func NewRunTestsTask(step *pb.UnitStep, tmpFilePath string, log *zap.SugaredLogg
 }
 
 // Execute commands with timeout and retry handling
-func (r *runTestsTask) Run(ctx context.Context) (int32, error) {
+func (r *runTestsTask) Run(ctx context.Context) (map[string]string, int32, error) {
 	var err, errCg error
+	var o map[string]string
 	cgDir := fmt.Sprintf(cgDir, r.tmpFilePath)
 	testSt := time.Now()
 	for i := int32(1); i <= r.numRetries; i++ {
-		if err = r.execute(ctx, i); err == nil {
-			st := time.Now()
+		if o, err = r.execute(ctx, i); err == nil {
+			cgSt := time.Now()
 			// even if the collectCg fails, try to collect reports. Both are parallel features and one should
 			// work even if the other one fails
 			errCg = collectCgFn(ctx, r.id, cgDir, time.Since(testSt).Milliseconds(), r.log)
+			cgTime := time.Since(cgSt)
+			repoSt := time.Now()
 			err = collectTestReportsFn(ctx, r.reports, r.id, r.log)
+			repoTime := time.Since(repoSt)
 			if errCg != nil {
 				// If there's an error in collecting callgraph, we won't retry but
 				// the step will be marked as an error
-				r.log.Errorw("unable to collect callgraph", zap.Error(errCg))
+				r.log.Errorw(fmt.Sprintf("unable to collect callgraph. Time taken: %s", cgTime), zap.Error(errCg))
 				if err != nil {
-					r.log.Errorw("unable to collect tests reports", zap.Error(err))
+					r.log.Errorw(fmt.Sprintf("unable to collect tests reports. Time taken: %s", repoTime), zap.Error(err))
 				}
-				return r.numRetries, errCg
+				return nil, r.numRetries, errCg
 			}
 			if err != nil {
 				// If there's an error in collecting reports, we won't retry but
 				// the step will be marked as an error
-				r.log.Errorw("unable to collect test reports", zap.Error(err))
-				return r.numRetries, err
+				r.log.Errorw(fmt.Sprintf("unable to collect test reports. Time taken: %s", repoTime), zap.Error(err))
+				return nil, r.numRetries, err
 			}
 			if len(r.reports) > 0 {
-				r.log.Infow(fmt.Sprintf("collected test reports in %s time", time.Since(st)))
+				r.log.Infow(fmt.Sprintf("successfully collected test reports in %s time", repoTime))
 			}
-			return i, nil
+			r.log.Infow(fmt.Sprintf("successfully uploaded partial callgraph in %s time", cgTime))
+			return o, i, nil
 		}
 	}
 	if err != nil {
@@ -155,9 +165,9 @@ func (r *runTestsTask) Run(ctx context.Context) (int32, error) {
 		if errCg != nil {
 			r.log.Errorw("error while collecting callgraph", zap.Error(errCg))
 		}
-		return r.numRetries, err
+		return nil, r.numRetries, err
 	}
-	return r.numRetries, err
+	return nil, r.numRetries, err
 }
 
 // createJavaAgentArg creates the ini file which is required as input to the java agent
@@ -196,7 +206,10 @@ instrPackages: %s`, dir, r.packages)
 	return fmt.Sprintf(javaAgentArg, iniFile), nil
 }
 
-func (r *runTestsTask) getMavenCmd(tests []types.RunnableTest) (string, error) {
+func (r *runTestsTask) getMavenCmd(ctx context.Context, tests []types.RunnableTest, ignoreInstr bool) (string, error) {
+	if ignoreInstr {
+		return strings.TrimSpace(fmt.Sprintf("%s %s", mvnCmd, r.args)), nil
+	}
 	instrArg, err := r.createJavaAgentArg()
 	if err != nil {
 		return "", err
@@ -210,7 +223,6 @@ func (r *runTestsTask) getMavenCmd(tests []types.RunnableTest) (string, error) {
 	}
 	if !r.runOnlySelectedTests {
 		// Run all the tests
-		// TODO -- Aman - check if instumentation is required here too.
 		return strings.TrimSpace(fmt.Sprintf("%s -am -DargLine=%s %s", mvnCmd, instrArg, r.args)), nil
 	}
 	if len(tests) == 0 {
@@ -236,19 +248,17 @@ func (r *runTestsTask) getMavenCmd(tests []types.RunnableTest) (string, error) {
 	return strings.TrimSpace(fmt.Sprintf("%s -Dtest=%s -am -DargLine=%s %s", mvnCmd, testStr, instrArg, r.args)), nil
 }
 
-func (r *runTestsTask) getBazelCmd(ctx context.Context, tests []types.RunnableTest) (string, error) {
-	//tests = []types.RunnableTest{
-	//	{Pkg: "io.harness.pms.pipeline.service", Class: "PMSPipelineServiceImplTest"},
-	//	{Pkg: "software.wings.service.impl.trigger", Class: "TriggerServiceTest"},
-	//	{Pkg: "software.wings.service.impl.workflow", Class: "WorkflowServiceTest"},
-	//	{Pkg: "software.wings.service.impl.verification", Class: "CVConfigurationServiceImplTest"},
-	//}
+func (r *runTestsTask) getBazelCmd(ctx context.Context, tests []types.RunnableTest, ignoreInstr bool) (string, error) {
+	if ignoreInstr {
+		return fmt.Sprintf("%s %s //...", bazelCmd, r.args), nil
+	}
 	instrArg, err := r.createJavaAgentArg()
 	if err != nil {
 		return "", err
 	}
 	bazelInstrArg := fmt.Sprintf("--define=HARNESS_ARGS=%s", instrArg)
 	defaultCmd := fmt.Sprintf("%s %s %s //...", bazelCmd, r.args, bazelInstrArg) // run all the tests
+
 	if !r.runOnlySelectedTests {
 		// Run all the tests
 		return defaultCmd, nil
@@ -343,7 +353,7 @@ func valid(tests []types.RunnableTest) bool {
 	return true
 }
 
-func (r *runTestsTask) getCmd(ctx context.Context) (string, error) {
+func (r *runTestsTask) getCmd(ctx context.Context, outputVarFile string) (string, error) {
 	// Get the tests that need to be run if we are running selected tests
 	var selection types.SelectTestsResp
 	var files []types.File
@@ -378,13 +388,13 @@ func (r *runTestsTask) getCmd(ctx context.Context) (string, error) {
 	switch r.buildTool {
 	case "maven":
 		r.log.Infow("setting up maven as the build tool")
-		testCmd, err = r.getMavenCmd(selection.Tests)
+		testCmd, err = r.getMavenCmd(ctx, selection.Tests, isManual)
 		if err != nil {
 			return "", err
 		}
 	case "bazel":
 		r.log.Infow("setting up bazel as the build tool")
-		testCmd, err = r.getBazelCmd(ctx, selection.Tests)
+		testCmd, err = r.getBazelCmd(ctx, selection.Tests, isManual)
 		if err != nil {
 			return "", err
 		}
@@ -392,39 +402,67 @@ func (r *runTestsTask) getCmd(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("build tool %s is not suported", r.buildTool)
 	}
 
-	// TMPDIR needs to be set for some build tools like bazel
-	command := fmt.Sprintf("set -e\nexport TMPDIR=%s\n%s\n%s\n%s", r.tmpFilePath, r.preCommand, testCmd, r.postCommand)
-	logCmd, err := utils.GetLoggableCmd(command)
-	if err != nil {
-		r.addonLogger.Warn("failed to parse command using mvdan/sh. ", "command", command, zap.Error(err))
-		return fmt.Sprintf("echo '---%s'\n%s", command, command), nil
+	outputVarCmd := ""
+	for _, o := range r.envVarOutputs {
+		outputVarCmd += fmt.Sprintf("\necho %s $%s >> %s", o, o, outputVarFile)
 	}
-	return logCmd, nil
+
+	iniFile := fmt.Sprintf("%s/config.ini", r.tmpFilePath)
+	agentArg := fmt.Sprintf(javaAgentArg, iniFile)
+
+	// TMPDIR needs to be set for some build tools like bazel
+	command := fmt.Sprintf("set -xe\nexport TMPDIR=%s\nexport HARNESS_JAVA_AGENT=%s\n%s\n%s\n%s%s", r.tmpFilePath, agentArg, r.preCommand, testCmd, r.postCommand, outputVarCmd)
+	resolvedCmd, err := resolveExprInCmd(command)
+	if err != nil {
+		return "", err
+	}
+
+	return resolvedCmd, nil
 }
 
-func (r *runTestsTask) execute(ctx context.Context, retryCount int32) error {
+func (r *runTestsTask) execute(ctx context.Context, retryCount int32) (map[string]string, error) {
 	start := time.Now()
 	ctx, cancel := context.WithTimeout(ctx, time.Second*time.Duration(r.timeoutSecs))
 	defer cancel()
 
-	cmdToExecute, err := r.getCmd(ctx)
+	outputFile := filepath.Join(r.tmpFilePath, fmt.Sprintf("%s%s", r.id, outputEnvSuffix))
+	cmdToExecute, err := r.getCmd(ctx, outputFile)
 	if err != nil {
 		r.log.Errorw("could not create run command", zap.Error(err))
-		return err
+		return nil, err
 	}
+
+	envVars, err := resolveExprInEnv(r.environment)
+	if err != nil {
+		return nil, err
+	}
+
 	cmdArgs := []string{"-c", cmdToExecute}
 
 	cmd := r.cmdContextFactory.CmdContextWithSleep(ctx, cmdExitWaitTime, "sh", cmdArgs...).
-		WithStdout(r.procWriter).WithStderr(r.procWriter).WithEnvVarsMap(nil)
+		WithStdout(r.procWriter).WithStderr(r.procWriter).WithEnvVarsMap(envVars)
 	err = runCmdFn(ctx, cmd, r.id, cmdArgs, retryCount, start, r.logMetrics, r.addonLogger)
 	if err != nil {
-		return err
+		return nil, err
+	}
+
+	stepOutput := make(map[string]string)
+	if len(r.envVarOutputs) != 0 {
+		var err error
+		outputVars, err := fetchOutputVariables(outputFile, r.fs, r.log)
+		if err != nil {
+			logCommandExecErr(r.log, "error encountered while fetching output of runtest step", r.id, cmdToExecute, retryCount, start, err)
+			return nil, err
+		}
+
+		stepOutput = outputVars
 	}
 
 	r.addonLogger.Infow(
 		"successfully executed run tests step",
 		"arguments", cmdToExecute,
+		"output", stepOutput,
 		"elapsed_time_ms", utils.TimeSince(start),
 	)
-	return nil
+	return stepOutput, nil
 }

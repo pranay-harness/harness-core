@@ -1,6 +1,7 @@
 package io.harness.grpc;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.BOJAN;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.VUK;
@@ -33,6 +34,7 @@ import io.harness.delegate.beans.DelegateEntityOwner;
 import io.harness.delegate.beans.DelegateProfile;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 import io.harness.delegate.beans.DelegateProfileScopingRule;
+import io.harness.delegateprofile.DelegateProfileFilterGrpc;
 import io.harness.delegateprofile.DelegateProfileGrpc;
 import io.harness.delegateprofile.DelegateProfilePageResponseGrpc;
 import io.harness.delegateprofile.DelegateProfileServiceGrpc;
@@ -185,6 +187,38 @@ public class DelegateProfileServiceGrpcImplTest extends WingsBaseTest implements
     assertThat(pageRequest.getFilters().stream().anyMatch(
                    filter -> DelegateProfileKeys.owner.equals(((SearchFilter) filter).getFieldName())))
         .isTrue();
+  }
+
+  @Test
+  @Owner(developers = BOJAN)
+  @Category(UnitTests.class)
+  public void listProfilesV2ShouldReturnOK() {
+    String accountId = generateUuid();
+    DelegateProfile delegateProfile = DelegateProfile.builder()
+                                          .ng(true)
+                                          .accountId(accountId)
+                                          .description("description")
+                                          .owner(DelegateEntityOwner.builder().identifier("orgId/projectId").build())
+                                          .build();
+
+    PageResponse<DelegateProfile> pageResponse = new PageResponse<>();
+    pageResponse.add(delegateProfile);
+    pageResponse.setTotal(1L);
+    pageResponse.setLimit("0");
+    pageResponse.setOffset("0");
+
+    ArgumentCaptor<PageRequest> argumentCaptor = ArgumentCaptor.forClass(PageRequest.class);
+    when(delegateProfileService.list(argumentCaptor.capture())).thenReturn(pageResponse);
+
+    DelegateProfilePageResponseGrpc delegateProfilePageResponseGrpc = delegateProfileServiceGrpcClient.listProfilesV2(
+        "", DelegateProfileFilterGrpc.newBuilder().build(), PageRequestGrpc.newBuilder().build());
+
+    assertThat(delegateProfilePageResponseGrpc).isNotNull();
+    assertThat(delegateProfilePageResponseGrpc.getResponse(0).getNg()).isTrue();
+    assertThat(delegateProfilePageResponseGrpc.getResponse(0).getCreatedAt()).isEqualTo(0);
+    assertThat(delegateProfilePageResponseGrpc.getResponse(0).getLastUpdatedAt()).isEqualTo(0);
+    assertThat(delegateProfilePageResponseGrpc.getResponse(0).getOrgIdentifier().getId()).isEqualTo("orgId");
+    assertThat(delegateProfilePageResponseGrpc.getResponse(0).getProjectIdentifier().getId()).isEqualTo("projectId");
   }
 
   @Test

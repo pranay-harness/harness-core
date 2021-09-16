@@ -205,4 +205,26 @@ public class YamlUtilsTest extends CategoryTest {
     assertThat(YamlUtils.getQualifiedNameTillGivenField(step1Node, "execution"))
         .isEqualTo("execution.steps.rolloutDeployment");
   }
+
+  @Test
+  @Owner(developers = SAHIL)
+  @Category(UnitTests.class)
+  public void testGetStageIdentifierFromFqn() {
+    String fqn = "pipeline.stages.qaStage.spec.execution.steps.rolloutDeployment";
+    assertThat("qaStage").isEqualTo(YamlUtils.getStageIdentifierFromFqn(fqn));
+
+    fqn = "pipeline.stages";
+    assertThat(YamlUtils.getStageIdentifierFromFqn(fqn)).isNull();
+  }
+
+  @Test
+  @Owner(developers = SAHIL)
+  @Category(UnitTests.class)
+  public void testGetPipelineVariableNameFromFqn() {
+    String fqn = "pipeline.variables.var1";
+    assertThat("var1").isEqualTo(YamlUtils.getPipelineVariableNameFromFqn(fqn));
+
+    fqn = "pipeline.variables";
+    assertThat(YamlUtils.getPipelineVariableNameFromFqn(fqn)).isNull();
+  }
 }

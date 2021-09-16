@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
+import io.harness.polling.contracts.PollingResponse;
 
 import java.util.List;
 import lombok.AccessLevel;
@@ -21,4 +22,5 @@ public class FilterRequestData {
   boolean isCustomTrigger;
   List<TriggerDetails> details;
   WebhookPayloadData webhookPayloadData;
+  PollingResponse pollingResponse;
 }

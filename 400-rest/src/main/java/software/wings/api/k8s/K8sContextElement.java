@@ -1,6 +1,6 @@
 package software.wings.api.k8s;
 
-import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -19,7 +19,7 @@ import lombok.Data;
 
 @Data
 @Builder
-@TargetModule(_871_CG_BEANS)
+@TargetModule(_957_CG_BEANS)
 @OwnedBy(CDP)
 public class K8sContextElement implements ContextElement {
   String releaseName;

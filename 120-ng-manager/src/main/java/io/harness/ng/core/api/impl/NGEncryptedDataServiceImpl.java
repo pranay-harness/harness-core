@@ -371,7 +371,9 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
     existingEncryptedData.setName(encryptedData.getName());
     existingEncryptedData.setEncryptionKey(encryptedData.getEncryptionKey());
     existingEncryptedData.setEncryptedValue(encryptedData.getEncryptedValue());
-    existingEncryptedData.setBase64Encoded(encryptedData.isBase64Encoded());
+    if (isNotEmpty(fileContent)) {
+      existingEncryptedData.setBase64Encoded(true);
+    }
     NGEncryptedData updatedEncryptedData = encryptedDataDao.save(existingEncryptedData);
     if (isNotEmpty(fileContent) && Optional.ofNullable(existingFileId).isPresent()
         && ENCRYPTION_TYPES_REQUIRING_FILE_DOWNLOAD.contains(existingEncryptedData.getEncryptionType())) {

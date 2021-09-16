@@ -1,5 +1,7 @@
 package software.wings.core.winrm.executors;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.DINESH;
 import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
@@ -15,6 +17,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
@@ -36,6 +40,8 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(CDP)
+@TargetModule(_930_DELEGATE_TASKS)
 public class DefaultWinRmExecutorTest extends CategoryTest {
   @Mock DefaultWinRmExecutor defaultWinRmExecutor;
   @Mock FileBasedWinRmExecutor fileBasedWinRmExecutor;
@@ -61,7 +67,7 @@ public class DefaultWinRmExecutorTest extends CategoryTest {
   public void setUp() throws Exception {
     MockitoAnnotations.initMocks(this);
     spyDefaultWinRmExecutor = new DefaultWinRmExecutor(logCallback, delegateFileManager, true, config, false);
-    spyFileBasedWinRmExecutor = new FileBasedWinRmExecutor(logCallback, delegateFileManager, true, config, true, false);
+    spyFileBasedWinRmExecutor = new FileBasedWinRmExecutor(logCallback, delegateFileManager, true, config, true);
     simpleCommand = "$test=\"someruntimepath\"\n"
         + "echo $test\n"
         + "if($test){\n"

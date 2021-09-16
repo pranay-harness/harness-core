@@ -14,5 +14,9 @@ Var url = concat(Env:baseUrl, "entries:list")
 
 Var logsResponse = sync-call(url=Var:url, header=Var:header, body=Var:body)
 Var logs = extract(Var:logsResponse, $.entries)
-
+Var responseList = []
+Var nullObject = null
+if Var:logs == Var:nullObject {
+    logs = []
+}
 return Var:logs

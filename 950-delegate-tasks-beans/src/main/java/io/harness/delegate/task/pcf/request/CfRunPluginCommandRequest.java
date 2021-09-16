@@ -5,9 +5,7 @@ import static io.harness.expression.Expression.ALLOW_SECRETS;
 
 import static java.lang.String.format;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
@@ -28,19 +26,20 @@ import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import org.jetbrains.annotations.NotNull;
 
 @Data
+@ToString(exclude = {"renderedScriptString", "fileDataList", "repoRoot"})
 @EqualsAndHashCode(callSuper = false)
-@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 @OwnedBy(CDP)
 public class CfRunPluginCommandRequest extends CfCommandRequest
     implements TaskParameters, ExecutionCapabilityDemander, ActivityAccess, Cd1ApplicationAccess {
   @Expression(ALLOW_SECRETS) private String renderedScriptString;
   private List<String> filePathsInScript;
-  private List<FileData> fileDataList;
+  @Expression(ALLOW_SECRETS) private List<FileData> fileDataList;
   private List<EncryptedDataDetail> encryptedDataDetails;
-  private String repoRoot;
+  @Expression(ALLOW_SECRETS) private String repoRoot;
   @NotNull private CfCliVersion cfCliVersion;
 
   @Builder

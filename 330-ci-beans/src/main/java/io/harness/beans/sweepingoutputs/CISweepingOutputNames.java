@@ -7,4 +7,5 @@ import io.harness.annotations.dev.OwnedBy;
 public class CISweepingOutputNames {
   public static final String STAGE_ARTIFACT_SWEEPING_OUTPUT_NAME = "integrationStageArtifacts";
   public static final String CODE_BASE_CONNECTOR_REF = "codeBaseConnectorRef";
+  public static final String CODEBASE = "codebase";
 }

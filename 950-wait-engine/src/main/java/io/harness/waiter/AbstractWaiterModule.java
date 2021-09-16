@@ -17,7 +17,7 @@ public abstract class AbstractWaiterModule extends AbstractModule {
   @Singleton
   protected WaiterConfiguration injectWaiterConfiguration() {
     return waiterConfiguration();
-  };
+  }
 
   public abstract WaiterConfiguration waiterConfiguration();
 }

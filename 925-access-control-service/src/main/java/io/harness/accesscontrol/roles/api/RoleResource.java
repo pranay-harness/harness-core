@@ -26,6 +26,7 @@ import io.harness.accesscontrol.roles.filter.RoleFilter;
 import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParams;
+import io.harness.accesscontrol.scopes.harness.ScopeMapper;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
@@ -102,7 +103,7 @@ public class RoleResource {
         ResourceScope.of(harnessScopeParams.getAccountIdentifier(), harnessScopeParams.getOrgIdentifier(),
             harnessScopeParams.getProjectIdentifier()),
         Resource.of(ROLE, null), VIEW_ROLE_PERMISSION);
-    String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
+    String scopeIdentifier = ScopeMapper.fromParams(harnessScopeParams).toString();
     RoleFilter roleFilter =
         RoleFilter.builder().searchTerm(searchTerm).scopeIdentifier(scopeIdentifier).managedFilter(NO_FILTER).build();
     PageResponse<Role> pageResponse = roleService.list(pageRequest, roleFilter);
@@ -118,7 +119,7 @@ public class RoleResource {
         ResourceScope.of(harnessScopeParams.getAccountIdentifier(), harnessScopeParams.getOrgIdentifier(),
             harnessScopeParams.getProjectIdentifier()),
         Resource.of(ROLE, identifier), VIEW_ROLE_PERMISSION);
-    String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
+    String scopeIdentifier = ScopeMapper.fromParams(harnessScopeParams).toString();
     return ResponseDTO.newResponse(roleDTOMapper.toResponseDTO(
         roleService.get(identifier, scopeIdentifier, NO_FILTER).<InvalidRequestException>orElseThrow(() -> {
           throw new InvalidRequestException("Role not found with the given scope and identifier");
@@ -134,12 +135,12 @@ public class RoleResource {
         ResourceScope.of(harnessScopeParams.getAccountIdentifier(), harnessScopeParams.getOrgIdentifier(),
             harnessScopeParams.getProjectIdentifier()),
         Resource.of(ROLE, identifier), EDIT_ROLE_PERMISSION);
-    String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
+    String scopeIdentifier = ScopeMapper.fromParams(harnessScopeParams).toString();
     if (!identifier.equals(roleDTO.getIdentifier())) {
       throw new InvalidRequestException("Role identifier in the request body and the url do not match");
     }
-    RoleUpdateResult roleUpdateResult = roleService.update(fromDTO(scopeIdentifier, roleDTO));
     return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+      RoleUpdateResult roleUpdateResult = roleService.update(fromDTO(scopeIdentifier, roleDTO));
       RoleResponseDTO response = roleDTOMapper.toResponseDTO(roleUpdateResult.getUpdatedRole());
       outboxService.save(new RoleUpdateEvent(response.getScope().getAccountIdentifier(), response.getRole(),
           roleDTOMapper.toResponseDTO(roleUpdateResult.getOriginalRole()).getRole(), response.getScope()));
@@ -154,7 +155,7 @@ public class RoleResource {
         ResourceScope.of(harnessScopeParams.getAccountIdentifier(), harnessScopeParams.getOrgIdentifier(),
             harnessScopeParams.getProjectIdentifier()),
         Resource.of(ROLE, null), EDIT_ROLE_PERMISSION);
-    Scope scope = scopeService.buildScopeFromParams(harnessScopeParams);
+    Scope scope = scopeService.getOrCreate(ScopeMapper.fromParams(harnessScopeParams));
     if (isEmpty(roleDTO.getAllowedScopeLevels())) {
       roleDTO.setAllowedScopeLevels(Sets.newHashSet(scope.getLevel().toString()));
     }
@@ -175,7 +176,7 @@ public class RoleResource {
         ResourceScope.of(harnessScopeParams.getAccountIdentifier(), harnessScopeParams.getOrgIdentifier(),
             harnessScopeParams.getProjectIdentifier()),
         Resource.of(ROLE, identifier), DELETE_ROLE_PERMISSION);
-    String scopeIdentifier = scopeService.buildScopeFromParams(harnessScopeParams).toString();
+    String scopeIdentifier = ScopeMapper.fromParams(harnessScopeParams).toString();
     return Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
       RoleResponseDTO response = roleDTOMapper.toResponseDTO(roleService.delete(identifier, scopeIdentifier));
       outboxService.save(

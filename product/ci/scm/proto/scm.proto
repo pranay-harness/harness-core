@@ -465,6 +465,8 @@ message ListBranchesRequest {
 message ListBranchesResponse {
   repeated string branches = 1;
   PageResponse pagination = 2;
+  int32 status = 3;
+  string error = 4;
 }
 
 message CompareCommitsRequest {

@@ -18,6 +18,7 @@ import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.cek8s.CEKubernetesClusterConfigDTO;
 import io.harness.eventsframework.entity_crud.EntityChangeDTO;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.remote.client.NGRestUtils;
 
@@ -35,6 +36,7 @@ public class EntityChangeHandler {
   @Inject NGClusterRecordHandler clusterRecordHandler;
   @Inject ConnectorResourceClient connectorResourceClient;
   @Inject K8sWatchTaskResourceClient k8sWatchTaskResourceClient;
+  @Inject private FeatureFlagService featureFlagService;
 
   public void handleCreateEvent(EntityChangeDTO entityChangeDTO, String connectorEntityType) {
     // Create Events of K8s Base (CD) connectors can be safely ignored
@@ -50,11 +52,14 @@ public class EntityChangeHandler {
     if (ConnectorType.KUBERNETES_CLUSTER.getDisplayName().equals(connectorEntityType)) {
       ClusterRecord clusterRecordFromK8sBaseConnector =
           clusterRecordHandler.getClusterRecordFromK8sBaseConnector(accountIdentifier, k8sConnectorIdentifier);
+      log.info("Handle K8s UpdateEvent [Cluster Record: {}]", clusterRecordFromK8sBaseConnector);
       // K8s Cluster Event is Relevant to CE/ CD Connector has CE Enabled
       if (clusterRecordFromK8sBaseConnector != null) {
         String perpetualTaskId = clusterRecordFromK8sBaseConnector.getPerpetualTaskId();
         try {
+          log.info("Handle K8s UpdateEvent [Starting PT Reset]]");
           resetPerpetualTask(clusterRecordFromK8sBaseConnector, perpetualTaskId);
+          log.info("Handle K8s UpdateEvent [PT Reset Complete]]");
         } catch (IOException e) {
           log.error("Exception Resetting Perpetual Task for Cluster Record: {}", clusterRecordFromK8sBaseConnector);
         }
@@ -71,14 +76,12 @@ public class EntityChangeHandler {
       String accountIdentifier = entityChangeDTO.getAccountIdentifier().getValue();
       String ceK8sConnectorIdentifier = entityChangeDTO.getIdentifier().getValue();
 
-      ConnectorInfoDTO ceK8sConnectorInfoDTO = getConnectorConfigDTO(entityChangeDTO);
-      ConnectorConfigDTO ceK8sConnectorConfigDTO = ceK8sConnectorInfoDTO.getConnectorConfig();
-      CEKubernetesClusterConfigDTO ceKubernetesClusterConfigDTO =
-          (CEKubernetesClusterConfigDTO) ceK8sConnectorConfigDTO;
-      if (isVisibilityFeatureEnabled(ceKubernetesClusterConfigDTO)) {
-        ClusterRecord clusterRecord =
-            clusterRecordHandler.getClusterRecord(accountIdentifier, ceK8sConnectorIdentifier);
+      ClusterRecord clusterRecord = clusterRecordHandler.getClusterRecord(accountIdentifier, ceK8sConnectorIdentifier);
+      log.info("Handle K8s DeleteEvent, Cluster Record: {}]", clusterRecord);
+      if (clusterRecord != null) {
+        log.info("Handle K8s DeleteEvent, Cleanup Start");
         clusterRecordAndPerpetualTaskCleanup(clusterRecord, accountIdentifier, ceK8sConnectorIdentifier);
+        log.info("Handle K8s DeleteEvent, Cleanup Complete");
       }
     }
   }
@@ -100,9 +103,17 @@ public class EntityChangeHandler {
   private void onboardNewCEK8sConnector(ClusterRecord clusterRecord) {
     String taskId;
     try {
+      log.info("Oboarding New K8s Connector[Cluster Record: {}]", clusterRecord);
       clusterRecord = clusterRecordHandler.handleNewCEK8sConnectorCreate(clusterRecord);
+      log.info("Oboarding New K8s Connector[Cluster Record Upserted]");
+
+      log.info("Oboarding New K8s Connector[creating PT]");
       taskId = createPerpetualTask(clusterRecord);
+      log.info("Oboarding New K8s Connector[taskId: {}]", taskId);
+
+      log.info("Oboarding New K8s Connector[Attach PT Starting]", taskId);
       clusterRecordHandler.attachPerpetualTask(clusterRecord, taskId);
+      log.info("Oboarding New K8s Connector[Attach PT Complete]", taskId);
     } catch (IOException e) {
       log.error("Exception Creating Perpetual Task for Cluster Record: {}", clusterRecord);
     }
@@ -113,11 +124,15 @@ public class EntityChangeHandler {
     String perpetualTaskId = clusterRecord.getPerpetualTaskId();
     // Delete the Perpetual Task
     try {
+      log.info("Handle K8s DeleteEvent, Delete PT");
       deletePerpetualTask(clusterRecord, perpetualTaskId);
+      log.info("Handle K8s DeleteEvent, Delete PT Complete");
     } catch (IOException e) {
       log.error("Exception Deleting Perpetual Task for CLuster Record: {}", clusterRecord);
     }
+    log.info("Handle K8s DeleteEvent, Delete CR");
     clusterRecordHandler.deleteClusterRecord(accountIdentifier, ceK8sConnectorIdentifier);
+    log.info("Handle K8s DeleteEvent, Delete CR Complete");
   }
 
   public void handleCEK8sUpdate(EntityChangeDTO entityChangeDTO) {
@@ -130,21 +145,30 @@ public class EntityChangeHandler {
     ClusterRecord clusterRecord;
     // Get Cluster Record from DB
     clusterRecord = clusterRecordHandler.getClusterRecord(accountIdentifier, ceK8sConnectorIdentifier);
-    boolean visibilityFeatureEnabled = isVisibilityFeatureEnabled(ceKubernetesClusterConfigDTO);
+    log.info("Handle CE K8s Connector[Cluster Record: {}]", clusterRecord);
 
-    // If Billing was enabled Previously and Disabled in the Update, we need to clean up PT, CR
+    boolean visibilityFeatureEnabled = isVisibilityFeatureEnabled(ceKubernetesClusterConfigDTO);
+    log.info("Handle CE K8s Connector[visibilityFeatureEnabled: {}]", visibilityFeatureEnabled);
+
+    // If Visibility was enabled Previously and Disabled in the Update, we need to clean up PT, CR
     if (!visibilityFeatureEnabled && clusterRecord != null) {
+      log.info("Handle CE K8s Connector[Visibility was enabled Previously and Disabled in the Update]");
+      log.info("Handle CE K8s Connector[Cleanup PT and CR Started]");
       clusterRecordAndPerpetualTaskCleanup(clusterRecord, accountIdentifier, ceK8sConnectorIdentifier);
+      log.info("Handle CE K8s Connector[Cleanup PT and CR Started]");
     }
 
     if (visibilityFeatureEnabled) {
       if (clusterRecord == null) {
-        /* If Billing was enabled as a part of connector Update (Cluster record didn't exist previously)
+        /* If Visibility was enabled as a part of connector Update (Cluster record didn't exist previously)
         - Then we create Cluster Record and Assign a Perpetual Task */
+        log.info("Handle CE K8s Connector[Visibility was enabled as a part of connector Update]");
         String k8sBaseConnectorRef = ceKubernetesClusterConfigDTO.getConnectorRef();
         onboardNewCEK8sConnector(getClusterRecord(
             accountIdentifier, ceK8sConnectorIdentifier, ceK8sConnectorInfoDTO.getName(), k8sBaseConnectorRef));
       } else {
+        log.info(
+            "Handle CE K8s Connector[Only fields that can change on a CE K8s Entity Update (Name, Connector Ref)]");
         // Only fields that can change on a CE K8s Entity Update (Name, Connector Ref)
         clusterRecord.setClusterName(ceK8sConnectorInfoDTO.getName());
         clusterRecord.setK8sBaseConnectorRefIdentifier(ceKubernetesClusterConfigDTO.getConnectorRef());
@@ -152,7 +176,9 @@ public class EntityChangeHandler {
         String perpetualTaskId = clusterRecord.getPerpetualTaskId();
         // Reset the Perpetual Task
         try {
+          log.info("Handle CE K8s Connector[Reset PT with cluster Record: {}]", clusterRecord);
           resetPerpetualTask(clusterRecord, perpetualTaskId);
+          log.info("Handle CE K8s Connector[Reset PT with cluster Record complete]");
         } catch (IOException e) {
           log.error("Exception Resetting Perpetual Task for CLuster Record: {}", clusterRecord);
         }
@@ -171,11 +197,14 @@ public class EntityChangeHandler {
                     .connectorIdentifier(clusterRecord.getCeK8sConnectorIdentifier())
                     .build())
             .execute();
+    if (!createResponse.isSuccessful()) {
+      log.error("Create perpetual Task Failed {}", createResponse);
+    }
     return createResponse.body().getData();
   }
 
   private Boolean resetPerpetualTask(ClusterRecord clusterRecord, String taskId) throws IOException {
-    Response<ResponseDTO<Boolean>> createResponse =
+    Response<ResponseDTO<Boolean>> resetResponse =
         k8sWatchTaskResourceClient
             .reset(clusterRecord.getAccountId(), taskId,
                 K8sEventCollectionBundle.builder()
@@ -185,13 +214,19 @@ public class EntityChangeHandler {
                     .connectorIdentifier(clusterRecord.getCeK8sConnectorIdentifier())
                     .build())
             .execute();
-    return createResponse.body().getData();
+    if (!resetResponse.isSuccessful()) {
+      log.error("Reset perpetual Task Failed {}", resetResponse);
+    }
+    return resetResponse.body().getData();
   }
 
   Boolean deletePerpetualTask(ClusterRecord clusterRecord, String taskId) throws IOException {
-    Response<ResponseDTO<Boolean>> createResponse =
+    Response<ResponseDTO<Boolean>> deleteResponse =
         k8sWatchTaskResourceClient.delete(clusterRecord.getAccountId(), taskId).execute();
-    return createResponse.body().getData();
+    if (!deleteResponse.isSuccessful()) {
+      log.error("Delete perpetual Task Failed {}", deleteResponse);
+    }
+    return deleteResponse.body().getData();
   }
 
   private ClusterRecord getClusterRecord(

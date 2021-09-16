@@ -8,6 +8,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -34,7 +35,7 @@ import org.mockito.MockitoAnnotations;
 
 @TargetModule(HarnessModule._375_CE_GRAPHQL)
 @OwnedBy(CE)
-public class AnomalyEntityDaoTest {
+public class AnomalyEntityDaoTest extends CategoryTest {
   @Mock TimeScaleDBService dbService;
   @Mock Connection connection;
   @Mock Statement statement;

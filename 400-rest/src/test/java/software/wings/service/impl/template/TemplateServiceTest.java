@@ -1,5 +1,6 @@
 package software.wings.service.impl.template;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.rule.OwnerRule.AADITI;
@@ -53,6 +54,7 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
@@ -103,7 +105,7 @@ import javax.validation.ConstraintViolationException;
 import org.junit.Test;
 import org.junit.Test.None;
 import org.junit.experimental.categories.Category;
-
+@OwnedBy(PL)
 public class TemplateServiceTest extends TemplateBaseTestHelper {
   private static final String MY_START_COMMAND = "My Start Command";
   private static final String MY_START_COMMAND_APP = "My Start Command App";
@@ -439,7 +441,7 @@ public class TemplateServiceTest extends TemplateBaseTestHelper {
     CustomSecretsManagerConfig config = CustomSecretsManagerConfig.builder()
                                             .name("CustomSecretsManager")
                                             .templateId(savedTemplate.getUuid())
-                                            .delegateSelectors(new ArrayList<>())
+                                            .delegateSelectors(new HashSet<>())
                                             .executeOnDelegate(true)
                                             .customSecretsManagerShellScript(script)
                                             .testVariables(new HashSet<>())

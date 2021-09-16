@@ -221,7 +221,7 @@ import org.quartz.JobDetail;
 import org.quartz.TriggerKey;
 
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._960_API_SERVICES)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class TriggerServiceTest extends WingsBaseTest {
   private static final String CATALOG_SERVICE_NAME = "Catalog";
   private static final String ARTIFACT_STREAM_ID_1 = "ARTIFACT_STREAM_ID_1";
@@ -3968,5 +3968,25 @@ public class TriggerServiceTest extends WingsBaseTest {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, SECRET_ID);
     assertThat(encryptedData).isNotNull();
     assertThat(encryptedData.getParents()).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void shouldNotRunDisabledTrigger() {
+    Artifact artifact = prepareArtifact(ARTIFACT_ID);
+    Artifact artifact2 = prepareArtifact(UUIDGenerator.generateUuid());
+
+    scheduledTriggerMocks();
+
+    when(workflowExecutionService.obtainLastGoodDeployedArtifacts(APP_ID, PIPELINE_ID))
+        .thenReturn(asList(artifact, artifact2));
+
+    ScheduledTriggerCondition scheduledTriggerCondition =
+        (ScheduledTriggerCondition) scheduledConditionTrigger.getCondition();
+    scheduledTriggerCondition.setCronExpression("0 5 31 2 ?");
+    assertThatThrownBy(() -> triggerService.save(scheduledConditionTrigger))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Given cron expression doesn't evaluate to a valid time. Please check the expression provided");
   }
 }

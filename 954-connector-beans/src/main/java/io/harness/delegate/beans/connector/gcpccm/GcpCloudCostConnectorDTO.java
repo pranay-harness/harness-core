@@ -26,6 +26,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class GcpCloudCostConnectorDTO extends ConnectorConfigDTO {
   @Valid @NotEmpty(message = "At least one of the features should enabled") List<CEFeatures> featuresEnabled;
   @NotNull String projectId;
+  @NotNull String serviceAccountEmail;
   @Valid GcpBillingExportSpecDTO billingExportSpec;
 
   @Override

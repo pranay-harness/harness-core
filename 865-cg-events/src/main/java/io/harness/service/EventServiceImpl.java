@@ -21,6 +21,7 @@ import io.harness.persistence.HPersistence;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
@@ -69,6 +70,10 @@ public class EventServiceImpl implements EventService {
           accountId, appId, eventConfigId);
       return;
     }
+
+    // Set the eventId in payload so that the customer can de-dup events on their end if we redeliver them in the
+    // future.
+    payload.setId(UUID.randomUUID().toString());
     Event event = Event.builder()
                       .eventConfigId(eventConfigId)
                       .status(EventStatus.QUEUED)
@@ -126,5 +131,10 @@ public class EventServiceImpl implements EventService {
     Query<Event> query = hPersistence.createQuery(Event.class).filter(EventsKeys.uuid, eventId);
 
     hPersistence.update(query, updateOperations);
+  }
+
+  @Override
+  public void pruneByApplication(String appId) {
+    hPersistence.delete(hPersistence.createQuery(Event.class).filter(EventsKeys.appId, appId));
   }
 }

@@ -1,7 +1,8 @@
 package io.harness.licensing.helpers;
 
-import io.harness.licensing.ModuleType;
+import io.harness.ModuleType;
 import io.harness.licensing.beans.modules.CDModuleLicenseDTO;
+import io.harness.licensing.beans.modules.CEModuleLicenseDTO;
 import io.harness.licensing.beans.modules.CFModuleLicenseDTO;
 import io.harness.licensing.beans.modules.CIModuleLicenseDTO;
 import io.harness.licensing.beans.modules.ModuleLicenseDTO;
@@ -24,6 +25,7 @@ public class ModuleLicenseSummaryHelper {
   public static LicensesWithSummaryDTO generateSummary(
       ModuleType moduleType, List<ModuleLicenseDTO> moduleLicenseDTOs) {
     long currentTime = Instant.now().toEpochMilli();
+
     SummaryHandler summaryHandler;
     LicensesWithSummaryDTO licensesWithSummaryDTO;
     switch (moduleType) {
@@ -50,6 +52,10 @@ public class ModuleLicenseSummaryHelper {
             if (temp.getWorkloads() != null) {
               cdLicenseSummaryDTO.setTotalWorkload(
                   ModuleLicenseUtils.computeAdd(cdLicenseSummaryDTO.getTotalWorkload(), temp.getWorkloads()));
+            }
+            if (temp.getServiceInstances() != null) {
+              cdLicenseSummaryDTO.setTotalServiceInstances(ModuleLicenseUtils.computeAdd(
+                  cdLicenseSummaryDTO.getTotalServiceInstances(), temp.getServiceInstances()));
             }
           }
         };
@@ -78,20 +84,34 @@ public class ModuleLicenseSummaryHelper {
         break;
       case CE:
         licensesWithSummaryDTO = CELicenseSummaryDTO.builder().build();
-        summaryHandler = (moduleLicenseDTO, summaryDTO, current) -> {};
+        summaryHandler = (moduleLicenseDTO, summaryDTO, current) -> {
+          CEModuleLicenseDTO temp = (CEModuleLicenseDTO) moduleLicenseDTO;
+          CELicenseSummaryDTO ceLicenseSummaryDTO = (CELicenseSummaryDTO) summaryDTO;
+
+          if (current < temp.getExpiryTime()) {
+            if (temp.getSpendLimit() != null) {
+              ceLicenseSummaryDTO.setTotalSpendLimit(
+                  ModuleLicenseUtils.computeAdd(ceLicenseSummaryDTO.getTotalSpendLimit(), temp.getSpendLimit()));
+            }
+          }
+        };
         break;
       default:
         throw new UnsupportedOperationException("Unsupported module type");
     }
 
     moduleLicenseDTOs.forEach(l -> {
+      // calculate summary detail info via each moduleLicenseDTO
       summaryHandler.calculateModuleSummary(l, licensesWithSummaryDTO, currentTime);
+
+      // Use the last expiring license info as the summary general info
       if (l.getExpiryTime() > licensesWithSummaryDTO.getMaxExpiryTime()) {
         licensesWithSummaryDTO.setMaxExpiryTime(l.getExpiryTime());
         licensesWithSummaryDTO.setEdition(l.getEdition());
         licensesWithSummaryDTO.setLicenseType(l.getLicenseType());
       }
     });
+    licensesWithSummaryDTO.setModuleType(moduleType);
     return licensesWithSummaryDTO;
   }
 

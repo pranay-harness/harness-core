@@ -1,9 +1,10 @@
 package io.harness.licensing.services;
 
-import static io.harness.licensing.interfaces.ModuleLicenseInterfaceImpl.TRIAL_DURATION;
+import static io.harness.licensing.interfaces.ModuleLicenseImpl.TRIAL_DURATION;
 
 import static java.lang.String.format;
 
+import io.harness.ModuleType;
 import io.harness.account.services.AccountService;
 import io.harness.beans.EmbeddedUser;
 import io.harness.exception.DuplicateFieldException;
@@ -11,7 +12,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.licensing.Edition;
 import io.harness.licensing.LicenseStatus;
 import io.harness.licensing.LicenseType;
-import io.harness.licensing.ModuleType;
 import io.harness.licensing.beans.modules.AccountLicenseDTO;
 import io.harness.licensing.beans.modules.ModuleLicenseDTO;
 import io.harness.licensing.beans.modules.StartTrialDTO;

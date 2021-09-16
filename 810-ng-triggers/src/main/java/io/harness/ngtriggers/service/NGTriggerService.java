@@ -8,6 +8,7 @@ import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.dto.WebhookEventProcessingDetails;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.TriggerWebhookEvent;
+import io.harness.ngtriggers.validations.ValidationResult;
 
 import java.util.List;
 import java.util.Optional;
@@ -37,7 +38,7 @@ public interface NGTriggerService {
       TriggerWebhookEvent triggerWebhookEvent, boolean isDeleted, boolean enabled);
   List<NGTriggerEntity> findTriggersForWehbookBySourceRepoType(
       TriggerWebhookEvent triggerWebhookEvent, boolean isDeleted, boolean enabled);
-
+  List<NGTriggerEntity> findBuildTriggersByAccountIdAndSignature(String accountId, List<String> signatures);
   boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String targetIdentifier,
       String identifier, Long version);
 
@@ -51,4 +52,8 @@ public interface NGTriggerService {
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier);
 
   WebhookEventProcessingDetails fetchTriggerEventHistory(String accountId, String eventId);
+  NGTriggerEntity updateTriggerWithValidationStatus(NGTriggerEntity ngTriggerEntity, ValidationResult validationResult);
+
+  TriggerDetails fetchTriggerEntity(
+      String accountId, String orgId, String projectId, String pipelineId, String triggerId, String newYaml);
 }

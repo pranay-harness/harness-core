@@ -13,7 +13,9 @@ import static software.wings.beans.VariableType.TEXT;
 
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.data.structure.EmptyPredicate;
 
@@ -51,6 +53,7 @@ import lombok.Setter;
       @JsonSubTypes.Type(value = MultiServiceOrchestrationWorkflow.class, name = "MULTI_SERVICE"),
       @JsonSubTypes.Type(value = BuildWorkflow.class, name = "BUILD"),
 })
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public abstract class OrchestrationWorkflow {
   @Getter @Setter protected ConcurrencyStrategy concurrencyStrategy;
   private OrchestrationWorkflowType orchestrationWorkflowType;

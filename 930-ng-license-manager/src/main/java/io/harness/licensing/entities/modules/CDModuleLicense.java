@@ -2,6 +2,7 @@ package io.harness.licensing.entities.modules;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.licensing.beans.modules.types.CDLicenseType;
 
 import lombok.Builder;
 import lombok.Data;
@@ -18,6 +19,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Persistent
 @TypeAlias("io.harness.license.entities.module.CDModuleLicense")
 public class CDModuleLicense extends ModuleLicense {
+  CDLicenseType cdLicenseType;
   private Integer workloads;
-  private Integer deploymentsPerDay;
+  private Integer serviceInstances;
 }

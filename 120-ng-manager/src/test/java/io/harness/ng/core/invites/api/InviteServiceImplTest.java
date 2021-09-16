@@ -3,7 +3,7 @@ package io.harness.ng.core.invites.api;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.ng.core.invites.InviteType.ADMIN_INITIATED_INVITE;
 import static io.harness.ng.core.invites.dto.InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED;
-import static io.harness.ng.core.invites.dto.InviteOperationResponse.FAIL;
+import static io.harness.ng.core.invites.dto.InviteOperationResponse.INVITE_INVALID;
 import static io.harness.ng.core.invites.dto.InviteOperationResponse.USER_ALREADY_ADDED;
 import static io.harness.ng.core.invites.dto.InviteOperationResponse.USER_ALREADY_INVITED;
 import static io.harness.ng.core.invites.dto.InviteOperationResponse.USER_INVITED_SUCCESSFULLY;
@@ -25,12 +25,13 @@ import io.harness.CategoryTest;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.account.AccountClient;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.Scope;
 import io.harness.category.element.UnitTests;
 import io.harness.invites.remote.InviteAcceptResponse;
 import io.harness.mongo.MongoConfig;
+import io.harness.ng.core.AccountOrgProjectHelper;
+import io.harness.ng.core.api.UserGroupService;
 import io.harness.ng.core.dto.AccountDTO;
-import io.harness.ng.core.entities.Organization;
-import io.harness.ng.core.entities.Project;
 import io.harness.ng.core.invites.InviteType;
 import io.harness.ng.core.invites.JWTGeneratorUtils;
 import io.harness.ng.core.invites.api.impl.InviteServiceImpl;
@@ -38,8 +39,6 @@ import io.harness.ng.core.invites.dto.InviteOperationResponse;
 import io.harness.ng.core.invites.dto.RoleBinding;
 import io.harness.ng.core.invites.entities.Invite;
 import io.harness.ng.core.invites.entities.Invite.InviteKeys;
-import io.harness.ng.core.services.OrganizationService;
-import io.harness.ng.core.services.ProjectService;
 import io.harness.ng.core.user.remote.dto.UserMetadataDTO;
 import io.harness.ng.core.user.service.NgUserService;
 import io.harness.notification.NotificationResultWithStatus;
@@ -51,6 +50,7 @@ import io.harness.rule.Owner;
 import io.harness.user.remote.UserClient;
 
 import com.auth0.jwt.interfaces.Claim;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -83,8 +83,8 @@ public class InviteServiceImplTest extends CategoryTest {
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private AccessControlClient accessControlClient;
   @Mock private NotificationClient notificationClient;
   @Mock private OutboxService outboxService;
-  @Mock private OrganizationService organizationService;
-  @Mock private ProjectService projectService;
+  @Mock private UserGroupService userGroupService;
+  @Mock private AccountOrgProjectHelper accountOrgProjectHelper;
 
   private InviteService inviteService;
 
@@ -93,8 +93,8 @@ public class InviteServiceImplTest extends CategoryTest {
     MockitoAnnotations.initMocks(this);
     MongoConfig mongoConfig = MongoConfig.builder().uri("mongodb://localhost:27017/ng-harness").build();
     inviteService = new InviteServiceImpl(USER_VERIFICATION_SECRET, mongoConfig, jwtGeneratorUtils, ngUserService,
-        transactionTemplate, inviteRepository, notificationClient, accountClient, outboxService, organizationService,
-        projectService, accessControlClient, userClient, false);
+        transactionTemplate, inviteRepository, notificationClient, accountClient, outboxService, accessControlClient,
+        userClient, accountOrgProjectHelper, false);
 
     when(accountClient.getAccountDTO(any()).execute())
         .thenReturn(Response.success(new RestResponse(AccountDTO.builder()
@@ -102,13 +102,11 @@ public class InviteServiceImplTest extends CategoryTest {
                                                           .companyName(accountIdentifier)
                                                           .name(accountIdentifier)
                                                           .build())));
-    when(accountClient.getBaseUrl(any()).execute()).thenReturn(Response.success(new RestResponse("qa.harness.io")));
+    when(accountOrgProjectHelper.getBaseUrl(any())).thenReturn("qa.harness.io");
     when(notificationClient.sendNotificationAsync(any())).thenReturn(new NotificationResultWithStatus());
-    when(projectService.get(any(), any(), any())).thenReturn(Optional.of(Project.builder().name("Project").build()));
-    when(organizationService.get(any(), any()))
-        .thenReturn(Optional.of(Organization.builder().name("Organization").build()));
-    when(accountClient.getAccountDTO(any()).execute())
-        .thenReturn(Response.success(new RestResponse(AccountDTO.builder().name("Account").build())));
+    when(accountOrgProjectHelper.getProjectName(any(), any(), any())).thenReturn("Project");
+    when(accountOrgProjectHelper.getOrgName(any(), any())).thenReturn("Organization");
+    when(accountOrgProjectHelper.getAccountName(any())).thenReturn("Account");
   }
 
   private Invite getDummyInvite() {
@@ -158,7 +156,7 @@ public class InviteServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = ANKUSH)
   @Category(UnitTests.class)
-  public void testCreate_UserAlreadyExists_UserNotInvitedYet() {
+  public void testCreate_UserAlreadyExists_UserNotInvitedYet() throws IOException {
     UserMetadataDTO user = UserMetadataDTO.builder().name(randomAlphabetic(7)).email(emailId).uuid(userId).build();
     when(ngUserService.getUserByEmail(any(), anyBoolean())).thenReturn(Optional.of(user));
     when(inviteRepository.save(any())).thenReturn(getDummyInvite());
@@ -166,6 +164,8 @@ public class InviteServiceImplTest extends CategoryTest {
              any(), any(), any(), any()))
         .thenReturn(Optional.empty());
 
+    when(accountClient.checkAutoInviteAcceptanceEnabledForAccount(any()).execute())
+        .thenReturn(Response.success(new RestResponse(false)));
     InviteOperationResponse inviteOperationResponse = inviteService.create(getDummyInvite());
 
     assertThat(inviteOperationResponse).isEqualTo(USER_INVITED_SUCCESSFULLY);
@@ -175,13 +175,15 @@ public class InviteServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = ANKUSH)
   @Category(UnitTests.class)
-  public void testCreate_UserDNE_UserNotInvitedYet() {
+  public void testCreate_UserDNE_UserNotInvitedYet() throws IOException {
     when(ngUserService.getUserByEmail(eq(emailId), anyBoolean())).thenReturn(Optional.empty());
     when(inviteRepository.save(any())).thenReturn(getDummyInvite());
     when(inviteRepository.findFirstByAccountIdentifierAndOrgIdentifierAndProjectIdentifierAndEmailAndDeletedFalse(
              any(), any(), any(), any()))
         .thenReturn(Optional.empty());
 
+    when(accountClient.checkAutoInviteAcceptanceEnabledForAccount(any()).execute())
+        .thenReturn(Response.success(new RestResponse(false)));
     InviteOperationResponse inviteOperationResponse = inviteService.create(getDummyInvite());
 
     assertThat(inviteOperationResponse).isEqualTo(USER_INVITED_SUCCESSFULLY);
@@ -276,15 +278,15 @@ public class InviteServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void acceptInvite_InvalidJWTToken() {
     InviteAcceptResponse inviteAcceptResponse = inviteService.acceptInvite(null);
-    assertThat(inviteAcceptResponse.getResponse()).isEqualTo(FAIL);
+    assertThat(inviteAcceptResponse.getResponse()).isEqualTo(INVITE_INVALID);
 
     inviteAcceptResponse = inviteService.acceptInvite("");
-    assertThat(inviteAcceptResponse.getResponse()).isEqualTo(FAIL);
+    assertThat(inviteAcceptResponse.getResponse()).isEqualTo(INVITE_INVALID);
 
     when(jwtGeneratorUtils.verifyJWTToken(any(), any())).thenReturn(Collections.emptyMap());
 
     inviteAcceptResponse = inviteService.acceptInvite("sadfs");
-    assertThat(inviteAcceptResponse.getResponse()).isEqualTo(FAIL);
+    assertThat(inviteAcceptResponse.getResponse()).isEqualTo(INVITE_INVALID);
   }
 
   @Test
@@ -355,15 +357,9 @@ public class InviteServiceImplTest extends CategoryTest {
   @Owner(developers = ANKUSH)
   @Category(UnitTests.class)
   public void completeInvite_InvalidJWTToken() {
-    boolean result = inviteService.completeInvite(null);
-    assertThat(result).isFalse();
-
-    result = inviteService.completeInvite("");
-    assertThat(result).isFalse();
-
     when(jwtGeneratorUtils.verifyJWTToken(any(), any())).thenReturn(Collections.emptyMap());
 
-    result = inviteService.completeInvite("sadfs");
+    boolean result = inviteService.completeInvite(Optional.empty());
     assertThat(result).isFalse();
   }
 
@@ -378,7 +374,8 @@ public class InviteServiceImplTest extends CategoryTest {
     when(inviteRepository.findFirstByIdAndDeleted(any(), any())).thenReturn(Optional.of(getDummyInvite()));
     when(ngUserService.getUserByEmail(any(), anyBoolean())).thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> inviteService.completeInvite(dummyJWTTOken)).isInstanceOf(IllegalStateException.class);
+    assertThatThrownBy(() -> inviteService.completeInvite(Optional.of(getDummyInvite())))
+        .isInstanceOf(IllegalStateException.class);
   }
 
   @Test
@@ -388,6 +385,11 @@ public class InviteServiceImplTest extends CategoryTest {
     String dummyJWTTOken = "dummy jwt token";
     Claim claim = mock(Claim.class);
     UserMetadataDTO user = UserMetadataDTO.builder().name(randomAlphabetic(7)).email(emailId).uuid(userId).build();
+    Scope scope = Scope.builder()
+                      .accountIdentifier(accountIdentifier)
+                      .orgIdentifier(orgIdentifier)
+                      .projectIdentifier(projectIdentifier)
+                      .build();
     ArgumentCaptor<Update> updateCapture = ArgumentCaptor.forClass(Update.class);
     ArgumentCaptor<String> idCapture = ArgumentCaptor.forClass(String.class);
 
@@ -395,7 +397,7 @@ public class InviteServiceImplTest extends CategoryTest {
     when(jwtGeneratorUtils.verifyJWTToken(any(), any())).thenReturn(Collections.singletonMap(InviteKeys.id, claim));
     when(inviteRepository.findFirstByIdAndDeleted(any(), any())).thenReturn(Optional.of(getDummyInvite()));
     when(ngUserService.getUserByEmail(any(), anyBoolean())).thenReturn(Optional.of(user));
-    boolean result = inviteService.completeInvite(dummyJWTTOken);
+    boolean result = inviteService.completeInvite(Optional.of(getDummyInvite()));
 
     assertThat(result).isTrue();
     verify(inviteRepository, times(1)).updateInvite(idCapture.capture(), updateCapture.capture());

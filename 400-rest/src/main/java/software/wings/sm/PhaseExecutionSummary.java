@@ -2,7 +2,9 @@ package software.wings.sm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SweepingOutput;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -14,6 +16,7 @@ import java.util.Map;
  */
 @OwnedBy(CDC)
 @JsonTypeName("phaseExecutionSummary")
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class PhaseExecutionSummary extends StepExecutionSummary implements SweepingOutput {
   public static final String SWEEPING_OUTPUT_NAME = "phaseExecutionSummary";
 

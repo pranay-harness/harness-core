@@ -450,7 +450,7 @@ public class CfSdkClientImpl implements CfSdkClient {
       }
     }
 
-    return builder.buildpack(applicationManifest.getBuildpack())
+    return builder.buildpacks(applicationManifest.getBuildpacks())
         .command(applicationManifest.getCommand())
         .disk(applicationManifest.getDisk())
         .instances(applicationManifest.getInstances())

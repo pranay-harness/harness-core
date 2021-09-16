@@ -1,7 +1,10 @@
 package io.harness.generator.artifactstream;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.generator.OwnerManager;
 import io.harness.generator.Randomizer;
 import io.harness.generator.SettingGenerator;
@@ -13,7 +16,14 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.utils.RepositoryFormat;
 
+@OwnedBy(CDP)
 public class Nexus3NpmArtifactStreamsGenerator extends NexusArtifactStreamsGenerator {
+  @Override
+  public ArtifactStream ensureArtifactStream(
+      Randomizer.Seed seed, OwnerManager.Owners owners, String serviceName, boolean atConnector) {
+    return null;
+  }
+
   @Override
   public ArtifactStream ensureArtifactStream(
       Randomizer.Seed seed, OwnerManager.Owners owners, boolean atConnector, boolean metadataOnly) {

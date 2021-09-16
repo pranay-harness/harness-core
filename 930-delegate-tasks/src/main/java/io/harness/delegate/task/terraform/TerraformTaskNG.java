@@ -20,8 +20,10 @@ import com.google.inject.Inject;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDP)
+@Slf4j
 public class TerraformTaskNG extends AbstractDelegateRunnableTask {
   @Inject private Map<TFTaskType, TerraformAbstractTaskHandler> tfTaskTypeToHandlerMap;
 
@@ -37,6 +39,7 @@ public class TerraformTaskNG extends AbstractDelegateRunnableTask {
 
   @Override
   public DelegateResponseData run(TaskParameters parameters) {
+    log.info("Started executing Terraform Task NG");
     TerraformTaskNGParameters taskParameters = (TerraformTaskNGParameters) parameters;
     CommandUnitsProgress commandUnitsProgress = CommandUnitsProgress.builder().build();
 

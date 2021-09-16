@@ -4,17 +4,16 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.accesscontrol.acl.persistence.ACL;
 import io.harness.accesscontrol.acl.persistence.repositories.ACLRepository;
-import io.harness.accesscontrol.principals.usergroups.UserGroupService;
 import io.harness.accesscontrol.principals.usergroups.persistence.UserGroupRepository;
-import io.harness.accesscontrol.resources.resourcegroups.ResourceGroupService;
 import io.harness.accesscontrol.resources.resourcegroups.persistence.ResourceGroupRepository;
 import io.harness.accesscontrol.roleassignments.persistence.repositories.RoleAssignmentRepository;
-import io.harness.accesscontrol.roles.RoleService;
 import io.harness.accesscontrol.roles.persistence.repositories.RoleRepository;
 import io.harness.aggregator.AggregatorConfiguration;
 import io.harness.aggregator.consumers.AccessControlDebeziumChangeConsumer;
 import io.harness.aggregator.consumers.ChangeConsumerService;
 import io.harness.aggregator.consumers.ChangeEventFailureHandler;
+import io.harness.aggregator.consumers.RoleAssignmentCRUDEventHandler;
+import io.harness.aggregator.consumers.UserGroupCRUDEventHandler;
 import io.harness.aggregator.models.MongoReconciliationOffset;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.lock.AcquiredLock;
@@ -38,13 +37,14 @@ public class AggregatorPrimarySyncController extends AggregatorBaseSyncControlle
   @Inject
   public AggregatorPrimarySyncController(@Named(ACL.PRIMARY_COLLECTION) ACLRepository primaryAclRepository,
       RoleAssignmentRepository roleAssignmentRepository, RoleRepository roleRepository,
-      ResourceGroupRepository resourceGroupRepository, UserGroupRepository userGroupRepository, RoleService roleService,
-      UserGroupService userGroupService, ResourceGroupService resourceGroupService,
+      ResourceGroupRepository resourceGroupRepository, UserGroupRepository userGroupRepository,
       AggregatorConfiguration aggregatorConfiguration, PersistentLocker persistentLocker,
-      ChangeEventFailureHandler changeEventFailureHandler, ChangeConsumerService changeConsumerService) {
+      ChangeEventFailureHandler changeEventFailureHandler, ChangeConsumerService changeConsumerService,
+      RoleAssignmentCRUDEventHandler roleAssignmentCRUDEventHandler,
+      UserGroupCRUDEventHandler userGroupCRUDEventHandler) {
     super(primaryAclRepository, roleAssignmentRepository, roleRepository, resourceGroupRepository, userGroupRepository,
-        roleService, userGroupService, resourceGroupService, aggregatorConfiguration, persistentLocker,
-        changeEventFailureHandler, AggregatorJobType.PRIMARY, changeConsumerService);
+        aggregatorConfiguration, persistentLocker, changeEventFailureHandler, AggregatorJobType.PRIMARY,
+        changeConsumerService, roleAssignmentCRUDEventHandler, userGroupCRUDEventHandler);
   }
 
   @Override

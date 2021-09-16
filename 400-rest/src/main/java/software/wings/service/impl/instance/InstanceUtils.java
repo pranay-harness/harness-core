@@ -1,5 +1,10 @@
 package software.wings.service.impl.instance;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.WingsException;
 
 import software.wings.beans.InfrastructureMappingType;
@@ -17,6 +22,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Singleton
 @Slf4j
+@OwnedBy(PL)
+@TargetModule(HarnessModule._441_CG_INSTANCE_SYNC)
 public class InstanceUtils {
   private static final String WORKFLOW_PREFIX = "Workflow: ";
   private static final int WORKFLOW_PREFIX_LENGTH = 10;

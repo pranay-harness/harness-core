@@ -63,6 +63,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mongodb.DuplicateKeyException;
 import java.nio.ByteBuffer;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -160,6 +161,43 @@ public class SecretServiceImpl implements SecretService {
       String reason = "Secret with " + encryptedData.getName() + " already exists";
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, reason, e, USER);
     }
+  }
+  @Override
+  public EncryptedData encryptSecret(String accountId, HarnessSecret secret, boolean validateScopes) {
+    SecretManagerConfig secretManagerConfig = secretManagerConfigService.getSecretManager(accountId, accountId);
+    secret.setKmsId(secretManagerConfig.getUuid());
+    secretValidatorsRegistry.getSecretValidator(secretManagerConfig.getEncryptionType())
+        .validateSecret(accountId, secret, secretManagerConfig);
+    if (validateScopes) {
+      SecretScopeMetadata secretScopeMetadata = SecretScopeMetadata.builder()
+                                                    .secretScopes(secret)
+                                                    .inheritScopesFromSM(secret.isInheritScopesFromSM())
+                                                    .secretsManagerScopes(secretManagerConfig)
+                                                    .build();
+      secretsRBACService.canSetPermissions(accountId, secretScopeMetadata);
+    }
+    EncryptedDataBuilder encryptedDataBuilder = EncryptedData.builder()
+                                                    .accountId(accountId)
+                                                    .kmsId(secretManagerConfig.getUuid())
+                                                    .encryptionType(secretManagerConfig.getEncryptionType())
+                                                    .name(secret.getName())
+                                                    .enabled(true)
+                                                    .searchTags(new HashMap<>())
+                                                    .hideFromListing(secret.isHideFromListing())
+                                                    .scopedToAccount(secret.isScopedToAccount())
+                                                    .usageRestrictions(secret.getUsageRestrictions())
+                                                    .additionalMetadata(secret.getAdditionalMetadata())
+                                                    .inheritScopesFromSM(secret.isInheritScopesFromSM());
+
+    EncryptedData encryptedData;
+    if (secret instanceof SecretText) {
+      encryptedData = buildSecretText(accountId, (SecretText) secret, secretManagerConfig, encryptedDataBuilder);
+    } else {
+      encryptedData = buildSecretFile(accountId, (SecretFile) secret, secretManagerConfig, encryptedDataBuilder);
+    }
+    encryptedData.addSearchTag(encryptedData.getName());
+    secretsAuditService.logSecretCreateEvent(encryptedData);
+    return encryptedData;
   }
 
   @Override
@@ -741,11 +779,29 @@ public class SecretServiceImpl implements SecretService {
 
   private void buildSecretScopeMetadataSet(
       String accountId, Set<String> secretIds, Set<SecretScopeMetadata> secretScopeMetadataSet) {
-    try (HIterator<EncryptedData> iterator = new HIterator<>(secretsDao.listSecretsBySecretIds(accountId, secretIds))) {
+    if (isEmpty(secretIds)) {
+      return;
+    }
+    Map<String, SecretManagerConfig> secretManagerConfigCache = new HashMap<>();
+    String secretManagerCacheKey = "%s.%s";
+
+    long secretsCount = secretIds.size();
+    long batches = (secretsCount + 100) / 101;
+    long slow = Duration.ofMillis(secretsCount + 500 * (batches + 1)).toMillis();
+    long dangerouslySlow = Duration.ofMillis(slow * 3).toMillis();
+
+    try (HIterator<EncryptedData> iterator =
+             new HIterator<>(secretsDao.listSecretsBySecretIds(accountId, secretIds), slow, dangerouslySlow)) {
       while (iterator.hasNext()) {
         EncryptedData encryptedData = iterator.next();
-        SecretManagerConfig secretManagerConfig = secretManagerConfigService.getSecretManager(
-            accountId, encryptedData.getKmsId(), encryptedData.getEncryptionType());
+        SecretManagerConfig secretManagerConfig =
+            secretManagerConfigCache.get(String.format(secretManagerCacheKey, accountId, encryptedData.getKmsId()));
+        if (secretManagerConfig == null) {
+          secretManagerConfig = secretManagerConfigService.getSecretManager(
+              accountId, encryptedData.getKmsId(), encryptedData.getEncryptionType());
+          secretManagerConfigCache.put(
+              String.format(secretManagerCacheKey, accountId, encryptedData.getKmsId()), secretManagerConfig);
+        }
         secretScopeMetadataSet.add(SecretScopeMetadata.builder()
                                        .secretId(encryptedData.getUuid())
                                        .secretScopes(encryptedData)

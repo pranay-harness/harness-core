@@ -4,6 +4,7 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
@@ -50,7 +51,7 @@ public class CVNGStepTask
   private long createdAt;
   private long lastUpdatedAt;
   private String activityId;
-  private String callbackId;
+  @FdIndex private String callbackId;
   private boolean skip;
   private Status status;
   @EqualsAndHashCode.Exclude

@@ -7,7 +7,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.activity.ActivitySourceDTO;
 import io.harness.cvng.beans.activity.ActivitySourceDTO.ActivitySourceDTOBuilder;
 import io.harness.cvng.beans.activity.ActivitySourceType;
-import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
 import io.harness.cvng.core.services.api.UpdatableEntity;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
@@ -79,7 +78,7 @@ public abstract class ActivitySource
 
   @Override
   public void updateNextIteration(String fieldName, long nextIteration) {
-    if (CVConfigKeys.dataCollectionTaskIteration.equals(fieldName)) {
+    if (ActivitySourceKeys.dataCollectionTaskIteration.equals(fieldName)) {
       this.dataCollectionTaskIteration = nextIteration;
       return;
     }
@@ -88,7 +87,7 @@ public abstract class ActivitySource
 
   @Override
   public Long obtainNextIteration(String fieldName) {
-    if (CVConfigKeys.dataCollectionTaskIteration.equals(fieldName)) {
+    if (ActivitySourceKeys.dataCollectionTaskIteration.equals(fieldName)) {
       return this.dataCollectionTaskIteration;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);

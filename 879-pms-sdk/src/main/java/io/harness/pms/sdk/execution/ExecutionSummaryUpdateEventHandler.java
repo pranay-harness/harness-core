@@ -8,7 +8,6 @@ import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.service.ExecutionSummaryUpdateRequest;
 import io.harness.pms.execution.utils.AmbianceUtils;
-import io.harness.pms.execution.utils.LevelUtils;
 import io.harness.pms.sdk.PmsSdkModuleUtils;
 import io.harness.pms.sdk.core.events.OrchestrationEvent;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
@@ -20,6 +19,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import io.grpc.StatusRuntimeException;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.PIPELINE)
@@ -32,7 +32,6 @@ public class ExecutionSummaryUpdateEventHandler implements OrchestrationEventHan
 
   public ExecutionSummaryUpdateEventHandler() {}
 
-  // Yes
   @Override
   public void handleEvent(OrchestrationEvent orchestrationEvent) {
     if (orchestrationEvent.getEventType() == OrchestrationEventType.NODE_EXECUTION_STATUS_UPDATE) {
@@ -45,22 +44,13 @@ public class ExecutionSummaryUpdateEventHandler implements OrchestrationEventHan
       return;
     }
     Ambiance ambiance = orchestrationEvent.getAmbiance();
-    Level level = AmbianceUtils.obtainCurrentLevel(ambiance);
     ExecutionSummaryUpdateRequest.Builder executionSummaryUpdateRequest =
         ExecutionSummaryUpdateRequest.newBuilder()
             .setModuleName(serviceName)
             .setPlanExecutionId(ambiance.getPlanExecutionId())
             .setNodeExecutionId(AmbianceUtils.obtainCurrentLevel(ambiance).getRuntimeId());
-    if (ambiance.getLevelsCount() >= 3) {
-      if (LevelUtils.isStageLevel(ambiance.getLevels(2))) {
-        executionSummaryUpdateRequest.setNodeUuid(ambiance.getLevels(2).getSetupId());
-      } else if (ambiance.getLevelsCount() >= 4) {
-        executionSummaryUpdateRequest.setNodeUuid(ambiance.getLevels(3).getSetupId());
-      }
-    }
-    if (LevelUtils.isStageLevel(level)) {
-      executionSummaryUpdateRequest.setNodeUuid(level.getSetupId());
-    }
+    Optional<Level> stageLevel = AmbianceUtils.getStageLevelFromAmbiance(ambiance);
+    stageLevel.ifPresent(value -> executionSummaryUpdateRequest.setNodeUuid(value.getSetupId()));
     String pipelineInfoJson = RecastOrchestrationUtils.toJson(
         executionSummaryModuleInfoProvider.getPipelineLevelModuleInfo(orchestrationEvent));
     if (EmptyPredicate.isNotEmpty(pipelineInfoJson)) {

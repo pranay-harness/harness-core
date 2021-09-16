@@ -10,6 +10,8 @@ import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
+import io.harness.graph.stepDetail.PmsGraphStepDetailsServiceImpl;
+import io.harness.graph.stepDetail.service.PmsGraphStepDetailsService;
 import io.harness.redis.RedisConfig;
 import io.harness.service.GraphGenerationService;
 import io.harness.service.impl.GraphGenerationServiceImpl;
@@ -46,6 +48,7 @@ public class OrchestrationVisualizationModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(GraphGenerationService.class).to(GraphGenerationServiceImpl.class);
+    bind(PmsGraphStepDetailsService.class).to(PmsGraphStepDetailsServiceImpl.class);
     bind(VertexSkipperService.class).to(VertexSkipperServiceImpl.class);
     RedisConfig redisConfig = this.eventsFrameworkConfiguration.getRedisConfig();
     if (redisConfig.getRedisUrl().equals("dummyRedisUrl")) {

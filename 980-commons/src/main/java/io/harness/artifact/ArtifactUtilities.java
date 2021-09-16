@@ -5,11 +5,15 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import java.net.MalformedURLException;
 import java.net.URL;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@OwnedBy(HarnessTeam.CDC)
 public class ArtifactUtilities {
   public static String getArtifactoryRegistryUrl(String url, String dockerRepositoryServer, String jobName) {
     String registryUrl;

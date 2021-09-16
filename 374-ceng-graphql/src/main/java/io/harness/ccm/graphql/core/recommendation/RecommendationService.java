@@ -39,6 +39,7 @@ public class RecommendationService {
                    .id(ceRecommendations.getId())
                    .resourceName(ceRecommendations.getName())
                    .clusterName(ceRecommendations.getClustername())
+                   .namespace(ceRecommendations.getNamespace())
                    .resourceType(ResourceType.valueOf(ceRecommendations.getResourcetype()))
                    .monthlyCost(ceRecommendations.getMonthlycost())
                    .monthlySaving(ceRecommendations.getMonthlysaving())
@@ -58,5 +59,10 @@ public class RecommendationService {
     }
 
     return result;
+  }
+
+  // TODO(UTSAV): Add unit test
+  public int getRecommendationsCount(@NonNull String accountId, @NonNull Condition condition) {
+    return k8sRecommendationDAO.fetchRecommendationsCount(accountId, condition);
   }
 }

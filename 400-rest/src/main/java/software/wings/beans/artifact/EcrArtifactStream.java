@@ -6,7 +6,9 @@ import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.ff.FeatureFlagService;
 
@@ -21,6 +23,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @JsonTypeName("ECR")
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -47,6 +50,20 @@ public class EcrArtifactStream extends ArtifactStream {
   @Override
   public String fetchArtifactDisplayName(String buildNo) {
     return format("%s_%s_%s", getImageName(), buildNo, new SimpleDateFormat(dateFormat).format(new Date()));
+  }
+
+  @Override
+  public ArtifactStream cloneInternal() {
+    return builder()
+        .appId(getAppId())
+        .accountId(getAccountId())
+        .name(getName())
+        .sourceName(getSourceName())
+        .settingId(getSettingId())
+        .keywords(getKeywords())
+        .region(region)
+        .imageName(imageName)
+        .build();
   }
 
   @Override

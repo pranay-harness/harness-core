@@ -4,13 +4,16 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.serializer.MapperUtils;
 
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class CustomWorkflowCreator extends WorkflowCreator {
   @Override
   public Workflow createWorkflow(Workflow clientWorkflow) {

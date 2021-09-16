@@ -8,6 +8,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.helper.EncryptionHelper;
@@ -26,7 +27,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class JiraConnectorValidatorTest {
+public class JiraConnectorValidatorTest extends CategoryTest {
   private static final String ACCOUNT_IDENTIFIER = "accountIdentifier";
   private static final String JIRA_URL = "https://jira.dev.harness.io";
   private static final String ORG_IDENTIFIER = "orgIdentifier";

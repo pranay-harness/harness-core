@@ -10,7 +10,7 @@ import lombok.Getter;
 @AllArgsConstructor
 @OwnedBy(HarnessTeam.DX)
 public class EnvBuildInstanceCount {
-  private String envId;
+  private String envIdentifier;
   private String envName;
   private String tag;
   private int count;

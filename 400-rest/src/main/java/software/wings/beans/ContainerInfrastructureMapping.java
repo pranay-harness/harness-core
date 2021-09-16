@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -22,7 +22,7 @@ import lombok.experimental.FieldNameConstants;
  */
 @FieldNameConstants(innerTypeName = "ContainerInfrastructureMappingKeys")
 @OwnedBy(CDP)
-@TargetModule(_871_CG_BEANS)
+@TargetModule(_957_CG_BEANS)
 public abstract class ContainerInfrastructureMapping extends InfrastructureMapping {
   @Attributes(title = "Cluster Name") @Blueprint private String clusterName;
 

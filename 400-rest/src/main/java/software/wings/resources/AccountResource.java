@@ -432,7 +432,7 @@ public class AccountResource {
   @Path("{accountId}/details")
   @AuthRule(permissionType = LOGGED_IN)
   public RestResponse<AccountDetails> getAccountDetails(@PathParam("accountId") @NotEmpty String accountId) {
-    return new RestResponse<>(accountService.getDetails(accountId));
+    return new RestResponse<>(accountService.getAccountDetails(accountId));
   }
 
   // Fetches account info from DB & not from local manager cache to avoid inconsistencies in UI when account is updated

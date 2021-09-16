@@ -1,8 +1,11 @@
 package io.harness.yaml;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static java.util.Arrays.asList;
+
+import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.introspector.Property;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.nodes.NodeTuple;
@@ -16,6 +19,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.Nonnull;
+
+@OwnedBy(CDP)
 public class YamlRepresenter extends Representer {
   private boolean removeEmptyValues;
 
@@ -31,19 +36,24 @@ public class YamlRepresenter extends Representer {
     getFieldsOfClassHierarchy(aClass, fieldList);
 
     Set<String> yamlSerializableFields = new HashSet<>();
+    Set<String> keepEmptyAsIsFields = new HashSet<>();
 
     for (Field field : fieldList) {
       YamlDoNotSerialize doNotAnnos = field.getAnnotation(YamlDoNotSerialize.class);
       Transient transientAnnos = field.getAnnotation(Transient.class);
+      YamlKeepEmptyAsIs keepEmptyAsIs = field.getAnnotation(YamlKeepEmptyAsIs.class);
 
       if (doNotAnnos == null && transientAnnos == null) {
         yamlSerializableFields.add(field.getName());
       }
+      if (keepEmptyAsIs != null) {
+        keepEmptyAsIsFields.add(field.getName());
+      }
     }
 
     if (removeEmptyValues) {
-      if (propertyValue == null || propertyValue.equals("")
-          || (propertyValue instanceof Collection<?> && isEmpty((Collection) propertyValue))) {
+      if (propertyValue == null || emptyAndShouldBeRemoved(property, propertyValue, keepEmptyAsIsFields)
+          || isEmptyCollection(propertyValue)) {
         return null;
       }
     }
@@ -53,6 +63,14 @@ public class YamlRepresenter extends Representer {
     }
 
     return null;
+  }
+
+  private boolean emptyAndShouldBeRemoved(Property property, Object propertyValue, Set<String> keepEmptyAsIsFields) {
+    return propertyValue.equals("") && !keepEmptyAsIsFields.contains(property.getName());
+  }
+
+  private boolean isEmptyCollection(Object propertyValue) {
+    return propertyValue instanceof Collection<?> && isEmpty((Collection) propertyValue);
   }
 
   public static void getFieldsOfClassHierarchy(@Nonnull Class<?> currentClass, List<Field> fieldList) {

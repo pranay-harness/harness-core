@@ -1135,7 +1135,16 @@ public class AccountExportImportResource {
         while ((len = zipInputStream.read(buffer)) > 0) {
           outputStream.write(buffer, 0, len);
         }
-        collectionDataMap.put(zipEntry.getName(), new String(outputStream.toByteArray(), Charset.defaultCharset()));
+        if (StringUtils.isNotBlank(zipEntry.getName())) {
+          String[] parts = zipEntry.getName().split("/");
+          String zipEntryName;
+          if (parts.length > 1) {
+            zipEntryName = parts[parts.length - 1];
+          } else {
+            zipEntryName = zipEntry.getName();
+          }
+          collectionDataMap.put(zipEntryName, new String(outputStream.toByteArray(), Charset.defaultCharset()));
+        }
       }
       return collectionDataMap;
     }

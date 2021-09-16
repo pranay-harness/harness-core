@@ -12,6 +12,7 @@ java_library(
         "//:lombok",
         "//945-account-mgmt:module",
         "//948-access-control-sdk:module",
+        "//958-migration-sdk:module",
         "//960-ng-core-beans:module",
         "//960-ng-license-beans:module",
         "//960-persistence:module",

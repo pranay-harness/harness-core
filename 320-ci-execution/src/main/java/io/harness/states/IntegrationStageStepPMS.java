@@ -88,7 +88,7 @@ public class IntegrationStageStepPMS implements ChildExecutable<StageElementPara
 
     Status stageStatus = stepResponseNotifyData.getStatus();
     log.info("Executed integration stage {} in {} milliseconds with status {} ", stepParameters.getIdentifier(),
-        currentTime - startTime, stageStatus);
+        (currentTime - startTime) / 1000, stageStatus);
 
     IntegrationStageStepParametersPMS integrationStageStepParametersPMS =
         (IntegrationStageStepParametersPMS) stepParameters.getSpecConfig();

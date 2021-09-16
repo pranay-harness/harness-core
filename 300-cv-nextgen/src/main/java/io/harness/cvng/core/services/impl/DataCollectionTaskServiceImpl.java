@@ -35,6 +35,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
+import io.fabric8.utils.Lists;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -135,11 +136,6 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
   }
 
   @Override
-  public void deletePerpetualTasks(String accountId, String perpetualTaskId) {
-    verificationManagerService.deletePerpetualTask(accountId, perpetualTaskId);
-  }
-
-  @Override
   public void updateTaskStatus(DataCollectionTaskResult result) {
     log.info("Updating status {}", result);
     UpdateOperations<DataCollectionTask> updateOperations =
@@ -192,11 +188,9 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
       metricService.incCounter(CVNGMetricsUtils.getDataCollectionTaskStatusMetricName(dataCollectionTask.getStatus()));
       metricService.recordDuration(
           CVNGMetricsUtils.DATA_COLLECTION_TASK_TOTAL_TIME, dataCollectionTask.totalTime(clock.instant()));
-      if (dataCollectionTask.getLastPickedAt() != null) { // Remove this in the future after lastPickedAt is populated.
-        metricService.recordDuration(CVNGMetricsUtils.DATA_COLLECTION_TASK_WAIT_TIME, dataCollectionTask.waitTime());
-        metricService.recordDuration(
-            CVNGMetricsUtils.DATA_COLLECTION_TASK_RUNNING_TIME, dataCollectionTask.runningTime(clock.instant()));
-      }
+      metricService.recordDuration(CVNGMetricsUtils.DATA_COLLECTION_TASK_WAIT_TIME, dataCollectionTask.waitTime());
+      metricService.recordDuration(
+          CVNGMetricsUtils.DATA_COLLECTION_TASK_RUNNING_TIME, dataCollectionTask.runningTime(clock.instant()));
     }
   }
 
@@ -264,8 +258,9 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
       UpdateOperations<DataCollectionTask> updateOperations =
           hPersistence.createUpdateOperations(DataCollectionTask.class)
               .set(DataCollectionTaskKeys.status, DataCollectionExecutionStatus.QUEUED);
-      hPersistence.update(
-          hPersistence.createQuery(DataCollectionTask.class).filter(DataCollectionTaskKeys.uuid, task.getNextTaskId()),
+      hPersistence.update(hPersistence.createQuery(DataCollectionTask.class)
+                              .filter(DataCollectionTaskKeys.uuid, task.getNextTaskId())
+                              .filter(DataCollectionTaskKeys.status, DataCollectionExecutionStatus.WAITING),
           updateOperations);
     }
   }
@@ -366,6 +361,21 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
       dataCollectionTasks.get(0).setStatus(DataCollectionExecutionStatus.QUEUED);
     }
     return hPersistence.save(dataCollectionTasks);
+  }
+
+  @Override
+  public void abortDeploymentDataCollectionTasks(List<String> verificationTaskIds) {
+    Query<DataCollectionTask> query =
+        hPersistence.createQuery(DataCollectionTask.class)
+            .filter(DataCollectionTaskKeys.type, DataCollectionTask.Type.DEPLOYMENT)
+            .field(DataCollectionTaskKeys.verificationTaskId)
+            .in(verificationTaskIds)
+            .field(DataCollectionTaskKeys.status)
+            .in(Lists.newArrayList(DataCollectionExecutionStatus.WAITING, DataCollectionExecutionStatus.QUEUED));
+    UpdateOperations<DataCollectionTask> abortDCTaskOperation =
+        hPersistence.createUpdateOperations(DataCollectionTask.class)
+            .set(DataCollectionTaskKeys.status, DataCollectionExecutionStatus.ABORTED);
+    hPersistence.update(query, abortDCTaskOperation);
   }
 
   private DataCollectionTask getDataCollectionTask(CVConfig cvConfig, Instant startTime, Instant endTime) {

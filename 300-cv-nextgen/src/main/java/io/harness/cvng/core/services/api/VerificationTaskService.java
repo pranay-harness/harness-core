@@ -31,4 +31,5 @@ public interface VerificationTaskService {
   Optional<String> findBaselineVerificationTaskId(
       String currentVerificationTaskId, VerificationJobInstance verificationJobInstance);
   List<String> getAllVerificationJobInstanceIdsForCVConfig(String cvConfigId);
+  List<String> maybeGetVerificationTaskIds(List<String> verificationJobInstanceIds);
 }

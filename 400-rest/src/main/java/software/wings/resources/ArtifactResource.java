@@ -2,6 +2,8 @@ package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
@@ -47,6 +49,7 @@ import org.apache.commons.lang3.StringUtils;
 @Api("artifacts")
 @Path("/artifacts")
 @Produces("application/json")
+@OwnedBy(HarnessTeam.CDC)
 public class ArtifactResource {
   private ArtifactService artifactService;
   private ArtifactStreamService artifactStreamService;

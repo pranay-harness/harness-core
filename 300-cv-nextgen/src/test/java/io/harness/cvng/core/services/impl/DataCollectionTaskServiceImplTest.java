@@ -1,22 +1,22 @@
 package io.harness.cvng.core.services.impl;
 
+import static io.harness.cvng.beans.DataCollectionExecutionStatus.ABORTED;
 import static io.harness.cvng.beans.DataCollectionExecutionStatus.QUEUED;
 import static io.harness.cvng.beans.DataCollectionExecutionStatus.RUNNING;
 import static io.harness.cvng.beans.DataCollectionExecutionStatus.SUCCESS;
+import static io.harness.cvng.beans.DataCollectionExecutionStatus.WAITING;
 import static io.harness.cvng.beans.DataSourceType.APP_DYNAMICS;
 import static io.harness.cvng.core.entities.DeploymentDataCollectionTask.MAX_RETRY_COUNT;
 import static io.harness.cvng.core.services.CVNextGenConstants.DATA_COLLECTION_DELAY;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.ABHIJITH;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.NEMANJA;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.VUK;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.CvNextGenTestBase;
@@ -32,7 +32,6 @@ import io.harness.cvng.beans.SplunkDataCollectionInfo;
 import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.beans.job.TestVerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobDTO;
-import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.DataCollectionTask;
@@ -69,6 +68,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -365,6 +365,17 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTestBase {
   }
 
   @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void testGetNextTask_withAbortedTask() throws IllegalAccessException {
+    DataCollectionTask abortedDataCollectionTask = create(ABORTED);
+    hPersistence.save(abortedDataCollectionTask);
+
+    Optional<DataCollectionTask> nextTask = dataCollectionTaskService.getNextTask(accountId, dataCollectionWorkerId);
+    assertThat(nextTask.isPresent()).isFalse();
+  }
+
+  @Test
   @Owner(developers = NEMANJA)
   @Category(UnitTests.class)
   public void testGetNextTask_withExceededRetryCountDeployment() {
@@ -653,6 +664,26 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTestBase {
   }
 
   @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void testUpdateTaskStatus_DeploymentWithAbortedNextTask() throws IllegalAccessException {
+    createVerificationJobInstance();
+    DataCollectionTask dataCollectionTask2 = createAndSave(ABORTED, Type.DEPLOYMENT);
+    DataCollectionTask dataCollectionTask1 = create(RUNNING, Type.DEPLOYMENT);
+    dataCollectionTask1.setNextTaskId(dataCollectionTask2.getUuid());
+    hPersistence.save(dataCollectionTask1);
+    DataCollectionTaskResult result = DataCollectionTaskDTO.DataCollectionTaskResult.builder()
+                                          .status(SUCCESS)
+                                          .dataCollectionTaskId(dataCollectionTask1.getUuid())
+                                          .build();
+    dataCollectionTaskService.updateTaskStatus(result);
+    DataCollectionTask dataCollectionTask2FromDb =
+        dataCollectionTaskService.getDataCollectionTask(dataCollectionTask2.getUuid());
+    // Assert that aborted task is not queued
+    assertThat(dataCollectionTask2FromDb.getStatus()).isEqualTo(ABORTED);
+  }
+
+  @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void handleCreateNextTask_forFirstTaskAndMetricsConfig() {
@@ -673,14 +704,34 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTestBase {
   }
 
   @Test
-  @Owner(developers = NEMANJA)
+  @Owner(developers = ABHIJITH)
   @Category(UnitTests.class)
-  public void testDeleteDataCollectionTask() throws IllegalAccessException {
-    String taskId = generateUuid();
-    VerificationManagerService verificationManagerService = mock(VerificationManagerService.class);
-    FieldUtils.writeField(dataCollectionTaskService, "verificationManagerService", verificationManagerService, true);
-    dataCollectionTaskService.deletePerpetualTasks(accountId, taskId);
-    verify(verificationManagerService, times(1)).deletePerpetualTask(accountId, taskId);
+  public void testAbortDataCollectionTasks() {
+    List<DataCollectionTask> dataCollectionTasks =
+        Arrays.stream(DataCollectionExecutionStatus.values())
+            .map(status -> create(status, Type.DEPLOYMENT))
+            .peek(dataCollectionTask -> dataCollectionTask.setVerificationTaskId(verificationTaskId))
+            .collect(Collectors.toList());
+    hPersistence.save(dataCollectionTasks);
+    dataCollectionTaskService.abortDeploymentDataCollectionTasks(Lists.newArrayList(verificationTaskId));
+    // WAITING and QUEUED status needs to changed to ABORTED
+    dataCollectionTasks.stream()
+        .filter(dataCollectionTask
+            -> dataCollectionTask.getStatus().equals(WAITING) || dataCollectionTask.getStatus().equals(QUEUED))
+        .map(dataCollectionTask -> dataCollectionTask.getUuid())
+        .forEach(uuid -> {
+          DataCollectionTask dataCollectionTask = hPersistence.get(DataCollectionTask.class, uuid);
+          assertThat(dataCollectionTask.getStatus()).isEqualTo(ABORTED);
+        });
+    // status other than WAITING and QUEUED should remain the same
+    dataCollectionTasks.stream()
+        .filter(dataCollectionTask
+            -> !(dataCollectionTask.getStatus().equals(WAITING) || dataCollectionTask.getStatus().equals(QUEUED)))
+        .forEach(dataCollectionTask -> {
+          DataCollectionTask updatedDataCollectionTask =
+              hPersistence.get(DataCollectionTask.class, dataCollectionTask.getUuid());
+          assertThat(updatedDataCollectionTask.getStatus()).isEqualTo(dataCollectionTask.getStatus());
+        });
   }
 
   @Test
@@ -811,6 +862,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTestBase {
           .endTime(fakeNow.minus(Duration.ofMinutes(2)))
           .status(executionStatus)
           .dataCollectionInfo(createDataCollectionInfo())
+          .lastPickedAt(executionStatus == RUNNING ? fakeNow.minus(Duration.ofMinutes(5)) : null)
           .build();
     } else {
       return DeploymentDataCollectionTask.builder()
@@ -822,6 +874,7 @@ public class DataCollectionTaskServiceImplTest extends CvNextGenTestBase {
           .endTime(fakeNow.minus(Duration.ofMinutes(2)))
           .status(executionStatus)
           .dataCollectionInfo(createDataCollectionInfo())
+          .lastPickedAt(executionStatus == RUNNING ? fakeNow.minus(Duration.ofMinutes(5)) : null)
           .build();
     }
   }

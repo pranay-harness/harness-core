@@ -30,7 +30,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @JsonTypeName("GCR")
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TargetModule(HarnessModule._950_COMMON_ENTITIES)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class GcrArtifactStream extends ArtifactStream {
   @NotEmpty private String registryHostName;
   @NotEmpty private String dockerImageName;
@@ -57,6 +57,20 @@ public class GcrArtifactStream extends ArtifactStream {
   @Override
   public String fetchArtifactDisplayName(String buildNo) {
     return format("%s_%s_%s", getDockerImageName(), buildNo, new SimpleDateFormat(dateFormat).format(new Date()));
+  }
+
+  @Override
+  public ArtifactStream cloneInternal() {
+    return builder()
+        .appId(getAppId())
+        .accountId(getAccountId())
+        .name(getName())
+        .sourceName(getSourceName())
+        .settingId(getSettingId())
+        .keywords(getKeywords())
+        .registryHostName(registryHostName)
+        .dockerImageName(dockerImageName)
+        .build();
   }
 
   @Override

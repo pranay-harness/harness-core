@@ -1,5 +1,11 @@
 package software.wings.helpers.ext.servicenow;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -11,6 +17,8 @@ import retrofit2.http.POST;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._960_API_SERVICES)
 public interface ServiceNowRestClient {
   @GET("api/now/table/incident?sysparm_limit=1")
   Call<JsonNode> validateConnection(@Header("Authorization") String authorization);

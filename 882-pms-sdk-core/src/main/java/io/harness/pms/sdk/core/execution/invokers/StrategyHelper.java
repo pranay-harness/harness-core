@@ -19,8 +19,10 @@ import io.harness.tasks.ResponseData;
 import com.google.inject.Inject;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.PIPELINE)
+@Slf4j
 public class StrategyHelper {
   @Inject private ExceptionManager exceptionManager;
 

@@ -1,5 +1,10 @@
 package io.harness.delegate.beans.connector.docker;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(CDC)
 public class DockerConstants {
   // auth types
   public static final String USERNAME_PASSWORD = "UsernamePassword";

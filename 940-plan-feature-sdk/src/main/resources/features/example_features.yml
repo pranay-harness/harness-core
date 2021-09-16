@@ -1,0 +1,56 @@
+moduleType: CD
+features:
+  # Feature availability example
+  # TEST1 feature
+  # FREE is disabled, TEAM and ENTERPRISE are enabled
+  - name: TEST1
+    description: test 1
+    restrictions:
+      FREE:
+        restrictionType: ENABLED
+        enabled: false
+      TEAM:
+        restrictionType: ENABLED
+        enabled: true
+      ENTERPRISE:
+        restrictionType: ENABLED
+        enabled: true
+  # Static limit example
+  # Test2 feature
+  # Free is disabled, TEAM have a 10 limit, ENTERPRISE is unlimited.
+  - name: TEST2
+    description: test 2
+    restrictions:
+      FREE:
+        restrictionType: ENABLED
+        enabled: false
+      TEAM:
+        restrictionType: STATIC_LIMIT
+        limit: 10
+        implClass: io.harness.feature.example.StaticLimitExampleImpl
+      ENTERPRISE:
+        restrictionType: ENABLED
+        enabled: true
+  # Rate limit example
+  # Test3 feature
+  # Free has 10 limit per day, TEAM has 100 limit per day, ENTERPRISE is unlimited.
+  - name: TEST3
+    description: test 3
+    restrictions:
+      FREE:
+        restrictionType: RATE_LIMIT
+        limit: 10
+        timeUnit:
+          unit: DAYS
+          numberOfUnits: 1
+        implClass: io.harness.feature.example.RateLimitExampleImpl
+      TEAM:
+        restrictionType: RATE_LIMIT
+        limit: 100
+        timeUnit:
+          unit: DAYS
+          numberOfUnits: 1
+        implClass: io.harness.feature.example.RateLimitExampleImpl
+      ENTERPRISE:
+        restrictionType: ENABLED
+        enabled: true

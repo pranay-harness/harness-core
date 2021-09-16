@@ -61,6 +61,14 @@ public class PlanExecutionSummaryCdChangeDataHandler extends AbstractChangeDataH
     if (((BasicDBObject) dbObject.get("moduleInfo")).get("cd") != null) {
       columnValueMapping.put("moduleInfo_type", "CD");
       // this is a cd deployment pipeline
+
+      // TriggerTypeInfo
+      PlanExecutionSummaryChangeDataHandler.commonHandlerTriggerInfo(columnValueMapping, dbObject);
+
+      // CI-relatedInfo
+      if (((BasicDBObject) dbObject.get("moduleInfo")).get("ci") != null) {
+        PlanExecutionSummaryChangeDataHandler.commonHandlerRepoInfo(columnValueMapping, dbObject);
+      }
     } else {
       return null;
     }

@@ -7,6 +7,7 @@ import static io.harness.exception.WingsException.USER;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.artifacts.docker.DockerRegistryRestClient;
 import io.harness.artifacts.docker.beans.DockerImageManifestResponse;
+import io.harness.artifacts.docker.beans.DockerInternalConfig;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidArtifactServerException;
@@ -33,8 +34,11 @@ import retrofit2.Response;
 @Singleton
 @Slf4j
 public class DockerRegistryUtils {
-  public List<Map<String, String>> getLabels(DockerRegistryRestClient registryRestClient,
-      Function<Headers, String> getTokenFn, String authHeader, String imageName, List<String> tags) {
+  protected static final String GITHUB_CONTAINER_REGISTRY = "ghcr.io";
+
+  public List<Map<String, String>> getLabels(DockerInternalConfig dockerConfig,
+      DockerRegistryRestClient registryRestClient, Function<Headers, String> getTokenFn, String authHeader,
+      String imageName, List<String> tags) {
     Map<Integer, Map<String, String>> labelsMap = new ConcurrentHashMap<>();
     if (EmptyPredicate.isEmpty(tags)) {
       return Collections.emptyList();
@@ -45,7 +49,7 @@ public class DockerRegistryUtils {
       // Get labels for the first tag to get the latest auth header.
       String tag = tags.get(0);
       ImmutablePair<Map<String, String>, String> res =
-          getSingleTagLabels(registryRestClient, getTokenFn, authHeader, imageName, tag);
+          getSingleTagLabels(dockerConfig, registryRestClient, getTokenFn, authHeader, imageName, tag);
       String finalAuthHeader = res.getRight();
       if (tags.size() <= 1) {
         return Collections.singletonList(res.getLeft());
@@ -57,7 +61,7 @@ public class DockerRegistryUtils {
         String tagInternal = tags.get(i);
         try {
           Map<String, String> newLabels =
-              getSingleTagLabels(registryRestClient, finalAuthHeader, imageName, tagInternal);
+              getSingleTagLabels(dockerConfig, registryRestClient, finalAuthHeader, imageName, tagInternal);
           labelsMap.put(i, newLabels);
         } catch (Exception e) {
           log.error("Could not fetch docker labels for {}:{}", imageName, tagInternal, e);
@@ -82,19 +86,19 @@ public class DockerRegistryUtils {
     return labelsList;
   }
 
-  private static Map<String, String> getSingleTagLabels(
+  private static Map<String, String> getSingleTagLabels(DockerInternalConfig dockerConfig,
       DockerRegistryRestClient registryRestClient, String authHeader, String imageName, String tag) throws IOException {
     ImmutablePair<Map<String, String>, String> res =
-        getSingleTagLabels(registryRestClient, null, authHeader, imageName, tag);
+        getSingleTagLabels(dockerConfig, registryRestClient, null, authHeader, imageName, tag);
     return res.getLeft();
   }
 
-  private static ImmutablePair<Map<String, String>, String> getSingleTagLabels(
+  private static ImmutablePair<Map<String, String>, String> getSingleTagLabels(DockerInternalConfig dockerConfig,
       DockerRegistryRestClient registryRestClient, Function<Headers, String> getTokenFn, String authHeader,
       String imageName, String tag) throws IOException {
     Response<DockerImageManifestResponse> response =
         registryRestClient.getImageManifest(authHeader, imageName, tag).execute();
-    if (response.code() == 401) { // unauthorized
+    if (DockerRegistryUtils.fallbackToTokenAuth(response.code(), dockerConfig)) { // unauthorized
       if (getTokenFn == null) {
         // We don't want to retry if getTokenFn is null.
         throw NestedExceptionUtils.hintWithExplanationException("Invalid Credentials",
@@ -163,5 +167,21 @@ public class DockerRegistryUtils {
         "Check if the image exists and if the permissions are scoped for the authenticated user",
         new InvalidArgumentsException(
             ImmutablePair.of("code", "Image name [" + imageName + "] does not exist in Docker Registry."), null, USER));
+  }
+
+  public static boolean fallbackToTokenAuth(int status, DockerInternalConfig config) {
+    if (status == 401) {
+      return true;
+    }
+
+    // Handle Github Container Registry. Refer to https://harness.atlassian.net/browse/CDC-14595 for more details
+    if (status == 403 && isGithubContainerRegistry(config)) {
+      return true;
+    }
+    return false;
+  }
+
+  public static boolean isGithubContainerRegistry(DockerInternalConfig config) {
+    return config.getDockerRegistryUrl().contains(GITHUB_CONTAINER_REGISTRY);
   }
 }

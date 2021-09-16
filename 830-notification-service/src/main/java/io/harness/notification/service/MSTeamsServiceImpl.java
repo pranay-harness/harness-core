@@ -50,6 +50,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -184,16 +185,12 @@ public class MSTeamsServiceImpl implements ChannelService {
   private List<String> getRecipients(NotificationRequest notificationRequest) {
     MSTeam msTeamDetails = notificationRequest.getMsTeam();
     List<String> recipients = new ArrayList<>(msTeamDetails.getMsTeamKeysList());
-    if (isNotEmpty(msTeamDetails.getUserGroupIdsList())) {
-      List<String> microsoftTeamWebHookUrls = notificationSettingsService.getNotificationSettingsForGroups(
-          msTeamDetails.getUserGroupIdsList(), NotificationChannelType.MSTEAMS, notificationRequest.getAccountId());
-      recipients.addAll(microsoftTeamWebHookUrls);
-    } else {
+    if (isNotEmpty(msTeamDetails.getUserGroupList())) {
       List<String> resolvedRecipients = notificationSettingsService.getNotificationRequestForUserGroups(
           msTeamDetails.getUserGroupList(), NotificationChannelType.MSTEAMS, notificationRequest.getAccountId());
       recipients.addAll(resolvedRecipients);
     }
-    return recipients;
+    return recipients.stream().distinct().collect(Collectors.toList());
   }
 
   Map<String, String> processTemplateVariables(Map<String, String> templateVariables) {

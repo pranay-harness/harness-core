@@ -87,6 +87,7 @@ public class PmsSdkCoreRule implements MethodRule, InjectorRuleMixin, MongoRuleM
       Set<Class<? extends KryoRegistrar>> kryoRegistrars() {
         return ImmutableSet.<Class<? extends KryoRegistrar>>builder()
             .add(PmsContractsKryoRegistrar.class)
+            .add(SdkCoreTestKryoRegistrar.class)
             .add(PmsSdkCoreKryoRegistrar.class)
             .build();
       }

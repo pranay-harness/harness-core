@@ -25,4 +25,8 @@ public interface ManifestOutcome extends Outcome, WithIdentifier {
   String getIdentifier();
   String getType();
   StoreConfig getStore();
+
+  default int getOrder() {
+    return -1;
+  }
 }

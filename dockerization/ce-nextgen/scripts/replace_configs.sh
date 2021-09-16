@@ -42,6 +42,7 @@ replace_key_value eventsFramework.redis.sslConfig.CATrustStorePath $EVENTS_FRAME
 replace_key_value eventsFramework.redis.sslConfig.CATrustStorePassword $EVENTS_FRAMEWORK_REDIS_SSL_CA_TRUST_STORE_PASSWORD
 
 replace_key_value gcpConfig.gcpProjectId "$GCP_PROJECT_ID"
+replace_key_value gcpConfig.gcpAwsConnectorCrudPubSubTopic "$GCP_AWS_CONNECTOR_CRUD_PUBSUB_TOPIC"
 
 replace_key_value ceAzureSetupConfig.azureAppClientId "$AZURE_APP_CLIENT_ID"
 replace_key_value ceAzureSetupConfig.azureAppClientSecret "$AZURE_APP_CLIENT_SECRET"
@@ -77,4 +78,20 @@ if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
   yq write -i $CONFIG_FILE logging.appenders[0].stackdriverLogEnabled "true"
 else
   yq delete -i $CONFIG_FILE logging.appenders[1]
+fi
+
+if [[ "" != "$DMS_GRPC_SECRET" ]]; then
+  yq write -i $CONFIG_FILE dmsGrpcClient.secret "$DMS_GRPC_SECRET"
+fi
+
+if [[ "" != "$DMS_GRPC_TARGET" ]]; then
+  yq write -i $CONFIG_FILE dmsGrpcClient.target "$DMS_GRPC_TARGET"
+fi
+
+if [[ "" != "$DMS_GRPC_AUTHORITY" ]]; then
+  yq write -i $CONFIG_FILE dmsGrpcClient.authority "$DMS_GRPC_AUTHORITY"
+fi
+
+if [[ "" != "$USE_DMS" ]]; then
+  yq write -i $CONFIG_FILE useDms "$USE_DMS"
 fi

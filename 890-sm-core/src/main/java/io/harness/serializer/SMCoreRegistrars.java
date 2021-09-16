@@ -19,6 +19,7 @@ public class SMCoreRegistrars {
           .addAll(SecretManagerClientRegistrars.kryoRegistrars)
           .addAll(RbacCoreRegistrars.kryoRegistrars)
           .addAll(ConnectorBeansRegistrars.kryoRegistrars)
+          .addAll(DelegateAgentBeansRegistrars.kryoRegistrars)
           .add(SMCoreKryoRegistrar.class)
           .build();
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -26,6 +27,7 @@ public class SMCoreRegistrars {
           .addAll(SecretManagerClientRegistrars.morphiaRegistrars)
           .addAll(RbacCoreRegistrars.morphiaRegistrars)
           .addAll(DelegateTasksRegistrars.morphiaRegistrars)
+          .addAll(DelegateAgentBeansRegistrars.morphiaRegistrars)
           .add(SMCoreMorphiaRegistrar.class)
           .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
           .build();

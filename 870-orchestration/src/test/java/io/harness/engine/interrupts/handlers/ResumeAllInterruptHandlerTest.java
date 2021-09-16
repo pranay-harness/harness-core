@@ -75,8 +75,7 @@ public class ResumeAllInterruptHandlerTest extends OrchestrationTestBase {
 
     assertThatThrownBy(() -> resumeAllInterruptHandler.registerInterrupt(interrupt))
         .isInstanceOf(InvalidRequestException.class)
-        .hasMessageContaining(
-            String.format("Stage [%s] already has RESUME_ALL interrupt", interrupt.getNodeExecutionId()));
+        .hasMessageContaining("Execution already has RESUME_ALL interrupt");
   }
 
   @Test

@@ -9,6 +9,7 @@ import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.EntityType;
 import io.harness.accesscontrol.clients.AccessCheckResponseDTO;
 import io.harness.accesscontrol.clients.AccessControlClient;
@@ -23,7 +24,7 @@ import io.harness.exception.AccessDeniedException;
 import io.harness.ng.core.EntityDetail;
 import io.harness.pms.pipeline.PipelineSetupUsageHelper;
 import io.harness.pms.rbac.PipelineRbacHelper;
-import io.harness.pms.sdk.preflight.PreFlightCheckMetadata;
+import io.harness.preflight.PreFlightCheckMetadata;
 import io.harness.rule.Owner;
 
 import java.util.ArrayList;
@@ -37,7 +38,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 @OwnedBy(PIPELINE)
-public class PipelineRbacServiceImplTest {
+public class PipelineRbacServiceImplTest extends CategoryTest {
   @Mock private PipelineSetupUsageHelper pipelineSetupUsageHelper;
   @Mock private AccessControlClient accessControlClient;
   @Mock private PipelineRbacHelper pipelineRbacHelper;

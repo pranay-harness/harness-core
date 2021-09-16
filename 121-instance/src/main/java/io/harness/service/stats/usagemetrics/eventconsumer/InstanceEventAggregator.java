@@ -6,7 +6,7 @@ import io.harness.event.timeseries.processor.EventProcessor;
 import io.harness.eventsframework.schemas.instancestatstimeseriesevent.DataPoint;
 import io.harness.eventsframework.schemas.instancestatstimeseriesevent.TimeseriesBatchEventInfo;
 import io.harness.exception.InstanceAggregationException;
-import io.harness.service.stats.Constants;
+import io.harness.models.constants.TimescaleConstants;
 import io.harness.service.stats.usagemetrics.eventconsumer.instanceaggregator.HourlyAggregator;
 import io.harness.service.stats.usagemetrics.eventconsumer.instanceaggregator.InstanceAggregator;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -145,12 +145,12 @@ public class InstanceEventAggregator {
       statement.setTimestamp(1, new Timestamp(windowBeginTimestamp.getTime()), utils.getDefaultCalendar());
       statement.setTimestamp(2, new Timestamp(windowEndTimestamp.getTime()), utils.getDefaultCalendar());
       statement.setString(3, aggregator.getEventInfo().getAccountId());
-      statement.setString(4, dataMap.get(Constants.ORG_ID.getKey()));
-      statement.setString(5, dataMap.get(Constants.PROJECT_ID.getKey()));
-      statement.setString(6, dataMap.get(Constants.SERVICE_ID.getKey()));
-      statement.setString(7, dataMap.get(Constants.ENV_ID.getKey()));
-      statement.setString(8, dataMap.get(Constants.CLOUDPROVIDER_ID.getKey()));
-      statement.setString(9, dataMap.get(Constants.INSTANCE_TYPE.getKey()));
+      statement.setString(4, dataMap.get(TimescaleConstants.ORG_ID.getKey()));
+      statement.setString(5, dataMap.get(TimescaleConstants.PROJECT_ID.getKey()));
+      statement.setString(6, dataMap.get(TimescaleConstants.SERVICE_ID.getKey()));
+      statement.setString(7, dataMap.get(TimescaleConstants.ENV_ID.getKey()));
+      statement.setString(8, dataMap.get(TimescaleConstants.CLOUDPROVIDER_ID.getKey()));
+      statement.setString(9, dataMap.get(TimescaleConstants.INSTANCE_TYPE.getKey()));
       ResultSet result = statement.executeQuery();
       return parseResults(result);
     }

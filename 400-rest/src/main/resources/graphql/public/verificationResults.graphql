@@ -1,6 +1,10 @@
 extend type Query {
-  verificationResults(filters: [VerificationResultFilter], limit: Int!, offset: Int): VerificationResultConnection
-    @dataFetcher(name: verificationResultConnection)
+  verificationResult(
+    filters: [VerificationResultFilter]
+    groupBy: [VerificationAggregation]
+    limit: Int!
+    offset: Int
+  ): VerificationResultConnection @dataFetcher(name: verificationResultConnection)
 }
 
 type VerificationResult {
@@ -20,15 +24,6 @@ type VerificationResultConnection {
   nodes: [VerificationResult]
 }
 
-input VerificationResultFilter {
-  application: IdFilter
-  service: IdFilter
-  environment: IdFilter
-  executionStatus: ExecutionStatusFilter
-  rollback: Boolean
-  analyzed: Boolean
-}
-
 input ExecutionStatusFilter {
   operator: EnumOperator
   values: [ExecutionStatusType]
@@ -40,6 +35,6 @@ enum ExecutionStatusType {
   FAILED
   RUNNING
   SUCCESS
-  SKIPPE
+  SKIPPED
   EXPIRED
 }

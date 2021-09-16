@@ -12,7 +12,7 @@ shared_dependencies = [
     "//330-ci-beans:module",
     "//870-cg-orchestration:module",
     "//940-primary-version-manager:module",
-    "//950-common-entities:module",
+    "//959-common-entities:module",
     "//955-delegate-beans:module",
     "//960-persistence:module",
     "//960-yaml-sdk:module",
@@ -249,6 +249,8 @@ shared_dependencies = [
     "@maven//:io_netty_netty_resolver",
     "@maven//:io_netty_netty_resolver_dns",
     "@maven//:io_netty_netty_transport",
+    "@maven//:io_opencensus_opencensus_impl",
+    "@maven//:io_opencensus_opencensus_exporter_stats_stackdriver",
     "@maven//:io_opencensus_opencensus_api",
     "@maven//:io_opencensus_opencensus_contrib_http_util",
     "@maven//:io_perfmark_perfmark_api",
@@ -449,3 +451,8 @@ java_library(
 run_tests()
 
 run_analysis()
+
+exports_files([
+    "keystore.jks",
+    "ci-manager-config.yml",
+])

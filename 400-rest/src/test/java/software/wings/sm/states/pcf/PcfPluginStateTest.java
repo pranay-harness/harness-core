@@ -64,6 +64,7 @@ import io.harness.beans.DelegateTask;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.pcf.response.CfCommandExecutionResponse;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.ff.FeatureFlagService;
@@ -150,7 +151,7 @@ import org.mockito.Spy;
 import org.mongodb.morphia.Key;
 
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class PcfPluginStateTest extends WingsBaseTest {
   private static final String BASE_URL = "https://env.harness.io/";
 
@@ -343,7 +344,11 @@ public class PcfPluginStateTest extends WingsBaseTest {
   @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_executeGitTask() {
-    final DelegateTask delegateTask = DelegateTask.builder().description("desc").build();
+    final DelegateTask delegateTask =
+        DelegateTask.builder()
+            .data(TaskData.builder().parameters(new Object[] {GitFetchFilesTaskParams.builder().build()}).build())
+            .description("desc")
+            .build();
     doReturn(delegateTask)
         .when(pcfStateHelper)
         .createGitFetchFileAsyncTask(any(ExecutionContext.class), anyMap(), anyString(), eq(true));
@@ -375,7 +380,11 @@ public class PcfPluginStateTest extends WingsBaseTest {
   @Owner(developers = ROHIT_KUMAR)
   @Category(UnitTests.class)
   public void test_executeGitTaskForLinkedCommand() {
-    final DelegateTask delegateTask = DelegateTask.builder().description("desc").build();
+    final DelegateTask delegateTask =
+        DelegateTask.builder()
+            .data(TaskData.builder().parameters(new Object[] {GitFetchFilesTaskParams.builder().build()}).build())
+            .description("desc")
+            .build();
     doReturn(delegateTask)
         .when(pcfStateHelper)
         .createGitFetchFileAsyncTask(any(ExecutionContext.class), anyMap(), anyString(), eq(true));
@@ -403,7 +412,8 @@ public class PcfPluginStateTest extends WingsBaseTest {
         (PcfPluginStateExecutionData) (executionResponse.getStateExecutionData());
 
     assertThat(stateExecutionData.getRepoRoot()).isEqualTo("/app/sample_application");
-    assertThat(stateExecutionData.getFilePathsInScript()).contains("/app/sample_application/manifest.yml");
+    // now we render all the variables on the delegate side
+    assertThat(stateExecutionData.getFilePathsInScript()).contains("/app/sample_application/${manifest}");
     assertThat(stateExecutionData.getFilePathsInScript()).isNotEmpty();
     assertThat(stateExecutionData.getRenderedScriptString()).isNotEmpty();
     verify(delegateService, times(1)).queueTask(delegateTask);

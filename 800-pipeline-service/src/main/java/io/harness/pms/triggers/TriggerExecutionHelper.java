@@ -43,6 +43,7 @@ import io.harness.pms.contracts.triggers.SourceType;
 import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.contracts.triggers.Type;
 import io.harness.pms.merger.helpers.MergeHelper;
+import io.harness.pms.ngpipeline.inputset.helpers.InputSetSanitizer;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSYamlSchemaService;
@@ -74,6 +75,18 @@ public class TriggerExecutionHelper {
   private final PMSExecutionService pmsExecutionService;
   private final PMSYamlSchemaService pmsYamlSchemaService;
 
+  public PlanExecution resolveRuntimeInputAndSubmitExecutionReques(
+      TriggerDetails triggerDetails, TriggerPayload triggerPayload) {
+    String executionTag = generateExecutionTagForEvent(triggerDetails, triggerPayload);
+    TriggeredBy embeddedUser =
+        generateTriggerdBy(executionTag, triggerDetails.getNgTriggerEntity(), triggerPayload, null);
+
+    TriggerType triggerType = findTriggerType(triggerPayload);
+    ExecutionTriggerInfo triggerInfo =
+        ExecutionTriggerInfo.newBuilder().setTriggerType(triggerType).setTriggeredBy(embeddedUser).build();
+    return createPlanExecution(triggerDetails, triggerPayload, null, executionTag, triggerInfo);
+  }
+
   public PlanExecution resolveRuntimeInputAndSubmitExecutionRequest(TriggerDetails triggerDetails,
       TriggerPayload triggerPayload, TriggerWebhookEvent triggerWebhookEvent, String payload) {
     String executionTagForGitEvent = generateExecutionTagForEvent(triggerDetails, triggerPayload);
@@ -83,6 +96,11 @@ public class TriggerExecutionHelper {
     TriggerType triggerType = findTriggerType(triggerPayload);
     ExecutionTriggerInfo triggerInfo =
         ExecutionTriggerInfo.newBuilder().setTriggerType(triggerType).setTriggeredBy(embeddedUser).build();
+    return createPlanExecution(triggerDetails, triggerPayload, payload, executionTagForGitEvent, triggerInfo);
+  }
+
+  private PlanExecution createPlanExecution(TriggerDetails triggerDetails, TriggerPayload triggerPayload,
+      String payload, String executionTagForGitEvent, ExecutionTriggerInfo triggerInfo) {
     try {
       NGTriggerEntity ngTriggerEntity = triggerDetails.getNgTriggerEntity();
       String targetIdentifier = ngTriggerEntity.getTargetIdentifier();
@@ -116,7 +134,8 @@ public class TriggerExecutionHelper {
         pipelineYaml = pipelineEntityToExecute.get().getYaml();
       } else {
         String pipelineYamlBeforeMerge = pipelineEntityToExecute.get().getYaml();
-        String sanitizedRuntimeInputYaml = MergeHelper.sanitizeRuntimeInput(pipelineYamlBeforeMerge, runtimeInputYaml);
+        String sanitizedRuntimeInputYaml =
+            InputSetSanitizer.sanitizeRuntimeInput(pipelineYamlBeforeMerge, runtimeInputYaml);
         if (isBlank(sanitizedRuntimeInputYaml)) {
           pipelineYaml = pipelineYamlBeforeMerge;
         } else {
@@ -156,7 +175,10 @@ public class TriggerExecutionHelper {
     if (isNotBlank(executionTagForGitEvent)) {
       builder.putExtraInfo(PlanExecution.EXEC_TAG_SET_BY_TRIGGER, executionTagForGitEvent);
       builder.putExtraInfo(TRIGGER_REF, generateTriggerRef(ngTriggerEntity));
-      builder.putExtraInfo(EVENT_CORRELATION_ID, eventId);
+
+      if (isNotBlank(eventId)) {
+        builder.putExtraInfo(EVENT_CORRELATION_ID, eventId);
+      }
 
       if (triggerPayload.hasParsedPayload()) {
         ParsedPayload parsedPayload = triggerPayload.getParsedPayload();

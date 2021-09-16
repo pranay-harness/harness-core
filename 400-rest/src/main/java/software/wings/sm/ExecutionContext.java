@@ -4,7 +4,7 @@
 
 package software.wings.sm;
 
-import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -34,7 +34,7 @@ import java.util.Map;
  * @author Rishi
  */
 @OwnedBy(CDC)
-@TargetModule(_870_CG_ORCHESTRATION)
+@TargetModule(_957_CG_BEANS)
 public interface ExecutionContext {
   Object evaluateExpression(String expression);
 

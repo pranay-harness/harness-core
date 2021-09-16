@@ -2,7 +2,7 @@ package io.harness.ng.cdOverview.dto;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.models.InstancesByBuildId;
+import io.harness.models.InstanceDetailsByBuildId;
 
 import java.util.List;
 import lombok.Builder;
@@ -12,5 +12,5 @@ import lombok.Value;
 @Value
 @Builder
 public class InstancesByBuildIdList {
-  private List<InstancesByBuildId> instancesByBuildIdList;
+  List<InstanceDetailsByBuildId> instancesByBuildIdList;
 }

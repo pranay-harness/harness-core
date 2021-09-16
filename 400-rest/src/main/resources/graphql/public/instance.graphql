@@ -39,6 +39,10 @@ input InstanceFilter {
   cloudProvider: IdFilter
   instanceType: InstanceType
   tag: InstanceTagFilter
+  deploymentType: DeploymentTypeFilter
+  workflow: IdFilter
+  orchestrationWorkflowType: OrchestrationWorkflowTypeFilter
+  environmentType: EnvironmentTypeFilter
 }
 
 interface Instance {

@@ -39,6 +39,7 @@ import software.wings.security.UsageRestrictions;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.UsageRestrictionsService;
+import software.wings.service.intfc.security.EncryptedSettingAttributes;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingVariableTypes;
 
@@ -91,6 +92,7 @@ public class SecretManagementResource {
   private final SecretManager secretManager;
   private final UsageRestrictionsService usageRestrictionsService;
   private final MainConfiguration configuration;
+  private final EncryptedSettingAttributes encryptedSettingAttributes;
 
   @GET
   @Path("/usage")
@@ -113,10 +115,10 @@ public class SecretManagementResource {
   public RestResponse<Collection<SettingAttribute>> listEncryptedSettingAttributes(
       @QueryParam("accountId") final String accountId, @QueryParam("category") String category) {
     if (isEmpty(category)) {
-      return new RestResponse<>(secretManager.listEncryptedSettingAttributes(accountId));
+      return new RestResponse<>(encryptedSettingAttributes.listEncryptedSettingAttributes(accountId));
     } else {
-      return new RestResponse<>(
-          secretManager.listEncryptedSettingAttributes(accountId, Sets.newHashSet(category.toUpperCase())));
+      return new RestResponse<>(encryptedSettingAttributes.listEncryptedSettingAttributes(
+          accountId, Sets.newHashSet(category.toUpperCase())));
     }
   }
 

@@ -5,10 +5,14 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.EntityReference;
+import io.harness.git.model.ChangeType;
+import io.harness.gitsync.FileChange;
+import io.harness.gitsync.ScopeDetails;
 import io.harness.gitsync.beans.YamlDTO;
 import io.harness.gitsync.persistance.GitSyncableEntity;
 import io.harness.ng.core.EntityDetail;
 
+import java.util.List;
 import java.util.function.Supplier;
 
 @OwnedBy(DX)
@@ -23,7 +27,7 @@ public interface GitSdkEntityHandlerInterface<B extends GitSyncableEntity, Y ext
 
   Y save(String accountIdentifier, String yaml);
 
-  Y update(String accountIdentifier, String yaml);
+  Y update(String accountIdentifier, String yaml, ChangeType changeType);
 
   boolean delete(EntityReference entityReference);
 
@@ -36,4 +40,10 @@ public interface GitSdkEntityHandlerInterface<B extends GitSyncableEntity, Y ext
   String getUuidKey();
 
   String getBranchKey();
+
+  Y upsert(String accountIdentifier, String yaml);
+
+  Y fullSyncEntity(String accountIdentifier, String yaml);
+
+  List<FileChange> listAllEntities(ScopeDetails scopeDetails);
 }

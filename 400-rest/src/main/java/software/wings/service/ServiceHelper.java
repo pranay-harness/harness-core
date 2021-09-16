@@ -1,5 +1,11 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.container.PcfServiceSpecification;
 
 import com.google.inject.Singleton;
@@ -11,6 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ServiceHelper {
   public static final String APP_NAME_PATTERN = "^\\s*[-]\\s+name\\s*:";
   public static final String INSTANCE_PATTERN = "^\\s*instances\\s*:";

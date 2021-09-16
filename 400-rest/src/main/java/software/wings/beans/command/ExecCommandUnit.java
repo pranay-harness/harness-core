@@ -37,7 +37,7 @@ import org.mongodb.morphia.annotations.Transient;
  */
 @JsonTypeName("EXEC")
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class ExecCommandUnit extends SshCommandUnit implements NestedAnnotationResolver {
   @Expression(ALLOW_SECRETS) @Attributes(title = "Working Directory") @NotEmpty private String commandPath;
 

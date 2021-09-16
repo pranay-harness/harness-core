@@ -1,13 +1,32 @@
 package io.harness.ccm.graphql.core.perspectives;
 
+import static io.harness.ccm.views.utils.ClusterTableKeys.AVG_CPU_UTILIZATION_VALUE;
+import static io.harness.ccm.views.utils.ClusterTableKeys.AVG_MEMORY_UTILIZATION_VALUE;
+import static io.harness.ccm.views.utils.ClusterTableKeys.BILLING_AMOUNT;
+import static io.harness.ccm.views.utils.ClusterTableKeys.COST;
+import static io.harness.ccm.views.utils.ClusterTableKeys.CPU_LIMIT;
+import static io.harness.ccm.views.utils.ClusterTableKeys.CPU_REQUEST;
+import static io.harness.ccm.views.utils.ClusterTableKeys.DEFAULT_DOUBLE_VALUE;
 import static io.harness.ccm.views.utils.ClusterTableKeys.DEFAULT_STRING_VALUE;
 import static io.harness.ccm.views.utils.ClusterTableKeys.ID_SEPARATOR;
+import static io.harness.ccm.views.utils.ClusterTableKeys.MAX_CPU_UTILIZATION_VALUE;
+import static io.harness.ccm.views.utils.ClusterTableKeys.MAX_MEMORY_UTILIZATION_VALUE;
+import static io.harness.ccm.views.utils.ClusterTableKeys.MEMORY_LIMIT;
+import static io.harness.ccm.views.utils.ClusterTableKeys.MEMORY_REQUEST;
+import static io.harness.ccm.views.utils.ClusterTableKeys.TIME_AGGREGATED_CPU_LIMIT;
+import static io.harness.ccm.views.utils.ClusterTableKeys.TIME_AGGREGATED_CPU_REQUEST;
+import static io.harness.ccm.views.utils.ClusterTableKeys.TIME_AGGREGATED_CPU_UTILIZATION_VALUE;
+import static io.harness.ccm.views.utils.ClusterTableKeys.TIME_AGGREGATED_MEMORY_LIMIT;
+import static io.harness.ccm.views.utils.ClusterTableKeys.TIME_AGGREGATED_MEMORY_REQUEST;
+import static io.harness.ccm.views.utils.ClusterTableKeys.TIME_AGGREGATED_MEMORY_UTILIZATION_VALUE;
 
 import io.harness.ccm.graphql.dto.common.DataPoint;
 import io.harness.ccm.graphql.dto.common.DataPoint.DataPointBuilder;
 import io.harness.ccm.graphql.dto.common.Reference;
 import io.harness.ccm.graphql.dto.common.TimeSeriesDataPoints;
 import io.harness.ccm.graphql.dto.perspectives.PerspectiveTimeSeriesData;
+import io.harness.ccm.views.graphql.QLCEViewGroupBy;
+import io.harness.ccm.views.graphql.QLCEViewTimeTruncGroupBy;
 
 import com.google.cloud.Timestamp;
 import com.google.cloud.bigquery.Field;
@@ -29,16 +48,33 @@ import lombok.extern.slf4j.Slf4j;
 public class PerspectiveTimeSeriesHelper {
   public static final String nullStringValueConstant = "Others";
   public static final String OTHERS = "Others";
+  private static final long ONE_DAY_SEC = 86400;
+  private static final long ONE_HOUR_SEC = 3600;
 
-  public PerspectiveTimeSeriesData fetch(TableResult result) {
+  public PerspectiveTimeSeriesData fetch(TableResult result, long timePeriod) {
     Schema schema = result.getSchema();
     FieldList fields = schema.getFields();
 
-    Map<Timestamp, List<DataPoint>> timeSeriesDataPointsMap = new LinkedHashMap();
+    Map<Timestamp, List<DataPoint>> costDataPointsMap = new LinkedHashMap();
+    Map<Timestamp, List<DataPoint>> cpuLimitDataPointsMap = new LinkedHashMap();
+    Map<Timestamp, List<DataPoint>> cpuRequestDataPointsMap = new LinkedHashMap();
+    Map<Timestamp, List<DataPoint>> cpuUtilizationValueDataPointsMap = new LinkedHashMap();
+    Map<Timestamp, List<DataPoint>> memoryLimitDataPointsMap = new LinkedHashMap();
+    Map<Timestamp, List<DataPoint>> memoryRequestDataPointsMap = new LinkedHashMap();
+    Map<Timestamp, List<DataPoint>> memoryUtilizationValueDataPointsMap = new LinkedHashMap();
+
     for (FieldValueList row : result.iterateAll()) {
-      DataPointBuilder dataPointBuilder = DataPoint.builder();
       Timestamp startTimeTruncatedTimestamp = null;
-      Double value = Double.valueOf(0);
+      double value = 0d;
+      double cpuLimit = DEFAULT_DOUBLE_VALUE;
+      double cpuRequest = DEFAULT_DOUBLE_VALUE;
+      double cpuUtilizationValue = DEFAULT_DOUBLE_VALUE;
+      double maxCpuUtilizationValue = DEFAULT_DOUBLE_VALUE;
+      double memoryLimit = DEFAULT_DOUBLE_VALUE;
+      double memoryRequest = DEFAULT_DOUBLE_VALUE;
+      double memoryUtilizationValue = DEFAULT_DOUBLE_VALUE;
+      double maxMemoryUtilizationValue = DEFAULT_DOUBLE_VALUE;
+
       String id = DEFAULT_STRING_VALUE;
       String stringValue = DEFAULT_STRING_VALUE;
       String type = DEFAULT_STRING_VALUE;
@@ -53,23 +89,98 @@ public class PerspectiveTimeSeriesHelper {
             id = getUpdatedId(id, stringValue);
             break;
           case FLOAT64:
-            value += getNumericValue(row, field);
+            switch (field.getName()) {
+              case COST:
+              case BILLING_AMOUNT:
+                value += getNumericValue(row, field);
+                break;
+              case TIME_AGGREGATED_CPU_LIMIT:
+                cpuLimit = getNumericValue(row, field) / (timePeriod * 1024);
+                break;
+              case TIME_AGGREGATED_CPU_REQUEST:
+                cpuRequest = getNumericValue(row, field) / (timePeriod * 1024);
+                break;
+              case TIME_AGGREGATED_CPU_UTILIZATION_VALUE:
+                cpuUtilizationValue = getNumericValue(row, field) / (timePeriod * 1024);
+                break;
+              case TIME_AGGREGATED_MEMORY_LIMIT:
+                memoryLimit = getNumericValue(row, field) / (timePeriod * 1024);
+                break;
+              case TIME_AGGREGATED_MEMORY_REQUEST:
+                memoryRequest = getNumericValue(row, field) / (timePeriod * 1024);
+                break;
+              case TIME_AGGREGATED_MEMORY_UTILIZATION_VALUE:
+                memoryUtilizationValue = getNumericValue(row, field) / (timePeriod * 1024);
+                break;
+              case CPU_LIMIT:
+                cpuLimit = getNumericValue(row, field) / 1024;
+                break;
+              case CPU_REQUEST:
+                cpuRequest = getNumericValue(row, field) / 1024;
+                break;
+              case AVG_CPU_UTILIZATION_VALUE:
+                cpuUtilizationValue = getNumericValue(row, field) / 1024;
+                break;
+              case MAX_CPU_UTILIZATION_VALUE:
+                maxCpuUtilizationValue = getNumericValue(row, field) / 1024;
+                break;
+              case MEMORY_LIMIT:
+                memoryLimit = getNumericValue(row, field) / 1024;
+                break;
+              case MEMORY_REQUEST:
+                memoryRequest = getNumericValue(row, field) / 1024;
+                break;
+              case AVG_MEMORY_UTILIZATION_VALUE:
+                memoryUtilizationValue = getNumericValue(row, field) / 1024;
+                break;
+              case MAX_MEMORY_UTILIZATION_VALUE:
+                maxMemoryUtilizationValue = getNumericValue(row, field) / 1024;
+                break;
+              default:
+                break;
+            }
             break;
           default:
             break;
         }
       }
-      dataPointBuilder.key(Reference.builder().id(id).name(stringValue).type(type).build());
-      dataPointBuilder.value(getRoundedDoubleValue(value));
-      List<DataPoint> dataPoints = new ArrayList<>();
-      if (timeSeriesDataPointsMap.containsKey(startTimeTruncatedTimestamp)) {
-        dataPoints = timeSeriesDataPointsMap.get(startTimeTruncatedTimestamp);
-      }
-      dataPoints.add(dataPointBuilder.build());
-      timeSeriesDataPointsMap.put(startTimeTruncatedTimestamp, dataPoints);
-    }
 
-    return PerspectiveTimeSeriesData.builder().stats(convertTimeSeriesPointsMapToList(timeSeriesDataPointsMap)).build();
+      addDataPointToMap(id, stringValue, type, value, costDataPointsMap, startTimeTruncatedTimestamp);
+      addDataPointToMap(id, "LIMIT", "UTILIZATION", cpuLimit, cpuLimitDataPointsMap, startTimeTruncatedTimestamp);
+      addDataPointToMap(id, "REQUEST", "UTILIZATION", cpuRequest, cpuRequestDataPointsMap, startTimeTruncatedTimestamp);
+      addDataPointToMap(
+          id, "AVG", "UTILIZATION", cpuUtilizationValue, cpuUtilizationValueDataPointsMap, startTimeTruncatedTimestamp);
+      addDataPointToMap(id, "MAX", "UTILIZATION", maxCpuUtilizationValue, cpuUtilizationValueDataPointsMap,
+          startTimeTruncatedTimestamp);
+      addDataPointToMap(id, "LIMIT", "UTILIZATION", memoryLimit, memoryLimitDataPointsMap, startTimeTruncatedTimestamp);
+      addDataPointToMap(
+          id, "REQUEST", "UTILIZATION", memoryRequest, memoryRequestDataPointsMap, startTimeTruncatedTimestamp);
+      addDataPointToMap(id, "AVG", "UTILIZATION", memoryUtilizationValue, memoryUtilizationValueDataPointsMap,
+          startTimeTruncatedTimestamp);
+      addDataPointToMap(id, "MAX", "UTILIZATION", maxMemoryUtilizationValue, memoryUtilizationValueDataPointsMap,
+          startTimeTruncatedTimestamp);
+    }
+    return PerspectiveTimeSeriesData.builder()
+        .stats(convertTimeSeriesPointsMapToList(costDataPointsMap))
+        .cpuLimit(convertTimeSeriesPointsMapToList(cpuLimitDataPointsMap))
+        .cpuRequest(convertTimeSeriesPointsMapToList(cpuRequestDataPointsMap))
+        .cpuUtilValues(convertTimeSeriesPointsMapToList(cpuUtilizationValueDataPointsMap))
+        .memoryLimit(convertTimeSeriesPointsMapToList(memoryLimitDataPointsMap))
+        .memoryRequest(convertTimeSeriesPointsMapToList(memoryRequestDataPointsMap))
+        .memoryUtilValues(convertTimeSeriesPointsMapToList(memoryUtilizationValueDataPointsMap))
+        .build();
+  }
+
+  private void addDataPointToMap(String id, String name, String type, double value,
+      Map<Timestamp, List<DataPoint>> dataPointsMap, Timestamp startTimeTruncatedTimestamp) {
+    if (value != DEFAULT_DOUBLE_VALUE) {
+      DataPointBuilder dataPointBuilder = DataPoint.builder();
+      dataPointBuilder.key(getReference(id, name, type));
+      dataPointBuilder.value(getRoundedDoubleValue(value));
+      List<DataPoint> dataPoints = dataPointsMap.getOrDefault(startTimeTruncatedTimestamp, new ArrayList<>());
+      dataPoints.add(dataPointBuilder.build());
+      dataPointsMap.put(startTimeTruncatedTimestamp, dataPoints);
+    }
   }
 
   private List<TimeSeriesDataPoints> convertTimeSeriesPointsMapToList(
@@ -123,6 +234,12 @@ public class PerspectiveTimeSeriesHelper {
 
     return PerspectiveTimeSeriesData.builder()
         .stats(getDataAfterLimit(data, selectedIdsAfterLimit, includeOthers))
+        .cpuLimit(data.getCpuLimit())
+        .cpuRequest(data.getCpuRequest())
+        .cpuUtilValues(data.getCpuUtilValues())
+        .memoryLimit(data.getMemoryLimit())
+        .memoryRequest(data.getMemoryRequest())
+        .memoryUtilValues(data.getMemoryUtilValues())
         .build();
   }
 
@@ -163,5 +280,32 @@ public class PerspectiveTimeSeriesHelper {
 
   private String getUpdatedId(String id, String newField) {
     return id.equals(DEFAULT_STRING_VALUE) ? newField : id + ID_SEPARATOR + newField;
+  }
+
+  private Reference getReference(String id, String name, String type) {
+    return Reference.builder().id(id).name(name).type(type).build();
+  }
+
+  public long getTimePeriod(List<QLCEViewGroupBy> groupBy) {
+    try {
+      List<QLCEViewTimeTruncGroupBy> timeGroupBy = groupBy.stream()
+                                                       .filter(entry -> entry.getTimeTruncGroupBy() != null)
+                                                       .map(QLCEViewGroupBy::getTimeTruncGroupBy)
+                                                       .collect(Collectors.toList());
+      switch (timeGroupBy.get(0).getResolution()) {
+        case HOUR:
+          return ONE_HOUR_SEC;
+        case WEEK:
+          return 7 * ONE_DAY_SEC;
+        case MONTH:
+          return 30 * ONE_DAY_SEC;
+        case DAY:
+        default:
+          return ONE_DAY_SEC;
+      }
+    } catch (Exception e) {
+      log.info("Time group by can't be null for timeSeries query");
+      return ONE_DAY_SEC;
+    }
   }
 }

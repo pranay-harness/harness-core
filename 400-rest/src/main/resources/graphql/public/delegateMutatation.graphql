@@ -23,7 +23,7 @@ input AddDelegateScopeInput {
   accountId: String!
   name: String!
   environmentTypes: [EnvironmentType]
-  taskGroups: [TaskGroup]
+  taskGroup: TaskGroup
   application: IdFilter
   service: IdFilter
   environment: IdFilter

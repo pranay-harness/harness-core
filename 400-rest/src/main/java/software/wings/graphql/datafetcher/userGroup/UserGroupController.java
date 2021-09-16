@@ -8,6 +8,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -42,7 +44,6 @@ import software.wings.graphql.schema.type.usergroup.QLSSOSettingInput;
 import software.wings.graphql.schema.type.usergroup.QLSlackNotificationSetting;
 import software.wings.graphql.schema.type.usergroup.QLUserGroup;
 import software.wings.graphql.schema.type.usergroup.QLUserGroup.QLUserGroupBuilder;
-import software.wings.service.impl.UserGroupServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserGroupService;
@@ -60,6 +61,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
+@OwnedBy(HarnessTeam.PL)
 public class UserGroupController {
   @Inject private UserGroupPermissionValidator userGroupPermissionValidator;
   @Inject private UserGroupService userGroupService;
@@ -103,8 +105,9 @@ public class UserGroupController {
 
   public QLUserGroupBuilder populateUserGroupOutput(UserGroup userGroup, QLUserGroupBuilder builder) {
     if (!ccmSettingService.isCloudCostEnabled(userGroup.getAccountId())) {
-      UserGroupServiceImpl.maskCePermissions(userGroup);
+      userGroupService.maskCePermissions(userGroup);
     }
+    userGroupService.maskAppTemplatePermissions(userGroup);
     QLGroupPermissions permissions = userGroupPermissionsController.populateUserGroupPermissions(userGroup);
     QLNotificationSettings notificationSettings = populateNotificationSettings(userGroup);
     return builder.name(userGroup.getName())

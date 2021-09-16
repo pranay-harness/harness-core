@@ -21,7 +21,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "InfrastructureMappingNGKeys")
-@Entity(value = "InfrastructureMappingNG", noClassnameStored = true)
+@Entity(value = "infrastructureMappingNG", noClassnameStored = true)
 @Document("infrastructureMappingNG")
 @StoreIn(DbAliases.NG_MANAGER)
 @Persistent
@@ -30,8 +30,7 @@ public class InfrastructureMapping {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
-                 .name("unique_account_org_project_id")
-                 .unique(true)
+                 .name("accountId_orgId_projectId_idx")
                  .field(InfrastructureMappingNGKeys.accountIdentifier)
                  .field(InfrastructureMappingNGKeys.orgIdentifier)
                  .field(InfrastructureMappingNGKeys.projectIdentifier)
@@ -43,10 +42,9 @@ public class InfrastructureMapping {
   private String accountIdentifier;
   private String orgIdentifier;
   private String projectIdentifier;
-  private String infrastructureMappingType;
+  private String infrastructureKind;
   private String connectorRef;
   private String envId;
-  private String deploymentType;
   private String serviceId;
   @FdUniqueIndex private String infrastructureKey;
 }

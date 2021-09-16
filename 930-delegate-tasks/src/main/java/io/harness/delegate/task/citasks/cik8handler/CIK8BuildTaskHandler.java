@@ -32,14 +32,12 @@ import io.harness.delegate.beans.ci.pod.PodParams;
 import io.harness.delegate.beans.ci.pod.SecretParams;
 import io.harness.delegate.beans.ci.pod.SecretVarParams;
 import io.harness.delegate.beans.ci.pod.SecretVariableDetails;
-import io.harness.delegate.beans.ci.pod.SecretVolumeParams;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.citasks.CIBuildTaskHandler;
 import io.harness.delegate.task.citasks.cik8handler.helper.DelegateServiceTokenHelper;
 import io.harness.delegate.task.citasks.cik8handler.helper.ProxyVariableHelper;
 import io.harness.delegate.task.citasks.cik8handler.k8java.CIK8JavaClientHandler;
 import io.harness.delegate.task.citasks.cik8handler.k8java.pod.PodSpecBuilder;
-import io.harness.delegate.task.citasks.cik8handler.params.CIConstants;
 import io.harness.k8s.KubernetesHelperService;
 import io.harness.k8s.apiclient.ApiClientFactory;
 import io.harness.k8s.model.KubernetesConfig;
@@ -406,9 +404,6 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     for (Map.Entry<String, SecretParams> secretDataEntry : secretData.entrySet()) {
       switch (secretDataEntry.getValue().getType()) {
         case FILE:
-          updateContainerWithSecretVolume(
-              secretDataEntry.getKey(), secretDataEntry.getValue(), secretName, containerParams);
-          break;
         case TEXT:
           updateContainerWithSecretVariable(
               secretDataEntry.getKey(), secretDataEntry.getValue(), secretName, containerParams);
@@ -419,36 +414,8 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     }
   }
 
-  private void updateContainerWithSecretVolume(
-      String variableName, SecretParams secretParam, String secretName, ContainerParams containerParams) {
-    if (secretParam.getType() != SecretParams.Type.FILE) {
-      return;
-    }
-    Map<String, String> envVars = containerParams.getEnvVars();
-    if (envVars == null) {
-      envVars = new HashMap<>();
-      containerParams.setEnvVars(envVars);
-    }
-    envVars.put(variableName, CIConstants.DEFAULT_SECRET_MOUNT_PATH + secretParam.getSecretKey());
-
-    Map<String, SecretVolumeParams> secretVolumes = containerParams.getSecretVolumes();
-    if (secretVolumes == null) {
-      secretVolumes = new HashMap<>();
-      containerParams.setSecretVolumes(secretVolumes);
-    }
-    secretVolumes.put(secretParam.getSecretKey(),
-        SecretVolumeParams.builder()
-            .secretKey(secretParam.getSecretKey())
-            .secretName(secretName)
-            .mountPath(CIConstants.DEFAULT_SECRET_MOUNT_PATH)
-            .build());
-  }
-
   private void updateContainerWithSecretVariable(
       String variableName, SecretParams secretParam, String secretName, ContainerParams containerParams) {
-    if (secretParam.getType() != SecretParams.Type.TEXT) {
-      return;
-    }
     Map<String, SecretVarParams> secretEnvVars = containerParams.getSecretEnvVars();
     if (secretEnvVars == null) {
       secretEnvVars = new HashMap<>();

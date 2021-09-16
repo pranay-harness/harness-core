@@ -31,8 +31,6 @@ import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
-import software.wings.service.intfc.yaml.YamlGitService;
-import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.service.intfc.yaml.clone.YamlCloneService;
 import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.yaml.YamlVersion.Type;
@@ -53,13 +51,11 @@ import java.util.Optional;
 @Singleton
 public class YamlCloneServiceImpl implements YamlCloneService {
   public static final String YAML_EXTENSION = ".yaml";
-  @Inject private YamlResourceService yamlResourceService;
   @Inject private YamlService yamlService;
   @Inject private AppService appService;
   @Inject private WorkflowService workflowService;
   @Inject private PipelineService pipelineService;
   @Inject private InfrastructureProvisionerService provisionerService;
-  @Inject private YamlGitService yamlGitSyncService;
   @Inject private YamlDirectoryService yamlDirectoryService;
 
   @Override
@@ -101,14 +97,12 @@ public class YamlCloneServiceImpl implements YamlCloneService {
       return getRestResponseForFailure("Workflow to be cloned from does not exists: " + entiytId);
     }
 
-    FolderNode workflowsFolder =
-        new FolderNode(accountId, WORKFLOWS_FOLDER, Workflow.class, directoryPath, appId, yamlGitSyncService);
+    FolderNode workflowsFolder = new FolderNode(accountId, WORKFLOWS_FOLDER, Workflow.class, directoryPath, appId);
 
     DirectoryPath workflowPath = directoryPath.clone();
     String workflowYamlFileName = newEntityName + YAML_EXTENSION;
-    workflowsFolder.addChild(
-        new AppLevelYamlNode(accountId, workflow.getUuid(), workflow.getAppId(), workflowYamlFileName, Workflow.class,
-            workflowPath.add(workflowYamlFileName), yamlGitSyncService, Type.WORKFLOW));
+    workflowsFolder.addChild(new AppLevelYamlNode(accountId, workflow.getUuid(), workflow.getAppId(),
+        workflowYamlFileName, Workflow.class, workflowPath.add(workflowYamlFileName), Type.WORKFLOW));
 
     return cloneAppLevelEntity(accountId, includeFiles, workflowsFolder);
   }
@@ -126,14 +120,12 @@ public class YamlCloneServiceImpl implements YamlCloneService {
       return getRestResponseForFailure("Pipeline to be cloned from does not exists: " + entiytId);
     }
 
-    FolderNode pipelinesFolder =
-        new FolderNode(accountId, PIPELINES_FOLDER, Pipeline.class, directoryPath, appId, yamlGitSyncService);
+    FolderNode pipelinesFolder = new FolderNode(accountId, PIPELINES_FOLDER, Pipeline.class, directoryPath, appId);
 
     DirectoryPath pipelinePath = directoryPath.clone();
     String pipelineYamlFileName = newEntityName + YAML_EXTENSION;
-    pipelinesFolder.addChild(
-        new AppLevelYamlNode(accountId, pipeline.getUuid(), pipeline.getAppId(), pipelineYamlFileName, Pipeline.class,
-            pipelinePath.add(pipelineYamlFileName), yamlGitSyncService, Type.PIPELINE));
+    pipelinesFolder.addChild(new AppLevelYamlNode(accountId, pipeline.getUuid(), pipeline.getAppId(),
+        pipelineYamlFileName, Pipeline.class, pipelinePath.add(pipelineYamlFileName), Type.PIPELINE));
 
     return cloneAppLevelEntity(accountId, includeFiles, pipelinesFolder);
   }
@@ -151,14 +143,14 @@ public class YamlCloneServiceImpl implements YamlCloneService {
       return getRestResponseForFailure("InfrastructureProvisioner to be cloned from does not exists: " + entiytId);
     }
 
-    FolderNode provisionersFolder = new FolderNode(
-        accountId, PROVISIONERS_FOLDER, InfrastructureProvisioner.class, directoryPath, appId, yamlGitSyncService);
+    FolderNode provisionersFolder =
+        new FolderNode(accountId, PROVISIONERS_FOLDER, InfrastructureProvisioner.class, directoryPath, appId);
 
     DirectoryPath provisionerPath = directoryPath.clone();
     String provisionerYamlFileName = newEntityName + YAML_EXTENSION;
     provisionersFolder.addChild(new AppLevelYamlNode(accountId, infrastructureProvisioner.getUuid(),
         infrastructureProvisioner.getAppId(), provisionerYamlFileName, InfrastructureProvisioner.class,
-        provisionerPath.add(provisionerYamlFileName), yamlGitSyncService, Type.PROVISIONER));
+        provisionerPath.add(provisionerYamlFileName), Type.PROVISIONER));
 
     return cloneAppLevelEntity(accountId, includeFiles, provisionersFolder);
   }

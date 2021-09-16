@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import static java.util.Arrays.asList;
@@ -61,7 +61,7 @@ import org.mongodb.morphia.annotations.Version;
 @FieldNameConstants(innerTypeName = "ServiceKeys")
 @Entity(value = "services", noClassnameStored = true)
 @HarnessEntity(exportable = true)
-@TargetModule(_871_CG_BEANS)
+@TargetModule(_957_CG_BEANS)
 public class Service
     extends Base implements KeywordsAware, NameAccess, TagAware, AccountAccess, CustomDeploymentTypeAware {
   public static List<MongoIndex> mongoIndexes() {
@@ -77,6 +77,11 @@ public class Service
                  .field(ServiceKeys.accountId)
                  .descSortField(ServiceKeys.createdAt)
                  .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("account_deploymentTypeIndex")
+                 .field(ServiceKeys.accountId)
+                 .field(ServiceKeys.deploymentType)
+                 .build())
         .build();
   }
   public static final String GLOBAL_SERVICE_NAME_FOR_YAML = "__all_service__";
@@ -87,6 +92,7 @@ public class Service
   private String description;
   private ArtifactType artifactType;
   private DeploymentType deploymentType;
+  private String serviceId;
   private String configMapYaml;
   private String helmValueYaml;
 
@@ -242,5 +248,8 @@ public class Service
     public static final String appId = "appId";
     public static final String createdAt = "createdAt";
     public static final String uuid = "uuid";
+    public static final String deploymentType = "deploymentType";
+    public static final String serviceId = "serviceId";
+    public static final String accountId = "accountId";
   }
 }

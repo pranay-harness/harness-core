@@ -12,10 +12,10 @@ import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlField;
+import io.harness.utils.TimeoutUtils;
 import io.harness.yaml.core.failurestrategy.FailureStrategyActionConfig;
 import io.harness.yaml.core.failurestrategy.manualintervention.ManualInterventionFailureActionConfig;
 import io.harness.yaml.core.failurestrategy.retry.RetryFailureActionConfig;
-import io.harness.yaml.core.timeout.TimeoutUtils;
 
 import com.google.common.collect.Sets;
 import com.google.protobuf.ByteString;
@@ -26,9 +26,8 @@ import java.util.stream.Collectors;
 public class CDPMSStepPlanCreator extends GenericStepPMSPlanCreator {
   @Override
   public Set<String> getSupportedStepTypes() {
-    return Sets.newHashSet("K8sRollingDeploy", "K8sScale", "K8sCanaryDeploy", "K8sBlueGreenDeploy", "K8sBGSwapServices",
-        "K8sDelete", "K8sCanaryDelete", "K8sApply", "ShellScript", "TerraformApply", "TerraformPlan",
-        "TerraformDestroy", StepSpecTypeConstants.TERRAFORM_ROLLBACK);
+    return Sets.newHashSet("K8sScale", "K8sCanaryDeploy", "K8sBlueGreenDeploy", "K8sDelete", "K8sApply", "ShellScript",
+        "TerraformApply", "TerraformPlan", "TerraformDestroy", StepSpecTypeConstants.TERRAFORM_ROLLBACK);
   }
 
   @Override

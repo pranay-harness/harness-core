@@ -333,7 +333,7 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
       AnalysisInput analysisInput, VerificationJobInstance verificationJobInstance) {
     Optional<TimeRange> preDeploymentTimeRange =
         verificationJobInstanceService.getPreDeploymentTimeRange(verificationJobInstance.getUuid());
-    if (preDeploymentTimeRange.isPresent() && preDeploymentTimeRange.equals(analysisInput.getTimeRange())) {
+    if (preDeploymentTimeRange.isPresent() && preDeploymentTimeRange.get().equals(analysisInput.getTimeRange())) {
       // first task so needs to enqueue clustering task
       PreDeploymentLogClusterState preDeploymentLogClusterState = PreDeploymentLogClusterState.builder().build();
       preDeploymentLogClusterState.setClusterLevel(LogClusterLevel.L1);

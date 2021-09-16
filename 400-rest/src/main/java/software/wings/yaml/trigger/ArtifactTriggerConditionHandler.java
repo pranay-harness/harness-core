@@ -6,7 +6,9 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 
 import software.wings.beans.artifact.ArtifactStream;
@@ -26,6 +28,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @Singleton
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class ArtifactTriggerConditionHandler extends TriggerConditionYamlHandler<ArtifactTriggerConditionYaml> {
   @Override
   public ArtifactTriggerConditionYaml toYaml(TriggerCondition bean, String appId) {

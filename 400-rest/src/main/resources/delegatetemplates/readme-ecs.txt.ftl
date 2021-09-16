@@ -14,11 +14,11 @@ If you select "awsvpc" as network mode, the ECS console will request network con
 FARGATE Launch type
 -------------------
 
-To run the ECS Delegate task with a FARGETE launch type, select "Use AWS VPC Mode" when downloading the Delegate.
+To run the ECS Delegate task with a FARGATE launch type, select "Use AWS VPC Mode" when downloading the Delegate.
 
 Update the ECS task spec with following changes:
 - Set "requiresCompatibilities" to "FARGATE" instead of "EC2"
-- Add "executionRoleArn" to the ECS task spec. This is needed by FARGETE launch types.
+- Add "executionRoleArn" to the ECS task spec. This is needed by FARGATE launch types.
 
 Note: If you change the default CPU or memory settings, follow the steps in this document to avoid any invalid CPU
 or memory errors: https://docs.aws.amazon.com/AmazonECS/latest/userguide/task-cpu-memory-error.html.

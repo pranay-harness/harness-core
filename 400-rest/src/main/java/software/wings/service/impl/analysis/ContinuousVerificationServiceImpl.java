@@ -42,6 +42,7 @@ import static java.lang.Math.ceil;
 import static java.lang.Math.min;
 import static java.util.Collections.emptySet;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -240,6 +241,7 @@ import org.mongodb.morphia.query.Sort;
 @Slf4j
 @OwnedBy(HarnessTeam.CV)
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class ContinuousVerificationServiceImpl implements ContinuousVerificationService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AuthService authService;

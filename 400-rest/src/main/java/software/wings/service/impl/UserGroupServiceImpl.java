@@ -17,6 +17,7 @@ import static software.wings.security.PermissionAttribute.Action.EXECUTE_PIPELIN
 import static software.wings.security.PermissionAttribute.Action.EXECUTE_WORKFLOW;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE_WORKFLOW_ROLLBACK;
 import static software.wings.security.PermissionAttribute.PermissionType.ALL_APP_ENTITIES;
+import static software.wings.security.PermissionAttribute.PermissionType.APP_TEMPLATE;
 import static software.wings.security.PermissionAttribute.PermissionType.CE_ADMIN;
 import static software.wings.security.PermissionAttribute.PermissionType.CE_VIEWER;
 import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
@@ -81,7 +82,6 @@ import software.wings.security.UserThreadLocal;
 import software.wings.service.UserGroupUtils;
 import software.wings.service.impl.workflow.UserGroupDeleteEventHandler;
 import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserGroupService;
@@ -94,7 +94,9 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.mongodb.ReadPreference;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -133,7 +135,6 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Inject private AccountService accountService;
   @Inject private AuthService authService;
   @Inject private SSOSettingService ssoSettingService;
-  @Inject private AlertService alertService;
   @Inject private PagerDutyService pagerDutyService;
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private UserGroupDeleteEventHandler userGroupDeleteEventHandler;
@@ -158,6 +159,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     AccountPermissions accountPermissions =
         Optional.ofNullable(userGroup.getAccountPermissions()).orElse(AccountPermissions.builder().build());
     userGroup.setAccountPermissions(addDefaultCePermissions(accountPermissions));
+    maintainTemplatePermissions(userGroup);
     UserGroup savedUserGroup = wingsPersistence.saveAndGet(UserGroup.class, userGroup);
     Account account = accountService.get(userGroup.getAccountId());
     notNullCheck("account", account);
@@ -167,6 +169,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     if (!ccmSettingService.isCloudCostEnabled(savedUserGroup.getAccountId())) {
       maskCePermissions(savedUserGroup);
     }
+    maskAppTemplatePermissions(savedUserGroup);
 
     auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, userGroup, Type.CREATE);
     log.info("Auditing creation of new userGroup={} and account={}", userGroup.getName(), account.getAccountName());
@@ -229,8 +232,9 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
 
     if (!ccmSettingService.isCloudCostEnabled(accountId)) {
-      res.getResponse().forEach(UserGroupServiceImpl::maskCePermissions);
+      res.getResponse().forEach(this::maskCePermissions);
     }
+    res.getResponse().forEach(this::maskAppTemplatePermissions);
 
     return res;
   }
@@ -306,6 +310,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     if (userGroup != null && !ccmSettingService.isCloudCostEnabled(userGroup.getAccountId())) {
       maskCePermissions(userGroup);
     }
+    maskAppTemplatePermissions(userGroup);
     return userGroup;
   }
 
@@ -327,8 +332,9 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
 
     if (!ccmSettingService.isCloudCostEnabled(accountId)) {
-      userGroups.forEach(userGroup -> { maskCePermissions(userGroup); });
+      userGroups.forEach(this::maskCePermissions);
     }
+    userGroups.forEach(this::maskAppTemplatePermissions);
     return userGroups;
   }
 
@@ -350,6 +356,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     if (!ccmSettingService.isCloudCostEnabled(userGroup.getAccountId())) {
       maskCePermissions(userGroup);
     }
+    maskAppTemplatePermissions(userGroup);
     return userGroup;
   }
 
@@ -369,7 +376,8 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
   }
 
-  public static void maskCePermissions(UserGroup userGroup) {
+  @Override
+  public void maskCePermissions(UserGroup userGroup) {
     AccountPermissions accountPermissions = userGroup.getAccountPermissions();
     if (accountPermissions != null) {
       Set<PermissionType> accountPermissionSet =
@@ -510,6 +518,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     UserGroup userGroup = get(accountId, userGroupId);
     checkImplicitPermissions(accountPermissions, accountId, userGroup.getName());
     checkDeploymentPermissions(userGroup);
+    maintainTemplatePermissions(userGroup);
     UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
     setUnset(operations, UserGroupKeys.appPermissions, appPermissions);
     setUnset(operations, UserGroupKeys.accountPermissions,
@@ -519,6 +528,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     if (!ccmSettingService.isCloudCostEnabled(updatedUserGroup.getAccountId())) {
       maskCePermissions(updatedUserGroup);
     }
+    maskAppTemplatePermissions(userGroup);
     return updatedUserGroup;
   }
 
@@ -549,10 +559,86 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
   }
 
+  private void maintainTemplatePermissions(UserGroup userGroup) {
+    boolean hasAccountLevelTemplateManagementPermission = false;
+    final AccountPermissions accountPermissions = userGroup.getAccountPermissions();
+    if (accountPermissions != null) {
+      final Set<PermissionType> accountPermissionSet = accountPermissions.getPermissions();
+      if (!accountPermissionSet.isEmpty()) {
+        hasAccountLevelTemplateManagementPermission = accountPermissionSet.contains(PermissionType.TEMPLATE_MANAGEMENT);
+      }
+    }
+
+    Set<AppPermission> appPermissions = userGroup.getAppPermissions();
+    if (isNotEmpty(appPermissions)
+        && appPermissions.stream().anyMatch(appPermission
+            -> appPermission.getPermissionType() != null && appPermission.getPermissionType().equals(APP_TEMPLATE))) {
+      return;
+    }
+
+    boolean hasAllAppAccess = false;
+    Set<String> allowedAppIds = new HashSet<>();
+
+    if (isNotEmpty(appPermissions)) {
+      hasAllAppAccess = appPermissions.stream().anyMatch(appPermission
+          -> appPermission.getAppFilter() != null && appPermission.getAppFilter().getFilterType() != null
+              && appPermission.getAppFilter().getFilterType().equals(GenericEntityFilter.FilterType.ALL));
+      if (!hasAllAppAccess) {
+        allowedAppIds =
+            appPermissions.stream()
+                .filter(appPermission
+                    -> appPermission.getAppFilter() != null && appPermission.getAppFilter().getFilterType() != null
+                        && appPermission.getAppFilter().getFilterType().equals(GenericEntityFilter.FilterType.SELECTED)
+                        && isNotEmpty(appPermission.getAppFilter().getIds()))
+                .map(appPermission -> appPermission.getAppFilter().getIds())
+                .flatMap(Collection::stream)
+                .collect(toSet());
+      }
+    }
+
+    if (hasAllAppAccess || (isNotEmpty(allowedAppIds))) {
+      AppPermission applicationTemplatePermission =
+          AppPermission.builder()
+              .permissionType(PermissionType.APP_TEMPLATE)
+              .appFilter(hasAllAppAccess
+                      ? GenericEntityFilter.builder().filterType(GenericEntityFilter.FilterType.ALL).build()
+                      : GenericEntityFilter.builder()
+                            .filterType(GenericEntityFilter.FilterType.SELECTED)
+                            .ids(allowedAppIds)
+                            .build())
+              .entityFilter(GenericEntityFilter.builder().filterType(GenericEntityFilter.FilterType.ALL).build())
+              .actions(hasAccountLevelTemplateManagementPermission
+                      ? new HashSet<>(Arrays.asList(PermissionAttribute.Action.CREATE, PermissionAttribute.Action.READ,
+                          PermissionAttribute.Action.UPDATE, PermissionAttribute.Action.DELETE))
+                      : new HashSet<>(Collections.singletonList(PermissionAttribute.Action.READ)))
+              .build();
+      if (userGroup.getAppPermissions() == null) {
+        userGroup.setAppPermissions(new HashSet<>());
+      }
+      userGroup.getAppPermissions().add(applicationTemplatePermission);
+    }
+  }
+
+  @Override
+  public void maskAppTemplatePermissions(UserGroup userGroup) {
+    if (userGroup == null) {
+      return;
+    }
+    Set<AppPermission> appPermissions = userGroup.getAppPermissions();
+    if (isNotEmpty(appPermissions)) {
+      userGroup.setAppPermissions(appPermissions.stream()
+                                      .filter(appPermission
+                                          -> appPermission.getPermissionType() == null
+                                              || !appPermission.getPermissionType().equals(APP_TEMPLATE))
+                                      .collect(toSet()));
+    }
+  }
+
   @Override
   public UserGroup updatePermissions(UserGroup userGroup) {
     checkImplicitPermissions(userGroup.getAccountPermissions(), userGroup.getAccountId(), userGroup.getName());
     checkDeploymentPermissions(userGroup);
+    maintainTemplatePermissions(userGroup);
     AccountPermissions accountPermissions =
         Optional.ofNullable(userGroup.getAccountPermissions()).orElse(AccountPermissions.builder().build());
     userGroup.setAccountPermissions(addDefaultCePermissions(accountPermissions));
@@ -741,6 +827,20 @@ public class UserGroupServiceImpl implements UserGroupService {
 
     return userService.isUserVerified(user) && isNotEmpty(userGroupMembers)
         && userGroupMembers.contains(user.getUuid());
+  }
+
+  @Override
+  public boolean verifyApiKeyAuthorizedToAcceptOrRejectApproval(
+      List<String> apiKeysUserGroupIds, List<String> userGroupIds) {
+    if (isEmpty(userGroupIds)) {
+      return false;
+    }
+
+    if (CollectionUtils.containsAny(apiKeysUserGroupIds, userGroupIds)) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
   @Override

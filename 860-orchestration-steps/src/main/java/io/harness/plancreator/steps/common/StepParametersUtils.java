@@ -11,7 +11,7 @@ import io.harness.plancreator.steps.common.StageElementParameters.StageElementPa
 import io.harness.plancreator.steps.common.StepElementParameters.StepElementParametersBuilder;
 import io.harness.pms.tags.TagUtils;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.yaml.core.timeout.TimeoutUtils;
+import io.harness.utils.TimeoutUtils;
 import io.harness.yaml.utils.NGVariablesUtils;
 
 import lombok.experimental.UtilityClass;

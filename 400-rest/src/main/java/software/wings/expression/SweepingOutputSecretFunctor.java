@@ -6,7 +6,9 @@ import static software.wings.expression.SecretManagerPreviewFunctor.SECRET_NAME_
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.expression.ExpressionFunctor;
 import io.harness.security.SimpleEncryption;
 
@@ -20,6 +22,7 @@ import lombok.Value;
 @OwnedBy(CDC)
 @Value
 @Builder
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class SweepingOutputSecretFunctor implements ExpressionFunctor {
   @Default private Set<String> evaluatedSecrets = new HashSet<>();
   SecretManagerMode mode;

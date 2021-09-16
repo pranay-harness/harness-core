@@ -22,6 +22,8 @@ import io.harness.ccm.commons.dao.CEMetadataRecordDao;
 import io.harness.ccm.commons.entities.batch.CEMetadataRecord;
 import io.harness.ccm.config.GcpBillingAccount;
 import io.harness.ccm.config.GcpBillingAccount.GcpBillingAccountKeys;
+import io.harness.ccm.config.GcpServiceAccount;
+import io.harness.ccm.config.GcpServiceAccount.GcpServiceAccountKeys;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnauthorizedException;
 import io.harness.persistence.HIterator;
@@ -174,9 +176,8 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
   @Override
   public List<Account> getCeEnabledAccounts() {
     List<Account> accounts = new ArrayList<>();
-    Query<Account> query = persistence.createQuery(Account.class, excludeAuthority);
-    query.or(query.criteria(AccountKeys.cloudCostEnabled).equal(Boolean.TRUE),
-        query.criteria(AccountKeys.ceAutoCollectK8sEvents).equal(Boolean.TRUE));
+    Query<Account> query =
+        persistence.createQuery(Account.class, excludeAuthority).filter(AccountKeys.cloudCostEnabled, Boolean.TRUE);
     try (HIterator<Account> accountItr = new HIterator<>(query.fetch())) {
       for (Account account : accountItr) {
         accounts.add(account);
@@ -291,6 +292,12 @@ public class CloudToHarnessMappingServiceImpl implements CloudToHarnessMappingSe
                                          .filter(GcpBillingAccountKeys.accountId, accountId);
     log.info("Query listGcpBillingAccountUpdatedInDuration {}", query.toString());
     return query.asList();
+  }
+
+  public GcpServiceAccount getGcpServiceAccount(String accountId) {
+    Query<GcpServiceAccount> query =
+        persistence.createQuery(GcpServiceAccount.class).field(GcpServiceAccountKeys.accountId).equal(accountId);
+    return query.get();
   }
 
   @Override

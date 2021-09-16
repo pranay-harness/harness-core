@@ -22,6 +22,7 @@ import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
+import io.harness.pms.resourceconstraints.response.ResourceConstraintDetailDTO;
 import io.harness.pms.resourceconstraints.response.ResourceConstraintExecutionInfoDTO;
 import io.harness.pms.resourceconstraints.service.PMSResourceConstraintServiceImpl;
 import io.harness.pms.utils.PmsConstants;
@@ -62,8 +63,7 @@ public class PMSResourceConstraintServiceTest extends PipelineServiceTestBase {
   public void shouldThrowExceptionWhenResourceConstraintNotFound() {
     when(resourceRestraintService.getByNameAndAccountId(PmsConstants.QUEUING_RC_NAME, ACCOUNT_ID)).thenReturn(null);
 
-    assertThatThrownBy(
-        () -> pmsResourceConstraintService.getResourceConstraintExecutionInfoList(ACCOUNT_ID, RESOURCE_UNIT))
+    assertThatThrownBy(() -> pmsResourceConstraintService.getResourceConstraintExecutionInfo(ACCOUNT_ID, RESOURCE_UNIT))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessageContaining(String.format(PMSResourceConstraintServiceImpl.NOT_FOUND_WITH_ARGUMENTS, ACCOUNT_ID));
 
@@ -124,27 +124,30 @@ public class PMSResourceConstraintServiceTest extends PipelineServiceTestBase {
         .thenReturn(restraintInstanceList);
     when(planExecutionService.findAllByPlanExecutionIdIn(any())).thenReturn(planExecutionList);
 
-    List<ResourceConstraintExecutionInfoDTO> response =
-        pmsResourceConstraintService.getResourceConstraintExecutionInfoList(ACCOUNT_ID, RESOURCE_UNIT);
+    ResourceConstraintExecutionInfoDTO response =
+        pmsResourceConstraintService.getResourceConstraintExecutionInfo(ACCOUNT_ID, RESOURCE_UNIT);
 
     assertThat(response).isNotNull();
-    assertThat(response).isNotEmpty();
-    assertThat(response.size()).isEqualTo(3);
-    assertThat(response).containsExactly(ResourceConstraintExecutionInfoDTO.builder()
-                                             .pipelineIdentifier("rc-pipeline")
-                                             .planExecutionId(PLAN_EXECUTION_ID + "1")
-                                             .state(ACTIVE)
-                                             .build(),
-        ResourceConstraintExecutionInfoDTO.builder()
-            .pipelineIdentifier("k8s")
-            .planExecutionId(PLAN_EXECUTION_ID)
-            .state(BLOCKED)
-            .build(),
-        ResourceConstraintExecutionInfoDTO.builder()
-            .pipelineIdentifier("barriers-pipeline")
-            .planExecutionId(PLAN_EXECUTION_ID + "2")
-            .state(BLOCKED)
-            .build());
+    assertThat(response.getCapacity()).isEqualTo(resourceConstraint.getCapacity());
+    assertThat(response.getName()).isEqualTo(resourceConstraint.getName());
+    assertThat(response.getResourceConstraints()).isNotEmpty();
+    assertThat(response.getResourceConstraints().size()).isEqualTo(3);
+    assertThat(response.getResourceConstraints())
+        .containsExactly(ResourceConstraintDetailDTO.builder()
+                             .pipelineIdentifier("rc-pipeline")
+                             .planExecutionId(PLAN_EXECUTION_ID + "1")
+                             .state(ACTIVE)
+                             .build(),
+            ResourceConstraintDetailDTO.builder()
+                .pipelineIdentifier("k8s")
+                .planExecutionId(PLAN_EXECUTION_ID)
+                .state(BLOCKED)
+                .build(),
+            ResourceConstraintDetailDTO.builder()
+                .pipelineIdentifier("barriers-pipeline")
+                .planExecutionId(PLAN_EXECUTION_ID + "2")
+                .state(BLOCKED)
+                .build());
 
     verify(resourceRestraintService).getByNameAndAccountId(PmsConstants.QUEUING_RC_NAME, ACCOUNT_ID);
     verify(resourceRestraintInstanceService)

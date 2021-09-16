@@ -71,7 +71,9 @@ import org.eclipse.jgit.errors.TransportException;
 public class GitClientHelper {
   private static final String GIT_URL_REGEX =
       "(http|https|git)(:\\/\\/|@)([^\\/:]+(:\\d+)?)[\\/:]([^\\/:]+)\\/(.+)?(.git)?";
+  private static final String GIT_URL_REGEX_NO_OWNER = "(http|https|git)(:\\/\\/|@)([^\\/:]+(:\\d+)?)";
   private static final Pattern GIT_URL = Pattern.compile(GIT_URL_REGEX);
+  private static final Pattern GIT_URL_NO_OWNER = Pattern.compile(GIT_URL_REGEX_NO_OWNER);
   private static final Integer OWNER_GROUP = 5;
   private static final Integer REPO_GROUP = 6;
   private static final Integer SCM_GROUP = 3;
@@ -162,7 +164,7 @@ public class GitClientHelper {
   }
 
   private static String getGitSCMHost(String url) {
-    Matcher m = GIT_URL.matcher(url);
+    Matcher m = GIT_URL_NO_OWNER.matcher(url);
     try {
       if (m.find()) {
         return m.toMatchResult().group(SCM_GROUP);

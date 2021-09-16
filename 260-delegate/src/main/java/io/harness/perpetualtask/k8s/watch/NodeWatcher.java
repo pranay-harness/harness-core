@@ -1,6 +1,7 @@
 package io.harness.perpetualtask.k8s.watch;
 
 import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
+import static io.harness.ccm.health.HealthStatusService.UID;
 import static io.harness.perpetualtask.k8s.watch.NodeEvent.EventType.EVENT_TYPE_STOP;
 
 import static java.util.Optional.ofNullable;
@@ -135,7 +136,8 @@ public class NodeWatcher implements ResourceEventHandler<V1Node> {
                                      .build();
 
     log.debug("Publishing event: {}", nodeStoppedEvent);
-    eventPublisher.publishMessage(nodeStoppedEvent, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));
+    eventPublisher.publishMessage(nodeStoppedEvent, timestamp,
+        ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId, UID, node.getMetadata().getUid()));
     publishedNodes.remove(node.getMetadata().getUid());
   }
 
@@ -152,7 +154,11 @@ public class NodeWatcher implements ResourceEventHandler<V1Node> {
               .putAllLabels(node.getMetadata().getLabels())
               .putAllAllocatableResource(K8sResourceUtils.getResourceMap(node.getStatus().getAllocatable()))
               .build();
-      eventPublisher.publishMessage(nodeInfo, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));
+      eventPublisher.publishMessage(
+          nodeInfo, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId, UID, node.getMetadata().getUid()));
+
+      log.info("Published Node Uid: {}, Name:{}", nodeInfo.getNodeUid(), nodeInfo.getNodeName());
+
       publishedNodes.add(node.getMetadata().getUid());
     } else {
       log.debug("NodeInfo for uid:{} already published", node.getMetadata().getUid());

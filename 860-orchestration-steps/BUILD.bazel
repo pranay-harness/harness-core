@@ -12,8 +12,8 @@ java_library(
     deps = [
         "//:lombok",
         "//870-orchestration:module",
-        "//870-yaml-beans:module",
         "//878-pipeline-service-utilities:module",
+        "//889-yaml-commons:module",
         "//940-notification-client:module",
         "//955-delegate-beans:module",
         "//960-continuous-features:module",

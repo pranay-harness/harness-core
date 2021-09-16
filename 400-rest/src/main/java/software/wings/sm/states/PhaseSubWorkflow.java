@@ -10,7 +10,9 @@ import static software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder.aP
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.SweepingOutputInstance;
@@ -81,6 +83,7 @@ import org.mongodb.morphia.annotations.Transient;
  * Created by rishi on 1/12/17.
  */
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @Slf4j
 public class PhaseSubWorkflow extends SubWorkflowState {
   public static final String SERVICE_ID = "serviceId";

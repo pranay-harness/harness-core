@@ -11,10 +11,8 @@ import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.environment.EnvironmentMapper;
-import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.cdng.infra.beans.InfraUseFromStage;
-import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.ParameterFieldHelper;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
@@ -37,6 +35,8 @@ import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.tags.TagUtils;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rbac.CDNGRbacPermissions;
+import io.harness.steps.OutputExpressionConstants;
+import io.harness.steps.environment.EnvironmentOutcome;
 import io.harness.steps.executable.ChildExecutableWithRbac;
 import io.harness.tasks.ResponseData;
 
@@ -75,12 +75,14 @@ public class InfrastructureSectionStep implements ChildExecutableWithRbac<InfraS
         || EmptyPredicate.isEmpty(stepParameters.getEnvironmentRef().getValue())) {
       accessControlClient.checkForAccessOrThrow(Principal.of(principalType, principal),
           ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier), Resource.of("ENVIRONMENT", null),
-          CDNGRbacPermissions.ENVIRONMENT_CREATE_PERMISSION, "Validation for Infrastructure Step failed");
+          CDNGRbacPermissions.ENVIRONMENT_CREATE_PERMISSION, "Missing Environment Create Permission");
     } else {
       accessControlClient.checkForAccessOrThrow(Principal.of(principalType, principal),
           ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
           Resource.of("ENVIRONMENT", stepParameters.getEnvironmentRef().getValue()),
-          CDNGRbacPermissions.ENVIRONMENT_RUNTIME_PERMISSION, "Validation for Infrastructure Step failed");
+          CDNGRbacPermissions.ENVIRONMENT_RUNTIME_PERMISSION,
+          String.format(
+              "Missing Access Permission for Environment: [%s]", stepParameters.getEnvironmentRef().getValue()));
     }
   }
 
@@ -96,7 +98,7 @@ public class InfrastructureSectionStep implements ChildExecutableWithRbac<InfraS
     EnvironmentOutcome environmentOutcome = processEnvironment(ambiance, stepParameters.getUseFromStage(),
         stepParameters.getEnvironment(), stepParameters.getEnvironmentRef());
     executionSweepingOutputResolver.consume(
-        ambiance, OutcomeExpressionConstants.ENVIRONMENT, environmentOutcome, StepOutcomeGroup.STAGE.name());
+        ambiance, OutputExpressionConstants.ENVIRONMENT, environmentOutcome, StepOutcomeGroup.STAGE.name());
 
     return ChildExecutableResponse.newBuilder().setChildNodeId(stepParameters.getChildNodeID()).build();
   }

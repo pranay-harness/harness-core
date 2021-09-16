@@ -51,6 +51,8 @@ billingDataPipelineConfig:
   gcpProjectId: gcpProjectIdPlaceHolder
   gcsBasePath: gcsBasePathPlaceHolder
   gcpPipelinePubSubTopic: "ce-gcpdata"
+  gcpSyncPubSubTopic: "ce-gcp-billing-cf"
+  isGcpSyncEnabled: false
   gcpUseNewPipeline: false
   awsUseNewPipeline: false
   clusterDataGcsBucketName: "clusterdata-qa"
@@ -124,3 +126,4 @@ banzaiRecommenderConfig:
   readTimeOutSeconds: 15
 
 ngManagerServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+awsCurBilling: true

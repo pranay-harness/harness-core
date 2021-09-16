@@ -224,364 +224,6 @@ preAggreagtedTableSchema = [
     }
 ]
 
-clusterDataTableFields = [
-    {
-        "mode": "REQUIRED",
-        "name": "starttime",
-        "type": "INTEGER"
-    },
-    {
-        "mode": "REQUIRED",
-        "name": "endtime",
-        "type": "INTEGER"
-    },
-    {
-        "mode": "REQUIRED",
-        "name": "accountid",
-        "type": "STRING"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "settingid",
-        "type": "STRING"
-    },
-    {
-        "mode": "REQUIRED",
-        "name": "instanceid",
-        "type": "STRING"
-    },
-    {
-        "mode": "REQUIRED",
-        "name": "instancetype",
-        "type": "STRING"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "billingaccountid",
-        "type": "STRING"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "clusterid",
-        "type": "STRING"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "clustername",
-        "type": "STRING"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "appid",
-        "type": "STRING"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "serviceid",
-        "type": "STRING"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "envid",
-        "type": "STRING"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "appname",
-        "type": "STRING"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "servicename",
-        "type": "STRING"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "envname",
-        "type": "STRING"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "cloudproviderid",
-        "type": "STRING"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "parentinstanceid",
-        "type": "STRING"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "region",
-        "type": "STRING"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "launchtype",
-        "type": "STRING"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "clustertype",
-        "type": "STRING"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "workloadname",
-        "type": "STRING"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "workloadtype",
-        "type": "STRING"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "namespace",
-        "type": "STRING"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "cloudservicename",
-        "type": "STRING"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "taskid",
-        "type": "STRING"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "cloudprovider",
-        "type": "STRING"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "billingamount",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "cpubillingamount",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "memorybillingamount",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "idlecost",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "cpuidlecost",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "memoryidlecost",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "usagedurationseconds",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "cpuunitseconds",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "memorymbseconds",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "maxcpuutilization",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "maxmemoryutilization",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "avgcpuutilization",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "avgmemoryutilization",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "systemcost",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "cpusystemcost",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "memorysystemcost",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "actualidlecost",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "cpuactualidlecost",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "memoryactualidlecost",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "unallocatedcost",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "cpuunallocatedcost",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "memoryunallocatedcost",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "instancename",
-        "type": "STRING"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "cpurequest",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "memoryrequest",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "cpulimit",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "memorylimit",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "maxcpuutilizationvalue",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "maxmemoryutilizationvalue",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "avgcpuutilizationvalue",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "avgmemoryutilizationvalue",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "networkcost",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "pricingsource",
-        "type": "STRING"
-    },
-    {
-        "fields": [
-            {
-                "name": "key",
-                "type": "STRING"
-            },
-            {
-                "name": "value",
-                "type": "STRING"
-            }
-        ],
-        "mode": "REPEATED",
-        "name": "labels",
-        "type": "RECORD"
-    },
-    {
-        "fields": [
-            {
-                "name": "key",
-                "type": "STRING"
-            },
-            {
-                "name": "value",
-                "type": "STRING"
-            }
-        ],
-        "mode": "REPEATED",
-        "name": "label",
-        "type": "RECORD"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "storagecost",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "storagembseconds",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "storagerequest",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "storageutilizationvalue",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "storageunallocatedcost",
-        "type": "FLOAT"
-    },
-    {
-        "mode": "NULLABLE",
-        "name": "storageactualidlecost",
-        "type": "FLOAT"
-    }
-]
-
 awsEc2InventoryCPUSchema = [
     {
         "mode": "NULLABLE",
@@ -1273,7 +915,89 @@ awsEbsInventoryMetricsSchema = [
     }
 ]
 
-# Generated from script
+# Generated from script via timescale
+clusterDataTableFields = [{'mode': 'REQUIRED', 'name': 'starttime', 'type': 'INTEGER'},
+                          {'mode': 'REQUIRED', 'name': 'endtime', 'type': 'INTEGER'},
+                          {'mode': 'REQUIRED', 'name': 'accountid', 'type': 'STRING'},
+                          {'mode': 'NULLABLE', 'name': 'settingid', 'type': 'STRING'},
+                          {'mode': 'REQUIRED', 'name': 'instanceid', 'type': 'STRING'},
+                          {'mode': 'REQUIRED', 'name': 'instancetype', 'type': 'STRING'},
+                          {'mode': 'NULLABLE', 'name': 'billingaccountid', 'type': 'STRING'},
+                          {'mode': 'NULLABLE', 'name': 'clusterid', 'type': 'STRING'},
+                          {'mode': 'NULLABLE', 'name': 'clustername', 'type': 'STRING'},
+                          {'mode': 'NULLABLE', 'name': 'appid', 'type': 'STRING'},
+                          {'mode': 'NULLABLE', 'name': 'serviceid', 'type': 'STRING'},
+                          {'mode': 'NULLABLE', 'name': 'envid', 'type': 'STRING'},
+                          {'mode': 'NULLABLE', 'name': 'appname', 'type': 'STRING'},
+                          {'mode': 'NULLABLE', 'name': 'servicename', 'type': 'STRING'},
+                          {'mode': 'NULLABLE', 'name': 'envname', 'type': 'STRING'},
+                          {'mode': 'NULLABLE', 'name': 'cloudproviderid', 'type': 'STRING'},
+                          {'mode': 'NULLABLE', 'name': 'parentinstanceid', 'type': 'STRING'},
+                          {'mode': 'NULLABLE', 'name': 'region', 'type': 'STRING'},
+                          {'mode': 'NULLABLE', 'name': 'launchtype', 'type': 'STRING'},
+                          {'mode': 'NULLABLE', 'name': 'clustertype', 'type': 'STRING'},
+                          {'mode': 'NULLABLE', 'name': 'workloadname', 'type': 'STRING'},
+                          {'mode': 'NULLABLE', 'name': 'workloadtype', 'type': 'STRING'},
+                          {'mode': 'NULLABLE', 'name': 'namespace', 'type': 'STRING'},
+                          {'mode': 'NULLABLE', 'name': 'cloudservicename', 'type': 'STRING'},
+                          {'mode': 'NULLABLE', 'name': 'taskid', 'type': 'STRING'},
+                          {'mode': 'NULLABLE', 'name': 'cloudprovider', 'type': 'STRING'},
+                          {'mode': 'REQUIRED', 'name': 'billingamount', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'cpubillingamount', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'memorybillingamount', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'idlecost', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'cpuidlecost', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'memoryidlecost', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'usagedurationseconds', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'cpuunitseconds', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'memorymbseconds', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'maxcpuutilization', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'maxmemoryutilization', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'avgcpuutilization', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'avgmemoryutilization', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'systemcost', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'cpusystemcost', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'memorysystemcost', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'actualidlecost', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'cpuactualidlecost', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'memoryactualidlecost', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'unallocatedcost', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'cpuunallocatedcost', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'memoryunallocatedcost', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'instancename', 'type': 'STRING'},
+                          {'mode': 'NULLABLE', 'name': 'cpurequest', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'memoryrequest', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'cpulimit', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'memorylimit', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'maxcpuutilizationvalue', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'maxmemoryutilizationvalue', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'avgcpuutilizationvalue', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'avgmemoryutilizationvalue', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'networkcost', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'pricingsource', 'type': 'STRING'},
+                          {'mode': 'NULLABLE', 'name': 'storageactualidlecost', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'storageunallocatedcost', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'storageutilizationvalue', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'storagerequest', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'storagembseconds', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'storagecost', 'type': 'FLOAT'},
+                          {
+                              "fields": [
+                                  {
+                                      "name": "key",
+                                      "type": "STRING"
+                                  },
+                                  {
+                                      "name": "value",
+                                      "type": "STRING"
+                                  }
+                              ],
+                              "mode": "REPEATED",
+                              "name": "labels",
+                              "type": "RECORD"
+                          }]
+
+# Generated from script via timescale
 clusterDataAggregatedFields = [{'mode': 'REQUIRED', 'name': 'starttime', 'type': 'INTEGER'},
                                {'mode': 'REQUIRED', 'name': 'endtime', 'type': 'INTEGER'},
                                {'mode': 'REQUIRED', 'name': 'accountid', 'type': 'STRING'},
@@ -1307,4 +1031,24 @@ clusterDataAggregatedFields = [{'mode': 'REQUIRED', 'name': 'starttime', 'type':
                                {'mode': 'NULLABLE', 'name': 'memorybillingamount', 'type': 'FLOAT'},
                                {'mode': 'NULLABLE', 'name': 'storagerequest', 'type': 'FLOAT'},
                                {'mode': 'NULLABLE', 'name': 'storageutilizationvalue', 'type': 'FLOAT'},
-                               {'mode': 'NULLABLE', 'name': 'instanceid', 'type': 'STRING'}]
+                               {'mode': 'NULLABLE', 'name': 'instanceid', 'type': 'STRING'},
+                               {'mode': 'NULLABLE', 'name': 'networkcost', 'type': 'FLOAT'},
+                               {'mode': 'NULLABLE', 'name': 'appname', 'type': 'STRING'},
+                               {'mode': 'NULLABLE', 'name': 'servicename', 'type': 'STRING'},
+                               {'mode': 'NULLABLE', 'name': 'envname', 'type': 'STRING'},
+                               {'mode': 'NULLABLE', 'name': 'cloudprovider', 'type': 'STRING'},
+                               {
+                                   "fields": [
+                                       {
+                                           "name": "key",
+                                           "type": "STRING"
+                                       },
+                                       {
+                                           "name": "value",
+                                           "type": "STRING"
+                                       }
+                                   ],
+                                   "mode": "REPEATED",
+                                   "name": "labels",
+                                   "type": "RECORD"
+                               }] # Added manually

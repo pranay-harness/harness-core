@@ -56,6 +56,8 @@ public interface ConnectorCrudService {
 
   List<ConnectorResponseDTO> listbyFQN(String accountIdentifier, List<String> connectorsFQN);
 
+  long count(String accountIdentifier, String orgIdentifier, String projectIdentifier);
+
   void deleteBatch(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, List<String> connectorIdentifiersList);
 }

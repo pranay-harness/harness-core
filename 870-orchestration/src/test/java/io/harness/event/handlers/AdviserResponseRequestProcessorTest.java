@@ -6,6 +6,7 @@ import static io.harness.rule.OwnerRule.SAHIL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
@@ -29,7 +30,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 @OwnedBy(HarnessTeam.PIPELINE)
-public class AdviserResponseRequestProcessorTest {
+public class AdviserResponseRequestProcessorTest extends CategoryTest {
   @Mock private OrchestrationEngine orchestrationEngine;
   @InjectMocks private AdviserResponseRequestProcessor adviserEventResponseHandler;
 

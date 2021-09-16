@@ -59,7 +59,7 @@ import org.mongodb.morphia.query.Sort;
 @Setter
 @Slf4j
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class TerraformRollbackState extends TerraformProvisionState {
   private TerraformCommand rollbackCommand;
 

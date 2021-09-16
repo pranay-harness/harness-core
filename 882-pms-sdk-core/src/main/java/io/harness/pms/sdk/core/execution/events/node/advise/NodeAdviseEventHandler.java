@@ -34,15 +34,6 @@ public class NodeAdviseEventHandler extends PmsBaseEventHandler<AdviseEvent> {
   @Inject private SdkNodeExecutionService sdkNodeExecutionService;
 
   @Override
-  protected Map<String, String> extractMetricContext(AdviseEvent message) {
-    return ImmutableMap.<String, String>builder()
-        .put("accountId", AmbianceUtils.getAccountId(message.getAmbiance()))
-        .put("orgIdentifier", AmbianceUtils.getOrgIdentifier(message.getAmbiance()))
-        .put("projectIdentifier", AmbianceUtils.getProjectIdentifier(message.getAmbiance()))
-        .build();
-  }
-
-  @Override
   protected String getMetricPrefix(AdviseEvent message) {
     return "advise_event";
   }
@@ -89,6 +80,7 @@ public class NodeAdviseEventHandler extends PmsBaseEventHandler<AdviseEvent> {
       }
 
       if (adviserResponse != null) {
+        log.info("Calculated Adviser response is of type {}", adviserResponse.getType());
         sdkNodeExecutionService.handleAdviserResponse(
             ambiance.getPlanExecutionId(), nodeExecutionId, event.getNotifyId(), adviserResponse);
       } else {

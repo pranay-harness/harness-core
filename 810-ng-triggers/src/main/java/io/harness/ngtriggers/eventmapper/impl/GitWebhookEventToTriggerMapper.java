@@ -14,9 +14,9 @@ import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
 import io.harness.ngtriggers.eventmapper.WebhookEventToTriggerMapper;
 import io.harness.ngtriggers.eventmapper.filters.TriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.dto.FilterRequestData;
+import io.harness.ngtriggers.helpers.TriggerEventResponseHelper;
 import io.harness.ngtriggers.helpers.TriggerFilterStore;
 import io.harness.ngtriggers.helpers.WebhookEventPublisher;
-import io.harness.ngtriggers.helpers.WebhookEventResponseHelper;
 import io.harness.ngtriggers.utils.WebhookEventPayloadParser;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -44,7 +44,7 @@ public class GitWebhookEventToTriggerMapper implements WebhookEventToTriggerMapp
       ParsePayloadResponse parsePayloadResponse = convertWebhookResponse(triggerWebhookEvent);
       if (parsePayloadResponse.isExceptionOccured()) {
         return WebhookEventMappingResponse.builder()
-            .webhookEventResponse(WebhookEventResponseHelper.prepareResponseForScmException(parsePayloadResponse))
+            .webhookEventResponse(TriggerEventResponseHelper.prepareResponseForScmException(parsePayloadResponse))
             .build();
       }
 

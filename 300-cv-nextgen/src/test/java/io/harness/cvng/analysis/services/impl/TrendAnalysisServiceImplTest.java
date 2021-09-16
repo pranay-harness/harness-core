@@ -8,9 +8,12 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.SOWMYA;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doReturn;
 
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.analysis.beans.ServiceGuardTimeSeriesAnalysisDTO;
 import io.harness.cvng.analysis.beans.ServiceGuardTxnMetricAnalysisDataDTO;
 import io.harness.cvng.analysis.beans.TimeSeriesAnomalies;
@@ -32,14 +35,17 @@ import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.cvng.analysis.services.api.TrendAnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.TimeSeriesMetricType;
+import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.models.VerificationType;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
+import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
@@ -71,16 +77,21 @@ public class TrendAnalysisServiceImplTest extends CvNextGenTestBase {
   @Inject private CVConfigService cvConfigService;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private DeploymentLogAnalysisService deploymentLogAnalysisService;
-  @Mock private HeatMapService heatMapService;
+  @Inject private HeatMapService heatMapService;
+  @Mock private NextGenService nextGenService;
+  private BuilderFactory builderFactory;
 
   @Before
   public void setUp() throws IllegalAccessException {
+    builderFactory = BuilderFactory.getDefault();
     MockitoAnnotations.initMocks(this);
     CVConfig cvConfig = createCVConfig();
     cvConfigService.save(cvConfig);
     cvConfigId = cvConfig.getUuid();
     verificationTaskId = verificationTaskService.getServiceGuardVerificationTaskId(cvConfig.getAccountId(), cvConfigId);
 
+    FieldUtils.writeField(cvConfigService, "nextGenService", nextGenService, true);
+    FieldUtils.writeField(heatMapService, "cvConfigService", cvConfigService, true);
     FieldUtils.writeField(trendAnalysisService, "heatMapService", heatMapService, true);
   }
 
@@ -182,6 +193,9 @@ public class TrendAnalysisServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testSaveAnalysis() {
+    doReturn(builderFactory.environmentResponseDTOBuilder().type(EnvironmentType.Production).build())
+        .when(nextGenService)
+        .getEnvironment(any(), any(), any(), any());
     Instant start = Instant.now().minus(10, ChronoUnit.MINUTES).truncatedTo(ChronoUnit.MINUTES);
     Instant end = start.plus(5, ChronoUnit.MINUTES);
     List<LogAnalysisCluster> logAnalysisClusters = createLogAnalysisClusters(start, end);
@@ -223,13 +237,19 @@ public class TrendAnalysisServiceImplTest extends CvNextGenTestBase {
     assertThat(analysisResult.getLogAnalysisResults().get(0))
         .isEqualTo(AnalysisResult.builder().label(1).tag(LogAnalysisTag.KNOWN).count(14).build());
     assertThat(analysisResult.getLogAnalysisResults().get(1))
-        .isEqualTo(AnalysisResult.builder().label(2).tag(LogAnalysisTag.UNEXPECTED).count(14).build());
+        .isEqualTo(AnalysisResult.builder().label(2).tag(LogAnalysisTag.UNEXPECTED).count(14).riskScore(1.0).build());
+    List<HeatMap> heatMaps = hPersistence.createQuery(HeatMap.class).asList();
+    heatMaps.forEach(
+        heatMap -> assertThat(heatMap.getHeatMapRisks().iterator().next().getAnomalousLogsCount()).isEqualTo(1));
   }
 
   @Test
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testSaveAnalysis_emptyCumulativeSums() {
+    doReturn(builderFactory.environmentResponseDTOBuilder().type(EnvironmentType.Production).build())
+        .when(nextGenService)
+        .getEnvironment(any(), any(), any(), any());
     Instant start = Instant.now().minus(10, ChronoUnit.MINUTES).truncatedTo(ChronoUnit.MINUTES);
     Instant end = start.plus(5, ChronoUnit.MINUTES);
     List<LogAnalysisCluster> logAnalysisClusters = createLogAnalysisClusters(start, end);
@@ -263,12 +283,18 @@ public class TrendAnalysisServiceImplTest extends CvNextGenTestBase {
         assertThat(frequency.getRiskScore()).isEqualTo(1.0);
       }
     }
+    List<HeatMap> heatMaps = hPersistence.createQuery(HeatMap.class).asList();
+    heatMaps.forEach(
+        heatMap -> assertThat(heatMap.getHeatMapRisks().iterator().next().getAnomalousLogsCount()).isEqualTo(2));
   }
 
   @Test
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testSaveAnalysis_baselineWindow() {
+    doReturn(builderFactory.environmentResponseDTOBuilder().type(EnvironmentType.Production).build())
+        .when(nextGenService)
+        .getEnvironment(any(), any(), any(), any());
     Instant start = Instant.now().minus(10, ChronoUnit.MINUTES).truncatedTo(ChronoUnit.MINUTES);
     Instant end = start.plus(5, ChronoUnit.MINUTES);
     List<LogAnalysisCluster> logAnalysisClusters = createLogAnalysisClusters(start, end);
@@ -311,6 +337,9 @@ public class TrendAnalysisServiceImplTest extends CvNextGenTestBase {
         .isEqualTo(AnalysisResult.builder().label(1).tag(LogAnalysisTag.KNOWN).count(14).build());
     assertThat(analysisResult.getLogAnalysisResults().get(1))
         .isEqualTo(AnalysisResult.builder().label(2).tag(LogAnalysisTag.KNOWN).count(14).build());
+    List<HeatMap> heatMaps = hPersistence.createQuery(HeatMap.class).asList();
+    heatMaps.forEach(
+        heatMap -> assertThat(heatMap.getHeatMapRisks().iterator().next().getAnomalousLogsCount()).isEqualTo(0));
   }
 
   @Test
@@ -408,7 +437,7 @@ public class TrendAnalysisServiceImplTest extends CvNextGenTestBase {
                                                 .build()))
               .lastSeenTime(0)
               .metricType(TimeSeriesMetricType.ERROR)
-              .risk(1)
+              .risk(2)
               .score(1.0)
               .build();
       metricMap.put(TREND_METRIC_NAME, txnMetricData);

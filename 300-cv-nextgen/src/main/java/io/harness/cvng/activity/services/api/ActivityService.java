@@ -9,26 +9,36 @@ import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivitySummaryDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.activity.entities.Activity;
+import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
+import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
 import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
-import io.harness.cvng.beans.activity.cd10.CD10RegisterActivityDTO;
+import io.harness.cvng.beans.activity.ActivityType;
+import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.core.beans.DatasourceTypeDTO;
+import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
+import io.harness.cvng.core.beans.params.PageParams;
+import io.harness.cvng.core.beans.params.ProjectParams;
+import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
+import io.harness.cvng.core.beans.params.filterParams.DeploymentLogAnalysisFilter;
+import io.harness.cvng.core.beans.params.filterParams.DeploymentTimeSeriesAnalysisFilter;
+import io.harness.ng.beans.PageResponse;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
+import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
+import lombok.NonNull;
 
 @OwnedBy(HarnessTeam.CV)
 public interface ActivityService {
   Activity get(String activityId);
   Activity getByVerificationJobInstanceId(String verificationJobInstanceId);
-  String register(String accountId, String webhookToken, ActivityDTO activityDTO);
 
   String register(String accountId, ActivityDTO activityDTO);
   String register(Activity activity);
-
-  CD10RegisterActivityDTO registerCD10Activity(String accountId, ActivityDTO activityDTO);
 
   void updateActivityStatus(Activity activity);
 
@@ -45,8 +55,9 @@ public interface ActivityService {
 
   String createActivity(Activity activity);
 
-  List<ActivityDashboardDTO> listActivitiesInTimeRange(String accountId, String orgIdentifier, String projectIdentifier,
-      String environmentIdentifier, String serviceIdentifier, Instant startTime, Instant endTime);
+  List<ActivityDashboardDTO> listActivitiesInTimeRange(@NotNull @NonNull ProjectParams projectParams,
+      @Nullable String serviceIdentifier, @Nullable String environmentIdentifier, @NotNull Instant startTime,
+      @NotNull Instant endTime);
 
   List<ActivityVerificationResultDTO> getRecentActivityVerificationResults(
       String accountId, String orgIdentifier, String projectIdentifier, int size);
@@ -57,6 +68,25 @@ public interface ActivityService {
   ActivityStatusDTO getActivityStatus(String accountId, String activityId);
   List<String> createVerificationJobInstancesForActivity(Activity activity);
   TransactionMetricInfoSummaryPageDTO getDeploymentActivityTimeSeriesData(String accountId, String activityId,
-      boolean anomalousMetricsOnly, String hostName, String filter, int pageNumber, int pageSize);
+      DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter, PageParams pageParams);
   Set<DatasourceTypeDTO> getDataSourcetypes(String accountId, String activityId);
+
+  List<LogAnalysisClusterChartDTO> getDeploymentActivityLogAnalysisClusters(
+      String accountId, String activityId, DeploymentLogAnalysisFilter deploymentLogAnalysisFilter);
+
+  PageResponse<LogAnalysisClusterDTO> getDeploymentActivityLogAnalysisResult(String accountId, String activityId,
+      Integer label, DeploymentLogAnalysisFilter deploymentLogAnalysisFilter, PageParams pageParams);
+
+  void abort(String activityId);
+
+  Set<HealthSourceDTO> healthSources(String accountId, String activityId);
+
+  void upsert(Activity activity);
+
+  List<Activity> get(ServiceEnvironmentParams serviceEnvironmentParams, List<String> changeSourceIdentifiers,
+      Instant startTime, Instant endTime, List<ActivityType> activityTypes);
+
+  Long getCount(ServiceEnvironmentParams serviceEnvironmentParams, List<String> changeSourceIdentifiers,
+      Instant startTime, Instant endTime, List<ActivityType> activityTypes);
+  String createActivityForDemo(Activity activity, ActivityVerificationStatus verificationStatus);
 }

@@ -29,7 +29,6 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
-import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.execution.PlanExecution;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
@@ -41,7 +40,6 @@ import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.repositories.BarrierNodeRepository;
 import io.harness.springdata.HMongoTemplate;
-import io.harness.steps.barriers.BarrierStep;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance.BarrierExecutionInstanceKeys;
 import io.harness.steps.barriers.beans.BarrierPositionInfo;
@@ -54,6 +52,7 @@ import io.harness.steps.barriers.beans.StageDetail.StageDetailKeys;
 import io.harness.steps.barriers.service.visitor.BarrierVisitor;
 import io.harness.waiter.WaitNotifyEngine;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -317,14 +316,6 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
   }
 
   @Override
-  public List<NodeExecution> findBarrierNodesByPlanExecutionIdAndIdentifier(String planExecutionId, String identifier) {
-    Query query = query(new Criteria().andOperator(where(NodeExecutionKeys.planExecutionId).is(planExecutionId),
-        where("node.stepType.type").is(BarrierStep.STEP_TYPE.getType()),
-        where("resolvedStepParameters.identifier").is(identifier)));
-    return mongoTemplate.find(query, NodeExecution.class);
-  }
-
-  @Override
   public List<BarrierExecutionInstance> findByStageIdentifierAndPlanExecutionIdAnsStateIn(
       String stageIdentifier, String planExecutionId, Set<State> stateSet) {
     Criteria planExecutionIdCriteria = Criteria.where(BarrierExecutionInstanceKeys.planExecutionId).is(planExecutionId);
@@ -340,7 +331,8 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
     return mongoTemplate.find(query, BarrierExecutionInstance.class);
   }
 
-  private List<BarrierExecutionInstance> findByPosition(
+  @VisibleForTesting
+  protected List<BarrierExecutionInstance> findByPosition(
       String planExecutionId, BarrierPositionType positionType, String positionSetupId) {
     Criteria planExecutionIdCriteria = Criteria.where(BarrierExecutionInstanceKeys.planExecutionId).is(planExecutionId);
 

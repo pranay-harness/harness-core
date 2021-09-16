@@ -17,6 +17,9 @@ import io.harness.ngtriggers.eventmapper.filters.impl.HeaderTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.JexlConditionsTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.PayloadConditionsTriggerFilter;
 import io.harness.ngtriggers.eventmapper.filters.impl.SourceRepoTypeTriggerFilter;
+import io.harness.ngtriggers.eventmapper.filters.impl.buildtrigger.BuildTriggerEventConditionsFilter;
+import io.harness.ngtriggers.eventmapper.filters.impl.buildtrigger.BuildTriggerSignatureFilter;
+import io.harness.ngtriggers.eventmapper.filters.impl.buildtrigger.BuildTriggerValidationFilter;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -40,6 +43,9 @@ public class TriggerFilterStore {
   private final HeaderTriggerFilter headerTriggerFilter;
   private final JexlConditionsTriggerFilter jexlConditionsTriggerFilter;
   private final FilepathTriggerFilter filepathTriggerFilter;
+  private final BuildTriggerEventConditionsFilter buildConditionsTriggerFilter;
+  private final BuildTriggerValidationFilter buildTriggerValidationFilter;
+  private final BuildTriggerSignatureFilter buildTriggerSignatureFilter;
 
   public List<TriggerFilter> getWebhookTriggerFilters(WebhookPayloadData webhookPayloadData) {
     if (CUSTOM.name().equals(webhookPayloadData.getOriginalEvent().getSourceRepoType())) {
@@ -58,6 +64,10 @@ public class TriggerFilterStore {
     }
 
     return getWebhookGitTriggerFiltersDefaultList();
+  }
+
+  public List<TriggerFilter> getBuildTriggerFiltersDefaultList() {
+    return Arrays.asList(buildTriggerSignatureFilter, buildConditionsTriggerFilter, buildTriggerValidationFilter);
   }
 
   List<TriggerFilter> getWebhookGitTriggerFiltersDefaultList() {

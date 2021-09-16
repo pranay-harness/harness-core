@@ -42,6 +42,7 @@ java_library(
     name = "tests",
     testonly = True,
     srcs = glob(["src/test/**/*.java"]),
+    resources = ["//870-orchestration/src/test/resources:resource"],
     visibility = ["//visibility:public"],
     deps = shared_dependencies + [
         ":module",
@@ -55,6 +56,8 @@ java_library(
         "@maven//:org_awaitility_awaitility",
         "@maven//:org_jooq_joor",
         "@maven//:org_mockito_mockito_core",
+        "@maven//:org_powermock_powermock_api_mockito",
+        "@maven//:org_powermock_powermock_module_junit4",
         "@maven//:org_reflections_reflections",
     ],
 )

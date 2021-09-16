@@ -4,6 +4,12 @@ package io.harness.pms.contracts.steps;
 
 option java_multiple_files = true;
 
+message SdkStep {
+  StepType stepType = 1;
+  StepInfo stepInfo = 2;
+  bool isPartOfStepPallete = 3;
+}
+
 message StepType {
   string type = 1;
   StepCategory stepCategory = 2;
@@ -27,4 +33,6 @@ enum StepCategory {
   STAGE = 2;
   STEP = 3;
   STAGES = 4;
+  FORK = 5;
+  STEP_GROUP = 6;
 }

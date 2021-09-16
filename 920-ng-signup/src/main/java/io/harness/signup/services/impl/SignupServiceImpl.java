@@ -5,22 +5,22 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.remote.client.RestClientUtils.getResponse;
 import static io.harness.utils.CryptoUtils.secureRandAlphaNumString;
 
+import static java.lang.Boolean.FALSE;
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 
+import io.harness.accesscontrol.clients.AccessControlClient;
+import io.harness.accesscontrol.clients.Resource;
+import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.account.services.AccountService;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.authenticationservice.recaptcha.ReCaptchaVerifier;
-import io.harness.beans.FeatureName;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SignupException;
-import io.harness.exception.UnavailableFeatureException;
 import io.harness.exception.UserAlreadyPresentException;
 import io.harness.exception.WeakPasswordException;
 import io.harness.exception.WingsException;
-import io.harness.ff.FeatureFlagService;
 import io.harness.ng.core.dto.AccountDTO;
-import io.harness.ng.core.user.SignupInviteDTO;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserRequestDTO;
 import io.harness.notification.templates.PredefinedTemplate;
@@ -28,11 +28,13 @@ import io.harness.repositories.SignupVerificationTokenRepository;
 import io.harness.signup.data.UtmInfo;
 import io.harness.signup.dto.OAuthSignupDTO;
 import io.harness.signup.dto.SignupDTO;
+import io.harness.signup.dto.SignupInviteDTO;
 import io.harness.signup.dto.VerifyTokenResponseDTO;
 import io.harness.signup.entities.SignupVerificationToken;
 import io.harness.signup.notification.EmailType;
 import io.harness.signup.notification.SignupNotificationHelper;
 import io.harness.signup.services.SignupService;
+import io.harness.signup.services.SignupType;
 import io.harness.signup.validator.SignupValidator;
 import io.harness.telemetry.Category;
 import io.harness.telemetry.Destination;
@@ -43,7 +45,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryConfig;
+import java.io.IOException;
 import java.net.URISyntaxException;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -69,9 +75,9 @@ public class SignupServiceImpl implements SignupService {
   private ReCaptchaVerifier reCaptchaVerifier;
   private final TelemetryReporter telemetryReporter;
   private final SignupNotificationHelper signupNotificationHelper;
-  private FeatureFlagService featureFlagService;
   private final SignupVerificationTokenRepository verificationTokenRepository;
   private final ExecutorService executorService;
+  private final AccessControlClient accessControlClient;
 
   public static final String FAILED_EVENT_NAME = "SIGNUP_ATTEMPT_FAILED";
   public static final String SUCCEED_EVENT_NAME = "NEW_SIGNUP";
@@ -85,18 +91,18 @@ public class SignupServiceImpl implements SignupService {
   @Inject
   public SignupServiceImpl(AccountService accountService, UserClient userClient, SignupValidator signupValidator,
       ReCaptchaVerifier reCaptchaVerifier, TelemetryReporter telemetryReporter,
-      SignupNotificationHelper signupNotificationHelper, FeatureFlagService featureFlagService,
-      SignupVerificationTokenRepository verificationTokenRepository,
-      @Named("NGSignupNotification") ExecutorService executorService) {
+      SignupNotificationHelper signupNotificationHelper, SignupVerificationTokenRepository verificationTokenRepository,
+      @Named("NGSignupNotification") ExecutorService executorService,
+      @Named("PRIVILEGED") AccessControlClient accessControlClient) {
     this.accountService = accountService;
     this.userClient = userClient;
     this.signupValidator = signupValidator;
     this.reCaptchaVerifier = reCaptchaVerifier;
     this.telemetryReporter = telemetryReporter;
     this.signupNotificationHelper = signupNotificationHelper;
-    this.featureFlagService = featureFlagService;
     this.verificationTokenRepository = verificationTokenRepository;
     this.executorService = executorService;
+    this.accessControlClient = accessControlClient;
   }
 
   /**
@@ -104,8 +110,6 @@ public class SignupServiceImpl implements SignupService {
    */
   @Override
   public UserInfo signup(SignupDTO dto, String captchaToken) throws WingsException {
-    validateSignupFeatureFlag();
-
     verifyReCaptcha(dto, captchaToken);
     verifySignupDTO(dto);
 
@@ -113,7 +117,8 @@ public class SignupServiceImpl implements SignupService {
 
     AccountDTO account = createAccount(dto);
     UserInfo user = createUser(dto, account);
-    sendSucceedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), account.getIdentifier(), user);
+    sendSucceedTelemetryEvent(
+        dto.getEmail(), dto.getUtmInfo(), account.getIdentifier(), user, SignupType.SIGNUP_FORM_FLOW);
     executorService.submit(() -> {
       SignupVerificationToken verificationToken = generateNewToken(user.getEmail());
       try {
@@ -132,15 +137,20 @@ public class SignupServiceImpl implements SignupService {
    */
   @Override
   public boolean createSignupInvite(SignupDTO dto, String captchaToken) {
-    validateSignupFeatureFlag();
     verifyReCaptcha(dto, captchaToken);
     verifySignupDTO(dto);
 
     dto.setEmail(dto.getEmail().toLowerCase());
 
     String passwordHash = hashpw(dto.getPassword(), BCrypt.gensalt());
-    SignupInviteDTO signupRequest =
-        SignupInviteDTO.builder().email(dto.getEmail()).passwordHash(passwordHash).intent(dto.getIntent()).build();
+    SignupInviteDTO signupRequest = SignupInviteDTO.builder()
+                                        .email(dto.getEmail())
+                                        .passwordHash(passwordHash)
+                                        .intent(dto.getIntent())
+                                        .signupAction(dto.getSignupAction())
+                                        .edition(dto.getEdition())
+                                        .billingFrequency(dto.getBillingFrequency())
+                                        .build();
     try {
       getResponse(userClient.createNewSignupInvite(signupRequest));
     } catch (InvalidRequestException e) {
@@ -172,7 +182,6 @@ public class SignupServiceImpl implements SignupService {
    */
   @Override
   public UserInfo completeSignupInvite(String token) {
-    validateSignupFeatureFlag();
     Optional<SignupVerificationToken> verificationTokenOptional = verificationTokenRepository.findByToken(token);
 
     if (!verificationTokenOptional.isPresent()) {
@@ -193,7 +202,8 @@ public class SignupServiceImpl implements SignupService {
       UserInfo userInfo = getResponse(userClient.completeSignupInvite(verificationToken.getEmail()));
       verificationTokenRepository.delete(verificationToken);
 
-      sendSucceedTelemetryEvent(userInfo.getEmail(), null, userInfo.getDefaultAccountId(), userInfo);
+      sendSucceedTelemetryEvent(
+          userInfo.getEmail(), null, userInfo.getDefaultAccountId(), userInfo, SignupType.SIGNUP_FORM_FLOW);
       executorService.submit(() -> {
         try {
           String url = generateLoginUrl(userInfo.getDefaultAccountId());
@@ -203,12 +213,48 @@ public class SignupServiceImpl implements SignupService {
           log.error("Failed to generate login url", e);
         }
       });
+
+      waitForRbacSetup(userInfo.getDefaultAccountId(), userInfo.getUuid(), userInfo.getEmail());
       log.info("Completed NG signup for {}", userInfo.getEmail());
       return userInfo;
     } catch (Exception e) {
       sendFailedTelemetryEvent(verificationToken.getEmail(), null, e, null, "Complete Signup Invite");
       throw e;
     }
+  }
+
+  private void waitForRbacSetup(String accountId, String userId, String email) {
+    try {
+      boolean rbacSetupSuccessful = busyPollUntilAccountRBACSetupCompletes(accountId, userId, 100, 200);
+      if (FALSE.equals(rbacSetupSuccessful)) {
+        log.error("User [{}] couldn't be assigned account admin role in stipulated time", email);
+        throw new SignupException("Role assignment executes longer than usual, please try logging-in in few minutes");
+      }
+    } catch (Exception e) {
+      log.error(String.format("Failed to check rbac setup for account [%s]", accountId), e);
+      throw new SignupException("Role assignment executes longer than usual, please try logging-in in few minutes");
+    }
+  }
+
+  private boolean busyPollUntilAccountRBACSetupCompletes(
+      String accountId, String userId, int maxAttempts, long retryDurationInMillis) {
+    RetryConfig config = RetryConfig.custom()
+                             .maxAttempts(maxAttempts)
+                             .waitDuration(Duration.ofMillis(retryDurationInMillis))
+                             .retryOnResult(FALSE::equals)
+                             .retryExceptions(Exception.class)
+                             .ignoreExceptions(IOException.class)
+                             .build();
+    Retry retry = Retry.of("check rbac setup", config);
+    Retry.EventPublisher publisher = retry.getEventPublisher();
+    publisher.onRetry(
+        event -> log.info("Retrying check for rbac setup for account {} {}", accountId, event.toString()));
+    return Retry
+        .decorateSupplier(retry,
+            ()
+                -> accessControlClient.hasAccess(
+                    ResourceScope.of(accountId, null, null), Resource.of("USER", userId), "core_organization_create"))
+        .get();
   }
 
   private AccountDTO createAccount(SignupDTO dto) {
@@ -274,8 +320,6 @@ public class SignupServiceImpl implements SignupService {
 
   @Override
   public UserInfo oAuthSignup(OAuthSignupDTO dto) {
-    validateSignupFeatureFlag();
-
     try {
       signupValidator.validateEmail(dto.getEmail());
     } catch (SignupException | UserAlreadyPresentException e) {
@@ -286,7 +330,9 @@ public class SignupServiceImpl implements SignupService {
     SignupDTO signupDTO = SignupDTO.builder().email(dto.getEmail()).utmInfo(dto.getUtmInfo()).build();
     AccountDTO account = createAccount(signupDTO);
     UserInfo oAuthUser = createOAuthUser(dto, account);
-    sendSucceedTelemetryEvent(dto.getEmail(), dto.getUtmInfo(), account.getIdentifier(), oAuthUser);
+
+    sendSucceedTelemetryEvent(
+        dto.getEmail(), dto.getUtmInfo(), account.getIdentifier(), oAuthUser, SignupType.OAUTH_FLOW);
 
     executorService.submit(() -> {
       try {
@@ -297,6 +343,8 @@ public class SignupServiceImpl implements SignupService {
         log.error("Failed to generate login url", e);
       }
     });
+
+    waitForRbacSetup(oAuthUser.getDefaultAccountId(), oAuthUser.getUuid(), oAuthUser.getEmail());
     return oAuthUser;
   }
 
@@ -325,8 +373,6 @@ public class SignupServiceImpl implements SignupService {
 
   @Override
   public void resendVerificationEmail(String email) {
-    validateSignupFeatureFlag();
-
     SignupInviteDTO response = getResponse(userClient.getSignupInvite(email));
     if (response == null) {
       throw new InvalidRequestException(String.format("Email [%s] has not been signed up", email));
@@ -407,13 +453,15 @@ public class SignupServiceImpl implements SignupService {
     }
   }
 
-  private void sendSucceedTelemetryEvent(String email, UtmInfo utmInfo, String accountId, UserInfo userInfo) {
+  private void sendSucceedTelemetryEvent(
+      String email, UtmInfo utmInfo, String accountId, UserInfo userInfo, String source) {
     HashMap<String, Object> properties = new HashMap<>();
     properties.put("email", userInfo.getEmail());
     properties.put("name", userInfo.getName());
     properties.put("id", userInfo.getUuid());
     properties.put("startTime", String.valueOf(Instant.now().toEpochMilli()));
     properties.put("accountId", accountId);
+    properties.put("source", source);
 
     addUtmInfoToProperties(utmInfo, properties);
     telemetryReporter.sendIdentifyEvent(userInfo.getEmail(), properties,
@@ -474,12 +522,6 @@ public class SignupServiceImpl implements SignupService {
       sendFailedTelemetryEvent(
           oAuthSignupDTO.getEmail(), oAuthSignupDTO.getUtmInfo(), e, account, "OAuth user creation");
       throw e;
-    }
-  }
-
-  private void validateSignupFeatureFlag() {
-    if (!featureFlagService.isGlobalEnabled(FeatureName.NG_SIGNUP)) {
-      throw new UnavailableFeatureException("NG signup is not available.");
     }
   }
 }

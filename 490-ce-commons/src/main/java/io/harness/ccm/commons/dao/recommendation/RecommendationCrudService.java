@@ -12,9 +12,9 @@ import lombok.NonNull;
 
 @OwnedBy(HarnessTeam.CE)
 public interface RecommendationCrudService {
-  void upsertWorkloadRecommendation(
-      @NonNull String uuid, @NonNull ResourceId workloadId, @NonNull K8sWorkloadRecommendation recommendation);
+  void upsertWorkloadRecommendation(@NonNull String uuid, @NonNull ResourceId workloadId, @NonNull String clusterName,
+      @NonNull K8sWorkloadRecommendation recommendation);
 
   void upsertNodeRecommendation(String entityUuid, @NonNull JobConstants jobConstants, @NonNull NodePoolId nodePoolId,
-      @NonNull RecommendationOverviewStats stats);
+      @NonNull String clusterName, @NonNull RecommendationOverviewStats stats);
 }

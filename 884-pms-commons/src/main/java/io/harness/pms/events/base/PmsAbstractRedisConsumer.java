@@ -6,12 +6,15 @@ import static io.harness.threading.Morpheus.sleep;
 
 import static java.time.Duration.ofSeconds;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.consumer.Message;
 import io.harness.logging.AutoLogContext;
 import io.harness.queue.QueueController;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -19,6 +22,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.cache.Cache;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Slf4j
 public abstract class PmsAbstractRedisConsumer<T extends PmsAbstractMessageListener> implements PmsRedisConsumer {
   private static final int WAIT_TIME_IN_SECONDS = 10;
@@ -71,7 +75,8 @@ public abstract class PmsAbstractRedisConsumer<T extends PmsAbstractMessageListe
     }
   }
 
-  private void pollAndProcessMessages() {
+  @VisibleForTesting
+  void pollAndProcessMessages() {
     List<Message> messages;
     String messageId;
     boolean messageProcessed;

@@ -25,6 +25,7 @@ import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.GraphLayoutInfo;
 import io.harness.pms.contracts.plan.GraphLayoutNode;
 import io.harness.pms.execution.ExecutionStatus;
+import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.pipeline.ExecutionSummaryInfo;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
@@ -50,13 +51,14 @@ public class ExecutionSummaryCreateEventHandlerTest extends PipelineServiceTestB
   @Mock private PlanExecutionService planExecutionService;
   @Mock private NodeTypeLookupService nodeTypeLookupService;
   @Mock private PmsExecutionSummaryRespository pmsExecutionSummaryRespository;
+  @Mock private PmsGitSyncHelper pmsGitSyncHelper;
 
   private ExecutionSummaryCreateEventHandler executionSummaryCreateEventHandler;
 
   @Before
   public void setUp() throws Exception {
-    executionSummaryCreateEventHandler = new ExecutionSummaryCreateEventHandler(
-        pmsPipelineService, planService, planExecutionService, nodeTypeLookupService, pmsExecutionSummaryRespository);
+    executionSummaryCreateEventHandler = new ExecutionSummaryCreateEventHandler(pmsPipelineService, planService,
+        planExecutionService, nodeTypeLookupService, pmsExecutionSummaryRespository, pmsGitSyncHelper);
   }
 
   @Test
@@ -69,6 +71,7 @@ public class ExecutionSummaryCreateEventHandlerTest extends PipelineServiceTestB
     PlanExecutionMetadata planExecutionMetadata = PlanExecutionMetadata.builder()
                                                       .planExecutionId(ambiance.getPlanExecutionId())
                                                       .inputSetYaml("some-yaml")
+                                                      .yaml("pipeline :\n  identifier: pipelineId")
                                                       .build();
     PlanExecution planExecution =
         PlanExecution.builder()
@@ -77,6 +80,7 @@ public class ExecutionSummaryCreateEventHandlerTest extends PipelineServiceTestB
 
     PipelineEntity pipelineEntity = PipelineEntity.builder()
                                         .uuid(generateUuid())
+                                        .yaml("pipeline :\n  identifier: pipelineId")
                                         .executionSummaryInfo(ExecutionSummaryInfo.builder()
                                                                   .lastExecutionStatus(ExecutionStatus.RUNNING)
                                                                   .numOfErrors(new HashMap<>())

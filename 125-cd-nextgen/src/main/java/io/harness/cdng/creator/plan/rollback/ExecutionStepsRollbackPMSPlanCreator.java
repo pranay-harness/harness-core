@@ -12,6 +12,7 @@ import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse.PlanCreationResponseBuilder;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
@@ -44,11 +45,11 @@ public class ExecutionStepsRollbackPMSPlanCreator {
     }
 
     PlanCreationResponseBuilder planCreationResponseBuilder = PlanCreationResponse.builder();
+    Map<String, YamlField> stepYamlFieldMap = new HashMap<>();
     for (YamlField stepYamlField : stepsArrayFields) {
-      Map<String, YamlField> stepYamlFieldMap = new HashMap<>();
       stepYamlFieldMap.put(stepYamlField.getNode().getUuid(), stepYamlField);
-      planCreationResponseBuilder.dependencies(stepYamlFieldMap);
     }
+    planCreationResponseBuilder.dependencies(DependenciesUtils.toDependenciesProto(stepYamlFieldMap));
 
     StepParameters stepParameters = NGSectionStepParameters.builder()
                                         .childNodeId(stepsArrayFields.get(0).getNode().getUuid())

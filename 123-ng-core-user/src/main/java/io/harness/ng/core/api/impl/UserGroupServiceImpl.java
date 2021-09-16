@@ -155,8 +155,9 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Override
   public List<UserGroup> list(UserGroupFilterDTO userGroupFilterDTO) {
     validateFilter(userGroupFilterDTO);
-    Criteria criteria = createScopeCriteria(userGroupFilterDTO.getAccountIdentifier(),
-        userGroupFilterDTO.getOrgIdentifier(), userGroupFilterDTO.getProjectIdentifier());
+    Criteria criteria =
+        createUserGroupFilterCriteria(userGroupFilterDTO.getAccountIdentifier(), userGroupFilterDTO.getOrgIdentifier(),
+            userGroupFilterDTO.getProjectIdentifier(), userGroupFilterDTO.getSearchTerm());
     if (isNotEmpty(userGroupFilterDTO.getDatabaseIdFilter())) {
       criteria.and(UserGroupKeys.id).in(userGroupFilterDTO.getDatabaseIdFilter());
     } else if (isNotEmpty(userGroupFilterDTO.getIdentifierFilter())) {
@@ -232,6 +233,9 @@ public class UserGroupServiceImpl implements UserGroupService {
     if (existingUserGroup.getUsers().stream().noneMatch(userIdentifier::equals)) {
       log.info("[NGSamlUserGroupSync] Adding member {} to Existing Usergroup: {}", userIdentifier, existingUserGroup);
       existingUserGroup.getUsers().add(userIdentifier);
+    } else {
+      throw new InvalidRequestException(
+          String.format("User %s is already part of User Group %s", userIdentifier, userGroupIdentifier));
     }
     return updateInternal(existingUserGroup, oldUserGroup);
   }
@@ -252,6 +256,20 @@ public class UserGroupServiceImpl implements UserGroupService {
         log.info("[NGSamlUserGroupSync] Not adding user {} to UserGroup:{} CheckMember failed ", userId, userGroup);
       }
     }
+  }
+
+  @Override
+  public void addUserToUserGroups(Scope scope, String userId, List<String> userGroups) {
+    if (isEmpty(userGroups)) {
+      return;
+    }
+    userGroups.forEach(userGroup -> {
+      if (!checkMember(scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier(), userGroup,
+              userId)) {
+        addMember(
+            scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier(), userGroup, userId);
+      }
+    });
   }
 
   @Override
@@ -396,19 +414,22 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   private void validateUsers(List<String> usersIds) {
-    if (hasDuplicate(usersIds)) {
-      throw new InvalidArgumentsException("Duplicate users provided");
+    Set<String> duplicates = getDuplicates(usersIds);
+    if (isNotEmpty(duplicates)) {
+      throw new InvalidArgumentsException(
+          String.format("Duplicate users %s provided in the user group", duplicates.toString()));
     }
   }
 
-  private static <T> boolean hasDuplicate(Iterable<T> elements) {
+  private static <T> Set<T> getDuplicates(Iterable<T> elements) {
     Set<T> set = new HashSet<>();
+    Set<T> duplicates = new HashSet<>();
     for (T element : elements) {
       if (!set.add(element)) {
-        return true;
+        duplicates.add(element);
       }
     }
-    return false;
+    return duplicates;
   }
 
   private void validateScopeMembership(UserGroup userGroup) {

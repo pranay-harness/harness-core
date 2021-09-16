@@ -10,6 +10,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.views.entities.CEReportSchedule;
 import io.harness.ccm.views.service.CEReportScheduleService;
@@ -32,8 +34,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
-import org.springframework.scheduling.support.CronSequenceGenerator;
 
+@OwnedBy(HarnessTeam.CE)
 public class CEReportScheduleResourceTest extends CategoryTest {
   private static CEReportScheduleService ceReportScheduleService = mock(CEReportScheduleService.class);
   @ClassRule
@@ -63,10 +65,11 @@ public class CEReportScheduleResourceTest extends CategoryTest {
                          .name(NAME)
                          .uuid(REPORT_ID)
                          .enabled(true)
+                         .userCronTimeZone("UTC")
                          .build();
     tempFile = tempFolder.newFile();
     Files.write(
-        "{\"metaData\":{},\"resource\":[{\"uuid\":\"REPORT_ID\",\"name\":\"REPORT_NAME\",\"enabled\":true,\"description\":\"\",\"viewsId\":[\"ceviewsid123\"],\"userCron\":\"* 30 12 * * *\",\"recipients\":[\"user1@harness.io\"],\"accountId\":\"ACCOUNT_ID\",\"createdAt\":0,\"lastUpdatedAt\":0,\"createdBy\":null,\"lastUpdatedBy\":null,\"nextExecution\":null}],\"responseMessages\":[]}"
+        "{\"metaData\":{},\"resource\":[{\"uuid\":\"REPORT_ID\",\"name\":\"REPORT_NAME\",\"enabled\":true,\"description\":\"\",\"viewsId\":[\"ceviewsid123\"],\"userCron\":\"* 30 12 * * *\",\"recipients\":[\"user1@harness.io\"],\"accountId\":\"ACCOUNT_ID\",\"createdAt\":0,\"lastUpdatedAt\":0,\"userCronTimeZone\":\"UTC\",\"createdBy\":null,\"lastUpdatedBy\":null,\"nextExecution\":null}],\"responseMessages\":[]}"
             .getBytes(),
         tempFile);
 
@@ -94,8 +97,7 @@ public class CEReportScheduleResourceTest extends CategoryTest {
         .target(format("/ceReportSchedule/%s/", ACCOUNT_ID))
         .request()
         .post(entity(reportSchedule, MediaType.APPLICATION_JSON), new GenericType<Response>() {});
-    CronSequenceGenerator cronSequenceGenerator = new CronSequenceGenerator(reportSchedule.getUserCron());
-    verify(ceReportScheduleService).createReportSetting(cronSequenceGenerator, ACCOUNT_ID, reportSchedule);
+    verify(ceReportScheduleService).createReportSetting(ACCOUNT_ID, reportSchedule);
   }
 
   @Test
@@ -146,9 +148,7 @@ public class CEReportScheduleResourceTest extends CategoryTest {
         .target(format("/ceReportSchedule/%s/", ACCOUNT_ID))
         .request()
         .put(entity(reportSchedule, MediaType.APPLICATION_JSON), new GenericType<Response>() {});
-
-    CronSequenceGenerator cronSequenceGenerator = new CronSequenceGenerator(reportSchedule.getUserCron());
-    verify(ceReportScheduleService).update(cronSequenceGenerator, ACCOUNT_ID, reportSchedule);
+    verify(ceReportScheduleService).update(ACCOUNT_ID, reportSchedule);
   }
 
   @Test

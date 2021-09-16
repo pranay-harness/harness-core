@@ -44,14 +44,15 @@ import io.harness.accesscontrol.resources.resourcegroups.HarnessResourceGroupSer
 import io.harness.accesscontrol.resources.resourcegroups.events.ResourceGroupEventConsumer;
 import io.harness.accesscontrol.roleassignments.RoleAssignment;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTO;
+import io.harness.accesscontrol.roleassignments.privileged.PrivilegedRoleAssignmentHandler;
 import io.harness.accesscontrol.roleassignments.privileged.PrivilegedRoleAssignmentService;
 import io.harness.accesscontrol.roleassignments.privileged.PrivilegedRoleAssignmentServiceImpl;
 import io.harness.accesscontrol.roleassignments.privileged.persistence.PrivilegedRoleAssignmentDao;
 import io.harness.accesscontrol.roleassignments.privileged.persistence.PrivilegedRoleAssignmentDaoImpl;
 import io.harness.accesscontrol.roleassignments.validation.RoleAssignmentActionValidator;
 import io.harness.accesscontrol.scopes.core.ScopeLevel;
-import io.harness.accesscontrol.scopes.core.ScopeParamsFactory;
-import io.harness.accesscontrol.scopes.harness.HarnessScopeParamsFactory;
+import io.harness.accesscontrol.scopes.harness.HarnessScopeService;
+import io.harness.accesscontrol.scopes.harness.HarnessScopeServiceImpl;
 import io.harness.accesscontrol.scopes.harness.events.ScopeEventConsumer;
 import io.harness.accesscontrol.support.SupportService;
 import io.harness.accesscontrol.support.SupportServiceImpl;
@@ -60,6 +61,8 @@ import io.harness.accesscontrol.support.persistence.SupportPreferenceDaoImpl;
 import io.harness.account.AccountClientModule;
 import io.harness.aggregator.AggregatorModule;
 import io.harness.aggregator.consumers.ChangeEventFailureHandler;
+import io.harness.aggregator.consumers.RoleAssignmentCRUDEventHandler;
+import io.harness.aggregator.consumers.UserGroupCRUDEventHandler;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.audit.client.remote.AuditClientModule;
@@ -73,8 +76,10 @@ import io.harness.lock.PersistentLockModule;
 import io.harness.metrics.modules.MetricsModule;
 import io.harness.metrics.service.api.MetricsPublisher;
 import io.harness.migration.NGMigrationSdkModule;
+import io.harness.organization.OrganizationClientModule;
 import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
+import io.harness.project.ProjectClientModule;
 import io.harness.redis.RedisConfig;
 import io.harness.resourcegroupclient.ResourceGroupClientModule;
 import io.harness.serviceaccount.ServiceAccountClientModule;
@@ -205,6 +210,13 @@ public class AccessControlModule extends AbstractModule {
     install(new AccountClientModule(config.getAccountClientConfiguration().getAccountServiceConfig(),
         config.getAccountClientConfiguration().getAccountServiceSecret(), ACCESS_CONTROL_SERVICE.toString()));
 
+    install(new ProjectClientModule(config.getProjectClientConfiguration().getProjectServiceConfig(),
+        config.getProjectClientConfiguration().getProjectServiceSecret(), ACCESS_CONTROL_SERVICE.getServiceId()));
+
+    install(new OrganizationClientModule(config.getOrganizationClientConfiguration().getOrganizationServiceConfig(),
+        config.getOrganizationClientConfiguration().getOrganizationServiceSecret(),
+        ACCESS_CONTROL_SERVICE.getServiceId()));
+
     install(new TokenClientModule(config.getServiceAccountClientConfiguration().getServiceAccountServiceConfig(),
         config.getServiceAccountClientConfiguration().getServiceAccountServiceSecret(),
         ACCESS_CONTROL_SERVICE.getServiceId()));
@@ -234,12 +246,16 @@ public class AccessControlModule extends AbstractModule {
     scopesByKey.addBinding(ACCOUNT.toString()).toInstance(ACCOUNT);
     scopesByKey.addBinding(ORGANIZATION.toString()).toInstance(ORGANIZATION);
     scopesByKey.addBinding(PROJECT.toString()).toInstance(PROJECT);
-    bind(ScopeParamsFactory.class).to(HarnessScopeParamsFactory.class);
+
+    bind(HarnessScopeService.class).to(HarnessScopeServiceImpl.class);
 
     bind(HarnessResourceGroupService.class).to(HarnessResourceGroupServiceImpl.class);
     bind(HarnessUserGroupService.class).to(HarnessUserGroupServiceImpl.class);
     bind(HarnessUserService.class).to(HarnessUserServiceImpl.class);
     bind(HarnessServiceAccountService.class).to(HarnessServiceAccountServiceImpl.class);
+
+    bind(UserGroupCRUDEventHandler.class).to(PrivilegedRoleAssignmentHandler.class);
+    bind(RoleAssignmentCRUDEventHandler.class).to(PrivilegedRoleAssignmentHandler.class);
 
     MapBinder<PrincipalType, PrincipalValidator> validatorByPrincipalType =
         MapBinder.newMapBinder(binder(), PrincipalType.class, PrincipalValidator.class);

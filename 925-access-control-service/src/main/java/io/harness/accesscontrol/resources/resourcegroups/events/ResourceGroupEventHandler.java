@@ -8,9 +8,8 @@ import static org.apache.commons.lang3.StringUtils.stripToNull;
 import io.harness.accesscontrol.commons.events.EventHandler;
 import io.harness.accesscontrol.resources.resourcegroups.HarnessResourceGroupService;
 import io.harness.accesscontrol.scopes.core.Scope;
-import io.harness.accesscontrol.scopes.core.ScopeParams;
-import io.harness.accesscontrol.scopes.core.ScopeService;
 import io.harness.accesscontrol.scopes.harness.HarnessScopeParams;
+import io.harness.accesscontrol.scopes.harness.ScopeMapper;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.consumer.Message;
@@ -28,12 +27,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ResourceGroupEventHandler implements EventHandler {
   private final HarnessResourceGroupService harnessResourceGroupService;
-  private final ScopeService scopeService;
 
   @Inject
-  public ResourceGroupEventHandler(HarnessResourceGroupService harnessResourceGroupService, ScopeService scopeService) {
+  public ResourceGroupEventHandler(HarnessResourceGroupService harnessResourceGroupService) {
     this.harnessResourceGroupService = harnessResourceGroupService;
-    this.scopeService = scopeService;
   }
 
   @Override
@@ -48,12 +45,13 @@ public class ResourceGroupEventHandler implements EventHandler {
       return true;
     }
     try {
-      ScopeParams scopeParams = HarnessScopeParams.builder()
-                                    .accountIdentifier(stripToNull(resourceGroupEntityChangeDTO.getAccountIdentifier()))
-                                    .orgIdentifier(stripToNull(resourceGroupEntityChangeDTO.getOrgIdentifier()))
-                                    .projectIdentifier(stripToNull(resourceGroupEntityChangeDTO.getProjectIdentifier()))
-                                    .build();
-      Scope scope = scopeService.buildScopeFromParams(scopeParams);
+      HarnessScopeParams scopeParams =
+          HarnessScopeParams.builder()
+              .accountIdentifier(stripToNull(resourceGroupEntityChangeDTO.getAccountIdentifier()))
+              .orgIdentifier(stripToNull(resourceGroupEntityChangeDTO.getOrgIdentifier()))
+              .projectIdentifier(stripToNull(resourceGroupEntityChangeDTO.getProjectIdentifier()))
+              .build();
+      Scope scope = ScopeMapper.fromParams(scopeParams);
       if (getEventType(message).equals(DELETE_ACTION)) {
         harnessResourceGroupService.deleteIfPresent(stripToNull(resourceGroupEntityChangeDTO.getIdentifier()), scope);
       } else {

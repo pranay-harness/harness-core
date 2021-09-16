@@ -128,6 +128,7 @@ public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Ap
         .accountId(accountId)
         .gitConnectorId(yamlGitConfig.getGitConnectorId())
         .branchName(yamlGitConfig.getBranchName())
+        .repositoryName(yamlGitConfig.getRepositoryName())
         .syncMode(SyncMode.BOTH)
         .enabled(true)
         .build();

@@ -54,9 +54,10 @@ public class Recast {
     recaster.getTransformer().addCustomTransformer(recastTransformer);
   }
 
-  public void registerAliases(Object... params) {
-    Reflections reflections = new Reflections(params);
+  public void registerAliases(String... params) {
+    Reflections reflections = new Reflections((Object[]) params);
     Set<Class<?>> typesAnnotatedWith = reflections.getTypesAnnotatedWith(RecasterAlias.class);
+    aliasRegistry.addPackages(params);
     typesAnnotatedWith.forEach(aliasRegistry::register);
   }
 

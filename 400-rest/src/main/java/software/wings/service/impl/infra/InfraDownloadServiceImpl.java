@@ -1,5 +1,6 @@
 package software.wings.service.impl.infra;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static java.nio.charset.Charset.defaultCharset;
@@ -8,6 +9,9 @@ import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.environment.SystemEnvironment;
 import io.harness.ff.FeatureFlagService;
@@ -36,6 +40,8 @@ import org.apache.commons.io.IOUtils;
 @Singleton
 @ValidateOnExecution
 @Slf4j
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+@OwnedBy(PL)
 public class InfraDownloadServiceImpl implements InfraDownloadService {
   private static final String DOWNLOAD_SERVICE_ACCOUNT_ENV_VAR = "SERVICE_ACC";
   private static final String DELEGATE_JAR = "delegate.jar";

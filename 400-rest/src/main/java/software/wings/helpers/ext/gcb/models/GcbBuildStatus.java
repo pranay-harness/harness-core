@@ -2,11 +2,14 @@ package software.wings.helpers.ext.gcb.models;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.logging.CommandExecutionStatus;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public enum GcbBuildStatus {
   STATUS_UNKNOWN(ExecutionStatus.FAILED, CommandExecutionStatus.FAILURE),
   QUEUED(ExecutionStatus.QUEUED, CommandExecutionStatus.QUEUED),

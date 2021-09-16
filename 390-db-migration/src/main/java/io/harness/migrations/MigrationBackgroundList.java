@@ -2,6 +2,7 @@ package io.harness.migrations;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.migrations.all.AccountNextGenEnabledMigration;
 import io.harness.migrations.all.AddAccountIdToActivityCollection;
 import io.harness.migrations.all.AddAccountIdToBarrierInstanceCollection;
 import io.harness.migrations.all.AddAccountIdToCloudFormationRollBackConfig;
@@ -121,6 +122,7 @@ import io.harness.migrations.all.UpdateWorkflowExecutionAccountId;
 import io.harness.migrations.all.UpdateWorkflowExecutionDuration;
 import io.harness.migrations.all.WFEAddDeploymentMetaData;
 import io.harness.migrations.all.WorkflowExecutionAddCDPageCandidateMigration;
+import io.harness.migrations.apppermission.ManageApplicationTemplatePermissionMigration;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
@@ -339,6 +341,9 @@ public class MigrationBackgroundList {
         .add(Pair.of(200, DelegateProfileIdentifierMigration.class))
         .add(Pair.of(201, DelegateGroupIdentifierMigration.class))
         .add(Pair.of(202, DeleteInvalidArtifactStreams.class))
+        .add(Pair.of(203, AccountNextGenEnabledMigration.class))
+        .add(Pair.of(204, DeleteOrphanPerpetualTaskMigration.class))
+        .add(Pair.of(205, ManageApplicationTemplatePermissionMigration.class))
         .build();
   }
 }

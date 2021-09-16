@@ -1,9 +1,13 @@
 package software.wings.graphql.datafetcher.secrets;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.exception.InvalidRequestException;
@@ -20,14 +24,19 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 
 import com.google.inject.Inject;
+import graphql.GraphQLContext;
+import graphql.schema.DataFetchingEnvironment;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@OwnedBy(PL)
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class CreateSecretDataFetcher extends BaseMutatorDataFetcher<QLCreateSecretInput, QLCreateSecretPayload> {
+  public static final String FILE = "file";
   @Inject private SecretManager secretManager;
   @Inject private WinRMCredentialController winRMCredentialController;
   @Inject private EncryptedTextController encryptedTextController;
+  @Inject private EncryptedFileController encryptedFileController;
   @Inject private SSHCredentialController sshCredentialController;
   @Inject private SettingsService settingsService;
   @Inject private SecretAuthHandler secretAuthHandler;
@@ -87,10 +96,28 @@ public class CreateSecretDataFetcher extends BaseMutatorDataFetcher<QLCreateSecr
         break;
       case ENCRYPTED_FILE:
         secretAuthHandler.authorize();
-        throw new InvalidRequestException("Encrypted file secret cannot be created through API.");
+        DataFetchingEnvironment dataFetchingEnvironment = mutationContext.getDataFetchingEnvironment();
+        GraphQLContext context = dataFetchingEnvironment.getContext();
+        byte[] bytes = context.get(FILE);
+        if (isEmpty(bytes)) {
+          throw new InvalidRequestException("No/Empty file uploaded.");
+        }
+        EncryptedData encryptedData = saveEncryptedFile(input, mutationContext.getAccountId(), bytes);
+        secret = encryptedFileController.populateEncryptedFile(encryptedData);
+        break;
       default:
         throw new InvalidRequestException("Invalid secret Type");
     }
     return QLCreateSecretPayload.builder().clientMutationId(mutationContext.getAccountId()).secret(secret).build();
+  }
+
+  private EncryptedData saveEncryptedFile(QLCreateSecretInput input, String accountId, byte[] bytes) {
+    if (input.getEncryptedFile() == null) {
+      throw new InvalidRequestException(
+          String.format("No encrypted file input provided with the request with secretType %s", input.getSecretType()));
+    }
+    input.getEncryptedFile().setFileContent(bytes);
+    String secretId = encryptedFileController.createEncryptedFile(input, accountId);
+    return secretManager.getSecretById(accountId, secretId);
   }
 }

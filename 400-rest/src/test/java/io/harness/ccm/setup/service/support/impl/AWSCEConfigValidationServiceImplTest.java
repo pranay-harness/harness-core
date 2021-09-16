@@ -11,6 +11,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.setup.service.support.AwsCredentialHelper;
@@ -47,7 +48,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
 @OwnedBy(CDP)
-public class AWSCEConfigValidationServiceImplTest {
+public class AWSCEConfigValidationServiceImplTest extends CategoryTest {
   @Spy @InjectMocks AWSCEConfigValidationServiceImpl awsceConfigValidationService;
   @Mock private AwsCredentialHelper awsCredentialHelper;
   @Mock AwsEKSHelperService awsEKSHelperService;

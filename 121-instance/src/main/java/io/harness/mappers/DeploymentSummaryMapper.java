@@ -6,6 +6,7 @@ import io.harness.dtos.DeploymentSummaryDTO;
 import io.harness.entities.DeploymentSummary;
 import io.harness.mappers.deploymentinfomapper.DeploymentInfoMapper;
 
+import java.util.ArrayList;
 import lombok.experimental.UtilityClass;
 
 @OwnedBy(HarnessTeam.DX)
@@ -27,6 +28,9 @@ public class DeploymentSummaryMapper {
         .infrastructureMappingId(deploymentSummary.getInfrastructureMappingId())
         .lastModifiedAt(deploymentSummary.getLastModifiedAt())
         .id(deploymentSummary.getId())
+        .serverInstanceInfoList(new ArrayList<>())
+        .isRollbackDeployment(deploymentSummary.isRollbackDeployment())
+        .instanceSyncKey(deploymentSummary.getInstanceSyncKey())
         .build();
   }
 
@@ -43,6 +47,8 @@ public class DeploymentSummaryMapper {
         .pipelineExecutionId(deploymentSummaryDTO.getPipelineExecutionId())
         .pipelineExecutionName(deploymentSummaryDTO.getPipelineExecutionName())
         .artifactDetails(deploymentSummaryDTO.getArtifactDetails())
+        .isRollbackDeployment(deploymentSummaryDTO.isRollbackDeployment())
+        .instanceSyncKey(deploymentSummaryDTO.getInstanceSyncKey())
         .build();
   }
 }

@@ -28,6 +28,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -83,7 +84,7 @@ import org.mockito.Mockito;
 
 @OwnedBy(CDP)
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
-public class TerragruntProvisionTaskTest {
+public class TerragruntProvisionTaskTest extends CategoryTest {
   @Mock private GitClient gitClient;
   @Mock private GitClientHelper gitClientHelper;
   @Mock private EncryptionService encryptionService;

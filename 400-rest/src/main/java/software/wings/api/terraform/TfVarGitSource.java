@@ -1,5 +1,9 @@
 package software.wings.api.terraform;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.provision.TfVarSource;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -11,9 +15,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+@OwnedBy(HarnessTeam.CDP)
 @Data
 @Builder
 @EqualsAndHashCode(of = "gitFileConfig")
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class TfVarGitSource implements TfVarSource {
   private GitConfig gitConfig;
   private GitFileConfig gitFileConfig;

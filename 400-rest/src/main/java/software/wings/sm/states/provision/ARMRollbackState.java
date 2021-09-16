@@ -40,7 +40,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @OwnedBy(HarnessTeam.CDP)
-@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ARMRollbackState extends ARMProvisionState {
   public ARMRollbackState(String name) {
     super(name);

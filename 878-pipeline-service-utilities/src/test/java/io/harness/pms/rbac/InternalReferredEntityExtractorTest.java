@@ -2,6 +2,7 @@ package io.harness.pms.rbac;
 
 import static io.harness.rule.OwnerRule.SAHIL;
 
+import io.harness.CategoryTest;
 import io.harness.EntityType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -31,7 +32,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({NGRestUtils.class})
 @OwnedBy(HarnessTeam.PIPELINE)
-public class InternalReferredEntityExtractorTest {
+public class InternalReferredEntityExtractorTest extends CategoryTest {
   private static final String ACCOUNT_ID = "accountId";
   @Mock EntitySetupUsageClient entitySetupUsageClient;
   @InjectMocks InternalReferredEntityExtractor internalReferredEntityExtractor;

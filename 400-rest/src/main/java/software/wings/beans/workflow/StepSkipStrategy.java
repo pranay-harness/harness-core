@@ -4,7 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.yaml.BaseYaml;
@@ -27,6 +29,7 @@ import org.mongodb.morphia.annotations.Transient;
 @OwnedBy(CDC)
 @Data
 @NoArgsConstructor
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class StepSkipStrategy {
   public enum Scope { ALL_STEPS, SPECIFIC_STEPS }
 

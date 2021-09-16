@@ -10,13 +10,13 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
-import io.harness.cloud.google.DownloadResult;
-import io.harness.cloud.google.GoogleCloudFileService;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.notification.remote.NotificationHTTPClient;
 import io.harness.notification.remote.dto.TemplateDTO;
 import io.harness.rule.Owner;
 import io.harness.signup.SignupNotificationConfiguration;
+import io.harness.templates.google.DownloadResult;
+import io.harness.templates.google.GoogleCloudFileService;
 
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;

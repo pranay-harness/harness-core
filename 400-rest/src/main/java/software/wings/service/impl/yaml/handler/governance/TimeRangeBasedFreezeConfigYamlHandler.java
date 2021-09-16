@@ -1,5 +1,9 @@
 package software.wings.service.impl.yaml.handler.governance;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.governance.ApplicationFilter;
@@ -7,6 +11,7 @@ import io.harness.governance.ApplicationFilterYaml;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
 import io.harness.governance.TimeRangeBasedFreezeConfig.TimeRangeBasedFreezeConfigBuilder;
 import io.harness.governance.TimeRangeBasedFreezeConfig.Yaml;
+import io.harness.governance.TimeRangeOccurrence;
 import io.harness.validation.Validator;
 
 import software.wings.beans.security.UserGroup;
@@ -23,6 +28,7 @@ import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 
+@OwnedBy(HarnessTeam.CDC)
 public class TimeRangeBasedFreezeConfigYamlHandler
     extends GovernanceFreezeConfigYamlHandler<Yaml, TimeRangeBasedFreezeConfig> {
   @Inject YamlHelper yamlHelper;
@@ -43,10 +49,7 @@ public class TimeRangeBasedFreezeConfigYamlHandler
       appFiltersYaml.add(applicationFilterYamlHandler.toYaml(applicationFilter, accountId));
     }
 
-    TimeRange.Yaml timeRangeYaml = TimeRange.Yaml.builder()
-                                       .from(String.valueOf(bean.getTimeRange().getFrom()))
-                                       .to(String.valueOf(bean.getTimeRange().getTo()))
-                                       .build();
+    TimeRange.Yaml timeRangeYaml = bean.getTimeRange().toYaml();
 
     return Yaml.builder()
         .name(bean.getName())
@@ -129,19 +132,42 @@ public class TimeRangeBasedFreezeConfigYamlHandler
   private TimeRange validateTimeRangeYaml(TimeRange.Yaml timeRangeYaml) {
     Validator.notNullCheck("Time Range cannot be empty", timeRangeYaml);
     Validator.notNullCheck("From time cannot be empty", timeRangeYaml.getFrom());
-    Validator.notNullCheck("To time cannot be empty", timeRangeYaml.getTo());
+    if (timeRangeYaml.isDurationBased()) {
+      Validator.notNullCheck("Duration cannot be empty", timeRangeYaml.getDuration());
+    } else {
+      Validator.notNullCheck("To time cannot be empty", timeRangeYaml.getTo());
+    }
 
     long from;
     long to;
-
+    Long duration = null;
+    Long endTime = null;
+    TimeRangeOccurrence freezeOccurrence = null;
+    boolean durationBased = timeRangeYaml.isDurationBased();
     try {
       from = Long.parseLong(timeRangeYaml.getFrom());
-      to = Long.parseLong(timeRangeYaml.getTo());
+      if (durationBased) {
+        duration = Long.parseLong(timeRangeYaml.getDuration());
+        to = duration + from;
+      } else {
+        to = Long.parseLong(timeRangeYaml.getTo());
+      }
     } catch (NumberFormatException exception) {
       throw new InvalidRequestException("Incorrect format for Time Range. Please enter epoch time");
     }
 
+    if (isNotEmpty(timeRangeYaml.getEndTime()) && isNotEmpty(timeRangeYaml.getFreezeOccurrence())) {
+      try {
+        endTime = Long.parseLong(timeRangeYaml.getEndTime());
+        freezeOccurrence = TimeRangeOccurrence.valueOf(timeRangeYaml.getFreezeOccurrence());
+      } catch (NumberFormatException exception) {
+        throw new InvalidRequestException("Incorrect format for Time Range. Please enter epoch time");
+      } catch (IllegalArgumentException exception) {
+        throw new InvalidRequestException(String.format(
+            "Invalid occurrence for TimeRange. Please enter valid value: %s", TimeRangeOccurrence.values()));
+      }
+    }
     // time zone from DB document
-    return new TimeRange(from, to, null);
+    return new TimeRange(from, to, null, durationBased, duration, endTime, freezeOccurrence, false);
   }
 }

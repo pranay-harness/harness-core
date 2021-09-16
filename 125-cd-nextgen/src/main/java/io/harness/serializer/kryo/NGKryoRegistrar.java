@@ -14,7 +14,6 @@ import io.harness.cdng.artifact.bean.yaml.GcrArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.PrimaryArtifact;
 import io.harness.cdng.artifact.bean.yaml.SidecarArtifact;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters;
-import io.harness.cdng.environment.EnvironmentOutcome;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
 import io.harness.cdng.infra.InfrastructureDef;
 import io.harness.cdng.infra.beans.InfraUseFromStage;
@@ -23,6 +22,7 @@ import io.harness.cdng.infra.beans.K8sGcpInfrastructureOutcome;
 import io.harness.cdng.infra.steps.InfraStepParameters;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
 import io.harness.cdng.infra.yaml.K8sGcpInfrastructure;
+import io.harness.cdng.instance.outcome.DeploymentInfoOutcome;
 import io.harness.cdng.k8s.DeleteResourcesWrapper;
 import io.harness.cdng.k8s.K8sBlueGreenOutcome;
 import io.harness.cdng.k8s.K8sCanaryOutcome;
@@ -70,9 +70,7 @@ import io.harness.cdng.manifest.yaml.kinds.OpenshiftParamManifest;
 import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
 import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
 import io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper;
-import io.harness.cdng.pipeline.DeploymentStage;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
-import io.harness.cdng.pipeline.beans.CDPipelineSetupParameters;
 import io.harness.cdng.pipeline.beans.DeploymentStageStepParameters;
 import io.harness.cdng.pipeline.beans.RollbackNode;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters;
@@ -133,7 +131,6 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(ManifestOverrideSets.class, 8043);
     kryo.register(ArtifactOverrideSets.class, 8044);
 
-    kryo.register(CDPipelineSetupParameters.class, 8046);
     kryo.register(DeploymentStageStepParameters.class, 8047);
     kryo.register(K8sRollingRollbackStepInfo.class, 8049);
     kryo.register(K8sRollingRollbackStepParameters.class, 8050);
@@ -144,14 +141,12 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(K8sStepPassThroughData.class, 8056);
 
     // Starting using 8100 series
-    kryo.register(DeploymentStage.class, 8100);
     kryo.register(PipelineInfrastructure.class, 8101);
     kryo.register(InfrastructureDef.class, 8102);
     kryo.register(ServiceDefinition.class, 8103);
     kryo.register(ManifestConfig.class, 8104);
     kryo.register(K8sDirectInfrastructureOutcome.class, 8105);
     kryo.register(PrimaryArtifact.class, 8106);
-    kryo.register(EnvironmentOutcome.class, 8107);
     kryo.register(RollbackOptionalChildChainStepParameters.class, 8108);
     kryo.register(RollbackNode.class, 8109);
 
@@ -208,5 +203,6 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(StoreConfigWrapper.class, 8045);
 
     kryo.register(K8sExecutionPassThroughData.class, 12546);
+    kryo.register(DeploymentInfoOutcome.class, 12547);
   }
 }

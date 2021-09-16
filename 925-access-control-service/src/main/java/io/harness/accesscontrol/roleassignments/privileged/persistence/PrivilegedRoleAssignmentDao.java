@@ -15,8 +15,10 @@ import org.hibernate.validator.constraints.NotEmpty;
 public interface PrivilegedRoleAssignmentDao {
   long insertAllIgnoringDuplicates(List<PrivilegedRoleAssignment> privilegedRoleAssignments);
   List<PrivilegedRoleAssignment> getByPrincipal(
-      @NotNull Principal principal, @NotEmpty String accountIdentifier, @NotNull ManagedFilter managedFilter);
+      @NotNull Principal principal, @NotEmpty Set<String> scopes, @NotNull ManagedFilter managedFilter);
   List<PrivilegedRoleAssignment> getGlobalByRole(@NotEmpty String roleIdentifier, @NotNull ManagedFilter managedFilter);
   long removeGlobalByPrincipalsAndRole(
       @NotEmpty Set<Principal> principals, @NotEmpty String roleIdentifier, @NotNull ManagedFilter managedFilter);
+  long deleteByRoleAssignment(@NotEmpty String id, @NotNull ManagedFilter managedFilter);
+  long deleteByUserGroup(String identifier, String scopeIdentifier, @NotNull ManagedFilter managedFilter);
 }

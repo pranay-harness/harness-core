@@ -10,7 +10,9 @@ import static io.harness.security.SimpleEncryption.CHARSET;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.IdentifierRef;
 import io.harness.data.encoding.EncodingUtils;
@@ -43,6 +45,7 @@ import lombok.Value;
 @OwnedBy(CDP)
 @Value
 @Builder
+@TargetModule(HarnessModule._950_NG_CORE)
 public class NgSecretManagerFunctor implements ExpressionFunctor, NgSecretManagerFunctorInterface {
   private int expressionFunctorToken;
   private final String accountId;

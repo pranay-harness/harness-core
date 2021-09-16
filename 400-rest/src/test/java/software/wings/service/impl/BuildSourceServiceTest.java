@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.AADITI;
+import static io.harness.rule.OwnerRule.ABHINAV_MITTAL;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.GARVIT;
@@ -1198,6 +1199,45 @@ public class BuildSourceServiceTest extends WingsBaseTest {
     List<String> actualTriggerNames = buildSourceService.getGcbTriggers(SETTING_ID);
     assertThat(actualTriggerNames).hasSize(1);
     assertThat(actualTriggerNames.get(0)).isEqualTo(TRIGGER_NAME);
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  @Owner(developers = ABHINAV_MITTAL)
+  @Category(UnitTests.class)
+  public void shouldReturnExceptionWhenDelegateResponseIsNull() {
+    GcbTrigger gcbTrigger = new GcbTrigger();
+    gcbTrigger.setId(TRIGGER_ID);
+    gcbTrigger.setName(TRIGGER_NAME);
+    List<GcbTrigger> triggers = Collections.singletonList(gcbTrigger);
+    GcpConfig gcpConfig = GcpConfig.builder().accountId(ACCOUNT_ID).build();
+    SettingAttribute settingAttribute =
+        SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).withValue(gcpConfig).build();
+    when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
+    when(gcbService.getAllTriggers(any(), any())).thenReturn(triggers);
+    when(delegateTaskServiceClassic.executeTask(any(DelegateTask.class))).thenReturn(null);
+
+    buildSourceService.getGcbTriggers(SETTING_ID);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = ABHINAV_MITTAL)
+  @Category(UnitTests.class)
+  public void shouldReturnExceptionWhenDelegateResponseGivesError() {
+    GcbState.GcbDelegateResponse delegateResponse = new GcbState.GcbDelegateResponse(
+        ExecutionStatus.FAILED, null, GcbTaskParams.builder().build(), "erorMessage", false);
+    delegateResponse.setTriggers(Collections.singletonList(TRIGGER_NAME));
+    GcbTrigger gcbTrigger = new GcbTrigger();
+    gcbTrigger.setId(TRIGGER_ID);
+    gcbTrigger.setName(TRIGGER_NAME);
+    List<GcbTrigger> triggers = Collections.singletonList(gcbTrigger);
+    GcpConfig gcpConfig = GcpConfig.builder().accountId(ACCOUNT_ID).build();
+    SettingAttribute settingAttribute =
+        SettingAttribute.Builder.aSettingAttribute().withAccountId(ACCOUNT_ID).withValue(gcpConfig).build();
+    when(settingsService.get(SETTING_ID)).thenReturn(settingAttribute);
+    when(gcbService.getAllTriggers(any(), any())).thenReturn(triggers);
+    when(delegateTaskServiceClassic.executeTask(any(DelegateTask.class))).thenReturn(delegateResponse);
+
+    buildSourceService.getGcbTriggers(SETTING_ID);
   }
 
   @Test(expected = InvalidRequestException.class)

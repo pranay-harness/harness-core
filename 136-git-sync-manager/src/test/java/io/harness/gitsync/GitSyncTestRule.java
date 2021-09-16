@@ -9,6 +9,7 @@ import static org.mockito.Mockito.mock;
 import io.harness.Microservice;
 import io.harness.SCMGrpcClientModule;
 import io.harness.ScmConnectionConfig;
+import io.harness.account.AccountClient;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.callback.DelegateCallbackToken;
@@ -117,6 +118,10 @@ public class GitSyncTestRule implements InjectorRuleMixin, MethodRule, MongoRule
         bind(SourceCodeManagerService.class).toInstance(mock(SourceCodeManagerService.class));
         bind(PersistentLocker.class).toInstance(mock(PersistentLocker.class));
         bind(WebhookEventService.class).toInstance(mock(WebhookEventService.class));
+        bind(AccountClient.class).toInstance(mock(AccountClient.class));
+        bind(Producer.class)
+            .annotatedWith(Names.named(EventsFrameworkConstants.SETUP_USAGE))
+            .toInstance(mock(NoOpProducer.class));
       }
     });
 

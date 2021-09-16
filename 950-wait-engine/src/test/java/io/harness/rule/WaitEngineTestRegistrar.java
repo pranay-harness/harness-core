@@ -7,6 +7,7 @@ import io.harness.waiter.NotifyEventListenerTest;
 import io.harness.waiter.TestNotifyCallback;
 import io.harness.waiter.TestProgressCallback;
 import io.harness.waiter.TestResponseData;
+import io.harness.waiter.WaitNotifyEngineTest;
 
 import com.esotericsoftware.kryo.Kryo;
 
@@ -20,5 +21,7 @@ public class WaitEngineTestRegistrar implements KryoRegistrar {
     kryo.register(TestResponseData.class, index++);
     kryo.register(NotifyEventListenerTest.TestNotifyCallback.class, index++);
     kryo.register(NotifyEventListenerTest.TestProgressCallback.class, index++);
+    kryo.register(WaitNotifyEngineTest.TestNotifyCallback.class, index++);
+    kryo.register(WaitNotifyEngineTest.TestProgressCallback.class, index++);
   }
 }

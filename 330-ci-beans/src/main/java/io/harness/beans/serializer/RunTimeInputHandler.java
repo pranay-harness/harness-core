@@ -12,6 +12,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.yaml.extended.ArchiveFormat;
 import io.harness.beans.yaml.extended.CIShellType;
 import io.harness.beans.yaml.extended.ImagePullPolicy;
+import io.harness.beans.yaml.extended.TIBuildTool;
+import io.harness.beans.yaml.extended.TILanguage;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.ngexception.CIStageExecutionUserException;
 import io.harness.pms.yaml.ParameterField;
@@ -65,6 +67,22 @@ public class RunTimeInputHandler {
       return null;
     } else {
       return ImagePullPolicy.fromString(pullPolicy.fetchFinalValue().toString()).getYamlName();
+    }
+  }
+
+  public String resolveBuildTool(ParameterField<TIBuildTool> buildTool) {
+    if (buildTool == null || buildTool.isExpression() || buildTool.getValue() == null) {
+      return null;
+    } else {
+      return TIBuildTool.fromString(buildTool.fetchFinalValue().toString()).getYamlName();
+    }
+  }
+
+  public String resolveLanguage(ParameterField<TILanguage> language) {
+    if (language == null || language.isExpression() || language.getValue() == null) {
+      return null;
+    } else {
+      return TILanguage.fromString(language.fetchFinalValue().toString()).getYamlName();
     }
   }
 

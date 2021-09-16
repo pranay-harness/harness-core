@@ -1,6 +1,9 @@
 package io.harness.ci.serializer;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
+import static io.harness.beans.serializer.RunTimeInputHandler.resolveBooleanParameter;
+import static io.harness.beans.serializer.RunTimeInputHandler.resolveMapParameter;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -16,12 +19,15 @@ import io.harness.product.ci.engine.proto.Report;
 import io.harness.product.ci.engine.proto.RunTestsStep;
 import io.harness.product.ci.engine.proto.StepContext;
 import io.harness.product.ci.engine.proto.UnitStep;
+import io.harness.utils.TimeoutUtils;
 import io.harness.yaml.core.timeout.Timeout;
-import io.harness.yaml.core.timeout.TimeoutUtils;
+import io.harness.yaml.core.variables.OutputNGVariable;
 
 import com.google.inject.Inject;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 
 @OwnedBy(CI)
@@ -51,21 +57,42 @@ public class RunTestsStepProtobufSerializer implements ProtobufStepSerializer<Ru
     if (StringUtils.isNotEmpty(postTestCommand)) {
       runTestsStepBuilder.setPostTestCommand(postTestCommand);
     }
-    runTestsStepBuilder.setArgs(runTestsStepInfo.getArgs());
+    runTestsStepBuilder.setArgs(
+        RunTimeInputHandler.resolveStringParameter("Args", "RunTests", identifier, runTestsStepInfo.getArgs(), true));
     runTestsStepBuilder.setContainerPort(port);
-    runTestsStepBuilder.setLanguage(runTestsStepInfo.getLanguage());
-    runTestsStepBuilder.setBuildTool(runTestsStepInfo.getBuildTool());
-    runTestsStepBuilder.setRunOnlySelectedTests(runTestsStepInfo.isRunOnlySelectedTests());
-    runTestsStepBuilder.setPackages(runTestsStepInfo.getPackages());
 
-    List<String> output = RunTimeInputHandler.resolveListParameter(
-        "OutputVariables", "RunTests", identifier, runTestsStepInfo.getOutputVariables(), false);
-    if (isNotEmpty(output)) {
-      runTestsStepBuilder.addAllEnvVarOutputs(output);
+    String buildTool = RunTimeInputHandler.resolveBuildTool(runTestsStepInfo.getBuildTool());
+    if (buildTool == null) {
+      throw new CIStageExecutionException("Build tool cannot be null");
+    }
+    String language = RunTimeInputHandler.resolveLanguage(runTestsStepInfo.getLanguage());
+    if (language == null) {
+      throw new CIStageExecutionException("language cannot be null");
+    }
+    runTestsStepBuilder.setLanguage(language.toLowerCase());
+    runTestsStepBuilder.setBuildTool(buildTool.toLowerCase());
+
+    runTestsStepBuilder.setRunOnlySelectedTests(
+        resolveBooleanParameter(runTestsStepInfo.getRunOnlySelectedTests(), true));
+    runTestsStepBuilder.setPackages(RunTimeInputHandler.resolveStringParameter(
+        "Packages", "RunTests", identifier, runTestsStepInfo.getPackages(), true));
+
+    if (isNotEmpty(runTestsStepInfo.getOutputVariables())) {
+      List<String> outputVarNames =
+          runTestsStepInfo.getOutputVariables().stream().map(OutputNGVariable::getName).collect(Collectors.toList());
+      runTestsStepBuilder.addAllEnvVarOutputs(outputVarNames);
     }
 
-    if (runTestsStepInfo.getTestAnnotations() != null) {
-      runTestsStepBuilder.setTestAnnotations(runTestsStepInfo.getTestAnnotations());
+    Map<String, String> envvars =
+        resolveMapParameter("envVariables", "RunTests", identifier, runTestsStepInfo.getEnvVariables(), false);
+    if (!isEmpty(envvars)) {
+      runTestsStepBuilder.putAllEnvironment(envvars);
+    }
+
+    String testAnnotations = RunTimeInputHandler.resolveStringParameter(
+        "TestAnnotations", "RunTests", identifier, runTestsStepInfo.getTestAnnotations(), false);
+    if (StringUtils.isNotEmpty(testAnnotations)) {
+      runTestsStepBuilder.setTestAnnotations(testAnnotations);
     }
 
     UnitTestReport reports = runTestsStepInfo.getReports();

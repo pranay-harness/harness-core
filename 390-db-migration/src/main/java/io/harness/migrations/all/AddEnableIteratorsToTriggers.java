@@ -3,9 +3,7 @@ package io.harness.migrations.all;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.persistence.HPersistence.returnNewOptions;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.migrations.Migration;
 import io.harness.mongo.MongoUtils;
 import io.harness.persistence.HIterator;
@@ -27,7 +25,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
 @Singleton
-@TargetModule(HarnessModule._390_DB_MIGRATION)
 @OwnedBy(CDC)
 public class AddEnableIteratorsToTriggers implements Migration {
   @Inject private WingsPersistence wingsPersistence;

@@ -1,5 +1,8 @@
 package software.wings.beans.deployment;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.EnvSummary;
@@ -15,6 +18,7 @@ import lombok.experimental.FieldNameConstants;
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "DeploymentMetadataKeys")
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class DeploymentMetadata {
   private List<Service> artifactRequiredServices = new ArrayList<>();
   private transient List<String> artifactRequiredServiceIds = new ArrayList<>();

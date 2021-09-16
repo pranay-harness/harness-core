@@ -2,31 +2,20 @@ package io.harness.cvng.core.jobs;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
-import static io.harness.rule.OwnerRule.KANHAIYA;
 import static io.harness.rule.OwnerRule.VUK;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
-import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTestBase;
-import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.VerificationApplication;
-import io.harness.cvng.activity.source.services.api.ActivitySourceService;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.beans.job.TestVerificationJobDTO;
 import io.harness.cvng.beans.job.VerificationJobDTO;
-import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.SplunkCVConfig;
@@ -34,12 +23,8 @@ import io.harness.cvng.core.entities.TimeSeriesThreshold;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.models.VerificationType;
-import io.harness.cvng.verificationjob.entities.VerificationJob;
-import io.harness.cvng.verificationjob.entities.VerificationJob.VerificationJobKeys;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.eventsframework.entity_crud.project.ProjectEntityChangeDTO;
-import io.harness.ng.core.dto.ProjectDTO;
-import io.harness.persistence.HPersistence;
 import io.harness.persistence.PersistentEntity;
 import io.harness.rule.Owner;
 
@@ -49,11 +34,9 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.reflections.Reflections;
 @OwnedBy(HarnessTeam.CV)
@@ -62,13 +45,10 @@ public class ProjectChangeEventMessageProcessorTest extends CvNextGenTestBase {
   @Inject private CVConfigService cvConfigService;
   @Inject private VerificationJobService verificationJobService;
   @Inject private MetricPackService metricPackService;
-  @Mock private NextGenService nextGenService;
-  @Inject private HPersistence hPersistence;
 
   @Before
   public void setup() throws IllegalAccessException {
     MockitoAnnotations.initMocks(this);
-    FieldUtils.writeField(projectChangeEventMessageProcessor, "nextGenService", nextGenService, true);
   }
 
   @Test
@@ -153,9 +133,6 @@ public class ProjectChangeEventMessageProcessorTest extends CvNextGenTestBase {
     String accountId = generateUuid();
     String orgIdentifier = generateUuid();
     String projectIdentifier = generateUuid();
-    // This service depends on FF.
-    FieldUtils.writeField(
-        projectChangeEventMessageProcessor, "activitySourceService", mock(ActivitySourceService.class), true);
     projectChangeEventMessageProcessor.processCreateAction(ProjectEntityChangeDTO.newBuilder()
                                                                .setAccountIdentifier(accountId)
                                                                .setOrgIdentifier(orgIdentifier)
@@ -190,70 +167,6 @@ public class ProjectChangeEventMessageProcessorTest extends CvNextGenTestBase {
     assertThat(entitiesWithVerificationTaskId)
         .isEqualTo(withProjectIdentifier)
         .withFailMessage("Entities with projectIdentifier found which is not added to ENTITIES_MAP");
-  }
-
-  @Test
-  @Owner(developers = KAMAL)
-  @Category(UnitTests.class)
-  public void testProcessUpdateAction_CDNotEnabled() throws IllegalAccessException {
-    String accountId = generateUuid();
-    String orgIdentifier = generateUuid();
-    String projectIdentifier = generateUuid();
-    // This service depends on FF.
-    ActivitySourceService activitySourceService = mock(ActivitySourceService.class);
-    FieldUtils.writeField(projectChangeEventMessageProcessor, "activitySourceService", activitySourceService, true);
-    ProjectDTO projectDTO = ProjectDTO.builder().modules(Arrays.asList(ModuleType.CE, ModuleType.CV)).build();
-    when(nextGenService.getProject(any(), any(), any())).thenReturn(projectDTO);
-    projectChangeEventMessageProcessor.processUpdateAction(ProjectEntityChangeDTO.newBuilder()
-                                                               .setAccountIdentifier(accountId)
-                                                               .setOrgIdentifier(orgIdentifier)
-                                                               .setIdentifier(projectIdentifier)
-                                                               .build());
-    verifyZeroInteractions(activitySourceService);
-  }
-
-  @Test
-  @Owner(developers = KAMAL)
-  @Category(UnitTests.class)
-  public void testProcessUpdateAction_CDEnabled() throws IllegalAccessException {
-    String accountId = generateUuid();
-    String orgIdentifier = generateUuid();
-    String projectIdentifier = generateUuid();
-    // This service depends on FF.
-    ActivitySourceService activitySourceService = mock(ActivitySourceService.class);
-    FieldUtils.writeField(projectChangeEventMessageProcessor, "activitySourceService", activitySourceService, true);
-    ProjectDTO projectDTO =
-        ProjectDTO.builder().modules(Arrays.asList(ModuleType.CD, ModuleType.CE, ModuleType.CV)).build();
-    when(nextGenService.getProject(any(), any(), any())).thenReturn(projectDTO);
-    projectChangeEventMessageProcessor.processUpdateAction(ProjectEntityChangeDTO.newBuilder()
-                                                               .setAccountIdentifier(accountId)
-                                                               .setOrgIdentifier(orgIdentifier)
-                                                               .setIdentifier(projectIdentifier)
-                                                               .build());
-    // TODO: change assert when FF is removed.
-    // assertThat(activitySourceService.getActivitySource(accountId, orgIdentifier, projectIdentifier,
-    // CDNGActivitySource.CDNG_ACTIVITY_SOURCE_IDENTIFIER)).isNotNull();
-    verify(activitySourceService, times(1))
-        .createDefaultCDNGActivitySource(eq(accountId), eq(orgIdentifier), eq(projectIdentifier));
-  }
-
-  @Test
-  @Owner(developers = KANHAIYA)
-  @Category(UnitTests.class)
-  public void testProcessUpdateAction_CheckCVDefualtProjectCreation() {
-    String accountId = generateUuid();
-    String orgIdentifier = generateUuid();
-    String projectIdentifier = generateUuid();
-
-    ProjectDTO projectDTO = ProjectDTO.builder().modules(Arrays.asList(ModuleType.CV)).build();
-    when(nextGenService.getProject(any(), any(), any())).thenReturn(projectDTO);
-    projectChangeEventMessageProcessor.processUpdateAction(ProjectEntityChangeDTO.newBuilder()
-                                                               .setAccountIdentifier(accountId)
-                                                               .setOrgIdentifier(orgIdentifier)
-                                                               .setIdentifier(projectIdentifier)
-                                                               .build());
-    assertThat(hPersistence.createQuery(VerificationJob.class).filter(VerificationJobKeys.isDefaultJob, true).asList())
-        .hasSize(4);
   }
 
   private boolean doesClassContainField(Class<?> clazz, String fieldName) {

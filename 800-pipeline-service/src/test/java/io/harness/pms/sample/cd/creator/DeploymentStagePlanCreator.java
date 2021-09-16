@@ -19,6 +19,7 @@ import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 
@@ -141,6 +142,9 @@ public class DeploymentStagePlanCreator extends ChildrenPlanCreator<DeploymentSt
     Map<String, YamlField> stepYamlFieldMap = new HashMap<>();
     stepYamlFields.forEach(stepField -> stepYamlFieldMap.put(stepField.getNode().getUuid(), stepField));
     responseMap.put(node.getUuid(),
-        PlanCreationResponse.builder().node(node.getUuid(), node).dependencies(stepYamlFieldMap).build());
+        PlanCreationResponse.builder()
+            .node(node.getUuid(), node)
+            .dependencies(DependenciesUtils.toDependenciesProto(stepYamlFieldMap))
+            .build());
   }
 }

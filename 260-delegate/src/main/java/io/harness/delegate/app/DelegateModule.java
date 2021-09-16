@@ -1,5 +1,6 @@
 package io.harness.delegate.app;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -76,6 +77,7 @@ import io.harness.delegate.git.NGGitServiceImpl;
 import io.harness.delegate.http.HttpTaskNG;
 import io.harness.delegate.k8s.K8sApplyRequestHandler;
 import io.harness.delegate.k8s.K8sBGRequestHandler;
+import io.harness.delegate.k8s.K8sCanaryDeleteRequestHandler;
 import io.harness.delegate.k8s.K8sCanaryRequestHandler;
 import io.harness.delegate.k8s.K8sDeleteRequestHandler;
 import io.harness.delegate.k8s.K8sRequestHandler;
@@ -231,6 +233,8 @@ import io.harness.pcf.cfsdk.CfSdkClientImpl;
 import io.harness.perpetualtask.internal.AssignmentTask;
 import io.harness.perpetualtask.manifest.HelmRepositoryService;
 import io.harness.perpetualtask.manifest.ManifestRepositoryService;
+import io.harness.perpetualtask.polling.manifest.HelmChartCollectionService;
+import io.harness.perpetualtask.polling.manifest.ManifestCollectionService;
 import io.harness.secretmanagerclient.EncryptDecryptHelper;
 import io.harness.secrets.SecretsDelegateCacheHelperService;
 import io.harness.secrets.SecretsDelegateCacheHelperServiceImpl;
@@ -567,6 +571,17 @@ import java.util.concurrent.TimeUnit;
 
 @TargetModule(HarnessModule._420_DELEGATE_AGENT)
 @OwnedBy(HarnessTeam.DEL)
+@BreakDependencyOn("io.harness.delegate.beans.connector.ConnectorType")
+@BreakDependencyOn("io.harness.encryptors.clients.CustomSecretsManagerEncryptor")
+@BreakDependencyOn("io.harness.exception.DelegateServiceDriverExceptionHandler")
+@BreakDependencyOn("io.harness.impl.scm.ScmServiceClientImpl")
+@BreakDependencyOn("io.harness.perpetualtask.internal.AssignmentTask")
+@BreakDependencyOn("io.harness.perpetualtask.polling.manifest.HelmChartCollectionService")
+@BreakDependencyOn("io.harness.perpetualtask.polling.manifest.ManifestCollectionService")
+@BreakDependencyOn("io.harness.service.ScmServiceClient")
+@BreakDependencyOn("software.wings.api.DeploymentType")
+@BreakDependencyOn("software.wings.beans.AwsConfig")
+@BreakDependencyOn("software.wings.beans.AzureConfig")
 public class DelegateModule extends AbstractModule {
   private static volatile DelegateModule instance;
 
@@ -595,6 +610,16 @@ public class DelegateModule extends AbstractModule {
         1, new ThreadFactoryBuilder().setNameFormat("localHeartbeat-%d").setPriority(Thread.MAX_PRIORITY).build());
     Runtime.getRuntime().addShutdownHook(new Thread(() -> { localHeartbeatExecutor.shutdownNow(); }));
     return localHeartbeatExecutor;
+  }
+
+  @Provides
+  @Singleton
+  @Named("watcherUpgradeExecutor")
+  public ScheduledExecutorService watcherUpgradeExecutor() {
+    ScheduledExecutorService watcherUpgradeExecutor = new ScheduledThreadPoolExecutor(
+        1, new ThreadFactoryBuilder().setNameFormat("watcherUpgrade-%d").setPriority(Thread.MAX_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> { watcherUpgradeExecutor.shutdownNow(); }));
+    return watcherUpgradeExecutor;
   }
 
   @Provides
@@ -709,6 +734,16 @@ public class DelegateModule extends AbstractModule {
         1, new ThreadFactoryBuilder().setNameFormat("grpc-%d").setPriority(Thread.MAX_PRIORITY).build());
     Runtime.getRuntime().addShutdownHook(new Thread(() -> { grpcServiceExecutor.shutdownNow(); }));
     return grpcServiceExecutor;
+  }
+
+  @Provides
+  @Singleton
+  @Named("taskProgressExecutor")
+  public ExecutorService taskProgressExecutor() {
+    ExecutorService taskProgressExecutor = Executors.newFixedThreadPool(
+        10, new ThreadFactoryBuilder().setNameFormat("taskProgress-%d").setPriority(Thread.MAX_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> { taskProgressExecutor.shutdownNow(); }));
+    return taskProgressExecutor;
   }
 
   @Provides
@@ -1026,6 +1061,7 @@ public class DelegateModule extends AbstractModule {
     bind(NGChartMuseumService.class).to(NGChartMuseumServiceImpl.class);
     bind(ScmDelegateClient.class).to(ScmDelegateClientImpl.class);
     bind(ScmServiceClient.class).to(ScmServiceClientImpl.class);
+    bind(ManifestCollectionService.class).to(HelmChartCollectionService.class);
 
     // NG Delegate
     MapBinder<String, K8sRequestHandler> k8sTaskTypeToRequestHandler =
@@ -1040,6 +1076,7 @@ public class DelegateModule extends AbstractModule {
     k8sTaskTypeToRequestHandler.addBinding(K8sTaskType.SWAP_SERVICE_SELECTORS.name())
         .to(K8sSwapServiceSelectorsHandler.class);
     k8sTaskTypeToRequestHandler.addBinding(K8sTaskType.DELETE.name()).to(K8sDeleteRequestHandler.class);
+    k8sTaskTypeToRequestHandler.addBinding(K8sTaskType.CANARY_DELETE.name()).to(K8sCanaryDeleteRequestHandler.class);
 
     // Terraform Task Handlers
     MapBinder<TFTaskType, TerraformAbstractTaskHandler> tfTaskTypeToHandlerMap =
@@ -1188,6 +1225,11 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.AZURE_ARTIFACTS_COLLECTION).toInstance(AzureArtifactsCollectionTask.class);
     mapBinder.addBinding(TaskType.AZURE_MACHINE_IMAGE_VALIDATE_ARTIFACT_SERVER)
         .toInstance(ServiceImplDelegateTask.class);
+    mapBinder.addBinding(TaskType.AZURE_MACHINE_IMAGE_GET_IMAGE_GALLERIES).toInstance(ServiceImplDelegateTask.class);
+    mapBinder.addBinding(TaskType.AZURE_MACHINE_IMAGE_GET_IMAGE_DEFINITIONS).toInstance(ServiceImplDelegateTask.class);
+    mapBinder.addBinding(TaskType.AZURE_MACHINE_IMAGE_GET_RESOURCE_GROUPS).toInstance(ServiceImplDelegateTask.class);
+    mapBinder.addBinding(TaskType.AZURE_GET_SUBSCRIPTIONS).toInstance(ServiceImplDelegateTask.class);
+
     mapBinder.addBinding(TaskType.AZURE_MACHINE_IMAGE_GET_BUILDS).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.AZURE_VMSS_COMMAND_TASK).toInstance(AzureVMSSTask.class);
     mapBinder.addBinding(TaskType.AZURE_APP_SERVICE_TASK).toInstance(AzureAppServiceTask.class);
@@ -1542,6 +1584,8 @@ public class DelegateModule extends AbstractModule {
     connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.SUMOLOGIC.getDisplayName())
         .to(CVConnectorValidationHandler.class);
     connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.DYNATRACE.getDisplayName())
+        .to(CVConnectorValidationHandler.class);
+    connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.PAGER_DUTY.getDisplayName())
         .to(CVConnectorValidationHandler.class);
   }
 

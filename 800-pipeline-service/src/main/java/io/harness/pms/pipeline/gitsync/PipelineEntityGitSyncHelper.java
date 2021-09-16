@@ -9,9 +9,14 @@ import io.harness.encryption.ScopeHelper;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.UnexpectedException;
+import io.harness.git.model.ChangeType;
+import io.harness.gitsync.FileChange;
+import io.harness.gitsync.ScopeDetails;
+import io.harness.gitsync.entityInfo.AbstractGitSdkEntityHandler;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.ng.core.EntityDetail;
 import io.harness.plancreator.pipeline.PipelineConfig;
+import io.harness.plancreator.pipeline.PipelineInfoConfig;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.mappers.PMSPipelineDtoMapper;
@@ -20,11 +25,14 @@ import io.harness.pms.pipeline.service.PMSPipelineService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
-public class PipelineEntityGitSyncHelper implements GitSdkEntityHandlerInterface<PipelineEntity, PipelineConfig> {
+public class PipelineEntityGitSyncHelper extends AbstractGitSdkEntityHandler<PipelineEntity, PipelineConfig>
+    implements GitSdkEntityHandlerInterface<PipelineEntity, PipelineConfig> {
   private final PMSPipelineService pmsPipelineService;
 
   @Inject
@@ -71,9 +79,9 @@ public class PipelineEntityGitSyncHelper implements GitSdkEntityHandlerInterface
   }
 
   @Override
-  public PipelineConfig update(String accountIdentifier, String yaml) {
-    PipelineEntity pipelineEntity =
-        pmsPipelineService.updatePipelineYaml(PMSPipelineDtoMapper.toPipelineEntity(accountIdentifier, yaml));
+  public PipelineConfig update(String accountIdentifier, String yaml, ChangeType changeType) {
+    PipelineEntity pipelineEntity = pmsPipelineService.updatePipelineYaml(
+        PMSPipelineDtoMapper.toPipelineEntity(accountIdentifier, yaml), changeType);
     return PipelineYamlDtoMapper.toDto(pipelineEntity);
   }
 
@@ -110,5 +118,25 @@ public class PipelineEntityGitSyncHelper implements GitSdkEntityHandlerInterface
   @Override
   public String getBranchKey() {
     return PipelineEntityKeys.branch;
+  }
+
+  @Override
+  public List<FileChange> listAllEntities(ScopeDetails scopeDetails) {
+    return null;
+  }
+
+  @Override
+  public String getLastObjectIdIfExists(String accountIdentifier, String yaml) {
+    final PipelineConfig pipelineConfig = getYamlDTO(yaml);
+    final PipelineInfoConfig pipelineInfoConfig = pipelineConfig.getPipelineInfoConfig();
+    final Optional<PipelineEntity> pipelineEntity =
+        pmsPipelineService.get(accountIdentifier, pipelineInfoConfig.getOrgIdentifier(),
+            pipelineInfoConfig.getProjectIdentifier(), pipelineInfoConfig.getIdentifier(), false);
+    return pipelineEntity.map(PipelineEntity::getObjectIdOfYaml).orElse(null);
+  }
+
+  @Override
+  public PipelineConfig getYamlDTO(String yaml) {
+    return PipelineYamlDtoMapper.toDto(yaml);
   }
 }

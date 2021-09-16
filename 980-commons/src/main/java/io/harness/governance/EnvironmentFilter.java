@@ -1,5 +1,8 @@
 package io.harness.governance;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -19,6 +22,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
+@OwnedBy(HarnessTeam.CDC)
 public class EnvironmentFilter {
   private EnvironmentFilterType filterType;
   public enum EnvironmentFilterType { ALL_PROD, ALL_NON_PROD, ALL, CUSTOM }

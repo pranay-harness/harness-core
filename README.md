@@ -635,6 +635,19 @@ gazelle  # generates, updates BUILD.bazel
 ```lang=bash
 portal/tools/go/update_bazel_repo.sh go.mod
 ```
+
+* Using GOPATH
+
+Some editors like vscode requires the code to be structured in a `GOPATH` directory tree.
+In this case, you may use the `:gopath` target to generate a directory tree with
+symlinks to the original source files.
+
+```
+bazelisk build :gopath
+```
+
+You can then set the `GOPATH` in your editor to `bazel-bin/gopath`. If `bazel-bin` folder is not present in the root folder, use `$(bazel info bazel-bin)/gopath`.
+
 # How to enable aws sdk logging in Manager/Delegate app locally
 NOTE: Below changes are only recommended in local environment and changes shall not be pushed.
 
@@ -643,3 +656,11 @@ AWS SDK library internal logging is done using SLF4J. SLF4J serves as a simple f
 We are already using logback framework in our application, so it is simple to enable logging as it is already supported in SLF4J.
 * Delegate - To enable AWS SDK logging in delegate, update root logger level to TRACE in logback.xml file in 260-delegate module resources folder and restart delegate.
 * Manager - To enable AWS SDK logging in manager, update root logger level to TRACE in logback.xml file in 360-cg-manager module resources folder and restart manager. 
+
+
+### Hotfix instructions
+
+1. Create a new JIRA ticket(Don't use the feature branch).
+2. Checkout the branch to hotfix on and make the changes.
+3. Bump up the build number in the build.properties.
+4. Create a pull request on this branch and master as well, make sure you merge them on master within the next 3 4 hours.

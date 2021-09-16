@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.ARPIT;
 import static io.harness.rule.OwnerRule.BOJAN;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.DEEPAK;
@@ -149,6 +150,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   private static final String TEST_DELEGATE_PROFILE_ID = generateUuid();
   private static final long TEST_PROFILE_EXECUTION_TIME = System.currentTimeMillis();
 
+  private static final String TEST_DELEGATE_NAME = "testDelegateName";
   private static final String TEST_DELEGATE_GROUP_NAME = "testDelegateGroupName";
   private static final String TEST_DELEGATE_GROUP_NAME_IDENTIFIER = "_testDelegateGroupName";
 
@@ -653,21 +655,21 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = MARKO)
+  @Owner(developers = ARPIT)
   @Category(UnitTests.class)
   public void testObtainDelegateIdShouldReturnEmpty() {
-    assertThat(delegateService.obtainDelegateIds(generateUuid(), generateUuid())).isEmpty();
+    assertThat(delegateService.obtainDelegateIdsUsingName(generateUuid(), generateUuid())).isEmpty();
   }
 
   @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void testObtainDelegateIdShouldReturnDelegateId() {
-    Delegate delegate = createDelegateBuilder().sessionIdentifier(TEST_SESSION_IDENTIFIER).build();
+    Delegate delegate = createDelegateBuilder().delegateName(TEST_DELEGATE_NAME).build();
     String delegateId = persistence.save(delegate);
 
     List<String> delegateIds =
-        delegateService.obtainDelegateIds(delegate.getAccountId(), delegate.getSessionIdentifier());
+        delegateService.obtainDelegateIdsUsingName(delegate.getAccountId(), delegate.getDelegateName());
 
     assertThat(delegateIds).size().isEqualTo(1);
     assertThat(delegateIds.get(0)).isEqualTo(delegateId);
@@ -994,7 +996,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
                        .build());
 
     // test delete event
-    delegateService.deleteDelegateGroup(ACCOUNT_ID, returnedDelegateGroup.getUuid(), true);
+    delegateService.deleteDelegateGroup(ACCOUNT_ID, returnedDelegateGroup.getUuid());
     outboxEvents = outboxService.list(OutboxEventFilter.builder().maximumEventsPolled(100).build());
     assertThat(outboxEvents.size()).isEqualTo(2);
     outboxEvent = outboxEvents.get(1);

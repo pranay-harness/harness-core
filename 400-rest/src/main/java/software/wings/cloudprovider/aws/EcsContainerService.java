@@ -1,8 +1,10 @@
 package software.wings.cloudprovider.aws;
 
+import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.container.ContainerInfo;
 import io.harness.logging.LogCallback;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -29,6 +31,7 @@ import java.util.Optional;
  * Created by anubhaw on 12/28/16.
  */
 @OwnedBy(CDP)
+@TargetModule(_930_DELEGATE_TASKS)
 public interface EcsContainerService {
   /**
    * Provision nodes.

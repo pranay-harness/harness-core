@@ -1,5 +1,7 @@
 package io.harness.app.beans.entities;
 
+import io.harness.ng.core.dashboard.AuthorInfo;
+
 import lombok.Builder;
 import lombok.Value;
 
@@ -12,7 +14,7 @@ public class BuildActiveInfo {
   private String commit;
   private String commitID;
   private AuthorInfo author;
-  private long startTs;
+  private Long startTs;
   private String status;
-  private long endTs;
+  private Long endTs;
 }

@@ -1,5 +1,6 @@
 package software.wings.service.impl.artifact;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.GEORGE;
 
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
@@ -11,6 +12,7 @@ import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -23,6 +25,7 @@ import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(CDC)
 public class ArtifactComparatorTest extends CategoryTest {
   private final Artifact.Builder artifactBuilder = anArtifact()
                                                        .withAppId(APP_ID)

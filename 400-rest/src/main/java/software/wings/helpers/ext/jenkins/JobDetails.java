@@ -1,5 +1,11 @@
 package software.wings.helpers.ext.jenkins;
 
+import static io.harness.annotations.dev.HarnessModule._960_API_SERVICES;
+
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import com.google.common.base.MoreObjects;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,6 +15,8 @@ import java.util.Objects;
  * Has all the job related info required by the UI to show jenkins job tree
  * Created by rtummala on 7/19/17.
  */
+@OwnedBy(HarnessTeam.CDC)
+@TargetModule(_960_API_SERVICES)
 public class JobDetails {
   private String jobName;
   private String url;

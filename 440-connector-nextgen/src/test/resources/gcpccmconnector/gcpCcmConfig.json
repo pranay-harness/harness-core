@@ -17,6 +17,7 @@
         "VISIBILITY"
       ],
       "projectId": "projectId",
+      "serviceAccountEmail": "serviceAccountEmail",
       "billingExportSpec": {
         "datasetId": "datasetId"
       }

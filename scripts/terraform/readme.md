@@ -16,14 +16,21 @@ https://www.terraform.io/docs/cli/commands/login.html
 Go to /portal/scripts/terraform/stackdriver
 terraform init # will read backend.tf file in the current directory.
 terraform workspace list # to list workspaces.
+terraform workspace select prod # to select prod workspace
 terraform plan # no opp command to print diff between local directory and actual 
 terraform state list
 ```
 For local testing always set target to only try with updated file instead of applying all the changes.
 ```
-terraform plan -target=module.cvng.google_monitoring_dashboard.cvng_dashboard
-terraform apply -target=module.cvng.google_monitoring_dashboard.cvng_dashboard
+terraform plan -target=module.cvng.google_monitoring_dashboard.cvng_dashboard_1
+terraform apply -target=module.cvng.google_monitoring_dashboard.cvng_dashboard_1
 ```
+
+For targeting one module
+```
+terraform plan -target=module.cvng
+terraform apply -target=module.cvng
+ ```
 
 ### Google cloud monitoring 
 * https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/monitoring_dashboard

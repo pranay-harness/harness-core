@@ -25,6 +25,8 @@ enum Type {
   GIT = 1;
   SCHEDULED = 2;
   WEBHOOK = 3;
+  ARTIFACT = 4;
+  MANIFEST = 5;
 }
 
 enum SourceType {

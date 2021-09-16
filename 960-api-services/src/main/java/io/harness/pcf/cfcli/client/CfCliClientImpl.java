@@ -23,9 +23,9 @@ import static software.wings.beans.LogColor.White;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
 
-import static com.google.common.base.Charsets.UTF_8;
 import static java.lang.String.format;
 import static java.lang.String.join;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toSet;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -49,7 +49,6 @@ import io.harness.pcf.model.PcfRouteInfo;
 import io.harness.pcf.model.PcfRouteInfo.PcfRouteInfoBuilder;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.File;
@@ -126,17 +125,8 @@ public class CfCliClientImpl implements CfCliClient {
     logCallback.saveExecutionLog("# Performing \"cf push\"");
     Map<String, String> environmentMapForPcfExecutor = getEnvironmentMapForCfPush(requestData);
     String command = constructCfPushCommand(requestData, finalFilePath);
-    ProcessExecutor processExecutor = new ProcessExecutor()
-                                          .timeout(pcfRequestConfig.getTimeOutIntervalInMins(), TimeUnit.MINUTES)
-                                          .command(BIN_BASH, "-c", command)
-                                          .readOutput(true)
-                                          .environment(environmentMapForPcfExecutor)
-                                          .redirectOutput(new LogOutputStream() {
-                                            @Override
-                                            protected void processLine(String line) {
-                                              logCallback.saveExecutionLog(line);
-                                            }
-                                          });
+    ProcessExecutor processExecutor = createProcessExecutorForCfTask(
+        pcfRequestConfig.getTimeOutIntervalInMins(), command, environmentMapForPcfExecutor, logCallback);
     ProcessResult processResult = processExecutor.execute();
     int result = processResult.getExitValue();
     if (result != 0) {
@@ -213,7 +203,7 @@ public class CfCliClientImpl implements CfCliClient {
   private void logManifestFile(String finalFilePath, LogCallback logCallback) {
     String content;
     try {
-      content = new String(Files.readAllBytes(Paths.get(finalFilePath)), Charsets.UTF_8);
+      content = new String(Files.readAllBytes(Paths.get(finalFilePath)), UTF_8);
       logCallback.saveExecutionLog(format("# Manifest File Content: %n %s %n", content));
       log.info(format("Manifest File at Path: %s, contents are %n %s", finalFilePath, content));
     } catch (Exception e) {
@@ -247,6 +237,7 @@ public class CfCliClientImpl implements CfCliClient {
         exitCode = processExecutor.execute().getExitValue();
       }
     } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
       exceptionForAutoscalarStateChangeFailure(appAutoscalarRequestData.getApplicationName(), enable, e);
       return;
     } catch (Exception e) {
@@ -539,20 +530,11 @@ public class CfCliClientImpl implements CfCliClient {
           doLogin(pcfRequestConfig, logCallback, cfRunPluginScriptRequestData.getWorkingDirectory());
       if (loginSuccessful) {
         logCallback.saveExecutionLog("# Executing pcf plugin script :");
-
-        ProcessExecutor processExecutor =
-            new ProcessExecutor()
-                .timeout(pcfRequestConfig.getTimeOutIntervalInMins(), TimeUnit.MINUTES)
-                .command(BIN_BASH, "-c", cfRunPluginScriptRequestData.getFinalScriptString())
-                .readOutput(true)
-                .environment(getEnvironmentMapForCfExecutor(pcfRequestConfig.getEndpointUrl(),
-                    cfRunPluginScriptRequestData.getWorkingDirectory(), pcfPluginHome))
-                .redirectOutput(new LogOutputStream() {
-                  @Override
-                  protected void processLine(String line) {
-                    logCallback.saveExecutionLog(line);
-                  }
-                });
+        ProcessExecutor processExecutor = createProcessExecutorForCfTask(pcfRequestConfig.getTimeOutIntervalInMins(),
+            cfRunPluginScriptRequestData.getFinalScriptString(),
+            getEnvironmentMapForCfExecutor(
+                pcfRequestConfig.getEndpointUrl(), cfRunPluginScriptRequestData.getWorkingDirectory(), pcfPluginHome),
+            logCallback);
         ProcessResult processResult = runProcessExecutor(processExecutor);
         exitCode = processResult.getExitValue();
         if (exitCode == 0) {
@@ -584,12 +566,11 @@ public class CfCliClientImpl implements CfCliClient {
         throw new InvalidRequestException("USE_PCF_CLI flag is needed");
       }
 
-      if (!pcfRequestConfig.isLoggedin()) {
-        if (!doLogin(pcfRequestConfig, logCallback, pcfRequestConfig.getCfHomeDirPath())) {
-          String errorMessage = "Failed to login when performing: set-env";
-          logCallback.saveExecutionLog(color(errorMessage, Red, Bold));
-          throw new InvalidRequestException(errorMessage);
-        }
+      if (!pcfRequestConfig.isLoggedin()
+          && !doLogin(pcfRequestConfig, logCallback, pcfRequestConfig.getCfHomeDirPath())) {
+        String errorMessage = "Failed to login when performing: set-env";
+        logCallback.saveExecutionLog(color(errorMessage, Red, Bold));
+        throw new InvalidRequestException(errorMessage);
       }
 
       if (isNotEmpty(envVars)) {
@@ -626,17 +607,7 @@ public class CfCliClientImpl implements CfCliClient {
   int executeCommand(String command, Map<String, String> env, LogCallback logCallback)
       throws IOException, InterruptedException, TimeoutException {
     logCallback.saveExecutionLog(format("Executing command: [%s]", command));
-    ProcessExecutor executor = new ProcessExecutor()
-                                   .timeout(5, TimeUnit.MINUTES)
-                                   .command(BIN_BASH, "-c", command)
-                                   .readOutput(true)
-                                   .environment(env)
-                                   .redirectOutput(new LogOutputStream() {
-                                     @Override
-                                     protected void processLine(String line) {
-                                       logCallback.saveExecutionLog(line);
-                                     }
-                                   });
+    ProcessExecutor executor = createProcessExecutorForCfTask(5, command, env, logCallback);
     ProcessResult result = executor.execute();
     int resultCode = result.getExitValue();
     if (resultCode != 0) {
@@ -655,12 +626,11 @@ public class CfCliClientImpl implements CfCliClient {
         throw new InvalidRequestException("USE_PCF_CLI flag is needed");
       }
 
-      if (!pcfRequestConfig.isLoggedin()) {
-        if (!doLogin(pcfRequestConfig, logCallback, pcfRequestConfig.getCfHomeDirPath())) {
-          String errorMessage = "Failed to login when performing: set-env";
-          logCallback.saveExecutionLog(color(errorMessage, Red, Bold));
-          throw new InvalidRequestException(errorMessage);
-        }
+      if (!pcfRequestConfig.isLoggedin()
+          && !doLogin(pcfRequestConfig, logCallback, pcfRequestConfig.getCfHomeDirPath())) {
+        String errorMessage = "Failed to login when performing: set-env";
+        logCallback.saveExecutionLog(color(errorMessage, Red, Bold));
+        throw new InvalidRequestException(errorMessage);
       }
 
       if (isNotEmpty(varNames)) {

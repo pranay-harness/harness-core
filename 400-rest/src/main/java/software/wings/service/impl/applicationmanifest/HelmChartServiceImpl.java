@@ -3,19 +3,23 @@ package software.wings.service.impl.applicationmanifest;
 import static io.harness.beans.SearchFilter.Operator.CONTAINS;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.validation.Validator.notNullCheck;
 
 import static java.util.regex.Pattern.compile;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SortOrder;
 import io.harness.data.structure.EmptyPredicate;
 
+import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.appmanifest.HelmChart.HelmChartKeys;
 import software.wings.dl.WingsPersistence;
@@ -31,6 +35,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 
 @OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class HelmChartServiceImpl implements HelmChartService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ApplicationManifestService applicationManifestService;
@@ -158,5 +163,19 @@ public class HelmChartServiceImpl implements HelmChartService {
   @Override
   public void pruneByApplicationManifest(String appId, String applicationManifestId) {
     deleteByAppManifest(appId, applicationManifestId);
+  }
+
+  @Override
+  public HelmChart getByChartVersion(String appId, String serviceId, String appManifestName, String chartVersion) {
+    ApplicationManifest applicationManifest =
+        applicationManifestService.getAppManifestByName(appId, null, serviceId, appManifestName);
+    notNullCheck("App manifest with name " + appManifestName + " doesn't belong to the given app and service",
+        applicationManifest);
+    Query<HelmChart> query = wingsPersistence.createQuery(HelmChart.class)
+                                 .filter(HelmChartKeys.appId, appId)
+                                 .filter(HelmChartKeys.serviceId, serviceId)
+                                 .filter(HelmChartKeys.applicationManifestId, applicationManifest.getUuid())
+                                 .filter(HelmChartKeys.version, chartVersion);
+    return query.get();
   }
 }

@@ -7,6 +7,7 @@ import static junit.framework.TestCase.assertNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import io.harness.CategoryTest;
 import io.harness.Team;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.beans.PageRequest;
@@ -26,7 +27,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.PageImpl;
 
-public class NotificationResourceTest {
+public class NotificationResourceTest extends CategoryTest {
   @Mock private NotificationService notificationService;
   private NotificationResource notificationResource;
 

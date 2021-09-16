@@ -24,6 +24,7 @@ import static software.wings.beans.appmanifest.StoreType.KustomizeSourceRepo;
 import static software.wings.beans.appmanifest.StoreType.Local;
 import static software.wings.beans.appmanifest.StoreType.OC_TEMPLATES;
 import static software.wings.beans.appmanifest.StoreType.Remote;
+import static software.wings.beans.appmanifest.StoreType.VALUES_YAML_FROM_HELM_REPO;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_MANIFEST_NAME;
@@ -50,6 +51,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -104,6 +107,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
+@OwnedBy(HarnessTeam.CDP)
 public class ApplicationManifestServiceImplTest extends WingsBaseTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
   @Spy @InjectMocks private GitFileConfigHelperService gitFileConfigHelperService;
@@ -142,6 +146,9 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
     applicationManifestServiceImpl.validateAppManifestForEnvironment(applicationManifest);
 
     applicationManifest.setStoreType(HelmSourceRepo);
+    applicationManifestServiceImpl.validateAppManifestForEnvironment(applicationManifest);
+
+    applicationManifest.setStoreType(VALUES_YAML_FROM_HELM_REPO);
     applicationManifestServiceImpl.validateAppManifestForEnvironment(applicationManifest);
 
     applicationManifest.setKind(K8S_MANIFEST);
@@ -196,6 +203,7 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
 
     assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> applicationManifestServiceImpl.validateApplicationManifest(applicationManifest));
+
     applicationManifest.setServiceId("s1");
     doReturn(HelmVersion.V2).when(serviceResourceService).getHelmVersionWithDefault(anyString(), anyString());
     applicationManifestServiceImpl.validateApplicationManifest(applicationManifest);
@@ -956,11 +964,14 @@ public class ApplicationManifestServiceImplTest extends WingsBaseTest {
 
     applicationManifest.setCustomSourceConfig(null);
     doNothing().when(gitFileConfigHelperService).validate(any());
-    when(serviceResourceService.getWithDetails(any(), any())).thenReturn(null);
-    assertThatExceptionOfType(InvalidRequestException.class)
-        .isThrownBy(() -> applicationManifestServiceImpl.validateRemoteAppManifest(applicationManifest))
-        .withMessageContaining("Remote manifest validation failed as service could not be found");
+    applicationManifestServiceImpl.validateRemoteAppManifest(applicationManifest);
 
+    applicationManifest.setServiceId("service__1");
+    doNothing().when(gitFileConfigHelperService).validate(any());
+    when(serviceResourceService.getWithDetails(any(), any())).thenReturn(null);
+    applicationManifestServiceImpl.validateRemoteAppManifest(applicationManifest);
+
+    applicationManifest.setAppId("appId");
     Service service = Service.builder().deploymentType(DeploymentType.ECS).build();
     doNothing().when(gitFileConfigHelperService).validate(any());
     when(serviceResourceService.getWithDetails(any(), any())).thenReturn(service);

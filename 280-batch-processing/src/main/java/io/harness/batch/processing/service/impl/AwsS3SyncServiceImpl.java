@@ -1,6 +1,5 @@
 package io.harness.batch.processing.service.impl;
 
-import io.harness.batch.processing.BatchProcessingException;
 import io.harness.batch.processing.ccm.S3SyncRecord;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.service.intfc.AwsS3SyncService;
@@ -43,7 +42,7 @@ public class AwsS3SyncServiceImpl implements AwsS3SyncService {
 
   @Override
   @SuppressWarnings("PMD")
-  public void syncBuckets(S3SyncRecord s3SyncRecord) {
+  public boolean syncBuckets(S3SyncRecord s3SyncRecord) {
     AwsS3SyncConfig awsCredentials = configuration.getAwsS3SyncConfig();
 
     // Retry class config to retry aws commands
@@ -97,18 +96,24 @@ public class AwsS3SyncServiceImpl implements AwsS3SyncService {
       try {
         retryingAwsS3Sync.apply();
       } catch (Throwable throwable) {
-        throw new BatchProcessingException("S3 sync failed", throwable);
+        log.error("Exception during s3 sync {}", throwable);
+        return false;
+        // throw new BatchProcessingException("S3 sync failed", throwable);
       }
       log.info("sync completed");
-
     } catch (IOException | TimeoutException | InvalidExitValueException | JsonSyntaxException e) {
-      log.error("Exception during s3 sync for src={}, srcRegion={}, dest={}, role-arn={}",
+      log.error(e.getMessage(), e);
+      log.info("Exception during s3 sync for src={}, srcRegion={}, dest={}, role-arn={}",
           s3SyncRecord.getBillingBucketPath(), s3SyncRecord.getBillingBucketRegion(), destinationBucketPath,
           s3SyncRecord.getRoleArn());
-      throw new BatchProcessingException("S3 sync failed", e);
+      return false;
+      // throw new BatchProcessingException("S3 sync failed", e);
     } catch (InterruptedException e) {
+      log.error(e.getMessage(), e);
       Thread.currentThread().interrupt();
+      return false;
     }
+    return true;
   }
 
   public ProcessResult trySyncBucket(ArrayList<String> cmd, ImmutableMap<String, String> roleEnvVariables)

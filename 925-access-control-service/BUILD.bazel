@@ -1,28 +1,6 @@
-load("@rules_java//java:defs.bzl", "java_binary")
+load("//:tools/bazel/harness.bzl", "java_binary", "java_library")
 load("//:tools/bazel/GenTestRules.bzl", "run_tests")
 load("//:tools/bazel/macros.bzl", "run_analysis")
-
-shared_deps = [
-    "@maven//:com_google_guava_guava",
-    "@maven//:io_netty_netty_all",
-] + [
-    "//930-ng-core-clients:module",
-    "//940-primary-version-manager:module",
-    "//945-ng-audit-client:module",
-    "//946-access-control-aggregator:module",
-    "//947-access-control-core:module",
-    "//948-access-control-sdk:module",
-    "//953-events-api:module",
-    "//954-feature-flag-sdk:module",
-    "//955-outbox-sdk:module",
-    "//958-migration-sdk:module",
-    "//965-api-key-filter:module",
-    "//970-ng-commons:module",
-    "//980-commons:module",
-    "@maven//:com_fasterxml_jackson_jaxrs_jackson_jaxrs_yaml_provider",
-    "@maven//:ru_vyarus_guice_validator",
-    "//:lombok",
-]
 
 java_binary(
     name = "module",
@@ -36,7 +14,76 @@ java_binary(
     runtime_deps = [
         "@maven//:javax_ws_rs_javax_ws_rs_api",
     ],
-    deps = shared_deps,
+    deps = [
+        "//:lombok",
+        "//930-ng-core-clients:module",
+        "//940-primary-version-manager:module",
+        "//940-resource-group-beans:module",
+        "//945-account-mgmt:module",
+        "//945-ng-audit-client:module",
+        "//946-access-control-aggregator:module",
+        "//947-access-control-core:module",
+        "//948-access-control-sdk:module",
+        "//949-access-control-commons:module",
+        "//951-ng-audit-commons:module",
+        "//953-events-api:module",
+        "//954-feature-flag-sdk:module",
+        "//955-outbox-sdk:module",
+        "//958-migration-sdk:module",
+        "//960-ng-core-beans:module",
+        "//960-persistence:module",
+        "//965-api-key-filter:module",
+        "//970-ng-commons:module",
+        "//980-commons:module",
+        "//999-annotations:module",
+        "@maven//:ch_qos_logback_logback_access",
+        "@maven//:ch_qos_logback_logback_classic",
+        "@maven//:com_fasterxml_jackson_core_jackson_annotations",
+        "@maven//:com_fasterxml_jackson_core_jackson_core",
+        "@maven//:com_fasterxml_jackson_core_jackson_databind",
+        "@maven//:com_fasterxml_jackson_dataformat_jackson_dataformat_yaml",
+        "@maven//:com_google_code_findbugs_annotations",
+        "@maven//:com_google_guava_guava",
+        "@maven//:com_google_inject_guice",
+        "@maven//:com_google_protobuf_protobuf_java",
+        "@maven//:com_smoketurner_dropwizard_swagger",
+        "@maven//:com_squareup_okhttp3_okhttp",
+        "@maven//:com_squareup_retrofit2_retrofit",
+        "@maven//:io_debezium_debezium_api",
+        "@maven//:io_dropwizard_dropwizard_configuration",
+        "@maven//:io_dropwizard_dropwizard_core",
+        "@maven//:io_dropwizard_dropwizard_jersey",
+        "@maven//:io_dropwizard_dropwizard_lifecycle",
+        "@maven//:io_dropwizard_dropwizard_logging",
+        "@maven//:io_dropwizard_dropwizard_request_logging",
+        "@maven//:io_dropwizard_metrics_metrics_annotation",
+        "@maven//:io_dropwizard_metrics_metrics_core",
+        "@maven//:io_dropwizard_metrics_metrics_healthchecks",
+        "@maven//:io_swagger_swagger_annotations",
+        "@maven//:io_swagger_swagger_jaxrs",
+        "@maven//:io_swagger_swagger_models",
+        "@maven//:javax_servlet_javax_servlet_api",
+        "@maven//:javax_validation_validation_api",
+        "@maven//:javax_ws_rs_javax_ws_rs_api",
+        "@maven//:net_jodah_failsafe",
+        "@maven//:net_sourceforge_argparse4j_argparse4j",
+        "@maven//:org_apache_commons_commons_lang3",
+        "@maven//:org_apache_commons_commons_text",
+        "@maven//:org_eclipse_jetty_jetty_servlets",
+        "@maven//:org_glassfish_jersey_core_jersey_server",
+        "@maven//:org_glassfish_jersey_media_jersey_media_multipart",
+        "@maven//:org_hibernate_hibernate_validator",
+        "@maven//:org_mongodb_mongo_java_driver",
+        "@maven//:org_mongodb_morphia_morphia",
+        "@maven//:org_redisson_redisson",
+        "@maven//:org_reflections_reflections",
+        "@maven//:org_slf4j_slf4j_api",
+        "@maven//:org_springframework_data_spring_data_commons",
+        "@maven//:org_springframework_data_spring_data_mongodb",
+        "@maven//:org_springframework_spring_context",
+        "@maven//:org_springframework_spring_tx",
+        "@maven//:ru_vyarus_guice_validator",
+    ],
 )
 
 java_library(
@@ -44,13 +91,37 @@ java_library(
     testonly = True,
     srcs = glob(["src/test/**/*.java"]),
     visibility = ["//visibility:public"],
-    deps = shared_deps + [
+    deps = [
         ":module",
+        "//:lombok",
+        "//945-ng-audit-client:module",
+        "//947-access-control-core:module",
+        "//949-access-control-commons:module",
+        "//951-ng-audit-commons:module",
+        "//955-outbox-sdk:module",
+        "//960-persistence:module",
         "//960-persistence:supporter-test",
+        "//970-ng-commons:module",
+        "//980-commons:module",
         "//990-commons-test:module",
+        "//999-annotations:module",
+        "@maven//:com_fasterxml_jackson_core_jackson_core",
+        "@maven//:com_fasterxml_jackson_core_jackson_databind",
+        "@maven//:com_google_code_findbugs_annotations",
+        "@maven//:com_google_guava_guava",
+        "@maven//:com_google_inject_guice",
         "@maven//:junit_junit",
-        "@maven//:org_assertj_assertj_core",
+        "@maven//:org_apache_commons_commons_lang3",
         "@maven//:org_mockito_mockito_core",
+        "@maven//:org_mongodb_mongo_java_driver",
+        "@maven//:org_mongodb_morphia_morphia",
+        "@maven//:org_slf4j_slf4j_api",
+        "@maven//:org_springframework_data_spring_data_commons",
+        "@maven//:org_springframework_data_spring_data_mongodb",
+        "@maven//:org_springframework_guice_spring_guice",
+        "@maven//:org_springframework_spring_context",
+        "@maven//:org_springframework_spring_core",
+        "@maven//:org_springframework_spring_tx",
     ],
 )
 
@@ -58,71 +129,7 @@ run_tests()
 
 run_analysis()
 
-#Docker Build Config
-load("@io_bazel_rules_docker//container:container.bzl", "container_image", "container_push")
-load("@io_bazel_rules_docker//docker/util:run.bzl", "container_run_and_commit")
-
-container_run_and_commit(
-    name = "base_image",
-    commands = [
-        "wget https://github.com/mikefarah/yq/releases/download/3.3.2/yq_linux_amd64 -O /usr/bin/yq -O /usr/bin/yq",
-        "chmod +x /usr/bin/yq",
-        "mkdir /opt/harness/plugins",
-    ],
-    image = "@platform_alpine//image",
-    tags = [
-        "manual",
-        "no-cache",
-        "no-ide",
-    ],
-)
-
-container_image(
-    name = "base_image_access_control",
-    base = "base_image_commit.tar",
-    cmd = [
-        "chmod +x /opt/harness/*.sh",
-    ],
-    directory = "/opt/harness",
-    files = [
-        "config.yml",
-        "container-image/scripts/replace_configs.sh",
-        "container-image/scripts/run.sh",
-        "container-image/scripts/start_process.sh",
-        "keystore.jks",
-        ":module_deploy.jar",
-    ],
-    tags = [
-        "manual",
-        "no-cache",
-        "no-ide",
-    ],
-)
-
-container_image(
-    name = "access_control_docker_image",
-    base = ":base_image_access_control",
-    cmd = "./run.sh",
-    repository = "us.gcr.io/harness-playground/access-control-service",
-    tags = [
-        "manual",
-        "no-cache",
-        "no-ide",
-    ],
-    workdir = "/opt/harness",
-)
-
-#TO-DO: Fix the repo path and use of dynamic tag in CI.
-container_push(
-    name = "push_access_control_docker_image",
-    format = "Docker",
-    image = ":access_control_docker_image",
-    registry = "gcr.io",
-    repository = "harness-playground/access-control-service",
-    tag = "bazel-docker-image-test",
-    tags = [
-        "manual",
-        "no-cache",
-        "no-ide",
-    ],
-)
+exports_files([
+    "keystore.jks",
+    "config.yml",
+])

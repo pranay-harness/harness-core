@@ -13,6 +13,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
@@ -42,6 +44,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
 
 @TargetModule(HarnessModule._960_API_SERVICES)
+@OwnedBy(HarnessTeam.CDC)
 public class DeploymentFreezeCheckerTest extends WingsBaseTest {
   public static final String FREEZE_ID = "FREEZE_ID";
   @Mock EnvironmentService environmentService;
@@ -147,7 +150,8 @@ public class DeploymentFreezeCheckerTest extends WingsBaseTest {
   }
 
   private GovernanceConfig generateGovernanceConfig() {
-    TimeRange timeRange = new TimeRange(System.currentTimeMillis(), System.currentTimeMillis() + 100_000, "");
+    TimeRange timeRange = new TimeRange(
+        System.currentTimeMillis(), System.currentTimeMillis() + 100_000, "", false, null, null, null, false);
     TimeRangeBasedFreezeConfig freezeConfig =
         TimeRangeBasedFreezeConfig.builder()
             .applicable(true)

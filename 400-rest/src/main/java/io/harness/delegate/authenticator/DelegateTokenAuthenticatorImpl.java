@@ -144,7 +144,7 @@ public class DelegateTokenAuthenticatorImpl implements DelegateTokenAuthenticato
           }
 
           long time_end = System.currentTimeMillis() - time_start;
-          log.info("Delegate Token verification for accountId {} and status {} has taken {} milliseconds.", accountId,
+          log.debug("Delegate Token verification for accountId {} and status {} has taken {} milliseconds.", accountId,
               status.name(), time_end);
           return true;
         } catch (Exception e) {
@@ -153,7 +153,7 @@ public class DelegateTokenAuthenticatorImpl implements DelegateTokenAuthenticato
         }
       }
       long time_end = System.currentTimeMillis() - time_start;
-      log.info("Delegate Token verification for accountId {} and status {} has taken {} milliseconds.", accountId,
+      log.debug("Delegate Token verification for accountId {} and status {} has taken {} milliseconds.", accountId,
           status.name(), time_end);
 
       return false;

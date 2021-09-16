@@ -19,7 +19,9 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import static java.util.Collections.singletonList;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.DeploymentType;
@@ -35,6 +37,7 @@ import com.google.common.collect.Lists;
 import java.util.List;
 
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class PcfStateTestHelper {
   public static final String ORG = "ORG";
   public static final String SPACE = "SPACE";

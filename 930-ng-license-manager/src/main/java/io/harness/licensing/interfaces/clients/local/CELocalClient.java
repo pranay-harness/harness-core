@@ -1,7 +1,7 @@
 package io.harness.licensing.interfaces.clients.local;
 
 import static io.harness.licensing.LicenseConstant.UNLIMITED;
-import static io.harness.licensing.interfaces.ModuleLicenseInterfaceImpl.TRIAL_DURATION;
+import static io.harness.licensing.interfaces.ModuleLicenseImpl.TRIAL_DURATION;
 
 import io.harness.licensing.Edition;
 import io.harness.licensing.LicenseType;
@@ -18,9 +18,7 @@ public class CELocalClient implements CEModuleLicenseClient {
     long expiryTime = Instant.now().plus(TRIAL_DURATION, ChronoUnit.DAYS).toEpochMilli();
     long currentTime = Instant.now().toEpochMilli();
     return CEModuleLicenseDTO.builder()
-        .numberOfCluster(UNLIMITED)
         .spendLimit(Long.valueOf(UNLIMITED))
-        .dataRetentionInDays(1825)
         .startTime(currentTime)
         .expiryTime(expiryTime)
         .build();

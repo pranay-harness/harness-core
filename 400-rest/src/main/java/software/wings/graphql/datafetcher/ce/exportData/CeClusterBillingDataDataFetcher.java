@@ -69,7 +69,7 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
   @Inject QLBillingStatsHelper statsHelper;
   @Inject K8sWorkloadDao dao;
   @Inject CeAccountExpirationChecker accountChecker;
-  private static final int LIMIT_THRESHOLD = 100;
+  private static final int LIMIT_THRESHOLD = 1000;
   private static final String SELECT = "select";
   private static final String DEFAULT_SELECTED_LABEL = "-";
   private static final String UNALLOCATED = "Unallocated";
@@ -84,7 +84,7 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
   @Override
   protected QLData fetchSelectedFields(String accountId, List<QLCEAggregation> aggregateFunction,
       List<QLCEFilter> filters, List<QLCEGroupBy> groupBy, List<QLCESort> sort, Integer limit, Integer offset,
-      DataFetchingEnvironment dataFetchingEnvironment) {
+      boolean skipRoundOff, DataFetchingEnvironment dataFetchingEnvironment) {
     accountChecker.checkIsCeEnabled(accountId);
     if (limit > LIMIT_THRESHOLD) {
       limit = LIMIT_THRESHOLD;
@@ -93,8 +93,8 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
       if (timeScaleDBService.isValid()) {
         List<String> selectedFields = getSelectedFields(dataFetchingEnvironment);
         List<String> selectedLabels = getSelectedLabelColumns(dataFetchingEnvironment);
-        return getData(
-            accountId, filters, aggregateFunction, groupBy, sort, limit, offset, selectedFields, selectedLabels);
+        return getData(accountId, filters, aggregateFunction, groupBy, sort, limit, offset, skipRoundOff,
+            selectedFields, selectedLabels);
       } else {
         throw new InvalidRequestException("Cannot process request in CeClusterBillingDataDataFetcher");
       }
@@ -105,7 +105,7 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
 
   protected QLCEData getData(@NotNull String accountId, List<QLCEFilter> filters,
       List<QLCEAggregation> aggregateFunction, List<QLCEGroupBy> groupByList, List<QLCESort> sortCriteria,
-      Integer limit, Integer offset, List<String> selectedFields, List<String> selectedLabels) {
+      Integer limit, Integer offset, boolean skipRoundOff, List<String> selectedFields, List<String> selectedLabels) {
     CEExportDataQueryMetadata queryData;
     ResultSet resultSet = null;
     boolean successful = false;
@@ -148,7 +148,7 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
            Statement statement = connection.createStatement()) {
         resultSet = statement.executeQuery(queryData.getQuery());
         successful = true;
-        return generateData(queryData, resultSet, accountId, selectedLabels);
+        return generateData(queryData, resultSet, accountId, selectedLabels, skipRoundOff);
       } catch (SQLException e) {
         retryCount++;
         if (retryCount >= MAX_RETRY) {
@@ -168,7 +168,7 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
   }
 
   private QLCEData generateData(CEExportDataQueryMetadata queryData, ResultSet resultSet, String accountId,
-      List<String> selectedLabels) throws SQLException {
+      List<String> selectedLabels, boolean skipRoundOff) throws SQLException {
     List<QLCEDataEntry> dataEntries = new ArrayList<>();
     Set<String> workloads = new HashSet<>();
     boolean isNamespacePresent = queryData.groupByFields.contains(QLCEEntityGroupBy.Namespace);
@@ -219,16 +219,16 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
             break;
           case SUM:
           case TOTALCOST:
-            totalCost = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()));
+            totalCost = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()), skipRoundOff);
             break;
           case IDLECOST:
-            idleCost = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()));
+            idleCost = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()), skipRoundOff);
             break;
           case UNALLOCATEDCOST:
-            unallocatedCost = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()));
+            unallocatedCost = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()), skipRoundOff);
             break;
           case SYSTEMCOST:
-            systemCost = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()));
+            systemCost = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()), skipRoundOff);
             break;
           case REGION:
             region = resultSet.getString(field.getFieldName());
@@ -271,22 +271,22 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
             instanceName = resultSet.getString(field.getFieldName());
             break;
           case AGGREGATEDCPULIMIT:
-            cpuLimit = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()));
+            cpuLimit = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()), skipRoundOff);
             break;
           case AGGREGATEDCPUREQUEST:
-            cpuRequest = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()));
+            cpuRequest = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()), skipRoundOff);
             break;
           case AGGREGATEDCPUUTILIZATIONVALUE:
-            avgCpuUtilization = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()));
+            avgCpuUtilization = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()), skipRoundOff);
             break;
           case AGGREGATEDMEMORYLIMIT:
-            memoryLimit = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()));
+            memoryLimit = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()), skipRoundOff);
             break;
           case AGGREGATEDMEMORYREQUEST:
-            memoryRequest = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()));
+            memoryRequest = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()), skipRoundOff);
             break;
           case AGGREGATEDMEMORYUTILIZATIONVALUE:
-            avgMemoryUtilization = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()));
+            avgMemoryUtilization = getRoundedDoubleValue(resultSet.getDouble(field.getFieldName()), skipRoundOff);
             break;
           default:
             break;
@@ -444,7 +444,10 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
     }
   }
 
-  private double getRoundedDoubleValue(double value) {
+  private double getRoundedDoubleValue(double value, boolean skipRoundOff) {
+    if (skipRoundOff) {
+      return value;
+    }
     return Math.round(value * 100D) / 100D;
   }
 

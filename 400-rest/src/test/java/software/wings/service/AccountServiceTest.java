@@ -235,7 +235,7 @@ public class AccountServiceTest extends WingsBaseTest {
   public void testGetAccountDetails() {
     when(configuration.getDeploymentClusterName()).thenReturn(CLUSTER_NAME);
     Account account = setUpDataForTestingSetAccountStatusInternal(AccountType.PAID);
-    AccountDetails details = accountService.getDetails(account.getUuid());
+    AccountDetails details = accountService.getAccountDetails(account.getUuid());
     assertThat(details.getCluster()).isEqualTo(CLUSTER_NAME);
     assertThat(details.getAccountName()).isEqualTo(HARNESS_NAME);
     assertThat(details.getDefaultExperience()).isEqualTo(DefaultExperience.NG);

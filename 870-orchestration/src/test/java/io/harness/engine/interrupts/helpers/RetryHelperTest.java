@@ -89,7 +89,7 @@ public class RetryHelperTest extends OrchestrationTestBase {
     InterruptConfig interruptConfig =
         InterruptConfig.newBuilder()
             .setIssuedBy(IssuedBy.newBuilder()
-                             .setManualIssuer(ManualIssuer.newBuilder().setEmailId("admin@admin").build())
+                             .setManualIssuer(ManualIssuer.newBuilder().setIdentifier("admin@admin").build())
                              .build())
             .build();
     retryHelper.retryNodeExecution(nodeExecution.getUuid(), null, generateUuid(), interruptConfig);
@@ -120,7 +120,7 @@ public class RetryHelperTest extends OrchestrationTestBase {
     InterruptConfig interruptConfig =
         InterruptConfig.newBuilder()
             .setIssuedBy(IssuedBy.newBuilder()
-                             .setManualIssuer(ManualIssuer.newBuilder().setEmailId("admin@admin").build())
+                             .setManualIssuer(ManualIssuer.newBuilder().setIdentifier("admin@admin").build())
                              .build())
             .build();
     NodeExecution clonedNodeExecution = retryHelper.cloneForRetry(

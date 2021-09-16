@@ -1,7 +1,9 @@
 package io.harness.delegate.app;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.grpc.DelegateServiceClassicGrpcImpl;
 import io.harness.grpc.auth.DelegateAuthServerInterceptor;
-import io.harness.grpc.auth.ServiceAuthServerInterceptor;
 import io.harness.grpc.auth.ServiceInfo;
 import io.harness.grpc.auth.ValidateAuthServerInterceptor;
 import io.harness.grpc.exception.GrpcExceptionMapper;
@@ -28,6 +30,7 @@ import io.grpc.services.HealthStatusManager;
 import java.util.List;
 import java.util.Set;
 
+@OwnedBy(HarnessTeam.DEL)
 public class DelegateServiceClassicGrpcServerModule extends AbstractModule {
   private DelegateServiceConfig delegateServiceConfig;
 
@@ -42,19 +45,26 @@ public class DelegateServiceClassicGrpcServerModule extends AbstractModule {
     Multibinder<BindableService> bindableServiceMultibinder = Multibinder.newSetBinder(binder(), BindableService.class);
     bindableServiceMultibinder.addBinding().toProvider(ProtoReflectionService::newInstance).in(Singleton.class);
     Provider<HealthStatusManager> healthStatusManagerProvider = getProvider(HealthStatusManager.class);
-    bindableServiceMultibinder.addBinding().toProvider(() -> healthStatusManagerProvider.get().getHealthService());
+    //    bindableServiceMultibinder.addBinding().toProvider(() ->
+    //    healthStatusManagerProvider.get().getHealthService());
     // bindableServiceMultibinder.addBinding().to(DelegateServicePingPongService.class);
+
+    bindableServiceMultibinder.addBinding().to(DelegateServiceClassicGrpcImpl.class);
 
     // Service Interceptors
     Provider<Set<ServerInterceptor>> serverInterceptorsProvider =
         getProvider(Key.get(new TypeLiteral<Set<ServerInterceptor>>() {}));
     Multibinder<ServerInterceptor> serverInterceptorMultibinder =
         Multibinder.newSetBinder(binder(), ServerInterceptor.class);
-    serverInterceptorMultibinder.addBinding().to(ServiceAuthServerInterceptor.class);
+    serverInterceptorMultibinder.addBinding().to(DelegateAuthServerInterceptor.class);
 
     // service info mapper
     MapBinder<String, ServiceInfo> stringServiceInfoMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ServiceInfo.class);
+
+    stringServiceInfoMapBinder.addBinding("io.harness.delegate.DelegateTask")
+        .toInstance(
+            ServiceInfo.builder().id("delegate-service-classic").secret(delegateServiceConfig.getDmsSecret()).build());
 
     // exception mapper
     Multibinder<GrpcExceptionMapper> expectionMapperMultibinder =

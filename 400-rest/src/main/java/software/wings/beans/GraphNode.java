@@ -5,6 +5,10 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskDetails;
 
 import software.wings.beans.template.TemplateMetadata;
@@ -25,6 +29,8 @@ import lombok.NoArgsConstructor;
 /**
  * The Class Node.
  */
+@OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @Data
 @Builder
 @NoArgsConstructor

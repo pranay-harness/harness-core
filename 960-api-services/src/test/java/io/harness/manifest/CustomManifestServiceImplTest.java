@@ -1,6 +1,7 @@
 package io.harness.manifest;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.TATHAGAT;
 
@@ -16,7 +17,6 @@ import static org.mockito.Mockito.doReturn;
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.ShellExecutionException;
-import io.harness.filesystem.FileIo;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
@@ -197,7 +197,7 @@ public class CustomManifestServiceImplTest extends CategoryTest {
     File file = new File(resultWorkingDir);
     assertThat(file.exists()).isTrue();
     assertThat(file.toString()).contains("manifestCustomSource");
-    FileIo.deleteDirectoryAndItsContentIfExists(resultWorkingDir);
+    deleteDirectoryAndItsContentIfExists(resultWorkingDir);
   }
 
   @Test
@@ -219,11 +219,11 @@ public class CustomManifestServiceImplTest extends CategoryTest {
   @After
   public void cleanup() throws IOException {
     if (isNotEmpty(testOutputDirectory)) {
-      FileUtils.deleteDirectory(new File(testOutputDirectory));
+      deleteDirectoryAndItsContentIfExists(testOutputDirectory);
     }
 
     if (isNotEmpty(shellWorkingDirectory)) {
-      FileUtils.deleteDirectory(new File(shellWorkingDirectory));
+      deleteDirectoryAndItsContentIfExists(shellWorkingDirectory);
     }
   }
 

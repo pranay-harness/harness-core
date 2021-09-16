@@ -26,7 +26,8 @@ public interface OrganizationService {
   /**
    * Use this method with caution, verify that the pageable sort is able to make use of the indexes.
    */
-  Page<Organization> list(String accountIdentifier, Pageable pageable, OrganizationFilterDTO organizationFilterDTO);
+  Page<Organization> listPermittedOrgs(
+      String accountIdentifier, Pageable pageable, OrganizationFilterDTO organizationFilterDTO);
 
   /**
    * Use this method with caution, verify that the criteria and pageable sort is able to make use of the indexes.

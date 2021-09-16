@@ -1,6 +1,9 @@
 package software.wings.utils;
+
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.FileReadException;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -21,6 +24,7 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 
 @Singleton
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class GitUtilsDelegate {
   private static final String USER_DIR_KEY = "user.dir";
 

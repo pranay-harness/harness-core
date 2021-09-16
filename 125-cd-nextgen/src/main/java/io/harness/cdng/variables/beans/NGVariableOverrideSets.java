@@ -1,5 +1,6 @@
 package io.harness.cdng.variables.beans;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.visitor.helpers.variables.VariableOverridesVisitorHelper;
@@ -32,6 +33,7 @@ public class NGVariableOverrideSets implements Visitable {
   // For Visitor Framework Impl
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) }) @ApiModelProperty(hidden = true) String metadata;
 
+  @RecasterAlias("io.harness.cdng.variables.beans.NGVariableOverrideSets$NGVariableOverrideSetsSweepingOutput")
   public static class NGVariableOverrideSetsSweepingOutput
       extends HashMap<String, NGVariableOverrideSetsSweepingOutputInner> implements ExecutionSweepingOutput {}
 

@@ -184,7 +184,7 @@ import org.quartz.TriggerKey;
 @Singleton
 @ValidateOnExecution
 @Slf4j
-@TargetModule(HarnessModule._960_API_SERVICES)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class TriggerServiceImpl implements TriggerService {
   public static final String TRIGGER_SLOWNESS_ERROR_MESSAGE = "Trigger rejected due to slowness in the product";
   @Inject private WingsPersistence wingsPersistence;
@@ -296,6 +296,7 @@ public class TriggerServiceImpl implements TriggerService {
     Trigger savedTrigger =
         duplicateCheck(() -> wingsPersistence.saveAndGet(Trigger.class, trigger), "name", trigger.getName());
     if (trigger.getCondition().getConditionType() == SCHEDULED) {
+      scheduledTriggerHandler.wakeup();
       ScheduledTriggerJob.add(jobScheduler, accountId, savedTrigger.getAppId(), savedTrigger.getUuid(), trigger);
       jobScheduler.pauseJob(trigger.getUuid(), ScheduledTriggerJob.GROUP);
     }
@@ -1973,8 +1974,7 @@ public class TriggerServiceImpl implements TriggerService {
       if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, trigger.getAccountId())) {
         validateAndSetManifestSelections(trigger, services);
       }
-      if (featureFlagService.isEnabled(FeatureName.RUNTIME_INPUT_PIPELINE, trigger.getAccountId())
-          && trigger.isContinueWithDefaultValues()) {
+      if (trigger.isContinueWithDefaultValues()) {
         validateContinueWithDefault(trigger, executePipeline);
       }
     } else if (ORCHESTRATION == trigger.getWorkflowType()) {
@@ -2076,6 +2076,7 @@ public class TriggerServiceImpl implements TriggerService {
   private void addOrUpdateCronForScheduledJob(Trigger trigger, Trigger existingTrigger) {
     if (existingTrigger.getCondition().getConditionType() == SCHEDULED) {
       if (trigger.getCondition().getConditionType() == SCHEDULED) {
+        scheduledTriggerHandler.wakeup();
         TriggerKey triggerKey = new TriggerKey(trigger.getUuid(), ScheduledTriggerJob.GROUP);
         jobScheduler.rescheduleJob(triggerKey, ScheduledTriggerJob.getQuartzTrigger(trigger));
         jobScheduler.pauseJob(trigger.getUuid(), ScheduledTriggerJob.GROUP);
@@ -2083,6 +2084,7 @@ public class TriggerServiceImpl implements TriggerService {
         jobScheduler.deleteJob(existingTrigger.getUuid(), ScheduledTriggerJob.GROUP);
       }
     } else if (trigger.getCondition().getConditionType() == SCHEDULED) {
+      scheduledTriggerHandler.wakeup();
       String accountId = appService.getAccountIdByAppId(trigger.getAppId());
       ScheduledTriggerJob.add(jobScheduler, accountId, trigger.getAppId(), trigger.getUuid(), trigger);
       jobScheduler.pauseJob(trigger.getUuid(), ScheduledTriggerJob.GROUP);
@@ -2098,7 +2100,10 @@ public class TriggerServiceImpl implements TriggerService {
       if (EmptyPredicate.isNotEmpty(nextIterations)) {
         trigger.setNextIterations(nextIterations.subList(1, nextIterations.size()));
       }
-      scheduledTriggerHandler.wakeup();
+      if (!trigger.isDisabled() && EmptyPredicate.isEmpty(trigger.getNextIterations())) {
+        throw new InvalidRequestException(
+            "Given cron expression doesn't evaluate to a valid time. Please check the expression provided");
+      }
     }
   }
 

@@ -17,6 +17,7 @@ import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
+import retrofit2.http.PUT;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
@@ -24,6 +25,7 @@ import retrofit2.http.Query;
 public interface AccessControlAdminClient {
   String ROLE_ASSIGNMENTS_API = "roleassignments";
   String ROLE_API = "roles";
+  String ACL_PREFERENCES_API = "aclPreferences";
 
   @POST(ROLE_ASSIGNMENTS_API + "/filter")
   Call<ResponseDTO<PageResponse<RoleAssignmentResponseDTO>>> getFilteredRoleAssignments(
@@ -60,4 +62,8 @@ public interface AccessControlAdminClient {
       @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier);
+
+  @PUT(ACL_PREFERENCES_API)
+  Call<ResponseDTO<Boolean>> updateAccessControlPreference(
+      @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier, @Query("enabled") boolean enabled);
 }

@@ -1,6 +1,7 @@
 package io.harness.plancreator.steps;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.pms.yaml.YAMLFieldNameConstants.EXECUTION;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.FAILURE_STRATEGIES;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.PARALLEL;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.ROLLBACK_STEPS;
@@ -47,15 +48,15 @@ import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
+import io.harness.pms.timeout.AbsoluteSdkTimeoutTrackerParameters;
+import io.harness.pms.timeout.SdkTimeoutObtainment;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.serializer.KryoSerializer;
-import io.harness.timeout.TimeoutParameters;
-import io.harness.timeout.contracts.TimeoutObtainment;
-import io.harness.timeout.trackers.absolute.AbsoluteTimeoutParameters;
 import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;
+import io.harness.utils.TimeoutUtils;
 import io.harness.when.utils.RunInfoUtils;
 import io.harness.yaml.core.failurestrategy.FailureStrategyActionConfig;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
@@ -63,7 +64,7 @@ import io.harness.yaml.core.failurestrategy.NGFailureActionType;
 import io.harness.yaml.core.failurestrategy.NGFailureTypeConstants;
 import io.harness.yaml.core.failurestrategy.manualintervention.ManualInterventionFailureActionConfig;
 import io.harness.yaml.core.failurestrategy.retry.RetryFailureActionConfig;
-import io.harness.yaml.core.timeout.TimeoutUtils;
+import io.harness.yaml.core.timeout.Timeout;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.inject.Inject;
@@ -129,10 +130,10 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
             .whenCondition(isStepInsideRollback ? RunInfoUtils.getRunConditionForRollback(stepElement.getWhen())
                                                 : RunInfoUtils.getRunCondition(stepElement.getWhen()))
             .timeoutObtainment(
-                TimeoutObtainment.newBuilder()
-                    .setDimension(AbsoluteTimeoutTrackerFactory.DIMENSION)
-                    .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(
-                        AbsoluteTimeoutParameters.builder().timeoutMillis(getTimeoutInMillis(stepElement)).build())))
+                SdkTimeoutObtainment.builder()
+                    .dimension(AbsoluteTimeoutTrackerFactory.DIMENSION)
+                    .parameters(
+                        AbsoluteSdkTimeoutTrackerParameters.builder().timeout(getTimeoutString(stepElement)).build())
                     .build())
             .skipUnresolvedExpressionsCheck(stepElement.getStepSpecType().skipUnresolvedExpressionsCheck())
             .build();
@@ -172,18 +173,14 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
     return nodeName;
   }
 
-  protected long getTimeoutInMillis(StepElementConfig stepElement) {
-    long timeoutInMillis;
-    if (ParameterField.isNull(stepElement.getTimeout())) {
-      timeoutInMillis = TimeoutParameters.DEFAULT_TIMEOUT_IN_MILLIS;
-    } else if (stepElement.getTimeout().isExpression()) {
-      throw new InvalidRequestException(
-          String.format("Timeout needs to be a fixed value. It cannot be an expression: %s",
-              stepElement.getTimeout().getExpressionValue()));
+  protected ParameterField<String> getTimeoutString(StepElementConfig stepElement) {
+    ParameterField<Timeout> timeout = TimeoutUtils.getTimeout(stepElement.getTimeout());
+    if (timeout.isExpression()) {
+      return ParameterField.createExpressionField(
+          true, timeout.getExpressionValue(), timeout.getInputSetValidator(), true);
     } else {
-      timeoutInMillis = stepElement.getTimeout().getValue().getTimeoutInMillis();
+      return ParameterField.createValueField(timeout.getValue().getTimeoutString());
     }
-    return timeoutInMillis;
   }
 
   protected List<AdviserObtainment> getAdviserObtainmentFromMetaData(YamlField currentField) {
@@ -489,5 +486,80 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
       }
     }
     return false;
+  }
+
+  protected String getExecutionStepFqn(YamlField currentField, String stepNodeType) {
+    String stepFqn = null;
+    YamlNode execution = YamlUtils.findParentNode(currentField.getNode(), EXECUTION);
+    List<YamlNode> steps = execution.getField(STEPS).getNode().asArray();
+    for (YamlNode stepsNode : steps) {
+      YamlNode stepGroup = getStepGroup(stepsNode);
+      stepFqn = stepGroup != null ? getStepFqnFromStepGroup(stepGroup, stepNodeType)
+                                  : getStepFqnFromStepNode(stepsNode, stepNodeType);
+      if (stepFqn != null) {
+        return stepFqn;
+      }
+    }
+
+    return stepFqn;
+  }
+
+  private String getStepFqnFromStepGroup(YamlNode stepGroup, String stepNodeType) {
+    String stepFqn = null;
+    List<YamlNode> stepsInsideStepGroup = stepGroup.getField(STEPS).getNode().asArray();
+    for (YamlNode stepsNodeInsideStepGroup : stepsInsideStepGroup) {
+      YamlNode parallelStepNode = getParallelStep(stepsNodeInsideStepGroup);
+      stepFqn = parallelStepNode != null ? getStepFqnFromParallelNode(parallelStepNode, stepNodeType)
+                                         : getFqnFromStepNode(stepsNodeInsideStepGroup, stepNodeType);
+      if (stepFqn != null) {
+        return stepFqn;
+      }
+    }
+
+    return stepFqn;
+  }
+
+  private String getStepFqnFromStepNode(YamlNode stepsNode, String stepNodeType) {
+    YamlNode parallelStepNode = getParallelStep(stepsNode);
+    return parallelStepNode != null ? getStepFqnFromParallelNode(parallelStepNode, stepNodeType)
+                                    : getFqnFromStepNode(stepsNode, stepNodeType);
+  }
+
+  private String getStepFqnFromParallelNode(YamlNode parallelStepNode, String stepNodeType) {
+    String stepFqn = null;
+    List<YamlNode> stepsInParallelNode = parallelStepNode.asArray();
+    for (YamlNode stepInParallelNode : stepsInParallelNode) {
+      stepFqn = getFqnFromStepNode(stepInParallelNode, stepNodeType);
+      if (stepFqn != null) {
+        return stepFqn;
+      }
+    }
+
+    return stepFqn;
+  }
+
+  private String getFqnFromStepNode(YamlNode stepsNode, String stepNodeType) {
+    YamlNode stepNode = stepsNode.getField(STEP).getNode();
+    if (stepNodeType.equals(stepNode.getType())) {
+      return YamlUtils.getFullyQualifiedName(stepNode);
+    }
+
+    return null;
+  }
+
+  private YamlNode getStepGroup(YamlNode stepsNode) {
+    try {
+      return stepsNode.getField(STEP_GROUP).getNode();
+    } catch (Exception ex) {
+      return null;
+    }
+  }
+
+  private YamlNode getParallelStep(YamlNode stepsNode) {
+    try {
+      return stepsNode.getField(PARALLEL).getNode();
+    } catch (Exception ex) {
+      return null;
+    }
   }
 }

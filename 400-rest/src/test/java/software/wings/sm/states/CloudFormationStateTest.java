@@ -1,6 +1,6 @@
 package software.wings.sm.states;
 
-import static io.harness.annotations.dev.HarnessModule._861_CG_ORCHESTRATION_STATES;
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -148,7 +148,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 @OwnedBy(CDP)
-@TargetModule(_861_CG_ORCHESTRATION_STATES)
+@TargetModule(_870_CG_ORCHESTRATION)
 public class CloudFormationStateTest extends WingsBaseTest {
   private static final String BASE_URL = "https://env.harness.io/";
   public static final String ENV_ID_CF = "abcdefgh";
@@ -519,17 +519,13 @@ public class CloudFormationStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testValidation() {
     // create stack
-    assertThat(cloudFormationCreateStackState.validateFields().size()).isEqualTo(2);
-    cloudFormationCreateStackState.setProvisionerId("test provisioner");
     assertThat(cloudFormationCreateStackState.validateFields().size()).isEqualTo(1);
-    cloudFormationCreateStackState.setAwsConfigId("AWS_CONFIG_ID");
+    cloudFormationCreateStackState.setProvisionerId("test provisioner");
     assertThat(cloudFormationCreateStackState.validateFields().size()).isEqualTo(0);
 
     // delete stack
-    assertThat(cloudFormationDeleteStackState.validateFields().size()).isEqualTo(2);
-    cloudFormationDeleteStackState.setProvisionerId("test provisioner");
     assertThat(cloudFormationDeleteStackState.validateFields().size()).isEqualTo(1);
-    cloudFormationDeleteStackState.setAwsConfigId("AWS_CONFIG_ID");
+    cloudFormationDeleteStackState.setProvisionerId("test provisioner");
     assertThat(cloudFormationDeleteStackState.validateFields().size()).isEqualTo(0);
   }
 }

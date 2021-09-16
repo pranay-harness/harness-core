@@ -11,6 +11,8 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -28,6 +30,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import retrofit2.Call;
 
+@OwnedBy(HarnessTeam.CDC)
 public class SlackMessageSenderTest extends WingsBaseTest {
   SlackMessageSenderImpl slackMessageSender = spy(new SlackMessageSenderImpl());
   @Mock private SlackWebhookClient slackWebhookClient;

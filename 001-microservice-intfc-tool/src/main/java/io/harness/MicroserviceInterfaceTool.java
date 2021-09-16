@@ -177,11 +177,15 @@ class MicroserviceInterfaceTool {
                * The String could be a collection also. And in general could be pretty
                * complicated to parse. Hence we do not fail, if we are not able to parse.
                */
+              if (paramClassName.startsWith("java.util.List<") && paramClassName.endsWith(">")) {
+                // We return only Lists right now. So adding special handling for the List case.
+                paramClassName = paramClassName.substring(15, paramClassName.length() - 1);
+              }
               try {
                 Class<?> paramClass = Class.forName(paramClassName);
                 classToHash.put(paramClass.getCanonicalName(), calculateStringHash(paramClass));
               } catch (Exception ex) {
-                ex.printStackTrace();
+                log(ex.getMessage());
               }
             }
             Class<?>[] parameterTypes = method.getParameterTypes();

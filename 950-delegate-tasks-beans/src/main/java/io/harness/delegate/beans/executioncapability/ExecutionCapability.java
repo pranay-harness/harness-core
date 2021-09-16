@@ -5,7 +5,7 @@ import io.harness.annotations.dev.TargetModule;
 
 import java.time.Duration;
 
-@TargetModule(HarnessModule._955_DELEGATE_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public interface ExecutionCapability {
   enum EvaluationMode { MANAGER, AGENT }
 

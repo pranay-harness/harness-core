@@ -2,6 +2,9 @@ package software.wings.sm.states;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategyProvider;
 import software.wings.service.impl.analysis.AnalysisContext;
@@ -33,6 +36,7 @@ import org.slf4j.Logger;
 @EqualsAndHashCode(callSuper = false)
 @Slf4j
 @FieldNameConstants(innerTypeName = "InstanaStateKeys")
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class InstanaState extends AbstractMetricAnalysisState {
   private static final String LATENCY = "latency";
   private static final String ERRORS = "errors";

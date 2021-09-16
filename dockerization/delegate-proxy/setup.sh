@@ -170,7 +170,7 @@ for chartmuseumversion in v0.8.2; do
     curl -L -o "${CHARTMUSEUM_MAC_DIR}chartmuseum" "${CHARTMUSEUM_MAC_URL}"
 done
 
-for tfConfigInspectVersion in v1.0; do
+for tfConfigInspectVersion in v1.0 v1.1; do
   echo "Adding terraform-config-inspect" $tfConfigInspectVersion
 
   TF_CONFIG_INSPECT_LINUX_DIR="${IMAGES_DIR}/tf-config-inspect/linux/$tfConfigInspectVersion/"
@@ -191,7 +191,7 @@ for tfConfigInspectVersion in v1.0; do
 
 done
 
-for scmVersion in abf4ce53; do
+for scmVersion in b276dd03; do
   echo "Adding scm" $scmVersion
 
   SCM_LINUX_DIR="${IMAGES_DIR}/scm/linux/$scmVersion/"
@@ -281,7 +281,7 @@ function setupClientUtils(){
             cp images/chartmuseum/${platform}/$chartmuseumversion/chartmuseum ${STORAGE_DIR_LOCATION}/harness-download/harness-chartmuseum/release/$chartmuseumversion/bin/${platform}/amd64/
         done
 
-        for tfConfigInspectVersion in v1.0; do
+        for tfConfigInspectVersion in v1.0 v1.1; do
            mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/harness-terraform-config-inspect/"$tfConfigInspectVersion"/${platform}/amd64/
            cp images/tf-config-inspect/${platform}/"$tfConfigInspectVersion"/terraform-config-inspect ${STORAGE_DIR_LOCATION}/harness-download/harness-terraform-config-inspect/"$tfConfigInspectVersion"/${platform}/amd64/
          done
@@ -291,7 +291,7 @@ function setupClientUtils(){
             cp images/oc/${platform}/$ocversion/oc ${STORAGE_DIR_LOCATION}/harness-download/harness-oc/release/$ocversion/bin/${platform}/amd64/
         done
 
-        for scmVersion in abf4ce53; do
+        for scmVersion in b276dd03; do
             mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/harness-scm/release/$scmVersion/bin/${platform}/amd64/
             cp images/scm/${platform}/$scmVersion/scm ${STORAGE_DIR_LOCATION}/harness-download/harness-scm/release/$scmVersion/bin/${platform}/amd64/
         done

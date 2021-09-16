@@ -45,6 +45,8 @@ import io.harness.product.ci.scm.proto.FindFilesInCommitRequest;
 import io.harness.product.ci.scm.proto.FindFilesInCommitResponse;
 import io.harness.product.ci.scm.proto.FindFilesInPRRequest;
 import io.harness.product.ci.scm.proto.FindFilesInPRResponse;
+import io.harness.product.ci.scm.proto.FindPRRequest;
+import io.harness.product.ci.scm.proto.FindPRResponse;
 import io.harness.product.ci.scm.proto.GetAuthenticatedUserRequest;
 import io.harness.product.ci.scm.proto.GetAuthenticatedUserResponse;
 import io.harness.product.ci.scm.proto.GetBatchFileRequest;
@@ -240,13 +242,9 @@ public class ScmServiceClientImpl implements ScmServiceClient {
                                                     .setProvider(provider)
                                                     .setPagination(PageRequest.newBuilder().setPage(pageNumber).build())
                                                     .build();
-      try {
-        branchListResponse = scmBlockingStub.listBranches(listBranchesRequest);
-      } catch (Exception ex) {
-        // todo : When scm provides the status and error messages for all the cases, change this code and message
-        log.error("Error encountered while fetching branch list for the slug {}", slug, ex);
-        throw ex;
-      }
+      branchListResponse = scmBlockingStub.listBranches(listBranchesRequest);
+      ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
+          branchListResponse.getStatus(), branchListResponse.getError());
       branchesList.addAll(branchListResponse.getBranchesList());
       pageNumber = branchListResponse.getPagination().getNext();
     } while (hasMoreBranches(branchListResponse));
@@ -403,7 +401,7 @@ public class ScmServiceClientImpl implements ScmServiceClient {
     ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
         latestCommitResponse.getStatus(), latestCommitResponse.getError());
     String latestCommitId = latestCommitResponse.getCommitId();
-    try (AutoLogContext ignore1 = new RepoBranchLogContext(slug, branchName, latestCommitId, OVERRIDE_ERROR)) {
+    try (AutoLogContext ignore = new RepoBranchLogContext(slug, branchName, latestCommitId, OVERRIDE_ERROR)) {
       List<String> getFilesWhichArePartOfHarness =
           getFileNames(foldersList, slug, gitProvider, branchName, latestCommitId, scmBlockingStub);
       final FileBatchContentResponse contentOfFiles =
@@ -412,6 +410,21 @@ public class ScmServiceClientImpl implements ScmServiceClient {
           .fileBatchContentResponse(contentOfFiles)
           .commitId(latestCommitId)
           .build();
+    }
+  }
+
+  @Override
+  public FileContentBatchResponse listFoldersFilesByCommitId(
+      ScmConnector connector, Set<String> foldersList, String commitId, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(connector);
+    String slug = scmGitProviderHelper.getSlug(connector);
+
+    try (AutoLogContext ignore = new RepoBranchLogContext(slug, null, commitId, OVERRIDE_ERROR)) {
+      List<String> getFilesWhichArePartOfHarness =
+          getFileNames(foldersList, slug, gitProvider, null, commitId, scmBlockingStub);
+      final FileBatchContentResponse contentOfFiles =
+          getContentOfFiles(getFilesWhichArePartOfHarness, slug, gitProvider, commitId, scmBlockingStub);
+      return FileContentBatchResponse.builder().fileBatchContentResponse(contentOfFiles).commitId(commitId).build();
     }
   }
 
@@ -490,6 +503,17 @@ public class ScmServiceClientImpl implements ScmServiceClient {
         throw new ExplanationException("Failed to create PR", e);
       }
     }
+    return prResponse;
+  }
+
+  @Override
+  public FindPRResponse findPR(ScmConnector scmConnector, long number, SCMGrpc.SCMBlockingStub scmBlockingStub) {
+    String slug = scmGitProviderHelper.getSlug(scmConnector);
+    Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
+    FindPRRequest findPRRequest =
+        FindPRRequest.newBuilder().setSlug(slug).setNumber(number).setProvider(gitProvider).build();
+    final FindPRResponse prResponse = scmBlockingStub.findPR(findPRRequest);
+    ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(prResponse.getStatus(), prResponse.getError());
     return prResponse;
   }
 
@@ -617,7 +641,7 @@ public class ScmServiceClientImpl implements ScmServiceClient {
       String branch, String commitId, SCMGrpc.SCMBlockingStub scmBlockingStub) {
     Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(connector);
     String slug = scmGitProviderHelper.getSlug(connector);
-    try (AutoLogContext ignore1 = new RepoBranchLogContext(slug, branch, commitId, OVERRIDE_ERROR)) {
+    try (AutoLogContext ignore = new RepoBranchLogContext(slug, branch, commitId, OVERRIDE_ERROR)) {
       final FileBatchContentResponse contentOfFiles =
           getContentOfFiles(filePaths, slug, gitProvider, commitId, scmBlockingStub);
       return FileContentBatchResponse.builder().fileBatchContentResponse(contentOfFiles).commitId(commitId).build();
@@ -634,7 +658,7 @@ public class ScmServiceClientImpl implements ScmServiceClient {
                                             .build());
   }
 
-  private String getLatestShaOfBranch(
+  public String getLatestShaOfBranch(
       String slug, Provider gitProvider, String defaultBranchName, SCMGrpc.SCMBlockingStub scmBlockingStub) {
     try {
       GetLatestCommitResponse latestCommit = scmBlockingStub.getLatestCommit(GetLatestCommitRequest.newBuilder()
@@ -656,7 +680,8 @@ public class ScmServiceClientImpl implements ScmServiceClient {
   }
 
   private boolean isIdenticalTarget(WebhookResponse webhookResponse, GitWebhookDetails gitWebhookDetails) {
-    return webhookResponse.getTarget().equals(gitWebhookDetails.getTarget());
+    // Currently we don't add secret however we receive it in response with empty value
+    return webhookResponse.getTarget().replace("&secret=", "").equals(gitWebhookDetails.getTarget());
   }
 
   private boolean isIdentical(

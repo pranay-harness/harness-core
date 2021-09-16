@@ -4,11 +4,15 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.cdng.instance.info.InstanceInfoService;
 import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.k8s.beans.K8sRollingReleaseOutput;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTimeConversionHelper;
+import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.beans.instancesync.mapper.K8sPodToServiceInstanceInfoMapper;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
+import io.harness.delegate.task.k8s.K8sRollingDeployRollbackResponse;
 import io.harness.delegate.task.k8s.K8sRollingRollbackDeployRequest;
 import io.harness.delegate.task.k8s.K8sRollingRollbackDeployRequest.K8sRollingRollbackDeployRequestBuilder;
 import io.harness.delegate.task.k8s.K8sTaskType;
@@ -29,6 +33,7 @@ import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
+import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.supplier.ThrowingSupplier;
 
@@ -45,6 +50,7 @@ public class K8sRollingRollbackStep extends TaskExecutableWithRollbackAndRbac<K8
   @Inject K8sStepHelper k8sStepHelper;
   @Inject private OutcomeService outcomeService;
   @Inject ExecutionSweepingOutputService executionSweepingOutputService;
+  @Inject private InstanceInfoService instanceInfoService;
 
   @Override
   public Class<StepElementParameters> getStepParametersClass() {
@@ -61,7 +67,7 @@ public class K8sRollingRollbackStep extends TaskExecutableWithRollbackAndRbac<K8
       Ambiance ambiance, StepElementParameters stepElementParameters, StepInputPackage inputPackage) {
     K8sRollingRollbackStepParameters rollingRollbackStepParameters =
         (K8sRollingRollbackStepParameters) stepElementParameters.getSpec();
-    if (rollingRollbackStepParameters.getRollingStepFqn() == null) {
+    if (EmptyPredicate.isEmpty(rollingRollbackStepParameters.getRollingStepFqn())) {
       return TaskRequest.newBuilder()
           .setSkipTaskRequest(SkipTaskRequest.newBuilder()
                                   .setMessage("K8s Rollout Deploy step was not executed. Skipping rollback.")
@@ -125,6 +131,12 @@ public class K8sRollingRollbackStep extends TaskExecutableWithRollbackAndRbac<K8
           .build();
     }
 
-    return stepResponseBuilder.status(Status.SUCCEEDED).build();
+    final K8sRollingDeployRollbackResponse response =
+        (K8sRollingDeployRollbackResponse) executionResponse.getK8sNGTaskResponse();
+
+    StepOutcome stepOutcome = instanceInfoService.saveServerInstancesIntoSweepingOutput(
+        ambiance, K8sPodToServiceInstanceInfoMapper.toServerInstanceInfoList(response.getK8sPodList()));
+
+    return stepResponseBuilder.status(Status.SUCCEEDED).stepOutcome(stepOutcome).build();
   }
 }

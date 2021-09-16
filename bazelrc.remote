@@ -1,8 +1,12 @@
 import bazelrc.common
+import bazelrc.coverage
 
 # Add properties that are specific for ci build system
 
-startup --output_base=/tmp --max_idle_secs 5
+startup --output_base=/tmp
+startup --max_idle_secs 5
+
+build --announce_rc
 
 # TODO: remove from here when remote cache is enabled for developers
 build --remote_cache=https://storage.googleapis.com/harness-bazel-cache

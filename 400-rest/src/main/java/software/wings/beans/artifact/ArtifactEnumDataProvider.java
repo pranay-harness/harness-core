@@ -2,7 +2,9 @@ package software.wings.beans.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.EntityType;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
@@ -15,6 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @Singleton
 public class ArtifactEnumDataProvider implements DataProvider {
   @Inject private ArtifactStreamServiceBindingService artifactStreamServiceBindingService;

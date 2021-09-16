@@ -91,8 +91,8 @@ jwtIdentityServiceSecret: "HVSKUYqD4e5Rxu12hFDdCJKGM64sxgEynvdDhaOHaTHhwwn0K4Ttr
 
 ngManagerClientConfig:
   baseUrl: http://localhost:7457/
-  connectTimeOutSeconds: 15
-  readTimeOutSeconds: 15
+  connectTimeOutSeconds: 40
+  readTimeOutSeconds: 40
 
 managerClientConfig:
   baseUrl: http://localhost:3457/api/
@@ -106,12 +106,12 @@ ciExecutionServiceConfig:
   defaultInternalImageConnector: ''
   pvcDefaultStorageSize: 25600
   delegateServiceEndpointVariableValue: "delegate-service:8080"
-  addonImage: harness/ci-addon:release-27
-  liteEngineImage: harness/ci-lite-engine:release-8
+  addonImage: harness/ci-addon:release-47
+  liteEngineImage: harness/ci-lite-engine:release-17
   isLocal: false
   stepConfig:
     gitCloneConfig:
-      image: harness/drone-git:v1.0.3
+      image: harness/drone-git:v1.0.4
       entrypoint:
         - /usr/local/bin/clone
     buildAndPushDockerRegistryConfig:
@@ -127,7 +127,7 @@ ciExecutionServiceConfig:
       entrypoint:
         - /kaniko/kaniko-gcr
     gcsUploadConfig:
-      image: plugins/gcs:1.1.0-linux-amd64
+      image: plugins/gcs:1.1.1-linux-amd64
       entrypoint:
         - /bin/drone-gcs
     s3UploadConfig:
@@ -135,15 +135,15 @@ ciExecutionServiceConfig:
       entrypoint:
         - /bin/drone-s3
     artifactoryUploadConfig:
-      image: plugins/artifactory:1.0.0
+      image: plugins/artifactory:1.0.2
       entrypoint:
         - /bin/plugin
     cacheGCSConfig:
-      image: plugins/cache:1.2.0
+      image: plugins/cache:1.3.0
       entrypoint:
         - /bin/drone-cache
     cacheS3Config:
-      image: plugins/cache:1.2.0
+      image: plugins/cache:1.3.0
       entrypoint:
         - /bin/drone-cache
 
@@ -158,6 +158,13 @@ pmsSdkGrpcServerConfig:
 pmsGrpcClientConfig:
   target: localhost:12011
   authority: localhost
+
+useDms: false
+dmsGrpcClient:
+  target: localhost:9890
+  authority: localhost
+  secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+
 
 apiUrl: https://localhost:8181/#/
 

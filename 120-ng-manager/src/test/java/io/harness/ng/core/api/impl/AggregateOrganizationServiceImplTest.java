@@ -18,6 +18,9 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.connector.services.ConnectorService;
+import io.harness.ng.core.api.DelegateDetailsService;
+import io.harness.ng.core.api.NGSecretServiceV2;
 import io.harness.ng.core.dto.OrganizationAggregateDTO;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.services.OrganizationService;
@@ -52,9 +55,12 @@ public class AggregateOrganizationServiceImplTest extends CategoryTest {
     projectService = mock(ProjectService.class);
     organizationService = mock(OrganizationService.class);
     ngUserService = mock(NgUserService.class);
-    ExecutorService executorService = Executors.newFixedThreadPool(1);
-    aggregateOrganizationService =
-        spy(new AggregateOrganizationServiceImpl(organizationService, projectService, ngUserService, executorService));
+    final NGSecretServiceV2 secretServiceV2 = mock(NGSecretServiceV2.class);
+    final ConnectorService defaultConnectorService = mock(ConnectorService.class);
+    final DelegateDetailsService delegateDetailsService = mock(DelegateDetailsService.class);
+    final ExecutorService executorService = Executors.newFixedThreadPool(1);
+    aggregateOrganizationService = spy(new AggregateOrganizationServiceImpl(organizationService, projectService,
+        secretServiceV2, defaultConnectorService, delegateDetailsService, ngUserService, executorService));
   }
 
   private Organization getOrganization(String accountIdentifier, String orgIdentifier) {
@@ -151,7 +157,8 @@ public class AggregateOrganizationServiceImplTest extends CategoryTest {
     String accountIdentifier = randomAlphabetic(10);
 
     List<Organization> organizations = getOrganizations(accountIdentifier, 3);
-    when(organizationService.list(accountIdentifier, Pageable.unpaged(), null)).thenReturn(getPage(organizations, 3));
+    when(organizationService.listPermittedOrgs(accountIdentifier, Pageable.unpaged(), null))
+        .thenReturn(getPage(organizations, 3));
 
     Map<String, Integer> projectsCount = new HashMap<>();
     organizations.forEach(organization -> projectsCount.put(organization.getIdentifier(), 3));
@@ -183,7 +190,8 @@ public class AggregateOrganizationServiceImplTest extends CategoryTest {
     String accountIdentifier = randomAlphabetic(10);
 
     List<Organization> organizations = getOrganizations(accountIdentifier, 3);
-    when(organizationService.list(accountIdentifier, Pageable.unpaged(), null)).thenReturn(getPage(organizations, 3));
+    when(organizationService.listPermittedOrgs(accountIdentifier, Pageable.unpaged(), null))
+        .thenReturn(getPage(organizations, 3));
 
     when(projectService.getProjectsCountPerOrganization(eq(accountIdentifier), any())).thenReturn(emptyMap());
 

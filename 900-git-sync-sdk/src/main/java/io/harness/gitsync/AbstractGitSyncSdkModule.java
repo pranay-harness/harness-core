@@ -47,7 +47,7 @@ import javax.cache.expiry.Duration;
 
 @OwnedBy(DX)
 public abstract class AbstractGitSyncSdkModule extends AbstractModule {
-  private static final String GIT_SYNC_SDK = "GitSyncSdk";
+  public static final String GIT_SYNC_SDK = "GitSyncSdk";
   @Override
   protected void configure() {
     install(new SCMGrpcClientModule(getScmConnectionConfig()));
@@ -57,7 +57,7 @@ public abstract class AbstractGitSyncSdkModule extends AbstractModule {
           .annotatedWith(Names.named(EventsFrameworkConstants.HARNESS_TO_GIT_PUSH))
           .toInstance(NoOpProducer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME));
       bind(Consumer.class)
-          .annotatedWith(Names.named(EventsFrameworkConstants.GIT_CONFIG_STREAM))
+          .annotatedWith(Names.named(EventsFrameworkConstants.GIT_CONFIG_STREAM + GIT_SYNC_SDK))
           .toInstance(
               NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
     } else {
@@ -68,9 +68,9 @@ public abstract class AbstractGitSyncSdkModule extends AbstractModule {
               EventsFrameworkConstants.HARNESS_TO_GIT_PUSH_MAX_TOPIC_SIZE,
               getAuthorizationServiceHeader().getServiceId()));
       bind(Consumer.class)
-          .annotatedWith(Names.named(EventsFrameworkConstants.GIT_CONFIG_STREAM))
+          .annotatedWith(Names.named(EventsFrameworkConstants.GIT_CONFIG_STREAM + GIT_SYNC_SDK))
           .toInstance(RedisConsumer.of(EventsFrameworkConstants.GIT_CONFIG_STREAM,
-              getGitSyncSdkConfiguration().getServiceHeader().getServiceId(),
+              getGitSyncSdkConfiguration().getServiceHeader().getServiceId() + GIT_SYNC_SDK,
               getGitSyncSdkConfiguration().getEventsRedisConfig(),
               EventsFrameworkConstants.GIT_CONFIG_STREAM_PROCESSING_TIME,
               EventsFrameworkConstants.GIT_CONFIG_STREAM_READ_BATCH_SIZE));

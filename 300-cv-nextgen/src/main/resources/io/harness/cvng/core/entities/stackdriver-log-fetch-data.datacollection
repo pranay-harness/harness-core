@@ -20,15 +20,16 @@ Var logsResponse = sync-call(url=Var:url, header=Var:header, body=Var:body)
 Var logs = extract(Var:logsResponse, $.entries)
 
 Var responseList = []
+Var nullObject
+if Var:logs != Var:nullObject {
+    foreach log in Var:logs {
+      Var message = extract(Var:log, Env:messageField)
+      Var host = extract(Var:log, Env:hostField)
+      Var timestamp = extract(Var:log, $.timestamp)
+      Var timeStampVal = string-to-time(Var:timestamp)
 
-foreach log in Var:logs {
-  Var message = extract(Var:log, Env:messageField)
-  Var host = extract(Var:log, Env:hostField)
-  Var timestamp = extract(Var:log, $.timestamp)
-  Var timeStampVal = string-to-time(Var:timestamp)
-
-  Var logToReturn = new LogDataRecord(log=Var:message, timestamp=Var:timeStampVal, host=Var:host)
-  Var:responseList.append(Var:logToReturn)
+      Var logToReturn = new LogDataRecord(log=Var:message, timestamp=Var:timeStampVal, host=Var:host)
+      Var:responseList.append(Var:logToReturn)
+    }
 }
-
 return Var:responseList

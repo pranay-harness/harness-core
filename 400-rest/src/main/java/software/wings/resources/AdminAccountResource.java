@@ -1,7 +1,12 @@
 package software.wings.resources;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
+import io.harness.accesscontrol.AccessControlAdminClient;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.commons.dao.CEDataCleanupRequestDao;
 import io.harness.ccm.commons.entities.batch.CEDataCleanupRequest;
 import io.harness.ccm.license.CeLicenseInfo;
@@ -15,6 +20,7 @@ import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.impl.model.StaticLimit;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
+import io.harness.remote.client.NGRestUtils;
 import io.harness.rest.RestResponse;
 
 import software.wings.beans.Account;
@@ -30,6 +36,7 @@ import java.util.List;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -43,19 +50,24 @@ import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import retrofit2.http.Body;
 
+@OwnedBy(PL)
 @Path("/admin/accounts")
 @Slf4j
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @AdminPortalAuth
+@TargetModule(HarnessModule._955_ACCOUNT_MGMT)
 public class AdminAccountResource {
   private AdminAccountService adminAccountService;
   private AdminUserService adminUserService;
+  private AccessControlAdminClient accessControlAdminClient;
 
   @Inject
-  public AdminAccountResource(AdminAccountService adminAccountService, AdminUserService adminUserService) {
+  public AdminAccountResource(AdminAccountService adminAccountService, AdminUserService adminUserService,
+      AccessControlAdminClient accessControlAdminClient) {
     this.adminAccountService = adminAccountService;
     this.adminUserService = adminUserService;
+    this.accessControlAdminClient = accessControlAdminClient;
   }
 
   @Inject CEDataCleanupRequestDao ceDataCleanupRequestDao;
@@ -84,6 +96,21 @@ public class AdminAccountResource {
   public RestResponse<LicenseInfo> updateAccountLicense(
       @PathParam("accountId") @NotEmpty String accountId, @NotNull LicenseUpdateInfo licenseUpdateInfo) {
     return new RestResponse<>(adminAccountService.updateLicense(accountId, licenseUpdateInfo));
+  }
+
+  @PUT
+  @Path("{accountId}/nextgen-accesscontrol-enabled")
+  public RestResponse<Boolean> updateNextgenAccessControlPreference(
+      @PathParam("accountId") String accountId, @QueryParam("enabled") @DefaultValue("false") boolean enabled) {
+    return new RestResponse<>(
+        NGRestUtils.getResponse(accessControlAdminClient.updateAccessControlPreference(accountId, enabled)));
+  }
+
+  @PUT
+  @Path("{accountId}/nextgen-enabled")
+  public RestResponse<Boolean> updateNextgenEnabled(
+      @PathParam("accountId") String accountId, @QueryParam("enabled") @DefaultValue("false") boolean enabled) {
+    return new RestResponse<>(adminAccountService.enableOrDisableNextGen(accountId, enabled));
   }
 
   @PUT

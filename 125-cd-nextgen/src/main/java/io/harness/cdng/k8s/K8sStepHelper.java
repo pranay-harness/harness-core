@@ -18,8 +18,9 @@ import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.UnitStatus.RUNNING;
 import static io.harness.steps.StepUtils.prepareCDTaskRequest;
-import static io.harness.steps.StepUtils.prepareTaskRequestWithTaskSelector;
 import static io.harness.validation.Validator.notEmptyCheck;
+
+import static software.wings.beans.appmanifest.ManifestFile.VALUES_YAML_KEY;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
@@ -29,7 +30,6 @@ import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.beans.IdentifierRef;
-import io.harness.cdng.common.step.StepHelper;
 import io.harness.cdng.expressions.CDExpressionResolveFunctor;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
@@ -105,6 +105,7 @@ import io.harness.delegate.task.k8s.KustomizeManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.delegate.task.k8s.OpenshiftManifestDelegateConfig;
 import io.harness.eraro.Level;
+import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -132,8 +133,11 @@ import io.harness.pms.contracts.execution.failure.FailureData;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.expression.EngineExpressionService;
+import io.harness.pms.rbac.PipelineRbacHelper;
 import io.harness.pms.sdk.core.data.OptionalOutcome;
+import io.harness.pms.sdk.core.execution.SdkGraphVisualizationDataService;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 import io.harness.pms.sdk.core.steps.executables.TaskChainResponse;
@@ -145,6 +149,8 @@ import io.harness.pms.yaml.validation.ExpressionUtils;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
+import io.harness.steps.EntityReferenceExtractorUtils;
+import io.harness.steps.StepHelper;
 import io.harness.supplier.ThrowingSupplier;
 import io.harness.tasks.ResponseData;
 import io.harness.utils.IdentifierRefHelper;
@@ -158,8 +164,11 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -180,6 +189,7 @@ public class K8sStepHelper {
   private static final Set<String> VALUES_YAML_SUPPORTED_MANIFEST_TYPES =
       ImmutableSet.of(ManifestType.K8Manifest, ManifestType.HelmChart);
 
+  public static final String RELEASE_NAME = "Release Name";
   public static final String MISSING_INFRASTRUCTURE_ERROR = "Infrastructure section is missing or is not configured";
   public static final String RELEASE_NAME_VALIDATION_REGEX =
       "[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*";
@@ -193,6 +203,9 @@ public class K8sStepHelper {
   @Inject private EncryptionHelper encryptionHelper;
   @Inject private LogStreamingStepClientFactory logStreamingStepClientFactory;
   @Inject private StepHelper stepHelper;
+  @Inject private EntityReferenceExtractorUtils entityReferenceExtractorUtils;
+  @Inject private PipelineRbacHelper pipelineRbacHelper;
+  @Inject private SdkGraphVisualizationDataService sdkGraphVisualizationDataService;
 
   String getReleaseName(Ambiance ambiance, InfrastructureOutcome infrastructure) {
     String releaseName;
@@ -230,7 +243,11 @@ public class K8sStepHelper {
   }
 
   public ConnectorInfoDTO getConnector(String connectorId, Ambiance ambiance) {
-    NGAccess ngAccess = AmbianceHelper.getNgAccess(ambiance);
+    NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);
+    return getConnectorInfoDTO(connectorId, ngAccess);
+  }
+
+  private ConnectorInfoDTO getConnectorInfoDTO(String connectorId, NGAccess ngAccess) {
     IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
         connectorId, ngAccess.getAccountIdentifier(), ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());
     Optional<ConnectorResponseDTO> connectorDTO = connectorService.get(identifierRef.getAccountIdentifier(),
@@ -298,14 +315,14 @@ public class K8sStepHelper {
         K8sManifestOutcome k8sManifestOutcome = (K8sManifestOutcome) manifestOutcome;
         return K8sManifestDelegateConfig.builder()
             .storeDelegateConfig(getStoreDelegateConfig(
-                k8sManifestOutcome.getStore(), ambiance, manifestOutcome.getType(), manifestOutcome.getType()))
+                k8sManifestOutcome.getStore(), ambiance, manifestOutcome, manifestOutcome.getType()))
             .build();
 
       case ManifestType.HelmChart:
         HelmChartManifestOutcome helmChartManifestOutcome = (HelmChartManifestOutcome) manifestOutcome;
         return HelmChartManifestDelegateConfig.builder()
-            .storeDelegateConfig(getStoreDelegateConfig(helmChartManifestOutcome.getStore(), ambiance,
-                manifestOutcome.getType(), manifestOutcome.getType() + " manifest"))
+            .storeDelegateConfig(getStoreDelegateConfig(helmChartManifestOutcome.getStore(), ambiance, manifestOutcome,
+                manifestOutcome.getType() + " manifest"))
             .chartName(getParameterFieldValue(helmChartManifestOutcome.getChartName()))
             .chartVersion(getParameterFieldValue(helmChartManifestOutcome.getChartVersion()))
             .helmVersion(helmChartManifestOutcome.getHelmVersion())
@@ -321,8 +338,8 @@ public class K8sStepHelper {
         }
         GitStoreConfig gitStoreConfig = (GitStoreConfig) storeConfig;
         return KustomizeManifestDelegateConfig.builder()
-            .storeDelegateConfig(getStoreDelegateConfig(kustomizeManifestOutcome.getStore(), ambiance,
-                manifestOutcome.getType(), manifestOutcome.getType() + " manifest"))
+            .storeDelegateConfig(getStoreDelegateConfig(kustomizeManifestOutcome.getStore(), ambiance, manifestOutcome,
+                manifestOutcome.getType() + " manifest"))
             .pluginPath(getParameterFieldValue(kustomizeManifestOutcome.getPluginPath()))
             .kustomizeDirPath(getParameterFieldValue(gitStoreConfig.getFolderPath()))
             .build();
@@ -330,8 +347,8 @@ public class K8sStepHelper {
       case ManifestType.OpenshiftTemplate:
         OpenshiftManifestOutcome openshiftManifestOutcome = (OpenshiftManifestOutcome) manifestOutcome;
         return OpenshiftManifestDelegateConfig.builder()
-            .storeDelegateConfig(getStoreDelegateConfig(openshiftManifestOutcome.getStore(), ambiance,
-                manifestOutcome.getType(), manifestOutcome.getType() + " manifest"))
+            .storeDelegateConfig(getStoreDelegateConfig(openshiftManifestOutcome.getStore(), ambiance, manifestOutcome,
+                manifestOutcome.getType() + " manifest"))
             .build();
 
       default:
@@ -340,21 +357,21 @@ public class K8sStepHelper {
   }
 
   public StoreDelegateConfig getStoreDelegateConfig(
-      StoreConfig storeConfig, Ambiance ambiance, String manifestType, String validationErrorMessage) {
+      StoreConfig storeConfig, Ambiance ambiance, ManifestOutcome manifestOutcome, String validationErrorMessage) {
     if (ManifestStoreType.isInGitSubset(storeConfig.getKind())) {
       GitStoreConfig gitStoreConfig = (GitStoreConfig) storeConfig;
       ConnectorInfoDTO connectorDTO = getConnector(getParameterFieldValue(gitStoreConfig.getConnectorRef()), ambiance);
       validateManifest(storeConfig.getKind(), connectorDTO, validationErrorMessage);
 
       GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO((ScmConnector) connectorDTO.getConnectorConfig());
-      NGAccess basicNGAccessObject = AmbianceHelper.getNgAccess(ambiance);
+      NGAccess basicNGAccessObject = AmbianceUtils.getNgAccess(ambiance);
       SSHKeySpecDTO sshKeySpecDTO = getSshKeySpecDTO(gitConfigDTO, ambiance);
       List<EncryptedDataDetail> encryptedDataDetails =
           gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, basicNGAccessObject);
 
-      List<String> gitFilePaths = getPathsBasedOnManifest(gitStoreConfig, manifestType);
-      return getGitStoreDelegateConfig(
-          gitStoreConfig, connectorDTO, encryptedDataDetails, sshKeySpecDTO, gitConfigDTO, manifestType, gitFilePaths);
+      List<String> gitFilePaths = getPathsBasedOnManifest(gitStoreConfig, manifestOutcome.getType());
+      return getGitStoreDelegateConfig(gitStoreConfig, connectorDTO, encryptedDataDetails, sshKeySpecDTO, gitConfigDTO,
+          manifestOutcome, gitFilePaths);
     }
 
     if (ManifestStoreType.HTTP.equals(storeConfig.getKind())) {
@@ -367,7 +384,7 @@ public class K8sStepHelper {
           .repoName(helmConnectorDTO.getIdentifier())
           .repoDisplayName(helmConnectorDTO.getName())
           .httpHelmConnector((HttpHelmConnectorDTO) helmConnectorDTO.getConnectorConfig())
-          .encryptedDataDetails(getEncryptionDataDetails(helmConnectorDTO, AmbianceHelper.getNgAccess(ambiance)))
+          .encryptedDataDetails(getEncryptionDataDetails(helmConnectorDTO, AmbianceUtils.getNgAccess(ambiance)))
           .build();
     }
 
@@ -384,7 +401,7 @@ public class K8sStepHelper {
           .region(getParameterFieldValue(s3StoreConfig.getRegion()))
           .folderPath(getParameterFieldValue(s3StoreConfig.getFolderPath()))
           .awsConnector((AwsConnectorDTO) awsConnectorDTO.getConnectorConfig())
-          .encryptedDataDetails(getEncryptionDataDetails(awsConnectorDTO, AmbianceHelper.getNgAccess(ambiance)))
+          .encryptedDataDetails(getEncryptionDataDetails(awsConnectorDTO, AmbianceUtils.getNgAccess(ambiance)))
           .build();
     }
 
@@ -400,7 +417,7 @@ public class K8sStepHelper {
           .bucketName(getParameterFieldValue(gcsStoreConfig.getBucketName()))
           .folderPath(getParameterFieldValue(gcsStoreConfig.getFolderPath()))
           .gcpConnector((GcpConnectorDTO) gcpConnectorDTO.getConnectorConfig())
-          .encryptedDataDetails(getEncryptionDataDetails(gcpConnectorDTO, AmbianceHelper.getNgAccess(ambiance)))
+          .encryptedDataDetails(getEncryptionDataDetails(gcpConnectorDTO, AmbianceUtils.getNgAccess(ambiance)))
           .build();
     }
 
@@ -409,7 +426,8 @@ public class K8sStepHelper {
 
   public GitStoreDelegateConfig getGitStoreDelegateConfig(@Nonnull GitStoreConfig gitstoreConfig,
       @Nonnull ConnectorInfoDTO connectorDTO, @Nonnull List<EncryptedDataDetail> encryptedDataDetailList,
-      SSHKeySpecDTO sshKeySpecDTO, @Nonnull GitConfigDTO gitConfigDTO, String manifestType, List<String> paths) {
+      SSHKeySpecDTO sshKeySpecDTO, @Nonnull GitConfigDTO gitConfigDTO, ManifestOutcome manifestOutcome,
+      List<String> paths) {
     convertToRepoGitConfig(gitstoreConfig, gitConfigDTO);
     return GitStoreDelegateConfig.builder()
         .gitConfigDTO(gitConfigDTO)
@@ -420,6 +438,8 @@ public class K8sStepHelper {
         .commitId(trim(getParameterFieldValue(gitstoreConfig.getCommitId())))
         .paths(trimStrings(paths))
         .connectorName(connectorDTO.getName())
+        .manifestType(manifestOutcome.getType())
+        .manifestId(manifestOutcome.getIdentifier())
         .build();
   }
 
@@ -463,12 +483,12 @@ public class K8sStepHelper {
     switch (manifestType) {
       case ManifestType.HelmChart:
         String folderPath = getParameterFieldValue(gitstoreConfig.getFolderPath());
-        paths.add(getValuesYamlGitFilePath(folderPath));
+        paths.add(getValuesYamlGitFilePath(folderPath, VALUES_YAML_KEY));
         break;
       case ManifestType.K8Manifest:
         List<String> filePaths = getParameterFieldValue(gitstoreConfig.getPaths());
         for (String filePath : filePaths) {
-          paths.add(getValuesYamlGitFilePath(filePath));
+          paths.add(getValuesYamlGitFilePath(filePath, VALUES_YAML_KEY));
         }
         break;
       default:
@@ -536,29 +556,33 @@ public class K8sStepHelper {
   }
 
   public K8sInfraDelegateConfig getK8sInfraDelegateConfig(InfrastructureOutcome infrastructure, Ambiance ambiance) {
+    NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);
+    return getK8sInfraDelegateConfig(infrastructure, ngAccess);
+  }
+
+  public K8sInfraDelegateConfig getK8sInfraDelegateConfig(InfrastructureOutcome infrastructure, NGAccess ngAccess) {
+    ConnectorInfoDTO connectorDTO = getConnectorInfoDTO(infrastructure.getConnectorRef(), ngAccess);
     switch (infrastructure.getKind()) {
       case KUBERNETES_DIRECT:
         K8sDirectInfrastructureOutcome k8SDirectInfrastructure = (K8sDirectInfrastructureOutcome) infrastructure;
-        ConnectorInfoDTO connectorDTO = getConnector(k8SDirectInfrastructure.getConnectorRef(), ambiance);
         KubernetesHelperService.validateNamespace(k8SDirectInfrastructure.getNamespace());
 
         return DirectK8sInfraDelegateConfig.builder()
             .namespace(k8SDirectInfrastructure.getNamespace())
             .kubernetesClusterConfigDTO((KubernetesClusterConfigDTO) connectorDTO.getConnectorConfig())
-            .encryptionDataDetails(getEncryptionDataDetails(connectorDTO, AmbianceHelper.getNgAccess(ambiance)))
+            .encryptionDataDetails(getEncryptionDataDetails(connectorDTO, ngAccess))
             .build();
 
       case KUBERNETES_GCP:
         K8sGcpInfrastructureOutcome k8sGcpInfrastructure = (K8sGcpInfrastructureOutcome) infrastructure;
-        ConnectorInfoDTO gcpConnectorDTO = getConnector(k8sGcpInfrastructure.getConnectorRef(), ambiance);
         KubernetesHelperService.validateNamespace(k8sGcpInfrastructure.getNamespace());
         KubernetesHelperService.validateCluster(k8sGcpInfrastructure.getCluster());
 
         return GcpK8sInfraDelegateConfig.builder()
             .namespace(k8sGcpInfrastructure.getNamespace())
             .cluster(k8sGcpInfrastructure.getCluster())
-            .gcpConnectorDTO((GcpConnectorDTO) gcpConnectorDTO.getConnectorConfig())
-            .encryptionDataDetails(getEncryptionDataDetails(gcpConnectorDTO, AmbianceHelper.getNgAccess(ambiance)))
+            .gcpConnectorDTO((GcpConnectorDTO) connectorDTO.getConnectorConfig())
+            .encryptionDataDetails(getEncryptionDataDetails(connectorDTO, ngAccess))
             .build();
 
       default:
@@ -570,7 +594,7 @@ public class K8sStepHelper {
   public List<EncryptedDataDetail> getEncryptedDataDetails(
       @Nonnull GitConfigDTO gitConfigDTO, @Nonnull Ambiance ambiance) {
     return secretManagerClientService.getEncryptionDetails(
-        AmbianceHelper.getNgAccess(ambiance), gitConfigDTO.getGitAuth());
+        AmbianceUtils.getNgAccess(ambiance), gitConfigDTO.getGitAuth());
   }
 
   public TaskChainResponse queueK8sTask(StepElementParameters stepElementParameters, K8sDeployRequest k8sDeployRequest,
@@ -637,9 +661,8 @@ public class K8sStepHelper {
     for (OpenshiftParamManifestOutcome openshiftParamManifest : openshiftParamManifests) {
       if (ManifestStoreType.isInGitSubset(openshiftParamManifest.getStore().getKind())) {
         String validationMessage = format("Openshift Param file with Id [%s]", openshiftParamManifest.getIdentifier());
-        GitFetchFilesConfig gitFetchFilesConfig =
-            getGitFetchFilesConfig(ambiance, openshiftParamManifest.getIdentifier(), openshiftParamManifest.getStore(),
-                validationMessage, ManifestType.OpenshiftParam);
+        GitFetchFilesConfig gitFetchFilesConfig = getGitFetchFilesConfig(
+            ambiance, openshiftParamManifest.getStore(), validationMessage, openshiftParamManifest);
         gitFetchFilesConfigs.add(gitFetchFilesConfig);
       }
     }
@@ -672,7 +695,7 @@ public class K8sStepHelper {
     }
 
     return k8sStepExecutor.executeK8sTask(k8sManifestOutcome, ambiance, stepElementParameters, emptyList(),
-        K8sExecutionPassThroughData.builder().infrastructure(infrastructure).build(), true);
+        K8sExecutionPassThroughData.builder().infrastructure(infrastructure).build(), true, null);
   }
 
   private TaskChainResponse prepareGitFetchValuesTaskChainResponse(StoreConfig storeConfig, Ambiance ambiance,
@@ -685,14 +708,14 @@ public class K8sStepHelper {
 
     GitStoreConfig gitStoreConfig = (GitStoreConfig) storeConfig;
     if (ManifestType.K8Manifest.equals(k8sManifestOutcome.getType()) && hasOnlyOne(gitStoreConfig.getPaths())) {
-      gitFetchFilesConfigs.add(mapK8sOrHelmValuesManifestToGitFetchFileConfig(
-          valuesManifestOutcome, ambiance, k8sManifestOutcome.getType()));
+      gitFetchFilesConfigs.add(
+          mapK8sOrHelmValuesManifestToGitFetchFileConfig(valuesManifestOutcome, ambiance, k8sManifestOutcome));
       orderedValuesManifests.addFirst(valuesManifestOutcome);
     }
 
     if (ManifestType.HelmChart.equals(k8sManifestOutcome.getType())) {
-      gitFetchFilesConfigs.add(mapK8sOrHelmValuesManifestToGitFetchFileConfig(
-          valuesManifestOutcome, ambiance, k8sManifestOutcome.getType()));
+      gitFetchFilesConfigs.add(
+          mapK8sOrHelmValuesManifestToGitFetchFileConfig(valuesManifestOutcome, ambiance, k8sManifestOutcome));
       orderedValuesManifests.addFirst(valuesManifestOutcome);
     }
 
@@ -708,10 +731,10 @@ public class K8sStepHelper {
   }
 
   private GitFetchFilesConfig mapK8sOrHelmValuesManifestToGitFetchFileConfig(
-      ValuesManifestOutcome valuesManifestOutcome, Ambiance ambiance, String k8sManifestType) {
+      ValuesManifestOutcome valuesManifestOutcome, Ambiance ambiance, ManifestOutcome k8sManifestOutcome) {
     String validationMessage = format("Values YAML with Id [%s]", valuesManifestOutcome.getIdentifier());
     return getValuesGitFetchFilesConfig(ambiance, valuesManifestOutcome.getIdentifier(),
-        valuesManifestOutcome.getStore(), validationMessage, k8sManifestType);
+        valuesManifestOutcome.getStore(), validationMessage, k8sManifestOutcome);
   }
 
   private List<GitFetchFilesConfig> mapValuesManifestToGitFetchFileConfig(
@@ -719,8 +742,8 @@ public class K8sStepHelper {
     return aggregatedValuesManifests.stream()
         .filter(valuesManifestOutcome -> ManifestStoreType.isInGitSubset(valuesManifestOutcome.getStore().getKind()))
         .map(valuesManifestOutcome
-            -> getGitFetchFilesConfig(ambiance, valuesManifestOutcome.getIdentifier(), valuesManifestOutcome.getStore(),
-                format("Values YAML with Id [%s]", valuesManifestOutcome.getIdentifier()), ManifestType.VALUES))
+            -> getGitFetchFilesConfig(ambiance, valuesManifestOutcome.getStore(),
+                format("Values YAML with Id [%s]", valuesManifestOutcome.getIdentifier()), valuesManifestOutcome))
         .collect(Collectors.toList());
   }
 
@@ -745,9 +768,10 @@ public class K8sStepHelper {
 
     String taskName = TaskType.HELM_VALUES_FETCH_NG.getDisplayName();
     K8sSpecParameters k8SSpecParameters = (K8sSpecParameters) stepElementParameters.getSpec();
-    final TaskRequest taskRequest = prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
+    final TaskRequest taskRequest = prepareCDTaskRequest(ambiance, taskData, kryoSerializer,
         k8SSpecParameters.getCommandUnits(), taskName,
-        TaskSelectorYaml.toTaskSelector(emptyIfNull(getParameterFieldValue(k8SSpecParameters.getDelegateSelectors()))));
+        TaskSelectorYaml.toTaskSelector(emptyIfNull(getParameterFieldValue(k8SSpecParameters.getDelegateSelectors()))),
+        stepHelper.getEnvironmentType(ambiance));
 
     K8sStepPassThroughData k8sStepPassThroughData = K8sStepPassThroughData.builder()
                                                         .k8sManifestOutcome(k8sManifestOutcome)
@@ -782,9 +806,10 @@ public class K8sStepHelper {
 
     String taskName = TaskType.GIT_FETCH_NEXT_GEN_TASK.getDisplayName();
     K8sSpecParameters k8SSpecParameters = (K8sSpecParameters) stepElementParameters.getSpec();
-    final TaskRequest taskRequest = prepareTaskRequestWithTaskSelector(ambiance, taskData, kryoSerializer,
+    final TaskRequest taskRequest = prepareCDTaskRequest(ambiance, taskData, kryoSerializer,
         k8SSpecParameters.getCommandUnits(), taskName,
-        TaskSelectorYaml.toTaskSelector(emptyIfNull(getParameterFieldValue(k8SSpecParameters.getDelegateSelectors()))));
+        TaskSelectorYaml.toTaskSelector(emptyIfNull(getParameterFieldValue(k8SSpecParameters.getDelegateSelectors()))),
+        stepHelper.getEnvironmentType(ambiance));
 
     return TaskChainResponse.builder()
         .chainEnd(false)
@@ -812,46 +837,46 @@ public class K8sStepHelper {
   }
 
   private GitFetchFilesConfig getGitFetchFilesConfig(
-      Ambiance ambiance, String identifier, StoreConfig store, String validationMessage, String manifestType) {
+      Ambiance ambiance, StoreConfig store, String validationMessage, ManifestOutcome manifestOutcome) {
     GitStoreConfig gitStoreConfig = (GitStoreConfig) store;
     String connectorId = gitStoreConfig.getConnectorRef().getValue();
     ConnectorInfoDTO connectorDTO = getConnector(connectorId, ambiance);
     validateManifest(store.getKind(), connectorDTO, validationMessage);
 
     GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO((ScmConnector) connectorDTO.getConnectorConfig());
-    NGAccess basicNGAccessObject = AmbianceHelper.getNgAccess(ambiance);
+    NGAccess basicNGAccessObject = AmbianceUtils.getNgAccess(ambiance);
     SSHKeySpecDTO sshKeySpecDTO = getSshKeySpecDTO(gitConfigDTO, ambiance);
     List<EncryptedDataDetail> encryptedDataDetails =
         gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, basicNGAccessObject);
 
-    List<String> gitFilePaths = getPathsBasedOnManifest(gitStoreConfig, manifestType);
+    List<String> gitFilePaths = getPathsBasedOnManifest(gitStoreConfig, manifestOutcome.getType());
     GitStoreDelegateConfig gitStoreDelegateConfig = getGitStoreDelegateConfig(
-        gitStoreConfig, connectorDTO, encryptedDataDetails, sshKeySpecDTO, gitConfigDTO, manifestType, gitFilePaths);
+        gitStoreConfig, connectorDTO, encryptedDataDetails, sshKeySpecDTO, gitConfigDTO, manifestOutcome, gitFilePaths);
 
     return GitFetchFilesConfig.builder()
-        .identifier(identifier)
-        .manifestType(manifestType)
+        .identifier(manifestOutcome.getIdentifier())
+        .manifestType(manifestOutcome.getType())
         .succeedIfFileNotFound(false)
         .gitStoreDelegateConfig(gitStoreDelegateConfig)
         .build();
   }
 
-  private GitFetchFilesConfig getValuesGitFetchFilesConfig(
-      Ambiance ambiance, String identifier, StoreConfig store, String validationMessage, String manifestType) {
+  private GitFetchFilesConfig getValuesGitFetchFilesConfig(Ambiance ambiance, String identifier, StoreConfig store,
+      String validationMessage, ManifestOutcome k8sManifestOutcome) {
     GitStoreConfig gitStoreConfig = (GitStoreConfig) store;
     String connectorId = gitStoreConfig.getConnectorRef().getValue();
     ConnectorInfoDTO connectorDTO = getConnector(connectorId, ambiance);
     validateManifest(store.getKind(), connectorDTO, validationMessage);
 
     GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO((ScmConnector) connectorDTO.getConnectorConfig());
-    NGAccess basicNGAccessObject = AmbianceHelper.getNgAccess(ambiance);
+    NGAccess basicNGAccessObject = AmbianceUtils.getNgAccess(ambiance);
     SSHKeySpecDTO sshKeySpecDTO = getSshKeySpecDTO(gitConfigDTO, ambiance);
     List<EncryptedDataDetail> encryptedDataDetails =
         gitConfigAuthenticationInfoHelper.getEncryptedDataDetails(gitConfigDTO, sshKeySpecDTO, basicNGAccessObject);
 
-    List<String> gitFilePaths = getValuesPathsBasedOnManifest(gitStoreConfig, manifestType);
-    GitStoreDelegateConfig gitStoreDelegateConfig = getGitStoreDelegateConfig(
-        gitStoreConfig, connectorDTO, encryptedDataDetails, sshKeySpecDTO, gitConfigDTO, manifestType, gitFilePaths);
+    List<String> gitFilePaths = getValuesPathsBasedOnManifest(gitStoreConfig, k8sManifestOutcome.getType());
+    GitStoreDelegateConfig gitStoreDelegateConfig = getGitStoreDelegateConfig(gitStoreConfig, connectorDTO,
+        encryptedDataDetails, sshKeySpecDTO, gitConfigDTO, k8sManifestOutcome, gitFilePaths);
 
     return GitFetchFilesConfig.builder()
         .identifier(identifier)
@@ -868,37 +893,33 @@ public class K8sStepHelper {
         ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.INFRASTRUCTURE_OUTCOME));
     ExpressionEvaluatorUtils.updateExpressions(
         manifestsOutcome, new CDExpressionResolveFunctor(engineExpressionService, ambiance));
-    manifestsOutcome.values().forEach(value -> ManifestOutcomeValidator.validate(value, false));
+    validateManifestsOutcome(ambiance, manifestsOutcome);
 
-    ManifestOutcome k8sManifestOutcome = getK8sSupportedManifestOutcome(new LinkedList<>(manifestsOutcome.values()));
+    ManifestOutcome k8sManifestOutcome = getK8sSupportedManifestOutcome(manifestsOutcome.values());
     if (ManifestType.Kustomize.equals(k8sManifestOutcome.getType())) {
       return k8sStepExecutor.executeK8sTask(k8sManifestOutcome, ambiance, stepElementParameters, emptyList(),
-          K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build(), true);
+          K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build(), true, null);
     }
 
     if (VALUES_YAML_SUPPORTED_MANIFEST_TYPES.contains(k8sManifestOutcome.getType())) {
-      return prepareK8sOrHelmWithValuesManifests(k8sStepExecutor, new LinkedList<>(manifestsOutcome.values()),
+      return prepareK8sOrHelmWithValuesManifests(k8sStepExecutor, getOrderedManifestOutcome(manifestsOutcome.values()),
           k8sManifestOutcome, ambiance, stepElementParameters, infrastructureOutcome);
     } else {
-      return prepareOcTemplateWithOcParamManifests(k8sStepExecutor, new LinkedList<>(manifestsOutcome.values()),
-          k8sManifestOutcome, ambiance, stepElementParameters, infrastructureOutcome);
+      return prepareOcTemplateWithOcParamManifests(k8sStepExecutor,
+          getOrderedManifestOutcome(manifestsOutcome.values()), k8sManifestOutcome, ambiance, stepElementParameters,
+          infrastructureOutcome);
     }
   }
 
   private ManifestsOutcome resolveManifestsOutcome(Ambiance ambiance) {
-    ManifestsOutcome manifestsOutcome = null;
-    try {
-      manifestsOutcome = (ManifestsOutcome) outcomeService.resolve(
-          ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.MANIFESTS));
-    } catch (Exception exception) {
-      throw new InvalidRequestException("Manifests can't be empty", exception);
+    OptionalOutcome manifestsOutcome = outcomeService.resolveOptional(
+        ambiance, RefObjectUtils.getOutcomeRefObject(OutcomeExpressionConstants.MANIFESTS));
+
+    if (!manifestsOutcome.isFound()) {
+      throw new InvalidRequestException("No manifests found.");
     }
 
-    if (isEmpty(manifestsOutcome)) {
-      throw new InvalidRequestException("Manifests can't be empty");
-    }
-
-    return manifestsOutcome;
+    return (ManifestsOutcome) manifestsOutcome.getOutcome();
   }
 
   private TaskChainResponse prepareOcTemplateWithOcParamManifests(K8sStepExecutor k8sStepExecutor,
@@ -907,13 +928,13 @@ public class K8sStepHelper {
     List<OpenshiftParamManifestOutcome> openshiftParamManifests = getOpenshiftParamManifests(manifestOutcomes);
     if (isEmpty(openshiftParamManifests)) {
       return k8sStepExecutor.executeK8sTask(k8sManifestOutcome, ambiance, stepElementParameters, emptyList(),
-          K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build(), true);
+          K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build(), true, null);
     }
     if (!isAnyOcParamRemoteStore(openshiftParamManifests)) {
       List<String> openshiftParamContentsForLocalStore = emptyList();
       return k8sStepExecutor.executeK8sTask(k8sManifestOutcome, ambiance, stepElementParameters,
           openshiftParamContentsForLocalStore,
-          K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build(), true);
+          K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build(), true, null);
     }
 
     return prepareOpenshiftParamFetchTask(
@@ -929,7 +950,7 @@ public class K8sStepHelper {
       List<String> valuesFileContentsForLocalStore = getValuesFileContentsForLocalStore(aggregatedValuesManifests);
       return k8sStepExecutor.executeK8sTask(k8sManifestOutcome, ambiance, stepElementParameters,
           valuesFileContentsForLocalStore,
-          K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build(), true);
+          K8sExecutionPassThroughData.builder().infrastructure(infrastructureOutcome).build(), true, null);
     }
 
     return prepareValuesFetchTask(k8sStepExecutor, ambiance, stepElementParameters, infrastructureOutcome,
@@ -937,7 +958,7 @@ public class K8sStepHelper {
   }
 
   @VisibleForTesting
-  public ManifestOutcome getK8sSupportedManifestOutcome(@NotEmpty List<ManifestOutcome> manifestOutcomes) {
+  public ManifestOutcome getK8sSupportedManifestOutcome(@NotEmpty Collection<ManifestOutcome> manifestOutcomes) {
     List<ManifestOutcome> k8sManifests =
         manifestOutcomes.stream()
             .filter(manifestOutcome -> K8S_SUPPORTED_MANIFEST_TYPES.contains(manifestOutcome.getType()))
@@ -994,6 +1015,12 @@ public class K8sStepHelper {
     return emptyList();
   }
 
+  private List<ManifestOutcome> getOrderedManifestOutcome(Collection<ManifestOutcome> manifestOutcomes) {
+    return manifestOutcomes.stream()
+        .sorted(Comparator.comparingInt(ManifestOutcome::getOrder))
+        .collect(Collectors.toCollection(LinkedList::new));
+  }
+
   private boolean isAnyOcParamRemoteStore(@NotEmpty List<OpenshiftParamManifestOutcome> openshiftParamManifests) {
     return openshiftParamManifests.stream().anyMatch(
         openshiftParamManifest -> ManifestStoreType.isInGitSubset(openshiftParamManifest.getStore().getKind()));
@@ -1035,7 +1062,8 @@ public class K8sStepHelper {
     }
 
     return k8sStepExecutor.executeK8sTask(k8sManifest, ambiance, stepElementParameters, emptyList(),
-        K8sExecutionPassThroughData.builder().infrastructure(k8sStepPassThroughData.getInfrastructure()).build(), true);
+        K8sExecutionPassThroughData.builder().infrastructure(k8sStepPassThroughData.getInfrastructure()).build(), true,
+        unitProgressData);
   }
 
   private UnitProgressData completeUnitProgressData(
@@ -1092,7 +1120,7 @@ public class K8sStepHelper {
             .infrastructure(k8sStepPassThroughData.getInfrastructure())
             .lastActiveUnitProgressData(gitFetchResponse.getUnitProgressData())
             .build(),
-        false);
+        false, gitFetchResponse.getUnitProgressData());
   }
 
   private TaskChainResponse handleHelmValuesFetchResponse(ResponseData responseData, K8sStepExecutor k8sStepExecutor,
@@ -1121,7 +1149,7 @@ public class K8sStepHelper {
               .infrastructure(k8sStepPassThroughData.getInfrastructure())
               .lastActiveUnitProgressData(helmValuesFetchResponse.getUnitProgressData())
               .build(),
-          false);
+          false, helmValuesFetchResponse.getUnitProgressData());
     }
   }
 
@@ -1311,6 +1339,16 @@ public class K8sStepHelper {
         .build();
   }
 
+  private void validateManifestsOutcome(Ambiance ambiance, ManifestsOutcome manifestsOutcome) {
+    Set<EntityDetailProtoDTO> entityDetails = new HashSet<>();
+    manifestsOutcome.values().forEach(value -> {
+      entityDetails.addAll(entityReferenceExtractorUtils.extractReferredEntities(ambiance, value.getStore()));
+      ManifestOutcomeValidator.validate(value, false);
+    });
+
+    pipelineRbacHelper.checkRuntimePermissions(ambiance, entityDetails);
+  }
+
   public static boolean getParameterFieldBooleanValue(
       ParameterField<?> fieldValue, String fieldName, StepElementParameters stepElement) {
     return getParameterFieldBooleanValue(fieldValue, fieldName,
@@ -1330,6 +1368,13 @@ public class K8sStepHelper {
     } catch (Exception e) {
       String message = String.format("%s for field %s in %s", e.getMessage(), fieldName, description);
       throw new InvalidArgumentsException(message);
+    }
+  }
+
+  public void publishReleaseNameStepDetails(Ambiance ambiance, String releaseName) {
+    if (isNotEmpty(releaseName)) {
+      sdkGraphVisualizationDataService.publishStepDetailInformation(
+          ambiance, K8sReleaseDetailsInfo.builder().releaseName(releaseName).build(), RELEASE_NAME);
     }
   }
 }

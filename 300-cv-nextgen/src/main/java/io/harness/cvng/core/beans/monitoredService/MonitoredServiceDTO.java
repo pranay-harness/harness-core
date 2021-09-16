@@ -1,9 +1,13 @@
 package io.harness.cvng.core.beans.monitoredService;
 
 import io.harness.cvng.beans.MonitoredServiceType;
+import io.harness.cvng.core.beans.dependency.ServiceDependencyMetadata;
+import io.harness.data.validator.EntityIdentifier;
+import io.harness.data.validator.NGEntityName;
 import io.harness.gitsync.beans.YamlDTO;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.swagger.annotations.ApiModelProperty;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
@@ -14,6 +18,7 @@ import javax.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
 
 @Data
@@ -21,33 +26,50 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class MonitoredServiceDTO implements YamlDTO {
-  @NotNull String orgIdentifier;
-  @NotNull String projectIdentifier;
-  @NotNull String identifier;
-  @NotNull String name;
-  @NotNull MonitoredServiceType type;
+  @ApiModelProperty(required = true) @NotNull @EntityIdentifier String orgIdentifier;
+  @ApiModelProperty(required = true) @NotNull @EntityIdentifier String projectIdentifier;
+  @ApiModelProperty(required = true) @NotNull String identifier;
+  @ApiModelProperty(required = true) @NotNull @NGEntityName String name;
+  @ApiModelProperty(required = true) @NotNull MonitoredServiceType type;
   String description;
-  @NotNull String serviceRef;
-  @NotNull String environmentRef;
-  @NotNull @Size(max = 128) Map<String, String> tags;
+  @ApiModelProperty(required = true) @NotNull @EntityIdentifier String serviceRef;
+  @ApiModelProperty(required = true) @NotNull @EntityIdentifier String environmentRef;
+  @ApiModelProperty(required = true) @NotNull @Size(max = 128) Map<String, String> tags;
   @Valid Sources sources;
+  @Valid Set<ServiceDependencyDTO> dependencies;
+
+  @Data
+  @Builder
+  public static class ServiceDependencyDTO {
+    @NonNull String monitoredServiceIdentifier;
+    ServiceDependencyMetadata dependencyMetadata;
+  }
+
+  public Set<ServiceDependencyDTO> getDependencies() {
+    if (dependencies == null) {
+      return new HashSet<>();
+    }
+    return dependencies;
+  }
 
   @Data
   @Builder
   public static class Sources {
     @Valid Set<HealthSource> healthSources;
+    @Valid Set<ChangeSourceDTO> changeSources;
 
     public Set<HealthSource> getHealthSources() {
       if (healthSources == null) {
-        return Collections.emptySet();
+        healthSources = Collections.EMPTY_SET;
       }
       return healthSources;
     }
-    public void addHealthSource(HealthSource healthSource) {
-      if (healthSources == null) {
-        healthSources = new HashSet<>();
+
+    public Set<ChangeSourceDTO> getChangeSources() {
+      if (changeSources == null) {
+        changeSources = Collections.EMPTY_SET;
       }
-      healthSources.add(healthSource);
+      return changeSources;
     }
   }
 }

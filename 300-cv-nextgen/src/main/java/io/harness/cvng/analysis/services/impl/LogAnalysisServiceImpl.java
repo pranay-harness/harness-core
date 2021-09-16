@@ -260,10 +260,16 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     learningEngineTaskService.markCompleted(taskId);
     CVConfig cvConfig =
         cvConfigService.get(verificationTaskService.getCVConfigId(learningEngineTask.getVerificationTaskId()));
-
+    Preconditions.checkNotNull(
+        cvConfig, String.format("Invalid verification task id: [%s]", learningEngineTask.getVerificationTaskId()));
+    long anomalousLogCount = analysisBody.getLogAnalysisResults()
+                                 .stream()
+                                 .filter(result -> LogAnalysisTag.getAnomalousTags().contains(result.getTag()))
+                                 .count();
     heatMapService.updateRiskScore(cvConfig.getAccountId(), cvConfig.getOrgIdentifier(),
         cvConfig.getProjectIdentifier(), cvConfig.getServiceIdentifier(), cvConfig.getEnvIdentifier(), cvConfig,
-        cvConfig.getCategory(), learningEngineTask.getAnalysisStartTime(), analysisBody.getScore());
+        cvConfig.getCategory(), learningEngineTask.getAnalysisStartTime(), analysisBody.getScore(), 0,
+        anomalousLogCount);
   }
 
   @Override

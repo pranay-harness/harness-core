@@ -36,6 +36,20 @@ public interface WingsTestConstants {
 
   String SERVICE_ID = "SERVICE_ID";
 
+  String SERVICE1_ID = "SERVICE1_ID";
+
+  String SERVICE2_ID = "SERVICE2_ID";
+
+  String SERVICE3_ID = "SERVICE3_ID";
+
+  String SERVICE4_ID = "SERVICE4_ID";
+
+  String SERVICE5_ID = "SERVICE5_ID";
+
+  String SERVICE6_ID = "SERVICE6_ID";
+
+  String SERVICE7_ID = "SERVICE7_ID";
+
   String SERVICE_TEMPLATE_ID = "SERVICE_TEMPLATE_ID";
 
   String PROVISIONER_ID = "PROVISIONER_ID";
@@ -241,6 +255,8 @@ public interface WingsTestConstants {
   String HOST_CONN_ATTR_KEY_ID = "HOST_CONN_ATTR_KEY_ID";
 
   String ACCOUNT_ID = "ACCOUNT_ID";
+
+  String ACCOUNT1_ID = "ACCOUNT1_ID";
 
   String ACCOUNT_SERVICE = "ACCOUNT_SERVICE";
 

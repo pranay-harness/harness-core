@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.inputset.InputSetErrorWrapperDTOPMS;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetListTypePMS;
+import io.harness.pms.ngpipeline.inputset.helpers.InputSetErrorsHelper;
 import io.harness.pms.ngpipeline.inputset.helpers.ValidateAndMergeHelper;
 import io.harness.pms.ngpipeline.inputset.mappers.PMSInputSetFilterHelper;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
@@ -47,7 +48,7 @@ public class InputSetValidationObserver implements PipelineActionObserver {
 
   private void checkIfInputSetIsValid(InputSetEntity inputSet, PipelineEntity pipelineEntity) {
     InputSetErrorWrapperDTOPMS errorWrapperDTO =
-        ValidateAndMergeHelper.validateInputSet(pipelineEntity.getYaml(), inputSet.getYaml());
+        InputSetErrorsHelper.getErrorMap(pipelineEntity.getYaml(), inputSet.getYaml());
     if (errorWrapperDTO != null) {
       markAsInvalid(inputSet);
     } else {
@@ -58,7 +59,7 @@ public class InputSetValidationObserver implements PipelineActionObserver {
   private void checkIfOverlayInputSetIsValid(InputSetEntity overlayInputSet, PipelineEntity pipelineEntity) {
     Map<String, String> invalidReferences =
         validateAndMergeHelper.validateOverlayInputSet(pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(),
-            pipelineEntity.getProjectIdentifier(), pipelineEntity.getIdentifier(), overlayInputSet);
+            pipelineEntity.getProjectIdentifier(), pipelineEntity.getIdentifier(), overlayInputSet.getYaml());
     if (!invalidReferences.isEmpty()) {
       markAsInvalid(overlayInputSet);
     } else {

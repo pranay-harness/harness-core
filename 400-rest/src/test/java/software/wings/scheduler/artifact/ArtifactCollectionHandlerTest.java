@@ -16,6 +16,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.WingsException;
 import io.harness.iterator.PersistenceIteratorFactory;
@@ -53,6 +57,8 @@ import org.slf4j.Logger;
 @PrepareForTest(
     {ArtifactCollectionHandler.class, ExceptionLogger.class, Logger.class, PersistenceIteratorFactory.class})
 @PowerMockIgnore({"javax.security.*", "javax.net.*"})
+@OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class ArtifactCollectionHandlerTest extends WingsBaseTest {
   private static final String ARTIFACT_STREAM_ID = "ARTIFACT_STREAM_ID";
 
@@ -87,7 +93,7 @@ public class ArtifactCollectionHandlerTest extends WingsBaseTest {
     WingsException wingsException = argumentCaptor.getValue();
 
     assertThat(wingsException).isNotNull();
-    assertThat(wingsException.calcRecursiveContextObjects().values().size()).isEqualTo(2);
+    assertThat(wingsException.calcRecursiveContextObjects().values().size()).isEqualTo(4);
     assertThat(wingsException.calcRecursiveContextObjects().values()).contains(ACCOUNT_ID, ARTIFACT_STREAM_ID);
   }
 

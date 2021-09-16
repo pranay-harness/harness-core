@@ -5,7 +5,7 @@ import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
 
-import io.harness.app.beans.entities.AuthorInfo;
+import io.harness.CategoryTest;
 import io.harness.app.beans.entities.BuildActiveInfo;
 import io.harness.app.beans.entities.BuildCount;
 import io.harness.app.beans.entities.BuildExecutionInfo;
@@ -23,6 +23,7 @@ import io.harness.app.beans.entities.RepositoryInformation;
 import io.harness.app.beans.entities.StatusAndTime;
 import io.harness.category.element.UnitTests;
 import io.harness.core.ci.services.CIOverviewDashboardServiceImpl;
+import io.harness.ng.core.dashboard.AuthorInfo;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
@@ -37,7 +38,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
-public class CIDashboardsApisTest {
+public class CIDashboardsApisTest extends CategoryTest {
   @Mock TimeScaleDBService timeScaleDBService;
   @InjectMocks @Spy private CIOverviewDashboardServiceImpl ciOverviewDashboardServiceImpl;
 
@@ -432,7 +433,7 @@ public class CIDashboardsApisTest {
                                .lastRepository(LastRepositoryInfo.builder()
                                                    .StartTime(1619349621000L)
                                                    .status(ExecutionStatus.EXPIRED.name())
-                                                   .EndTime(-1L)
+                                                   .EndTime(null)
                                                    .commit("commit103")
                                                    .author(AuthorInfo.builder().name("name3").url("url3").build())
                                                    .build())
@@ -447,7 +448,7 @@ public class CIDashboardsApisTest {
                                .lastRepository(LastRepositoryInfo.builder()
                                                    .StartTime(1619608221000L)
                                                    .status(ExecutionStatus.SUCCESS.name())
-                                                   .EndTime(-1L)
+                                                   .EndTime(null)
                                                    .commit("commit104")
                                                    .author(AuthorInfo.builder().name("name4").url("url4").build())
                                                    .build())
@@ -462,7 +463,7 @@ public class CIDashboardsApisTest {
                                .lastRepository(LastRepositoryInfo.builder()
                                                    .StartTime(1619781021000L)
                                                    .status(ExecutionStatus.SUCCESS.name())
-                                                   .EndTime(-1L)
+                                                   .EndTime(null)
                                                    .commit("commit105")
                                                    .author(AuthorInfo.builder().name("name5").url("url5").build())
                                                    .build())

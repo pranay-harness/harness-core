@@ -19,6 +19,8 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import io.harness.DelegateTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ccm.K8sClusterInfo;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
@@ -44,6 +46,7 @@ import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.protobuf.Any;
@@ -77,10 +80,10 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
+@OwnedBy(HarnessTeam.CE)
 public class K8SWatchTaskExecutorTest extends DelegateTestBase {
   @Rule public final WireMockRule wireMockRule = new WireMockRule(65217);
 
@@ -88,13 +91,13 @@ public class K8SWatchTaskExecutorTest extends DelegateTestBase {
   private DefaultK8sMetricsClient k8sMetricClient;
   private K8SWatchTaskExecutor k8SWatchTaskExecutor;
 
-  @Mock EventPublisher eventPublisher;
-  @Mock K8sWatchServiceDelegate k8sWatchServiceDelegate;
-  @Mock ApiClientFactoryImpl apiClientFactory;
-  @Mock ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
-  @Mock K8sConnectorHelper k8sConnectorHelper;
-  @Captor ArgumentCaptor<Message> messageArgumentCaptor;
-  @Captor ArgumentCaptor<Map<String, String>> mapArgumentCaptor;
+  @Mock private EventPublisher eventPublisher;
+  @Mock private K8sWatchServiceDelegate k8sWatchServiceDelegate;
+  @Mock private ApiClientFactoryImpl apiClientFactory;
+  @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
+  @Mock private K8sConnectorHelper k8sConnectorHelper;
+  @Captor private ArgumentCaptor<Message> messageArgumentCaptor;
+  @Captor private ArgumentCaptor<Map<String, String>> mapArgumentCaptor;
 
   @Inject KryoSerializer kryoSerializer;
 
@@ -114,8 +117,6 @@ public class K8SWatchTaskExecutorTest extends DelegateTestBase {
 
   @Before
   public void setUp() throws Exception {
-    MockitoAnnotations.initMocks(this);
-
     apiClient = new ClientBuilder().setBasePath("http://localhost:" + wireMockRule.port()).build();
     doReturn(apiClient).when(apiClientFactory).getClient(any(KubernetesConfig.class));
 
@@ -268,10 +269,11 @@ public class K8SWatchTaskExecutorTest extends DelegateTestBase {
                       .setClusterName(CLUSTER_NAME)
                       .setCloudProviderId(CLOUD_PROVIDER_ID)
                       .setKubeSystemUid(KUBE_SYSTEM_ID)
-                      .addAllActivePodUids(ImmutableList.of(POD_ONE_UID, POD_TWO_UID))
-                      .addAllActiveNodeUids(ImmutableList.of(NODE_ONE_UID, NODE_TWO_UID))
-                      .addAllActivePvUids(ImmutableList.of(PV_ONE_UID, PV_TWO_UID))
+                      .putAllActivePodUidsMap(ImmutableMap.of(POD_ONE_UID, POD_ONE_UID, POD_TWO_UID, POD_TWO_UID))
+                      .putAllActiveNodeUidsMap(ImmutableMap.of(NODE_ONE_UID, NODE_ONE_UID, NODE_TWO_UID, NODE_TWO_UID))
+                      .putAllActivePvUidsMap(ImmutableMap.of(PV_ONE_UID, PV_ONE_UID, PV_TWO_UID, PV_TWO_UID))
                       .setLastProcessedTimestamp(HTimestamps.fromInstant(pollTime))
+                      .setVersion(2)
                       .build());
     assertThat(mapArgumentCaptor.getValue().keySet()).contains(CLUSTER_ID_IDENTIFIER);
   }
@@ -299,7 +301,7 @@ public class K8SWatchTaskExecutorTest extends DelegateTestBase {
   }
 
   private V1ObjectMeta getObjectMeta(String uid) {
-    return new V1ObjectMetaBuilder().withUid(uid).build();
+    return new V1ObjectMetaBuilder().withUid(uid).withName(uid).build();
   }
 
   private V1Pod getPod(String podUid) {

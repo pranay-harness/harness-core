@@ -1,6 +1,8 @@
 use clap::Clap;
 use enumset::{EnumSet, EnumSetType};
 use multimap::MultiMap;
+use rayon::iter::IntoParallelRefIterator;
+use rayon::iter::ParallelIterator;
 use std::cmp::Ordering::Equal;
 use std::collections::{HashMap, HashSet};
 use std::process::exit;
@@ -29,7 +31,9 @@ static WEIGHTS: [i32; 7] = [5, 3, 2, 1, 2, 1, 1];
 enum Explanation {
     Empty,
     TeamIsMissing,
+    ClassAlreadyInTheTargetModule,
     DeprecatedModule,
+    UsedInDeprecatedClass,
     BreakDependencyOnModule,
 }
 
@@ -37,6 +41,12 @@ pub const EXPLANATION_TEAM_IS_MISSING: &str =
     "Please use the source level java annotation io.harness.annotations.dev.OwnedBy
 to specify which team is the owner of the class. The list of teams is in the
 enum io.harness.annotations.dev.HarnessTeam.";
+
+pub const EXPLANATION_CLASS_IS_ALREADY_IN_THE_TARGET_MODULE: &str =
+    "When class has a target module that is consistent with the module that it is
+already in, this could mean one of these two:
+    1. The annotation was left during the promotion/demotion - please remove it
+    2. The target module is wrong - please correct the module";
 
 pub const EXPLANATION_CLASS_IN_DEPRECATED_MODULE: &str =
     "When a module is deprecated, every class that is still in use should be
@@ -48,13 +58,20 @@ of the available modules is in io.harness.annotations.dev.HarnessModule.
 WARNING: Add target modules with cation. If wrong targets are specified
          this could lead to all sorts of inappropriate error reports.";
 
+pub const EXPLANATION_CLASS_USED_DEPRECATED_CLASS: &str =
+    "When a class is deprecated, every class that it depends on should be
+removed. Obviously removing the deprecated class all together will eliminate this
+issue. In the spirit of allowing for iterative progress though, we report that
+need independently. This is especially useful when big registration classes are
+deprecated and removing dependencies class by class make more sense.";
+
 pub const EXPLANATION_TOO_MANY_ISSUE_POINTS_PER_CLASS: &str =
     "Please resolve the necessary issues so your issue points drop under the expected limit.
 Note resolving some of the issues with higher issue points weight might be harder,
 but you will need to resolve less of those.";
 
-pub const EXPLANATION_DEPENDENCY_TO_CLASS_IN_BREAK_DEPENDENCY_ON_MODULE: &str = "
-When class from a module that needs to break dependency from another module,
+pub const EXPLANATION_DEPENDENCY_TO_CLASS_IN_BREAK_DEPENDENCY_ON_MODULE: &str =
+    "When class from a module that needs to break dependency from another module,
 depends on class from such module, this dependency needs to be broken.
 This can be done with breaking the dependency of the two classes or moving the
 classes accordingly, so they do not belong to module that should not depend to each other.";
@@ -103,7 +120,10 @@ pub struct Analyze {
     issue_points_per_class_limit: Option<f64>,
 
     #[clap(short, long)]
-    indirect: bool,
+    indirect: Option<u32>,
+
+    #[clap(long)]
+    top_blockers: Option<u32>,
 }
 
 #[derive(Debug)]
@@ -261,36 +281,37 @@ pub fn analyze(opts: Analyze) {
         if ordering != Equal {
             ordering
         } else {
-            a.message.cmp(&b.message)
+            let ordering = a.message.cmp(&b.message);
+            if ordering != Equal {
+                ordering
+            } else {
+                a.for_team.cmp(&b.for_team)
+            }
         }
     });
 
     println!("Detecting indirectly involved classes...");
 
     let indirect_classes: &mut HashSet<&String> = &mut HashSet::new();
-    if opts.indirect {
-        loop {
-            let original: HashSet<&String> = indirect_classes.iter().map(|&s| s).collect();
+    for _ in 0..opts.indirect.unwrap_or(0) {
+        let original: HashSet<&String> = indirect_classes.iter().map(|&s| s).collect();
 
-            results
-                .iter()
-                .filter(|&report| {
-                    filter_report(&opts, report, &class_locations) || original.contains(&report.for_class)
-                })
-                .for_each(|report| {
-                    indirect_classes.extend(&report.indirect_classes);
-                });
+        results
+            .iter()
+            .filter(|&report| filter_report(&opts, report, &class_locations) || original.contains(&report.for_class))
+            .for_each(|report| {
+                indirect_classes.extend(&report.indirect_classes);
+            });
 
-            if original.len() == indirect_classes.len() {
-                break;
-            }
+        if original.len() == indirect_classes.len() {
+            break;
         }
     }
 
     let mut explanations: EnumSet<Explanation> = EnumSet::empty();
     let mut total_count = 0;
 
-    results
+    let filtered: Vec<&Report> = results
         .iter()
         .filter(|&report| {
             filter_report(&opts, report, &class_locations) || indirect_classes.contains(&report.for_class)
@@ -298,17 +319,24 @@ pub fn analyze(opts: Analyze) {
         .filter(|&report| filter_by_kind(&opts, report))
         .filter(|&report| filter_by_auto_actionable(&opts, report))
         .filter(|&report| filter_by_team(&opts, report))
-        .for_each(|report| {
-            println!("{:?}: [{}] {}", &report.kind, &report.for_team, &report.message);
-            if opts.auto_actionable_command && !report.action.is_empty() {
-                println!("   {}", &report.action);
-            }
-            total_count += 1;
-            *kind_summary.entry(report.kind as usize).or_insert(0) += 1;
-            let ts = team_summary.entry(&report.for_team).or_insert(HashMap::new());
-            *ts.entry(report.kind as usize).or_insert(0) += 1;
-            explanations.insert(report.explanation);
-        });
+        .collect();
+
+    filtered.iter().for_each(|&report| {
+        println!("{:?}: [{}] {}", &report.kind, &report.for_team, &report.message);
+        if opts.auto_actionable_command && !report.action.is_empty() {
+            println!("   {}", &report.action);
+        }
+        total_count += 1;
+        *kind_summary.entry(report.kind as usize).or_insert(0) += 1;
+        let ts = team_summary.entry(&report.for_team).or_insert(HashMap::new());
+        *ts.entry(report.kind as usize).or_insert(0) += 1;
+        explanations.insert(report.explanation);
+    });
+
+    if opts.top_blockers.unwrap_or(0) > 0 {
+        println!();
+        report_blockers(opts.top_blockers.unwrap(), &filtered);
+    }
 
     println!();
 
@@ -328,9 +356,17 @@ pub fn analyze(opts: Analyze) {
         println!();
         println!("{}", EXPLANATION_TEAM_IS_MISSING);
     }
+    if explanations.contains(Explanation::ClassAlreadyInTheTargetModule) {
+        println!();
+        println!("{}", EXPLANATION_CLASS_IS_ALREADY_IN_THE_TARGET_MODULE);
+    }
     if explanations.contains(Explanation::DeprecatedModule) {
         println!();
         println!("{}", EXPLANATION_CLASS_IN_DEPRECATED_MODULE);
+    }
+    if explanations.contains(Explanation::UsedInDeprecatedClass) {
+        println!();
+        println!("{}", EXPLANATION_CLASS_USED_DEPRECATED_CLASS);
     }
 
     if explanations.contains(Explanation::BreakDependencyOnModule) {
@@ -352,6 +388,67 @@ pub fn analyze(opts: Analyze) {
     if opts.exit_code {
         exit(1);
     }
+}
+
+pub struct Blocker {
+    class: String,
+    operations: usize,
+}
+
+fn report_blockers(top: u32, results: &Vec<&Report>) {
+    let mut blockers_map: HashMap<&String, HashSet<&String>> = HashMap::new();
+
+    results.iter().for_each(|result| {
+        result.indirect_classes.iter().for_each(|blocker| {
+            let blockers = blockers_map.entry(blocker).or_insert(HashSet::new());
+            blockers.insert(&result.for_class);
+        })
+    });
+
+    let mut unstable: HashSet<&String> = blockers_map.keys().map(|&class| class).collect();
+
+    while unstable.len() > 0 {
+        let extended: HashMap<&String, HashSet<&String>> = blockers_map
+            .par_iter()
+            .map(|(&class, blocked)| {
+                let mut extended = HashSet::new();
+                extended.extend(blocked);
+
+                let x: HashSet<&String> = blocked
+                    .par_iter()
+                    .map(|class| blockers_map.get(class))
+                    .filter(|option| option.is_some())
+                    .map(|option| option.unwrap())
+                    .flatten()
+                    .map(|&class| class)
+                    .collect();
+
+                extended.extend(x);
+
+                (extended.len() == blocked.len(), class, extended)
+            })
+            .filter(|(stable, _, _)| !stable)
+            .map(|(_, class, extended)| (class, extended))
+            .collect();
+
+        unstable = extended.keys().map(|&class| class).collect();
+        blockers_map.extend(extended);
+    }
+
+    let mut blockers: Vec<Blocker> = blockers_map
+        .iter()
+        .map(|(&class, blocked)| Blocker {
+            class: class.clone(),
+            operations: blocked.len(),
+        })
+        .collect();
+
+    blockers.sort_by(|a, b| b.operations.cmp(&a.operations));
+
+    blockers
+        .iter()
+        .take(top as usize)
+        .for_each(|blocker| println!("Class {} blocks {} operations", blocker.class, blocker.operations))
 }
 
 fn report(
@@ -536,12 +633,9 @@ fn check_already_in_target(class: &JavaClass, module: &JavaModule, target_module
     } else {
         if module.name.eq(target_module.unwrap()) {
             results.push(Report {
-                kind: Kind::AutoAction,
-                explanation: Explanation::Empty,
-                message: format!(
-                    "{} target module is where it already is - remove the annotation",
-                    class.name
-                ),
+                kind: Kind::Critical,
+                explanation: Explanation::ClassAlreadyInTheTargetModule,
+                message: format!("{} target module is the same as the module of the class", class.name),
                 action: Default::default(),
                 for_class: class.name.clone(),
                 for_team: class.team(module, target_module_team),
@@ -651,10 +745,6 @@ fn check_for_promotion(
             .get(src)
             .expect(&format!("The source {} is not find in any module", src));
 
-        if dependent_class.deprecated {
-            return ();
-        }
-
         let &dependent_real_module = class_modules.get(dependent_class).expect(&format!(
             "The class {} is not find in the modules",
             dependent_class.name
@@ -677,6 +767,11 @@ fn check_for_promotion(
             && !target_module.dependencies.contains(&dependent_target_module.name)
         {
             issue = true;
+
+            if dependent_class.deprecated {
+                return ();
+            }
+
             let mdls = [
                 module.name.clone(),
                 dependent_target_module.name.clone(),
@@ -701,13 +796,22 @@ fn check_for_promotion(
                     for_modules: mdls,
                 });
             } else if !dependent_real_module.external() {
+                let msg = if dependent_target_module.index > target_module.index {
+                    format!(
+                        "{} depends on {} that is in module {} but {} does not depend on it",
+                        class.name, dependent_class.name, dependent_target_module.name, target_module.name
+                    )
+                } else {
+                    format!(
+                        "{} depends on {} that is in module {} but {} cannot depend on it",
+                        class.name, dependent_class.name, dependent_target_module.name, target_module.name
+                    )
+                };
+
                 results.push(Report {
                     kind: Kind::Error,
                     explanation: Explanation::Empty,
-                    message: format!(
-                        "{} depends on {} that is in module {} but {} does not depend on it",
-                        class.name, dependent_class.name, dependent_target_module.name, target_module.name
-                    ),
+                    message: msg,
                     action: Default::default(),
                     for_class: class.name.clone(),
                     for_team: class.team(module, &target_module.team),
@@ -763,6 +867,8 @@ fn check_for_promotion(
 
     if !issue && !not_ready_yet.is_empty() {
         all_classes.insert(class.name.clone());
+
+        not_ready_yet.sort_by(|a, b| a.cmp(b));
 
         results.push(Report {
             kind: Kind::Blocked,
@@ -826,6 +932,27 @@ fn check_for_demotion(
                 .get(dependee)
                 .expect(&format!("The source {} is not find in any module", dependee));
 
+            if dependee_class.deprecated {
+                issue = true;
+
+                let indirect_classes = [dependee_class.name.clone()].iter().cloned().collect();
+
+                results.push(Report {
+                    kind: Kind::DevAction,
+                    explanation: Explanation::UsedInDeprecatedClass,
+                    message: format!(
+                        "{} is deprecated and depends on {}, this dependency has to be broken",
+                        dependee_class.name, class.name,
+                    ),
+                    action: Default::default(),
+                    for_class: class.name.clone(),
+                    for_team: class.team(module, &class.target_module_team(modules)),
+                    indirect_classes: indirect_classes,
+                    for_modules: [module.name.clone()].iter().cloned().collect(),
+                });
+                return ();
+            }
+
             let &dependee_real_module = class_modules
                 .get(dependee_class)
                 .expect(&format!("The class {} is not find in the modules", dependee_class.name));
@@ -871,13 +998,22 @@ fn check_for_demotion(
                         for_modules: mdls,
                     });
                 } else {
+                    let msg = if target_module.index > dependee_target_module.index {
+                        format!(
+                            "{} depends on {} that is in module {} but {} does not depend on it",
+                            dependee_class.name, class.name, target_module.name, dependee_target_module.name
+                        )
+                    } else {
+                        format!(
+                            "{} depends on {} that is in module {} but {} cannot depend on it",
+                            dependee_class.name, class.name, target_module.name, dependee_target_module.name
+                        )
+                    };
+
                     results.push(Report {
                         kind: Kind::Error,
                         explanation: Explanation::Empty,
-                        message: format!(
-                            "{} depends on {} that is in module {} but {} does not depend on it",
-                            dependee_class.name, class.name, target_module.name, dependee_target_module.name
-                        ),
+                        message: msg,
                         action: Default::default(),
                         for_team: class.team(module, &target_module.team),
                         for_class: class.name.clone(),
@@ -935,6 +1071,8 @@ fn check_for_demotion(
 
     if !issue && !not_ready_yet.is_empty() {
         all_classes.insert(class.name.clone());
+
+        not_ready_yet.sort_by(|a, b| a.cmp(b));
 
         results.push(Report {
             kind: Kind::Blocked,
@@ -1109,7 +1247,7 @@ fn check_for_deprecation(
                 action: Default::default(),
                 for_class: dependent_class.name.clone(),
                 for_team: dependent_class.team(dependent_module, &dependent_class.target_module_team(modules)),
-                indirect_classes: [class.name.clone()].iter().cloned().collect(),
+                indirect_classes: Default::default(),
                 for_modules: [dependent_module.name.clone()].iter().cloned().collect(),
             });
         });

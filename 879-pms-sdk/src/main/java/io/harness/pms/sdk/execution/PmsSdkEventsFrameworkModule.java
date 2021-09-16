@@ -14,6 +14,8 @@ import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_ORCHE
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_ORCHESTRATION_EVENT_TOPIC;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_PROGRESS_BATCH_SIZE;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_PROGRESS_EVENT_TOPIC;
+import static io.harness.eventsframework.EventsFrameworkConstants.START_PARTIAL_PLAN_CREATOR_BATCH_SIZE;
+import static io.harness.eventsframework.EventsFrameworkConstants.START_PARTIAL_PLAN_CREATOR_EVENT_TOPIC;
 import static io.harness.pms.events.PmsEventFrameworkConstants.MAX_PROCESSING_TIME_SECONDS;
 import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_FACILITATOR_CONSUMER;
 import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_INTERRUPT_CONSUMER;
@@ -22,26 +24,21 @@ import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.
 import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_NODE_START_CONSUMER;
 import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_ORCHESTRATION_EVENT_CONSUMER;
 import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_PROGRESS_CONSUMER;
+import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_START_PLAN_CREATION_EVENT_CONSUMER;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
-import io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants;
 import io.harness.redis.RedisConfig;
-import io.harness.threading.ThreadPool;
 
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import java.time.Duration;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
-
+@OwnedBy(HarnessTeam.PIPELINE)
 public class PmsSdkEventsFrameworkModule extends AbstractModule {
   private static PmsSdkEventsFrameworkModule instance;
 
@@ -99,6 +96,11 @@ public class PmsSdkEventsFrameworkModule extends AbstractModule {
           .toInstance(
               NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
 
+      bind(Consumer.class)
+          .annotatedWith(Names.named(PT_START_PLAN_CREATION_EVENT_CONSUMER))
+          .toInstance(
+              NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
+
     } else {
       bind(Consumer.class)
           .annotatedWith(Names.named(PT_INTERRUPT_CONSUMER))
@@ -134,14 +136,11 @@ public class PmsSdkEventsFrameworkModule extends AbstractModule {
           .annotatedWith(Names.named(PT_NODE_RESUME_CONSUMER))
           .toInstance(RedisConsumer.of(PIPELINE_NODE_RESUME_EVENT_TOPIC, serviceName, redisConfig,
               Duration.ofSeconds(MAX_PROCESSING_TIME_SECONDS), PIPELINE_NODE_RESUME_BATCH_SIZE));
-    }
-  }
 
-  @Provides
-  @Singleton
-  @Named(PmsSdkEventFrameworkConstants.SDK_PROCESSOR_SERVICE)
-  public ExecutorService sdkExecutorService() {
-    return ThreadPool.create(
-        20, 60, 30L, TimeUnit.SECONDS, new ThreadFactoryBuilder().setNameFormat("PmsSdkEventProcessor-%d").build());
+      bind(Consumer.class)
+          .annotatedWith(Names.named(PT_START_PLAN_CREATION_EVENT_CONSUMER))
+          .toInstance(RedisConsumer.of(START_PARTIAL_PLAN_CREATOR_EVENT_TOPIC, serviceName, redisConfig,
+              Duration.ofSeconds(MAX_PROCESSING_TIME_SECONDS), START_PARTIAL_PLAN_CREATOR_BATCH_SIZE));
+    }
   }
 }

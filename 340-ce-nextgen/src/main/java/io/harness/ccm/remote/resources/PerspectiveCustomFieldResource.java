@@ -3,6 +3,7 @@ package io.harness.ccm.remote.resources;
 import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.commons.utils.BigQueryHelper.UNIFIED_TABLE;
 
+import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.commons.utils.BigQueryHelper;
@@ -73,7 +74,7 @@ public class PerspectiveCustomFieldResource {
   @ExceptionMetered
   @ApiOperation(value = "Save customField", nickname = "saveCustomField")
   public RestResponse<ViewCustomField> saveCustomField(
-      @QueryParam("accountId") String accountId, ViewCustomField viewCustomField) {
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId, ViewCustomField viewCustomField) {
     modifyCustomField(viewCustomField);
     BigQuery bigQuery = bigQueryService.get();
     String cloudProviderTableName = bigQueryHelper.getCloudProviderTableName(accountId, UNIFIED_TABLE);
@@ -128,8 +129,8 @@ public class PerspectiveCustomFieldResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Get customField", nickname = "getCustomField")
-  public RestResponse<ViewCustomField> get(
-      @QueryParam("accountId") String accountId, @QueryParam("customFieldId") String customFieldId) {
+  public RestResponse<ViewCustomField> get(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @QueryParam("customFieldId") String customFieldId) {
     return new RestResponse<>(viewCustomFieldService.get(customFieldId));
   }
 
@@ -138,7 +139,8 @@ public class PerspectiveCustomFieldResource {
   @ExceptionMetered
   @Path("/validate")
   @ApiOperation(value = "Validate customField", nickname = "validateCustomField")
-  public RestResponse<String> validate(@QueryParam("accountId") String accountId, ViewCustomField viewCustomField) {
+  public RestResponse<String> validate(
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId, ViewCustomField viewCustomField) {
     modifyCustomField(viewCustomField);
     BigQuery bigQuery = bigQueryService.get();
     String cloudProviderTableName = bigQueryHelper.getCloudProviderTableName(accountId, UNIFIED_TABLE);
@@ -150,8 +152,8 @@ public class PerspectiveCustomFieldResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Update customField", nickname = "updateCustomField")
-  public RestResponse<ViewCustomField> update(
-      @QueryParam("accountId") String accountId, @Valid @RequestBody ViewCustomField viewCustomField) {
+  public RestResponse<ViewCustomField> update(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @Valid @RequestBody ViewCustomField viewCustomField) {
     modifyCustomField(viewCustomField);
     BigQuery bigQuery = bigQueryService.get();
     String cloudProviderTableName = bigQueryHelper.getCloudProviderTableName(accountId, UNIFIED_TABLE);
@@ -162,7 +164,7 @@ public class PerspectiveCustomFieldResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "Delete customField", nickname = "deleteCustomField")
-  public RestResponse<String> delete(@QueryParam("accountId") String accountId,
+  public RestResponse<String> delete(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @QueryParam("customFieldId") String customFieldId, @Valid @RequestBody CEView ceView) {
     viewCustomFieldService.delete(customFieldId, accountId, ceView);
     return new RestResponse<>("Successfully deleted the custom field.");

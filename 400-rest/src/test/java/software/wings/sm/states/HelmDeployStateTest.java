@@ -21,6 +21,7 @@ import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aG
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
+import static software.wings.beans.appmanifest.ManifestFile.VALUES_YAML_KEY;
 import static software.wings.beans.appmanifest.StoreType.CUSTOM;
 import static software.wings.beans.appmanifest.StoreType.HelmChartRepo;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
@@ -137,6 +138,7 @@ import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.Environment;
+import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
@@ -243,7 +245,7 @@ import org.mockito.MockitoAnnotations;
 import org.mongodb.morphia.Key;
 
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._861_CG_ORCHESTRATION_STATES)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class HelmDeployStateTest extends CategoryTest {
   private static final String HELM_CONTROLLER_NAME = "helm-controller-name";
   private static final String HELM_RELEASE_NAME_PREFIX = "helm-release-name-prefix";
@@ -1010,10 +1012,13 @@ public class HelmDeployStateTest extends CategoryTest {
 
   private void testHandleAsyncResponseForHelmFetchTaskWithValuesInGit() {
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
+    Map<String, List<String>> mapK8sValuesLocationToContents = new HashMap<>();
+    mapK8sValuesLocationToContents.put(K8sValuesLocation.Service.name(), singletonList("fileContent"));
     HelmValuesFetchTaskResponse response = HelmValuesFetchTaskResponse.builder()
                                                .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
-                                               .valuesFileContent("fileContent")
+                                               .mapK8sValuesLocationToContent(mapK8sValuesLocationToContents)
                                                .build();
+
     Map<String, ResponseData> responseDataMap = ImmutableMap.of(ACTIVITY_ID, response);
 
     doReturn(appManifestMap)
@@ -1349,6 +1354,9 @@ public class HelmDeployStateTest extends CategoryTest {
     helmOverrideManifestMap.put(
         K8sValuesLocation.EnvironmentGlobal, ApplicationManifest.builder().storeType(StoreType.Local).build());
 
+    Map<K8sValuesLocation, ApplicationManifest> mapK8sValuesLocationToApplicationManifest =
+        applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES);
+
     ApplicationManifest serviceHelmChartManifest =
         ApplicationManifest.builder()
             .storeType(HelmChartRepo)
@@ -1357,9 +1365,13 @@ public class HelmDeployStateTest extends CategoryTest {
 
     doReturn(serviceHelmChartManifest).when(applicationManifestUtils).getApplicationManifestForService(context);
     when(helmChartConfigHelperService.getHelmChartConfigTaskParams(context, serviceHelmChartManifest))
-        .thenReturn(HelmChartConfigParams.builder().repoName("repoName").build());
+        .thenReturn(HelmChartConfigParams.builder()
+                        .connectorConfig(GcpConfig.builder().delegateSelectors(singletonList("gcp-delegate")).build())
+                        .repoName("repoName")
+                        .build());
 
-    helmDeployState.executeHelmValuesFetchTask(context, ACTIVITY_ID, helmOverrideManifestMap);
+    helmDeployState.executeHelmValuesFetchTask(
+        context, ACTIVITY_ID, helmOverrideManifestMap, mapK8sValuesLocationToApplicationManifest);
 
     ArgumentCaptor<DelegateTask> delegateTaskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(applicationManifestUtils, times(1))
@@ -1371,6 +1383,7 @@ public class HelmDeployStateTest extends CategoryTest {
     HelmValuesFetchTaskParameters taskParameters = (HelmValuesFetchTaskParameters) task.getData().getParameters()[0];
     assertThat(taskParameters.getHelmChartConfigTaskParams()).isNotNull();
     assertThat(taskParameters.getHelmChartConfigTaskParams().getRepoName()).isEqualTo("repoName");
+    assertThat(taskParameters.getDelegateSelectors()).containsExactly("gcp-delegate");
   }
 
   @Test
@@ -1862,7 +1875,9 @@ public class HelmDeployStateTest extends CategoryTest {
     doReturn(infrastructureMapping).when(k8sStateHelper).fetchContainerInfrastructureMapping(context);
     doReturn(Activity.builder().uuid(ACTIVITY_ID).build()).when(activityService).save(any(Activity.class));
     doReturn(appManifestMap).when(applicationManifestUtils).getApplicationManifests(context, AppManifestKind.VALUES);
-    doReturn(mockParams).when(applicationManifestUtils).createCustomManifestValuesFetchParams(context, appManifestMap);
+    doReturn(mockParams)
+        .when(applicationManifestUtils)
+        .createCustomManifestValuesFetchParams(context, appManifestMap, VALUES_YAML_KEY);
     doReturn(serviceTemplateId).when(serviceTemplateHelper).fetchServiceTemplateId(infrastructureMapping);
 
     helmDeployState.executeInternal(context);
@@ -1953,7 +1968,7 @@ public class HelmDeployStateTest extends CategoryTest {
     doReturn(true).when(featureFlagService).isEnabled(FeatureName.CUSTOM_MANIFEST, null);
     doReturn(valuesMap)
         .when(applicationManifestUtils)
-        .getValuesFilesFromCustomFetchValuesResponse(context, appManifestMap, successfulFetchResponse);
+        .getValuesFilesFromCustomFetchValuesResponse(context, appManifestMap, successfulFetchResponse, VALUES_YAML_KEY);
     ArgumentCaptor<DelegateTask> delegateTaskCaptor = ArgumentCaptor.forClass(DelegateTask.class);
     doReturn("taskId").when(delegateService).queueTask(delegateTaskCaptor.capture());
     doReturn(false).when(applicationManifestUtils).isValuesInGit(appManifestMap);

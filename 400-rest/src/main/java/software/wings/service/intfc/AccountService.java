@@ -55,7 +55,11 @@ public interface AccountService {
 
   Account get(String accountId);
 
-  AccountDetails getDetails(String accountId);
+  boolean isNextGenEnabled(String accountId);
+
+  Boolean updateNextGenEnabled(String accountId, boolean enabled);
+
+  AccountDetails getAccountDetails(String accountId);
 
   List<Account> getAccounts(List<String> identifiers);
 
@@ -224,6 +228,8 @@ public interface AccountService {
   boolean disableHarnessUserGroupAccess(String accountId);
 
   boolean isRestrictedAccessEnabled(String accountId);
+
+  boolean isAutoInviteAcceptanceEnabled(String accountId);
 
   Void setDefaultExperience(String accountId, DefaultExperience defaultExperience);
 }

@@ -1,5 +1,10 @@
 package software.wings.beans.command;
 
+import static io.harness.annotations.dev.HarnessModule._950_DELEGATE_TASKS_BEANS;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.shell.BaseScriptExecutor;
@@ -13,6 +18,8 @@ import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.tuple.Pair;
 
 @EqualsAndHashCode(callSuper = true)
+@OwnedBy(CDP)
+@TargetModule(_950_DELEGATE_TASKS_BEANS)
 public class ShellCommandExecutionContext extends CommandExecutionContext {
   private BaseScriptExecutor executor;
   private FileBasedScriptExecutor fileBasedScriptExecutor;

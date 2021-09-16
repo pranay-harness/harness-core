@@ -1,10 +1,14 @@
 package software.wings.delegatetasks.validation;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import java.util.List;
 
-/**
- * Created by brett on 11/1/17
- */
+@OwnedBy(HarnessTeam.DEL)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public interface DelegateValidateTask {
   List<DelegateConnectionResult> validationResults();
   List<String> getCriteria();

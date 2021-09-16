@@ -1,6 +1,6 @@
 package software.wings.infra;
 
-import static io.harness.annotations.dev.HarnessModule._871_CG_BEANS;
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import static software.wings.beans.InfrastructureType.AWS_AMI;
@@ -49,7 +49,7 @@ import java.util.Set;
       @JsonSubTypes.Type(value = CustomInfrastructure.class, name = CUSTOM_INFRASTRUCTURE)
 })
 @OwnedBy(CDC)
-@TargetModule(_871_CG_BEANS)
+@TargetModule(_957_CG_BEANS)
 public interface InfraMappingInfrastructureProvider extends CloudProviderInfrastructure {
   @JsonIgnore InfrastructureMapping getInfraMapping();
 

@@ -9,8 +9,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @OwnedBy(DX)
 public enum FilterType {
   @JsonProperty("Connector") CONNECTOR,
+  @JsonProperty("DelegateProfile") DELEGATEPROFILE,
+  @JsonProperty("Delegate") DELEGATE,
   @JsonProperty("PipelineSetup") PIPELINESETUP,
   @JsonProperty("PipelineExecution") PIPELINEEXECUTION,
   @JsonProperty("Deployment") DEPLOYMENT,
-  @JsonProperty("Audit") AUDIT
+  @JsonProperty("Audit") AUDIT,
+  @JsonProperty("Template") TEMPLATE
 }

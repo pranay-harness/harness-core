@@ -6,9 +6,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.dao.intfc.BillingDataPipelineRecordDao;
-import io.harness.batch.processing.pricing.data.VMInstanceBillingData;
 import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryHelperService;
+import io.harness.batch.processing.pricing.vmpricing.VMInstanceBillingData;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.dao.CEMetadataRecordDao;
 import io.harness.ccm.commons.entities.batch.CEMetadataRecord;
@@ -40,6 +41,7 @@ public class CustomBillingMetaDataServiceImplTest extends CategoryTest {
   @Mock private BillingDataPipelineRecordDao billingDataPipelineRecordDao;
   @Mock CEMetadataRecordDao ceMetadataRecordDao;
   @Mock CloudBillingHelper cloudBillingHelper;
+  @Mock private BatchMainConfig mainConfig;
   @InjectMocks private CustomBillingMetaDataServiceImpl customBillingMetaDataService;
 
   private static final String ACCOUNT_ID = "zEaak-FLS425IEO7OLzMUg";
@@ -66,6 +68,7 @@ public class CustomBillingMetaDataServiceImplTest extends CategoryTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetPipelineJobStatusWhenJobNotFinished() {
+    when(mainConfig.isAwsCurBilling()).thenReturn(true);
     when(ceMetadataRecordDao.getByAccountId(ACCOUNT_ID))
         .thenReturn(CEMetadataRecord.builder().accountId(ACCOUNT_ID).awsDataPresent(true).build());
     when(customBillingMetaDataService.getAwsDataSetId(ACCOUNT_ID)).thenReturn(AWS_DATA_SETID);
@@ -82,6 +85,7 @@ public class CustomBillingMetaDataServiceImplTest extends CategoryTest {
     VMInstanceBillingData vmInstanceBillingData =
         VMInstanceBillingData.builder().computeCost(10).networkCost(0).resourceId(RESOURCE_ID).build();
     vmInstanceBillingDataMap.put(RESOURCE_ID, vmInstanceBillingData);
+    when(mainConfig.isAwsCurBilling()).thenReturn(true);
     when(ceMetadataRecordDao.getByAccountId(ACCOUNT_ID))
         .thenReturn(CEMetadataRecord.builder().accountId(ACCOUNT_ID).awsDataPresent(true).build());
     when(customBillingMetaDataService.getAwsDataSetId(ACCOUNT_ID)).thenReturn(AWS_DATA_SETID);

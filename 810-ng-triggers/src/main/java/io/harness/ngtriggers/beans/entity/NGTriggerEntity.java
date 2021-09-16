@@ -12,6 +12,7 @@ import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.ngtriggers.beans.entity.metadata.NGTriggerMetadata;
+import io.harness.ngtriggers.beans.entity.metadata.status.TriggerStatus;
 import io.harness.ngtriggers.beans.source.NGTriggerType;
 import io.harness.ngtriggers.beans.target.TargetType;
 import io.harness.persistence.PersistentEntity;
@@ -78,6 +79,11 @@ public class NGTriggerEntity implements PersistentEntity, PersistentNGCronIterab
                 .name("accId_sourcerepo_index")
                 .field(NGTriggerEntityKeys.accountId)
                 .field("metadata.webhook.type")
+                .build(),
+            CompoundMongoIndex.builder()
+                .name("accId_signature_index")
+                .field(NGTriggerEntityKeys.accountId)
+                .field("metadata.buildMetadata.pollingConfig.signature")
                 .build())
         .build();
   }
@@ -88,7 +94,8 @@ public class NGTriggerEntity implements PersistentEntity, PersistentNGCronIterab
   @Size(max = 1024) String description;
   @NotEmpty String yaml;
   @NotEmpty NGTriggerType type;
-
+  String status;
+  TriggerStatus triggerStatus;
   @NotEmpty String accountId;
   @NotEmpty String orgIdentifier;
   @NotEmpty String projectIdentifier;
@@ -96,7 +103,6 @@ public class NGTriggerEntity implements PersistentEntity, PersistentNGCronIterab
   @NotEmpty TargetType targetType;
 
   @NotEmpty NGTriggerMetadata metadata;
-
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
   @Version Long version;

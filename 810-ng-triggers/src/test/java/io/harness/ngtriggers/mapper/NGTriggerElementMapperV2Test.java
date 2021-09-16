@@ -89,6 +89,8 @@ public class NGTriggerElementMapperV2Test extends CategoryTest {
   private String ngTriggerYaml_awscodecommit_push;
   private String ngTriggerYaml_custom;
   private String ngTriggerYaml_cron;
+  private String ngTriggerYaml_artifact;
+  private String ngTriggerYaml_manifest;
 
   private List<TriggerEventDataCondition> payloadConditions;
   private List<TriggerEventDataCondition> headerConditions;
@@ -136,6 +138,12 @@ public class NGTriggerElementMapperV2Test extends CategoryTest {
     ngTriggerYaml_cron = Resources.toString(
         Objects.requireNonNull(classLoader.getResource("ng-trigger-cron-v2.yaml")), StandardCharsets.UTF_8);
 
+    ngTriggerYaml_artifact = Resources.toString(
+        Objects.requireNonNull(classLoader.getResource("ng-trigger-artifact.yaml")), StandardCharsets.UTF_8);
+
+    ngTriggerYaml_manifest = Resources.toString(
+        Objects.requireNonNull(classLoader.getResource("ng-trigger-manifest.yaml")), StandardCharsets.UTF_8);
+
     payloadConditions = asList(TriggerEventDataCondition.builder().key("k1").operator(EQUALS).value("v1").build(),
         TriggerEventDataCondition.builder().key("k2").operator(NOT_EQUALS).value("v2").build(),
         TriggerEventDataCondition.builder().key("k3").operator(IN).value("v3,c").build(),
@@ -145,13 +153,15 @@ public class NGTriggerElementMapperV2Test extends CategoryTest {
         TriggerEventDataCondition.builder().key("k7").operator(CONTAINS).value("v7").build());
     headerConditions = asList(TriggerEventDataCondition.builder().key("h1").operator(EQUALS).value("v1").build());
 
-    doReturn("https://app.harness.io/pipeline/api")
-        .doReturn("https://app.harness.io/pipeline/api/")
-        .doReturn("https://app.harness.io/pipeline/api/#")
-        .doReturn("https://app.harness.io/pipeline/api")
+    doReturn("https://app.harness.io/ng/api")
+        .doReturn("https://app.harness.io/ng/api/")
+        .doReturn("https://app.harness.io/ng/api/#")
+        .doReturn("https://app.harness.io/ng/api")
         .doReturn(null)
         .when(webhookConfigProvider)
-        .getPmsApiBaseUrl();
+        .getWebhookApiBaseUrl();
+
+    doReturn("https://app.harness.io/pipeline/api").when(webhookConfigProvider).getCustomApiBaseUrl();
   }
 
   @Test
@@ -547,19 +557,19 @@ public class NGTriggerElementMapperV2Test extends CategoryTest {
         ngTriggerElementMapper.toNGTriggerDetailsResponseDTO(ngTriggerEntity, false, true);
     // baseUrl: "https://app.harness.io/pipeline/api"
     assertThat(ngTriggerDetailsResponseDTO.getWebhookUrl())
-        .isEqualTo("https://app.harness.io/pipeline/api/webhook/trigger?accountIdentifier=accId");
+        .isEqualTo("https://app.harness.io/ng/api/webhook?accountIdentifier=accId");
 
     // baseUrl: "https://app.harness.io/pipeline/api/"
     ngTriggerEntity = ngTriggerElementMapper.toTriggerDetails("accId", "orgId", "projId", ngTriggerYaml_gitlab_pr)
                           .getNgTriggerEntity();
     ngTriggerDetailsResponseDTO = ngTriggerElementMapper.toNGTriggerDetailsResponseDTO(ngTriggerEntity, false, true);
     assertThat(ngTriggerDetailsResponseDTO.getWebhookUrl())
-        .isEqualTo("https://app.harness.io/pipeline/api/webhook/trigger?accountIdentifier=accId");
+        .isEqualTo("https://app.harness.io/ng/api/webhook?accountIdentifier=accId");
 
     // baseUrl: "https://app.harness.io/pipeline/api/#"
     ngTriggerDetailsResponseDTO = ngTriggerElementMapper.toNGTriggerDetailsResponseDTO(ngTriggerEntity, false, true);
     assertThat(ngTriggerDetailsResponseDTO.getWebhookUrl())
-        .isEqualTo("https://app.harness.io/pipeline/api/webhook/trigger?accountIdentifier=accId");
+        .isEqualTo("https://app.harness.io/ng/api/webhook?accountIdentifier=accId");
 
     ngTriggerEntity =
         ngTriggerElementMapper.toTriggerDetails("accId", "org", "proj", ngTriggerYaml_custom).getNgTriggerEntity();
@@ -569,13 +579,31 @@ public class NGTriggerElementMapperV2Test extends CategoryTest {
         .isEqualTo(
             "https://app.harness.io/pipeline/api/webhook/custom?accountIdentifier=accId&orgIdentifier=org&projectIdentifier=proj&pipelineIdentifier=pipeline&triggerIdentifier=first_trigger");
 
-    // baseUrl: null
-    ngTriggerDetailsResponseDTO = ngTriggerElementMapper.toNGTriggerDetailsResponseDTO(ngTriggerEntity, false, true);
-    assertThat(ngTriggerDetailsResponseDTO.getWebhookUrl()).isNull();
-
     ngTriggerEntity.setType(SCHEDULED);
     ngTriggerDetailsResponseDTO = ngTriggerElementMapper.toNGTriggerDetailsResponseDTO(ngTriggerEntity, false, true);
     assertThat(ngTriggerDetailsResponseDTO.getWebhookUrl()).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void testArtifactTriggerToResponseDTO() {
+    NGTriggerEntity ngTriggerEntity =
+        ngTriggerElementMapper.toTriggerDetails("accId", "org", "proj", ngTriggerYaml_artifact).getNgTriggerEntity();
+    NGTriggerResponseDTO responseDTO = ngTriggerElementMapper.toResponseDTO(ngTriggerEntity);
+    assertThat(responseDTO.getYaml()).isEqualTo(ngTriggerEntity.getYaml());
+    assertThat(responseDTO.getType()).isEqualTo(ngTriggerEntity.getType());
+  }
+
+  @Test
+  @Owner(developers = ROHITKARELIA)
+  @Category(UnitTests.class)
+  public void testManifestTriggerToResponseDTO() {
+    NGTriggerEntity ngTriggerEntity =
+        ngTriggerElementMapper.toTriggerDetails("accId", "org", "proj", ngTriggerYaml_manifest).getNgTriggerEntity();
+    NGTriggerResponseDTO responseDTO = ngTriggerElementMapper.toResponseDTO(ngTriggerEntity);
+    assertThat(responseDTO.getYaml()).isEqualTo(ngTriggerEntity.getYaml());
+    assertThat(responseDTO.getType()).isEqualTo(ngTriggerEntity.getType());
   }
 
   private TriggerEventHistory generateEventHistoryWithTimestamp(SimpleDateFormat formatter6, String sDate1)

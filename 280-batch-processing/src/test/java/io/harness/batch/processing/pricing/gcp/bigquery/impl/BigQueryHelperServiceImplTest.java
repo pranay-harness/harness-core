@@ -1,13 +1,13 @@
 package io.harness.batch.processing.pricing.gcp.bigquery.impl;
 
-import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.computeProductFamily;
-import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.cost;
-import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.effectiveCost;
-import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.networkProductFamily;
-import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.productFamily;
-import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.resourceId;
-import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.serviceCode;
-import static io.harness.batch.processing.pricing.gcp.bigquery.BigQueryConstants.usageType;
+import static io.harness.batch.processing.pricing.gcp.bigquery.BQConst.computeProductFamily;
+import static io.harness.batch.processing.pricing.gcp.bigquery.BQConst.cost;
+import static io.harness.batch.processing.pricing.gcp.bigquery.BQConst.effectiveCost;
+import static io.harness.batch.processing.pricing.gcp.bigquery.BQConst.networkProductFamily;
+import static io.harness.batch.processing.pricing.gcp.bigquery.BQConst.productFamily;
+import static io.harness.batch.processing.pricing.gcp.bigquery.BQConst.resourceId;
+import static io.harness.batch.processing.pricing.gcp.bigquery.BQConst.serviceCode;
+import static io.harness.batch.processing.pricing.gcp.bigquery.BQConst.usageType;
 import static io.harness.rule.OwnerRule.HITESH;
 
 import static com.google.cloud.bigquery.FieldValue.Attribute.PRIMITIVE;
@@ -19,7 +19,8 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.batch.processing.config.BatchMainConfig;
 import io.harness.batch.processing.config.BillingDataPipelineConfig;
-import io.harness.batch.processing.pricing.data.VMInstanceBillingData;
+import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryHelperServiceImpl;
+import io.harness.batch.processing.pricing.vmpricing.VMInstanceBillingData;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 

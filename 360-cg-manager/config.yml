@@ -260,6 +260,20 @@ grpcOnpremDelegateClientConfig:
   target: localhost:9880
   authority: localhost
 
+#This is for classic DMS grpc client
+grpcDMSClientConfig:
+  target: localhost:15011
+  authority: localhost
+
+dmsSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+
+#This is for Delegate service driver SDK DMS grpc client
+dmsGrpcClient:
+  target: localhost:9890
+  authority: localhost
+  secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+
+
 mongo:
   uri: mongodb://localhost:27017/harness
   #uri: mongodb://mongo1:30001,mongo2:30002,mongo3:30003/harness
@@ -269,6 +283,7 @@ mongo:
   maxConnectionIdleTime: 600000
   connectionsPerHost: 300
   indexManagerMode: AUTO
+  traceMode: DISABLED
   mongoSSLConfig:
     mongoSSLEnabled: false
     mongoTrustStorePath:
@@ -299,10 +314,14 @@ deployMode: KUBERNETES
 envPath: ""
 
 kubectlVersion: v1.13.2
-scmVersion: abf4ce53
+scmVersion: b276dd03
+
+ngAuthUIEnabled: false
 
 portal:
   url: https://localhost:8000
+  zendeskBaseUrl: "https://harnesssupport.zendesk.com"
+  gatewayPathPrefix: "gateway/"
   allowedOrigins: http://localhost:8000, https://localhost:8000, https://127.0.0.1:8000, https://localhost:8181, https://127.0.0.1:8181, http://127.0.0.1:8000
   companyName: Harness Inc
   authTokenExpiryInMillis: 86400000
@@ -570,9 +589,6 @@ ngManagerServiceHttpClientConfig:
   readTimeOutSeconds: 15
   enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
 
-cvngClientConfig:
-  baseUrl: https://localhost:6060/cv/
-  cvNgServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
 eventsFramework:
   redis:
@@ -616,3 +632,9 @@ auditClientConfig:
   readTimeOutSeconds: 15
 
 enableAudit: false
+
+disableDelegateMgmtInManager: false
+
+ldapSyncJobConfig:
+  poolSize: 3
+  syncInterval: 15

@@ -1,8 +1,13 @@
 package io.harness.ccm.views.graphql;
 
 import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.AFTER;
+import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.BEFORE;
 
-import com.hazelcast.util.Preconditions;
+import io.harness.ccm.views.entities.ViewFieldIdentifier;
+import io.harness.ccm.views.entities.ViewQueryParams;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -12,8 +17,10 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,7 +33,9 @@ public class ViewsQueryHelper {
   private static final int IDLE_COST_BASELINE = 30;
   private static final int UNALLOCATED_COST_BASELINE = 5;
   private static final int DEFAULT_EFFICIENCY_SCORE = -1;
+  private static final double DEFAULT_DOUBLE_VALUE = 0;
   private static final String EFFICIENCY_SCORE_LABEL = "Efficiency Score";
+  private static final long OBSERVATION_PERIOD = 29 * ONE_DAY_MILLIS;
 
   public boolean isYearRequired(Instant startInstant, Instant endInstant) {
     LocalDate endDate = LocalDateTime.ofInstant(endInstant, ZoneOffset.UTC).toLocalDate();
@@ -56,22 +65,34 @@ public class ViewsQueryHelper {
     return Math.round(value * 100D) / 100D;
   }
 
-  public double getForecastCost(ViewCostData billingAmountData, Instant endInstant) {
-    Preconditions.checkNotNull(billingAmountData);
+  public double getRoundedDoublePercentageValue(double value) {
+    return Math.round(value * 10000D) / 100D;
+  }
+
+  public double getForecastCost(ViewCostData costData, Instant endInstant) {
+    if (costData == null) {
+      return DEFAULT_DOUBLE_VALUE;
+    }
     Instant currentTime = Instant.now();
     if (currentTime.isAfter(endInstant)) {
-      return Double.valueOf(0);
+      return DEFAULT_DOUBLE_VALUE;
     }
 
-    long maxStartTime = getModifiedMaxStartTime(billingAmountData.getMaxStartTime());
+    double totalCost = costData.getCost();
+    long actualTimeDiffMillis =
+        (endInstant.plus(1, ChronoUnit.SECONDS).toEpochMilli()) - (costData.getMaxStartTime() / 1000);
+
     long billingTimeDiffMillis = ONE_DAY_MILLIS;
-    if (maxStartTime != billingAmountData.getMinStartTime()) {
-      billingTimeDiffMillis = maxStartTime - billingAmountData.getMinStartTime();
+    if (costData.getMaxStartTime() != costData.getMinStartTime()) {
+      billingTimeDiffMillis = ((costData.getMaxStartTime() - costData.getMinStartTime()) / 1000) + ONE_DAY_MILLIS;
+    }
+    if (billingTimeDiffMillis < OBSERVATION_PERIOD) {
+      return DEFAULT_DOUBLE_VALUE;
     }
 
-    double totalBillingAmount = billingAmountData.getCost();
-    long actualTimeDiffMillis = endInstant.toEpochMilli() - billingAmountData.getMinStartTime();
-    return totalBillingAmount * (actualTimeDiffMillis / billingTimeDiffMillis);
+    return totalCost
+        * (new BigDecimal(actualTimeDiffMillis).divide(new BigDecimal(billingTimeDiffMillis), 2, RoundingMode.HALF_UP))
+              .doubleValue();
   }
 
   private Long getModifiedMaxStartTime(long maxStartTime) {
@@ -103,6 +124,15 @@ public class ViewsQueryHelper {
     return trendCostValue;
   }
 
+  public List<QLCEViewFilterWrapper> getFiltersForForecastCost(List<QLCEViewFilterWrapper> filters) {
+    List<QLCEViewFilterWrapper> filtersForForecastCost =
+        filters.stream().filter(filter -> filter.getTimeFilter() == null).collect(Collectors.toList());
+    long timestampForFilters = getStartOfCurrentDay();
+    filtersForForecastCost.add(getPerspectiveTimeFilter(timestampForFilters - 1000, BEFORE));
+    filtersForForecastCost.add(getPerspectiveTimeFilter(timestampForFilters - 30 * ONE_DAY_MILLIS, AFTER));
+    return filtersForForecastCost;
+  }
+
   public Instant getEndInstantForForecastCost(List<QLCEViewFilterWrapper> filters) {
     List<QLCEViewTimeFilter> timeFilters = getTimeFilters(filters);
     QLCEViewTimeFilter endTimeFilter = null;
@@ -119,10 +149,11 @@ public class ViewsQueryHelper {
     if (endTimeFilter != null && startTimeFilter != null) {
       long endTimeFromFilters = endTimeFilter.getValue().longValue();
       long startTimeFromFilters = startTimeFilter.getValue().longValue();
-      if (endTimeFromFilters == currentDay - 1000) {
+      if (endTimeFromFilters == currentDay - 1000 || endTimeFromFilters == currentDay) {
         days = (currentDay - startTimeFromFilters) / ONE_DAY_MILLIS;
       }
-      if (endTimeFromFilters == currentDay + ONE_DAY_MILLIS - 1000) {
+      if (endTimeFromFilters == currentDay + ONE_DAY_MILLIS - 1000
+          || endTimeFromFilters == currentDay + ONE_DAY_MILLIS) {
         days = (currentDay + ONE_DAY_MILLIS - startTimeFromFilters) / ONE_DAY_MILLIS;
       }
     }
@@ -130,10 +161,17 @@ public class ViewsQueryHelper {
                      : Instant.ofEpochMilli(currentDay - ONE_DAY_MILLIS);
   }
 
-  private static List<QLCEViewTimeFilter> getTimeFilters(List<QLCEViewFilterWrapper> filters) {
+  public List<QLCEViewTimeFilter> getTimeFilters(List<QLCEViewFilterWrapper> filters) {
     return filters.stream()
         .filter(f -> f.getTimeFilter() != null)
         .map(QLCEViewFilterWrapper::getTimeFilter)
+        .collect(Collectors.toList());
+  }
+
+  public List<QLCEViewFilter> getIdFilters(List<QLCEViewFilterWrapper> filters) {
+    return filters.stream()
+        .filter(f -> f.getIdFilter() != null)
+        .map(QLCEViewFilterWrapper::getIdFilter)
         .collect(Collectors.toList());
   }
 
@@ -186,5 +224,63 @@ public class ViewsQueryHelper {
         .statsValue(String.valueOf(currentEfficiencyScore))
         .statsTrend(efficiencyTrend)
         .build();
+  }
+
+  public QLCEViewFilterWrapper getPerspectiveTimeFilter(long timestamp, QLCEViewTimeFilterOperator operator) {
+    return QLCEViewFilterWrapper.builder()
+        .timeFilter(QLCEViewTimeFilter.builder()
+                        .field(QLCEViewFieldInput.builder()
+                                   .fieldId("startTime")
+                                   .fieldName("startTime")
+                                   .identifier(ViewFieldIdentifier.COMMON)
+                                   .identifierName(ViewFieldIdentifier.COMMON.getDisplayName())
+                                   .build())
+                        .operator(operator)
+                        .value(timestamp)
+                        .build())
+        .build();
+  }
+
+  public QLCEViewFilterWrapper getViewMetadataFilter(String viewId) {
+    return QLCEViewFilterWrapper.builder()
+        .viewMetadataFilter(QLCEViewMetadataFilter.builder().viewId(viewId).isPreview(false).build())
+        .build();
+  }
+
+  public List<QLCEViewAggregation> getPerspectiveTotalCostAggregation() {
+    return Collections.singletonList(
+        QLCEViewAggregation.builder().columnName("cost").operationType(QLCEViewAggregateOperation.SUM).build());
+  }
+
+  public ViewQueryParams buildQueryParams(String accountId, boolean isTimeTruncGroupByRequired,
+      boolean isUsedByTimeSeriesStats, boolean isClusterQuery, boolean isTotalCountQuery) {
+    return ViewQueryParams.builder()
+        .accountId(accountId)
+        .isClusterQuery(isClusterQuery)
+        .isUsedByTimeSeriesStats(isUsedByTimeSeriesStats)
+        .isTimeTruncGroupByRequired(isTimeTruncGroupByRequired)
+        .isTotalCountQuery(isTotalCountQuery)
+        .build();
+  }
+
+  public ViewQueryParams buildQueryParams(String accountId, boolean isClusterQuery) {
+    return buildQueryParams(accountId, false, false, isClusterQuery, false);
+  }
+
+  public ViewQueryParams buildQueryParams(String accountId, boolean isClusterQuery, boolean skipRoundOff) {
+    return ViewQueryParams.builder()
+        .accountId(accountId)
+        .isClusterQuery(isClusterQuery)
+        .skipRoundOff(skipRoundOff)
+        .isUsedByTimeSeriesStats(false)
+        .isTimeTruncGroupByRequired(false)
+        .isTotalCountQuery(false)
+        .build();
+  }
+
+  public String getPerspectiveIdFromMetadataFilter(List<QLCEViewFilterWrapper> filters) {
+    Optional<QLCEViewFilterWrapper> viewMetadataFilter =
+        filters.stream().filter(f -> f.getViewMetadataFilter() != null).findFirst();
+    return viewMetadataFilter.isPresent() ? viewMetadataFilter.get().getViewMetadataFilter().getViewId() : null;
   }
 }

@@ -9,6 +9,7 @@ import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.eraro.ErrorCode.VAULT_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.remote.client.RestClientUtils.getResponse;
+import static io.harness.security.encryption.AccessType.APP_ROLE;
 import static io.harness.security.encryption.AccessType.TOKEN;
 import static io.harness.security.encryption.EncryptionType.AZURE_VAULT;
 import static io.harness.security.encryption.EncryptionType.VAULT;
@@ -69,6 +70,7 @@ import io.harness.secretmanagerclient.ValueType;
 import io.harness.secretmanagerclient.dto.SecretManagerConfigDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerMetadataDTO;
 import io.harness.secretmanagerclient.dto.SecretManagerMetadataRequestDTO;
+import io.harness.secretmanagerclient.dto.VaultAgentCredentialDTO;
 import io.harness.secretmanagerclient.dto.VaultAppRoleCredentialDTO;
 import io.harness.secretmanagerclient.dto.VaultAuthTokenCredentialDTO;
 import io.harness.secretmanagerclient.dto.VaultMetadataRequestSpecDTO;
@@ -248,9 +250,11 @@ public class NGVaultServiceImpl implements NGVaultService {
       String accountIdentifier, SecretManagerMetadataRequestDTO requestDTO) {
     SecretRefData secretRefData = getSecretRefData(requestDTO);
 
-    // get Decrypted SecretRefData
-    decryptSecretRefData(
-        accountIdentifier, requestDTO.getOrgIdentifier(), requestDTO.getProjectIdentifier(), secretRefData);
+    if (secretRefData != null) {
+      // get Decrypted SecretRefData
+      decryptSecretRefData(
+          accountIdentifier, requestDTO.getOrgIdentifier(), requestDTO.getProjectIdentifier(), secretRefData);
+    }
     EncryptionConfig existingVaultEncryptionConfig = getDecryptedEncryptionConfig(accountIdentifier,
         requestDTO.getOrgIdentifier(), requestDTO.getProjectIdentifier(), requestDTO.getIdentifier());
     if (VAULT == requestDTO.getEncryptionType()) {
@@ -280,6 +284,21 @@ public class NGVaultServiceImpl implements NGVaultService {
     VaultMetadataRequestSpecDTO specDTO = (VaultMetadataRequestSpecDTO) requestDTO.getSpec();
     Optional<String> urlFromRequest = Optional.ofNullable(specDTO).map(VaultMetadataRequestSpecDTO::getUrl);
     urlFromRequest.ifPresent(vaultConfig::setVaultUrl);
+
+    Optional<String> nameSpaceFromRequest = Optional.ofNullable(specDTO).map(VaultMetadataRequestSpecDTO::getNamespace);
+    nameSpaceFromRequest.ifPresent(vaultConfig::setNamespace);
+
+    Optional<String> sinkPathFromRequest = Optional.ofNullable(specDTO)
+                                               .filter(x -> x.getAccessType() == AccessType.VAULT_AGENT)
+                                               .map(x -> ((VaultAgentCredentialDTO) (x.getSpec())).getSinkPath())
+                                               .filter(x -> !x.isEmpty());
+    sinkPathFromRequest.ifPresent(x -> {
+      vaultConfig.setAuthToken(null);
+      vaultConfig.setAppRoleId(null);
+      vaultConfig.setSecretId(null);
+      vaultConfig.setSinkPath(x);
+      vaultConfig.setUseVaultAgent(true);
+    });
 
     Optional<String> tokenFromRequest =
         Optional.ofNullable(specDTO)
@@ -421,7 +440,7 @@ public class NGVaultServiceImpl implements NGVaultService {
           projectIdentifier = getProjectIdentifier(projectIdentifier, scope);
 
           if (null != existingConnectorConfigDTO
-              && TOKEN == ((VaultConnectorDTO) existingConnectorConfigDTO).getAccessType()) {
+              && APP_ROLE != ((VaultConnectorDTO) existingConnectorConfigDTO).getAccessType()) {
             create = true;
           }
           SecretRefData authTokenRefData =
@@ -489,8 +508,11 @@ public class NGVaultServiceImpl implements NGVaultService {
       VaultMetadataRequestSpecDTO spec = (VaultMetadataRequestSpecDTO) requestDTO.getSpec();
       if (TOKEN == spec.getAccessType()) {
         secretRefData = ((VaultAuthTokenCredentialDTO) spec.getSpec()).getAuthToken();
-      } else {
+      } else if (APP_ROLE == spec.getAccessType()) {
         secretRefData = ((VaultAppRoleCredentialDTO) spec.getSpec()).getSecretId();
+      } else {
+        // n case of VAULT_AGENT we don't have any secretref
+        return null;
       }
     } else { // Azure Key Vault
       secretRefData = ((AzureKeyVaultMetadataRequestSpecDTO) requestDTO.getSpec()).getSecretKey();

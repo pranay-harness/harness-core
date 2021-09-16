@@ -1,6 +1,8 @@
 package io.harness.perpetualtask.k8s.watch;
 
 import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
+import static io.harness.ccm.health.HealthStatusService.UID;
+import static io.harness.perpetualtask.k8s.utils.DebugConstants.RELATIVITY_CLUSTER_IDS;
 import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_TERMINATED;
 import static io.harness.perpetualtask.k8s.watch.Volume.VolumeType.VOLUME_TYPE_PVC;
 
@@ -178,8 +180,17 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
               .build();
       logMessage(podInfo);
 
-      eventPublisher.publishMessage(podInfo, creationTimestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));
+      eventPublisher.publishMessage(
+          podInfo, creationTimestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId, UID, uid));
+      if (RELATIVITY_CLUSTER_IDS.contains(clusterId)) {
+        log.info("published PodInfo UID:[{}], Name:[{}]", uid, pod.getMetadata().getName());
+      }
+
       publishedPods.add(uid);
+    } else if (podScheduledCondition == null) {
+      if (RELATIVITY_CLUSTER_IDS.contains(clusterId)) {
+        log.warn("podScheduledCondition is null Pod UID:[{}], Name:[{}]", uid, pod.getMetadata().getName());
+      }
     }
 
     if (isPodDeleted(pod)) {
@@ -190,7 +201,7 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
                               .setTimestamp(timestamp)
                               .build();
       logMessage(podEvent);
-      eventPublisher.publishMessage(podEvent, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId));
+      eventPublisher.publishMessage(podEvent, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId, UID, uid));
       publishedPods.remove(uid);
     }
   }
@@ -240,8 +251,8 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
 
   private void publishError(CeExceptionMessage ceExceptionMessage) {
     try {
-      eventPublisher.publishMessage(ceExceptionMessage, HTimestamps.fromInstant(Instant.now()), Collections.emptyMap(),
-          MESSAGE_PROCESSOR_TYPE_EXCEPTION);
+      eventPublisher.publishMessage(ceExceptionMessage, HTimestamps.fromInstant(Instant.now()),
+          ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId), MESSAGE_PROCESSOR_TYPE_EXCEPTION);
     } catch (Exception ex) {
       log.error("Failed to publish failure from PodWatcher to the Event Server.", ex);
     }

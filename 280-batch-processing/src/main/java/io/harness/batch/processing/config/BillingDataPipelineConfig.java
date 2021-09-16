@@ -11,7 +11,9 @@ public class BillingDataPipelineConfig {
   private String gcpProjectId;
   private String gcsBasePath;
   private String gcpPipelinePubSubTopic;
+  private String gcpSyncPubSubTopic;
   private boolean gcpUseNewPipeline;
+  private boolean isGcpSyncEnabled;
   private String clusterDataGcsBucketName;
   private String clusterDataGcsBackupBucketName;
   private boolean awsUseNewPipeline;

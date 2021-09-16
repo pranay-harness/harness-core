@@ -157,9 +157,9 @@ public class CustomManifestFetchTaskHelper {
         Throwable cause = e.getCause();
         boolean isNotFound = e instanceof FileNotFoundException || cause instanceof FileNotFoundException;
         if (isNotFound && !fetchFileConfig.isRequired()) {
-          log.info("No values.yaml file found for {} and activity {}", fetchFileConfig.getKey(),
+          log.info("Failed to fetch values file for {} and activity {}", fetchFileConfig.getKey(),
               fetchParams.getActivityId());
-          logCallback.saveExecutionLog("Values.yaml file not found for " + fetchFileConfig.getKey(), LogLevel.WARN);
+          logCallback.saveExecutionLog("Failed to fetch values file for " + fetchFileConfig.getKey(), LogLevel.WARN);
           continue;
         }
 

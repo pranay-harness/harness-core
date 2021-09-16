@@ -1,5 +1,8 @@
 package io.harness.ngtriggers.beans.config;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ngtriggers.beans.source.NGTriggerSource;
 import io.harness.ngtriggers.beans.target.NGTriggerTarget;
 
@@ -10,6 +13,7 @@ import lombok.Data;
 
 @Data
 @Builder
+@OwnedBy(PIPELINE)
 public class NGTriggerConfig implements NGTriggerInterface {
   String name;
   @NotNull String identifier;

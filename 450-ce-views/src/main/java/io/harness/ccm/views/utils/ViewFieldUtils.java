@@ -66,6 +66,7 @@ public class ViewFieldUtils {
         QLCEViewField.builder().fieldId("workloadName").fieldName("Workload").build(),
         QLCEViewField.builder().fieldId("workloadName").fieldName("Workload Id").build(),
         QLCEViewField.builder().fieldId("instanceName").fieldName("Node").build(),
+        QLCEViewField.builder().fieldId("storage").fieldName("Storage").build(),
         QLCEViewField.builder().fieldId("appName").fieldName("Application").build(),
         QLCEViewField.builder().fieldId("envName").fieldName("Environment").build(),
         QLCEViewField.builder().fieldId("serviceName").fieldName("Service").build(),

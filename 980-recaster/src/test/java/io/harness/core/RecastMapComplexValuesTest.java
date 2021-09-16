@@ -1,6 +1,7 @@
 package io.harness.core;
 
 import static io.harness.rule.OwnerRule.ALEXEI;
+import static io.harness.rule.OwnerRule.ARCHIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -51,6 +52,17 @@ public class RecastMapComplexValuesTest extends RecasterTestBase {
     DummyEnum recastedDummyEnum = recast.fromMap(document, DummyEnum.class);
     assertThat(recastedDummyEnum).isNotNull();
     assertThat(recastedDummyEnum.types).isEqualTo(Collections.singletonList(DummyEnum.Type.SUPER_DUMMY));
+  }
+
+  @Test
+  @Owner(developers = ARCHIT)
+  @Category(UnitTests.class)
+  public void shouldTestRecasterThrowException() {
+    Recast recast = new Recast(recaster, ImmutableSet.of(DummySimpleSet.class));
+
+    Map<String, Object> document = recast.toMap(DummySimpleList.builder().build());
+    document.put("__recast", "randomClassPath");
+    assertThatThrownBy(() -> recast.fromMap(document, DummySimpleList.class)).isInstanceOf(RecasterException.class);
   }
 
   @Builder

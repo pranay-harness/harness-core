@@ -9,10 +9,10 @@ import static software.wings.beans.LogColor.White;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
 
-import io.harness.annotations.dev.HarnessModule;
+import static com.google.common.base.Charsets.UTF_8;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileData;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.EmptyPredicate;
@@ -29,7 +29,6 @@ import io.harness.filesystem.FileIo;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.Misc;
-import io.harness.pcf.PivotalClientApiException;
 import io.harness.pcf.model.CfCliVersion;
 import io.harness.pcf.model.CfRequestConfig;
 import io.harness.pcf.model.CfRunPluginScriptRequestData;
@@ -47,13 +46,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 @NoArgsConstructor
 @Singleton
 @Slf4j
-@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(HarnessTeam.CDP)
 public class PcfRunPluginCommandTaskHandler extends PcfCommandTaskHandler {
   /**
@@ -79,7 +78,7 @@ public class PcfRunPluginCommandTaskHandler extends PcfCommandTaskHandler {
 
       // save the files in the directory
       if (EmptyPredicate.isNotEmpty(pluginCommandRequest.getFileDataList())) {
-        saveFilesInWorkingDirectory(pluginCommandRequest.getFileDataList(), workingDirCanonicalPath);
+        saveFilesInWorkingDirectoryStringContent(pluginCommandRequest.getFileDataList(), workingDirCanonicalPath);
       }
 
       CfCliVersion cfCliVersion = cfCommandRequest.getCfCliVersion();
@@ -128,8 +127,6 @@ public class PcfRunPluginCommandTaskHandler extends PcfCommandTaskHandler {
           "\n ----------  PCF Run Plugin Command completed successfully", INFO, CommandExecutionStatus.SUCCESS);
       return CfCommandExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
 
-    } catch (PivotalClientApiException | IOException e) {
-      return handleError(executionLogCallback, pluginCommandRequest, e);
     } catch (Exception e) {
       return handleError(executionLogCallback, pluginCommandRequest, e);
     } finally {
@@ -145,7 +142,8 @@ public class PcfRunPluginCommandTaskHandler extends PcfCommandTaskHandler {
     return canonicalPath;
   }
 
-  private String prepareFinalScript(
+  @VisibleForTesting
+  String prepareFinalScript(
       String renderedScriptString, String workingDirCanonicalPathStr, String repoRoot, String cfCliPath) {
     // replace the path identifier with actual working directory path
     String finalScript =
@@ -177,6 +175,22 @@ public class PcfRunPluginCommandTaskHandler extends PcfCommandTaskHandler {
               "Error while writing file :" + file.getFilePath() + "in directory :" + workingDirectoryCanonicalPath);
         }
       });
+    }
+  }
+
+  @VisibleForTesting
+  void saveFilesInWorkingDirectoryStringContent(
+      final List<FileData> fileDataList, final String workingDirectoryCanonicalPath) throws IOException {
+    if (EmptyPredicate.isEmpty(fileDataList)) {
+      return;
+    }
+    for (FileData file : fileDataList) {
+      final Path filePath = Paths.get(workingDirectoryCanonicalPath, canonicalise(file.getFilePath()));
+      FileIo.createDirectoryIfDoesNotExist(filePath.getParent());
+      Files.deleteIfExists(filePath);
+      final Path createdFile = Files.createFile(filePath);
+      String fileContent = file.getFileContent();
+      FileUtils.writeStringToFile(createdFile.toFile(), fileContent, UTF_8);
     }
   }
 

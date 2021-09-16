@@ -2,6 +2,9 @@ package io.harness.beans.execution;
 
 import static io.harness.beans.execution.ExecutionSource.Type.MANUAL;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.Builder;
 import lombok.Value;
@@ -11,9 +14,12 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @JsonTypeName("Manual")
 @TypeAlias("MANUAL")
+@OwnedBy(HarnessTeam.CI)
 public class ManualExecutionSource implements ExecutionSource {
   private String branch;
   private String tag;
+  private String prNumber;
+  private String commitSha;
 
   @Override
   public Type getType() {

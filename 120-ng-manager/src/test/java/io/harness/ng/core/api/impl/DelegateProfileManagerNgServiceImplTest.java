@@ -26,12 +26,18 @@ import io.harness.delegate.AccountId;
 import io.harness.delegate.beans.DelegateProfile.DelegateProfileKeys;
 import io.harness.delegate.beans.DelegateProfileDetailsNg;
 import io.harness.delegate.beans.ScopingRuleDetailsNg;
+import io.harness.delegate.filter.DelegateProfileFilterPropertiesDTO;
+import io.harness.delegateprofile.DelegateProfileFilterGrpc;
 import io.harness.delegateprofile.DelegateProfileGrpc;
 import io.harness.delegateprofile.DelegateProfilePageResponseGrpc;
 import io.harness.delegateprofile.ProfileId;
 import io.harness.delegateprofile.ProfileScopingRule;
 import io.harness.delegateprofile.ScopingValues;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
+import io.harness.filter.FilterType;
+import io.harness.filter.dto.FilterDTO;
+import io.harness.filter.service.FilterService;
 import io.harness.grpc.DelegateProfileServiceGrpcClient;
 import io.harness.ng.core.events.DelegateConfigurationCreateEvent;
 import io.harness.ng.core.events.DelegateConfigurationDeleteEvent;
@@ -70,8 +76,10 @@ import org.mockito.Mock;
 public class DelegateProfileManagerNgServiceImplTest extends CategoryTest {
   private static final String TEST_ACCOUNT_ID = generateUuid();
   private static final String TEST_DELEGATE_PROFILE_ID = generateUuid();
+  public static final String TEST_FILTER_ID = "filterId";
 
   @Mock private DelegateProfileServiceGrpcClient delegateProfileServiceGrpcClient;
+  @Mock private FilterService filterService;
   @Mock private HPersistence hPersistence;
   @Mock private OutboxService outboxService;
   @InjectMocks @Inject private DelegateProfileManagerNgServiceImpl delegateProfileManagerNgService;
@@ -108,6 +116,62 @@ public class DelegateProfileManagerNgServiceImplTest extends CategoryTest {
     delegateProfileDetailsPageResponse =
         delegateProfileManagerNgService.list(TEST_ACCOUNT_ID, pageRequest, null, "projectId");
     assertThat(delegateProfileDetailsPageResponse).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.BOJAN)
+  @Category(UnitTests.class)
+  public void listV2WithFilterShouldReturnList() {
+    PageRequest<DelegateProfileDetailsNg> pageRequest = new PageRequest<>();
+    pageRequest.setOffset("0");
+    pageRequest.setLimit("0");
+    DelegateProfilePageResponseGrpc delegateProfilePageResponseGrpc =
+        DelegateProfilePageResponseGrpc.newBuilder().build();
+
+    when(delegateProfileServiceGrpcClient.listProfilesV2(
+             eq(""), any(DelegateProfileFilterGrpc.class), any(PageRequestGrpc.class)))
+        .thenReturn(delegateProfilePageResponseGrpc);
+
+    PageResponse<DelegateProfileDetailsNg> delegateProfileDetailsPageResponse =
+        delegateProfileManagerNgService.listV2(TEST_ACCOUNT_ID, "orgId", "projectId", "", "", null, pageRequest);
+    assertThat(delegateProfileDetailsPageResponse).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.BOJAN)
+  @Category(UnitTests.class)
+  public void listV2WithFilterShouldGetExistingFilter() {
+    PageRequest<DelegateProfileDetailsNg> pageRequest = new PageRequest<>();
+    pageRequest.setOffset("0");
+    pageRequest.setLimit("0");
+    DelegateProfilePageResponseGrpc delegateProfilePageResponseGrpc =
+        DelegateProfilePageResponseGrpc.newBuilder().build();
+
+    when(delegateProfileServiceGrpcClient.listProfilesV2(
+             eq(""), any(DelegateProfileFilterGrpc.class), any(PageRequestGrpc.class)))
+        .thenReturn(delegateProfilePageResponseGrpc);
+    when(filterService.get(
+             eq(TEST_ACCOUNT_ID), eq("orgId"), eq("projectId"), eq(TEST_FILTER_ID), eq(FilterType.DELEGATEPROFILE)))
+        .thenReturn(new FilterDTO());
+
+    PageResponse<DelegateProfileDetailsNg> delegateProfileDetailsPageResponse = delegateProfileManagerNgService.listV2(
+        TEST_ACCOUNT_ID, "orgId", "projectId", TEST_FILTER_ID, "", null, pageRequest);
+
+    verify(filterService, times(1))
+        .get(eq(TEST_ACCOUNT_ID), eq("orgId"), eq("projectId"), eq(TEST_FILTER_ID), eq(FilterType.DELEGATEPROFILE));
+    assertThat(delegateProfileDetailsPageResponse).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.BOJAN)
+  @Category(UnitTests.class)
+  public void listV2WithFilterShouldThrowException() {
+    PageRequest<DelegateProfileDetailsNg> pageRequest = new PageRequest<>();
+    assertThatThrownBy(()
+                           -> delegateProfileManagerNgService.listV2(TEST_ACCOUNT_ID, "orgId", "projectId", "filterId",
+                               "", DelegateProfileFilterPropertiesDTO.builder().build(), pageRequest))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Can not apply both filter properties and saved filter together");
   }
 
   @Test

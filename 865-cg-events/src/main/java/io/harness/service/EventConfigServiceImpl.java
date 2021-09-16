@@ -9,6 +9,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CgEventConfig;
 import io.harness.beans.CgEventConfig.CgEventConfigKeys;
 import io.harness.beans.CgEventRule;
+import io.harness.beans.EventType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
@@ -52,7 +53,20 @@ public class EventConfigServiceImpl implements EventConfigService {
 
   @Override
   public CgEventConfig getEventsConfig(String accountId, String appId, @Valid @NotBlank String eventConfigId) {
-    return hPersistence.get(CgEventConfig.class, eventConfigId);
+    return hPersistence.createQuery(CgEventConfig.class)
+        .filter(CgEventConfigKeys.accountId, accountId)
+        .filter(CgEventConfigKeys.appId, appId)
+        .filter(CgEventConfigKeys.uuid, eventConfigId)
+        .get();
+  }
+
+  @Override
+  public CgEventConfig getEventsConfigByName(String accountId, String appId, @Valid @NotBlank String eventConfigName) {
+    return hPersistence.createQuery(CgEventConfig.class)
+        .filter(CgEventConfigKeys.accountId, accountId)
+        .filter(CgEventConfigKeys.appId, appId)
+        .filter(CgEventConfigKeys.name, eventConfigName)
+        .get();
   }
 
   @Override
@@ -64,6 +78,10 @@ public class EventConfigServiceImpl implements EventConfigService {
     }
     if (eventConfig.getDelegateSelectors() == null) {
       eventConfig.setDelegateSelectors(Collections.emptyList());
+    }
+    CgEventConfig prevConfigByName = getEventsConfigByName(accountId, appId, eventConfig.getName());
+    if (prevConfigByName != null && !(prevConfigByName.getUuid()).equals(eventConfig.getUuid())) {
+      throw new InvalidRequestException("Duplicate Name " + eventConfig.getName());
     }
     UpdateOperations<CgEventConfig> updateOperations =
         hPersistence.createUpdateOperations(CgEventConfig.class)
@@ -93,7 +111,15 @@ public class EventConfigServiceImpl implements EventConfigService {
 
   @Override
   public void deleteEventsConfig(String accountId, String appId, String eventConfigId) {
+    if (getEventsConfig(accountId, appId, eventConfigId) == null) {
+      throw new InvalidRequestException("Event Config does not exist");
+    }
     hPersistence.delete(CgEventConfig.class, eventConfigId);
+  }
+
+  @Override
+  public void pruneByApplication(String appId) {
+    hPersistence.delete(hPersistence.createQuery(CgEventConfig.class).filter(CgEventConfigKeys.appId, appId));
   }
 
   private void validateEventConfig(CgEventConfig eventConfig) {
@@ -139,11 +165,13 @@ public class EventConfigServiceImpl implements EventConfigService {
       throw new InvalidRequestException(
           "For Event rule type Pipeline choose all pipelines or specify at least one pipeline");
     }
-
-    Optional<String> invalidEvent =
-        pipelineRule.getEvents().stream().filter(e -> !CgEventRule.PIPELINE_EVENTS.contains(e)).findFirst();
-    if (invalidEvent.isPresent()) {
-      throw new InvalidRequestException("For Event rule type Pipeline we found invalid event - " + invalidEvent.get());
+    if (!pipelineRule.isAllEvents()) {
+      Optional<String> invalidEvent =
+          pipelineRule.getEvents().stream().filter(e -> !EventType.getPipelineEvents().contains(e)).findFirst();
+      if (invalidEvent.isPresent()) {
+        throw new InvalidRequestException(
+            "For Event rule type Pipeline we found invalid event - " + invalidEvent.get());
+      }
     }
   }
 
@@ -160,11 +188,13 @@ public class EventConfigServiceImpl implements EventConfigService {
       throw new InvalidRequestException(
           "For Event rule type workflow choose all workflows or specify at least one workflow");
     }
-
-    Optional<String> invalidEvent =
-        workflowRule.getEvents().stream().filter(e -> !CgEventRule.WORKFLOW_EVENTS.contains(e)).findFirst();
-    if (invalidEvent.isPresent()) {
-      throw new InvalidRequestException("For Event rule type Workflow we found invalid event - " + invalidEvent.get());
+    if (!workflowRule.isAllEvents()) {
+      Optional<String> invalidEvent =
+          workflowRule.getEvents().stream().filter(e -> !EventType.getWorkflowEvents().contains(e)).findFirst();
+      if (invalidEvent.isPresent()) {
+        throw new InvalidRequestException(
+            "For Event rule type Workflow we found invalid event - " + invalidEvent.get());
+      }
     }
   }
 }

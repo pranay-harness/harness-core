@@ -21,6 +21,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.alert.AlertData;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EnvironmentType;
 import io.harness.category.element.UnitTests;
 import io.harness.governance.TimeRangeBasedFreezeConfig;
@@ -48,6 +50,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.CDC)
 public class DeploymentFreezeUtilsTest extends WingsBaseTest {
   @Mock GovernanceConfigService governanceConfigService;
   @Mock NotificationService notificationService;
@@ -60,7 +63,7 @@ public class DeploymentFreezeUtilsTest extends WingsBaseTest {
   public void shouldSendPipelineRejectionNotification() {
     Map<String, String> placeholderValues = new HashMap<>();
     placeholderValues.put("key", "value");
-    TimeRange range = new TimeRange(100, 100_000, "Asia/Kolkatta");
+    TimeRange range = new TimeRange(100, 100_000, "Asia/Kolkatta", false, null, null, null, false);
     TimeRangeBasedFreezeConfig timeRangeBasedFreezeConfig =
         new TimeRangeBasedFreezeConfig(true, Collections.emptyList(), Collections.singletonList(EnvironmentType.PROD),
             range, "FREEZE1", null, false, Collections.emptyList(), asList(USER_GROUP_ID, USER_GROUP_ID + 2), "uuid");
@@ -103,7 +106,7 @@ public class DeploymentFreezeUtilsTest extends WingsBaseTest {
   public void shouldSendTriggerRejectedNotification() {
     Map<String, String> placeholderValues = new HashMap<>();
     placeholderValues.put("key", "value");
-    TimeRange range = new TimeRange(100, 100_000, "Asia/Kolkatta");
+    TimeRange range = new TimeRange(100, 100_000, "Asia/Kolkatta", false, null, null, null, false);
     TimeRangeBasedFreezeConfig timeRangeBasedFreezeConfig =
         new TimeRangeBasedFreezeConfig(true, Collections.emptyList(), Collections.singletonList(EnvironmentType.PROD),
             range, "FREEZE1", null, false, Collections.emptyList(), asList(USER_GROUP_ID, USER_GROUP_ID + 2), "uuid");
@@ -137,7 +140,7 @@ public class DeploymentFreezeUtilsTest extends WingsBaseTest {
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void shouldHandleActivationEvent() {
-    TimeRange range = new TimeRange(100, 100_000, "Asia/Kolkatta");
+    TimeRange range = new TimeRange(100, 100_000, "Asia/Kolkatta", false, null, null, null, false);
     TimeRangeBasedFreezeConfig timeRangeBasedFreezeConfig =
         new TimeRangeBasedFreezeConfig(true, Collections.emptyList(), Collections.singletonList(EnvironmentType.PROD),
             range, "FREEZE1", null, false, Collections.emptyList(), asList(USER_GROUP_ID, USER_GROUP_ID + 2), "uuid");
@@ -173,7 +176,7 @@ public class DeploymentFreezeUtilsTest extends WingsBaseTest {
   @Owner(developers = PRABU)
   @Category(UnitTests.class)
   public void handleDeActivationEvent() {
-    TimeRange range = new TimeRange(100, 100_000, "Asia/Kolkatta");
+    TimeRange range = new TimeRange(100, 100_000, "Asia/Kolkatta", false, null, null, null, false);
     TimeRangeBasedFreezeConfig timeRangeBasedFreezeConfig =
         new TimeRangeBasedFreezeConfig(true, Collections.emptyList(), Collections.singletonList(EnvironmentType.PROD),
             range, "FREEZE1", null, false, Collections.emptyList(), asList(USER_GROUP_ID, USER_GROUP_ID + 2), "uuid");

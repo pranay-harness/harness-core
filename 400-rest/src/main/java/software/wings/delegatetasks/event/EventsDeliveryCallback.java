@@ -2,7 +2,9 @@ package software.wings.delegatetasks.event;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EventDetail;
 import io.harness.beans.EventStatus;
 import io.harness.beans.GenericEventDetail;
@@ -13,16 +15,15 @@ import io.harness.service.EventService;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.OldNotifyCallback;
 
-import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
 
 import com.google.inject.Inject;
-import java.util.List;
 import java.util.Map;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 @Data
 @Slf4j
 public class EventsDeliveryCallback implements OldNotifyCallback {
@@ -31,7 +32,6 @@ public class EventsDeliveryCallback implements OldNotifyCallback {
   private String eventId;
   private String permitId;
   private String appId;
-  private List<BuildDetails> builds;
   private static final int MAX_ARTIFACTS_COLLECTION_FOR_WARN = 100;
   private static final int MAX_LOGS = 2000;
 

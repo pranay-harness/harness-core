@@ -18,4 +18,5 @@ import java.util.List;
 public interface QLTriggerAction extends QLObject {
   List<QLTriggerVariableValue> getVariables();
   List<QLArtifactSelection> getArtifactSelections();
+  List<QLManifestSelection> getManifestSelections();
 }

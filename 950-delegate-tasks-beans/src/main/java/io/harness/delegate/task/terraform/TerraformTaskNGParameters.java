@@ -26,9 +26,11 @@ import java.util.Map;
 import lombok.Builder;
 import lombok.NonNull;
 import lombok.Value;
+import lombok.extern.slf4j.Slf4j;
 
 @Value
 @Builder
+@Slf4j
 @OwnedBy(CDP)
 public class TerraformTaskNGParameters
     implements TaskParameters, ExecutionCapabilityDemander, NestedAnnotationResolver {
@@ -61,6 +63,7 @@ public class TerraformTaskNGParameters
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     List<ExecutionCapability> capabilities = ProcessExecutionCapabilityHelper.generateExecutionCapabilitiesForTerraform(
         configFile.getGitStoreDelegateConfig().getEncryptedDataDetails(), maskingEvaluator);
+    log.info("Adding Required Execution Capabilities");
     if (configFile != null) {
       capabilities.add(GitConnectionNGCapability.builder()
                            .gitConfig((GitConfigDTO) configFile.getGitStoreDelegateConfig().getGitConfigDTO())

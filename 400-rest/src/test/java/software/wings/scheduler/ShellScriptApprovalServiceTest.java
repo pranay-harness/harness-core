@@ -7,6 +7,7 @@ import static software.wings.scheduler.approval.ApprovalPollingHandler.TARGET_IN
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -20,7 +21,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
-public class ShellScriptApprovalServiceTest {
+public class ShellScriptApprovalServiceTest extends CategoryTest {
   private static final int RETRY_INTERVAL = 30000;
   @Mock private ApprovalPolingService approvalPolingService;
   ShellScriptApprovalService shellScriptApprovalService;

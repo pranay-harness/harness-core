@@ -11,6 +11,7 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import io.harness.pms.contracts.plan.ConsumerConfig;
 import io.harness.pms.contracts.plan.SdkModuleInfo;
+import io.harness.pms.contracts.steps.SdkStep;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepType;
 
@@ -49,8 +50,13 @@ public class PmsSdkInstance implements PersistentEntity, UuidAware {
 
   @NotNull @FdUniqueIndex String name;
   Map<String, Set<String>> supportedTypes;
-  List<StepInfo> supportedSteps;
-  List<StepType> supportedStepTypes;
+  Map<String, String> staticAliases;
+  List<String> sdkFunctors;
+  List<SdkStep> supportedSdkSteps;
+
+  @Deprecated List<StepInfo> supportedSteps;
+  @Deprecated List<StepType> supportedStepTypes;
+
   SdkModuleInfo sdkModuleInfo;
 
   ConsumerConfig interruptConsumerConfig;
@@ -60,6 +66,7 @@ public class PmsSdkInstance implements PersistentEntity, UuidAware {
   ConsumerConfig progressEventConsumerConfig;
   ConsumerConfig nodeAdviseEventConsumerConfig;
   ConsumerConfig nodeResumeEventConsumerConfig;
+  ConsumerConfig startPlanCreationEventConsumerConfig;
 
   @Default @Setter @NonFinal @SchemaIgnore @FdIndex @CreatedDate Long createdAt = System.currentTimeMillis();
   @Setter @NonFinal @SchemaIgnore @NotNull @LastModifiedDate Long lastUpdatedAt;

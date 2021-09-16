@@ -46,10 +46,6 @@ aeriform("//220-graphql-test:tests")
 
 aeriform("//230-model-test:module")
 
-aeriform("//250-watcher:module")
-
-aeriform("//250-watcher:tests")
-
 aeriform("//260-delegate:module")
 
 aeriform("//260-delegate:tests")
@@ -67,6 +63,10 @@ aeriform("//280-batch-processing:module")
 aeriform("//280-batch-processing:supporter-test")
 
 aeriform("//280-batch-processing:tests")
+
+aeriform("//290-dashboard-service:module")
+
+aeriform("//290-dashboard-service:tests")
 
 aeriform("//300-cv-nextgen:module")
 
@@ -136,7 +136,13 @@ aeriform("//440-connector-nextgen:module")
 
 aeriform("//440-connector-nextgen:tests")
 
+aeriform("//440-secret-management-service:module")
+
+aeriform("//441-cg-instance-sync:module")
+
 aeriform("//445-cg-connectors:module")
+
+aeriform("//445-gitops:module")
 
 aeriform("//450-ce-views:module")
 
@@ -151,12 +157,6 @@ aeriform("//470-alert:module")
 aeriform("//490-ce-commons:module")
 
 aeriform("//490-ce-commons:tests")
-
-aeriform("//800-pipeline-service/src/test/java/io/harness/pms/sample/cd:module")
-
-aeriform("//800-pipeline-service/src/test/java/io/harness/pms/sample/cv:module")
-
-aeriform("//800-pipeline-service/src/test/java/io/harness/pms/sample/steps:module")
 
 aeriform("//800-pipeline-service:module")
 
@@ -186,10 +186,6 @@ aeriform("//840-template-service:module")
 
 aeriform("//840-template-service:tests")
 
-aeriform("//850-ng-pipeline-commons:module")
-
-aeriform("//850-ng-pipeline-commons:tests")
-
 aeriform("//860-orchestration-steps:module")
 
 aeriform("//860-orchestration-steps:tests")
@@ -198,7 +194,11 @@ aeriform("//860-orchestration-visualization:module")
 
 aeriform("//860-orchestration-visualization:tests")
 
-aeriform("//861-cg-orchestration-states:module")
+aeriform("//865-cg-events:module")
+
+aeriform("//865-cg-events:tests")
+
+aeriform("//867-polling-contracts:module")
 
 aeriform("//870-cg-orchestration:module")
 
@@ -207,10 +207,6 @@ aeriform("//870-cg-orchestration:tests")
 aeriform("//870-orchestration:module")
 
 aeriform("//870-orchestration:tests")
-
-aeriform("//870-yaml-beans:module")
-
-aeriform("//870-yaml-beans:tests")
 
 aeriform("//874-orchestration-delay:module")
 
@@ -221,6 +217,10 @@ aeriform("//876-orchestration-beans:tests")
 aeriform("//878-pipeline-service-utilities:module")
 
 aeriform("//878-pipeline-service-utilities:tests")
+
+aeriform("//878-pms-coupling:module")
+
+aeriform("//878-pms-coupling:tests")
 
 aeriform("//879-pms-sdk:module")
 
@@ -237,6 +237,10 @@ aeriform("//884-pms-commons:module")
 aeriform("//884-pms-commons:tests")
 
 aeriform("//888-pms-client:module")
+
+aeriform("//889-yaml-commons:module")
+
+aeriform("//889-yaml-commons:tests")
 
 aeriform("//890-pms-contracts:module")
 
@@ -270,8 +274,6 @@ aeriform("//925-access-control-service:module")
 
 aeriform("//925-access-control-service:tests")
 
-aeriform("//925-watcher-beans:module")
-
 aeriform("//930-delegate-tasks:module")
 
 aeriform("//930-delegate-tasks:tests")
@@ -281,6 +283,12 @@ aeriform("//930-ng-core-clients:module")
 aeriform("//930-ng-license-manager:module")
 
 aeriform("//930-ng-license-manager:tests")
+
+aeriform("//935-analyser-service:module")
+
+aeriform("//937-persistence-tracer:module")
+
+aeriform("//937-persistence-tracer:tests")
 
 aeriform("//940-cg-audit-service:module")
 
@@ -296,6 +304,10 @@ aeriform("//940-ng-audit-service:tests")
 
 aeriform("//940-notification-client:module")
 
+aeriform("//940-plan-feature-sdk:module")
+
+aeriform("//940-plan-feature-sdk:tests")
+
 aeriform("//940-primary-version-manager:module")
 
 aeriform("//940-primary-version-manager:tests")
@@ -305,6 +317,8 @@ aeriform("//940-resource-group-beans:module")
 aeriform("//940-secret-manager-client:module")
 
 aeriform("//945-account-mgmt:module")
+
+aeriform("//945-license-usage-sdk:module")
 
 aeriform("//945-ng-audit-client:module")
 
@@ -327,8 +341,6 @@ aeriform("//948-access-control-sdk:tests")
 aeriform("//949-access-control-commons:module")
 
 aeriform("//950-command-library-common:module")
-
-aeriform("//950-common-entities:module")
 
 aeriform("//950-delegate-tasks-beans:module")
 
@@ -354,13 +366,15 @@ aeriform("//950-ng-project-n-orgs:module")
 
 aeriform("//950-ng-project-n-orgs:tests")
 
+aeriform("//950-ng-signup-beans:module")
+
+aeriform("//950-opa-client:module")
+
+aeriform("//950-opa-client:tests")
+
 aeriform("//950-telemetry:module")
 
 aeriform("//950-telemetry:tests")
-
-aeriform("//950-timeout-engine:module")
-
-aeriform("//950-timeout-engine:tests")
 
 aeriform("//950-wait-engine:module")
 
@@ -371,6 +385,8 @@ aeriform("//950-wait-engine:tests")
 aeriform("//950-walktree-visitor:module")
 
 aeriform("//950-walktree-visitor:tests")
+
+aeriform("//951-cg-git-sync:module")
 
 aeriform("//951-ng-audit-commons:module")
 
@@ -410,19 +426,25 @@ aeriform("//955-setup-usage-sdk:tests")
 
 aeriform("//956-feature-flag-beans:module")
 
+aeriform("//957-cg-beans:module")
+
 aeriform("//958-migration-sdk:module")
 
 aeriform("//958-migration-sdk:tests")
 
 aeriform("//958-ng-file-service-sdk:module")
 
-aeriform("//959-cg-beans:module")
+aeriform("//959-common-entities:module")
 
 aeriform("//959-file-service-commons:module")
 
 aeriform("//959-psql-database-models:module")
 
 aeriform("//959-psql-database-models:tests")
+
+aeriform("//959-timeout-engine:module")
+
+aeriform("//959-timeout-engine:tests")
 
 aeriform("//960-api-services:module")
 
@@ -438,7 +460,7 @@ aeriform("//960-ng-core-beans:module")
 
 aeriform("//960-ng-license-beans:module")
 
-aeriform("//960-ng-signup-beans:module")
+aeriform("//960-ng-license-usage-beans:module")
 
 aeriform("//960-notification-beans:module")
 
@@ -447,6 +469,10 @@ aeriform("//960-persistence:module")
 aeriform("//960-persistence:supporter-test")
 
 aeriform("//960-persistence:tests")
+
+aeriform("//960-watcher:module")
+
+aeriform("//960-watcher:tests")
 
 aeriform("//960-yaml-sdk:module")
 
@@ -471,6 +497,8 @@ aeriform("//970-ng-commons:tests")
 aeriform("//970-rbac-core:module")
 
 aeriform("//970-telemetry-beans:module")
+
+aeriform("//970-watcher-beans:module")
 
 aeriform("//980-commons:module")
 

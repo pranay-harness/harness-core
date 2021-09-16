@@ -1,6 +1,8 @@
 package software.wings.graphql.schema.type.aggregation.deployment;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
@@ -11,6 +13,8 @@ import software.wings.graphql.schema.type.aggregation.QLNumberFilter;
 import software.wings.graphql.schema.type.aggregation.QLStringFilter;
 import software.wings.graphql.schema.type.aggregation.QLTimeFilter;
 import software.wings.graphql.schema.type.aggregation.environment.QLEnvironmentTypeFilter;
+import software.wings.graphql.schema.type.aggregation.service.QLDeploymentTypeFilter;
+import software.wings.graphql.schema.type.aggregation.workflow.QLOrchestrationWorkflowTypeFilter;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -18,6 +22,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.ToString;
 
+@OwnedBy(HarnessTeam.DX)
 @Data
 @Builder
 @ToString
@@ -45,6 +50,8 @@ public class QLDeploymentFilter implements EntityFilter {
   private QLIdFilter cloudProvider;
   private QLIdFilter environment;
   private QLEnvironmentTypeFilter environmentType;
+  private QLDeploymentTypeFilter deploymentType;
+  private QLOrchestrationWorkflowTypeFilter orchestrationWorkflowType;
   private QLStringFilter status;
   private QLTimeFilter endTime;
   private QLTimeFilter startTime;
@@ -64,6 +71,12 @@ public class QLDeploymentFilter implements EntityFilter {
     }
     if (filter.getEnvironmentType() != null) {
       filterTypes.add(QLDeploymentFilterType.EnvironmentType);
+    }
+    if (filter.getDeploymentType() != null) {
+      filterTypes.add(QLDeploymentFilterType.DeploymentType);
+    }
+    if (filter.getOrchestrationWorkflowType() != null) {
+      filterTypes.add(QLDeploymentFilterType.OrchestrationWorkflowType);
     }
     if (filter.getPipeline() != null) {
       filterTypes.add(QLDeploymentFilterType.Pipeline);
@@ -119,6 +132,10 @@ public class QLDeploymentFilter implements EntityFilter {
         return filter.getEnvironmentType();
       case Service:
         return filter.getService();
+      case DeploymentType:
+        return filter.getDeploymentType();
+      case OrchestrationWorkflowType:
+        return filter.getOrchestrationWorkflowType();
       case Workflow:
         return filter.getWorkflow();
       case CloudProvider:

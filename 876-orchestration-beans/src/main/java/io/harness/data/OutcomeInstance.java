@@ -13,14 +13,14 @@ import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import io.harness.pms.contracts.ambiance.Level;
-import io.harness.pms.data.OrchestrationMap;
+import io.harness.pms.data.PmsOutcome;
 
 import com.google.common.collect.ImmutableList;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.List;
 import lombok.Builder;
-import lombok.Singular;
+import lombok.NonNull;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
@@ -65,15 +65,16 @@ public class OutcomeInstance implements PersistentEntity, UuidAccess {
   }
 
   @Wither @Id @org.mongodb.morphia.annotations.Id String uuid;
-  @NotEmpty String planExecutionId;
-  @Singular List<Level> levels;
+  @NonNull String planExecutionId;
+  String stageExecutionId;
   Level producedBy;
   @NotEmpty @Trimmed String name;
   String levelRuntimeIdIdx;
   @Deprecated org.bson.Document outcome;
-  OrchestrationMap outcomeValue;
+  PmsOutcome outcomeValue;
   @Wither @CreatedDate Long createdAt;
   @Wither @Version Long version;
+  String groupName;
   @Builder.Default @FdTtlIndex Date validUntil = Date.from(OffsetDateTime.now().plusMonths(TTL_MONTHS).toInstant());
 
   public String getOutcomeJsonValue() {

@@ -23,8 +23,8 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 
-@Path("/accessControlPreferences")
-@Api("/accessControlPreferences")
+@Path("/aclPreferences")
+@Api("/aclPreferences")
 @Produces({"application/json", "application/yaml"})
 @Consumes({"application/json", "application/yaml"})
 @AllArgsConstructor(onConstructor = @__({ @Inject }))

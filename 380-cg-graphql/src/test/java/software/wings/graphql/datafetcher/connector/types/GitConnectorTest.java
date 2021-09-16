@@ -18,6 +18,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.CategoryTest;
 import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
@@ -44,7 +45,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class GitConnectorTest {
+public class GitConnectorTest extends CategoryTest {
   @Mock private SecretManager secretManager;
   @Mock private SettingsService settingsService;
   @Mock private ConnectorsController connectorsController;

@@ -27,13 +27,12 @@ public class CustomFailureInterruptHandler extends MarkStatusInterruptHandler {
   @Inject @Named(OrchestrationPublisherName.PUBLISHER_NAME) String publisherName;
 
   @Override
-  public Interrupt handleInterrupt(Interrupt interrupt) {
+  public Interrupt handleInterruptForNodeExecution(Interrupt interrupt, String nodeExecutionId) {
     try {
-      String notifyId =
-          interruptEventPublisher.publishEvent(interrupt.getNodeExecutionId(), interrupt, InterruptType.CUSTOM_FAILURE);
+      String notifyId = interruptEventPublisher.publishEvent(nodeExecutionId, interrupt, InterruptType.CUSTOM_FAILURE);
       waitNotifyEngine.waitForAllOn(publisherName,
           FailureInterruptCallback.builder()
-              .nodeExecutionId(interrupt.getNodeExecutionId())
+              .nodeExecutionId(nodeExecutionId)
               .interruptId(interrupt.getUuid())
               .interruptType(interrupt.getType())
               .interruptConfig(interrupt.getInterruptConfig())
@@ -44,7 +43,7 @@ public class CustomFailureInterruptHandler extends MarkStatusInterruptHandler {
       interruptService.markProcessed(interrupt.getUuid(), PROCESSED_UNSUCCESSFULLY);
       throw new InterruptProcessingFailedException(InterruptType.CUSTOM_FAILURE,
           "Custom Failure Interrupt failed for execution Plan :" + interrupt.getPlanExecutionId()
-              + "for NodeExecutionId: " + interrupt.getNodeExecutionId(),
+              + "for NodeExecutionId: " + nodeExecutionId,
           ex);
     } catch (Exception e) {
       interruptService.markProcessed(interrupt.getUuid(), PROCESSED_UNSUCCESSFULLY);

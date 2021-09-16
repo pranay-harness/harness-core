@@ -3,6 +3,7 @@ package software.wings.service.impl.artifact;
 import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.FeatureName.ARTIFACT_STREAM_DELEGATE_TIMEOUT;
+import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -15,6 +16,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
+import static software.wings.beans.artifact.ArtifactStreamType.AZURE_ARTIFACTS;
 import static software.wings.beans.artifact.ArtifactStreamType.AZURE_MACHINE_IMAGE;
 import static software.wings.beans.artifact.ArtifactStreamType.BAMBOO;
 import static software.wings.beans.artifact.ArtifactStreamType.CUSTOM;
@@ -32,6 +34,7 @@ import static software.wings.service.impl.ArtifactoryBuildServiceImpl.MANUAL_PUL
 import static software.wings.service.impl.artifact.ArtifactServiceImpl.ARTIFACT_RETENTION_SIZE;
 
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -146,6 +149,10 @@ public class ArtifactCollectionUtils {
   @Inject private MainConfiguration mainConfiguration;
 
   public static final Long DELEGATE_QUEUE_TIMEOUT = Duration.ofSeconds(6).toMillis();
+
+  static final List<String> metadataOnlyStreams = Collections.unmodifiableList(
+      asList(DOCKER.name(), ECR.name(), GCR.name(), NEXUS.name(), AMI.name(), ACR.name(), AMAZON_S3.name(), GCS.name(),
+          SMB.name(), SFTP.name(), AZURE_ARTIFACTS.name(), AZURE_MACHINE_IMAGE.name(), CUSTOM.name()));
 
   public long getDelegateQueueTimeout(String accountId) {
     long timeout = DELEGATE_QUEUE_TIMEOUT;
@@ -394,9 +401,19 @@ public class ArtifactCollectionUtils {
         // All the new ECR artifact streams use cloud provider AWS settings for accesskey and secret
         if (SettingVariableTypes.AWS.name().equals(settingValue.getType())) {
           AwsConfig awsConfig = (AwsConfig) settingsService.get(settingId).getValue();
-          imageDetailsBuilder.password(
+          String authToken =
               getAmazonEcrAuthToken(awsConfig, secretManager.getEncryptionDetails(awsConfig, null, workflowExecutionId),
-                  imageUrl.substring(0, imageUrl.indexOf('.')), ecrArtifactStream.getRegion()));
+                  imageUrl.substring(0, imageUrl.indexOf('.')), ecrArtifactStream.getRegion());
+          imageDetailsBuilder.password(authToken);
+          if (featureFlagService.isEnabled(FeatureName.AMAZON_ECR_AUTH_REFACTOR, artifactStream.getAccountId())) {
+            // https://github.com/aws/aws-sdk-java/issues/818
+            String decodedString = new String(decodeBase64(authToken));
+            String username = decodedString.split(":")[0];
+            String password = decodedString.split(":")[1];
+            imageDetailsBuilder.username(username);
+            imageDetailsBuilder.password(password);
+            imageDetailsBuilder.registryUrl("https://" + imageUrl);
+          }
         } else {
           // There is a point when old ECR artifact streams would be using the old ECR Artifact Server
           // definition until migration happens. The deployment code handles both the cases.
@@ -637,7 +654,7 @@ public class ArtifactCollectionUtils {
   public BuildSourceRequestType getRequestType(ArtifactStream artifactStream, ArtifactType artifactType) {
     String artifactStreamType = artifactStream.getArtifactStreamType();
 
-    if (ArtifactCollectionServiceAsyncImpl.metadataOnlyStreams.contains(artifactStreamType)
+    if (metadataOnlyStreams.contains(artifactStreamType)
         || isArtifactoryDockerOrGeneric(artifactStream, artifactType)) {
       return BuildSourceRequestType.GET_BUILDS;
     } else {
@@ -648,9 +665,8 @@ public class ArtifactCollectionUtils {
   private BuildSourceRequestType getRequestType(ArtifactStream artifactStream) {
     String artifactStreamType = artifactStream.getArtifactStreamType();
 
-    if (ArtifactCollectionServiceAsyncImpl.metadataOnlyStreams.contains(artifactStreamType)
-        || isArtifactoryDockerOrGeneric(artifactStream) || artifactStreamType.equals(JENKINS.name())
-        || artifactStreamType.equals(BAMBOO.name())) {
+    if (metadataOnlyStreams.contains(artifactStreamType) || isArtifactoryDockerOrGeneric(artifactStream)
+        || artifactStreamType.equals(JENKINS.name()) || artifactStreamType.equals(BAMBOO.name())) {
       return BuildSourceRequestType.GET_BUILDS;
     } else {
       return BuildSourceRequestType.GET_LAST_SUCCESSFUL_BUILD;

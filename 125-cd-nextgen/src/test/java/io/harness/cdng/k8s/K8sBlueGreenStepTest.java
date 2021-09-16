@@ -15,6 +15,8 @@ import static org.mockito.Mockito.when;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.cdng.instance.info.InstanceInfoService;
+import io.harness.cdng.instance.outcome.DeploymentInfoOutcome;
 import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
@@ -32,6 +34,8 @@ import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import org.junit.Test;
@@ -44,7 +48,7 @@ import org.mockito.Mock;
 public class K8sBlueGreenStepTest extends AbstractK8sStepExecutorTestBase {
   @Mock ExecutionSweepingOutputService executionSweepingOutputService;
   @InjectMocks private K8sBlueGreenStep k8sBlueGreenStep;
-
+  @Mock private InstanceInfoService instanceInfoService;
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
@@ -62,6 +66,10 @@ public class K8sBlueGreenStepTest extends AbstractK8sStepExecutorTestBase {
     assertThat(request.isSkipDryRun()).isTrue();
     assertThat(request.getTimeoutIntervalInMin()).isEqualTo(30);
     assertThat(request.isSkipResourceVersioning()).isTrue();
+
+    ArgumentCaptor<String> releaseNameCaptor = ArgumentCaptor.forClass(String.class);
+    verify(k8sStepHelper, times(1)).publishReleaseNameStepDetails(eq(ambiance), releaseNameCaptor.capture());
+    assertThat(releaseNameCaptor.getValue()).isEqualTo(releaseName);
   }
 
   @Test
@@ -87,28 +95,40 @@ public class K8sBlueGreenStepTest extends AbstractK8sStepExecutorTestBase {
     K8sBlueGreenStepParameters stepParameters = new K8sBlueGreenStepParameters();
     final StepElementParameters stepElementParameters = StepElementParameters.builder().spec(stepParameters).build();
 
-    K8sDeployResponse k8sDeployResponse =
-        K8sDeployResponse.builder()
-            .k8sNGTaskResponse(
-                K8sBGDeployResponse.builder().primaryColor("blue").stageColor("green").releaseNumber(1).build())
-            .commandUnitsProgress(UnitProgressData.builder().build())
-            .commandExecutionStatus(SUCCESS)
-            .build();
+    K8sDeployResponse k8sDeployResponse = K8sDeployResponse.builder()
+                                              .k8sNGTaskResponse(K8sBGDeployResponse.builder()
+                                                                     .primaryColor("blue")
+                                                                     .stageColor("green")
+                                                                     .k8sPodList(Collections.emptyList())
+                                                                     .releaseNumber(1)
+                                                                     .build())
+                                              .commandUnitsProgress(UnitProgressData.builder().build())
+                                              .commandExecutionStatus(SUCCESS)
+                                              .build();
+    StepResponse.StepOutcome stepOutcome = StepResponse.StepOutcome.builder()
+                                               .name(OutcomeExpressionConstants.DEPLOYMENT_INFO_OUTCOME)
+                                               .outcome(DeploymentInfoOutcome.builder().build())
+                                               .build();
+    doReturn(stepOutcome).when(instanceInfoService).saveServerInstancesIntoSweepingOutput(any(), any());
     when(k8sStepHelper.getReleaseName(any(), any())).thenReturn("releaseName");
     StepResponse response = k8sBlueGreenStep.finalizeExecutionWithSecurityContext(
         ambiance, stepElementParameters, K8sExecutionPassThroughData.builder().build(), () -> k8sDeployResponse);
     assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
-    assertThat(response.getStepOutcomes()).hasSize(1);
+    assertThat(response.getStepOutcomes()).hasSize(2);
 
     StepOutcome outcome = response.getStepOutcomes().stream().collect(Collectors.toList()).get(0);
     assertThat(outcome.getOutcome()).isInstanceOf(K8sBlueGreenOutcome.class);
     assertThat(outcome.getName()).isEqualTo(OutcomeExpressionConstants.OUTPUT);
     assertThat(outcome.getGroup()).isNull();
 
+    StepOutcome deploymentInfoOutcome = new ArrayList<>(response.getStepOutcomes()).get(1);
+    assertThat(deploymentInfoOutcome.getOutcome()).isInstanceOf(DeploymentInfoOutcome.class);
+    assertThat(deploymentInfoOutcome.getName()).isEqualTo(OutcomeExpressionConstants.DEPLOYMENT_INFO_OUTCOME);
+
     ArgumentCaptor<K8sBlueGreenOutcome> argumentCaptor = ArgumentCaptor.forClass(K8sBlueGreenOutcome.class);
     verify(executionSweepingOutputService, times(1))
         .consume(eq(ambiance), eq(OutcomeExpressionConstants.K8S_BLUE_GREEN_OUTCOME), argumentCaptor.capture(),
-            eq(StepOutcomeGroup.STAGE.name()));
+            eq(StepOutcomeGroup.STEP.name()));
     assertThat(argumentCaptor.getValue().getReleaseName()).isEqualTo("releaseName");
     assertThat(argumentCaptor.getValue().getPrimaryColor()).isEqualTo("blue");
     assertThat(argumentCaptor.getValue().getStageColor()).isEqualTo("green");

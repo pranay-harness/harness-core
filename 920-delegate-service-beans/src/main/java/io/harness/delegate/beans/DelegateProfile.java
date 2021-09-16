@@ -25,6 +25,7 @@ import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
@@ -94,4 +95,9 @@ public final class DelegateProfile implements PersistentEntity, UuidAware, Creat
 
   // Will be used for segregation of CG vs. NG records.
   private boolean ng;
+
+  @UtilityClass
+  public static final class DelegateProfileKeys {
+    public static final String searchTermFilter = "searchTermFilter";
+  }
 }

@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.MediaType;
@@ -136,15 +137,11 @@ public class SlackServiceImpl implements ChannelService {
   private List<String> getRecipients(NotificationRequest notificationRequest) {
     Slack slackChannelDetails = notificationRequest.getSlack();
     List<String> recipients = new ArrayList<>(slackChannelDetails.getSlackWebHookUrlsList());
-    if (isNotEmpty(slackChannelDetails.getUserGroupIdsList())) {
-      List<String> slackWebHookUrls = notificationSettingsService.getNotificationSettingsForGroups(
-          slackChannelDetails.getUserGroupIdsList(), NotificationChannelType.SLACK, notificationRequest.getAccountId());
-      recipients.addAll(slackWebHookUrls);
-    } else {
+    if (isNotEmpty(slackChannelDetails.getUserGroupList())) {
       List<String> resolvedRecipients = notificationSettingsService.getNotificationRequestForUserGroups(
           slackChannelDetails.getUserGroupList(), NotificationChannelType.SLACK, notificationRequest.getAccountId());
       recipients.addAll(resolvedRecipients);
     }
-    return recipients;
+    return recipients.stream().distinct().collect(Collectors.toList());
   }
 }

@@ -169,6 +169,7 @@ func TestWrite_Success(t *testing.T) {
 	mock.On("Exists", []string{key}).Return(redis.NewIntResult(1, nil))
 	mock.On("XAdd", args1).Return(redis.NewStringResult("success", nil))
 	mock.On("XAdd", args2).Return(redis.NewStringResult("success", nil))
+	mock.On("TTL", key).Return(redis.NewDurationResult(20*time.Second, errors.New("could not get ttl")))
 
 	rdb := &Redis{
 		Client: mock,
@@ -211,6 +212,7 @@ func TestWrite_Failure(t *testing.T) {
 	mock.On("XAdd", args1).Return(redis.NewStringResult("success", nil))
 	mock.On("XAdd", args2).Return(redis.NewStringResult("", errors.New("err")))
 	mock.On("XAdd", args3).Return(redis.NewStringResult("success", nil))
+	mock.On("TTL", key).Return(redis.NewDurationResult(20*time.Second, errors.New("could not get ttl")))
 	rdb := &Redis{
 		Client: mock,
 	}
@@ -435,4 +437,32 @@ func TestExists(t *testing.T) {
 
 	assert.Equal(t, mr.Exists(key), false)
 	assert.NotNil(t, rdb.Exists(ctx, key))
+}
+
+func TestListPrefixes(t *testing.T) {
+	ctx := context.Background()
+
+	mr, err := miniredis.Run()
+	if err != nil {
+		log.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+	defer mr.Close()
+
+	client = redis.NewClient(&redis.Options{
+		Addr: mr.Addr(),
+	})
+
+	rdb := &Redis{
+		Client: client,
+	}
+
+	mr.XAdd("key1", "*", []string{"k1", "v1"})
+	mr.XAdd("key2", "*", []string{"k1", "v1"})
+	mr.XAdd("differentPrefix", "*", []string{"k1", "v1"})
+
+	l, err := rdb.ListPrefix(ctx, "key")
+	assert.Nil(t, err)
+	assert.Equal(t, len(l), 2)
+	assert.Contains(t, l, "key1")
+	assert.Contains(t, l, "key2")
 }

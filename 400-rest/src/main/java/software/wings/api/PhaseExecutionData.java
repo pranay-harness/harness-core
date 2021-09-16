@@ -2,7 +2,9 @@ package software.wings.api;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutput;
 
@@ -21,6 +23,7 @@ import java.util.Map;
  */
 @OwnedBy(CDC)
 @JsonTypeName("phaseExecutionData")
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class PhaseExecutionData extends ElementStateExecutionData implements SweepingOutput {
   public static final String SWEEPING_OUTPUT_NAME = "phaseExecutionData";
 

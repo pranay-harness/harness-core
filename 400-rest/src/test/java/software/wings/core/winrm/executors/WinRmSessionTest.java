@@ -2,12 +2,15 @@ package software.wings.core.winrm.executors;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ARVIND;
+import static io.harness.rule.OwnerRule.NAMAN_TALAYCHA;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.TMACARI;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.joor.Reflect.on;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
@@ -17,7 +20,10 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.spy;
 
+import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.configuration.InstallUtils;
 import io.harness.exception.InvalidRequestException;
@@ -25,7 +31,6 @@ import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
 import io.harness.ssh.SshHelperUtils;
 
-import software.wings.WingsBaseTest;
 import software.wings.beans.WinRmConnectionAttributes;
 
 import com.jcraft.jsch.JSchException;
@@ -41,12 +46,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import org.mockito.internal.verification.VerificationModeFactory;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -57,7 +65,8 @@ import org.powermock.modules.junit4.PowerMockRunner;
     InstallUtils.class, WinRmClient.class})
 @PowerMockIgnore({"javax.security.*", "javax.net.*"})
 @OwnedBy(CDP)
-public class WinRmSessionTest extends WingsBaseTest {
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+public class WinRmSessionTest extends CategoryTest {
   @Mock private SshHelperUtils sshHelperUtils;
   @Mock private Writer writer;
   @Mock private Writer error;
@@ -66,6 +75,11 @@ public class WinRmSessionTest extends WingsBaseTest {
   private WinRmSessionConfig winRmSessionConfig;
 
   private WinRmSession winRmSession;
+
+  @Before
+  public void setUp() throws Exception {
+    MockitoAnnotations.initMocks(this);
+  }
 
   @Test
   @Owner(developers = SAHIL)
@@ -80,6 +94,9 @@ public class WinRmSessionTest extends WingsBaseTest {
                              .hostname("localhost")
                              .authenticationScheme(WinRmConnectionAttributes.AuthenticationScheme.KERBEROS)
                              .build();
+    PowerMockito
+        .when(SshHelperUtils.executeLocalCommand(anyString(), any(LogCallback.class), any(Writer.class), anyBoolean()))
+        .thenReturn(true);
     winRmSession = new WinRmSession(winRmSessionConfig, logCallback);
 
     int status = winRmSession.executeCommandString("ls", writer, error, false);
@@ -89,6 +106,50 @@ public class WinRmSessionTest extends WingsBaseTest {
     SshHelperUtils.generateTGT(captor.capture(), anyString(), anyString(), eq(logCallback));
     assertThat(captor.getValue()).isEqualTo("TestUser@KRB.LOCAL");
     SshHelperUtils.executeLocalCommand(anyString(), eq(logCallback), eq(writer), eq(false));
+  }
+
+  @Test
+  @Owner(developers = NAMAN_TALAYCHA)
+  @Category(UnitTests.class)
+  public void testRemoteHost() throws JSchException {
+    PowerMockito.mockStatic(SshHelperUtils.class);
+    winRmSessionConfig = WinRmSessionConfig.builder()
+                             .domain("KRB.LOCAL")
+                             .skipCertChecks(true)
+                             .username("TestUser")
+                             .environment(new HashMap<>())
+                             .hostname("localhost")
+                             .authenticationScheme(WinRmConnectionAttributes.AuthenticationScheme.KERBEROS)
+                             .build();
+    PowerMockito
+        .when(SshHelperUtils.executeLocalCommand(anyString(), any(LogCallback.class), any(Writer.class), anyBoolean()))
+        .thenReturn(true);
+    winRmSession = new WinRmSession(winRmSessionConfig, logCallback);
+    PowerMockito.verifyStatic(VerificationModeFactory.times(1));
+    SshHelperUtils.executeLocalCommand(anyString(), any(LogCallback.class), any(Writer.class), anyBoolean());
+  }
+
+  @Test
+  @Owner(developers = NAMAN_TALAYCHA)
+  @Category(UnitTests.class)
+  public void testRemoteHostCheckNegativeCase() throws JSchException {
+    PowerMockito.mockStatic(SshHelperUtils.class);
+    winRmSessionConfig = WinRmSessionConfig.builder()
+                             .domain("KRB.LOCAL")
+                             .skipCertChecks(true)
+                             .username("TestUser")
+                             .environment(new HashMap<>())
+                             .hostname("localhost")
+                             .authenticationScheme(WinRmConnectionAttributes.AuthenticationScheme.KERBEROS)
+                             .build();
+    PowerMockito
+        .when(SshHelperUtils.executeLocalCommand(anyString(), any(LogCallback.class), any(Writer.class), anyBoolean()))
+        .thenReturn(false);
+    try {
+      winRmSession = new WinRmSession(winRmSessionConfig, logCallback);
+    } catch (InvalidRequestException invalidRequestException) {
+      assertThat(invalidRequestException.getMessage()).isEqualTo("Cannot reach remote host");
+    }
   }
 
   @Test
@@ -104,6 +165,9 @@ public class WinRmSessionTest extends WingsBaseTest {
                              .hostname("localhost")
                              .authenticationScheme(WinRmConnectionAttributes.AuthenticationScheme.KERBEROS)
                              .build();
+    PowerMockito
+        .when(SshHelperUtils.executeLocalCommand(anyString(), any(LogCallback.class), any(Writer.class), anyBoolean()))
+        .thenReturn(true);
     winRmSession = new WinRmSession(winRmSessionConfig, logCallback);
 
     String userPrincipal = winRmSession.getUserPrincipal("test", "domain");
@@ -124,6 +188,9 @@ public class WinRmSessionTest extends WingsBaseTest {
                              .hostname("localhost")
                              .authenticationScheme(WinRmConnectionAttributes.AuthenticationScheme.KERBEROS)
                              .build();
+    PowerMockito
+        .when(SshHelperUtils.executeLocalCommand(anyString(), any(LogCallback.class), any(Writer.class), anyBoolean()))
+        .thenReturn(true);
     winRmSession = new WinRmSession(winRmSessionConfig, logCallback);
 
     String userPrincipal = winRmSession.getUserPrincipal("test@oldDomain", "domain");
@@ -136,6 +203,9 @@ public class WinRmSessionTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetUserPrincipalWithUsernameNull() throws JSchException {
     PowerMockito.mockStatic(SshHelperUtils.class);
+    PowerMockito
+        .when(SshHelperUtils.executeLocalCommand(anyString(), any(LogCallback.class), any(Writer.class), anyBoolean()))
+        .thenReturn(true);
     winRmSessionConfig = WinRmSessionConfig.builder()
                              .domain("KRB.LOCAL")
                              .skipCertChecks(true)
@@ -154,6 +224,9 @@ public class WinRmSessionTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetUserPrincipalWithDomainNull() throws JSchException {
     PowerMockito.mockStatic(SshHelperUtils.class);
+    PowerMockito
+        .when(SshHelperUtils.executeLocalCommand(anyString(), any(LogCallback.class), any(Writer.class), anyBoolean()))
+        .thenReturn(true);
     winRmSessionConfig = WinRmSessionConfig.builder()
                              .skipCertChecks(true)
                              .username("TestUser")
@@ -172,6 +245,9 @@ public class WinRmSessionTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testAutoClosable() throws JSchException {
     PowerMockito.mockStatic(SshHelperUtils.class);
+    PowerMockito
+        .when(SshHelperUtils.executeLocalCommand(anyString(), any(LogCallback.class), any(Writer.class), anyBoolean()))
+        .thenReturn(true);
     winRmSessionConfig = WinRmSessionConfig.builder()
                              .domain("KRB.LOCAL")
                              .skipCertChecks(true)

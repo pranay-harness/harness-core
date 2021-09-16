@@ -18,7 +18,12 @@ import java.util.Map;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class RedisSdkResponseEventPublisher implements SdkResponseEventPublisher {
-  @Inject @Named(SDK_RESPONSE_EVENT_PRODUCER) private Producer eventProducer;
+  private Producer eventProducer;
+
+  @Inject
+  public RedisSdkResponseEventPublisher(@Named(SDK_RESPONSE_EVENT_PRODUCER) Producer producer) {
+    this.eventProducer = producer;
+  }
 
   @Override
   public void publishEvent(SdkResponseEventProto event) {
@@ -30,7 +35,6 @@ public class RedisSdkResponseEventPublisher implements SdkResponseEventPublisher
       metadataMap.put(PIPELINE_MONITORING_ENABLED, "false");
     }
 
-    // TODO: add plan execution Id here
     metadataMap.put("eventType", event.getSdkResponseEventType().name());
     metadataMap.put("nodeExecutionId", event.getNodeExecutionId());
     metadataMap.put("planExecutionId", event.getPlanExecutionId());

@@ -204,15 +204,14 @@ func GetLatestCommit(ctx context.Context, request *pb.GetLatestCommitRequest, lo
 	if err != nil {
 		log.Errorw("GetLatestCommit failure", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		// this is a hard error with no response
-		if refResponse == nil {
+		if response == nil {
 			return nil, err
 		}
 
 		// this is an error from the git provider
 		out = &pb.GetLatestCommitResponse{
-			CommitId: refResponse.Sha,
-			Error:    err.Error(),
-			Status:   int32(response.Status),
+			Error:  err.Error(),
+			Status: int32(response.Status),
 		}
 		return out, nil
 	}
@@ -239,7 +238,15 @@ func ListBranches(ctx context.Context, request *pb.ListBranchesRequest, log *zap
 	branchesContent, response, err := client.Git.ListBranches(ctx, request.GetSlug(), scm.ListOptions{Page: int(request.GetPagination().GetPage())})
 	if err != nil {
 		log.Errorw("ListBranches failure", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
-		return nil, err
+		if response == nil {
+			return nil, err
+		}
+		// this is an error from the git provider, e.g. authentication.
+		out = &pb.ListBranchesResponse{
+			Status: int32(response.Status),
+			Error:  err.Error(),
+		}
+		return out, nil
 	}
 	log.Infow("ListBranches success", "slug", request.GetSlug(), "elapsed_time_ms", utils.TimeSince(start))
 	var branches []string
@@ -356,6 +363,11 @@ func GetUserRepos(ctx context.Context, request *pb.GetUserReposRequest, log *zap
 
 	if err != nil {
 		log.Errorw("GetUserRepos failure", "provider", gitclient.GetProvider(*request.GetProvider()), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		// this is a hard error with no response
+		if response == nil {
+			return nil, err
+		}
+
 		out = &pb.GetUserReposResponse{
 			Status: int32(response.Status),
 			Error:  err.Error(),

@@ -72,17 +72,20 @@ public class NotificationHelper {
     try {
       notificationRules = getNotificationRulesFromYaml(yaml);
     } catch (IOException exception) {
-      // Todo: throw Execution exception over here.
-      log.error("", exception);
+      log.error("Unable to parse yaml to get notification objects", exception);
     }
     if (EmptyPredicate.isEmpty(notificationRules)) {
       return;
     }
 
-    sendNotificationInternal(notificationRules, pipelineEventType, identifier, accountId,
-        constructTemplateData(
-            ambiance, pipelineEventType, nodeExecution, identifier, updatedAt, orgIdentifier, projectIdentifier),
-        orgIdentifier, projectIdentifier);
+    try {
+      sendNotificationInternal(notificationRules, pipelineEventType, identifier, accountId,
+          constructTemplateData(
+              ambiance, pipelineEventType, nodeExecution, identifier, updatedAt, orgIdentifier, projectIdentifier),
+          orgIdentifier, projectIdentifier);
+    } catch (Exception ex) {
+      log.error("Exception occurred in sendNotificationInternal", ex);
+    }
   }
 
   private void sendNotificationInternal(List<NotificationRules> notificationRulesList,
@@ -99,7 +102,12 @@ public class NotificationHelper {
         String templateId = getNotificationTemplate(pipelineEventType.getLevel(), wrapper.getType());
         NotificationChannel channel = wrapper.getNotificationChannel().toNotificationChannel(
             accountIdentifier, orgIdentifier, projectIdentifier, templateId, notificationContent);
-        notificationClient.sendNotificationAsync(channel);
+        log.info("Sending notification via notification-client");
+        try {
+          notificationClient.sendNotificationAsync(channel);
+        } catch (Exception ex) {
+          log.error("Unable to send notification because of following exception", ex);
+        }
       }
     }
   }
@@ -120,7 +128,7 @@ public class NotificationHelper {
         if (stages.contains(identifier) || stages.contains("AllStages")) {
           return true;
         }
-      } else if (thisEventType == pipelineEventType && !pipelineEventTypeLevel.equals("Stage")) {
+      } else if (thisEventType == pipelineEventType) {
         return true;
       }
     }

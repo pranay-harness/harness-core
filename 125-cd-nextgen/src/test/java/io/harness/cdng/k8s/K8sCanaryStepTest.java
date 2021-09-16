@@ -17,6 +17,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.NGInstanceUnitType;
 import io.harness.category.element.UnitTests;
+import io.harness.cdng.instance.info.InstanceInfoService;
 import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
@@ -37,6 +38,7 @@ import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.rule.Owner;
 
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import org.junit.Test;
@@ -48,6 +50,7 @@ import org.mockito.Mock;
 @OwnedBy(HarnessTeam.CDP)
 public class K8sCanaryStepTest extends AbstractK8sStepExecutorTestBase {
   @Mock ExecutionSweepingOutputService executionSweepingOutputService;
+  @Mock InstanceInfoService instanceInfoService;
   @InjectMocks private K8sCanaryStep k8sCanaryStep;
 
   @Test
@@ -73,6 +76,10 @@ public class K8sCanaryStepTest extends AbstractK8sStepExecutorTestBase {
     assertThat(request.isSkipDryRun()).isTrue();
     assertThat(request.getTimeoutIntervalInMin()).isEqualTo(30);
     assertThat(request.isSkipResourceVersioning()).isTrue();
+
+    ArgumentCaptor<String> releaseNameCaptor = ArgumentCaptor.forClass(String.class);
+    verify(k8sStepHelper, times(1)).publishReleaseNameStepDetails(eq(ambiance), releaseNameCaptor.capture());
+    assertThat(releaseNameCaptor.getValue()).isEqualTo(releaseName);
   }
 
   @Test
@@ -175,13 +182,15 @@ public class K8sCanaryStepTest extends AbstractK8sStepExecutorTestBase {
     K8sCanaryStepParameters stepParameters = new K8sCanaryStepParameters();
     StepElementParameters stepElementParameters = StepElementParameters.builder().spec(stepParameters).build();
 
-    K8sDeployResponse k8sDeployResponse =
-        K8sDeployResponse.builder()
-            .k8sNGTaskResponse(
-                K8sCanaryDeployResponse.builder().canaryWorkload("canaryWorkload").releaseNumber(1).build())
-            .commandUnitsProgress(UnitProgressData.builder().build())
-            .commandExecutionStatus(SUCCESS)
-            .build();
+    K8sDeployResponse k8sDeployResponse = K8sDeployResponse.builder()
+                                              .k8sNGTaskResponse(K8sCanaryDeployResponse.builder()
+                                                                     .canaryWorkload("canaryWorkload")
+                                                                     .releaseNumber(1)
+                                                                     .k8sPodList(new ArrayList<>())
+                                                                     .build())
+                                              .commandUnitsProgress(UnitProgressData.builder().build())
+                                              .commandExecutionStatus(SUCCESS)
+                                              .build();
     when(k8sStepHelper.getReleaseName(any(), any())).thenReturn("releaseName");
 
     StepResponse response = k8sCanaryStep.finalizeExecutionWithSecurityContext(
@@ -197,7 +206,7 @@ public class K8sCanaryStepTest extends AbstractK8sStepExecutorTestBase {
     ArgumentCaptor<K8sCanaryOutcome> argumentCaptor = ArgumentCaptor.forClass(K8sCanaryOutcome.class);
     verify(executionSweepingOutputService, times(1))
         .consume(eq(ambiance), eq(OutcomeExpressionConstants.K8S_CANARY_OUTCOME), argumentCaptor.capture(),
-            eq(StepOutcomeGroup.STAGE.name()));
+            eq(StepOutcomeGroup.STEP.name()));
     assertThat(argumentCaptor.getValue().getReleaseName()).isEqualTo("releaseName");
     assertThat(argumentCaptor.getValue().getCanaryWorkload()).isEqualTo("canaryWorkload");
   }

@@ -83,6 +83,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.authenticationservice.beans.LogoutResponse;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
@@ -140,7 +141,6 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.SecretManager;
 import software.wings.security.authentication.AuthenticationManager;
 import software.wings.security.authentication.AuthenticationUtils;
-import software.wings.security.authentication.LogoutResponse;
 import software.wings.security.authentication.MarketPlaceConfig;
 import software.wings.security.authentication.TOTPAuthHandler;
 import software.wings.service.impl.AccessRequestServiceImpl;
@@ -1219,7 +1219,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testResendInvitationEmail() {
     when(accountService.get(any())).thenReturn(anAccount().withUuid(UUIDGenerator.generateUuid()).build());
-    when(userInviteQuery.get()).thenReturn(new UserInvite());
+    when(userInviteQuery.get()).thenReturn(anUserInvite().withEmail(USER_EMAIL).build());
     when(query.get()).thenReturn(anUser().build());
     when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn(PORTAL_URL + "/");
     when(wingsPersistence.delete((Query<PersistentEntity>) any())).thenReturn(true);
@@ -1244,6 +1244,7 @@ public class UserServiceTest extends WingsBaseTest {
     when(userInviteQuery.get())
         .thenReturn(anUserInvite()
                         .withUserGroups(Arrays.asList(UserGroup.builder().uuid(UUIDGenerator.generateUuid()).build()))
+                        .withEmail(TEMPORARY_EMAIL)
                         .build());
     when(subdomainUrlHelper.getPortalBaseUrl(any())).thenReturn(PORTAL_URL + "/");
     when(query.get()).thenReturn(user);
@@ -1452,14 +1453,14 @@ public class UserServiceTest extends WingsBaseTest {
         .thenReturn("5E1YekVGldTSS5Kt0GHlyWrJ6fJHmee9nXSBssefAWSOgdMwAvvbvJalnYENZ0H0EealN0CxHh34gUCN");
     HashMap<String, String> claimMap = new HashMap<>();
     claimMap.put("email", "testUser@harness.io");
-    assertThat(userService.verifyJWTToken(
-                   userService.generateJWTToken(User.Builder.anUser().build(), claimMap, JWT_CATEGORY.MULTIFACTOR_AUTH),
+    assertThat(userService.verifyJWTToken(userService.generateJWTToken(User.Builder.anUser().build(), claimMap,
+                                              JWT_CATEGORY.MULTIFACTOR_AUTH, false),
                    JWT_CATEGORY.MULTIFACTOR_AUTH))
         .isEqualTo(null);
 
     try {
       userService.verifyJWTToken(
-          userService.generateJWTToken(User.Builder.anUser().build(), claimMap, JWT_CATEGORY.MULTIFACTOR_AUTH)
+          userService.generateJWTToken(User.Builder.anUser().build(), claimMap, JWT_CATEGORY.MULTIFACTOR_AUTH, false)
               + "fakeData",
           JWT_CATEGORY.MULTIFACTOR_AUTH);
       failBecauseExceptionWasNotThrown(WingsException.class);

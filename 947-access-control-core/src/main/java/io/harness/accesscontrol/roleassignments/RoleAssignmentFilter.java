@@ -35,6 +35,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class RoleAssignmentFilter {
   @NotEmpty final String scopeFilter;
   final boolean includeChildScopes;
+  @Builder.Default @NotNull @Size(max = 100) final Set<String> scopeLevelFilter = new HashSet<>();
   @Builder.Default @NotNull @Size(max = 100) final Set<String> resourceGroupFilter = new HashSet<>();
   @Builder.Default @NotNull @Size(max = 100) final Set<String> roleFilter = new HashSet<>();
   @Setter @Builder.Default @NotNull @Size(max = 100) Set<PrincipalType> principalTypeFilter = new HashSet<>();

@@ -17,6 +17,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.filter.FilterType;
 import io.harness.filter.dto.FilterDTO;
 import io.harness.filter.service.FilterService;
+import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.interrupts.Interrupt;
 import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
 import io.harness.pms.contracts.interrupts.InterruptConfig;
@@ -25,8 +26,11 @@ import io.harness.pms.contracts.interrupts.ManualIssuer;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.filter.utils.ModuleInfoFilterUtils;
+import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.helpers.TriggeredByHelper;
 import io.harness.pms.helpers.YamlExpressionResolveHelper;
+import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetYamlWithTemplateDTO;
+import io.harness.pms.ngpipeline.inputset.helpers.ValidateAndMergeHelper;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.plan.execution.PlanExecutionInterruptType;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
@@ -34,6 +38,8 @@ import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity.PlanEx
 import io.harness.pms.plan.execution.beans.dto.InterruptDTO;
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionFilterPropertiesDTO;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
+import io.harness.security.SecurityContextBuilder;
+import io.harness.security.dto.Principal;
 import io.harness.serializer.JsonUtils;
 import io.harness.serializer.ProtoUtils;
 import io.harness.service.GraphGenerationService;
@@ -66,12 +72,14 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
   @Inject private FilterService filterService;
   @Inject private TriggeredByHelper triggeredByHelper;
   @Inject private YamlExpressionResolveHelper yamlExpressionResolveHelper;
+  @Inject private ValidateAndMergeHelper validateAndMergeHelper;
+  @Inject private PmsGitSyncHelper pmsGitSyncHelper;
 
   @Override
   public Criteria formCriteria(String accountId, String orgId, String projectId, String pipelineIdentifier,
       String filterIdentifier, PipelineExecutionFilterPropertiesDTO filterProperties, String moduleName,
       String searchTerm, ExecutionStatus status, boolean myDeployments, boolean pipelineDeleted,
-      ByteString gitEntityBasicInfo) {
+      ByteString gitSyncBranchContext) {
     Criteria criteria = new Criteria();
     if (EmptyPredicate.isNotEmpty(accountId)) {
       criteria.and(PlanExecutionSummaryKeys.accountId).is(accountId);
@@ -131,8 +139,19 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
     }
 
     Criteria gitCriteria = new Criteria();
-    if (gitEntityBasicInfo != null) {
-      gitCriteria.orOperator(where(PlanExecutionSummaryKeys.gitSyncBranchContext).is(gitEntityBasicInfo));
+    if (gitSyncBranchContext != null) {
+      Criteria gitCriteriaDeprecated =
+          Criteria.where(PlanExecutionSummaryKeys.gitSyncBranchContext).is(gitSyncBranchContext);
+
+      EntityGitDetails entityGitDetails = pmsGitSyncHelper.getEntityGitDetailsFromBytes(gitSyncBranchContext);
+      Criteria gitCriteriaNew = Criteria
+                                    .where(PlanExecutionSummaryKeys.entityGitDetails + "."
+                                        + "branch")
+                                    .is(entityGitDetails.getBranch())
+                                    .and(PlanExecutionSummaryKeys.entityGitDetails + "."
+                                        + "repoIdentifier")
+                                    .is(entityGitDetails.getRepoIdentifier());
+      gitCriteria.orOperator(gitCriteriaDeprecated, gitCriteriaNew);
     }
 
     criteria.andOperator(filterCriteria, moduleCriteria, searchCriteria, gitCriteria);
@@ -169,18 +188,31 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
   }
 
   @Override
-  public String getInputSetYaml(String accountId, String orgId, String projectId, String planExecutionId,
-      boolean pipelineDeleted, boolean resolveExpressions) {
+  public InputSetYamlWithTemplateDTO getInputSetYamlWithTemplate(String accountId, String orgId, String projectId,
+      String planExecutionId, boolean pipelineDeleted, boolean resolveExpressions) {
     Optional<PipelineExecutionSummaryEntity> pipelineExecutionSummaryEntityOptional =
         pmsExecutionSummaryRespository
             .findByAccountIdAndOrgIdentifierAndProjectIdentifierAndPlanExecutionIdAndPipelineDeletedNot(
                 accountId, orgId, projectId, planExecutionId, !pipelineDeleted);
     if (pipelineExecutionSummaryEntityOptional.isPresent()) {
       String yaml = pipelineExecutionSummaryEntityOptional.get().getInputSetYaml();
-      if (resolveExpressions && yaml != null) {
+      String template = pipelineExecutionSummaryEntityOptional.get().getPipelineTemplate();
+      if (resolveExpressions && EmptyPredicate.isNotEmpty(yaml)) {
         yaml = yamlExpressionResolveHelper.resolveExpressionsInYaml(yaml, planExecutionId);
       }
-      return yaml;
+      if (EmptyPredicate.isEmpty(template) && EmptyPredicate.isNotEmpty(yaml)) {
+        EntityGitDetails entityGitDetails = pmsGitSyncHelper.getEntityGitDetailsFromBytes(
+            pipelineExecutionSummaryEntityOptional.get().getGitSyncBranchContext());
+        if (entityGitDetails != null) {
+          template = validateAndMergeHelper.getPipelineTemplate(accountId, orgId, projectId,
+              pipelineExecutionSummaryEntityOptional.get().getPipelineIdentifier(), entityGitDetails.getBranch(),
+              entityGitDetails.getRepoIdentifier());
+        } else {
+          template = validateAndMergeHelper.getPipelineTemplate(
+              accountId, orgId, projectId, pipelineExecutionSummaryEntityOptional.get().getPipelineIdentifier());
+        }
+      }
+      return InputSetYamlWithTemplateDTO.builder().inputSetTemplateYaml(template).inputSetYaml(yaml).build();
     }
     throw new InvalidRequestException(
         "Invalid request : Input Set did not exist or pipeline execution has been deleted");
@@ -216,10 +248,14 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
   @Override
   public InterruptDTO registerInterrupt(
       PlanExecutionInterruptType executionInterruptType, String planExecutionId, String nodeExecutionId) {
+    final Principal principal = SecurityContextBuilder.getPrincipal();
     InterruptConfig interruptConfig =
         InterruptConfig.newBuilder()
             .setIssuedBy(IssuedBy.newBuilder()
-                             .setManualIssuer(ManualIssuer.newBuilder().build())
+                             .setManualIssuer(ManualIssuer.newBuilder()
+                                                  .setType(principal.getType().toString())
+                                                  .setIdentifier(principal.getName())
+                                                  .build())
                              .setIssueTime(ProtoUtils.unixMillisToTimestamp(System.currentTimeMillis()))
                              .build())
             .build();

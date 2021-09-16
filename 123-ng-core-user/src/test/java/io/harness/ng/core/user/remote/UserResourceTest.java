@@ -10,6 +10,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.accesscontrol.user.AggregateUserService;
@@ -33,7 +34,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 
 @OwnedBy(PL)
-public class UserResourceTest {
+public class UserResourceTest extends CategoryTest {
   private static final String ACCOUNT = "account";
   @Mock private NgUserService ngUserService;
   @Mock private AggregateUserService aggregateUserService;

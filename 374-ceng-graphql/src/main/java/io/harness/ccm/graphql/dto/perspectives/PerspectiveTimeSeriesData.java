@@ -10,4 +10,10 @@ import lombok.Value;
 @Builder
 public class PerspectiveTimeSeriesData {
   List<TimeSeriesDataPoints> stats;
+  List<TimeSeriesDataPoints> cpuUtilValues;
+  List<TimeSeriesDataPoints> memoryUtilValues;
+  List<TimeSeriesDataPoints> cpuRequest;
+  List<TimeSeriesDataPoints> cpuLimit;
+  List<TimeSeriesDataPoints> memoryRequest;
+  List<TimeSeriesDataPoints> memoryLimit;
 }

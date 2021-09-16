@@ -20,6 +20,8 @@ public class PortalConfig {
   @JsonProperty(defaultValue = "https://localhost:8000") private String url = "https://localhost:8000";
   private List<String> allowedOrigins = Lists.newArrayList();
   @JsonProperty(defaultValue = "") private String companyName = "";
+  @JsonProperty private String zendeskBaseUrl;
+  @JsonProperty private String gatewayPathPrefix;
   @JsonProperty(defaultValue = "/register/verify") private String verificationUrl = "/register/verify";
   @JsonProperty(defaultValue = "/app/%s/overview") private String applicationOverviewUrlPattern = "/app/%s/overview";
   @JsonProperty(defaultValue = "/app/%s/env/%s/execution/%s/detail")

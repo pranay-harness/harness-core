@@ -12,7 +12,6 @@ import io.harness.pms.contracts.execution.events.SpawnChildRequest;
 import io.harness.pms.contracts.execution.events.SuspendChainRequest;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.execution.ChainDetails;
-import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.ExecuteStrategy;
 import io.harness.pms.sdk.core.execution.InvokerPackage;
 import io.harness.pms.sdk.core.execution.ResumePackage;
@@ -23,7 +22,6 @@ import io.harness.pms.sdk.core.steps.io.ResponseDataMapper;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponseMapper;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
-import io.harness.serializer.KryoSerializer;
 import io.harness.tasks.ResponseData;
 
 import com.google.common.base.Preconditions;
@@ -37,17 +35,13 @@ import java.util.Map;
 public class ChildChainStrategy implements ExecuteStrategy {
   @Inject private SdkNodeExecutionService sdkNodeExecutionService;
   @Inject private StepRegistry stepRegistry;
-  @Inject private EngineObtainmentHelper engineObtainmentHelper;
-  @Inject private KryoSerializer kryoSerializer;
-  @Inject private StrategyHelper strategyHelper;
   @Inject private ResponseDataMapper responseDataMapper;
 
   @Override
   public void start(InvokerPackage invokerPackage) {
     Ambiance ambiance = invokerPackage.getAmbiance();
     ChildChainExecutable childChainExecutable = extractStep(ambiance);
-    ChildChainExecutableResponse childChainResponse;
-    childChainResponse = childChainExecutable.executeFirstChild(
+    ChildChainExecutableResponse childChainResponse = childChainExecutable.executeFirstChild(
         ambiance, invokerPackage.getStepParameters(), invokerPackage.getInputPackage());
     handleResponse(ambiance, childChainResponse);
   }
@@ -60,13 +54,13 @@ public class ChildChainStrategy implements ExecuteStrategy {
     Map<String, ResponseData> accumulatedResponse = resumePackage.getResponseDataMap();
     if (chainDetails.isShouldEnd()) {
       StepResponse stepResponse = childChainExecutable.finalizeExecution(
-          ambiance, resumePackage.getStepParameters(), chainDetails.getPassThroughData(), accumulatedResponse);
+          ambiance, resumePackage.getStepParameters(), chainDetails.getPassThroughBytes(), accumulatedResponse);
       sdkNodeExecutionService.handleStepResponse(ambiance.getPlanExecutionId(),
           AmbianceUtils.obtainCurrentRuntimeId(ambiance), StepResponseMapper.toStepResponseProto(stepResponse));
     } else {
       ChildChainExecutableResponse chainResponse =
           childChainExecutable.executeNextChild(ambiance, resumePackage.getStepParameters(),
-              resumePackage.getStepInputPackage(), chainDetails.getPassThroughData(), accumulatedResponse);
+              resumePackage.getStepInputPackage(), chainDetails.getPassThroughBytes(), accumulatedResponse);
       handleResponse(ambiance, chainResponse);
     }
   }

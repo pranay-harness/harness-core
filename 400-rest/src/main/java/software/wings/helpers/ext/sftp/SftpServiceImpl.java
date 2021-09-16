@@ -1,9 +1,11 @@
 package software.wings.helpers.ext.sftp;
 
+import static io.harness.annotations.dev.HarnessModule._960_API_SERVICES;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArtifactServerException;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -18,6 +20,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(CDC)
+@TargetModule(_960_API_SERVICES)
 @Singleton
 @Slf4j
 public class SftpServiceImpl implements SftpService {

@@ -10,7 +10,6 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
-        "//953-events-api:module",
         "//956-feature-flag-beans:module",
         "//960-continuous-features:module",
         "//960-persistence:module",
@@ -36,13 +35,13 @@ java_library(
     deps = [
         ":module",
         "//:lombok",
-        "//953-events-api:module",
         "//956-feature-flag-beans:module",
         "//960-continuous-features:module",
         "//960-persistence:module",
         "//960-persistence:supporter-test",
         "//980-commons:module",
         "//990-commons-test:module",
+        "//999-annotations:module",
         "@maven//:com_google_code_findbugs_annotations",
         "@maven//:com_google_guava_guava",
         "@maven//:com_google_inject_guice",

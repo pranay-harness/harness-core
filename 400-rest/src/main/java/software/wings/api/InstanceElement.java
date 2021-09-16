@@ -4,11 +4,13 @@
 
 package software.wings.api;
 
+import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.context.ContextElementType;
 import io.harness.ecs.EcsContainerDetails;
 
@@ -30,6 +32,7 @@ import lombok.Setter;
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @OwnedBy(CDP)
+@TargetModule(_957_CG_BEANS)
 public class InstanceElement implements ContextElement, VerificationElement {
   private String uuid;
   private String displayName;

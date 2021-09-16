@@ -14,7 +14,7 @@ import lombok.Data;
 @Data
 @Builder
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._871_CG_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @JsonTypeName("terragruntApplyMarkerParam")
 public class TerragruntApplyMarkerParam implements SweepingOutput {
   private String provisionerId;

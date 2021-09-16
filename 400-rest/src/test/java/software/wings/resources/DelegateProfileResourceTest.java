@@ -19,6 +19,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.CategoryTest;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
@@ -48,7 +49,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runners.Parameterized;
 import org.mockito.ArgumentCaptor;
 
-public class DelegateProfileResourceTest {
+public class DelegateProfileResourceTest extends CategoryTest {
   private static DelegateProfileService delegateProfileService = mock(DelegateProfileService.class);
   private static DelegateProfileManagerService delegateProfileManagerService =
       mock(DelegateProfileManagerService.class);

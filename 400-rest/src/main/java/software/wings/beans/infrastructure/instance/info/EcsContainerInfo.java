@@ -1,10 +1,18 @@
 package software.wings.beans.infrastructure.instance.info;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class EcsContainerInfo extends ContainerInfo {
   private String taskArn;
   private String taskDefinitionArn;

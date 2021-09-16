@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.buildsource;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
@@ -10,6 +11,9 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.artifact.ArtifactStreamCollectionStatus.STABLE;
 import static software.wings.beans.artifact.ArtifactStreamCollectionStatus.UNSTABLE;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.exception.WingsException;
@@ -50,6 +54,8 @@ import javax.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @Data
 @Slf4j
 public class BuildSourceCallback implements OldNotifyCallback {
@@ -84,6 +90,9 @@ public class BuildSourceCallback implements OldNotifyCallback {
     this.settingId = settingId;
   }
 
+  // token used for exclusion filter for stack driver
+  private static String CDC_LOG_EXCLUSION = "CDC_LOG_EXCLUSION";
+
   private void handleResponseForSuccess(DelegateResponseData notifyResponseData, ArtifactStream artifactStream) {
     try {
       executorService.submit(() -> {
@@ -106,8 +115,8 @@ public class BuildSourceCallback implements OldNotifyCallback {
   @VisibleForTesting
   void handleResponseForSuccessInternal(DelegateResponseData notifyResponseData, ArtifactStream artifactStream) {
     log.info(
-        "Processing response for BuildSourceCallback for accountId:[{}] artifactStreamId:[{}] permitId:[{}] settingId:[{}]",
-        accountId, artifactStreamId, permitId, settingId);
+        "{}: Processing response for BuildSourceCallback for accountId:[{}] artifactStreamId:[{}] permitId:[{}] settingId:[{}]",
+        CDC_LOG_EXCLUSION, accountId, artifactStreamId, permitId, settingId);
 
     BuildSourceExecutionResponse buildSourceExecutionResponse = (BuildSourceExecutionResponse) notifyResponseData;
     BuildSourceResponse buildSourceResponse = buildSourceExecutionResponse.getBuildSourceResponse();

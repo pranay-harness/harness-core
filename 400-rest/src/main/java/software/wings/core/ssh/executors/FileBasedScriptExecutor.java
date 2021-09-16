@@ -1,5 +1,10 @@
 package software.wings.core.ssh.executors;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.logging.CommandExecutionStatus;
 
@@ -9,6 +14,8 @@ import software.wings.beans.command.CopyConfigCommandUnit;
 import java.util.List;
 import org.apache.commons.lang3.tuple.Pair;
 
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public interface FileBasedScriptExecutor {
   CommandExecutionStatus copyConfigFiles(CopyConfigCommandUnit.ConfigFileMetaData configFileMetaData);
 

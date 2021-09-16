@@ -10,12 +10,14 @@ import static io.harness.pms.contracts.execution.Status.DISCONTINUING;
 import static io.harness.pms.contracts.execution.Status.ERRORED;
 import static io.harness.springdata.SpringDataMongoUtils.returnNewOptions;
 
+import static org.springframework.data.domain.Sort.by;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.plan.PlanExecutionMetadataService;
+import io.harness.engine.executions.retry.RetryStageInfo;
 import io.harness.engine.observers.NodeExecutionStartObserver;
 import io.harness.engine.observers.NodeStartInfo;
 import io.harness.engine.observers.NodeStatusUpdateObserver;
@@ -37,8 +39,10 @@ import io.harness.pms.contracts.execution.events.OrchestrationEvent;
 import io.harness.pms.contracts.execution.events.OrchestrationEvent.Builder;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.interrupts.InterruptConfig;
+import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.triggers.TriggerPayload;
+import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
@@ -61,6 +65,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
@@ -226,7 +231,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   }
 
   @Override
-  public long markLeavesDiscontinuingOnAbort(String planExecutionId, List<String> leafInstanceIds) {
+  public long markLeavesDiscontinuing(String planExecutionId, List<String> leafInstanceIds) {
     Update ops = new Update();
     ops.set(NodeExecutionKeys.status, DISCONTINUING);
     Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
@@ -240,7 +245,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   }
 
   @Override
-  public long markAllLeavesDiscontinuingOnAbort(String planExecutionId, EnumSet<Status> statuses) {
+  public long markAllLeavesDiscontinuing(String planExecutionId, EnumSet<Status> statuses) {
     Update ops = new Update();
     ops.set(NodeExecutionKeys.status, DISCONTINUING);
     Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
@@ -438,5 +443,43 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       return false;
     }
     return true;
+  }
+
+  @Override
+  public List<RetryStageInfo> getStageDetailFromPlanExecutionId(String planExecutionId) {
+    Criteria criteria = Criteria.where(NodeExecutionKeys.planExecutionId)
+                            .is(planExecutionId)
+                            .and(NodeExecutionKeys.stepCategory)
+                            .is(StepCategory.STAGE);
+
+    Query query = new Query().addCriteria(criteria);
+    query.with(by(NodeExecutionKeys.createdAt));
+    List<NodeExecution> nodeExecutionList = mongoTemplate.find(query, NodeExecution.class);
+
+    return fetchStageDetailFromNodeExecution(nodeExecutionList);
+  }
+
+  public List<RetryStageInfo> fetchStageDetailFromNodeExecution(List<NodeExecution> nodeExecutionList) {
+    List<RetryStageInfo> stageDetails = new ArrayList<>();
+
+    if (nodeExecutionList.size() == 0) {
+      throw new InvalidRequestException("No stage to retry");
+    }
+
+    for (NodeExecution nodeExecution : nodeExecutionList) {
+      PlanNodeProto node = nodeExecution.getNode();
+      String nextId = nodeExecution.getNextId();
+      String parentId = nodeExecution.getParentId();
+      RetryStageInfo stageDetail = RetryStageInfo.builder()
+                                       .name(node.getName())
+                                       .identifier(node.getIdentifier())
+                                       .parentId(parentId)
+                                       .createdAt(nodeExecution.getCreatedAt())
+                                       .status(ExecutionStatus.getExecutionStatus(nodeExecution.getStatus()))
+                                       .nextId(nextId != null ? nextId : get(parentId).getNextId())
+                                       .build();
+      stageDetails.add(stageDetail);
+    }
+    return stageDetails;
   }
 }

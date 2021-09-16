@@ -15,9 +15,9 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @OwnedBy(DX)
 public class ServiceDeploymentListInfo {
-  long startTime;
-  long endTime;
-  long totalDeployments;
+  Long startTime;
+  Long endTime;
+  Long totalDeployments;
   double failureRate;
   double frequency;
   double failureRateChangeRate;

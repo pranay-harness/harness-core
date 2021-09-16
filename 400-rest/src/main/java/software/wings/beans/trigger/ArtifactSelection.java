@@ -2,7 +2,9 @@ package software.wings.beans.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.yaml.BaseYaml;
 
 import lombok.Builder;
@@ -20,6 +22,7 @@ import org.mongodb.morphia.annotations.Transient;
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "ArtifactSelectionKeys")
+@TargetModule(HarnessModule._815_CG_TRIGGERS)
 public class ArtifactSelection {
   @NotEmpty private String serviceId;
   private String serviceName;

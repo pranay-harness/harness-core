@@ -5,7 +5,9 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.CategoryTest;
 import io.harness.MockableTestMixin;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.Account;
 import software.wings.beans.Account.Builder;
@@ -19,6 +21,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
 @OwnedBy(PL)
+@TargetModule(HarnessModule._980_COMMONS)
 public abstract class WingsBaseTest extends CategoryTest implements MockableTestMixin {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 

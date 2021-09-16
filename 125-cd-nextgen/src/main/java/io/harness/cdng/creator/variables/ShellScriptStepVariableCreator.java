@@ -1,5 +1,8 @@
 package io.harness.cdng.creator.variables;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.StepSpecTypeConstants;
@@ -10,7 +13,7 @@ import io.harness.pms.sdk.core.pipeline.variables.VariableCreatorHelper;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
-import io.harness.steps.common.script.ShellScriptSourceType;
+import io.harness.steps.shellscript.ShellScriptSourceType;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -18,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@OwnedBy(PIPELINE)
 public class ShellScriptStepVariableCreator extends GenericStepVariableCreator {
   @Override
   public Set<String> getSupportedStepTypes() {
@@ -57,7 +61,7 @@ public class ShellScriptStepVariableCreator extends GenericStepVariableCreator {
 
     YamlField outputVariablesField = yamlNode.getField(YamlTypes.OUTPUT_VARIABLES);
     if (VariableCreatorHelper.isNotYamlFieldEmpty(outputVariablesField)) {
-      addVariablesForVariables(outputVariablesField, yamlPropertiesMap);
+      addVariablesForOutputVariables(outputVariablesField, yamlOutputPropertiesMap);
     }
   }
 

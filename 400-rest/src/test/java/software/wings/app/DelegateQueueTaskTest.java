@@ -1,5 +1,6 @@
 package software.wings.app;
 
+import static io.harness.beans.DelegateTask.Status.PARKED;
 import static io.harness.beans.FeatureName.PER_AGENT_CAPABILITIES;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.GEORGE;
@@ -59,6 +60,22 @@ public class DelegateQueueTaskTest extends WingsBaseTest {
 
     delegateQueueTask.endTasks(asList(delegateTask.getUuid()));
 
+    assertThat(persistence.createQuery(DelegateTask.class).count()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = GEORGE)
+  @Category(UnitTests.class)
+  public void testEndTasksWithCorruptedRecord132() {
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .accountId("FOO")
+                                    .status(PARKED)
+                                    .expiry(System.currentTimeMillis() - 10)
+                                    .data(TaskData.builder().timeout(1).build())
+                                    .build();
+    persistence.save(delegateTask);
+
+    delegateQueueTask.run();
     assertThat(persistence.createQuery(DelegateTask.class).count()).isEqualTo(0);
   }
 

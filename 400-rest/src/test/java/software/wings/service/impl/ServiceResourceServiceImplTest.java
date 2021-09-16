@@ -60,6 +60,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -131,6 +133,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mongodb.morphia.query.UpdateOperations;
 
+@OwnedBy(HarnessTeam.CDC)
 public class ServiceResourceServiceImplTest extends WingsBaseTest {
   @Captor ArgumentCaptor<Command> commandCaptor;
   @Captor ArgumentCaptor<Boolean> booleanCaptor;
