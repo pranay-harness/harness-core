@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.EnvironmentType.PROD;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
@@ -66,6 +67,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
@@ -149,6 +151,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 /**
  * Created by anubhaw on 6/28/16.
  */
+@OwnedBy(CDC)
 public class EnvironmentServiceTest extends WingsBaseTest {
   private static final String FILE_CONTENT = "fileContent";
 
