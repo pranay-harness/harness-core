@@ -946,4 +946,6 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
         dashboardService.getCompareServicesByEnvironment(ACCOUNT_3_ID, APP_6_ID, ENV_9_ID, ENV_10_ID, 5, 5);
     assertThat(compareEnvironmentAggregationResponseInfos3).hasSize(1);
   }
+
+  public void doNothing() {}
 }
