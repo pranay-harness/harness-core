@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
-import io.harness.pms.merger.PipelineYamlConfig;
+import io.harness.pms.merger.YamlConfig;
 import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.merger.fqn.FQNNode;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
@@ -36,7 +36,7 @@ public class YamlSubMapExtractor {
    * The given FQN refers to a key in the pipeline config. This method extracts the value corresponding
    * to this FQN. This value can be a list or a map as well
    */
-  public JsonNode getNodeForFQN(PipelineYamlConfig config, FQN baseFQN) {
+  public JsonNode getNodeForFQN(YamlConfig config, FQN baseFQN) {
     JsonNode curr = config.getYamlMap();
     boolean prevWasParallel = false;
     for (FQNNode node : baseFQN.getFqnList()) {
