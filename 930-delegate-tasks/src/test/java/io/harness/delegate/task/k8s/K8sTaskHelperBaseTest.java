@@ -181,12 +181,10 @@ import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import me.snowdrop.istio.api.networking.v1alpha3.Destination;
 import me.snowdrop.istio.api.networking.v1alpha3.DestinationBuilder;
-import me.snowdrop.istio.api.networking.v1alpha3.DestinationWeight;
-import me.snowdrop.istio.api.networking.v1alpha3.DestinationWeightBuilder;
 import me.snowdrop.istio.api.networking.v1alpha3.HTTPRoute;
 import me.snowdrop.istio.api.networking.v1alpha3.HTTPRouteBuilder;
-import me.snowdrop.istio.api.networking.v1alpha3.NumberPort;
-import me.snowdrop.istio.api.networking.v1alpha3.PortSelectorBuilder;
+import me.snowdrop.istio.api.networking.v1alpha3.HTTPRouteDestination;
+import me.snowdrop.istio.api.networking.v1alpha3.PortSelector;
 import me.snowdrop.istio.api.networking.v1alpha3.Subset;
 import me.snowdrop.istio.api.networking.v1alpha3.TCPRoute;
 import me.snowdrop.istio.api.networking.v1alpha3.TLSRoute;
@@ -1311,9 +1309,9 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
             IstioDestinationWeight.builder().destination("host: test\nsubset: default").weight("50").build());
 
     k8sTaskHelperBase.updateVirtualServiceWithDestinationWeights(destinationWeights, service, executionLogCallback);
-    List<DestinationWeight> routes = service.getSpec().getHttp().get(0).getRoute();
-    assertThat(routes.stream().map(DestinationWeight::getWeight)).containsExactly(10, 40, 50);
-    assertThat(routes.stream().map(DestinationWeight::getDestination).map(Destination::getSubset))
+    List<HTTPRouteDestination> routes = service.getSpec().getHttp().get(0).getRoute();
+    assertThat(routes.stream().map(HTTPRouteDestination::getWeight)).containsExactly(10, 40, 50);
+    assertThat(routes.stream().map(HTTPRouteDestination::getDestination).map(Destination::getSubset))
         .containsExactly(HarnessLabelValues.trackCanary, HarnessLabelValues.trackStable, "default");
   }
 
@@ -1389,9 +1387,9 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
     doReturn(asList(service1)).when(resource).get();
     VirtualService result = k8sTaskHelperBase.updateVirtualServiceManifestFilesWithRoutesForCanary(
         resources, KubernetesConfig.builder().build(), executionLogCallback);
-    List<DestinationWeight> routes = result.getSpec().getHttp().get(0).getRoute();
-    assertThat(routes.stream().map(DestinationWeight::getWeight)).containsExactly(100, 0);
-    assertThat(routes.stream().map(DestinationWeight::getDestination).map(Destination::getSubset))
+    List<HTTPRouteDestination> routes = result.getSpec().getHttp().get(0).getRoute();
+    assertThat(routes.stream().map(HTTPRouteDestination::getWeight)).containsExactly(100, 0);
+    assertThat(routes.stream().map(HTTPRouteDestination::getDestination).map(Destination::getSubset))
         .containsExactly(HarnessLabelValues.trackStable, HarnessLabelValues.trackCanary);
   }
 
@@ -1401,18 +1399,13 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
             .stream()
             .map(entry
                 -> new HTTPRouteBuilder()
-                       .withRoute(
-                           new DestinationWeightBuilder()
-                               .withDestination(
-                                   new DestinationBuilder()
-                                       .withHost(entry.getKey())
-                                       .withPort(
-                                           new PortSelectorBuilder().withPort(new NumberPort(entry.getValue())).build())
-                                       .build())
-                               .build())
+                       .withRoute(new HTTPRouteDestination(new DestinationBuilder()
+                                                               .withHost(entry.getKey())
+                                                               .withPort(new PortSelector(entry.getValue()))
+                                                               .build(),
+                           null, null))
                        .build())
             .collect(Collectors.toList());
-
     return new VirtualServiceBuilder().withSpec(new VirtualServiceSpecBuilder().withHttp(routes).build()).build();
   }
 
