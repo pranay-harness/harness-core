@@ -5,7 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.NGExpressionUtils;
 import io.harness.exception.InvalidRequestException;
-import io.harness.pms.merger.PipelineYamlConfig;
+import io.harness.pms.merger.YamlConfig;
 import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlUtils;
@@ -28,20 +28,20 @@ import lombok.extern.slf4j.Slf4j;
 public class MergeHelper {
   public String mergeInputSetIntoPipeline(
       String pipelineYaml, String inputSetPipelineCompYaml, boolean appendInputSetValidator) {
-    return mergeInputSetIntoPipeline(pipelineYaml, inputSetPipelineCompYaml, true, appendInputSetValidator);
+    return mergeInputSetIntoOriginYaml(pipelineYaml, inputSetPipelineCompYaml, true, appendInputSetValidator);
   }
 
-  private String mergeInputSetIntoPipeline(String pipelineYaml, String inputSetPipelineCompYaml,
-      boolean convertToTemplate, boolean appendInputSetValidator) {
-    PipelineYamlConfig pipelineConfig = new PipelineYamlConfig(pipelineYaml);
-    String templateYaml = TemplateHelper.createTemplateFromPipeline(pipelineYaml);
+  private String mergeInputSetIntoOriginYaml(
+      String originYaml, String inputSetPipelineCompYaml, boolean convertToTemplate, boolean appendInputSetValidator) {
+    YamlConfig originYamlConfig = new YamlConfig(originYaml);
+    String templateYaml = YamlTemplateHelper.createTemplateFromPipeline(originYaml);
     if (!convertToTemplate) {
-      templateYaml = pipelineYaml;
+      templateYaml = originYaml;
     }
-    PipelineYamlConfig inputSetConfig = new PipelineYamlConfig(inputSetPipelineCompYaml);
-    PipelineYamlConfig templateConfig = new PipelineYamlConfig(templateYaml);
+    YamlConfig inputSetConfig = new YamlConfig(inputSetPipelineCompYaml);
+    YamlConfig templateConfig = new YamlConfig(templateYaml);
 
-    Map<FQN, Object> res = new LinkedHashMap<>(pipelineConfig.getFqnToValueMap());
+    Map<FQN, Object> res = new LinkedHashMap<>(originYamlConfig.getFqnToValueMap());
     templateConfig.getFqnToValueMap().keySet().forEach(key -> {
       if (inputSetConfig.getFqnToValueMap().containsKey(key)) {
         Object value = inputSetConfig.getFqnToValueMap().get(key);
@@ -62,7 +62,7 @@ public class MergeHelper {
         }
       }
     });
-    return (new PipelineYamlConfig(res, pipelineConfig.getYamlMap())).getYaml();
+    return (new YamlConfig(res, originYamlConfig.getYamlMap())).getYaml();
   }
 
   private void throwUpdatedKeyException(FQN key, Object templateValue, Object value) {
@@ -75,7 +75,7 @@ public class MergeHelper {
         inputSetYamlList.stream().map(InputSetYamlHelper::getPipelineComponent).collect(Collectors.toList());
     String res = template;
     for (String yaml : inputSetPipelineCompYamlList) {
-      res = mergeInputSetIntoPipeline(res, yaml, false, appendInputSetValidator);
+      res = mergeInputSetIntoOriginYaml(res, yaml, false, appendInputSetValidator);
     }
     return res;
   }
