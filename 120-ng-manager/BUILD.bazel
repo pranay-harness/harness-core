@@ -22,6 +22,7 @@ shared_dependencies = [
     "//123-ng-core-user:module",
     "//125-cd-nextgen:module",
     "//136-git-sync-manager:module",
+    "//295-cdng-contracts:module",
     "//920-ng-signup:module",
     "//930-ng-license-manager:module",
     "//940-primary-version-manager:module",

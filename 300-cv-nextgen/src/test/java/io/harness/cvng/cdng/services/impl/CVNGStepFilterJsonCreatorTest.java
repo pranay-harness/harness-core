@@ -12,6 +12,7 @@ import io.harness.cvng.cdng.beans.CVNGStepType;
 import io.harness.cvng.cdng.beans.TestVerificationJobSpec;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.services.api.MetricPackService;
+import io.harness.cvng.core.services.api.monitoredService.ChangeSourceService;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.pms.contracts.plan.SetupMetadata;
@@ -30,7 +31,9 @@ import com.google.inject.Inject;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -41,6 +44,7 @@ public class CVNGStepFilterJsonCreatorTest extends CvNextGenTestBase {
       Arrays.asList("pipeline/pipeline-with-verify.yaml", "pipeline/pipeline-canary-with-verify.yaml");
   @Inject private CVNGStepFilterJsonCreator cvngStepFilterJsonCreator;
   @Inject private MonitoredServiceService monitoredServiceService;
+  @Inject private ChangeSourceService changeSourceService;
   @Inject private MetricPackService metricPackService;
   private BuilderFactory builderFactory;
   private String accountId;
@@ -58,6 +62,9 @@ public class CVNGStepFilterJsonCreatorTest extends CvNextGenTestBase {
     serviceIdentifier = builderFactory.getContext().getServiceIdentifier();
     envIdentifier = builderFactory.getContext().getEnvIdentifier();
     metricPackService.createDefaultMetricPackAndThresholds(accountId, orgIdentifier, projectIdentifier);
+
+    FieldUtils.writeField(changeSourceService, "changeSourceUpdateHandlerMap", new HashMap<>(), true);
+    FieldUtils.writeField(monitoredServiceService, "changeSourceService", changeSourceService, true);
   }
 
   @Test

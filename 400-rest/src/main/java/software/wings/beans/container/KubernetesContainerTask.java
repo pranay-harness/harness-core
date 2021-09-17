@@ -9,6 +9,8 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.strip;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.WingsException;
@@ -53,6 +55,7 @@ import org.apache.commons.io.LineIterator;
 @JsonTypeName("KUBERNETES")
 @EqualsAndHashCode(callSuper = true)
 @Slf4j
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class KubernetesContainerTask extends ContainerTask {
   public static final String CONFIG_MAP_NAME_PLACEHOLDER_REGEX = "\\$\\{CONFIG_MAP_NAME}";
   public static final String SECRET_MAP_NAME_PLACEHOLDER_REGEX = "\\$\\{SECRET_MAP_NAME}";

@@ -54,4 +54,5 @@ public class WaitInstance implements WaitEngineEntity {
 
   // Timeout instance will expire after this duration if 0 it will never expire
   Duration timeout;
+  @NonFinal @Wither String timeoutInstanceId;
 }

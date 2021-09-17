@@ -12,6 +12,7 @@ import io.harness.cvng.activity.entities.HarnessCDActivity;
 import io.harness.cvng.activity.entities.InfrastructureActivity;
 import io.harness.cvng.activity.entities.KubernetesActivity;
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
+import io.harness.cvng.activity.entities.KubernetesClusterActivity;
 import io.harness.cvng.activity.entities.PagerDutyActivity;
 import io.harness.cvng.alert.entities.AlertRule;
 import io.harness.cvng.alert.entities.AlertRuleAnomaly;
@@ -165,6 +166,7 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(PagerDutyChangeSource.class);
     set.add(HarnessCDActivity.class);
     set.add(KubernetesChangeSource.class);
+    set.add(KubernetesClusterActivity.class);
     set.add(Webhook.class);
     set.add(PagerDutyWebhook.class);
     set.add(PagerDutyActivity.class);

@@ -48,6 +48,7 @@ public class CgOrchestrationRegistrars {
           .addAll(SMCoreRegistrars.morphiaRegistrars)
           .addAll(DelegateServiceBeansRegistrars.morphiaRegistrars)
           .addAll(FeatureFlagBeansRegistrars.morphiaRegistrars)
+          .addAll(EventsFrameworkRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =

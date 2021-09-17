@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -174,6 +175,21 @@ public class WaitNotifyEngine {
       if (isEmpty(waitInstance.getWaitingOnCorrelationIds())) {
         sendNotification(waitInstance);
       }
+    }
+  }
+
+  public boolean doneWithWithoutCallback(@NonNull String correlationId) {
+    try {
+      WaitInstance waitInstance;
+      while ((waitInstance = persistenceWrapper.modifyAndFetchWaitInstance(correlationId)) != null) {
+        if (isEmpty(waitInstance.getWaitingOnCorrelationIds())) {
+          persistenceWrapper.deleteWaitInstance(waitInstance);
+        }
+      }
+      return true;
+    } catch (Exception exception) {
+      log.error("Failed to Noop notify for correlationId: {}", correlationId, exception);
+      return false;
     }
   }
 }

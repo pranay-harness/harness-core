@@ -7,6 +7,8 @@ import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 
 import io.harness.cvng.activity.entities.HarnessCDActivity;
 import io.harness.cvng.activity.entities.HarnessCDActivity.HarnessCDActivityBuilder;
+import io.harness.cvng.activity.entities.KubernetesClusterActivity;
+import io.harness.cvng.activity.entities.KubernetesClusterActivity.KubernetesClusterActivityBuilder;
 import io.harness.cvng.activity.entities.PagerDutyActivity;
 import io.harness.cvng.activity.entities.PagerDutyActivity.PagerDutyActivityBuilder;
 import io.harness.cvng.beans.CVMonitoringCategory;
@@ -16,6 +18,9 @@ import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.beans.change.ChangeEventDTO.ChangeEventDTOBuilder;
 import io.harness.cvng.beans.change.ChangeSourceType;
 import io.harness.cvng.beans.change.HarnessCDEventMetadata;
+import io.harness.cvng.beans.change.KubernetesChangeEventMetadata;
+import io.harness.cvng.beans.change.KubernetesChangeEventMetadata.Action;
+import io.harness.cvng.beans.change.KubernetesChangeEventMetadata.KubernetesResourceType;
 import io.harness.cvng.beans.change.PagerDutyEventMetaData;
 import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.cdng.beans.CVNGStepInfo;
@@ -164,6 +169,8 @@ public class BuilderFactory {
             ServiceDependencyDTO.builder().monitoredServiceIdentifier("service2").build()))
         .sources(MonitoredServiceDTO.Sources.builder()
                      .healthSources(Arrays.asList(createHealthSource()).stream().collect(Collectors.toSet()))
+                     .changeSources(Sets.newHashSet(getPagerDutyChangeSourceDTOBuilder().build(),
+                         getHarnessCDChangeSourceDTOBuilder().build(), getKubernetesChangeSourceDTOBuilder().build()))
                      .build());
   }
 
@@ -389,6 +396,25 @@ public class BuilderFactory {
         .activityStartTime(clock.instant());
   }
 
+  public KubernetesClusterActivityBuilder getKubernetesClusterActivityBuilder() {
+    return KubernetesClusterActivity.builder()
+        .accountId(context.getAccountId())
+        .orgIdentifier(context.getOrgIdentifier())
+        .projectIdentifier(context.getProjectIdentifier())
+        .serviceIdentifier(context.getServiceIdentifier())
+        .environmentIdentifier(context.getEnvIdentifier())
+        .eventTime(clock.instant())
+        .changeSourceIdentifier("changeSourceID")
+        .type(ChangeSourceType.KUBERNETES.getActivityType())
+        .oldYaml("oldYaml")
+        .newYaml("newYaml")
+        .resourceType(KubernetesResourceType.ReplicaSet)
+        .action(Action.Update)
+        .reason("replica set update")
+        .namespace("cv")
+        .workload("workload");
+  }
+
   public PagerDutyActivityBuilder getPagerDutyActivityBuilder() {
     return PagerDutyActivity.builder()
         .accountId(context.getAccountId())
@@ -420,6 +446,21 @@ public class BuilderFactory {
                                  .artifactType("artifactType")
                                  .artifactTag("artifactTag")
                                  .status("status")
+                                 .build());
+  }
+
+  public ChangeEventDTOBuilder getKubernetesClusterChangeEventDTOBuilder() {
+    return getChangeEventDTOBuilder()
+        .type(ChangeSourceType.KUBERNETES)
+        .changeEventMetaData(KubernetesChangeEventMetadata.builder()
+                                 .oldYaml("oldYaml")
+                                 .newYaml("newYaml")
+                                 .resourceType(KubernetesResourceType.ReplicaSet)
+                                 .action(Action.Update)
+                                 .reason("replica set update")
+                                 .namespace("cv")
+                                 .workload("workload")
+                                 .timestamp(Instant.now())
                                  .build());
   }
 

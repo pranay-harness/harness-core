@@ -56,6 +56,7 @@ public class WorkloadRecommendationService {
         mergeHistogram(histogramList, workloadRecommendation.get().getContainerRecommendations());
 
     return WorkloadRecommendationDTO.builder()
+        .id(workloadRecommendation.get().getUuid())
         .containerRecommendations(workloadRecommendation.get().getContainerRecommendations())
         .items(containerHistogramList)
         .lastDayCost(workloadRecommendation.get().getLastDayCost())

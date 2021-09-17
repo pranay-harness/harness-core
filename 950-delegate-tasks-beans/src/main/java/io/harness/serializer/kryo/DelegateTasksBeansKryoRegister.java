@@ -410,6 +410,7 @@ import io.harness.secretmanagerclient.ValueType;
 import io.harness.serializer.KryoRegistrar;
 
 import software.wings.beans.TaskType;
+import software.wings.helpers.ext.ecs.response.EcsCommandResponse;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.ElkValidationType;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
@@ -903,5 +904,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AwsVPC.class, 7319);
     kryo.register(AwsSubnet.class, 7320);
     kryo.register(HelmCommandResponse.class, 5261);
+
+    kryo.register(EcsCommandResponse.class, 5608);
   }
 }

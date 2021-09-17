@@ -9,6 +9,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.delegate.DelegateProfileExecutedAtResponse;
 import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateApproval;
@@ -171,4 +172,8 @@ public interface DelegateService extends OwnedByAccount {
   void regenerateCapabilityPermissions(String accountId, String delegateId);
 
   DelegateGroup upsertDelegateGroup(String name, String accountId, DelegateSetupDetails delegateSetupDetails);
+
+  Delegate clearProfileExecutedAt(String accountId, String delegateId);
+
+  DelegateProfileExecutedAtResponse fetchProfileExecutedAt(String accountId, String delegateId);
 }
