@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.NGExpressionUtils;
-import io.harness.pms.merger.PipelineYamlConfig;
+import io.harness.pms.merger.YamlConfig;
 import io.harness.pms.merger.fqn.FQN;
 
 import java.util.LinkedHashMap;
@@ -13,18 +13,22 @@ import lombok.experimental.UtilityClass;
 
 @OwnedBy(PIPELINE)
 @UtilityClass
-public class TemplateHelper {
+public class YamlTemplateHelper {
   public String createTemplateFromPipeline(String pipelineYaml) {
-    return createTemplateFromPipeline(pipelineYaml, true);
+    return createTemplate(pipelineYaml, true);
   }
 
   public String removeRuntimeInputFromYaml(String runtimeInputYaml) {
-    return createTemplateFromPipeline(runtimeInputYaml, false);
+    return createTemplate(runtimeInputYaml, false);
   }
 
-  private String createTemplateFromPipeline(String pipelineYaml, boolean keepInput) {
-    PipelineYamlConfig pipeline = new PipelineYamlConfig(pipelineYaml);
-    Map<FQN, Object> fullMap = pipeline.getFqnToValueMap();
+  public String createTemplateFromYaml(String templateYaml) {
+    return createTemplate(templateYaml, true);
+  }
+
+  private String createTemplate(String yaml, boolean keepInput) {
+    YamlConfig yamlConfig = new YamlConfig(yaml);
+    Map<FQN, Object> fullMap = yamlConfig.getFqnToValueMap();
     Map<FQN, Object> templateMap = new LinkedHashMap<>();
     fullMap.keySet().forEach(key -> {
       String value = fullMap.get(key).toString().replace("\"", "");
@@ -34,6 +38,6 @@ public class TemplateHelper {
         templateMap.put(key, fullMap.get(key));
       }
     });
-    return (new PipelineYamlConfig(templateMap, pipeline.getYamlMap())).getYaml();
+    return (new YamlConfig(templateMap, yamlConfig.getYamlMap())).getYaml();
   }
 }

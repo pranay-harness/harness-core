@@ -2,7 +2,7 @@ package io.harness.pms.inputset.helpers;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.pms.merger.helpers.MergeHelper.mergeInputSetIntoPipeline;
-import static io.harness.pms.merger.helpers.TemplateHelper.createTemplateFromPipeline;
+import static io.harness.pms.merger.helpers.YamlTemplateHelper.createTemplateFromPipeline;
 import static io.harness.rule.OwnerRule.NAMAN;
 
 import static org.assertj.core.api.Assertions.assertThat;

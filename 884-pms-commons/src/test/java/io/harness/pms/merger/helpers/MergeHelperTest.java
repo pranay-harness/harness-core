@@ -3,7 +3,7 @@ package io.harness.pms.merger.helpers;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.pms.merger.helpers.MergeHelper.mergeInputSetIntoPipeline;
 import static io.harness.pms.merger.helpers.MergeHelper.mergeInputSets;
-import static io.harness.pms.merger.helpers.TemplateHelper.createTemplateFromPipeline;
+import static io.harness.pms.merger.helpers.YamlTemplateHelper.createTemplateFromPipeline;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.NAMAN;
 

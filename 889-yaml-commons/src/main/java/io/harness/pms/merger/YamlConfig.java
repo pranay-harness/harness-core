@@ -18,12 +18,12 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PIPELINE)
 @Data
 @Slf4j
-public class PipelineYamlConfig {
+public class YamlConfig {
   private String yaml;
   private JsonNode yamlMap;
   private Map<FQN, Object> fqnToValueMap;
 
-  public PipelineYamlConfig(String yaml) {
+  public YamlConfig(String yaml) {
     this.yaml = yaml;
     try {
       yamlMap = YamlUtils.readTree(yaml).getNode().getCurrJsonNode();
@@ -34,7 +34,7 @@ public class PipelineYamlConfig {
     fqnToValueMap = FQNMapGenerator.generateFQNMap(yamlMap);
   }
 
-  public PipelineYamlConfig(Map<FQN, Object> fqnToValueMap, JsonNode originalYaml) {
+  public YamlConfig(Map<FQN, Object> fqnToValueMap, JsonNode originalYaml) {
     this.fqnToValueMap = fqnToValueMap;
     yamlMap = YamlMapGenerator.generateYamlMap(fqnToValueMap, originalYaml);
     if (yamlMap.size() != 0) {
