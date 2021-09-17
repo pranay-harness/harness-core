@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Singleton
 public class AnomalyService {
@@ -28,10 +29,10 @@ public class AnomalyService {
       List<QLCEViewFilterWrapper> filters, List<QLCEViewGroupBy> groupBy, String accountId) {
     List<QLCEViewTimeFilter> timeFilters = viewsQueryHelper.getTimeFilters(filters);
     List<QLCEViewFilter> idFilters = viewsQueryHelper.getIdFilters(filters);
-    String perspectiveId = viewsQueryHelper.getPerspectiveIdFromMetadataFilter(filters);
+    Optional<String> perspectiveId = viewsQueryHelper.getPerspectiveIdFromMetadataFilter(filters);
     List<ViewRule> viewRuleList = new ArrayList<>();
-    if (perspectiveId != null) {
-      CEView perspective = viewService.get(perspectiveId);
+    if (perspectiveId.isPresent()) {
+      CEView perspective = viewService.get(perspectiveId.get());
       viewRuleList = perspective.getViewRules();
     }
     // Todo: filter out irrelevant filters and group by here

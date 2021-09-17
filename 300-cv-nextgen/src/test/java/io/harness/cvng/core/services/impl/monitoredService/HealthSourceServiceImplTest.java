@@ -193,6 +193,57 @@ public class HealthSourceServiceImplTest extends CvNextGenTestBase {
     assertThat(cvConfig.getMetricPack().getCategory()).isEqualTo(CVMonitoringCategory.ERRORS);
   }
 
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testUpdate_updateCVConfigsWithMetricPacks() {
+    HealthSource healthSource = createHealthSource(CVMonitoringCategory.ERRORS);
+    healthSourceService.create(accountId, orgIdentifier, projectIdentifier, environmentIdentifier, serviceIdentifier,
+        nameSpaceIdentifier, Sets.newHashSet(healthSource), true);
+    healthSource.setIdentifier("new-identifier");
+    healthSource.setName("new-name");
+    AppDynamicsHealthSourceSpec appDynamicsHealthSourceSpec = (AppDynamicsHealthSourceSpec) healthSource.getSpec();
+    appDynamicsHealthSourceSpec.setMetricPacks(
+        Arrays
+            .asList(MetricPackDTO.builder().identifier(CVMonitoringCategory.ERRORS).build(),
+                MetricPackDTO.builder().identifier(CVMonitoringCategory.PERFORMANCE).build())
+            .stream()
+            .collect(Collectors.toSet()));
+    appDynamicsHealthSourceSpec.setFeature("new-feature");
+    appDynamicsHealthSourceSpec.setTierName("new-tier-name");
+    appDynamicsHealthSourceSpec.setApplicationName("new-application-name");
+    healthSourceService.update(accountId, orgIdentifier, projectIdentifier, environmentIdentifier, serviceIdentifier,
+        nameSpaceIdentifier, Sets.newHashSet(healthSource));
+
+    List<CVConfig> cvConfigs = cvConfigService.list(accountId, orgIdentifier, projectIdentifier,
+        HealthSourceService.getNameSpacedIdentifier(nameSpaceIdentifier, healthSource.getIdentifier()));
+    assertThat(cvConfigs.size()).isEqualTo(2);
+
+    for (CVConfig cvConfig : cvConfigs) {
+      AppDynamicsCVConfig appdCVConfig = (AppDynamicsCVConfig) cvConfig;
+      assertThat(appdCVConfig.getIdentifier())
+          .isEqualTo(HealthSourceService.getNameSpacedIdentifier(nameSpaceIdentifier, "new-identifier"));
+      assertThat(appdCVConfig.getMonitoringSourceName()).isEqualTo("new-name");
+      assertThat(appdCVConfig.getProductName()).isEqualTo("new-feature");
+      assertThat(appdCVConfig.getTierName()).isEqualTo("new-tier-name");
+      assertThat(appdCVConfig.getApplicationName()).isEqualTo("new-application-name");
+      assertThat(appdCVConfig.getMetricPack().getCategory())
+          .isIn(CVMonitoringCategory.ERRORS, CVMonitoringCategory.PERFORMANCE);
+    }
+
+    Set<HealthSource> saveHealthSources = healthSourceService.get(
+        accountId, orgIdentifier, projectIdentifier, nameSpaceIdentifier, Arrays.asList("new-identifier"));
+    assertThat(saveHealthSources.size()).isEqualTo(1);
+    assertThat(saveHealthSources.iterator().next().getName()).isEqualTo("new-name");
+    assertThat(saveHealthSources.iterator().next().getIdentifier()).isEqualTo("new-identifier");
+    AppDynamicsHealthSourceSpec savedAppdHealthSourceSpec =
+        (AppDynamicsHealthSourceSpec) saveHealthSources.iterator().next().getSpec();
+    assertThat(savedAppdHealthSourceSpec.getTierName()).isEqualTo("new-tier-name");
+    assertThat(savedAppdHealthSourceSpec.getApplicationName()).isEqualTo("new-application-name");
+    assertThat(savedAppdHealthSourceSpec.getFeature()).isEqualTo("new-feature");
+    assertThat(savedAppdHealthSourceSpec.getMetricPacks().size()).isEqualTo(2);
+  }
+
   HealthSource createHealthSource(CVMonitoringCategory cvMonitoringCategory) {
     HealthSourceSpec healthSourceSpec =
         AppDynamicsHealthSourceSpec.builder()

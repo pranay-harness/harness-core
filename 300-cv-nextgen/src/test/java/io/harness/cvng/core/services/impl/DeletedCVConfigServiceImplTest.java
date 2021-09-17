@@ -2,6 +2,7 @@ package io.harness.cvng.core.services.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.KANHAIYA;
 import static io.harness.rule.OwnerRule.NEMANJA;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -15,11 +16,14 @@ import io.harness.cvng.beans.LogRecordDTO;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.DeletedCVConfig;
 import io.harness.cvng.core.entities.LogRecord;
+import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask;
+import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask.MonitoringSourcePerpetualTaskKeys;
 import io.harness.cvng.core.entities.SplunkCVConfig;
 import io.harness.cvng.core.entities.VerificationTask;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DeletedCVConfigService;
 import io.harness.cvng.core.services.api.LogRecordService;
+import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.models.VerificationType;
 import io.harness.persistence.HPersistence;
@@ -27,6 +31,7 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -44,6 +49,7 @@ public class DeletedCVConfigServiceImplTest extends CvNextGenTestBase {
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private CVConfigService cvConfigService;
   @Inject private LogRecordService logRecordService;
+  @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
 
   private String accountId;
   private String connectorId;
@@ -61,7 +67,7 @@ public class DeletedCVConfigServiceImplTest extends CvNextGenTestBase {
   }
 
   private DeletedCVConfig save(DeletedCVConfig deletedCVConfig) {
-    return deletedCVConfigService.save(deletedCVConfig);
+    return deletedCVConfigService.save(deletedCVConfig, Duration.ZERO);
   }
 
   @Test
@@ -114,6 +120,27 @@ public class DeletedCVConfigServiceImplTest extends CvNextGenTestBase {
     List<LogRecord> logRecords = hPersistence.createQuery(LogRecord.class).asList();
     assertThat(logRecords).hasSize(1);
     assertThat(logRecords.get(0).getVerificationTaskId()).isEqualTo(logRecord2.getVerificationTaskId());
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testTriggerCleanup_deleteMonitoringSourcePerpetualTasks() {
+    CVConfig cvConfig = createCVConfig();
+    DeletedCVConfig saved = save(createDeletedCVConfig(cvConfig));
+    monitoringSourcePerpetualTaskService.createTask(accountId, cvConfig.getOrgIdentifier(),
+        cvConfig.getProjectIdentifier(), cvConfig.getConnectorIdentifier(), cvConfig.getIdentifier());
+    List<MonitoringSourcePerpetualTask> monitoringSourcePerpetualTasks =
+        hPersistence.createQuery(MonitoringSourcePerpetualTask.class)
+            .filter(MonitoringSourcePerpetualTaskKeys.monitoringSourceIdentifier, cvConfig.getIdentifier())
+            .asList();
+    assertThat(monitoringSourcePerpetualTasks).hasSize(2);
+    deletedCVConfigServiceWithMocks.triggerCleanup(saved);
+    monitoringSourcePerpetualTasks =
+        hPersistence.createQuery(MonitoringSourcePerpetualTask.class)
+            .filter(MonitoringSourcePerpetualTaskKeys.monitoringSourceIdentifier, cvConfig.getIdentifier())
+            .asList();
+    assertThat(monitoringSourcePerpetualTasks).hasSize(0);
   }
 
   @Test

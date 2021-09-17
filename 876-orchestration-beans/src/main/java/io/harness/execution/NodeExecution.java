@@ -73,7 +73,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
   private Long startTs;
   private Long endTs;
   private Duration initialWaitDuration;
-
+  private Integer levelCount;
   @Builder.Default @FdTtlIndex Date validUntil = Date.from(OffsetDateTime.now().plusMonths(TTL_MONTHS).toInstant());
 
   // Resolved StepParameters stored just before invoking step.

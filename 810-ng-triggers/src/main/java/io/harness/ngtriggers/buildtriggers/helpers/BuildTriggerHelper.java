@@ -15,7 +15,7 @@ import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.buildtriggers.helpers.dtos.BuildTriggerOpsData;
 import io.harness.pipeline.remote.PipelineServiceClient;
-import io.harness.pms.merger.PipelineYamlConfig;
+import io.harness.pms.merger.YamlConfig;
 import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.pipeline.PMSPipelineResponseDTO;
 import io.harness.pms.yaml.YamlUtils;
@@ -58,14 +58,14 @@ public class BuildTriggerHelper {
 
   public Map<String, Object> generateFinalMapWithBuildSpecFromPipeline(
       String pipeline, String stageRef, String buildRef, List<String> fqnDisplayStrs) {
-    PipelineYamlConfig pipelineYamlConfig = new PipelineYamlConfig(pipeline);
+    YamlConfig yamlConfig = new YamlConfig(pipeline);
 
     fqnDisplayStrs = fqnDisplayStrs.stream()
                          .map(str -> str.replace("STAGE_REF", stageRef).replace("BUILD_REF", buildRef))
                          .collect(toList());
 
     Map<String, Object> fqnToValueMap = new HashMap<>();
-    for (Map.Entry<FQN, Object> entry : pipelineYamlConfig.getFqnToValueMap().entrySet()) {
+    for (Map.Entry<FQN, Object> entry : yamlConfig.getFqnToValueMap().entrySet()) {
       String key = fqnDisplayStrs.stream()
                        .filter(str -> entry.getKey().display().toLowerCase().startsWith(str.toLowerCase()))
                        .findFirst()

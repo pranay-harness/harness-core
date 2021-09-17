@@ -442,6 +442,12 @@ public class AuthenticationManager {
     try {
       User user = samlBasedAuthHandler.authenticate(credentials).getUser();
       String accountId = (credentials != null && credentials.length >= 3) ? credentials[2] : user.getDefaultAccountId();
+      if (accountId == null) {
+        accountId = user.getDefaultAccountId();
+        if (accountId == null) {
+          throw new WingsException("Default accountId of user is null");
+        }
+      }
       HashMap<String, String> claimMap = new HashMap<>();
       claimMap.put(EMAIL, user.getEmail());
       claimMap.put("subDomainUrl", accountService.get(accountId).getSubdomainUrl());

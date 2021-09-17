@@ -61,6 +61,7 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 			"selection_stats_table", config.TimeScaleDb.SelectionTable,
 			"coverage_table", config.TimeScaleDb.CoverageTable,
 			"ssl_enabled", config.TimeScaleDb.EnableSSL,
+			"ssl_mode", config.TimeScaleDb.SSLMode,
 			"ssl_cert_path", config.TimeScaleDb.SSLCertPath)
 		db, err = timescaledb.New(
 			config.TimeScaleDb.Username,
@@ -72,6 +73,7 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 			config.TimeScaleDb.CoverageTable,
 			config.TimeScaleDb.SelectionTable,
 			config.TimeScaleDb.EnableSSL,
+			config.TimeScaleDb.SSLMode,
 			config.TimeScaleDb.SSLCertPath,
 			log,
 		)
@@ -108,12 +110,20 @@ func (c *serverCommand) run(*kingpin.ParseContext) error {
 		if config.EventsFramework.RedisUrl != "" {
 			log.Infow("connecting to redis for receiving events", "url", config.EventsFramework.RedisUrl,
 				"ssl_enabled", config.EventsFramework.SSLEnabled, "cert_path", config.EventsFramework.CertPath)
-			rdb, err := eventsframework.New(
-				config.EventsFramework.RedisUrl,
-				config.EventsFramework.RedisPassword,
-				config.EventsFramework.SSLEnabled,
-				config.EventsFramework.CertPath,
-				log)
+
+			conf := eventsframework.RedisBrokerConf{
+				Address:            config.EventsFramework.RedisUrl,
+				ClusterUrls:        config.EventsFramework.ClusterUrls,
+				Password:           config.EventsFramework.RedisPassword,
+				UseTLS:             config.EventsFramework.SSLEnabled,
+				TLSCaFilePath:      config.EventsFramework.CertPath,
+				SentinelMasterName: config.EventsFramework.SentinelMasterName,
+				SentinelUrls:       config.EventsFramework.SentinelUrls,
+				UseSentinel:        config.EventsFramework.UseSentinel,
+				UseCluster:         config.EventsFramework.UseCluster,
+			}
+
+			rdb, err := eventsframework.NewRedisBroker(conf, log)
 			if err != nil {
 				log.Errorw("could not establish connection with events framework Redis")
 				return errors.New("could not establish connection with events framework Redis")

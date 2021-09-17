@@ -6,7 +6,6 @@ import io.harness.cvng.beans.activity.KubernetesActivityDTO;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceBuilder;
 import io.harness.mongo.index.FdIndex;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.time.Instant;
 import java.util.Set;
 import lombok.Data;
@@ -21,7 +20,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 @FieldNameConstants(innerTypeName = "KubernetesActivityKeys")
 @SuperBuilder
 @EqualsAndHashCode(callSuper = true)
-@JsonTypeName("KUBERNETES")
+@Deprecated
 public class KubernetesActivity extends Activity {
   String namespace;
   String workloadName;
@@ -31,7 +30,7 @@ public class KubernetesActivity extends Activity {
 
   @Override
   public ActivityType getType() {
-    return ActivityType.KUBERNETES;
+    throw new NotImplementedException();
   }
 
   @Override

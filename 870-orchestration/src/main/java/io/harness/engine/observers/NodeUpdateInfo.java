@@ -1,5 +1,7 @@
 package io.harness.engine.observers;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.execution.NodeExecution;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.AutoLogContext.OverrideBehavior;
@@ -13,6 +15,7 @@ import lombok.Value;
 
 @Value
 @Builder
+@OwnedBy(HarnessTeam.PIPELINE)
 public class NodeUpdateInfo {
   @NonNull NodeExecution nodeExecution;
   @Builder.Default long updatedTs = System.currentTimeMillis();
