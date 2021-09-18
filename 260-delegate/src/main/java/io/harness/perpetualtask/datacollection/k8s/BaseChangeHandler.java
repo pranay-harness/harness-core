@@ -8,9 +8,15 @@ import io.harness.verificationclient.CVNextGenServiceClient;
 import com.google.inject.Inject;
 import io.kubernetes.client.common.KubernetesObject;
 import io.kubernetes.client.informer.ResourceEventHandler;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.joor.Reflect;
 
+@SuperBuilder
+@Data
+@AllArgsConstructor
 @Slf4j
 public abstract class BaseChangeHandler<ApiType extends KubernetesObject> implements ResourceEventHandler<ApiType> {
   String accountId;
@@ -25,15 +31,25 @@ public abstract class BaseChangeHandler<ApiType extends KubernetesObject> implem
   }
 
   @Override
-  public void onAdd(ApiType apiType) {}
+  public void onAdd(ApiType apiType) {
+    handleMissingKindAndApiVersion(apiType);
+    processAndSendAddEvent(apiType);
+  }
   void processAndSendAddEvent(ApiType newResource) {}
 
   @Override
   public void onUpdate(ApiType oldResource, ApiType newResource) {
     handleMissingKindAndApiVersion(oldResource);
     handleMissingKindAndApiVersion(newResource);
+    String oldYaml = k8sHandlerUtils.yamlDump(oldResource);
+    String newYaml = k8sHandlerUtils.yamlDump(newResource);
+    if (oldYaml.equals(newYaml)) {
+      log.info("Old and New Yamls are same so not sending a change event");
+      return;
+    }
+    processAndSendUpdateEvent(oldResource, newResource, oldYaml, newYaml);
   }
-  void processAndSendUpdateEvent(ApiType oldResource, ApiType newResource) {}
+  void processAndSendUpdateEvent(ApiType oldResource, ApiType newResource, String oldYaml, String newYaml) {}
 
   @Override
   public void onDelete(ApiType apiType, boolean b) {}
@@ -53,6 +69,7 @@ public abstract class BaseChangeHandler<ApiType extends KubernetesObject> implem
 
   protected ChangeEventDTO buildChangeEventDTOSkeleton() {
     return ChangeEventDTO.builder()
+        .accountId(accountId)
         .type(ChangeSourceType.KUBERNETES)
         .changeSourceIdentifier(dataCollectionInfo.getChangeSourceIdentifier())
         .serviceIdentifier(dataCollectionInfo.getServiceIdentifier())

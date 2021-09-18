@@ -1,10 +1,10 @@
 package io.harness.cvng.core.services.impl.monitoredService;
 
+import io.harness.cvng.beans.DataCollectionConnectorBundle;
+import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.beans.change.ChangeCategory;
 import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.beans.change.ChangeSourceType;
-import io.harness.cvng.beans.DataCollectionConnectorBundle;
-import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.beans.ChangeSummaryDTO;
 import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
@@ -160,6 +160,10 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
             .connectorIdentifier(changeSource.getConnectorIdentifier())
             .sourceIdentifier(changeSource.getIdentifier())
             .dataCollectionWorkerId(changeSource.getUuid())
+            .projectIdentifier(changeSource.getProjectIdentifier())
+            .orgIdentifier(changeSource.getOrgIdentifier())
+            .envIdentifier(changeSource.getEnvIdentifier())
+            .serviceIdentifier(changeSource.getServiceIdentifier())
             .build();
     String dataCollectionTaskId = verificationManagerService.createDataCollectionTask(changeSource.getAccountId(),
         changeSource.getOrgIdentifier(), changeSource.getProjectIdentifier(), dataCollectionConnectorBundle);

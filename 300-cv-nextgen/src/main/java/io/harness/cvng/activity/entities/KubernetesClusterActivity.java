@@ -16,6 +16,7 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
+import org.mongodb.morphia.query.UpdateOperations;
 
 @FieldNameConstants(innerTypeName = "KubernetesClusterActivityKeys")
 @Data
@@ -34,7 +35,7 @@ public class KubernetesClusterActivity extends Activity {
   Action action;
   String reason;
   String message;
-
+  String resourceVersion;
   @Override
   public ActivityType getType() {
     return KUBERNETES;
@@ -57,5 +58,29 @@ public class KubernetesClusterActivity extends Activity {
   @Override
   public boolean deduplicateEvents() {
     return false;
+  }
+
+  public static class KubernetesClusterActivityUpdatableEntity
+      extends ActivityUpdatableEntity<KubernetesClusterActivity, KubernetesClusterActivity> {
+    @Override
+    public Class getEntityClass() {
+      return KubernetesClusterActivity.class;
+    }
+
+    @Override
+    public void setUpdateOperations(
+        UpdateOperations<KubernetesClusterActivity> updateOperations, KubernetesClusterActivity activity) {
+      setCommonUpdateOperations(updateOperations, activity);
+      updateOperations.set(KubernetesClusterActivityKeys.oldYaml, activity.getOldYaml())
+          .set(KubernetesClusterActivityKeys.newYaml, activity.getNewYaml())
+          .set(KubernetesClusterActivityKeys.namespace, activity.getNamespace())
+          .set(KubernetesClusterActivityKeys.workload, activity.getWorkload())
+          .set(KubernetesClusterActivityKeys.kind, activity.getKind())
+          .set(KubernetesClusterActivityKeys.resourceType, activity.getResourceType())
+          .set(KubernetesClusterActivityKeys.action, activity.getAction())
+          .set(KubernetesClusterActivityKeys.reason, activity.getReason())
+          .set(KubernetesClusterActivityKeys.resourceVersion, activity.getResourceVersion())
+          .set(KubernetesClusterActivityKeys.message, activity.getMessage());
+    }
   }
 }
