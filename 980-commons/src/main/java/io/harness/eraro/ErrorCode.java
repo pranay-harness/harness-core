@@ -564,7 +564,9 @@ public enum ErrorCode {
   JIRA_CLIENT_ERROR,
   SCM_NOT_MODIFIED,
   JIRA_STEP_ERROR,
-  BUCKET_SERVER_ERROR;
+  BUCKET_SERVER_ERROR,
+  GIT_SYNC_ERROR,
+  TEMPLATE_EXCEPTION;
 
   private Status status = BAD_REQUEST;
   private String description;

@@ -47,7 +47,6 @@ import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.beans.params.filterParams.DeploymentLogAnalysisFilter;
 import io.harness.cvng.core.beans.params.filterParams.DeploymentTimeSeriesAnalysisFilter;
 import io.harness.cvng.core.entities.CVConfig;
-import io.harness.cvng.core.services.api.WebhookService;
 import io.harness.cvng.dashboard.services.api.HealthVerificationHeatMapService;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
@@ -93,7 +92,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 @OwnedBy(HarnessTeam.CV)
 public class ActivityServiceImpl implements ActivityService {
   private static final int RECENT_DEPLOYMENT_ACTIVITIES_RESULT_SIZE = 5;
-  @Inject private WebhookService webhookService;
   @Inject private HPersistence hPersistence;
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
   @Inject private VerificationJobService verificationJobService;
@@ -119,12 +117,6 @@ public class ActivityServiceImpl implements ActivityService {
         .get();
   }
 
-  @Override
-  public String register(String accountId, String webhookToken, ActivityDTO activityDTO) {
-    webhookService.validateWebhookToken(
-        webhookToken, activityDTO.getProjectIdentifier(), activityDTO.getOrgIdentifier());
-    return register(accountId, activityDTO);
-  }
   @Override
   public String register(String accountId, ActivityDTO activityDTO) {
     Preconditions.checkNotNull(activityDTO);
@@ -683,7 +675,8 @@ public class ActivityServiceImpl implements ActivityService {
         verificationJobInstanceService.get(getVerificationJobInstanceId(activityId));
     verificationJobInstances.forEach(verificationJobInstance -> {
       verificationJobInstance.getCvConfigMap().forEach((s, cvConfig) -> {
-        healthSourceDTOS.add(HealthSourceDTO.toHealthSourceDTO(HealthSourceDTO.toHealthSource(cvConfig, injector)));
+        healthSourceDTOS.add(
+            HealthSourceDTO.toHealthSourceDTO(HealthSourceDTO.toHealthSource(Arrays.asList(cvConfig), injector)));
       });
     });
     return healthSourceDTOS;

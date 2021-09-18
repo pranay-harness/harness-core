@@ -39,7 +39,8 @@ service DelegateService {
   // before the rest of the micro services are promoted
   rpc ObtainDocument(ObtainDocumentRequest) returns (ObtainDocumentResponse);
 
-  rpc ProfileScriptExecutionInitiated(DelegateUpdateRequest) returns (DelegateUpdateResponse);
+  rpc ClearProfileExecutedAt(DelegateUpdateRequest) returns (DelegateUpdateResponse);
+  rpc FetchProfileExecutedAt(DelegateUpdateRequest) returns (DelegateProfileExecutedAtResponse);
 }
 
 // Next ID: 11
@@ -203,6 +204,11 @@ message DelegateUpdateRequest {
 
 message DelegateUpdateResponse {
   bool success = 1;
+}
+
+message DelegateProfileExecutedAtResponse {
+  string profileId = 1;
+  int64 profileExecutedAt = 2;
 }
 
 // }}

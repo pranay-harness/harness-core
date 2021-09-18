@@ -14,8 +14,8 @@ func logQuery(log *zap.SugaredLogger, start time.Time, query string, args []inte
 		logw = log.Errorw
 	}
 
-	// Log only the first 50 args and the first 300 characters of the SQL query to avoid spamming the logs
-	logw("sql query execute", "sql.query", truncateString(collapseSpaces(query), 300), "sql.hash", hash(query),
+	// Log only the first 50 args and the first 2000 characters of the SQL query to avoid spamming the logs
+	logw("sql query execute", "sql.query", truncateString(collapseSpaces(query), 2000), "sql.hash", hash(query),
 		"logQuerysql.parameters", truncateList(args, 50), "query_time_ms", ms(time.Since(start)), zap.Error(err))
 }
 

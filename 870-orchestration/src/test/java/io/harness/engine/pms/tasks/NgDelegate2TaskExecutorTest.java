@@ -63,7 +63,7 @@ public class NgDelegate2TaskExecutorTest extends OrchestrationTestBase {
   @Test
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
-  public void shouldThrowInvalidRequestExceptionwhenQueueTask() {
+  public void shouldThrowInvalidRequestExceptionWhenQueueTask() {
     TaskRequest taskRequest =
         TaskRequest.newBuilder()
             .setDelegateTaskRequest(
@@ -83,7 +83,7 @@ public class NgDelegate2TaskExecutorTest extends OrchestrationTestBase {
   @Test
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
-  public void shouldThrowInvalidRequestExceptionwhenQueueTaskWithWrongTaskMode() {
+  public void shouldThrowInvalidRequestExceptionWhenQueueTaskWithWrongTaskMode() {
     TaskRequest taskRequest = TaskRequest.newBuilder().setSkipTaskRequest(SkipTaskRequest.newBuilder().build()).build();
 
     assertThatThrownBy(() -> ngDelegate2TaskExecutor.queueTask(new HashMap<>(), taskRequest, Duration.ZERO))

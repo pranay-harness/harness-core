@@ -1,0 +1,125 @@
+pipeline:
+  identifier: "Test_Pipline11"
+  variables:
+  - name: "port2"
+    value: 8080
+  stages:
+  - stage:
+      identifier: "qaStage"
+      type: "Deployment"
+      spec:
+        execution:
+          steps:
+          - step:
+              identifier: "httpStep1"
+              type: "Http"
+              spec:
+                url: www.google.com
+          - parallel:
+            - step:
+                identifier: "httpStep2"
+                type: "Http"
+                spec:
+                  method: POST
+          - step:
+              identifier: "shellScriptStep11"
+              template:
+                templateInputs:
+                  type: "ShellScript"
+                  timeout: 1000
+          - parallel:
+              - step:
+                  identifier: "shellScriptStep12"
+                  template:
+                    templateInputs:
+                      type: "ShellScript"
+                      spec:
+                        source:
+                          type: "Inline"
+                          spec:
+                            script: "echo hola"
+                      timeout: 2000
+        service:
+          identifier: "manager"
+          serviceDefinition:
+            type: "Kubernetes"
+            spec:
+              manifests:
+              - manifest:
+                  identifier: "qaOverride"
+                  type: "Values"
+                  spec:
+                    store:
+                      connectorRef: my_git_connector
+                      gitFetchType: Branch
+                      branch: master
+                      paths:
+                      - test/baseValues.yaml
+                      - test/qa/values_1.yaml
+        infrastructure:
+          infrastructureDefinition:
+            type: "KubernetesDirect"
+            spec:
+              namespace: default
+  - parallel:
+    - stage:
+        identifier: "qaStage2"
+        type: "Deployment"
+        spec:
+          execution:
+            steps:
+            - step:
+                identifier: "httpStep4"
+                spec:
+                  method: GET
+          service:
+            identifier: "manager"
+            serviceDefinition:
+              spec:
+                manifests:
+                - manifest:
+                    identifier: "baseValues"
+                    spec:
+                      store:
+                        spec:
+                          connectorRef: defaultConn
+    - stage:
+        identifier: "qaStage3"
+        type: "Deployment"
+        spec:
+          execution:
+            steps:
+            - step:
+                identifier: "httpStep5"
+                spec:
+                  method: GET
+          service:
+            identifier: "manager"
+            serviceDefinition:
+              spec:
+                manifests:
+                - manifest:
+                    identifier: baseValues
+                    type: K8sManifest
+                    spec:
+                      store:
+                        type: Git
+                        spec:
+                          connectorRef: my_git_connector
+                          gitFetchType: Branch
+                          branch: master
+                          paths:
+                          - test/spec
+                - manifest:
+                    identifier: qaOverride
+                    type: Values
+                    spec:
+                      store:
+                        type: Git
+                        spec:
+                          connectorRef: my_git_connector
+                          gitFetchType: Branch
+                          branch: master
+                          paths:
+                          - test/baseValues.yaml
+                          - test/qa/values_1.yaml

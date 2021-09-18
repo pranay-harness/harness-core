@@ -13,6 +13,7 @@ import io.harness.delegate.CancelTaskRequest;
 import io.harness.delegate.CancelTaskResponse;
 import io.harness.delegate.CreatePerpetualTaskRequest;
 import io.harness.delegate.CreatePerpetualTaskResponse;
+import io.harness.delegate.DelegateProfileExecutedAtResponse;
 import io.harness.delegate.DelegateServiceGrpc.DelegateServiceImplBase;
 import io.harness.delegate.DelegateUpdateRequest;
 import io.harness.delegate.DelegateUpdateResponse;
@@ -377,14 +378,29 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
   }
 
   @Override
-  public void profileScriptExecutionInitiated(
+  public void clearProfileExecutedAt(
       DelegateUpdateRequest request, StreamObserver<DelegateUpdateResponse> responseObserver) {
     try {
-      delegateService.profileScriptExecutionInitiated(request.getAccountId().getId(), request.getDelegateId().getId());
+      delegateService.clearProfileExecutedAt(request.getAccountId().getId(), request.getDelegateId().getId());
       responseObserver.onNext(DelegateUpdateResponse.newBuilder().setSuccess(true).build());
       responseObserver.onCompleted();
     } catch (Exception ex) {
       log.error("Unexpected error occurred while updating profile execution status on delegate.", ex);
+      responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
+    }
+  }
+
+  @Override
+  public void fetchProfileExecutedAt(
+      DelegateUpdateRequest request, StreamObserver<DelegateProfileExecutedAtResponse> responseObserver) {
+    try {
+      DelegateProfileExecutedAtResponse response =
+          delegateService.fetchProfileExecutedAt(request.getAccountId().getId(), request.getDelegateId().getId());
+
+      responseObserver.onNext(response);
+      responseObserver.onCompleted();
+    } catch (Exception ex) {
+      log.error("Unexpected error occurred while fetching profile execution time on delegate.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
     }
   }

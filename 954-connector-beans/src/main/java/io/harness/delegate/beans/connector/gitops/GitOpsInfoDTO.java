@@ -5,6 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.GitOpsProviderType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import lombok.AccessLevel;
 import lombok.Data;
@@ -21,5 +22,5 @@ import lombok.experimental.FieldDefaults;
   , @JsonSubTypes.Type(value = ManagedArgoGitOpsInfoDTO.class, name = "ManagedArgoProvider")
 })
 public abstract class GitOpsInfoDTO {
-  public abstract GitOpsProviderType getGitProviderType();
+  @JsonProperty("type") public abstract GitOpsProviderType getGitProviderType();
 }

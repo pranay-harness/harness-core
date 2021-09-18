@@ -44,11 +44,7 @@ public class NotifyEventListenerHelper {
         processCallback(callback, response.getResponseDataMap(), response.isError());
       }
 
-      try {
-        persistenceWrapper.delete(waitInstance);
-      } catch (Exception exception) {
-        log.error("Failed to delete WaitInstance", exception);
-      }
+      persistenceWrapper.deleteWaitInstance(waitInstance);
 
       waitInstanceService.checkProcessingTime(now);
     }

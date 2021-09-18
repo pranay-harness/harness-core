@@ -68,6 +68,10 @@ aeriform("//290-dashboard-service:module")
 
 aeriform("//290-dashboard-service:tests")
 
+aeriform("//295-cdng-contracts:module")
+
+aeriform("//295-cdng-contracts:tests")
+
 aeriform("//300-cv-nextgen:module")
 
 aeriform("//300-cv-nextgen:tests")
@@ -141,6 +145,8 @@ aeriform("//440-secret-management-service:module")
 aeriform("//441-cg-instance-sync:module")
 
 aeriform("//445-cg-connectors:module")
+
+aeriform("//445-gitops:module")
 
 aeriform("//450-ce-views:module")
 

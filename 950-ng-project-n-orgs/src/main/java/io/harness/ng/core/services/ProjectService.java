@@ -26,6 +26,8 @@ public interface ProjectService {
 
   PageResponse<ProjectDTO> listProjectsForUser(String userId, String accountId, PageRequest pageRequest);
 
+  List<ProjectDTO> listProjectsForUser(String userId, String accountId);
+
   /**
    * Use this method with caution, verify that the pageable sort is able to make use of the indexes.
    */

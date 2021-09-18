@@ -2,7 +2,9 @@ package software.wings.beans.container;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.yaml.BaseYaml;
 
 import software.wings.stencils.DefaultValue;
@@ -17,6 +19,7 @@ import lombok.NoArgsConstructor;
 
 @OwnedBy(CDP)
 @Builder
+@TargetModule(HarnessModule._955_DELEGATE_BEANS)
 public class ContainerDefinition {
   @Attributes(title = "PORT MAPPINGS") List<PortMapping> portMappings;
   @SchemaIgnore private String name;

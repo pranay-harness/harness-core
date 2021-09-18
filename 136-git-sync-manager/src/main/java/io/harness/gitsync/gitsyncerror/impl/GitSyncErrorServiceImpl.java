@@ -1,16 +1,12 @@
 package io.harness.gitsync.gitsyncerror.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
-// import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.gitsync.common.beans.GitSyncDirection.GIT_TO_HARNESS;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.git.model.GitFileChange;
-import io.harness.gitsync.common.helper.GitFileLocationHelper;
 import io.harness.gitsync.gitfileactivity.beans.GitFileActivity;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncError;
-import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorType;
 import io.harness.gitsync.gitsyncerror.beans.GitToHarnessErrorDetails;
 import io.harness.gitsync.gitsyncerror.service.GitSyncErrorService;
 import io.harness.repositories.gitSyncError.GitSyncErrorRepository;
@@ -35,12 +31,6 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   private GitSyncErrorRepository gitSyncErrorRepository;
 
   @Override
-  public void deleteByAccountIdOrgIdProjectIdAndFilePath(
-      String accountId, String orgId, String projectId, List<String> yamlFilePath) {
-    gitSyncErrorRepository.removeByAccountIdentifierAndCompleteFilePathIn(accountId, yamlFilePath);
-  }
-
-  @Override
   public void upsertGitSyncErrors(
       GitFileChange failedChange, String errorMessage, boolean fullSyncPath, YamlGitConfigDTO yamlGitConfig) {
     upsertGitToHarnessError(failedChange, errorMessage, yamlGitConfig);
@@ -50,7 +40,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
       GitFileChange failedGitFileChange, String errorMessage, YamlGitConfigDTO yamlGitConfig) {
     log.info("Upsert git to harness sync issue for file: [{}]", failedGitFileChange.getFilePath());
 
-    GitToHarnessErrorDetails gitToHarnessErrorDetails = getGitToHarnessErrorDetails(failedGitFileChange);
+    /*GitToHarnessErrorDetails gitToHarnessErrorDetails = getGitToHarnessErrorDetails(failedGitFileChange);
     final GitSyncError previousGitSyncError =
         gitSyncErrorRepository.findByAccountIdentifierAndCompleteFilePathAndErrorType(
             failedGitFileChange.getAccountId(), failedGitFileChange.getFilePath(), GitSyncErrorType.GIT_TO_HARNESS);
@@ -60,7 +50,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
         false, failedGitFileChange.getChangeType(), gitToHarnessErrorDetails, yamlGitConfig.getGitConnectorRef(),
         yamlGitConfig.getRepo(), yamlGitConfig.getBranch(),
         GitFileLocationHelper.getRootPathSafely(failedGitFileChange.getFilePath()), yamlGitConfig.getIdentifier(),
-        yamlGitConfig.getProjectIdentifier(), yamlGitConfig.getOrganizationIdentifier());
+        yamlGitConfig.getProjectIdentifier(), yamlGitConfig.getOrganizationIdentifier());*/
   }
 
   private void addPreviousCommitDetailsToErrorDetails(GitFileChange failedGitFileChange,
@@ -116,8 +106,8 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   @Override
   public List<GitSyncError> getActiveGitToHarnessSyncErrors(String accountId, String gitConnectorId, String repoName,
       String branchName, String rootFolder, long fromTimestamp) {
-    return gitSyncErrorRepository.getActiveGitSyncError(
-        accountId, fromTimestamp, GIT_TO_HARNESS, gitConnectorId, repoName, branchName, rootFolder);
+    return null; // gitSyncErrorRepository.getActiveGitSyncError(
+                 // accountId, fromTimestamp, GIT_TO_HARNESS, gitConnectorId, repoName, branchName, rootFolder);
   }
 
   @Override

@@ -26,6 +26,8 @@ import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.services.ProjectService;
+import io.harness.ng.core.user.AddUsersDTO;
+import io.harness.ng.core.user.AddUsersResponse;
 import io.harness.ng.core.user.PasswordChangeDTO;
 import io.harness.ng.core.user.PasswordChangeResponse;
 import io.harness.ng.core.user.TwoFactorAuthMechanismInfo;
@@ -49,6 +51,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -151,6 +154,14 @@ public class UserResource {
     return ResponseDTO.newResponse(projectService.listProjectsForUser(userId.get(), accountId, pageRequest));
   }
 
+  @GET
+  @Path("all-projects")
+  @ApiOperation(value = "get user all projects information", nickname = "getUserAllProjectsInfo")
+  public ResponseDTO<List<ProjectDTO>> getUserAllProjectsInfo(
+      @QueryParam("accountId") String accountId, @QueryParam("userId") String userId) {
+    return ResponseDTO.newResponse(projectService.listProjectsForUser(userId, accountId));
+  }
+
   @POST
   @Path("batch")
   @ApiOperation(value = "Get a list of users", nickname = "getUsers")
@@ -226,6 +237,20 @@ public class UserResource {
       return ResponseDTO.newResponse(aggregateUserService.getAggregatedUsers(scope, aclAggregateFilter, pageRequest));
     }
     return ResponseDTO.newResponse(aggregateUserService.getAggregatedUsers(scope, searchTerm, pageRequest));
+  }
+
+  @POST
+  @Path("users")
+  @ApiOperation(value = "Add users to a scope", nickname = "addUsers")
+  public ResponseDTO<AddUsersResponse> addUsers(
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @Valid AddUsersDTO addUsersDTO) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(USER, null), MANAGE_USER_PERMISSION);
+    return ResponseDTO.newResponse(
+        ngUserService.addUsers(Scope.of(accountIdentifier, orgIdentifier, projectIdentifier), addUsersDTO));
   }
 
   @PUT

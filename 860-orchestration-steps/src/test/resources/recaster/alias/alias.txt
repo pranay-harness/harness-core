@@ -60,3 +60,7 @@ io.harness.steps.environment.EnvironmentOutcome
 io.harness.pms.timeout.AbsoluteSdkTimeoutTrackerParameters
 io.harness.pms.yaml.ParameterFieldValueWrapper
 io.harness.pms.yaml.ParameterDocumentField
+io.harness.yaml.core.failurestrategy.OnFailureConfig
+io.harness.yaml.core.failurestrategy.FailureStrategyConfig
+io.harness.yaml.core.failurestrategy.marksuccess.MarkAsSuccessFailureActionConfig
+io.harness.yaml.core.failurestrategy.rollback.StageRollbackFailureActionConfig

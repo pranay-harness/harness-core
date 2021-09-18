@@ -62,6 +62,8 @@ public final class LogAnalysisCluster implements PersistentEntity, UuidAware, Cr
   private String text;
   private boolean isEvicted;
   private long firstSeenTime;
+  private double x;
+  private double y;
 
   @JsonIgnore @SchemaIgnore @FdTtlIndex private Date validUntil;
 

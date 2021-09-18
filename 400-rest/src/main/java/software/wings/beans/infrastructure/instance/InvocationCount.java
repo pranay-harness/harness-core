@@ -1,5 +1,10 @@
 package software.wings.beans.infrastructure.instance;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import com.google.common.collect.ImmutableList;
 import java.time.Instant;
 import java.util.List;
@@ -11,6 +16,8 @@ import lombok.experimental.FieldNameConstants;
 @Value
 @Builder
 @FieldNameConstants(innerTypeName = "InvocationCountFields")
+@OwnedBy(HarnessTeam.CDP)
+@TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class InvocationCount {
   private InvocationCountKey key;
   private long count;

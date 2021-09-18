@@ -18,6 +18,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.MockableTestMixin;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
@@ -94,6 +96,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.slf4j.Logger;
 
 @RunWith(MockitoJUnitRunner.class)
+@OwnedBy(HarnessTeam.DEL)
 public class DelegateServiceGrpcImplTest extends WingsBaseTest implements MockableTestMixin {
   @Rule public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
 

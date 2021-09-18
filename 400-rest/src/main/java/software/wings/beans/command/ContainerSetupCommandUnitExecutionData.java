@@ -2,7 +2,9 @@ package software.wings.beans.command;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.shell.CommandExecutionData;
 
 import software.wings.beans.AwsElbConfig;
@@ -21,6 +23,7 @@ import lombok.Data;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @Builder
+@TargetModule(HarnessModule._955_DELEGATE_BEANS)
 public class ContainerSetupCommandUnitExecutionData implements CommandExecutionData {
   private String containerServiceName;
   private String namespace;

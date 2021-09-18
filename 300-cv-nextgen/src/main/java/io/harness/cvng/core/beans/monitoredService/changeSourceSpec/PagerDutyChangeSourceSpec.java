@@ -1,6 +1,6 @@
 package io.harness.cvng.core.beans.monitoredService.changeSourceSpec;
 
-import io.harness.cvng.core.types.ChangeSourceType;
+import io.harness.cvng.beans.change.ChangeSourceType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AccessLevel;
@@ -18,8 +18,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class PagerDutyChangeSourceSpec extends ChangeSourceSpec {
-  @NonNull @NotEmpty String connectorRef;
+public class PagerDutyChangeSourceSpec extends ChangeSourceWithConnectorSpec {
   @NonNull @NotEmpty String pagerDutyServiceId;
 
   @Override

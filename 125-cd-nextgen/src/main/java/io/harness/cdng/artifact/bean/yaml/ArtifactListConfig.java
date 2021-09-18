@@ -2,6 +2,7 @@ package io.harness.cdng.artifact.bean.yaml;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.visitor.helpers.artifact.ArtifactListConfigVisitorHelper;
@@ -28,6 +29,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Data
 @SimpleVisitorHelper(helperClass = ArtifactListConfigVisitorHelper.class)
 @TypeAlias("artifactListConfig")
+@RecasterAlias("io.harness.cdng.artifact.bean.yaml.ArtifactListConfig")
 public class ArtifactListConfig implements Visitable {
   @JsonProperty(YamlNode.UUID_FIELD_NAME)
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) })

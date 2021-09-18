@@ -1,0 +1,468 @@
+package io.harness.engine.interrupts;
+
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
+import static io.harness.rule.OwnerRule.PRASHANT;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import io.harness.OrchestrationTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.category.element.UnitTests;
+import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.interrupts.helpers.AbortHelper;
+import io.harness.execution.NodeExecution;
+import io.harness.execution.PlanExecution;
+import io.harness.interrupts.Interrupt;
+import io.harness.pms.contracts.execution.ExecutionMode;
+import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.interrupts.InterruptType;
+import io.harness.rule.Owner;
+
+import com.google.inject.Inject;
+import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.stream.Collectors;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+
+@OwnedBy(HarnessTeam.PIPELINE)
+public class InterruptMonitorTest extends OrchestrationTestBase {
+  @Mock private PlanExecutionService planExecutionService;
+  @Mock private NodeExecutionService nodeExecutionService;
+  @Mock private InterruptService interruptService;
+  @Mock private AbortHelper abortHelper;
+
+  @Inject @InjectMocks private InterruptMonitor interruptMonitor;
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void shouldTestActiveInterruptForCompetedPlan() {
+    String planExecutionId = generateUuid();
+    PlanExecution planExecution = PlanExecution.builder().uuid(planExecutionId).status(Status.ABORTED).build();
+    Interrupt interrupt = Interrupt.builder()
+                              .uuid(generateUuid())
+                              .planExecutionId(planExecutionId)
+                              .type(InterruptType.ABORT_ALL)
+                              .state(Interrupt.State.PROCESSING)
+                              .build();
+    when(planExecutionService.get(eq(planExecutionId))).thenReturn(planExecution);
+    interruptMonitor.handle(interrupt);
+
+    verify(interruptService).markProcessed(eq(interrupt.getUuid()), eq(PROCESSED_SUCCESSFULLY));
+  }
+
+  /**
+   * Setup for the test
+   * pipeline (running)
+   *    stages (running)
+   *      stage (running)
+   *        execution (running)
+   *          step (failed)
+   *
+   * And now the abort interrupt is registered
+   */
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void shouldTestExecutionStuck() {
+    String planExecutionId = generateUuid();
+    PlanExecution planExecution = PlanExecution.builder().uuid(planExecutionId).status(Status.RUNNING).build();
+
+    Interrupt interrupt = Interrupt.builder()
+                              .uuid(generateUuid())
+                              .planExecutionId(planExecutionId)
+                              .type(InterruptType.ABORT_ALL)
+                              .state(Interrupt.State.PROCESSING)
+                              .build();
+    NodeExecution pipeline = NodeExecution.builder()
+                                 .uuid(generateUuid() + "_pipeline")
+                                 .status(Status.RUNNING)
+                                 .mode(ExecutionMode.CHILD)
+                                 .build();
+    NodeExecution stages = NodeExecution.builder()
+                               .uuid(generateUuid() + "_stages")
+                               .status(Status.RUNNING)
+                               .mode(ExecutionMode.CHILD)
+                               .parentId(pipeline.getUuid())
+                               .build();
+    NodeExecution stage = NodeExecution.builder()
+                              .uuid(generateUuid() + "_stage")
+                              .status(Status.RUNNING)
+                              .mode(ExecutionMode.CHILD)
+                              .parentId(stages.getUuid())
+                              .build();
+    NodeExecution execution = NodeExecution.builder()
+                                  .uuid(generateUuid() + "_execution")
+                                  .status(Status.RUNNING)
+                                  .mode(ExecutionMode.CHILD)
+                                  .parentId(stage.getUuid())
+                                  .build();
+    NodeExecution step = NodeExecution.builder()
+                             .uuid(generateUuid() + "_step")
+                             .status(Status.FAILED)
+                             .mode(ExecutionMode.SYNC)
+                             .parentId(execution.getUuid())
+                             .build();
+
+    when(planExecutionService.get(eq(planExecutionId))).thenReturn(planExecution);
+    when(nodeExecutionService.findAllNodeExecutionsTrimmed(eq(planExecutionId)))
+        .thenReturn(Arrays.asList(pipeline, stages, stage, execution, step));
+
+    when(nodeExecutionService.updateStatusWithOps(
+             eq(execution.getUuid()), eq(Status.DISCONTINUING), any(), eq(EnumSet.noneOf(Status.class))))
+        .thenReturn(NodeExecution.builder()
+                        .uuid(execution.getUuid())
+                        .status(Status.DISCONTINUING)
+                        .mode(ExecutionMode.CHILD)
+                        .parentId(stage.getUuid())
+                        .build());
+    interruptMonitor.handle(interrupt);
+    ArgumentCaptor<NodeExecution> discontinuingNodeCaptor = ArgumentCaptor.forClass(NodeExecution.class);
+    ArgumentCaptor<Interrupt> interruptCaptor = ArgumentCaptor.forClass(Interrupt.class);
+    verify(abortHelper).discontinueMarkedInstance(discontinuingNodeCaptor.capture(), interruptCaptor.capture());
+
+    NodeExecution discontinuingNode = discontinuingNodeCaptor.getValue();
+    assertThat(discontinuingNode.getUuid()).isEqualTo(execution.getUuid());
+  }
+
+  /**
+   * Setup for the test
+   * pipeline (running)
+   *  stages (running)
+   *    stage (running)
+   *      execution (running)
+   *        fork (running)
+   *          sg1 (running)
+   *            step(failed)
+   *          sg2 (running)
+   *            step(failed)
+   *
+   * And now the abort interrupt is registered
+   */
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void shouldTestParallelStepGroupStuck() {
+    String planExecutionId = generateUuid();
+    PlanExecution planExecution = PlanExecution.builder().uuid(planExecutionId).status(Status.RUNNING).build();
+    Interrupt interrupt = Interrupt.builder()
+                              .uuid(generateUuid())
+                              .planExecutionId(planExecutionId)
+                              .type(InterruptType.ABORT_ALL)
+                              .state(Interrupt.State.PROCESSING)
+                              .build();
+    NodeExecution pipeline = NodeExecution.builder()
+                                 .uuid(generateUuid() + "_pipeline")
+                                 .status(Status.RUNNING)
+                                 .mode(ExecutionMode.CHILD)
+                                 .build();
+    NodeExecution stages = NodeExecution.builder()
+                               .uuid(generateUuid() + "_stages")
+                               .status(Status.RUNNING)
+                               .mode(ExecutionMode.CHILD)
+                               .parentId(pipeline.getUuid())
+                               .build();
+    NodeExecution stage = NodeExecution.builder()
+                              .uuid(generateUuid() + "_stage")
+                              .status(Status.RUNNING)
+                              .mode(ExecutionMode.CHILD)
+                              .parentId(stages.getUuid())
+                              .build();
+    NodeExecution execution = NodeExecution.builder()
+                                  .uuid(generateUuid() + "_execution")
+                                  .status(Status.RUNNING)
+                                  .mode(ExecutionMode.CHILD)
+                                  .parentId(stage.getUuid())
+                                  .build();
+
+    NodeExecution fork = NodeExecution.builder()
+                             .uuid(generateUuid() + "_fork")
+                             .status(Status.RUNNING)
+                             .mode(ExecutionMode.CHILDREN)
+                             .parentId(execution.getUuid())
+                             .build();
+
+    NodeExecution sg1 = NodeExecution.builder()
+                            .uuid(generateUuid() + "_sg1")
+                            .status(Status.RUNNING)
+                            .mode(ExecutionMode.CHILD)
+                            .parentId(fork.getUuid())
+                            .build();
+
+    NodeExecution stepSg1 = NodeExecution.builder()
+                                .uuid(generateUuid() + "_stepSg1")
+                                .status(Status.FAILED)
+                                .mode(ExecutionMode.SYNC)
+                                .parentId(sg1.getUuid())
+                                .build();
+
+    NodeExecution sg2 = NodeExecution.builder()
+                            .uuid(generateUuid() + "_sg2")
+                            .status(Status.RUNNING)
+                            .mode(ExecutionMode.CHILD)
+                            .parentId(fork.getUuid())
+                            .build();
+
+    NodeExecution stepSg2 = NodeExecution.builder()
+                                .uuid(generateUuid() + "_stepSg2")
+                                .status(Status.FAILED)
+                                .mode(ExecutionMode.SYNC)
+                                .parentId(sg2.getUuid())
+                                .build();
+
+    when(planExecutionService.get(eq(planExecutionId))).thenReturn(planExecution);
+    when(nodeExecutionService.findAllNodeExecutionsTrimmed(eq(planExecutionId)))
+        .thenReturn(Arrays.asList(pipeline, stages, stage, execution, fork, sg1, sg2, stepSg1, stepSg2));
+
+    when(nodeExecutionService.updateStatusWithOps(
+             eq(sg1.getUuid()), eq(Status.DISCONTINUING), any(), eq(EnumSet.noneOf(Status.class))))
+        .thenReturn(NodeExecution.builder()
+                        .uuid(sg1.getUuid())
+                        .status(Status.DISCONTINUING)
+                        .mode(ExecutionMode.CHILD)
+                        .parentId(stage.getUuid())
+                        .build());
+
+    when(nodeExecutionService.updateStatusWithOps(
+             eq(sg2.getUuid()), eq(Status.DISCONTINUING), any(), eq(EnumSet.noneOf(Status.class))))
+        .thenReturn(NodeExecution.builder()
+                        .uuid(sg2.getUuid())
+                        .status(Status.DISCONTINUING)
+                        .mode(ExecutionMode.CHILD)
+                        .parentId(stage.getUuid())
+                        .build());
+    interruptMonitor.handle(interrupt);
+    ArgumentCaptor<NodeExecution> discontinuingNodeCaptor = ArgumentCaptor.forClass(NodeExecution.class);
+    ArgumentCaptor<Interrupt> interruptCaptor = ArgumentCaptor.forClass(Interrupt.class);
+    verify(abortHelper, times(2))
+        .discontinueMarkedInstance(discontinuingNodeCaptor.capture(), interruptCaptor.capture());
+
+    List<NodeExecution> discontinuingNodes = discontinuingNodeCaptor.getAllValues();
+    assertThat(discontinuingNodes.stream().map(NodeExecution::getUuid).collect(Collectors.toSet()))
+        .containsExactlyInAnyOrder(sg1.getUuid(), sg2.getUuid());
+  }
+
+  /**
+   * Setup for the test
+   * pipeline (running)
+   *  stages (running)
+   *    stage (running)
+   *      execution (running)
+   *        fork (discontinuing)
+   *          sg1 (failed)
+   *            step(failed)
+   *          sg2 (failed)
+   *            step(failed)
+   *
+   * And now the abort interrupt is registered
+   */
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void shouldTestSecondLevelParentStuck() {
+    String planExecutionId = generateUuid();
+    PlanExecution planExecution = PlanExecution.builder().uuid(planExecutionId).status(Status.RUNNING).build();
+    Interrupt interrupt = Interrupt.builder()
+                              .uuid(generateUuid())
+                              .planExecutionId(planExecutionId)
+                              .type(InterruptType.ABORT_ALL)
+                              .state(Interrupt.State.PROCESSING)
+                              .build();
+    NodeExecution pipeline = NodeExecution.builder()
+                                 .uuid(generateUuid() + "_pipeline")
+                                 .status(Status.RUNNING)
+                                 .mode(ExecutionMode.CHILD)
+                                 .build();
+    NodeExecution stages = NodeExecution.builder()
+                               .uuid(generateUuid() + "_stages")
+                               .status(Status.RUNNING)
+                               .mode(ExecutionMode.CHILD)
+                               .parentId(pipeline.getUuid())
+                               .build();
+    NodeExecution stage = NodeExecution.builder()
+                              .uuid(generateUuid() + "_stage")
+                              .status(Status.RUNNING)
+                              .mode(ExecutionMode.CHILD)
+                              .parentId(stages.getUuid())
+                              .build();
+    NodeExecution execution = NodeExecution.builder()
+                                  .uuid(generateUuid() + "_execution")
+                                  .status(Status.RUNNING)
+                                  .mode(ExecutionMode.CHILD)
+                                  .parentId(stage.getUuid())
+                                  .build();
+
+    NodeExecution fork = NodeExecution.builder()
+                             .uuid(generateUuid() + "_fork")
+                             .status(Status.DISCONTINUING)
+                             .mode(ExecutionMode.CHILDREN)
+                             .parentId(execution.getUuid())
+                             .build();
+
+    NodeExecution sg1 = NodeExecution.builder()
+                            .uuid(generateUuid() + "_sg1")
+                            .status(Status.FAILED)
+                            .mode(ExecutionMode.CHILD)
+                            .parentId(fork.getUuid())
+                            .build();
+
+    NodeExecution stepSg1 = NodeExecution.builder()
+                                .uuid(generateUuid() + "_stepSg1")
+                                .status(Status.FAILED)
+                                .mode(ExecutionMode.SYNC)
+                                .parentId(sg1.getUuid())
+                                .build();
+
+    NodeExecution sg2 = NodeExecution.builder()
+                            .uuid(generateUuid() + "_sg2")
+                            .status(Status.FAILED)
+                            .mode(ExecutionMode.CHILD)
+                            .parentId(fork.getUuid())
+                            .build();
+
+    NodeExecution stepSg2 = NodeExecution.builder()
+                                .uuid(generateUuid() + "_stepSg2")
+                                .status(Status.FAILED)
+                                .mode(ExecutionMode.SYNC)
+                                .parentId(sg2.getUuid())
+                                .build();
+
+    when(planExecutionService.get(eq(planExecutionId))).thenReturn(planExecution);
+    when(nodeExecutionService.findAllNodeExecutionsTrimmed(eq(planExecutionId)))
+        .thenReturn(Arrays.asList(pipeline, stages, stage, execution, fork, sg1, sg2, stepSg1, stepSg2));
+
+    interruptMonitor.handle(interrupt);
+
+    ArgumentCaptor<NodeExecution> discontinuingNodeCaptor = ArgumentCaptor.forClass(NodeExecution.class);
+    ArgumentCaptor<Interrupt> interruptCaptor = ArgumentCaptor.forClass(Interrupt.class);
+    verify(abortHelper).discontinueMarkedInstance(discontinuingNodeCaptor.capture(), interruptCaptor.capture());
+
+    List<NodeExecution> discontinuingNodes = discontinuingNodeCaptor.getAllValues();
+    assertThat(discontinuingNodes).hasSize(1);
+    assertThat(discontinuingNodes.get(0).getUuid()).isEqualTo(fork.getUuid());
+  }
+
+  /**
+   * Setup for the test
+   * pipeline (running)
+   *  stages (running)
+   *    stage (running)
+   *      execution (running)
+   *        fork (running)
+   *          sg1 (SUCCEEDED)
+   *            step(SUCCEEDED)
+   *          sg2 (running)
+   *            step(failed)
+   *
+   * And now the abort interrupt is registered
+   */
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void shouldTestParallelStepGroupOneStuck() {
+    String planExecutionId = generateUuid();
+    PlanExecution planExecution = PlanExecution.builder().uuid(planExecutionId).status(Status.RUNNING).build();
+    Interrupt interrupt = Interrupt.builder()
+                              .uuid(generateUuid())
+                              .planExecutionId(planExecutionId)
+                              .type(InterruptType.ABORT_ALL)
+                              .state(Interrupt.State.PROCESSING)
+                              .build();
+    NodeExecution pipeline = NodeExecution.builder()
+                                 .uuid(generateUuid() + "_pipeline")
+                                 .status(Status.RUNNING)
+                                 .mode(ExecutionMode.CHILD)
+                                 .build();
+    NodeExecution stages = NodeExecution.builder()
+                               .uuid(generateUuid() + "_stages")
+                               .status(Status.RUNNING)
+                               .mode(ExecutionMode.CHILD)
+                               .parentId(pipeline.getUuid())
+                               .build();
+    NodeExecution stage = NodeExecution.builder()
+                              .uuid(generateUuid() + "_stage")
+                              .status(Status.RUNNING)
+                              .mode(ExecutionMode.CHILD)
+                              .parentId(stages.getUuid())
+                              .build();
+    NodeExecution execution = NodeExecution.builder()
+                                  .uuid(generateUuid() + "_execution")
+                                  .status(Status.RUNNING)
+                                  .mode(ExecutionMode.CHILD)
+                                  .parentId(stage.getUuid())
+                                  .build();
+
+    NodeExecution fork = NodeExecution.builder()
+                             .uuid(generateUuid() + "_fork")
+                             .status(Status.RUNNING)
+                             .mode(ExecutionMode.CHILDREN)
+                             .parentId(execution.getUuid())
+                             .build();
+
+    NodeExecution sg1 = NodeExecution.builder()
+                            .uuid(generateUuid() + "_sg1")
+                            .status(Status.SUCCEEDED)
+                            .mode(ExecutionMode.CHILD)
+                            .parentId(fork.getUuid())
+                            .build();
+
+    NodeExecution stepSg1 = NodeExecution.builder()
+                                .uuid(generateUuid() + "_stepSg1")
+                                .status(Status.SUCCEEDED)
+                                .mode(ExecutionMode.SYNC)
+                                .parentId(sg1.getUuid())
+                                .build();
+
+    NodeExecution sg2 = NodeExecution.builder()
+                            .uuid(generateUuid() + "_sg2")
+                            .status(Status.RUNNING)
+                            .mode(ExecutionMode.CHILD)
+                            .parentId(fork.getUuid())
+                            .build();
+
+    NodeExecution stepSg2 = NodeExecution.builder()
+                                .uuid(generateUuid() + "_stepSg2")
+                                .status(Status.FAILED)
+                                .mode(ExecutionMode.SYNC)
+                                .parentId(sg2.getUuid())
+                                .build();
+
+    when(planExecutionService.get(eq(planExecutionId))).thenReturn(planExecution);
+    when(nodeExecutionService.findAllNodeExecutionsTrimmed(eq(planExecutionId)))
+        .thenReturn(Arrays.asList(pipeline, stages, stage, execution, fork, sg1, sg2, stepSg1, stepSg2));
+
+    when(nodeExecutionService.updateStatusWithOps(
+             eq(sg2.getUuid()), eq(Status.DISCONTINUING), any(), eq(EnumSet.noneOf(Status.class))))
+        .thenReturn(NodeExecution.builder()
+                        .uuid(sg2.getUuid())
+                        .status(Status.DISCONTINUING)
+                        .mode(ExecutionMode.CHILD)
+                        .parentId(stage.getUuid())
+                        .build());
+
+    interruptMonitor.handle(interrupt);
+    ArgumentCaptor<NodeExecution> discontinuingNodeCaptor = ArgumentCaptor.forClass(NodeExecution.class);
+    ArgumentCaptor<Interrupt> interruptCaptor = ArgumentCaptor.forClass(Interrupt.class);
+    verify(abortHelper, times(1))
+        .discontinueMarkedInstance(discontinuingNodeCaptor.capture(), interruptCaptor.capture());
+
+    List<NodeExecution> discontinuingNodes = discontinuingNodeCaptor.getAllValues();
+    assertThat(discontinuingNodes.get(0).getUuid()).isEqualTo(sg2.getUuid());
+  }
+}

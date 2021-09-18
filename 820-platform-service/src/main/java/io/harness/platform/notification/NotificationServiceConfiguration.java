@@ -23,6 +23,4 @@ public class NotificationServiceConfiguration {
   @JsonProperty("smtp") private SmtpConfig smtpConfig;
   @JsonProperty("seedDataConfiguration") private SeedDataConfiguration seedDataConfiguration;
   @JsonProperty("delegateServiceGrpcConfig") private GrpcClientConfig delegateServiceGrpcConfig;
-  @JsonProperty(value = "useDms", defaultValue = "false") private boolean useDms;
-  @JsonProperty("dmsGrpcClient") private GrpcClientConfig dmsGrpcClient;
 }

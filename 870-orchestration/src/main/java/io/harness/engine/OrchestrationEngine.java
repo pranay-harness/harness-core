@@ -116,6 +116,7 @@ public class OrchestrationEngine {
             .uuid(uuid)
             .node(node)
             .ambiance(cloned)
+            .levelCount(cloned.getLevelsCount())
             .status(Status.QUEUED)
             .notifyId(previousNodeExecution == null ? null : previousNodeExecution.getNotifyId())
             .parentId(previousNodeExecution == null ? null : previousNodeExecution.getParentId())

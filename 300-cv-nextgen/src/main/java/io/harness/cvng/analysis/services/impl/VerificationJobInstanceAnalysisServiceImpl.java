@@ -183,13 +183,7 @@ public class VerificationJobInstanceAnalysisServiceImpl implements VerificationJ
                     ? "success"
                     : "failure")
             .replace("$verification_type", cvConfig.getVerificationType().name().toLowerCase());
-    String provider;
-    if (cvConfig.getVerificationType() == VerificationType.TIME_SERIES) {
-      provider = "appdynamics";
-    } else {
-      provider = "splunk";
-    }
-    path = path.replace("$provider", provider);
+    path = path.replace("$provider", cvConfig.getType().getDemoTemplatePrefix());
     return path;
   }
 

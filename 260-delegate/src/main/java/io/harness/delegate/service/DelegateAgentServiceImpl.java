@@ -97,6 +97,7 @@ import io.harness.data.structure.NullSafeImmutableMap;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.AccountId;
 import io.harness.delegate.DelegateId;
+import io.harness.delegate.DelegateProfileExecutedAtResponse;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateInstanceStatus;
@@ -197,6 +198,7 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFilePermission;
 import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
@@ -290,6 +292,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private static final String HOST_NAME = getLocalHostName();
   private static final String DELEGATE_TYPE = System.getenv().get("DELEGATE_TYPE");
   private static final String DELEGATE_GROUP_NAME = System.getenv().get("DELEGATE_GROUP_NAME");
+  private static final String NONE = "NONE";
   private final String delegateGroupId = System.getenv().get("DELEGATE_GROUP_ID");
 
   private static final String START_SH = "start.sh";
@@ -301,6 +304,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private final String delegateProjectIdentifier = System.getenv().get("DELEGATE_PROJECT_IDENTIFIER");
   private final String delegateSize = System.getenv().get("DELEGATE_SIZE");
   private final String delegateDescription = System.getenv().get("DELEGATE_DESCRIPTION");
+  // TODO remove this dependency of delegateNg on SESSION_ID once DEL-2413 has gone into prod for several weeks.
+  private final boolean delegateNg = isNotBlank(delegateSessionIdentifier)
+      || (isNotBlank(System.getenv().get("NEXT_GEN")) && Boolean.parseBoolean(System.getenv().get("NEXT_GEN")));
   private final int delegateTaskLimit = isNotBlank(System.getenv().get("DELEGATE_TASK_LIMIT"))
       ? Integer.parseInt(System.getenv().get("DELEGATE_TASK_LIMIT"))
       : 0;
@@ -535,6 +541,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                           .delegateType(DELEGATE_TYPE)
                                           //.proxy(set to true if there is a system proxy)
                                           .pollingModeEnabled(delegateConfiguration.isPollForTasks())
+                                          .ng(delegateNg)
                                           .sampleDelegate(isSample)
                                           .location(Paths.get("").toAbsolutePath().toString())
                                           .ceEnabled(Boolean.parseBoolean(System.getenv("ENABlE_CE")));
@@ -1095,18 +1102,14 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                 ()
                     -> delegateExecute(
                         delegateAgentManagerClient.checkForProfile(delegateId, accountId, profileId, updated)));
-
-        if (profileParams != null) {
-          initialProfileScriptExecuted.set(
-              !isEmpty(profileParams.getProfileId()) && profileParams.getProfileLastExecutedOnDelegate() != 0L);
+        if (response == null || response.getResource() == null) {
+          initialProfileScriptExecuted.set(resolveProfileExecuted(profileParams));
         }
         if (response != null) {
           if (response.getResource() != null) {
-            initialProfileScriptExecuted.set(response.getResource().getProfileLastExecutedOnDelegate() != 0L
-                && !isEmpty(response.getResource().getProfileId())
-                && !response.getResource().getProfileId().equals("NONE"));
-            if (isEmpty(response.getResource().getProfileId())
-                || response.getResource().getProfileId().equals("NONE")) {
+            initialProfileScriptExecuted.set(response.getResource().getProfileLastExecutedOnDelegate() != 0L);
+            if (isEmpty(response.getResource().getProfileId()) || response.getResource().getProfileId().equals(NONE)) {
+              initialProfileScriptExecuted.set(true);
               clearProfileExecutedAt();
             }
           }
@@ -1137,7 +1140,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       File profileFile = new File("profile");
       if (acquireLock(profileFile, ofMinutes(5))) {
         try {
-          if ("NONE".equals(profile.getProfileId())) {
+          if (NONE.equals(profile.getProfileId())) {
             FileUtils.deleteQuietly(profileFile);
             FileUtils.deleteQuietly(new File("profile.result"));
             return;
@@ -1175,6 +1178,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             if (exitCode == 0) {
               initialProfileScriptExecuted.set(true);
             }
+          } else {
+            initialProfileScriptExecuted.set(true);
           }
 
           saveProfile(profile, result);
@@ -1202,10 +1207,28 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private void clearProfileExecutedAt() {
     if (null != delegateAgentManagerClient) {
-      delegateServiceGrpcAgentClient.profileScriptInitiatedOnDelegateInstance(
+      delegateServiceGrpcAgentClient.clearProfileExecutedAt(
           AccountId.newBuilder().setId(accountId).build(), DelegateId.newBuilder().setId(delegateId).build());
       log.info("Profile script execution initiated on delegate instance {}:{} ", accountId, delegateId);
     }
+  }
+
+  protected boolean resolveProfileExecuted(DelegateProfileParams profileParams) {
+    long profileExecutedAt = profileParams != null ? profileParams.getProfileLastUpdatedAt() : 0L;
+    String profileId = profileParams != null ? profileParams.getProfileId() : null;
+    DelegateProfileExecutedAtResponse paramsFromManager = fetchProfileFromManager();
+    if (paramsFromManager != null) {
+      profileExecutedAt = paramsFromManager.getProfileExecutedAt();
+      profileId = paramsFromManager.getProfileId();
+    }
+    log.info("Profile script last executed on delegate {}:{} at {}", accountId, delegateId,
+        Instant.ofEpochMilli(profileExecutedAt));
+    return isEmpty(profileId) || NONE.equals(profileId) || profileExecutedAt != 0L;
+  }
+
+  private DelegateProfileExecutedAtResponse fetchProfileFromManager() {
+    return delegateServiceGrpcAgentClient.fetchProfileExecutedAt(
+        AccountId.newBuilder().setId(accountId).build(), DelegateId.newBuilder().setId(delegateId).build());
   }
 
   private void saveProfile(DelegateProfileParams profile, List<String> result) {
@@ -2423,7 +2446,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   private String getVersionWithPatch() {
-    return versionInfoManager.getFullVersion();
+    if (multiVersion) {
+      return versionInfoManager.getFullVersion();
+    }
+    return getVersion();
   }
 
   private void initiateSelfDestruct() {

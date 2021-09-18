@@ -14,6 +14,8 @@ import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPL
 import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_POLICY;
 
 import static java.lang.Boolean.FALSE;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.accesscontrol.clients.AccessControlClient;
@@ -33,6 +35,7 @@ import io.harness.ng.core.events.OrganizationCreateEvent;
 import io.harness.ng.core.events.OrganizationDeleteEvent;
 import io.harness.ng.core.events.OrganizationRestoreEvent;
 import io.harness.ng.core.events.OrganizationUpdateEvent;
+import io.harness.ng.core.invites.dto.RoleBinding;
 import io.harness.ng.core.remote.OrganizationMapper;
 import io.harness.ng.core.remote.utils.ScopeAccessHelper;
 import io.harness.ng.core.services.OrganizationService;
@@ -177,7 +180,7 @@ public class OrganizationServiceImpl implements OrganizationService {
                 .orgIdentifier(scope.getOrgIdentifier())
                 .projectIdentifier(scope.getProjectIdentifier())
                 .build(),
-            ORG_ADMIN_ROLE, SYSTEM);
+            singletonList(RoleBinding.builder().roleIdentifier(ORG_ADMIN_ROLE).build()), emptyList(), SYSTEM);
         break;
       case SERVICE_ACCOUNT:
         ngUserService.addServiceAccountToScope(principalId,

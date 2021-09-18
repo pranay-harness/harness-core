@@ -436,7 +436,6 @@ import software.wings.helpers.ext.ecs.request.EcsServiceSetupRequest;
 import software.wings.helpers.ext.ecs.response.EcsBGRoute53DNSWeightUpdateResponse;
 import software.wings.helpers.ext.ecs.response.EcsBGRoute53ServiceSetupResponse;
 import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
-import software.wings.helpers.ext.ecs.response.EcsCommandResponse;
 import software.wings.helpers.ext.ecs.response.EcsDeployRollbackDataFetchResponse;
 import software.wings.helpers.ext.ecs.response.EcsListenerUpdateCommandResponse;
 import software.wings.helpers.ext.ecs.response.EcsRunTaskDeployResponse;
@@ -1102,7 +1101,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(EcsCommandRequest.class, 5606);
     kryo.register(EcsListenerUpdateRequestConfigData.class, 5610);
     kryo.register(EcsCommandExecutionResponse.class, 5609);
-    kryo.register(EcsCommandResponse.class, 5608);
     kryo.register(EcsListenerUpdateCommandResponse.class, 5613);
     kryo.register(CollaborationProviderRequest.CommunicationType.class, 5307);
     kryo.register(CollaborationProviderRequest.class, 5306);

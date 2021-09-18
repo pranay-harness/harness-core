@@ -4925,7 +4925,7 @@ amazon_artifacts = [
     maven.artifact(
         group = "com.amazonaws",
         artifact = x,
-        version = "1.11.834",
+        version = "1.12.47",
         exclusions = [
             "commons-logging:commons-logging",
         ],
@@ -5300,4 +5300,11 @@ go_repository(
     importpath = "github.com/robfig/cron/v3",
     sum = "h1:WdRxkvbJztn8LMz/QEvLN5sBU+xKpSqwwUO1Pjr4qDs=",
     version = "v3.0.1",
+)
+
+go_repository(
+    name = "com_github_robinjoseph08_redisqueue_v2",
+    importpath = "github.com/robinjoseph08/redisqueue/v2",
+    sum = "h1:GactHlrxS8YSCJc4CbP1KbTObo14pieNmNWSUlquTGI=",
+    version = "v2.1.0",
 )

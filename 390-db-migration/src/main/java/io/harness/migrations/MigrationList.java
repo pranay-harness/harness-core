@@ -431,6 +431,7 @@ public class MigrationList {
         .add(Pair.of(362, BaseMigration.class))
         .add(Pair.of(363, QpsGraphQLMigration.class))
         .add(Pair.of(364, BaseMigration.class))
+        .add(Pair.of(365, BaseMigration.class))
         .build();
   }
 }

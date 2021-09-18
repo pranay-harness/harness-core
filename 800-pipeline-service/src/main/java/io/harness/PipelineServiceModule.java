@@ -207,14 +207,8 @@ public class PipelineServiceModule extends AbstractModule {
     install(OrchestrationStepsModule.getInstance(configuration.getOrchestrationStepConfig()));
     install(OrchestrationVisualizationModule.getInstance(configuration.getEventsFrameworkConfiguration()));
     install(PrimaryVersionManagerModule.getInstance());
-    if (configuration.isUseDms()) {
-      install(new DelegateServiceDriverGrpcClientModule(configuration.getDmsGrpcClient().getSecret(),
-          configuration.getDmsGrpcClient().getTarget(), configuration.getDmsGrpcClient().getAuthority(), true));
-    } else {
-      install(new DelegateServiceDriverGrpcClientModule(configuration.getManagerServiceSecret(),
-          configuration.getManagerTarget(), configuration.getManagerAuthority(), true));
-    }
-
+    install(new DelegateServiceDriverGrpcClientModule(configuration.getManagerServiceSecret(),
+        configuration.getManagerTarget(), configuration.getManagerAuthority(), true));
     install(new ConnectorResourceClientModule(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getNgManagerServiceSecret(), MANAGER.getServiceId(), ClientMode.PRIVILEGED));
     install(new SecretNGManagerClientModule(configuration.getNgManagerServiceHttpClientConfig(),

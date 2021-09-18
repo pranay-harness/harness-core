@@ -105,9 +105,6 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
 
   @Override
   public void collectNewArtifactsAsync(ArtifactStream artifactStream, String permitId) {
-    log.info("Collecting build details type {} and source name {} ", artifactStream.getArtifactStreamType(),
-        artifactStream.getSourceName());
-
     String artifactStreamType = artifactStream.getArtifactStreamType();
 
     String accountId;
@@ -175,7 +172,8 @@ public class ArtifactCollectionServiceAsyncImpl implements ArtifactCollectionSer
         new BuildSourceCallback(accountId, artifactStream.getUuid(), permitId, artifactStream.getSettingId()), waitId);
     log.info("Queuing delegate task for artifactStream with waitId {}", waitId);
     final String taskId = delegateService.queueTask(delegateTaskBuilder.build());
-    log.info("Queued delegate taskId {} for artifactStream", taskId);
+    log.info("Queued delegate taskId {} for artifactStream type: {} and source: {}", taskId,
+        artifactStream.getArtifactStreamType(), artifactStream.getSourceName());
   }
 
   @Override

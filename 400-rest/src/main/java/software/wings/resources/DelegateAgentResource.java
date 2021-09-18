@@ -592,6 +592,7 @@ public class DelegateAgentResource {
         .delegateRandomToken(delegateParams.getDelegateRandomToken())
         .keepAlivePacket(delegateParams.isKeepAlivePacket())
         .polllingModeEnabled(delegateParams.isPollingModeEnabled())
+        .ng(delegateParams.isNg())
         .sampleDelegate(delegateParams.isSampleDelegate())
         .currentlyExecutingDelegateTasks(delegateParams.getCurrentlyExecutingDelegateTasks())
         .location(delegateParams.getLocation())

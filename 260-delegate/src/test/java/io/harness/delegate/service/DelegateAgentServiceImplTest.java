@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.VLAD;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
@@ -19,6 +20,7 @@ import io.harness.CategoryTest;
 import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.delegate.DelegateProfileExecutedAtResponse;
 import io.harness.delegate.beans.DelegateProfileParams;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -158,7 +160,7 @@ public class DelegateAgentServiceImplTest extends CategoryTest {
     DelegateAgentServiceImpl delegateAgentService = spy(delegateService);
     delegateAgentService.accountId = "some_account_id";
     DelegateAgentServiceImpl.delegateId = "some_delegate_id";
-    when(delegateServiceGrpcAgentClient.profileScriptInitiatedOnDelegateInstance(any(), any())).thenReturn(true);
+    when(delegateServiceGrpcAgentClient.clearProfileExecutedAt(any(), any())).thenReturn(true);
     DelegateTaskEvent taskEvent = mock(DelegateTaskEvent.class);
     when(taskEvent.getDelegateTaskId()).thenReturn("some delegate task id");
     DelegateProfileParams delegateProfileParams = mock(DelegateProfileParams.class);
@@ -197,10 +199,64 @@ public class DelegateAgentServiceImplTest extends CategoryTest {
     DelegateProfileParams profile = mock(DelegateProfileParams.class);
     delegateAgentService.accountId = "some_account_id";
     DelegateAgentServiceImpl.delegateId = "some_delegate_id";
-    when(delegateServiceGrpcAgentClient.profileScriptInitiatedOnDelegateInstance(any(), any())).thenReturn(true);
+    when(delegateServiceGrpcAgentClient.clearProfileExecutedAt(any(), any())).thenReturn(true);
     // execute
     delegateAgentService.applyProfile(profile);
     // validate
-    verify(delegateServiceGrpcAgentClient, never()).profileScriptInitiatedOnDelegateInstance(any(), any());
+    verify(delegateServiceGrpcAgentClient, never()).clearProfileExecutedAt(any(), any());
+  }
+
+  @Test
+  @Owner(developers = VLAD)
+  @Category(UnitTests.class)
+  public void shouldResolveProfileExecutedAt() throws IOException {
+    // mock
+    DelegateAgentServiceImpl delegateAgentService = spy(delegateService);
+    DelegateProfileParams profile = mock(DelegateProfileParams.class);
+    delegateAgentService.accountId = "some_account_id";
+    DelegateAgentServiceImpl.delegateId = "some_delegate_id";
+    DelegateProfileExecutedAtResponse response =
+        DelegateProfileExecutedAtResponse.newBuilder().setProfileId("123").setProfileExecutedAt(0L).build();
+    when(delegateServiceGrpcAgentClient.fetchProfileExecutedAt(any(), any())).thenReturn(response);
+    // execute
+    boolean result = delegateAgentService.resolveProfileExecuted(profile);
+    // validate
+    assertThat(result).isEqualTo(false);
+  }
+
+  @Test
+  @Owner(developers = VLAD)
+  @Category(UnitTests.class)
+  public void shouldResolveProfileExecutedAtTimeSet() throws IOException {
+    // mock
+    DelegateAgentServiceImpl delegateAgentService = spy(delegateService);
+    DelegateProfileParams profile = mock(DelegateProfileParams.class);
+    delegateAgentService.accountId = "some_account_id";
+    DelegateAgentServiceImpl.delegateId = "some_delegate_id";
+    DelegateProfileExecutedAtResponse response =
+        DelegateProfileExecutedAtResponse.newBuilder().setProfileId("123").setProfileExecutedAt(123L).build();
+    when(delegateServiceGrpcAgentClient.fetchProfileExecutedAt(any(), any())).thenReturn(response);
+    // execute
+    boolean result = delegateAgentService.resolveProfileExecuted(profile);
+    // validate
+    assertThat(result).isEqualTo(true);
+  }
+
+  @Test
+  @Owner(developers = VLAD)
+  @Category(UnitTests.class)
+  public void shouldResolveProfileExecutedAtProfileNotSet() throws IOException {
+    // mock
+    DelegateAgentServiceImpl delegateAgentService = spy(delegateService);
+    DelegateProfileParams profile = mock(DelegateProfileParams.class);
+    delegateAgentService.accountId = "some_account_id";
+    DelegateAgentServiceImpl.delegateId = "some_delegate_id";
+    DelegateProfileExecutedAtResponse response =
+        DelegateProfileExecutedAtResponse.newBuilder().setProfileExecutedAt(123L).build();
+    when(delegateServiceGrpcAgentClient.fetchProfileExecutedAt(any(), any())).thenReturn(response);
+    // execute
+    boolean result = delegateAgentService.resolveProfileExecuted(profile);
+    // validate
+    assertThat(result).isEqualTo(true);
   }
 }

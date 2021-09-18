@@ -163,8 +163,7 @@ public class PlanCreatorMergeService {
             PmsExceptionUtils.getUnresolvedDependencyPathsErrorMessage(finalResponseBuilder.getDeps()));
       }
       PlanCreationBlobResponseUtils.mergeContext(finalResponseBuilder, currIterationResponse.getContextMap());
-      PlanCreationBlobResponseUtils.addDependencies(finalResponseBuilder, currIterationResponse.getDeps());
-      PlanCreationBlobResponseUtils.mergeYamlUpdates(finalResponseBuilder, currIterationResponse.getYamlUpdates());
+      PlanCreationBlobResponseUtils.addDependenciesV2(finalResponseBuilder, currIterationResponse);
     }
 
     return finalResponseBuilder.build();

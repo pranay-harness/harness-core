@@ -233,24 +233,6 @@ if [[ "" != "$FILE_STORAGE_CLUSTER_NAME" ]]; then
   yq write -i $CONFIG_FILE fileServiceConfiguration.clusterName "$FILE_STORAGE_CLUSTER_NAME"
 fi
 
-
-if [[ "" != "$DMS_GRPC_SECRET" ]]; then
-  yq write -i $CONFIG_FILE dmsGrpcClient.secret "$DMS_GRPC_SECRET"
-fi
-
-if [[ "" != "$DMS_GRPC_TARGET" ]]; then
-  yq write -i $CONFIG_FILE dmsGrpcClient.target "$DMS_GRPC_TARGET"
-fi
-
-if [[ "" != "$DMS_GRPC_AUTHORITY" ]]; then
-  yq write -i $CONFIG_FILE dmsGrpcClient.authority "$DMS_GRPC_AUTHORITY"
-fi
-
-if [[ "" != "$USE_DMS" ]]; then
-  yq write -i $CONFIG_FILE useDms "$USE_DMS"
-fi
-
-
 yq delete -i $REDISSON_CACHE_FILE codec
 
 if [[ "$REDIS_SCRIPT_CACHE" == "false" ]]; then
@@ -314,6 +296,8 @@ replace_key_value ceAwsSetupConfig.secretKey $CE_AWS_SECRET_KEY
 replace_key_value ceAwsSetupConfig.destinationBucket $CE_AWS_DESTINATION_BUCKET
 
 replace_key_value ceAwsSetupConfig.templateURL $CE_AWS_TEMPLATE_URL
+
+replace_key_value ceGcpSetupConfig.gcpProjectId $CE_SETUP_CONFIG_GCP_PROJECT_ID
 
 replace_key_value accessControlClient.enableAccessControl "$ACCESS_CONTROL_ENABLED"
 

@@ -1,6 +1,7 @@
 package io.harness.cvng.activity.resources;
 
 import static io.harness.cvng.core.services.CVNextGenConstants.ACTIVITY_RESOURCE;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.activity.beans.ActivityDashboardDTO;
@@ -14,7 +15,6 @@ import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ClusterType;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
 import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
-import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.core.beans.DatasourceTypeDTO;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
 import io.harness.cvng.core.beans.params.PageParams;
@@ -24,7 +24,6 @@ import io.harness.cvng.core.beans.params.filterParams.DeploymentTimeSeriesAnalys
 import io.harness.ng.beans.PageResponse;
 import io.harness.rest.RestResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
-import io.harness.security.annotations.PublicApi;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
@@ -35,17 +34,14 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import org.hibernate.validator.constraints.NotEmpty;
-import retrofit2.http.Body;
 
 @Api(ACTIVITY_RESOURCE)
 @Path(ACTIVITY_RESOURCE)
@@ -54,17 +50,6 @@ import retrofit2.http.Body;
 @NextGenManagerAuth
 public class ActivityResource {
   @Inject private ActivityService activityService;
-
-  @POST
-  @Timed
-  @ExceptionMetered
-  @PublicApi
-  @Path("{webHookToken}")
-  @ApiOperation(value = "registers an activity", nickname = "registerActivity")
-  public RestResponse<String> registerActivity(@NotNull @PathParam("webHookToken") String webHookToken,
-      @NotNull @QueryParam("accountId") @Valid final String accountId, @Body ActivityDTO activityDTO) {
-    return new RestResponse<>(activityService.register(accountId, webHookToken, activityDTO));
-  }
 
   @GET
   @Path("recent-deployment-activity-verifications")
@@ -208,8 +193,16 @@ public class ActivityResource {
   @ApiOperation(value = "get logs for given activity", nickname = "getDeploymentLogAnalysisClusters")
   public RestResponse<List<LogAnalysisClusterChartDTO>> getDeploymentLogAnalysisClusters(
       @NotNull @NotEmpty @PathParam("activityId") String activityId, @NotNull @QueryParam("accountId") String accountId,
-      @QueryParam("hostName") String hostName, @QueryParam("healthSource") List<String> healthSourceIdentifiers,
-      @QueryParam("clusterType") List<ClusterType> clusterTypes) {
+      @QueryParam("hostName") String hostName, @QueryParam("healthSource") List<String> healthSourceIdentifier,
+      @QueryParam("healthSources") List<String> healthSourceIdentifiers,
+      @QueryParam("clusterType") List<ClusterType> clusterType,
+      @QueryParam("clusterTypes") List<ClusterType> clusterTypes) {
+    if (isNotEmpty(healthSourceIdentifier)) {
+      healthSourceIdentifiers = healthSourceIdentifier;
+    }
+    if (isNotEmpty(clusterType)) {
+      clusterTypes = clusterType;
+    }
     DeploymentLogAnalysisFilter deploymentLogAnalysisFilter = DeploymentLogAnalysisFilter.builder()
                                                                   .healthSourceIdentifiers(healthSourceIdentifiers)
                                                                   .clusterTypes(clusterTypes)
@@ -229,11 +222,15 @@ public class ActivityResource {
       @PathParam("activityId") String activityId, @NotNull @QueryParam("accountId") String accountId,
       @QueryParam("label") Integer label, @NotNull @QueryParam("pageNumber") int pageNumber,
       @NotNull @QueryParam("pageSize") int pageSize, @QueryParam("hostName") String hostName,
-      @QueryParam("healthSource") List<String> healthSourceIdentifiers,
+      @QueryParam("healthSource") List<String> healthSourceIdentifier,
+      @QueryParam("healthSources") List<String> healthSourceIdentifiers,
       @QueryParam("clusterType") ClusterType clusterType, @QueryParam("clusterTypes") List<ClusterType> clusterTypes) {
     PageParams pageParams = PageParams.builder().page(pageNumber).size(pageSize).build();
     if (clusterType != null) {
       clusterTypes = Arrays.asList(clusterType);
+    }
+    if (isNotEmpty(healthSourceIdentifier)) {
+      healthSourceIdentifiers = healthSourceIdentifier;
     }
     DeploymentLogAnalysisFilter deploymentLogAnalysisFilter = DeploymentLogAnalysisFilter.builder()
                                                                   .healthSourceIdentifiers(healthSourceIdentifiers)

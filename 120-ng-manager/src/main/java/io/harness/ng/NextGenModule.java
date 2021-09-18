@@ -178,6 +178,7 @@ import io.harness.polling.service.intfc.PollingService;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.CEAwsSetupConfig;
 import io.harness.remote.CEAzureSetupConfig;
+import io.harness.remote.CEGcpSetupConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.resourcegroupclient.ResourceGroupClientModule;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
@@ -350,6 +351,12 @@ public class NextGenModule extends AbstractModule {
     return this.appConfig.getCeAzureSetupConfig();
   }
 
+  @Provides
+  @Singleton
+  CEGcpSetupConfig ceGcpSetupConfig() {
+    return this.appConfig.getCeGcpSetupConfig();
+  }
+
   @Override
   protected void configure() {
     install(VersionModule.getInstance());
@@ -440,15 +447,8 @@ public class NextGenModule extends AbstractModule {
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(new SecretNGManagerClientModule(this.appConfig.getNgManagerClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
-
-    if (this.appConfig.isUseDms()) {
-      install(new DelegateServiceDriverGrpcClientModule(this.appConfig.getDmsGrpcClient().getSecret(),
-          this.appConfig.getDmsGrpcClient().getTarget(), this.appConfig.getDmsGrpcClient().getAuthority(), true));
-    } else {
-      install(new DelegateServiceDriverGrpcClientModule(this.appConfig.getNextGenConfig().getManagerServiceSecret(),
-          this.appConfig.getGrpcClientConfig().getTarget(), this.appConfig.getGrpcClientConfig().getAuthority(), true));
-    }
-
+    install(new DelegateServiceDriverGrpcClientModule(this.appConfig.getNextGenConfig().getManagerServiceSecret(),
+        this.appConfig.getGrpcClientConfig().getTarget(), this.appConfig.getGrpcClientConfig().getAuthority(), true));
     install(new EntitySetupUsageClientModule(this.appConfig.getNgManagerClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(new ModulesClientModule(this.appConfig.getManagerClientConfig(),

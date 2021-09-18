@@ -80,8 +80,6 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("cacheConfig") private CacheConfig cacheConfig;
   @JsonProperty("hostname") String hostname;
   @JsonProperty("basePathPrefix") String basePathPrefix;
-  @JsonProperty(value = "useDms", defaultValue = "false") private boolean useDms;
-  @JsonProperty("dmsGrpcClient") private GrpcClientConfig dmsGrpcClient;
 
   private String managerServiceSecret;
   private String managerTarget;

@@ -1,22 +1,39 @@
 package io.harness.ngtriggers.utils;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.delegate.beans.connector.ConnectorType.BITBUCKET;
+import static io.harness.delegate.beans.connector.ConnectorType.GIT;
+import static io.harness.delegate.beans.connector.ConnectorType.GITHUB;
+import static io.harness.delegate.beans.connector.ConnectorType.GITLAB;
 
 import static software.wings.beans.TaskType.SCM_GIT_REF_TASK;
+
+import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.IdentifierRef;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
+import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
+import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
+import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.delegate.task.scm.GitRefType;
 import io.harness.delegate.task.scm.ScmGitRefTaskParams;
 import io.harness.delegate.task.scm.ScmGitRefTaskResponseData;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.TriggerException;
 import io.harness.exception.WingsException;
+import io.harness.exception.ngexception.CIStageExecutionException;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
 import io.harness.ngtriggers.beans.scm.WebhookPayloadData;
+import io.harness.ngtriggers.beans.source.webhook.v2.WebhookTriggerConfigV2;
+import io.harness.ngtriggers.beans.source.webhook.v2.git.GitAware;
 import io.harness.ngtriggers.eventmapper.filters.dto.FilterRequestData;
+import io.harness.ngtriggers.helpers.WebhookConfigHelper;
 import io.harness.product.ci.scm.proto.Commit;
 import io.harness.product.ci.scm.proto.ListCommitsInPRResponse;
 import io.harness.product.ci.scm.proto.ParseWebhookResponse;
@@ -43,6 +60,8 @@ public class SCMDataObtainer implements GitProviderBaseDataObtainer {
   private final TaskExecutionUtils taskExecutionUtils;
   private final ConnectorUtils connectorUtils;
   private final KryoSerializer kryoSerializer;
+  public static final String GIT_URL_SUFFIX = ".git";
+  public static final String PATH_SEPARATOR = "/";
 
   @Inject
   public SCMDataObtainer(
@@ -59,6 +78,37 @@ public class SCMDataObtainer implements GitProviderBaseDataObtainer {
     if (parseWebhookResponse.hasPr()) {
       acquirePullRequestCommits(filterRequestData, triggers);
     }
+  }
+
+  private String getGitURL(GitConnectionType connectionType, String url, String repoName) {
+    String gitUrl = retrieveGenericGitConnectorURL(repoName, connectionType, url);
+
+    if (!url.endsWith(GIT_URL_SUFFIX) && !url.contains("dev.azure.com")) {
+      gitUrl += GIT_URL_SUFFIX;
+    }
+    return gitUrl;
+  }
+
+  private String retrieveGenericGitConnectorURL(String repoName, GitConnectionType connectionType, String url) {
+    String gitUrl;
+    if (connectionType == GitConnectionType.REPO) {
+      gitUrl = url;
+    } else if (connectionType == GitConnectionType.ACCOUNT) {
+      if (isEmpty(repoName)) {
+        throw new IllegalArgumentException("Repo name is not set in trigger git connector spec");
+      }
+
+      if (url.endsWith(PATH_SEPARATOR)) {
+        gitUrl = url + repoName;
+      } else {
+        gitUrl = url + PATH_SEPARATOR + repoName;
+      }
+    } else {
+      throw new InvalidArgumentsException(
+          format("Invalid connection type for git connector: %s", connectionType.toString()), WingsException.USER);
+    }
+
+    return gitUrl;
   }
 
   private void acquirePullRequestCommits(FilterRequestData filterRequestData, List<TriggerDetails> triggers) {
@@ -98,13 +148,42 @@ public class SCMDataObtainer implements GitProviderBaseDataObtainer {
     filterRequestData.setWebhookPayloadData(updatedWebhookPayloadData);
   }
 
+  private GitConnectionType retrieveGitConnectionType(ConnectorDetails gitConnector) {
+    if (gitConnector.getConnectorType() == GITHUB) {
+      GithubConnectorDTO gitConfigDTO = (GithubConnectorDTO) gitConnector.getConnectorConfig();
+      return gitConfigDTO.getConnectionType();
+    } else if (gitConnector.getConnectorType() == BITBUCKET) {
+      BitbucketConnectorDTO gitConfigDTO = (BitbucketConnectorDTO) gitConnector.getConnectorConfig();
+      return gitConfigDTO.getConnectionType();
+    } else if (gitConnector.getConnectorType() == GITLAB) {
+      GitlabConnectorDTO gitConfigDTO = (GitlabConnectorDTO) gitConnector.getConnectorConfig();
+      return gitConfigDTO.getConnectionType();
+    } else if (gitConnector.getConnectorType() == GIT) {
+      GitConfigDTO gitConfigDTO = (GitConfigDTO) gitConnector.getConnectorConfig();
+      return gitConfigDTO.getGitConnectionType();
+    } else {
+      throw new CIStageExecutionException("scmType " + gitConnector.getConnectorType() + "is not supported");
+    }
+  }
+
   List<Commit> getCommitsInPr(ConnectorDetails connectorDetails, TriggerDetails triggerDetails, long number) {
+    ScmConnector scmConnector = (ScmConnector) connectorDetails.getConnectorConfig();
+    try {
+      GitAware gitAware = WebhookConfigHelper.retrieveGitAware(
+          (WebhookTriggerConfigV2) triggerDetails.getNgTriggerConfigV2().getSource().getSpec());
+
+      String repoName = gitAware.fetchRepoName();
+
+      scmConnector.setUrl(getGitURL(retrieveGitConnectionType(connectorDetails), scmConnector.getUrl(), repoName));
+    } catch (Exception ex) {
+      log.error("Failed to update url");
+    }
     if (ScmConnector.class.isAssignableFrom(connectorDetails.getConnectorConfig().getClass())) {
       ScmGitRefTaskParams scmGitRefTaskParams = ScmGitRefTaskParams.builder()
                                                     .prNumber(number)
                                                     .gitRefType(GitRefType.PULL_REQUEST_COMMITS)
                                                     .encryptedDataDetails(connectorDetails.getEncryptedDataDetails())
-                                                    .scmConnector((ScmConnector) connectorDetails.getConnectorConfig())
+                                                    .scmConnector(scmConnector)
                                                     .build();
       ResponseData responseData =
           taskExecutionUtils.executeSyncTask(DelegateTaskRequest.builder()
@@ -128,11 +207,11 @@ public class SCMDataObtainer implements GitProviderBaseDataObtainer {
         } else if (object instanceof ErrorResponseData) {
           ErrorResponseData errorResponseData = (ErrorResponseData) object;
           throw new TriggerException(
-              String.format("Failed to fetch connector details. Reason: %s", errorResponseData.getErrorMessage()),
+              String.format("Failed to fetch commit details. Reason: %s", errorResponseData.getErrorMessage()),
               WingsException.SRE);
         }
       }
-      throw new TriggerException("Failed to fetch connector details", WingsException.SRE);
+      throw new TriggerException("Failed to fetch commit details", WingsException.SRE);
     }
     return new ArrayList<>();
   }

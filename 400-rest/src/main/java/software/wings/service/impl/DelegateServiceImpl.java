@@ -79,6 +79,7 @@ import io.harness.capability.CapabilityTaskSelectionDetails.CapabilityTaskSelect
 import io.harness.capability.service.CapabilityService;
 import io.harness.configuration.DeployMode;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.DelegateProfileExecutedAtResponse;
 import io.harness.delegate.beans.AvailableDelegateSizes;
 import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.Delegate;
@@ -192,6 +193,7 @@ import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.DelegateSelectionLogsService;
+import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.DelegateTaskServiceClassic;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.FileService;
@@ -276,7 +278,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @BreakDependencyOn("software.wings.beans.User")
 @BreakDependencyOn("software.wings.beans.Event")
 @OwnedBy(DEL)
-public class DelegateServiceImpl implements software.wings.service.intfc.DelegateService {
+public class DelegateServiceImpl implements DelegateService {
   /**
    * The constant DELEGATE_DIR.
    */
@@ -927,8 +929,7 @@ public class DelegateServiceImpl implements software.wings.service.intfc.Delegat
     return updatedDelegate;
   }
 
-  @Override
-  public Delegate profileScriptExecutionInitiated(String accountId, String delegateId) {
+  public Delegate clearProfileExecutedAt(String accountId, String delegateId) {
     Delegate currentDelegate = persistence.createQuery(Delegate.class)
                                    .filter(DelegateKeys.accountId, accountId)
                                    .filter(DelegateKeys.uuid, delegateId)
@@ -945,6 +946,29 @@ public class DelegateServiceImpl implements software.wings.service.intfc.Delegat
     Delegate updatedDelegate = persistence.findAndModify(updateQuery, updateOperations, HPersistence.returnNewOptions);
     auditServiceHelper.reportForAuditingUsingAccountId(accountId, currentDelegate, updatedDelegate, Type.UPDATE);
     return updatedDelegate;
+  }
+
+  @Override
+  public DelegateProfileExecutedAtResponse fetchProfileExecutedAt(String accountId, String delegateId) {
+    Delegate delegate = persistence.createQuery(Delegate.class)
+                            .filter(DelegateKeys.accountId, accountId)
+                            .filter(DelegateKeys.uuid, delegateId)
+                            .get();
+
+    log.debug("Fetch profileExecutedAt property for delegate {}:{}", accountId, delegateId);
+    DelegateProfileExecutedAtResponse result;
+    if (delegate == null) {
+      result = DelegateProfileExecutedAtResponse.newBuilder().build();
+    } else if (delegate.getDelegateProfileId() != null) {
+      result = DelegateProfileExecutedAtResponse.newBuilder()
+                   .setProfileId(delegate.getDelegateProfileId())
+                   .setProfileExecutedAt(delegate.getProfileExecutedAt())
+                   .build();
+    } else {
+      result =
+          DelegateProfileExecutedAtResponse.newBuilder().setProfileExecutedAt(delegate.getProfileExecutedAt()).build();
+    }
+    return result;
   }
 
   private DelegateInstanceStatus mapApprovalActionToDelegateStatus(DelegateApproval action) {
@@ -2367,9 +2391,6 @@ public class DelegateServiceImpl implements software.wings.service.intfc.Delegat
       delegateGroupId = delegateGroup.getUuid();
     }
 
-    // Check if delegate is NG delegate and set the flag to true, if needed
-    boolean isNgDelegate = isNotBlank(delegateParams.getSessionIdentifier());
-
     DelegateEntityOwner owner =
         DelegateEntityOwnerHelper.buildOwner(delegateParams.getOrgIdentifier(), delegateParams.getProjectIdentifier());
 
@@ -2380,7 +2401,7 @@ public class DelegateServiceImpl implements software.wings.service.intfc.Delegat
             .sessionIdentifier(
                 isNotBlank(delegateParams.getSessionIdentifier()) ? delegateParams.getSessionIdentifier() : null)
             .owner(owner)
-            .ng(isNgDelegate)
+            .ng(delegateParams.isNg())
             .sizeDetails(sizeDetails)
             .description(delegateParams.getDescription())
             .ip(delegateParams.getIp())
@@ -2656,6 +2677,22 @@ public class DelegateServiceImpl implements software.wings.service.intfc.Delegat
       return persistence.createQuery(Delegate.class)
           .filter(DelegateKeys.accountId, accountId)
           .filter(DelegateKeys.sessionIdentifier, sessionIdentifier)
+          .asKeyList()
+          .stream()
+          .map(key -> (String) key.getId())
+          .collect(toList());
+    } catch (Exception e) {
+      log.error("Could not get delegates from DB.", e);
+      return null;
+    }
+  }
+
+  @Override
+  public List<String> obtainDelegateIdsUsingName(String accountId, String delegateName) {
+    try {
+      return persistence.createQuery(Delegate.class)
+          .filter(DelegateKeys.accountId, accountId)
+          .filter(DelegateKeys.delegateName, delegateName)
           .asKeyList()
           .stream()
           .map(key -> (String) key.getId())

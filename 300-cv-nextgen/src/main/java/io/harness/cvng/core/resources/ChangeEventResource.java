@@ -1,11 +1,14 @@
 package io.harness.cvng.core.resources;
 
+import static io.harness.cvng.core.services.CVNextGenConstants.CHANGE_EVENT_RESOURCE;
+
 import io.harness.annotations.ExposeInternalException;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cvng.core.beans.change.event.ChangeEventDTO;
+import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.core.services.api.ChangeEventService;
 import io.harness.rest.RestResponse;
+import io.harness.security.annotations.DelegateAuth;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -22,11 +25,10 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import retrofit2.http.Body;
 
-@Api("change-event")
-@Path("change-event")
+@Api(CHANGE_EVENT_RESOURCE)
+@Path(CHANGE_EVENT_RESOURCE)
 @Produces("application/json")
 @ExposeInternalException
-@NextGenManagerAuth
 @OwnedBy(HarnessTeam.CV)
 public class ChangeEventResource {
   @Inject ChangeEventService changeEventService;
@@ -34,9 +36,22 @@ public class ChangeEventResource {
   @POST
   @Timed
   @ExceptionMetered
+  @NextGenManagerAuth
   @Path("register")
   @ApiOperation(value = "register a ChangeEvent", nickname = "registerChangeEvent")
   public RestResponse<Boolean> register(@ApiParam(required = true) @NotNull @QueryParam("accountId") String accountId,
+      @NotNull @Valid @Body ChangeEventDTO changeEventDTO) {
+    return new RestResponse<>(changeEventService.register(changeEventDTO));
+  }
+
+  @POST
+  @Timed
+  @ExceptionMetered
+  @DelegateAuth
+  @Path("register-change")
+  @ApiOperation(value = "register a ChangeEvent", nickname = "registerChangeEventFromDelegate")
+  public RestResponse<Boolean> registerFromDelegate(
+      @ApiParam(required = true) @NotNull @QueryParam("accountId") String accountId,
       @NotNull @Valid @Body ChangeEventDTO changeEventDTO) {
     return new RestResponse<>(changeEventService.register(changeEventDTO));
   }

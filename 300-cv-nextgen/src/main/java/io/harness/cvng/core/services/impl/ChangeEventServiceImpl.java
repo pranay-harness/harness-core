@@ -2,16 +2,16 @@ package io.harness.cvng.core.services.impl;
 
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.beans.activity.ActivityType;
+import io.harness.cvng.beans.change.ChangeCategory;
+import io.harness.cvng.beans.change.ChangeEventDTO;
+import io.harness.cvng.beans.change.ChangeSourceType;
 import io.harness.cvng.core.beans.ChangeSummaryDTO;
 import io.harness.cvng.core.beans.ChangeSummaryDTO.CategoryCountDetails;
-import io.harness.cvng.core.beans.change.event.ChangeEventDTO;
 import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.services.api.ChangeEventService;
 import io.harness.cvng.core.services.api.monitoredService.ChangeSourceService;
 import io.harness.cvng.core.transformer.changeEvent.ChangeEventEntityAndDTOTransformer;
-import io.harness.cvng.core.types.ChangeCategory;
-import io.harness.cvng.core.types.ChangeSourceType;
 
 import com.google.inject.Inject;
 import java.time.Duration;
@@ -46,11 +46,9 @@ public class ChangeEventServiceImpl implements ChangeEventService {
     if (!changeSourceDTOOptional.isPresent()) {
       return false;
     }
-    activityService.upsert(transformer.getEntity(changeEventDTO));
     if (StringUtils.isEmpty(changeEventDTO.getChangeSourceIdentifier())) {
       changeEventDTO.setChangeSourceIdentifier(changeSourceDTOOptional.get().getIdentifier());
     }
-    changeEventDTO.setChangeSourceIdentifier(changeSourceDTOOptional.get().getIdentifier());
     activityService.upsert(transformer.getEntity(changeEventDTO));
     return true;
   }

@@ -27,5 +27,6 @@ public interface CVNextGenConstants {
   String ACTIVITY_SOURCE_RESOURCE = "activity-source";
   String INTERNAL_ACTIVITY_RESOURCE = "activity-internal-api";
   String KUBERNETES_RESOURCE = "kubernetes";
+  String CHANGE_EVENT_RESOURCE = "change-event";
   int CVNG_MAX_PARALLEL_THREADS = 20;
 }

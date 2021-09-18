@@ -5,18 +5,23 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.iterator.PersistentRegularIterable;
 import io.harness.logging.AutoLogContext;
+import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ng.DbAliases;
-import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
 import io.harness.pms.contracts.interrupts.InterruptConfig;
 import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 
+import com.google.common.collect.ImmutableList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.Value;
@@ -39,7 +44,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @FieldNameConstants(innerTypeName = "InterruptKeys")
 @TypeAlias("interrupt")
 @StoreIn(DbAliases.PMS)
-public class Interrupt implements PersistentEntity, UuidAccess {
+public class Interrupt implements PersistentRegularIterable, UuidAccess {
   public enum State { REGISTERED, PROCESSING, PROCESSED_SUCCESSFULLY, PROCESSED_UNSUCCESSFULLY, DISCARDED }
 
   @Wither @Id @org.mongodb.morphia.annotations.Id @NotNull String uuid;
@@ -54,14 +59,56 @@ public class Interrupt implements PersistentEntity, UuidAccess {
   @NonFinal @Setter @Builder.Default State state = State.REGISTERED;
   @Wither @Version Long version;
 
+  @Getter @NonFinal @Setter Long nextIteration;
+
+  @Override
+  public Long obtainNextIteration(String fieldName) {
+    return nextIteration;
+  }
+
+  @Override
+  public void updateNextIteration(String fieldName, long nextIteration) {
+    this.nextIteration = nextIteration;
+  }
+
   public AutoLogContext autoLogContext() {
     return new AutoLogContext(logContextMap(), OVERRIDE_NESTS);
   }
+
   private Map<String, String> logContextMap() {
     Map<String, String> logContext = new HashMap<>();
     logContext.put(InterruptKeys.planExecutionId, planExecutionId);
     logContext.put(InterruptKeys.type, type.name());
     logContext.put(InterruptKeys.nodeExecutionId, nodeExecutionId);
     return logContext;
+  }
+
+  public static List<MongoIndex> mongoIndexes() {
+    return ImmutableList.<MongoIndex>builder()
+        .add(SortCompoundMongoIndex.builder()
+                 .name("planExecutionId_state_type_createdAt_idx")
+                 .field(InterruptKeys.planExecutionId)
+                 .field(InterruptKeys.state)
+                 .field(InterruptKeys.type)
+                 .descSortField(InterruptKeys.createdAt)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("planExecutionId_createdAt_idx")
+                 .field(InterruptKeys.planExecutionId)
+                 .descSortField(InterruptKeys.createdAt)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("planExecutionId_nodeExecutionId_createdAt_idx")
+                 .field(InterruptKeys.planExecutionId)
+                 .field(InterruptKeys.nodeExecutionId)
+                 .descSortField(InterruptKeys.createdAt)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("state_type_monitoring_createdAt_idx")
+                 .field(InterruptKeys.state)
+                 .field(InterruptKeys.type)
+                 .descSortField(InterruptKeys.createdAt)
+                 .build())
+        .build();
   }
 }

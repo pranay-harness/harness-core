@@ -10,7 +10,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.ccm.commons.beans.config.CEFeatures;
 import io.harness.ccm.remote.beans.K8sClusterSetupRequest;
 import io.harness.ccm.service.intf.CEYamlService;
+import io.harness.exception.DelegateNotAvailableException;
+import io.harness.exception.DelegateServiceDriverException;
+import io.harness.exception.HintException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.security.annotations.NextGenManagerAuth;
@@ -79,20 +83,35 @@ public class CEYamlResource {
   @ApiOperation(value = "get k8s cluster setup yaml based on features enabled", nickname = CLOUD_COST_K8S_CLUSTER_SETUP)
   public Response cloudCostK8sClusterSetup(@Context HttpServletRequest request,
       @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
-      @Valid @NotNull @RequestBody K8sClusterSetupRequest body) throws Exception {
-    if (body.getFeaturesEnabled().contains(CEFeatures.BILLING)) {
-      throw new InvalidRequestException("Feature BILLING not supported for CEK8sCluster Connector Setup");
+      @Valid @NotNull @RequestBody K8sClusterSetupRequest body) {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      if (body.getFeaturesEnabled().contains(CEFeatures.BILLING)) {
+        throw new InvalidRequestException("Feature BILLING not supported for CEK8sCluster Connector Setup");
+      }
+
+      final String serverName = request.getServerName();
+      final String harnessHost = request.getScheme() + "://" + serverName;
+
+      try {
+        final String yamlFileContent =
+            ceYamlService.unifiedCloudCostK8sClusterYaml(accountId, harnessHost, serverName, body);
+
+        return Response.ok(yamlFileContent)
+            .header(CONTENT_DISPOSITION, ATTACHMENT_FILENAME + CLOUD_COST_K8S_CLUSTER_SETUP + DOT_YAML)
+            .type("text/plain; charset=UTF-8")
+            .build();
+      } catch (DelegateServiceDriverException ex) {
+        log.error("DelegateServiceDriverException: msg:[{}]", ex.getMessage(), ex);
+
+        throw new HintException(
+            String.format(HintException.DELEGATE_NOT_AVAILABLE,
+                "https://ngdocs.harness.io/article/ltt65r6k39-set-up-cost-visibility-for-kubernetes"),
+            new DelegateNotAvailableException(ex.getMessage(), WingsException.USER));
+      } catch (Exception ex) {
+        log.error("cloudCostK8sClusterSetup Exception", ex);
+
+        throw new InvalidRequestException(ex.getMessage());
+      }
     }
-
-    final String serverName = request.getServerName();
-    final String harnessHost = request.getScheme() + "://" + serverName;
-
-    final String yamlFileContent =
-        ceYamlService.unifiedCloudCostK8sClusterYaml(accountId, harnessHost, serverName, body);
-
-    return Response.ok(yamlFileContent)
-        .header(CONTENT_DISPOSITION, ATTACHMENT_FILENAME + CLOUD_COST_K8S_CLUSTER_SETUP + DOT_YAML)
-        .type("text/plain; charset=UTF-8")
-        .build();
   }
 }

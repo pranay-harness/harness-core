@@ -18,6 +18,7 @@ import io.harness.cvng.activity.entities.HarnessCDActivity.HarnessCDActivityUpda
 import io.harness.cvng.activity.entities.InfrastructureActivity.InfrastructureActivityUpdatableEntity;
 import io.harness.cvng.activity.entities.KubernetesActivity.KubernetesActivityUpdatableEntity;
 import io.harness.cvng.activity.entities.KubernetesActivitySource.KubernetesActivitySourceUpdatableEntity;
+import io.harness.cvng.activity.entities.PagerDutyActivity.PagerDutyActivityUpdatableEntity;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.services.impl.ActivityServiceImpl;
 import io.harness.cvng.activity.source.services.api.ActivitySourceService;
@@ -53,6 +54,7 @@ import io.harness.cvng.analysis.services.impl.VerificationJobInstanceAnalysisSer
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.activity.ActivitySourceType;
 import io.harness.cvng.beans.activity.ActivityType;
+import io.harness.cvng.beans.change.ChangeSourceType;
 import io.harness.cvng.beans.job.VerificationJobType;
 import io.harness.cvng.cdng.services.api.CVNGStepService;
 import io.harness.cvng.cdng.services.api.CVNGStepTaskService;
@@ -84,7 +86,6 @@ import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.core.services.api.AppDynamicsService;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.CVConfigTransformer;
-import io.harness.cvng.core.services.api.CVEventService;
 import io.harness.cvng.core.services.api.CVNGLogService;
 import io.harness.cvng.core.services.api.CVNGYamlSchemaService;
 import io.harness.cvng.core.services.api.CVSetupService;
@@ -120,11 +121,11 @@ import io.harness.cvng.core.services.impl.AppDynamicsCVConfigTransformer;
 import io.harness.cvng.core.services.impl.AppDynamicsDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.AppDynamicsServiceImpl;
 import io.harness.cvng.core.services.impl.CVConfigServiceImpl;
-import io.harness.cvng.core.services.impl.CVEventServiceImpl;
 import io.harness.cvng.core.services.impl.CVNGLogServiceImpl;
 import io.harness.cvng.core.services.impl.CVNGYamlSchemaServiceImpl;
 import io.harness.cvng.core.services.impl.CVSetupServiceImpl;
 import io.harness.cvng.core.services.impl.ChangeEventServiceImpl;
+import io.harness.cvng.core.services.impl.ChangeSourceUpdateHandler;
 import io.harness.cvng.core.services.impl.DSConfigServiceImpl;
 import io.harness.cvng.core.services.impl.DataCollectionTaskServiceImpl;
 import io.harness.cvng.core.services.impl.DefaultDeleteEntityByHandler;
@@ -139,6 +140,7 @@ import io.harness.cvng.core.services.impl.NewRelicDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.NewRelicServiceImpl;
 import io.harness.cvng.core.services.impl.OnboardingServiceImpl;
 import io.harness.cvng.core.services.impl.PagerDutyServiceImpl;
+import io.harness.cvng.core.services.impl.PagerdutyChangeSourceUpdateHandler;
 import io.harness.cvng.core.services.impl.PrometheusCVConfigTransformer;
 import io.harness.cvng.core.services.impl.PrometheusDataCollectionInfoMapper;
 import io.harness.cvng.core.services.impl.PrometheusServiceImpl;
@@ -162,12 +164,13 @@ import io.harness.cvng.core.services.impl.monitoredService.ServiceDependencyServ
 import io.harness.cvng.core.transformer.changeEvent.ChangeEventEntityAndDTOTransformer;
 import io.harness.cvng.core.transformer.changeEvent.ChangeEventMetaDataTransformer;
 import io.harness.cvng.core.transformer.changeEvent.HarnessCDChangeEventTransformer;
+import io.harness.cvng.core.transformer.changeEvent.KubernetesClusterChangeEventMetadataTransformer;
+import io.harness.cvng.core.transformer.changeEvent.PagerDutyChangeEventTransformer;
 import io.harness.cvng.core.transformer.changeSource.ChangeSourceEntityAndDTOTransformer;
 import io.harness.cvng.core.transformer.changeSource.ChangeSourceSpecTransformer;
 import io.harness.cvng.core.transformer.changeSource.HarnessCDChangeSourceSpecTransformer;
 import io.harness.cvng.core.transformer.changeSource.KubernetesChangeSourceSpecTransformer;
 import io.harness.cvng.core.transformer.changeSource.PagerDutyChangeSourceSpecTransformer;
-import io.harness.cvng.core.types.ChangeSourceType;
 import io.harness.cvng.core.utils.monitoredService.AppDynamicsHealthSourceSpecTransformer;
 import io.harness.cvng.core.utils.monitoredService.CVConfigToHealthSourceTransformer;
 import io.harness.cvng.core.utils.monitoredService.NewRelicHealthSourceSpecTransformer;
@@ -397,7 +400,6 @@ public class CVServiceModule extends AbstractModule {
     bind(ActivityService.class).to(ActivityServiceImpl.class);
     bind(AlertRuleService.class).to(AlertRuleServiceImpl.class);
     bind(LogDashboardService.class).to(LogDashboardServiceImpl.class);
-    bind(WebhookService.class).to(WebhookServiceImpl.class);
     bind(DeploymentTimeSeriesAnalysisService.class).to(DeploymentTimeSeriesAnalysisServiceImpl.class);
     bind(NextGenService.class).to(NextGenServiceImpl.class);
     bind(HostRecordService.class).to(HostRecordServiceImpl.class);
@@ -413,7 +415,6 @@ public class CVServiceModule extends AbstractModule {
     bind(CVNGMigrationService.class).to(CVNGMigrationServiceImpl.class).in(Singleton.class);
     bind(TimeLimiter.class).toInstance(HTimeLimiter.create());
     bind(StackdriverService.class).to(StackdriverServiceImpl.class);
-    bind(CVEventService.class).to(CVEventServiceImpl.class);
     bind(RedisConfig.class)
         .annotatedWith(Names.named("lock"))
         .toInstance(verificationConfiguration.getEventsFrameworkConfiguration().getRedisConfig());
@@ -476,6 +477,7 @@ public class CVServiceModule extends AbstractModule {
     bind(SetupUsageEventService.class).to(SetupUsageEventServiceImpl.class);
     bind(CVNGStepService.class).to(CVNGStepServiceImpl.class);
     bind(PagerDutyService.class).to(PagerDutyServiceImpl.class);
+    bind(WebhookService.class).to(WebhookServiceImpl.class);
     MapBinder<ChangeSourceType, ChangeSource.UpdatableChangeSourceEntity> changeTypeSourceMapBinder =
         MapBinder.newMapBinder(binder(), ChangeSourceType.class, ChangeSource.UpdatableChangeSourceEntity.class);
     changeTypeSourceMapBinder.addBinding(ChangeSourceType.HARNESS_CD)
@@ -501,6 +503,8 @@ public class CVServiceModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), ActivityType.class, ActivityUpdatableEntity.class);
     activityTypeActivityUpdatableEntityMapBinder.addBinding(ActivityType.HARNESS_CD)
         .to(HarnessCDActivityUpdatableEntity.class);
+    activityTypeActivityUpdatableEntityMapBinder.addBinding(ActivityType.PAGER_DUTY)
+        .to(PagerDutyActivityUpdatableEntity.class);
     activityTypeActivityUpdatableEntityMapBinder.addBinding(ActivityType.DEPLOYMENT)
         .to(DeploymentActivityUpdatableEntity.class);
     activityTypeActivityUpdatableEntityMapBinder.addBinding(ActivityType.INFRASTRUCTURE)
@@ -510,11 +514,22 @@ public class CVServiceModule extends AbstractModule {
     activityTypeActivityUpdatableEntityMapBinder.addBinding(ActivityType.CUSTOM)
         .to(CustomActivityUpdatableEntity.class);
 
+    MapBinder<ChangeSourceType, ChangeSourceUpdateHandler> changeSourceUpdateHandlerMapBinder =
+        MapBinder.newMapBinder(binder(), ChangeSourceType.class, ChangeSourceUpdateHandler.class);
+    changeSourceUpdateHandlerMapBinder.addBinding(ChangeSourceType.PAGER_DUTY)
+        .to(PagerdutyChangeSourceUpdateHandler.class);
+
     bind(ChangeEventService.class).to(ChangeEventServiceImpl.class);
     bind(ChangeEventEntityAndDTOTransformer.class);
     bind(ChangeEventMetaDataTransformer.class)
         .annotatedWith(Names.named(ChangeSourceType.HARNESS_CD.name()))
         .to(HarnessCDChangeEventTransformer.class);
+    bind(ChangeEventMetaDataTransformer.class)
+        .annotatedWith(Names.named(ChangeSourceType.KUBERNETES.name()))
+        .to(KubernetesClusterChangeEventMetadataTransformer.class);
+    bind(ChangeEventMetaDataTransformer.class)
+        .annotatedWith(Names.named(ChangeSourceType.PAGER_DUTY.name()))
+        .to(PagerDutyChangeEventTransformer.class);
   }
 
   private void bindTheMonitoringSourceImportStatusCreators() {
