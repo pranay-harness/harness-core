@@ -10,6 +10,7 @@ import io.kubernetes.client.openapi.models.V1OwnerReference;
 import java.time.Instant;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
+import org.joda.time.DateTime;
 
 @SuperBuilder
 @Slf4j
@@ -25,23 +26,32 @@ public class ChangeIntelDeploymentHandler extends BaseChangeHandler<V1Deployment
   }
 
   @Override
-  void processAndSendAddEvent(V1Deployment v1Deployment) {
-    log.info("OnAdd of DeploymentChange.");
-    boolean hasOwner = false;
-    for (V1OwnerReference ownerReference : v1Deployment.getMetadata().getOwnerReferences()) {
-      if (Boolean.TRUE.equals(ownerReference.getController())) {
-        hasOwner = true;
+  boolean hasOwnerReference(V1Deployment v1Deployment) {
+    if (v1Deployment.getMetadata().getOwnerReferences() != null) {
+      for (V1OwnerReference ownerReference : v1Deployment.getMetadata().getOwnerReferences()) {
+        if (Boolean.TRUE.equals(ownerReference.getController())) {
+          return true;
+        }
       }
     }
-    if (!hasOwner) {
+    return false;
+  }
+
+  @Override
+  void processAndSendAddEvent(V1Deployment v1Deployment) {
+    log.info("OnAdd of DeploymentChange.");
+    if (!hasOwnerReference(v1Deployment)) {
       log.info("Deployment doesn't have an ownerReference. Sending event Data");
       ChangeEventDTO eventDTO = buildDeploymentChangeEvent(v1Deployment);
       String newYaml = k8sHandlerUtils.yamlDump(v1Deployment);
       ((KubernetesChangeEventMetadata) eventDTO.getChangeEventMetaData()).setNewYaml(newYaml);
-      ((KubernetesChangeEventMetadata) eventDTO.getChangeEventMetaData())
-          .setTimestamp(Instant.ofEpochMilli(
-              v1Deployment.getMetadata().getCreationTimestamp().toDateTime().toInstant().getMillis()));
+      DateTime dateTime = v1Deployment.getMetadata().getCreationTimestamp();
+      if (dateTime != null) {
+        ((KubernetesChangeEventMetadata) eventDTO.getChangeEventMetaData())
+            .setTimestamp(Instant.ofEpochMilli(dateTime.toDateTime().toInstant().getMillis()));
+      }
       ((KubernetesChangeEventMetadata) eventDTO.getChangeEventMetaData()).setAction(Action.Add);
+      sendEvent(accountId, eventDTO);
     }
   }
 
@@ -55,6 +65,14 @@ public class ChangeIntelDeploymentHandler extends BaseChangeHandler<V1Deployment
     ((KubernetesChangeEventMetadata) eventDTO.getChangeEventMetaData()).setNewYaml(newYaml);
     ((KubernetesChangeEventMetadata) eventDTO.getChangeEventMetaData()).setAction(Action.Update);
     eventDTO.setEventTime(Instant.now().toEpochMilli());
+    sendEvent(accountId, eventDTO);
+  }
+
+  @Override
+  void processAndSendDeletedEvent(V1Deployment newResource, String oldYaml) {
+    ChangeEventDTO eventDTO = buildDeploymentChangeEvent(newResource);
+    ((KubernetesChangeEventMetadata) eventDTO.getChangeEventMetaData()).setOldYaml(oldYaml);
+    ((KubernetesChangeEventMetadata) eventDTO.getChangeEventMetaData()).setAction(Action.Delete);
     sendEvent(accountId, eventDTO);
   }
 

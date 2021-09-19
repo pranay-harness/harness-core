@@ -1,7 +1,5 @@
 package io.harness.perpetualtask.datacollection;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -9,9 +7,6 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.cvng.CVNGRequestExecutor;
 import io.harness.cvng.beans.CVDataCollectionInfo;
 import io.harness.cvng.beans.K8ActivityDataCollectionInfo;
-import io.harness.cvng.beans.activity.KubernetesActivityDTO;
-import io.harness.cvng.beans.activity.KubernetesActivityDTO.KubernetesEventType;
-import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.service.KubernetesActivitiesStoreService;
 import io.harness.grpc.utils.AnyUtils;
@@ -33,18 +28,11 @@ import software.wings.delegatetasks.cvng.K8InfoDataService;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import io.kubernetes.client.informer.ResourceEventHandler;
-import io.kubernetes.client.informer.SharedIndexInformer;
 import io.kubernetes.client.informer.SharedInformerFactory;
 import io.kubernetes.client.openapi.ApiClient;
-import io.kubernetes.client.openapi.apis.CoreV1Api;
-import io.kubernetes.client.openapi.models.V1Event;
-import io.kubernetes.client.openapi.models.V1EventList;
-import io.kubernetes.client.util.CallGeneratorParams;
 import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j

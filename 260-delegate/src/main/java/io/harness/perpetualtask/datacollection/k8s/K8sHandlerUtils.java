@@ -1,4 +1,5 @@
 package io.harness.perpetualtask.datacollection.k8s;
+
 import io.harness.reflection.ReflectionUtils;
 
 import com.google.common.collect.ImmutableSet;
@@ -31,7 +32,6 @@ public class K8sHandlerUtils<ApiType extends KubernetesObject> {
 
   public String yamlDump(ApiType resource) {
     ApiType copy = clone(resource);
-    Reflect.on(copy).set("status", null);
     V1ObjectMetaBuilder newV1ObjectMetaBuilder = new V1ObjectMetaBuilder();
     V1ObjectMeta objectMeta = getMetadata(copy);
     if (objectMeta != null) {

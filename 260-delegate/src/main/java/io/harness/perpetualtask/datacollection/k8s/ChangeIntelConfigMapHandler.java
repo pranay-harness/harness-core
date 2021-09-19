@@ -8,6 +8,7 @@ import io.kubernetes.client.openapi.models.V1OwnerReference;
 import java.time.Instant;
 import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
+import org.joda.time.DateTime;
 
 @SuperBuilder
 @Slf4j
@@ -23,25 +24,33 @@ public class ChangeIntelConfigMapHandler extends BaseChangeHandler<V1ConfigMap> 
   }
 
   @Override
-  void processAndSendAddEvent(V1ConfigMap v1ConfigMap) {
-    log.info("Add configMap event received");
-
-    boolean hasOwner = false;
-    for (V1OwnerReference ownerReference : v1ConfigMap.getMetadata().getOwnerReferences()) {
-      if (Boolean.TRUE.equals(ownerReference.getController())) {
-        hasOwner = true;
+  boolean hasOwnerReference(V1ConfigMap v1ConfigMap) {
+    if (v1ConfigMap.getMetadata().getOwnerReferences() != null) {
+      for (V1OwnerReference ownerReference : v1ConfigMap.getMetadata().getOwnerReferences()) {
+        if (Boolean.TRUE.equals(ownerReference.getController())) {
+          return true;
+        }
       }
     }
-    if (!hasOwner && v1ConfigMap.getMetadata() != null) {
+    return false;
+  }
+
+  @Override
+  void processAndSendAddEvent(V1ConfigMap v1ConfigMap) {
+    log.info("Add configMap event received");
+    if (!hasOwnerReference(v1ConfigMap) && v1ConfigMap.getMetadata() != null) {
       log.info("ConfigMap doesn't have an ownerReference. Sending event Data");
       ChangeEventDTO eventDTO = buildConfigMapChangeEvent(v1ConfigMap);
       String newYaml = k8sHandlerUtils.yamlDump(v1ConfigMap);
       ((KubernetesChangeEventMetadata) eventDTO.getChangeEventMetaData()).setNewYaml(newYaml);
-      ((KubernetesChangeEventMetadata) eventDTO.getChangeEventMetaData())
-          .setTimestamp(Instant.ofEpochMilli(
-              v1ConfigMap.getMetadata().getCreationTimestamp().toDateTime().toInstant().getMillis()));
+      DateTime dateTime = v1ConfigMap.getMetadata().getCreationTimestamp();
+      if (dateTime != null) {
+        ((KubernetesChangeEventMetadata) eventDTO.getChangeEventMetaData())
+            .setTimestamp(Instant.ofEpochMilli(dateTime.toDateTime().toInstant().getMillis()));
+      }
       ((KubernetesChangeEventMetadata) eventDTO.getChangeEventMetaData())
           .setAction(KubernetesChangeEventMetadata.Action.Add);
+      sendEvent(accountId, eventDTO);
     }
   }
 
@@ -57,6 +66,15 @@ public class ChangeIntelConfigMapHandler extends BaseChangeHandler<V1ConfigMap> 
     ((KubernetesChangeEventMetadata) eventDTO.getChangeEventMetaData())
         .setAction(KubernetesChangeEventMetadata.Action.Update);
     eventDTO.setEventTime(Instant.now().toEpochMilli());
+    sendEvent(accountId, eventDTO);
+  }
+
+  @Override
+  void processAndSendDeletedEvent(V1ConfigMap newResource, String oldYaml) {
+    ChangeEventDTO eventDTO = buildConfigMapChangeEvent(newResource);
+    ((KubernetesChangeEventMetadata) eventDTO.getChangeEventMetaData()).setOldYaml(oldYaml);
+    ((KubernetesChangeEventMetadata) eventDTO.getChangeEventMetaData())
+        .setAction(KubernetesChangeEventMetadata.Action.Delete);
     sendEvent(accountId, eventDTO);
   }
 

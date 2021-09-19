@@ -1,4 +1,5 @@
 package io.harness.perpetualtask.datacollection.k8s;
+
 import io.harness.cvng.CVNGRequestExecutor;
 import io.harness.cvng.beans.K8ActivityDataCollectionInfo;
 import io.harness.cvng.beans.change.ChangeEventDTO;
@@ -52,11 +53,26 @@ public abstract class BaseChangeHandler<ApiType extends KubernetesObject> implem
   void processAndSendUpdateEvent(ApiType oldResource, ApiType newResource, String oldYaml, String newYaml) {}
 
   @Override
-  public void onDelete(ApiType apiType, boolean b) {}
-  void processAndSendDeletedEvent(ApiType newResource) {}
+  public void onDelete(ApiType resource, boolean finalStateUnknown) {
+    handleMissingKindAndApiVersion(resource);
+    String oldYaml = k8sHandlerUtils.yamlDump(resource);
+    log.debug("Delete resource: {}, finalStateUnknown: {}", oldYaml, finalStateUnknown);
+
+    if (hasOwnerReference(resource)) {
+      log.info("Skipping publish for resource deleted as it has controller.");
+    } else {
+      if (!finalStateUnknown) {
+        processAndSendDeletedEvent(resource, oldYaml);
+      } else {
+        log.warn("Deletion with finalStateUnknown");
+      }
+    }
+  }
+  void processAndSendDeletedEvent(ApiType newResource, String oldYaml) {}
 
   abstract String getKind();
   abstract String getApiVersion();
+  abstract boolean hasOwnerReference(ApiType resource);
 
   private void handleMissingKindAndApiVersion(ApiType resource) {
     if (Reflect.on(resource).get("kind") == null) {

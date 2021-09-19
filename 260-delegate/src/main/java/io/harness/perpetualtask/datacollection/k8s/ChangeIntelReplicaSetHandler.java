@@ -1,6 +1,5 @@
 package io.harness.perpetualtask.datacollection.k8s;
 
-import io.harness.cvng.beans.K8ActivityDataCollectionInfo;
 import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.beans.change.KubernetesChangeEventMetadata;
 
@@ -24,15 +23,21 @@ public class ChangeIntelReplicaSetHandler extends BaseChangeHandler<V1ReplicaSet
   }
 
   @Override
-  public void processAndSendAddEvent(V1ReplicaSet v1ReplicaSet) {
-    log.info("OnAdd of ReplicaSet.");
-    boolean hasOwner = false;
-    for (V1OwnerReference ownerReference : v1ReplicaSet.getMetadata().getOwnerReferences()) {
-      if (Boolean.TRUE.equals(ownerReference.getController())) {
-        hasOwner = true;
+  boolean hasOwnerReference(V1ReplicaSet v1ReplicaSet) {
+    if (v1ReplicaSet.getMetadata().getOwnerReferences() != null) {
+      for (V1OwnerReference ownerReference : v1ReplicaSet.getMetadata().getOwnerReferences()) {
+        if (Boolean.TRUE.equals(ownerReference.getController())) {
+          return true;
+        }
       }
     }
-    if (!hasOwner) {
+    return false;
+  }
+
+  @Override
+  public void processAndSendAddEvent(V1ReplicaSet v1ReplicaSet) {
+    log.info("OnAdd of ReplicaSet.");
+    if (!hasOwnerReference(v1ReplicaSet)) {
       log.info("ReplicaSet doesn't have an ownerReference. Sending event Data");
       ChangeEventDTO eventDTO = buildReplicaSetChangeEvent(v1ReplicaSet);
       String newYaml = k8sHandlerUtils.yamlDump(v1ReplicaSet);
@@ -42,6 +47,7 @@ public class ChangeIntelReplicaSetHandler extends BaseChangeHandler<V1ReplicaSet
               v1ReplicaSet.getMetadata().getCreationTimestamp().toDateTime().toInstant().getMillis()));
       ((KubernetesChangeEventMetadata) eventDTO.getChangeEventMetaData())
           .setAction(KubernetesChangeEventMetadata.Action.Add);
+      sendEvent(accountId, eventDTO);
     }
   }
 
@@ -56,6 +62,15 @@ public class ChangeIntelReplicaSetHandler extends BaseChangeHandler<V1ReplicaSet
     ((KubernetesChangeEventMetadata) eventDTO.getChangeEventMetaData())
         .setAction(KubernetesChangeEventMetadata.Action.Update);
     eventDTO.setEventTime(Instant.now().toEpochMilli());
+    sendEvent(accountId, eventDTO);
+  }
+
+  @Override
+  void processAndSendDeletedEvent(V1ReplicaSet newResource, String oldYaml) {
+    ChangeEventDTO eventDTO = buildReplicaSetChangeEvent(newResource);
+    ((KubernetesChangeEventMetadata) eventDTO.getChangeEventMetaData()).setOldYaml(oldYaml);
+    ((KubernetesChangeEventMetadata) eventDTO.getChangeEventMetaData())
+        .setAction(KubernetesChangeEventMetadata.Action.Delete);
     sendEvent(accountId, eventDTO);
   }
 
