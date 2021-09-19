@@ -16,6 +16,11 @@ import org.mongodb.morphia.query.UpdateOperations;
 public class KubernetesChangeSource extends ChangeSource {
   @NotNull @FdIndex String connectorIdentifier;
 
+  @Override
+  public boolean isDataCollectionRequired() {
+    return true;
+  }
+
   public static class UpdatableKubernetesChangeSourceEntity
       extends UpdatableChangeSourceEntity<KubernetesChangeSource, KubernetesChangeSource> {
     @Override

@@ -6,7 +6,9 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.change.ChangeSourceType;
 import io.harness.cvng.core.services.api.UpdatableEntity;
+import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
@@ -21,6 +23,7 @@ import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
@@ -40,7 +43,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 @HarnessEntity(exportable = true)
 @StoreIn(DbAliases.CVNG)
 public abstract class ChangeSource
-    implements PersistentEntity, UuidAware, AccountAccess, UpdatedAtAware, CreatedAtAware {
+    implements PersistentEntity, UuidAware, AccountAccess, UpdatedAtAware, CreatedAtAware, PersistentRegularIterable {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
@@ -73,6 +76,15 @@ public abstract class ChangeSource
 
   boolean enabled;
 
+  @FdIndex String dataCollectionTaskId;
+  @FdIndex Long dataCollectionTaskIteration;
+
+  @Getter(AccessLevel.NONE) boolean dataCollectionRequired;
+
+  public boolean isDataCollectionRequired() {
+    return false;
+  }
+
   public abstract static class UpdatableChangeSourceEntity<T extends ChangeSource, D extends ChangeSource>
       implements UpdatableEntity<T, D> {
     protected void setCommonOperations(UpdateOperations<T> updateOperations, D changeSource) {
@@ -86,5 +98,22 @@ public abstract class ChangeSource
           .set(ChangeSourceKeys.name, changeSource.getName())
           .set(ChangeSourceKeys.enabled, changeSource.isEnabled());
     }
+  }
+
+  @Override
+  public void updateNextIteration(String fieldName, long nextIteration) {
+    if (ChangeSourceKeys.dataCollectionTaskIteration.equals(fieldName)) {
+      this.dataCollectionTaskIteration = nextIteration;
+      return;
+    }
+    throw new IllegalArgumentException("Invalid fieldName " + fieldName);
+  }
+
+  @Override
+  public Long obtainNextIteration(String fieldName) {
+    if (ChangeSourceKeys.dataCollectionTaskIteration.equals(fieldName)) {
+      return this.dataCollectionTaskIteration;
+    }
+    throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 }
