@@ -848,9 +848,18 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(VersionModule.getInstance());
     install(TimeModule.getInstance());
     install(DelegateServiceDriverModule.getInstance(false));
-    install(new DelegateServiceDriverGrpcClientModule(configuration.getPortal().getJwtNextGenManagerSecret(),
-        configuration.getGrpcDelegateServiceClientConfig().getTarget(),
-        configuration.getGrpcDelegateServiceClientConfig().getAuthority(), false));
+
+    if (configuration.isDisableDelegateMgmtInManager()) {
+      // Delegate Service driver SDK grpc client config for DMS grpc client config
+      install(new DelegateServiceDriverGrpcClientModule(configuration.getDmsGrpcClient().getSecret(),
+          configuration.getDmsGrpcClient().getTarget(), configuration.getDmsGrpcClient().getAuthority(), false));
+    } else {
+      // Delegate Service driver SDK grpc client config for manager grpc client config
+      install(new DelegateServiceDriverGrpcClientModule(configuration.getPortal().getJwtNextGenManagerSecret(),
+          configuration.getGrpcDelegateServiceClientConfig().getTarget(),
+          configuration.getGrpcDelegateServiceClientConfig().getAuthority(), false));
+    }
+    // DMS Classic flow grpc client config
     install(new DelegateServiceClassicGrpcClientModule(configuration.getDmsSecret(),
         configuration.getGrpcDMSClientConfig().getTarget(), configuration.getGrpcDMSClientConfig().getAuthority()));
 
