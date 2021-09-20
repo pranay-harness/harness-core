@@ -75,7 +75,7 @@ import lombok.experimental.UtilityClass;
 public class IntegrationStageUtils {
   private static final String TAG_EXPRESSION = "<+trigger.tag>";
   private static final String BRANCH_EXPRESSION = "<+trigger.branch>";
-  private static final String PR_EXPRESSION = "<+trigger.prNumber>";
+  public static final String PR_EXPRESSION = "<+trigger.prNumber>";
 
   public IntegrationStageConfig getIntegrationStageConfig(StageElementConfig stageElementConfig) {
     if (stageElementConfig.getType().equals("CI")) {

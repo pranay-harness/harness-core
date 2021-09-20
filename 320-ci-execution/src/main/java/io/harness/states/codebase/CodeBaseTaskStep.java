@@ -18,6 +18,7 @@ import static java.util.Arrays.asList;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.execution.BranchWebhookEvent;
+import io.harness.beans.execution.CommitDetails;
 import io.harness.beans.execution.ExecutionSource;
 import io.harness.beans.execution.ManualExecutionSource;
 import io.harness.beans.execution.PRWebhookEvent;
@@ -171,7 +172,7 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
       ManualExecutionSource manualExecutionSource, ConnectorDetails connectorDetails, String repoName) {
     ScmConnector scmConnector = (ScmConnector) connectorDetails.getConnectorConfig();
     String completeUrl = scmConnector.getUrl();
-    GitConnectionType gitConnectionType = getGitURLFromConnector(connectorDetails);
+    GitConnectionType gitConnectionType = getGitConnectionType(connectorDetails);
     if (isNotEmpty(repoName) && (gitConnectionType == null || gitConnectionType == GitConnectionType.ACCOUNT)) {
       completeUrl = StringUtils.stripEnd(scmConnector.getUrl(), "/") + "/" + StringUtils.stripStart(repoName, "/");
     }
@@ -206,7 +207,7 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
     }
   }
 
-  public GitConnectionType getGitURLFromConnector(ConnectorDetails gitConnector) {
+  public GitConnectionType getGitConnectionType(ConnectorDetails gitConnector) {
     if (gitConnector == null) {
       return null;
     }
@@ -262,9 +263,24 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
 
   @VisibleForTesting
   CodebaseSweepingOutput buildWebhookCodebaseSweepingOutput(WebhookExecutionSource webhookExecutionSource) {
+    List<CodebaseSweepingOutput.CodeBaseCommit> codeBaseCommits = new ArrayList<>();
     if (webhookExecutionSource.getWebhookEvent().getType() == WebhookEvent.Type.PR) {
       PRWebhookEvent prWebhookEvent = (PRWebhookEvent) webhookExecutionSource.getWebhookEvent();
+
+      for (CommitDetails commit : prWebhookEvent.getCommitDetailsList()) {
+        codeBaseCommits.add(CodebaseSweepingOutput.CodeBaseCommit.builder()
+                                .id(commit.getCommitId())
+                                .message(commit.getMessage())
+                                .link(commit.getLink())
+                                .timeStamp(commit.getTimeStamp())
+                                .ownerEmail(commit.getOwnerEmail())
+                                .ownerId(commit.getOwnerId())
+                                .ownerName(commit.getOwnerName())
+                                .build());
+      }
+
       return CodebaseSweepingOutput.builder()
+          .commits(codeBaseCommits)
           .branch(prWebhookEvent.getTargetBranch())
           .targetBranch(prWebhookEvent.getTargetBranch())
           .sourceBranch(prWebhookEvent.getSourceBranch())
@@ -281,8 +297,22 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
           .build();
     } else if (webhookExecutionSource.getWebhookEvent().getType() == WebhookEvent.Type.BRANCH) {
       BranchWebhookEvent branchWebhookEvent = (BranchWebhookEvent) webhookExecutionSource.getWebhookEvent();
+
+      for (CommitDetails commit : branchWebhookEvent.getCommitDetailsList()) {
+        codeBaseCommits.add(CodebaseSweepingOutput.CodeBaseCommit.builder()
+                                .id(commit.getCommitId())
+                                .message(commit.getMessage())
+                                .link(commit.getLink())
+                                .timeStamp(commit.getTimeStamp())
+                                .ownerEmail(commit.getOwnerEmail())
+                                .ownerId(commit.getOwnerId())
+                                .ownerName(commit.getOwnerName())
+                                .build());
+      }
+
       return CodebaseSweepingOutput.builder()
           .branch(branchWebhookEvent.getBranchName())
+          .commits(codeBaseCommits)
           .targetBranch(branchWebhookEvent.getBranchName())
           .commitSha(branchWebhookEvent.getBaseAttributes().getAfter())
           .repoUrl(branchWebhookEvent.getRepository().getLink())

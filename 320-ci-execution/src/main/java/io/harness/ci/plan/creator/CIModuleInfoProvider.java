@@ -106,7 +106,9 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
               url = IntegrationStageUtils.getGitURLFromConnector(
                   connectorDetails, liteEngineTaskStepInfo.getCiCodebase());
             }
-            repoName = getGitRepo(connectorUtils.retrieveURL(connectorDetails));
+            if (repoName == null) {
+              repoName = getGitRepo(connectorUtils.retrieveURL(connectorDetails));
+            }
           } catch (Exception exception) {
             log.warn("Failed to retrieve repo");
           }
@@ -122,7 +124,9 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
       }
 
       if (build != null && build.getType().equals(BuildType.PR)) {
-        prNumber = (String) ((PRBuildSpec) build.getSpec()).getNumber().fetchFinalValue();
+        if (((PRBuildSpec) build.getSpec()).getNumber().isExpression() == false) {
+          prNumber = (String) ((PRBuildSpec) build.getSpec()).getNumber().fetchFinalValue();
+        }
       }
 
       if (build != null && build.getType().equals(BuildType.TAG)) {
@@ -141,6 +145,14 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
     if (executionSource != null && executionTriggerInfo.getTriggerType() == TriggerType.WEBHOOK) {
       WebhookExecutionSource webhookExecutionSource = (WebhookExecutionSource) executionSource;
       CIWebhookInfoDTO ciWebhookInfoDTO = CIModuleInfoMapper.getCIBuildResponseDTO(executionSource);
+      OptionalSweepingOutput optionalSweepingOutput =
+          executionSweepingOutputService.resolveOptional(ambiance, RefObjectUtils.getOutcomeRefObject(CODEBASE));
+      CodebaseSweepingOutput codebaseSweepingOutput = null;
+      if (optionalSweepingOutput.isFound()) {
+        codebaseSweepingOutput = (CodebaseSweepingOutput) optionalSweepingOutput.getOutput();
+        ciWebhookInfoDTO = getCiExecutionInfoDTO(codebaseSweepingOutput, ciWebhookInfoDTO.getAuthor(), prNumber, null);
+      }
+
       author = ciWebhookInfoDTO.getAuthor();
       if (ciWebhookInfoDTO.getEvent().equals("branch")) {
         triggerCommits = ciWebhookInfoDTO.getBranch().getCommits();
@@ -205,10 +217,6 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
                                .timeStamp(commit.getTimeStamp())
                                .build());
       }
-    }
-
-    if (isEmpty(codebaseSweepingOutput.getCommits())) {
-      return null;
     }
 
     if (isNotEmpty(prNumber)) {
