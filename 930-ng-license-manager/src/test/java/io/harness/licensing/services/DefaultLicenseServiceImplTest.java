@@ -1,12 +1,16 @@
 package io.harness.licensing.services;
 
 import static io.harness.ModuleType.CD;
+import static io.harness.ModuleType.CI;
+import static io.harness.licensing.LicenseConstant.UNLIMITED;
 import static io.harness.licensing.LicenseTestConstant.ACCOUNT_IDENTIFIER;
 import static io.harness.licensing.LicenseTestConstant.DEFAULT_CI_MODULE_LICENSE;
 import static io.harness.licensing.LicenseTestConstant.DEFAULT_CI_MODULE_LICENSE_DTO;
 import static io.harness.licensing.LicenseTestConstant.DEFAULT_MODULE_TYPE;
 import static io.harness.licensing.services.DefaultLicenseServiceImpl.SUCCEED_EXTEND_TRIAL_OPERATION;
+import static io.harness.licensing.services.DefaultLicenseServiceImpl.SUCCEED_START_FREE_OPERATION;
 import static io.harness.licensing.services.DefaultLicenseServiceImpl.SUCCEED_START_TRIAL_OPERATION;
+import static io.harness.rule.OwnerRule.NATHAN;
 import static io.harness.rule.OwnerRule.ZHUO;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,6 +31,7 @@ import io.harness.licensing.Edition;
 import io.harness.licensing.LicenseStatus;
 import io.harness.licensing.LicenseType;
 import io.harness.licensing.beans.modules.AccountLicenseDTO;
+import io.harness.licensing.beans.modules.CIModuleLicenseDTO;
 import io.harness.licensing.beans.modules.ModuleLicenseDTO;
 import io.harness.licensing.beans.modules.StartTrialDTO;
 import io.harness.licensing.beans.response.CheckExpiryResultDTO;
@@ -136,11 +141,53 @@ public class DefaultLicenseServiceImplTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = NATHAN)
+  @Category(UnitTests.class)
+  public void testStartFreeLicense() {
+    CIModuleLicense ciModuleLicense = CIModuleLicense.builder().numberOfCommitters(10).build();
+    ciModuleLicense.setId("id");
+    ciModuleLicense.setAccountIdentifier(ACCOUNT_IDENTIFIER);
+    ciModuleLicense.setModuleType(DEFAULT_MODULE_TYPE);
+    ciModuleLicense.setEdition(Edition.FREE);
+    ciModuleLicense.setStatus(LicenseStatus.ACTIVE);
+    ciModuleLicense.setStartTime(1);
+    ciModuleLicense.setExpiryTime(Long.valueOf(UNLIMITED));
+    ciModuleLicense.setCreatedAt(0L);
+    ciModuleLicense.setLastUpdatedAt(0L);
+
+    CIModuleLicenseDTO ciModuleLicenseDTO = CIModuleLicenseDTO.builder()
+                                                .id("id")
+                                                .numberOfCommitters(10)
+                                                .accountIdentifier(ACCOUNT_IDENTIFIER)
+                                                .moduleType(DEFAULT_MODULE_TYPE)
+                                                .edition(Edition.FREE)
+                                                .status(LicenseStatus.ACTIVE)
+                                                .startTime(1)
+                                                .expiryTime(Long.valueOf(UNLIMITED))
+                                                .createdAt(0L)
+                                                .lastModifiedAt(0L)
+                                                .build();
+
+    when(licenseObjectConverter.toDTO(ciModuleLicense)).thenReturn(ciModuleLicenseDTO);
+    when(licenseObjectConverter.toEntity(ciModuleLicenseDTO)).thenReturn(ciModuleLicense);
+    when(moduleLicenseRepository.save(ciModuleLicense)).thenReturn(ciModuleLicense);
+    when(moduleLicenseInterface.generateFreeLicense(eq(ACCOUNT_IDENTIFIER), eq(DEFAULT_MODULE_TYPE)))
+        .thenReturn(ciModuleLicenseDTO);
+    when(accountService.getAccount(ACCOUNT_IDENTIFIER)).thenReturn(AccountDTO.builder().build());
+    ModuleLicenseDTO result = licenseService.startFreeLicense(ACCOUNT_IDENTIFIER, CI);
+    verify(accountService, times(1)).updateDefaultExperienceIfApplicable(ACCOUNT_IDENTIFIER, DefaultExperience.NG);
+    verify(telemetryReporter, times(1)).sendGroupEvent(eq(ACCOUNT_IDENTIFIER), any(), any());
+    verify(telemetryReporter, times(1))
+        .sendTrackEvent(eq(SUCCEED_START_FREE_OPERATION), any(), any(), eq(io.harness.telemetry.Category.SIGN_UP));
+    assertThat(result).isEqualTo(ciModuleLicenseDTO);
+  }
+
+  @Test
   @Owner(developers = ZHUO)
   @Category(UnitTests.class)
   public void testStartTrial() {
     when(moduleLicenseRepository.save(DEFAULT_CI_MODULE_LICENSE)).thenReturn(DEFAULT_CI_MODULE_LICENSE);
-    when(moduleLicenseInterface.generateTrialLicense(any(), eq(ACCOUNT_IDENTIFIER), any(), eq(DEFAULT_MODULE_TYPE)))
+    when(moduleLicenseInterface.generateTrialLicense(any(), eq(ACCOUNT_IDENTIFIER), eq(DEFAULT_MODULE_TYPE)))
         .thenReturn(DEFAULT_CI_MODULE_LICENSE_DTO);
     when(accountService.getAccount(ACCOUNT_IDENTIFIER)).thenReturn(AccountDTO.builder().build());
     ModuleLicenseDTO result = licenseService.startTrialLicense(ACCOUNT_IDENTIFIER, startTrialRequestDTO);
@@ -156,7 +203,7 @@ public class DefaultLicenseServiceImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testExtendTrial() {
     when(moduleLicenseRepository.save(DEFAULT_CI_MODULE_LICENSE)).thenReturn(DEFAULT_CI_MODULE_LICENSE);
-    when(moduleLicenseInterface.generateTrialLicense(any(), eq(ACCOUNT_IDENTIFIER), any(), eq(DEFAULT_MODULE_TYPE)))
+    when(moduleLicenseInterface.generateTrialLicense(any(), eq(ACCOUNT_IDENTIFIER), eq(DEFAULT_MODULE_TYPE)))
         .thenReturn(DEFAULT_CI_MODULE_LICENSE_DTO);
 
     CIModuleLicense expiredTrial = CIModuleLicense.builder().numberOfCommitters(10).build();
