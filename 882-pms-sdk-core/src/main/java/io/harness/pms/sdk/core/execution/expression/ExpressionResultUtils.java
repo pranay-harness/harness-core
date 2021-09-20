@@ -15,10 +15,10 @@ public class ExpressionResultUtils {
 
   public static Map<Class, String> primitivesMap = new HashMap() {
     {
-      put(String.class.toString(), STRING);
-      put(Integer.class.toString(), INTEGER);
-      put(Boolean.class.toString(), BOOLEAN);
-      put(Byte.class.toString(), BYTES);
+      put(String.class.getSimpleName(), STRING);
+      put(Integer.class.getSimpleName(), INTEGER);
+      put(Boolean.class.getSimpleName(), BOOLEAN);
+      put(Byte.class.getSimpleName(), BYTES);
     }
   };
 }

@@ -36,7 +36,7 @@ public class RemoteFunctorService extends RemoteFunctorServiceImplBase {
       if (RecastReflectionUtils.isPrimitiveLike(result.getClass())) {
         expressionResponse = ExpressionResponse.newBuilder()
                                  .setIsPrimitive(true)
-                                 .setPrimitiveType(result.getClass().toString())
+                                 .setPrimitiveType(result.getClass().getSimpleName())
                                  .setValue(result.toString())
                                  .build();
       } else {

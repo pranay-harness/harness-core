@@ -75,4 +75,14 @@ public class RemoteExpressionFunctorTest extends CategoryTest {
     assertNotNull(map);
     assertEquals(map.get("value"), "DummyValue");
   }
+
+  @Test
+  @Owner(developers = BRIJESH)
+  @Category(UnitTests.class)
+  public void testGetPrimitiveResponse() {
+    assertEquals(remoteExpressionFunctor.getPrimitiveResponse("10", Integer.class.getSimpleName()), 10);
+    assertEquals(remoteExpressionFunctor.getPrimitiveResponse("true", Boolean.class.getSimpleName()), true);
+    assertEquals(remoteExpressionFunctor.getPrimitiveResponse("10", String.class.getSimpleName()), "10");
+    assertEquals(remoteExpressionFunctor.getPrimitiveResponse("10", Byte.class.getSimpleName()), Byte.valueOf("10"));
+  }
 }

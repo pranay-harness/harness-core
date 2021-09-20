@@ -12,6 +12,7 @@ import io.harness.pms.sdk.core.execution.expression.ExpressionResultUtils;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.utils.PmsGrpcClientUtils;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -54,7 +55,8 @@ public class RemoteExpressionFunctor extends LateBindingMap implements Expressio
     return get(args);
   }
 
-  private Object getPrimitiveResponse(String value, String clazz) {
+  @VisibleForTesting
+  protected Object getPrimitiveResponse(String value, String clazz) {
     switch (ExpressionResultUtils.primitivesMap.get(clazz)) {
       case ExpressionResultUtils.INTEGER:
         return Integer.parseInt(value);
