@@ -407,7 +407,9 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
                                        .filter(env -> ((Environment) env).getEnvironmentType() == EnvironmentType.PROD)
                                        .map(Base::getUuid)
                                        .collect(Collectors.toSet());
-          envSet.addAll(prodEnvSet);
+          if (prodEnvSet != null) {
+            envSet.addAll(prodEnvSet);
+          }
           break;
         case FilterType.NON_PROD:
           Set<String> nonProdEnvSet =
@@ -415,10 +417,14 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
                   .filter(env -> ((Environment) env).getEnvironmentType() == EnvironmentType.NON_PROD)
                   .map(Base::getUuid)
                   .collect(Collectors.toSet());
-          envSet.addAll(nonProdEnvSet);
+          if (nonProdEnvSet != null) {
+            envSet.addAll(nonProdEnvSet);
+          }
           break;
         case FilterType.SELECTED:
-          envSet.addAll(envFilter.getIds());
+          if (envFilter != null && envFilter.getIds() != null) {
+            envSet.addAll(envFilter.getIds());
+          }
           break;
         default:
           throw new WingsException("Unsupported env filter type" + envFilter.getFilterTypes());
