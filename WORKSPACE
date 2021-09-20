@@ -4615,7 +4615,7 @@ plain_artifacts = [
     "javax.xml.soap:javax.xml.soap-api:1.4.0",
     "javax.xml.ws:jaxws-api:2.3.1",
     "jaxen:jaxen:1.1.6",
-    "joda-time:joda-time:2.10.1",
+    "joda-time:joda-time:2.10.8",
     "me.snowdrop:istio-client-uberjar:1.5.5",
     "me.snowdrop:istio-client:1.5.5",
     "me.snowdrop:istio-common:1.5.5",
