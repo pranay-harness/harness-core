@@ -1,7 +1,10 @@
 package io.harness.delegate.task.citasks.cik8handler;
 
-import com.google.inject.Inject;
-import com.google.protobuf.InvalidProtocolBufferException;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
+import static java.lang.String.format;
+
 import io.harness.delegate.beans.ci.CIExecuteStepTaskParams;
 import io.harness.delegate.beans.ci.CIK8ExecuteStepTaskParams;
 import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
@@ -9,18 +12,17 @@ import io.harness.delegate.task.citasks.CIExecuteStepTaskHandler;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.product.ci.engine.proto.ExecuteStepRequest;
-import lombok.extern.slf4j.Slf4j;
-import net.jodah.failsafe.RetryPolicy;
-import okhttp3.Response;
 
-import javax.validation.constraints.NotNull;
+import com.google.inject.Inject;
+import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.util.JsonFormat;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
-
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static java.lang.String.format;
+import javax.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
+import net.jodah.failsafe.RetryPolicy;
+import okhttp3.Response;
 
 @Slf4j
 public class CIK8ExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
@@ -36,14 +38,26 @@ public class CIK8ExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
     return type;
   }
 
-  public K8sTaskExecutionResponse callDrone(ExecuteStepRequest request) {
+  public K8sTaskExecutionResponse callDrone(ExecuteStepRequest request, CIK8ExecuteStepTaskParams taskParams) {
     if (!request.getStep().hasRun()) {
       throw new InvalidArgumentsException("Invalid step type");
+    }
+
+    String jsonDump = "";
+    try {
+      JsonFormat.Printer printer = JsonFormat.printer().includingDefaultValueFields();
+      jsonDump = printer.print(request);
+    } catch (InvalidProtocolBufferException ex) {
+      ex.printStackTrace();
     }
 
     Map<String, String> params = new HashMap<>();
     params.put("command", request.getStep().getRun().getCommand());
     params.put("image", request.getStep().getRun().getImage());
+    params.put("step_id", request.getStep().getId());
+    params.put("log_key", request.getStep().getLogKey());
+    params.put("dump", jsonDump);
+    params.put("stage_id", taskParams.getPodName());
 
     Response response = httpHelper.call("http://127.0.0.1:9191/execute_step", params);
     if (response == null || !response.isSuccessful()) {
@@ -84,7 +98,7 @@ public class CIK8ExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
     }
 
     final ExecuteStepRequest finalExecuteStepRequest = executeStepRequest;
-    return callDrone(executeStepRequest);
+    return callDrone(executeStepRequest, cik8ExecuteStepTaskParams);
 
     /*
     String target = format("%s:%d", cik8ExecuteStepTaskParams.getIp(), cik8ExecuteStepTaskParams.getPort());

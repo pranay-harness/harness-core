@@ -21,6 +21,7 @@ public class CIK8ExecuteStepTaskParams implements CIExecuteStepTaskParams, Execu
   @NotNull private String delegateSvcEndpoint;
   private boolean isLocal;
   @NotNull private byte[] serializedStep;
+  private String podName;
 
   @Builder.Default private static final CIExecuteStepTaskParams.Type type = CIExecuteStepTaskParams.Type.K8;
 

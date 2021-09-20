@@ -3,6 +3,7 @@ package io.harness.states;
 import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.beans.sweepingoutputs.CISweepingOutputNames.CODE_BASE_CONNECTOR_REF;
 import static io.harness.beans.sweepingoutputs.ContainerPortDetails.PORT_DETAILS;
+import static io.harness.beans.sweepingoutputs.PodCleanupDetails.CLEANUP_DETAILS;
 import static io.harness.common.CIExecutionConstants.LITE_ENGINE_PORT;
 import static io.harness.common.CIExecutionConstants.TMP_PATH;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -25,6 +26,7 @@ import io.harness.beans.steps.stepinfo.RunStepInfo;
 import io.harness.beans.steps.stepinfo.RunTestsStepInfo;
 import io.harness.beans.sweepingoutputs.CodeBaseConnectorRefSweepingOutput;
 import io.harness.beans.sweepingoutputs.ContainerPortDetails;
+import io.harness.beans.sweepingoutputs.PodCleanupDetails;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.ci.serializer.PluginCompatibleStepSerializer;
 import io.harness.ci.serializer.PluginStepProtobufSerializer;
@@ -286,6 +288,9 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
         ambiance, RefObjectUtils.getOutcomeRefObject(LiteEnginePodDetailsOutcome.POD_DETAILS_OUTCOME));
     String ip = liteEnginePodDetailsOutcome.getIpAddress();
 
+    PodCleanupDetails podCleanupDetails = (PodCleanupDetails) executionSweepingOutputResolver.resolve(
+        ambiance, RefObjectUtils.getSweepingOutputRefObject(CLEANUP_DETAILS));
+
     ExecuteStepRequest executeStepRequest =
         ExecuteStepRequest.newBuilder().setExecutionId(executionId).setStep(unitStep).setTmpFilePath(TMP_PATH).build();
     final TaskData taskData =
@@ -300,6 +305,7 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
                     .serializedStep(executeStepRequest.toByteArray())
                     .isLocal(ciExecutionServiceConfig.isLocal())
                     .delegateSvcEndpoint(ciExecutionServiceConfig.getDelegateServiceEndpointVariableValue())
+                    .podName(podCleanupDetails.getPodName())
                     .build()})
             .timeout(timeout)
             .build();

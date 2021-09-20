@@ -44,6 +44,8 @@ import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.CommandExecutionStatus;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Stopwatch;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -54,6 +56,7 @@ import io.kubernetes.client.openapi.models.V1Event;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.util.Watch;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -93,13 +96,20 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     return type;
   }
 
-  public K8sTaskExecutionResponse callDrone(String podName, String namespace) {
-    Map<String, String> params = new HashMap<>();
-    params.put("podName", podName);
-    params.put("namespace", namespace);
-    Response response = httpHelper.call("http://127.0.0.1:9191/initialize", params);
-    if (response == null || !response.isSuccessful()) {
+  public K8sTaskExecutionResponse callDrone(String podName, CIK8BuildTaskParams taskParams) {
+    ObjectMapper Obj = new ObjectMapper();
+    String jsonDump = "";
+    try {
+      jsonDump = Obj.writeValueAsString(taskParams);
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
 
+    Map<String, String> params = new HashMap<>();
+    params.put("stage_id", podName);
+    params.put("dump", jsonDump);
+    Response response = httpHelper.call("http://127.0.0.1:9191/setup", params);
+    if (response == null || !response.isSuccessful()) {
       log.error("Response not Successful. Response body: {}", response);
       return K8sTaskExecutionResponse.builder()
               .commandExecutionStatus(CommandExecutionStatus.FAILURE)
@@ -124,7 +134,7 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     String namespace = podParams.getNamespace();
     String podName = podParams.getName();
 
-    return callDrone(podName, namespace);
+    return callDrone(podName, cik8BuildTaskParams);
 
     /*
     K8sTaskExecutionResponse result;
