@@ -6,4 +6,6 @@ import io.harness.annotations.dev.OwnedBy;
 @OwnedBy(HarnessTeam.PL)
 public interface InstanceSyncPerpetualTaskStatusService {
   boolean handlePerpetualTaskFailure(String perpetualTaskId, String errorMessage);
+
+  void updatePerpetualTaskSuccess(String perpetualTaskId);
 }

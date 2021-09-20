@@ -33,6 +33,11 @@ public class InstanceSyncPerpetualTaskStatusServiceImpl implements InstanceSyncP
     return false;
   }
 
+  @Override
+  public void updatePerpetualTaskSuccess(String perpetualTaskId) {
+    delete(perpetualTaskId);
+  }
+
   private void updateSyncFailure(String perpetualTaskId, String errorMessage) {
     Query<InstanceSyncPerpetualTaskStatus> query = wingsPersistence.createQuery(InstanceSyncPerpetualTaskStatus.class)
                                                        .field(InstanceSyncPerpetualTaskStatusKeys.perpetualTaskId)
