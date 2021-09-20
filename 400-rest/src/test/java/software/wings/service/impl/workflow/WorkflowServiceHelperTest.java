@@ -182,7 +182,7 @@ public class WorkflowServiceHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetHPAYamlStringWithCustomMetric() throws Exception {
     WorkflowServiceHelper workflowServiceHelper = new WorkflowServiceHelper();
-    String hpaString = workflowServiceHelper.getHPAYamlStringWithCustomMetric(2, 4, 80);
+    String hpaString = workflowServiceHelper.getHPAYamlStringWithCustomMetric(2, 4);
 
     String yamlForHPAWithCustomMetric = "apiVersion: autoscaling/v2beta1\n"
         + "kind: HorizontalPodAutoscaler\n"

@@ -46,8 +46,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import me.snowdrop.istio.api.IstioResource;
 import me.snowdrop.istio.api.networking.v1alpha3.Destination;
-import me.snowdrop.istio.api.networking.v1alpha3.DestinationWeight;
 import me.snowdrop.istio.api.networking.v1alpha3.HTTPRoute;
+import me.snowdrop.istio.api.networking.v1alpha3.HTTPRouteDestination;
 import me.snowdrop.istio.api.networking.v1alpha3.VirtualService;
 import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceBuilder;
 import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceFluent.SpecNested;
@@ -190,16 +190,16 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
       return false;
     }
 
-    List<DestinationWeight> sorted = new ArrayList<>(virtualServiceHttpRoute.getRoute());
-    List<DestinationWeight> existingSorted = new ArrayList<>(existingVirtualServiceHttpRoute.getRoute());
-    Comparator<DestinationWeight> comparator =
+    List<HTTPRouteDestination> sorted = new ArrayList<>(virtualServiceHttpRoute.getRoute());
+    List<HTTPRouteDestination> existingSorted = new ArrayList<>(existingVirtualServiceHttpRoute.getRoute());
+    Comparator<HTTPRouteDestination> comparator =
         Comparator.comparing(a -> Integer.valueOf(a.getDestination().getSubset()));
     sorted.sort(comparator);
     existingSorted.sort(comparator);
 
     for (int i = 0; i < sorted.size(); i++) {
-      DestinationWeight dw1 = sorted.get(i);
-      DestinationWeight dw2 = existingSorted.get(i);
+      HTTPRouteDestination dw1 = sorted.get(i);
+      HTTPRouteDestination dw2 = existingSorted.get(i);
       if (!dw1.getDestination().getSubset().equals(dw2.getDestination().getSubset())
           || !dw1.getWeight().equals(dw2.getWeight())) {
         return false;
@@ -318,10 +318,10 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
           Destination destination = new Destination();
           destination.setHost(kubernetesServiceName);
           destination.setSubset(Integer.toString(revision.get()));
-          DestinationWeight destinationWeight = new DestinationWeight();
-          destinationWeight.setWeight(weight);
-          destinationWeight.setDestination(destination);
-          virtualServiceHttpNested.addToRoute(destinationWeight);
+          HTTPRouteDestination HTTPRouteDestination = new HTTPRouteDestination();
+          HTTPRouteDestination.setWeight(weight);
+          HTTPRouteDestination.setDestination(destination);
+          virtualServiceHttpNested.addToRoute(HTTPRouteDestination);
         }
       }
     }

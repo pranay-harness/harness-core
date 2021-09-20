@@ -373,13 +373,12 @@ public class WorkflowServiceHelper {
   @Inject private AppService appService;
   @Inject private FeatureFlagService featureFlagService;
 
-  public String getHPAYamlStringWithCustomMetric(
-      Integer minAutoscaleInstances, Integer maxAutoscaleInstances, Integer targetCpuUtilizationPercentage) {
+  public String getHPAYamlStringWithCustomMetric(Integer minAutoscaleInstances, Integer maxAutoscaleInstances) {
     try {
       String hpaYaml =
           yamlForHPAWithCustomMetric.replaceAll(MIN_REPLICAS, String.valueOf(minAutoscaleInstances.intValue()))
-              .replaceAll(MAX_REPLICAS, String.valueOf(maxAutoscaleInstances.intValue()))
-              .replaceAll(UTILIZATION, String.valueOf(targetCpuUtilizationPercentage.intValue()));
+              .replaceAll(MAX_REPLICAS, String.valueOf(maxAutoscaleInstances.intValue()));
+      //              .replaceAll(UTILIZATION, String.valueOf(targetCpuUtilizationPercentage.intValue()));
       if (KubernetesHelper.loadYaml(hpaYaml, HorizontalPodAutoscaler.class) == null) {
         log.error("HPA couldn't be parsed: {}", hpaYaml);
       }

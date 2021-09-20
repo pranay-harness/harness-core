@@ -32,8 +32,8 @@ import io.fabric8.kubernetes.api.model.HostPathVolumeSource;
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.VolumeBuilder;
-import io.fabric8.kubernetes.api.model.extensions.Deployment;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentBuilder;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.DeploymentBuilder;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.HashMap;
@@ -239,7 +239,7 @@ public class KubernetesContainerTask extends ContainerTask {
             volumeMap.put(volumeName,
                 new VolumeBuilder()
                     .withName(volumeName)
-                    .withHostPath(new HostPathVolumeSource(strip(storageConfiguration.getHostSourcePath())))
+                    .withHostPath(new HostPathVolumeSource(strip(storageConfiguration.getHostSourcePath()), null))
                     .build());
           }
         }

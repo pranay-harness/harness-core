@@ -3221,10 +3221,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
   public void testGetHPAYamlStringWithCustomMetric() throws Exception {
     Integer minAutoscaleInstances = 2;
     Integer maxAutoscaleInstances = 10;
-    Integer targetCpuUtilizationPercentage = 60;
 
-    String yamlHPA = workflowService.getHPAYamlStringWithCustomMetric(
-        minAutoscaleInstances, maxAutoscaleInstances, targetCpuUtilizationPercentage);
+    String yamlHPA = workflowService.getHPAYamlStringWithCustomMetric(minAutoscaleInstances, maxAutoscaleInstances);
 
     HorizontalPodAutoscaler horizontalPodAutoscaler = KubernetesHelper.loadYaml(yamlHPA);
     assertThat(horizontalPodAutoscaler.getApiVersion()).isEqualTo("autoscaling/v2beta1");

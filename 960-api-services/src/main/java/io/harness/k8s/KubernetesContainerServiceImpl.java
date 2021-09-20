@@ -46,6 +46,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
+import static me.snowdrop.istio.api.internal.IstioSpecRegistry.getCRDInfo;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -109,25 +110,24 @@ import io.fabric8.kubernetes.api.model.ReplicationControllerList;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
-import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
-import io.fabric8.kubernetes.api.model.extensions.DaemonSetList;
-import io.fabric8.kubernetes.api.model.extensions.Deployment;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentList;
-import io.fabric8.kubernetes.api.model.extensions.DoneableDaemonSet;
-import io.fabric8.kubernetes.api.model.extensions.DoneableDeployment;
-import io.fabric8.kubernetes.api.model.extensions.DoneableReplicaSet;
-import io.fabric8.kubernetes.api.model.extensions.DoneableStatefulSet;
+import io.fabric8.kubernetes.api.model.apps.DaemonSet;
+import io.fabric8.kubernetes.api.model.apps.DaemonSetList;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.DeploymentList;
+import io.fabric8.kubernetes.api.model.apps.DoneableDaemonSet;
+import io.fabric8.kubernetes.api.model.apps.DoneableDeployment;
+import io.fabric8.kubernetes.api.model.apps.DoneableReplicaSet;
+import io.fabric8.kubernetes.api.model.apps.DoneableStatefulSet;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSetList;
+import io.fabric8.kubernetes.api.model.apps.StatefulSet;
+import io.fabric8.kubernetes.api.model.apps.StatefulSetList;
 import io.fabric8.kubernetes.api.model.extensions.Ingress;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSetList;
-import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
-import io.fabric8.kubernetes.api.model.extensions.StatefulSetList;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.RollableScalableResource;
-import io.fabric8.kubernetes.client.dsl.ScalableResource;
 import io.fabric8.openshift.api.model.DeploymentConfig;
 import io.fabric8.openshift.api.model.DeploymentConfigList;
 import io.fabric8.openshift.api.model.DoneableDeploymentConfig;
@@ -182,9 +182,9 @@ import me.snowdrop.istio.api.IstioResource;
 import me.snowdrop.istio.api.internal.IstioSpecRegistry;
 import me.snowdrop.istio.api.networking.v1alpha3.DestinationRule;
 import me.snowdrop.istio.api.networking.v1alpha3.DestinationRuleBuilder;
-import me.snowdrop.istio.api.networking.v1alpha3.DestinationWeight;
 import me.snowdrop.istio.api.networking.v1alpha3.DoneableDestinationRule;
 import me.snowdrop.istio.api.networking.v1alpha3.DoneableVirtualService;
+import me.snowdrop.istio.api.networking.v1alpha3.HTTPRouteDestination;
 import me.snowdrop.istio.api.networking.v1alpha3.VirtualService;
 import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceBuilder;
 import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceSpec;
@@ -990,7 +990,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   private NonNamespaceOperation<Deployment, DeploymentList, DoneableDeployment,
-      ScalableResource<Deployment, DoneableDeployment>>
+      RollableScalableResource<Deployment, DoneableDeployment>>
   deploymentOperations(KubernetesConfig kubernetesConfig, String namespace) {
     namespace = isNotBlank(namespace) ? namespace : kubernetesConfig.getNamespace();
     return kubernetesHelperService.getKubernetesClient(kubernetesConfig)
@@ -1314,14 +1314,26 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public CustomResourceDefinition getCustomResourceDefinition(KubernetesClient client, IstioResource resource) {
-    final Optional<String> crdName = IstioSpecRegistry.getCRDNameFor(resource.getKind().toLowerCase());
+    final String crdName = getCRDNameFor(resource.getKind(), resource.getApiVersion());
     final CustomResourceDefinition customResourceDefinition =
-        client.customResourceDefinitions().withName(crdName.get()).get();
+        client.customResourceDefinitions().withName(crdName).get();
     if (customResourceDefinition == null) {
       throw new IllegalArgumentException(
           format("Custom Resource Definition %s is not found in cluster %s", crdName, client.getMasterUrl()));
     }
     return customResourceDefinition;
+  }
+
+  private static String getCRDNameFor(String kind, String version) {
+    IstioSpecRegistry.CRDInfo crdInfo =
+        getCRDInfo(kind, version.substring(version.lastIndexOf("/") + 1))
+            .orElseThrow(
+                () -> new IllegalArgumentException(format("%s/%s is not a known Istio resource.", kind, version)));
+
+    String crdNameSuffix = crdInfo.getAPIVersion().lastIndexOf("/") == -1
+        ? EMPTY
+        : crdInfo.getAPIVersion().substring(0, crdInfo.getAPIVersion().lastIndexOf("/"));
+    return isEmpty(crdNameSuffix) ? EMPTY : format("%s.%s", crdInfo.getPlural(), crdNameSuffix);
   }
 
   @Override
@@ -1372,7 +1384,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         .getRoute()
         .stream()
         .filter(dw -> Integer.toString(revision.get()).equals(dw.getDestination().getSubset()))
-        .map(DestinationWeight::getWeight)
+        .map(HTTPRouteDestination::getWeight)
         .findFirst()
         .orElse(0);
   }
@@ -1390,9 +1402,9 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     if (isEmpty(virtualServiceSpec.getHttp()) || isEmpty(virtualServiceSpec.getHttp().get(0).getRoute())) {
       return new HashMap<>();
     }
-    List<DestinationWeight> destinationWeights = virtualServiceSpec.getHttp().get(0).getRoute();
-    return destinationWeights.stream().collect(
-        toMap(dw -> controllerNamePrefix + DASH + dw.getDestination().getSubset(), DestinationWeight::getWeight));
+    List<HTTPRouteDestination> httpRouteDestinations = virtualServiceSpec.getHttp().get(0).getRoute();
+    return httpRouteDestinations.stream().collect(
+        toMap(dw -> controllerNamePrefix + DASH + dw.getDestination().getSubset(), HTTPRouteDestination::getWeight));
   }
 
   @Override

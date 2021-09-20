@@ -117,17 +117,17 @@ import io.fabric8.kubernetes.api.model.ServiceBuilder;
 import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.api.model.ServicePortBuilder;
 import io.fabric8.kubernetes.api.model.ServiceSpecBuilder;
-import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
-import io.fabric8.kubernetes.api.model.extensions.DaemonSetSpec;
-import io.fabric8.kubernetes.api.model.extensions.Deployment;
-import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
+import io.fabric8.kubernetes.api.model.apps.DaemonSet;
+import io.fabric8.kubernetes.api.model.apps.DaemonSetSpec;
+import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.DeploymentSpec;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
+import io.fabric8.kubernetes.api.model.apps.ReplicaSetSpec;
+import io.fabric8.kubernetes.api.model.apps.StatefulSet;
+import io.fabric8.kubernetes.api.model.apps.StatefulSetSpec;
 import io.fabric8.kubernetes.api.model.extensions.HTTPIngressPath;
 import io.fabric8.kubernetes.api.model.extensions.Ingress;
 import io.fabric8.kubernetes.api.model.extensions.IngressRule;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSet;
-import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpec;
-import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
-import io.fabric8.kubernetes.api.model.extensions.StatefulSetSpec;
 import java.io.IOException;
 import java.time.Clock;
 import java.time.Duration;
@@ -150,7 +150,7 @@ import me.snowdrop.istio.api.networking.v1alpha3.Destination;
 import me.snowdrop.istio.api.networking.v1alpha3.DestinationRule;
 import me.snowdrop.istio.api.networking.v1alpha3.DestinationRuleBuilder;
 import me.snowdrop.istio.api.networking.v1alpha3.DestinationRuleFluent;
-import me.snowdrop.istio.api.networking.v1alpha3.DestinationWeight;
+import me.snowdrop.istio.api.networking.v1alpha3.HTTPRouteDestination;
 import me.snowdrop.istio.api.networking.v1alpha3.VirtualService;
 import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceBuilder;
 import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceFluent.SpecNested;
@@ -1069,10 +1069,10 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       horizontalPodAutoscaler =
           getCustomMetricHorizontalPodAutoscaler(name, kind, apiVersion, namespace, serviceLabels, setupParams);
     } else {
+      // removed TargetCpuUtilizationPercentage as replaced by metrics in api
       executionLogCallback.saveExecutionLog(
-          format("Setting autoscaler min instances %d, max instances %d, with target CPU utilization %d%%",
-              setupParams.getMinAutoscaleInstances(), setupParams.getMaxAutoscaleInstances(),
-              setupParams.getTargetCpuUtilizationPercentage()),
+          format("Setting autoscaler min instances %d, max instances %d", setupParams.getMinAutoscaleInstances(),
+              setupParams.getMaxAutoscaleInstances()),
           LogLevel.INFO);
 
       horizontalPodAutoscaler =
@@ -1117,18 +1117,17 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
   }
 
+  // removed TargetCpuUtilizationPercentage as replaced by metrics in api
   private HorizontalPodAutoscaler getBasicHorizontalPodAutoscaler(String name, String kind, String apiVersion,
       String namespace, Map<String, String> serviceLabels, KubernetesSetupParams setupParams) {
-    HorizontalPodAutoscalerSpecBuilder spec =
-        new HorizontalPodAutoscalerSpecBuilder()
-            .withMinReplicas(setupParams.getMinAutoscaleInstances())
-            .withMaxReplicas(setupParams.getMaxAutoscaleInstances())
-            .withTargetCPUUtilizationPercentage(setupParams.getTargetCpuUtilizationPercentage())
-            .withNewScaleTargetRef()
-            .withKind(kind)
-            .withName(name)
-            .withApiVersion(apiVersion)
-            .endScaleTargetRef();
+    HorizontalPodAutoscalerSpecBuilder spec = new HorizontalPodAutoscalerSpecBuilder()
+                                                  .withMinReplicas(setupParams.getMinAutoscaleInstances())
+                                                  .withMaxReplicas(setupParams.getMaxAutoscaleInstances())
+                                                  .withNewScaleTargetRef()
+                                                  .withKind(kind)
+                                                  .withName(name)
+                                                  .withApiVersion(apiVersion)
+                                                  .endScaleTargetRef();
     return new HorizontalPodAutoscalerBuilder()
         .withNewMetadata()
         .withAnnotations(harnessAnnotations)
@@ -1179,11 +1178,11 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       Destination destination = new Destination();
       destination.setHost(kubernetesServiceName);
       destination.setSubset(String.valueOf(currentRevision));
-      DestinationWeight destinationWeight = new DestinationWeight();
-      destinationWeight.setWeight(100);
-      destinationWeight.setDestination(destination);
+      HTTPRouteDestination HTTPRouteDestination = new HTTPRouteDestination();
+      HTTPRouteDestination.setWeight(100);
+      HTTPRouteDestination.setDestination(destination);
 
-      virtualServiceHttpNested.addToRoute(destinationWeight);
+      virtualServiceHttpNested.addToRoute(HTTPRouteDestination);
 
     } else {
       int totalInstances = activeControllers.values().stream().mapToInt(Integer::intValue).sum();
@@ -1195,10 +1194,10 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             Destination destination = new Destination();
             destination.setHost(kubernetesServiceName);
             destination.setSubset(revision.get().toString());
-            DestinationWeight destinationWeight = new DestinationWeight();
-            destinationWeight.setWeight(weight);
-            destinationWeight.setDestination(destination);
-            virtualServiceHttpNested.addToRoute(destinationWeight);
+            HTTPRouteDestination HTTPRouteDestination = new HTTPRouteDestination();
+            HTTPRouteDestination.setWeight(weight);
+            HTTPRouteDestination.setDestination(destination);
+            virtualServiceHttpNested.addToRoute(HTTPRouteDestination);
 
             destinationRuleSpecNested.addNewSubset()
                 .withName(revision.get().toString())
