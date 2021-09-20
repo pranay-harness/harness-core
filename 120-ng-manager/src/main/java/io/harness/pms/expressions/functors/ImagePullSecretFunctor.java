@@ -10,6 +10,8 @@ import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outcome.OutcomeService;
 
 import com.google.inject.Inject;
+import java.util.HashMap;
+import java.util.Map;
 
 @OwnedBy(HarnessTeam.CDC)
 public class ImagePullSecretFunctor implements SdkFunctor {
@@ -24,14 +26,17 @@ public class ImagePullSecretFunctor implements SdkFunctor {
   @Override
   public Object get(Ambiance ambiance, String... args) {
     String artifactIdentifier = args[0];
+    ArtifactsOutcome artifactsOutcome = fetchArtifactsOutcome(ambiance);
     if (artifactIdentifier.equals(PRIMARY_ARTIFACT)) {
-      ArtifactsOutcome artifactsOutcome = fetchArtifactsOutcome(ambiance);
       if (artifactsOutcome == null || artifactsOutcome.getPrimary() == null) {
         return null;
       }
       return imagePullSecretUtils.getImagePullSecret(artifactsOutcome.getPrimary(), ambiance);
     } else if (artifactIdentifier.equals(SIDECAR_ARTIFACTS)) {
-      return fetchArtifactsOutcome(ambiance).getSidecars();
+      Map<String, Object> sidecarsImagePullSecrets = new HashMap<>();
+      artifactsOutcome.getSidecars().forEach(
+          (k, v) -> { sidecarsImagePullSecrets.put(k, imagePullSecretUtils.getImagePullSecret(v, ambiance)); });
+      return sidecarsImagePullSecrets;
     } else {
       return null;
     }
