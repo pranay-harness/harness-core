@@ -1,5 +1,6 @@
 package io.harness.resourcegroup.service;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.REETIKA;
 import static io.harness.utils.PageTestUtils.getPage;
 
@@ -11,6 +12,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.beans.PageRequest;
 import io.harness.resourcegroup.framework.repositories.spring.ResourceGroupRepository;
@@ -31,6 +33,7 @@ import org.mockito.Mock;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
+@OwnedBy(PL)
 public class ResourceGroupServiceImplTest {
   @Mock private ResourceGroupRepository resourceGroupRepository;
 
