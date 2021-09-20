@@ -65,6 +65,7 @@ import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.PhysicalHostInstanceInfo;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.service.impl.AwsHelperService;
+import software.wings.service.impl.instance.instancesyncperpetualtaskstatus.InstanceSyncPerpetualTaskStatusService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -133,6 +134,7 @@ public class InstanceHelper {
   @Inject private PerpetualTaskService perpetualTaskService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private InstanceSyncPerpetualTaskService instanceSyncPerpetualTaskService;
+  @Inject private InstanceSyncPerpetualTaskStatusService instanceSyncPerpetualTaskStatusService;
 
   /**
    * The phaseExecutionData is used to process the instance information that is used by the service and infra
@@ -744,6 +746,15 @@ public class InstanceHelper {
           infrastructureMapping.getUuid(), perpetualTaskRecord.getUuid());
       String errorMsg = getErrorMsg(ex);
 
+      boolean shouldDelete =
+          instanceSyncPerpetualTaskStatusService.handlePerpetualTaskFailure(perpetualTaskRecord.getUuid(), errorMsg);
+      if (shouldDelete) {
+        log.info(
+            "Perpetual task : {} failing consecutively for last 7 days, deleting it", perpetualTaskRecord.getUuid());
+        instanceSyncPerpetualTaskService.deletePerpetualTask(
+            infrastructureMapping.getAccountId(), infrastructureMapping.getUuid(), perpetualTaskRecord.getUuid());
+      }
+
       boolean continueSync = instanceService.handleSyncFailure(infrastructureMapping.getAppId(),
           infrastructureMapping.getServiceId(), infrastructureMapping.getEnvId(), infrastructureMapping.getUuid(),
           infrastructureMapping.getDisplayName(), System.currentTimeMillis(), errorMsg);
@@ -762,6 +773,7 @@ public class InstanceHelper {
         instanceService.updateSyncSuccess(infrastructureMapping.getAppId(), infrastructureMapping.getServiceId(),
             infrastructureMapping.getEnvId(), infrastructureMapping.getUuid(), infrastructureMapping.getDisplayName(),
             System.currentTimeMillis());
+        instanceSyncPerpetualTaskStatusService.updatePerpetualTaskSuccess(perpetualTaskRecord.getUuid());
       }
       if (!status.isRetryable()) {
         log.info("Task Not Retryable. Deleting Perpetual Task. Infrastructure Mapping : [{}], Perpetual Task Id : [{}]",
