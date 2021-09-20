@@ -64,7 +64,8 @@ public class RemoteExpressionFunctor extends LateBindingMap implements Expressio
         return Boolean.parseBoolean(value);
       case ExpressionResultUtils.BYTES:
         return Byte.valueOf(value);
+      default:
+        return value;
     }
-    return value;
   }
 }
