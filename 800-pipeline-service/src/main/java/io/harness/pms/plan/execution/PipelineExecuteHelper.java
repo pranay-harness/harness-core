@@ -27,7 +27,7 @@ import io.harness.pms.exception.PmsExceptionUtils;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.helpers.PrincipalInfoHelper;
 import io.harness.pms.helpers.TriggeredByHelper;
-import io.harness.pms.merger.PipelineYamlConfig;
+import io.harness.pms.merger.YamlConfig;
 import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.merger.helpers.MergeHelper;
 import io.harness.pms.ngpipeline.inputset.helpers.InputSetSanitizer;
@@ -337,8 +337,8 @@ public class PipelineExecuteHelper {
       return false;
     }
 
-    PipelineYamlConfig updatedConfig = new PipelineYamlConfig(updatedYaml);
-    PipelineYamlConfig executedConfig = new PipelineYamlConfig(executedYaml);
+    YamlConfig updatedConfig = new YamlConfig(updatedYaml);
+    YamlConfig executedConfig = new YamlConfig(executedYaml);
 
     Map<FQN, Object> fqnToValueMapUpdatedYaml = updatedConfig.getFqnToValueMap();
     Map<FQN, Object> fqnToValueMapExecutedYaml = executedConfig.getFqnToValueMap();

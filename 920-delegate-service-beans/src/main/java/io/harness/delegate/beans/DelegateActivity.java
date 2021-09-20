@@ -1,3 +1,6 @@
 package io.harness.delegate.beans;
 
-public enum DelegateActivity { ACTIVE, DISCONNECTED, WAITING_FOR_APPROVAL, OTHER }
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+
+@OwnedBy(HarnessTeam.DEL) public enum DelegateActivity { ACTIVE, DISCONNECTED, WAITING_FOR_APPROVAL, OTHER, INACTIVE }

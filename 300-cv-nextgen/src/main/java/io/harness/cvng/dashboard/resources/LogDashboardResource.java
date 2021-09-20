@@ -1,6 +1,7 @@
 package io.harness.cvng.dashboard.resources;
 
 import io.harness.annotations.ExposeInternalException;
+import io.harness.cvng.analysis.beans.LiveMonitoringLogAnalysisClusterDTO;
 import io.harness.cvng.analysis.entities.LogAnalysisResult.LogAnalysisTag;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.core.beans.params.PageParams;
@@ -158,5 +159,39 @@ public class LogDashboardResource {
 
     return new RestResponse<>(logDashboardService.getAllLogsData(
         serviceEnvironmentParams, timeRangeParams, liveMonitoringLogAnalysisFilter, pageParams));
+  }
+
+  @GET
+  @Path("/logs-cluster")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "get all log cluster data for a time range", nickname = "getAllLogsClusterData")
+  public RestResponse<List<LiveMonitoringLogAnalysisClusterDTO>> getLogsClusterData(
+      @QueryParam("accountId") String accountId, @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @NotNull @QueryParam("serviceIdentifier") String serviceIdentifier,
+      @NotNull @QueryParam("environmentIdentifier") String environmentIdentifier,
+      @QueryParam("clusterTypes") List<LogAnalysisTag> clusterTypes,
+      @NotNull @QueryParam("startTime") Long startTimeMillis, @NotNull @QueryParam("endTime") Long endTimeMillis,
+      @QueryParam("healthSources") List<String> healthSourceIdentifiers) {
+    ServiceEnvironmentParams serviceEnvironmentParams = ServiceEnvironmentParams.builder()
+                                                            .accountIdentifier(accountId)
+                                                            .orgIdentifier(orgIdentifier)
+                                                            .projectIdentifier(projectIdentifier)
+                                                            .serviceIdentifier(serviceIdentifier)
+                                                            .environmentIdentifier(environmentIdentifier)
+                                                            .build();
+    TimeRangeParams timeRangeParams = TimeRangeParams.builder()
+                                          .startTime(Instant.ofEpochMilli(startTimeMillis))
+                                          .endTime(Instant.ofEpochMilli(endTimeMillis))
+                                          .build();
+    LiveMonitoringLogAnalysisFilter liveMonitoringLogAnalysisFilter =
+        LiveMonitoringLogAnalysisFilter.builder()
+            .healthSourceIdentifiers(healthSourceIdentifiers)
+            .clusterTypes(clusterTypes)
+            .build();
+
+    return new RestResponse<>(logDashboardService.getLogAnalysisClusters(
+        serviceEnvironmentParams, timeRangeParams, liveMonitoringLogAnalysisFilter));
   }
 }

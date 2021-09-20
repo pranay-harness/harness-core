@@ -3,6 +3,7 @@ package io.harness.cdng.artifact.bean.yaml;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.artifact.bean.ArtifactConfig;
@@ -33,6 +34,7 @@ import org.springframework.data.annotation.TypeAlias;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @SimpleVisitorHelper(helperClass = ArtifactSpecWrapperVisitorHelper.class)
 @TypeAlias("primaryArtifact")
+@RecasterAlias("io.harness.cdng.artifact.bean.yaml.PrimaryArtifact")
 public class PrimaryArtifact implements Visitable {
   @JsonProperty(YamlNode.UUID_FIELD_NAME)
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) })

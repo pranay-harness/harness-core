@@ -675,7 +675,8 @@ public class ActivityServiceImpl implements ActivityService {
         verificationJobInstanceService.get(getVerificationJobInstanceId(activityId));
     verificationJobInstances.forEach(verificationJobInstance -> {
       verificationJobInstance.getCvConfigMap().forEach((s, cvConfig) -> {
-        healthSourceDTOS.add(HealthSourceDTO.toHealthSourceDTO(HealthSourceDTO.toHealthSource(cvConfig, injector)));
+        healthSourceDTOS.add(
+            HealthSourceDTO.toHealthSourceDTO(HealthSourceDTO.toHealthSource(Arrays.asList(cvConfig), injector)));
       });
     });
     return healthSourceDTOS;

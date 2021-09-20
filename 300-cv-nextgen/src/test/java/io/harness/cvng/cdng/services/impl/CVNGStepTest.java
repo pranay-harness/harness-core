@@ -25,6 +25,7 @@ import io.harness.cvng.cdng.services.impl.CVNGStep.VerifyStepOutcome;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.services.api.FeatureFlagService;
 import io.harness.cvng.core.services.api.MetricPackService;
+import io.harness.cvng.core.services.api.monitoredService.ChangeSourceService;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.cvng.verificationjob.entities.TestVerificationJob;
 import io.harness.cvng.verificationjob.entities.VerificationJob.RuntimeParameter;
@@ -65,6 +66,7 @@ public class CVNGStepTest extends CvNextGenTestBase {
   @Inject private MonitoredServiceService monitoredServiceService;
   @Inject private MetricPackService metricPackService;
   @Inject private ActivityService activityService;
+  @Inject private ChangeSourceService changeSourceService;
   private BuilderFactory builderFactory;
   private String accountId;
   private String projectIdentifier;
@@ -75,7 +77,7 @@ public class CVNGStepTest extends CvNextGenTestBase {
   long activityStartTime;
 
   @Before
-  public void setup() {
+  public void setup() throws IllegalAccessException {
     cvngStep = new CVNGStep();
     injector.injectMembers(cvngStep);
     builderFactory = BuilderFactory.getDefault();
@@ -86,6 +88,8 @@ public class CVNGStepTest extends CvNextGenTestBase {
     envIdentifier = builderFactory.getContext().getEnvIdentifier();
     monitoredServiceDTO = builderFactory.monitoredServiceDTOBuilder().build();
     activityStartTime = builderFactory.getClock().instant().minus(Duration.ofMinutes(3)).toEpochMilli();
+    FieldUtils.writeField(changeSourceService, "changeSourceUpdateHandlerMap", new HashMap<>(), true);
+    FieldUtils.writeField(monitoredServiceService, "changeSourceService", changeSourceService, true);
   }
   @Test
   @Owner(developers = KAMAL)

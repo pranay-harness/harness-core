@@ -4,7 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import static software.wings.beans.CustomOrchestrationWorkflow.CustomOrchestrationWorkflowBuilder.aCustomOrchestrationWorkflow;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.OrchestrationWorkflowType;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -19,6 +21,7 @@ import java.util.Set;
  */
 @OwnedBy(CDC)
 @JsonTypeName("CUSTOM")
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class CustomOrchestrationWorkflow extends OrchestrationWorkflow {
   public CustomOrchestrationWorkflow() {
     setOrchestrationWorkflowType(OrchestrationWorkflowType.CUSTOM);

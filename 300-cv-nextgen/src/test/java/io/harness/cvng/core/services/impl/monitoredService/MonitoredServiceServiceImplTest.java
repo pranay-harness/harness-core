@@ -33,6 +33,7 @@ import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.Monitored
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceDependencyDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.Sources;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceResponse;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.AppDynamicsHealthSourceSpec;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceSpec;
@@ -66,6 +67,7 @@ import com.google.inject.Inject;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -882,6 +884,66 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
             + "        identifier: harness_cd\n"
             + "        type: HarnessCD\n"
             + "        enabled : true\n");
+  }
+
+  @Test
+  @Owner(developers = ANJAN)
+  @Category(UnitTests.class)
+  public void testListOfMonitoredServices() {
+    MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
+
+    String serviceRef1 = "delegate";
+    String identifier1 = "monitoredServiceDTO1";
+    monitoredServiceDTO.setServiceRef(serviceRef1);
+    monitoredServiceDTO.setIdentifier(identifier1);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
+
+    String serviceRef2 = "nextgen-manager";
+    String identifier2 = "monitoredServiceDTO2";
+    monitoredServiceDTO.setServiceRef(serviceRef2);
+    monitoredServiceDTO.setIdentifier(identifier2);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
+
+    String serviceRef3 = "ff";
+    String identifier3 = "monitoredServiceDTO3";
+    monitoredServiceDTO.setServiceRef(serviceRef3);
+    monitoredServiceDTO.setEnvironmentRef("staging-env");
+    monitoredServiceDTO.setIdentifier(identifier3);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
+
+    PageResponse pageResponse = monitoredServiceService.getList(projectParams, environmentIdentifier, 0, 10, null);
+    assertThat(pageResponse.getPageSize()).isEqualTo(10);
+    assertThat(pageResponse.getPageItemCount()).isEqualTo(3);
+    assertThat(pageResponse.getTotalItems()).isEqualTo(3);
+
+    MonitoredServiceDTO dto1 = createMonitoredServiceDTO();
+
+    MonitoredServiceDTO dto2 = createMonitoredServiceDTO();
+    dto2.setServiceRef(serviceRef1);
+    dto2.setIdentifier(identifier1);
+
+    MonitoredServiceDTO dto3 = createMonitoredServiceDTO();
+    dto3.setServiceRef(serviceRef2);
+    dto3.setIdentifier(identifier2);
+
+    List<MonitoredServiceResponse> responses = pageResponse.getContent();
+    List<MonitoredServiceResponse> responseDTOs =
+        responses.stream()
+            .sorted(Comparator.comparing(a -> a.getMonitoredServiceDTO().getIdentifier()))
+            .collect(Collectors.toList());
+
+    assertThat(responseDTOs.get(0).getMonitoredServiceDTO().getIdentifier()).isEqualTo(dto2.getIdentifier());
+    assertThat(responseDTOs.get(0).getMonitoredServiceDTO().getEnvironmentRef()).isEqualTo(dto2.getEnvironmentRef());
+    assertThat(responseDTOs.get(0).getMonitoredServiceDTO().getServiceRef()).isEqualTo(dto2.getServiceRef());
+
+    assertThat(responseDTOs.get(1).getMonitoredServiceDTO().getIdentifier()).isEqualTo(dto3.getIdentifier());
+    assertThat(responseDTOs.get(1).getMonitoredServiceDTO().getEnvironmentRef()).isEqualTo(dto3.getEnvironmentRef());
+    assertThat(responseDTOs.get(1).getMonitoredServiceDTO().getServiceRef()).isEqualTo(dto3.getServiceRef());
+
+    assertThat(responseDTOs.get(2).getMonitoredServiceDTO().getIdentifier()).isEqualTo(dto1.getIdentifier());
+    assertThat(responseDTOs.get(2).getMonitoredServiceDTO().getEnvironmentRef()).isEqualTo(dto1.getEnvironmentRef());
+    assertThat(responseDTOs.get(2).getMonitoredServiceDTO().getServiceRef()).isEqualTo(dto1.getServiceRef());
   }
 
   MonitoredServiceDTO createMonitoredServiceDTO() {

@@ -25,11 +25,11 @@ public class PipelineCoreTimeScaleMigrationDetails implements MigrationDetails {
   @Override
   public List<Pair<Integer, Class<? extends NGMigration>>> getMigrations() {
     return new ImmutableList.Builder<Pair<Integer, Class<? extends NGMigration>>>()
-        .add(Pair.of(1, UpdateTimescalePipelineExecutionSummary.class))
-        .add(Pair.of(2, UpdateTimescaleCIPipelineExecutionSummary.class))
-        .add(Pair.of(3, UpdateTimescaleTablePipelineExecutionSummaryCd.class))
-        .add(Pair.of(4, UpdateTimescaleTableCIWithTriggerInfo.class))
-        .add(Pair.of(5, CreateTimescaleCDCTablesWhereNotExist.class))
+        .add(Pair.of(1, CreateTimescaleCDCTablesWhereNotExist.class))
+        .add(Pair.of(2, UpdateTimescalePipelineExecutionSummary.class))
+        .add(Pair.of(3, UpdateTimescaleCIPipelineExecutionSummary.class))
+        .add(Pair.of(4, UpdateTimescaleTablePipelineExecutionSummaryCd.class))
+        .add(Pair.of(5, UpdateTimescaleTableCIWithTriggerInfo.class))
         .build();
   }
 }

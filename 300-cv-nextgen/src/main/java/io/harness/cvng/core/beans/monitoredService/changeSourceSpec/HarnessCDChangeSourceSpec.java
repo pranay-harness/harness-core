@@ -12,4 +12,9 @@ public class HarnessCDChangeSourceSpec extends ChangeSourceSpec {
   public ChangeSourceType getType() {
     return ChangeSourceType.HARNESS_CD;
   }
+
+  @Override
+  public boolean connectorPresent() {
+    return false;
+  }
 }
