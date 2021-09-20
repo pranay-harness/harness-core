@@ -53,10 +53,24 @@ public class RemoteExpressionFunctorTest extends CategoryTest {
     doReturn(ExpressionResponse.newBuilder().setValue(expressionResponseJson).build())
         .when(blockingStub)
         .evaluate(any());
+
+    // For single string as argument
     Map<String, Object> map = (Map<String, Object>) remoteExpressionFunctor.get("empty");
     verify(blockingStub, times(1)).evaluate(argumentCaptor.capture());
     ExpressionRequest request = argumentCaptor.getValue();
     assertEquals(request.getAmbiance(), ambiance);
+    assertEquals(request.getArgsList().size(), 1);
+    assertEquals(request.getFunctorKey(), "functorKey");
+    assertNotNull(map);
+    assertEquals(map.get("value"), "DummyValue");
+
+    // For array of strings as argument
+    String[] allArgs = {"empty", "arg1"};
+    map = (Map<String, Object>) remoteExpressionFunctor.get(allArgs);
+    verify(blockingStub, times(2)).evaluate(argumentCaptor.capture());
+    request = argumentCaptor.getValue();
+    assertEquals(request.getAmbiance(), ambiance);
+    assertEquals(request.getArgsList().size(), 2);
     assertEquals(request.getFunctorKey(), "functorKey");
     assertNotNull(map);
     assertEquals(map.get("value"), "DummyValue");

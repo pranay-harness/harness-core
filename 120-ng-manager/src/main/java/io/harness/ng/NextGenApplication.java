@@ -84,7 +84,6 @@ import io.harness.ng.migration.UserMetadataMigrationProvider;
 import io.harness.ng.webhook.services.api.WebhookEventProcessingService;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.persistence.HPersistence;
-import io.harness.pms.cdng.execution.expression.DummyFunctor;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.events.base.PipelineEventConsumerController;
 import io.harness.pms.expressions.functors.ImagePullSecretFunctor;
@@ -527,8 +526,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   private Map<String, Class<? extends SdkFunctor>> getSdkFunctors() {
     Map<String, Class<? extends SdkFunctor>> sdkFunctorMap = new HashMap<>();
-    // For testing. Do not remove.
-    sdkFunctorMap.put("dummy", DummyFunctor.class);
     sdkFunctorMap.put(ImagePullSecretFunctor.IMAGE_PULL_SECRET, ImagePullSecretFunctor.class);
     return sdkFunctorMap;
   }

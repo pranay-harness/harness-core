@@ -8,10 +8,13 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.expression.ExpressionRequest;
 import io.harness.pms.contracts.expression.ExpressionResponse;
 import io.harness.pms.contracts.expression.RemoteFunctorServiceGrpc.RemoteFunctorServiceBlockingStub;
+import io.harness.pms.sdk.core.execution.expression.ExpressionResultUtils;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.utils.PmsGrpcClientUtils;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,15 +30,18 @@ public class RemoteExpressionFunctor extends LateBindingMap implements Expressio
   @Override
   public Object get(Object args) {
     try {
-      ExpressionResponse expressionResponse =
-          PmsGrpcClientUtils.retryAndProcessException(remoteFunctorServiceBlockingStub::evaluate,
-              ExpressionRequest.newBuilder()
-                  .setAmbiance(ambiance)
-                  .setFunctorKey(functorKey)
-                  .addAllArgs(Collections.singletonList((String) args))
-                  .build());
+      List<String> allArgs;
+      // checking if args is string or array of string
+      if (args instanceof String) {
+        allArgs = Collections.singletonList((String) args);
+      } else {
+        allArgs = Arrays.asList((String[]) args);
+      }
+      ExpressionResponse expressionResponse = PmsGrpcClientUtils.retryAndProcessException(
+          remoteFunctorServiceBlockingStub::evaluate,
+          ExpressionRequest.newBuilder().setAmbiance(ambiance).setFunctorKey(functorKey).addAllArgs(allArgs).build());
       if (expressionResponse.getIsPrimitive()) {
-        return expressionResponse.getValue();
+        return getPrimitiveResponse(expressionResponse.getValue(), expressionResponse.getPrimitiveType());
       }
       return RecastOrchestrationUtils.fromJson(expressionResponse.getValue());
     } catch (Exception ex) {
@@ -46,5 +52,17 @@ public class RemoteExpressionFunctor extends LateBindingMap implements Expressio
 
   public Object getValue(String... args) {
     return get(args);
+  }
+
+  private Object getPrimitiveResponse(String value, String clazz) {
+    switch (ExpressionResultUtils.primitivesMap.get(clazz)) {
+      case ExpressionResultUtils.INTEGER:
+        return Integer.parseInt(value);
+      case ExpressionResultUtils.BOOLEAN:
+        return Boolean.parseBoolean(value);
+      case ExpressionResultUtils.BYTES:
+        return Byte.valueOf(value);
+    }
+    return value;
   }
 }

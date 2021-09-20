@@ -34,7 +34,11 @@ public class RemoteFunctorService extends RemoteFunctorServiceImplBase {
       ProtocolStringList argsList = request.getArgsList();
       Object result = functor.get(request.getAmbiance(), argsList.toArray(new String[0]));
       if (RecastReflectionUtils.isPrimitiveLike(result.getClass())) {
-        expressionResponse = ExpressionResponse.newBuilder().setIsPrimitive(true).setValue(result.toString()).build();
+        expressionResponse = ExpressionResponse.newBuilder()
+                                 .setIsPrimitive(true)
+                                 .setPrimitiveType(result.getClass().toString())
+                                 .setValue(result.toString())
+                                 .build();
       } else {
         expressionResponse = ExpressionResponse.newBuilder()
                                  .setIsPrimitive(false)
