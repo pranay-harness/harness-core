@@ -24,14 +24,13 @@ public class InstanceSyncPerpetualTaskStatusServiceImpl implements InstanceSyncP
     InstanceSyncPerpetualTaskStatus status = get(perpetualTaskId);
     if (status != null) {
       if (System.currentTimeMillis() - status.getInitialFailureAt() >= Duration.ofDays(7).toMillis()) {
-        log.info("Perpetual task id : {} failing consecutively within specified time period", perpetualTaskId);
         delete(perpetualTaskId);
       }
-      return false;
+      return true;
     }
 
     updateSyncFailure(perpetualTaskId, errorMessage);
-    return true;
+    return false;
   }
 
   private void updateSyncFailure(String perpetualTaskId, String errorMessage) {
