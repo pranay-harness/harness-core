@@ -4,6 +4,8 @@ import static java.lang.String.format;
 
 import io.harness.alert.AlertData;
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import lombok.Builder;
@@ -13,6 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 @Data
 @Builder
 @TargetModule(HarnessModule._955_ALERT_BEANS)
+@OwnedBy(HarnessTeam.DEL)
 public class DelegatesScalingGroupDownAlert implements AlertData {
   private String groupName;
   private String accountId;

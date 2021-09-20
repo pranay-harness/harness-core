@@ -42,6 +42,7 @@ java_binary(
         "//440-secret-management-service:module",
         "//441-cg-instance-sync:module",
         "//445-cg-connectors:module",
+        "//445-gitops:module",
         "//450-ce-views:module",
         "//460-capability:module",
         "//470-alert:module",
