@@ -11,7 +11,7 @@ import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
-import io.harness.pms.merger.PipelineYamlConfig;
+import io.harness.pms.merger.YamlConfig;
 import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.merger.helpers.FQNMapGenerator;
 import io.harness.pms.yaml.YamlUtils;
@@ -55,7 +55,7 @@ public class FQNUtilsTest extends CategoryTest {
         + "        identifier: f5\n"
         + "    - stage:\n"
         + "        identifier: f6";
-    PipelineYamlConfig config = new PipelineYamlConfig(yaml);
+    YamlConfig config = new YamlConfig(yaml);
     Set<FQN> fqnSet = config.getFqnToValueMap().keySet();
     assertThat(fqnSet).hasSize(9);
     List<FQN> stageIdentifiers = fqnSet.stream().filter(FQN::isStageIdentifier).collect(Collectors.toList());
@@ -82,7 +82,7 @@ public class FQNUtilsTest extends CategoryTest {
       String filename = filenames.get(i);
       String yaml =
           Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
-      PipelineYamlConfig config = new PipelineYamlConfig(yaml);
+      YamlConfig config = new YamlConfig(yaml);
       List<String> keys = config.getFqnToValueMap().keySet().stream().map(FQN::display).collect(Collectors.toList());
 
       String resFile = resFiles.get(i);
@@ -103,9 +103,9 @@ public class FQNUtilsTest extends CategoryTest {
       String filename = filenames.get(i);
       String yaml =
           Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
-      PipelineYamlConfig config = new PipelineYamlConfig(yaml);
+      YamlConfig config = new YamlConfig(yaml);
 
-      PipelineYamlConfig reverseConfig = new PipelineYamlConfig(config.getFqnToValueMap(), config.getYamlMap());
+      YamlConfig reverseConfig = new YamlConfig(config.getFqnToValueMap(), config.getYamlMap());
       assertThat(reverseConfig.getYaml().replace("\"", "")).isEqualTo(yaml);
     }
   }
@@ -117,9 +117,9 @@ public class FQNUtilsTest extends CategoryTest {
     ClassLoader classLoader = getClass().getClassLoader();
     String filename = "failure-strategy.yaml";
     String yaml = Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
-    PipelineYamlConfig config = new PipelineYamlConfig(yaml);
+    YamlConfig config = new YamlConfig(yaml);
     assertThat(config).isNotNull();
-    PipelineYamlConfig configRes = new PipelineYamlConfig(config.getFqnToValueMap(), config.getYamlMap());
+    YamlConfig configRes = new YamlConfig(config.getFqnToValueMap(), config.getYamlMap());
     assertThat(configRes.getYaml().replace("\"", "")).isEqualTo(yaml);
   }
 
@@ -130,9 +130,9 @@ public class FQNUtilsTest extends CategoryTest {
     ClassLoader classLoader = getClass().getClassLoader();
     String filename = "ci-pipeline-with-reports.yaml";
     String yaml = Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
-    PipelineYamlConfig config = new PipelineYamlConfig(yaml);
+    YamlConfig config = new YamlConfig(yaml);
     assertThat(config).isNotNull();
-    PipelineYamlConfig configRes = new PipelineYamlConfig(config.getFqnToValueMap(), config.getYamlMap());
+    YamlConfig configRes = new YamlConfig(config.getFqnToValueMap(), config.getYamlMap());
     assertThat(configRes.getYaml().replace("\"", "")).isEqualTo(yaml);
   }
 

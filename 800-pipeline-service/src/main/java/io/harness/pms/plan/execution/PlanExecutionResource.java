@@ -13,11 +13,11 @@ import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.InvalidYamlException;
 import io.harness.gitsync.interceptor.GitEntityFindInfoDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.pms.annotations.PipelineServiceAuth;
-import io.harness.pms.helpers.TriggeredByHelper;
 import io.harness.pms.ngpipeline.inputset.beans.resource.MergeInputSetRequestDTOPMS;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
@@ -27,6 +27,8 @@ import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.pms.preflight.PreFlightDTO;
 import io.harness.pms.preflight.service.PreflightService;
 import io.harness.pms.rbac.PipelineRbacPermissions;
+import io.harness.pms.stages.StageExecutionResponse;
+import io.harness.pms.stages.StageExecutionSelectorHelper;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.repositories.orchestrationEventLog.OrchestrationEventLogRepository;
 
@@ -35,6 +37,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -64,7 +67,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class PlanExecutionResource {
   @Inject private final PipelineExecuteHelper pipelineExecuteHelper;
   @Inject private final PMSExecutionService pmsExecutionService;
-  @Inject private final TriggeredByHelper triggeredByHelper;
   @Inject private final OrchestrationEventLogRepository orchestrationEventLogRepository;
   @Inject private final AccessControlClient accessControlClient;
   @Inject private final PreflightService preflightService;
@@ -345,5 +347,27 @@ public class PlanExecutionResource {
   public ResponseDTO<String> runASchemaMigration() {
     orchestrationEventLogRepository.schemaMigrationForOldEvenLog();
     return ResponseDTO.newResponse("Deleted Old Orchestration event log entries");
+  }
+
+  @GET
+  @ApiOperation(value = "get list of stages for stage execution", nickname = "getStagesExecutionList")
+  @Path("/stagesExecutionList")
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
+  public ResponseDTO<List<StageExecutionResponse>> getStagesExecutionList(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier @NotEmpty String pipelineIdentifier,
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
+    Optional<PipelineEntity> optionalPipelineEntity =
+        pmsPipelineService.get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
+    if (!optionalPipelineEntity.isPresent()) {
+      throw new InvalidRequestException(format("Pipeline [%s] under Project[%s], Organization [%s] doesn't exist.",
+          pipelineIdentifier, projectIdentifier, orgIdentifier));
+    }
+    PipelineEntity pipelineEntity = optionalPipelineEntity.get();
+    List<StageExecutionResponse> stageExecutionResponse =
+        StageExecutionSelectorHelper.getStageExecutionResponse(pipelineEntity.getYaml());
+    return ResponseDTO.newResponse(stageExecutionResponse);
   }
 }

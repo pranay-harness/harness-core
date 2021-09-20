@@ -867,7 +867,7 @@ public class UserResource {
   @ExceptionMetered
   public javax.ws.rs.core.Response samlLogin(@FormParam(value = "SAMLResponse") String samlResponse,
       @FormParam(value = "RelayState") String relayState, @Context HttpServletRequest request,
-      @Context HttpServletResponse response, @QueryParam("accountId") @NotEmpty String accountId) {
+      @Context HttpServletResponse response, @QueryParam("accountId") String accountId) {
     try {
       return authenticationManager.samlLogin(
           request.getHeader(com.google.common.net.HttpHeaders.REFERER), samlResponse, accountId, relayState);

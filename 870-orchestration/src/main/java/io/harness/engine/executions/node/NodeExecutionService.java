@@ -44,6 +44,8 @@ public interface NodeExecutionService {
 
   long markAllLeavesDiscontinuing(String planExecutionId, EnumSet<Status> statuses);
 
+  List<NodeExecution> findAllNodeExecutionsTrimmed(String planExecutionId);
+
   boolean markRetried(String nodeExecutionId);
 
   boolean updateRelationShipsForRetryNode(String nodeExecutionId, String newNodeExecutionId);

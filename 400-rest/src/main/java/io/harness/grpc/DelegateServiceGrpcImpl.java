@@ -13,7 +13,10 @@ import io.harness.delegate.CancelTaskRequest;
 import io.harness.delegate.CancelTaskResponse;
 import io.harness.delegate.CreatePerpetualTaskRequest;
 import io.harness.delegate.CreatePerpetualTaskResponse;
+import io.harness.delegate.DelegateProfileExecutedAtResponse;
 import io.harness.delegate.DelegateServiceGrpc.DelegateServiceImplBase;
+import io.harness.delegate.DelegateUpdateRequest;
+import io.harness.delegate.DelegateUpdateResponse;
 import io.harness.delegate.DeletePerpetualTaskRequest;
 import io.harness.delegate.DeletePerpetualTaskResponse;
 import io.harness.delegate.ExecuteParkedTaskRequest;
@@ -52,6 +55,7 @@ import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateCallbackRegistry;
 import io.harness.service.intfc.DelegateTaskService;
 
+import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.DelegateTaskServiceClassic;
 
@@ -80,18 +84,21 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
   private KryoSerializer kryoSerializer;
   private DelegateTaskService delegateTaskService;
   private DelegateTaskServiceClassic delegateTaskServiceClassic;
+  private DelegateSelectionLogsService delegateSelectionLogsService;
 
   @Inject
   public DelegateServiceGrpcImpl(DelegateCallbackRegistry delegateCallbackRegistry,
       PerpetualTaskService perpetualTaskService, DelegateService delegateService,
       DelegateTaskService delegateTaskService, KryoSerializer kryoSerializer,
-      DelegateTaskServiceClassic delegateTaskServiceClassic) {
+      DelegateTaskServiceClassic delegateTaskServiceClassic,
+      DelegateSelectionLogsService delegateSelectionLogsService) {
     this.delegateCallbackRegistry = delegateCallbackRegistry;
     this.perpetualTaskService = perpetualTaskService;
     this.delegateService = delegateService;
     this.kryoSerializer = kryoSerializer;
     this.delegateTaskService = delegateTaskService;
     this.delegateTaskServiceClassic = delegateTaskServiceClassic;
+    this.delegateSelectionLogsService = delegateSelectionLogsService;
   }
 
   @Override
@@ -366,6 +373,34 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
       responseObserver.onCompleted();
     } catch (Exception ex) {
       log.error("Unexpected error occurred while processing reset perpetual task request.", ex);
+      responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
+    }
+  }
+
+  @Override
+  public void clearProfileExecutedAt(
+      DelegateUpdateRequest request, StreamObserver<DelegateUpdateResponse> responseObserver) {
+    try {
+      delegateService.clearProfileExecutedAt(request.getAccountId().getId(), request.getDelegateId().getId());
+      responseObserver.onNext(DelegateUpdateResponse.newBuilder().setSuccess(true).build());
+      responseObserver.onCompleted();
+    } catch (Exception ex) {
+      log.error("Unexpected error occurred while updating profile execution status on delegate.", ex);
+      responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
+    }
+  }
+
+  @Override
+  public void fetchProfileExecutedAt(
+      DelegateUpdateRequest request, StreamObserver<DelegateProfileExecutedAtResponse> responseObserver) {
+    try {
+      DelegateProfileExecutedAtResponse response =
+          delegateService.fetchProfileExecutedAt(request.getAccountId().getId(), request.getDelegateId().getId());
+
+      responseObserver.onNext(response);
+      responseObserver.onCompleted();
+    } catch (Exception ex) {
+      log.error("Unexpected error occurred while fetching profile execution time on delegate.", ex);
       responseObserver.onError(io.grpc.Status.INTERNAL.withDescription(ex.getMessage()).asRuntimeException());
     }
   }

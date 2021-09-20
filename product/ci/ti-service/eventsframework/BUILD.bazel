@@ -11,8 +11,9 @@ go_library(
         "//product/ci/ti-service/db",
         "//product/ci/ti-service/logger",
         "//product/ci/ti-service/types",
+        "@com_github_go_redis_redis_v7//:redis",
         "@com_github_golang_protobuf//proto:go_default_library",
-        "@com_github_robinjoseph08_redisqueue//:redisqueue",
+        "@com_github_robinjoseph08_redisqueue_v2//:redisqueue",
         "@org_uber_go_zap//:zap",
     ],
 )

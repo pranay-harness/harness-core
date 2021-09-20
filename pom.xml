@@ -36,7 +36,6 @@
         <grpc.version>1.33.1</grpc.version>
         <guice.version>4.2.3</guice.version>
         <http.component.version>4.5.13</http.component.version>
-        <ibatis.core.version>3.0</ibatis.core.version>
         <jacoco.filename>jacoco</jacoco.filename>
         <jacoco.integration.skip>true</jacoco.integration.skip>
         <jacoco.merge.skip>true</jacoco.merge.skip>
@@ -50,6 +49,7 @@
         <maven.javadoc.skip>true</maven.javadoc.skip>
         <maven.site.deploy.skip>true</maven.site.deploy.skip>
         <morphia.version>1.3.2</morphia.version>
+        <mybatis.version>3.5.7</mybatis.version>
         <nexus.version>2.14.18-01</nexus.version>
         <os.plugin.version>1.5.0.Final</os.plugin.version>
         <pcf.client.version>4.15.0.RELEASE</pcf.client.version>
@@ -1343,11 +1343,6 @@
                 <version>4.4.1</version>
             </dependency>
             <dependency>
-                <groupId>org.apache.ibatis</groupId>
-                <artifactId>ibatis-core</artifactId>
-                <version>${ibatis.core.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>org.apache.logging.log4j</groupId>
                 <artifactId>log4j-to-slf4j</artifactId>
                 <version>2.12.1</version>
@@ -1639,6 +1634,11 @@
                 <groupId>org.mortbay.jetty.alpn</groupId>
                 <artifactId>alpn-boot</artifactId>
                 <version>${alpnboot.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mybatis</groupId>
+                <artifactId>mybatis</artifactId>
+                <version>${mybatis.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.ow2.asm</groupId>

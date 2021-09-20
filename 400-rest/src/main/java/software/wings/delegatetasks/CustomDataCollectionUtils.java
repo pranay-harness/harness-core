@@ -6,7 +6,11 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
 import java.text.DateFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
@@ -94,5 +98,19 @@ public class CustomDataCollectionUtils {
     }
     stringBuilder.append(input, start, input.length());
     return stringBuilder.toString();
+  }
+
+  public static long parseTimestampfield(String timestampStr, String timestampFormat) throws ParseException {
+    long timestamp;
+    try {
+      DateTimeFormatter df = DateTimeFormatter.ofPattern(timestampFormat);
+      timestamp = Instant.from(df.parse(timestampStr)).toEpochMilli();
+    } catch (Exception ex) {
+      log.debug("Exception while parsing using DateTimeFormatter, we will attempt with SimpleDateFormatter", ex);
+      SimpleDateFormat simpleDateFormat = new SimpleDateFormat(timestampFormat);
+      Date date = simpleDateFormat.parse(timestampStr);
+      timestamp = date.toInstant().toEpochMilli();
+    }
+    return timestamp;
   }
 }
