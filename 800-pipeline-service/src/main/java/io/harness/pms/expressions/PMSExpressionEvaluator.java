@@ -37,7 +37,6 @@ public class PMSExpressionEvaluator extends AmbianceExpressionEvaluator {
   @Inject @Named("PRIVILEGED") private AccountClient accountClient;
   @Inject @Named("PRIVILEGED") private OrganizationClient organizationClient;
   @Inject @Named("PRIVILEGED") private ProjectClient projectClient;
-  //  @Inject private ImagePullSecretUtils imagePullSecretUtils;
   @Inject private PlanExecutionMetadataService planExecutionMetadataService;
   @Inject PmsSdkInstanceService pmsSdkInstanceService;
 
@@ -53,14 +52,6 @@ public class PMSExpressionEvaluator extends AmbianceExpressionEvaluator {
     addToContext("account", new AccountFunctor(accountClient, ambiance));
     addToContext("org", new OrgFunctor(organizationClient, ambiance));
     addToContext("project", new ProjectFunctor(projectClient, ambiance));
-
-    // Artifact pull secret functor
-    //    addToContext(ImagePullSecretFunctor.IMAGE_PULL_SECRET,
-    //        ImagePullSecretFunctor.builder()
-    //            .imagePullSecretUtils(imagePullSecretUtils)
-    //            .pmsOutcomeService(getPmsOutcomeService())
-    //            .ambiance(ambiance)
-    //            .build());
 
     // Trigger functors
     addToContext(SetupAbstractionKeys.eventPayload, new EventPayloadFunctor(ambiance, planExecutionMetadataService));
