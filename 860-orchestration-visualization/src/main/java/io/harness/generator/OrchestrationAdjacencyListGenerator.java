@@ -23,7 +23,6 @@ import io.harness.graph.stepDetail.service.PmsGraphStepDetailsService;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.data.PmsOutcome;
 import io.harness.pms.data.stepdetails.PmsStepDetails;
-import io.harness.pms.sdk.core.resolver.outcome.mapper.PmsOutcomeMapper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -38,7 +37,7 @@ import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@OwnedBy(HarnessTeam.CDC)
+@OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
 public class OrchestrationAdjacencyListGenerator {
   @Inject private PmsOutcomeService pmsOutcomeService;
@@ -232,7 +231,7 @@ public class OrchestrationAdjacencyListGenerator {
 
         Map<String, PmsOutcome> outcomes;
         if (isOutcomePresent) {
-          outcomes = PmsOutcomeMapper.convertJsonToOrchestrationMap(pmsOutcomeService.findAllOutcomesMapByRuntimeId(
+          outcomes = PmsOutcome.convertJsonToOrchestrationMap(pmsOutcomeService.findAllOutcomesMapByRuntimeId(
               nodeExecution.getAmbiance().getPlanExecutionId(), currentNodeId));
         } else {
           outcomes = new LinkedHashMap<>();

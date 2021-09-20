@@ -13,7 +13,7 @@ import io.harness.engine.executions.retry.RetryStageInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
-import io.harness.pms.pipeline.mappers.NodeExecutionToExecutioNodeMapper;
+import io.harness.pms.pipeline.mappers.NodeExecutionToExecutionNodeMapper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSPipelineServiceImpl;
 import io.harness.pms.pipeline.service.PMSYamlSchemaService;
@@ -43,7 +43,7 @@ public class PipelineExecuteHelperTest {
   @Mock PMSExecutionService pmsExecutionService;
   @Mock PMSYamlSchemaService pmsYamlSchemaService;
   @Mock NodeExecutionService nodeExecutionService;
-  @Mock NodeExecutionToExecutioNodeMapper nodeExecutionToExecutioNodeMapper;
+  @Mock NodeExecutionToExecutionNodeMapper nodeExecutionToExecutionNodeMapper;
   @Mock AccessControlClient accessControlClient;
   @Mock PmsGitSyncHelper pmsGitSyncHelper;
 

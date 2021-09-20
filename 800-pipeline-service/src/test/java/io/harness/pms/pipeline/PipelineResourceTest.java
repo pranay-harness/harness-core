@@ -28,7 +28,7 @@ import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
-import io.harness.pms.pipeline.mappers.NodeExecutionToExecutioNodeMapper;
+import io.harness.pms.pipeline.mappers.NodeExecutionToExecutionNodeMapper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSYamlSchemaService;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
@@ -63,7 +63,7 @@ public class PipelineResourceTest extends CategoryTest {
   @Mock PMSExecutionService pmsExecutionService;
   @Mock PMSYamlSchemaService pmsYamlSchemaService;
   @Mock NodeExecutionService nodeExecutionService;
-  @Mock NodeExecutionToExecutioNodeMapper nodeExecutionToExecutioNodeMapper;
+  @Mock NodeExecutionToExecutionNodeMapper nodeExecutionToExecutionNodeMapper;
   @Mock AccessControlClient accessControlClient;
   @Mock PmsGitSyncHelper pmsGitSyncHelper;
 
@@ -85,7 +85,7 @@ public class PipelineResourceTest extends CategoryTest {
   public void setUp() throws IOException {
     MockitoAnnotations.initMocks(this);
     pipelineResource = new PipelineResource(pmsPipelineService, pmsExecutionService, pmsYamlSchemaService,
-        nodeExecutionService, accessControlClient, nodeExecutionToExecutioNodeMapper, pmsGitSyncHelper);
+        nodeExecutionService, accessControlClient, nodeExecutionToExecutionNodeMapper, pmsGitSyncHelper);
     ClassLoader classLoader = this.getClass().getClassLoader();
     String filename = "failure-strategy.yaml";
     yaml = Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);

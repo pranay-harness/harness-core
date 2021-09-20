@@ -6,6 +6,10 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.pms.serializer.kryo.PmsContractsKryoRegistrar;
 import io.harness.serializer.kryo.OrchestrationBeansKryoRegistrar;
 import io.harness.serializer.morphia.OrchestrationBeansMorphiaRegistrar;
+import io.harness.serializer.spring.converters.outcomes.PmsOutcomeReadConverter;
+import io.harness.serializer.spring.converters.outcomes.PmsOutcomeWriteConverter;
+import io.harness.serializer.spring.converters.outputs.PmsSweepingOutputReadConverter;
+import io.harness.serializer.spring.converters.outputs.PmsSweepingOutputWriteConverter;
 import io.harness.serializer.spring.converters.stepparameters.PmsStepParametersReadConverter;
 import io.harness.serializer.spring.converters.stepparameters.PmsStepParametersWriteConverter;
 
@@ -45,6 +49,8 @@ public class OrchestrationBeansRegistrars {
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =
       ImmutableSet.<Class<? extends TypeConverter>>builder().addAll(PersistenceRegistrars.morphiaConverters).build();
 
-  public final ImmutableList<Class<? extends Converter<?, ?>>> springConverters =
-      ImmutableList.of(PmsStepParametersReadConverter.class, PmsStepParametersWriteConverter.class);
+  public final ImmutableList<Class<? extends Converter<?, ?>>> springConverters = ImmutableList.of(
+      PmsStepParametersReadConverter.class, PmsStepParametersWriteConverter.class, PmsOutcomeReadConverter.class,
+      PmsOutcomeWriteConverter.class, PmsSweepingOutputReadConverter.class, PmsSweepingOutputWriteConverter.class,
+      PmsStepParametersReadConverter.class, PmsStepParametersWriteConverter.class);
 }

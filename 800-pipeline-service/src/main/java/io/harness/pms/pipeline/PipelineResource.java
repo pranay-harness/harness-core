@@ -39,7 +39,7 @@ import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetYamlWithTemplateDTO;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.mappers.ExecutionGraphMapper;
-import io.harness.pms.pipeline.mappers.NodeExecutionToExecutioNodeMapper;
+import io.harness.pms.pipeline.mappers.NodeExecutionToExecutionNodeMapper;
 import io.harness.pms.pipeline.mappers.PMSPipelineDtoMapper;
 import io.harness.pms.pipeline.mappers.PipelineExecutionSummaryDtoMapper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
@@ -105,7 +105,7 @@ public class PipelineResource implements YamlSchemaResource {
   private final PMSYamlSchemaService pmsYamlSchemaService;
   private final NodeExecutionService nodeExecutionService;
   private final AccessControlClient accessControlClient;
-  private final NodeExecutionToExecutioNodeMapper nodeExecutionToExecutioNodeMapper;
+  private final NodeExecutionToExecutionNodeMapper nodeExecutionToExecutionNodeMapper;
   private final PmsGitSyncHelper pmsGitSyncHelper;
 
   @POST
@@ -426,6 +426,6 @@ public class PipelineResource implements YamlSchemaResource {
       return null;
     }
     return ResponseDTO.newResponse(
-        nodeExecutionToExecutioNodeMapper.mapNodeExecutionToExecutionNode(nodeExecutionService.get(nodeExecutionId)));
+        nodeExecutionToExecutionNodeMapper.mapNodeExecutionToExecutionNode(nodeExecutionService.get(nodeExecutionId)));
   }
 }

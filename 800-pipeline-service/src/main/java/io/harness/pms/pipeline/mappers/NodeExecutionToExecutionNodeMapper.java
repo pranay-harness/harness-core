@@ -13,7 +13,6 @@ import io.harness.execution.NodeExecution;
 import io.harness.pms.data.PmsOutcome;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.execution.utils.AmbianceUtils;
-import io.harness.pms.sdk.core.resolver.outcome.mapper.PmsOutcomeMapper;
 import io.harness.pms.utils.OrchestrationMapBackwardCompatibilityUtils;
 
 import com.google.inject.Inject;
@@ -24,13 +23,13 @@ import java.util.Map;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
-public class NodeExecutionToExecutioNodeMapper {
+public class NodeExecutionToExecutionNodeMapper {
   @Inject PmsOutcomeService pmsOutcomeService;
   @Inject private DelegateInfoHelper delegateInfoHelper;
 
   public ExecutionNode mapNodeExecutionToExecutionNode(NodeExecution nodeExecution) {
     Map<String, PmsOutcome> outcomes =
-        PmsOutcomeMapper.convertJsonToOrchestrationMap(pmsOutcomeService.findAllOutcomesMapByRuntimeId(
+        PmsOutcome.convertJsonToOrchestrationMap(pmsOutcomeService.findAllOutcomesMapByRuntimeId(
             nodeExecution.getAmbiance().getPlanExecutionId(), nodeExecution.getUuid()));
 
     List<GraphDelegateSelectionLogParams> graphDelegateSelectionLogParamsList =

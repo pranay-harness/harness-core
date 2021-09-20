@@ -13,6 +13,7 @@ import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.execution.NodeExecution;
 import io.harness.generator.OrchestrationAdjacencyListGenerator;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
+import io.harness.pms.data.PmsOutcome;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.resolver.outcome.mapper.PmsOutcomeMapper;
@@ -74,7 +75,7 @@ public class GraphStatusUpdateHelper {
     graphVertexMap.computeIfPresent(nodeExecutionId, (key, prevValue) -> {
       GraphVertex newValue = convertFromNodeExecution(prevValue, nodeExecution);
       if (StatusUtils.isFinalStatus(newValue.getStatus())) {
-        newValue.setOutcomeDocuments(PmsOutcomeMapper.convertJsonToOrchestrationMap(
+        newValue.setOutcomeDocuments(PmsOutcome.convertJsonToOrchestrationMap(
             pmsOutcomeService.findAllOutcomesMapByRuntimeId(planExecutionId, nodeExecutionId)));
         newValue.setGraphDelegateSelectionLogParams(
             delegateInfoHelper.getDelegateInformationForGivenTask(nodeExecution.getExecutableResponses(),

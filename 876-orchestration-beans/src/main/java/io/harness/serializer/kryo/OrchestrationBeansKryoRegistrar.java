@@ -9,6 +9,8 @@ import io.harness.execution.NodeExecution;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.State;
 import io.harness.interrupts.InterruptEffect;
+import io.harness.pms.data.PmsOutcome;
+import io.harness.pms.data.output.PmsSweepingOutput;
 import io.harness.pms.data.stepparameters.PmsStepParameters;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.timeout.trackers.active.ActiveTimeoutParameters;
@@ -16,11 +18,6 @@ import io.harness.timeout.trackers.active.ActiveTimeoutParameters;
 import com.esotericsoftware.kryo.Kryo;
 import java.time.Duration;
 
-/**
- * We are trying to remain as independent from Kryo as possible.
- * All the classes which get saved inside DelegateResponseData need to be registered as our
- * WaitNotify engine used that.
- */
 @OwnedBy(CDC)
 public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {
   @Override
@@ -40,5 +37,7 @@ public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(StepDetailInstance.class, 87603);
 
     kryo.register(PmsStepParameters.class, 88405);
+    kryo.register(PmsOutcome.class, 88402);
+    kryo.register(PmsSweepingOutput.class, 88403);
   }
 }

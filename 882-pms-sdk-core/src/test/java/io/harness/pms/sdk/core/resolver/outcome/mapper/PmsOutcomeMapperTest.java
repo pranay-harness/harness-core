@@ -68,16 +68,6 @@ public class PmsOutcomeMapperTest extends PmsSdkCoreTestBase {
     assertThat(PmsOutcomeMapper.convertJsonToOutcome(jsons).size()).isEqualTo(2);
   }
 
-  @Test
-  @Owner(developers = SAHIL)
-  @Category(UnitTests.class)
-  public void testConvertJsonToOrchestrationMap() {
-    Map<String, String> jsons = new HashMap<>();
-    jsons.put("key", "test");
-    assertThat(PmsOutcomeMapper.convertJsonToOrchestrationMap(jsons)).isNotNull();
-    assertThat(PmsOutcomeMapper.convertJsonToOrchestrationMap(jsons).size()).isEqualTo(1);
-  }
-
   @Data
   @Builder
   public static class DummyOutcome implements Outcome {
