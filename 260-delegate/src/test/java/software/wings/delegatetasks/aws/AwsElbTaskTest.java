@@ -57,22 +57,22 @@ public class AwsElbTaskTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testRun() {
     AwsElbRequest request = AwsElbListClassicElbsRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockElbHelperServiceDelegate).listClassicLoadBalancers(any(), anyList(), anyString());
     request = AwsElbListAppElbsRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockElbHelperServiceDelegate).listApplicationLoadBalancerDetails(any(), anyList(), anyString());
     request = AwsElbListTargetGroupsRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockElbHelperServiceDelegate).listTargetGroupsForAlb(any(), anyList(), anyString(), anyString());
     request = AwsElbListElbsRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockElbHelperServiceDelegate).listElasticLoadBalancerDetails(any(), anyList(), anyString());
     request = AwsElbListNetworkElbsRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockElbHelperServiceDelegate).listNetworkLoadBalancerDetails(any(), anyList(), anyString());
     request = AwsElbListListenerRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockElbHelperServiceDelegate).getElbListenersForLoadBalaner(any(), anyList(), anyString(), anyString());
   }
 }

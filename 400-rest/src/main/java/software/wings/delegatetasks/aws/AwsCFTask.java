@@ -42,12 +42,7 @@ public class AwsCFTask extends AbstractDelegateRunnableTask {
 
   @Override
   public AwsResponse run(TaskParameters parameters) {
-    throw new NotImplementedException("not implemented");
-  }
-
-  @Override
-  public AwsResponse run(Object[] parameters) {
-    AwsCFRequest request = (AwsCFRequest) parameters[0];
+    AwsCFRequest request = (AwsCFRequest) parameters;
     try {
       AwsCFRequestType requestType = request.getRequestType();
       switch (requestType) {
@@ -68,5 +63,10 @@ public class AwsCFTask extends AbstractDelegateRunnableTask {
     } catch (Exception ex) {
       throw new InvalidRequestException(ex.getMessage(), WingsException.USER);
     }
+  }
+
+  @Override
+  public AwsResponse run(Object[] parameters) {
+    throw new NotImplementedException("not implemented");
   }
 }

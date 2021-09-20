@@ -50,12 +50,7 @@ public class AwsElbTask extends AbstractDelegateRunnableTask {
 
   @Override
   public AwsResponse run(TaskParameters parameters) {
-    throw new NotImplementedException("not implemented");
-  }
-
-  @Override
-  public AwsResponse run(Object[] parameters) {
-    AwsElbRequest request = (AwsElbRequest) parameters[0];
+    AwsElbRequest request = (AwsElbRequest) parameters;
     try {
       AwsElbRequestType requestType = request.getRequestType();
       switch (requestType) {
@@ -100,6 +95,11 @@ public class AwsElbTask extends AbstractDelegateRunnableTask {
     } catch (Exception exception) {
       throw new InvalidRequestException(exception.getMessage(), WingsException.USER);
     }
+  }
+
+  @Override
+  public AwsResponse run(Object[] parameters) {
+    throw new NotImplementedException("not implemented");
   }
 
   private List<String> generateLoadBalancerNamesList(List<AwsLoadBalancerDetails> details) {

@@ -49,12 +49,7 @@ public class AwsCodeDeployTask extends AbstractDelegateRunnableTask {
 
   @Override
   public AwsResponse run(TaskParameters parameters) {
-    throw new NotImplementedException("not implemented");
-  }
-
-  @Override
-  public AwsResponse run(Object[] parameters) {
-    AwsCodeDeployRequest request = (AwsCodeDeployRequest) parameters[0];
+    AwsCodeDeployRequest request = (AwsCodeDeployRequest) parameters;
     AwsCodeDeployRequestType requestType = request.getRequestType();
     try {
       switch (requestType) {
@@ -108,5 +103,10 @@ public class AwsCodeDeployTask extends AbstractDelegateRunnableTask {
     } catch (Exception ex) {
       throw new InvalidRequestException(ex.getMessage(), WingsException.USER);
     }
+  }
+
+  @Override
+  public AwsResponse run(Object[] parameters) {
+    throw new NotImplementedException("not implemented");
   }
 }

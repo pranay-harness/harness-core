@@ -53,7 +53,7 @@ public class AwsCFTaskTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testRun() {
     AwsCFRequest request = AwsCFGetTemplateParamsRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockAwsCFHelperServiceDelegate)
         .getParamsData(any(), anyList(), anyString(), anyString(), anyString(), anyObject(), anyObject(), anyList());
   }

@@ -56,19 +56,19 @@ public class AwsCodeDeployTaskTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testRun() {
     AwsCodeDeployRequest request = AwsCodeDeployListAppRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockAwsCodeDeployHelperServiceDelegate).listApplications(any(), anyList(), anyString());
     request = AwsCodeDeployListDeploymentConfigRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockAwsCodeDeployHelperServiceDelegate).listDeploymentConfiguration(any(), anyList(), anyString());
     request = AwsCodeDeployListDeploymentGroupRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockAwsCodeDeployHelperServiceDelegate).listDeploymentGroups(any(), anyList(), anyString(), anyString());
     request = AwsCodeDeployListDeploymentInstancesRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockAwsCodeDeployHelperServiceDelegate).listDeploymentInstances(any(), anyList(), anyString(), anyString());
     request = AwsCodeDeployListAppRevisionRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockAwsCodeDeployHelperServiceDelegate)
         .listAppRevision(any(), anyList(), anyString(), anyString(), anyString());
   }

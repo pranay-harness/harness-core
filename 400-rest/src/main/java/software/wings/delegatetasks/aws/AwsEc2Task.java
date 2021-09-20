@@ -53,12 +53,7 @@ public class AwsEc2Task extends AbstractDelegateRunnableTask {
 
   @Override
   public AwsResponse run(TaskParameters parameters) {
-    throw new NotImplementedException("not implemented");
-  }
-
-  @Override
-  public AwsResponse run(Object[] parameters) {
-    AwsEc2Request request = (AwsEc2Request) parameters[0];
+    AwsEc2Request request = (AwsEc2Request) parameters;
     try {
       AwsEc2RequestType requestType = request.getRequestType();
       switch (requestType) {
@@ -107,5 +102,10 @@ public class AwsEc2Task extends AbstractDelegateRunnableTask {
     } catch (Exception ex) {
       throw new InvalidRequestException(ex.getMessage(), WingsException.USER);
     }
+  }
+
+  @Override
+  public AwsResponse run(Object[] parameters) {
+    throw new NotImplementedException("not implemented");
   }
 }

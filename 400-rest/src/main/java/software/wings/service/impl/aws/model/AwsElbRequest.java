@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
@@ -18,7 +19,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 @OwnedBy(CDP)
-public class AwsElbRequest extends AwsRequest {
+public class AwsElbRequest extends AwsRequest implements TaskParameters {
   public enum AwsElbRequestType {
     LIST_CLASSIC_ELBS,
     LIST_APPLICATION_LBS,
