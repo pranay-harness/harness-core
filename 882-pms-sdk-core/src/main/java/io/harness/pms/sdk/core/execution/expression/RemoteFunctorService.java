@@ -11,6 +11,7 @@ import io.harness.pms.contracts.expression.ExpressionResponse;
 import io.harness.pms.contracts.expression.RemoteFunctorServiceGrpc.RemoteFunctorServiceImplBase;
 import io.harness.pms.sdk.core.registries.FunctorRegistry;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
+import io.harness.utils.RecastReflectionUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -31,9 +32,15 @@ public class RemoteFunctorService extends RemoteFunctorServiceImplBase {
     try {
       SdkFunctor functor = functorRegistry.obtain(request.getFunctorKey());
       ProtocolStringList argsList = request.getArgsList();
-      ExpressionResult expressionResult = functor.get(request.getAmbiance(), argsList.toArray(new String[0]));
-      expressionResponse =
-          ExpressionResponse.newBuilder().setValue(RecastOrchestrationUtils.toJson(expressionResult)).build();
+      Object result = functor.get(request.getAmbiance(), argsList.toArray(new String[0]));
+      if (RecastReflectionUtils.isPrimitiveLike(result.getClass())) {
+        expressionResponse = ExpressionResponse.newBuilder().setIsPrimitive(true).setValue(result.toString()).build();
+      } else {
+        expressionResponse = ExpressionResponse.newBuilder()
+                                 .setIsPrimitive(false)
+                                 .setValue(RecastOrchestrationUtils.toSimpleJson(result))
+                                 .build();
+      }
     } catch (Exception ex) {
       log.error(ExceptionUtils.getMessage(ex), ex);
       WingsException processedException = exceptionManager.processException(ex);

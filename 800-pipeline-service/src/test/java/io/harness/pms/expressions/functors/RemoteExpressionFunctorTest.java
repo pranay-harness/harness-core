@@ -53,7 +53,7 @@ public class RemoteExpressionFunctorTest extends CategoryTest {
     doReturn(ExpressionResponse.newBuilder().setValue(expressionResponseJson).build())
         .when(blockingStub)
         .evaluate(any());
-    Map<String, Object> map = (Map<String, Object>) remoteExpressionFunctor.get();
+    Map<String, Object> map = (Map<String, Object>) remoteExpressionFunctor.get("empty");
     verify(blockingStub, times(1)).evaluate(argumentCaptor.capture());
     ExpressionRequest request = argumentCaptor.getValue();
     assertEquals(request.getAmbiance(), ambiance);
