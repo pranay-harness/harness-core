@@ -5,7 +5,6 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.licensing.Edition;
 import io.harness.licensing.LicenseStatus;
-import io.harness.licensing.LicenseType;
 import io.harness.licensing.beans.modules.ModuleLicenseDTO;
 import io.harness.licensing.interfaces.clients.ModuleLicenseClient;
 
@@ -20,24 +19,26 @@ public class ModuleLicenseImpl implements ModuleLicenseInterface {
   public static final long TRIAL_DURATION = 14;
 
   @Override
-  public ModuleLicenseDTO generateTrialLicense(
-      Edition edition, String accountId, LicenseType licenseType, ModuleType moduleType) {
-    ModuleLicenseDTO trialLicense = clientMap.get(moduleType).createTrialLicense(edition, accountId, licenseType);
+  public ModuleLicenseDTO generateFreeLicense(String accountId, ModuleType moduleType) {
+    ModuleLicenseDTO trialLicense = clientMap.get(moduleType).createTrialLicense(Edition.FREE, accountId);
     trialLicense.setAccountIdentifier(accountId);
-    checkAndSetDefault(trialLicense, moduleType, licenseType, edition);
     return trialLicense;
   }
 
-  private void checkAndSetDefault(
-      ModuleLicenseDTO moduleLicenseDTO, ModuleType moduleType, LicenseType type, Edition edition) {
+  @Override
+  public ModuleLicenseDTO generateTrialLicense(Edition edition, String accountId, ModuleType moduleType) {
+    ModuleLicenseDTO trialLicense = clientMap.get(moduleType).createTrialLicense(edition, accountId);
+    trialLicense.setAccountIdentifier(accountId);
+    checkAndSetDefault(trialLicense, moduleType, edition);
+    return trialLicense;
+  }
+
+  private void checkAndSetDefault(ModuleLicenseDTO moduleLicenseDTO, ModuleType moduleType, Edition edition) {
     if (moduleLicenseDTO.getModuleType() == null) {
       moduleLicenseDTO.setModuleType(moduleType);
     }
     if (moduleLicenseDTO.getEdition() == null) {
       moduleLicenseDTO.setEdition(edition);
-    }
-    if (moduleLicenseDTO.getLicenseType() == null) {
-      moduleLicenseDTO.setLicenseType(type);
     }
     if (moduleLicenseDTO.getStatus() == null) {
       moduleLicenseDTO.setStatus(LicenseStatus.ACTIVE);
