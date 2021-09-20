@@ -1,11 +1,22 @@
 package io.harness.pms.migration;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.ngtriggers.beans.source.WebhookTriggerType.BITBUCKET;
+import static io.harness.ngtriggers.beans.source.WebhookTriggerType.GITHUB;
+import static io.harness.ngtriggers.beans.source.webhook.v2.github.event.GithubTriggerEvent.PULL_REQUEST;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.migration.NGMigration;
+import io.harness.ngtriggers.beans.config.NGTriggerConfigV2;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityKeys;
+import io.harness.ngtriggers.beans.source.NGTriggerSourceV2;
+import io.harness.ngtriggers.beans.source.NGTriggerType;
+import io.harness.ngtriggers.beans.source.webhook.v2.WebhookTriggerConfigV2;
+import io.harness.ngtriggers.beans.source.webhook.v2.bitbucket.BitbucketSpec;
+import io.harness.ngtriggers.beans.source.webhook.v2.bitbucket.event.BitbucketTriggerEvent;
+import io.harness.ngtriggers.beans.source.webhook.v2.github.GithubSpec;
+import io.harness.ngtriggers.mapper.NGTriggerElementMapper;
 import io.harness.utils.RetryUtils;
 
 import com.google.common.collect.ImmutableList;
@@ -32,6 +43,7 @@ import org.springframework.data.mongodb.core.query.Update;
 @Slf4j
 public class PMSTriggerMigration implements NGMigration {
   @Inject private final MongoTemplate mongoTemplate;
+  @Inject private NGTriggerElementMapper ngTriggerElementMapper;
   private final RetryPolicy<Object> updateRetryPolicy = RetryUtils.getRetryPolicy(
       "[Retrying]: Failed updating Trigger; attempt: {}", "[Failed]: Failed updating Trigger; attempt: {}",
       ImmutableList.of(OptimisticLockingFailureException.class, DuplicateKeyException.class), Duration.ofSeconds(1), 3,
@@ -52,18 +64,29 @@ public class PMSTriggerMigration implements NGMigration {
         break;
       }
       for (NGTriggerEntity ngTriggerEntity : triggers) {
-        String triggerYaml = ngTriggerEntity.getYaml();
-        String updatedYaml = triggerYaml.replace("type: branch", "type: PR")
-                                 .replace("branch: <+trigger.branch>", "number: <+trigger.prNumber>");
+        try {
+          String triggerYaml = ngTriggerEntity.getYaml();
+          if (ngTriggerEntity.getType() == NGTriggerType.WEBHOOK) {
+            NGTriggerConfigV2 ngTriggerConfig = ngTriggerElementMapper.toTriggerConfigV2(ngTriggerEntity.getYaml());
+            NGTriggerSourceV2 source = ngTriggerConfig.getSource();
+            WebhookTriggerConfigV2 webhookTriggerConfigV2 = (WebhookTriggerConfigV2) source.getSpec();
+            if (updateYAML(webhookTriggerConfigV2)) {
+              String updatedYaml = triggerYaml.replace("type: branch", "type: PR")
+                                       .replace("branch: <+trigger.branch>", "number: <+trigger.prNumber>");
 
-        Update update = new Update();
-        update.set(NGTriggerEntityKeys.yaml, updatedYaml);
+              Update update = new Update();
+              update.set(NGTriggerEntityKeys.yaml, updatedYaml);
 
-        Query query1 = new Query(Criteria.where(NGTriggerEntityKeys.uuid).is(ngTriggerEntity.getUuid()));
-        Failsafe.with(updateRetryPolicy)
-            .get(()
-                     -> mongoTemplate.findAndModify(
-                         query1, update, new FindAndModifyOptions().returnNew(true), NGTriggerEntity.class));
+              Query query1 = new Query(Criteria.where(NGTriggerEntityKeys.uuid).is(ngTriggerEntity.getUuid()));
+              Failsafe.with(updateRetryPolicy)
+                  .get(()
+                           -> mongoTemplate.findAndModify(
+                               query1, update, new FindAndModifyOptions().returnNew(true), NGTriggerEntity.class));
+            }
+          }
+        } catch (Exception ex) {
+          log.error("Trigger migration failed");
+        }
       }
 
       pageIdx++;
@@ -71,5 +94,18 @@ public class PMSTriggerMigration implements NGMigration {
         log.info("NGTrigger migration in process...");
       }
     }
+  }
+  private boolean updateYAML(WebhookTriggerConfigV2 webhookTriggerConfigV2) {
+    if (webhookTriggerConfigV2.getType() == GITHUB) {
+      GithubSpec githubSpec = (GithubSpec) webhookTriggerConfigV2.getSpec();
+      return githubSpec.getType() == PULL_REQUEST;
+    }
+
+    if (webhookTriggerConfigV2.getType() == BITBUCKET) {
+      BitbucketSpec bitbucketSpec = (BitbucketSpec) webhookTriggerConfigV2.getSpec();
+      return bitbucketSpec.getType() == BitbucketTriggerEvent.PULL_REQUEST;
+    }
+
+    return false;
   }
 }

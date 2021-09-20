@@ -161,6 +161,11 @@ public class IntegrationStageUtils {
             RunTimeInputHandler.resolveStringParameter("number", "Git Clone", "identifier", number, false);
         if (!numberString.equals(PR_EXPRESSION)) {
           return true;
+        } else {
+          if (webhookExecutionSource.getWebhookEvent().getType() == BRANCH) {
+            throw new CIStageExecutionException(
+                "Building PR with expression <+trigger.prNumber> for push event is not supported");
+          }
         }
       }
 
