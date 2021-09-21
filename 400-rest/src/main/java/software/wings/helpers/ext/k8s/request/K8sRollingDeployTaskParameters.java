@@ -39,9 +39,10 @@ public class K8sRollingDeployTaskParameters extends K8sTaskParameters implements
       K8sTaskType k8sTaskType, K8sClusterConfig k8sClusterConfig, String workflowExecutionId, String releaseName,
       Integer timeoutIntervalInMin, K8sDelegateManifestConfig k8sDelegateManifestConfig, List<String> valuesYamlList,
       boolean isInCanaryWorkflow, boolean skipDryRun, HelmVersion helmVersion, boolean localOverrideFeatureFlag,
-      Boolean skipVersioningForAllK8sObjects, Set<String> delegateSelectors, boolean isPruningEnabled) {
+      Boolean skipVersioningForAllK8sObjects, Set<String> delegateSelectors, boolean isPruningEnabled,
+      boolean useLatestChartMuseumVersion) {
     super(accountId, appId, commandName, activityId, k8sClusterConfig, workflowExecutionId, releaseName,
-        timeoutIntervalInMin, k8sTaskType, helmVersion, delegateSelectors);
+        timeoutIntervalInMin, k8sTaskType, helmVersion, delegateSelectors, useLatestChartMuseumVersion);
     this.k8sDelegateManifestConfig = k8sDelegateManifestConfig;
     this.valuesYamlList = valuesYamlList;
     this.isInCanaryWorkflow = isInCanaryWorkflow;

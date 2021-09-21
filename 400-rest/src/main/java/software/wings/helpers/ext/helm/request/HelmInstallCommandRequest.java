@@ -48,12 +48,13 @@ public class HelmInstallCommandRequest extends HelmCommandRequest {
       String repoName, GitConfig gitConfig, GitFileConfig gitFileConfig, List<EncryptedDataDetail> encryptedDataDetails,
       LogCallback executionLogCallback, String commandFlags, HelmCommandFlag helmCommandFlag,
       K8sDelegateManifestConfig sourceRepoConfig, HelmVersion helmVersion, String ocPath, String workingDir,
-      boolean k8SteadyStateCheckEnabled, boolean mergeCapabilities, boolean isGitHostConnectivityCheck) {
+      boolean k8SteadyStateCheckEnabled, boolean mergeCapabilities, boolean isGitHostConnectivityCheck,
+      boolean useLatestChartMuseumVersion) {
     super(HelmCommandType.INSTALL, accountId, appId, kubeConfigLocation, commandName, activityId,
         containerServiceParams, releaseName, chartSpecification, repoName, gitConfig, encryptedDataDetails,
         executionLogCallback, commandFlags, helmCommandFlag, sourceRepoConfig, helmVersion, ocPath, workingDir,
         variableOverridesYamlFiles, gitFileConfig, k8SteadyStateCheckEnabled, mergeCapabilities,
-        isGitHostConnectivityCheck);
+        isGitHostConnectivityCheck, useLatestChartMuseumVersion);
     this.newReleaseVersion = newReleaseVersion;
     this.prevReleaseVersion = prevReleaseVersion;
     this.namespace = namespace;

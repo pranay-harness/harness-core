@@ -24,9 +24,9 @@ public class K8sCanaryRollbackTaskParameters extends K8sTaskParameters {
   public K8sCanaryRollbackTaskParameters(String accountId, String appId, String commandName, String activityId,
       K8sTaskType k8sTaskType, K8sClusterConfig k8sClusterConfig, String workflowExecutionId, String releaseName,
       Integer timeoutIntervalInMin, Integer releaseNumber, Integer targetReplicas, HelmVersion helmVersion,
-      Set<String> delegateSelectors) {
+      Set<String> delegateSelectors, boolean useLatestChartMuseumVersion) {
     super(accountId, appId, commandName, activityId, k8sClusterConfig, workflowExecutionId, releaseName,
-        timeoutIntervalInMin, k8sTaskType, helmVersion, delegateSelectors);
+        timeoutIntervalInMin, k8sTaskType, helmVersion, delegateSelectors, useLatestChartMuseumVersion);
     this.releaseNumber = releaseNumber;
     this.targetReplicas = targetReplicas;
   }

@@ -48,6 +48,7 @@ public class HelmValuesFetchTaskParameters implements TaskParameters, ActivityAc
 
   private HelmChartConfigParams helmChartConfigTaskParams;
   private Map<String, List<String>> mapK8sValuesLocationToFilePaths;
+  private boolean useLatestChartMuseumVersion;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
