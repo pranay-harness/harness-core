@@ -153,8 +153,8 @@ public abstract class AbstractAzureAppServiceState extends State {
   }
 
   private ExecutionResponse executeRemoteGITFetchTask(ExecutionContext context, Activity activity,
-      Map<String, ApplicationManifest> remoteManifests,
-      Map<String, ApplicationManifest> appServiceConfigurationManifests) {
+      Map<String, ApplicationManifest> appServiceConfigurationManifests,
+      Map<String, ApplicationManifest> remoteManifests) {
     Map<String, GitFetchFilesConfig> filesConfigMap = new HashMap<>();
     remoteManifests.forEach(
         (key, value) -> filesConfigMap.put(key, createGitFetchFilesConfig(value.getGitFileConfig(), context)));
