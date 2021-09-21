@@ -6,6 +6,8 @@ import static io.harness.rule.OwnerRule.ARCHIT;
 import static junit.framework.TestCase.assertEquals;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -105,9 +107,9 @@ public class TemplateEntityGitSyncHandlerTest extends CategoryTest {
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
   public void testSave() throws IOException {
-    doReturn(entity.withVersion(0L)).when(templateService).create(any());
+    doReturn(entity.withVersion(0L)).when(templateService).create(any(), anyBoolean(), anyString());
     NGTemplateConfig templateConfig = templateEntityGitSyncHandler.save(ACCOUNT_ID, yaml);
-    verify(templateService, times(1)).create(any());
+    verify(templateService, times(1)).create(any(), anyBoolean(), anyString());
     assertThat(templateConfig).isEqualTo(YamlPipelineUtils.read(yaml, NGTemplateConfig.class));
   }
 
@@ -115,9 +117,11 @@ public class TemplateEntityGitSyncHandlerTest extends CategoryTest {
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
   public void testUpdate() throws IOException {
-    doReturn(entity.withVersion(1L)).when(templateService).updateTemplateEntity(any(), any());
+    doReturn(entity.withVersion(1L))
+        .when(templateService)
+        .updateTemplateEntity(any(), any(), anyBoolean(), anyString());
     NGTemplateConfig templateConfig = templateEntityGitSyncHandler.update(ACCOUNT_ID, yaml, ChangeType.NONE);
-    verify(templateService, times(1)).updateTemplateEntity(any(), any());
+    verify(templateService, times(1)).updateTemplateEntity(any(), any(), anyBoolean(), anyString());
     assertThat(templateConfig).isEqualTo(YamlPipelineUtils.read(yaml, NGTemplateConfig.class));
   }
 
@@ -134,7 +138,7 @@ public class TemplateEntityGitSyncHandlerTest extends CategoryTest {
                                         .build();
     doReturn(true)
         .when(templateService)
-        .delete(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, TEMPLATE_VERSION_LABEL, null);
+        .delete(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, TEMPLATE_VERSION_LABEL, null, "");
     assertThat(templateEntityGitSyncHandler.delete(reference)).isTrue();
   }
 

@@ -78,6 +78,7 @@ public class TemplateEntity
 
   @Wither String versionLabel;
   @Wither boolean isStableTemplate;
+  @Wither boolean isLastUpdatedTemplate;
   @Wither TemplateEntityType templateEntityType;
   @Wither String childType;
   @Wither Scope templateScope;
@@ -128,6 +129,16 @@ public class TemplateEntity
                  .field(TemplateEntityKeys.projectIdentifier)
                  .field(TemplateEntityKeys.identifier)
                  .field(TemplateEntityKeys.isStableTemplate)
+                 .field(TemplateEntityKeys.yamlGitConfigRef)
+                 .field(TemplateEntityKeys.branch)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("accountId_organizationId_projectId_identifier_isLastUpdated_repo_branch")
+                 .field(TemplateEntityKeys.accountId)
+                 .field(TemplateEntityKeys.orgIdentifier)
+                 .field(TemplateEntityKeys.projectIdentifier)
+                 .field(TemplateEntityKeys.identifier)
+                 .field(TemplateEntityKeys.isLastUpdatedTemplate)
                  .field(TemplateEntityKeys.yamlGitConfigRef)
                  .field(TemplateEntityKeys.branch)
                  .build())

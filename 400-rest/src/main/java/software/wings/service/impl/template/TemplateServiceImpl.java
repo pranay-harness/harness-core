@@ -44,11 +44,14 @@ import static software.wings.exception.TemplateException.templateLinkedException
 import static java.lang.String.format;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
@@ -87,6 +90,7 @@ import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.beans.template.deploymenttype.CustomDeploymentTypeTemplate;
 import software.wings.beans.template.dto.HarnessImportedTemplateDetails;
 import software.wings.beans.template.dto.ImportedTemplateDetails;
+import software.wings.beans.template.dto.TemplateMetaData;
 import software.wings.beans.yaml.YamlType;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.TemplateException;
@@ -119,6 +123,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
@@ -132,6 +137,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 @ValidateOnExecution
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
 public class TemplateServiceImpl implements TemplateService {
   private static final String ACCOUNT = "Account";
   private static final String APPLICATION = "Application";
@@ -165,6 +171,42 @@ public class TemplateServiceImpl implements TemplateService {
     }
 
     return pageResponse;
+  }
+
+  @Override
+  public List<TemplateMetaData> listTemplatesWithMetadata(Set<String> appIds, String accountId) {
+    List<TemplateMetaData> templateResponseList = new ArrayList<>();
+
+    final List<Template> templates = wingsPersistence.createQuery(Template.class)
+                                         .filter(TemplateKeys.accountId, accountId)
+                                         .field(TemplateKeys.appId)
+                                         .in(appIds)
+                                         .asList();
+
+    if (isNotEmpty(templates)) {
+      Set<String> templateFolderIds = templates.stream().map(Template::getFolderId).collect(Collectors.toSet());
+      if (isNotEmpty(templateFolderIds)) {
+        final List<TemplateFolder> templateFolders =
+            templateHelper.getFolderDetails(accountId, templateFolderIds, new ArrayList<>(appIds));
+        if (isNotEmpty(templateFolders)) {
+          final Map<String, TemplateFolder> templateFolderIdToEntityMapping =
+              templateFolders.stream().collect(Collectors.toMap(TemplateFolder::getUuid, Function.identity()));
+          templateResponseList =
+              templates.stream()
+                  .map(template
+                      -> TemplateMetaData.builder()
+                             .appId(template.getAppId())
+                             .uuid(template.getUuid())
+                             .name(template.getName())
+                             .folderName(templateFolderIdToEntityMapping.get(template.getFolderId()) != null
+                                     ? templateFolderIdToEntityMapping.get(template.getFolderId()).getName()
+                                     : HARNESS_GALLERY)
+                             .build())
+                  .collect(Collectors.toList());
+        }
+      }
+    }
+    return templateResponseList;
   }
 
   private void addSearchFilterForGalleryIds(
@@ -834,6 +876,12 @@ public class TemplateServiceImpl implements TemplateService {
                                            .asKeyList();
     List<String> templateUuids =
         templateKeys.stream().map(templateKey -> templateKey.getId().toString()).collect(Collectors.toList());
+    if (templateFolder.getAppId() != GLOBAL_APP_ID
+        && !templateHelper.shouldAllowTemplateFolderDeletion(templateFolder.getAppId(), new HashSet<>(templateUuids))) {
+      throw new InvalidRequestException(
+          String.format("User not allowed to delete template folder with id %s", templateFolder.getUuid()),
+          ErrorCode.ACCESS_DENIED, USER);
+    }
 
     if (isEmpty(templateUuids)) {
       log.info("No templates under the folder {}", templateFolder.getName());

@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.security.dto.PrincipalType.USER;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -107,15 +108,15 @@ public class UserResourceNG {
     UserInfo userInfo = convertUserToNgUser(createdUser);
     userInfo.setIntent(userInviteInDB.getIntent());
 
-    if (userInviteInDB.getSignupAction() != null) {
+    if (isNotEmpty(userInviteInDB.getSignupAction())) {
       userInfo.setSignupAction(userInviteInDB.getSignupAction());
     }
 
-    if (userInviteInDB.getEdition() != null) {
+    if (isNotEmpty(userInviteInDB.getEdition())) {
       userInfo.setEdition(userInviteInDB.getEdition());
     }
 
-    if (userInviteInDB.getBillingFrequency() != null) {
+    if (isNotEmpty(userInviteInDB.getBillingFrequency())) {
       userInfo.setBillingFrequency(userInviteInDB.getBillingFrequency());
     }
 

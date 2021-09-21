@@ -9,6 +9,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.noop;
 
+import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.beans.security.UserGroup.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME;
 import static software.wings.beans.security.UserGroup.DEFAULT_NON_PROD_SUPPORT_USER_GROUP_NAME;
 import static software.wings.beans.security.UserGroup.DEFAULT_PROD_SUPPORT_USER_GROUP_NAME;
@@ -17,6 +18,7 @@ import static software.wings.security.EnvFilter.FilterType.PROD;
 import static software.wings.security.GenericEntityFilter.FilterType.SELECTED;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.ALL_APP_ENTITIES;
+import static software.wings.security.PermissionAttribute.PermissionType.APP_TEMPLATE;
 import static software.wings.security.PermissionAttribute.PermissionType.AUDIT_VIEWER;
 import static software.wings.security.PermissionAttribute.PermissionType.CE_ADMIN;
 import static software.wings.security.PermissionAttribute.PermissionType.CE_VIEWER;
@@ -81,6 +83,8 @@ import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.UserGroup.UserGroupBuilder;
+import software.wings.beans.template.Template;
+import software.wings.beans.template.Template.TemplateKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.security.AccountPermissionSummary;
@@ -113,6 +117,8 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.template.TemplateGalleryService;
+import software.wings.service.intfc.template.TemplateService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.EnvState.EnvStateKeys;
 
@@ -179,6 +185,8 @@ public class AuthHandler {
   @Inject private ApiKeyService apiKeyService;
   @Inject private HarnessApiKeyService harnessApiKeyService;
   @Inject private WorkflowServiceHelper workflowServiceHelper;
+  @Inject private TemplateService templateService;
+  @Inject private TemplateGalleryService templateGalleryService;
 
   public UserPermissionInfo evaluateUserPermissionInfo(String accountId, List<UserGroup> userGroups, User user) {
     UserPermissionInfoBuilder userPermissionInfoBuilder = UserPermissionInfo.builder().accountId(accountId);
@@ -240,7 +248,7 @@ public class AuthHandler {
         PermissionType permissionType = appPermission.getPermissionType();
 
         if (permissionType == ALL_APP_ENTITIES) {
-          asList(SERVICE, PROVISIONER, ENV, WORKFLOW, DEPLOYMENT).forEach(permissionType1 -> {
+          asList(SERVICE, PROVISIONER, ENV, WORKFLOW, DEPLOYMENT, APP_TEMPLATE).forEach(permissionType1 -> {
             // ignoring entity filter in case of ALL_APP_ENTITIES
             attachPermission(appPermissionMap, permissionTypeAppIdEntityMap, appIds, permissionType1, null,
                 appPermission.getActions());
@@ -537,6 +545,25 @@ public class AuthHandler {
           }
           break;
         }
+        case APP_TEMPLATE: {
+          if (actions.contains(Action.CREATE)) {
+            appPermissionSummary.setCanCreateTemplate(true);
+          }
+
+          if (isEmpty(entityActions)) {
+            break;
+          }
+
+          Set<String> entityIds = getTemplateIdsByFilter(
+              permissionTypeAppIdEntityMap.get(permissionType).get(appId), (GenericEntityFilter) entityFilter);
+          if (isEmpty(entityIds)) {
+            break;
+          }
+          Map<Action, Set<String>> actionEntityIdMap =
+              buildActionEntityMap(finalAppPermissionSummary.getTemplatePermissions(), entityIds, entityActions);
+          finalAppPermissionSummary.setTemplatePermissions(actionEntityIdMap);
+          break;
+        }
         default:
           noop();
       }
@@ -718,6 +745,10 @@ public class AuthHandler {
           permissionTypeAppIdEntityMap.put(permissionType, getAppIdPipelineMap(accountId));
           break;
         }
+        case APP_TEMPLATE: {
+          permissionTypeAppIdEntityMap.put(permissionType, getAppIdTemplateMap(accountId));
+          break;
+        }
         default: {
           noop();
         }
@@ -772,6 +803,18 @@ public class AuthHandler {
     return list.stream().collect(Collectors.groupingBy(Base::getAppId));
   }
 
+  private Map<String, List<Base>> getAppIdTemplateMap(String accountId) {
+    PageRequest<Template> pageRequest = aPageRequest()
+                                            .addFilter(TemplateKeys.accountId, Operator.EQ, accountId)
+                                            .addFilter(TemplateKeys.appId, Operator.NOT_EQ, GLOBAL_APP_ID)
+                                            .build();
+    List<Template> list = getAllEntities(pageRequest,
+        ()
+            -> templateService.list(pageRequest,
+                Collections.singletonList(templateGalleryService.getAccountGalleryKey().name()), accountId, false));
+    return list.stream().collect(Collectors.groupingBy(Base::getAppId));
+  }
+
   private void populateRequiredAccountPermissions(
       List<UserGroup> userGroups, Set<PermissionType> accountPermissionSet) {
     userGroups.forEach(userGroup -> {
@@ -789,7 +832,7 @@ public class AuthHandler {
       List<UserGroup> userGroups, HashSet<String> allAppIds) {
     Map<PermissionType, Set<String>> permissionTypeAppIdSetMap = new HashMap<>();
     // initialize
-    asList(SERVICE, PROVISIONER, ENV, WORKFLOW, PIPELINE, DEPLOYMENT)
+    asList(SERVICE, PROVISIONER, ENV, WORKFLOW, PIPELINE, DEPLOYMENT, APP_TEMPLATE)
         .forEach(permissionType -> permissionTypeAppIdSetMap.put(permissionType, new HashSet<>()));
 
     userGroups.forEach(userGroup -> {
@@ -805,7 +848,7 @@ public class AuthHandler {
         }
         PermissionType permissionType = appPermission.getPermissionType();
         if (permissionType == PermissionType.ALL_APP_ENTITIES) {
-          asList(SERVICE, PROVISIONER, ENV, WORKFLOW, PIPELINE, DEPLOYMENT).forEach(permissionType1 -> {
+          asList(SERVICE, PROVISIONER, ENV, WORKFLOW, PIPELINE, DEPLOYMENT, APP_TEMPLATE).forEach(permissionType1 -> {
             permissionTypeAppIdSetMap.get(permissionType1).addAll(appIdSet);
           });
         } else {
@@ -954,6 +997,8 @@ public class AuthHandler {
           entityPermissions = appPermissionSummary.getPipelinePermissions();
         } else if (permissionType == DEPLOYMENT) {
           entityPermissions = appPermissionSummary.getDeploymentPermissions();
+        } else if (permissionType == APP_TEMPLATE) {
+          entityPermissions = appPermissionSummary.getTemplatePermissions();
         }
 
         if (isEmpty(entityPermissions)) {
@@ -1010,6 +1055,8 @@ public class AuthHandler {
                 className = Pipeline.class.getName();
               } else if (permissionType == DEPLOYMENT) {
                 className = WorkflowExecution.class.getName();
+              } else if (permissionType == APP_TEMPLATE) {
+                className = Template.class.getName();
               } else {
                 throw new InvalidRequestException("Invalid permission type: " + permissionType);
               }
@@ -1043,6 +1090,29 @@ public class AuthHandler {
           .collect(Collectors.toSet());
     } else {
       String msg = "Unknown service filter type: " + serviceFilter.getFilterType();
+      log.error(msg);
+      throw new InvalidRequestException(msg);
+    }
+  }
+
+  private Set<String> getTemplateIdsByFilter(List<Base> templates, GenericEntityFilter templateFilter) {
+    if (isEmpty(templates)) {
+      return new HashSet<>();
+    }
+    if (templateFilter == null) {
+      templateFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
+    }
+
+    if (FilterType.ALL.equals(templateFilter.getFilterType())) {
+      return templates.stream().map(Base::getUuid).collect(Collectors.toSet());
+    } else if (SELECTED.equals(templateFilter.getFilterType())) {
+      GenericEntityFilter finalTemplateFilter = templateFilter;
+      return templates.stream()
+          .filter(service -> finalTemplateFilter.getIds().contains(service.getUuid()))
+          .map(Base::getUuid)
+          .collect(Collectors.toSet());
+    } else {
+      String msg = "Unknown template filter type: " + templateFilter.getFilterType();
       log.error(msg);
       throw new InvalidRequestException(msg);
     }
@@ -1522,12 +1592,14 @@ public class AuthHandler {
             .canCreateEnvironment(fromSummary.isCanCreateEnvironment())
             .canCreateWorkflow(fromSummary.isCanCreateWorkflow())
             .canCreatePipeline(fromSummary.isCanCreatePipeline())
+            .canCreateTemplate(fromSummary.isCanCreateTemplate())
             .servicePermissions(convertActionEntityIdMapToEntityActionMap(fromSummary.getServicePermissions()))
             .provisionerPermissions(convertActionEntityIdMapToEntityActionMap(fromSummary.getProvisionerPermissions()))
             .envPermissions(convertActionEnvMapToEnvActionMap(fromSummary.getEnvPermissions()))
             .workflowPermissions(convertActionEntityIdMapToEntityActionMap(fromSummary.getWorkflowPermissions()))
             .pipelinePermissions(convertActionEntityIdMapToEntityActionMap(fromSummary.getPipelinePermissions()))
-            .deploymentPermissions(convertActionEntityIdMapToEntityActionMap(fromSummary.getDeploymentPermissions()));
+            .deploymentPermissions(convertActionEntityIdMapToEntityActionMap(fromSummary.getDeploymentPermissions()))
+            .templatePermissions(convertActionEntityIdMapToEntityActionMap(fromSummary.getTemplatePermissions()));
     return toAppPermissionSummaryBuilder.build();
   }
 
@@ -1696,6 +1768,15 @@ public class AuthHandler {
                                            .permissionType(PermissionType.PIPELINE)
                                            .build();
     appPermissions.add(pipelinePermission);
+
+    AppPermission templatePermission =
+        AppPermission.builder()
+            .actions(actions)
+            .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+            .entityFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+            .permissionType(APP_TEMPLATE)
+            .build();
+    appPermissions.add(templatePermission);
 
     UserGroupBuilder userGroupBuilder = UserGroup.builder()
                                             .accountId(accountId)
