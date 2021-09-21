@@ -1,4 +1,4 @@
-package software.wings.service.impl.instance.instancesyncperpetualtaskstatus;
+package io.harness.service.instancesyncperpetualtaskstatus;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;

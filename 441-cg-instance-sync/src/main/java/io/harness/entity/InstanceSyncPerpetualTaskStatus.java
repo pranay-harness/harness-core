@@ -1,4 +1,4 @@
-package software.wings.beans.infrastructure.instance;
+package io.harness.entity;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;

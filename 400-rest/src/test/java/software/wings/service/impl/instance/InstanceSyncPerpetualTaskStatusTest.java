@@ -9,13 +9,13 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
+import io.harness.entity.InstanceSyncPerpetualTaskStatus;
+import io.harness.entity.InstanceSyncPerpetualTaskStatus.InstanceSyncPerpetualTaskStatusKeys;
 import io.harness.rule.Owner;
+import io.harness.service.instancesyncperpetualtaskstatus.InstanceSyncPerpetualTaskStatusService;
 
 import software.wings.WingsBaseTest;
-import software.wings.beans.infrastructure.instance.InstanceSyncPerpetualTaskStatus;
-import software.wings.beans.infrastructure.instance.InstanceSyncPerpetualTaskStatus.InstanceSyncPerpetualTaskStatusKeys;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.instance.instancesyncperpetualtaskstatus.InstanceSyncPerpetualTaskStatusService;
 
 import com.google.inject.Inject;
 import java.time.Duration;
