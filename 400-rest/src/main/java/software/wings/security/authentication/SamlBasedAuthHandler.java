@@ -71,8 +71,8 @@ public class SamlBasedAuthHandler implements AuthHandler {
       }
       String idpUrl = credentials[0];
       String samlResponseString = credentials[1];
-      String accountId = credentials.length == 3 ? credentials[2] : null;
-      String relayState = credentials.length == 4 ? credentials[3] : "";
+      String accountId = credentials.length >= 3 ? credentials[2] : null;
+      String relayState = credentials.length >= 4 ? credentials[3] : "";
       Map<String, String> relayStateData = getRelayStateData(relayState);
 
       User user = decodeResponseAndReturnUser(idpUrl, samlResponseString, accountId);
