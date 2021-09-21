@@ -18,7 +18,6 @@ BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --experimental_convenience_symlinks=normal -
 BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --spawn_strategy=standalone"
 BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --test_timeout=900"
 BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --test_output=all"
-#BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --cache_test_results=no"
 BAZEL_TEST_ARGUMENTS="${BAZEL_TEST_ARGUMENTS} --test_verbose_timeout_warnings --test_summary=detailed"
 
 if [[ ! -z "${OVERRIDE_LOCAL_M2}" ]]; then
@@ -35,25 +34,28 @@ if [ "${RUN_BAZEL_FUNCTIONAL_TESTS}" == "true" ]; then
   DELEGATE_PID=$!
 
   bazel run ${GCP} ${BAZEL_ARGUMENTS} 230-model-test:app
-#  MODEL_TEST_APP_PID=$!
 
-#  sleep 5m;
   MANAGER_PID=`ps ax | grep 'java' | grep '360-cg-manager/modified_config' |  awk '{print $1}'`
   echo "INFO: MANAGER_PID = $MANAGER_PID"
 
-  bazel test --keep_going ${GCP} ${BAZEL_ARGUMENTS} --jobs=3 ${BAZEL_TEST_ARGUMENTS} -- //200-functional-test:io.harness.functional.DummyFirstFunctionalTest || true
-
-#  TODO: https://harness.atlassian.net/browse/BT-434
-  bazel test --keep_going ${GCP} ${BAZEL_ARGUMENTS} --jobs=3 ${BAZEL_TEST_ARGUMENTS} -- //200-functional-test/... \
+  bazel test --keep_going ${GCP} ${BAZEL_ARGUMENTS} --jobs=3 ${BAZEL_TEST_ARGUMENTS} -- //200-functional-test:io.harness.functional.DummyFirstFunctionalTest
+  exitCode=$?
+  if [ $exitCode -eq 0 ]; then
+    echo "Dummy test passed"
+    #  TODO: https://harness.atlassian.net/browse/BT-434
+    bazel test --keep_going ${GCP} ${BAZEL_ARGUMENTS} --jobs=3 ${BAZEL_TEST_ARGUMENTS} -- //200-functional-test/... \
     -//200-functional-test:io.harness.functional.nas.NASBuildWorkflowExecutionTest \
-    -//200-functional-test:io.harness.functional.nas.NASWorkflowExecutionTest || true
+    -//200-functional-test:io.harness.functional.nas.NASWorkflowExecutionTest
+    exitCode=$?
+  else
+    echo "Dummy test failed"
+  fi
 
   echo "INFO: MANAGER_PID = $MANAGER_PID"
   echo "INFO: DELEGATE_PID = $DELEGATE_PID"
-#  echo "INFO: MODEL_TEST_APP_PID = $MODEL_TEST_APP_PID"
 
   kill -9 $MANAGER_PID || true
   kill -9 $DELEGATE_PID || true
-#  kill -9 $MODEL_TEST_APP_PID || true
-#  pkill -P $$
+  exit $exitCode
 fi
+exit 0;
