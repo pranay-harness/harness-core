@@ -12,6 +12,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.PipelineServiceApplication;
@@ -54,6 +56,7 @@ import lombok.Data;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
 @OwnedBy(HarnessTeam.PIPELINE)
@@ -184,11 +187,28 @@ public class PMSExpressionEvaluatorTest extends PipelineServiceTestBase {
         AmbianceUtils.cloneForChild(ambiance, Level.newBuilder().setRuntimeId(nodeExecution5.getUuid()).build());
     EngineExpressionEvaluator engineExpressionEvaluator = prepareEngineExpressionEvaluator(newAmbiance);
     ExpressionResponse expressionResponse = ExpressionResponse.newBuilder().build();
+    ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
     doReturn(expressionResponse).when(remoteExpressionFunctor).get(any());
+
+    // testing that remoteFunctor is registered correctly
     assertTrue(engineExpressionEvaluator.evaluateExpression("<+dummy>") instanceof RemoteExpressionFunctor);
+
+    // testing simple string argument
     assertEquals(engineExpressionEvaluator.evaluateExpression("<+dummy.abc>"), expressionResponse);
+    verify(remoteExpressionFunctor, times(1)).get(argumentCaptor.capture());
+    assertEquals(argumentCaptor.getValue(), "abc");
     assertEquals(engineExpressionEvaluator.evaluateExpression("<+dummy.get(\"arg1\")>"), expressionResponse);
+    verify(remoteExpressionFunctor, times(2)).get(argumentCaptor.capture());
+    assertEquals(argumentCaptor.getValue(), "arg1");
+
+    // testing array of strings as argument
     assertEquals(engineExpressionEvaluator.evaluateExpression("<+dummy.get([\"arg1\",\"arg2\"])>"), expressionResponse);
+    ArgumentCaptor<String[]> arrayArgumentCaptor = ArgumentCaptor.forClass(String[].class);
+    verify(remoteExpressionFunctor, times(3)).get(arrayArgumentCaptor.capture());
+    String[] argsArray = arrayArgumentCaptor.getValue();
+    assertEquals(argsArray.length, 2);
+    assertEquals(argsArray[0], "arg1");
+    assertEquals(argsArray[1], "arg2");
   }
 
   private PlanNodeProto preparePlanNode(
