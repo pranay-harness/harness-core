@@ -21,6 +21,7 @@ import io.harness.ng.core.user.PasswordChangeResponse;
 import io.harness.ng.core.user.TwoFactorAdminOverrideSettings;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserRequestDTO;
+import io.harness.ng.core.user.UtmInfo;
 import io.harness.rest.RestResponse;
 import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.annotations.NextGenManagerAuth;
@@ -335,6 +336,14 @@ public class UserResourceNG {
                 .map(x
                     -> x.stream().anyMatch(y -> ACCOUNT_ADMINISTRATOR_USER_GROUP.equals(y.getName()) && y.isDefault()))
                 .orElse(false))
+        .utmInfo(user.getUtmInfo() != null ? UtmInfo.builder()
+                                                 .utmCampaign(user.getUtmInfo().getUtmCampaign())
+                                                 .utmContent(user.getUtmInfo().getUtmContent())
+                                                 .utmMedium(user.getUtmInfo().getUtmMedium())
+                                                 .utmSource(user.getUtmInfo().getUtmSource())
+                                                 .utmTerm(user.getUtmInfo().getUtmTerm())
+                                                 .build()
+                                           : UtmInfo.builder().build())
         .build();
   }
 
