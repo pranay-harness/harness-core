@@ -5,7 +5,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static java.lang.String.join;
 import static org.apache.commons.lang3.StringUtils.abbreviate;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.ExecutionStatusResponseData;
 import io.harness.serializer.KryoSerializer;
@@ -36,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @OwnedBy(CDC)
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ForkState extends State {
   @Inject transient KryoSerializer kryoSerializer;
   @SchemaIgnore private List<String> forkStateNames = new ArrayList<>();
