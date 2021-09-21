@@ -5,6 +5,7 @@ import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.FeatureName.CUSTOM_MANIFEST;
 import static io.harness.beans.FeatureName.GIT_HOST_CONNECTIVITY;
 import static io.harness.beans.FeatureName.OVERRIDE_VALUES_YAML_FROM_HELM_CHART;
+import static io.harness.beans.FeatureName.USE_LATEST_CHARTMUSEUM_VERSION;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -473,6 +474,7 @@ public class HelmDeployState extends State {
             .sourceRepoConfig(manifestConfig)
             .helmVersion(helmVersion)
             .helmCommandFlag(helmCommandFlag)
+            .useLatestChartMuseumVersion(featureFlagService.isEnabled(USE_LATEST_CHARTMUSEUM_VERSION, accountId))
             .mergeCapabilities(
                 featureFlagService.isEnabled(FeatureName.HELM_MERGE_CAPABILITIES, context.getAccountId()))
             .isGitHostConnectivityCheck(
@@ -1023,6 +1025,8 @@ public class HelmDeployState extends State {
           } else {
             HelmChartConfigParams helmChartConfigTaskParams =
                 helmChartConfigHelperService.getHelmChartConfigTaskParams(context, appManifest);
+            helmChartConfigTaskParams.setUseLatestChartMuseumVersion(
+                featureFlagService.isEnabled(USE_LATEST_CHARTMUSEUM_VERSION, context.getAccountId()));
             manifestConfig = K8sDelegateManifestConfig.builder()
                                  .helmChartConfigParams(helmChartConfigTaskParams)
                                  .manifestStoreTypes(HelmChartRepo)
@@ -1546,6 +1550,8 @@ public class HelmDeployState extends State {
             .workflowExecutionId(context.getWorkflowExecutionId())
             .isBindTaskFeatureSet(isBindTaskFeatureSet)
             .timeoutInMillis(fetchSafeTimeoutInMillis(getTimeoutMillis()))
+            .useLatestChartMuseumVersion(
+                featureFlagService.isEnabled(USE_LATEST_CHARTMUSEUM_VERSION, context.getAccountId()))
             .build();
 
     ApplicationManifest applicationManifest = applicationManifestUtils.getApplicationManifestForService(context);

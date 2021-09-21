@@ -89,11 +89,13 @@ public class NGChartMuseumServiceImplTest extends CategoryTest {
             .region(region)
             .folderPath(folderPath)
             .awsConnector(AwsConnectorDTO.builder().credential(credentials).build())
+            .useLatestChartMuseumVersion(true)
             .build();
 
     ngChartMuseumService.startChartMuseumServer(s3StoreDelegateConfig, "resources");
     verify(clientHelper, times(1))
-        .startS3ChartMuseumServer(bucketName, folderPath, region, inheritFromDelegate, accessKey, secretKey, false);
+        .startS3ChartMuseumServer(
+            bucketName, folderPath, region, inheritFromDelegate, accessKey, secretKey, false, true);
   }
 
   @Test
@@ -119,10 +121,12 @@ public class NGChartMuseumServiceImplTest extends CategoryTest {
                                         .build())
                             .build())
                     .build())
+            .useLatestChartMuseumVersion(true)
             .build();
 
     ngChartMuseumService.startChartMuseumServer(gcsHelmStoreDelegateConfig, "resources");
-    verify(clientHelper, times(1)).startGCSChartMuseumServer(bucketName, folderPath, serviceAccountKey, resourcesDir);
+    verify(clientHelper, times(1))
+        .startGCSChartMuseumServer(bucketName, folderPath, serviceAccountKey, resourcesDir, true);
   }
 
   @Test

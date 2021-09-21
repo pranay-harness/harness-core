@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.OPTIMIZED_GIT_FETCH_FILES;
 import static io.harness.beans.FeatureName.OVERRIDE_VALUES_YAML_FROM_HELM_CHART;
+import static io.harness.beans.FeatureName.USE_LATEST_CHARTMUSEUM_VERSION;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -552,6 +553,8 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
     k8sTaskParameters.setK8sClusterConfig(k8sClusterConfig);
     k8sTaskParameters.setWorkflowExecutionId(context.getWorkflowExecutionId());
     k8sTaskParameters.setHelmVersion(serviceResourceService.getHelmVersionWithDefault(context.getAppId(), serviceId));
+    k8sTaskParameters.setUseLatestChartMuseumVersion(
+        featureFlagService.isEnabled(USE_LATEST_CHARTMUSEUM_VERSION, context.getAccountId()));
 
     k8sTaskParameters.setDelegateSelectors(getDelegateSelectors(
         (applicationManifestMap == null) ? null : applicationManifestMap.get(K8sValuesLocation.Service), context));
@@ -916,6 +919,8 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
         .mergeCapabilities(featureFlagService.isEnabled(FeatureName.HELM_MERGE_CAPABILITIES, context.getAccountId()))
         .delegateSelectors(delegateSelectors)
         .mapK8sValuesLocationToFilePaths(mapK8sValuesLocationToFilePaths)
+        .useLatestChartMuseumVersion(
+            featureFlagService.isEnabled(USE_LATEST_CHARTMUSEUM_VERSION, context.getAccountId()))
         .build();
   }
 
@@ -985,6 +990,9 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
     ContainerInfrastructureMapping infraMapping = k8sStateHelper.fetchContainerInfrastructureMapping(context);
     HelmValuesFetchTaskParameters helmValuesFetchTaskParameters =
         fetchHelmValuesFetchTaskParameters(context, activityId, timeoutInMillis, infraMapping, applicationManifestMap);
+
+    helmValuesFetchTaskParameters.setUseLatestChartMuseumVersion(
+        featureFlagService.isEnabled(USE_LATEST_CHARTMUSEUM_VERSION, context.getAccountId()));
 
     String serviceTemplateId = serviceTemplateHelper.fetchServiceTemplateId(infraMapping);
 
