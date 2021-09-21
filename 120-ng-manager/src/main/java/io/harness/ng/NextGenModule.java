@@ -45,6 +45,7 @@ import io.harness.audit.client.remote.AuditClientModule;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
+import io.harness.ccm.license.remote.CeLicenseClientModule;
 import io.harness.cdng.NGModule;
 import io.harness.cdng.expressions.CDExpressionEvaluatorProvider;
 import io.harness.cdng.fileservice.FileServiceClient;
@@ -569,6 +570,8 @@ public class NextGenModule extends AbstractModule {
         .to(SetupUsageChangeEventMessageProcessor.class);
     install(AccessControlClientModule.getInstance(
         appConfig.getAccessControlClientConfiguration(), NG_MANAGER.getServiceId()));
+    install(CeLicenseClientModule.getInstance(appConfig.getManagerClientConfig(),
+        appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId()));
 
     bind(SourceCodeManagerService.class).to(SourceCodeManagerServiceImpl.class);
     bind(ApiKeyService.class).to(ApiKeyServiceImpl.class);
