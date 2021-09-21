@@ -50,7 +50,7 @@ public enum NGFailureType {
     this.failureType = failureType;
   }
 
-  @JsonCreator
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
   public static NGFailureType getFailureTypes(String yamlName) {
     for (NGFailureType value : NGFailureType.values()) {
       if (value.yamlName.equalsIgnoreCase(yamlName)) {

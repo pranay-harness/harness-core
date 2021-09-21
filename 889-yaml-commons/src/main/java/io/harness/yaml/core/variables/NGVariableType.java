@@ -20,7 +20,7 @@ public enum NGVariableType {
     return yamlProperty;
   }
 
-  @JsonCreator
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
   public static NGVariableType getNGVariableType(@JsonProperty("type") String yamlProperty) {
     for (NGVariableType ngVariableType : NGVariableType.values()) {
       if (ngVariableType.getYamlProperty().equalsIgnoreCase(yamlProperty)) {

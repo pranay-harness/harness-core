@@ -42,7 +42,7 @@ public class YamlUtils {
     mapper = new ObjectMapper(new YAMLFactory());
     mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
     mapper.setSubtypeResolver(AnnotationAwareJsonSubtypeResolver.newInstance(mapper.getSubtypeResolver()));
-    mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+    // mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
     mapper.registerModule(new Jdk8Module());
     mapper.registerModule(new GuavaModule());
     mapper.registerModule(new JavaTimeModule());

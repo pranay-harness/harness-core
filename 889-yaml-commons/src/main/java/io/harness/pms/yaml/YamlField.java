@@ -1,5 +1,8 @@
 package io.harness.pms.yaml;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.serializer.JsonUtils;
 
@@ -13,12 +16,13 @@ import javax.validation.constraints.NotNull;
 import lombok.Value;
 
 @Value
+@OwnedBy(PIPELINE)
 public class YamlField {
   private static final Charset CHARSET = Charset.forName(StandardCharsets.UTF_8.name());
 
   @NotNull YamlNode node;
 
-  @JsonCreator
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
   public YamlField(@JsonProperty("name") String name, @JsonProperty("node") YamlNode node) {
     this.node = node;
   }

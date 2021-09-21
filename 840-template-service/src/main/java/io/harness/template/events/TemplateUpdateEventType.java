@@ -34,7 +34,7 @@ public enum TemplateUpdateEventType {
     this.yamlType = yamlType;
   }
 
-  @JsonCreator
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
   public static TemplateUpdateEventType getTemplateType(@JsonProperty("type") String yamlType) {
     for (TemplateUpdateEventType value : TemplateUpdateEventType.values()) {
       if (value.yamlType.equalsIgnoreCase(yamlType)) {
