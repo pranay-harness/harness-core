@@ -27,9 +27,9 @@ import java.util.List;
 import java.util.Optional;
 
 public class DashboardAggregateServiceImpl implements DashboardAggregateService {
-  @Inject private DashboardRBACService dashboardRBACService;
-  @Inject private CDLandingDashboardResourceClient cdLandingDashboardResourceClient;
-  @Inject private PMSLandingDashboardResourceClient pmsLandingDashboardResourceClient;
+  @Inject  DashboardRBACService dashboardRBACService;
+  @Inject  CDLandingDashboardResourceClient cdLandingDashboardResourceClient;
+  @Inject  PMSLandingDashboardResourceClient pmsLandingDashboardResourceClient;
   @Inject ParallelRestCallExecutor parallelRestCallExecutor;
 
   @Override

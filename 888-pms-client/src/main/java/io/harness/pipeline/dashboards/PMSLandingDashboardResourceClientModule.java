@@ -13,6 +13,7 @@ import com.google.inject.Scopes;
 
 @OwnedBy(PIPELINE)
 public class PMSLandingDashboardResourceClientModule extends AbstractModule {
+  private static PMSLandingDashboardResourceClientModule instance;
   private final ServiceHttpClientConfig serviceHttpClientConfig;
   private final String serviceSecret;
   private final String clientId;
@@ -22,6 +23,15 @@ public class PMSLandingDashboardResourceClientModule extends AbstractModule {
     this.serviceHttpClientConfig = serviceHttpClientConfig;
     this.serviceSecret = serviceSecret;
     this.clientId = clientId;
+  }
+
+  public static PMSLandingDashboardResourceClientModule getInstance(
+          ServiceHttpClientConfig serviceHttpClientConfig, String serviceSecret, String clientId) {
+    if (instance == null) {
+      instance = new PMSLandingDashboardResourceClientModule(serviceHttpClientConfig, serviceSecret, clientId);
+    }
+
+    return instance;
   }
 
   @Provides
