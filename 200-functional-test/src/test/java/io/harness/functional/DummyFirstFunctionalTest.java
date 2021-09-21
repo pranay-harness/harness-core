@@ -32,6 +32,6 @@ public class DummyFirstFunctionalTest extends AbstractFunctionalTest {
   @Owner(developers = ABHINAV)
   @Category(FunctionalTests.class)
   public void accessManagementPermissionTestForList() {
-    assertThat(true).isTrue();
+    assertThat(true).isFalse();
   }
 }
