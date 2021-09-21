@@ -10,7 +10,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 @OwnedBy(HarnessTeam.CI)
 public enum TIBuildTool {
   @JsonProperty("Maven") MAVEN("Maven"),
-  @JsonProperty("Bazel") BAZEL("Bazel");
+  @JsonProperty("Bazel") BAZEL("Bazel"),
+  @JsonProperty("Gradle") GRADLE("Gradle");
 
   private final String yamlName;
 
