@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.rule.OwnerRule.ABHINAV;
-import static io.harness.rule.OwnerRule.ALEXANDRU_CIOFU;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
 import static io.harness.rule.OwnerRule.MEET;
 import static io.harness.rule.OwnerRule.PRABU;
