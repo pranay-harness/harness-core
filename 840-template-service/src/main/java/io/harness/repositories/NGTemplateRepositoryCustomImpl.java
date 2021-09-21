@@ -15,6 +15,7 @@ import io.harness.template.entity.TemplateEntity.TemplateEntityKeys;
 import io.harness.template.events.TemplateCreateEvent;
 import io.harness.template.events.TemplateDeleteEvent;
 import io.harness.template.events.TemplateUpdateEvent;
+import io.harness.template.events.TemplateUpdateEventType;
 
 import com.google.inject.Inject;
 import java.util.List;
@@ -39,10 +40,10 @@ public class NGTemplateRepositoryCustomImpl implements NGTemplateRepositoryCusto
   OutboxService outboxService;
 
   @Override
-  public TemplateEntity save(TemplateEntity templateToSave, NGTemplateConfig templateConfig) {
+  public TemplateEntity save(TemplateEntity templateToSave, NGTemplateConfig templateConfig, String comments) {
     Supplier<OutboxEvent> supplier = ()
         -> outboxService.save(new TemplateCreateEvent(templateToSave.getAccountIdentifier(),
-            templateToSave.getOrgIdentifier(), templateToSave.getProjectIdentifier(), templateToSave));
+            templateToSave.getOrgIdentifier(), templateToSave.getProjectIdentifier(), templateToSave, comments));
     return gitAwarePersistence.save(
         templateToSave, templateToSave.getYaml(), ChangeType.ADD, TemplateEntity.class, supplier);
   }
@@ -87,25 +88,46 @@ public class NGTemplateRepositoryCustomImpl implements NGTemplateRepositoryCusto
   }
 
   @Override
+  public Optional<TemplateEntity>
+  findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndIsLastUpdatedAndDeletedNot(
+      String accountId, String orgIdentifier, String projectIdentifier, String templateIdentifier, boolean notDeleted) {
+    return gitAwarePersistence.findOne(Criteria.where(TemplateEntityKeys.deleted)
+                                           .is(!notDeleted)
+                                           .and(TemplateEntityKeys.isLastUpdatedTemplate)
+                                           .is(true)
+                                           .and(TemplateEntityKeys.identifier)
+                                           .is(templateIdentifier)
+                                           .and(TemplateEntityKeys.projectIdentifier)
+                                           .is(projectIdentifier)
+                                           .and(TemplateEntityKeys.orgIdentifier)
+                                           .is(orgIdentifier)
+                                           .and(TemplateEntityKeys.accountId)
+                                           .is(accountId),
+        projectIdentifier, orgIdentifier, accountId, TemplateEntity.class);
+  }
+
+  @Override
   public TemplateEntity updateTemplateYaml(TemplateEntity templateToUpdate, TemplateEntity oldTemplateEntity,
-      NGTemplateConfig templateConfig, ChangeType changeType) {
+      NGTemplateConfig templateConfig, ChangeType changeType, String comments,
+      TemplateUpdateEventType templateUpdateEventType) {
     Supplier<OutboxEvent> supplier = null;
     if (!gitSyncSdkService.isGitSyncEnabled(templateToUpdate.getAccountId(), templateToUpdate.getOrgIdentifier(),
             templateToUpdate.getProjectIdentifier())) {
       supplier = ()
-          -> outboxService.save(
-              new TemplateUpdateEvent(templateToUpdate.getAccountIdentifier(), templateToUpdate.getOrgIdentifier(),
-                  templateToUpdate.getProjectIdentifier(), templateToUpdate, oldTemplateEntity));
+          -> outboxService.save(new TemplateUpdateEvent(templateToUpdate.getAccountIdentifier(),
+              templateToUpdate.getOrgIdentifier(), templateToUpdate.getProjectIdentifier(), templateToUpdate,
+              oldTemplateEntity, "", TemplateUpdateEventType.OTHERS_EVENT));
     }
     return gitAwarePersistence.save(
         templateToUpdate, templateToUpdate.getYaml(), changeType, TemplateEntity.class, supplier);
   }
 
   @Override
-  public TemplateEntity deleteTemplate(TemplateEntity templateToDelete, NGTemplateConfig templateConfig) {
+  public TemplateEntity deleteTemplate(
+      TemplateEntity templateToDelete, NGTemplateConfig templateConfig, String comments) {
     Supplier<OutboxEvent> supplier = ()
         -> outboxService.save(new TemplateDeleteEvent(templateToDelete.getAccountIdentifier(),
-            templateToDelete.getOrgIdentifier(), templateToDelete.getProjectIdentifier(), templateToDelete));
+            templateToDelete.getOrgIdentifier(), templateToDelete.getProjectIdentifier(), templateToDelete, comments));
     return gitAwarePersistence.save(
         templateToDelete, templateToDelete.getYaml(), ChangeType.DELETE, TemplateEntity.class, supplier);
   }

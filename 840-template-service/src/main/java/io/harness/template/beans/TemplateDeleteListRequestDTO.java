@@ -8,18 +8,16 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModel;
 import java.util.List;
-import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(CDC)
 @Data
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@ApiModel("TemplateApplyRequest")
-public class TemplateApplyRequestDTO {
-  // This could be original pipeline yaml, or any other entity on which we are referring templateRef.
-  @NotNull String originalEntityYaml;
-  List<String> inputSetYamlList;
+@ApiModel("TemplateDeleteListRequest")
+public class TemplateDeleteListRequestDTO {
+  @NotEmpty List<String> templateVersionLabels;
 }

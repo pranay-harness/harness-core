@@ -79,14 +79,14 @@ public class TemplateEntityGitSyncHandler extends AbstractGitSdkEntityHandler<Te
   @Override
   public NGTemplateConfig save(String accountIdentifier, String yaml) {
     TemplateEntity templateEntity = NGTemplateDtoMapper.toTemplateEntity(accountIdentifier, yaml);
-    TemplateEntity createdTemplate = templateService.create(templateEntity);
+    TemplateEntity createdTemplate = templateService.create(templateEntity, false, "");
     return NGTemplateDtoMapper.toDTO(createdTemplate);
   }
 
   @Override
   public NGTemplateConfig update(String accountIdentifier, String yaml, ChangeType changeType) {
     TemplateEntity templateEntity = NGTemplateDtoMapper.toTemplateEntity(accountIdentifier, yaml);
-    return NGTemplateDtoMapper.toDTO(templateService.updateTemplateEntity(templateEntity, changeType));
+    return NGTemplateDtoMapper.toDTO(templateService.updateTemplateEntity(templateEntity, changeType, false, ""));
   }
 
   @Override
@@ -94,7 +94,8 @@ public class TemplateEntityGitSyncHandler extends AbstractGitSdkEntityHandler<Te
     try {
       NGTemplateReference reference = (NGTemplateReference) entityReference;
       return templateService.delete(entityReference.getAccountIdentifier(), entityReference.getOrgIdentifier(),
-          entityReference.getProjectIdentifier(), entityReference.getIdentifier(), reference.getVersionLabel(), null);
+          entityReference.getProjectIdentifier(), entityReference.getIdentifier(), reference.getVersionLabel(), null,
+          "");
     } catch (EventsFrameworkDownException ex) {
       throw new UnexpectedException("Producer shutdown: " + ExceptionUtils.getMessage(ex));
     }

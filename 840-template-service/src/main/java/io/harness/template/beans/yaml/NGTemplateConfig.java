@@ -7,11 +7,11 @@ import io.harness.gitsync.beans.YamlDTO;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 import org.springframework.data.annotation.TypeAlias;
 
 @OwnedBy(CDC)
-@Value
+@Data
 @Builder
 @TypeAlias("ngTemplateConfig")
 public class NGTemplateConfig implements YamlDTO {
