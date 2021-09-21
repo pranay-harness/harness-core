@@ -564,6 +564,21 @@ public class DelegateAgentResource {
     return new RestResponse<>(Boolean.TRUE);
   }
 
+  @DelegateAuth
+  @GET
+  @Path("configuration")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> hasNonPrimaryDelegateConfiguration(
+          @QueryParam("accountId") @NotEmpty String accountId) {
+    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
+      return new RestResponse<>(accountService.hasNonPrimaryDelegateConfiguration(accountId));
+
+    } catch (InvalidRequestException ex) {
+      return false;
+    }
+  }
+
   private DelegateHeartbeatResponse buildDelegateHBResponse(Delegate delegate) {
     return DelegateHeartbeatResponse.builder()
         .delegateId(delegate.getUuid())

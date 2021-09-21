@@ -206,6 +206,8 @@ spec:
           value: "false"
         - name: INSTALL_CLIENT_TOOLS_IN_BACKGROUND
           value: "true"
+        - name: DISABLE_VERSION_INFO
+          value: "false"
         - name: DELEGATE_NAMESPACE
           valueFrom:
             fieldRef:

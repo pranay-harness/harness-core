@@ -721,8 +721,13 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       URI uri = uriBuilder.build();
 
       // Stream the request body
-      RequestBuilder requestBuilder =
-          client.newRequestBuilder().method(METHOD.GET).uri(uri.toString()).header("Version", getVersion());
+      RequestBuilder requestBuilder;
+      if (delegateConfiguration.isDisableVersionInfo()) {
+        requestBuilder = client.newRequestBuilder().method(METHOD.GET).uri(uri.toString());
+      } else {
+        requestBuilder =
+            client.newRequestBuilder().method(METHOD.GET).uri(uri.toString()).header("Version", getVersion());
+      }
 
       requestBuilder
           .encoder(new Encoder<Delegate, Reader>() { // Do not change this, wasync doesn't like lambdas
@@ -1057,6 +1062,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         continue;
       }
 
+      delegateConfiguration.setDisableVersionInfo(true);
       DelegateRegisterResponse delegateResponse = restResponse.getResource();
       String responseDelegateId = delegateResponse.getDelegateId();
       handleEcsDelegateRegistrationResponse(delegateResponse);
@@ -1276,7 +1282,12 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           } else if (DELEGATE_RESUME.equals(message.getMessage())) {
             resume();
           } else if (DELEGATE_SEND_VERSION_HEADER.equals(message.getMessage())) {
-            DelegateAgentManagerClientFactory.setSendVersionHeader(Boolean.parseBoolean(message.getParams().get(0)));
+            if (!delegateConfiguration.isDisableVersionInfo()) {
+              log.info("Sending version info as part of header");
+              DelegateAgentManagerClientFactory.setSendVersionHeader(Boolean.parseBoolean(message.getParams().get(0)));
+            } else {
+              log.info("No version header");
+            }
             delegateAgentManagerClient = injector.getInstance(DelegateAgentManagerClient.class);
           } else if (DELEGATE_START_GRPC.equals(message.getMessage())) {
             startGrpcService();
@@ -1342,6 +1353,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
               Duration.ofMinutes(1),
               () -> delegateExecute(delegateAgentManagerClient.getDelegateScripts(accountId, version, delegateName)));
           DelegateScripts delegateScripts = restResponse.getResource();
+
+          //
+
           if (delegateScripts.isDoUpgrade()) {
             upgradePending.set(true);
 
@@ -1354,6 +1368,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             log.info("[Old] Replace run scripts");
             replaceRunScripts(delegateScripts);
             log.info("[Old] Run scripts downloaded. Upgrading delegate. Stop acquiring async tasks");
+
             upgradeVersion = delegateScripts.getVersion();
             upgradeNeeded.set(true);
           } else {

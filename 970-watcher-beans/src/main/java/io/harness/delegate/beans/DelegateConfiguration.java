@@ -14,5 +14,6 @@ public class DelegateConfiguration {
   private List<String> delegateVersions;
   private Action action;
 
+
   public enum Action { SELF_DESTRUCT }
 }

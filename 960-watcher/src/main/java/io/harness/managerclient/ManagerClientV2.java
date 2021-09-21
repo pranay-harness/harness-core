@@ -19,6 +19,7 @@ public interface ManagerClientV2 {
   Call<RestResponse<DelegateScripts>> getDelegateScriptsNg(@Query("accountId") String accountId,
       @Query("delegateVersion") String delegateVersion, @Query("delegateSize") String delegateSize,
       @Query("patchVersion") String patchVersion);
+
   @GET("agent/delegates/configuration")
   Call<RestResponse<DelegateConfiguration>> getDelegateConfiguration(@Query("accountId") String accountId);
 
