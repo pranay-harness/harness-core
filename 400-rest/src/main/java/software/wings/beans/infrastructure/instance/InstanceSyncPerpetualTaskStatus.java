@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Id;
 
 @Data
 @Builder
@@ -16,6 +17,7 @@ import org.mongodb.morphia.annotations.Entity;
 @Entity(value = "instanceSyncPerpetualTaskStatus", noClassnameStored = true)
 @OwnedBy(HarnessTeam.PL)
 public class InstanceSyncPerpetualTaskStatus implements PersistentEntity {
+  @Id String uuid;
   @FdUniqueIndex String perpetualTaskId;
   String lastFailureReason;
   long initialFailureAt;

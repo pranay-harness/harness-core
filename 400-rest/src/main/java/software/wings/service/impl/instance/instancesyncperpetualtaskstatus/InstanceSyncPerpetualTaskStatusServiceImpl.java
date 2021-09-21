@@ -45,7 +45,6 @@ public class InstanceSyncPerpetualTaskStatusServiceImpl implements InstanceSyncP
     UpdateOperations<InstanceSyncPerpetualTaskStatus> updateOperations =
         wingsPersistence.createUpdateOperations(InstanceSyncPerpetualTaskStatus.class)
             .setOnInsert(InstanceSyncPerpetualTaskStatusKeys.perpetualTaskId, perpetualTaskId)
-            .setOnInsert(InstanceSyncPerpetualTaskStatusKeys.lastFailureReason, errorMessage)
             .setOnInsert(InstanceSyncPerpetualTaskStatusKeys.initialFailureAt, System.currentTimeMillis())
             .set(InstanceSyncPerpetualTaskStatusKeys.lastFailureReason, errorMessage);
     wingsPersistence.upsert(query, updateOperations, new FindAndModifyOptions().upsert(true).returnNew(true));
