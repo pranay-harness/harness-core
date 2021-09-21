@@ -132,16 +132,17 @@ public class HelmTaskHelper {
   public void downloadChartFiles(HelmChartSpecification helmChartSpecification, String destinationDirectory,
       HelmCommandRequest helmCommandRequest, long timeoutInMillis, HelmCommandFlag helmCommandFlag) throws Exception {
     String workingDirectory = createDirectory(Paths.get(destinationDirectory).toString());
-    HelmChartConfigParams helmChartConfigParams = HelmChartConfigParams.builder()
-                                                      .chartName(helmChartSpecification.getChartName())
-                                                      .chartVersion(helmChartSpecification.getChartVersion())
-                                                      .chartUrl(helmChartSpecification.getChartUrl())
-                                                      .helmVersion(helmCommandRequest.getHelmVersion())
-                                                      .build();
+    HelmChartConfigParams helmChartConfigParams =
+        HelmChartConfigParams.builder()
+            .chartName(helmChartSpecification.getChartName())
+            .chartVersion(helmChartSpecification.getChartVersion())
+            .chartUrl(helmChartSpecification.getChartUrl())
+            .helmVersion(helmCommandRequest.getHelmVersion())
+            .useLatestChartMuseumVersion(helmCommandRequest.isUseLatestChartMuseumVersion())
+            .build();
     if (isNotBlank(helmChartSpecification.getChartUrl())) {
       helmChartConfigParams.setRepoName(helmCommandRequest.getRepoName());
     }
-
     fetchChartFiles(helmChartConfigParams, workingDirectory, timeoutInMillis, helmCommandFlag);
   }
 
@@ -230,7 +231,8 @@ public class HelmTaskHelper {
     try {
       resourceDirectory = createNewDirectoryAtPath(RESOURCE_DIR_BASE);
       chartMuseumServer = chartMuseumClient.startChartMuseumServer(helmChartConfigParams.getHelmRepoConfig(),
-          connectorConfig, resourceDirectory, helmChartConfigParams.getBasePath());
+          connectorConfig, resourceDirectory, helmChartConfigParams.getBasePath(),
+          helmChartConfigParams.isUseLatestChartMuseumVersion());
 
       helmTaskHelperBase.addChartMuseumRepo(helmChartConfigParams.getRepoName(),
           helmChartConfigParams.getRepoDisplayName(), chartMuseumServer.getPort(), chartDirectory,
@@ -344,13 +346,14 @@ public class HelmTaskHelper {
   }
 
   public void addHelmRepo(HelmRepoConfig helmRepoConfig, SettingValue connectorConfig, String repoName,
-      String repoDisplayName, String workingDirectory, String basePath, HelmVersion helmVersion) throws Exception {
+      String repoDisplayName, String workingDirectory, String basePath, HelmVersion helmVersion,
+      boolean useLatestChartMuseumVersion) throws Exception {
     ChartMuseumServer chartMuseumServer = null;
     String resourceDirectory = null;
     try {
       resourceDirectory = createNewDirectoryAtPath(RESOURCE_DIR_BASE);
-      chartMuseumServer =
-          chartMuseumClient.startChartMuseumServer(helmRepoConfig, connectorConfig, resourceDirectory, basePath);
+      chartMuseumServer = chartMuseumClient.startChartMuseumServer(
+          helmRepoConfig, connectorConfig, resourceDirectory, basePath, useLatestChartMuseumVersion);
 
       helmTaskHelperBase.addChartMuseumRepo(repoName, repoDisplayName, chartMuseumServer.getPort(), workingDirectory,
           helmVersion, DEFAULT_TIMEOUT_IN_MILLIS);
@@ -506,9 +509,9 @@ public class HelmTaskHelper {
 
     String resourceDirectory = createNewDirectoryAtPath(RESOURCE_DIR_BASE);
 
-    ChartMuseumServer chartMuseumServer =
-        chartMuseumClient.startChartMuseumServer(helmChartConfigParams.getHelmRepoConfig(),
-            helmChartConfigParams.getConnectorConfig(), resourceDirectory, helmChartConfigParams.getBasePath());
+    ChartMuseumServer chartMuseumServer = chartMuseumClient.startChartMuseumServer(
+        helmChartConfigParams.getHelmRepoConfig(), helmChartConfigParams.getConnectorConfig(), resourceDirectory,
+        helmChartConfigParams.getBasePath(), helmChartConfigParams.isUseLatestChartMuseumVersion());
 
     try {
       helmTaskHelperBase.addChartMuseumRepo(helmChartConfigParams.getRepoName(),

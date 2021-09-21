@@ -9,9 +9,11 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
+import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.task.manifests.request.ManifestCollectionParams;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -53,6 +55,7 @@ public class ManifestCollectionUtils {
   @Inject private HelmChartService helmChartService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private AppManifestPTaskHelper appManifestPTaskHelper;
+  @Inject private FeatureFlagService featureFlagService;
 
   public ManifestCollectionParams prepareCollectTaskParams(String appManifestId, String appId) {
     ApplicationManifest appManifest = applicationManifestService.getById(appId, appManifestId);
@@ -135,6 +138,8 @@ public class ManifestCollectionUtils {
             .encryptedDataDetails(helmChartCollectionParams.getHelmChartConfigParams().getEncryptedDataDetails())
             .connectorConfig(helmChartCollectionParams.getHelmChartConfigParams().getConnectorConfig())
             .repoDisplayName(helmChartCollectionParams.getHelmChartConfigParams().getRepoDisplayName())
+            .useLatestChartMuseumVersion(featureFlagService.isEnabled(
+                FeatureName.USE_LATEST_CHARTMUSEUM_VERSION, helmChartCollectionParams.getAccountId()))
             .connectorEncryptedDataDetails(
                 helmChartCollectionParams.getHelmChartConfigParams().getConnectorEncryptedDataDetails())
             .build();
