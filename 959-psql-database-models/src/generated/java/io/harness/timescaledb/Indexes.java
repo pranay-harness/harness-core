@@ -6,6 +6,8 @@ package io.harness.timescaledb;
 import io.harness.timescaledb.tables.Anomalies;
 import io.harness.timescaledb.tables.BillingData;
 import io.harness.timescaledb.tables.KubernetesUtilizationData;
+import io.harness.timescaledb.tables.NodeInfo;
+import io.harness.timescaledb.tables.PodInfo;
 
 import org.jooq.Index;
 import org.jooq.OrderField;
@@ -89,6 +91,14 @@ public class Indexes {
           new OrderField[] {BillingData.BILLING_DATA.ACCOUNTID, BillingData.BILLING_DATA.WORKLOADNAME,
               BillingData.BILLING_DATA.STARTTIME.desc()},
           false);
+  public static final Index KUBERNETES_UTILIZATION_DATA_ACCID_CLUSTERID_ACINSTANCEID =
+      Internal.createIndex(DSL.name("kubernetes_utilization_data_accid_clusterid_acinstanceid"),
+          KubernetesUtilizationData.KUBERNETES_UTILIZATION_DATA,
+          new OrderField[] {KubernetesUtilizationData.KUBERNETES_UTILIZATION_DATA.ACCOUNTID,
+              KubernetesUtilizationData.KUBERNETES_UTILIZATION_DATA.CLUSTERID,
+              KubernetesUtilizationData.KUBERNETES_UTILIZATION_DATA.ACTUALINSTANCEID,
+              KubernetesUtilizationData.KUBERNETES_UTILIZATION_DATA.STARTTIME.desc()},
+          false);
   public static final Index KUBERNETES_UTILIZATION_DATA_INSTANCEID_INDEX = Internal.createIndex(
       DSL.name("kubernetes_utilization_data_instanceid_index"), KubernetesUtilizationData.KUBERNETES_UTILIZATION_DATA,
       new OrderField[] {KubernetesUtilizationData.KUBERNETES_UTILIZATION_DATA.INSTANCEID,
@@ -106,4 +116,15 @@ public class Indexes {
           KubernetesUtilizationData.KUBERNETES_UTILIZATION_DATA.INSTANCETYPE,
           KubernetesUtilizationData.KUBERNETES_UTILIZATION_DATA.STARTTIME.desc()},
       true);
+  public static final Index NODE_INFO_ACCID_CLUSTERID_POOLNAME = Internal.createIndex(
+      DSL.name("node_info_accid_clusterid_poolname"), NodeInfo.NODE_INFO,
+      new OrderField[] {NodeInfo.NODE_INFO.ACCOUNTID, NodeInfo.NODE_INFO.CLUSTERID, NodeInfo.NODE_INFO.NODEPOOLNAME},
+      false);
+  public static final Index POD_INFO_STARTTIME_IDX = Internal.createIndex(DSL.name("pod_info_starttime_idx"),
+      PodInfo.POD_INFO, new OrderField[] {PodInfo.POD_INFO.STARTTIME.desc()}, false);
+  public static final Index POD_INFO_STARTTIME_UNIQUE_RECORD_INDEX =
+      Internal.createIndex(DSL.name("pod_info_starttime_unique_record_index"), PodInfo.POD_INFO,
+          new OrderField[] {PodInfo.POD_INFO.ACCOUNTID, PodInfo.POD_INFO.CLUSTERID, PodInfo.POD_INFO.INSTANCEID,
+              PodInfo.POD_INFO.STARTTIME.desc()},
+          true);
 }

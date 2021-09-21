@@ -945,6 +945,36 @@ public class BillingDataRecord extends TableRecordImpl<BillingDataRecord> {
     return (Double) get(61);
   }
 
+  /**
+   * Setter for <code>public.billing_data.maxstoragerequest</code>.
+   */
+  public BillingDataRecord setMaxstoragerequest(Double value) {
+    set(62, value);
+    return this;
+  }
+
+  /**
+   * Getter for <code>public.billing_data.maxstoragerequest</code>.
+   */
+  public Double getMaxstoragerequest() {
+    return (Double) get(62);
+  }
+
+  /**
+   * Setter for <code>public.billing_data.maxstorageutilizationvalue</code>.
+   */
+  public BillingDataRecord setMaxstorageutilizationvalue(Double value) {
+    set(63, value);
+    return this;
+  }
+
+  /**
+   * Getter for <code>public.billing_data.maxstorageutilizationvalue</code>.
+   */
+  public Double getMaxstorageutilizationvalue() {
+    return (Double) get(63);
+  }
+
   // -------------------------------------------------------------------------
   // Constructors
   // -------------------------------------------------------------------------
@@ -973,7 +1003,7 @@ public class BillingDataRecord extends TableRecordImpl<BillingDataRecord> {
       Double maxcpuutilizationvalue, Double maxmemoryutilizationvalue, Double avgcpuutilizationvalue,
       Double avgmemoryutilizationvalue, Double networkcost, String pricingsource, Double storageactualidlecost,
       Double storageunallocatedcost, Double storageutilizationvalue, Double storagerequest, Double storagembseconds,
-      Double storagecost) {
+      Double storagecost, Double maxstoragerequest, Double maxstorageutilizationvalue) {
     super(BillingData.BILLING_DATA);
 
     setStarttime(starttime);
@@ -1038,5 +1068,7 @@ public class BillingDataRecord extends TableRecordImpl<BillingDataRecord> {
     setStoragerequest(storagerequest);
     setStoragembseconds(storagembseconds);
     setStoragecost(storagecost);
+    setMaxstoragerequest(maxstoragerequest);
+    setMaxstorageutilizationvalue(maxstorageutilizationvalue);
   }
 }
