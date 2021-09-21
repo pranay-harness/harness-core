@@ -2,6 +2,7 @@ package io.harness.pms.expressions.functors;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionFunctor;
 import io.harness.expression.LateBindingMap;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -45,6 +46,9 @@ public class RemoteExpressionFunctor extends LateBindingMap implements Expressio
             expressionResponse.getValue(), expressionResponse.getPrimitiveType());
       }
       return RecastOrchestrationUtils.fromJson(expressionResponse.getValue());
+    } catch (ClassNotFoundException e) {
+      e.printStackTrace();
+      throw new InvalidRequestException(e.getMessage(), e);
     } catch (Exception ex) {
       log.error("Could not get object from remote functor for key: " + functorKey);
       throw ex;

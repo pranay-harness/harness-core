@@ -24,7 +24,11 @@ import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.StreamObserver;
 import io.grpc.testing.GrpcCleanupRule;
 import java.io.IOException;
+import java.net.URI;
+import java.time.Instant;
+import java.util.Date;
 import java.util.Map;
+import java.util.UUID;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -91,10 +95,24 @@ public class RemoteExpressionFunctorTest extends CategoryTest {
   @Test
   @Owner(developers = BRIJESH)
   @Category(UnitTests.class)
-  public void testGetPrimitiveResponse() {
+  public void testGetPrimitiveResponse() throws ClassNotFoundException {
     assertEquals(ExpressionResultUtils.getPrimitiveResponse("10", Integer.class.getSimpleName()), 10);
     assertEquals(ExpressionResultUtils.getPrimitiveResponse("true", Boolean.class.getSimpleName()), true);
     assertEquals(ExpressionResultUtils.getPrimitiveResponse("10", String.class.getSimpleName()), "10");
     assertEquals(ExpressionResultUtils.getPrimitiveResponse("10", Byte.class.getSimpleName()), Byte.valueOf("10"));
+    assertEquals(ExpressionResultUtils.getPrimitiveResponse("10", Character.class.getSimpleName()), '1');
+    assertEquals(ExpressionResultUtils.getPrimitiveResponse("10", Short.class.getSimpleName()), new Short("10"));
+    assertEquals(ExpressionResultUtils.getPrimitiveResponse("10", Long.class.getSimpleName()), 10L);
+    assertEquals(ExpressionResultUtils.getPrimitiveResponse("10.1", Double.class.getSimpleName()), 10.1D);
+    assertEquals(ExpressionResultUtils.getPrimitiveResponse("10.1", Float.class.getSimpleName()), 10.1F);
+    assertEquals(ExpressionResultUtils.getPrimitiveResponse("2021-09-21T10:04:19.112Z", Date.class.getSimpleName()),
+        Date.from(Instant.parse("2021-09-21T10:04:19.112Z")));
+    assertEquals(ExpressionResultUtils.getPrimitiveResponse(Integer.class.getName(), Class.class.getSimpleName()),
+        Class.forName(Integer.class.getName()));
+    assertEquals(ExpressionResultUtils.getPrimitiveResponse("a-b-c-d-e", UUID.class.getSimpleName()),
+        UUID.fromString("a-b-c-d-e"));
+    assertEquals(ExpressionResultUtils.getPrimitiveResponse("uri", URI.class.getSimpleName()), URI.create("uri"));
   }
+
+  public enum DummyEnum { ENUM1 }
 }
