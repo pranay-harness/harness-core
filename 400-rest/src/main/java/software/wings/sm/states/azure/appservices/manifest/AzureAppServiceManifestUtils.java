@@ -271,11 +271,11 @@ public class AzureAppServiceManifestUtils {
 
     Map<K8sValuesLocation, ApplicationManifest> connStringsOverride =
         applicationManifestUtils.getApplicationManifests(context, AppManifestKind.AZURE_CONN_STRINGS_OVERRIDE);
-    if (!appSettingsOverride.isEmpty()) {
+    if (!connStringsOverride.isEmpty()) {
       Optional<K8sValuesLocation> connStringsOverrideLevel = connStringsOverride.keySet().stream().findFirst();
       connStringsOverrideLevel.ifPresent(overrideLevel
           -> appManifestMap.put(
-              AppManifestKind.AZURE_CONN_STRINGS_OVERRIDE.name(), appSettingsOverride.get(overrideLevel)));
+              AppManifestKind.AZURE_CONN_STRINGS_OVERRIDE.name(), connStringsOverride.get(overrideLevel)));
     }
 
     if (!appManifestMap.containsKey(AppManifestKind.AZURE_APP_SETTINGS_OVERRIDE.name())

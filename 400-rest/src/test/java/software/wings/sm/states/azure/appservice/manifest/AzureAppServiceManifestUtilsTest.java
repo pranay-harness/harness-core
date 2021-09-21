@@ -8,6 +8,7 @@
 package software.wings.sm.states.azure.appservice.manifest;
 
 import static io.harness.rule.OwnerRule.IVAN;
+import static io.harness.rule.OwnerRule.JELENA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -24,6 +25,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
+import software.wings.beans.GitFileConfig;
 import software.wings.beans.Service;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
@@ -413,5 +415,101 @@ public class AzureAppServiceManifestUtilsTest extends WingsBaseTest {
     assertThat(connStringSecretsImmutableList).isNotEmpty();
     assertThat(connStringSecretsImmutableList.size()).isEqualTo(1);
     assertThat(connStringSecretsImmutableList.get(0)).isEqualTo("SECRET_CONN_STRINGS");
+  }
+
+  @Test
+  @Owner(developers = JELENA)
+  @Category(UnitTests.class)
+  public void testGetAppServiceConfigurationManifests() {
+    ExecutionContext mockExecutionContext = mock(ExecutionContext.class);
+    mockGetManifestFilesByAppManifestId(mockExecutionContext);
+
+    Map<K8sValuesLocation, ApplicationManifest> appSettingsManifestOverrides = new EnumMap<>(K8sValuesLocation.class);
+
+    // remote service level manifest
+    ApplicationManifest appSettingsServiceOverride = ApplicationManifest.builder().storeType(StoreType.Remote).build();
+    appSettingsServiceOverride.setAppId("APP_ID");
+    appSettingsServiceOverride.setUuid("APP_SETTINGS_SERVICE_OVERRIDE_UUID");
+    appSettingsServiceOverride.setGitFileConfig(
+        GitFileConfig.builder().branch("main").connectorId("CONNECTOR_ID").filePath("appsettings").build());
+    appSettingsManifestOverrides.put(K8sValuesLocation.Service, appSettingsServiceOverride);
+
+    // local env service overrides
+    appSettingsManifestOverrides.putAll(getAppSettingsEnvServiceOverride());
+    doReturn(appSettingsManifestOverrides)
+        .when(applicationManifestUtils)
+        .getApplicationManifests(mockExecutionContext, AppManifestKind.AZURE_APP_SETTINGS_OVERRIDE);
+
+    Map<K8sValuesLocation, ApplicationManifest> connStringManifestOverrides = new EnumMap<>(K8sValuesLocation.class);
+
+    // remote service override
+    ApplicationManifest connStringsServiceEnvOverride =
+        ApplicationManifest.builder().storeType(StoreType.Remote).build();
+    connStringsServiceEnvOverride.setAppId("APP_ID");
+    connStringsServiceEnvOverride.setUuid("CONN_STRINGS_SERVICE_OVERRIDE_UUID");
+    connStringsServiceEnvOverride.setGitFileConfig(
+        GitFileConfig.builder().branch("main").connectorId("CONNECTOR_ID").filePath("connsettings").build());
+
+    // local env service overrides
+    connStringManifestOverrides.put(K8sValuesLocation.Service, connStringsServiceEnvOverride);
+    connStringManifestOverrides.putAll(getConnStringsEnvServiceOverride());
+    doReturn(connStringManifestOverrides)
+        .when(applicationManifestUtils)
+        .getApplicationManifests(mockExecutionContext, AppManifestKind.AZURE_CONN_STRINGS_OVERRIDE);
+
+    Map<String, ApplicationManifest> appServiceConfigurationManifests =
+        azureAppServiceManifestUtils.getAppServiceConfigurationManifests(mockExecutionContext);
+
+    assertThat(appServiceConfigurationManifests.size()).isEqualTo(2);
+
+    assertThat(appServiceConfigurationManifests.get(AppManifestKind.AZURE_APP_SETTINGS_OVERRIDE.name())).isNotNull();
+    assertThat(appServiceConfigurationManifests.get(AppManifestKind.AZURE_APP_SETTINGS_OVERRIDE.name()).getAppId())
+        .isEqualTo("APP_ID");
+    assertThat(appServiceConfigurationManifests.get(AppManifestKind.AZURE_APP_SETTINGS_OVERRIDE.name()).getUuid())
+        .isEqualTo("APP_SETTINGS_ENV_SERVICE_OVERRIDE_UUID");
+
+    assertThat(appServiceConfigurationManifests.get(AppManifestKind.AZURE_CONN_STRINGS_OVERRIDE.name())).isNotNull();
+    assertThat(appServiceConfigurationManifests.get(AppManifestKind.AZURE_CONN_STRINGS_OVERRIDE.name()).getAppId())
+        .isEqualTo("APP_ID");
+    assertThat(appServiceConfigurationManifests.get(AppManifestKind.AZURE_CONN_STRINGS_OVERRIDE.name()).getUuid())
+        .isEqualTo("CONN_STRINGS_ENV_SERVICE_OVERRIDE_UUID");
+  }
+
+  @Test
+  @Owner(developers = JELENA)
+  @Category(UnitTests.class)
+  public void testGetAppServiceConfigurationManifestsNoOverrides() {
+    ExecutionContext mockExecutionContext = mock(ExecutionContext.class);
+    mockGetManifestFilesByAppManifestId(mockExecutionContext);
+
+    Map<K8sValuesLocation, ApplicationManifest> appSettingsManifestOverrides = new EnumMap<>(K8sValuesLocation.class);
+    appSettingsManifestOverrides.putAll(getAppSettingsEnvServiceOverride());
+    doReturn(appSettingsManifestOverrides)
+        .when(applicationManifestUtils)
+        .getApplicationManifests(mockExecutionContext, AppManifestKind.AZURE_APP_SETTINGS_OVERRIDE);
+
+    // empty conn string manifest
+    Map<K8sValuesLocation, ApplicationManifest> connStringManifestOverrides = new EnumMap<>(K8sValuesLocation.class);
+    doReturn(connStringManifestOverrides)
+        .when(applicationManifestUtils)
+        .getApplicationManifests(mockExecutionContext, AppManifestKind.AZURE_CONN_STRINGS_OVERRIDE);
+
+    Map<String, ApplicationManifest> appServiceConfigurationManifests =
+        azureAppServiceManifestUtils.getAppServiceConfigurationManifests(mockExecutionContext);
+
+    assertThat(appServiceConfigurationManifests.size()).isEqualTo(2);
+
+    assertThat(appServiceConfigurationManifests.get(AppManifestKind.AZURE_CONN_STRINGS_OVERRIDE.name())).isNull();
+
+    assertThat(appServiceConfigurationManifests.get(AppManifestKind.AZURE_APP_SETTINGS_OVERRIDE.name())).isNotNull();
+    assertThat(appServiceConfigurationManifests.get(AppManifestKind.AZURE_APP_SETTINGS_OVERRIDE.name()).getAppId())
+        .isEqualTo("APP_ID");
+    assertThat(appServiceConfigurationManifests.get(AppManifestKind.AZURE_APP_SETTINGS_OVERRIDE.name()).getUuid())
+        .isEqualTo("APP_SETTINGS_ENV_SERVICE_OVERRIDE_UUID");
+
+    assertThat(appServiceConfigurationManifests.get(K8sValuesLocation.Service.name())).isNotNull();
+    assertThat(appServiceConfigurationManifests.get(K8sValuesLocation.Service.name()).getAppId()).isEqualTo("APP_ID");
+    assertThat(appServiceConfigurationManifests.get(K8sValuesLocation.Service.name()).getUuid())
+        .isEqualTo("SERVICE_UUID");
   }
 }
