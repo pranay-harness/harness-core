@@ -66,7 +66,7 @@ public class AwsLambdaTaskTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testExecuteWf() {
     AwsLambdaRequest request = AwsLambdaExecuteWfRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockAwsLambdaHelperServiceDelegate).executeWf(any(), any());
   }
 
@@ -75,7 +75,7 @@ public class AwsLambdaTaskTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testExecuteFunction() {
     AwsLambdaRequest request = AwsLambdaExecuteFunctionRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockAwsLambdaHelperServiceDelegate).executeFunction(any());
   }
 
@@ -86,7 +86,7 @@ public class AwsLambdaTaskTest extends WingsBaseTest {
     AwsLambdaExecuteFunctionRequest request = AwsLambdaExecuteFunctionRequest.builder().build();
     doThrow(new RuntimeException("Error msg")).when(mockAwsLambdaHelperServiceDelegate).executeFunction(request);
 
-    AwsResponse awsResponse = task.run(new Object[] {request});
+    AwsResponse awsResponse = task.run(request);
 
     verify(mockAwsLambdaHelperServiceDelegate).executeFunction(any());
     assertThat(awsResponse instanceof AwsLambdaExecuteFunctionResponse).isTrue();
@@ -104,7 +104,7 @@ public class AwsLambdaTaskTest extends WingsBaseTest {
     AwsLambdaExecuteWfRequest request = AwsLambdaExecuteWfRequest.builder().build();
     doThrow(new RuntimeException("Error msg")).when(mockAwsLambdaHelperServiceDelegate).executeWf(any(), any());
 
-    AwsResponse awsResponse = task.run(new Object[] {request});
+    AwsResponse awsResponse = task.run(request);
 
     verify(mockAwsLambdaHelperServiceDelegate).executeWf(any(), any());
     assertThat(awsResponse instanceof AwsLambdaExecuteWfResponse).isTrue();
@@ -119,7 +119,7 @@ public class AwsLambdaTaskTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetLambdaFunctions() {
     AwsLambdaFunctionRequest request = AwsLambdaFunctionRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockAwsLambdaHelperServiceDelegate).getLambdaFunctions(request);
   }
 
@@ -130,7 +130,7 @@ public class AwsLambdaTaskTest extends WingsBaseTest {
     AwsLambdaFunctionRequest request = AwsLambdaFunctionRequest.builder().build();
     doThrow(new RuntimeException("Error msg")).when(mockAwsLambdaHelperServiceDelegate).getLambdaFunctions(request);
 
-    AwsResponse awsResponse = task.run(new Object[] {request});
+    AwsResponse awsResponse = task.run(request);
 
     verify(mockAwsLambdaHelperServiceDelegate).getLambdaFunctions(any());
     assertThat(awsResponse instanceof AwsLambdaFunctionResponse).isTrue();
@@ -145,7 +145,7 @@ public class AwsLambdaTaskTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testGetFunctionDetails() {
     AwsLambdaDetailsRequest request = AwsLambdaDetailsRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockAwsLambdaHelperServiceDelegate).getFunctionDetails(request, false);
   }
 
@@ -158,7 +158,7 @@ public class AwsLambdaTaskTest extends WingsBaseTest {
         .when(mockAwsLambdaHelperServiceDelegate)
         .getFunctionDetails(request, false);
 
-    AwsResponse awsResponse = task.run(new Object[] {request});
+    AwsResponse awsResponse = task.run(request);
 
     verify(mockAwsLambdaHelperServiceDelegate).getFunctionDetails(any(), anyBoolean());
     assertThat(awsResponse instanceof AwsLambdaFunctionResponse).isTrue();

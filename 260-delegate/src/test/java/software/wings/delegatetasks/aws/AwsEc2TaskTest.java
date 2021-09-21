@@ -59,25 +59,25 @@ public class AwsEc2TaskTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testRun() {
     AwsEc2Request request = AwsEc2ValidateCredentialsRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockEc2ServiceDelegate).validateAwsAccountCredential(any(), anyList());
     request = AwsEc2ListRegionsRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockEc2ServiceDelegate).listRegions(any(), anyList());
     request = AwsEc2ListVpcsRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockEc2ServiceDelegate).listVPCs(any(), anyList(), anyString());
     request = AwsEc2ListSubnetsRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockEc2ServiceDelegate).listSubnets(any(), anyList(), anyString(), anyList());
     request = AwsEc2ListSGsRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockEc2ServiceDelegate).listSGs(any(), anyList(), anyString(), anyList());
     request = AwsEc2ListTagsRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockEc2ServiceDelegate).listTags(any(), anyList(), anyString(), anyString());
     request = AwsEc2ListInstancesRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockEc2ServiceDelegate).listEc2Instances(any(), anyList(), anyString(), anyList(), anyBoolean());
   }
 }

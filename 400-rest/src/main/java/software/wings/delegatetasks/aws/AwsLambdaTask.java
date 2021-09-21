@@ -50,12 +50,7 @@ public class AwsLambdaTask extends AbstractDelegateRunnableTask {
 
   @Override
   public AwsResponse run(TaskParameters parameters) {
-    throw new NotImplementedException("not implemented");
-  }
-
-  @Override
-  public AwsResponse run(Object[] parameters) {
-    AwsLambdaRequest request = (AwsLambdaRequest) parameters[0];
+    AwsLambdaRequest request = (AwsLambdaRequest) parameters;
     AwsLambdaRequestType requestType = request.getRequestType();
     switch (requestType) {
       case EXECUTE_LAMBDA_FUNCTION: {
@@ -107,5 +102,10 @@ public class AwsLambdaTask extends AbstractDelegateRunnableTask {
         throw new InvalidRequestException("Invalid request type [" + requestType + "]", WingsException.USER);
       }
     }
+  }
+
+  @Override
+  public AwsResponse run(Object[] parameters) {
+    throw new NotImplementedException("not implemented");
   }
 }

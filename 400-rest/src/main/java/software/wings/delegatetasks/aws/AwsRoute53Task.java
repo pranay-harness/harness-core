@@ -42,12 +42,7 @@ public class AwsRoute53Task extends AbstractDelegateRunnableTask {
 
   @Override
   public AwsResponse run(TaskParameters parameters) {
-    throw new NotImplementedException("not implemented");
-  }
-
-  @Override
-  public AwsResponse run(Object[] parameters) {
-    AwsRoute53Request request = (AwsRoute53Request) parameters[0];
+    AwsRoute53Request request = (AwsRoute53Request) parameters;
     try {
       AwsRoute53RequestType requestType = request.getRequestType();
       switch (requestType) {
@@ -66,5 +61,10 @@ public class AwsRoute53Task extends AbstractDelegateRunnableTask {
     } catch (Exception ex) {
       throw new InvalidRequestException(ExceptionUtils.getMessage(ex), USER);
     }
+  }
+
+  @Override
+  public AwsResponse run(Object[] parameters) {
+    throw new NotImplementedException("not implemented");
   }
 }

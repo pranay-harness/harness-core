@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -22,7 +23,7 @@ import lombok.Data;
 @AllArgsConstructor
 @TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 @OwnedBy(CDP)
-public class AwsRequest implements ExecutionCapabilityDemander {
+public class AwsRequest implements ExecutionCapabilityDemander, TaskParameters {
   @NotNull private AwsConfig awsConfig;
   @NotNull private List<EncryptedDataDetail> encryptionDetails;
 

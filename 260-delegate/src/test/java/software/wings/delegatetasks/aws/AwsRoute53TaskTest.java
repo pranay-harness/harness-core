@@ -55,7 +55,7 @@ public class AwsRoute53TaskTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testRun() {
     AwsRoute53Request request = AwsRoute53ListHostedZonesRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockAwsRoute53HelperServiceDelegate).listHostedZones(any(), anyList(), anyString());
   }
 
@@ -68,7 +68,7 @@ public class AwsRoute53TaskTest extends WingsBaseTest {
         .listHostedZones(any(), anyList(), anyString());
 
     AwsRoute53ListHostedZonesRequest request = AwsRoute53ListHostedZonesRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
 
     verify(mockAwsRoute53HelperServiceDelegate).listHostedZones(any(), anyList(), anyString());
   }
@@ -82,7 +82,7 @@ public class AwsRoute53TaskTest extends WingsBaseTest {
         .listHostedZones(any(), anyList(), anyString());
 
     AwsRoute53ListHostedZonesRequest request = AwsRoute53ListHostedZonesRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
 
     verify(mockAwsRoute53HelperServiceDelegate).listHostedZones(any(), anyList(), anyString());
   }
