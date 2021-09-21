@@ -422,7 +422,6 @@ import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandR
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationListStacksResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationRollbackInfo;
-import software.wings.helpers.ext.cloudformation.response.ExistingStackInfo;
 import software.wings.helpers.ext.cloudformation.response.StackSummaryInfo;
 import software.wings.helpers.ext.ecs.request.EcsBGListenerUpdateRequest;
 import software.wings.helpers.ext.ecs.request.EcsBGRoute53DNSWeightUpdateRequest;
@@ -1094,7 +1093,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(CloudFormationCommandResponse.class, 5338);
     kryo.register(CloudFormationCreateStackResponse.class, 5339);
     kryo.register(CloudFormationListStacksResponse.class, 5340);
-    kryo.register(ExistingStackInfo.class, 5479);
     kryo.register(StackSummaryInfo.class, 5341);
     kryo.register(EcsBGListenerUpdateRequest.class, 5605);
     kryo.register(EcsCommandRequest.EcsCommandType.class, 5607);
