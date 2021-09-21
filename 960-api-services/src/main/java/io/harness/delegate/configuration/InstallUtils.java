@@ -862,10 +862,11 @@ public class InstallUtils {
 
   public static String getScmVersion() {
     String version = System.getenv().get("SCM_VERSION");
-    if (StringUtils.isEmpty(version)) {
-      version = defaultScmVersion;
-      log.info("No version configured. Using default scm version {}", version);
-    }
+    log.info("scm Version configured. ", version);
+
+    version = defaultScmVersion;
+    log.info("No version configured. Using default scm version {}", version);
+
     return version;
   }
 
