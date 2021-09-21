@@ -218,7 +218,6 @@ import software.wings.beans.SmbConfig;
 import software.wings.beans.Workflow;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
-import software.wings.beans.infrastructure.instance.InstanceSyncPerpetualTaskStatus;
 import software.wings.beans.loginSettings.LoginSettingsService;
 import software.wings.beans.loginSettings.LoginSettingsServiceImpl;
 import software.wings.beans.security.UserGroup;
