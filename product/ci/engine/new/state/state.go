@@ -18,8 +18,9 @@ var (
 )
 
 type executionState struct {
-	mu              sync.Mutex
-	executionStatus map[string]status
+	mu               sync.Mutex
+	executionStatus  map[string]status
+	cancelCleanupJob bool
 }
 
 // If a job with an execution ID is already running or completed, it returns false.
@@ -55,11 +56,26 @@ func (s *executionState) IsAnyExecutionRunning() bool {
 	return false
 }
 
+func (s *executionState) NotifyCleanupJobCancellation() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.cancelCleanupJob = true
+}
+
+func (s *executionState) CancelCleanupJob() bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	return s.cancelCleanupJob
+}
+
 // ExecutionState returns execution state
 func ExecutionState() *executionState {
 	once.Do(func() {
 		s = &executionState{}
 		s.executionStatus = make(map[string]status)
+		s.cancelCleanupJob = false
 	})
 	return s
 }

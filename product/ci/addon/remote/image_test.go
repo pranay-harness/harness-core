@@ -24,7 +24,7 @@ type mockClient struct {
 func (c *mockClient) GetImageEntrypoint(ctx context.Context, in *pb.GetImageEntrypointRequest, opts ...grpc.CallOption) (*pb.GetImageEntrypointResponse, error) {
 	return c.response, c.err
 }
-func (c *mockClient) UpdateState(ctx context.Context, in *pb.UpdateStateRequest, opts ...grpc.CallOption) (*pb.UpdateStateResponse, error) {
+func (c *mockClient) NotifyStateChange(ctx context.Context, in *pb.NotifyStateChangeRequest, opts ...grpc.CallOption) (*pb.NotifyStateChangeResponse, error) {
 	return nil, nil
 }
 

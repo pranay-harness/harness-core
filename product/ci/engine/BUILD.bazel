@@ -12,6 +12,7 @@ go_library(
         "//product/ci/engine/consts",
         "//product/ci/engine/grpc",
         "//product/ci/engine/legacy/executor",
+        "//product/ci/engine/new/cleanup",
         "@com_github_alexflint_go_arg//:go-arg",
         "@org_uber_go_zap//:zap",
     ],

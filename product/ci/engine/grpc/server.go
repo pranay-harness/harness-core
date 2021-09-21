@@ -21,6 +21,7 @@ const (
 type EngineServer interface {
 	Start() error
 	Stop()
+	GetStopChannel() chan bool
 }
 
 type engineServer struct {
@@ -79,4 +80,8 @@ func (s *engineServer) Stop() {
 		s.log.Infow("Gracefully shutting down CI engine server")
 		s.grpcServer.GracefulStop()
 	}
+}
+
+func (s *engineServer) GetStopChannel() chan bool {
+	return s.stopCh
 }

@@ -5,7 +5,7 @@ import (
 
 	"github.com/wings-software/portal/commons/go/lib/images"
 	"github.com/wings-software/portal/product/ci/engine/legacy/jexl"
-	"github.com/wings-software/portal/product/ci/engine/legacy/state"
+	"github.com/wings-software/portal/product/ci/engine/new/state"
 	"github.com/wings-software/portal/product/ci/engine/new/executor"
 	"github.com/wings-software/portal/product/ci/engine/output"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
@@ -99,8 +99,8 @@ func (h *engineHandler) ExecuteStep(ctx context.Context, in *pb.ExecuteStepReque
 func (h *engineHandler) NotifyStateChange(ctx context.Context, in *pb.NotifyStateChangeRequest) (*pb.NotifyStateChangeResponse, error) {
 	s := state.ExecutionState()
 	if in.GetAction() == pb.NotifyStateChangeRequest_PAUSE {
-		h.log.Infow("Pausing pipeline execution")
-		s.SetState(state.PAUSED)
+		h.log.Infow("Notify for stopping cleanup job")
+		s.NotifyCleanupJobCancellation()
 	}
 	return &pb.NotifyStateChangeResponse{}, nil
 }

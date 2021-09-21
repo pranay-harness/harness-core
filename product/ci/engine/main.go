@@ -13,6 +13,7 @@ import (
 	"github.com/wings-software/portal/product/ci/engine/consts"
 	"github.com/wings-software/portal/product/ci/engine/grpc"
 	"github.com/wings-software/portal/product/ci/engine/legacy/executor"
+	"github.com/wings-software/portal/product/ci/engine/new/cleanup"
 	"go.uber.org/zap"
 )
 
@@ -39,6 +40,7 @@ type stageSchema struct {
 var args struct {
 	Stage *stageSchema `arg:"subcommand:stage"`
 
+	Ports                 []uint `arg:"--ports" help:"list of ports of all the addon containers"`
 	Verbose               bool   `arg:"--verbose" help:"enable verbose logging mode"`
 	LogMetrics            bool   `arg:"--log_metrics" help:"enable metric logging"`
 	Deployment            string `arg:"env:DEPLOYMENT" help:"name of the deployment"`
@@ -73,7 +75,7 @@ func main() {
 
 	if args.Stage != nil {
 		// Starting stage execution
-		startServer(remoteLogger, true)
+		startServer(remoteLogger, args.Ports, true)
 		log.Infow("Starting stage execution")
 		err := executeStage(args.Stage.Input, args.Stage.TmpFilePath, args.Stage.ServicePorts, args.Stage.Debug, log)
 		if err != nil {
@@ -83,16 +85,16 @@ func main() {
 		log.Infow("CI lite engine completed execution, now exiting")
 	} else {
 		// Starts the grpc server and waits for ExecuteStep grpc call to execute a step.
-		startServer(remoteLogger, false)
+		startServer(remoteLogger, args.Ports, false)
 	}
 }
 
 // starts grpc server in background
-func startServer(rl *logs.RemoteLogger, background bool) {
+func startServer(rl *logs.RemoteLogger, ports []uint, background bool) {
 	log := rl.BaseLogger
 	procWriter := rl.Writer
 
-	log.Infow("Starting CI engine server", "port", consts.LiteEnginePort)
+	log.Infow("Starting CI engine server", "engine_port", consts.LiteEnginePort, "addon_ports", ports)
 	s, err := engineServer(consts.LiteEnginePort, log, procWriter)
 	if err != nil {
 		log.Errorw("error on running CI engine server", "port", consts.LiteEnginePort, "error_msg", zap.Error(err))
@@ -109,6 +111,9 @@ func startServer(rl *logs.RemoteLogger, background bool) {
 			}
 		}()
 	} else {
+		// Starts a goroutine to clean up pod resources in case of ci-manager failing to clean up pod resources.
+		go cleanup.RunCleanupJob(ports, s.GetStopChannel(), log)
+
 		if err := s.Start(); err != nil {
 			log.Errorw("error in CI engine grpc server", "port", consts.LiteEnginePort, "error_msg", zap.Error(err))
 			rl.Writer.Close()

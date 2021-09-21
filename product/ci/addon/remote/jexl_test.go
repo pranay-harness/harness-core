@@ -24,7 +24,7 @@ type mockJEXLClient struct {
 func (c *mockJEXLClient) GetImageEntrypoint(ctx context.Context, in *pb.GetImageEntrypointRequest, opts ...grpc.CallOption) (*pb.GetImageEntrypointResponse, error) {
 	return nil, nil
 }
-func (c *mockJEXLClient) UpdateState(ctx context.Context, in *pb.UpdateStateRequest, opts ...grpc.CallOption) (*pb.UpdateStateResponse, error) {
+func (c *mockJEXLClient) NotifyStateChange(ctx context.Context, in *pb.NotifyStateChangeRequest, opts ...grpc.CallOption) (*pb.NotifyStateChangeResponse, error) {
 	return nil, nil
 }
 

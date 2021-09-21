@@ -19,8 +19,9 @@ type mockServer struct {
 	err error
 }
 
-func (s *mockServer) Start() error { return s.err }
-func (s *mockServer) Stop()        {}
+func (s *mockServer) Start() error              { return s.err }
+func (s *mockServer) Stop()                     {}
+func (s *mockServer) GetStopChannel() chan bool { return nil }
 
 func TestMainEmptyStage(t *testing.T) {
 	ctrl, _ := gomock.WithContext(context.Background(), t)
