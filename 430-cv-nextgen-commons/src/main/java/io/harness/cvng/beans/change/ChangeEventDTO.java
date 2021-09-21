@@ -21,24 +21,29 @@ public class ChangeEventDTO {
   @NotNull String projectIdentifier;
 
   @NotNull String serviceIdentifier;
+  String serviceName;
   @NotNull String envIdentifier;
+  String environmentName;
 
+  String name;
   String changeSourceIdentifier;
-
   @JsonProperty("type") ChangeSourceType type;
-
   long eventTime;
 
   @JsonTypeInfo(
       use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)
   @Valid
   @NotNull
-  ChangeEventMetadata changeEventMetaData;
+  ChangeEventMetadata metadata;
 
   public ChangeSourceType getType() {
-    if (type == null && changeEventMetaData != null) {
-      type = changeEventMetaData.getType();
+    if (type == null && metadata != null) {
+      type = metadata.getType();
     }
     return type;
+  }
+
+  public ChangeCategory getCategory() {
+    return getType().getChangeCategory();
   }
 }

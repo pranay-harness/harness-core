@@ -10,11 +10,11 @@ public class HarnessCDChangeEventTransformer
     extends ChangeEventMetaDataTransformer<HarnessCDActivity, HarnessCDEventMetadata> {
   @Override
   public HarnessCDActivity getEntity(ChangeEventDTO changeEventDTO) {
-    HarnessCDEventMetadata metaData = (HarnessCDEventMetadata) changeEventDTO.getChangeEventMetaData();
+    HarnessCDEventMetadata metaData = (HarnessCDEventMetadata) changeEventDTO.getMetadata();
     return HarnessCDActivity.builder()
         .accountId(changeEventDTO.getAccountId())
         .activityName(
-            "Harness CD - " + changeEventDTO.getServiceIdentifier() + " - " + changeEventDTO.getEnvIdentifier())
+            "Deployment of " + changeEventDTO.getServiceIdentifier() + " in " + changeEventDTO.getEnvIdentifier())
         .orgIdentifier(changeEventDTO.getOrgIdentifier())
         .projectIdentifier(changeEventDTO.getProjectIdentifier())
         .serviceIdentifier(changeEventDTO.getServiceIdentifier())

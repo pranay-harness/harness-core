@@ -1,4 +1,4 @@
-package io.harness.cvng.core.beans;
+package io.harness.cvng.core.beans.change;
 
 import io.harness.cvng.beans.change.ChangeCategory;
 

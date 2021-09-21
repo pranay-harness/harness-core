@@ -10,7 +10,7 @@ public class PagerDutyChangeEventTransformer
     extends ChangeEventMetaDataTransformer<PagerDutyActivity, PagerDutyEventMetaData> {
   @Override
   public PagerDutyActivity getEntity(ChangeEventDTO changeEventDTO) {
-    PagerDutyEventMetaData pagerDutyEventMetaData = (PagerDutyEventMetaData) changeEventDTO.getChangeEventMetaData();
+    PagerDutyEventMetaData pagerDutyEventMetaData = (PagerDutyEventMetaData) changeEventDTO.getMetadata();
     return PagerDutyActivity.builder()
         .accountId(changeEventDTO.getAccountId())
         .activityName(pagerDutyEventMetaData.getTitle())
