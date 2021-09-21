@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.pms.merger.helpers.MergeHelper.mergeInputSetIntoPipeline;
 import static io.harness.pms.merger.helpers.MergeHelper.mergeInputSets;
 import static io.harness.pms.merger.helpers.YamlTemplateHelper.createTemplateFromPipeline;
+import static io.harness.pms.merger.helpers.YamlTemplateHelper.createTemplateFromPipelineForGivenStages;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.NAMAN;
 
@@ -19,6 +20,8 @@ import com.google.common.io.Resources;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import org.junit.Test;
@@ -35,6 +38,11 @@ public class MergeHelperTest extends CategoryTest {
     }
   }
 
+  private void assertStringEqualToFile(String result, String filename) {
+    String expected = readFile(filename);
+    assertThat(result).isEqualTo(expected);
+  }
+
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
@@ -46,6 +54,28 @@ public class MergeHelperTest extends CategoryTest {
     String resFile = "pipeline-extensive-template.yml";
     String resTemplate = readFile(resFile);
     assertThat(templateYaml).isEqualTo(resTemplate);
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testCreateTemplateFromPipelineForGivenStages() {
+    String pipeline1 = "pipeline-extensive.yml";
+    String pipelineYaml1 = readFile(pipeline1);
+    String templateForQaStage4 =
+        createTemplateFromPipelineForGivenStages(pipelineYaml1, Collections.singletonList("qaStage4"));
+    assertStringEqualToFile(templateForQaStage4, "templateForQaStage4.yaml");
+    String templateForQaStage3 =
+        createTemplateFromPipelineForGivenStages(pipelineYaml1, Collections.singletonList("qaStage3"));
+    assertStringEqualToFile(templateForQaStage3, "templateForQaStage3.yaml");
+    String templateForQaStageAndQaStage3 =
+        createTemplateFromPipelineForGivenStages(pipelineYaml1, Arrays.asList("qaStage", "qaStage3"));
+    assertStringEqualToFile(templateForQaStageAndQaStage3, "templateForQaStageAndQaStage3.yaml");
+
+    String pipeline2 = "pipeline-2.yaml";
+    String pipelineYaml2 = readFile(pipeline2);
+    String template = createTemplateFromPipelineForGivenStages(pipelineYaml2, Collections.singletonList("qaStage4"));
+    assertThat(template).isNull();
   }
 
   @Test

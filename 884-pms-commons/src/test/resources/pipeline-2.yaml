@@ -1,0 +1,121 @@
+pipeline:
+  name: Test Pipline
+  identifier: Test_Pipline11
+  variables:
+    - name: port
+      value: 6060
+      type: String
+  stages:
+    - stage:
+        identifier: qaStage
+        name: qa stage
+        type: Deployment
+        spec:
+          serviceConfig:
+            service:
+              identifier: manager
+              name: manager
+            serviceDefinition:
+              type: Kubernetes
+              spec:
+                manifests:
+                  - manifest:
+                      identifier: baseValues
+                      type: K8sManifest
+                      spec:
+                        store:
+                          type: Git
+                          spec:
+                            connectorRef: my_git_connector
+                            gitFetchType: Branch
+                            branch: master
+                            paths:
+                              - a.yaml
+          infrastructure:
+            environment:
+              identifier: stagingInfra
+              type: PreProduction
+            infrastructureDefinition:
+              type: KubernetesDirect
+              spec:
+                connectorRef: aa
+                namespace: aa
+                releaseName: aa
+          execution:
+            steps:
+              - step:
+                  name: http step 1
+                  identifier: httpStep1
+                  type: Http
+                  spec:
+                    socketTimeoutMillis: 1000
+                    method: GET
+                    url: <+input>
+    - stage:
+        identifier: qaStage4
+        name: qa stage4
+        type: Deployment
+        spec:
+          service:
+            identifier: manager
+            name: manager
+            serviceDefinition:
+              type: Kubernetes
+              spec:
+                manifests:
+                  - manifest:
+                      identifier: baseValues
+                      type: K8sManifest
+                      spec:
+                        store:
+                          type: Git
+                          spec:
+                            connectorRef: my_git_connector
+                            gitFetchType: Branch
+                            branch: master
+                            paths:
+                              - test/spec
+                  - manifest:
+                      identifier: qaOverride
+                      type: Values
+                      spec:
+                        store:
+                          type: Git
+                          spec:
+                            connectorRef: my_git_connector
+                            gitFetchType: Branch
+                            branch: master
+                            paths:
+                              - test/baseValues.yaml
+                              - test/qa/values_1.yaml
+          infrastructure:
+            environment:
+              identifier: stagingInfra
+              type: PreProduction
+              tags:
+                cloud: GCP
+                team: cdp
+            infrastructureDefinition:
+              type: KubernetesDirect
+              spec:
+                connectorRef: account.argocd-account
+                namespace: harness
+                releaseName: testingqa
+          execution:
+            steps:
+              - step:
+                  name: http step 7
+                  identifier: httpStep7
+                  type: Http
+                  spec:
+                    socketTimeoutMillis: 1000
+                    method: GET
+                    url: https://google.com
+              - step:
+                  name: http step 8
+                  identifier: httpStep8
+                  type: Http
+                  spec:
+                    socketTimeoutMillis: 1000
+                    method: GET
+                    url: https://google.com
