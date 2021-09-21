@@ -4,8 +4,10 @@ import static io.harness.rule.OwnerRule.MOHIT_GARG;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -21,6 +23,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._441_CG_INSTANCE_SYNC)
 public class InstanceSyncPerpetualTaskStatusTest extends WingsBaseTest {
   @Inject WingsPersistence wingsPersistence;
   @Inject InstanceSyncPerpetualTaskStatusService instanceSyncPerpetualTaskStatusService;

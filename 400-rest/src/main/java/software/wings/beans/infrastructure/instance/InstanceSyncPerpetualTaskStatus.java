@@ -1,7 +1,9 @@
 package software.wings.beans.infrastructure.instance;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.mongo.index.FdUniqueIndex;
 import io.harness.persistence.PersistentEntity;
 
@@ -16,6 +18,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "InstanceSyncPerpetualTaskStatusKeys")
 @Entity(value = "instanceSyncPerpetualTaskStatus", noClassnameStored = true)
 @OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._441_CG_INSTANCE_SYNC)
 public class InstanceSyncPerpetualTaskStatus implements PersistentEntity {
   @Id String uuid;
   @FdUniqueIndex String perpetualTaskId;
