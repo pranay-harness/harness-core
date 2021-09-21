@@ -25,8 +25,8 @@ public class InstanceSyncPerpetualTaskStatusServiceImpl implements InstanceSyncP
     if (status != null) {
       if (System.currentTimeMillis() - status.getInitialFailureAt() >= Duration.ofDays(7).toMillis()) {
         delete(perpetualTaskId);
+        return true;
       }
-      return true;
     }
 
     updateSyncFailure(perpetualTaskId, errorMessage);
