@@ -2,9 +2,9 @@ package software.wings.service.impl.instance;
 
 import static io.harness.rule.OwnerRule.MOHIT_GARG;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertFalse;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -39,9 +39,8 @@ public class InstanceSyncPerpetualTaskStatusTest extends WingsBaseTest {
         instanceSyncPerpetualTaskStatusService.handlePerpetualTaskFailure(PERPETUAL_TASK_ID, FAILURE_REASON);
     InstanceSyncPerpetualTaskStatus instanceSyncPerpetualTaskStatus = getRecord(PERPETUAL_TASK_ID);
 
-    assertEquals(status, false);
-    assertEquals(instanceSyncPerpetualTaskStatus.getPerpetualTaskId(), PERPETUAL_TASK_ID);
-    assertEquals(instanceSyncPerpetualTaskStatus.getLastFailureReason(), FAILURE_REASON);
+    assertThat(PERPETUAL_TASK_ID.equals(instanceSyncPerpetualTaskStatus.getPerpetualTaskId()));
+    assertThat(FAILURE_REASON.equals(instanceSyncPerpetualTaskStatus.getLastFailureReason()));
   }
 
   @Test
@@ -51,13 +50,13 @@ public class InstanceSyncPerpetualTaskStatusTest extends WingsBaseTest {
     long currTime = System.currentTimeMillis();
     createRecord(currTime - Duration.ofDays(7).toMillis());
     InstanceSyncPerpetualTaskStatus instanceSyncPerpetualTaskStatus = getRecord(PERPETUAL_TASK_ID);
-    assertNotNull(instanceSyncPerpetualTaskStatus);
+    assertThat(instanceSyncPerpetualTaskStatus).isNotNull();
 
     boolean status =
         instanceSyncPerpetualTaskStatusService.handlePerpetualTaskFailure(PERPETUAL_TASK_ID, FAILURE_REASON);
     instanceSyncPerpetualTaskStatus = getRecord(PERPETUAL_TASK_ID);
-    assertEquals(status, true);
-    assertNull(instanceSyncPerpetualTaskStatus);
+    assertThat(status);
+    assertThat(instanceSyncPerpetualTaskStatus).isNull();
   }
 
   @Test
@@ -66,11 +65,11 @@ public class InstanceSyncPerpetualTaskStatusTest extends WingsBaseTest {
   public void testUpdatePerpetualTaskSuccess() {
     createRecord(System.currentTimeMillis());
     InstanceSyncPerpetualTaskStatus instanceSyncPerpetualTaskStatus = getRecord(PERPETUAL_TASK_ID);
-    assertNotNull(instanceSyncPerpetualTaskStatus);
+    assertThat(instanceSyncPerpetualTaskStatus).isNotNull();
 
     instanceSyncPerpetualTaskStatusService.updatePerpetualTaskSuccess(PERPETUAL_TASK_ID);
     instanceSyncPerpetualTaskStatus = getRecord(PERPETUAL_TASK_ID);
-    assertNull(instanceSyncPerpetualTaskStatus);
+    assertThat(instanceSyncPerpetualTaskStatus).isNull();
   }
 
   @Test
@@ -81,14 +80,14 @@ public class InstanceSyncPerpetualTaskStatusTest extends WingsBaseTest {
         instanceSyncPerpetualTaskStatusService.handlePerpetualTaskFailure(PERPETUAL_TASK_ID, FAILURE_REASON);
     InstanceSyncPerpetualTaskStatus instanceSyncPerpetualTaskStatus = getRecord(PERPETUAL_TASK_ID);
 
-    assertEquals(status, false);
+    assertFalse(status);
     assertEquals(instanceSyncPerpetualTaskStatus.getPerpetualTaskId(), PERPETUAL_TASK_ID);
     assertEquals(instanceSyncPerpetualTaskStatus.getLastFailureReason(), FAILURE_REASON);
 
     status = instanceSyncPerpetualTaskStatusService.handlePerpetualTaskFailure(PERPETUAL_TASK_ID, FAILURE_REASON_2);
     instanceSyncPerpetualTaskStatus = getRecord(PERPETUAL_TASK_ID);
 
-    assertEquals(status, false);
+    assertFalse(status);
     assertEquals(instanceSyncPerpetualTaskStatus.getPerpetualTaskId(), PERPETUAL_TASK_ID);
     assertEquals(instanceSyncPerpetualTaskStatus.getLastFailureReason(), FAILURE_REASON_2);
   }
