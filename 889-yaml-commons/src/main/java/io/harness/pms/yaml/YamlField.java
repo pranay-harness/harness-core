@@ -22,7 +22,7 @@ public class YamlField {
 
   @NotNull YamlNode node;
 
-  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
+  @JsonCreator
   public YamlField(@JsonProperty("name") String name, @JsonProperty("node") YamlNode node) {
     this.node = node;
   }

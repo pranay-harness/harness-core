@@ -47,11 +47,7 @@ public class YamlNode implements Visitable {
     this(null, currJsonNode, null);
   }
 
-  public YamlNode(String name, JsonNode currJsonNode) {
-    this(name, currJsonNode, null);
-  }
-
-  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
+  @JsonCreator
   public YamlNode(@JsonProperty("fieldName") String fieldName, @JsonProperty("currJsonNode") JsonNode currJsonNode,
       @JsonProperty("parentNode") YamlNode parentNode) {
     this.fieldName = fieldName;
