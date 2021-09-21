@@ -51,6 +51,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.Environment;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.cloudformation.CloudFormationCommandTaskParameters;
 import software.wings.beans.infrastructure.CloudFormationRollbackConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.cloudformation.CloudFormationCompletionFlag;
@@ -184,10 +185,12 @@ public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
     DelegateTask delegateTask = captor.getValue();
     assertThat(delegateTask).isNotNull();
     assertThat(delegateTask.getData().getParameters()).isNotNull();
-    assertThat(2).isEqualTo(delegateTask.getData().getParameters().length);
+    assertThat(1).isEqualTo(delegateTask.getData().getParameters().length);
     assertThat(delegateTask.getData().getParameters()[0] instanceof CloudFormationCreateStackRequest).isTrue();
+    CloudFormationCommandTaskParameters cloudFormationCommandTaskParameters =
+        (CloudFormationCommandTaskParameters) delegateTask.getData().getParameters()[0];
     CloudFormationCreateStackRequest createStackRequest =
-        (CloudFormationCreateStackRequest) delegateTask.getData().getParameters()[0];
+        (CloudFormationCreateStackRequest) cloudFormationCommandTaskParameters.getCloudFormationCommandRequest();
     assertThat(CREATE_STACK).isEqualTo(createStackRequest.getCommandType());
     assertThat("oldBody").isEqualTo(createStackRequest.getData());
     assertThat(1000).isEqualTo(createStackRequest.getTimeoutInMs());
@@ -323,16 +326,20 @@ public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
     assertThat(delegateTask.getAccountId()).isEqualTo(ACCOUNT_ID);
 
     assertThat(delegateTask.getData().getParameters()).isNotNull();
-    assertThat(delegateTask.getData().getParameters().length).isEqualTo(2);
+    assertThat(delegateTask.getData().getParameters().length).isEqualTo(1);
     if (stackExisted) {
+      CloudFormationCommandTaskParameters cloudFormationCommandTaskParameters =
+          (CloudFormationCommandTaskParameters) delegateTask.getData().getParameters()[0];
       CloudFormationDeleteStackRequest deleteRequest =
-          (CloudFormationDeleteStackRequest) delegateTask.getData().getParameters()[0];
+          (CloudFormationDeleteStackRequest) cloudFormationCommandTaskParameters.getCloudFormationCommandRequest();
       assertThat(deleteRequest.getAccountId()).isEqualTo(ACCOUNT_ID);
       assertThat(deleteRequest.getCommandType())
           .isEqualTo(CloudFormationCommandRequest.CloudFormationCommandType.DELETE_STACK);
     } else {
+      CloudFormationCommandTaskParameters cloudFormationCommandTaskParameters =
+          (CloudFormationCommandTaskParameters) delegateTask.getData().getParameters()[0];
       CloudFormationCreateStackRequest createRequest =
-          (CloudFormationCreateStackRequest) delegateTask.getData().getParameters()[0];
+          (CloudFormationCreateStackRequest) cloudFormationCommandTaskParameters.getCloudFormationCommandRequest();
       assertThat(createRequest.getCreateType()).isEqualTo(createType);
       assertThat(createRequest.getData()).isEqualTo(data);
       assertThat(createRequest.getAccountId()).isEqualTo(ACCOUNT_ID);

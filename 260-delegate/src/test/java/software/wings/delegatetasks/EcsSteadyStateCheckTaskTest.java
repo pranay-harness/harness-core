@@ -77,7 +77,7 @@ public class EcsSteadyStateCheckTaskTest extends WingsBaseTest {
     doReturn(singletonList(ContainerInfo.builder().containerId("cid").hostName("host").newContainer(true).build()))
         .when(mockEcsContainerService)
         .getContainerInfosAfterEcsWait(anyString(), any(), anyList(), anyString(), anyString(), anyList(), any());
-    EcsSteadyStateCheckResponse response = task.run(new Object[] {EcsSteadyStateCheckParams.builder().build()});
+    EcsSteadyStateCheckResponse response = task.run(EcsSteadyStateCheckParams.builder().build());
     assertThat(response).isNotNull();
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(response.getContainerInfoList()).isNotNull();
@@ -102,12 +102,12 @@ public class EcsSteadyStateCheckTaskTest extends WingsBaseTest {
     doReturn(singletonList(ContainerInfo.builder().containerId("cid").hostName("host").newContainer(true).build()))
         .when(mockEcsContainerService)
         .getContainerInfosAfterEcsWait(anyString(), any(), anyList(), anyString(), anyString(), anyList(), any());
-    EcsSteadyStateCheckResponse response = task.run(new Object[] {EcsSteadyStateCheckParams.builder().build()});
+    EcsSteadyStateCheckResponse response = task.run(EcsSteadyStateCheckParams.builder().build());
     assertThat(response).isNotNull();
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
     assertThat(response.isTimeoutFailure()).isFalse();
 
-    response = task.run(new Object[] {EcsSteadyStateCheckParams.builder().timeoutErrorSupported(true).build()});
+    response = task.run(EcsSteadyStateCheckParams.builder().timeoutErrorSupported(true).build());
     assertThat(response).isNotNull();
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
     assertThat(response.isTimeoutFailure()).isTrue();

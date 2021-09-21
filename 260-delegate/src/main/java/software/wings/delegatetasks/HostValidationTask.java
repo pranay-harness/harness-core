@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
@@ -36,30 +37,12 @@ public class HostValidationTask extends AbstractDelegateRunnableTask {
 
   @Override
   public DelegateResponseData run(Object[] parameters) {
-    HostValidationTaskParameters hostValidationTaskParameters = null;
-    if (!(parameters[0] instanceof HostValidationTaskParameters)) {
-      hostValidationTaskParameters = HostValidationTaskParameters.builder()
-                                         .hostNames((List<String>) parameters[2])
-                                         .connectionSetting((SettingAttribute) parameters[3])
-                                         .encryptionDetails((List<EncryptedDataDetail>) parameters[4])
-                                         .executionCredential((ExecutionCredential) parameters[5])
-                                         .build();
-    } else {
-      hostValidationTaskParameters = (HostValidationTaskParameters) getParameters()[0];
-    }
-    return getTaskExecutionResponseData(hostValidationTaskParameters);
+    throw new NotImplementedException("not implemented");
   }
 
   @Override
   public RemoteMethodReturnValueData run(TaskParameters parameters) {
-    HostValidationTaskParameters hostValidationTaskParameters = null;
-    if (!(parameters instanceof HostValidationTaskParameters)) {
-      String message = format(
-          "Unrecognized task params while running HostValidationTask: [%s]", parameters.getClass().getSimpleName());
-      log.error(message);
-      return RemoteMethodReturnValueData.builder().returnValue(message).build();
-    }
-    hostValidationTaskParameters = (HostValidationTaskParameters) parameters;
+    HostValidationTaskParameters hostValidationTaskParameters = (HostValidationTaskParameters) parameters;
     return getTaskExecutionResponseData(hostValidationTaskParameters);
   }
 

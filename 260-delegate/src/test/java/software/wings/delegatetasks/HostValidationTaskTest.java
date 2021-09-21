@@ -31,6 +31,7 @@ import software.wings.utils.HostValidationService;
 import java.util.Arrays;
 import java.util.Collections;
 import jodd.exception.UncheckedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -57,7 +58,7 @@ public class HostValidationTaskTest extends WingsBaseTest {
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
   public void testRun() {
-    Object methodReturnValue = hostValidationTask.run(new Object[] {getTaskParameters()});
+    Object methodReturnValue = hostValidationTask.run(getTaskParameters());
     verify(mockHostValidationService, times(1)).validateHost(any(), any(), any(), any(), any());
     assertThat(methodReturnValue).isNotNull();
   }
@@ -67,17 +68,16 @@ public class HostValidationTaskTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testRunthrowsException() {
     when(mockHostValidationService.validateHost(any(), any(), any(), any(), any())).thenThrow(new UncheckedException());
-    hostValidationTask.run(new Object[] {getTaskParameters()});
+    hostValidationTask.run(getTaskParameters());
     verify(mockHostValidationService, times(1)).validateHost(any(), any(), any(), any(), any());
   }
 
-  @Test
+  @Test(expected = NotImplementedException.class)
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
   public void testRunWithObjectParameters() {
-    Object[] objectParams = {any(), any(), Arrays.asList("host1"), any(), Collections.emptyList(), any()};
-    Object methodReturnValue = hostValidationTask.run(objectParams);
-    assertThat(methodReturnValue).isNotNull();
+    Object methodReturnValue = hostValidationTask.run(new Object[] {getTaskParameters()});
+    assertThat(methodReturnValue).isNull();
   }
 
   private HostValidationTaskParameters getTaskParameters() {
@@ -98,7 +98,6 @@ public class HostValidationTaskTest extends WingsBaseTest {
         .async(true)
         .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
         .parameters(new Object[] {getTaskParameters()})
-
         .build();
   }
 }

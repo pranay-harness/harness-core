@@ -8,6 +8,7 @@ import io.harness.delegate.beans.executioncapability.ConnectivityCapabilityDeman
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
+import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
 
@@ -21,7 +22,7 @@ import lombok.Getter;
 @Getter
 @Builder
 @TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
-public class HostValidationTaskParameters implements ExecutionCapabilityDemander {
+public class HostValidationTaskParameters implements ExecutionCapabilityDemander, TaskParameters {
   List<String> hostNames;
   SettingAttribute connectionSetting;
   List<EncryptedDataDetail> encryptionDetails;

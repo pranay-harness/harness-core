@@ -99,7 +99,12 @@ public class CloudFormationCommandTaskTest extends WingsBaseTest {
   public void testRunWithNoExecute() {
     CloudFormationCreateStackRequest unknownRequest =
         CloudFormationCreateStackRequest.builder().commandType(CloudFormationCommandType.UNKNOWN_REQUEST).build();
-    CloudFormationCommandExecutionResponse response = task.run(new Object[] {unknownRequest, emptyList()});
+    CloudFormationCommandTaskParameters cloudFormationCommandTaskParameters =
+        CloudFormationCommandTaskParameters.builder()
+            .cloudFormationCommandRequest(unknownRequest)
+            .encryptedDataDetails(emptyList())
+            .build();
+    CloudFormationCommandExecutionResponse response = task.run(cloudFormationCommandTaskParameters);
     assert (response.getCommandExecutionStatus()).equals(CommandExecutionStatus.FAILURE);
     verify(mockCreateStackHandler, never()).execute(any(), any());
     verify(mockDeleteStackHandler, never()).execute(any(), any());
@@ -113,7 +118,12 @@ public class CloudFormationCommandTaskTest extends WingsBaseTest {
     CloudFormationCreateStackRequest createStackRequest =
         CloudFormationCreateStackRequest.builder().commandType(CloudFormationCommandType.CREATE_STACK).build();
     doThrow(new RuntimeException("Exception")).when(mockCreateStackHandler).execute(any(), any());
-    CloudFormationCommandExecutionResponse response = task.run(new Object[] {createStackRequest, emptyList()});
+    CloudFormationCommandTaskParameters cloudFormationCommandTaskParameters =
+        CloudFormationCommandTaskParameters.builder()
+            .cloudFormationCommandRequest(createStackRequest)
+            .encryptedDataDetails(emptyList())
+            .build();
+    CloudFormationCommandExecutionResponse response = task.run(cloudFormationCommandTaskParameters);
     assert (response.getCommandExecutionStatus()).equals(CommandExecutionStatus.FAILURE);
     verify(mockDeleteStackHandler, never()).execute(any(), any());
     verify(mockListStacksHandler, never()).execute(any(), any());

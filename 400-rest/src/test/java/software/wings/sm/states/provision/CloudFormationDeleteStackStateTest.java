@@ -43,6 +43,7 @@ import software.wings.beans.CloudFormationInfrastructureProvisioner;
 import software.wings.beans.Environment;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
+import software.wings.beans.cloudformation.CloudFormationCommandTaskParameters;
 import software.wings.beans.infrastructure.CloudFormationRollbackConfig;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.dl.WingsPersistence;
@@ -153,10 +154,12 @@ public class CloudFormationDeleteStackStateTest extends WingsBaseTest {
     }
     assertThat(delegateTask.getWaitId()).isEqualTo(ACTIVITY_ID);
     assertThat(delegateTask.getData().getParameters()).isNotNull();
-    assertThat(delegateTask.getData().getParameters().length).isEqualTo(2);
-    assertThat(delegateTask.getData().getParameters()[0] instanceof CloudFormationDeleteStackRequest).isTrue();
+    assertThat(delegateTask.getData().getParameters().length).isEqualTo(1);
+    assertThat(delegateTask.getData().getParameters()[0] instanceof CloudFormationCommandTaskParameters).isTrue();
+    CloudFormationCommandTaskParameters cloudFormationCommandTaskParameters =
+        (CloudFormationCommandTaskParameters) delegateTask.getData().getParameters()[0];
     CloudFormationDeleteStackRequest deleteStackRequest =
-        (CloudFormationDeleteStackRequest) delegateTask.getData().getParameters()[0];
+        (CloudFormationDeleteStackRequest) cloudFormationCommandTaskParameters.getCloudFormationCommandRequest();
     assertThat(deleteStackRequest.getCommandType()).isEqualTo(DELETE_STACK);
     assertThat(deleteStackRequest.getCustomStackName()).isEqualTo("customStackName");
     assertThat(deleteStackRequest.getAccountId()).isEqualTo(ACCOUNT_ID);

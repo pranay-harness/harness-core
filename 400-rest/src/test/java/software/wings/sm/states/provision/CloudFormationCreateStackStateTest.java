@@ -71,6 +71,7 @@ import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TemplateExpression;
+import software.wings.beans.cloudformation.CloudFormationCommandTaskParameters;
 import software.wings.beans.s3.FetchS3FilesCommandParams;
 import software.wings.beans.s3.FetchS3FilesExecutionResponse;
 import software.wings.beans.s3.S3Bucket;
@@ -278,8 +279,10 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
     verifyDelegateTask(delegateTask, true);
+    CloudFormationCommandTaskParameters cloudFormationCommandTaskParameters =
+        (CloudFormationCommandTaskParameters) delegateTask.getData().getParameters()[0];
     CloudFormationCreateStackRequest request =
-        (CloudFormationCreateStackRequest) delegateTask.getData().getParameters()[0];
+        (CloudFormationCreateStackRequest) cloudFormationCommandTaskParameters.getCloudFormationCommandRequest();
     assertThat(request.getData()).isEqualTo(TEMPLATE_FILE_PATH);
     assertThat(request.getCreateType()).isEqualTo(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_URL);
     assertThat(request.getCustomStackName()).isEqualTo(StringUtils.EMPTY);
@@ -300,8 +303,10 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
     verifyDelegateTask(delegateTask, true);
+    CloudFormationCommandTaskParameters cloudFormationCommandTaskParameters =
+        (CloudFormationCommandTaskParameters) delegateTask.getData().getParameters()[0];
     CloudFormationCreateStackRequest request =
-        (CloudFormationCreateStackRequest) delegateTask.getData().getParameters()[0];
+        (CloudFormationCreateStackRequest) cloudFormationCommandTaskParameters.getCloudFormationCommandRequest();
     assertThat(request.getData()).isEqualTo(WingsTestConstants.TEMPLATE_BODY);
     assertThat(request.getCreateType()).isEqualTo(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY);
     assertThat(request.getCustomStackName()).isEqualTo("customStackName");
@@ -330,8 +335,10 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
     DelegateTask delegateTask = captor.getValue();
     verifyDelegateTask(delegateTask, true);
 
+    CloudFormationCommandTaskParameters cloudFormationCommandTaskParameters =
+        (CloudFormationCommandTaskParameters) delegateTask.getData().getParameters()[0];
     CloudFormationCreateStackRequest request =
-        (CloudFormationCreateStackRequest) delegateTask.getData().getParameters()[0];
+        (CloudFormationCreateStackRequest) cloudFormationCommandTaskParameters.getCloudFormationCommandRequest();
     assertThat(request.getData()).isEqualTo(WingsTestConstants.TEMPLATE_BODY);
     assertThat(request.getCreateType()).isEqualTo(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY);
     assertThat(request.getCustomStackName()).isEqualTo("customStackName");
@@ -359,8 +366,10 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
     verifyDelegateTask(delegateTask, true);
+    CloudFormationCommandTaskParameters cloudFormationCommandTaskParameters =
+        (CloudFormationCommandTaskParameters) delegateTask.getData().getParameters()[0];
     CloudFormationCreateStackRequest request =
-        (CloudFormationCreateStackRequest) delegateTask.getData().getParameters()[0];
+        (CloudFormationCreateStackRequest) cloudFormationCommandTaskParameters.getCloudFormationCommandRequest();
     assertThat(request.getGitConfig()).isEqualTo(gitConfig);
     assertThat(request.getGitConfig().getBranch()).isEqualTo("gitBranch");
     assertThat(request.getGitConfig().getReference()).isEqualTo("commitId");
@@ -391,8 +400,10 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
     verifyDelegateTask(delegateTask, true);
+    CloudFormationCommandTaskParameters cloudFormationCommandTaskParameters =
+        (CloudFormationCommandTaskParameters) delegateTask.getData().getParameters()[0];
     CloudFormationCreateStackRequest request =
-        (CloudFormationCreateStackRequest) delegateTask.getData().getParameters()[0];
+        (CloudFormationCreateStackRequest) cloudFormationCommandTaskParameters.getCloudFormationCommandRequest();
     assertThat(request.getGitConfig()).isEqualTo(gitConfig);
     assertThat(request.getGitConfig().getBranch()).isEqualTo("gitBranch");
     assertThat(request.getGitConfig().getReference()).isEqualTo("commitId");
@@ -661,8 +672,10 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
     DelegateTask delegateTask = captor.getValue();
     assertThat(delegateTask).isNotNull();
     verifyDelegateTask(delegateTask, false);
+    CloudFormationCommandTaskParameters cloudFormationCommandTaskParameters =
+        (CloudFormationCommandTaskParameters) delegateTask.getData().getParameters()[0];
     CloudFormationCreateStackRequest request =
-        (CloudFormationCreateStackRequest) delegateTask.getData().getParameters()[0];
+        (CloudFormationCreateStackRequest) cloudFormationCommandTaskParameters.getCloudFormationCommandRequest();
     assertThat(request.getGitConfig()).isEqualTo(gitConfig);
     assertThat(request.getGitConfig().getReference()).isEqualTo("commitId");
     assertThat(request.getGitConfig().getRepoName()).isNull();
@@ -680,9 +693,11 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
     }
 
     assertThat(delegateTask.getData().getParameters()).isNotNull();
-    assertThat(delegateTask.getData().getParameters().length).isEqualTo(2);
+    assertThat(delegateTask.getData().getParameters().length).isEqualTo(1);
+    CloudFormationCommandTaskParameters cloudFormationCommandTaskParameters =
+        (CloudFormationCommandTaskParameters) delegateTask.getData().getParameters()[0];
     CloudFormationCreateStackRequest request =
-        (CloudFormationCreateStackRequest) delegateTask.getData().getParameters()[0];
+        (CloudFormationCreateStackRequest) cloudFormationCommandTaskParameters.getCloudFormationCommandRequest();
     assertThat(request.getCommandType()).isEqualTo(CloudFormationCommandRequest.CloudFormationCommandType.CREATE_STACK);
     assertThat(request.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(request.getAwsConfig()).isEqualTo(awsConfig);
@@ -710,8 +725,10 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
     verifyDelegateTask(delegateTask, true);
+    CloudFormationCommandTaskParameters cloudFormationCommandTaskParameters =
+        (CloudFormationCommandTaskParameters) delegateTask.getData().getParameters()[0];
     CloudFormationCreateStackRequest request =
-        (CloudFormationCreateStackRequest) delegateTask.getData().getParameters()[0];
+        (CloudFormationCreateStackRequest) cloudFormationCommandTaskParameters.getCloudFormationCommandRequest();
     assertThat(request.getData()).isEqualTo(WingsTestConstants.TEMPLATE_BODY);
     assertThat(request.getCreateType()).isEqualTo(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY);
     assertThat(request.getCustomStackName()).isEqualTo("customStackName");

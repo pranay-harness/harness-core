@@ -92,6 +92,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
+import software.wings.beans.cloudformation.CloudFormationCommandTaskParameters;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.common.InfrastructureConstants;
@@ -445,9 +446,10 @@ public class CloudFormationStateTest extends WingsBaseTest {
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
-
+    CloudFormationCommandTaskParameters cloudFormationCommandTaskParameters =
+        (CloudFormationCommandTaskParameters) delegateTask.getData().getParameters()[0];
     CloudFormationCreateStackRequest cloudFormationCreateStackRequest =
-        (CloudFormationCreateStackRequest) delegateTask.getData().getParameters()[0];
+        (CloudFormationCreateStackRequest) cloudFormationCommandTaskParameters.getCloudFormationCommandRequest();
     assertThat(cloudFormationCreateStackRequest).isNotNull();
     assertThat(cloudFormationCreateStackRequest.getRegion()).isEqualTo(Regions.US_EAST_1.name());
     assertThat(cloudFormationCreateStackRequest.getCommandType()).isEqualTo(CloudFormationCommandType.CREATE_STACK);
@@ -501,9 +503,10 @@ public class CloudFormationStateTest extends WingsBaseTest {
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
-
+    CloudFormationCommandTaskParameters cloudFormationCommandTaskParameters =
+        (CloudFormationCommandTaskParameters) delegateTask.getData().getParameters()[0];
     CloudFormationDeleteStackRequest cloudFormationDeleteStackRequest =
-        (CloudFormationDeleteStackRequest) delegateTask.getData().getParameters()[0];
+        (CloudFormationDeleteStackRequest) cloudFormationCommandTaskParameters.getCloudFormationCommandRequest();
     assertThat(cloudFormationDeleteStackRequest).isNotNull();
     assertThat(cloudFormationDeleteStackRequest.getRegion()).isEqualTo(Regions.US_EAST_1.name());
     assertThat(cloudFormationDeleteStackRequest.getCommandType()).isEqualTo(CloudFormationCommandType.DELETE_STACK);
