@@ -47,7 +47,7 @@ public class RemoteExpressionFunctor extends LateBindingMap implements Expressio
       }
       return RecastOrchestrationUtils.fromJson(expressionResponse.getValue());
     } catch (ClassNotFoundException e) {
-      e.printStackTrace();
+      log.error(e.getMessage());
       throw new InvalidRequestException(e.getMessage(), e);
     } catch (Exception ex) {
       log.error("Could not get object from remote functor for key: " + functorKey);
