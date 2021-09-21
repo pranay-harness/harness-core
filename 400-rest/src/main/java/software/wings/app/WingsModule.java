@@ -11,6 +11,7 @@ import static io.harness.lock.DistributedLockImplementation.MONGO;
 import static io.harness.outbox.OutboxSDKConstants.DEFAULT_OUTBOX_POLL_CONFIGURATION;
 
 import io.harness.AccessControlClientModule;
+import io.harness.CGInstanceSyncModule;
 import io.harness.CgOrchestrationModule;
 import io.harness.SecretManagementCoreModule;
 import io.harness.accesscontrol.AccessControlAdminClientConfiguration;
@@ -190,8 +191,6 @@ import io.harness.service.EventHelper;
 import io.harness.service.EventService;
 import io.harness.service.EventServiceImpl;
 import io.harness.service.impl.DelegateTokenServiceImpl;
-import io.harness.service.instancesyncperpetualtaskstatus.InstanceSyncPerpetualTaskStatusService;
-import io.harness.service.instancesyncperpetualtaskstatus.InstanceSyncPerpetualTaskStatusServiceImpl;
 import io.harness.service.intfc.DelegateTokenService;
 import io.harness.templatizedsm.RuntimeCredentialsInjector;
 import io.harness.threading.ThreadPool;
@@ -929,7 +928,6 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(DashboardStatisticsService.class).to(DashboardStatisticsServiceImpl.class);
     bind(InstanceService.class).to(InstanceServiceImpl.class);
     bind(InstanceSyncPerpetualTaskService.class).to(InstanceSyncPerpetualTaskServiceImpl.class);
-    bind(InstanceSyncPerpetualTaskStatusService.class).to(InstanceSyncPerpetualTaskStatusServiceImpl.class);
     bind(InstanceHandlerFactoryService.class).to(InstanceHandlerFactory.class);
     bind(BuildSourceService.class).to(BuildSourceServiceImpl.class);
     bind(ServiceVariableService.class).to(ServiceVariableServiceImpl.class);
@@ -1125,6 +1123,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(new ManagerCacheRegistrar());
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
     install(SecretManagementCoreModule.getInstance());
+    install(CGInstanceSyncModule.getInstance());
     registerSecretManagementBindings();
 
     registerEventListeners();
