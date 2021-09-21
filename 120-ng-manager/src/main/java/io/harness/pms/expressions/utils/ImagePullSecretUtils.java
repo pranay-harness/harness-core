@@ -8,9 +8,9 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
-import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
-import io.harness.connector.ConnectorResourceClient;
+import io.harness.connector.ConnectorResponseDTO;
+import io.harness.connector.services.ConnectorService;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerAuthType;
@@ -29,7 +29,7 @@ import io.harness.delegate.task.artifacts.response.ArtifactTaskExecutionResponse
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.k8s.model.ImageDetails;
-import io.harness.network.SafeHttpCall;
+import io.harness.ng.NextGenModule;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
 import io.harness.ngpipeline.artifact.bean.ArtifactOutcome;
@@ -44,6 +44,7 @@ import io.harness.utils.IdentifierRefHelper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
@@ -55,7 +56,7 @@ import org.mongodb.morphia.annotations.Transient;
 @OwnedBy(CDP)
 public class ImagePullSecretUtils {
   @Inject private EcrImagePullSecretHelper ecrImagePullSecretHelper;
-  @Inject private ConnectorResourceClient connectorResourceClient;
+  @Inject @Named(NextGenModule.CONNECTOR_DECORATOR_SERVICE) private ConnectorService connectorService;
   @Transient
   private static final String DOCKER_REGISTRY_CREDENTIAL_TEMPLATE =
       "{\"%s\":{\"username\":\"%s\",\"password\":\"%s\"}}";
@@ -174,16 +175,13 @@ public class ImagePullSecretUtils {
       NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);
       IdentifierRef connectorRef = IdentifierRefHelper.getIdentifierRef(connectorIdentifierRef,
           ngAccess.getAccountIdentifier(), ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());
-      Optional<ConnectorDTO> connectorDTO =
-          SafeHttpCall
-              .execute(connectorResourceClient.get(connectorRef.getIdentifier(), connectorRef.getAccountIdentifier(),
-                  connectorRef.getOrgIdentifier(), connectorRef.getProjectIdentifier()))
-              .getData();
+      Optional<ConnectorResponseDTO> connectorDTO = connectorService.get(connectorRef.getAccountIdentifier(),
+          connectorRef.getOrgIdentifier(), connectorRef.getProjectIdentifier(), connectorRef.getIdentifier());
       if (!connectorDTO.isPresent()) {
         throw new InvalidRequestException(
             String.format("Connector not found for identifier : [%s]", connectorIdentifierRef), WingsException.USER);
       }
-      return connectorDTO.get().getConnectorInfo();
+      return connectorDTO.get().getConnector();
     } catch (Exception e) {
       log.error(format("Unable to get connector information : [%s] ", connectorIdentifierRef), e);
       throw new InvalidRequestException(format("Unable to get connector information : [%s] ", connectorIdentifierRef));
