@@ -3,7 +3,9 @@ package software.wings.service;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.artifact.ArtifactStream;
@@ -22,6 +24,7 @@ import org.apache.commons.jexl3.JexlException;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ArtifactStreamHelper {
   @Inject private ManagerExpressionEvaluator evaluator;
 

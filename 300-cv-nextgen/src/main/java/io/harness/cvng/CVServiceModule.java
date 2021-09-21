@@ -237,6 +237,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
@@ -521,15 +522,18 @@ public class CVServiceModule extends AbstractModule {
 
     bind(ChangeEventService.class).to(ChangeEventServiceImpl.class);
     bind(ChangeEventEntityAndDTOTransformer.class);
-    bind(ChangeEventMetaDataTransformer.class)
-        .annotatedWith(Names.named(ChangeSourceType.HARNESS_CD.name()))
-        .to(HarnessCDChangeEventTransformer.class);
-    bind(ChangeEventMetaDataTransformer.class)
-        .annotatedWith(Names.named(ChangeSourceType.KUBERNETES.name()))
-        .to(KubernetesClusterChangeEventMetadataTransformer.class);
-    bind(ChangeEventMetaDataTransformer.class)
-        .annotatedWith(Names.named(ChangeSourceType.PAGER_DUTY.name()))
-        .to(PagerDutyChangeEventTransformer.class);
+
+    MapBinder<ChangeSourceType, ChangeEventMetaDataTransformer> changeTypeMetaDataTransformerMapBinder =
+        MapBinder.newMapBinder(binder(), ChangeSourceType.class, ChangeEventMetaDataTransformer.class);
+    changeTypeMetaDataTransformerMapBinder.addBinding(ChangeSourceType.HARNESS_CD)
+        .to(HarnessCDChangeEventTransformer.class)
+        .in(Scopes.SINGLETON);
+    changeTypeMetaDataTransformerMapBinder.addBinding(ChangeSourceType.KUBERNETES)
+        .to(KubernetesClusterChangeEventMetadataTransformer.class)
+        .in(Scopes.SINGLETON);
+    changeTypeMetaDataTransformerMapBinder.addBinding(ChangeSourceType.PAGER_DUTY)
+        .to(PagerDutyChangeEventTransformer.class)
+        .in(Scopes.SINGLETON);
   }
 
   private void bindTheMonitoringSourceImportStatusCreators() {

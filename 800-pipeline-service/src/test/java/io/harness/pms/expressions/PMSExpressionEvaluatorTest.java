@@ -3,11 +3,17 @@ package io.harness.pms.expressions;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ARCHIT;
+import static io.harness.rule.OwnerRule.BRIJESH;
 
 import static java.util.Arrays.asList;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.PipelineServiceApplication;
@@ -28,10 +34,12 @@ import io.harness.expression.field.dummy.DummyOrchestrationField;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.expression.ExpressionResponse;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.expressions.functors.RemoteExpressionFunctor;
 import io.harness.pms.sdk.PmsSdkInstance;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
@@ -48,6 +56,7 @@ import lombok.Data;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
 @OwnedBy(HarnessTeam.PIPELINE)
@@ -56,6 +65,7 @@ public class PMSExpressionEvaluatorTest extends PipelineServiceTestBase {
   @Mock NodeExecutionService nodeExecutionService;
   @Mock PmsOutcomeService pmsOutcomeService;
   @Mock PmsSdkInstanceService pmsSdkInstanceService;
+  @Mock RemoteExpressionFunctor remoteExpressionFunctor;
 
   private Ambiance ambiance;
   NodeExecution nodeExecution1;
@@ -169,6 +179,38 @@ public class PMSExpressionEvaluatorTest extends PipelineServiceTestBase {
     assertThat((Boolean) stageSuccess).isEqualTo(true);
   }
 
+  @Test
+  @Owner(developers = BRIJESH)
+  @Category(UnitTests.class)
+  public void testRemoteFunctor() {
+    Ambiance newAmbiance =
+        AmbianceUtils.cloneForChild(ambiance, Level.newBuilder().setRuntimeId(nodeExecution5.getUuid()).build());
+    EngineExpressionEvaluator engineExpressionEvaluator = prepareEngineExpressionEvaluator(newAmbiance);
+    ExpressionResponse expressionResponse = ExpressionResponse.newBuilder().build();
+    ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
+    doReturn(expressionResponse).when(remoteExpressionFunctor).get(any());
+
+    // testing that remoteFunctor is registered correctly
+    assertTrue(engineExpressionEvaluator.evaluateExpression("<+dummy>") instanceof RemoteExpressionFunctor);
+
+    // testing simple string argument
+    assertEquals(engineExpressionEvaluator.evaluateExpression("<+dummy.abc>"), expressionResponse);
+    verify(remoteExpressionFunctor, times(1)).get(argumentCaptor.capture());
+    assertEquals(argumentCaptor.getValue(), "abc");
+    assertEquals(engineExpressionEvaluator.evaluateExpression("<+dummy.get(\"arg1\")>"), expressionResponse);
+    verify(remoteExpressionFunctor, times(2)).get(argumentCaptor.capture());
+    assertEquals(argumentCaptor.getValue(), "arg1");
+
+    // testing array of strings as argument
+    assertEquals(engineExpressionEvaluator.evaluateExpression("<+dummy.get([\"arg1\",\"arg2\"])>"), expressionResponse);
+    ArgumentCaptor<String[]> arrayArgumentCaptor = ArgumentCaptor.forClass(String[].class);
+    verify(remoteExpressionFunctor, times(3)).get(arrayArgumentCaptor.capture());
+    String[] argsArray = arrayArgumentCaptor.getValue();
+    assertEquals(argsArray.length, 2);
+    assertEquals(argsArray[0], "arg1");
+    assertEquals(argsArray[1], "arg2");
+  }
+
   private PlanNodeProto preparePlanNode(
       boolean skipExpressionChain, String identifier, String paramValue, String groupName) {
     PlanNodeProto.Builder builder =
@@ -194,6 +236,8 @@ public class PMSExpressionEvaluatorTest extends PipelineServiceTestBase {
     SampleEngineExpressionEvaluator evaluator = new SampleEngineExpressionEvaluator(ambiance, pmsSdkInstanceService);
     on(evaluator).set("planExecutionService", planExecutionService);
     on(evaluator).set("nodeExecutionService", nodeExecutionService);
+
+    evaluator.addToContextMap("dummy", remoteExpressionFunctor);
     return evaluator;
   }
 
@@ -206,6 +250,10 @@ public class PMSExpressionEvaluatorTest extends PipelineServiceTestBase {
     @Override
     protected void initialize() {
       super.initialize();
+    }
+
+    public void addToContextMap(String a, Object b) {
+      super.addToContext(a, b);
     }
 
     @Override

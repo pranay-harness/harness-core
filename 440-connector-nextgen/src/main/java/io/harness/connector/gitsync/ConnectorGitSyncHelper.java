@@ -14,13 +14,17 @@ import io.harness.connector.entities.Connector;
 import io.harness.connector.helper.ConnectorEntityDetailUtils;
 import io.harness.connector.mappers.ConnectorMapper;
 import io.harness.connector.services.ConnectorService;
+import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
+import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.FileChange;
 import io.harness.gitsync.ScopeDetails;
 import io.harness.gitsync.entityInfo.AbstractGitSdkEntityHandler;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.gitsync.exceptions.NGYamlParsingException;
+import io.harness.grpc.utils.StringValueUtils;
 import io.harness.ng.core.EntityDetail;
+import io.harness.ng.core.utils.NGYamlUtils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -132,6 +136,18 @@ public class ConnectorGitSyncHelper extends AbstractGitSdkEntityHandler<Connecto
   @Override
   public List<FileChange> listAllEntities(ScopeDetails scope) {
     return connectorFullSyncHelper.getAllEntitiesForFullSync(scope);
+  }
+
+  @Override
+  public String getYamlFromEntityRef(EntityDetailProtoDTO entityReference) {
+    final IdentifierRefProtoDTO identifierRef = entityReference.getIdentifierRef();
+    final Optional<ConnectorResponseDTO> connectorResponseDTO =
+        connectorService.get(StringValueUtils.getStringFromStringValue(identifierRef.getAccountIdentifier()),
+            StringValueUtils.getStringFromStringValue(identifierRef.getOrgIdentifier()),
+            StringValueUtils.getStringFromStringValue(identifierRef.getProjectIdentifier()),
+            StringValueUtils.getStringFromStringValue(identifierRef.getIdentifier()));
+    return NGYamlUtils.getYamlString(
+        ConnectorDTO.builder().connectorInfo(connectorResponseDTO.get().getConnector()).build(), objectMapper);
   }
 
   @Override

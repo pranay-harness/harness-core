@@ -489,29 +489,34 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     for (int i = 0; i < res.size(); i++) {
       WorkflowExecution workflowExecution = res.get(i);
-      refreshBreakdown(workflowExecution);
-      if (workflowExecution.getWorkflowType() == WorkflowType.PIPELINE) {
-        // pipeline
-        refreshPipelineExecution(workflowExecution);
-        PipelineExecution pipelineExecution = workflowExecution.getPipelineExecution();
+      try {
+        refreshBreakdown(workflowExecution);
+        if (workflowExecution.getWorkflowType() == WorkflowType.PIPELINE) {
+          // pipeline
+          refreshPipelineExecution(workflowExecution);
+          PipelineExecution pipelineExecution = workflowExecution.getPipelineExecution();
 
-        // Done to ignore inconsistent pipeline executions with mismatch from setup
-        if (pipelineExecution == null || pipelineExecution.getPipelineStageExecutions() == null
-            || pipelineExecution.getPipeline() == null || pipelineExecution.getPipeline().getPipelineStages() == null) {
-          res.remove(i);
-          i--;
-        } else if (pipelineExecution.getPipelineStageExecutions().size()
-            != pipelineExecution.getPipeline().getPipelineStages().size()) {
-          boolean isAnyStageLooped =
-              pipelineExecution.getPipelineStageExecutions().stream().anyMatch(t -> t.isLooped());
-          if (isAnyStageLooped) {
-            continue;
-          } else {
+          // Done to ignore inconsistent pipeline executions with mismatch from setup
+          if (pipelineExecution == null || pipelineExecution.getPipelineStageExecutions() == null
+              || pipelineExecution.getPipeline() == null
+              || pipelineExecution.getPipeline().getPipelineStages() == null) {
             res.remove(i);
             i--;
+          } else if (pipelineExecution.getPipelineStageExecutions().size()
+              != pipelineExecution.getPipeline().getPipelineStages().size()) {
+            boolean isAnyStageLooped =
+                pipelineExecution.getPipelineStageExecutions().stream().anyMatch(t -> t.isLooped());
+            if (isAnyStageLooped) {
+              continue;
+            } else {
+              res.remove(i);
+              i--;
+            }
           }
+          continue;
         }
-        continue;
+      } catch (Exception e) {
+        log.error("Failed to process executions");
       }
       if (withBreakdownAndSummary) {
         try {
@@ -532,9 +537,16 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         }
       }
     }
-    if (withFailureDetails) {
-      res.forEach(this::populateFailureDetails);
+    for (WorkflowExecution workflowExecution : res) {
+      if (withFailureDetails) {
+        try {
+          populateFailureDetails(workflowExecution);
+        } catch (Exception e) {
+          log.error("Failed to populate the failure details.");
+        }
+      }
     }
+
     return res;
   }
 
@@ -1118,7 +1130,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     if (withFailureDetails) {
-      populateFailureDetails(workflowExecution);
+      try {
+        populateFailureDetails(workflowExecution);
+      } catch (Exception e) {
+        log.error("Failed to populate failure details.");
+      }
     }
     return workflowExecution;
   }
