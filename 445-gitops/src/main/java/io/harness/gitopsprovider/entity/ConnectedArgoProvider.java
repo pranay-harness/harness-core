@@ -3,6 +3,7 @@ package io.harness.gitopsprovider.entity;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.GitOpsProviderType;
+import io.harness.gitopsprovider.SearchTerm;
 
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -23,7 +24,7 @@ import org.springframework.data.annotation.Persistent;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(HarnessTeam.GITOPS)
 public class ConnectedArgoProvider extends GitOpsProvider {
-  @NotBlank String adapterUrl;
+  @NotBlank @SearchTerm String adapterUrl;
 
   @Override
   public GitOpsProviderType getGitOpsProviderType() {

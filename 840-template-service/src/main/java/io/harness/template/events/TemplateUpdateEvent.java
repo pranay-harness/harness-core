@@ -27,14 +27,19 @@ public class TemplateUpdateEvent implements Event {
   private String projectIdentifier;
   private TemplateEntity newTemplateEntity;
   private TemplateEntity oldTemplateEntity;
+  private String comments;
+  private TemplateUpdateEventType templateUpdateEventType;
 
   public TemplateUpdateEvent(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      TemplateEntity newTemplateEntity, TemplateEntity oldTemplateEntity) {
+      TemplateEntity newTemplateEntity, TemplateEntity oldTemplateEntity, String comments,
+      TemplateUpdateEventType templateUpdateEventType) {
     this.accountIdentifier = accountIdentifier;
     this.orgIdentifier = orgIdentifier;
     this.projectIdentifier = projectIdentifier;
     this.newTemplateEntity = newTemplateEntity;
     this.oldTemplateEntity = oldTemplateEntity;
+    this.comments = comments;
+    this.templateUpdateEventType = templateUpdateEventType;
   }
 
   @JsonIgnore

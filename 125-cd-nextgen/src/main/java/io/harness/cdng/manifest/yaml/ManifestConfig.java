@@ -5,6 +5,7 @@ import static io.harness.cdng.manifest.yaml.ManifestAttributes.ManifestAttribute
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.manifest.ManifestConfigType;
@@ -32,6 +33,7 @@ import org.springframework.data.annotation.TypeAlias;
 @NoArgsConstructor
 @SimpleVisitorHelper(helperClass = ManifestConfigVisitorHelper.class)
 @TypeAlias("manifestConfig")
+@RecasterAlias("io.harness.cdng.manifest.yaml.ManifestConfig")
 public class ManifestConfig implements Visitable {
   @JsonProperty(YamlNode.UUID_FIELD_NAME)
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) })

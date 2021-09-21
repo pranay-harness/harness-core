@@ -2,6 +2,7 @@ package io.harness.yaml.core.failurestrategy.rollback;
 
 import static io.harness.beans.rollback.NGFailureActionTypeConstants.STAGE_ROLLBACK;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.yaml.core.failurestrategy.FailureStrategyActionConfig;
@@ -14,6 +15,7 @@ import lombok.Value;
 @Value
 @Builder
 @OwnedBy(HarnessTeam.PIPELINE)
+@RecasterAlias("io.harness.yaml.core.failurestrategy.rollback.StageRollbackFailureActionConfig")
 public class StageRollbackFailureActionConfig implements FailureStrategyActionConfig {
   @ApiModelProperty(allowableValues = STAGE_ROLLBACK) NGFailureActionType type = NGFailureActionType.STAGE_ROLLBACK;
 }

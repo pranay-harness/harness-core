@@ -38,11 +38,10 @@ public class GitOpsProviderServiceImpl implements GitopsProviderService {
 
   @Override
   public Page<GitOpsProviderResponseDTO> list(
-      Pageable pageable, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+      Pageable pageable, String accountIdentifier, String orgIdentifier, String projectIdentifier, String searchTerm) {
     Page<GitOpsProvider> gitOpsProviders =
-        gitopsProviderRepository.findAll(pageable, projectIdentifier, orgIdentifier, accountIdentifier);
-
-    return gitOpsProviders.map(gitOpsProvider -> toResponseDTO(gitOpsProvider));
+        gitopsProviderRepository.findAll(pageable, projectIdentifier, orgIdentifier, accountIdentifier, searchTerm);
+    return gitOpsProviders.map(this::toResponseDTO);
   }
 
   @Override
@@ -59,7 +58,7 @@ public class GitOpsProviderServiceImpl implements GitopsProviderService {
     final GitOpsProviderEntityMapper entityMapper =
         gitopsProviderEntityMapperBinding.get(gitopsProviderDTO.getInfoDTO().getGitProviderType());
     GitOpsProvider gitopsProvider = entityMapper.toGitOpsProviderEntity(gitopsProviderDTO, accountIdentifier);
-    final GitOpsProvider savedEntity = gitopsProviderRepository.update(gitopsProvider);
+    final GitOpsProvider savedEntity = gitopsProviderRepository.update(accountIdentifier, gitopsProvider);
     return entityMapper.toGitOpsProvider(savedEntity);
   }
 

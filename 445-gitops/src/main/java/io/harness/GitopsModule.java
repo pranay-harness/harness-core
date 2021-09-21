@@ -10,12 +10,22 @@ import io.harness.gitopsprovider.services.impl.GitOpsProviderServiceImpl;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
+import java.util.concurrent.atomic.AtomicReference;
 
-@Singleton
 @OwnedBy(HarnessTeam.GITOPS)
 public class GitopsModule extends AbstractModule {
+  private static final AtomicReference<GitopsModule> instanceRef = new AtomicReference();
+
+  private GitopsModule() {}
+
+  public static GitopsModule getInstance() {
+    if (instanceRef.get() == null) {
+      instanceRef.compareAndSet(null, new GitopsModule());
+    }
+
+    return (GitopsModule) instanceRef.get();
+  }
   @Override
   protected void configure() {
     requireBinding(HPersistence.class);

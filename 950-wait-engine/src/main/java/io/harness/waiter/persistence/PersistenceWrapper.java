@@ -17,6 +17,8 @@ public interface PersistenceWrapper {
 
   void delete(WaitEngineEntity entity);
 
+  void deleteWaitInstance(WaitInstance entity);
+
   WaitInstance modifyAndFetchWaitInstance(String waitingOnCorrelationId);
 
   WaitInstance modifyAndFetchWaitInstanceForExistingResponse(String waitInstanceId, List<String> notifyResponseIds);

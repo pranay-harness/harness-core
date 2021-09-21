@@ -13,7 +13,7 @@ public interface GitOpsProviderCustomRepository {
       String providerIdentifier, String projectIdentifier, String orgIdentifier, String accountIdentifier);
   boolean delete(String providerIdentifier, String projectIdentifier, String orgIdentifier, String accountIdentifier);
   Page<GitOpsProvider> findAll(
-      Pageable pageable, String projectIdentifier, String orgIdentifier, String accountIdentifier);
+      Pageable pageable, String projectIdentifier, String orgIdentifier, String accountIdentifier, String searchTerm);
   GitOpsProvider save(GitOpsProvider gitopsProvider);
-  GitOpsProvider update(GitOpsProvider gitopsProvider);
+  GitOpsProvider update(String accountIdentifier, GitOpsProvider gitopsProvider);
 }

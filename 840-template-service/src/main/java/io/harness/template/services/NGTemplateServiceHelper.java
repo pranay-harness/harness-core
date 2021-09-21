@@ -3,6 +3,9 @@ package io.harness.template.services;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.encryption.Scope.ACCOUNT;
+import static io.harness.encryption.Scope.ORG;
+import static io.harness.encryption.Scope.PROJECT;
 import static io.harness.springdata.SpringDataMongoUtils.populateInFilter;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -15,13 +18,13 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.filter.FilterType;
 import io.harness.filter.dto.FilterDTO;
 import io.harness.filter.service.FilterService;
-import io.harness.gitsync.interceptor.GitEntityFindInfoDTO;
 import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.interceptor.GitSyncBranchContext;
 import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.springdata.SpringDataMongoUtils;
 import io.harness.template.beans.TemplateFilterPropertiesDTO;
+import io.harness.template.beans.TemplateListType;
 import io.harness.template.entity.TemplateEntity;
 import io.harness.template.entity.TemplateEntity.TemplateEntityKeys;
 import io.harness.template.gitsync.TemplateGitSyncBranchContextGuard;
@@ -53,16 +56,14 @@ public class NGTemplateServiceHelper {
   }
 
   public TemplateGitSyncBranchContextGuard getTemplateGitContext(
-      TemplateEntity template, GitEntityFindInfoDTO gitEntityBasicInfo, String commitMsg) {
+      TemplateEntity template, GitEntityInfo gitEntityInfo, String commitMsg) {
     boolean defaultFromOtherRepo = false;
     String branch = "";
     String yamlGitConfigId = "";
-    if (gitEntityBasicInfo != null) {
-      if (gitEntityBasicInfo.getDefaultFromOtherRepo() != null) {
-        defaultFromOtherRepo = gitEntityBasicInfo.getDefaultFromOtherRepo();
-      }
-      branch = gitEntityBasicInfo.getBranch();
-      yamlGitConfigId = gitEntityBasicInfo.getYamlGitConfigId();
+    if (gitEntityInfo != null) {
+      defaultFromOtherRepo = gitEntityInfo.isFindDefaultFromOtherRepos();
+      branch = gitEntityInfo.getBranch();
+      yamlGitConfigId = gitEntityInfo.getYamlGitConfigId();
     }
     GitSyncBranchContext branchContext = GitSyncBranchContext.builder()
                                              .gitBranchInfo(GitEntityInfo.builder()
@@ -78,50 +79,75 @@ public class NGTemplateServiceHelper {
     return new TemplateGitSyncBranchContextGuard(branchContext, false);
   }
 
+  public Criteria formCriteria(Criteria criteria, TemplateListType templateListType) {
+    if (templateListType.equals(TemplateListType.LAST_UPDATED_TEMPLATE_TYPE)) {
+      return criteria.and(TemplateEntityKeys.isLastUpdatedTemplate).is(true);
+    } else if (templateListType.equals(TemplateListType.STABLE_TEMPLATE_TYPE)) {
+      return criteria.and(TemplateEntityKeys.isStableTemplate).is(true);
+    }
+    return criteria;
+  }
+
   public Criteria formCriteria(String accountId, String orgId, String projectId, String filterIdentifier,
-      TemplateFilterPropertiesDTO filterProperties, boolean deleted, String searchTerm) {
+      TemplateFilterPropertiesDTO filterProperties, boolean deleted, String searchTerm,
+      Boolean includeAllTemplatesAccessibleAtScope) {
     Criteria criteria = new Criteria();
-    if (isNotEmpty(accountId)) {
-      criteria.and(TemplateEntityKeys.accountId).is(accountId);
-    }
-    if (isNotEmpty(orgId)) {
+    criteria.and(TemplateEntityKeys.accountId).is(accountId);
+
+    Criteria includeAllTemplatesCriteria = null;
+    if (includeAllTemplatesAccessibleAtScope != null && includeAllTemplatesAccessibleAtScope) {
+      includeAllTemplatesCriteria = getCriteriaToReturnAllTemplatesAccessible(orgId, projectId);
+    } else {
       criteria.and(TemplateEntityKeys.orgIdentifier).is(orgId);
-    }
-    if (isNotEmpty(projectId)) {
       criteria.and(TemplateEntityKeys.projectIdentifier).is(projectId);
     }
+
     criteria.and(TemplateEntityKeys.deleted).is(deleted);
 
     if (EmptyPredicate.isNotEmpty(filterIdentifier) && filterProperties != null) {
       throw new InvalidRequestException("Can not apply both filter properties and saved filter together");
     } else if (EmptyPredicate.isNotEmpty(filterIdentifier) && filterProperties == null) {
-      populateFilterUsingIdentifier(criteria, accountId, orgId, projectId, filterIdentifier, searchTerm);
+      populateFilterUsingIdentifier(
+          criteria, accountId, orgId, projectId, filterIdentifier, searchTerm, includeAllTemplatesCriteria);
     } else if (EmptyPredicate.isEmpty(filterIdentifier) && filterProperties != null) {
-      NGTemplateServiceHelper.populateFilter(criteria, filterProperties, searchTerm);
+      NGTemplateServiceHelper.populateFilter(criteria, filterProperties, searchTerm, includeAllTemplatesCriteria);
     } else {
+      List<Criteria> criteriaList = new ArrayList<>();
+      if (includeAllTemplatesCriteria != null) {
+        criteriaList.add(includeAllTemplatesCriteria);
+      }
       Criteria searchTermCriteria = getSearchTermCriteria(searchTerm);
       if (searchTermCriteria != null) {
-        criteria.andOperator(searchTermCriteria);
+        criteriaList.add(searchTermCriteria);
+      }
+      if (criteriaList.size() != 0) {
+        criteria.andOperator(criteriaList.toArray(new Criteria[0]));
       }
     }
     return criteria;
   }
 
   private void populateFilterUsingIdentifier(Criteria criteria, String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, @NotNull String filterIdentifier, String searchTerm) {
+      String projectIdentifier, @NotNull String filterIdentifier, String searchTerm,
+      Criteria includeAllTemplatesCriteria) {
     FilterDTO pipelineFilterDTO =
         filterService.get(accountIdentifier, orgIdentifier, projectIdentifier, filterIdentifier, FilterType.TEMPLATE);
     if (pipelineFilterDTO == null) {
       throw new InvalidRequestException("Could not find a Template filter with the identifier ");
     } else {
-      populateFilter(criteria, (TemplateFilterPropertiesDTO) pipelineFilterDTO.getFilterProperties(), searchTerm);
+      populateFilter(criteria, (TemplateFilterPropertiesDTO) pipelineFilterDTO.getFilterProperties(), searchTerm,
+          includeAllTemplatesCriteria);
     }
   }
 
-  private static void populateFilter(
-      Criteria criteria, @NotNull TemplateFilterPropertiesDTO templateFilter, String searchTerm) {
+  private static void populateFilter(Criteria criteria, @NotNull TemplateFilterPropertiesDTO templateFilter,
+      String searchTerm, Criteria includeAllTemplatesCriteria) {
     populateInFilter(criteria, TemplateEntityKeys.identifier, templateFilter.getTemplateIdentifiers());
     List<Criteria> criteriaList = new ArrayList<>();
+
+    if (includeAllTemplatesCriteria != null) {
+      criteriaList.add(includeAllTemplatesCriteria);
+    }
     Criteria nameFilter = getCaseInsensitiveFilter(TemplateEntityKeys.name, templateFilter.getTemplateNames());
     if (nameFilter != null) {
       criteriaList.add(nameFilter);
@@ -191,5 +217,27 @@ public class NGTemplateServiceHelper {
       return;
     }
     criteria.and(TemplateEntityKeys.tags).in(TagMapper.convertToList(tags));
+  }
+
+  private Criteria getCriteriaToReturnAllTemplatesAccessible(String orgIdentifier, String projectIdentifier) {
+    if (EmptyPredicate.isNotEmpty(projectIdentifier)) {
+      return new Criteria().orOperator(Criteria.where(TemplateEntityKeys.templateScope)
+                                           .is(PROJECT)
+                                           .and(TemplateEntityKeys.projectIdentifier)
+                                           .is(projectIdentifier),
+          Criteria.where(TemplateEntityKeys.templateScope)
+              .is(ORG)
+              .and(TemplateEntityKeys.orgIdentifier)
+              .is(orgIdentifier),
+          Criteria.where(TemplateEntityKeys.templateScope).is(ACCOUNT));
+    } else if (EmptyPredicate.isNotEmpty(orgIdentifier)) {
+      return new Criteria().orOperator(Criteria.where(TemplateEntityKeys.templateScope)
+                                           .is(ORG)
+                                           .and(TemplateEntityKeys.orgIdentifier)
+                                           .is(orgIdentifier),
+          Criteria.where(TemplateEntityKeys.templateScope).is(ACCOUNT));
+    } else {
+      return Criteria.where(TemplateEntityKeys.templateScope).is(ACCOUNT);
+    }
   }
 }

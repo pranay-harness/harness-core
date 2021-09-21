@@ -11,5 +11,5 @@ import lombok.Value;
 @Builder
 @OwnedBy(HarnessTeam.PL)
 public class MostActiveServicesList {
-  List<ServiceDashboardInfo> activeServices;
+  List<ActiveServiceInfo> activeServices;
 }

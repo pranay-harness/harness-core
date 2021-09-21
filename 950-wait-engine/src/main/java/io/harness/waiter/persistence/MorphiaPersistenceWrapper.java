@@ -61,6 +61,11 @@ public class MorphiaPersistenceWrapper implements PersistenceWrapper {
   }
 
   @Override
+  public void deleteWaitInstance(WaitInstance entity) {
+    delete(entity);
+  }
+
+  @Override
   public ProcessedMessageResponse processMessage(WaitInstance waitInstance) {
     boolean isError = false;
     Map<String, ResponseData> responseMap = new HashMap<>();

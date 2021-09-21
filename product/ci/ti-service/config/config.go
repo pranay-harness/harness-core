@@ -28,6 +28,7 @@ type Config struct {
 		Host      string `envconfig:"TI_SERVICE_TIMESCALE_HOST"`
 		Port      string `envconfig:"TI_SERVICE_TIMESCALE_PORT"`
 		EnableSSL bool   `envconfig:"TI_SERVICE_TIMESCALE_ENABLE_SSL"`
+		SSLMode   string `envconfig:"TI_SERVICE_TIMESCALE_SSL_MODE" default:"disable""`
 		// Path to root certificate provided by server in plaintext
 		SSLCertPath    string `envconfig:"TI_SERVICE_TIMESCALE_SSL_CERT_PATH"`
 		DbName         string `envconfig:"TI_SERVICE_DB_NAME"`
@@ -56,7 +57,13 @@ type Config struct {
 		RedisPassword string `envconfig:"EVENTS_FRAMEWORK_REDIS_PASSWORD"`
 		SSLEnabled    bool   `envconfig:"EVENTS_FRAMEWORK_REDIS_SSL_ENABLED"`
 		// Path to b64 encoded .pem file
-		CertPath string `envconfig:"EVENTS_FRAMEWORK_REDIS_SSL_CA_CERT_PATH"`
+		CertPath    string `envconfig:"EVENTS_FRAMEWORK_REDIS_SSL_CA_CERT_PATH"`
+		UseCluster  bool   `envconfig:"EVENTS_FRAMEWORK_REDIS_USE_CLUSTER"`
+		ClusterUrls string `envconfig:"EVENTS_FRAMEWORK_CLUSTER_URLS"`
+		// Sentinel Config
+		UseSentinel        bool   `envconfig:"EVENTS_FRAMEWORK_REDIS_USE_SENTINEL"`
+		SentinelMasterName string `envconfig:"EVENTS_FRAMEWORK_REDIS_SENTINEL_MASTER_NAME"`
+		SentinelUrls       string `envconfig:"EVENTS_FRAMEWORK_REDIS_SENTINEL_URLS"`
 	}
 }
 

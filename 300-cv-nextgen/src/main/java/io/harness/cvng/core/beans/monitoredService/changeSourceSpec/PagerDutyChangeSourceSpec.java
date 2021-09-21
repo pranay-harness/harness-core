@@ -18,8 +18,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class PagerDutyChangeSourceSpec extends ChangeSourceSpec {
-  @NonNull @NotEmpty String connectorRef;
+public class PagerDutyChangeSourceSpec extends ChangeSourceWithConnectorSpec {
   @NonNull @NotEmpty String pagerDutyServiceId;
 
   @Override
