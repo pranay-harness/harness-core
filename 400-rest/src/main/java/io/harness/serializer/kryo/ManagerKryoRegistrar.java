@@ -530,7 +530,6 @@ import software.wings.service.impl.appdynamics.AppDynamicsDataCollectionInfoV2;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.appdynamics.AppdynamicsSetupTestNodeData;
 import software.wings.service.impl.aws.model.AwsAmiAllPhaseRollbackData;
-import software.wings.service.impl.aws.model.AwsAmiPreDeploymentData;
 import software.wings.service.impl.aws.model.AwsAmiRequest;
 import software.wings.service.impl.aws.model.AwsAmiRequest.AwsAmiRequestType;
 import software.wings.service.impl.aws.model.AwsAmiResizeData;
@@ -1143,7 +1142,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AppdynamicsDataCollectionInfo.class, 5168);
     kryo.register(AppdynamicsSetupTestNodeData.class, 5531);
 
-    kryo.register(AwsAmiPreDeploymentData.class, 5519);
     kryo.register(AwsAmiRequestType.class, 5458);
     kryo.register(AwsAmiRequest.class, 5457);
     kryo.register(AwsAmiResizeData.class, 5518);

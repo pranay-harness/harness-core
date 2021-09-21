@@ -2117,55 +2117,12 @@
     </dependencyManagement>
     <repositories>
         <repository>
-            <id>harness</id>
-            <name>harness-releases</name>
-            <url>https://harness.jfrog.io/harness/thirdparty-annonymous</url>
-        </repository>
-        <repository>
-            <id>harness-internal</id>
-            <name>harness-internal-releases</name>
-            <url>https://harness.jfrog.io/artifactory/harness-internal</url>
-        </repository>
-        <repository>
-            <id>harness-public</id>
-            <name>harness-public</name>
-            <url>https://harness.jfrog.io/harness/harness-public</url>
-        </repository>
-        <repository>
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>
-            <id>spring-io</id>
-            <url>https://repo.spring.io/plugins-release/</url>
-        </repository>
-        <repository>
-            <id>michaelklishin</id>
-            <url>https://dl.bintray.com/michaelklishin/maven/</url>
-        </repository>
-        <repository>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <id>bintray-palantir-releases</id>
-            <name>bintray</name>
-            <url>https://palantir.bintray.com/releases</url>
-        </repository>
-        <repository>
-            <id>sonatype-nexus-releases</id>
-            <name>Sonatype Nexus releases</name>
-            <url>https://oss.sonatype.org/content/repositories/releases</url>
-        </repository>
-        <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
-        </repository>
-        <repository>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <id>bintray</id>
-            <name>bintray</name>
-            <url>https://jcenter.bintray.com</url>
+            <id>portal-maven</id>
+            <name>portal-maven</name>
+            <url>https://harness.jfrog.io/artifactory/portal-maven</url>
         </repository>
     </repositories>
     <pluginRepositories>

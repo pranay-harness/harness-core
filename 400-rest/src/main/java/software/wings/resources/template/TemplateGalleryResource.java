@@ -4,6 +4,8 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.PermissionType.TEMPLATE_MANAGEMENT;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.data.structure.EmptyPredicate;
@@ -12,9 +14,11 @@ import io.harness.rest.RestResponse;
 
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateGallery;
+import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.security.auth.TemplateAuthHandler;
 import software.wings.service.intfc.template.TemplateFolderService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 
@@ -38,9 +42,11 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @Scope(ResourceType.TEMPLATE)
 @AuthRule(permissionType = LOGGED_IN)
+@OwnedBy(HarnessTeam.PL)
 public class TemplateGalleryResource {
   @Inject TemplateGalleryService templateGalleryService;
   @Inject TemplateFolderService templateFolderService;
+  @Inject TemplateAuthHandler templateAuthHandler;
 
   @GET
   @Timed
@@ -120,6 +126,7 @@ public class TemplateGalleryResource {
   @AuthRule(permissionType = TEMPLATE_MANAGEMENT)
   public RestResponse<TemplateFolder> saveFolder(@QueryParam("accountId") String accountId,
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, TemplateFolder templateFolder) {
+    templateAuthHandler.authorizeTemplateFolderCrud(appId, Action.CREATE);
     templateFolder.setAppId(appId);
     templateFolder.setAccountId(accountId);
     if (EmptyPredicate.isEmpty(templateFolder.getParentId())) {
@@ -148,6 +155,7 @@ public class TemplateGalleryResource {
   public RestResponse<TemplateFolder> updateFolder(@QueryParam("accountId") String accountId,
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
       @PathParam("templateFolderId") String templateFolderId, TemplateFolder templateFolder) {
+    templateAuthHandler.authorizeTemplateFolderCrud(appId, Action.UPDATE);
     templateFolder.setAppId(appId);
     templateFolder.setUuid(templateFolderId);
     return new RestResponse<>(templateFolderService.update(templateFolder));
@@ -179,7 +187,9 @@ public class TemplateGalleryResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = TEMPLATE_MANAGEMENT)
-  public RestResponse deleteFolder(@PathParam("templateFolderId") String templateFolderId) {
+  public RestResponse deleteFolder(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
+      @PathParam("templateFolderId") String templateFolderId) {
+    templateAuthHandler.authorizeTemplateFolderCrud(appId, Action.DELETE);
     templateFolderService.delete(templateFolderId);
     return new RestResponse();
   }

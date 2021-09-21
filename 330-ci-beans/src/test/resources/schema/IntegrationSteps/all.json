@@ -703,7 +703,8 @@
               "type": "string",
               "enum": [
                 "Maven",
-                "Bazel"
+                "Bazel",
+                "Gradle"
               ]
             },
             "connectorRef": {

@@ -15,6 +15,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
+import software.wings.beans.aws.AmazonS3CollectionTaskParameters;
 import software.wings.helpers.ext.amazons3.AmazonS3Service;
 
 import com.google.inject.Inject;
@@ -40,18 +41,20 @@ public class AmazonS3CollectionTask extends AbstractDelegateRunnableTask {
 
   @Override
   public ListNotifyResponseData run(TaskParameters parameters) {
-    throw new NotImplementedException("not implemented");
-  }
-
-  @Override
-  public ListNotifyResponseData run(Object[] parameters) {
     try {
-      return run((AwsConfig) parameters[0], (List<EncryptedDataDetail>) parameters[1], (String) parameters[2],
-          (List<String>) parameters[3]);
+      AmazonS3CollectionTaskParameters amazonS3CollectionTaskParameters = (AmazonS3CollectionTaskParameters) parameters;
+      return run(amazonS3CollectionTaskParameters.getAwsConfig(),
+          amazonS3CollectionTaskParameters.getEncryptedDataDetails(), amazonS3CollectionTaskParameters.getJobName(),
+          amazonS3CollectionTaskParameters.getArtifactPaths());
     } catch (Exception e) {
       log.error("Exception occurred while collecting S3 artifacts", e);
       return new ListNotifyResponseData();
     }
+  }
+
+  @Override
+  public ListNotifyResponseData run(Object[] parameters) {
+    throw new NotImplementedException("not implemented");
   }
 
   public ListNotifyResponseData run(

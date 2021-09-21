@@ -7,6 +7,7 @@ import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertFalse;
 import static junit.framework.TestCase.assertNotNull;
 import static junit.framework.TestCase.assertTrue;
+import static junit.framework.TestCase.fail;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphabetic;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
@@ -128,6 +129,7 @@ public class RoleAssignmentServiceImplTest extends AccessControlCoreTestBase {
       ReflectionUtils.setObjectField(field, roleAssignmentValidationResult, invalidResult);
       try {
         roleAssignmentService.create(roleAssignment);
+        fail();
       } catch (InvalidRequestException exception) {
         verify(roleAssignmentValidator, times(idx)).validate(any());
         ReflectionUtils.setObjectField(field, roleAssignmentValidationResult, validResult);
@@ -229,6 +231,7 @@ public class RoleAssignmentServiceImplTest extends AccessControlCoreTestBase {
       ReflectionUtils.setObjectField(fieldAndValue.getLeft(), roleAssignmentUpdate, fieldAndValue.getRight());
       try {
         roleAssignmentService.update(roleAssignmentUpdate);
+        fail();
       } catch (InvalidRequestException exception) {
         verify(roleAssignmentDao, times(idx)).get(any(), any());
         ReflectionUtils.setObjectField(fieldAndValue.getLeft(), roleAssignmentUpdate,

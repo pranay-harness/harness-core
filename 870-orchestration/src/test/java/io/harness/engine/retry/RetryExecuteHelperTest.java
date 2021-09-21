@@ -1,55 +1,40 @@
-package io.harness.pms.plan;
+package io.harness.engine.retry;
 
 import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.engine.executions.retry.RetryExecutionHelper;
+import io.harness.engine.executions.retry.RetryGroup;
+import io.harness.engine.executions.retry.RetryInfo;
 import io.harness.engine.executions.retry.RetryStageInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.execution.ExecutionStatus;
-import io.harness.pms.gitsync.PmsGitSyncHelper;
-import io.harness.pms.pipeline.mappers.NodeExecutionToExecutionNodeMapper;
-import io.harness.pms.pipeline.service.PMSPipelineService;
-import io.harness.pms.pipeline.service.PMSPipelineServiceImpl;
-import io.harness.pms.pipeline.service.PMSYamlSchemaService;
-import io.harness.pms.plan.execution.PipelineExecuteHelper;
-import io.harness.pms.plan.execution.RetryGroup;
-import io.harness.pms.plan.execution.RetryInfo;
-import io.harness.pms.plan.execution.service.PMSExecutionService;
-import io.harness.repositories.pipeline.PMSPipelineRepositoryCustomImpl;
 import io.harness.rule.Owner;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.io.Resources;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 @OwnedBy(HarnessTeam.PIPELINE)
-public class PipelineExecuteHelperTest {
-  @Mock PMSPipelineService pmsPipelineService;
-  @Mock PMSExecutionService pmsExecutionService;
-  @Mock PMSYamlSchemaService pmsYamlSchemaService;
-  @Mock NodeExecutionService nodeExecutionService;
-  @Mock NodeExecutionToExecutionNodeMapper nodeExecutionToExecutionNodeMapper;
-  @Mock AccessControlClient accessControlClient;
-  @Mock PmsGitSyncHelper pmsGitSyncHelper;
-
-  @InjectMocks private PMSPipelineServiceImpl pmsPipelineServiceImpl;
-  @InjectMocks private PipelineExecuteHelper pipelineExecuteHelper;
-  @InjectMocks private PMSPipelineRepositoryCustomImpl pmsPipelineRepositoryCustom;
+public class RetryExecuteHelperTest {
+  @InjectMocks private RetryExecutionHelper retryExecuteHelper;
 
   @Before
   public void setUp() throws IOException {
@@ -345,19 +330,19 @@ public class PipelineExecuteHelperTest {
     List<RetryStageInfo> stageDetails = new ArrayList<>();
 
     // passing empty stageDetails
-    RetryInfo retryInfo = pipelineExecuteHelper.getRetryInfo(stageDetails);
+    RetryInfo retryInfo = retryExecuteHelper.getRetryInfo(stageDetails);
     assertThat(retryInfo).isNotNull();
     assertThat(retryInfo.getGroups().size()).isEqualTo(0);
 
     // making first stage as empty
     stageDetails = getFirstStageFailed();
-    retryInfo = pipelineExecuteHelper.getRetryInfo(stageDetails);
+    retryInfo = retryExecuteHelper.getRetryInfo(stageDetails);
     assertThat(retryInfo).isNotNull();
     assertThat(retryInfo.getGroups().get(0).getInfo()).isEqualTo(stageDetails);
 
     // making the last stageFailed
     stageDetails = getlastStageFailed();
-    retryInfo = pipelineExecuteHelper.getRetryInfo(stageDetails);
+    retryInfo = retryExecuteHelper.getRetryInfo(stageDetails);
     assertThat(retryInfo).isNotNull();
     assertThat(retryInfo.getGroups().size()).isEqualTo(3);
     assertThat(retryInfo.getGroups().get(0).getInfo().get(0)).isEqualTo(stageDetails.get(0));
@@ -372,14 +357,14 @@ public class PipelineExecuteHelperTest {
 
     // making first stage as parallel and failed
     stageDetails = getFirstStageParallelAndFailed();
-    retryInfo = pipelineExecuteHelper.getRetryInfo(stageDetails);
+    retryInfo = retryExecuteHelper.getRetryInfo(stageDetails);
     assertThat(retryInfo).isNotNull();
     List<RetryGroup> retryGroupList = retryInfo.getGroups();
     assertThat(retryGroupList.get(0).getInfo()).isEqualTo(stageDetails);
 
     // having more than once parallel stages. All stages in parallel
     stageDetails = getlastStageParallelAndFailed();
-    retryInfo = pipelineExecuteHelper.getRetryInfo(stageDetails);
+    retryInfo = retryExecuteHelper.getRetryInfo(stageDetails);
     assertThat(retryInfo).isNotNull();
     retryGroupList = retryInfo.getGroups();
     assertThat(retryGroupList.size()).isEqualTo(3);
@@ -398,7 +383,7 @@ public class PipelineExecuteHelperTest {
 
     // parallel step failed after getting success for stages in series
     stageDetails = getMixTypeStagesWithParallelFailed();
-    retryInfo = pipelineExecuteHelper.getRetryInfo(stageDetails);
+    retryInfo = retryExecuteHelper.getRetryInfo(stageDetails);
     assertThat(retryInfo).isNotNull();
     List<RetryGroup> retryGroupList = retryInfo.getGroups();
     assertThat(retryGroupList.size()).isEqualTo(4);
@@ -408,7 +393,7 @@ public class PipelineExecuteHelperTest {
 
     // series stage failed having few stages in parallel before
     stageDetails = getMixTypeStagesWithSeriesStageFailed();
-    retryInfo = pipelineExecuteHelper.getRetryInfo(stageDetails);
+    retryInfo = retryExecuteHelper.getRetryInfo(stageDetails);
     assertThat(retryInfo).isNotNull();
     retryGroupList = retryInfo.getGroups();
     assertThat(retryGroupList.size()).isEqualTo(7);
@@ -423,8 +408,8 @@ public class PipelineExecuteHelperTest {
   @Category(UnitTests.class)
   public void testValidateRetry() {
     // empty and null yaml values
-    assertThat(pipelineExecuteHelper.validateRetry("updatedYaml", "")).isEqualTo(false);
-    assertThat(pipelineExecuteHelper.validateRetry(null, "originalYaml")).isEqualTo(false);
+    assertThat(retryExecuteHelper.validateRetry("updatedYaml", "")).isEqualTo(false);
+    assertThat(retryExecuteHelper.validateRetry(null, "originalYaml")).isEqualTo(false);
 
     // same yaml
     String updatedYamlFile = "retry-updated1.yaml";
@@ -433,7 +418,7 @@ public class PipelineExecuteHelperTest {
     String originalYamlFile = "retry-original1.yaml";
     String originalYaml = readFile(originalYamlFile);
 
-    assertThat(pipelineExecuteHelper.validateRetry(updatedYaml, originalYaml)).isEqualTo(true);
+    assertThat(retryExecuteHelper.validateRetry(updatedYaml, originalYaml)).isEqualTo(true);
 
     // updated the yaml - adding a stage
     // same yaml
@@ -443,7 +428,7 @@ public class PipelineExecuteHelperTest {
     String originalYamlFile2 = "retry-original2.yaml";
     String originalYaml2 = readFile(originalYamlFile2);
 
-    assertThat(pipelineExecuteHelper.validateRetry(updatedYaml2, originalYaml2)).isEqualTo(false);
+    assertThat(retryExecuteHelper.validateRetry(updatedYaml2, originalYaml2)).isEqualTo(false);
 
     // added step in on of the stage and changed the name of the stage
     String updatedYamlFile3 = "retry-updated3.yaml";
@@ -452,7 +437,7 @@ public class PipelineExecuteHelperTest {
     String originalYamlFile3 = "retry-original3.yaml";
     String originalYaml3 = readFile(originalYamlFile3);
 
-    assertThat(pipelineExecuteHelper.validateRetry(updatedYaml3, originalYaml3)).isEqualTo(true);
+    assertThat(retryExecuteHelper.validateRetry(updatedYaml3, originalYaml3)).isEqualTo(true);
 
     // updated the identifier
     String updatedYamlFile4 = "retry-updated4.yaml";
@@ -461,7 +446,7 @@ public class PipelineExecuteHelperTest {
     String originalYamlFile4 = "retry-original4.yaml";
     String originalYaml4 = readFile(originalYamlFile4);
 
-    assertThat(pipelineExecuteHelper.validateRetry(updatedYaml4, originalYaml4)).isEqualTo(false);
+    assertThat(retryExecuteHelper.validateRetry(updatedYaml4, originalYaml4)).isEqualTo(false);
 
     // shuffling of stages
     String updatedYamlFile5 = "retry-updated5.yaml";
@@ -470,7 +455,7 @@ public class PipelineExecuteHelperTest {
     String originalYamlFile5 = "retry-original5.yaml";
     String originalYaml5 = readFile(originalYamlFile5);
 
-    assertThat(pipelineExecuteHelper.validateRetry(updatedYaml5, originalYaml5)).isEqualTo(false);
+    assertThat(retryExecuteHelper.validateRetry(updatedYaml5, originalYaml5)).isEqualTo(false);
 
     // adding the stage in parallel
     String updatedYamlFile6 = "retry-updated6.yaml";
@@ -479,7 +464,7 @@ public class PipelineExecuteHelperTest {
     String originalYamlFile6 = "retry-original6.yaml";
     String originalYaml6 = readFile(originalYamlFile6);
 
-    assertThat(pipelineExecuteHelper.validateRetry(updatedYaml6, originalYaml6)).isEqualTo(false);
+    assertThat(retryExecuteHelper.validateRetry(updatedYaml6, originalYaml6)).isEqualTo(false);
 
     // shuffling of parallel stages
     String updatedYamlFile7 = "retry-updated7.yaml";
@@ -488,6 +473,120 @@ public class PipelineExecuteHelperTest {
     String originalYamlFile7 = "retry-original7.yaml";
     String originalYaml7 = readFile(originalYamlFile7);
 
-    assertThat(pipelineExecuteHelper.validateRetry(updatedYaml7, originalYaml7)).isEqualTo(false);
+    assertThat(retryExecuteHelper.validateRetry(updatedYaml7, originalYaml7)).isEqualTo(false);
+  }
+
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testRetryProcessedYaml() throws IOException {
+    String previousYamlFile = "retry-processedYamlPrevious1.yaml";
+    String previousYaml = readFile(previousYamlFile);
+    String currentYamlFile = "retry-processedYamlCurrent1.yaml";
+    String currentYaml = readFile(currentYamlFile);
+    String resultYamlFile = "retry-processedYamlResult1.yaml";
+    String resultYaml = readFile(resultYamlFile);
+    String replacedProcessedYaml =
+        retryExecuteHelper.retryProcessedYaml(previousYaml, currentYaml, Collections.singletonList("stage2"));
+    assertThat(replacedProcessedYaml).isEqualTo(resultYaml);
+
+    // resuming from the first stage
+    replacedProcessedYaml =
+        retryExecuteHelper.retryProcessedYaml(previousYaml, currentYaml, Collections.singletonList("stage1"));
+    assertThat(replacedProcessedYaml).isEqualTo(currentYaml);
+
+    // failing a single stage which is ahead of some parallel stages
+    String previousGoldenYamlFile = "retry-processedYamlPreviousGolden.yaml";
+    String previousGoldenYaml = readFile(previousGoldenYamlFile);
+    String currentGoldenYamlFile = "retry-processedYamlCurrentGolden.yaml";
+    String currentGoldenYaml = readFile(currentGoldenYamlFile);
+    String resultProcessedFile = "retry-processedYamlResultGolden1.yaml";
+    String resultProcessedYaml = readFile(resultProcessedFile);
+    replacedProcessedYaml = retryExecuteHelper.retryProcessedYaml(
+        previousGoldenYaml, currentGoldenYaml, Collections.singletonList("stage7"));
+    assertThat(replacedProcessedYaml).isEqualTo(yamlToJsonString(resultProcessedYaml));
+
+    // failing single stages from parallel groups
+    resultProcessedFile = "retry-processedYamlResultSingleStageFailedInParallelStages.yaml";
+    resultProcessedYaml = readFile(resultProcessedFile);
+    replacedProcessedYaml = retryExecuteHelper.retryProcessedYaml(
+        previousGoldenYaml, currentGoldenYaml, Collections.singletonList("stage9"));
+    assertThat(replacedProcessedYaml).isEqualTo(yamlToJsonString(resultProcessedYaml));
+
+    // failing multiple stage failure in parallel group
+    resultProcessedFile = "retry-processedYamlResultMultipleStageFailedInParallelStages.yaml";
+    resultProcessedYaml = readFile(resultProcessedFile);
+    replacedProcessedYaml =
+        retryExecuteHelper.retryProcessedYaml(previousGoldenYaml, currentGoldenYaml, Arrays.asList("stage3", "stage5"));
+    assertThat(replacedProcessedYaml).isEqualTo(yamlToJsonString(resultProcessedYaml));
+
+    // selecting all stages in parallel group
+    resultProcessedFile = "retry-processedYamlResultAllStageFailedInParallelStages.yaml";
+    resultProcessedYaml = readFile(resultProcessedFile);
+    replacedProcessedYaml = retryExecuteHelper.retryProcessedYaml(
+        previousGoldenYaml, currentGoldenYaml, Arrays.asList("stage3", "stage4", "stage5"));
+    assertThat(replacedProcessedYaml).isEqualTo(yamlToJsonString(resultProcessedYaml));
+  }
+
+  private String yamlToJsonString(String resultProcessedYaml) throws IOException {
+    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+    return mapper.readTree(resultProcessedYaml).toString();
+  }
+
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testIsFailedStatus() {
+    assertThat(retryExecuteHelper.isFailedStatus(ExecutionStatus.EXPIRED)).isEqualTo(true);
+    assertThat(retryExecuteHelper.isFailedStatus(ExecutionStatus.ABORTED)).isEqualTo(true);
+    assertThat(retryExecuteHelper.isFailedStatus(ExecutionStatus.FAILED)).isEqualTo(true);
+    assertThat(retryExecuteHelper.isFailedStatus(ExecutionStatus.APPROVAL_REJECTED)).isEqualTo(true);
+    assertThat(retryExecuteHelper.isFailedStatus(ExecutionStatus.APPROVALREJECTED)).isEqualTo(true);
+
+    assertThat(retryExecuteHelper.isFailedStatus(ExecutionStatus.SUCCESS)).isEqualTo(false);
+  }
+
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testFetchOnlyFailedStages() {
+    List<RetryStageInfo> retryStageInfos = new ArrayList<>();
+    List<String> stageIdentifier = new ArrayList<>();
+    assertThatThrownBy(() -> retryExecuteHelper.fetchOnlyFailedStages(retryStageInfos, stageIdentifier))
+        .isInstanceOf(InvalidRequestException.class);
+
+    // testing caching of exception
+    retryStageInfos.add(RetryStageInfo.builder().identifier("stage1").build());
+    stageIdentifier.add("stage2");
+    assertThatThrownBy(() -> retryExecuteHelper.fetchOnlyFailedStages(retryStageInfos, stageIdentifier))
+        .isInstanceOf(InvalidRequestException.class);
+
+    stageIdentifier.clear();
+    retryStageInfos.clear();
+
+    // testing whole valid status
+    retryStageInfos.add(RetryStageInfo.builder().identifier("stage1").status(ExecutionStatus.SUCCESS).build());
+    retryStageInfos.add(RetryStageInfo.builder().identifier("stage2").status(ExecutionStatus.ABORTED).build());
+    retryStageInfos.add(RetryStageInfo.builder().identifier("stage3").status(ExecutionStatus.IGNOREFAILED).build());
+    retryStageInfos.add(RetryStageInfo.builder().identifier("stage4").status(ExecutionStatus.FAILED).build());
+    retryStageInfos.add(RetryStageInfo.builder().identifier("stage5").status(ExecutionStatus.EXPIRED).build());
+    retryStageInfos.add(RetryStageInfo.builder().identifier("stage6").status(ExecutionStatus.APPROVALREJECTED).build());
+    retryStageInfos.add(RetryStageInfo.builder().identifier("stage7").status(ExecutionStatus.APPROVALREJECTED).build());
+
+    stageIdentifier.add("stage1");
+    stageIdentifier.add("stage2");
+    stageIdentifier.add("stage3");
+    stageIdentifier.add("stage4");
+    stageIdentifier.add("stage5");
+    stageIdentifier.add("stage6");
+    stageIdentifier.add("stage7");
+
+    List<String> onlyFailedStageIdentifier = retryExecuteHelper.fetchOnlyFailedStages(retryStageInfos, stageIdentifier);
+    assertThat(onlyFailedStageIdentifier.size()).isEqualTo(5);
+    assertThat(onlyFailedStageIdentifier).contains("stage2");
+    assertThat(onlyFailedStageIdentifier).contains("stage4");
+    assertThat(onlyFailedStageIdentifier).contains("stage5");
+    assertThat(onlyFailedStageIdentifier).contains("stage6");
+    assertThat(onlyFailedStageIdentifier).contains("stage7");
   }
 }
