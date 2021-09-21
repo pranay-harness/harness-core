@@ -20,25 +20,31 @@ import lombok.AllArgsConstructor;
 
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
 @OwnedBy(DX)
-public class GitFullSyncProcessorServiceImpl implements GitFullSyncProcessorService {
+public class GitFullSyncProcessorServiceImpl implements io.harness.gitsync.core.fullsync.GitFullSyncProcessorService {
   Map<Microservice, FullSyncServiceGrpc.FullSyncServiceBlockingStub> fullSyncServiceBlockingStubMap;
   YamlGitConfigService yamlGitConfigService;
   EntityDetailRestToProtoMapper entityDetailRestToProtoMapper;
-  GitFullSyncEntityService gitFullSyncEntityService;
+  io.harness.gitsync.core.fullsync.GitFullSyncEntityService gitFullSyncEntityService;
 
   private static int MAX_RETRY_COUNT = 2;
 
+  @Override
   public void processFile(GitFullSyncEntityInfo entityInfo) {
     boolean failed = false;
+    FullSyncResponse fullSyncResponse = null;
     try {
-      FullSyncResponse fullSyncResponse = performSyncForEntity(entityInfo);
+      fullSyncResponse = performSyncForEntity(entityInfo);
       failed = !fullSyncResponse.getSuccess();
     } catch (Exception e) {
       failed = true;
     }
     if (failed) {
-      gitFullSyncEntityService.markQueuedOrFailed(
-          entityInfo.getMessageId(), entityInfo.getAccountIdentifier(), entityInfo.getRetryCount(), MAX_RETRY_COUNT);
+      String errorMsg = "";
+      if (fullSyncResponse != null) {
+        errorMsg = fullSyncResponse.getErrorMsg();
+      }
+      gitFullSyncEntityService.markQueuedOrFailed(entityInfo.getMessageId(), entityInfo.getAccountIdentifier(),
+          entityInfo.getRetryCount(), MAX_RETRY_COUNT, errorMsg);
     }
   }
 
@@ -62,6 +68,8 @@ public class GitFullSyncProcessorServiceImpl implements GitFullSyncProcessorServ
         .setFilePath(entityInfo.getFilePath())
         .setYamlGitConfigIdentifier(yamlGitConfigDTO.getIdentifier())
         .putAllLogContext(logContext)
+        .setAccountIdentifier(entityInfo.getAccountIdentifier())
+        .setFolderPath(yamlGitConfigDTO.getDefaultRootFolder().getRootFolder())
         .build();
   }
 }
