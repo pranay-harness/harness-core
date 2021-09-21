@@ -21,4 +21,17 @@ public class ExpressionResultUtils {
       put(Byte.class.getSimpleName(), BYTES);
     }
   };
+
+  public static Object getPrimitiveResponse(String value, String clazz) {
+    switch (ExpressionResultUtils.primitivesMap.get(clazz)) {
+      case ExpressionResultUtils.INTEGER:
+        return Integer.parseInt(value);
+      case ExpressionResultUtils.BOOLEAN:
+        return Boolean.parseBoolean(value);
+      case ExpressionResultUtils.BYTES:
+        return Byte.valueOf(value);
+      default:
+        return value;
+    }
+  }
 }

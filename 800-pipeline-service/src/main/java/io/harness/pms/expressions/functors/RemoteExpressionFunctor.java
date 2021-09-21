@@ -12,7 +12,6 @@ import io.harness.pms.sdk.core.execution.expression.ExpressionResultUtils;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.utils.PmsGrpcClientUtils;
 
-import com.google.common.annotations.VisibleForTesting;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -42,7 +41,8 @@ public class RemoteExpressionFunctor extends LateBindingMap implements Expressio
           remoteFunctorServiceBlockingStub::evaluate,
           ExpressionRequest.newBuilder().setAmbiance(ambiance).setFunctorKey(functorKey).addAllArgs(allArgs).build());
       if (expressionResponse.getIsPrimitive()) {
-        return getPrimitiveResponse(expressionResponse.getValue(), expressionResponse.getPrimitiveType());
+        return ExpressionResultUtils.getPrimitiveResponse(
+            expressionResponse.getValue(), expressionResponse.getPrimitiveType());
       }
       return RecastOrchestrationUtils.fromJson(expressionResponse.getValue());
     } catch (Exception ex) {
@@ -53,19 +53,5 @@ public class RemoteExpressionFunctor extends LateBindingMap implements Expressio
 
   public Object getValue(String... args) {
     return get(args);
-  }
-
-  @VisibleForTesting
-  protected Object getPrimitiveResponse(String value, String clazz) {
-    switch (ExpressionResultUtils.primitivesMap.get(clazz)) {
-      case ExpressionResultUtils.INTEGER:
-        return Integer.parseInt(value);
-      case ExpressionResultUtils.BOOLEAN:
-        return Boolean.parseBoolean(value);
-      case ExpressionResultUtils.BYTES:
-        return Byte.valueOf(value);
-      default:
-        return value;
-    }
   }
 }
