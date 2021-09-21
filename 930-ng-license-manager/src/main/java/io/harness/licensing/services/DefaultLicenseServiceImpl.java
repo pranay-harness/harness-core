@@ -1,12 +1,15 @@
 package io.harness.licensing.services;
 
 import static io.harness.licensing.interfaces.ModuleLicenseImpl.TRIAL_DURATION;
+import static io.harness.remote.client.RestClientUtils.getResponse;
 
 import static java.lang.String.format;
 
 import io.harness.ModuleType;
 import io.harness.account.services.AccountService;
 import io.harness.beans.EmbeddedUser;
+import io.harness.ccm.license.CeLicenseInfoDTO;
+import io.harness.ccm.license.remote.CeLicenseClient;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.licensing.Edition;
@@ -51,6 +54,7 @@ public class DefaultLicenseServiceImpl implements LicenseService {
   private final ModuleLicenseInterface licenseInterface;
   private final AccountService accountService;
   private final TelemetryReporter telemetryReporter;
+  private final CeLicenseClient ceLicenseClient;
 
   static final String FAILED_OPERATION = "START_TRIAL_ATTEMPT_FAILED";
   static final String SUCCEED_START_TRIAL_OPERATION = "NEW_TRIAL";
@@ -117,6 +121,9 @@ public class DefaultLicenseServiceImpl implements LicenseService {
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException("ModuleLicense already exists");
     }
+
+    log.info("Created license for module [{}] in account [{}]", savedEntity.getModuleType(),
+        savedEntity.getAccountIdentifier());
     return licenseObjectConverter.toDTO(savedEntity);
   }
 
@@ -134,6 +141,9 @@ public class DefaultLicenseServiceImpl implements LicenseService {
     license.setAccountIdentifier(existedLicense.getAccountIdentifier());
     license.setModuleType(existedLicense.getModuleType());
     ModuleLicense updatedLicense = moduleLicenseRepository.save(license);
+
+    log.info("Updated license for module [{}] in account [{}]", updatedLicense.getModuleType(),
+        updatedLicense.getAccountIdentifier());
     return licenseObjectConverter.toDTO(updatedLicense);
   }
 
@@ -167,6 +177,7 @@ public class DefaultLicenseServiceImpl implements LicenseService {
         accountIdentifier);
 
     accountService.updateDefaultExperienceIfApplicable(accountIdentifier, DefaultExperience.NG);
+    startTrialInCGIfCE(savedEntity);
     return licenseObjectConverter.toDTO(savedEntity);
   }
 
@@ -197,6 +208,7 @@ public class DefaultLicenseServiceImpl implements LicenseService {
     ModuleLicense savedEntity = moduleLicenseRepository.save(licenseObjectConverter.toEntity(trialLicense));
 
     sendSucceedTelemetryEvents(SUCCEED_EXTEND_TRIAL_OPERATION, savedEntity, accountIdentifier);
+    syncLicenseChangeToCGForCE(savedEntity);
     log.info("Trial license for module [{}] is extended in account [{}]", moduleType, accountIdentifier);
     return licenseObjectConverter.toDTO(savedEntity);
   }
@@ -315,5 +327,31 @@ public class DefaultLicenseServiceImpl implements LicenseService {
     Duration duration = Duration.ofMillis(Instant.now().toEpochMilli() - moduleLicense.getExpiryTime());
     return duration.toMillis() <= 0 || duration.toDays() > 14 || LicenseType.PAID.equals(moduleLicense.getLicenseType())
         || Edition.FREE.equals(moduleLicense.getEdition());
+  }
+
+  private void startTrialInCGIfCE(ModuleLicense moduleLicense) {
+    if (ModuleType.CE.equals(moduleLicense.getModuleType())) {
+      try {
+        getResponse(ceLicenseClient.createCeTrial(CeLicenseInfoDTO.builder()
+                                                      .accountId(moduleLicense.getAccountIdentifier())
+                                                      .expiryTime(moduleLicense.getExpiryTime())
+                                                      .build()));
+      } catch (Exception e) {
+        log.error("Unable to sync trial start in CG CCM", e);
+      }
+    }
+  }
+
+  private void syncLicenseChangeToCGForCE(ModuleLicense moduleLicense) {
+    if (ModuleType.CE.equals(moduleLicense.getModuleType())) {
+      try {
+        getResponse(ceLicenseClient.updateCeLicense(CeLicenseInfoDTO.builder()
+                                                        .accountId(moduleLicense.getAccountIdentifier())
+                                                        .expiryTime(moduleLicense.getExpiryTime())
+                                                        .build()));
+      } catch (Exception e) {
+        log.error("Unable to sync license info in CG CCM", e);
+      }
+    }
   }
 }

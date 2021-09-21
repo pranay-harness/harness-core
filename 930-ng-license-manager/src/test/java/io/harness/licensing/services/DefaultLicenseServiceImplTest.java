@@ -1,6 +1,7 @@
 package io.harness.licensing.services;
 
 import static io.harness.ModuleType.CD;
+import static io.harness.ModuleType.CE;
 import static io.harness.licensing.LicenseTestConstant.ACCOUNT_IDENTIFIER;
 import static io.harness.licensing.LicenseTestConstant.DEFAULT_CI_MODULE_LICENSE;
 import static io.harness.licensing.LicenseTestConstant.DEFAULT_CI_MODULE_LICENSE_DTO;
@@ -14,6 +15,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -22,15 +24,18 @@ import io.harness.ModuleType;
 import io.harness.account.services.AccountService;
 import io.harness.beans.EmbeddedUser;
 import io.harness.category.element.UnitTests;
+import io.harness.ccm.license.remote.CeLicenseClient;
 import io.harness.exception.InvalidRequestException;
 import io.harness.licensing.Edition;
 import io.harness.licensing.LicenseStatus;
 import io.harness.licensing.LicenseType;
 import io.harness.licensing.beans.modules.AccountLicenseDTO;
+import io.harness.licensing.beans.modules.CEModuleLicenseDTO;
 import io.harness.licensing.beans.modules.ModuleLicenseDTO;
 import io.harness.licensing.beans.modules.StartTrialDTO;
 import io.harness.licensing.beans.response.CheckExpiryResultDTO;
 import io.harness.licensing.entities.modules.CDModuleLicense;
+import io.harness.licensing.entities.modules.CEModuleLicense;
 import io.harness.licensing.entities.modules.CIModuleLicense;
 import io.harness.licensing.entities.modules.ModuleLicense;
 import io.harness.licensing.interfaces.ModuleLicenseInterface;
@@ -61,6 +66,7 @@ public class DefaultLicenseServiceImplTest extends CategoryTest {
   @Mock LicenseObjectConverter licenseObjectConverter;
   @Mock AccountService accountService;
   @Mock TelemetryReporter telemetryReporter;
+  @Mock CeLicenseClient ceLicenseClient;
   @InjectMocks DefaultLicenseServiceImpl licenseService;
 
   private StartTrialDTO startTrialRequestDTO;
@@ -148,7 +154,36 @@ public class DefaultLicenseServiceImplTest extends CategoryTest {
     verify(telemetryReporter, times(1)).sendGroupEvent(eq(ACCOUNT_IDENTIFIER), any(), any());
     verify(telemetryReporter, times(1))
         .sendTrackEvent(eq(SUCCEED_START_TRIAL_OPERATION), any(), any(), eq(io.harness.telemetry.Category.SIGN_UP));
+    verifyZeroInteractions(ceLicenseClient);
     assertThat(result).isEqualTo(DEFAULT_CI_MODULE_LICENSE_DTO);
+  }
+
+  @Test
+  @Owner(developers = ZHUO)
+  @Category(UnitTests.class)
+  public void testStartTrialForCE() {
+    CEModuleLicense ceModuleLicense = CEModuleLicense.builder().spendLimit(-1L).build();
+    ceModuleLicense.setAccountIdentifier(ACCOUNT_IDENTIFIER);
+    ceModuleLicense.setModuleType(CE);
+    ceModuleLicense.setLicenseType(LicenseType.TRIAL);
+    ceModuleLicense.setEdition(Edition.ENTERPRISE);
+
+    CEModuleLicenseDTO ceModuleLicenseDTO = CEModuleLicenseDTO.builder()
+                                                .spendLimit(-1L)
+                                                .accountIdentifier(ACCOUNT_IDENTIFIER)
+                                                .edition(Edition.ENTERPRISE)
+                                                .licenseType(LicenseType.TRIAL)
+                                                .moduleType(CE)
+                                                .build();
+
+    StartTrialDTO startTrialDTO = StartTrialDTO.builder().moduleType(CE).build();
+    when(licenseObjectConverter.toEntity(ceModuleLicenseDTO)).thenReturn(ceModuleLicense);
+    when(moduleLicenseRepository.save(ceModuleLicense)).thenReturn(ceModuleLicense);
+    when(moduleLicenseInterface.generateTrialLicense(any(), eq(ACCOUNT_IDENTIFIER), eq(ModuleType.CE)))
+        .thenReturn(ceModuleLicenseDTO);
+    when(accountService.getAccount(ACCOUNT_IDENTIFIER)).thenReturn(AccountDTO.builder().build());
+    licenseService.startTrialLicense(ACCOUNT_IDENTIFIER, startTrialDTO);
+    verify(ceLicenseClient, times(1)).createCeTrial(any());
   }
 
   @Test
@@ -170,6 +205,7 @@ public class DefaultLicenseServiceImplTest extends CategoryTest {
     ModuleLicenseDTO result = licenseService.extendTrialLicense(ACCOUNT_IDENTIFIER, startTrialRequestDTO);
     verify(telemetryReporter, times(1))
         .sendTrackEvent(eq(SUCCEED_EXTEND_TRIAL_OPERATION), any(), any(), eq(io.harness.telemetry.Category.SIGN_UP));
+    verifyZeroInteractions(ceLicenseClient);
     assertThat(result).isEqualTo(DEFAULT_CI_MODULE_LICENSE_DTO);
   }
 
