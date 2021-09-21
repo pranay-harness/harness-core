@@ -113,6 +113,4 @@ public class RemoteExpressionFunctorTest extends CategoryTest {
         UUID.fromString("a-b-c-d-e"));
     assertEquals(ExpressionResultUtils.getPrimitiveResponse("uri", URI.class.getSimpleName()), URI.create("uri"));
   }
-
-  public enum DummyEnum { ENUM1 }
 }
