@@ -8,10 +8,10 @@ import io.harness.cdng.creator.plan.rollback.RollbackPlanCreator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.plancreator.beans.OrchestrationConstants;
-import io.harness.plancreator.utils.CommonPlanCreatorUtils;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
+import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.plan.PlanNode;
@@ -59,7 +59,6 @@ public class CDExecutionPMSPlanCreator {
                 FacilitatorObtainment.newBuilder()
                     .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
                     .build())
-            .adviserObtainment(AdviserObtainment.newBuilder().setType(RollbackCustomAdviser.ADVISER_TYPE).build())
             .skipExpressionChain(false)
             .build();
 
@@ -85,8 +84,8 @@ public class CDExecutionPMSPlanCreator {
     if (EmptyPredicate.isNotEmpty(stepYamlFields)) {
       YamlField stepsField =
           Preconditions.checkNotNull(executionField.getNode().getField(YAMLFieldNameConstants.STEPS));
-      PlanNode stepsNode = CommonPlanCreatorUtils.getStepsPlanNode(
-          stepsField.getNode().getUuid(), stepYamlFields.get(0).getNode().getUuid(), "Steps Element");
+      PlanNode stepsNode =
+          getStepsPlanNode(stepsField.getNode().getUuid(), stepYamlFields.get(0).getNode().getUuid(), "Steps Element");
       responseMap.put(stepsNode.getUuid(), PlanCreationResponse.builder().node(stepsNode.getUuid(), stepsNode).build());
     }
 
@@ -109,5 +108,23 @@ public class CDExecutionPMSPlanCreator {
             .orElse(Collections.emptyList());
 
     return PlanCreatorUtils.getStepYamlFields(yamlNodes);
+  }
+
+  public PlanNode getStepsPlanNode(String nodeUuid, String childNodeId, String logMessage) {
+    StepParameters stepParameters =
+        NGSectionStepParameters.builder().childNodeId(childNodeId).logMessage(logMessage).build();
+    return PlanNode.builder()
+        .uuid(nodeUuid)
+        .identifier(YAMLFieldNameConstants.STEPS)
+        .stepType(NGSectionStep.STEP_TYPE)
+        .name(YAMLFieldNameConstants.STEPS)
+        .stepParameters(stepParameters)
+        .facilitatorObtainment(
+            FacilitatorObtainment.newBuilder()
+                .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+                .build())
+        .adviserObtainment(AdviserObtainment.newBuilder().setType(RollbackCustomAdviser.ADVISER_TYPE).build())
+        .skipGraphType(SkipType.SKIP_NODE)
+        .build();
   }
 }
