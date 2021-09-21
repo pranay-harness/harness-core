@@ -12,6 +12,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.overviewdashboard.dashboardaggregateservice.service.DashboardAggregateService;
 import io.harness.overviewdashboard.dtos.CountOverview;
 import io.harness.overviewdashboard.dtos.DeploymentsStatsSummary;
 import io.harness.overviewdashboard.dtos.TopProjectsPanel;
@@ -45,6 +46,8 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class DashboardResource {
+  DashboardAggregateService dashboardAggregateService;
+
   @GET
   @Path("/top-projects")
   @ApiOperation(value = "Get Top Projects", nickname = "getTopProjects")
@@ -54,7 +57,7 @@ public class DashboardResource {
       @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
       @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
     log.info("Getting top projects");
-    return ResponseDTO.newResponse(TopProjectsPanel.builder().build());
+    return ResponseDTO.newResponse(dashboardAggregateService.getTopProjectsPanel(accountIdentifier,"lv0euRhKRCyiXWzS7pOg6g",1612074913000L,1632074913000L));
   }
 
   @GET

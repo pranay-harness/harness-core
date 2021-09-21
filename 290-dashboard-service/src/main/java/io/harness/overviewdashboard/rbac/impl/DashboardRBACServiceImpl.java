@@ -9,14 +9,16 @@ import io.harness.remote.client.RestClientUtils;
 import io.harness.user.remote.UserClient;
 
 import com.google.inject.Inject;
+import io.harness.userng.remote.UserNGClient;
+
 import java.util.List;
 
 @OwnedBy(PL)
 public class DashboardRBACServiceImpl implements DashboardRBACService {
-  @Inject private UserClient userClient;
+  @Inject private UserNGClient userNGClient;
 
   @Override
   public List<ProjectDTO> listAccessibleProject(String accountId, String userId) {
-    return RestClientUtils.getResponse(userClient.getUserAllProjectsInfo(accountId, userId));
+    return RestClientUtils.getResponse(userNGClient.getUserAllProjectsInfo(accountId, userId));
   }
 }
