@@ -32,6 +32,7 @@ import software.wings.api.cloudformation.CloudFormationRollbackInfoElement;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
 import software.wings.beans.NameValuePair;
+import software.wings.beans.cloudformation.CloudFormationCommandTaskParameters;
 import software.wings.beans.infrastructure.CloudFormationRollbackConfig;
 import software.wings.beans.infrastructure.CloudFormationRollbackConfig.CloudFormationRollbackConfigKeys;
 import software.wings.helpers.ext.cloudformation.CloudFormationCompletionFlag;
@@ -256,6 +257,12 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
                                                      .encryptedVariables(encryptedTextVariables)
                                                      .build();
       setTimeOutOnRequest(request);
+      CloudFormationCommandTaskParameters cloudFormationCommandTaskParameters =
+          CloudFormationCommandTaskParameters.builder()
+              .cloudFormationCommandRequest(request)
+              .encryptedDataDetails(
+                  secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, context.getWorkflowExecutionId()))
+              .build();
       DelegateTask delegateTask =
           DelegateTask.builder()
               .accountId(executionContext.getAccountId())
@@ -265,9 +272,7 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
               .data(TaskData.builder()
                         .async(true)
                         .taskType(CLOUD_FORMATION_TASK.name())
-                        .parameters(new Object[] {request,
-                            secretManager.getEncryptionDetails(
-                                awsConfig, GLOBAL_APP_ID, context.getWorkflowExecutionId())})
+                        .parameters(new Object[] {cloudFormationCommandTaskParameters})
                         .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
                         .build())
               .build();
@@ -325,7 +330,12 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
               .build();
 
       setTimeOutOnRequest(request);
-
+      CloudFormationCommandTaskParameters cloudFormationCommandTaskParameters =
+          CloudFormationCommandTaskParameters.builder()
+              .cloudFormationCommandRequest(request)
+              .encryptedDataDetails(
+                  secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, context.getWorkflowExecutionId()))
+              .build();
       delegateTask =
           DelegateTask.builder()
               .accountId(executionContext.getApp().getAccountId())
@@ -335,9 +345,7 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
               .data(TaskData.builder()
                         .async(true)
                         .taskType(CLOUD_FORMATION_TASK.name())
-                        .parameters(new Object[] {request,
-                            secretManager.getEncryptionDetails(
-                                awsConfig, GLOBAL_APP_ID, context.getWorkflowExecutionId())})
+                        .parameters(new Object[] {cloudFormationCommandTaskParameters})
                         .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                         .build())
               .build();
@@ -373,6 +381,12 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
 
       notNullCheck("Application cannot be null", context.getApp());
 
+      CloudFormationCommandTaskParameters cloudFormationCommandTaskParameters =
+          CloudFormationCommandTaskParameters.builder()
+              .cloudFormationCommandRequest(request)
+              .encryptedDataDetails(secretManager.getEncryptionDetails(
+                  awsConfig, GLOBAL_APP_ID, executionContext.getWorkflowExecutionId()))
+              .build();
       delegateTask =
           DelegateTask.builder()
               .accountId(executionContext.getApp().getAccountId())
@@ -382,9 +396,7 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
               .data(TaskData.builder()
                         .async(true)
                         .taskType(CLOUD_FORMATION_TASK.name())
-                        .parameters(new Object[] {request,
-                            secretManager.getEncryptionDetails(
-                                awsConfig, GLOBAL_APP_ID, executionContext.getWorkflowExecutionId())})
+                        .parameters(new Object[] {cloudFormationCommandTaskParameters})
                         .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
                         .build())
               .build();

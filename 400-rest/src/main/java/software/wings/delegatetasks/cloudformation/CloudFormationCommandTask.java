@@ -14,6 +14,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
 
+import software.wings.beans.cloudformation.CloudFormationCommandTaskParameters;
 import software.wings.delegatetasks.cloudformation.cloudformationtaskhandler.CloudFormationCommandTaskHandler;
 import software.wings.delegatetasks.cloudformation.cloudformationtaskhandler.CloudFormationCreateStackHandler;
 import software.wings.delegatetasks.cloudformation.cloudformationtaskhandler.CloudFormationDeleteStackHandler;
@@ -44,13 +45,10 @@ public class CloudFormationCommandTask extends AbstractDelegateRunnableTask {
 
   @Override
   public CloudFormationCommandExecutionResponse run(TaskParameters parameters) {
-    throw new NotImplementedException("not implemented");
-  }
-
-  @Override
-  public CloudFormationCommandExecutionResponse run(Object[] parameters) {
-    CloudFormationCommandRequest request = (CloudFormationCommandRequest) parameters[0];
-    List<EncryptedDataDetail> details = (List<EncryptedDataDetail>) parameters[1];
+    CloudFormationCommandTaskParameters cloudFormationCommandTaskParameters =
+        (CloudFormationCommandTaskParameters) parameters;
+    CloudFormationCommandRequest request = cloudFormationCommandTaskParameters.getCloudFormationCommandRequest();
+    List<EncryptedDataDetail> details = cloudFormationCommandTaskParameters.getEncryptedDataDetails();
 
     CloudFormationCommandTaskHandler handler = null;
     switch (request.getCommandType()) {
@@ -82,5 +80,10 @@ public class CloudFormationCommandTask extends AbstractDelegateRunnableTask {
           .errorMessage(ExceptionUtils.getMessage(ex))
           .build();
     }
+  }
+
+  @Override
+  public CloudFormationCommandExecutionResponse run(Object[] parameters) {
+    throw new NotImplementedException("not implemented");
   }
 }

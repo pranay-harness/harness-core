@@ -22,6 +22,7 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
+import software.wings.beans.cloudformation.CloudFormationCommandTaskParameters;
 import software.wings.delegatetasks.cloudformation.cloudformationtaskhandler.CloudFormationCreateStackHandler;
 import software.wings.delegatetasks.cloudformation.cloudformationtaskhandler.CloudFormationDeleteStackHandler;
 import software.wings.delegatetasks.cloudformation.cloudformationtaskhandler.CloudFormationListStacksHandler;
@@ -65,15 +66,30 @@ public class CloudFormationCommandTaskTest extends WingsBaseTest {
   public void testRun() {
     CloudFormationCreateStackRequest createStackRequest =
         CloudFormationCreateStackRequest.builder().commandType(CloudFormationCommandType.CREATE_STACK).build();
-    task.run(new Object[] {createStackRequest, emptyList()});
+    CloudFormationCommandTaskParameters cloudFormationCreateStackTaskParameters =
+        CloudFormationCommandTaskParameters.builder()
+            .cloudFormationCommandRequest(createStackRequest)
+            .encryptedDataDetails(emptyList())
+            .build();
+    task.run(cloudFormationCreateStackTaskParameters);
     verify(mockCreateStackHandler).execute(any(), any());
     CloudFormationDeleteStackRequest deleteStackRequest =
         CloudFormationDeleteStackRequest.builder().commandType(CloudFormationCommandType.DELETE_STACK).build();
-    task.run(new Object[] {deleteStackRequest, emptyList()});
+    CloudFormationCommandTaskParameters cloudFormationDeleteStackTaskParameters =
+        CloudFormationCommandTaskParameters.builder()
+            .cloudFormationCommandRequest(deleteStackRequest)
+            .encryptedDataDetails(emptyList())
+            .build();
+    task.run(cloudFormationDeleteStackTaskParameters);
     verify(mockDeleteStackHandler).execute(any(), any());
     CloudFormationListStacksRequest listStacksRequest =
         CloudFormationListStacksRequest.builder().commandType(CloudFormationCommandType.GET_STACKS).build();
-    task.run(new Object[] {listStacksRequest, emptyList()});
+    CloudFormationCommandTaskParameters cloudFormationListStacksTaskParameters =
+        CloudFormationCommandTaskParameters.builder()
+            .cloudFormationCommandRequest(listStacksRequest)
+            .encryptedDataDetails(emptyList())
+            .build();
+    task.run(cloudFormationListStacksTaskParameters);
     verify(mockListStacksHandler).execute(any(), any());
   }
 

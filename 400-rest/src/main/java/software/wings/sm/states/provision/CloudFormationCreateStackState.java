@@ -49,6 +49,7 @@ import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.GitFetchFilesTaskParams;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.NameValuePair;
+import software.wings.beans.cloudformation.CloudFormationCommandTaskParameters;
 import software.wings.beans.s3.FetchS3FilesCommandParams;
 import software.wings.beans.s3.FetchS3FilesExecutionResponse;
 import software.wings.beans.s3.S3File;
@@ -309,6 +310,12 @@ public class CloudFormationCreateStackState extends CloudFormationState {
 
   private DelegateTask getCreateStackDelegateTask(ExecutionContextImpl executionContext, AwsConfig awsConfig,
       String activityId, CloudFormationCreateStackRequest request) {
+    CloudFormationCommandTaskParameters cloudFormationCommandTaskParameters =
+        CloudFormationCommandTaskParameters.builder()
+            .cloudFormationCommandRequest(request)
+            .encryptedDataDetails(
+                secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, executionContext.getWorkflowExecutionId()))
+            .build();
     return DelegateTask.builder()
         .accountId(executionContext.getApp().getAccountId())
         .waitId(activityId)
@@ -319,9 +326,7 @@ public class CloudFormationCreateStackState extends CloudFormationState {
         .data(TaskData.builder()
                   .async(true)
                   .taskType(CLOUD_FORMATION_TASK.name())
-                  .parameters(new Object[] {request,
-                      secretManager.getEncryptionDetails(
-                          awsConfig, GLOBAL_APP_ID, executionContext.getWorkflowExecutionId())})
+                  .parameters(new Object[] {cloudFormationCommandTaskParameters})
                   .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
                   .build())
         .build();

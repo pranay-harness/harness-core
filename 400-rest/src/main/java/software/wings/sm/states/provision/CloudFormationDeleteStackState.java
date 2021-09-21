@@ -20,6 +20,7 @@ import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.cloudformation.CloudFormationElement;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
+import software.wings.beans.cloudformation.CloudFormationCommandTaskParameters;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCommandRequest.CloudFormationCommandType;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationDeleteStackRequest;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandResponse;
@@ -70,6 +71,12 @@ public class CloudFormationDeleteStackState extends CloudFormationState {
             .awsConfig(awsConfig)
             .build();
     setTimeOutOnRequest(request);
+    CloudFormationCommandTaskParameters cloudFormationCommandTaskParameters =
+        CloudFormationCommandTaskParameters.builder()
+            .cloudFormationCommandRequest(request)
+            .encryptedDataDetails(
+                secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, executionContext.getWorkflowExecutionId()))
+            .build();
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(executionContext.getApp().getAccountId())
@@ -81,9 +88,7 @@ public class CloudFormationDeleteStackState extends CloudFormationState {
             .data(TaskData.builder()
                       .async(true)
                       .taskType(CLOUD_FORMATION_TASK.name())
-                      .parameters(new Object[] {request,
-                          secretManager.getEncryptionDetails(
-                              awsConfig, GLOBAL_APP_ID, executionContext.getWorkflowExecutionId())})
+                      .parameters(new Object[] {cloudFormationCommandTaskParameters})
                       .timeout(defaultIfNullTimeout(DEFAULT_ASYNC_CALL_TIMEOUT))
                       .build())
             .build();

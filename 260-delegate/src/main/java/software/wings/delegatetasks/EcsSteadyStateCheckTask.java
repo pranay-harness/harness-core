@@ -67,12 +67,7 @@ public class EcsSteadyStateCheckTask extends AbstractDelegateRunnableTask {
 
   @Override
   public EcsSteadyStateCheckResponse run(TaskParameters parameters) {
-    throw new NotImplementedException("not implemented");
-  }
-
-  @Override
-  public EcsSteadyStateCheckResponse run(Object[] parameters) {
-    EcsSteadyStateCheckParams params = (EcsSteadyStateCheckParams) parameters[0];
+    EcsSteadyStateCheckParams params = (EcsSteadyStateCheckParams) parameters;
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(
         delegateLogService, params.getAccountId(), params.getAppId(), params.getActivityId(), params.getCommandName());
     try {
@@ -148,5 +143,10 @@ public class EcsSteadyStateCheckTask extends AbstractDelegateRunnableTask {
           .errorMessage(errorMessage)
           .build();
     }
+  }
+
+  @Override
+  public EcsSteadyStateCheckResponse run(Object[] parameters) {
+    throw new NotImplementedException("not implemented");
   }
 }
