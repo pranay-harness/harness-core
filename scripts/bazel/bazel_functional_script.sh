@@ -56,6 +56,6 @@ if [ "${RUN_BAZEL_FUNCTIONAL_TESTS}" == "true" ]; then
 
   kill -9 $MANAGER_PID || true
   kill -9 $DELEGATE_PID || true
-  return $exitCode
+  exit $exitCode
 fi
-return 0;
+exit 0;
