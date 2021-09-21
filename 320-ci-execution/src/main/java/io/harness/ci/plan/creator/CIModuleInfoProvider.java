@@ -55,6 +55,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
 @Singleton
@@ -148,17 +149,18 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
       OptionalSweepingOutput optionalSweepingOutput =
           executionSweepingOutputService.resolveOptional(ambiance, RefObjectUtils.getOutcomeRefObject(CODEBASE));
       CodebaseSweepingOutput codebaseSweepingOutput = null;
-      if (optionalSweepingOutput.isFound()) {
-        codebaseSweepingOutput = (CodebaseSweepingOutput) optionalSweepingOutput.getOutput();
-        ciWebhookInfoDTO = getCiExecutionInfoDTO(codebaseSweepingOutput, ciWebhookInfoDTO.getAuthor(), prNumber, null);
-      }
-
-      author = ciWebhookInfoDTO.getAuthor();
       if (ciWebhookInfoDTO.getEvent().equals("branch")) {
         triggerCommits = ciWebhookInfoDTO.getBranch().getCommits();
       } else {
         triggerCommits = ciWebhookInfoDTO.getPullRequest().getCommits();
       }
+      if (optionalSweepingOutput.isFound()) {
+        codebaseSweepingOutput = (CodebaseSweepingOutput) optionalSweepingOutput.getOutput();
+        ciWebhookInfoDTO =
+            getCiExecutionInfoDTO(codebaseSweepingOutput, ciWebhookInfoDTO.getAuthor(), prNumber, triggerCommits);
+      }
+
+      author = ciWebhookInfoDTO.getAuthor();
 
       if (IntegrationStageUtils.isURLSame(webhookExecutionSource, url) && isNotEmpty(prNumber)) {
         return CIPipelineModuleInfo.builder()
@@ -242,6 +244,17 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
           .branch(CIBuildBranchHook.builder().commits(ciBuildCommits).triggerCommits(triggerCommits).build())
           .build();
     }
+  }
+
+  public boolean displayTriggerCommits(List<CIBuildCommit> buildCommits, List<CIBuildCommit> triggerCommits) {
+    if (isNotEmpty(triggerCommits) && isNotEmpty(buildCommits)) {
+      return buildCommits.stream()
+          .map(CIBuildCommit::getId)
+          .collect(Collectors.toSet())
+          .containsAll(triggerCommits.stream().map(CIBuildCommit::getId).collect(Collectors.toSet()));
+    }
+
+    return true;
   }
 
   @Override
