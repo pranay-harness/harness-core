@@ -24,4 +24,5 @@ import lombok.experimental.SuperBuilder;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = DATA_SOURCE_TYPE, include = JsonTypeInfo.As.EXTERNAL_PROPERTY)
 public abstract class ChangeSourceSpec {
   @JsonIgnore public abstract ChangeSourceType getType();
+  @JsonIgnore public abstract boolean connectorPresent();
 }

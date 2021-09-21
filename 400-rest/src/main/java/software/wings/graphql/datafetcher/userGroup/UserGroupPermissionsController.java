@@ -23,6 +23,7 @@ import static software.wings.security.PermissionAttribute.Action.UPDATE;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.PermissionType.ALLOW_DEPLOYMENTS_DURING_FREEZE;
 import static software.wings.security.PermissionAttribute.PermissionType.ALL_APP_ENTITIES;
+import static software.wings.security.PermissionAttribute.PermissionType.APP_TEMPLATE;
 import static software.wings.security.PermissionAttribute.PermissionType.AUDIT_VIEWER;
 import static software.wings.security.PermissionAttribute.PermissionType.CE_ADMIN;
 import static software.wings.security.PermissionAttribute.PermissionType.CE_VIEWER;
@@ -86,6 +87,7 @@ import software.wings.graphql.schema.type.permissions.QLPipelineFilterType;
 import software.wings.graphql.schema.type.permissions.QLPipelinePermissions;
 import software.wings.graphql.schema.type.permissions.QLProivionerPermissions;
 import software.wings.graphql.schema.type.permissions.QLServicePermissions;
+import software.wings.graphql.schema.type.permissions.QLTemplatePermissions;
 import software.wings.graphql.schema.type.permissions.QLUserGroupPermissions;
 import software.wings.graphql.schema.type.permissions.QLWorkflowFilterType;
 import software.wings.graphql.schema.type.permissions.QLWorkflowPermissions;
@@ -261,6 +263,8 @@ public class UserGroupPermissionsController {
         return DEPLOYMENT;
       case PROVISIONER:
         return PROVISIONER;
+      case TEMPLATE:
+        return APP_TEMPLATE;
       default:
         log.error("Invalid Permission Type {} given by the user", permissionType.toString());
     }
@@ -425,6 +429,15 @@ public class UserGroupPermissionsController {
         break;
       case PIPELINE:
         entityFilter = createPipelineFilter(permission.getPipelines());
+        break;
+      case TEMPLATE:
+        Set<String> templateIds = permission.getTemplates().getTemplateIds();
+        if (templateIds != null) {
+          filterType = isNotEmpty(templateIds) ? SELECTED : ALL;
+        } else {
+          filterType = ALL;
+        }
+        entityFilter = GenericEntityFilter.builder().filterType(filterType).ids(templateIds).build();
         break;
       case PROVISIONER:
         Set<String> provisionerIds = permission.getProvisioners().getProvisionerIds();
@@ -599,6 +612,8 @@ public class UserGroupPermissionsController {
         return QLPermissionType.DEPLOYMENT;
       case PROVISIONER:
         return QLPermissionType.PROVISIONER;
+      case APP_TEMPLATE:
+        return QLPermissionType.TEMPLATE;
       default:
         log.error("Invalid Permission Type {} given by the user", permissionType.toString());
     }
@@ -748,6 +763,16 @@ public class UserGroupPermissionsController {
           servicePermissions = QLServicePermissions.builder().serviceIds(serviceIds).build();
         }
         return builder.permissionType(appPermissionType).services(servicePermissions).build();
+      case APP_TEMPLATE:
+        QLTemplatePermissions templatePermissions;
+        Set<String> templateIds = permission.getEntityFilter().getIds();
+        if (isEmpty(templateIds)) {
+          templatePermissions =
+              QLTemplatePermissions.builder().filterType(QLPermissionsFilterType.ALL).templateIds(templateIds).build();
+        } else {
+          templatePermissions = QLTemplatePermissions.builder().templateIds(templateIds).build();
+        }
+        return builder.permissionType(appPermissionType).templates(templatePermissions).build();
       case ENV:
         QLEnvPermissions envFilter = createEnvFilterOutput((EnvFilter) permission.getEntityFilter());
         return builder.permissionType(appPermissionType).environments(envFilter).build();

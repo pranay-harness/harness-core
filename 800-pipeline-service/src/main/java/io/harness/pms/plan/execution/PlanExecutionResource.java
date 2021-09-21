@@ -13,11 +13,13 @@ import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.engine.executions.retry.RetryExecutionHelper;
+import io.harness.engine.executions.retry.RetryInfo;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.InvalidYamlException;
 import io.harness.gitsync.interceptor.GitEntityFindInfoDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.pms.annotations.PipelineServiceAuth;
-import io.harness.pms.helpers.TriggeredByHelper;
 import io.harness.pms.ngpipeline.inputset.beans.resource.MergeInputSetRequestDTOPMS;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
@@ -27,6 +29,8 @@ import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.pms.preflight.PreFlightDTO;
 import io.harness.pms.preflight.service.PreflightService;
 import io.harness.pms.rbac.PipelineRbacPermissions;
+import io.harness.pms.stages.StageExecutionResponse;
+import io.harness.pms.stages.StageExecutionSelectorHelper;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.repositories.orchestrationEventLog.OrchestrationEventLogRepository;
 
@@ -35,6 +39,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -64,11 +69,11 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class PlanExecutionResource {
   @Inject private final PipelineExecuteHelper pipelineExecuteHelper;
   @Inject private final PMSExecutionService pmsExecutionService;
-  @Inject private final TriggeredByHelper triggeredByHelper;
   @Inject private final OrchestrationEventLogRepository orchestrationEventLogRepository;
   @Inject private final AccessControlClient accessControlClient;
   @Inject private final PreflightService preflightService;
   @Inject private final PMSPipelineService pmsPipelineService;
+  @Inject private final RetryExecutionHelper retryExecutionHelper;
 
   @POST
   @Path("/{identifier}")
@@ -178,7 +183,7 @@ public class PlanExecutionResource {
   @Path("/{planExecutionId}/retryStages")
   @ApiOperation(value = "Get retry stages for failed pipeline", nickname = "getRetryStages")
   @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_EXECUTE)
-  public ResponseDTO<RetryInfo> getRetryStages(
+  public ResponseDTO<io.harness.engine.executions.retry.RetryInfo> getRetryStages(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
@@ -198,9 +203,9 @@ public class PlanExecutionResource {
     }
     String updatedPipeline = updatedPipelineEntity.get().getYaml();
 
-    String executedPipeline = pipelineExecuteHelper.getYamlFromExecutionId(planExecutionId);
+    String executedPipeline = retryExecutionHelper.getYamlFromExecutionId(planExecutionId);
     return ResponseDTO.newResponse(
-        pipelineExecuteHelper.getRetryStages(updatedPipeline, executedPipeline, planExecutionId, pipelineIdentifier));
+        retryExecutionHelper.getRetryStages(updatedPipeline, executedPipeline, planExecutionId, pipelineIdentifier));
   }
 
   @POST
@@ -345,5 +350,52 @@ public class PlanExecutionResource {
   public ResponseDTO<String> runASchemaMigration() {
     orchestrationEventLogRepository.schemaMigrationForOldEvenLog();
     return ResponseDTO.newResponse("Deleted Old Orchestration event log entries");
+  }
+
+  @GET
+  @ApiOperation(value = "get list of stages for stage execution", nickname = "getStagesExecutionList")
+  @Path("/stagesExecutionList")
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
+  public ResponseDTO<List<StageExecutionResponse>> getStagesExecutionList(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier @NotEmpty String pipelineIdentifier,
+      @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
+    Optional<PipelineEntity> optionalPipelineEntity =
+        pmsPipelineService.get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);
+    if (!optionalPipelineEntity.isPresent()) {
+      throw new InvalidRequestException(format("Pipeline [%s] under Project[%s], Organization [%s] doesn't exist.",
+          pipelineIdentifier, projectIdentifier, orgIdentifier));
+    }
+    PipelineEntity pipelineEntity = optionalPipelineEntity.get();
+    List<StageExecutionResponse> stageExecutionResponse =
+        StageExecutionSelectorHelper.getStageExecutionResponse(pipelineEntity.getYaml());
+    return ResponseDTO.newResponse(stageExecutionResponse);
+  }
+
+  @POST
+  @Path("retry/{identifier}")
+  @ApiOperation(value = "Retry a executed pipeline with inputSet pipeline yaml", nickname = "retryPipeline")
+  @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_EXECUTE)
+  public ResponseDTO<PlanExecutionResponseDto> retryPipelineWithInputSetPipelineYaml(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.MODULE_TYPE) String moduleType,
+      @NotNull @QueryParam(NGCommonEntityConstants.PLAN_KEY) String previousExecutionId,
+      @NotNull @QueryParam(NGCommonEntityConstants.RETRY_STAGES) List<String> retryStagesIdentifier,
+      @QueryParam(NGCommonEntityConstants.RUN_ALL_STAGES) @DefaultValue("true") boolean runAllStages,
+      @PathParam(NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier @NotEmpty String pipelineIdentifier,
+      @ApiParam(hidden = true) String inputSetPipelineYaml) {
+    try {
+      PlanExecutionResponseDto planExecutionResponseDto = pipelineExecuteHelper.retryPipelineWithInputSetPipelineYaml(
+          accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, moduleType, inputSetPipelineYaml,
+          previousExecutionId, retryStagesIdentifier, runAllStages, false);
+      return ResponseDTO.newResponse(planExecutionResponseDto);
+    } catch (IOException ex) {
+      log.error(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+      throw new InvalidYamlException(format("Invalid yaml in node [%s]", YamlUtils.getErrorNodePartialFQN(ex)), ex);
+    }
   }
 }

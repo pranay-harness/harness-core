@@ -25,6 +25,8 @@ import static software.wings.common.TemplateConstants.TOMCAT_COMMANDS;
 import static java.lang.String.format;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.ExceptionUtils;
@@ -45,6 +47,8 @@ import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.template.TemplateHelper;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.AuditServiceHelper;
+import software.wings.service.impl.security.auth.TemplateAuthHandler;
+import software.wings.service.impl.security.auth.TemplateRBACListFilter;
 import software.wings.service.intfc.template.TemplateFolderService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
@@ -70,6 +74,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 @Singleton
 @ValidateOnExecution
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
 public class TemplateFolderServiceImpl implements TemplateFolderService {
   private static final String ACCOUNT = "Account";
   private static final String APPLICATION = "Application";
@@ -78,6 +83,8 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
   @Inject private TemplateGalleryService templateGalleryService;
   @Inject private TemplateService templateService;
   @Inject private AuditServiceHelper auditServiceHelper;
+  @Inject private TemplateHelper templateHelper;
+  @Inject private TemplateAuthHandler templateAuthHandler;
 
   @Override
   //  @Deprecated
@@ -334,7 +341,6 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
     // Get all templates belonging to appId
     Query<Template> templateQuery = wingsPersistence.createQuery(Template.class)
                                         .filter(TemplateKeys.accountId, accountId)
-                                        .filter(TemplateKeys.appId, appId)
                                         .filter(TemplateFolderKeys.galleryId, galleryId);
 
     if (isNotEmpty(keyword)) {
@@ -366,7 +372,17 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
       getParentUuids(accountId, templateFolders);
     }
 
-    List<Template> templates = templateQuery.asList();
+    final TemplateRBACListFilter templateRBACListFilter =
+        templateAuthHandler.buildTemplateListRBACFilter(Collections.singletonList(appId));
+
+    List<Template> templates;
+    if (templateRBACListFilter.empty()) {
+      templates = Collections.emptyList();
+    } else {
+      templateRBACListFilter.addToQuery(templateQuery);
+      templates = templateQuery.asList();
+    }
+
     List<String> templateFolderUuids = getTemplateFolderUuids(templates);
 
     List<TemplateFolder> templateParentFolders = getTemplateFolderUuids(accountId, templateFolderUuids);

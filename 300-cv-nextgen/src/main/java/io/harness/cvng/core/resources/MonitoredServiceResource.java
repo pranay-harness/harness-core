@@ -174,6 +174,26 @@ public class MonitoredServiceResource {
   @GET
   @Timed
   @ExceptionMetered
+  @Path("/list")
+  @ApiOperation(value = "get list of monitored service data ", nickname = "getMonitoredServiceList")
+  public ResponseDTO<PageResponse<MonitoredServiceResponse>> getList(@NotNull @QueryParam("accountId") String accountId,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @NotNull @QueryParam("environmentIdentifier") String environmentIdentifier,
+      @QueryParam("offset") @NotNull Integer offset, @QueryParam("pageSize") @NotNull Integer pageSize,
+      @QueryParam("filter") String filter) {
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
+    return ResponseDTO.newResponse(
+        monitoredServiceService.getList(projectParams, environmentIdentifier, offset, pageSize, filter));
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
   @Path("/service-environment")
   @ApiOperation(value = "get monitored service data from service and env ref",
       nickname = "getMonitoredServiceFromServiceAndEnvironment")

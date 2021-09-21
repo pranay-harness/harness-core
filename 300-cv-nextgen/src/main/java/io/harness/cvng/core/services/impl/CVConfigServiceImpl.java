@@ -32,6 +32,7 @@ import io.harness.persistence.HPersistence;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -115,7 +116,7 @@ public class CVConfigServiceImpl implements CVConfigService {
       return;
     }
     deletedCVConfigService.save(
-        DeletedCVConfig.builder().cvConfig(cvConfig).accountId(cvConfig.getAccountId()).build());
+        DeletedCVConfig.builder().cvConfig(cvConfig).accountId(cvConfig.getAccountId()).build(), Duration.ofHours(2));
     hPersistence.delete(CVConfig.class, cvConfigId);
   }
 

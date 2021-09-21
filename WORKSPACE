@@ -4678,7 +4678,7 @@ plain_artifacts = [
     "org.apache.httpcomponents:httpcore-nio:4.4.14",
     "org.apache.httpcomponents:httpcore:4.4.14",
     "org.apache.httpcomponents:httpmime:4.5.13",
-    "org.apache.ibatis:ibatis-core:3.0",
+    "org.mybatis:mybatis:jar:3.5.7",
     "org.apache.kafka:connect-api:2.6.1",
     "org.apache.kafka:connect-runtime:2.6.1",
     "org.apache.kafka:kafka-clients:2.6.1",
@@ -5300,4 +5300,11 @@ go_repository(
     importpath = "github.com/robfig/cron/v3",
     sum = "h1:WdRxkvbJztn8LMz/QEvLN5sBU+xKpSqwwUO1Pjr4qDs=",
     version = "v3.0.1",
+)
+
+go_repository(
+    name = "com_github_robinjoseph08_redisqueue_v2",
+    importpath = "github.com/robinjoseph08/redisqueue/v2",
+    sum = "h1:GactHlrxS8YSCJc4CbP1KbTObo14pieNmNWSUlquTGI=",
+    version = "v2.1.0",
 )

@@ -119,6 +119,7 @@ public class RetryHelper {
         .uuid(newUuid)
         .ambiance(ambiance)
         .node(newPlanNode)
+        .levelCount(ambiance.getLevelsCount())
         .mode(null)
         .startTs(AmbianceUtils.getCurrentLevelStartTs(ambiance))
         .endTs(null)

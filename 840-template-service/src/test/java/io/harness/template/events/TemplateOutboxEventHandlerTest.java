@@ -77,7 +77,7 @@ public class TemplateOutboxEventHandlerTest extends CategoryTest {
                                         .yaml(newYaml)
                                         .build();
     TemplateCreateEvent createEvent =
-        new TemplateCreateEvent(accountIdentifier, orgIdentifier, projectIdentifier, templateEntity);
+        new TemplateCreateEvent(accountIdentifier, orgIdentifier, projectIdentifier, templateEntity, "");
     String eventData = objectMapper.writeValueAsString(createEvent);
     GlobalContext globalContext = new GlobalContext();
     Principal principal =
@@ -133,8 +133,8 @@ public class TemplateOutboxEventHandlerTest extends CategoryTest {
                                            .templateScope(Scope.PROJECT)
                                            .yaml(newYaml)
                                            .build();
-    TemplateUpdateEvent updateEvent = new TemplateUpdateEvent(
-        accountIdentifier, orgIdentifier, projectIdentifier, newTemplateEntity, oldTemplateEntity);
+    TemplateUpdateEvent updateEvent = new TemplateUpdateEvent(accountIdentifier, orgIdentifier, projectIdentifier,
+        newTemplateEntity, oldTemplateEntity, "", TemplateUpdateEventType.OTHERS_EVENT);
     String eventData = objectMapper.writeValueAsString(updateEvent);
     GlobalContext globalContext = new GlobalContext();
     Principal principal =
@@ -184,7 +184,7 @@ public class TemplateOutboxEventHandlerTest extends CategoryTest {
                                         .yaml(oldYaml)
                                         .build();
     TemplateDeleteEvent deleteEvent =
-        new TemplateDeleteEvent(accountIdentifier, orgIdentifier, projectIdentifier, templateEntity);
+        new TemplateDeleteEvent(accountIdentifier, orgIdentifier, projectIdentifier, templateEntity, "");
     String eventData = objectMapper.writeValueAsString(deleteEvent);
     GlobalContext globalContext = new GlobalContext();
     Principal principal =

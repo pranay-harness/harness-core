@@ -41,7 +41,7 @@ public class WaitInstanceTimeoutCallback implements TimeoutCallback {
     }
 
     try {
-      persistenceWrapper.delete(waitInstance);
+      persistenceWrapper.deleteWaitInstance(waitInstance);
     } catch (Exception exception) {
       log.error("Failed to delete WaitInstance", exception);
     }

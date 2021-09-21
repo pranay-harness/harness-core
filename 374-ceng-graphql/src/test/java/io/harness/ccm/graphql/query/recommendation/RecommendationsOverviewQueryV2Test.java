@@ -3,7 +3,9 @@ package io.harness.ccm.graphql.query.recommendation;
 import static io.harness.rule.OwnerRule.UTSAV;
 import static io.harness.timescaledb.Tables.CE_RECOMMENDATIONS;
 
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.offset;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -21,9 +23,24 @@ import io.harness.ccm.graphql.dto.recommendation.K8sRecommendationFilterDTO;
 import io.harness.ccm.graphql.dto.recommendation.RecommendationItemDTO;
 import io.harness.ccm.graphql.dto.recommendation.RecommendationsDTO;
 import io.harness.ccm.graphql.utils.GraphQLUtils;
+import io.harness.ccm.views.entities.CEView;
+import io.harness.ccm.views.entities.ViewCondition;
+import io.harness.ccm.views.entities.ViewField;
+import io.harness.ccm.views.entities.ViewFieldIdentifier;
+import io.harness.ccm.views.entities.ViewIdCondition;
+import io.harness.ccm.views.entities.ViewIdOperator;
+import io.harness.ccm.views.entities.ViewRule;
+import io.harness.ccm.views.graphql.QLCEViewFieldInput;
+import io.harness.ccm.views.graphql.QLCEViewFilter;
+import io.harness.ccm.views.graphql.QLCEViewFilterOperator;
+import io.harness.ccm.views.graphql.QLCEViewFilterWrapper;
+import io.harness.ccm.views.graphql.QLCEViewMetadataFilter;
+import io.harness.ccm.views.graphql.QLCEViewRule;
+import io.harness.ccm.views.service.CEViewService;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 
-import com.google.common.collect.ImmutableList;
+import graphql.com.google.common.collect.ImmutableList;
 import java.util.Collections;
 import java.util.List;
 import org.jooq.Condition;
@@ -43,6 +60,7 @@ public class RecommendationsOverviewQueryV2Test extends CategoryTest {
   private static final Double MONTHLY_SAVING = 40D;
   private static final String NAMESPACE = "namespace";
   private static final String ID = "id0";
+  private static final String PERSPECTIVE_ID = "perspectiveId";
 
   private static final K8sRecommendationFilterDTO defaultFilter = K8sRecommendationFilterDTO.builder()
                                                                       .limit(GraphQLUtils.DEFAULT_LIMIT)
@@ -52,6 +70,7 @@ public class RecommendationsOverviewQueryV2Test extends CategoryTest {
 
   @Mock private GraphQLUtils graphQLUtils;
   @Mock private RecommendationService recommendationService;
+  @Mock private CEViewService viewService;
   @InjectMocks private RecommendationsOverviewQueryV2 overviewQuery;
 
   @Before
@@ -90,7 +109,7 @@ public class RecommendationsOverviewQueryV2Test extends CategoryTest {
         .thenReturn(ImmutableList.of(createRecommendationItem("id0", ResourceType.WORKLOAD)));
 
     K8sRecommendationFilterDTO filter = K8sRecommendationFilterDTO.builder()
-                                            .ids(Collections.singletonList(ID))
+                                            .ids(singletonList(ID))
                                             .limit(GraphQLUtils.DEFAULT_LIMIT)
                                             .offset(GraphQLUtils.DEFAULT_OFFSET)
                                             .build();
@@ -117,15 +136,15 @@ public class RecommendationsOverviewQueryV2Test extends CategoryTest {
   @Test
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
-  public void testGetRecommendationsOverviewQueryWithAllFiltersExceptId() {
+  public void testListQueryWithAllFiltersExceptId() {
     when(recommendationService.listAll(eq(ACCOUNT_ID), any(Condition.class), any(), any()))
         .thenReturn(ImmutableList.of(createRecommendationItem("id0"), createRecommendationItem("id1")));
 
     K8sRecommendationFilterDTO filter = K8sRecommendationFilterDTO.builder()
-                                            .names(Collections.singletonList(NAME))
-                                            .namespaces(Collections.singletonList(NAMESPACE))
-                                            .clusterNames(Collections.singletonList(CLUSTER_NAME))
-                                            .resourceTypes(Collections.singletonList(ResourceType.WORKLOAD))
+                                            .names(singletonList(NAME))
+                                            .namespaces(singletonList(NAMESPACE))
+                                            .clusterNames(singletonList(CLUSTER_NAME))
+                                            .resourceTypes(singletonList(ResourceType.WORKLOAD))
                                             .minCost(0D)
                                             .minSaving(0D)
                                             .limit(GraphQLUtils.DEFAULT_LIMIT)
@@ -142,9 +161,145 @@ public class RecommendationsOverviewQueryV2Test extends CategoryTest {
   @Test
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
+  public void testListQueryWithPerspectiveRuleFilters() {
+    final QLCEViewFilter viewFilter = createViewFilter("name", QLCEViewFilterOperator.IN);
+
+    final K8sRecommendationFilterDTO filter = createPerspectiveViewFilter(viewFilter);
+
+    when(recommendationService.listAll(eq(ACCOUNT_ID), conditionCaptor.capture(), any(), any()))
+        .thenReturn(ImmutableList.of(createRecommendationItem("id0"), createRecommendationItem("id1")));
+
+    final RecommendationsDTO recommendationsDTO = overviewQuery.recommendations(filter, null);
+
+    assertRecommendationOverviewListResponse(recommendationsDTO);
+    assertThat(recommendationsDTO.getItems())
+        .containsExactlyInAnyOrder(createRecommendationItem("id0"), createRecommendationItem("id1"));
+
+    final Condition condition = conditionCaptor.getValue();
+
+    assertThat(condition).isNotNull();
+    assertThat(condition.toString()).contains("in").contains(NAME);
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testListQueryWithPerspectiveMetadataFilters() {
+    final K8sRecommendationFilterDTO filter = createPerspectiveMetadataFilter();
+
+    when(recommendationService.listAll(eq(ACCOUNT_ID), conditionCaptor.capture(), any(), any()))
+        .thenReturn(ImmutableList.of(createRecommendationItem("id0"), createRecommendationItem("id1")));
+
+    when(viewService.get(eq(PERSPECTIVE_ID))).thenReturn(createCEView(NAME, ViewIdOperator.NOT_IN));
+
+    final RecommendationsDTO recommendationsDTO = overviewQuery.recommendations(filter, null);
+
+    assertRecommendationOverviewListResponse(recommendationsDTO);
+    assertThat(recommendationsDTO.getItems())
+        .containsExactlyInAnyOrder(createRecommendationItem("id0"), createRecommendationItem("id1"));
+
+    final Condition condition = conditionCaptor.getValue();
+
+    assertThat(condition).isNotNull();
+    assertThat(condition.toString()).contains("not in").contains(NAME);
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testListQueryWithMetadataFiltersViewIdNotPresent() {
+    final K8sRecommendationFilterDTO filter = createPerspectiveMetadataFilter();
+
+    when(viewService.get(eq(PERSPECTIVE_ID))).thenReturn(null);
+
+    assertThatThrownBy(() -> overviewQuery.recommendations(filter, null))
+        .isExactlyInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining(PERSPECTIVE_ID);
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testGetRecommendationsOverviewListQueryWithPerspectiveFiltersThrowsError() {
+    final QLCEViewFilter viewFilter = createViewFilter("randomField", QLCEViewFilterOperator.IN);
+
+    final K8sRecommendationFilterDTO filter = createPerspectiveViewFilter(viewFilter);
+
+    when(recommendationService.listAll(any(), any(), any(), any()))
+        .thenReturn(ImmutableList.of(createRecommendationItem("id0"), createRecommendationItem("id1")));
+
+    assertThatThrownBy(() -> overviewQuery.recommendations(filter, null))
+        .isExactlyInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("doesnt exist");
+  }
+
+  private static K8sRecommendationFilterDTO createPerspectiveViewFilter(QLCEViewFilter viewFilter) {
+    final List<QLCEViewFilterWrapper> perspectiveFilters =
+        ImmutableList.of(QLCEViewFilterWrapper.builder()
+                             .ruleFilter(QLCEViewRule.builder().conditions(ImmutableList.of(viewFilter)).build())
+                             .build());
+
+    return buildFilter(perspectiveFilters);
+  }
+
+  private static K8sRecommendationFilterDTO createPerspectiveMetadataFilter() {
+    final List<QLCEViewFilterWrapper> perspectiveFilters =
+        ImmutableList.of(QLCEViewFilterWrapper.builder()
+                             .viewMetadataFilter(QLCEViewMetadataFilter.builder().viewId(PERSPECTIVE_ID).build())
+                             .build());
+
+    return buildFilter(perspectiveFilters);
+  }
+
+  private static K8sRecommendationFilterDTO buildFilter(List<QLCEViewFilterWrapper> perspectiveFilters) {
+    return K8sRecommendationFilterDTO.builder()
+        .perspectiveFilters(perspectiveFilters)
+        .minSaving(0D)
+        .limit(GraphQLUtils.DEFAULT_LIMIT)
+        .offset(GraphQLUtils.DEFAULT_OFFSET)
+        .build();
+  }
+
+  private static QLCEViewFilter createViewFilter(String fieldId, QLCEViewFilterOperator operator) {
+    return QLCEViewFilter.builder()
+        .field(QLCEViewFieldInput.builder()
+                   .fieldId(fieldId)
+                   .fieldName(fieldId)
+                   .identifierName(fieldId)
+                   .identifier(ViewFieldIdentifier.CLUSTER)
+                   .build())
+        .values(new String[] {NAME})
+        .operator(operator)
+        .build();
+  }
+
+  private CEView createCEView(String fieldId, ViewIdOperator operator) {
+    return CEView.builder()
+        .uuid(PERSPECTIVE_ID)
+        .viewRules(singletonList(
+            ViewRule.builder().viewConditions(ImmutableList.of(createViewCondition(fieldId, operator))).build()))
+        .build();
+  }
+
+  private static ViewCondition createViewCondition(String fieldId, ViewIdOperator operator) {
+    return ViewIdCondition.builder()
+        .viewField(ViewField.builder()
+                       .fieldId(fieldId)
+                       .fieldName(fieldId)
+                       .identifierName(fieldId)
+                       .identifier(ViewFieldIdentifier.CLUSTER)
+                       .build())
+        .viewOperator(operator)
+        .values(singletonList(NAME))
+        .build();
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
   public void testRecommendationFilterStats() {
     String columnName = "resourceType";
-    List<String> columns = Collections.singletonList(columnName);
+    List<String> columns = singletonList(columnName);
     List<FilterStatsDTO> actualResponse =
         ImmutableList.of(FilterStatsDTO.builder()
                              .key(columnName)
@@ -172,7 +327,7 @@ public class RecommendationsOverviewQueryV2Test extends CategoryTest {
   @Category(UnitTests.class)
   public void testRecommendationFilterStatsWithPreselectedFilters() {
     String columnName = "resourceType";
-    List<String> columns = Collections.singletonList(columnName);
+    List<String> columns = singletonList(columnName);
     List<FilterStatsDTO> actualResponse = ImmutableList.of(
         FilterStatsDTO.builder().key(columnName).values(ImmutableList.of(ResourceType.WORKLOAD.name())).build());
 
@@ -180,10 +335,10 @@ public class RecommendationsOverviewQueryV2Test extends CategoryTest {
         .thenReturn(actualResponse);
 
     K8sRecommendationFilterDTO filter = K8sRecommendationFilterDTO.builder()
-                                            .names(Collections.singletonList("name0"))
-                                            .namespaces(Collections.singletonList("namespace0"))
-                                            .clusterNames(Collections.singletonList("clusterName0"))
-                                            .resourceTypes(Collections.singletonList(ResourceType.WORKLOAD))
+                                            .names(singletonList("name0"))
+                                            .namespaces(singletonList("namespace0"))
+                                            .clusterNames(singletonList("clusterName0"))
+                                            .resourceTypes(singletonList(ResourceType.WORKLOAD))
                                             .minCost(200D)
                                             .minSaving(100D)
                                             .build();

@@ -150,7 +150,7 @@ def isFreshSync(jsonData):
     if jsonData.get("dataSourceId"):
         # Check in preaggregated table for non US regions
         query = """  SELECT count(*) as count from %s.%s.preAggregated
-                   WHERE starttime >= DATETIME_SUB(CURRENT_TIMESTAMP, INTERVAL 3 DAY);
+                   WHERE starttime >= DATETIME_SUB(CURRENT_TIMESTAMP, INTERVAL 3 DAY) AND cloudProvider = "GCP" ;
                    """ % (PROJECTID, jsonData["datasetName"])
     else:
         # Only applicable for US regions
@@ -183,20 +183,21 @@ def syncDataset(jsonData):
     destination = "%s.%s.%s" % (PROJECTID, jsonData["datasetName"], jsonData["tableName"])
     if jsonData["isFreshSync"]:
         # Fresh sync
-        query = """  SELECT * FROM `%s.%s.gcp_billing_export*`;
+        query = """  SELECT * FROM `%s.%s.gcp_billing_export_v1_*`;
         """ % (jsonData["sourceGcpProjectId"], jsonData["sourceDataSetId"])
         # Configure the query job.
         print_(" Destination :%s" % destination)
         job_config = bigquery.QueryJobConfig(
             destination=destination,
-            write_disposition=bigquery.job.WriteDisposition.WRITE_TRUNCATE
+            write_disposition=bigquery.job.WriteDisposition.WRITE_TRUNCATE,
+            time_partitioning=bigquery.table.TimePartitioning()
         )
     else:
         # Sync past 3 days only
         query = """  DELETE FROM `%s` 
                 WHERE DATE(usage_start_time) >= DATE_SUB(@run_date , INTERVAL 3 DAY); 
             INSERT INTO `%s` 
-                SELECT * FROM `%s.%s.gcp_billing_export*` 
+                SELECT * FROM `%s.%s.gcp_billing_export_v1_*`
                 WHERE DATE(usage_start_time) >= DATE_SUB(@run_date , INTERVAL 3 DAY);
         """ % (destination, destination,
                jsonData["sourceGcpProjectId"], jsonData["sourceDataSetId"])

@@ -15,3 +15,7 @@ ciServiceClientConfig:
   baseUrl: http://localhost:4457/api/
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
+
+hostname: ${HOSTNAME:-localhost}
+
+basePathPrefix: ${BASE_PATH_PREFIX:-""}

@@ -2,6 +2,7 @@ package io.harness.ngpipeline.pipeline.executions.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.task.artifacts.ArtifactSourceConstants;
 
@@ -13,6 +14,7 @@ import lombok.Data;
 @Data
 @Builder
 @JsonTypeName(ArtifactSourceConstants.DOCKER_REGISTRY_NAME)
+@RecasterAlias("io.harness.ngpipeline.pipeline.executions.beans.DockerArtifactSummary")
 public class DockerArtifactSummary implements ArtifactSummary {
   String imagePath;
   String tag;

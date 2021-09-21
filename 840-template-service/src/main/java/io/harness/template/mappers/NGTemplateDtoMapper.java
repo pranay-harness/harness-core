@@ -11,6 +11,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.sdk.EntityGitDetailsMapper;
 import io.harness.jackson.JsonNodeUtils;
 import io.harness.ng.core.mapper.TagMapper;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.template.beans.TemplateResponseDTO;
 import io.harness.template.beans.TemplateSummaryResponseDTO;
 import io.harness.template.beans.yaml.NGTemplateConfig;
@@ -41,6 +42,7 @@ public class NGTemplateDtoMapper {
         .tags(TagMapper.convertToMap(templateEntity.getTags()))
         .version(templateEntity.getVersion())
         .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(templateEntity))
+        .lastUpdatedAt(templateEntity.getLastUpdatedAt())
         .build();
   }
 
@@ -61,6 +63,7 @@ public class NGTemplateDtoMapper {
         .tags(TagMapper.convertToMap(templateEntity.getTags()))
         .version(templateEntity.getVersion())
         .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(templateEntity))
+        .lastUpdatedAt(templateEntity.getLastUpdatedAt())
         .build();
   }
 
@@ -75,6 +78,8 @@ public class NGTemplateDtoMapper {
             .identifier(templateConfig.getTemplateInfoConfig().getIdentifier())
             .versionLabel(templateConfig.getTemplateInfoConfig().getVersionLabel())
             .build();
+    String description = (String) templateConfig.getTemplateInfoConfig().getDescription().fetchFinalValue();
+    description = description == null ? "" : description;
     return TemplateEntity.builder()
         .yaml(yaml)
         .identifier(templateConfig.getTemplateInfoConfig().getIdentifier())
@@ -83,7 +88,7 @@ public class NGTemplateDtoMapper {
         .orgIdentifier(templateConfig.getTemplateInfoConfig().getOrgIdentifier())
         .projectIdentifier(templateConfig.getTemplateInfoConfig().getProjectIdentifier())
         .name(templateConfig.getTemplateInfoConfig().getName())
-        .description((String) templateConfig.getTemplateInfoConfig().getDescription().fetchFinalValue())
+        .description(description)
         .tags(TagMapper.convertToList(templateConfig.getTemplateInfoConfig().getTags()))
         .templateEntityType(templateConfig.getTemplateInfoConfig().getType())
         .templateScope(getScopeFromTemplateDto(templateConfig.getTemplateInfoConfig()))
@@ -94,6 +99,11 @@ public class NGTemplateDtoMapper {
 
   public TemplateEntity toTemplateEntity(String accountId, NGTemplateConfig templateConfig) {
     try {
+      // Set this value so that description parameterField is not serialised as null during yaml creation from template
+      // config
+      if (templateConfig.getTemplateInfoConfig().getDescription().fetchFinalValue() == null) {
+        templateConfig.getTemplateInfoConfig().setDescription(ParameterField.createValueField(""));
+      }
       return toTemplateEntityResponse(accountId, templateConfig.getTemplateInfoConfig().getOrgIdentifier(),
           templateConfig.getTemplateInfoConfig().getProjectIdentifier(), templateConfig,
           YamlPipelineUtils.getYamlString(templateConfig));
@@ -182,6 +192,16 @@ public class NGTemplateDtoMapper {
       return Scope.PROJECT;
     }
     if (EmptyPredicate.isNotEmpty(templateInfoConfig.getOrgIdentifier())) {
+      return Scope.ORG;
+    }
+    return Scope.ACCOUNT;
+  }
+
+  public Scope getScopeFromMetadata(String orgIdentifier, String projectIdentifier) {
+    if (EmptyPredicate.isNotEmpty(projectIdentifier)) {
+      return Scope.PROJECT;
+    }
+    if (EmptyPredicate.isNotEmpty(orgIdentifier)) {
       return Scope.ORG;
     }
     return Scope.ACCOUNT;

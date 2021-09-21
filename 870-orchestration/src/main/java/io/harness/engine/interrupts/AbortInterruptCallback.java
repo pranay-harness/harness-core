@@ -1,6 +1,7 @@
 package io.harness.engine.interrupts;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -44,6 +45,12 @@ public class AbortInterruptCallback implements OldNotifyCallback {
   }
 
   @Override
+  public void notifyTimeout(Map<String, ResponseData> responseMap) {
+    log.error("Abort event timed out for nodeExecutionId {} and interrupt {}", nodeExecutionId, interruptId);
+    abortNode(responseMap);
+  }
+
+  @Override
   public void notifyError(Map<String, ResponseData> response) {
     log.error("Abort event failed for nodeExecutionId {} and interrupt {}", nodeExecutionId, interruptId);
     abortNode(response);
@@ -52,6 +59,7 @@ public class AbortInterruptCallback implements OldNotifyCallback {
   private void abortNode(Map<String, ResponseData> response) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
     abortHelper.abortDiscontinuingNode(nodeExecution, interruptId, interruptConfig);
-    waitNotifyEngine.doneWith(nodeExecutionId + "|" + interruptId, response.values().iterator().next());
+    ResponseData responseData = isEmpty(response) ? null : response.values().iterator().next();
+    waitNotifyEngine.doneWith(nodeExecutionId + "|" + interruptId, responseData);
   }
 }

@@ -2,7 +2,7 @@ package io.harness.pms.ngpipeline.inputset.helpers;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.pms.merger.helpers.MergeHelper.mergeInputSets;
-import static io.harness.pms.merger.helpers.TemplateHelper.createTemplateFromPipeline;
+import static io.harness.pms.merger.helpers.YamlTemplateHelper.createTemplateFromPipeline;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;

@@ -95,9 +95,11 @@ type TestSummary struct {
 }
 
 type SummaryResponse struct {
-	TotalTests int           `json:"total_tests"`
-	TimeMs     int64         `json:"duration_ms"`
-	Tests      []TestSummary `json:"tests"`
+	TotalTests      int   `json:"total_tests"`
+	FailedTests     int   `json:"failed_tests"`
+	SuccessfulTests int   `json:"successful_tests"`
+	SkippedTests    int   `json:"skipped_tests"`
+	TimeMs          int64 `json:"duration_ms"`
 }
 
 type StepInfo struct {

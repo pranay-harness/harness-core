@@ -1,5 +1,8 @@
 package io.harness.resourcegroup.reconciliation;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.resourcegroup.framework.service.Resource;
@@ -17,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 
+@OwnedBy(PL)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ResourceGroupSyncConciliationService implements Managed {
   final Consumer consumer;

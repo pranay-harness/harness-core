@@ -11,6 +11,7 @@ import static io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum.SERV
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
+import io.harness.cvng.core.beans.monitoredService.changeSourceSpec.ChangeSourceWithConnectorSpec;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.services.api.SetupUsageEventService;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
@@ -110,6 +111,12 @@ public class SetupUsageEventServiceImpl implements SetupUsageEventService {
                                     .stream()
                                     .map(hs -> hs.getSpec().getConnectorRef())
                                     .collect(Collectors.toSet());
+
+    monitoredServiceDTO.getSources().getChangeSources().forEach(changeSourceDTO -> {
+      if (changeSourceDTO.getSpec().connectorPresent()) {
+        connectorRefs.add(((ChangeSourceWithConnectorSpec) changeSourceDTO.getSpec()).getConnectorRef());
+      }
+    });
     return getEntityDetailProtoDTOList(projectParams, connectorRefs, CONNECTORS);
   }
 

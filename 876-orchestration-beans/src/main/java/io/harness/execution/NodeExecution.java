@@ -73,7 +73,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
   private Long startTs;
   private Long endTs;
   private Duration initialWaitDuration;
-
+  private Integer levelCount;
   @Builder.Default @FdTtlIndex Date validUntil = Date.from(OffsetDateTime.now().plusMonths(TTL_MONTHS).toInstant());
 
   // Resolved StepParameters stored just before invoking step.
@@ -203,6 +203,11 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
                  .field(NodeExecutionKeys.mode)
                  .field(NodeExecutionKeys.status)
                  .field(NodeExecutionKeys.oldRetry)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("planExecutionId_step_category_idx")
+                 .field(NodeExecutionKeys.planExecutionId)
+                 .field(NodeExecutionKeys.stepCategory)
                  .build())
         .add(CompoundMongoIndex.builder().name("previous_id_idx").field(NodeExecutionKeys.previousId).build())
         .build();

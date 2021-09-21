@@ -19,6 +19,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -27,6 +28,7 @@ import java.util.Optional;
 import java.util.Set;
 import lombok.AllArgsConstructor;
 
+@Singleton
 @OwnedBy(HarnessTeam.PL)
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 public class ChangeConsumerServiceImpl implements ChangeConsumerService {
