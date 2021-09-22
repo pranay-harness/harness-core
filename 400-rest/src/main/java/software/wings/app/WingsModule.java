@@ -1123,7 +1123,6 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(new ManagerCacheRegistrar());
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
     install(SecretManagementCoreModule.getInstance());
-    install(CGInstanceSyncModule.getInstance());
     registerSecretManagementBindings();
 
     registerEventListeners();
@@ -1358,6 +1357,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
 
     bind(OutboxEventHandler.class).to(DelegateOutboxEventHandler.class);
     install(new CVCommonsServiceModule());
+    install(CGInstanceSyncModule.getInstance());
   }
 
   private void bindFeatures() {

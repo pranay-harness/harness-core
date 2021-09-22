@@ -23,6 +23,7 @@ java_library(
         "//420-delegate-service:module",
         "//425-verification-commons:module",
         "//430-cv-nextgen-commons:module",
+        "//441-cg-instance-sync:module",
         "//450-ce-views:module",
         "//460-capability:module",
         "//470-alert:module",
