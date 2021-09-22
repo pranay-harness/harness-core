@@ -74,4 +74,11 @@ public final class DeploymentLogAnalysis
     }
     return hostSummaries;
   }
+
+  public List<ClusterCoordinates> getClusterCoordinates() {
+    if (clusterCoordinates == null) {
+      return Collections.emptyList();
+    }
+    return clusterCoordinates;
+  }
 }
