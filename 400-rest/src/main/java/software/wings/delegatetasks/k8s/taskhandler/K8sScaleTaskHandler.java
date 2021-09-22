@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.k8s.taskhandler;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getTimeoutMillisFromMinutes;
 import static io.harness.exception.WingsException.USER;
@@ -22,6 +23,7 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.exception.ExceptionUtils;
@@ -55,6 +57,7 @@ import org.apache.commons.lang3.tuple.Pair;
 
 @NoArgsConstructor
 @Slf4j
+@OwnedBy(CDP)
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class K8sScaleTaskHandler extends K8sTaskHandler {
   @Inject private transient KubernetesContainerService kubernetesContainerService;
@@ -99,7 +102,8 @@ public class K8sScaleTaskHandler extends K8sTaskHandler {
 
     success = k8sTaskHelperBase.scale(client, k8sDelegateTaskParams, resourceIdToScale, targetReplicaCount,
         new ExecutionLogCallback(delegateLogService, k8sScaleTaskParameters.getAccountId(),
-            k8sScaleTaskParameters.getAppId(), k8sScaleTaskParameters.getActivityId(), Scale));
+            k8sScaleTaskParameters.getAppId(), k8sScaleTaskParameters.getActivityId(), Scale),
+        false);
 
     if (!success) {
       return k8sTaskHelper.getK8sTaskExecutionResponse(k8sScaleResponse, CommandExecutionStatus.FAILURE);
