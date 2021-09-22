@@ -34,6 +34,7 @@ import io.harness.perpetualtask.PerpetualTaskService;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.queue.QueuePublisher;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.service.instancesyncperpetualtaskstatus.InstanceSyncPerpetualTaskStatusService;
 import io.harness.validation.Validator;
 
 import software.wings.annotation.EncryptableSetting;
@@ -65,7 +66,6 @@ import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.PhysicalHostInstanceInfo;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.service.impl.AwsHelperService;
-import software.wings.service.impl.instance.instancesyncperpetualtaskstatus.InstanceSyncPerpetualTaskStatusService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
