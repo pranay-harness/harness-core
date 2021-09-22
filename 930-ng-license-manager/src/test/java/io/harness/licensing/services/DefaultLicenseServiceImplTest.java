@@ -179,7 +179,7 @@ public class DefaultLicenseServiceImplTest extends CategoryTest {
     StartTrialDTO startTrialDTO = StartTrialDTO.builder().moduleType(CE).build();
     when(licenseObjectConverter.toEntity(ceModuleLicenseDTO)).thenReturn(ceModuleLicense);
     when(moduleLicenseRepository.save(ceModuleLicense)).thenReturn(ceModuleLicense);
-    when(moduleLicenseInterface.generateTrialLicense(any(), eq(ACCOUNT_IDENTIFIER), eq(ModuleType.CE)))
+    when(moduleLicenseInterface.generateTrialLicense(any(), eq(ACCOUNT_IDENTIFIER), any(), eq(ModuleType.CE)))
         .thenReturn(ceModuleLicenseDTO);
     when(accountService.getAccount(ACCOUNT_IDENTIFIER)).thenReturn(AccountDTO.builder().build());
     licenseService.startTrialLicense(ACCOUNT_IDENTIFIER, startTrialDTO);
