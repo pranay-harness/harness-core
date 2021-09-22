@@ -17,7 +17,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
 @OwnedBy(HarnessTeam.PL)
-@TargetModule(HarnessModule._441_CG_INSTANCE_SYNC)
 public class InstanceSyncPerpetualTaskStatusServiceImpl implements InstanceSyncPerpetualTaskStatusService {
   @Inject private MongoPersistence mongoPersistence;
 
