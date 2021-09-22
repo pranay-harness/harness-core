@@ -2,7 +2,6 @@ package dashboards;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
-import com.google.inject.Singleton;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.remote.client.AbstractHttpClientFactory;
 import io.harness.remote.client.ClientMode;
