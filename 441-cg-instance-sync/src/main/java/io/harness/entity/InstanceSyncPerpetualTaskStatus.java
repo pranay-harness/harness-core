@@ -18,7 +18,6 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "InstanceSyncPerpetualTaskStatusKeys")
 @Entity(value = "instanceSyncPerpetualTaskStatus", noClassnameStored = true)
 @OwnedBy(HarnessTeam.PL)
-@TargetModule(HarnessModule._441_CG_INSTANCE_SYNC)
 public class InstanceSyncPerpetualTaskStatus implements PersistentEntity {
   @Id String uuid;
   @FdUniqueIndex String perpetualTaskId;
