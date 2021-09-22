@@ -98,6 +98,7 @@ public class ServiceDependency implements PersistentEntity, UuidAware, AccountAc
     String projectIdentifier;
     String fromMonitoredServiceIdentifier;
     String toMonitoredServiceIdentifier;
+    ServiceDependencyMetadata serviceDependencyMetadata;
   }
 
   @JsonIgnore
@@ -108,6 +109,7 @@ public class ServiceDependency implements PersistentEntity, UuidAware, AccountAc
         .projectIdentifier(projectIdentifier)
         .fromMonitoredServiceIdentifier(fromMonitoredServiceIdentifier)
         .toMonitoredServiceIdentifier(toMonitoredServiceIdentifier)
+        .serviceDependencyMetadata(serviceDependencyMetadata)
         .build();
   }
 }
