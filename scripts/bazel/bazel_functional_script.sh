@@ -38,18 +38,11 @@ if [ "${RUN_BAZEL_FUNCTIONAL_TESTS}" == "true" ]; then
   MANAGER_PID=`ps ax | grep 'java' | grep '360-cg-manager/modified_config' |  awk '{print $1}'`
   echo "INFO: MANAGER_PID = $MANAGER_PID"
 
-  bazel test --keep_going ${GCP} ${BAZEL_ARGUMENTS} --jobs=3 ${BAZEL_TEST_ARGUMENTS} -- //200-functional-test:io.harness.functional.DummyFirstFunctionalTest
-  exitCode=$?
-  if [ $exitCode -eq 0 ]; then
-    echo "Dummy test passed"
-    #  TODO: https://harness.atlassian.net/browse/BT-434
-    bazel test --keep_going ${GCP} ${BAZEL_ARGUMENTS} --jobs=3 ${BAZEL_TEST_ARGUMENTS} -- //200-functional-test/... \
+  #  TODO: https://harness.atlassian.net/browse/BT-434
+  bazel test --keep_going ${GCP} ${BAZEL_ARGUMENTS} --jobs=3 ${BAZEL_TEST_ARGUMENTS} -- //200-functional-test/... \
     -//200-functional-test:io.harness.functional.nas.NASBuildWorkflowExecutionTest \
     -//200-functional-test:io.harness.functional.nas.NASWorkflowExecutionTest
     exitCode=$?
-  else
-    echo "Dummy test failed"
-  fi
 
   echo "INFO: MANAGER_PID = $MANAGER_PID"
   echo "INFO: DELEGATE_PID = $DELEGATE_PID"
