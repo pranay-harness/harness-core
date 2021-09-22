@@ -1,11 +1,6 @@
-<configuration name="DashboardApp"
-               type="BlazeCommandRunConfigurationType"
-               factoryName="Bazel Command">
-    <blaze-settings handler-id="BlazeJavaRunConfigurationHandlerProvider"
-                    kind="java_binary"
-                    debug_port="6021"
-                    blaze-command="run"
-                    keep-in-sync="true">
+<configuration name="DashboardApp" type="BlazeCommandRunConfigurationType" factoryName="Bazel Command" temporary="true">
+    <blaze-settings handler-id="BlazeCommandGenericRunConfigurationHandlerProvider" kind="java_binary"
+                    blaze-command="run" keep-in-sync="false">
         <blaze-target>//290-dashboard-service:module</blaze-target>
         <blaze-user-flag>
             --jvmopt="-Xbootclasspath/p:${HOME}/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar"
