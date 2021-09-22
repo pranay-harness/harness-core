@@ -1,4 +1,4 @@
-package io.harness.signup.data;
+package io.harness.ng.core.user;
 
 import static io.harness.annotations.dev.HarnessTeam.GTM;
 
