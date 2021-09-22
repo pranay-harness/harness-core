@@ -1004,7 +1004,7 @@ public class WatcherServiceImpl implements WatcherService {
     // Get patched version
     final String patchVersion = substringAfter(version, "-");
     final String updatedVersion = version.contains("-") ? substringBefore(version, "-") : version;
-
+    //version 1.0.700218 and patch 000
     RestResponse<DelegateScripts> restResponse = null;
     if (isBlank(delegateSize)) {
       log.info(format("Calling getDelegateScripts with version %s and patch %s", updatedVersion, patchVersion));

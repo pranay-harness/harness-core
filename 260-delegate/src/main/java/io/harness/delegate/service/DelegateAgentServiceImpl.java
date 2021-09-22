@@ -599,6 +599,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       startHeartbeatWhenPollingEnabled(builder);
       startKeepAliveRequestWhenPollingEnabled(builder);
 
+      //
+      delegateConfiguration.setDisableVersionInfo(true);
+
       if (!multiVersion) {
         startUpgradeCheck(getVersion());
       }
@@ -1061,8 +1064,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         sleep(ofMinutes(1));
         continue;
       }
-
-      delegateConfiguration.setDisableVersionInfo(true);
       DelegateRegisterResponse delegateResponse = restResponse.getResource();
       String responseDelegateId = delegateResponse.getDelegateId();
       handleEcsDelegateRegistrationResponse(delegateResponse);
@@ -1093,6 +1094,17 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         checkForProfile();
       }
     }, 0, 3, TimeUnit.MINUTES);
+  }
+
+  private void setVersionInfoOnConfiguration() {
+    try {
+      RestResponse<Boolean> restResponse = HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(1),
+          () -> delegateExecute(delegateAgentManagerClient.hasNonPrimaryDelegateConfiguration(accountId)));
+      if (restResponse.getResource()) {
+        delegateConfiguration.setDisableVersionInfo(true);
+      }
+    } catch (Exception e) {
+    }
   }
 
   private void checkForProfile() {

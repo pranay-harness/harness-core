@@ -566,7 +566,7 @@ public class DelegateAgentResource {
 
   @DelegateAuth
   @GET
-  @Path("configuration")
+  @Path("configuration/version")
   @Timed
   @ExceptionMetered
   public RestResponse<Boolean> hasNonPrimaryDelegateConfiguration(
@@ -575,7 +575,7 @@ public class DelegateAgentResource {
       return new RestResponse<>(accountService.hasNonPrimaryDelegateConfiguration(accountId));
 
     } catch (InvalidRequestException ex) {
-      return false;
+      return null;
     }
   }
 

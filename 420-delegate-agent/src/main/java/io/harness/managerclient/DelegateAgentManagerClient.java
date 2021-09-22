@@ -149,4 +149,8 @@ public interface DelegateAgentManagerClient {
 
   @GET("agent/delegates/configuration")
   Call<RestResponse<DelegateConfiguration>> getDelegateConfiguration(@Query("accountId") String accountId);
+
+  @GET("agent/delegates/configuration/version")
+  Call<RestResponse<Boolean>> hasNonPrimaryDelegateConfiguration(@Query("accountId") String accountId);
+
 }
