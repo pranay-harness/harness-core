@@ -79,7 +79,6 @@ import io.harness.capability.CapabilityTaskSelectionDetails.CapabilityTaskSelect
 import io.harness.capability.service.CapabilityService;
 import io.harness.configuration.DeployMode;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.delegate.DelegateProfileExecutedAtResponse;
 import io.harness.delegate.beans.AvailableDelegateSizes;
 import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.Delegate;
@@ -927,48 +926,6 @@ public class DelegateServiceImpl implements DelegateService {
     }
 
     return updatedDelegate;
-  }
-
-  public Delegate clearProfileExecutedAt(String accountId, String delegateId) {
-    Delegate currentDelegate = persistence.createQuery(Delegate.class)
-                                   .filter(DelegateKeys.accountId, accountId)
-                                   .filter(DelegateKeys.uuid, delegateId)
-                                   .get();
-
-    Query<Delegate> updateQuery = persistence.createQuery(Delegate.class)
-                                      .filter(DelegateKeys.accountId, accountId)
-                                      .filter(DelegateKeys.uuid, delegateId);
-
-    UpdateOperations<Delegate> updateOperations =
-        persistence.createUpdateOperations(Delegate.class).set(DelegateKeys.profileExecutedAt, 0l);
-
-    log.debug("Clear profileExecutedAt property for delegate {}:{}", accountId, delegateId);
-    Delegate updatedDelegate = persistence.findAndModify(updateQuery, updateOperations, HPersistence.returnNewOptions);
-    auditServiceHelper.reportForAuditingUsingAccountId(accountId, currentDelegate, updatedDelegate, Type.UPDATE);
-    return updatedDelegate;
-  }
-
-  @Override
-  public DelegateProfileExecutedAtResponse fetchProfileExecutedAt(String accountId, String delegateId) {
-    Delegate delegate = persistence.createQuery(Delegate.class)
-                            .filter(DelegateKeys.accountId, accountId)
-                            .filter(DelegateKeys.uuid, delegateId)
-                            .get();
-
-    log.debug("Fetch profileExecutedAt property for delegate {}:{}", accountId, delegateId);
-    DelegateProfileExecutedAtResponse result;
-    if (delegate == null) {
-      result = DelegateProfileExecutedAtResponse.newBuilder().build();
-    } else if (delegate.getDelegateProfileId() != null) {
-      result = DelegateProfileExecutedAtResponse.newBuilder()
-                   .setProfileId(delegate.getDelegateProfileId())
-                   .setProfileExecutedAt(delegate.getProfileExecutedAt())
-                   .build();
-    } else {
-      result =
-          DelegateProfileExecutedAtResponse.newBuilder().setProfileExecutedAt(delegate.getProfileExecutedAt()).build();
-    }
-    return result;
   }
 
   private DelegateInstanceStatus mapApprovalActionToDelegateStatus(DelegateApproval action) {
@@ -2556,9 +2513,7 @@ public class DelegateServiceImpl implements DelegateService {
 
     if (isNotBlank(delegate.getDelegateProfileId())) {
       DelegateProfile profile = delegateProfileService.get(accountId, delegate.getDelegateProfileId());
-      if (profile != null
-          && (!profile.getUuid().equals(profileId) || profile.getLastUpdatedAt() > lastUpdatedAt
-              || delegate.getProfileExecutedAt() == 0L)) {
+      if (profile != null && (!profile.getUuid().equals(profileId) || profile.getLastUpdatedAt() > lastUpdatedAt)) {
         Map<String, Object> context = new HashMap<>();
         context.put("secrets",
             SecretFunctor.builder()
@@ -2572,8 +2527,6 @@ public class DelegateServiceImpl implements DelegateService {
             .name(profile.getName())
             .profileLastUpdatedAt(profile.getLastUpdatedAt())
             .scriptContent(scriptContent)
-            .delegateId(delegateId)
-            .profileLastExecutedOnDelegate(delegate.getProfileExecutedAt())
             .build();
       }
     }
