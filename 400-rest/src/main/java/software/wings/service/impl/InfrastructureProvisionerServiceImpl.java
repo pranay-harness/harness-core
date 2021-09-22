@@ -756,29 +756,28 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
     gitConfigHelperService.setSshKeySettingAttributeIfNeeded(gitConfig);
     gitConfig.setGitRepoType(GitRepositoryType.TERRAFORM);
     gitConfigHelperService.convertToRepoGitConfig(gitConfig, repoName);
-    DelegateTask delegateTask =
-        DelegateTask.builder()
-            .accountId(accountId)
-            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, appId)
-            .data(
-                TaskData.builder()
-                    .async(false)
-                    .taskType(TaskType.TERRAFORM_INPUT_VARIABLES_OBTAIN_TASK.name())
-                    .parameters(new Object[] {
-                        TerraformProvisionParameters.builder()
-                            .scriptPath(terraformDirectory)
-                            .useTfConfigInspectLatestVersion(
-                                featureFlagService.isEnabled(TERRAFORM_CONFIG_INSPECT_VERSION_SELECTOR, accountId))
-                            .sourceRepoSettingId(gitSettingAttribute.getUuid())
-                            .sourceRepo(gitConfig)
-                            .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, appId, null))
-                            .sourceRepoBranch(sourceRepoBranch)
-                            .commitId(commitId)
-                            .isGitHostConnectivityCheck(featureFlagService.isEnabled(GIT_HOST_CONNECTIVITY, accountId))
-                            .build()})
-                    .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
-                    .build())
+    TerraformProvisionParameters terraformProvisionParameters =
+        TerraformProvisionParameters.builder()
+            .scriptPath(terraformDirectory)
+            .useTfConfigInspectLatestVersion(
+                featureFlagService.isEnabled(TERRAFORM_CONFIG_INSPECT_VERSION_SELECTOR, accountId))
+            .sourceRepoSettingId(gitSettingAttribute.getUuid())
+            .sourceRepo(gitConfig)
+            .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, appId, null))
+            .sourceRepoBranch(sourceRepoBranch)
+            .commitId(commitId)
+            .isGitHostConnectivityCheck(featureFlagService.isEnabled(GIT_HOST_CONNECTIVITY, accountId))
             .build();
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .accountId(accountId)
+                                    .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, appId)
+                                    .data(TaskData.builder()
+                                              .async(false)
+                                              .taskType(TaskType.TERRAFORM_INPUT_VARIABLES_OBTAIN_TASK.name())
+                                              .parameters(new Object[] {terraformProvisionParameters})
+                                              .timeout(TaskData.DEFAULT_SYNC_CALL_TIMEOUT)
+                                              .build())
+                                    .build();
 
     DelegateResponseData notifyResponseData;
     try {

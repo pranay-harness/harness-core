@@ -97,7 +97,7 @@ public class TerraformInputVariablesObtainTaskTest extends WingsBaseTest {
     when(terraformConfigInspectService.parseFieldsUnderCategory(moduleDir, "variables", false))
         .thenReturn(Arrays.asList("var_1", "var_2"));
 
-    TerraformInputVariablesTaskResponse inputVariables = delegateRunnableTask.run(new Object[] {parameters});
+    TerraformInputVariablesTaskResponse inputVariables = delegateRunnableTask.run(parameters);
     assertThat(inputVariables.getVariablesList().isEmpty()).isFalse();
     List<String> variableNames =
         inputVariables.getVariablesList().stream().map(NameValuePair::getName).collect(Collectors.toList());
@@ -111,7 +111,7 @@ public class TerraformInputVariablesObtainTaskTest extends WingsBaseTest {
     when(gitUtilsDelegate.cloneRepo(any(), any(), any())).thenReturn(GitOperationContext.builder().build());
     when(gitUtilsDelegate.resolveAbsoluteFilePath(any(), any())).thenReturn("some-path");
     when(FileUtils.listFiles(any(), any(), any())).thenReturn(Collections.EMPTY_LIST);
-    TerraformInputVariablesTaskResponse response = delegateRunnableTask.run(new Object[] {parameters});
+    TerraformInputVariablesTaskResponse response = delegateRunnableTask.run(parameters);
     assertThat(response.getTerraformExecutionData().getErrorMessage())
         .contains("No "
             + "Terraform Files Found");

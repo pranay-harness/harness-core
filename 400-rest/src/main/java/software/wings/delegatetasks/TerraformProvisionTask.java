@@ -111,6 +111,7 @@ import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.input.NullInputStream;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -141,7 +142,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
 
   @Override
   public TerraformExecutionData run(Object[] parameters) {
-    return run((TerraformProvisionParameters) parameters[0]);
+    throw new NotImplementedException("not implemented");
   }
 
   private enum WorkspaceCommand {

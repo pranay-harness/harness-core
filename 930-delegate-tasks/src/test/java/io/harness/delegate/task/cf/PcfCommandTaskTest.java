@@ -27,7 +27,6 @@ import io.harness.delegate.task.pcf.request.CfCommandDeployRequest;
 import io.harness.delegate.task.pcf.request.CfCommandTaskParameters;
 import io.harness.delegate.task.pcf.request.CfRunPluginCommandRequest;
 import io.harness.delegate.task.pcf.response.CfCommandExecutionResponse;
-import io.harness.exception.InvalidArgumentsException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -70,28 +69,25 @@ public class PcfCommandTaskTest extends CategoryTest {
                                                  .pcfCommandRequest(deployRequest)
                                                  .encryptedDataDetails(encryptedDataDetails)
                                                  .build();
-    pcfTask.run(new Object[] {taskParameters});
+    pcfTask.run(taskParameters);
     verify(pcfDelegateTaskHelper, times(1))
         .getPcfCommandExecutionResponse(
             eq(deployRequest), eq(encryptedDataDetails), eq(false), eq(pcfTask.getLogStreamingTaskClient()));
 
     reset(pcfDelegateTaskHelper);
-    pcfTask.run(new Object[] {deployRequest, encryptedDataDetails});
-    verify(pcfDelegateTaskHelper, times(1))
-        .getPcfCommandExecutionResponse(
-            eq(deployRequest), eq(encryptedDataDetails), eq(false), eq(pcfTask.getLogStreamingTaskClient()));
 
-    reset(pcfDelegateTaskHelper);
     CfRunPluginCommandRequest pluginCommandRequest =
         CfRunPluginCommandRequest.builder().encryptedDataDetails(encryptedDataDetails).build();
-    pcfTask.run(pluginCommandRequest);
+    CfCommandTaskParameters cfCommandTaskParameters =
+        CfCommandTaskParameters.builder().pcfCommandRequest(pluginCommandRequest).build();
+    pcfTask.run(cfCommandTaskParameters);
     verify(pcfDelegateTaskHelper, times(1))
         .getPcfCommandExecutionResponse(
             eq(pluginCommandRequest), eq(encryptedDataDetails), eq(false), eq(pcfTask.getLogStreamingTaskClient()));
 
     reset(pcfDelegateTaskHelper);
-    assertThatThrownBy(() -> pcfTask.run(K8sApplyRequest.builder().build()))
-        .isInstanceOf(InvalidArgumentsException.class);
+
+    assertThatThrownBy(() -> pcfTask.run(K8sApplyRequest.builder().build())).isInstanceOf(ClassCastException.class);
   }
 
   @Test

@@ -43,6 +43,7 @@ import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
+import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
@@ -67,7 +68,7 @@ public class TerraformInputVariablesObtainTask extends AbstractDelegateRunnableT
 
   @Override
   public TerraformInputVariablesTaskResponse run(Object[] parameters) {
-    return run((TerraformProvisionParameters) parameters[0]);
+    throw new NotImplementedException("not implemented");
   }
 
   private TerraformInputVariablesTaskResponse run(TerraformProvisionParameters parameters) {

@@ -37,6 +37,7 @@ import java.util.Map.Entry;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
@@ -55,7 +56,7 @@ public class TerraformFetchTargetsTask extends AbstractDelegateRunnableTask {
 
   @Override
   public TerraformExecutionData run(Object[] parameters) {
-    return run((TerraformProvisionParameters) parameters[0]);
+    throw new NotImplementedException("not implemented");
   }
 
   @Override
