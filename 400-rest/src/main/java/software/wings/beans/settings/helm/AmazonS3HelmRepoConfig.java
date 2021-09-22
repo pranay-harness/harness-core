@@ -43,19 +43,21 @@ public class AmazonS3HelmRepoConfig extends SettingValue implements HelmRepoConf
   @NotEmpty private String bucketName;
   private String folderPath;
   @NotEmpty private String region;
+  private boolean useLatestChartMuseumVersion;
 
   public AmazonS3HelmRepoConfig() {
     super(SettingVariableTypes.AMAZON_S3_HELM_REPO.name());
   }
 
-  public AmazonS3HelmRepoConfig(
-      String accountId, String connectorId, String bucketName, String folderPath, String region) {
+  public AmazonS3HelmRepoConfig(String accountId, String connectorId, String bucketName, String folderPath,
+      String region, boolean useLatestChartMuseumVersion) {
     super(SettingVariableTypes.AMAZON_S3_HELM_REPO.name());
     this.accountId = accountId;
     this.connectorId = connectorId;
     this.bucketName = bucketName;
     this.folderPath = folderPath;
     this.region = region;
+    this.useLatestChartMuseumVersion = useLatestChartMuseumVersion;
   }
 
   @Override
@@ -72,7 +74,8 @@ public class AmazonS3HelmRepoConfig extends SettingValue implements HelmRepoConf
                                     .build());
     executionCapabilityList.add(
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(AWS_URL, maskingEvaluator));
-    executionCapabilityList.add(ChartMuseumCapability.builder().build());
+    executionCapabilityList.add(
+        ChartMuseumCapability.builder().useLatestChartMuseumVersion(this.useLatestChartMuseumVersion).build());
     return executionCapabilityList;
   }
 

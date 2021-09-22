@@ -2,9 +2,7 @@ package io.harness.plancreator.steps;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.plancreator.execution.ExecutionWrapperConfig;
@@ -38,8 +36,6 @@ import org.springframework.data.annotation.TypeAlias;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @TypeAlias("stepGroupElementConfig")
 @OwnedBy(PIPELINE)
-// TODO this should go to yaml commons
-@TargetModule(HarnessModule._884_PMS_COMMONS)
 public class StepGroupElementConfig {
   @JsonProperty(YamlNode.UUID_FIELD_NAME)
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) })
@@ -56,5 +52,4 @@ public class StepGroupElementConfig {
 
   List<FailureStrategyConfig> failureStrategies;
   @NotNull @Size(min = 1) List<ExecutionWrapperConfig> steps;
-  List<ExecutionWrapperConfig> rollbackSteps;
 }

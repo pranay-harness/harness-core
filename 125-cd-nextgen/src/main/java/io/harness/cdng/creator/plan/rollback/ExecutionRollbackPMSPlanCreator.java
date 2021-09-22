@@ -29,23 +29,11 @@ public class ExecutionRollbackPMSPlanCreator {
     if (executionStepsField == null || executionStepsField.getNode().asArray().size() == 0) {
       return PlanCreationResponse.builder().build();
     }
-    YamlNode stageNode = YamlUtils.getGivenYamlNodeFromParentPath(executionField, YAMLFieldNameConstants.STAGE);
     RollbackOptionalChildChainStepParametersBuilder stepParametersBuilder =
         RollbackOptionalChildChainStepParameters.builder();
 
-    // Add StepGroup rollback steps
-    PlanCreationResponse stepGroupsRollbackPlanNode =
-        StepGroupsRollbackPMSPlanCreator.createStepGroupsRollbackPlanNode(executionStepsField);
-
     String executionNodeFullIdentifier =
         YamlUtils.getQualifiedNameTillGivenField(executionField, YAMLFieldNameConstants.STAGES);
-    if (EmptyPredicate.isNotEmpty(stepGroupsRollbackPlanNode.getNodes())) {
-      stepParametersBuilder.childNode(RollbackNode.builder()
-                                          .nodeId(executionStepsField.getNode().getUuid()
-                                              + OrchestrationConstants.STEP_GROUPS_ROLLBACK_NODE_ID_SUFFIX)
-                                          .dependentNodeIdentifier(executionNodeFullIdentifier)
-                                          .build());
-    }
     YamlField executionRollbackSteps = executionField.getField(YAMLFieldNameConstants.ROLLBACK_STEPS);
 
     // Add rollbackSteps defined under rollback section of execution.
@@ -80,7 +68,6 @@ public class ExecutionRollbackPMSPlanCreator {
 
     PlanCreationResponse finalResponse =
         PlanCreationResponse.builder().node(deploymentStageRollbackNode.getUuid(), deploymentStageRollbackNode).build();
-    finalResponse.merge(stepGroupsRollbackPlanNode);
     finalResponse.merge(executionRollbackPlanNode);
 
     return finalResponse;

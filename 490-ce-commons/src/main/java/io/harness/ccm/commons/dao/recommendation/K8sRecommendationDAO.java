@@ -218,6 +218,7 @@ public class K8sRecommendationDAO {
             POD_INFO.CPUREQUEST, POD_INFO.MEMORYREQUEST)
         .from(POD_INFO.innerJoin(NODE_INFO).on(NODE_INFO.INSTANCEID.eq(POD_INFO.PARENTNODEID),
             NODE_INFO.ACCOUNTID.eq(jobConstants.getAccountId()), NODE_INFO.CLUSTERID.eq(nodePoolId.getClusterid()),
+            POD_INFO.ACCOUNTID.eq(jobConstants.getAccountId()), POD_INFO.CLUSTERID.eq(nodePoolId.getClusterid()),
             NODE_INFO.NODEPOOLNAME.eq(nodePoolId.getNodepoolname()),
             TimescaleUtils.isAlive(
                 NODE_INFO.STARTTIME, NODE_INFO.STOPTIME, jobConstants.getJobStartTime(), jobConstants.getJobEndTime()),

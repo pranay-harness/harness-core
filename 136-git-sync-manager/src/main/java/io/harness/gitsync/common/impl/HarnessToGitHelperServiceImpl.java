@@ -18,10 +18,10 @@ import io.harness.exception.UnexpectedException;
 import io.harness.gitsync.BranchDetails;
 import io.harness.gitsync.ChangeType;
 import io.harness.gitsync.FileInfo;
+import io.harness.gitsync.Principal;
 import io.harness.gitsync.PushFileResponse;
 import io.harness.gitsync.PushInfo;
 import io.harness.gitsync.RepoDetails;
-import io.harness.gitsync.UserPrincipal;
 import io.harness.gitsync.common.beans.BranchSyncStatus;
 import io.harness.gitsync.common.beans.GitBranch;
 import io.harness.gitsync.common.beans.GitSyncDirection;
@@ -93,7 +93,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
   }
 
   private Optional<ConnectorResponseDTO> getConnector(
-      String accountId, YamlGitConfigDTO yamlGitConfig, UserPrincipal userPrincipal) {
+      String accountId, YamlGitConfigDTO yamlGitConfig, Principal principal) {
     final String gitConnectorId = yamlGitConfig.getGitConnectorRef();
     final IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(gitConnectorId, accountId,
         yamlGitConfig.getOrganizationIdentifier(), yamlGitConfig.getProjectIdentifier(), null);
@@ -103,7 +103,9 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
       throw new InvalidRequestException(String.format("Ref Connector [{}] doesn't exist.", gitConnectorId));
     }
     final ConnectorResponseDTO connector = connectorResponseDTO.get();
-    userProfileHelper.setConnectorDetailsFromUserProfile(yamlGitConfig, userPrincipal, connector);
+    if (principal.hasUserPrincipal()) {
+      userProfileHelper.setConnectorDetailsFromUserProfile(yamlGitConfig, principal.getUserPrincipal(), connector);
+    }
     setRepoUrlInConnector(yamlGitConfig, connector);
     return Optional.of(connector);
   }
@@ -256,7 +258,7 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
 
   private InfoForGitPush getInfoForGitPush(
       FileInfo request, EntityReference entityReference, String accountId, YamlGitConfigDTO yamlGitConfig) {
-    final Optional<ConnectorResponseDTO> connector = getConnector(accountId, yamlGitConfig, request.getUserPrincipal());
+    final Optional<ConnectorResponseDTO> connector = getConnector(accountId, yamlGitConfig, request.getPrincipal());
     if (!connector.isPresent()) {
       throw new InvalidRequestException(
           String.format("Connector with identifier %s deleted", yamlGitConfig.getGitConnectorRef()));

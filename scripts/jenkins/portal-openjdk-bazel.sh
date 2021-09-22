@@ -226,7 +226,7 @@ cp ../../alpn-boot-8.1.13.v20181017.jar .
 cp ../../dockerization/pipeline-service/Dockerfile-pipeline-service-jenkins-k8-openjdk ./Dockerfile
 cp ../../dockerization/pipeline-service/Dockerfile-pipeline-service-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
 cp -r ../../dockerization/pipeline-service/scripts/ .
-cp ../../protocol.info .
+cp ../../pipeline-service-protocol.info .
 echo ${JDK} > jdk.txt
 echo ${VERSION} > version.txt
 if [ ! -z ${PURPOSE} ]

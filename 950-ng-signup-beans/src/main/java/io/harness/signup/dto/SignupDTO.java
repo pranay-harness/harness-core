@@ -6,7 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.licensing.BillingFrequency;
 import io.harness.licensing.Edition;
 import io.harness.ng.core.user.SignupAction;
-import io.harness.signup.data.UtmInfo;
+import io.harness.ng.core.user.UtmInfo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;

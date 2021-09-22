@@ -71,7 +71,7 @@ public class WebhookServiceImpl implements WebhookService {
                                         .envIdentifier(webhook.getEnvIdentifier())
                                         .type(ChangeSourceType.PAGER_DUTY)
                                         .eventTime(Instant.now().toEpochMilli())
-                                        .changeEventMetaData(eventMetaData)
+                                        .metadata(eventMetaData)
                                         .build();
     changeEventService.register(changeEventDTO);
   }

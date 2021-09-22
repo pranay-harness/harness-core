@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.EntityReference;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.FileChange;
+import io.harness.gitsync.FullSyncChangeSet;
 import io.harness.gitsync.ScopeDetails;
 import io.harness.gitsync.beans.YamlDTO;
 import io.harness.gitsync.persistance.GitSyncableEntity;
@@ -43,7 +44,7 @@ public interface GitSdkEntityHandlerInterface<B extends GitSyncableEntity, Y ext
 
   Y upsert(String accountIdentifier, String yaml);
 
-  Y fullSyncEntity(String accountIdentifier, String yaml);
+  Y fullSyncEntity(FullSyncChangeSet fullSyncChangeSet);
 
   List<FileChange> listAllEntities(ScopeDetails scopeDetails);
 }

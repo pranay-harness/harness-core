@@ -3,6 +3,7 @@ package io.harness.morphia;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.SweepingOutput;
 
 import software.wings.beans.TerraGroupProvisioners;
 import software.wings.beans.entityinterface.ApplicationAccess;
@@ -19,6 +20,7 @@ public class CgOrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
     set.add(ApplicationAccess.class);
     set.add(KeywordsAware.class);
     set.add(TerraGroupProvisioners.class);
+    set.add(SweepingOutput.class);
   }
 
   @Override

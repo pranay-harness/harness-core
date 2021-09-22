@@ -672,9 +672,6 @@ springboot(
     name = "module_deploy",
     boot_app_class = "io.harness.delegate.app.DelegateApplication",
     java_library = ":module",
-    tags = [
-        "oss",
-    ],
     visibility = ["//visibility:public"],
 )
 
@@ -1384,6 +1381,7 @@ pkg_tar(
         "manual",
         "no-cache",
         "no-ide",
+        "oss",
     ],
     visibility = ["//visibility:public"],
 )
