@@ -88,6 +88,7 @@ const (
 )
 
 var expireQuery = bson.M{"$set": bson.M{"expireAt": time.Now()}}
+var ttlTime = 24 * 30 * 2 * time.Hour // 2 months
 
 // VCSInfo contains metadata corresponding to version control system details
 type VCSInfo struct {
@@ -98,6 +99,7 @@ type VCSInfo struct {
 
 // NewNode creates Node object form given fields
 func NewNode(id, classId int, pkg, method, params, class, typ, file string, callsReflection bool, vcs VCSInfo, acc, org, proj string) *Node {
+	expireTime := time.Now().Add(ttlTime)
 	return &Node{
 		DefaultModel: mgm.DefaultModel{
 			DateFields: mgm.DateFields{
@@ -118,11 +120,13 @@ func NewNode(id, classId int, pkg, method, params, class, typ, file string, call
 		Org:             org,
 		Proj:            proj,
 		VCSInfo:         vcs,
+		ExpireAt:        expireTime,
 	}
 }
 
 // NewRelation creates Relation object form given fields
 func NewRelation(source int, tests []int, vcs VCSInfo, acc, org, proj string) *Relation {
+	expireTime := time.Now().Add(ttlTime)
 	return &Relation{
 		DefaultModel: mgm.DefaultModel{
 			DateFields: mgm.DateFields{
@@ -130,16 +134,18 @@ func NewRelation(source int, tests []int, vcs VCSInfo, acc, org, proj string) *R
 				UpdatedAt: time.Now(),
 			},
 		},
-		Source:  source,
-		Tests:   tests,
-		Acct:    acc,
-		Org:     org,
-		Proj:    proj,
-		VCSInfo: vcs,
+		Source:   source,
+		Tests:    tests,
+		Acct:     acc,
+		Org:      org,
+		Proj:     proj,
+		VCSInfo:  vcs,
+		ExpireAt: expireTime,
 	}
 }
 
 func NewVisEdge(caller int, callee []int, account, org, project string, vcs VCSInfo) *VisEdge {
+	expireTime := time.Now().Add(ttlTime)
 	return &VisEdge{
 		DefaultModel: mgm.DefaultModel{
 			DateFields: mgm.DateFields{
@@ -147,12 +153,13 @@ func NewVisEdge(caller int, callee []int, account, org, project string, vcs VCSI
 				UpdatedAt: time.Now(),
 			},
 		},
-		Caller:  caller,
-		Callee:  callee,
-		Acct:    account,
-		Org:     org,
-		Proj:    project,
-		VCSInfo: vcs,
+		Caller:   caller,
+		Callee:   callee,
+		Acct:     account,
+		Org:      org,
+		Proj:     project,
+		VCSInfo:  vcs,
+		ExpireAt: expireTime,
 	}
 }
 
@@ -1127,7 +1134,7 @@ func (mdb *MongoDb) mergeNodes(ctx context.Context, commit, branch, repo, accoun
 	// update `branch` field of the nodes from source to dest
 	if len(nodesToMove) > 0 {
 		f := bson.M{"vcs_info.commit_id": commit, "id": bson.M{"$in": nodesToMove}, "vcs_info.repo": repo, "account": account}
-		update := bson.M{"$set": bson.M{"vcs_info.branch": branch}}
+		update := bson.M{"$set": bson.M{"vcs_info.branch": branch}, "$unset": bson.M{"expireAt": ""}}
 		res, err := mdb.Database.Collection(nodeColl).UpdateMany(ctx, f, update)
 		if err != nil {
 			return formatError(err, "failed to merge cg in nodes collection for", repo, branch, commit)
@@ -1168,7 +1175,7 @@ func (mdb *MongoDb) mergeRelations(ctx context.Context, commit, branch, repo, ac
 	// update `branch` field of the relToMove from source to dest
 	if len(relToMove) > 0 {
 		f := bson.M{"vcs_info.commit_id": commit, "source": bson.M{"$in": relToMove}, "vcs_info.repo": repo, "account": account}
-		u := bson.M{"$set": bson.M{"vcs_info.branch": branch}}
+		u := bson.M{"$set": bson.M{"vcs_info.branch": branch}, "$unset": bson.M{"expireAt": ""}}
 		res, err := mdb.Database.Collection(relnsColl).UpdateMany(ctx, f, u)
 		if err != nil {
 			return formatError(err, "failed to merge cg in nodes collection for", repo, branch, commit)
@@ -1258,7 +1265,7 @@ func (mdb *MongoDb) mergeVisEdges(ctx context.Context, commit, branch, repo, acc
 	// update `branch` field of the edgeToMove from source to dest
 	if len(edgesToMove) > 0 {
 		f := bson.M{"account": account, "vcs_info.repo": repo, "vcs_info.commit_id": commit, "caller": bson.M{"$in": edgesToMove}}
-		u := bson.M{"$set": bson.M{"vcs_info.branch": branch}}
+		u := bson.M{"$set": bson.M{"vcs_info.branch": branch}, "$unset": bson.M{"expireAt": ""}}
 		res, err := mdb.Database.Collection(visColl).UpdateMany(ctx, f, u)
 		if err != nil {
 			return formatError(err, "failed to merge vis_edge collection for", repo, branch, commit)
