@@ -12,7 +12,6 @@ import io.harness.delegate.task.pcf.request.CfCommandTaskParameters;
 import io.harness.delegate.task.pcf.request.CfInstanceSyncRequest;
 import io.harness.delegate.task.pcf.request.CfRunPluginCommandRequest;
 import io.harness.delegate.task.pcf.response.CfCommandExecutionResponse;
-import io.harness.exception.InvalidArgumentsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import com.google.inject.Inject;
@@ -20,7 +19,7 @@ import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
 @OwnedBy(HarnessTeam.CDP)
@@ -34,28 +33,20 @@ public class PcfCommandTask extends AbstractDelegateRunnableTask {
 
   @Override
   public CfCommandExecutionResponse run(TaskParameters parameters) {
-    if (parameters instanceof CfCommandTaskParameters) {
-      return run(new TaskParameters[] {parameters});
-    } else if (!(parameters instanceof CfRunPluginCommandRequest)) {
-      throw new InvalidArgumentsException(Pair.of("cfCommandRequest", "Must be instance of CfPluginCommandRequest"));
+    CfCommandTaskParameters cfCommandTaskParameters = (CfCommandTaskParameters) parameters;
+    final CfCommandRequest cfCommandRequest = cfCommandTaskParameters.getPcfCommandRequest();
+    final List<EncryptedDataDetail> encryptedDataDetails;
+    if (cfCommandRequest instanceof CfRunPluginCommandRequest) {
+      encryptedDataDetails = ((CfRunPluginCommandRequest) cfCommandRequest).getEncryptedDataDetails();
+    } else {
+      encryptedDataDetails = cfCommandTaskParameters.getEncryptedDataDetails();
     }
-    final CfRunPluginCommandRequest pluginCommandRequest = (CfRunPluginCommandRequest) parameters;
-    return getPcfCommandExecutionResponse(pluginCommandRequest, pluginCommandRequest.getEncryptedDataDetails());
+    return getPcfCommandExecutionResponse(cfCommandRequest, encryptedDataDetails);
   }
 
   @Override
   public CfCommandExecutionResponse run(Object[] parameters) {
-    final CfCommandRequest cfCommandRequest;
-    final List<EncryptedDataDetail> encryptedDataDetails;
-    if (parameters[0] instanceof CfCommandTaskParameters) {
-      CfCommandTaskParameters cfCommandTaskParameters = (CfCommandTaskParameters) parameters[0];
-      cfCommandRequest = cfCommandTaskParameters.getPcfCommandRequest();
-      encryptedDataDetails = cfCommandTaskParameters.getEncryptedDataDetails();
-    } else {
-      cfCommandRequest = (CfCommandRequest) parameters[0];
-      encryptedDataDetails = (List<EncryptedDataDetail>) parameters[1];
-    }
-    return getPcfCommandExecutionResponse(cfCommandRequest, encryptedDataDetails);
+    throw new NotImplementedException("not implemented");
   }
 
   private CfCommandExecutionResponse getPcfCommandExecutionResponse(

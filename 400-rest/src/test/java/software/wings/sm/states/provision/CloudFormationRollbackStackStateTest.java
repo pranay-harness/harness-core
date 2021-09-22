@@ -186,7 +186,7 @@ public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
     assertThat(delegateTask).isNotNull();
     assertThat(delegateTask.getData().getParameters()).isNotNull();
     assertThat(1).isEqualTo(delegateTask.getData().getParameters().length);
-    assertThat(delegateTask.getData().getParameters()[0] instanceof CloudFormationCreateStackRequest).isTrue();
+    assertThat(delegateTask.getData().getParameters()[0] instanceof CloudFormationCommandTaskParameters).isTrue();
     CloudFormationCommandTaskParameters cloudFormationCommandTaskParameters =
         (CloudFormationCommandTaskParameters) delegateTask.getData().getParameters()[0];
     CloudFormationCreateStackRequest createStackRequest =

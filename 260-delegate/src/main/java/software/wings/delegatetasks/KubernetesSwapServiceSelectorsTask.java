@@ -42,13 +42,8 @@ public class KubernetesSwapServiceSelectorsTask extends AbstractDelegateRunnable
 
   @Override
   public KubernetesSwapServiceSelectorsResponse run(TaskParameters parameters) {
-    throw new NotImplementedException("not implemented");
-  }
-
-  @Override
-  public KubernetesSwapServiceSelectorsResponse run(Object[] parameters) {
     KubernetesSwapServiceSelectorsParams kubernetesSwapServiceSelectorsParams =
-        (KubernetesSwapServiceSelectorsParams) parameters[0];
+        (KubernetesSwapServiceSelectorsParams) parameters;
 
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(delegateLogService,
         kubernetesSwapServiceSelectorsParams.getAccountId(), kubernetesSwapServiceSelectorsParams.getAppId(),
@@ -80,5 +75,10 @@ public class KubernetesSwapServiceSelectorsTask extends AbstractDelegateRunnable
           "Exception occurred in kubernetesSwapServiceSelectors", LogLevel.ERROR, CommandExecutionStatus.FAILURE);
       return KubernetesSwapServiceSelectorsResponse.builder().executionStatus(ExecutionStatus.FAILED).build();
     }
+  }
+
+  @Override
+  public KubernetesSwapServiceSelectorsResponse run(Object[] parameters) {
+    throw new NotImplementedException("not implemented");
   }
 }

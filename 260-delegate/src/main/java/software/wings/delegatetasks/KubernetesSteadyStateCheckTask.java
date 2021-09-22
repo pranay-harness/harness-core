@@ -53,13 +53,7 @@ public class KubernetesSteadyStateCheckTask extends AbstractDelegateRunnableTask
 
   @Override
   public KubernetesSteadyStateCheckResponse run(TaskParameters parameters) {
-    throw new NotImplementedException("not implemented");
-  }
-
-  @Override
-  public KubernetesSteadyStateCheckResponse run(Object[] parameters) {
-    KubernetesSteadyStateCheckParams kubernetesSteadyStateCheckParams =
-        (KubernetesSteadyStateCheckParams) parameters[0];
+    KubernetesSteadyStateCheckParams kubernetesSteadyStateCheckParams = (KubernetesSteadyStateCheckParams) parameters;
 
     ExecutionLogCallback executionLogCallback = new ExecutionLogCallback(delegateLogService,
         kubernetesSteadyStateCheckParams.getAccountId(), kubernetesSteadyStateCheckParams.getAppId(),
@@ -104,6 +98,11 @@ public class KubernetesSteadyStateCheckTask extends AbstractDelegateRunnableTask
           LogLevel.ERROR, CommandExecutionStatus.FAILURE);
       return KubernetesSteadyStateCheckResponse.builder().executionStatus(ExecutionStatus.FAILED).build();
     }
+  }
+
+  @Override
+  public KubernetesSteadyStateCheckResponse run(Object[] parameters) {
+    throw new NotImplementedException("not implemented");
   }
 
   private List<ContainerInfo> doSteadyStateCheck(

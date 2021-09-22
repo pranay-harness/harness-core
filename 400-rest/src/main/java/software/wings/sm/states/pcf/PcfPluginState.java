@@ -28,6 +28,7 @@ import io.harness.data.structure.ListUtils;
 import io.harness.delegate.beans.pcf.CfInternalConfig;
 import io.harness.delegate.task.pcf.CfCommandRequest;
 import io.harness.delegate.task.pcf.CfCommandRequest.PcfCommandType;
+import io.harness.delegate.task.pcf.request.CfCommandTaskParameters;
 import io.harness.delegate.task.pcf.request.CfRunPluginCommandRequest;
 import io.harness.delegate.task.pcf.response.CfCommandExecutionResponse;
 import io.harness.exception.ExceptionUtils;
@@ -388,6 +389,9 @@ public class PcfPluginState extends State {
 
     stateExecutionData.setPcfCommandRequest(commandRequest);
 
+    CfCommandTaskParameters cfCommandTaskParameters =
+        CfCommandTaskParameters.builder().pcfCommandRequest(commandRequest).build();
+
     int expressionFunctorToken = HashGenerator.generateIntegerHash();
     DelegateTask delegateTask =
         pcfStateHelper.getDelegateTask(PcfDelegateTaskCreationData.builder()
@@ -399,7 +403,7 @@ public class PcfPluginState extends State {
                                            .environmentType(env.getEnvironmentType())
                                            .infrastructureMappingId(pcfInfrastructureMapping.getUuid())
                                            .serviceId(pcfInfrastructureMapping.getServiceId())
-                                           .parameters(new Object[] {commandRequest})
+                                           .parameters(new Object[] {cfCommandTaskParameters})
                                            .timeout(timeoutIntervalInMin)
                                            .tagList(renderedTags)
                                            .serviceTemplateId(getServiceTemplateId(pcfInfrastructureMapping))

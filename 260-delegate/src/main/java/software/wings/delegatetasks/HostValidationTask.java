@@ -1,7 +1,5 @@
 package software.wings.delegatetasks;
 
-import static java.lang.String.format;
-
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -11,15 +9,11 @@ import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
-import io.harness.security.encryption.EncryptedDataDetail;
 
-import software.wings.beans.ExecutionCredential;
 import software.wings.beans.HostValidationTaskParameters;
-import software.wings.beans.SettingAttribute;
 import software.wings.utils.HostValidationService;
 
 import com.google.inject.Inject;
-import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;

@@ -45,6 +45,7 @@ import io.harness.delegate.cf.apprenaming.AppNamingStrategy;
 import io.harness.delegate.task.manifests.response.CustomManifestValuesFetchResponse;
 import io.harness.delegate.task.pcf.CfCommandRequest.PcfCommandType;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
+import io.harness.delegate.task.pcf.request.CfCommandTaskParameters;
 import io.harness.delegate.task.pcf.response.CfCommandExecutionResponse;
 import io.harness.delegate.task.pcf.response.CfSetupCommandResponse;
 import io.harness.exception.ExceptionUtils;
@@ -387,7 +388,10 @@ public class PcfSetupState extends State {
     String waitId = generateUuid();
 
     List<String> renderedTags = pcfStateHelper.getRenderedTags(context, tags);
-
+    CfCommandTaskParameters cfCommandTaskParameters = CfCommandTaskParameters.builder()
+                                                          .pcfCommandRequest(cfCommandSetupRequest)
+                                                          .encryptedDataDetails(encryptedDataDetails)
+                                                          .build();
     DelegateTask delegateTask = pcfStateHelper.getDelegateTask(
         PcfDelegateTaskCreationData.builder()
             .accountId(app.getAccountId())
@@ -397,7 +401,7 @@ public class PcfSetupState extends State {
             .envId(env.getUuid())
             .environmentType(env.getEnvironmentType())
             .infrastructureMappingId(pcfInfrastructureMapping.getUuid())
-            .parameters(new Object[] {cfCommandSetupRequest, encryptedDataDetails})
+            .parameters(new Object[] {cfCommandTaskParameters})
             .selectionLogsTrackingEnabled(isSelectionLogsTrackingForTasksEnabled())
             .taskDescription("PCF setup task execution")
             .serviceId(pcfInfrastructureMapping.getServiceId())
