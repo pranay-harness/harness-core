@@ -85,6 +85,7 @@ import io.harness.migrations.all.DropUniqueIndexOnImportedTemplate;
 import io.harness.migrations.all.DropUniqueIndexOnTemplateGallery;
 import io.harness.migrations.all.DropYamlGitSyncCollectionMigration;
 import io.harness.migrations.all.DuplicateGlobalAccountMigration;
+import io.harness.migrations.all.EnableIteratorsForLdapSync;
 import io.harness.migrations.all.EntityNameValidationMigration_All_00;
 import io.harness.migrations.all.EntityNameValidationMigration_All_01;
 import io.harness.migrations.all.EntityNameValidationMigration_All_02;
@@ -432,6 +433,7 @@ public class MigrationList {
         .add(Pair.of(363, QpsGraphQLMigration.class))
         .add(Pair.of(364, BaseMigration.class))
         .add(Pair.of(365, BaseMigration.class))
+        .add(Pair.of(366, EnableIteratorsForLdapSync.class))
         .build();
   }
 }
