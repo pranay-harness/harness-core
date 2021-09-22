@@ -58,29 +58,29 @@ public class AwsAmiAsyncTaskTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testRun() {
     AwsAmiRequest request = AwsAmiServiceSetupRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockAwsAmiHelperServiceDelegate).setUpAmiService(any(), any());
     request = AwsAmiServiceDeployRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockAwsAmiHelperServiceDelegate).deployAmiService(any(), any());
     request = AwsAmiSwitchRoutesRequest.builder().rollback(false).build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockAwsAmiHelperServiceDelegate).switchAmiRoutes(any(), any());
     request = AwsAmiSwitchRoutesRequest.builder().rollback(true).build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockAwsAmiHelperServiceDelegate).rollbackSwitchAmiRoutes(any(), any());
 
     request = AwsAmiServiceTrafficShiftAlbSetupRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockAwsAmiHelperServiceDelegate).setUpAmiServiceTrafficShift(any());
     request = AwsAmiServiceTrafficShiftAlbDeployRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockAwsAmiHelperServiceDelegate).deployAmiServiceTrafficShift(any());
     request = AwsAmiTrafficShiftAlbSwitchRouteRequest.builder().rollback(false).build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockAwsAmiHelperServiceDelegate).switchAmiRoutesTrafficShift(any());
     request = AwsAmiTrafficShiftAlbSwitchRouteRequest.builder().rollback(true).build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockAwsAmiHelperServiceDelegate).rollbackSwitchAmiRoutesTrafficShift(any());
   }
 }

@@ -47,12 +47,7 @@ public class AwsAmiAsyncTask extends AbstractDelegateRunnableTask {
 
   @Override
   public AwsResponse run(TaskParameters parameters) {
-    throw new NotImplementedException("not implemented");
-  }
-
-  @Override
-  public AwsResponse run(Object[] parameters) {
-    AwsAmiRequest request = (AwsAmiRequest) parameters[0];
+    AwsAmiRequest request = (AwsAmiRequest) parameters;
     try {
       AwsAmiRequestType requestType = request.getRequestType();
       switch (requestType) {
@@ -101,6 +96,11 @@ public class AwsAmiAsyncTask extends AbstractDelegateRunnableTask {
           .errorMessage(ExceptionUtils.getMessage(ex))
           .build();
     }
+  }
+
+  @Override
+  public AwsResponse run(Object[] parameters) {
+    throw new NotImplementedException("not implemented");
   }
 
   private AwsResponse performAwsAmiTrafficShiftSwitchRoute(AwsAmiTrafficShiftAlbSwitchRouteRequest request) {
