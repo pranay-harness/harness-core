@@ -11,6 +11,7 @@ import static io.harness.lock.DistributedLockImplementation.MONGO;
 import static io.harness.outbox.OutboxSDKConstants.DEFAULT_OUTBOX_POLL_CONFIGURATION;
 
 import io.harness.AccessControlClientModule;
+import io.harness.CGInstanceSyncModule;
 import io.harness.CgOrchestrationModule;
 import io.harness.SecretManagementCoreModule;
 import io.harness.accesscontrol.AccessControlAdminClientConfiguration;
@@ -1367,6 +1368,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
 
     bind(OutboxEventHandler.class).to(DelegateOutboxEventHandler.class);
     install(new CVCommonsServiceModule());
+    install(CGInstanceSyncModule.getInstance());
   }
 
   private void bindFeatures() {

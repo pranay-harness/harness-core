@@ -69,6 +69,7 @@ public class ManagerRegistrars {
           .addAll(NGCommonsRegistrars.morphiaRegistrars)
           .addAll(NGCoreRegistrars.morphiaRegistrars)
           .addAll(CgOrchestrationRegistrars.morphiaRegistrars)
+          .addAll(CGInstanceSyncRegistrars.morphiaRegistrars)
           .addAll(RbacCoreRegistrars.morphiaRegistrars)
           .addAll(SMCoreRegistrars.morphiaRegistrars)
           .addAll(FileServiceCommonsRegistrars.morphiaRegistrars)
