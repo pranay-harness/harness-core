@@ -751,8 +751,6 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   @RealMongo
   public void shouldUpdateLastWorkflowExecutionAndManifestInActiveInstance() {
-    Long startTS = 1630969310005L;
-
     WorkflowExecution workflowExecution = WorkflowExecution.builder()
                                               .appId(APP_1_ID)
                                               .status(ExecutionStatus.SUCCESS)
@@ -762,7 +760,6 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
                                               .workflowId(WORKFLOW_ID)
                                               .uuid(WORKFLOW_EXECUTION_ID)
                                               .name(WORKFLOW_NAME)
-                                              .startTs(startTS)
                                               .build();
     persistence.save(workflowExecution);
     Instance instance = buildInstance(INSTANCE_1_ID, ACCOUNT_1_ID, APP_1_ID, SERVICE_1_ID, ENV_1_ID, INFRA_MAPPING_1_ID,
@@ -777,7 +774,7 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
     List<CurrentActiveInstances> activeInstances =
         dashboardStatisticsService.getCurrentActiveInstances(ACCOUNT_1_ID, APP_1_ID, SERVICE_1_ID);
     assertThat(activeInstances).hasSize(1);
-    assertThat(activeInstances.get(0).getLastWorkflowExecutionDate()).isEqualTo(startTS);
+    assertThat(activeInstances.get(0).getLastWorkflowExecutionDate()).isEqualTo(workflowExecution.getStartTs());
 
     EntitySummary executionSummary = activeInstances.get(0).getLastWorkflowExecution();
     assertThat(executionSummary.getId()).isEqualTo(WORKFLOW_EXECUTION_ID);
