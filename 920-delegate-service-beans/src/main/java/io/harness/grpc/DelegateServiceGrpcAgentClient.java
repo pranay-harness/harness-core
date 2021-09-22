@@ -1,16 +1,10 @@
 package io.harness.grpc;
 
 import io.harness.annotations.dev.HarnessModule;
-import io.harness.annotations.dev.HarnessTeam;
-import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.delegate.AccountId;
-import io.harness.delegate.DelegateId;
-import io.harness.delegate.DelegateProfileExecutedAtResponse;
 import io.harness.delegate.DelegateServiceGrpc.DelegateServiceBlockingStub;
-import io.harness.delegate.DelegateUpdateRequest;
-import io.harness.delegate.DelegateUpdateResponse;
 import io.harness.delegate.ExecuteParkedTaskRequest;
 import io.harness.delegate.ExecuteParkedTaskResponse;
 import io.harness.delegate.FetchParkedTaskStatusRequest;
@@ -35,7 +29,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @TargetModule(HarnessModule._920_DELEGATE_AGENT_BEANS)
-@OwnedBy(HarnessTeam.DEL)
 public class DelegateServiceGrpcAgentClient {
   private final DelegateServiceBlockingStub delegateServiceBlockingStub;
 
@@ -117,29 +110,6 @@ public class DelegateServiceGrpcAgentClient {
       return response.getSuccess();
     } catch (StatusRuntimeException ex) {
       throw new DelegateServiceLiteException("Unexpected error occurred while checking task progress.", ex);
-    }
-  }
-
-  public boolean clearProfileExecutedAt(AccountId accountId, DelegateId delegateId) {
-    try {
-      DelegateUpdateResponse response =
-          delegateServiceBlockingStub.withDeadlineAfter(30, TimeUnit.SECONDS)
-              .clearProfileExecutedAt(
-                  DelegateUpdateRequest.newBuilder().setAccountId(accountId).setDelegateId(delegateId).build());
-
-      return response.getSuccess();
-    } catch (StatusRuntimeException ex) {
-      throw new DelegateServiceLiteException("Unexpected error occurred while updating delegate.", ex);
-    }
-  }
-
-  public DelegateProfileExecutedAtResponse fetchProfileExecutedAt(AccountId accountId, DelegateId delegateId) {
-    try {
-      return delegateServiceBlockingStub.withDeadlineAfter(30, TimeUnit.SECONDS)
-          .fetchProfileExecutedAt(
-              DelegateUpdateRequest.newBuilder().setAccountId(accountId).setDelegateId(delegateId).build());
-    } catch (StatusRuntimeException ex) {
-      throw new DelegateServiceLiteException("Unexpected error occurred while fetching delegate data.", ex);
     }
   }
 }
