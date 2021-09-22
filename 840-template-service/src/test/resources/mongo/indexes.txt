@@ -83,6 +83,7 @@ taskSelectorMaps {"name": "createdAt_1", "background": true} {"createdAt": 1}
 taskSelectorMaps {"name": "uniqueGroup", "unique": true} {"accountId": 1, "taskGroup": 1}
 templatesNG {"name": "accountId_org_project_childType", "background": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "childType": 1}
 templatesNG {"name": "accountId_organizationId_projectId_identifier", "background": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1}
+templatesNG {"name": "accountId_organizationId_projectId_identifier_isLastUpdated_repo_branch", "background": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1, "isLastUpdatedTemplate": 1, "yamlGitConfigRef": 1, "branch": 1}
 templatesNG {"name": "accountId_organizationId_projectId_identifier_isStable_repo_branch", "background": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1, "isStableTemplate": 1, "yamlGitConfigRef": 1, "branch": 1}
 templatesNG {"name": "accountId_organizationId_projectId_identifier_label_isDefault", "background": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1, "versionLabel": 1, "isFromDefaultBranch": 1, "createdAt": -1}
 templatesNG {"name": "accountId_project_org_isDefault", "background": true} {"accountId": 1, "projectIdentifier": 1, "orgIdentifier": 1, "isFromDefaultBranch": 1, "createdAt": -1}

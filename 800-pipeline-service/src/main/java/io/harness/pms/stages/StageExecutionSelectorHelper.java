@@ -15,8 +15,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import lombok.Builder;
-import lombok.Value;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,10 +23,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class StageExecutionSelectorHelper {
   public List<StageExecutionResponse> getStageExecutionResponse(String pipelineYaml) {
-    List<StageInfo> stagesInfo = getStageInfoList(pipelineYaml);
+    List<BasicStageInfo> stagesInfo = getStageInfoList(pipelineYaml);
 
     List<StageExecutionResponse> executionResponses = new ArrayList<>();
-    for (StageInfo stageInfo : stagesInfo) {
+    for (BasicStageInfo stageInfo : stagesInfo) {
       StageExecutionResponseBuilder builder = StageExecutionResponse.builder()
                                                   .stageIdentifier(stageInfo.getIdentifier())
                                                   .stageName(stageInfo.getName())
@@ -42,14 +40,14 @@ public class StageExecutionSelectorHelper {
   }
 
   @VisibleForTesting
-  List<StageInfo> getStageInfoList(String pipelineYaml) {
-    List<StageInfo> stageYamlList = getStageYamlList(pipelineYaml);
+  List<BasicStageInfo> getStageInfoList(String pipelineYaml) {
+    List<BasicStageInfo> stageYamlList = getStageYamlList(pipelineYaml);
     return addStagesRequired(stageYamlList);
   }
 
   @VisibleForTesting
-  List<StageInfo> getStageYamlList(String pipelineYaml) {
-    List<StageInfo> stageInfoList = new ArrayList<>();
+  List<BasicStageInfo> getStageYamlList(String pipelineYaml) {
+    List<BasicStageInfo> stageInfoList = new ArrayList<>();
     try {
       YamlField pipelineYamlField = YamlUtils.readTree(pipelineYaml);
       List<YamlNode> stagesYamlNodes = pipelineYamlField.getNode()
@@ -76,23 +74,23 @@ public class StageExecutionSelectorHelper {
     }
   }
 
-  private StageInfo getBasicStageInfo(YamlNode stageYamlNode) {
+  private BasicStageInfo getBasicStageInfo(YamlNode stageYamlNode) {
     String identifier = stageYamlNode.getField(YAMLFieldNameConstants.STAGE).getNode().getIdentifier();
     String name = stageYamlNode.getField(YAMLFieldNameConstants.STAGE).getNode().getName();
     String type = stageYamlNode.getField(YAMLFieldNameConstants.STAGE).getNode().getType();
-    return StageInfo.builder().identifier(identifier).name(name).type(type).build();
+    return BasicStageInfo.builder().identifier(identifier).name(name).type(type).build();
   }
 
   @VisibleForTesting
-  List<StageInfo> addStagesRequired(List<StageInfo> stageYamlList) {
-    List<StageInfo> fullStageInfoList = new ArrayList<>();
+  List<BasicStageInfo> addStagesRequired(List<BasicStageInfo> stageYamlList) {
+    List<BasicStageInfo> fullStageInfoList = new ArrayList<>();
 
     List<String> currRequiredStages = new ArrayList<>();
     boolean isPreviousApproval = false;
-    for (StageInfo currStageInfo : stageYamlList) {
+    for (BasicStageInfo currStageInfo : stageYamlList) {
       boolean isCurrentApproval = currStageInfo.getType().equals("Approval");
       if (!isCurrentApproval) {
-        fullStageInfoList.add(StageInfo.builder()
+        fullStageInfoList.add(BasicStageInfo.builder()
                                   .identifier(currStageInfo.getIdentifier())
                                   .name(currStageInfo.getName())
                                   .type(currStageInfo.getType())
@@ -100,7 +98,7 @@ public class StageExecutionSelectorHelper {
                                   .build());
         isPreviousApproval = false;
       } else if (!isPreviousApproval) {
-        fullStageInfoList.add(StageInfo.builder()
+        fullStageInfoList.add(BasicStageInfo.builder()
                                   .identifier(currStageInfo.getIdentifier())
                                   .name(currStageInfo.getName())
                                   .type(currStageInfo.getType())
@@ -110,7 +108,7 @@ public class StageExecutionSelectorHelper {
         currRequiredStages.add(currStageInfo.getIdentifier());
         isPreviousApproval = true;
       } else {
-        fullStageInfoList.add(StageInfo.builder()
+        fullStageInfoList.add(BasicStageInfo.builder()
                                   .identifier(currStageInfo.getIdentifier())
                                   .name(currStageInfo.getName())
                                   .type(currStageInfo.getType())
@@ -122,15 +120,5 @@ public class StageExecutionSelectorHelper {
     }
 
     return fullStageInfoList;
-  }
-
-  @VisibleForTesting
-  @Value
-  @Builder
-  class StageInfo {
-    String identifier;
-    String name;
-    String type;
-    List<String> stagesRequired;
   }
 }

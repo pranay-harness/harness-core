@@ -2,10 +2,15 @@ package io.harness.gitsync.entityInfo;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.git.model.ChangeType;
+import io.harness.gitsync.FullSyncChangeSet;
 import io.harness.gitsync.beans.YamlDTO;
+import io.harness.gitsync.interceptor.GitEntityInfo;
+import io.harness.gitsync.interceptor.GitSyncBranchContext;
 import io.harness.gitsync.persistance.GitSyncableEntity;
 import io.harness.gitsync.scm.EntityObjectIdUtils;
+import io.harness.manage.GlobalContextManager;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,7 +41,25 @@ public abstract class AbstractGitSdkEntityHandler<B extends GitSyncableEntity, Y
   public abstract Y getYamlDTO(String yaml);
 
   @Override
-  public Y fullSyncEntity(String accountIdentifier, String yaml) {
-    return update(accountIdentifier, yaml, ChangeType.ADD);
+  public Y fullSyncEntity(FullSyncChangeSet fullSyncChangeSet) {
+    final EntityDetailProtoDTO entityDetail = fullSyncChangeSet.getEntityDetail();
+    final String yaml = getYamlFromEntityRef(entityDetail);
+    try (GlobalContextManager.GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
+      GlobalContextManager.upsertGlobalContextRecord(createGitEntityInfo(fullSyncChangeSet));
+      return update(fullSyncChangeSet.getAccountIdentifier(), yaml, ChangeType.ADD);
+    }
   }
+
+  private GitSyncBranchContext createGitEntityInfo(FullSyncChangeSet fullSyncChangeSet) {
+    return GitSyncBranchContext.builder()
+        .gitBranchInfo(GitEntityInfo.builder()
+                           .branch(fullSyncChangeSet.getBranchName())
+                           .folderPath(fullSyncChangeSet.getFolderPath())
+                           .filePath(fullSyncChangeSet.getFilePath())
+                           .yamlGitConfigId(fullSyncChangeSet.getYamlGitConfigIdentifier())
+                           .build())
+        .build();
+  }
+
+  public abstract String getYamlFromEntityRef(EntityDetailProtoDTO entityReference);
 }

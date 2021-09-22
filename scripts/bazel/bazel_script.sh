@@ -342,6 +342,17 @@ build_proto_module() {
   fi
 }
 
+build_protocol_info(){
+  module=$1
+  moduleName=$2
+
+  bazel query "deps(//${module}:module)" | grep -i "KryoRegistrar" | rev | cut -f 1 -d "/" | rev | cut -f 1 -d "." > /tmp/KryoDeps.text
+  cp scripts/interface-hash/module-deps.sh .
+  sh module-deps.sh //${module}:module > /tmp/ProtoDeps.text
+  bazel ${bazelrc} run ${BAZEL_ARGUMENTS}  //001-microservice-intfc-tool:module -- kryo-file=/tmp/KryoDeps.text proto-file=/tmp/ProtoDeps.text ignore-json | grep "Codebase Hash:" > ${moduleName}-protocol.info
+  rm module-deps.sh /tmp/ProtoDeps.text /tmp/KryoDeps.text
+}
+
 build_bazel_application 940-notification-client
 build_bazel_application 820-platform-service
 
@@ -450,3 +461,7 @@ build_proto_module ciengine product/ci/engine/proto
 build_proto_module ciscm product/ci/scm/proto
 
 bazel ${bazelrc} run ${BAZEL_ARGUMENTS} //001-microservice-intfc-tool:module | grep "Codebase Hash:" > protocol.info
+
+if [ "${PLATFORM}" == "jenkins" ]; then
+ build_protocol_info 800-pipeline-service pipeline-service
+fi

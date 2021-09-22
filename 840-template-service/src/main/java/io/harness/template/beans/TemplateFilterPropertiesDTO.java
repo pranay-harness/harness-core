@@ -26,7 +26,7 @@ import lombok.experimental.FieldDefaults;
 @EqualsAndHashCode(callSuper = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@ApiModel("PipelineFilterProperties")
+@ApiModel("TemplateFilterProperties")
 @JsonTypeName(TEMPLATE_FILTER)
 @OwnedBy(CDC)
 public class TemplateFilterPropertiesDTO extends FilterPropertiesDTO {

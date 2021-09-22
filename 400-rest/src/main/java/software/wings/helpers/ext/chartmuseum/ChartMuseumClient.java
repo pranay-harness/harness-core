@@ -12,7 +12,7 @@ import org.zeroturnaround.exec.StartedProcess;
 @TargetModule(HarnessModule._960_API_SERVICES)
 public interface ChartMuseumClient {
   ChartMuseumServer startChartMuseumServer(HelmRepoConfig helmRepoConfig, SettingValue connectorConfig,
-      String resourceDirectory, String basePath) throws Exception;
+      String resourceDirectory, String basePath, boolean useLatestChartMuseumVersion) throws Exception;
 
   void stopChartMuseumServer(StartedProcess process) throws Exception;
 }

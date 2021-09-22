@@ -2,7 +2,9 @@ package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.RepairActionCode;
 
 import software.wings.yaml.BaseYamlWithType;
@@ -18,6 +20,7 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 @AllArgsConstructor
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class RuntimeInputsConfig {
   List<String> runtimeInputVariables;
   long timeout;

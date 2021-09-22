@@ -8,7 +8,7 @@ import lombok.Value;
 @Builder
 public class ChartMuseumCapability implements ExecutionCapability {
   CapabilityType capabilityType = CapabilityType.CHART_MUSEUM;
-
+  boolean useLatestChartMuseumVersion;
   @Override
   public EvaluationMode evaluationMode() {
     return EvaluationMode.AGENT;

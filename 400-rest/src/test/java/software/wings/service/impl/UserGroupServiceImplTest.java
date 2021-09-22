@@ -304,7 +304,6 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testSaveAndGetForAdminWhenCeDisabled() {
     UserGroup savedUserGroup = userGroupService.save(userGroup1);
-    userGroupService.maskAppTemplatePermissions(userGroup1);
     assertThat(savedUserGroup)
         .isEqualToComparingOnlyGivenFields(userGroup1, "uuid", UserGroupKeys.accountId, UserGroupKeys.name,
             UserGroupKeys.description, UserGroupKeys.memberIds, UserGroupKeys.appPermissions);
@@ -320,7 +319,6 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testSaveAndGetForNonAdminWhenCeDisabled() {
     UserGroup savedUserGroup = userGroupService.save(userGroup2);
-    userGroupService.maskAppTemplatePermissions(userGroup2);
     assertThat(savedUserGroup)
         .isEqualToComparingOnlyGivenFields(userGroup2, "uuid", UserGroupKeys.accountId, UserGroupKeys.name,
             UserGroupKeys.description, UserGroupKeys.memberIds, UserGroupKeys.appPermissions);
@@ -338,7 +336,6 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     when(ccmSettingService.isCloudCostEnabled(eq(accountId))).thenReturn(true);
 
     UserGroup savedUserGroup = userGroupService.save(userGroup1);
-    userGroupService.maskAppTemplatePermissions(userGroup1);
     assertThat(savedUserGroup)
         .isEqualToComparingOnlyGivenFields(userGroup1, UserGroupKeys.accountId, UserGroupKeys.name,
             UserGroupKeys.description, UserGroupKeys.memberIds, UserGroupKeys.appPermissions, "uuid");
@@ -359,7 +356,6 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   public void testSaveAndGetForNonAdminWithCeEnabled() {
     when(ccmSettingService.isCloudCostEnabled(eq(accountId))).thenReturn(true);
     UserGroup savedUserGroup = userGroupService.save(userGroup2);
-    userGroupService.maskAppTemplatePermissions(userGroup2);
     assertThat(savedUserGroup)
         .isEqualToComparingOnlyGivenFields(userGroup2, UserGroupKeys.accountId, UserGroupKeys.name,
             UserGroupKeys.description, UserGroupKeys.memberIds, UserGroupKeys.appPermissions, "uuid");
@@ -377,14 +373,12 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testSaveAndGet() {
     UserGroup savedUserGroup = userGroupService.save(userGroup1);
-    userGroupService.maskAppTemplatePermissions(userGroup1);
     compare(userGroup1, savedUserGroup);
 
     UserGroup userGroupFromGet = userGroupService.get(accountId, userGroupId);
     compare(savedUserGroup, userGroupFromGet);
 
     savedUserGroup = userGroupService.save(userGroup2);
-    userGroupService.maskAppTemplatePermissions(userGroup2);
     compare(userGroup2, savedUserGroup);
 
     userGroupFromGet = userGroupService.get(accountId, userGroupId);
@@ -1120,18 +1114,16 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
             .appPermissions(new HashSet<>(
                 Arrays.asList(createAppPermission(FilterType.ALL, ALL_APP_ENTITIES, Collections.emptyList(), actions))))
             .build();
-    userGroupService.save(userGroup);
+    final UserGroup savedUserGroup = userGroupService.save(userGroup);
 
-    final Set<AppPermission> appPermissions = userGroup.getAppPermissions();
-    assertThat(appPermissions.size()).isEqualTo(2);
-    final List<AppPermission> templateAppPermissions = getTemplateAppPermissions(appPermissions);
-    assertThat(templateAppPermissions.size()).isEqualTo(1);
-
-    final AppPermission templateAppPermission = templateAppPermissions.get(0);
-    assertThat(templateAppPermission).isNotNull();
-    verifyApplicationTemplatePermissionsWithAllFilter(templateAppPermission);
-    assertThat(templateAppPermission.getActions().size()).isEqualTo(1);
-    assertThat(templateAppPermission.getActions().contains(Action.READ)).isEqualTo(true);
+    final Set<AppPermission> appPermissions = savedUserGroup.getAppPermissions();
+    assertThat(appPermissions.size()).isEqualTo(1);
+    final AppPermission appPermission = appPermissions.iterator().next();
+    assertThat(appPermission).isNotNull();
+    assertThat(appPermission.getPermissionType()).isEqualTo(ALL_APP_ENTITIES);
+    assertThat(appPermission.getAppFilter().getFilterType()).isEqualTo(FilterType.ALL);
+    assertThat(appPermission.getActions().size()).isEqualTo(4);
+    assertThat(appPermission.getActions().containsAll(actions)).isEqualTo(true);
   }
 
   @Test
@@ -1150,20 +1142,16 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
             .appPermissions(new HashSet<>(
                 Arrays.asList(createAppPermission(FilterType.ALL, ALL_APP_ENTITIES, Collections.emptyList(), actions))))
             .build();
-    userGroupService.save(userGroup);
+    final UserGroup savedUserGroup = userGroupService.save(userGroup);
 
-    final Set<AppPermission> appPermissions = userGroup.getAppPermissions();
-    assertThat(appPermissions.size()).isEqualTo(2);
-    final List<AppPermission> templateAppPermissions = getTemplateAppPermissions(appPermissions);
-    assertThat(templateAppPermissions.size()).isEqualTo(1);
-
-    final AppPermission templateAppPermission = templateAppPermissions.get(0);
-    assertThat(templateAppPermission).isNotNull();
-    verifyApplicationTemplatePermissionsWithAllFilter(templateAppPermission);
-    assertThat(templateAppPermission.getActions().size()).isEqualTo(4);
-    assertThat(templateAppPermission.getActions().containsAll(
-                   Arrays.asList(Action.CREATE, Action.READ, Action.UPDATE, Action.DELETE)))
-        .isEqualTo(true);
+    final Set<AppPermission> appPermissions = savedUserGroup.getAppPermissions();
+    assertThat(appPermissions.size()).isEqualTo(1);
+    final AppPermission appPermission = appPermissions.iterator().next();
+    assertThat(appPermission).isNotNull();
+    assertThat(appPermission.getPermissionType()).isEqualTo(ALL_APP_ENTITIES);
+    assertThat(appPermission.getAppFilter().getFilterType()).isEqualTo(FilterType.ALL);
+    assertThat(appPermission.getActions().size()).isEqualTo(4);
+    assertThat(appPermission.getActions().containsAll(actions)).isEqualTo(true);
   }
 
   @Test
@@ -1182,19 +1170,17 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
             .appPermissions(new HashSet<>(Arrays.asList(
                 createAppPermission(FilterType.SELECTED, ALL_APP_ENTITIES, Arrays.asList("appId1"), actions))))
             .build();
-    userGroupService.save(userGroup);
+    final UserGroup savedUserGroup = userGroupService.save(userGroup);
 
-    final Set<AppPermission> appPermissions = userGroup.getAppPermissions();
-    assertThat(appPermissions.size()).isEqualTo(2);
-    final List<AppPermission> templateAppPermissions = getTemplateAppPermissions(appPermissions);
-    assertThat(templateAppPermissions.size()).isEqualTo(1);
-
-    final AppPermission templateAppPermission = templateAppPermissions.get(0);
-    assertThat(templateAppPermission).isNotNull();
-    verifyApplicationTemplatePermissionsWithSelectedFilter(templateAppPermission);
-    assertThat(templateAppPermission.getAppFilter().getIds().containsAll(Arrays.asList("appId1"))).isEqualTo(true);
-    assertThat(templateAppPermission.getActions().size()).isEqualTo(1);
-    assertThat(templateAppPermission.getActions().containsAll(Arrays.asList(Action.READ))).isEqualTo(true);
+    final Set<AppPermission> appPermissions = savedUserGroup.getAppPermissions();
+    assertThat(appPermissions.size()).isEqualTo(1);
+    final AppPermission appPermission = appPermissions.iterator().next();
+    assertThat(appPermission).isNotNull();
+    assertThat(appPermission.getPermissionType()).isEqualTo(ALL_APP_ENTITIES);
+    assertThat(appPermission.getAppFilter().getFilterType()).isEqualTo(FilterType.SELECTED);
+    assertThat(appPermission.getAppFilter().getIds().containsAll(Arrays.asList("appId1"))).isEqualTo(true);
+    assertThat(appPermission.getActions().size()).isEqualTo(4);
+    assertThat(appPermission.getActions().containsAll(actions)).isEqualTo(true);
   }
 
   @Test
@@ -1216,17 +1202,17 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
             .build();
     userGroupService.save(userGroup);
 
-    final Set<AppPermission> appPermissions = userGroup.getAppPermissions();
-    assertThat(appPermissions.size()).isEqualTo(2);
-    final List<AppPermission> templateAppPermissions = getTemplateAppPermissions(appPermissions);
-    assertThat(templateAppPermissions.size()).isEqualTo(1);
+    final UserGroup savedUserGroup = userGroupService.save(userGroup);
 
-    final AppPermission templateAppPermission = templateAppPermissions.get(0);
-    assertThat(templateAppPermission).isNotNull();
-    verifyApplicationTemplatePermissionsWithSelectedFilter(templateAppPermission);
-    assertThat(templateAppPermission.getAppFilter().getIds().containsAll(Arrays.asList("appId1"))).isEqualTo(true);
-    assertThat(templateAppPermission.getActions().size()).isEqualTo(4);
-    assertThat(templateAppPermission.getActions().containsAll(actions)).isEqualTo(true);
+    final Set<AppPermission> appPermissions = savedUserGroup.getAppPermissions();
+    assertThat(appPermissions.size()).isEqualTo(1);
+    final AppPermission appPermission = appPermissions.iterator().next();
+    assertThat(appPermission).isNotNull();
+    assertThat(appPermission.getPermissionType()).isEqualTo(ALL_APP_ENTITIES);
+    assertThat(appPermission.getAppFilter().getFilterType()).isEqualTo(FilterType.SELECTED);
+    assertThat(appPermission.getAppFilter().getIds().containsAll(Arrays.asList("appId1"))).isEqualTo(true);
+    assertThat(appPermission.getActions().size()).isEqualTo(4);
+    assertThat(appPermission.getActions().containsAll(actions)).isEqualTo(true);
   }
 
   private void verifyNoApplicationTemplatePermissions(Set<PermissionType> permissions) {

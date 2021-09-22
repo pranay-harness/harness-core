@@ -6,7 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.creator.plan.rollback.ExecutionStepsRollbackPMSPlanCreator;
-import io.harness.cdng.creator.plan.rollback.StepGroupsRollbackPMSPlanCreator;
 import io.harness.cdng.pipeline.beans.RollbackNode;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters;
 import io.harness.cdng.pipeline.beans.RollbackOptionalChildChainStepParameters.RollbackOptionalChildChainStepParametersBuilder;
@@ -41,17 +40,6 @@ public class InfraRollbackPMSPlanCreator {
     RollbackOptionalChildChainStepParametersBuilder stepParametersBuilder =
         RollbackOptionalChildChainStepParameters.builder();
 
-    YamlField stepsField = provisionerField.getNode().getField(YAMLFieldNameConstants.STEPS);
-    PlanCreationResponse stepGroupsRollbackPlan =
-        StepGroupsRollbackPMSPlanCreator.createStepGroupsRollbackPlanNode(stepsField);
-    if (isNotEmpty(stepGroupsRollbackPlan.getNodes())) {
-      stepParametersBuilder.childNode(
-          RollbackNode.builder()
-              .nodeId(stepsField.getNode().getUuid() + OrchestrationConstants.STEP_GROUPS_ROLLBACK_NODE_ID_SUFFIX)
-              .shouldAlwaysRun(true)
-              .build());
-    }
-
     YamlField rollbackStepsField = provisionerField.getNode().getField(YAMLFieldNameConstants.ROLLBACK_STEPS);
     PlanCreationResponse executionRollbackPlan =
         ExecutionStepsRollbackPMSPlanCreator.createExecutionStepsRollbackPlanNode(rollbackStepsField);
@@ -78,12 +66,11 @@ public class InfraRollbackPMSPlanCreator {
                 FacilitatorObtainment.newBuilder()
                     .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD_CHAIN).build())
                     .build())
-            .skipExpressionChain(true)
+            .skipExpressionChain(false)
             .build();
 
     PlanCreationResponse finalResponse =
         PlanCreationResponse.builder().node(infraRollbackNode.getUuid(), infraRollbackNode).build();
-    finalResponse.merge(stepGroupsRollbackPlan);
     finalResponse.merge(executionRollbackPlan);
 
     return finalResponse;

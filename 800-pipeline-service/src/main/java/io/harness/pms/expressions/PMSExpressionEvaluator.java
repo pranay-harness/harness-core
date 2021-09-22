@@ -15,11 +15,9 @@ import io.harness.organization.remote.OrganizationClient;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.expression.RemoteFunctorServiceGrpc.RemoteFunctorServiceBlockingStub;
 import io.harness.pms.expressions.functors.AccountFunctor;
-import io.harness.pms.expressions.functors.ImagePullSecretFunctor;
 import io.harness.pms.expressions.functors.OrgFunctor;
 import io.harness.pms.expressions.functors.ProjectFunctor;
 import io.harness.pms.expressions.functors.RemoteExpressionFunctor;
-import io.harness.pms.expressions.utils.ImagePullSecretUtils;
 import io.harness.pms.plan.execution.SetupAbstractionKeys;
 import io.harness.pms.sdk.PmsSdkInstance;
 import io.harness.pms.sdk.PmsSdkInstanceService;
@@ -39,7 +37,6 @@ public class PMSExpressionEvaluator extends AmbianceExpressionEvaluator {
   @Inject @Named("PRIVILEGED") private AccountClient accountClient;
   @Inject @Named("PRIVILEGED") private OrganizationClient organizationClient;
   @Inject @Named("PRIVILEGED") private ProjectClient projectClient;
-  @Inject private ImagePullSecretUtils imagePullSecretUtils;
   @Inject private PlanExecutionMetadataService planExecutionMetadataService;
   @Inject PmsSdkInstanceService pmsSdkInstanceService;
 
@@ -55,14 +52,6 @@ public class PMSExpressionEvaluator extends AmbianceExpressionEvaluator {
     addToContext("account", new AccountFunctor(accountClient, ambiance));
     addToContext("org", new OrgFunctor(organizationClient, ambiance));
     addToContext("project", new ProjectFunctor(projectClient, ambiance));
-
-    // Artifact pull secret functor
-    addToContext(ImagePullSecretFunctor.IMAGE_PULL_SECRET,
-        ImagePullSecretFunctor.builder()
-            .imagePullSecretUtils(imagePullSecretUtils)
-            .pmsOutcomeService(getPmsOutcomeService())
-            .ambiance(ambiance)
-            .build());
 
     // Trigger functors
     addToContext(SetupAbstractionKeys.eventPayload, new EventPayloadFunctor(ambiance, planExecutionMetadataService));

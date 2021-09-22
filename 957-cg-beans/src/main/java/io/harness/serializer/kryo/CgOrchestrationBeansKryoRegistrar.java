@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionInterruptType;
+import io.harness.beans.SweepingOutput;
 import io.harness.context.ContextElementType;
 import io.harness.serializer.KryoRegistrar;
 
@@ -22,6 +23,7 @@ public class CgOrchestrationBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(LicenseInfo.class, 5511);
 
     // Put promoted classes here and do not change the id
+    kryo.register(SweepingOutput.class, 3101);
     kryo.register(ExecutionInterruptType.class, 4000);
     kryo.register(ContainerServiceData.class, 5157);
   }

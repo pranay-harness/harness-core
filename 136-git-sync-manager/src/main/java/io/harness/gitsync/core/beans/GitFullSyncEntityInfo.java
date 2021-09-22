@@ -8,6 +8,7 @@ import io.harness.mongo.index.FdIndex;
 import io.harness.ng.core.EntityDetail;
 import io.harness.persistence.PersistentEntity;
 
+import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -46,6 +47,7 @@ public class GitFullSyncEntityInfo implements PersistentEntity, PersistentRegula
   String yamlGitConfigId;
   int retryCount;
   @FdIndex @NonFinal Long nextRuntime;
+  List<String> errorMessage;
 
   @EqualsAndHashCode.Exclude @CreatedDate private long createdAt;
   @EqualsAndHashCode.Exclude @LastModifiedDate private long lastUpdatedAt;

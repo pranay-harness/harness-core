@@ -33,6 +33,7 @@ public class HelmRepoConfigValidationTaskParams implements TaskParameters, Execu
   private SettingValue connectorConfig;
   private List<EncryptedDataDetail> connectorEncryptedDataDetails;
   private Set<String> delegateSelectors;
+  private boolean useLatestChartMuseumVersion;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

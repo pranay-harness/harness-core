@@ -1,0 +1,27 @@
+pipeline:
+  name: Test Pipline
+  identifier: Test_Pipline11
+  stages:
+    - stage:
+        identifier: app
+        type: Approval
+        spec:
+          execution:
+            steps:
+              - step:
+                  identifier: httpStep7
+                  type: Http
+                  spec:
+                    url: pr.harness.io
+    - parallel:
+        - stage:
+            identifier: pq2
+            type: Approval
+            spec:
+              execution:
+                steps:
+                  - step:
+                      identifier: httpStep7
+                      type: Http
+                      spec:
+                        url: pr.harness.io

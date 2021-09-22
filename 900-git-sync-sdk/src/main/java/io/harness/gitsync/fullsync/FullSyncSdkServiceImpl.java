@@ -2,11 +2,16 @@ package io.harness.gitsync.fullsync;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
+import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
+import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
 import io.harness.gitsync.FileChange;
 import io.harness.gitsync.FileChanges;
+import io.harness.gitsync.FullSyncChangeSet;
 import io.harness.gitsync.ScopeDetails;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
+import io.harness.gitsync.persistance.EntityLookupHelper;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
@@ -20,17 +25,34 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @OwnedBy(DX)
 public class FullSyncSdkServiceImpl implements FullSyncSdkService {
-  Map<String, GitSdkEntityHandlerInterface> gitPersistenceHelperServiceMap;
-
+  Map<EntityType, GitSdkEntityHandlerInterface> gitPersistenceHelperServiceMap;
+  EntityLookupHelper entityLookupHelper;
   @Override
   public FileChanges getFileChanges(ScopeDetails scopeDetails) {
     List<FileChange> fileChangeList = new ArrayList<>();
-
+    invalidateCacheOfGitEnabled(scopeDetails);
     gitPersistenceHelperServiceMap.forEach((entityType, gitPersistenceHelperService) -> {
       final List<FileChange> entitiesForFullSync = gitPersistenceHelperService.listAllEntities(scopeDetails);
       log.info("Entities for full sync for entityType [{}]: [{}]", entityType, entitiesForFullSync);
       fileChangeList.addAll(entitiesForFullSync);
     });
     return FileChanges.newBuilder().addAllFileChanges(fileChangeList).build();
+  }
+
+  private void invalidateCacheOfGitEnabled(ScopeDetails scopeDetails) {
+    final EntityScopeInfo entityScope = scopeDetails.getEntityScope();
+    entityLookupHelper.updateKey(EntityScopeInfo.newBuilder()
+                                     .setOrgId(entityScope.getOrgId())
+                                     .setProjectId(entityScope.getProjectId())
+                                     .setAccountId(entityScope.getAccountId())
+                                     .build());
+  }
+
+  @Override
+  public void doFullSyncForFile(FullSyncChangeSet fullSyncChangeSet) {
+    final EntityDetailProtoDTO entityDetail = fullSyncChangeSet.getEntityDetail();
+    final GitSdkEntityHandlerInterface gitSdkEntityHandlerInterface =
+        gitPersistenceHelperServiceMap.get(EntityType.fromString(entityDetail.getType().name()));
+    gitSdkEntityHandlerInterface.fullSyncEntity(fullSyncChangeSet);
   }
 }

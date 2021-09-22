@@ -2,6 +2,7 @@ package io.harness.pms.merger.fqn;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.pms.merger.fqn.FQNNode.NodeType;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlUtils;
 
@@ -119,5 +120,19 @@ public class FQN {
 
   public String getFieldName() {
     return fqnList.get(fqnList.size() - 1).getKey();
+  }
+
+  public String getStageIdentifier() {
+    if (fqnList.size() < 2) {
+      return null;
+    }
+    if (!fqnList.get(1).getKey().equals(YAMLFieldNameConstants.STAGES)) {
+      return null;
+    }
+    FQNNode stageNode = fqnList.get(2);
+    if (stageNode.getNodeType().equals(NodeType.PARALLEL)) {
+      stageNode = fqnList.get(3);
+    }
+    return stageNode.getUuidValue();
   }
 }

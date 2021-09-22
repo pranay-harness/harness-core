@@ -35,6 +35,7 @@ public class AuthResponseFilter implements ContainerResponseFilter {
   private static final String RESOURCE_URI_CREATE_WORKFLOW = "/api/workflows";
   private static final String RESOURCE_URI_CREATE_PIPELINE = "/api/pipelines";
   private static final String RESOURCE_URI_CREATE_DASHBOARD = "/api/custom-dashboard";
+  private static final String RESOURCE_URI_CREATE_TEMPLATES = "/api/templates";
 
   private static final String RESOURCE_URI_CLONE_APP = "/api/apps/[^/]+/clone";
   private static final String RESOURCE_URI_CLONE_SERVICE = "/api/services/[^/]+/clone";
@@ -47,19 +48,23 @@ public class AuthResponseFilter implements ContainerResponseFilter {
   private static final String RESOURCE_URI_UPDATE_WORKFLOW = "/api/workflows/[^/]+/basic";
   private static final String RESOURCE_URI_UPDATE_PIPELINE = "/api/pipelines/[^/]+";
   private static final String RESOURCE_URI_UPDATE_DASHBOARD = "/api/custom-dashboard";
+  private static final String RESOURCE_URI_UPDATE_TEMPLATES = "/api/templates";
 
   private static final String RESOURCE_URI_DELETE_APP = "/api/apps/[^/]+";
   private static final String RESOURCE_URI_DELETE_ENVIRONMENT = "/api/environments/[^/]+";
   private static final String RESOURCE_URI_DELETE_DASHBOARD = "/api/custom-dashboard";
+  private static final String RESOURCE_URI_DELETE_TEMPLATES = "/api/templates";
 
-  private static final Set<String> restResourcesCreateURIs = Sets.newHashSet(RESOURCE_URI_CREATE_APP,
-      RESOURCE_URI_CREATE_SERVICE, RESOURCE_URI_CREATE_PROVISIONER, RESOURCE_URI_CREATE_ENVIRONMENT,
-      RESOURCE_URI_CREATE_WORKFLOW, RESOURCE_URI_CREATE_PIPELINE, RESOURCE_URI_CREATE_DASHBOARD);
+  private static final Set<String> restResourcesCreateURIs =
+      Sets.newHashSet(RESOURCE_URI_CREATE_APP, RESOURCE_URI_CREATE_SERVICE, RESOURCE_URI_CREATE_PROVISIONER,
+          RESOURCE_URI_CREATE_ENVIRONMENT, RESOURCE_URI_CREATE_WORKFLOW, RESOURCE_URI_CREATE_PIPELINE,
+          RESOURCE_URI_CREATE_DASHBOARD, RESOURCE_URI_CREATE_TEMPLATES);
   private static final Set<String> restResourcesCloneURIs =
       Sets.newHashSet(RESOURCE_URI_CLONE_APP, RESOURCE_URI_CLONE_SERVICE, RESOURCE_URI_CLONE_PROVISIONER,
           RESOURCE_URI_CLONE_ENVIRONMENT, RESOURCE_URI_CLONE_WORKFLOW, RESOURCE_URI_CLONE_PIPELINE);
-  private static final Set<String> restResourcesUpdateURIs = Sets.newHashSet(RESOURCE_URI_UPDATE_ENVIRONMENT,
-      RESOURCE_URI_UPDATE_WORKFLOW, RESOURCE_URI_UPDATE_PIPELINE, RESOURCE_URI_UPDATE_DASHBOARD);
+  private static final Set<String> restResourcesUpdateURIs =
+      Sets.newHashSet(RESOURCE_URI_UPDATE_ENVIRONMENT, RESOURCE_URI_UPDATE_WORKFLOW, RESOURCE_URI_UPDATE_PIPELINE,
+          RESOURCE_URI_UPDATE_DASHBOARD, RESOURCE_URI_UPDATE_TEMPLATES);
 
   @Inject private AuthService authService;
   @Inject private AppService appService;
@@ -94,7 +99,8 @@ public class AuthResponseFilter implements ContainerResponseFilter {
     } else if (HttpMethod.DELETE.name().equals(httpMethod)) {
       if (resourcePath.matches(RESOURCE_URI_DELETE_APP) || resourcePath.matches(RESOURCE_URI_DELETE_ENVIRONMENT)) {
         evictPermissionsAndRestrictions(requestContext, resourcePath, true, true);
-      } else if (resourcePath.matches(RESOURCE_URI_DELETE_DASHBOARD)) {
+      } else if (resourcePath.matches(RESOURCE_URI_DELETE_DASHBOARD)
+          || resourcePath.matches(RESOURCE_URI_DELETE_TEMPLATES)) {
         evictPermissions(requestContext, resourcePath, true);
       }
     }
