@@ -2,6 +2,7 @@ package io.harness.pms.merger.helpers;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.pms.merger.helpers.MergeHelper.mergeInputSetIntoPipeline;
+import static io.harness.pms.merger.helpers.MergeHelper.mergeInputSetIntoPipelineForGivenStages;
 import static io.harness.pms.merger.helpers.MergeHelper.mergeInputSets;
 import static io.harness.pms.merger.helpers.YamlTemplateHelper.createTemplateFromPipeline;
 import static io.harness.pms.merger.helpers.YamlTemplateHelper.createTemplateFromPipelineForGivenStages;
@@ -76,6 +77,52 @@ public class MergeHelperTest extends CategoryTest {
     String pipelineYaml2 = readFile(pipeline2);
     String template = createTemplateFromPipelineForGivenStages(pipelineYaml2, Collections.singletonList("qaStage4"));
     assertThat(template).isNull();
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testMergeInputSetIntoPipelineForGivenStages() {
+    String pipeline1 = "pipeline-2.yaml";
+    String pipelineYaml1 = readFile(pipeline1);
+
+    String runtimeInputForQaStageAndAppFile = "runtimeInputForQaStageAndAppAndPQ2.yaml";
+    String runtimeInputForQaStageAndApp = readFile(runtimeInputForQaStageAndAppFile);
+
+    String qaStageResult = mergeInputSetIntoPipelineForGivenStages(
+        pipelineYaml1, runtimeInputForQaStageAndApp, false, Collections.singletonList("qaStage"));
+    assertStringEqualToFile(qaStageResult, "mergedPipeline2ForQaStage.yaml");
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testMergeInputSetsForGivenStages() {
+    String pipeline = "pipeline-2.yaml";
+    String pipelineYaml = readFile(pipeline);
+
+    String template = YamlTemplateHelper.createTemplateFromPipeline(pipelineYaml);
+
+    String runtimeInputForQaStageAndAppAndPQ2File = "runtimeInputForQaStageAndAppAndPQ2.yaml";
+    String runtimeInputForQaStageAndAppAndPQ2 = readFile(runtimeInputForQaStageAndAppAndPQ2File);
+
+    String runtimeInputForAppAndPQ2File = "runtimeInputForAppAndPQ2.yaml";
+    String runtimeInputForAppAndPQ2 = readFile(runtimeInputForAppAndPQ2File);
+
+    String mergedResult1 = MergeHelper.mergeInputSetsForGivenStages(template,
+        Arrays.asList(runtimeInputForQaStageAndAppAndPQ2, runtimeInputForAppAndPQ2), false,
+        Collections.singletonList("qaStage"));
+    assertStringEqualToFile(mergedResult1, "mergedRuntimeInputsForQAStage.yaml");
+
+    String mergedResult2 = MergeHelper.mergeInputSetsForGivenStages(template,
+        Arrays.asList(runtimeInputForQaStageAndAppAndPQ2, runtimeInputForAppAndPQ2), false,
+        Arrays.asList("qaStage", "pq2"));
+    assertStringEqualToFile(mergedResult2, "mergedRuntimeInputForQAStageAndPQ2.yaml");
+
+    String mergedResult3 = MergeHelper.mergeInputSetsForGivenStages(template,
+        Arrays.asList(runtimeInputForQaStageAndAppAndPQ2, runtimeInputForAppAndPQ2), false,
+        Arrays.asList("qaStage4", "pq2"));
+    assertStringEqualToFile(mergedResult3, "mergedRuntimeInputForQAStage4AndPQ2.yaml");
   }
 
   @Test
