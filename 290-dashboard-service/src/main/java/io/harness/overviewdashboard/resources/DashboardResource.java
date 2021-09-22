@@ -9,20 +9,27 @@ import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.NGAccessControlCheck;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.dashboards.GroupBy;
+import io.harness.dashboards.SortBy;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.overviewdashboard.dashboardaggregateservice.service.DashboardAggregateService;
+import io.harness.overviewdashboard.dashboardaggregateservice.service.OverviewDashboardService;
 import io.harness.overviewdashboard.dtos.CountOverview;
-import io.harness.overviewdashboard.dtos.DeploymentsStatsSummary;
+import io.harness.overviewdashboard.dtos.DeploymentsStatsOverview;
+import io.harness.overviewdashboard.dtos.ExecutionResponse;
+import io.harness.overviewdashboard.dtos.ExecutionStatus;
 import io.harness.overviewdashboard.dtos.TopProjectsPanel;
+import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.annotations.NextGenManagerAuth;
+import io.harness.security.dto.PrincipalType;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -46,7 +53,18 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class DashboardResource {
-  DashboardAggregateService dashboardAggregateService;
+  private final String FAILURE_MESSAGE = "failed to get userId";
+
+  OverviewDashboardService overviewDashboardService;
+
+  public Optional<String> getUserIdentifierFromSecurityContext() {
+    Optional<String> userId = Optional.empty();
+    if (SourcePrincipalContextBuilder.getSourcePrincipal() != null
+        && SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER) {
+      userId = Optional.of(SourcePrincipalContextBuilder.getSourcePrincipal().getName());
+    }
+    return userId;
+  }
 
   @GET
   @Path("/top-projects")
@@ -56,29 +74,51 @@ public class DashboardResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
       @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
+    Optional<String> userId = getUserIdentifierFromSecurityContext();
+    if (!userId.isPresent()) {
+      return ResponseDTO.newResponse(TopProjectsPanel.builder().build());
+    }
     log.info("Getting top projects");
-    return ResponseDTO.newResponse(dashboardAggregateService.getTopProjectsPanel(accountIdentifier,"lv0euRhKRCyiXWzS7pOg6g",1612074913000L,1632074913000L));
+    return ResponseDTO.newResponse(overviewDashboardService.getTopProjectsPanel(
+        accountIdentifier, userId.get(), startInterval, endInterval)); // TopProjectsPanel.builder().build());
   }
 
   @GET
   @Path("/deployment-stats")
-  @ApiOperation(value = "Get deployment stats summary", nickname = "getDeploymentStatsSummary")
+  @ApiOperation(value = "Get deployment stats summary", nickname = "getDeploymentStatsOverview")
   @NGAccessControlCheck(resourceType = ACCOUNT, permission = VIEW_ACCOUNT_PERMISSION)
-  public ResponseDTO<DeploymentsStatsSummary> getDeploymentStatsSummary(
+  public ResponseDTO<ExecutionResponse<DeploymentsStatsOverview>> getDeploymentStatsSummary(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
-      @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) throws Exception {
-    return ResponseDTO.newResponse(DeploymentsStatsSummary.builder().build());
+      @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval,
+      @NotNull @QueryParam("groupBy") GroupBy groupBy, @NotNull @QueryParam("sortBy") SortBy sortBy) throws Exception {
+    Optional<String> userId = getUserIdentifierFromSecurityContext();
+    if (!userId.isPresent()) {
+      return ResponseDTO.newResponse(ExecutionResponse.<DeploymentsStatsOverview>builder()
+                                         .executionStatus(ExecutionStatus.FAILURE)
+                                         .executionMessage("Failed to get userId")
+                                         .build());
+    }
+    return ResponseDTO.newResponse(overviewDashboardService.getDeploymentStatsOverview(
+        accountIdentifier, userId.get(), startInterval, endInterval, groupBy, sortBy));
   }
 
   @GET
   @Path("/resources-overview-count")
   @ApiOperation(value = "Get count of projects, services, envs, pipelines", nickname = "getCounts")
   @NGAccessControlCheck(resourceType = ACCOUNT, permission = VIEW_ACCOUNT_PERMISSION)
-  public ResponseDTO<CountOverview> getCounts(
+  public ResponseDTO<ExecutionResponse<CountOverview>> getCounts(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
       @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) throws Exception {
-    return ResponseDTO.newResponse(CountOverview.builder().build());
+    Optional<String> userId = getUserIdentifierFromSecurityContext();
+    if (!userId.isPresent()) {
+      return ResponseDTO.newResponse(ExecutionResponse.<CountOverview>builder()
+                                         .executionStatus(ExecutionStatus.FAILURE)
+                                         .executionMessage("Failed to get userId")
+                                         .build());
+    }
+    return ResponseDTO.newResponse(
+        overviewDashboardService.getCountOverview(accountIdentifier, userId.get(), startInterval, endInterval));
   }
 }
