@@ -8,6 +8,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.delegate.beans.DelegateTaskAbortEvent;
 import io.harness.serializer.JsonUtils;
 
+import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.DelegateTaskBroadcast;
 import software.wings.beans.PerpetualTaskBroadcastEvent;
 import software.wings.service.intfc.DelegateService;
@@ -21,6 +22,7 @@ import org.atmosphere.cpr.BroadcastFilter.BroadcastAction.ACTION;
 import org.atmosphere.cpr.BroadcastFilterAdapter;
 import org.jetbrains.annotations.NotNull;
 
+@Slf4j
 public class DelegateEventFilter extends BroadcastFilterAdapter {
   @Inject private DelegateService delegateService;
   @Inject private DelegateTaskServiceClassic delegateTaskServiceClassic;
@@ -30,7 +32,7 @@ public class DelegateEventFilter extends BroadcastFilterAdapter {
     AtmosphereRequest req = r.getRequest();
     String delegateId = req.getParameter("delegateId");
     String version = req.getHeader("Version");
-
+    log.info("Received request with  version Id {}", version);
     if (message instanceof DelegateTaskBroadcast) {
       DelegateTaskBroadcast broadcast = (DelegateTaskBroadcast) message;
 
