@@ -61,6 +61,7 @@ import software.wings.app.TemplateModule;
 import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
 import software.wings.graphql.provider.QueryLanguageProvider;
+import software.wings.scheduler.LdapSyncJobConfig;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -175,6 +176,8 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
                                            .org("testOrg")
                                            .project("testProject")
                                            .build());
+    configuration.setLdapSyncJobConfig(
+        LdapSyncJobConfig.builder().defaultCronExpression("0 0 23 ? * SAT *").poolSize(3).syncInterval(15).build());
     return configuration;
   }
 

@@ -309,6 +309,7 @@ import software.wings.ratelimit.DelegateRequestRateLimiter;
 import software.wings.resources.graphql.GraphQLRateLimiter;
 import software.wings.resources.graphql.GraphQLUtils;
 import software.wings.scheduler.BackgroundJobScheduler;
+import software.wings.scheduler.LdapSyncJobConfig;
 import software.wings.scheduler.ServiceJobScheduler;
 import software.wings.scim.ScimGroupService;
 import software.wings.scim.ScimGroupServiceImpl;
@@ -810,6 +811,12 @@ public class WingsModule extends AbstractModule implements ServersModule {
   @Singleton
   RedisConfig redisAtmoshphereConfig() {
     return configuration.getRedisAtmosphereConfig();
+  }
+
+  @Provides
+  @Singleton
+  LdapSyncJobConfig ldapSyncJobConfig() {
+    return configuration.getLdapSyncJobConfig();
   }
 
   @Provides

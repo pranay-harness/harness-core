@@ -35,6 +35,7 @@ public class UserInfo {
   String signupAction;
   String edition;
   String billingFrequency;
+  UtmInfo utmInfo;
 
   public boolean isLocked() {
     return this.locked;

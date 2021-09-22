@@ -23,9 +23,9 @@ import io.harness.exception.WingsException;
 import io.harness.ng.core.dto.AccountDTO;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserRequestDTO;
+import io.harness.ng.core.user.UtmInfo;
 import io.harness.notification.templates.PredefinedTemplate;
 import io.harness.repositories.SignupVerificationTokenRepository;
-import io.harness.signup.data.UtmInfo;
 import io.harness.signup.dto.OAuthSignupDTO;
 import io.harness.signup.dto.SignupDTO;
 import io.harness.signup.dto.SignupInviteDTO;
@@ -150,6 +150,7 @@ public class SignupServiceImpl implements SignupService {
                                         .signupAction(dto.getSignupAction())
                                         .edition(dto.getEdition())
                                         .billingFrequency(dto.getBillingFrequency())
+                                        .utmInfo(dto.getUtmInfo())
                                         .build();
     try {
       getResponse(userClient.createNewSignupInvite(signupRequest));
@@ -161,7 +162,7 @@ public class SignupServiceImpl implements SignupService {
       throw e;
     }
 
-    sendSucceedInvite(dto.getEmail());
+    sendSucceedInvite(dto.getEmail(), dto.getUtmInfo());
     executorService.submit(() -> {
       SignupVerificationToken verificationToken = generateNewToken(dto.getEmail());
       try {
@@ -198,17 +199,19 @@ public class SignupServiceImpl implements SignupService {
       throw new InvalidRequestException("Verification token expired, please resend verify email");
     }
 
+    UserInfo userInfo = null;
     try {
-      UserInfo userInfo = getResponse(userClient.completeSignupInvite(verificationToken.getEmail()));
+      userInfo = getResponse(userClient.completeSignupInvite(verificationToken.getEmail()));
       verificationTokenRepository.delete(verificationToken);
 
-      sendSucceedTelemetryEvent(
-          userInfo.getEmail(), null, userInfo.getDefaultAccountId(), userInfo, SignupType.SIGNUP_FORM_FLOW);
+      sendSucceedTelemetryEvent(userInfo.getEmail(), userInfo.getUtmInfo(), userInfo.getDefaultAccountId(), userInfo,
+          SignupType.SIGNUP_FORM_FLOW);
+      UserInfo finalUserInfo = userInfo;
       executorService.submit(() -> {
         try {
-          String url = generateLoginUrl(userInfo.getDefaultAccountId());
+          String url = generateLoginUrl(finalUserInfo.getDefaultAccountId());
           signupNotificationHelper.sendSignupNotification(
-              userInfo, EmailType.CONFIRM, PredefinedTemplate.SIGNUP_CONFIRMATION.getIdentifier(), url);
+              finalUserInfo, EmailType.CONFIRM, PredefinedTemplate.SIGNUP_CONFIRMATION.getIdentifier(), url);
         } catch (URISyntaxException e) {
           log.error("Failed to generate login url", e);
         }
@@ -218,7 +221,8 @@ public class SignupServiceImpl implements SignupService {
       log.info("Completed NG signup for {}", userInfo.getEmail());
       return userInfo;
     } catch (Exception e) {
-      sendFailedTelemetryEvent(verificationToken.getEmail(), null, e, null, "Complete Signup Invite");
+      sendFailedTelemetryEvent(verificationToken.getEmail(), userInfo != null ? userInfo.getUtmInfo() : null, e, null,
+          "Complete Signup Invite");
       throw e;
     }
   }
@@ -482,10 +486,11 @@ public class SignupServiceImpl implements SignupService {
     log.info("Signup telemetry sent");
   }
 
-  private void sendSucceedInvite(String email) {
+  private void sendSucceedInvite(String email, UtmInfo utmInfo) {
     HashMap<String, Object> properties = new HashMap<>();
     properties.put("email", email);
     properties.put("startTime", String.valueOf(Instant.now().toEpochMilli()));
+    addUtmInfoToProperties(utmInfo, properties);
     telemetryReporter.sendTrackEvent(SUCCEED_SIGNUP_INVITE_NAME, email, UNDEFINED_ACCOUNT_ID, properties,
         ImmutableMap.<Destination, Boolean>builder()
             .put(Destination.SALESFORCE, true)
