@@ -15,9 +15,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
-import io.harness.connector.ConnectorResponseDTO;
-import io.harness.connector.services.ConnectorService;
-import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
+import io.harness.connector.ConnectorResourceClient;
 import io.harness.delegate.beans.connector.docker.DockerAuthType;
 import io.harness.delegate.beans.connector.docker.DockerAuthenticationDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
@@ -32,6 +30,7 @@ import io.harness.delegate.task.artifacts.ecr.EcrArtifactDelegateResponse;
 import io.harness.delegate.task.artifacts.response.ArtifactTaskExecutionResponse;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidRequestException;
+import io.harness.network.SafeHttpCall;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ngpipeline.artifact.bean.ArtifactOutcome;
@@ -49,14 +48,20 @@ import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
+@RunWith(PowerMockRunner.class)
 @OwnedBy(PIPELINE)
+@PrepareForTest({SafeHttpCall.class})
 public class ImagePullSecretUtilsTest extends CategoryTest {
   @Mock private EcrImagePullSecretHelper ecrImagePullSecretHelper;
-  @Mock private ConnectorService connectorService;
+  @Mock private ConnectorResourceClient connectorResourceClient;
   @InjectMocks private ImagePullSecretUtils imagePullSecretUtils;
 
   @Before
@@ -73,6 +78,7 @@ public class ImagePullSecretUtilsTest extends CategoryTest {
     final String ecrImagePullSecret =
         "${imageSecret.create(\"https://https://aws_account_id.dkr.ecr.region.amazonaws.com/\", \"AWS\", \"randomtoken\n"
         + "\")}";
+    PowerMockito.mockStatic(SafeHttpCall.class);
     ArtifactOutcome artifactOutcome =
         EcrArtifactOutcome.builder().type(ArtifactSourceConstants.ECR_NAME).connectorRef("account").build();
     Ambiance ambiance = Ambiance.newBuilder()
@@ -94,12 +100,8 @@ public class ImagePullSecretUtilsTest extends CategoryTest {
     ResponseDTO<Optional<ConnectorDTO>> responseDTO = ResponseDTO.newResponse(
         Optional.of(ConnectorDTO.builder().connectorInfo(ConnectorInfoDTO.builder().build()).build()));
 
-    Optional<ConnectorResponseDTO> connectorResponseDTO = Optional.of(
-        ConnectorResponseDTO.builder()
-            .connector(ConnectorInfoDTO.builder().connectorConfig(AwsConnectorDTO.builder().build()).build())
-            .build());
-
-    when(connectorService.get(any(), any(), any(), any())).thenReturn(connectorResponseDTO);
+    when(connectorResourceClient.get(any(), any(), any(), any())).thenReturn(null);
+    when(SafeHttpCall.execute(any())).thenReturn(responseDTO);
     when(ecrImagePullSecretHelper.getBaseNGAccess(any(), any(), any())).thenReturn(baseNGAccess);
     when(ecrImagePullSecretHelper.getEncryptionDetails(any(), any())).thenReturn(encryptionDetails);
     when(ecrImagePullSecretHelper.executeSyncTask(any(), any(), eq(ArtifactTaskType.GET_IMAGE_URL), any(), any()))
@@ -132,18 +134,19 @@ public class ImagePullSecretUtilsTest extends CategoryTest {
                         .build())
             .gcpCredentialType(GcpCredentialType.MANUAL_CREDENTIALS)
             .build();
-    Optional<ConnectorResponseDTO> connectorResponseDTO = Optional.of(
-        ConnectorResponseDTO.builder()
-            .connector(ConnectorInfoDTO.builder()
-                           .connectorConfig(GcpConnectorDTO.builder().credential(connectorCredentialDTO).build())
-                           .build())
-            .build());
-    when(connectorService.get(any(), any(), any(), any())).thenReturn(Optional.empty());
+    ResponseDTO<Optional<ConnectorDTO>> responseDTO = ResponseDTO.newResponse(Optional.of(
+        ConnectorDTO.builder()
+            .connectorInfo(ConnectorInfoDTO.builder()
+                               .connectorConfig(GcpConnectorDTO.builder().credential(connectorCredentialDTO).build())
+                               .build())
+            .build()));
 
+    when(connectorResourceClient.get(any(), any(), any(), any())).thenReturn(null);
     assertThatThrownBy(() -> imagePullSecretUtils.getImagePullSecret(artifactOutcome, ambiance))
         .isInstanceOf(InvalidRequestException.class);
 
-    when(connectorService.get(any(), any(), any(), any())).thenReturn(connectorResponseDTO);
+    PowerMockito.mockStatic(SafeHttpCall.class);
+    when(SafeHttpCall.execute(any())).thenReturn(responseDTO);
     assertEquals(imagePullSecretUtils.getImagePullSecret(artifactOutcome, ambiance),
         "${imageSecret.create(\"us.gcr.io/test-image\", \"_json_key\", ${ngSecretManager.obtain(\"null\", 0)})}");
   }
@@ -171,18 +174,18 @@ public class ImagePullSecretUtilsTest extends CategoryTest {
                              .passwordRef(SecretRefData.builder().identifier("password").build())
                              .build())
             .build();
+    ResponseDTO<Optional<ConnectorDTO>> responseDTO = ResponseDTO.newResponse(
+        Optional.of(ConnectorDTO.builder()
+                        .connectorInfo(ConnectorInfoDTO.builder()
+                                           .connectorConfig(DockerConnectorDTO.builder()
+                                                                .dockerRegistryUrl("index.docker.io")
+                                                                .auth(authenticationDTO)
+                                                                .build())
+                                           .build())
+                        .build()));
 
-    Optional<ConnectorResponseDTO> connectorResponseDTO =
-        Optional.of(ConnectorResponseDTO.builder()
-                        .connector(ConnectorInfoDTO.builder()
-                                       .connectorConfig(DockerConnectorDTO.builder()
-                                                            .dockerRegistryUrl("index.docker.io")
-                                                            .auth(authenticationDTO)
-                                                            .build())
-                                       .build())
-                        .build());
-
-    when(connectorService.get(any(), any(), any(), any())).thenReturn(connectorResponseDTO);
+    PowerMockito.mockStatic(SafeHttpCall.class);
+    when(SafeHttpCall.execute(any())).thenReturn(responseDTO);
     assertEquals(imagePullSecretUtils.getImagePullSecret(artifactOutcome, ambiance),
         "${imageSecret.create(\"index.docker.io\", ${ngSecretManager.obtain(\"null\", 0)}, ${ngSecretManager.obtain(\"null\", 0)})}");
   }

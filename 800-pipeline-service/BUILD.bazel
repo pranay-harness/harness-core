@@ -136,7 +136,6 @@ java_library(
         "//960-yaml-sdk:module",
         "//980-commons:module",
         "//990-commons-test:module",
-        "@maven//:io_grpc_grpc_testing",
         "@maven//:junit_junit",
         "@maven//:org_assertj_assertj_core",
         "@maven//:org_glassfish_jersey_media_jersey_media_multipart",

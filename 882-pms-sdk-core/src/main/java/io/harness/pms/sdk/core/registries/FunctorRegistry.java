@@ -7,12 +7,10 @@ import io.harness.registries.Registry;
 import io.harness.registries.exceptions.DuplicateRegistryException;
 import io.harness.registries.exceptions.UnregisteredKeyAccessException;
 
-import com.google.inject.Singleton;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Singleton
 @OwnedBy(HarnessTeam.PIPELINE)
 public class FunctorRegistry implements Registry<String, SdkFunctor> {
   Map<String, SdkFunctor> registry = new ConcurrentHashMap<>();

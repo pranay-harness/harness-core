@@ -10,7 +10,7 @@ import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.CategoryTest;
+import io.harness.PipelineServiceTestBase;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
@@ -43,7 +43,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 @OwnedBy(HarnessTeam.PIPELINE)
-public class EcrImagePullSecretHelperTest extends CategoryTest {
+public class EcrImagePullSecretHelperTest extends PipelineServiceTestBase {
   @Mock private SecretManagerClientService secretManagerClientService;
   @Mock private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
   @Mock private NgDelegate2TaskExecutor ngDelegate2TaskExecutor;

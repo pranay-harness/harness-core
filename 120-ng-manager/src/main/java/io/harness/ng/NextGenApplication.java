@@ -84,9 +84,9 @@ import io.harness.ng.migration.UserMetadataMigrationProvider;
 import io.harness.ng.webhook.services.api.WebhookEventProcessingService;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.persistence.HPersistence;
+import io.harness.pms.cdng.execution.expression.DummyFunctor;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.events.base.PipelineEventConsumerController;
-import io.harness.pms.expressions.functors.ImagePullSecretFunctor;
 import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
@@ -482,7 +482,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
       try {
         PmsSdkInitHelper.initializeSDKInstance(injector, sdkConfig);
       } catch (Exception e) {
-        log.error("Failed To register pipeline sdk", e);
+        log.error("Failed To register pipeline sdk");
         System.exit(1);
       }
     }
@@ -526,7 +526,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   private Map<String, Class<? extends SdkFunctor>> getSdkFunctors() {
     Map<String, Class<? extends SdkFunctor>> sdkFunctorMap = new HashMap<>();
-    sdkFunctorMap.put(ImagePullSecretFunctor.IMAGE_PULL_SECRET, ImagePullSecretFunctor.class);
+    // For testing. Do not remove.
+    sdkFunctorMap.put("dummy", DummyFunctor.class);
     return sdkFunctorMap;
   }
 

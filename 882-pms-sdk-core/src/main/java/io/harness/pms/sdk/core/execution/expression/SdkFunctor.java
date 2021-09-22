@@ -6,5 +6,5 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public interface SdkFunctor {
-  Object get(Ambiance ambiance, String... args);
+  ExpressionResult get(Ambiance ambiance, String... args);
 }

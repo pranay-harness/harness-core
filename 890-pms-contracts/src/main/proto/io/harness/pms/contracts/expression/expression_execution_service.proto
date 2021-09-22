@@ -18,8 +18,6 @@ message ExpressionRequest {
 message ExpressionResponse {
   string value = 1;
   ErrorResponse errorResponse = 2;
-  bool isPrimitive = 3;
-  string primitiveType = 4;
 }
 
 message ErrorResponse {
