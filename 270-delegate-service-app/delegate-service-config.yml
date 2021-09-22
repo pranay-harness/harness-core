@@ -349,4 +349,92 @@ jreConfigs:
     jreTarPath: jre/openjdk-8u242/jre_x64_${OS}_8u242b08.tar.gz
     alpnJarPath: tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar
 
+techStacks:
+  Deployment-Kubernetes:
+    title: Connect to a Kubernetes Cluster
+    url: https://docs.harness.io/article/whwnovprrb-cloud-providers#kubernetes_cluster
+  Deployment-AWS:
+    title: Connect to Amazon Web Services
+    url: https://docs.harness.io/article/whwnovprrb-cloud-providers#amazon_web_services_aws_cloud
+  Deployment-GCP:
+    title: Connect to Google Cloud Provider
+    url: https://docs.harness.io/article/whwnovprrb-cloud-providers#google_cloud_platform_gcp
+  Deployment-Azure:
+    title: Connect to Microsoft Azure
+    url: https://docs.harness.io/article/whwnovprrb-cloud-providers#microsoft_azure
+  Deployment-Pivotal:
+    title: Connect to Pivotal Cloud Foundry
+    url: https://docs.harness.io/article/whwnovprrb-cloud-providers#pivotal_cloud_foundry_pcf
+  Deployment-Datacenter:
+    title: Connect to a physical data center
+    url: https://docs.harness.io/article/whwnovprrb-cloud-providers#physical_data_center
+  Deployment-General:
+    title: Connect to a cloud provider
+    url: https://docs.harness.io/article/whwnovprrb-cloud-providers
+  Artifact-S3:
+    title: Connect to Amazon S3
+    url: https://docs.harness.io/article/7dghbx1dbl-configuring-artifact-server#aws_s3_and_google_cloud_storage
+  Artifact-GCS:
+    title: Connect to Google Cloud Storage
+    url: https://docs.harness.io/article/7dghbx1dbl-configuring-artifact-server#aws_s3_and_google_cloud_storage
+  Artifact-DockerHub:
+    title: Connect to a Docker Repository
+    url: https://docs.harness.io/article/7dghbx1dbl-configuring-artifact-server#docker_registry
+  Artifact-Nexus:
+    title: Connect to Nexus
+    url: https://docs.harness.io/article/7dghbx1dbl-configuring-artifact-server#nexus
+  Artifact-SFTP:
+    title: Connect to an SFTP server
+    url: https://docs.harness.io/article/7dghbx1dbl-configuring-artifact-server#sftp
+  Artifact-SMB:
+    title: Connect to an SMB server
+    url: https://docs.harness.io/article/7dghbx1dbl-configuring-artifact-server#smb
+  Artifact-Artifactory:
+    title: Connect to Artifactory
+    url: https://docs.harness.io/article/7dghbx1dbl-configuring-artifact-server#artifactory
+  Artifact-Jenkins:
+    title: Connect to Jenkins
+    url: https://docs.harness.io/article/7dghbx1dbl-configuring-artifact-server#jenkins
+  Artifact-General:
+    title: Connect to an artifact repository
+    url: https://docs.harness.io/article/7dghbx1dbl-configuring-artifact-server
+  Monitoring-AppDynamics:
+    title: Connect to AppDynamics
+    url: https://docs.harness.io/article/ps716zaurs-use-app-dynamics
+  Monitoring-NewRelic:
+    title: Connect to NewRelic
+    url: https://docs.harness.io/article/uw64fijctw-new-relic-cv
+  Monitoring-DynaTrace:
+    title: Connect to Dynatrace
+    url: https://docs.harness.io/article/ftp6uphgs1-dynatrace-verification
+  Monitoring-DataDog:
+    title: Connect to Datadog
+    url: https://docs.harness.io/article/rougsx3tir-datadog-verification
+  Monitoring-Prometheus:
+    title: Connect to Prometheus
+    url: https://docs.harness.io/article/dzehr6um67-prometheus-cv
+  Monitoring-CloudWatch:
+    title: Connect to Cloudwatch
+    url: https://docs.harness.io/article/fnl9wjmd4c-cloud-watch-verification
+  Monitoring-Bugsnag:
+    title: Connect to Bugsnag
+    url: https://docs.harness.io/article/p4lxsooom7-bugsnag-verification
+  Monitoring-Splunk:
+    title: Connect to Splunk
+    url: https://docs.harness.io/article/fq1ompej1b-splunk-verification
+  Monitoring-ELK:
+    title: Connect to ELK Elasticsearch
+    url: https://docs.harness.io/article/xpftsz2cte-elk-elasticsearch-cv
+  Monitoring-SumoLogic:
+    title: Connect to Sumologic
+    url: https://docs.harness.io/article/9kqxldnrmx-sumo-logic-verification
+  Monitoring-StackDriver:
+    title: Connect to Stackdriver
+    url: https://docs.harness.io/article/g5l03na9zo-stackdriver-verification
+  Monitoring-Custom:
+    title: Connect to custom metrics
+    url: https://docs.harness.io/article/27w7uso9r4-new-relic-insights-cv
+  Monitoring-General:
+    title: Connect to a verification provider
+    url: https://docs.harness.io/article/r6ut6tldy0-verification-providers
 
