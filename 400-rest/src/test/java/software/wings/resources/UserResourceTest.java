@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.rule.OwnerRule.DEEPAK;
+import static io.harness.rule.OwnerRule.MEENAKSHI;
 import static io.harness.rule.OwnerRule.MEHUL;
 import static io.harness.rule.OwnerRule.MOHIT;
 import static io.harness.rule.OwnerRule.RAMA;
@@ -14,11 +15,13 @@ import static software.wings.signup.BugsnagConstants.FREEMIUM;
 import static software.wings.signup.BugsnagConstants.ONBOARDING;
 
 import static java.util.Arrays.asList;
+import static javax.ws.rs.client.Entity.form;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
@@ -60,13 +63,21 @@ import software.wings.utils.ResourceTestRule;
 
 import com.google.inject.Inject;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import javax.cache.Cache;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -98,6 +109,7 @@ public class UserResourceTest extends WingsBaseTest {
   static final AccountPermissionUtils ACCOUNT_PERMISSION_UTILS = mock(AccountPermissionUtils.class);
   private static final List<BugsnagTab> tab =
       Collections.singletonList(BugsnagTab.builder().tabName(CLUSTER_TYPE).key(FREEMIUM).value(ONBOARDING).build());
+  private static final HttpServletRequest httpServletRequest = mock(HttpServletRequest.class);
   @Inject @InjectMocks private UserResource userResource;
   @Mock private BugsnagErrorReporter bugsnagErrorReporter;
 
@@ -110,6 +122,12 @@ public class UserResourceTest extends WingsBaseTest {
           .instance(new UserResource(USER_SERVICE, AUTH_SERVICE, ACCOUNT_SERVICE, ACCOUNT_PERMISSION_UTILS,
               AUTHENTICATION_MANAGER, TWO_FACTOR_AUTHENTICATION_MANAGER, CACHES, HARNESS_USER_GROUP_SERVICE,
               USER_GROUP_SERVICE, MAIN_CONFIGURATION, ACCOUNT_PASSWORD_EXPIRATION_JOB, RE_CAPTCHA_VERIFIER))
+          .instance(new AbstractBinder() {
+            @Override
+            protected void configure() {
+              bind(httpServletRequest).to(HttpServletRequest.class);
+            }
+          })
           .type(WingsExceptionMapper.class)
           .type(MultiPartFeature.class)
           .build();
@@ -189,6 +207,39 @@ public class UserResourceTest extends WingsBaseTest {
     UserInvite userInvite = anUserInvite().build();
     userResource.inviteUsers(accountId, userInvite);
     verify(USER_SERVICE, times(1)).inviteUsers(any());
+  }
+
+  @Test
+  @Owner(developers = MEENAKSHI)
+  @Category(UnitTests.class)
+  public void testAaccountIDIsOptionalInSAMLLogin() throws URISyntaxException {
+    String accountId = UUIDGenerator.generateUuid();
+    String relayState = "test-relay-state";
+    String samlResponse = "test-saml-response";
+    MultivaluedMap<String, String> requestEntity = new MultivaluedHashMap<>();
+    requestEntity.add("SAMLResponse", samlResponse);
+    requestEntity.add("RelayState", relayState);
+    List<MediaType> list = new ArrayList<>();
+    list.add(MediaType.valueOf(MediaType.TEXT_HTML));
+    list.add(MediaType.valueOf(MediaType.APPLICATION_JSON));
+    when(httpServletRequest.getHeader(com.google.common.net.HttpHeaders.REFERER)).thenReturn("headervalue");
+    when(AUTHENTICATION_MANAGER.samlLogin(eq("headervalue"), anyString(), anyString(), anyString()))
+        .thenReturn(Response.status(200).build());
+    Response responseWithAccountId = RESOURCES.client()
+                                         .target("/users/saml-login")
+                                         .queryParam("accountId", accountId)
+                                         .request()
+                                         .header("Content-Type", MediaType.APPLICATION_FORM_URLENCODED)
+                                         .post(form(requestEntity));
+
+    assertThat(responseWithAccountId.getStatus()).isEqualTo(200);
+
+    Response responseWithoutAccountId = RESOURCES.client()
+                                            .target("/users/saml-login")
+                                            .request()
+                                            .header("Content-Type", MediaType.APPLICATION_FORM_URLENCODED)
+                                            .post(form(requestEntity));
+    assertThat(responseWithoutAccountId.getStatus()).isEqualTo(200);
   }
 
   @Test

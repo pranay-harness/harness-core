@@ -486,6 +486,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
                 fieldName = "pipelineId";
               } else if (permissionType == PermissionType.DEPLOYMENT) {
                 fieldName = "workflowId";
+              } else if (permissionType == PermissionType.APP_TEMPLATE) {
+                fieldName = "templateId";
               }
 
               return fieldName;

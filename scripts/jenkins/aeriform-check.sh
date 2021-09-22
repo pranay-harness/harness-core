@@ -123,17 +123,3 @@ then
     --exit-code
 fi
 
-RENAMED_FILES=$(git diff --diff-filter=R --name-status ${BASE_SHA}..HEAD | wc -l)
-
-if [ $RENAMED_FILES -eq 0 ]
-then
-  OWNED_BY_FIXES=$(git diff ${BASE_SHA}..HEAD | grep '+@OwnedBy' | wc -l)
-  if [ $OWNED_BY_FIXES -lt 5 ]
-  then
-    scripts/bazel/aeriform.sh analyze \
-      --team-filter ${HARNESS_TEAM} \
-      --kind-filter AutoAction \
-      --auto-actionable-command \
-      --exit-code
-  fi
-fi

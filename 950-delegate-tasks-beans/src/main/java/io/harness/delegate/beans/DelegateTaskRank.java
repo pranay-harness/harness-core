@@ -1,6 +1,14 @@
 package io.harness.delegate.beans;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
-@TargetModule(HarnessModule._955_DELEGATE_BEANS) public enum DelegateTaskRank { OPTIONAL, IMPORTANT, CRITICAL }
+@TargetModule(HarnessModule._955_DELEGATE_BEANS)
+@OwnedBy(HarnessTeam.DEL)
+public enum DelegateTaskRank {
+  OPTIONAL,
+  IMPORTANT,
+  CRITICAL
+}

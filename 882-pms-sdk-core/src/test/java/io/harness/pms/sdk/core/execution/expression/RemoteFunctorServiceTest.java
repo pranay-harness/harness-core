@@ -36,8 +36,7 @@ public class RemoteFunctorServiceTest extends CategoryTest {
   @Mock FunctorRegistry functorRegistry;
   @Mock ExceptionManager exceptionManager;
   @InjectMocks RemoteFunctorService remoteFunctorService;
-  String responseYaml =
-      "{\"__recast\":\"io.harness.pms.sdk.core.execution.expression.StringResult\",\"value\":\"dummy\"}";
+  String responseYaml = "{\"value\":\"dummy\"}";
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);

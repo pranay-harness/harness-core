@@ -79,6 +79,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
   // Resolved StepParameters stored just before invoking step.
   Map<String, Object> resolvedStepParameters;
   Map<String, Object> resolvedStepInputs;
+  PmsStepParameters resolvedInputs;
 
   // For Wait Notify
   String notifyId;
@@ -204,6 +205,11 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
                  .field(NodeExecutionKeys.status)
                  .field(NodeExecutionKeys.oldRetry)
                  .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("planExecutionId_step_category_idx")
+                 .field(NodeExecutionKeys.planExecutionId)
+                 .field(NodeExecutionKeys.stepCategory)
+                 .build())
         .add(CompoundMongoIndex.builder().name("previous_id_idx").field(NodeExecutionKeys.previousId).build())
         .build();
   }
@@ -214,8 +220,11 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
   }
 
   public PmsStepParameters getPmsStepParameters() {
-    return PmsStepParameters.parse(
-        OrchestrationMapBackwardCompatibilityUtils.extractToOrchestrationMap(resolvedStepInputs));
+    if (resolvedStepInputs != null) {
+      return PmsStepParameters.parse(
+          OrchestrationMapBackwardCompatibilityUtils.extractToOrchestrationMap(resolvedStepInputs));
+    }
+    return PmsStepParameters.parse(resolvedInputs);
   }
 
   public OrchestrationMap getPmsProgressData() {

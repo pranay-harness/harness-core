@@ -95,9 +95,6 @@ import io.harness.configuration.DeployMode;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.data.structure.NullSafeImmutableMap;
 import io.harness.data.structure.UUIDGenerator;
-import io.harness.delegate.AccountId;
-import io.harness.delegate.DelegateId;
-import io.harness.delegate.DelegateProfileExecutedAtResponse;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateInstanceStatus;
@@ -198,7 +195,6 @@ import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.PosixFilePermission;
 import java.time.Clock;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
@@ -292,7 +288,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private static final String HOST_NAME = getLocalHostName();
   private static final String DELEGATE_TYPE = System.getenv().get("DELEGATE_TYPE");
   private static final String DELEGATE_GROUP_NAME = System.getenv().get("DELEGATE_GROUP_NAME");
-  private static final String NONE = "NONE";
   private final String delegateGroupId = System.getenv().get("DELEGATE_GROUP_ID");
 
   private static final String START_SH = "start.sh";
@@ -313,7 +308,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   public static final String JAVA_VERSION = "java.version";
 
-  protected static volatile String delegateId;
+  private static volatile String delegateId;
 
   @Inject private DelegateConfiguration delegateConfiguration;
   @Inject private RestartableServiceManager restartableServiceManager;
@@ -383,7 +378,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private final AtomicBoolean switchStorage = new AtomicBoolean(false);
   private final AtomicBoolean reconnectingSocket = new AtomicBoolean(false);
   private final AtomicBoolean closingSocket = new AtomicBoolean(false);
-  private final AtomicBoolean initialProfileScriptExecuted = new AtomicBoolean(false);
 
   private Client client;
   private Socket socket;
@@ -392,7 +386,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private long startTime;
   private long upgradeStartedAt;
   private long stoppedAcquiringAt;
-  protected String accountId;
+  private String accountId;
   private long watcherVersionMatchedAt = System.currentTimeMillis();
   private long delegateJreVersionChangedAt;
 
@@ -1102,17 +1096,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                 ()
                     -> delegateExecute(
                         delegateAgentManagerClient.checkForProfile(delegateId, accountId, profileId, updated)));
-        if (response == null || response.getResource() == null) {
-          initialProfileScriptExecuted.set(resolveProfileExecuted(profileParams));
-        }
         if (response != null) {
-          if (response.getResource() != null) {
-            initialProfileScriptExecuted.set(response.getResource().getProfileLastExecutedOnDelegate() != 0L);
-            if (isEmpty(response.getResource().getProfileId()) || response.getResource().getProfileId().equals(NONE)) {
-              initialProfileScriptExecuted.set(true);
-              clearProfileExecutedAt();
-            }
-          }
           applyProfile(response.getResource());
         }
       } catch (UncheckedTimeoutException ex) {
@@ -1135,12 +1119,12 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     return null;
   }
 
-  protected void applyProfile(DelegateProfileParams profile) {
+  private void applyProfile(DelegateProfileParams profile) {
     if (profile != null && executingProfile.compareAndSet(false, true)) {
       File profileFile = new File("profile");
       if (acquireLock(profileFile, ofMinutes(5))) {
         try {
-          if (NONE.equals(profile.getProfileId())) {
+          if ("NONE".equals(profile.getProfileId())) {
             FileUtils.deleteQuietly(profileFile);
             FileUtils.deleteQuietly(new File("profile.result"));
             return;
@@ -1175,11 +1159,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                                     }
                                                   });
             exitCode = processExecutor.execute().getExitValue();
-            if (exitCode == 0) {
-              initialProfileScriptExecuted.set(true);
-            }
-          } else {
-            initialProfileScriptExecuted.set(true);
           }
 
           saveProfile(profile, result);
@@ -1203,32 +1182,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         }
       }
     }
-  }
-
-  private void clearProfileExecutedAt() {
-    if (null != delegateAgentManagerClient) {
-      delegateServiceGrpcAgentClient.clearProfileExecutedAt(
-          AccountId.newBuilder().setId(accountId).build(), DelegateId.newBuilder().setId(delegateId).build());
-      log.info("Profile script execution initiated on delegate instance {}:{} ", accountId, delegateId);
-    }
-  }
-
-  protected boolean resolveProfileExecuted(DelegateProfileParams profileParams) {
-    long profileExecutedAt = profileParams != null ? profileParams.getProfileLastUpdatedAt() : 0L;
-    String profileId = profileParams != null ? profileParams.getProfileId() : null;
-    DelegateProfileExecutedAtResponse paramsFromManager = fetchProfileFromManager();
-    if (paramsFromManager != null) {
-      profileExecutedAt = paramsFromManager.getProfileExecutedAt();
-      profileId = paramsFromManager.getProfileId();
-    }
-    log.info("Profile script last executed on delegate {}:{} at {}", accountId, delegateId,
-        Instant.ofEpochMilli(profileExecutedAt));
-    return isEmpty(profileId) || NONE.equals(profileId) || profileExecutedAt != 0L;
-  }
-
-  private DelegateProfileExecutedAtResponse fetchProfileFromManager() {
-    return delegateServiceGrpcAgentClient.fetchProfileExecutedAt(
-        AccountId.newBuilder().setId(accountId).build(), DelegateId.newBuilder().setId(delegateId).build());
   }
 
   private void saveProfile(DelegateProfileParams profile, List<String> result) {
@@ -1381,10 +1334,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   private void pollForTask() {
-    if (!initialProfileScriptExecuted.get()) {
-      log.info("Initial profile script is still not applied. Delegate will not acquire tasks");
-      return;
-    }
     if (pollingForTasks.get() && shouldContactManager()) {
       try {
         DelegateTaskEventsResponse taskEventsResponse =
@@ -1849,7 +1798,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
   }
 
-  protected void dispatchDelegateTask(DelegateTaskEvent delegateTaskEvent) {
+  private void dispatchDelegateTask(DelegateTaskEvent delegateTaskEvent) {
     if (!shouldContactManager()) {
       return;
     }
@@ -1865,11 +1814,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     if (frozen.get()) {
       log.info(
           "Delegate process with detected time out of sync or with revoked token is running. Won't acquire tasks.");
-      return;
-    }
-
-    if (!initialProfileScriptExecuted.get()) {
-      log.info("Initial profile script is still not applied. Delegate will not acquire tasks");
       return;
     }
 
@@ -2070,7 +2014,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     return delegateConnectionResultDetails;
   }
 
-  protected void executeTask(@NotNull DelegateTaskPackage delegateTaskPackage) {
+  private void executeTask(@NotNull DelegateTaskPackage delegateTaskPackage) {
     TaskData taskData = delegateTaskPackage.getData();
 
     if (currentlyExecutingTasks.containsKey(delegateTaskPackage.getDelegateTaskId())) {
@@ -2300,7 +2244,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     };
   }
 
-  protected void updateCounterIfLessThanCurrent(AtomicInteger counter, int current) {
+  private void updateCounterIfLessThanCurrent(AtomicInteger counter, int current) {
     counter.updateAndGet(value -> Math.max(value, current));
   }
 
