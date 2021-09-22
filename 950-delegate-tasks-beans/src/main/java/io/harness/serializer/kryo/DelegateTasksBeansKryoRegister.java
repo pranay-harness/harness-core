@@ -16,7 +16,6 @@ import io.harness.capability.SmtpParameters;
 import io.harness.capability.SocketConnectivityParameters;
 import io.harness.capability.SystemEnvParameters;
 import io.harness.capability.TestingCapability;
-import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateStringProgressData;
 import io.harness.delegate.beans.DelegateStringResponseData;
 import io.harness.delegate.beans.DelegateTaskDetails;
@@ -468,7 +467,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(ChartMuseumCapability.class, 19038);
     kryo.register(TaskType.class, 5005);
     kryo.register(CommandExecutionResult.class, 5036);
-    kryo.register(DelegateMetaInfo.class, 5372);
     kryo.register(DelegateRetryableException.class, 5521);
     kryo.register(DelegateTaskDetails.class, 19044);
     kryo.register(DelegateTaskNotifyResponseData.class, 5373);
