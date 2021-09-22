@@ -26,7 +26,7 @@ public class CDLandingDashboardResourceClientModule extends AbstractModule {
   }
 
   public static CDLandingDashboardResourceClientModule getInstance(
-          ServiceHttpClientConfig serviceHttpClientConfig, String serviceSecret, String clientId) {
+      ServiceHttpClientConfig serviceHttpClientConfig, String serviceSecret, String clientId) {
     if (instance == null) {
       instance = new CDLandingDashboardResourceClientModule(serviceHttpClientConfig, serviceSecret, clientId);
     }
