@@ -28,7 +28,7 @@ public class ManageApplicationTemplatePermissionMigration implements Migration {
           userGroupService.updatePermissions(userGroup);
         } catch (Exception e) {
           log.error("{} Migration failed for user group with id {} in account {}", DEBUG_MESSAGE, userGroup.getUuid(),
-              userGroup.getAccountId());
+              userGroup.getAccountId(), e);
         }
       }
     } catch (Exception e) {
