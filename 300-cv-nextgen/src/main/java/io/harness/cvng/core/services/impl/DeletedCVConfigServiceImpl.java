@@ -27,8 +27,8 @@ import io.harness.persistence.PersistentEntity;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
+import java.time.Clock;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -51,10 +51,11 @@ public class DeletedCVConfigServiceImpl implements DeletedCVConfigService {
   @Inject private HPersistence hPersistence;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
+  @Inject private Clock clock;
 
   @Override
   public DeletedCVConfig save(DeletedCVConfig deletedCVConfig, Duration toDeleteAfterDuration) {
-    deletedCVConfig.setDataCollectionTaskIteration(Instant.now().plus(toDeleteAfterDuration).toEpochMilli());
+    deletedCVConfig.setDataCollectionTaskIteration(clock.instant().plus(toDeleteAfterDuration).toEpochMilli());
     hPersistence.save(deletedCVConfig);
     return deletedCVConfig;
   }
