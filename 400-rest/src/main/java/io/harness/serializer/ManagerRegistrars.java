@@ -2,7 +2,9 @@ package io.harness.serializer;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.serializer.morphia.CECommonsMorphiaRegistrar;
 import io.harness.morphia.CgOrchestrationBeansMorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrar;
@@ -33,6 +35,7 @@ import org.springframework.core.convert.converter.Converter;
 
 @UtilityClass
 @OwnedBy(PL)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 public class ManagerRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
