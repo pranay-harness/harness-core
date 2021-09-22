@@ -131,7 +131,7 @@ public class CodeBaseTaskStep implements TaskExecutable<CodeBaseTaskStepParamete
       if (scmGitRefTaskResponseData == null && isNotEmpty(prNumber)) {
         throw new CIStageExecutionException(
             "Failed to retrieve commits info, Validate codebase connector api token is correct and input PR number: "
-            + prNumber + "exists in repo ");
+            + prNumber + " exists in repo ");
       }
       log.error("Failed to retrieve codebase info from returned delegate response");
     }

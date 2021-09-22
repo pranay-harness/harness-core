@@ -15,6 +15,7 @@ public class CIPipelineModuleInfo implements PipelineModuleInfo {
   private CIWebhookInfoDTO ciExecutionInfoDTO;
   private String branch;
   private String repoName;
+  private String triggerRepoName;
   private String tag;
   private String prNumber;
   private String buildType;
