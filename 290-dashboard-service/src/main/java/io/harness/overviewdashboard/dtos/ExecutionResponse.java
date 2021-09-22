@@ -9,7 +9,8 @@ import lombok.Value;
 @Value
 @Builder
 @OwnedBy(HarnessTeam.PL)
-public class ServiceInfo {
-  String serviceName;
-  String serviceInfo;
+public class ExecutionResponse<T> {
+  T response;
+  ExecutionStatus executionStatus;
+  String executionMessage;
 }
