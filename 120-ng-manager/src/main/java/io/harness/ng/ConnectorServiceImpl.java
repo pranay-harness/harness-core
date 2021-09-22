@@ -223,18 +223,17 @@ public class ConnectorServiceImpl implements ConnectorService {
              connector.getConnectorInfo().getOrgIdentifier(), accountIdentifier, OVERRIDE_ERROR);
          AutoLogContext ignore2 =
              new ConnectorLogContext(connector.getConnectorInfo().getIdentifier(), OVERRIDE_ERROR)) {
-      boolean isDefaultBranchConnector = gitSyncSdkService.isDefaultBranch(accountIdentifier,
-          connector.getConnectorInfo().getOrgIdentifier(), connector.getConnectorInfo().getProjectIdentifier());
       ConnectorInfoDTO connectorInfo = connector.getConnectorInfo();
-
       connectorInfo.getConnectorConfig().validate();
       validateTheUpdateRequestIsValid(connectorInfo, accountIdentifier);
-      if (GitContextHelper.isUpdateToNewBranch()) {
+      if (GitContextHelper.isUpdateToNewBranch() && gitChangeType != ChangeType.ADD) {
         return create(connector, accountIdentifier, ChangeType.MODIFY);
       }
-
       ConnectorResponseDTO connectorResponse =
           getConnectorService(connectorInfo.getConnectorType()).update(connector, accountIdentifier, gitChangeType);
+
+      boolean isDefaultBranchConnector = gitSyncSdkService.isDefaultBranch(accountIdentifier,
+          connector.getConnectorInfo().getOrgIdentifier(), connector.getConnectorInfo().getProjectIdentifier());
       if (isDefaultBranchConnector) {
         ConnectorInfoDTO savedConnector = connectorResponse.getConnector();
         createConnectorUpdateActivity(accountIdentifier, savedConnector);
