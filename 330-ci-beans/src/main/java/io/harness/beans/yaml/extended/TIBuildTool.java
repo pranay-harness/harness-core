@@ -15,7 +15,7 @@ public enum TIBuildTool {
 
   private final String yamlName;
 
-  @JsonCreator
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
   public static TIBuildTool getBuildTool(@JsonProperty("buildTool") String yamlName) {
     for (TIBuildTool buildTool : TIBuildTool.values()) {
       if (buildTool.yamlName.equalsIgnoreCase(yamlName)) {

@@ -17,6 +17,7 @@ import io.harness.yaml.extended.ci.container.ContainerResource;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
 import java.util.Map;
@@ -38,10 +39,10 @@ import org.springframework.data.annotation.TypeAlias;
 public class CIServiceInfo implements DependencySpecType {
   @JsonIgnore public static final CIDependencyType type = CIDependencyType.SERVICE;
 
-  @Getter(onMethod = @__(@JsonIgnore)) @JsonIgnore @NotNull @EntityIdentifier private String identifier;
-  @Getter(onMethod = @__(@JsonIgnore)) @JsonIgnore private String name;
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) @NotNull @EntityIdentifier private String identifier;
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) private String name;
 
-  @Getter(onMethod = @__(@JsonIgnore)) @JsonIgnore private Integer grpcPort;
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) private Integer grpcPort;
   @YamlSchemaTypes(value = {string})
   @ApiModelProperty(dataType = STRING_MAP_CLASSPATH)
   private ParameterField<Map<String, String>> envVariables;

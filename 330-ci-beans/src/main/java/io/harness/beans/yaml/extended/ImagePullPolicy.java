@@ -10,7 +10,7 @@ public enum ImagePullPolicy {
   @JsonProperty("IfNotPresent") If_NOT_PRESENT("IfNotPresent");
   private final String yamlName;
 
-  @JsonCreator
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
   public static ImagePullPolicy getImagePullPolicy(@JsonProperty("pullPolicy") String yamlName) {
     for (ImagePullPolicy pullPolicy : ImagePullPolicy.values()) {
       if (pullPolicy.yamlName.equalsIgnoreCase(yamlName)) {

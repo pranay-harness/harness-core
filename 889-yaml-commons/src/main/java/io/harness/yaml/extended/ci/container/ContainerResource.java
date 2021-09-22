@@ -27,7 +27,7 @@ public class ContainerResource {
   @NotNull Limits limits;
 
   @Builder
-  @JsonCreator
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
   public ContainerResource(@JsonProperty("limits") Limits limits) {
     this.limits = Optional.ofNullable(limits).orElse(Limits.builder().build());
   }
@@ -44,7 +44,6 @@ public class ContainerResource {
     private ParameterField<String> cpu;
 
     @Builder
-    @JsonCreator
     public Limits(
         @JsonProperty("memory") ParameterField<String> memory, @JsonProperty("cpu") ParameterField<String> cpu) {
       this.memory = memory;

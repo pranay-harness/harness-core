@@ -23,7 +23,7 @@ public class MemoryQuantity {
   private String numericValue;
   private MemoryQuantityUnit unit;
 
-  @JsonCreator
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
   public static MemoryQuantity fromString(String quantity) {
     if (isEmpty(quantity)) {
       return null;
