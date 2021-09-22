@@ -26,7 +26,7 @@ public class PMSLandingDashboardResourceClientModule extends AbstractModule {
   }
 
   public static PMSLandingDashboardResourceClientModule getInstance(
-          ServiceHttpClientConfig serviceHttpClientConfig, String serviceSecret, String clientId) {
+      ServiceHttpClientConfig serviceHttpClientConfig, String serviceSecret, String clientId) {
     if (instance == null) {
       instance = new PMSLandingDashboardResourceClientModule(serviceHttpClientConfig, serviceSecret, clientId);
     }
