@@ -2,8 +2,8 @@ package io.harness.service.instancesyncperpetualtaskstatus;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.entity.InstanceSyncPerpetualTaskStatus;
-import io.harness.entity.InstanceSyncPerpetualTaskStatus.InstanceSyncPerpetualTaskStatusKeys;
+import io.harness.beans.InstanceSyncPerpetualTaskStatus;
+import io.harness.beans.InstanceSyncPerpetualTaskStatus.InstanceSyncPerpetualTaskStatusKeys;
 import io.harness.mongo.MongoPersistence;
 
 import com.google.inject.Inject;
