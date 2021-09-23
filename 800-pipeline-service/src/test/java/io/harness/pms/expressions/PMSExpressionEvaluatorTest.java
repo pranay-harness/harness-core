@@ -53,6 +53,7 @@ import java.util.Collections;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
+import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -76,36 +77,48 @@ public class PMSExpressionEvaluatorTest extends PipelineServiceTestBase {
 
   @Before
   public void setup() {
+    String nodeExecution1Id = generateUuid();
+    String nodeExecution2Id = generateUuid();
+    String nodeExecution3Id = generateUuid();
+    String nodeExecution4Id = generateUuid();
+    String nodeExecution5Id = generateUuid();
+
     nodeExecution1 = NodeExecution.builder()
-                         .uuid(generateUuid())
+                         .uuid(nodeExecution1Id)
                          .node(preparePlanNode(false, "pipeline", "pipelineValue", "PIPELINE"))
                          .resolvedStepParameters(prepareStepParameters("pipelineResolvedValue"))
                          .build();
     nodeExecution2 = NodeExecution.builder()
-                         .uuid(generateUuid())
+                         .uuid(nodeExecution2Id)
                          .node(preparePlanNode(false, "stages", "stagesValue", null))
                          .resolvedStepParameters(prepareStepParameters("stagesResolvedValue"))
+                         .parentId(nodeExecution1Id)
                          .build();
     nodeExecution3 = NodeExecution.builder()
-                         .uuid(generateUuid())
+                         .uuid(nodeExecution3Id)
                          .node(preparePlanNode(false, "stage", "stageValue", "STAGE"))
                          .resolvedStepParameters(prepareStepParameters("stageResolvedValue"))
+                         .parentId(nodeExecution2Id)
                          .build();
     nodeExecution4 = NodeExecution.builder()
-                         .uuid(generateUuid())
+                         .uuid(nodeExecution4Id)
                          .node(preparePlanNode(false, "d", "di1", null))
                          .resolvedStepParameters(prepareStepParameters("dResolvedValue"))
+                         .parentId(nodeExecution3Id)
+                         .nextId(nodeExecution5Id)
                          .build();
 
     nodeExecution5 = NodeExecution.builder()
-                         .uuid(generateUuid())
+                         .uuid(nodeExecution4Id)
                          .node(preparePlanNode(false, "e", "ei1", null))
                          .resolvedStepParameters(prepareStepParameters("eResolvedValue"))
+                         .previousId(nodeExecution4Id)
+                         .parentId(nodeExecution3Id)
                          .build();
 
-    Level pipelineLevel = Level.newBuilder().setRuntimeId(nodeExecution1.getUuid()).build();
-    Level stagesLevel = Level.newBuilder().setRuntimeId(nodeExecution2.getUuid()).build();
-    Level stageLevel = Level.newBuilder().setRuntimeId(nodeExecution3.getUuid()).build();
+    Level pipelineLevel = Level.newBuilder().setRuntimeId(nodeExecution1Id).build();
+    Level stagesLevel = Level.newBuilder().setRuntimeId(nodeExecution2Id).build();
+    Level stageLevel = Level.newBuilder().setRuntimeId(nodeExecution3Id).build();
     List<Level> levels = new ArrayList<>();
     levels.add(pipelineLevel);
     levels.add(stagesLevel);
@@ -115,13 +128,6 @@ public class PMSExpressionEvaluatorTest extends PipelineServiceTestBase {
                    .putAllSetupAbstractions(ImmutableMap.of("accountId", generateUuid(), "appId", generateUuid()))
                    .setExpressionFunctorToken(1234)
                    .build();
-
-    nodeExecution2.setParentId(nodeExecution1.getUuid());
-    nodeExecution3.setParentId(nodeExecution2.getUuid());
-    nodeExecution4.setParentId(nodeExecution3.getUuid());
-    nodeExecution4.setNextId(nodeExecution5.getUuid());
-    nodeExecution5.setPreviousId(nodeExecution4.getUuid());
-    nodeExecution5.setParentId(nodeExecution3.getUuid());
 
     when(nodeExecutionService.get(nodeExecution1.getUuid())).thenReturn(nodeExecution1);
     when(nodeExecutionService.get(nodeExecution2.getUuid())).thenReturn(nodeExecution2);
@@ -157,8 +163,8 @@ public class PMSExpressionEvaluatorTest extends PipelineServiceTestBase {
     Ambiance newAmbiance =
         AmbianceUtils.cloneForChild(ambiance, Level.newBuilder().setRuntimeId(nodeExecution5.getUuid()).build());
 
-    nodeExecution5.setStatus(Status.IGNORE_FAILED);
-    nodeExecution4.setStatus(Status.SUCCEEDED);
+    Reflect.on(nodeExecution5).set("status", Status.IGNORE_FAILED);
+    Reflect.on(nodeExecution4).set("status", Status.SUCCEEDED);
 
     EngineExpressionEvaluator engineExpressionEvaluator = prepareEngineExpressionEvaluator(newAmbiance);
     PmsSdkInstance pmsSdkInstance =
