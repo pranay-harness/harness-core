@@ -1,6 +1,7 @@
 package io.harness.feature.client.services.impl;
 
 import io.harness.feature.client.PlanFeatureRegisterConfiguration;
+import io.harness.feature.client.custom.CustomFeatureRestriction;
 import io.harness.feature.client.services.PlanFeatureRegisterService;
 import io.harness.feature.client.usage.PlanFeatureUsageInterface;
 import io.harness.feature.constants.FeatureRestriction;
@@ -15,6 +16,7 @@ import java.util.Map;
 public class PlanFeatureRegisterServiceImpl implements PlanFeatureRegisterService {
   private final Injector injector;
   private Map<FeatureRestriction, PlanFeatureUsageInterface> featureUsageMap;
+  private Map<FeatureRestriction, CustomFeatureRestriction> customFeatureRestrictionMapMap;
 
   @Inject
   public PlanFeatureRegisterServiceImpl(Injector injector) {
@@ -36,5 +38,10 @@ public class PlanFeatureRegisterServiceImpl implements PlanFeatureRegisterServic
   @Override
   public PlanFeatureUsageInterface get(FeatureRestriction featureName) {
     return featureUsageMap.get(featureName);
+  }
+
+  @Override
+  public CustomFeatureRestriction getCustom(FeatureRestriction featureName) {
+    return customFeatureRestrictionMapMap.get(featureName);
   }
 }

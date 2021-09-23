@@ -19,6 +19,7 @@ import io.harness.licensing.beans.modules.AccountLicenseDTO;
 import io.harness.licensing.beans.modules.ModuleLicenseDTO;
 import io.harness.licensing.beans.modules.StartTrialDTO;
 import io.harness.licensing.beans.response.CheckExpiryResultDTO;
+import io.harness.licensing.beans.summary.CORELicenseSummaryDTO;
 import io.harness.licensing.beans.summary.LicensesWithSummaryDTO;
 import io.harness.licensing.entities.modules.ModuleLicense;
 import io.harness.licensing.helpers.ModuleLicenseSummaryHelper;
@@ -301,6 +302,12 @@ public class DefaultLicenseServiceImpl implements LicenseService {
 
   @Override
   public Edition calculateAccountEdition(String accountIdentifier) {
+    LicensesWithSummaryDTO accountLicenseSummary = getAccountLicenseSummary(accountIdentifier);
+    return accountLicenseSummary == null ? null : accountLicenseSummary.getEdition();
+  }
+
+  @Override
+  public LicensesWithSummaryDTO getAccountLicenseSummary(String accountIdentifier) {
     AccountLicenseDTO accountLicense = getAccountLicense(accountIdentifier);
     Map<ModuleType, List<ModuleLicenseDTO>> allModuleLicenses = accountLicense.getAllModuleLicenses();
 
@@ -320,7 +327,14 @@ public class DefaultLicenseServiceImpl implements LicenseService {
     if (!highestEditionLicense.isPresent()) {
       return null;
     }
-    return highestEditionLicense.get().getEdition();
+
+    ModuleLicenseDTO moduleLicenseDTO = highestEditionLicense.get();
+    return CORELicenseSummaryDTO.builder()
+        .edition(moduleLicenseDTO.getEdition())
+        .licenseType(moduleLicenseDTO.getLicenseType())
+        .maxExpiryTime(moduleLicenseDTO.getExpiryTime())
+        .moduleType(ModuleType.CORE)
+        .build();
   }
 
   private void sendSucceedTelemetryEvents(String eventName, ModuleLicense moduleLicense, String accountIdentifier) {

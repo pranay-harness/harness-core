@@ -15,4 +15,5 @@ public interface LicenseService extends LicenseCrudService {
   void softDelete(String accountIdentifier);
   LicensesWithSummaryDTO getLicenseSummary(String accountIdentifier, ModuleType moduleType);
   Edition calculateAccountEdition(String accountIdentifier);
+  LicensesWithSummaryDTO getAccountLicenseSummary(String accountIdentifier);
 }
