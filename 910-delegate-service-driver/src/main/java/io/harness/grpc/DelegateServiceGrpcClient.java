@@ -155,6 +155,7 @@ public class DelegateServiceGrpcClient {
                                                                .setCallbackToken(delegateCallbackToken)
                                                                .setAccountId(accountId)
                                                                .setSetupAbstractions(taskSetupAbstractions)
+                                                               .setSelectionTrackingLogEnabled(true)
                                                                .setLogAbstractions(taskLogAbstractions)
                                                                .setDetails(taskDetails)
                                                                .setForceExecute(forceExecute);

@@ -163,12 +163,6 @@ grpcDMSClientConfig:
 
 dmsSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
-grpcDMSClientConfig:
-  target: localhost:15011
-  authority: localhost
-
-dmsSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
-
 mongo:
   uri: mongodb://localhost:27017/harness
   connectTimeout: 30000
