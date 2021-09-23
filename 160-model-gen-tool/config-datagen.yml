@@ -293,3 +293,7 @@ cfMigrationConfig:
   environment: "environment1"
   connectionTimeout: 10000
   readTimeout: 30000
+
+ldapSyncJobConfig:
+  poolSize: 3
+  syncInterval: 15
