@@ -16,12 +16,12 @@ import io.harness.execution.PlanExecutionMetadata;
 import io.harness.interrupts.Interrupt;
 import io.harness.observer.Subject;
 import io.harness.plan.Plan;
+import io.harness.plan.PlanNode;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.OrchestrationEvent;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
-import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.springdata.TransactionHelper;
 
@@ -90,7 +90,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
     orchestrationStartSubject.fireInform(OrchestrationStartObxxxxxxxx:onStart,
         OrchestrationStartInfo.builder().ambiance(ambiance).planExecutionMetadata(planExecutionMetadata).build());
 
-    PlanNodeProto planNode = plan.fetchStartingNode();
+    PlanNode planNode = plan.fetchStartingPlanNode();
     if (planNode == null) {
       log.error("Cannot Start Execution for empty plan");
       return null;
@@ -100,7 +100,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
   }
 
   @VisibleForTesting
-  void submitToEngine(Ambiance ambiance, PlanNodeProto planNode) {
+  void submitToEngine(Ambiance ambiance, PlanNode planNode) {
     executorService.submit(() -> orchestrationEngine.triggerExecution(ambiance, planNode));
   }
 

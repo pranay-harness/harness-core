@@ -102,9 +102,9 @@ public class ImagePullSecretUtilsTest extends CategoryTest {
     when(connectorService.get(any(), any(), any(), any())).thenReturn(connectorResponseDTO);
     when(ecrImagePullSecretHelper.getBaseNGAccess(any(), any(), any())).thenReturn(baseNGAccess);
     when(ecrImagePullSecretHelper.getEncryptionDetails(any(), any())).thenReturn(encryptionDetails);
-    when(ecrImagePullSecretHelper.executeSyncTask(any(), any(), eq(ArtifactTaskType.GET_IMAGE_URL), any(), any()))
+    when(ecrImagePullSecretHelper.executeSyncTask(any(), eq(ArtifactTaskType.GET_IMAGE_URL), any(), any()))
         .thenReturn(responseForImageUrl);
-    when(ecrImagePullSecretHelper.executeSyncTask(any(), any(), eq(ArtifactTaskType.GET_AUTH_TOKEN), any(), any()))
+    when(ecrImagePullSecretHelper.executeSyncTask(any(), eq(ArtifactTaskType.GET_AUTH_TOKEN), any(), any()))
         .thenReturn(responseForAuthToken);
     assertThat(imagePullSecretUtils.getImagePullSecret(artifactOutcome, ambiance).equals(ecrImagePullSecret));
   }

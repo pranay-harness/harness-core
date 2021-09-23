@@ -554,7 +554,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   public void maintainTemplatePermissions(UserGroup userGroup) {
     boolean hasAccountLevelTemplateManagementPermission = false;
     final AccountPermissions accountPermissions = userGroup.getAccountPermissions();
-    if (accountPermissions != null) {
+    if (accountPermissions != null && accountPermissions.getPermissions() != null) {
       final Set<PermissionType> accountPermissionSet = accountPermissions.getPermissions();
       if (!accountPermissionSet.isEmpty()) {
         hasAccountLevelTemplateManagementPermission = accountPermissionSet.contains(PermissionType.TEMPLATE_MANAGEMENT);

@@ -26,7 +26,7 @@ import io.harness.pms.exception.PmsExceptionUtils;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.helpers.PrincipalInfoHelper;
 import io.harness.pms.helpers.TriggeredByHelper;
-import io.harness.pms.merger.helpers.MergeHelper;
+import io.harness.pms.merger.helpers.InputSetMergeHelper;
 import io.harness.pms.ngpipeline.inputset.helpers.InputSetSanitizer;
 import io.harness.pms.ngpipeline.inputset.helpers.ValidateAndMergeHelper;
 import io.harness.pms.pipeline.PipelineEntity;
@@ -259,7 +259,8 @@ public class PipelineExecuteHelper {
     if (EmptyPredicate.isEmpty(inputSetPipelineYaml)) {
       pipelineYaml = pipelineEntity.getYaml();
     } else {
-      pipelineYaml = MergeHelper.mergeInputSetIntoPipeline(pipelineEntity.getYaml(), inputSetPipelineYaml, true);
+      pipelineYaml =
+          InputSetMergeHelper.mergeInputSetIntoPipeline(pipelineEntity.getYaml(), inputSetPipelineYaml, true);
     }
     pipelineYaml = InputSetSanitizer.trimValues(pipelineYaml);
     pmsYamlSchemaService.validateYamlSchema(pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(),

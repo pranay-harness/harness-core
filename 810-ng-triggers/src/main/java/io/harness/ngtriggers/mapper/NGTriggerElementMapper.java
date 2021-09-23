@@ -59,7 +59,6 @@ import io.harness.ngtriggers.beans.source.NGTriggerType;
 import io.harness.ngtriggers.beans.source.WebhookTriggerType;
 import io.harness.ngtriggers.beans.source.artifact.ArtifactTriggerConfig;
 import io.harness.ngtriggers.beans.source.artifact.ArtifactTypeSpec;
-import io.harness.ngtriggers.beans.source.artifact.GcrArtifactSpec;
 import io.harness.ngtriggers.beans.source.artifact.HelmManifestSpec;
 import io.harness.ngtriggers.beans.source.artifact.ManifestTriggerConfig;
 import io.harness.ngtriggers.beans.source.artifact.ManifestTypeSpec;
@@ -270,10 +269,8 @@ public class NGTriggerElementMapper {
             .build();
       case ARTIFACT:
         ArtifactTypeSpec artifactTypeSpec = ((ArtifactTriggerConfig) triggerSource.getSpec()).getSpec();
-        String artifactSourceType = null;
-        if (GcrArtifactSpec.class.isAssignableFrom(artifactTypeSpec.getClass())) {
-          artifactSourceType = artifactTypeSpec.getClass().getName();
-        }
+        String artifactSourceType = artifactTypeSpec.getClass().getName();
+
         return NGTriggerMetadata.builder()
             .buildMetadata(BuildMetadata.builder()
                                .type(ARTIFACT)

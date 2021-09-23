@@ -19,6 +19,7 @@ import io.harness.delegate.task.artifacts.DelegateArtifactTaskHandler;
 import io.harness.delegate.task.artifacts.mappers.EcrRequestResponseMapper;
 import io.harness.delegate.task.artifacts.response.ArtifactTaskExecutionResponse;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.security.encryption.SecretDecryptionService;
 
 import software.wings.helpers.ext.ecr.EcrService;
 import software.wings.service.impl.AwsApiHelperService;
@@ -43,6 +44,7 @@ import org.apache.commons.lang3.tuple.Pair;
 public class EcrArtifactTaskHandler extends DelegateArtifactTaskHandler<EcrArtifactDelegateRequest> {
   private final EcrService ecrService;
   private final AwsApiHelperService awsApiHelperService;
+  private final SecretDecryptionService secretDecryptionService;
   @Inject AwsEcrApiHelperServiceDelegate awsEcrApiHelperServiceDelegate;
 
   @Override
@@ -59,6 +61,15 @@ public class EcrArtifactTaskHandler extends DelegateArtifactTaskHandler<EcrArtif
             .map(build -> EcrRequestResponseMapper.toEcrResponse(build, attributesRequest))
             .collect(Collectors.toList());
     return getSuccessTaskExecutionResponse(ecrArtifactDelegateResponseList);
+  }
+
+  public void decryptRequestDTOs(EcrArtifactDelegateRequest ecrRequest) {
+    if (ecrRequest.getAwsConnectorDTO().getCredential() != null
+        && ecrRequest.getAwsConnectorDTO().getCredential().getConfig() != null) {
+      secretDecryptionService.decrypt(
+          (AwsManualConfigSpecDTO) ecrRequest.getAwsConnectorDTO().getCredential().getConfig(),
+          ecrRequest.getEncryptedDataDetails());
+    }
   }
 
   @Override

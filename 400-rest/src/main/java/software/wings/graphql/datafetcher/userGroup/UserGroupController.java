@@ -155,6 +155,7 @@ public class UserGroupController {
         .groupEmailAddresses(notificationSettings.getEmailAddresses())
         .slackNotificationSetting(populateSlackNotificationSettings(notificationSettings))
         .microsoftTeamsWebhookUrl(notificationSettings.getMicrosoftTeamsWebhookUrl())
+        .pagerDutyIntegrationKey(notificationSettings.getPagerDutyIntegrationKey())
         .build();
   }
 

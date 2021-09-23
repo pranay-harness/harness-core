@@ -751,19 +751,6 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
   }
 
   @Override
-  public void clearConnectionResults(String accountId) {
-    persistence.delete(persistence.createQuery(DelegateConnectionResult.class)
-                           .filter(DelegateConnectionResultKeys.accountId, accountId));
-  }
-
-  @Override
-  public void clearConnectionResults(String accountId, String delegateId) {
-    persistence.delete(persistence.createQuery(DelegateConnectionResult.class)
-                           .filter(DelegateConnectionResultKeys.accountId, accountId)
-                           .filter(DelegateConnectionResultKeys.delegateId, delegateId));
-  }
-
-  @Override
   public String getActiveDelegateAssignmentErrorMessage(TaskFailureReason reason, DelegateTask delegateTask) {
     log.info("Delegate task is terminated");
 

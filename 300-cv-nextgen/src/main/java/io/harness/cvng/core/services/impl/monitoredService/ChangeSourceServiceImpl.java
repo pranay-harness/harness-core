@@ -160,6 +160,10 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
             .connectorIdentifier(changeSource.getConnectorIdentifier())
             .sourceIdentifier(changeSource.getIdentifier())
             .dataCollectionWorkerId(changeSource.getUuid())
+            .projectIdentifier(changeSource.getProjectIdentifier())
+            .orgIdentifier(changeSource.getOrgIdentifier())
+            .envIdentifier(changeSource.getEnvIdentifier())
+            .serviceIdentifier(changeSource.getServiceIdentifier())
             .build();
 
     String dataCollectionTaskId = verificationManagerService.createDataCollectionTask(changeSource.getAccountId(),

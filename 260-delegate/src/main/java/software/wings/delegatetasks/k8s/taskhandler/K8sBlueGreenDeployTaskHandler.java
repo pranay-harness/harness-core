@@ -29,6 +29,7 @@ import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.BooleanUtils.isNotTrue;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -335,7 +336,9 @@ public class K8sBlueGreenDeployTaskHandler extends K8sTaskHandler {
       }
 
       if (k8sBlueGreenDeployTaskParameters.isPruningEnabled()) {
-        currentRelease = releaseHistory.createNewReleaseWithResourceMap(resources);
+        List<KubernetesResource> resourcesWithoutSkipPruning =
+            resources.stream().filter(resource -> !resource.isSkipPruning()).collect(toList());
+        currentRelease = releaseHistory.createNewReleaseWithResourceMap(resourcesWithoutSkipPruning);
       } else {
         currentRelease = releaseHistory.createNewRelease(
             resources.stream().map(KubernetesResource::getResourceId).collect(Collectors.toList()));

@@ -1,5 +1,7 @@
 package io.harness.cvng.core.beans.monitoredService.changeSourceSpec;
 
+import io.harness.data.validator.EntityIdentifier;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AccessLevel;
 import lombok.Data;
@@ -17,7 +19,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class ChangeSourceWithConnectorSpec extends ChangeSourceSpec {
-  @NonNull @NotEmpty String connectorRef;
+  @NonNull @NotEmpty @EntityIdentifier(allowScoped = true) String connectorRef;
 
   @Override
   public boolean connectorPresent() {

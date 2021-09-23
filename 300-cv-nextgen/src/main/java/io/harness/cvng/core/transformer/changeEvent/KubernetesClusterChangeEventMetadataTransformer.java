@@ -29,6 +29,7 @@ public class KubernetesClusterChangeEventMetadataTransformer
         .reason(metadata.getReason())
         .namespace(metadata.getNamespace())
         .workload(metadata.getWorkload())
+        .activityStartTime(metadata.getTimestamp())
         .build();
   }
 
@@ -44,6 +45,7 @@ public class KubernetesClusterChangeEventMetadataTransformer
         .namespace(activity.getNamespace())
         .workload(activity.getWorkload())
         .timestamp(activity.getEventTime())
+        .resourceVersion(activity.getResourceVersion())
         .build();
   }
 }
