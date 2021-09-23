@@ -82,9 +82,9 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
     ExecutionResponse<List<TopProjectsDashboardInfo<CountInfo>>> executionResponseCFTopProjectsInfoList =
         getExecutionResponseCFTopProjectsInfoList();
 
-    if ((executionResponseCDTopProjectsInfoList.getExecutionStatus() == ExecutionStatus.SUCCESS
+    if (executionResponseCDTopProjectsInfoList.getExecutionStatus() == ExecutionStatus.SUCCESS
             || executionResponseCITopProjectsInfoList.getExecutionStatus() == ExecutionStatus.SUCCESS
-            || executionResponseCFTopProjectsInfoList.getExecutionStatus() == ExecutionStatus.SUCCESS)) {
+            || executionResponseCFTopProjectsInfoList.getExecutionStatus() == ExecutionStatus.SUCCESS) {
       return ExecutionResponse.<TopProjectsPanel>builder()
           .response((TopProjectsPanel.builder()
                          .CDTopProjectsInfo(executionResponseCDTopProjectsInfoList)
