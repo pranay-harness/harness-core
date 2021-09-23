@@ -32,6 +32,7 @@ import io.harness.cvng.analysis.services.api.AnalysisService;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
 import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
 import io.harness.cvng.analysis.services.api.HealthVerificationService;
+import io.harness.cvng.analysis.services.api.LearningEngineDevService;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.cvng.analysis.services.api.LogAnalysisService;
 import io.harness.cvng.analysis.services.api.LogClusterService;
@@ -43,6 +44,7 @@ import io.harness.cvng.analysis.services.impl.AnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.DeploymentLogAnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.DeploymentTimeSeriesAnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.HealthVerificationServiceImpl;
+import io.harness.cvng.analysis.services.impl.LearningEngineDevServiceImpl;
 import io.harness.cvng.analysis.services.impl.LearningEngineTaskServiceImpl;
 import io.harness.cvng.analysis.services.impl.LogAnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.LogClusterServiceImpl;
@@ -512,6 +514,7 @@ public class CVServiceModule extends AbstractModule {
     bind(ChangeEventMetaDataTransformer.class)
         .annotatedWith(Names.named(ChangeSourceType.HARNESS_CD.name()))
         .to(HarnessCDChangeEventTransformer.class);
+    bind(LearningEngineDevService.class).to(LearningEngineDevServiceImpl.class);
   }
 
   private void bindTheMonitoringSourceImportStatusCreators() {
