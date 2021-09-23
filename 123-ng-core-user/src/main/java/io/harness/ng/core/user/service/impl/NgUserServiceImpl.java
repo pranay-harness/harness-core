@@ -290,8 +290,9 @@ public class NgUserServiceImpl implements NgUserService {
         getResponse(accessControlAdminClient.getFilteredRoleAssignments(scope.getAccountIdentifier(),
             scope.getOrgIdentifier(), scope.getProjectIdentifier(), 0, DEFAULT_PAGE_SIZE,
             RoleAssignmentFilterDTO.builder().roleFilter(Collections.singleton(roleIdentifier)).build()));
-    List<PrincipalDTO> principals =
-        roleAssignmentPage.getContent().stream().map(dto -> dto.getRoleAssignment().getPrincipal()).collect(toList());
+    List<PrincipalDTO> principals = roleAssignmentPage.getContent() != null
+        ? roleAssignmentPage.getContent().stream().map(dto -> dto.getRoleAssignment().getPrincipal()).collect(toList())
+        : new ArrayList<>();
     Set<String> userIds = principals.stream()
                               .filter(principal -> USER.equals(principal.getType()))
                               .map(PrincipalDTO::getIdentifier)
