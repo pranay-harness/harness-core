@@ -421,7 +421,6 @@ import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandR
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationListStacksResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationRollbackInfo;
-import software.wings.helpers.ext.cloudformation.response.ExistingStackInfo;
 import software.wings.helpers.ext.cloudformation.response.StackSummaryInfo;
 import software.wings.helpers.ext.ecs.request.EcsBGListenerUpdateRequest;
 import software.wings.helpers.ext.ecs.request.EcsBGRoute53DNSWeightUpdateRequest;
@@ -529,7 +528,6 @@ import software.wings.service.impl.appdynamics.AppDynamicsDataCollectionInfoV2;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.appdynamics.AppdynamicsSetupTestNodeData;
 import software.wings.service.impl.aws.model.AwsAmiAllPhaseRollbackData;
-import software.wings.service.impl.aws.model.AwsAmiPreDeploymentData;
 import software.wings.service.impl.aws.model.AwsAmiRequest;
 import software.wings.service.impl.aws.model.AwsAmiRequest.AwsAmiRequestType;
 import software.wings.service.impl.aws.model.AwsAmiResizeData;
@@ -641,7 +639,6 @@ import software.wings.service.impl.aws.model.AwsS3ListBucketNamesResponse;
 import software.wings.service.impl.aws.model.AwsS3Request;
 import software.wings.service.impl.aws.model.AwsS3Request.AwsS3RequestType;
 import software.wings.service.impl.aws.model.AwsSecurityGroup;
-import software.wings.service.impl.aws.model.embed.AwsLambdaDetails;
 import software.wings.service.impl.aws.model.request.AwsCloudWatchStatisticsRequest;
 import software.wings.service.impl.aws.model.request.AwsLambdaDetailsRequest;
 import software.wings.service.impl.aws.model.response.AwsCloudWatchMetricDataResponse;
@@ -1094,7 +1091,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(CloudFormationCommandResponse.class, 5338);
     kryo.register(CloudFormationCreateStackResponse.class, 5339);
     kryo.register(CloudFormationListStacksResponse.class, 5340);
-    kryo.register(ExistingStackInfo.class, 5479);
     kryo.register(StackSummaryInfo.class, 5341);
     kryo.register(EcsBGListenerUpdateRequest.class, 5605);
     kryo.register(EcsCommandRequest.EcsCommandType.class, 5607);
@@ -1142,7 +1138,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AppdynamicsDataCollectionInfo.class, 5168);
     kryo.register(AppdynamicsSetupTestNodeData.class, 5531);
 
-    kryo.register(AwsAmiPreDeploymentData.class, 5519);
     kryo.register(AwsAmiRequestType.class, 5458);
     kryo.register(AwsAmiRequest.class, 5457);
     kryo.register(AwsAmiResizeData.class, 5518);
@@ -1441,7 +1436,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AwsCloudWatchStatisticsRequest.class, 7254);
     kryo.register(AwsLambdaDetailsRequest.class, 7255);
     kryo.register(AwsLambdaDetailsResponse.class, 7256);
-    kryo.register(AwsLambdaDetails.class, 7257);
     kryo.register(JiraIssueData.class, 7259);
     kryo.register(K8sSwapServiceElement.class, 7260);
     kryo.register(SlackMessage.class, 7261);

@@ -27,5 +27,6 @@ public class QLAppPermission {
   QLDeploymentPermissions deployments;
   QLPipelinePermissions pipelines;
   QLProivionerPermissions provisioners;
+  QLTemplatePermissions templates;
   Set<QLActions> actions;
 }

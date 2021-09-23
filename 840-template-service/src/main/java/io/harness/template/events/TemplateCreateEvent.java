@@ -26,13 +26,15 @@ public class TemplateCreateEvent implements Event {
   private String orgIdentifier;
   private String projectIdentifier;
   private TemplateEntity templateEntity;
+  private String comments;
 
-  public TemplateCreateEvent(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, TemplateEntity templateEntity) {
-    this.orgIdentifier = orgIdentifier;
+  public TemplateCreateEvent(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      TemplateEntity templateEntity, String comments) {
     this.accountIdentifier = accountIdentifier;
+    this.orgIdentifier = orgIdentifier;
     this.projectIdentifier = projectIdentifier;
     this.templateEntity = templateEntity;
+    this.comments = comments;
   }
 
   @JsonIgnore

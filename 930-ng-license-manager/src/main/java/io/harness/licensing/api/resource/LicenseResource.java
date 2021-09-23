@@ -125,8 +125,18 @@ public class LicenseResource {
   }
 
   @POST
+  @Path("free")
+  @ApiOperation(value = "Starts Free License For A Module", nickname = "startFreeLicense")
+  @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
+  public ResponseDTO<ModuleLicenseDTO> startFreeLicense(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.MODULE_TYPE) @AccountIdentifier ModuleType moduleType) {
+    return ResponseDTO.newResponse(licenseService.startFreeLicense(accountIdentifier, moduleType));
+  }
+
+  @POST
   @Path("trial")
-  @ApiOperation(value = "Starts Trail License For A Module", nickname = "startTrialLicense")
+  @ApiOperation(value = "Starts Trial License For A Module", nickname = "startTrialLicense")
   @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
   public ResponseDTO<ModuleLicenseDTO> startTrialLicense(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,

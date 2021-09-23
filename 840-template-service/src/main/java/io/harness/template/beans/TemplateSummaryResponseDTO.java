@@ -43,4 +43,5 @@ public class TemplateSummaryResponseDTO {
   Scope templateScope;
   Long version;
   EntityGitDetails gitDetails;
+  long lastUpdatedAt;
 }

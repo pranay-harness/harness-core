@@ -210,6 +210,7 @@ public class DelegateProfileManagerNgServiceImplTest extends CategoryTest {
                                                  .uuid(generateUuid())
                                                  .accountId(TEST_ACCOUNT_ID)
                                                  .name("test")
+                                                 .identifier("_ident")
                                                  .description("description")
                                                  .startupScript("startupScript")
                                                  .build();
@@ -222,6 +223,7 @@ public class DelegateProfileManagerNgServiceImplTest extends CategoryTest {
     DelegateProfileGrpc delegateProfileGrpc =
         DelegateProfileGrpc.newBuilder()
             .setName("test")
+            .setIdentifier("_ident")
             .setDescription("description")
             .setStartupScript("startupScript")
             .setAccountId(AccountId.newBuilder().setId(TEST_ACCOUNT_ID).build())
@@ -257,6 +259,7 @@ public class DelegateProfileManagerNgServiceImplTest extends CategoryTest {
     assertThat(delegateConfigurationUpdateEvent.getProjectIdentifier()).isNull();
     assertThat(delegateConfigurationUpdateEvent.getOldProfile()).isNotNull();
     assertThat(delegateConfigurationUpdateEvent.getNewProfile()).isNotNull();
+    assertThat(delegateConfigurationUpdateEvent.getResource().getIdentifier()).isEqualTo("_ident");
   }
 
   @Test
@@ -291,6 +294,7 @@ public class DelegateProfileManagerNgServiceImplTest extends CategoryTest {
     DelegateProfileDetailsNg profileDetail = DelegateProfileDetailsNg.builder()
                                                  .accountId(TEST_ACCOUNT_ID)
                                                  .name("test")
+                                                 .identifier("_ident")
                                                  .description("description")
                                                  .startupScript("startupScript")
                                                  .orgIdentifier("orgId")
@@ -308,6 +312,7 @@ public class DelegateProfileManagerNgServiceImplTest extends CategoryTest {
     DelegateProfileGrpc delegateProfileGrpc =
         DelegateProfileGrpc.newBuilder()
             .setName("test")
+            .setIdentifier("_ident")
             .setDescription("description")
             .setStartupScript("startupScript")
             .setAccountId(AccountId.newBuilder().setId(TEST_ACCOUNT_ID).build())
@@ -340,6 +345,7 @@ public class DelegateProfileManagerNgServiceImplTest extends CategoryTest {
         .isEqualTo(delegateProfileGrpc.getOrgIdentifier().getId());
     assertThat(delegateConfigurationCreateEvent.getProjectIdentifier())
         .isEqualTo(delegateProfileGrpc.getProjectIdentifier().getId());
+    assertThat(delegateConfigurationCreateEvent.getResource().getIdentifier()).isEqualTo("_ident");
 
     assertThat(delegateConfigurationCreateEvent.getDelegateProfile().getAccountId()).isEqualTo(TEST_ACCOUNT_ID);
     assertThat(delegateConfigurationCreateEvent.getDelegateProfile().getOrgIdentifier())

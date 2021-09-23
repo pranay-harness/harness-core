@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.InvalidYamlException;
 import io.harness.pms.merger.YamlConfig;
 import io.harness.pms.yaml.YamlUtils;
 
@@ -42,7 +43,8 @@ public class InputSetYamlHelper {
       innerMap.set("pipeline", pipelineNode);
       return YamlUtils.write(innerMap).replace("---\n", "");
     } catch (IOException e) {
-      throw new InvalidRequestException("Input set yaml is invalid");
+      log.error("Input set yaml is invalid. Yaml:\n" + inputSetYaml);
+      throw new InvalidYamlException("Input set yaml is invalid", e);
     }
   }
 

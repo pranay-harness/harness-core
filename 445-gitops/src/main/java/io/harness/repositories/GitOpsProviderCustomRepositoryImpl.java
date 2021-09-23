@@ -1,5 +1,6 @@
 package io.harness.repositories;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -27,31 +28,29 @@ public class GitOpsProviderCustomRepositoryImpl implements GitOpsProviderCustomR
   @Override
   public GitOpsProvider get(
       String providerIdentifier, String projectIdentifier, String orgIdentifier, String accountIdentifier) {
-    Criteria criteria = new Criteria();
-    criteria.and("accountIdentifier").is(accountIdentifier);
-    criteria.and("orgIdentifier").is(orgIdentifier);
-    criteria.and("projectIdentifier").is(projectIdentifier);
-    criteria.and("identifier").is(providerIdentifier);
-    Query query = new Query(criteria);
+    final Criteria criteria =
+        FilterUtils.getCriteria(accountIdentifier, orgIdentifier, projectIdentifier, providerIdentifier);
+    final Query query = new Query(criteria);
     return mongoTemplate.findOne(query, GitOpsProvider.class);
   }
 
   @Override
   public boolean delete(
       String providerIdentifier, String projectIdentifier, String orgIdentifier, String accountIdentifier) {
-    Criteria criteria = new Criteria();
-    criteria.and("accountIdentifier").is(accountIdentifier);
-    criteria.and("orgIdentifier").is(orgIdentifier);
-    criteria.and("projectIdentifier").is(projectIdentifier);
-    criteria.and("identifier").is(providerIdentifier);
-    Query query = new Query(criteria);
+    final Criteria criteria =
+        FilterUtils.getCriteria(accountIdentifier, orgIdentifier, projectIdentifier, providerIdentifier);
+    final Query query = new Query(criteria);
     return mongoTemplate.remove(query, GitOpsProvider.class).wasAcknowledged();
   }
 
   @Override
   public Page<GitOpsProvider> findAll(
-      Criteria criteria, Pageable pageable, String projectIdentifier, String orgIdentifier, String accountIdentifier) {
-    Query query = new Query(criteria).with(pageable);
+      Pageable pageable, String projectIdentifier, String orgIdentifier, String accountIdentifier, String searchTerm) {
+    final Criteria criteria = FilterUtils.getCriteria(accountIdentifier, orgIdentifier, projectIdentifier);
+    if (isNotEmpty(searchTerm)) {
+      FilterUtils.applySearchFilter(criteria, searchTerm);
+    }
+    final Query query = new Query(criteria).with(pageable);
     List<GitOpsProvider> gitOpsProviders = mongoTemplate.find(query, GitOpsProvider.class);
     return PageableExecutionUtils.getPage(
         gitOpsProviders, pageable, () -> mongoTemplate.count(Query.of(query).limit(-1).skip(-1), GitOpsProvider.class));
@@ -67,12 +66,9 @@ public class GitOpsProviderCustomRepositoryImpl implements GitOpsProviderCustomR
   }
 
   @Override
-  public GitOpsProvider update(GitOpsProvider gitopsProvider) {
-    Criteria criteria = new Criteria();
-    criteria.and("accountIdentifier").is(gitopsProvider.getAccountIdentifier());
-    criteria.and("orgIdentifier").is(gitopsProvider.getOrgIdentifier());
-    criteria.and("projectIdentifier").is(gitopsProvider.getProjectIdentifier());
-    criteria.and("identifier").is(gitopsProvider.getIdentifier());
+  public GitOpsProvider update(String accountIdentifier, GitOpsProvider gitopsProvider) {
+    final Criteria criteria = FilterUtils.getCriteria(accountIdentifier, gitopsProvider.getOrgIdentifier(),
+        gitopsProvider.getProjectIdentifier(), gitopsProvider.getIdentifier());
     Query query = new Query(criteria);
     return mongoTemplate.findAndReplace(query, gitopsProvider, FindAndReplaceOptions.empty().returnNew());
   }

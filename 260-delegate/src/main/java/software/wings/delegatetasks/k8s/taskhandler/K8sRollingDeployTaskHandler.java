@@ -376,12 +376,15 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
   }
 
   private void setResourcesInReleaseWithPruningEnabled(boolean inCanaryWorkflow) {
+    List<KubernetesResource> resourcesWithoutSkipPruning =
+        resources.stream().filter(resource -> !resource.isSkipPruning()).collect(toList());
     if (!inCanaryWorkflow) {
-      release = releaseHistory.createNewReleaseWithResourceMap(resources);
+      release = releaseHistory.createNewReleaseWithResourceMap(resourcesWithoutSkipPruning);
     } else {
       release = releaseHistory.getLatestRelease();
-      release.setResources(resources.stream().map(KubernetesResource::getResourceId).collect(toList()));
-      release.setResourcesWithSpec(resources);
+      release.setResources(
+          resourcesWithoutSkipPruning.stream().map(KubernetesResource::getResourceId).collect(toList()));
+      release.setResourcesWithSpec(resourcesWithoutSkipPruning);
     }
   }
 }

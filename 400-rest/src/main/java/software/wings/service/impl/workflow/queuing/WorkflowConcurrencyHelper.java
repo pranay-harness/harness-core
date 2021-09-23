@@ -16,7 +16,9 @@ import static software.wings.sm.StateType.RESOURCE_CONSTRAINT;
 import static software.wings.sm.StateType.SHELL_SCRIPT_PROVISION;
 import static software.wings.sm.StateType.TERRAFORM_PROVISION;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ResourceConstraint;
 
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -47,6 +49,7 @@ import org.jetbrains.annotations.NotNull;
 
 @OwnedBy(CDC)
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class WorkflowConcurrencyHelper {
   @Inject private AppService appService;
   @Inject private ResourceConstraintService resourceConstraintService;

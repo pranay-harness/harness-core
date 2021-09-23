@@ -336,4 +336,7 @@ jreConfigs:
     jreTarPath: jre/openjdk-8u242/jre_x64_${OS}_8u242b08.tar.gz
     alpnJarPath: tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar
 
-
+ldapSyncJobConfig:
+  poolSize: 3
+  syncInterval: 15
+  defaultCronExpression: "0 0/15 * 1/1 * ? *"

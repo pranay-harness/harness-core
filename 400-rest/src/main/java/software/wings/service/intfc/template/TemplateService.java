@@ -1,5 +1,7 @@
 package software.wings.service.intfc.template;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.validation.Create;
@@ -11,6 +13,7 @@ import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.VersionedTemplate;
+import software.wings.beans.template.dto.TemplateMetaData;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.service.intfc.ownership.OwnedByApplication;
 
@@ -23,9 +26,12 @@ import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
+@OwnedBy(HarnessTeam.PL)
 public interface TemplateService extends OwnedByAccount, OwnedByApplication {
   PageResponse<Template> list(
       PageRequest<Template> pageRequest, List<String> galleryKeys, String accountId, boolean defaultVersion);
+
+  List<TemplateMetaData> listTemplatesWithMetadata(Set<String> appIds, String accountId);
 
   @ValidationGroups(Create.class) Template saveReferenceTemplate(Template template);
 

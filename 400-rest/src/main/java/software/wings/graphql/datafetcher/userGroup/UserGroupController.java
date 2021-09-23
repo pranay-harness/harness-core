@@ -107,7 +107,6 @@ public class UserGroupController {
     if (!ccmSettingService.isCloudCostEnabled(userGroup.getAccountId())) {
       userGroupService.maskCePermissions(userGroup);
     }
-    userGroupService.maskAppTemplatePermissions(userGroup);
     QLGroupPermissions permissions = userGroupPermissionsController.populateUserGroupPermissions(userGroup);
     QLNotificationSettings notificationSettings = populateNotificationSettings(userGroup);
     return builder.name(userGroup.getName())
@@ -156,6 +155,7 @@ public class UserGroupController {
         .groupEmailAddresses(notificationSettings.getEmailAddresses())
         .slackNotificationSetting(populateSlackNotificationSettings(notificationSettings))
         .microsoftTeamsWebhookUrl(notificationSettings.getMicrosoftTeamsWebhookUrl())
+        .pagerDutyIntegrationKey(notificationSettings.getPagerDutyIntegrationKey())
         .build();
   }
 

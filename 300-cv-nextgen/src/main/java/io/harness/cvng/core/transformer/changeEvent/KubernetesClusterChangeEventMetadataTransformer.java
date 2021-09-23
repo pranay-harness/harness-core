@@ -10,7 +10,7 @@ public class KubernetesClusterChangeEventMetadataTransformer
     extends ChangeEventMetaDataTransformer<KubernetesClusterActivity, KubernetesChangeEventMetadata> {
   @Override
   public KubernetesClusterActivity getEntity(ChangeEventDTO changeEventDTO) {
-    KubernetesChangeEventMetadata metadata = (KubernetesChangeEventMetadata) changeEventDTO.getChangeEventMetaData();
+    KubernetesChangeEventMetadata metadata = (KubernetesChangeEventMetadata) changeEventDTO.getMetadata();
     return KubernetesClusterActivity.builder()
         .accountId(changeEventDTO.getAccountId())
         .activityName("Kubernetes " + metadata.getResourceType() + " event.")
@@ -29,6 +29,7 @@ public class KubernetesClusterChangeEventMetadataTransformer
         .reason(metadata.getReason())
         .namespace(metadata.getNamespace())
         .workload(metadata.getWorkload())
+        .activityStartTime(metadata.getTimestamp())
         .build();
   }
 
@@ -44,6 +45,7 @@ public class KubernetesClusterChangeEventMetadataTransformer
         .namespace(activity.getNamespace())
         .workload(activity.getWorkload())
         .timestamp(activity.getEventTime())
+        .resourceVersion(activity.getResourceVersion())
         .build();
   }
 }

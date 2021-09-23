@@ -7,6 +7,7 @@ import io.harness.beans.NGTemplateReference;
 import io.harness.common.EntityReference;
 import io.harness.encryption.ScopeHelper;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
+import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.UnexpectedException;
 import io.harness.git.model.ChangeType;
@@ -79,14 +80,14 @@ public class TemplateEntityGitSyncHandler extends AbstractGitSdkEntityHandler<Te
   @Override
   public NGTemplateConfig save(String accountIdentifier, String yaml) {
     TemplateEntity templateEntity = NGTemplateDtoMapper.toTemplateEntity(accountIdentifier, yaml);
-    TemplateEntity createdTemplate = templateService.create(templateEntity);
+    TemplateEntity createdTemplate = templateService.create(templateEntity, false, "");
     return NGTemplateDtoMapper.toDTO(createdTemplate);
   }
 
   @Override
   public NGTemplateConfig update(String accountIdentifier, String yaml, ChangeType changeType) {
     TemplateEntity templateEntity = NGTemplateDtoMapper.toTemplateEntity(accountIdentifier, yaml);
-    return NGTemplateDtoMapper.toDTO(templateService.updateTemplateEntity(templateEntity, changeType));
+    return NGTemplateDtoMapper.toDTO(templateService.updateTemplateEntity(templateEntity, changeType, false, ""));
   }
 
   @Override
@@ -94,7 +95,8 @@ public class TemplateEntityGitSyncHandler extends AbstractGitSdkEntityHandler<Te
     try {
       NGTemplateReference reference = (NGTemplateReference) entityReference;
       return templateService.delete(entityReference.getAccountIdentifier(), entityReference.getOrgIdentifier(),
-          entityReference.getProjectIdentifier(), entityReference.getIdentifier(), reference.getVersionLabel(), null);
+          entityReference.getProjectIdentifier(), entityReference.getIdentifier(), reference.getVersionLabel(), null,
+          "");
     } catch (EventsFrameworkDownException ex) {
       throw new UnexpectedException("Producer shutdown: " + ExceptionUtils.getMessage(ex));
     }
@@ -125,6 +127,7 @@ public class TemplateEntityGitSyncHandler extends AbstractGitSdkEntityHandler<Te
     return TemplateEntityKeys.branch;
   }
 
+  // todo(archit): implement
   @Override
   public List<FileChange> listAllEntities(ScopeDetails scopeDetails) {
     return null;
@@ -138,5 +141,11 @@ public class TemplateEntityGitSyncHandler extends AbstractGitSdkEntityHandler<Te
         templateInfoConfig.getOrgIdentifier(), templateInfoConfig.getProjectIdentifier(),
         templateInfoConfig.getIdentifier(), templateInfoConfig.getVersionLabel(), false);
     return templateEntity.map(TemplateEntity::getObjectIdOfYaml).orElse(null);
+  }
+
+  // todo(archit): implement
+  @Override
+  public String getYamlFromEntityRef(EntityDetailProtoDTO entityReference) {
+    return null;
   }
 }

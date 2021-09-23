@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.licensing.BillingFrequency;
 import io.harness.licensing.Edition;
 import io.harness.ng.core.user.SignupAction;
+import io.harness.ng.core.user.UtmInfo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AccessLevel;
@@ -27,6 +28,7 @@ public class SignupInviteDTO {
   SignupAction signupAction;
   Edition edition;
   BillingFrequency billingFrequency;
+  UtmInfo utmInfo;
   boolean createdFromNG;
   boolean completed;
 }

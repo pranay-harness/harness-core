@@ -120,6 +120,9 @@ public class HelmChartConfigHelperService {
     HelmChartConfigParamsBuilder helmChartConfigParamsBuilder =
         HelmChartConfigParams.builder().chartVersion(helmChartConfig.getChartVersion());
 
+    helmChartConfigParamsBuilder.useLatestChartMuseumVersion(
+        featureFlagService.isEnabled(FeatureName.USE_LATEST_CHARTMUSEUM_VERSION, context.getAccountId()));
+
     if (isNotBlank(helmChartConfig.getChartName())) {
       String chartName = helmChartConfig.getChartName();
       // If the Feature Flag is enabled, we split the chart name smartly ( i.e only in certain cases ). Else, we always

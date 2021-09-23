@@ -19,11 +19,15 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class DataCollectionConnectorBundle implements ExecutionCapabilityDemander {
   // JSON serialization does not work for ConnectorConfigDTO without the wrapper so need to pass the whole object
-  private String connectorIdentifier;
-  private String sourceIdentifier;
-  private String dataCollectionWorkerId;
-  private ConnectorInfoDTO connectorDTO;
-  private DataCollectionType dataCollectionType;
+  String connectorIdentifier;
+  String sourceIdentifier;
+  String dataCollectionWorkerId;
+  ConnectorInfoDTO connectorDTO;
+  DataCollectionType dataCollectionType;
+  String projectIdentifier;
+  String orgIdentifier;
+  String serviceIdentifier;
+  String envIdentifier;
 
   @JsonIgnore
   public ConnectorConfigDTO getConnectorConfigDTO() {
