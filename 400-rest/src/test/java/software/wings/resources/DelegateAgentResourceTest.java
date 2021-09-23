@@ -226,22 +226,6 @@ public class DelegateAgentResourceTest extends CategoryTest {
   @Test
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
-  public void shouldClearCache() {
-    Delegate delegate = Delegate.builder().build();
-    when(delegateService.update(any(Delegate.class)))
-        .thenAnswer(invocation -> invocation.getArgumentAt(0, Delegate.class));
-
-    RESOURCES.client()
-        .target(
-            "/agent/delegates/" + DELEGATE_ID + "/clear-cache?delegateId=" + DELEGATE_ID + "&accountId=" + ACCOUNT_ID)
-        .request()
-        .put(entity(delegate, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Delegate>>() {});
-    verify(delegateService, atLeastOnce()).clearCache(ACCOUNT_ID, DELEGATE_ID);
-  }
-
-  @Test
-  @Owner(developers = ROHITKARELIA)
-  @Category(UnitTests.class)
   public void shouldRegisterDelegate() {
     DelegateRegisterResponse registerResponse = DelegateRegisterResponse.builder().delegateId(ID_KEY).build();
     when(delegateService.register(any(DelegateParams.class))).thenReturn(registerResponse);
