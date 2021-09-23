@@ -6,15 +6,21 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ngtriggers.beans.dto.TriggerDetails;
+import io.harness.ngtriggers.beans.source.artifact.ArtifactType;
 import io.harness.ngtriggers.buildtriggers.helpers.BuildTriggerHelper;
 import io.harness.ngtriggers.buildtriggers.helpers.dtos.BuildTriggerOpsData;
+import io.harness.ngtriggers.buildtriggers.helpers.generator.GeneratorFactory;
+import io.harness.ngtriggers.buildtriggers.helpers.generator.PollingItemGenerator;
 import io.harness.ngtriggers.helpers.TriggerHelper;
 import io.harness.ngtriggers.validations.TriggerValidator;
 import io.harness.ngtriggers.validations.ValidationResult;
 import io.harness.ngtriggers.validations.ValidationResult.ValidationResultBuilder;
+import io.harness.polling.contracts.PollingItem;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +31,14 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PIPELINE)
 public class ArtifactTriggerValidator implements TriggerValidator {
   private final BuildTriggerHelper validationHelper;
+  private final GeneratorFactory generatorFactory;
+  private static final List<String> artifactTypesSupported = new ArrayList<>();
+
+  static {
+    for (ArtifactType artifactType : ArtifactType.values()) {
+      artifactTypesSupported.add(artifactType.getValue());
+    }
+  }
 
   @Override
   public ValidationResult validate(TriggerDetails triggerDetails) {
@@ -64,6 +78,20 @@ public class ArtifactTriggerValidator implements TriggerValidator {
   }
 
   private void validateBasedOnArtifactType(BuildTriggerOpsData buildTriggerOpsData) {
-    validationHelper.fetchBuildType(buildTriggerOpsData.getTriggerSpecMap());
+    String typeFromTrigger = validationHelper.fetchBuildType(buildTriggerOpsData.getTriggerSpecMap());
+    if (!artifactTypesSupported.contains(typeFromTrigger)) {
+      throw new InvalidRequestException(
+          String.format("Artifact Type in Trigger:%s is not supported. Supported types are [Gcr, Ecr, DockerRegistry]",
+              typeFromTrigger));
+    }
+
+    PollingItemGenerator pollingItemGenerator = generatorFactory.retrievePollingItemGenerator(buildTriggerOpsData);
+    if (pollingItemGenerator == null) {
+      throw new InvalidRequestException(
+          "Failed to find Polling Generator For Trigger. Please Check Manifest Config In Trigger");
+    }
+
+    PollingItem pollingItem = pollingItemGenerator.generatePollingItem(buildTriggerOpsData);
+    validationHelper.validatePollingItemForArtifact(pollingItem);
   }
 }

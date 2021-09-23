@@ -14,10 +14,11 @@ import lombok.Data;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @OwnedBy(PIPELINE)
-public class GcrArtifactSpec implements ArtifactTypeSpec {
+public class EcrSpec implements ArtifactTypeSpec {
   String connectorRef;
   List<TriggerEventDataCondition> eventConditions;
-  String registryHostname;
+  String imagePath;
+  String region;
   String tag;
 
   @Override

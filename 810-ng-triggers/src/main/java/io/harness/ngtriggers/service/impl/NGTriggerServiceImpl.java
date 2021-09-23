@@ -201,7 +201,7 @@ public class NGTriggerServiceImpl implements NGTriggerService {
     Criteria criteria = getTriggerEqualityCriteria(ngTriggerEntity, false);
 
     stampPollingStatusInfo(ngTriggerEntity, pollingDocument, statusResult);
-    NGTriggerEntity updatedEntity = ngTriggerRepository.update(criteria, ngTriggerEntity);
+    NGTriggerEntity updatedEntity = ngTriggerRepository.updateValidationStatus(criteria, ngTriggerEntity);
 
     if (updatedEntity == null) {
       throw new InvalidRequestException(
@@ -648,7 +648,7 @@ public class NGTriggerServiceImpl implements NGTriggerService {
     }
 
     if (needsUpdate) {
-      ngTriggerEntity = ngTriggerRepository.update(criteria, ngTriggerEntity);
+      ngTriggerEntity = ngTriggerRepository.updateValidationStatus(criteria, ngTriggerEntity);
       if (ngTriggerEntity == null) {
         throw new InvalidRequestException(
             String.format("NGTrigger [%s] couldn't be updated or doesn't exist", ngTriggerEntity.getIdentifier()));
