@@ -640,7 +640,6 @@ import software.wings.service.impl.aws.model.AwsS3ListBucketNamesResponse;
 import software.wings.service.impl.aws.model.AwsS3Request;
 import software.wings.service.impl.aws.model.AwsS3Request.AwsS3RequestType;
 import software.wings.service.impl.aws.model.AwsSecurityGroup;
-import software.wings.service.impl.aws.model.embed.AwsLambdaDetails;
 import software.wings.service.impl.aws.model.request.AwsCloudWatchStatisticsRequest;
 import software.wings.service.impl.aws.model.request.AwsLambdaDetailsRequest;
 import software.wings.service.impl.aws.model.response.AwsCloudWatchMetricDataResponse;
@@ -1438,7 +1437,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AwsCloudWatchStatisticsRequest.class, 7254);
     kryo.register(AwsLambdaDetailsRequest.class, 7255);
     kryo.register(AwsLambdaDetailsResponse.class, 7256);
-    kryo.register(AwsLambdaDetails.class, 7257);
     kryo.register(JiraIssueData.class, 7259);
     kryo.register(K8sSwapServiceElement.class, 7260);
     kryo.register(SlackMessage.class, 7261);
