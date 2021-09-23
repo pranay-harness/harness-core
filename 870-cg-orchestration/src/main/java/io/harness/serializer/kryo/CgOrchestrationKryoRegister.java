@@ -9,7 +9,6 @@ import io.harness.beans.ExecutionStatusResponseData;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.RepairActionCode;
 import io.harness.beans.ShellScriptProvisionOutputVariables;
-import io.harness.beans.SweepingOutput;
 import io.harness.beans.WorkflowType;
 import io.harness.serializer.KryoRegistrar;
 
@@ -28,7 +27,6 @@ public class CgOrchestrationKryoRegister implements KryoRegistrar {
     kryo.register(DelegateTask.class, 5003);
 
     kryo.register(ExecutionStatusResponseData.class, 3102);
-    kryo.register(SweepingOutput.class, 3101);
     kryo.register(RepairActionCode.class, 2528);
     kryo.register(ShellScriptProvisionOutputVariables.class, 40021);
 

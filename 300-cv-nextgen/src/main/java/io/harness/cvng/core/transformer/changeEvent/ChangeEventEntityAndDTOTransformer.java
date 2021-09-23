@@ -2,24 +2,23 @@ package io.harness.cvng.core.transformer.changeEvent;
 
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.beans.change.ChangeEventDTO;
+import io.harness.cvng.beans.change.ChangeSourceType;
 
 import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.name.Names;
+import java.util.Map;
 
 public class ChangeEventEntityAndDTOTransformer {
-  @Inject Injector injector;
+  @Inject private Map<ChangeSourceType, ChangeEventMetaDataTransformer> changeTypeMetaDataTransformerMap;
 
   public Activity getEntity(ChangeEventDTO changeEventDTO) {
-    ChangeEventMetaDataTransformer changeEventMetaDataTransformer = injector.getInstance(Key.get(
-        ChangeEventMetaDataTransformer.class, Names.named(changeEventDTO.getChangeEventMetaData().getType().name())));
+    ChangeEventMetaDataTransformer changeEventMetaDataTransformer =
+        changeTypeMetaDataTransformerMap.get(changeEventDTO.getType());
     return changeEventMetaDataTransformer.getEntity(changeEventDTO);
   }
 
   public ChangeEventDTO getDto(Activity changeEvent) {
     ChangeEventMetaDataTransformer changeEventMetaDataTransformer =
-        injector.getInstance(Key.get(ChangeEventMetaDataTransformer.class, Names.named(changeEvent.getType().name())));
+        changeTypeMetaDataTransformerMap.get(ChangeSourceType.ofActivityType(changeEvent.getType()));
     return changeEventMetaDataTransformer.getDTO(changeEvent);
   }
 }

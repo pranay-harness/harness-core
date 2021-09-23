@@ -3,6 +3,8 @@ package io.harness.ngtriggers.expressions.functors;
 import static io.harness.ngtriggers.Constants.EVENT_PAYLOAD;
 import static io.harness.ngtriggers.Constants.PAYLOAD;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.plan.PlanExecutionMetadataService;
@@ -35,12 +37,15 @@ public class TriggerFunctor implements LateBindingValue {
                              -> new IllegalStateException(
                                  "No Metadata present for planExecution :" + ambiance.getPlanExecutionId()));
     Map<String, Object> jsonObject = TriggerHelper.buildJsonObjectFromAmbiance(metadata.getTriggerPayload());
-    jsonObject.put(EVENT_PAYLOAD, metadata.getTriggerJsonPayload());
-    // payload
-    try {
-      jsonObject.put(PAYLOAD, JsonPipelineUtils.read(metadata.getTriggerJsonPayload(), HashMap.class));
-    } catch (IOException e) {
-      throw new InvalidRequestException("Event payload could not be converted to a hashmap");
+
+    if (isNotBlank(metadata.getTriggerJsonPayload())) {
+      jsonObject.put(EVENT_PAYLOAD, metadata.getTriggerJsonPayload());
+      // payload
+      try {
+        jsonObject.put(PAYLOAD, JsonPipelineUtils.read(metadata.getTriggerJsonPayload(), HashMap.class));
+      } catch (IOException e) {
+        throw new InvalidRequestException("Event payload could not be converted to a hashmap");
+      }
     }
     return jsonObject;
   }

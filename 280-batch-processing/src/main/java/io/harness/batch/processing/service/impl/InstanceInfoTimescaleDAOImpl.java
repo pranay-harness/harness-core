@@ -120,7 +120,7 @@ public class InstanceInfoTimescaleDAOImpl implements InstanceInfoTimescaleDAO {
                                .set(POD_INFO.CPUREQUEST, resource.getCpuUnits())
                                .set(POD_INFO.MEMORYREQUEST, resource.getMemoryMb())
                                .set(POD_INFO.PARENTNODEID, parentId)
-                               .onConflictOnConstraint(Keys.POD_INFO_UNIQUE_RECORD_INDEX)
+                               .onConflict(POD_INFO.ACCOUNTID, POD_INFO.CLUSTERID, POD_INFO.INSTANCEID)
                                .doUpdate()
                                .set(POD_INFO.STARTTIME, instantToOffsetDateTime(instanceInfo.getUsageStartTime()))
                                .set(POD_INFO.NAMESPACE, namespace)

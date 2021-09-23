@@ -7,6 +7,8 @@ import io.harness.beans.IdentifierRef;
 import io.harness.common.EntityReference;
 import io.harness.encryption.ScopeHelper;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
+import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
+import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.UnexpectedException;
 import io.harness.git.model.ChangeType;
@@ -14,6 +16,7 @@ import io.harness.gitsync.FileChange;
 import io.harness.gitsync.ScopeDetails;
 import io.harness.gitsync.entityInfo.AbstractGitSdkEntityHandler;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
+import io.harness.grpc.utils.StringValueUtils;
 import io.harness.ng.core.EntityDetail;
 import io.harness.plancreator.pipeline.PipelineConfig;
 import io.harness.plancreator.pipeline.PipelineInfoConfig;
@@ -138,5 +141,16 @@ public class PipelineEntityGitSyncHelper extends AbstractGitSdkEntityHandler<Pip
   @Override
   public PipelineConfig getYamlDTO(String yaml) {
     return PipelineYamlDtoMapper.toDto(yaml);
+  }
+
+  @Override
+  public String getYamlFromEntityRef(EntityDetailProtoDTO entityReference) {
+    final IdentifierRefProtoDTO identifierRef = entityReference.getIdentifierRef();
+    final Optional<PipelineEntity> pipelineEntity =
+        pmsPipelineService.get(StringValueUtils.getStringFromStringValue(identifierRef.getAccountIdentifier()),
+            StringValueUtils.getStringFromStringValue(identifierRef.getOrgIdentifier()),
+            StringValueUtils.getStringFromStringValue(identifierRef.getProjectIdentifier()),
+            StringValueUtils.getStringFromStringValue(identifierRef.getIdentifier()), false);
+    return pipelineEntity.get().getYaml();
   }
 }

@@ -62,10 +62,6 @@ public class CEGcpServiceAccountServiceImpl implements CEGcpServiceAccountServic
   @Override
   public CEGcpServiceAccount provisionAndRetrieveServiceAccount(String accountId, String ccmProjectId)
       throws IOException {
-    /* If a connector creation was initiated and not completed projectId will be null, CE-NG Processes the event on
-     * create of GCP connector creation hence projectId is oly set in the record in CE-NG Service.
-     * If connector creation is not complete, projectId will be null */
-
     CEGcpServiceAccount gcpServiceAccount = gcpServiceAccountDao.getUnassignedServiceAccountByAccountId(accountId);
     if (gcpServiceAccount == null) {
       log.info("Creating gcpServiceAccount");

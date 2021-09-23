@@ -7,6 +7,7 @@ import io.harness.beans.NGTemplateReference;
 import io.harness.common.EntityReference;
 import io.harness.encryption.ScopeHelper;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
+import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.UnexpectedException;
 import io.harness.git.model.ChangeType;
@@ -126,6 +127,7 @@ public class TemplateEntityGitSyncHandler extends AbstractGitSdkEntityHandler<Te
     return TemplateEntityKeys.branch;
   }
 
+  // todo(archit): implement
   @Override
   public List<FileChange> listAllEntities(ScopeDetails scopeDetails) {
     return null;
@@ -139,5 +141,11 @@ public class TemplateEntityGitSyncHandler extends AbstractGitSdkEntityHandler<Te
         templateInfoConfig.getOrgIdentifier(), templateInfoConfig.getProjectIdentifier(),
         templateInfoConfig.getIdentifier(), templateInfoConfig.getVersionLabel(), false);
     return templateEntity.map(TemplateEntity::getObjectIdOfYaml).orElse(null);
+  }
+
+  // todo(archit): implement
+  @Override
+  public String getYamlFromEntityRef(EntityDetailProtoDTO entityReference) {
+    return null;
   }
 }

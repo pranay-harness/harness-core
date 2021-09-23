@@ -6,12 +6,10 @@ package io.harness.timescaledb;
 import io.harness.timescaledb.tables.CeRecommendations;
 import io.harness.timescaledb.tables.NodeInfo;
 import io.harness.timescaledb.tables.NodePoolAggregated;
-import io.harness.timescaledb.tables.PodInfo;
 import io.harness.timescaledb.tables.WorkloadInfo;
 import io.harness.timescaledb.tables.records.CeRecommendationsRecord;
 import io.harness.timescaledb.tables.records.NodeInfoRecord;
 import io.harness.timescaledb.tables.records.NodePoolAggregatedRecord;
-import io.harness.timescaledb.tables.records.PodInfoRecord;
 import io.harness.timescaledb.tables.records.WorkloadInfoRecord;
 
 import org.jooq.TableField;
@@ -43,9 +41,6 @@ public class Keys {
               NodePoolAggregated.NODE_POOL_AGGREGATED.CLUSTERID, NodePoolAggregated.NODE_POOL_AGGREGATED.NAME,
               NodePoolAggregated.NODE_POOL_AGGREGATED.STARTTIME, NodePoolAggregated.NODE_POOL_AGGREGATED.ENDTIME},
           true);
-  public static final UniqueKey<PodInfoRecord> POD_INFO_UNIQUE_RECORD_INDEX =
-      Internal.createUniqueKey(PodInfo.POD_INFO, DSL.name("pod_info_unique_record_index"),
-          new TableField[] {PodInfo.POD_INFO.ACCOUNTID, PodInfo.POD_INFO.CLUSTERID, PodInfo.POD_INFO.INSTANCEID}, true);
   public static final UniqueKey<WorkloadInfoRecord> WORKLOAD_INFO_UNIQUE_RECORD_INDEX =
       Internal.createUniqueKey(WorkloadInfo.WORKLOAD_INFO, DSL.name("workload_info_unique_record_index"),
           new TableField[] {WorkloadInfo.WORKLOAD_INFO.ACCOUNTID, WorkloadInfo.WORKLOAD_INFO.CLUSTERID,

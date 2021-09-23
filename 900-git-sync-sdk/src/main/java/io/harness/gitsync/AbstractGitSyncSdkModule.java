@@ -85,6 +85,10 @@ public abstract class AbstractGitSyncSdkModule extends AbstractModule {
       final MapBinder<String, GitSdkEntityHandlerInterface> gitPersistenceHelperServiceMapBinder =
           MapBinder.newMapBinder(binder(), String.class, GitSdkEntityHandlerInterface.class);
       gitPersistenceHelperServiceMapBinder.addBinding(entityClass.getCanonicalName()).to(entityHelperClass);
+
+      final MapBinder<EntityType, GitSdkEntityHandlerInterface> gitEntityTypeMapBinder =
+          MapBinder.newMapBinder(binder(), EntityType.class, GitSdkEntityHandlerInterface.class);
+      gitEntityTypeMapBinder.addBinding(gitSyncEntitiesConfig.getEntityType()).to(entityHelperClass);
     });
   }
 

@@ -23,7 +23,7 @@ public class DelegateConfigurationCreateEvent extends AbstractDelegateConfigurat
   @Override
   public Resource getResource() {
     return Resource.builder()
-        .identifier(delegateProfile.getUuid())
+        .identifier(delegateProfile.getIdentifier())
         .type(ResourceTypeConstants.DELEGATE_CONFIGURATION)
         .build();
   }

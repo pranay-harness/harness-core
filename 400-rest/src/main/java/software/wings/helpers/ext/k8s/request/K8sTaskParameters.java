@@ -43,6 +43,7 @@ public class K8sTaskParameters implements TaskParameters, ActivityAccess, Execut
   @NotEmpty private K8sTaskType commandType;
   private HelmVersion helmVersion;
   private Set<String> delegateSelectors;
+  private boolean useLatestChartMuseumVersion;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
