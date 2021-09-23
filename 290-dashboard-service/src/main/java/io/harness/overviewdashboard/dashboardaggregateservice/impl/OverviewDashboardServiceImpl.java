@@ -49,7 +49,6 @@ import io.harness.pms.dashboards.PipelinesCount;
 import com.google.inject.Inject;
 import dashboards.CDLandingDashboardResourceClient;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -65,29 +64,47 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
   @Inject ParallelRestCallExecutor parallelRestCallExecutor;
 
   @Override
-  public TopProjectsPanel getTopProjectsPanel(
+  public ExecutionResponse<TopProjectsPanel> getTopProjectsPanel(
       String accountIdentifier, String userId, long startInterval, long endInterval) {
     List<OrgProjectIdentifier> orgProjectIdentifierList = getOrgProjectIdentifier(accountIdentifier, userId);
     List<RestCallRequest> restCallRequestList = getRestCallRequestListForTopProjectsPanel(
         accountIdentifier, startInterval, endInterval, orgProjectIdentifierList);
     List<RestCallResponse> restCallResponses = parallelRestCallExecutor.executeRestCalls(restCallRequestList);
+
     Optional<RestCallResponse> cdProjectsDashBoardInfoOptional =
         getResponseOptional(restCallResponses, OverviewDashboardRequestType.GET_CD_TOP_PROJECT_LIST);
-    List<TopProjectsDashboardInfo<CountWithSuccessFailureDetails>> cdTopProjectsInfoList;
-    List<TopProjectsDashboardInfo<CountWithSuccessFailureDetails>> ciTopProjectsInfoList = Collections.EMPTY_LIST;
-    List<TopProjectsDashboardInfo<CountInfo>> cfTopProjectsInfoList = Collections.EMPTY_LIST;
-    if (cdProjectsDashBoardInfoOptional.isPresent()) {
-      ProjectsDashboardInfo cdProjectsDashBoardInfo =
-          (ProjectsDashboardInfo) cdProjectsDashBoardInfoOptional.get().getResponse();
-      cdTopProjectsInfoList = getCDTopProjectsInfoList(cdProjectsDashBoardInfo);
+
+    ExecutionResponse<List<TopProjectsDashboardInfo<CountWithSuccessFailureDetails>>>
+        executionResponseCDTopProjectsInfoList =
+            getExecutionResponseCDTopProjectsInfoList(cdProjectsDashBoardInfoOptional);
+    ExecutionResponse<List<TopProjectsDashboardInfo<CountWithSuccessFailureDetails>>>
+        executionResponseCITopProjectsInfoList = getExecutionResponseCITopProjectsInfoList();
+    ExecutionResponse<List<TopProjectsDashboardInfo<CountInfo>>> executionResponseCFTopProjectsInfoList =
+        getExecutionResponseCFTopProjectsInfoList();
+
+    if ((executionResponseCDTopProjectsInfoList.getExecutionStatus() == ExecutionStatus.SUCCESS
+            || executionResponseCITopProjectsInfoList.getExecutionStatus() == ExecutionStatus.SUCCESS
+            || executionResponseCFTopProjectsInfoList.getExecutionStatus() == ExecutionStatus.SUCCESS)) {
+      return ExecutionResponse.<TopProjectsPanel>builder()
+          .response((TopProjectsPanel.builder()
+                         .CDTopProjectsInfo(executionResponseCDTopProjectsInfoList)
+                         .CITopProjectsInfo(executionResponseCITopProjectsInfoList)
+                         .CFTopProjectsInfo(executionResponseCFTopProjectsInfoList)
+                         .build()))
+          .executionStatus(ExecutionStatus.SUCCESS)
+          .executionMessage(SUCCESS_MESSAGE)
+          .build();
     } else {
-      cdTopProjectsInfoList = Collections.EMPTY_LIST;
+      return ExecutionResponse.<TopProjectsPanel>builder()
+          .response((TopProjectsPanel.builder()
+                         .CDTopProjectsInfo(executionResponseCDTopProjectsInfoList)
+                         .CITopProjectsInfo(executionResponseCITopProjectsInfoList)
+                         .CFTopProjectsInfo(executionResponseCFTopProjectsInfoList)
+                         .build()))
+          .executionStatus(ExecutionStatus.FAILURE)
+          .executionMessage(FAILURE_MESSAGE)
+          .build();
     }
-    return TopProjectsPanel.builder()
-        .CDTopProjectsInfo(cdTopProjectsInfoList)
-        .CITopProjectsInfo(ciTopProjectsInfoList)
-        .CFTopProjectsInfo(cfTopProjectsInfoList)
-        .build();
   }
 
   @Override
@@ -97,29 +114,39 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
     List<RestCallRequest> restCallRequestList = getRestCallRequestListForDeploymentStatsOverview(
         accountIdentifier, startInterval, endInterval, orgProjectIdentifierList, groupBy, sortBy);
     List<RestCallResponse> restCallResponses = parallelRestCallExecutor.executeRestCalls(restCallRequestList);
+
     Optional<RestCallResponse> deploymentStatsSummaryOptional =
         getResponseOptional(restCallResponses, OverviewDashboardRequestType.GET_DEPLOYMENTS_STATS_SUMMARY);
     Optional<RestCallResponse> timeBasedDeploymentsInfoOptional =
         getResponseOptional(restCallResponses, OverviewDashboardRequestType.GET_TIME_WISE_DEPLOYMENT_INFO);
     Optional<RestCallResponse> mostActiveServicesOptional =
         getResponseOptional(restCallResponses, OverviewDashboardRequestType.GET_MOST_ACTIVE_SERVICES);
+
     if (deploymentStatsSummaryOptional.isPresent() && timeBasedDeploymentsInfoOptional.isPresent()
         && mostActiveServicesOptional.isPresent()) {
-      DeploymentStatsSummary deploymentStatsSummary =
-          (DeploymentStatsSummary) deploymentStatsSummaryOptional.get().getResponse();
-      List<TimeBasedDeploymentInfo> timeBasedDeploymentInfoList =
-          (List<TimeBasedDeploymentInfo>) timeBasedDeploymentsInfoOptional.get().getResponse();
-      ServicesDashboardInfo servicesDashboardInfo =
-          (ServicesDashboardInfo) mostActiveServicesOptional.get().getResponse();
-      return ExecutionResponse.<DeploymentsStatsOverview>builder()
-          .response(DeploymentsStatsOverview.builder()
-                        .deploymentsStatsSummary(
-                            getDeploymentStatsSummary(deploymentStatsSummary, timeBasedDeploymentInfoList))
-                        .mostActiveServicesList(getMostActiveServicesList(sortBy, servicesDashboardInfo))
-                        .build())
-          .executionStatus(ExecutionStatus.SUCCESS)
-          .executionMessage(SUCCESS_MESSAGE)
-          .build();
+      if (deploymentStatsSummaryOptional.get().isCallFailed() || timeBasedDeploymentsInfoOptional.get().isCallFailed()
+          || mostActiveServicesOptional.get().isCallFailed()) {
+        return ExecutionResponse.<DeploymentsStatsOverview>builder()
+            .executionStatus(ExecutionStatus.FAILURE)
+            .executionMessage(FAILURE_MESSAGE)
+            .build();
+      } else {
+        DeploymentStatsSummary deploymentStatsSummary =
+            (DeploymentStatsSummary) deploymentStatsSummaryOptional.get().getResponse();
+        List<TimeBasedDeploymentInfo> timeBasedDeploymentInfoList =
+            (List<TimeBasedDeploymentInfo>) timeBasedDeploymentsInfoOptional.get().getResponse();
+        ServicesDashboardInfo servicesDashboardInfo =
+            (ServicesDashboardInfo) mostActiveServicesOptional.get().getResponse();
+        return ExecutionResponse.<DeploymentsStatsOverview>builder()
+            .response(DeploymentsStatsOverview.builder()
+                          .deploymentsStatsSummary(
+                              getDeploymentStatsSummary(deploymentStatsSummary, timeBasedDeploymentInfoList))
+                          .mostActiveServicesList(getMostActiveServicesList(sortBy, servicesDashboardInfo))
+                          .build())
+            .executionStatus(ExecutionStatus.SUCCESS)
+            .executionMessage(SUCCESS_MESSAGE)
+            .build();
+      }
     }
     return ExecutionResponse.<DeploymentsStatsOverview>builder()
         .executionStatus(ExecutionStatus.FAILURE)
@@ -134,25 +161,35 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
     List<RestCallRequest> restCallRequestList =
         getRestCallRequestListForCountOverview(accountIdentifier, startInterval, endInterval, orgProjectIdentifierList);
     List<RestCallResponse> restCallResponses = parallelRestCallExecutor.executeRestCalls(restCallRequestList);
+
     Optional<RestCallResponse> servicesCountOptional =
         getResponseOptional(restCallResponses, OverviewDashboardRequestType.GET_SERVICES_COUNT);
     Optional<RestCallResponse> envCountOptional =
         getResponseOptional(restCallResponses, OverviewDashboardRequestType.GET_ENV_COUNT);
     Optional<RestCallResponse> pipelinesCountOptional =
         getResponseOptional(restCallResponses, OverviewDashboardRequestType.GET_PIPELINES_COUNT);
+
     if (servicesCountOptional.isPresent() && envCountOptional.isPresent() && pipelinesCountOptional.isPresent()) {
-      ServicesCount servicesCount = (ServicesCount) servicesCountOptional.get().getResponse();
-      EnvCount envCount = (EnvCount) envCountOptional.get().getResponse();
-      PipelinesCount pipelinesCount = (PipelinesCount) pipelinesCountOptional.get().getResponse();
-      return ExecutionResponse.<CountOverview>builder()
-          .response(CountOverview.builder()
-                        .servicesCountDetail(getServicesCount(servicesCount))
-                        .envCountDetail(getEnvCount(envCount))
-                        .pipelinesCountDetail(getPipelinesCount(pipelinesCount))
-                        .build())
-          .executionStatus(ExecutionStatus.SUCCESS)
-          .executionMessage(SUCCESS_MESSAGE)
-          .build();
+      if (servicesCountOptional.get().isCallFailed() || envCountOptional.get().isCallFailed()
+          || pipelinesCountOptional.get().isCallFailed()) {
+        return ExecutionResponse.<CountOverview>builder()
+            .executionStatus(ExecutionStatus.FAILURE)
+            .executionMessage(FAILURE_MESSAGE)
+            .build();
+      } else {
+        ServicesCount servicesCount = (ServicesCount) servicesCountOptional.get().getResponse();
+        EnvCount envCount = (EnvCount) envCountOptional.get().getResponse();
+        PipelinesCount pipelinesCount = (PipelinesCount) pipelinesCountOptional.get().getResponse();
+        return ExecutionResponse.<CountOverview>builder()
+            .response(CountOverview.builder()
+                          .servicesCountDetail(getServicesCount(servicesCount))
+                          .envCountDetail(getEnvCount(envCount))
+                          .pipelinesCountDetail(getPipelinesCount(pipelinesCount))
+                          .build())
+            .executionStatus(ExecutionStatus.SUCCESS)
+            .executionMessage(SUCCESS_MESSAGE)
+            .build();
+      }
     }
     return ExecutionResponse.<CountOverview>builder()
         .executionStatus(ExecutionStatus.FAILURE)
@@ -352,5 +389,49 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
                                 .requestType(OverviewDashboardRequestType.GET_PIPELINES_COUNT)
                                 .build());
     return restCallRequestList;
+  }
+
+  private ExecutionResponse<List<TopProjectsDashboardInfo<CountWithSuccessFailureDetails>>>
+  getExecutionResponseCDTopProjectsInfoList(Optional<RestCallResponse> cdProjectsDashBoardInfoOptional) {
+    ExecutionResponse<List<TopProjectsDashboardInfo<CountWithSuccessFailureDetails>>>
+        executionResponseCDTopProjectsInfoList;
+    if (cdProjectsDashBoardInfoOptional.isPresent()) {
+      if (cdProjectsDashBoardInfoOptional.get().isCallFailed()) {
+        executionResponseCDTopProjectsInfoList =
+            ExecutionResponse.<List<TopProjectsDashboardInfo<CountWithSuccessFailureDetails>>>builder()
+                .executionStatus(ExecutionStatus.FAILURE)
+                .executionMessage(FAILURE_MESSAGE)
+                .build();
+      } else {
+        ProjectsDashboardInfo cdProjectsDashBoardInfo =
+            (ProjectsDashboardInfo) cdProjectsDashBoardInfoOptional.get().getResponse();
+        executionResponseCDTopProjectsInfoList =
+            ExecutionResponse.<List<TopProjectsDashboardInfo<CountWithSuccessFailureDetails>>>builder()
+                .response(getCDTopProjectsInfoList(cdProjectsDashBoardInfo))
+                .executionStatus(ExecutionStatus.SUCCESS)
+                .executionMessage(SUCCESS_MESSAGE)
+                .build();
+      }
+    } else {
+      executionResponseCDTopProjectsInfoList =
+          ExecutionResponse.<List<TopProjectsDashboardInfo<CountWithSuccessFailureDetails>>>builder()
+              .executionStatus(ExecutionStatus.FAILURE)
+              .executionMessage(FAILURE_MESSAGE)
+              .build();
+    }
+    return executionResponseCDTopProjectsInfoList;
+  }
+  private ExecutionResponse<List<TopProjectsDashboardInfo<CountWithSuccessFailureDetails>>>
+  getExecutionResponseCITopProjectsInfoList() {
+    return ExecutionResponse.<List<TopProjectsDashboardInfo<CountWithSuccessFailureDetails>>>builder()
+        .executionStatus(ExecutionStatus.FAILURE)
+        .executionMessage(FAILURE_MESSAGE)
+        .build();
+  }
+  private ExecutionResponse<List<TopProjectsDashboardInfo<CountInfo>>> getExecutionResponseCFTopProjectsInfoList() {
+    return ExecutionResponse.<List<TopProjectsDashboardInfo<CountInfo>>>builder()
+        .executionStatus(ExecutionStatus.FAILURE)
+        .executionMessage(FAILURE_MESSAGE)
+        .build();
   }
 }
