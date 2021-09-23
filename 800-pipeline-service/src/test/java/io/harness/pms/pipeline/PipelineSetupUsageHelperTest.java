@@ -37,8 +37,8 @@ import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
 import io.harness.ng.core.entitysetupusage.dto.SetupUsageDetailType;
+import io.harness.pms.merger.helpers.InputSetMergeHelper;
 import io.harness.pms.merger.helpers.InputSetYamlHelper;
-import io.harness.pms.merger.helpers.MergeHelper;
 import io.harness.pms.rbac.InternalReferredEntityExtractor;
 import io.harness.preflight.PreFlightCheckMetadata;
 import io.harness.remote.client.NGRestUtils;
@@ -204,7 +204,7 @@ public class PipelineSetupUsageHelperTest extends PipelineServiceTestBase {
     String inputSetCorrectFile = "input-set-for-validators.yaml";
     String inputSetCorrect = readFile(inputSetCorrectFile);
 
-    pipelineYaml = MergeHelper.mergeInputSetIntoPipeline(
+    pipelineYaml = InputSetMergeHelper.mergeInputSetIntoPipeline(
         pipelineYaml, InputSetYamlHelper.getPipelineComponent(inputSetCorrect), true);
     EntityDetail referredByEntity = EntityDetail.builder()
                                         .type(EntityType.PIPELINES)

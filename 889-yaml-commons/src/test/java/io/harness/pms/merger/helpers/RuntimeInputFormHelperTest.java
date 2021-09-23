@@ -1,7 +1,7 @@
 package io.harness.pms.merger.helpers;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
-import static io.harness.pms.merger.helpers.MergeHelper.mergeRuntimeInputValuesIntoOriginalYaml;
+import static io.harness.pms.merger.helpers.RuntimeInputFormHelper.createRuntimeInputForm;
 import static io.harness.rule.OwnerRule.NAMAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,7 +20,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @OwnedBy(PIPELINE)
-public class MergeHelperTest extends CategoryTest {
+public class RuntimeInputFormHelperTest extends CategoryTest {
   private String readFile(String filename) {
     ClassLoader classLoader = getClass().getClassLoader();
     try {
@@ -33,19 +33,13 @@ public class MergeHelperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testMergeInputSetIntoPipeline() {
+  public void testCreateTemplateFromPipeline() {
     String filename = "pipeline-extensive.yml";
     String yaml = readFile(filename);
+    String templateYaml = createRuntimeInputForm(yaml, true);
 
-    String inputSet = "runtimeInput1.yml";
-    String inputSetYaml = readFile(inputSet);
-
-    String res = mergeRuntimeInputValuesIntoOriginalYaml(yaml, inputSetYaml, false);
-    String resYaml = res.replace("\"", "");
-
-    String mergedYamlFile = "pipeline-extensive-merged.yml";
-    String mergedYaml = readFile(mergedYamlFile);
-
-    assertThat(resYaml).isEqualTo(mergedYaml);
+    String resFile = "pipeline-extensive-template.yml";
+    String resTemplate = readFile(resFile);
+    assertThat(templateYaml).isEqualTo(resTemplate);
   }
 }
