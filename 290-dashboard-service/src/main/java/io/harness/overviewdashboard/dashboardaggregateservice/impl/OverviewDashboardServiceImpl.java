@@ -86,21 +86,21 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
         || executionResponseCITopProjectsInfoList.getExecutionStatus() == ExecutionStatus.SUCCESS
         || executionResponseCFTopProjectsInfoList.getExecutionStatus() == ExecutionStatus.SUCCESS) {
       return ExecutionResponse.<TopProjectsPanel>builder()
-          .response((TopProjectsPanel.builder()
-                         .CDTopProjectsInfo(executionResponseCDTopProjectsInfoList)
-                         .CITopProjectsInfo(executionResponseCITopProjectsInfoList)
-                         .CFTopProjectsInfo(executionResponseCFTopProjectsInfoList)
-                         .build()))
+          .response(TopProjectsPanel.builder()
+                        .CDTopProjectsInfo(executionResponseCDTopProjectsInfoList)
+                        .CITopProjectsInfo(executionResponseCITopProjectsInfoList)
+                        .CFTopProjectsInfo(executionResponseCFTopProjectsInfoList)
+                        .build())
           .executionStatus(ExecutionStatus.SUCCESS)
           .executionMessage(SUCCESS_MESSAGE)
           .build();
     } else {
       return ExecutionResponse.<TopProjectsPanel>builder()
-          .response((TopProjectsPanel.builder()
-                         .CDTopProjectsInfo(executionResponseCDTopProjectsInfoList)
-                         .CITopProjectsInfo(executionResponseCITopProjectsInfoList)
-                         .CFTopProjectsInfo(executionResponseCFTopProjectsInfoList)
-                         .build()))
+          .response(TopProjectsPanel.builder()
+                        .CDTopProjectsInfo(executionResponseCDTopProjectsInfoList)
+                        .CITopProjectsInfo(executionResponseCITopProjectsInfoList)
+                        .CFTopProjectsInfo(executionResponseCFTopProjectsInfoList)
+                        .build())
           .executionStatus(ExecutionStatus.FAILURE)
           .executionMessage(FAILURE_MESSAGE)
           .build();
