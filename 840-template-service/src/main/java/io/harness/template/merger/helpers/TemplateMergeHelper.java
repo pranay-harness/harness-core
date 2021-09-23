@@ -7,7 +7,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.exception.NGTemplateException;
-import io.harness.pms.merger.helpers.YamlTemplateHelper;
+import io.harness.pms.merger.helpers.RuntimeInputFormHelper;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.template.beans.yaml.NGTemplateConfig;
@@ -84,7 +84,7 @@ public class TemplateMergeHelper {
         log.error("Template yaml provided does not have spec in it.");
         throw new NGTemplateException("Template yaml provided does not have spec in it.");
       }
-      String templateInputsYamlWithSpec = YamlTemplateHelper.createTemplateFromYaml(templateSpec);
+      String templateInputsYamlWithSpec = RuntimeInputFormHelper.createTemplateFromYaml(templateSpec);
       if (isEmpty(templateInputsYamlWithSpec)) {
         return templateInputsYamlWithSpec;
       }

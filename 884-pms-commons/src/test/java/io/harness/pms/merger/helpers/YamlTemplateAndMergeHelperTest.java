@@ -1,7 +1,7 @@
 package io.harness.pms.merger.helpers;
 
-import static io.harness.pms.merger.helpers.MergeHelper.mergeInputSetIntoPipeline;
-import static io.harness.pms.merger.helpers.YamlTemplateHelper.createTemplateFromPipeline;
+import static io.harness.pms.merger.helpers.InputSetMergeHelper.mergeInputSetIntoPipeline;
+import static io.harness.pms.merger.helpers.InputSetTemplateHelper.createTemplateFromPipeline;
 import static io.harness.rule.OwnerRule.INDER;
 
 import static org.assertj.core.api.Assertions.assertThat;

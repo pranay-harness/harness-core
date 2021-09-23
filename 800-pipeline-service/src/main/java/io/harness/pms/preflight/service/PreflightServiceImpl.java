@@ -9,7 +9,7 @@ import io.harness.manage.ManagedExecutorService;
 import io.harness.ng.core.EntityDetail;
 import io.harness.pms.inputset.InputSetErrorDTOPMS;
 import io.harness.pms.inputset.InputSetErrorResponseDTOPMS;
-import io.harness.pms.merger.helpers.MergeHelper;
+import io.harness.pms.merger.helpers.InputSetMergeHelper;
 import io.harness.pms.ngpipeline.inputset.helpers.InputSetErrorsHelper;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineSetupUsageHelper;
@@ -70,7 +70,8 @@ public class PreflightServiceImpl implements PreflightService {
     if (EmptyPredicate.isEmpty(inputSetPipelineYaml)) {
       pipelineYaml = pipelineEntity.get().getYaml();
     } else {
-      pipelineYaml = MergeHelper.mergeInputSetIntoPipeline(pipelineEntity.get().getYaml(), inputSetPipelineYaml, false);
+      pipelineYaml =
+          InputSetMergeHelper.mergeInputSetIntoPipeline(pipelineEntity.get().getYaml(), inputSetPipelineYaml, false);
     }
     List<EntityDetail> entityDetails = pipelineSetupUsageHelper.getReferencesOfPipeline(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineYaml, null);
