@@ -248,8 +248,9 @@ public class GitAwarePersistenceNewImpl implements GitAwarePersistence {
                             .and(gitSdkEntityHandlerInterface.getBranchKey())
                             .is(branch)
                             .and(gitSdkEntityHandlerInterface.getYamlGitConfigRefKey())
-                            .is(repo), 
-                             Criteria.where(gitSdkEntityHandlerInterface.getIsFromDefaultBranchKey()).exists(false));
+                            .is(repo),
+        new Criteria().orOperator(Criteria.where(gitSdkEntityHandlerInterface.getYamlGitConfigRefKey()).is(false),
+            Criteria.where(gitSdkEntityHandlerInterface.getYamlGitConfigRefKey()).exists(false)));
     if (isFindDefaultFromOtherBranches != null && isFindDefaultFromOtherBranches) {
       return new Criteria().orOperator(criteria,
           Criteria.where(gitSdkEntityHandlerInterface.getIsFromDefaultBranchKey())
