@@ -1984,7 +1984,6 @@ public class DelegateServiceImpl implements DelegateService {
     if (isDelegateWithoutPollingEnabled(delegate)) {
       eventEmitter.send(Channel.DELEGATES,
           anEvent().withOrgId(delegate.getAccountId()).withUuid(delegate.getUuid()).withType(Type.CREATE).build());
-      assignDelegateService.clearConnectionResults(delegate.getAccountId());
     }
 
     updateWithTokenAndSeqNumIfEcsDelegate(delegate, savedDelegate);
@@ -2800,11 +2799,6 @@ public class DelegateServiceImpl implements DelegateService {
   public void delegateDisconnected(String accountId, String delegateId, String delegateConnectionId) {
     delegateConnectionDao.delegateDisconnected(accountId, delegateConnectionId);
     subject.fireInform(DelegateObxxxxxxxx:onDisconnected, accountId, delegateId);
-  }
-
-  @Override
-  public void clearCache(String accountId, String delegateId) {
-    assignDelegateService.clearConnectionResults(accountId, delegateId);
   }
 
   @Override
