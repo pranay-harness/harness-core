@@ -424,6 +424,7 @@ import software.wings.service.impl.aws.model.AwsAmiPreDeploymentData;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
 import software.wings.service.impl.aws.model.AwsSubnet;
 import software.wings.service.impl.aws.model.AwsVPC;
+import software.wings.service.impl.aws.model.embed.AwsLambdaDetails;
 import software.wings.service.impl.elk.ElkIndexTemplate;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicApplication.NewRelicApplications;
@@ -907,5 +908,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AwsAmiPreDeploymentData.class, 5519);
     kryo.register(EcsCommandResponse.class, 5608);
     kryo.register(ExistingStackInfo.class, 5479);
+    kryo.register(AwsLambdaDetails.class, 5701);
   }
 }
