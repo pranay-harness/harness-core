@@ -710,9 +710,11 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   @Override
   public MonitoredServiceResponse createDefault(
       ProjectParams projectParams, String serviceIdentifier, String environmentIdentifier) {
+    String identifier = serviceIdentifier + "_" + environmentIdentifier;
+    identifier = identifier.substring(0, Math.min(identifier.length(), 64));
     MonitoredServiceDTO monitoredServiceDTO = MonitoredServiceDTO.builder()
-                                                  .name(serviceIdentifier + "_" + environmentIdentifier)
-                                                  .identifier(serviceIdentifier + "_" + environmentIdentifier)
+                                                  .name(identifier)
+                                                  .identifier(identifier)
                                                   .orgIdentifier(projectParams.getOrgIdentifier())
                                                   .projectIdentifier(projectParams.getProjectIdentifier())
                                                   .serviceRef(serviceIdentifier)
@@ -725,8 +727,8 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
     try {
       saveMonitoredServiceEntity(projectParams.getAccountIdentifier(), monitoredServiceDTO);
     } catch (DuplicateKeyException e) {
-      monitoredServiceDTO.setIdentifier(
-          monitoredServiceDTO.getIdentifier() + "_" + RandomStringUtils.randomAlphanumeric(7));
+      identifier = identifier.substring(0, Math.min(identifier.length(), 57));
+      monitoredServiceDTO.setIdentifier(identifier + "_" + RandomStringUtils.randomAlphanumeric(7));
       saveMonitoredServiceEntity(projectParams.getAccountIdentifier(), monitoredServiceDTO);
     }
     setupUsageEventService.sendCreateEventsForMonitoredService(projectParams, monitoredServiceDTO);

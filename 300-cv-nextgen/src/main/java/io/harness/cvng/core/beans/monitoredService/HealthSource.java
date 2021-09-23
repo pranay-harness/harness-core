@@ -5,6 +5,7 @@ import static io.harness.cvng.CVConstants.DATA_SOURCE_TYPE;
 import io.harness.cvng.beans.MonitoredServiceDataSourceType;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceSpec;
 import io.harness.cvng.core.entities.CVConfig;
+import io.harness.data.validator.EntityIdentifier;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -26,7 +27,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 public class HealthSource {
   @NotEmpty String name;
-  @NotEmpty String identifier;
+  @NotEmpty @EntityIdentifier String identifier;
   @JsonProperty(DATA_SOURCE_TYPE) MonitoredServiceDataSourceType type;
 
   @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = DATA_SOURCE_TYPE, include = JsonTypeInfo.As.EXTERNAL_PROPERTY,
