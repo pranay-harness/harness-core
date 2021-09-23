@@ -1,0 +1,35 @@
+pipeline:
+  name: Test Pipline
+  identifier: Test_Pipline11
+  variables:
+    - name: port
+      value: 6060
+      type: String
+  stages:
+    - stage:
+        identifier: qaStage
+        name: qa stage
+        template:
+          templateRef: stageTemplate
+          versionLabel: 1
+          templateInputs:
+            type: Approval
+            spec:
+              execution:
+                steps:
+                  - step:
+                      identifier: approval
+                      template:
+                        templateInputs:
+                          type: HarnessApproval
+                          spec:
+                            approvers:
+                              userGroups: myUserGroup
+                  - step:
+                      identifier: http
+                      template:
+                        templateInputs:
+                          spec:
+                            url: https://www.google.com
+                            method: GET
+                          timeout: 10s
