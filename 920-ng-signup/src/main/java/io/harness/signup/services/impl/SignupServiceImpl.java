@@ -502,11 +502,11 @@ public class SignupServiceImpl implements SignupService {
 
   private void addUtmInfoToProperties(UtmInfo utmInfo, HashMap<String, Object> properties) {
     if (utmInfo != null) {
-      properties.put("utmSource", utmInfo.getUtmSource() == null ? "" : utmInfo.getUtmSource());
-      properties.put("utmContent", utmInfo.getUtmContent() == null ? "" : utmInfo.getUtmContent());
-      properties.put("utmMedium", utmInfo.getUtmMedium() == null ? "" : utmInfo.getUtmMedium());
-      properties.put("utmTerm", utmInfo.getUtmTerm() == null ? "" : utmInfo.getUtmTerm());
-      properties.put("utmCampaign", utmInfo.getUtmCampaign() == null ? "" : utmInfo.getUtmCampaign());
+      properties.put("utm_source", utmInfo.getUtmSource() == null ? "" : utmInfo.getUtmSource());
+      properties.put("utm_content", utmInfo.getUtmContent() == null ? "" : utmInfo.getUtmContent());
+      properties.put("utm_medium", utmInfo.getUtmMedium() == null ? "" : utmInfo.getUtmMedium());
+      properties.put("utm_term", utmInfo.getUtmTerm() == null ? "" : utmInfo.getUtmTerm());
+      properties.put("utm_campaign", utmInfo.getUtmCampaign() == null ? "" : utmInfo.getUtmCampaign());
     }
   }
 
