@@ -38,6 +38,7 @@ mongo:
   indexManagerMode: AUTO
   transactionsEnabled: true
   aliasDBName:  template-harness
+  traceMode: DISABLED
 
 gitSdkConfiguration:
   gitSdkGrpcServerConfig:
@@ -73,6 +74,12 @@ eventsFramework:
     readMode: MASTER
     nettyThreads: 16
     useScriptCache: true
+    userName: ""
+    password: ""
+    sslConfig:
+      enabled: false
+      CATrustStorePath: "/tmp/ca_trust_store"
+      CATrustStorePassword: ""
 
 auditClientConfig:
   baseUrl: http://localhost:9005/api/
