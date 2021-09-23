@@ -38,6 +38,10 @@ public class MergeHelper {
         pipelineYaml, inputSetPipelineCompYaml, appendInputSetValidator, stageIdentifiers);
   }
 
+  public String mergeInputSetFormatYamlToOriginYaml(String originYaml, String inputSetFormatYaml) {
+    return mergeInputSetIntoOriginYaml(originYaml, inputSetFormatYaml, false, null);
+  }
+
   private String mergeInputSetIntoOriginYaml(String originalYaml, String inputSetPipelineCompYaml,
       boolean appendInputSetValidator, List<String> stageIdentifiers) {
     YamlConfig inputSetConfig = new YamlConfig(inputSetPipelineCompYaml);
