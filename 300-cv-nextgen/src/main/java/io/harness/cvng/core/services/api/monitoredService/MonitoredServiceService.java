@@ -1,9 +1,10 @@
 package io.harness.cvng.core.services.api.monitoredService;
 
+import io.harness.cvng.beans.MonitoredServiceType;
 import io.harness.cvng.beans.change.ChangeCategory;
 import io.harness.cvng.beans.change.ChangeEventDTO;
-import io.harness.cvng.core.beans.ChangeSummaryDTO;
 import io.harness.cvng.core.beans.HealthMonitoringFlagResponse;
+import io.harness.cvng.core.beans.change.ChangeSummaryDTO;
 import io.harness.cvng.core.beans.monitoredService.AnomaliesSummaryDTO;
 import io.harness.cvng.core.beans.monitoredService.DurationDTO;
 import io.harness.cvng.core.beans.monitoredService.HealthScoreDTO;
@@ -31,10 +32,15 @@ public interface MonitoredServiceService extends DeleteEntityByHandler<Monitored
   boolean delete(ProjectParams projectParams, String identifier);
   MonitoredServiceResponse get(ProjectParams projectParams, String identifier);
   MonitoredServiceResponse get(ServiceEnvironmentParams serviceEnvironmentParams);
+  PageResponse<MonitoredServiceResponse> getList(
+      ProjectParams projectParams, String environmentIdentifier, Integer offset, Integer pageSize, String filter);
+
   MonitoredServiceDTO getMonitoredServiceDTO(ServiceEnvironmentParams serviceEnvironmentParams);
 
   List<MonitoredService> list(
       @NonNull ProjectParams projectParams, @Nullable String serviceIdentifier, @Nullable String environmentIdentifier);
+
+  List<MonitoredService> list(@NonNull ProjectParams projectParams, @NonNull List<String> identifiers);
 
   PageResponse<MonitoredServiceListItemDTO> list(String accountId, String orgIdentifier, String projectIdentifier,
       String environmentIdentifier, Integer offset, Integer pageSize, String filter);
@@ -48,7 +54,7 @@ public interface MonitoredServiceService extends DeleteEntityByHandler<Monitored
 
   HealthScoreDTO getCurrentScore(ServiceEnvironmentParams serviceEnvironmentParams);
 
-  String getYamlTemplate(ProjectParams projectParams);
+  String getYamlTemplate(ProjectParams projectParams, MonitoredServiceType type);
 
   List<HealthSourceDTO> getHealthSources(ServiceEnvironmentParams serviceEnvironmentParams);
   List<ChangeEventDTO> getChangeEvents(ProjectParams projectParams, String monitoredServiceIdentifier,

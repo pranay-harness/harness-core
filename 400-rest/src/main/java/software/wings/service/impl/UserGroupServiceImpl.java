@@ -17,6 +17,7 @@ import static software.wings.security.PermissionAttribute.Action.EXECUTE_PIPELIN
 import static software.wings.security.PermissionAttribute.Action.EXECUTE_WORKFLOW;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE_WORKFLOW_ROLLBACK;
 import static software.wings.security.PermissionAttribute.PermissionType.ALL_APP_ENTITIES;
+import static software.wings.security.PermissionAttribute.PermissionType.APP_TEMPLATE;
 import static software.wings.security.PermissionAttribute.PermissionType.CE_ADMIN;
 import static software.wings.security.PermissionAttribute.PermissionType.CE_VIEWER;
 import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
@@ -81,7 +82,6 @@ import software.wings.security.UserThreadLocal;
 import software.wings.service.UserGroupUtils;
 import software.wings.service.impl.workflow.UserGroupDeleteEventHandler;
 import software.wings.service.intfc.AccountService;
-import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserGroupService;
@@ -94,7 +94,9 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.mongodb.ReadPreference;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -133,7 +135,6 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Inject private AccountService accountService;
   @Inject private AuthService authService;
   @Inject private SSOSettingService ssoSettingService;
-  @Inject private AlertService alertService;
   @Inject private PagerDutyService pagerDutyService;
   @Inject private EventPublishHelper eventPublishHelper;
   @Inject private UserGroupDeleteEventHandler userGroupDeleteEventHandler;
@@ -229,7 +230,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
 
     if (!ccmSettingService.isCloudCostEnabled(accountId)) {
-      res.getResponse().forEach(UserGroupServiceImpl::maskCePermissions);
+      res.getResponse().forEach(this::maskCePermissions);
     }
 
     return res;
@@ -327,7 +328,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
 
     if (!ccmSettingService.isCloudCostEnabled(accountId)) {
-      userGroups.forEach(userGroup -> { maskCePermissions(userGroup); });
+      userGroups.forEach(this::maskCePermissions);
     }
     return userGroups;
   }
@@ -369,7 +370,8 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
   }
 
-  public static void maskCePermissions(UserGroup userGroup) {
+  @Override
+  public void maskCePermissions(UserGroup userGroup) {
     AccountPermissions accountPermissions = userGroup.getAccountPermissions();
     if (accountPermissions != null) {
       Set<PermissionType> accountPermissionSet =
@@ -546,6 +548,66 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
     if (!newAppPermissions.equals(userGroup.getAppPermissions())) {
       userGroup.setAppPermissions(newAppPermissions);
+    }
+  }
+
+  public void maintainTemplatePermissions(UserGroup userGroup) {
+    boolean hasAccountLevelTemplateManagementPermission = false;
+    final AccountPermissions accountPermissions = userGroup.getAccountPermissions();
+    if (accountPermissions != null && accountPermissions.getPermissions() != null) {
+      final Set<PermissionType> accountPermissionSet = accountPermissions.getPermissions();
+      if (!accountPermissionSet.isEmpty()) {
+        hasAccountLevelTemplateManagementPermission = accountPermissionSet.contains(PermissionType.TEMPLATE_MANAGEMENT);
+      }
+    }
+
+    Set<AppPermission> appPermissions = userGroup.getAppPermissions();
+    if (isNotEmpty(appPermissions)
+        && appPermissions.stream().anyMatch(appPermission
+            -> appPermission.getPermissionType() != null && appPermission.getPermissionType().equals(APP_TEMPLATE))) {
+      return;
+    }
+
+    boolean hasAllAppAccess = false;
+    Set<String> allowedAppIds = new HashSet<>();
+
+    if (isNotEmpty(appPermissions)) {
+      hasAllAppAccess = appPermissions.stream().anyMatch(appPermission
+          -> appPermission.getAppFilter() != null && appPermission.getAppFilter().getFilterType() != null
+              && appPermission.getAppFilter().getFilterType().equals(GenericEntityFilter.FilterType.ALL));
+      if (!hasAllAppAccess) {
+        allowedAppIds =
+            appPermissions.stream()
+                .filter(appPermission
+                    -> appPermission.getAppFilter() != null && appPermission.getAppFilter().getFilterType() != null
+                        && appPermission.getAppFilter().getFilterType().equals(GenericEntityFilter.FilterType.SELECTED)
+                        && isNotEmpty(appPermission.getAppFilter().getIds()))
+                .map(appPermission -> appPermission.getAppFilter().getIds())
+                .flatMap(Collection::stream)
+                .collect(toSet());
+      }
+    }
+
+    if (hasAllAppAccess || (isNotEmpty(allowedAppIds))) {
+      AppPermission applicationTemplatePermission =
+          AppPermission.builder()
+              .permissionType(PermissionType.APP_TEMPLATE)
+              .appFilter(hasAllAppAccess
+                      ? GenericEntityFilter.builder().filterType(GenericEntityFilter.FilterType.ALL).build()
+                      : GenericEntityFilter.builder()
+                            .filterType(GenericEntityFilter.FilterType.SELECTED)
+                            .ids(allowedAppIds)
+                            .build())
+              .entityFilter(GenericEntityFilter.builder().filterType(GenericEntityFilter.FilterType.ALL).build())
+              .actions(hasAccountLevelTemplateManagementPermission
+                      ? new HashSet<>(Arrays.asList(PermissionAttribute.Action.CREATE, PermissionAttribute.Action.READ,
+                          PermissionAttribute.Action.UPDATE, PermissionAttribute.Action.DELETE))
+                      : new HashSet<>(Collections.singletonList(PermissionAttribute.Action.READ)))
+              .build();
+      if (userGroup.getAppPermissions() == null) {
+        userGroup.setAppPermissions(new HashSet<>());
+      }
+      userGroup.getAppPermissions().add(applicationTemplatePermission);
     }
   }
 

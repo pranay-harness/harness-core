@@ -1,7 +1,11 @@
 package io.harness.ccm.budget.utils;
 
+import static io.harness.ccm.budget.BudgetScopeType.PERSPECTIVE;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ccm.budget.AlertThreshold;
+import io.harness.ccm.budget.AlertThresholdBase;
 import io.harness.ccm.budget.BudgetScope;
 import io.harness.ccm.commons.entities.billing.Budget;
 import io.harness.exception.InvalidRequestException;
@@ -9,6 +13,7 @@ import io.harness.exception.InvalidRequestException;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.TimeZone;
@@ -31,6 +36,8 @@ public class BudgetUtils {
   private static final String UNDEFINED_BUDGET = "undefined";
   private static final String DEFAULT_TIMEZONE = "GMT";
   public static final long ONE_DAY_MILLIS = 86400000;
+  public static final String DEFAULT_TIME_UNIT = "days";
+  public static final String DEFAULT_TIME_SCOPE = "monthly";
 
   public static void validateBudget(Budget budget, List<Budget> existingBudgets) {
     validateBudgetAmount(budget);
@@ -122,5 +129,32 @@ public class BudgetUtils {
 
   public static double getBudgetVariancePercentage(double budgetVariance, double budgetedAmount) {
     return budgetedAmount != 0 ? (budgetVariance / budgetedAmount) * 100 : 0.0;
+  }
+
+  public static boolean isBudgetBasedOnGivenPerspective(Budget budget, String perspectiveId) {
+    if (isPerspectiveBudget(budget)) {
+      return budget.getScope().getEntityIds().get(0).equals(perspectiveId);
+    }
+    return false;
+  }
+
+  public static boolean isPerspectiveBudget(Budget budget) {
+    return budget.getScope().getBudgetScopeType().equals(PERSPECTIVE);
+  }
+
+  public static int getTimeLeftForBudget(Budget budget) {
+    // Todo: Update this method when support for different budget periods is added
+    return Math.toIntExact((getEndOfMonthForCurrentBillingCycle() - getStartOfCurrentDay()) / ONE_DAY_MILLIS);
+  }
+
+  public static List<Double> getAlertThresholdsForBudget(Budget budget, AlertThresholdBase basedOn) {
+    AlertThreshold[] alertThresholds = budget.getAlertThresholds();
+    List<Double> costAlertsPercentage = new ArrayList<>();
+    for (AlertThreshold alertThreshold : alertThresholds) {
+      if (alertThreshold.getBasedOn() == basedOn) {
+        costAlertsPercentage.add(alertThreshold.getPercentage());
+      }
+    }
+    return costAlertsPercentage;
   }
 }

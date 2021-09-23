@@ -1,6 +1,5 @@
 package io.harness.batch.processing.config;
 
-import io.harness.batch.processing.billing.tasklet.BillingDataGeneratedMailTasklet;
 import io.harness.batch.processing.billing.writer.InstanceBillingAggregationDataTasklet;
 import io.harness.batch.processing.billing.writer.InstanceBillingDataTasklet;
 import io.harness.batch.processing.ccm.BatchJobType;
@@ -34,24 +33,11 @@ public class BillingBatchConfiguration {
   }
 
   @Bean
-  public Tasklet billingDataGeneratedMailTasklet() {
-    return new BillingDataGeneratedMailTasklet();
-  }
-
-  @Bean
-  public Step billingDataGeneratedNotificationStep() {
-    return stepBuilderFactory.get("billingDataGeneratedNotificationStep")
-        .tasklet(billingDataGeneratedMailTasklet())
-        .build();
-  }
-
-  @Bean
   @Qualifier(value = "instanceBillingHourlyJob")
-  public Job instanceBillingHourlyJob(Step instanceBillingStep, Step billingDataGeneratedNotificationStep) {
+  public Job instanceBillingHourlyJob(Step instanceBillingStep) {
     return jobBuilderFactory.get(BatchJobType.INSTANCE_BILLING_HOURLY.name())
         .incrementer(new RunIdIncrementer())
         .start(instanceBillingStep)
-        .next(billingDataGeneratedNotificationStep)
         .build();
   }
 

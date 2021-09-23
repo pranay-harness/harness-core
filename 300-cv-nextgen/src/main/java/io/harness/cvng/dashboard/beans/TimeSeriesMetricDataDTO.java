@@ -35,7 +35,7 @@ public class TimeSeriesMetricDataDTO implements Comparable<TimeSeriesMetricDataD
     return totalRisk;
   }
 
-  public void addMetricData(double value, long timestamp, Double riskScore) {
+  public void addMetricData(Double value, long timestamp, Double riskScore) {
     if (metricDataList == null) {
       metricDataList = new TreeSet<>();
     }
@@ -65,7 +65,7 @@ public class TimeSeriesMetricDataDTO implements Comparable<TimeSeriesMetricDataD
   @Builder
   public static class MetricData implements Comparable<MetricData> {
     private Long timestamp;
-    private double value;
+    private Double value;
     Risk risk;
     @Override
     public int compareTo(@NotNull MetricData o) {

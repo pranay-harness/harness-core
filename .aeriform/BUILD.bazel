@@ -68,6 +68,10 @@ aeriform("//290-dashboard-service:module")
 
 aeriform("//290-dashboard-service:tests")
 
+aeriform("//295-cdng-contracts:module")
+
+aeriform("//295-cdng-contracts:tests")
+
 aeriform("//300-cv-nextgen:module")
 
 aeriform("//300-cv-nextgen:tests")

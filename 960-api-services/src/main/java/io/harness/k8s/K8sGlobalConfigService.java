@@ -6,7 +6,7 @@ public interface K8sGlobalConfigService {
   String getKubectlPath();
   String getGoTemplateClientPath();
   String getHelmPath(HelmVersion helmVersion);
-  String getChartMuseumPath();
+  String getChartMuseumPath(boolean useLatestVersion);
   String getOcPath();
   String getKustomizePath();
   String getScmPath();

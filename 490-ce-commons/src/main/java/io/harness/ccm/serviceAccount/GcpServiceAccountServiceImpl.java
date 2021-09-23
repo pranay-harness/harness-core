@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @OwnedBy(CE)
 public class GcpServiceAccountServiceImpl implements GcpServiceAccountService {
-  public static final String CE_GCP_CREDENTIALS_PATH = "GOOGLE_CREDENTIALS_PATH";
+  public static final String CE_GCP_CREDENTIALS_PATH = "CE_GCP_CREDENTIALS_PATH";
   private Iam iamService;
 
   @Inject private GcpResourceManagerService gcpResourceManagerService;

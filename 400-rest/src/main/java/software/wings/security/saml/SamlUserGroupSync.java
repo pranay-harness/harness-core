@@ -1,8 +1,10 @@
 package software.wings.security.saml;
 
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.User;
 import software.wings.beans.security.UserGroup;
@@ -18,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
 @Slf4j
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
 public class SamlUserGroupSync {
   @Inject private UserGroupService userGroupService;
   @Inject private UserService userService;

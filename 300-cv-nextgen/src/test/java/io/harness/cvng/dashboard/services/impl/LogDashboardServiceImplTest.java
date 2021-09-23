@@ -1,5 +1,6 @@
 package io.harness.cvng.dashboard.services.impl;
 
+import static io.harness.cvng.core.utils.DateTimeUtils.roundDownTo5MinBoundary;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KANHAIYA;
 import static io.harness.rule.OwnerRule.NEMANJA;
@@ -17,6 +18,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.activity.services.api.ActivityService;
+import io.harness.cvng.analysis.beans.LiveMonitoringLogAnalysisClusterDTO;
 import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.entities.LogAnalysisCluster;
 import io.harness.cvng.analysis.entities.LogAnalysisCluster.Frequency;
@@ -42,7 +44,9 @@ import io.harness.rule.Owner;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -66,10 +70,10 @@ public class LogDashboardServiceImplTest extends CvNextGenTestBase {
   private String envIdentifier;
   private String accountId;
   private ServiceEnvironmentParams serviceEnvironmentParams;
+  private Clock clock;
 
   @Inject private LogDashboardService logDashboardService;
   @Inject private HPersistence hPersistence;
-
   @Mock private LogAnalysisService mockLogAnalysisService;
   @Mock private CVConfigService mockCvConfigService;
   @Mock private ActivityService mockActivityService;
@@ -89,6 +93,7 @@ public class LogDashboardServiceImplTest extends CvNextGenTestBase {
                                    .serviceIdentifier(serviceIdentifier)
                                    .environmentIdentifier(envIdentifier)
                                    .build();
+    clock = Clock.fixed(Instant.parse("2020-04-22T10:02:06Z"), ZoneOffset.UTC);
     MockitoAnnotations.initMocks(this);
     FieldUtils.writeField(logDashboardService, "logAnalysisService", mockLogAnalysisService, true);
     FieldUtils.writeField(logDashboardService, "cvConfigService", mockCvConfigService, true);
@@ -459,7 +464,6 @@ public class LogDashboardServiceImplTest extends CvNextGenTestBase {
       assertThat(Arrays.asList(LogAnalysisTag.UNKNOWN, LogAnalysisTag.UNEXPECTED)
                      .contains(analyzedLogDataDTO.getLogData().getTag()));
       assertThat(analyzedLogDataDTO.getLogData().getRiskStatus()).isEqualTo(Risk.HIGH);
-      assertThat(analyzedLogDataDTO.getLogData().getRiskScore()).isEqualTo(0.9);
     });
 
     boolean containsKnown = false;
@@ -627,6 +631,138 @@ public class LogDashboardServiceImplTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = KANHAIYA)
   @Category(UnitTests.class)
+  public void testGetLogAnalysisClusters_AllClusters() {
+    String cvConfigId = generateUuid();
+    Instant startTime = Instant.now().minus(10, ChronoUnit.MINUTES);
+    Instant endTime = Instant.now().minus(5, ChronoUnit.MINUTES);
+    TimeRangeParams timeRangeParams = TimeRangeParams.builder().startTime(startTime).endTime(endTime).build();
+    List<Long> labelList = Arrays.asList(1234l, 12345l, 123455l, 12334l);
+    List<LogAnalysisResult> resultList = buildLogAnalysisResults(cvConfigId, false, startTime, endTime, labelList);
+    when(mockCvConfigService.list(serviceEnvironmentParams))
+        .thenReturn(Arrays.asList(createCvConfig(cvConfigId, serviceIdentifier)));
+    when(mockLogAnalysisService.getAnalysisResults(anyString(), anyList(), any(), any())).thenReturn(resultList);
+    when(mockLogAnalysisService.getAnalysisClusters(cvConfigId, new HashSet<>(labelList)))
+        .thenReturn(buildLogAnalysisClusters(labelList));
+
+    LiveMonitoringLogAnalysisFilter liveMonitoringLogAnalysisFilter =
+        LiveMonitoringLogAnalysisFilter.builder()
+            .healthSourceIdentifiers(null)
+            .clusterTypes(Arrays.asList(LogAnalysisTag.values()))
+            .build();
+
+    List<LiveMonitoringLogAnalysisClusterDTO> response = logDashboardService.getLogAnalysisClusters(
+        serviceEnvironmentParams, timeRangeParams, liveMonitoringLogAnalysisFilter);
+
+    verify(mockCvConfigService).list(serviceEnvironmentParams);
+    assertThat(response.size()).isEqualTo(labelList.size());
+    for (LiveMonitoringLogAnalysisClusterDTO liveMonitoringLogAnalysisClusterDTO : response) {
+      assertThat(liveMonitoringLogAnalysisClusterDTO.getText()).isNotEmpty();
+      assertThat(liveMonitoringLogAnalysisClusterDTO.getX()).isNotNull();
+      assertThat(liveMonitoringLogAnalysisClusterDTO.getY()).isNotNull();
+      assertThat(liveMonitoringLogAnalysisClusterDTO.getTag()).isIn(LogAnalysisTag.UNKNOWN, LogAnalysisTag.KNOWN);
+      if (liveMonitoringLogAnalysisClusterDTO.getTag().equals(LogAnalysisTag.UNKNOWN)) {
+        assertThat(liveMonitoringLogAnalysisClusterDTO.getRisk()).isEqualTo(Risk.HIGH);
+      } else {
+        assertThat(liveMonitoringLogAnalysisClusterDTO.getRisk()).isEqualTo(Risk.LOW);
+      }
+    }
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetLogAnalysisClusters_filterByCLusterTypes() {
+    String cvConfigId = generateUuid();
+    Instant startTime = Instant.now().minus(10, ChronoUnit.MINUTES);
+    Instant endTime = Instant.now().minus(5, ChronoUnit.MINUTES);
+    TimeRangeParams timeRangeParams = TimeRangeParams.builder().startTime(startTime).endTime(endTime).build();
+    List<Long> labelList = Arrays.asList(1234l, 12345l, 123455l, 12334l);
+
+    List<LogAnalysisResult> resultList = buildLogAnalysisResults(cvConfigId, false, startTime, endTime, labelList);
+    Set<Long> knownLabelList = new HashSet<>();
+    for (LogAnalysisResult logAnalysisResult : resultList) {
+      logAnalysisResult.getLogAnalysisResults().forEach(analysisResult -> {
+        if (analysisResult.getTag().equals(LogAnalysisTag.KNOWN)) {
+          knownLabelList.add(analysisResult.getLabel());
+        }
+      });
+    }
+    when(mockCvConfigService.list(serviceEnvironmentParams))
+        .thenReturn(Arrays.asList(createCvConfig(cvConfigId, serviceIdentifier)));
+    when(mockLogAnalysisService.getAnalysisResults(anyString(), anyList(), any(), any())).thenReturn(resultList);
+    when(mockLogAnalysisService.getAnalysisClusters(cvConfigId, knownLabelList))
+        .thenReturn(buildLogAnalysisClusters(knownLabelList.stream().collect(Collectors.toList())));
+
+    LiveMonitoringLogAnalysisFilter liveMonitoringLogAnalysisFilter =
+        LiveMonitoringLogAnalysisFilter.builder()
+            .healthSourceIdentifiers(null)
+            .clusterTypes(Arrays.asList(LogAnalysisTag.KNOWN))
+            .build();
+
+    List<LiveMonitoringLogAnalysisClusterDTO> response = logDashboardService.getLogAnalysisClusters(
+        serviceEnvironmentParams, timeRangeParams, liveMonitoringLogAnalysisFilter);
+
+    verify(mockCvConfigService).list(serviceEnvironmentParams);
+    assertThat(response.size()).isEqualTo(2);
+    for (LiveMonitoringLogAnalysisClusterDTO liveMonitoringLogAnalysisClusterDTO : response) {
+      assertThat(liveMonitoringLogAnalysisClusterDTO.getText()).isNotEmpty();
+      assertThat(liveMonitoringLogAnalysisClusterDTO.getX()).isNotNull();
+      assertThat(liveMonitoringLogAnalysisClusterDTO.getY()).isNotNull();
+      assertThat(liveMonitoringLogAnalysisClusterDTO.getTag()).isEqualTo(LogAnalysisTag.KNOWN);
+      assertThat(liveMonitoringLogAnalysisClusterDTO.getRisk()).isEqualTo(Risk.LOW);
+    }
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetLogAnalysisClusters_filterByHealthSources() {
+    String cvConfigId = generateUuid();
+    Instant startTime = Instant.now().minus(10, ChronoUnit.MINUTES);
+    Instant endTime = Instant.now().minus(5, ChronoUnit.MINUTES);
+    TimeRangeParams timeRangeParams = TimeRangeParams.builder().startTime(startTime).endTime(endTime).build();
+    List<Long> labelList = Arrays.asList(1234l, 12345l, 123455l, 12334l);
+    List<LogAnalysisResult> resultList = buildLogAnalysisResults(cvConfigId, false, startTime, endTime, labelList);
+    List<String> healthSourceIds = Arrays.asList(cvConfigId);
+    when(mockCvConfigService.list(serviceEnvironmentParams, healthSourceIds))
+        .thenReturn(Arrays.asList(createCvConfig(cvConfigId, serviceIdentifier)));
+    when(mockLogAnalysisService.getAnalysisResults(anyString(), anyList(), any(), any())).thenReturn(resultList);
+    when(mockLogAnalysisService.getAnalysisClusters(cvConfigId, new HashSet<>(labelList)))
+        .thenReturn(buildLogAnalysisClusters(labelList));
+
+    LiveMonitoringLogAnalysisFilter liveMonitoringLogAnalysisFilter =
+        LiveMonitoringLogAnalysisFilter.builder().healthSourceIdentifiers(healthSourceIds).clusterTypes(null).build();
+
+    List<LiveMonitoringLogAnalysisClusterDTO> response = logDashboardService.getLogAnalysisClusters(
+        serviceEnvironmentParams, timeRangeParams, liveMonitoringLogAnalysisFilter);
+
+    verify(mockCvConfigService).list(serviceEnvironmentParams, healthSourceIds);
+    assertThat(response.size()).isEqualTo(labelList.size());
+    for (LiveMonitoringLogAnalysisClusterDTO liveMonitoringLogAnalysisClusterDTO : response) {
+      assertThat(liveMonitoringLogAnalysisClusterDTO.getText()).isNotEmpty();
+      assertThat(liveMonitoringLogAnalysisClusterDTO.getX()).isNotNull();
+      assertThat(liveMonitoringLogAnalysisClusterDTO.getY()).isNotNull();
+      assertThat(liveMonitoringLogAnalysisClusterDTO.getTag()).isIn(LogAnalysisTag.UNKNOWN, LogAnalysisTag.KNOWN);
+      if (liveMonitoringLogAnalysisClusterDTO.getTag().equals(LogAnalysisTag.UNKNOWN)) {
+        assertThat(liveMonitoringLogAnalysisClusterDTO.getRisk()).isEqualTo(Risk.HIGH);
+      } else {
+        assertThat(liveMonitoringLogAnalysisClusterDTO.getRisk()).isEqualTo(Risk.LOW);
+      }
+    }
+    liveMonitoringLogAnalysisFilter = LiveMonitoringLogAnalysisFilter.builder()
+                                          .healthSourceIdentifiers(Arrays.asList("some-identifier"))
+                                          .clusterTypes(Arrays.asList(LogAnalysisTag.KNOWN))
+                                          .build();
+
+    response = logDashboardService.getLogAnalysisClusters(
+        serviceEnvironmentParams, timeRangeParams, liveMonitoringLogAnalysisFilter);
+    verify(mockCvConfigService).list(serviceEnvironmentParams, healthSourceIds);
+    assertThat(response.size()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
   public void testGetAllLogsData_AllLogsFilteredUsingHealthSources() {
     String cvConfigId = generateUuid();
     Instant startTime = Instant.now().minus(10, ChronoUnit.MINUTES);
@@ -662,6 +798,81 @@ public class LogDashboardServiceImplTest extends CvNextGenTestBase {
     assertThat(containsKnown).isTrue();
   }
 
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetAllLogsData_withFilteringAndTheSameClustersHavingKNOWNAndUNKNOWNTag() {
+    String cvConfigId = generateUuid();
+    Instant startTime = clock.instant().minus(10, ChronoUnit.MINUTES);
+    Instant endTime = clock.instant();
+    List<Long> labelList = Arrays.asList(0l, 1l, 2l);
+
+    Instant time = roundDownTo5MinBoundary(clock.instant());
+    List<LogAnalysisResult> logAnalysisResults = Arrays.asList(
+        LogAnalysisResult.builder()
+            .analysisStartTime(time.minus(10, ChronoUnit.MINUTES))
+            .analysisEndTime(time.minus(5, ChronoUnit.MINUTES))
+            .verificationTaskId(cvConfigId)
+            .accountId(accountId)
+            .logAnalysisResults(Arrays.asList(
+                AnalysisResult.builder().label(labelList.get(0)).tag(LogAnalysisTag.UNKNOWN).count(10).build(),
+                AnalysisResult.builder().label(labelList.get(1)).tag(LogAnalysisTag.KNOWN).count(20).build(),
+                AnalysisResult.builder().label(labelList.get(2)).tag(LogAnalysisTag.KNOWN).count(30).build()))
+            .build(),
+        LogAnalysisResult.builder()
+            .analysisStartTime(time.minus(5, ChronoUnit.MINUTES))
+            .analysisEndTime(time)
+            .verificationTaskId(cvConfigId)
+            .accountId(accountId)
+            .logAnalysisResults(Arrays.asList(
+                AnalysisResult.builder().label(labelList.get(0)).tag(LogAnalysisTag.KNOWN).count(30).build(),
+                AnalysisResult.builder().label(labelList.get(1)).tag(LogAnalysisTag.KNOWN).count(40).build(),
+                AnalysisResult.builder().label(labelList.get(2)).tag(LogAnalysisTag.UNEXPECTED).count(300).build()))
+            .build());
+
+    TimeRangeParams timeRangeParams = TimeRangeParams.builder().startTime(startTime).endTime(endTime).build();
+    PageParams pageParams = PageParams.builder().page(0).size(10).build();
+
+    when(mockCvConfigService.list(serviceEnvironmentParams))
+        .thenReturn(Arrays.asList(createCvConfig(cvConfigId, serviceIdentifier)));
+    when(mockLogAnalysisService.getAnalysisResults(anyString(), anyList(), any(), any()))
+        .thenReturn(logAnalysisResults);
+    when(mockLogAnalysisService.getAnalysisClusters(cvConfigId, new HashSet<>(labelList)))
+        .thenReturn(buildLogAnalysisClusters(labelList));
+
+    LiveMonitoringLogAnalysisFilter liveMonitoringLogAnalysisFilter = LiveMonitoringLogAnalysisFilter.builder().build();
+    PageResponse<AnalyzedLogDataDTO> pageResponse = logDashboardService.getAllLogsData(
+        serviceEnvironmentParams, timeRangeParams, liveMonitoringLogAnalysisFilter, pageParams);
+    verify(mockCvConfigService).list(serviceEnvironmentParams);
+    assertThat(pageResponse).isNotNull();
+    assertThat(pageResponse.getContent()).isNotEmpty();
+    assertThat(pageResponse.getContent().size()).isEqualTo(3);
+
+    liveMonitoringLogAnalysisFilter =
+        LiveMonitoringLogAnalysisFilter.builder().clusterTypes(Arrays.asList(LogAnalysisTag.KNOWN)).build();
+    pageResponse = logDashboardService.getAllLogsData(
+        serviceEnvironmentParams, timeRangeParams, liveMonitoringLogAnalysisFilter, pageParams);
+    assertThat(pageResponse).isNotNull();
+    assertThat(pageResponse.getContent()).isNotEmpty();
+    assertThat(pageResponse.getContent().size()).isEqualTo(1);
+
+    liveMonitoringLogAnalysisFilter =
+        LiveMonitoringLogAnalysisFilter.builder().clusterTypes(Arrays.asList(LogAnalysisTag.UNKNOWN)).build();
+    pageResponse = logDashboardService.getAllLogsData(
+        serviceEnvironmentParams, timeRangeParams, liveMonitoringLogAnalysisFilter, pageParams);
+    assertThat(pageResponse).isNotNull();
+    assertThat(pageResponse.getContent()).isNotEmpty();
+    assertThat(pageResponse.getContent().size()).isEqualTo(1);
+
+    liveMonitoringLogAnalysisFilter =
+        LiveMonitoringLogAnalysisFilter.builder().clusterTypes(Arrays.asList(LogAnalysisTag.UNEXPECTED)).build();
+    pageResponse = logDashboardService.getAllLogsData(
+        serviceEnvironmentParams, timeRangeParams, liveMonitoringLogAnalysisFilter, pageParams);
+    assertThat(pageResponse).isNotNull();
+    assertThat(pageResponse.getContent()).isNotEmpty();
+    assertThat(pageResponse.getContent().size()).isEqualTo(1);
+  }
+
   private List<LogAnalysisResult> buildLogAnalysisResults(
       String cvConfigId, boolean anomalousOnly, Instant startTime, Instant endTime, List<Long> labels) {
     List<LogAnalysisResult> returnList = new ArrayList<>();
@@ -694,6 +905,7 @@ public class LogDashboardServiceImplTest extends CvNextGenTestBase {
 
   private List<LogAnalysisCluster> buildLogAnalysisClusters(List<Long> labels) {
     List<LogAnalysisCluster> clusterList = new ArrayList<>();
+    int[] coordinates = {0};
     labels.forEach(label -> {
       clusterList.add(LogAnalysisCluster.builder()
                           .isEvicted(false)
@@ -702,6 +914,8 @@ public class LogDashboardServiceImplTest extends CvNextGenTestBase {
                           .frequencyTrend(Lists.newArrayList(Frequency.builder().timestamp(12353453L).count(1).build(),
                               Frequency.builder().timestamp(132312L).count(2).build(),
                               Frequency.builder().timestamp(132213L).count(3).build()))
+                          .x(coordinates[0]++)
+                          .y(coordinates[0]++)
                           .build());
     });
     return clusterList;

@@ -160,6 +160,7 @@ import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SamlSettings;
+import software.wings.beans.utm.UtmInfo;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.EmailData;
@@ -414,6 +415,8 @@ public class UserServiceImpl implements UserService {
     UserInvite userInviteInDB = signupService.getUserInviteByEmail(emailAddress);
 
     if (userInviteInDB == null) {
+      io.harness.ng.core.user.UtmInfo signupInviteUtmInfo = signupInvite.getUtmInfo();
+
       UserInvite userInvite = new UserInvite();
       userInvite.setEmail(emailAddress);
       userInvite.setPasswordHash(signupInvite.getPasswordHash());
@@ -421,9 +424,28 @@ public class UserServiceImpl implements UserService {
       userInvite.setCreatedFromNG(true);
       userInvite.setSource(UserInviteSource.builder().type(SourceType.TRIAL).build());
       userInvite.setCompleted(false);
-      userInvite.setEdition(signupInvite.getEdition());
-      userInvite.setBillingFrequency(signupInvite.getBillingFrequency());
-      userInvite.setSignupAction(signupInvite.getSignupAction());
+
+      if (signupInviteUtmInfo != null) {
+        userInvite.setUtmInfo(UtmInfo.builder()
+                                  .utmSource(signupInviteUtmInfo.getUtmSource())
+                                  .utmTerm(signupInviteUtmInfo.getUtmTerm())
+                                  .utmCampaign(signupInviteUtmInfo.getUtmCampaign())
+                                  .utmContent(signupInviteUtmInfo.getUtmContent())
+                                  .utmMedium(signupInviteUtmInfo.getUtmMedium())
+                                  .build());
+      }
+
+      if (signupInvite.getEdition() != null) {
+        userInvite.setEdition(signupInvite.getEdition().name());
+      }
+
+      if (signupInvite.getBillingFrequency() != null) {
+        userInvite.setBillingFrequency(signupInvite.getBillingFrequency().name());
+      }
+
+      if (signupInvite.getSignupAction() != null) {
+        userInvite.setSignupAction(signupInvite.getSignupAction().name());
+      }
 
       String inviteId = wingsPersistence.save(userInvite);
       userInvite.setUuid(inviteId);
@@ -482,6 +504,7 @@ public class UserServiceImpl implements UserService {
                     .accounts(Lists.newArrayList(createdAccount))
                     .emailVerified(true)
                     .defaultAccountId(createdAccount.getUuid())
+                    .utmInfo(userInvite.getUtmInfo())
                     .build();
     completeUserInviteForSignup(userInvite, createdAccount.getUuid());
     return createNewUserAndSignIn(user, createdAccount.getUuid());

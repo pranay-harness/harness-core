@@ -106,6 +106,10 @@ public class AwsClientImpl implements AwsClient {
       throw amazonEC2Exception;
     } catch (Exception e) {
       log.error("Exception validateAwsAccountCredential", e);
+      if (awsConfig.isIRSA()) {
+        throw NestedExceptionUtils.hintWithExplanationException(HintException.HINT_AWS_IRSA_CHECK,
+            ExplanationException.EXPLANATION_IRSA_ROLE_CHECK, new InvalidRequestException(e.getMessage()));
+      }
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }

@@ -24,35 +24,36 @@ public class ChartMuseumClientImpl implements ChartMuseumClient {
 
   @Override
   public ChartMuseumServer startChartMuseumServer(HelmRepoConfig helmRepoConfig, SettingValue connectorConfig,
-      String resourceDirectory, String basePath) throws Exception {
+      String resourceDirectory, String basePath, boolean useLatestChartMuseumVersion) throws Exception {
     log.info("Starting chart museum server");
 
     if (helmRepoConfig instanceof AmazonS3HelmRepoConfig) {
-      return startAmazonS3ChartMuseumServer(helmRepoConfig, connectorConfig, basePath);
+      return startAmazonS3ChartMuseumServer(helmRepoConfig, connectorConfig, basePath, useLatestChartMuseumVersion);
     } else if (helmRepoConfig instanceof GCSHelmRepoConfig) {
-      return startGCSChartMuseumServer(helmRepoConfig, connectorConfig, resourceDirectory, basePath);
+      return startGCSChartMuseumServer(
+          helmRepoConfig, connectorConfig, resourceDirectory, basePath, useLatestChartMuseumVersion);
     }
 
     throw new WingsException("Unhandled type of helm repo config. Type : " + helmRepoConfig.getSettingType());
   }
 
   private ChartMuseumServer startGCSChartMuseumServer(HelmRepoConfig helmRepoConfig, SettingValue connectorConfig,
-      String resourceDirectory, String basePath) throws Exception {
+      String resourceDirectory, String basePath, boolean useLatestChartMuseumVersion) throws Exception {
     GCSHelmRepoConfig gcsHelmRepoConfig = (GCSHelmRepoConfig) helmRepoConfig;
     GcpConfig config = (GcpConfig) connectorConfig;
 
-    return chartMuseumClientHelper.startGCSChartMuseumServer(
-        gcsHelmRepoConfig.getBucketName(), basePath, config.getServiceAccountKeyFileContent(), resourceDirectory);
+    return chartMuseumClientHelper.startGCSChartMuseumServer(gcsHelmRepoConfig.getBucketName(), basePath,
+        config.getServiceAccountKeyFileContent(), resourceDirectory, useLatestChartMuseumVersion);
   }
 
-  private ChartMuseumServer startAmazonS3ChartMuseumServer(
-      HelmRepoConfig helmRepoConfig, SettingValue connectorConfig, String basePath) throws Exception {
+  private ChartMuseumServer startAmazonS3ChartMuseumServer(HelmRepoConfig helmRepoConfig, SettingValue connectorConfig,
+      String basePath, boolean useLatestChartMuseumVersion) throws Exception {
     AmazonS3HelmRepoConfig amazonS3HelmRepoConfig = (AmazonS3HelmRepoConfig) helmRepoConfig;
     AwsConfig awsConfig = (AwsConfig) connectorConfig;
 
     return chartMuseumClientHelper.startS3ChartMuseumServer(amazonS3HelmRepoConfig.getBucketName(), basePath,
         amazonS3HelmRepoConfig.getRegion(), awsConfig.isUseEc2IamCredentials(), awsConfig.getAccessKey(),
-        awsConfig.getSecretKey(), awsConfig.isUseIRSA());
+        awsConfig.getSecretKey(), awsConfig.isUseIRSA(), useLatestChartMuseumVersion);
   }
 
   @Override

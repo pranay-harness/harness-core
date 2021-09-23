@@ -126,6 +126,8 @@ spec:
           value: KUBERNETES
         - name: DELEGATE_NAME
           value: harness-delegate
+        - name: NEXT_GEN
+          value: "true"
         - name: DELEGATE_GROUP_ID
           value: delegateGroupId1
         - name: DELEGATE_DESCRIPTION

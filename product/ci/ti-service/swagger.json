@@ -345,7 +345,6 @@
             "in": "query",
             "name": "stepId",
             "description": "Step ID",
-            "required": true,
             "type": "string"
           },
           {
@@ -875,22 +874,17 @@
           "type": "integer",
           "format": "int64"
         },
-        "tests": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/TestCaseSummary"
-          }
-        }
-      }
-    },
-    "TestCaseSummary": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
+        "skipped_tests": {
+          "type": "integer",
+          "format": "int64"
         },
-        "status": {
-          "$ref": "#/definitions/TestCaseStatus"
+        "failed_tests": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "successful_tests": {
+          "type": "integer",
+          "format": "int64"
         }
       }
     },

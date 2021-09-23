@@ -1,5 +1,6 @@
 package io.harness.cvng.dashboard.services.api;
 
+import io.harness.cvng.analysis.beans.LiveMonitoringLogAnalysisClusterDTO;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
@@ -10,6 +11,7 @@ import io.harness.cvng.dashboard.beans.LogDataByTag;
 import io.harness.ng.beans.PageResponse;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.SortedSet;
 
 public interface LogDashboardService {
@@ -36,4 +38,7 @@ public interface LogDashboardService {
   PageResponse<AnalyzedLogDataDTO> getAllLogsData(ServiceEnvironmentParams serviceEnvironmentParams,
       TimeRangeParams timeRangeParams, LiveMonitoringLogAnalysisFilter liveMonitoringLogAnalysisFilter,
       PageParams pageParams);
+
+  List<LiveMonitoringLogAnalysisClusterDTO> getLogAnalysisClusters(ServiceEnvironmentParams serviceEnvironmentParams,
+      TimeRangeParams timeRangeParams, LiveMonitoringLogAnalysisFilter liveMonitoringLogAnalysisFilter);
 }

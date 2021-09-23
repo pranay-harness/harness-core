@@ -5,7 +5,8 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
-import io.harness.pms.merger.PipelineYamlConfig;
+import io.harness.exception.InvalidYamlException;
+import io.harness.pms.merger.YamlConfig;
 import io.harness.pms.yaml.YamlUtils;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -42,12 +43,13 @@ public class InputSetYamlHelper {
       innerMap.set("pipeline", pipelineNode);
       return YamlUtils.write(innerMap).replace("---\n", "");
     } catch (IOException e) {
-      throw new InvalidRequestException("Input set yaml is invalid");
+      log.error("Input set yaml is invalid. Yaml:\n" + inputSetYaml);
+      throw new InvalidYamlException("Input set yaml is invalid", e);
     }
   }
 
   public String getStringField(String yaml, String fieldName, String rootNode) {
-    JsonNode node = (new PipelineYamlConfig(yaml)).getYamlMap();
+    JsonNode node = (new YamlConfig(yaml)).getYamlMap();
     JsonNode innerMap = node.get(rootNode);
     if (innerMap == null) {
       log.error("Root node is not " + rootNode + ". Yaml:\n" + yaml);
@@ -61,7 +63,7 @@ public class InputSetYamlHelper {
   }
 
   public boolean isPipelineAbsent(String yaml) {
-    JsonNode node = (new PipelineYamlConfig(yaml)).getYamlMap();
+    JsonNode node = (new YamlConfig(yaml)).getYamlMap();
     JsonNode innerMap = node.get("inputSet");
     if (innerMap == null) {
       log.error("Yaml provided is not an input set yaml. Yaml:\n" + yaml);
@@ -72,7 +74,7 @@ public class InputSetYamlHelper {
   }
 
   public Map<String, String> getTags(String yaml, String rootNode) {
-    JsonNode node = (new PipelineYamlConfig(yaml)).getYamlMap();
+    JsonNode node = (new YamlConfig(yaml)).getYamlMap();
     JsonNode innerMap = node.get(rootNode);
     if (innerMap == null) {
       log.error("Root node is not " + rootNode + ". Yaml:\n" + yaml);
@@ -98,7 +100,7 @@ public class InputSetYamlHelper {
    * Throws an exception if it is any other kind of yaml
    */
   public String getRootNodeOfInputSetYaml(String yaml) {
-    JsonNode node = (new PipelineYamlConfig(yaml)).getYamlMap();
+    JsonNode node = (new YamlConfig(yaml)).getYamlMap();
     JsonNode innerMap = node.get("inputSet");
     if (innerMap == null) {
       innerMap = node.get("overlayInputSet");
@@ -112,7 +114,7 @@ public class InputSetYamlHelper {
   }
 
   public List<String> getReferencesFromOverlayInputSetYaml(String yaml) {
-    JsonNode node = (new PipelineYamlConfig(yaml)).getYamlMap();
+    JsonNode node = (new YamlConfig(yaml)).getYamlMap();
     JsonNode innerMap = node.get("overlayInputSet");
     if (innerMap == null) {
       log.error("Yaml provided is not an overlay input set yaml. Yaml:\n" + yaml);

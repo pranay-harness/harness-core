@@ -1,10 +1,13 @@
 package software.wings.beans.servicenow;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import lombok.Getter;
 
+@OwnedBy(HarnessTeam.DEL)
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public enum ServiceNowFields {
   PRIORITY("priority"),

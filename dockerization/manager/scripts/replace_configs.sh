@@ -801,17 +801,6 @@ if [[ "" != "$DELEGATE_SERVICE_MANAGEMENT_SECRET" ]]; then
   yq write -i $CONFIG_FILE dmsSecret "$DELEGATE_SERVICE_MANAGEMENT_SECRET"
 fi
 
-if [[ "" != "$DMS_GRPC_SECRET" ]]; then
-  yq write -i $CONFIG_FILE dmsGrpcClient.secret "$DMS_GRPC_SECRET"
-fi
-
-if [[ "" != "$DMS_GRPC_TARGET" ]]; then
-  yq write -i $CONFIG_FILE dmsGrpcClient.target "$DMS_GRPC_TARGET"
-fi
-
-if [[ "" != "$DMS_GRPC_AUTHORITY" ]]; then
-  yq write -i $CONFIG_FILE dmsGrpcClient.authority "$DMS_GRPC_AUTHORITY"
-fi
 
 if [[ "" != "$DELEGATE_GRPC_TARGET" ]]; then
   yq write -i $CONFIG_FILE grpcOnpremDelegateClientConfig.target "$DELEGATE_GRPC_TARGET"
@@ -909,4 +898,8 @@ fi
 
 if [[ "" != "$LDAP_GROUP_SYNC_POOL_SIZE" ]]; then
   yq write -i $CONFIG_FILE ldapSyncJobConfig.poolSize "$LDAP_GROUP_SYNC_POOL_SIZE"
+fi
+
+if [[ "" != "$LDAP_GROUP_SYNC_DEFAULT_CRON" ]]; then
+  yq write -i $CONFIG_FILE ldapSyncJobConfig.defaultCronExpression "$LDAP_GROUP_SYNC_DEFAULT_CRON"
 fi

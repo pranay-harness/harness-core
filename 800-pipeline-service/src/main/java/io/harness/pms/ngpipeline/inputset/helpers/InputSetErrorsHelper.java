@@ -3,8 +3,8 @@ package io.harness.pms.ngpipeline.inputset.helpers;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.beans.InputSetValidatorType.ALLOWED_VALUES;
 import static io.harness.beans.InputSetValidatorType.REGEX;
+import static io.harness.pms.merger.helpers.InputSetTemplateHelper.createTemplateFromPipeline;
 import static io.harness.pms.merger.helpers.InputSetYamlHelper.getPipelineComponent;
-import static io.harness.pms.merger.helpers.TemplateHelper.createTemplateFromPipeline;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.NGExpressionUtils;
@@ -13,7 +13,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.pms.inputset.InputSetErrorDTOPMS;
 import io.harness.pms.inputset.InputSetErrorResponseDTOPMS;
 import io.harness.pms.inputset.InputSetErrorWrapperDTOPMS;
-import io.harness.pms.merger.PipelineYamlConfig;
+import io.harness.pms.merger.YamlConfig;
 import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.merger.helpers.InputSetYamlHelper;
 import io.harness.pms.merger.helpers.YamlSubMapExtractor;
@@ -61,8 +61,8 @@ public class InputSetErrorsHelper {
   private String getErrorPipelineYaml(Set<FQN> invalidFQNs, String pipelineYaml) {
     Map<FQN, Object> map = new LinkedHashMap<>();
     invalidFQNs.forEach(fqn -> map.put(fqn, fqn.getExpressionFqn()));
-    PipelineYamlConfig config = new PipelineYamlConfig(pipelineYaml);
-    PipelineYamlConfig res = new PipelineYamlConfig(map, config.getYamlMap());
+    YamlConfig config = new YamlConfig(pipelineYaml);
+    YamlConfig res = new YamlConfig(map, config.getYamlMap());
     return res.getYaml();
   }
 
@@ -115,13 +115,13 @@ public class InputSetErrorsHelper {
 
   public Map<FQN, String> getInvalidFQNsInInputSet(String templateYaml, String inputSetPipelineCompYaml) {
     Map<FQN, String> errorMap = new LinkedHashMap<>();
-    PipelineYamlConfig inputSetConfig = new PipelineYamlConfig(inputSetPipelineCompYaml);
+    YamlConfig inputSetConfig = new YamlConfig(inputSetPipelineCompYaml);
     Set<FQN> inputSetFQNs = new LinkedHashSet<>(inputSetConfig.getFqnToValueMap().keySet());
     if (EmptyPredicate.isEmpty(templateYaml)) {
       inputSetFQNs.forEach(fqn -> errorMap.put(fqn, "Pipeline no longer contains any runtime input"));
       return errorMap;
     }
-    PipelineYamlConfig templateConfig = new PipelineYamlConfig(templateYaml);
+    YamlConfig templateConfig = new YamlConfig(templateYaml);
 
     templateConfig.getFqnToValueMap().keySet().forEach(key -> {
       if (inputSetFQNs.contains(key)) {

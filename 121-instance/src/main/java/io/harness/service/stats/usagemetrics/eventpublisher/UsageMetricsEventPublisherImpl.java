@@ -61,7 +61,7 @@ public class UsageMetricsEventPublisherImpl implements UsageMetricsEventPublishe
       data.put(TimescaleConstants.CLOUDPROVIDER_ID.getKey(), instance.getConnectorRef());
       data.put(TimescaleConstants.INSTANCE_TYPE.getKey(), instance.getInstanceType().name());
       data.put(TimescaleConstants.INSTANCECOUNT.getKey(), String.valueOf(size));
-
+      log.info("Adding the instance record {} to the list", instance);
       dataPointList.add(DataPoint.newBuilder().putAllData(data).build());
     });
 

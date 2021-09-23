@@ -8,10 +8,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.ExecutionEngineDispatcher;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.engine.utils.PmsLevelUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.interrupts.InterruptEffect;
-import io.harness.plan.PlanNodeUtils;
+import io.harness.plan.PlanNode;
 import io.harness.pms.contracts.advisers.InterventionWaitAdvise;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
@@ -19,9 +20,7 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.interrupts.InterruptConfig;
 import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.contracts.interrupts.RetryInterruptConfig;
-import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.execution.utils.AmbianceUtils;
-import io.harness.pms.execution.utils.LevelUtils;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -42,10 +41,11 @@ public class RetryHelper {
   @Inject private OrchestrationEngine engine;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
 
+  // Just ignoring step parameters for now as this is not supported will revisit this when we need to support it
   public void retryNodeExecution(
       String nodeExecutionId, StepParameters parameters, String interruptId, InterruptConfig interruptConfig) {
     NodeExecution nodeExecution = Preconditions.checkNotNull(nodeExecutionService.get(nodeExecutionId));
-    PlanNodeProto node = nodeExecution.getNode();
+    PlanNode node = nodeExecution.getNode();
     String newUuid = generateUuid();
 
     Ambiance oldAmbiance = nodeExecution.getAmbiance();
@@ -54,9 +54,9 @@ public class RetryHelper {
     Level currentLevel = AmbianceUtils.obtainCurrentLevel(oldAmbiance);
     Ambiance ambiance = AmbianceUtils.cloneForFinish(oldAmbiance);
     int newRetryIndex = currentLevel != null ? currentLevel.getRetryIndex() + 1 : 0;
-    ambiance = ambiance.toBuilder().addLevels(LevelUtils.buildLevelFromPlanNode(newUuid, newRetryIndex, node)).build();
-    NodeExecution newNodeExecution =
-        cloneForRetry(updatedRetriedNode, parameters, newUuid, ambiance, interruptConfig, interruptId);
+    ambiance =
+        ambiance.toBuilder().addLevels(PmsLevelUtils.buildLevelFromPlanNode(newUuid, newRetryIndex, node)).build();
+    NodeExecution newNodeExecution = cloneForRetry(updatedRetriedNode, newUuid, ambiance, interruptConfig, interruptId);
     NodeExecution savedNodeExecution = nodeExecutionService.save(newNodeExecution);
 
     nodeExecutionService.updateRelationShipsForRetryNode(updatedRetriedNode.getUuid(), savedNodeExecution.getUuid());
@@ -92,12 +92,8 @@ public class RetryHelper {
   }
 
   @VisibleForTesting
-  NodeExecution cloneForRetry(NodeExecution nodeExecution, StepParameters parameters, String newUuid, Ambiance ambiance,
+  NodeExecution cloneForRetry(NodeExecution nodeExecution, String newUuid, Ambiance ambiance,
       InterruptConfig interruptConfig, String interruptId) {
-    PlanNodeProto newPlanNode = nodeExecution.getNode();
-    if (parameters != null) {
-      newPlanNode = PlanNodeUtils.cloneForRetry(nodeExecution.getNode(), parameters);
-    }
     List<String> retryIds = isEmpty(nodeExecution.getRetryIds()) ? new LinkedList<>() : nodeExecution.getRetryIds();
     retryIds.add(nodeExecution.getUuid());
     InterruptConfig newInterruptConfig =
@@ -118,7 +114,8 @@ public class RetryHelper {
     return NodeExecution.builder()
         .uuid(newUuid)
         .ambiance(ambiance)
-        .node(newPlanNode)
+        .planNode(nodeExecution.getNode())
+        .levelCount(ambiance.getLevelsCount())
         .mode(null)
         .startTs(AmbianceUtils.getCurrentLevelStartTs(ambiance))
         .endTs(null)

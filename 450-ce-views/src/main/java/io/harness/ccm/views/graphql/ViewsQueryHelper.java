@@ -6,6 +6,7 @@ import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.BEFORE;
 import io.harness.ccm.views.entities.ViewFieldIdentifier;
 import io.harness.ccm.views.entities.ViewQueryParams;
 
+import com.sun.istack.internal.Nullable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.NumberFormat;
@@ -278,9 +279,11 @@ public class ViewsQueryHelper {
         .build();
   }
 
-  public String getPerspectiveIdFromMetadataFilter(List<QLCEViewFilterWrapper> filters) {
-    Optional<QLCEViewFilterWrapper> viewMetadataFilter =
-        filters.stream().filter(f -> f.getViewMetadataFilter() != null).findFirst();
-    return viewMetadataFilter.isPresent() ? viewMetadataFilter.get().getViewMetadataFilter().getViewId() : null;
+  @Nullable
+  public static Optional<String> getPerspectiveIdFromMetadataFilter(List<QLCEViewFilterWrapper> filters) {
+    return filters.stream()
+        .filter(f -> f.getViewMetadataFilter() != null)
+        .findFirst()
+        .map(x -> x.getViewMetadataFilter().getViewId());
   }
 }

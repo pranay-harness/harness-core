@@ -125,6 +125,7 @@ public class InstanceStatsEventListener implements MessageListener {
            currElementIdx++, currentBatchSize++) {
         try {
           Map<String, String> dataMap = dataPointArray[currElementIdx].getDataMap();
+          log.info("Saving the instance data in the timescale db {}", dataMap);
           statement.setTimestamp(1, new Timestamp(eventInfo.getTimestamp()), utils.getDefaultCalendar());
           statement.setString(2, eventInfo.getAccountId());
           statement.setString(3, dataMap.get(TimescaleConstants.ORG_ID.getKey()));

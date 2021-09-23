@@ -2,6 +2,7 @@ package io.harness.cvng.core.services.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
+import static io.harness.rule.OwnerRule.SOWMYA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -36,5 +37,21 @@ public class HostRecordServiceImplTest extends CvNextGenTestBase {
     assertThat(hostRecordService.get(
                    hostRecordDTO.getVerificationTaskId(), hostRecordDTO.getStartTime(), hostRecordDTO.getEndTime()))
         .isEqualTo(Sets.newHashSet("h1", "h2"));
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testSave_withGetEmtpyHosts() {
+    HostRecordDTO hostRecordDTO = HostRecordDTO.builder()
+                                      .accountId(generateUuid())
+                                      .startTime(Instant.now())
+                                      .endTime(Instant.now())
+                                      .verificationTaskId(generateUuid())
+                                      .build();
+    hostRecordService.save(Lists.newArrayList(hostRecordDTO));
+    assertThat(hostRecordService.get(
+                   hostRecordDTO.getVerificationTaskId(), hostRecordDTO.getStartTime(), hostRecordDTO.getEndTime()))
+        .isEqualTo(Sets.newHashSet());
   }
 }

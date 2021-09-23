@@ -18,4 +18,5 @@ import lombok.Data;
 public class LdapSyncJobConfig {
   private int poolSize;
   private int syncInterval;
+  private String defaultCronExpression;
 }

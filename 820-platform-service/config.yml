@@ -90,12 +90,6 @@ notificationServiceConfig:
     target: localhost:9880
     authority: localhost
 
-useDms: false
-dmsGrpcClient:
-  target: localhost:9880
-  authority: localhost
-  secret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
-
 auditServiceConfig:
   mongo:
     uri: mongodb://localhost:27017/ng-audits

@@ -1,6 +1,7 @@
 package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.beans.FeatureName.USE_LATEST_CHARTMUSEUM_VERSION;
 import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_DIRECT;
 import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_GCP;
 import static io.harness.common.ParameterFieldHelper.getBooleanParameterFieldValue;
@@ -112,6 +113,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.StepConstants;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.expression.ExpressionEvaluatorUtils;
+import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitFile;
 import io.harness.helm.HelmSubCommandType;
@@ -206,6 +208,7 @@ public class K8sStepHelper {
   @Inject private EntityReferenceExtractorUtils entityReferenceExtractorUtils;
   @Inject private PipelineRbacHelper pipelineRbacHelper;
   @Inject private SdkGraphVisualizationDataService sdkGraphVisualizationDataService;
+  @Inject private FeatureFlagService featureFlagService;
 
   String getReleaseName(Ambiance ambiance, InfrastructureOutcome infrastructure) {
     String releaseName;
@@ -402,6 +405,8 @@ public class K8sStepHelper {
           .folderPath(getParameterFieldValue(s3StoreConfig.getFolderPath()))
           .awsConnector((AwsConnectorDTO) awsConnectorDTO.getConnectorConfig())
           .encryptedDataDetails(getEncryptionDataDetails(awsConnectorDTO, AmbianceUtils.getNgAccess(ambiance)))
+          .useLatestChartMuseumVersion(
+              featureFlagService.isEnabled(USE_LATEST_CHARTMUSEUM_VERSION, AmbianceUtils.getAccountId(ambiance)))
           .build();
     }
 
@@ -418,6 +423,8 @@ public class K8sStepHelper {
           .folderPath(getParameterFieldValue(gcsStoreConfig.getFolderPath()))
           .gcpConnector((GcpConnectorDTO) gcpConnectorDTO.getConnectorConfig())
           .encryptedDataDetails(getEncryptionDataDetails(gcpConnectorDTO, AmbianceUtils.getNgAccess(ambiance)))
+          .useLatestChartMuseumVersion(
+              featureFlagService.isEnabled(USE_LATEST_CHARTMUSEUM_VERSION, AmbianceUtils.getAccountId(ambiance)))
           .build();
     }
 

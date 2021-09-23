@@ -308,6 +308,7 @@ import software.wings.ratelimit.DelegateRequestRateLimiter;
 import software.wings.resources.graphql.GraphQLRateLimiter;
 import software.wings.resources.graphql.GraphQLUtils;
 import software.wings.scheduler.BackgroundJobScheduler;
+import software.wings.scheduler.LdapSyncJobConfig;
 import software.wings.scheduler.ServiceJobScheduler;
 import software.wings.scim.ScimGroupService;
 import software.wings.scim.ScimGroupServiceImpl;
@@ -812,6 +813,12 @@ public class WingsModule extends AbstractModule implements ServersModule {
   }
 
   @Provides
+  @Singleton
+  LdapSyncJobConfig ldapSyncJobConfig() {
+    return configuration.getLdapSyncJobConfig();
+  }
+
+  @Provides
   public UrlConfiguration urlConfiguration() {
     return new UrlConfiguration(configuration.getPortal().getUrl(), configuration.getApiUrl(),
         configuration.getDelegateMetadataUrl(), configuration.getWatcherMetadataUrl());
@@ -848,18 +855,9 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(VersionModule.getInstance());
     install(TimeModule.getInstance());
     install(DelegateServiceDriverModule.getInstance(false));
-
-    if (configuration.isDisableDelegateMgmtInManager()) {
-      // Delegate Service driver SDK grpc client config for DMS grpc client config
-      install(new DelegateServiceDriverGrpcClientModule(configuration.getDmsGrpcClient().getSecret(),
-          configuration.getDmsGrpcClient().getTarget(), configuration.getDmsGrpcClient().getAuthority(), false));
-    } else {
-      // Delegate Service driver SDK grpc client config for manager grpc client config
-      install(new DelegateServiceDriverGrpcClientModule(configuration.getPortal().getJwtNextGenManagerSecret(),
-          configuration.getGrpcDelegateServiceClientConfig().getTarget(),
-          configuration.getGrpcDelegateServiceClientConfig().getAuthority(), false));
-    }
-    // DMS Classic flow grpc client config
+    install(new DelegateServiceDriverGrpcClientModule(configuration.getPortal().getJwtNextGenManagerSecret(),
+        configuration.getGrpcDelegateServiceClientConfig().getTarget(),
+        configuration.getGrpcDelegateServiceClientConfig().getAuthority(), false));
     install(new DelegateServiceClassicGrpcClientModule(configuration.getDmsSecret(),
         configuration.getGrpcDMSClientConfig().getTarget(), configuration.getGrpcDMSClientConfig().getAuthority()));
 

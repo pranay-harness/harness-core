@@ -140,6 +140,7 @@ import com.google.inject.Singleton;
 import com.healthmarketscience.sqlbuilder.SelectQuery;
 import com.healthmarketscience.sqlbuilder.custom.postgresql.PgLimitClause;
 import com.healthmarketscience.sqlbuilder.custom.postgresql.PgOffsetClause;
+import com.sun.istack.internal.NotNull;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
@@ -157,6 +158,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -759,7 +761,11 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
         viewRuleList, idFilters, timeFilters, modifiedGroupBy, aggregateFunction, sort, cloudProviderTableName);
   }
 
-  private ViewRule convertQLCEViewRuleToViewRule(QLCEViewRule rule) {
+  public static List<ViewRule> convertQLCEViewRuleToViewRule(@NotNull List<QLCEViewRule> ruleList) {
+    return ruleList.stream().map(ViewsBillingServiceImpl::convertQLCEViewRuleToViewRule).collect(Collectors.toList());
+  }
+
+  private static ViewRule convertQLCEViewRuleToViewRule(QLCEViewRule rule) {
     List<ViewCondition> conditionsList = new ArrayList<>();
     for (QLCEViewFilter filter : rule.getConditions()) {
       conditionsList.add(ViewIdCondition.builder()
@@ -771,7 +777,7 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
     return ViewRule.builder().viewConditions(conditionsList).build();
   }
 
-  private ViewIdOperator mapQLCEViewFilterOperatorToViewIdOperator(QLCEViewFilterOperator operator) {
+  private static ViewIdOperator mapQLCEViewFilterOperatorToViewIdOperator(QLCEViewFilterOperator operator) {
     if (operator.equals(QLCEViewFilterOperator.IN)) {
       return ViewIdOperator.IN;
     } else if (operator.equals(QLCEViewFilterOperator.NOT_IN)) {
@@ -784,7 +790,7 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
     return null;
   }
 
-  public ViewField getViewField(QLCEViewFieldInput field) {
+  public static ViewField getViewField(QLCEViewFieldInput field) {
     return ViewField.builder()
         .fieldId(field.getFieldId())
         .fieldName(field.getFieldName())
@@ -799,19 +805,22 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
 
   private static List<QLCEViewTimeFilter> getTimeFilters(List<QLCEViewFilterWrapper> filters) {
     return filters.stream()
-        .filter(f -> f.getTimeFilter() != null)
-        .map(f -> f.getTimeFilter())
+        .map(QLCEViewFilterWrapper::getTimeFilter)
+        .filter(Objects::nonNull)
         .collect(Collectors.toList());
   }
 
   private static List<QLCEViewFilter> getIdFilters(List<QLCEViewFilterWrapper> filters) {
-    return filters.stream().filter(f -> f.getIdFilter() != null).map(f -> f.getIdFilter()).collect(Collectors.toList());
+    return filters.stream()
+        .map(QLCEViewFilterWrapper::getIdFilter)
+        .filter(Objects::nonNull)
+        .collect(Collectors.toList());
   }
 
-  private static List<QLCEViewRule> getRuleFilters(List<QLCEViewFilterWrapper> filters) {
+  public static List<QLCEViewRule> getRuleFilters(@NotNull List<QLCEViewFilterWrapper> filters) {
     return filters.stream()
-        .filter(f -> f.getRuleFilter() != null)
-        .map(f -> f.getRuleFilter())
+        .map(QLCEViewFilterWrapper::getRuleFilter)
+        .filter(Objects::nonNull)
         .collect(Collectors.toList());
   }
 

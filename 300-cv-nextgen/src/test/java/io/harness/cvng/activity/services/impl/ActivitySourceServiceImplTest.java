@@ -78,6 +78,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
@@ -122,6 +123,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = RAGHU)
   @Category({UnitTests.class})
+  @Ignore("We do not use Kubernetes activity source anymore. Moved to change source")
   public void testCreate_GetKubernetesSource() {
     String identifier = generateUuid();
     KubernetesActivitySourceDTO kubernetesActivitySourceDTO =
@@ -496,6 +498,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = RAGHU)
   @Category({UnitTests.class})
+  @Ignore("We do not use Kubernetes activity source anymore. Moved to change source")
   public void testSaveKubernetesActivities() {
     createCVConfig();
 
@@ -559,6 +562,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
+  @Ignore("We do not use Kubernetes activity source anymore. Moved to change source")
   public void testUpsertAddsAllFields() {
     createCVConfig();
 
@@ -613,6 +617,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = RAGHU)
   @Category({UnitTests.class})
+  @Ignore("We do not use Kubernetes activity source anymore. Moved to change source")
   public void testDeletePerpetualTask_whenEditKubernetesActivities() {
     KubernetesActivitySourceDTO kubernetesActivitySourceDTO =
         KubernetesActivitySourceDTO.builder()
@@ -663,6 +668,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = DEEPAK)
   @Category({UnitTests.class})
+  @Ignore("We do not use Kubernetes activity source anymore. Moved to change source")
   public void testDoesAActivitySourceExistsForTheCaseWhenNoSourceAdded() {
     boolean doesAActivitySourceExistsForThisProject =
         kubernetesActivitySourceService.doesAActivitySourceExistsForThisProject(
@@ -673,6 +679,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = DEEPAK)
   @Category({UnitTests.class})
+  @Ignore("We do not use Kubernetes activity source anymore. Moved to change source")
   public void testDoesAActivitySourceExistsForTheCaseWhenSourceExists() {
     KubernetesActivitySourceDTO kubernetesActivitySourceDTO =
         KubernetesActivitySourceDTO.builder()
@@ -840,6 +847,7 @@ public class ActivitySourceServiceImplTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = RAGHU)
   @Category({UnitTests.class})
+  @Ignore("We do not use Kubernetes activity source anymore. Moved to change source")
   public void testGetEventDetails() {
     createCVConfig();
     String nameSpace = generateUuid();

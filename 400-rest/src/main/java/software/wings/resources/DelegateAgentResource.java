@@ -346,19 +346,6 @@ public class DelegateAgentResource {
   }
 
   @DelegateAuth
-  @PUT
-  @Path("{delegateId}/clear-cache")
-  @Timed
-  @ExceptionMetered
-  public void clearCache(
-      @PathParam("delegateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
-    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
-         AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      delegateService.clearCache(accountId, delegateId);
-    }
-  }
-
-  @DelegateAuth
   @GET
   @Path("{delegateId}/upgrade")
   @Timed
@@ -592,6 +579,7 @@ public class DelegateAgentResource {
         .delegateRandomToken(delegateParams.getDelegateRandomToken())
         .keepAlivePacket(delegateParams.isKeepAlivePacket())
         .polllingModeEnabled(delegateParams.isPollingModeEnabled())
+        .ng(delegateParams.isNg())
         .sampleDelegate(delegateParams.isSampleDelegate())
         .currentlyExecutingDelegateTasks(delegateParams.getCurrentlyExecutingDelegateTasks())
         .location(delegateParams.getLocation())

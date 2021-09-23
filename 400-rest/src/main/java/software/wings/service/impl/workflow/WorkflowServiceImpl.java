@@ -2099,6 +2099,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       if (rollbackWorkflowPhase != null) {
         rollbackWorkflowPhase.setServiceId(serviceId);
         rollbackWorkflowPhase.setInfraDefinitionId(infraDefinitionId);
+        rollbackWorkflowPhase.setVariableOverrides(workflowPhase.getVariableOverrides());
         if (infrastructureDefinition != null) {
           setCloudProviderForPhase(infrastructureDefinition, rollbackWorkflowPhase);
         }

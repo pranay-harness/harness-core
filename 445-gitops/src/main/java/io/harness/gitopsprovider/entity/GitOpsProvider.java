@@ -11,13 +11,17 @@ import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.ng.core.NGAccountAccess;
+import io.harness.ng.core.common.beans.NGTag;
 import io.harness.persistence.PersistentEntity;
 import io.harness.security.dto.Principal;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import lombok.Data;
+import lombok.Singular;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -63,6 +67,7 @@ public abstract class GitOpsProvider implements PersistentEntity, NGAccountAcces
   @LastModifiedBy private Principal lastUpdatedBy;
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
+  @NotNull @Singular @Size(max = 128) List<NGTag> tags;
 
   @Override
   public String getAccountIdentifier() {

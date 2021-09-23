@@ -8,8 +8,8 @@ import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
+import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.AccountAccess;
 
@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Data;
@@ -38,13 +39,18 @@ import org.mongodb.morphia.annotations.Entity;
 @HarnessEntity(exportable = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXISTING_PROPERTY)
-public abstract class SSOSettings extends Base implements AccountAccess, PersistentRegularIterable {
+public abstract class SSOSettings extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
                  .name("accountIdTypeIdx")
                  .field(SSOSettingsKeys.accountId)
                  .field(SSOSettingsKeys.type)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("typeNextIterations")
+                 .field(SSOSettingsKeys.type)
+                 .field(SSOSettingsKeys.nextIterations)
                  .build())
         .build();
   }
@@ -53,22 +59,13 @@ public abstract class SSOSettings extends Base implements AccountAccess, Persist
   @NotEmpty protected String displayName;
   @NotEmpty protected String url;
   private Long nextIteration;
+  @FdIndex List<Long> nextIterations = new ArrayList<>();
 
   public SSOSettings(SSOType type, String displayName, String url) {
     this.type = type;
     this.displayName = displayName;
     this.url = url;
     appId = GLOBAL_APP_ID;
-  }
-
-  @Override
-  public void updateNextIteration(String fieldName, long nextIteration) {
-    this.nextIteration = nextIteration;
-  }
-
-  @Override
-  public Long obtainNextIteration(String fieldName) {
-    return this.nextIteration;
   }
 
   // TODO: Return list of all sso settings instead with the use of @JsonIgnore to trim the unnecessary elements
