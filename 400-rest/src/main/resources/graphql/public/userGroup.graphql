@@ -178,6 +178,7 @@ type NotificationSettings {
   groupEmailAddresses: [String]
   slackNotificationSetting: SlackNotificationSetting
   microsoftTeamsWebhookUrl: String
+  pagerDutyIntegrationKey: String
 }
 
 type SlackNotificationSetting {
