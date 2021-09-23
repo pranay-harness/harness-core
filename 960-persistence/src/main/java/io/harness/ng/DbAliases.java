@@ -17,4 +17,5 @@ public class DbAliases {
   public static final String ALL = "all";
   public static final String CVNG = "cvng";
   public static final String CENG = "events";
+  public static final String CG_MANAGER = "harness";
 }

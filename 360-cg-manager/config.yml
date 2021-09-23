@@ -276,11 +276,12 @@ mongo:
   maxConnectionIdleTime: 600000
   connectionsPerHost: 300
   indexManagerMode: AUTO
+  aliasDBName: harness
   traceMode: DISABLED
   mongoSSLConfig:
-    mongoSSLEnabled: false
-    mongoTrustStorePath:
-    mongoTrustStorePassword:
+  mongoSSLEnabled: false
+  mongoTrustStorePath:
+  mongoTrustStorePassword:
 
 events-mongo:
   uri: mongodb://localhost:27017/events
