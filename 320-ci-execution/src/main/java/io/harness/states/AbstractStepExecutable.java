@@ -35,6 +35,7 @@ import io.harness.ci.serializer.RunTestsStepProtobufSerializer;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.ci.CIK8ExecuteStepTaskParams;
+import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
 import io.harness.delegate.task.HDelegateTask;
 import io.harness.delegate.task.stepstatus.StepExecutionStatus;
 import io.harness.delegate.task.stepstatus.StepMapOutput;
@@ -44,6 +45,7 @@ import io.harness.delegate.task.stepstatus.StepStatusTaskResponseData;
 import io.harness.delegate.task.stepstatus.artifact.ArtifactMetadata;
 import io.harness.encryption.Scope;
 import io.harness.exception.ngexception.CIStageExecutionException;
+import io.harness.logging.CommandExecutionStatus;
 import io.harness.logstreaming.LogStreamingHelper;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -353,7 +355,17 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
   }
 
   private StepStatusTaskResponseData filterStepResponse(Map<String, ResponseData> responseDataMap) {
-    return StepStatusTaskResponseData.builder().stepStatus(StepStatus.builder().stepExecutionStatus(StepExecutionStatus.SUCCESS).build()).build();
+    StepExecutionStatus status = StepExecutionStatus.SUCCESS;
+    String errMessage = "";
+    for (Map.Entry<String,ResponseData> entry : responseDataMap.entrySet()){
+      K8sTaskExecutionResponse response = (K8sTaskExecutionResponse) entry.getValue();
+      if (response.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
+        status = StepExecutionStatus.FAILURE;
+        errMessage = response.getErrorMessage();
+      }
+      break;
+    }
+    return StepStatusTaskResponseData.builder().stepStatus(StepStatus.builder().stepExecutionStatus(status).error(errMessage).build()).build();
     // Filter final response from step
 //    return responseDataMap.entrySet()
 //        .stream()

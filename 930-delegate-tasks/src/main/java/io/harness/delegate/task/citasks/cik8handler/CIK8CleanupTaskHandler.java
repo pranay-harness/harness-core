@@ -54,10 +54,9 @@ public class CIK8CleanupTaskHandler implements CICleanupTaskHandler {
   public K8sTaskExecutionResponse callDrone(String podName) {
     Map<String, String> params = new HashMap<>();
     params.put("stage_id", podName);
-    Response response = httpHelper.call("http://127.0.0.1:9191/destroy", params);
+    Response response = httpHelper.call("http://127.0.0.1:3000/destroy", params);
     if (response == null || !response.isSuccessful()) {
-
-      log.error("Response not Successful. Response body: {}", response);
+      log.error("Cleanup step response not Successful. Response body: {}", response);
       return K8sTaskExecutionResponse.builder()
               .commandExecutionStatus(CommandExecutionStatus.FAILURE)
               .build();

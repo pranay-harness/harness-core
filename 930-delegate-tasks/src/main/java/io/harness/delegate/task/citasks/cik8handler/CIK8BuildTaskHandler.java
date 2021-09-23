@@ -107,10 +107,10 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
 
     Map<String, String> params = new HashMap<>();
     params.put("stage_id", podName);
-    params.put("dump", jsonDump);
-    Response response = httpHelper.call("http://127.0.0.1:9191/setup", params);
+//    params.put("dump", jsonDump);
+    Response response = httpHelper.call("http://127.0.0.1:3000/setup", params);
     if (response == null || !response.isSuccessful()) {
-      log.error("Response not Successful. Response body: {}", response);
+      log.error("Setup response not Successful. Response body: {}", response);
       return K8sTaskExecutionResponse.builder()
               .commandExecutionStatus(CommandExecutionStatus.FAILURE)
               .build();

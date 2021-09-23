@@ -16,6 +16,8 @@ import io.harness.product.ci.engine.proto.ExecuteStepRequest;
 import com.google.inject.Inject;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
+
+import java.io.IOException;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,6 +25,7 @@ import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.RetryPolicy;
 import okhttp3.Response;
+import org.json.JSONObject;
 
 @Slf4j
 public class CIK8ExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
@@ -56,20 +59,38 @@ public class CIK8ExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
     params.put("image", request.getStep().getRun().getImage());
     params.put("step_id", request.getStep().getId());
     params.put("log_key", request.getStep().getLogKey());
-    params.put("dump", jsonDump);
+//    params.put("dump", jsonDump);
     params.put("stage_id", taskParams.getPodName());
 
-    Response response = httpHelper.call("http://127.0.0.1:9191/execute_step", params);
+    Response response = httpHelper.call("http://127.0.0.1:3000/step", params);
     if (response == null || !response.isSuccessful()) {
-
-      log.error("Response not Successful. Response body: {}", response);
+      log.error("Execute step response not Successful. Response body: {}", response);
       return K8sTaskExecutionResponse.builder()
               .commandExecutionStatus(CommandExecutionStatus.FAILURE)
               .build();
     } else {
-      return K8sTaskExecutionResponse.builder()
-              .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
-              .build();
+      JSONObject obj;
+      try {
+        obj = new JSONObject(response.body().string());
+      } catch (IOException ex) {
+        log.error("failed to parse response", ex);
+        ex.printStackTrace();
+        return K8sTaskExecutionResponse.builder()
+                .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+                .build();
+      }
+
+      Integer exitCode = obj.getInt("ExitCode");
+      if (exitCode == 0) {
+        return K8sTaskExecutionResponse.builder()
+                .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+                .build();
+      } else {
+        return K8sTaskExecutionResponse.builder()
+                .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+                .errorMessage(format("Exit code: %d", exitCode))
+                .build();
+      }
     }
   }
 
