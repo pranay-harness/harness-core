@@ -1,9 +1,2022 @@
 {
   "type": "object",
+  "discriminator": "type",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
+    "BitbucketStore": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StoreConfig"
+        },
+        {
+          "type": "object",
+          "required": [
+            "connectorRef",
+            "gitFetchType"
+          ],
+          "properties": {
+            "branch": {
+              "type": "string"
+            },
+            "commitId": {
+              "type": "string"
+            },
+            "connectorRef": {
+              "type": "string"
+            },
+            "folderPath": {
+              "type": "string"
+            },
+            "gitFetchType": {
+              "type": "string",
+              "enum": [
+                "Branch",
+                "Commit"
+              ]
+            },
+            "metadata": {
+              "type": "string"
+            },
+            "paths": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
+                }
+              ]
+            },
+            "repoName": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "folderPath"
+              ]
+            },
+            {
+              "required": [
+                "paths"
+              ]
+            }
+          ]
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "commitId"
+              ]
+            },
+            {
+              "required": [
+                "branch"
+              ]
+            }
+          ]
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "CDStepInfo": {
       "type": "object",
+      "discriminator": "type",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "CountInstanceSelection": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/InstanceSelectionBase"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "count": {
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/ParameterFieldString"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "DeleteManifestPathSpec": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/DeleteResourcesBaseSpec"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "allManifestPaths": {
+              "type": "boolean"
+            },
+            "manifestPaths": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "DeleteReleaseNameSpec": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/DeleteResourcesBaseSpec"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "deleteNamespace": {
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "DeleteResourceNameSpec": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/DeleteResourcesBaseSpec"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "resourceNames": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "DeleteResourcesBaseSpec": {
+      "type": "object",
+      "discriminator": "type",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "DeleteResourcesWrapper": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "ResourceName",
+            "ReleaseName",
+            "ManifestPath"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "ManifestPath"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/DeleteManifestPathSpec"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "ReleaseName"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/DeleteReleaseNameSpec"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "ResourceName"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/DeleteResourceNameSpec"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "ExecutionTarget": {
+      "type": "object",
+      "properties": {
+        "connectorRef": {
+          "type": "string"
+        },
+        "host": {
+          "type": "string"
+        },
+        "workingDirectory": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "GcsStoreConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StoreConfig"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "bucketName": {
+              "type": "string"
+            },
+            "connectorRef": {
+              "type": "string"
+            },
+            "folderPath": {
+              "type": "string"
+            },
+            "metadata": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "GitLabStore": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StoreConfig"
+        },
+        {
+          "type": "object",
+          "required": [
+            "connectorRef",
+            "gitFetchType"
+          ],
+          "properties": {
+            "branch": {
+              "type": "string"
+            },
+            "commitId": {
+              "type": "string"
+            },
+            "connectorRef": {
+              "type": "string"
+            },
+            "folderPath": {
+              "type": "string"
+            },
+            "gitFetchType": {
+              "type": "string",
+              "enum": [
+                "Branch",
+                "Commit"
+              ]
+            },
+            "metadata": {
+              "type": "string"
+            },
+            "paths": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
+                }
+              ]
+            },
+            "repoName": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "folderPath"
+              ]
+            },
+            {
+              "required": [
+                "paths"
+              ]
+            }
+          ]
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "commitId"
+              ]
+            },
+            {
+              "required": [
+                "branch"
+              ]
+            }
+          ]
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "GitStore": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StoreConfig"
+        },
+        {
+          "type": "object",
+          "required": [
+            "connectorRef",
+            "gitFetchType"
+          ],
+          "properties": {
+            "branch": {
+              "type": "string"
+            },
+            "commitId": {
+              "type": "string"
+            },
+            "connectorRef": {
+              "type": "string"
+            },
+            "folderPath": {
+              "type": "string"
+            },
+            "gitFetchType": {
+              "type": "string",
+              "enum": [
+                "Branch",
+                "Commit"
+              ]
+            },
+            "metadata": {
+              "type": "string"
+            },
+            "paths": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
+                }
+              ]
+            },
+            "repoName": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "folderPath"
+              ]
+            },
+            {
+              "required": [
+                "paths"
+              ]
+            }
+          ]
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "commitId"
+              ]
+            },
+            {
+              "required": [
+                "branch"
+              ]
+            }
+          ]
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "GithubStore": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StoreConfig"
+        },
+        {
+          "type": "object",
+          "required": [
+            "connectorRef",
+            "gitFetchType"
+          ],
+          "properties": {
+            "branch": {
+              "type": "string"
+            },
+            "commitId": {
+              "type": "string"
+            },
+            "connectorRef": {
+              "type": "string"
+            },
+            "folderPath": {
+              "type": "string"
+            },
+            "gitFetchType": {
+              "type": "string",
+              "enum": [
+                "Branch",
+                "Commit"
+              ]
+            },
+            "metadata": {
+              "type": "string"
+            },
+            "paths": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
+                }
+              ]
+            },
+            "repoName": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "folderPath"
+              ]
+            },
+            {
+              "required": [
+                "paths"
+              ]
+            }
+          ]
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "commitId"
+              ]
+            },
+            {
+              "required": [
+                "branch"
+              ]
+            }
+          ]
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "HttpStoreConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StoreConfig"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "connectorRef": {
+              "type": "string"
+            },
+            "metadata": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "InlineTerraformBackendConfigSpec": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/TerraformBackendConfigSpec"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "content": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "InlineTerraformVarFileSpec": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/TerraformVarFileSpec"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "content": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "InputSetValidator": {
+      "type": "object",
+      "properties": {
+        "parameters": {
+          "type": "string"
+        },
+        "validatorType": {
+          "type": "string",
+          "enum": [
+            "ALLOWED_VALUES",
+            "REGEX"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "InstanceSelectionBase": {
+      "type": "object",
+      "discriminator": "type",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "InstanceSelectionWrapper": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "Count",
+            "Percentage"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Count"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/CountInstanceSelection"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Percentage"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/PercentageInstanceSelection"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "K8sApplyStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CDStepInfo"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "delegateSelectors": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
+                }
+              ]
+            },
+            "filePaths": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
+                }
+              ]
+            },
+            "skipDryRun": {
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "skipSteadyStateCheck": {
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "K8sBGSwapServicesStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CDStepInfo"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "delegateSelectors": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
+                }
+              ]
+            },
+            "skipDryRun": {
+              "type": "boolean"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "K8sBlueGreenStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CDStepInfo"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "delegateSelectors": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
+                }
+              ]
+            },
+            "skipDryRun": {
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "K8sCanaryDeleteStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CDStepInfo"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "delegateSelectors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "skipDryRun": {
+              "type": "boolean"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "K8sCanaryStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CDStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "instanceSelection"
+          ],
+          "properties": {
+            "delegateSelectors": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
+                }
+              ]
+            },
+            "instanceSelection": {
+              "$ref": "#/definitions/InstanceSelectionWrapper"
+            },
+            "skipDryRun": {
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "K8sDeleteStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CDStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "deleteResources"
+          ],
+          "properties": {
+            "delegateSelectors": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
+                }
+              ]
+            },
+            "deleteResources": {
+              "$ref": "#/definitions/DeleteResourcesWrapper"
+            },
+            "skipDryRun": {
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "K8sRollingRollbackStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CDStepInfo"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "delegateSelectors": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
+                }
+              ]
+            },
+            "skipDryRun": {
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "K8sRollingStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CDStepInfo"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "delegateSelectors": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
+                }
+              ]
+            },
+            "skipDryRun": {
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "K8sScaleStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CDStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "instanceSelection"
+          ],
+          "properties": {
+            "delegateSelectors": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
+                }
+              ]
+            },
+            "instanceSelection": {
+              "$ref": "#/definitions/InstanceSelectionWrapper"
+            },
+            "skipDryRun": {
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "skipSteadyStateCheck": {
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "workload": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "NGVariable": {
+      "type": "object",
+      "discriminator": "type",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "metadata": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "String",
+            "Number",
+            "Secret"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "NumberNGVariable": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/NGVariable"
+        },
+        {
+          "type": "object",
+          "required": [
+            "value"
+          ],
+          "properties": {
+            "default": {
+              "type": "number",
+              "format": "double"
+            },
+            "name": {
+              "type": "string",
+              "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "Number"
+              ]
+            },
+            "value": {
+              "oneOf": [
+                {
+                  "type": "number",
+                  "format": "double"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ParameterField": {
+      "type": "object",
+      "properties": {
+        "expression": {
+          "type": "boolean"
+        },
+        "expressionValue": {
+          "type": "string"
+        },
+        "inputSetValidator": {
+          "$ref": "#/definitions/InputSetValidator"
+        },
+        "jsonResponseField": {
+          "type": "boolean"
+        },
+        "responseField": {
+          "type": "string"
+        },
+        "typeString": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "object"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ParameterFieldString": {
+      "type": "object",
+      "properties": {
+        "expression": {
+          "type": "boolean"
+        },
+        "expressionValue": {
+          "type": "string"
+        },
+        "inputSetValidator": {
+          "$ref": "#/definitions/InputSetValidator"
+        },
+        "jsonResponseField": {
+          "type": "boolean"
+        },
+        "responseField": {
+          "type": "string"
+        },
+        "typeString": {
+          "type": "boolean"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "PercentageInstanceSelection": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/InstanceSelectionBase"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "percentage": {
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/ParameterFieldString"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "RemoteTerraformVarFileSpec": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/TerraformVarFileSpec"
+        },
+        {
+          "type": "object",
+          "required": [
+            "store"
+          ],
+          "properties": {
+            "store": {
+              "$ref": "#/definitions/StoreConfigWrapper"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "S3StoreConfig": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StoreConfig"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "bucketName": {
+              "type": "string"
+            },
+            "connectorRef": {
+              "type": "string"
+            },
+            "folderPath": {
+              "type": "string"
+            },
+            "metadata": {
+              "type": "string"
+            },
+            "region": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "SecretNGVariable": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/NGVariable"
+        },
+        {
+          "type": "object",
+          "required": [
+            "value"
+          ],
+          "properties": {
+            "default": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string",
+              "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "Secret"
+              ]
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ShellScriptBaseSource": {
+      "type": "object",
+      "discriminator": "type",
+      "properties": {
+        "type": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ShellScriptInlineSource": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ShellScriptBaseSource"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "script": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ShellScriptSourceWrapper": {
+      "type": "object",
+      "required": [
+        "spec",
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Inline"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/ShellScriptInlineSource"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "ShellScriptStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CDStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "onDelegate",
+            "shell",
+            "source"
+          ],
+          "properties": {
+            "delegateSelectors": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
+                }
+              ]
+            },
+            "environmentVariables": {
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  {
+                    "$ref": "#/definitions/NumberNGVariable"
+                  },
+                  {
+                    "$ref": "#/definitions/SecretNGVariable"
+                  },
+                  {
+                    "$ref": "#/definitions/StringNGVariable"
+                  }
+                ]
+              }
+            },
+            "executionTarget": {
+              "$ref": "#/definitions/ExecutionTarget"
+            },
+            "metadata": {
+              "type": "string"
+            },
+            "onDelegate": {
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            },
+            "outputVariables": {
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  {
+                    "$ref": "#/definitions/NumberNGVariable"
+                  },
+                  {
+                    "$ref": "#/definitions/SecretNGVariable"
+                  },
+                  {
+                    "$ref": "#/definitions/StringNGVariable"
+                  }
+                ]
+              }
+            },
+            "shell": {
+              "type": "string",
+              "enum": [
+                "Bash",
+                "PowerShell"
+              ]
+            },
+            "source": {
+              "$ref": "#/definitions/ShellScriptSourceWrapper"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "StoreConfig": {
+      "type": "object",
+      "discriminator": "type",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "StoreConfigWrapper": {
+      "type": "object",
+      "required": [
+        "spec",
+        "type"
+      ],
+      "properties": {
+        "metadata": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "Git",
+            "Github",
+            "Bitbucket",
+            "GitLab",
+            "Http",
+            "S3",
+            "Gcs"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Bitbucket"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/BitbucketStore"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Gcs"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/GcsStoreConfig"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Git"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/GitStore"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "GitLab"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/GitLabStore"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Github"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/GithubStore"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Http"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/HttpStoreConfig"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "S3"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/S3StoreConfig"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "StringNGVariable": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/NGVariable"
+        },
+        {
+          "type": "object",
+          "required": [
+            "value"
+          ],
+          "properties": {
+            "default": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string",
+              "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "String"
+              ]
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "TerraformApplyStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CDStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "configuration",
+            "provisionerIdentifier"
+          ],
+          "properties": {
+            "configuration": {
+              "$ref": "#/definitions/TerraformStepConfiguration"
+            },
+            "delegateSelectors": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
+                }
+              ]
+            },
+            "metadata": {
+              "type": "string"
+            },
+            "provisionerIdentifier": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "TerraformBackendConfig": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Inline"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/InlineTerraformBackendConfigSpec"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "TerraformBackendConfigSpec": {
+      "type": "object",
+      "discriminator": "type",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "TerraformConfigFilesWrapper": {
+      "type": "object",
+      "required": [
+        "store"
+      ],
+      "properties": {
+        "store": {
+          "$ref": "#/definitions/StoreConfigWrapper"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "TerraformDestroyStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CDStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "configuration",
+            "provisionerIdentifier"
+          ],
+          "properties": {
+            "configuration": {
+              "$ref": "#/definitions/TerraformStepConfiguration"
+            },
+            "delegateSelectors": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
+                }
+              ]
+            },
+            "metadata": {
+              "type": "string"
+            },
+            "provisionerIdentifier": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "TerraformExecutionData": {
+      "type": "object",
+      "required": [
+        "configFiles"
+      ],
+      "properties": {
+        "backendConfig": {
+          "$ref": "#/definitions/TerraformBackendConfig"
+        },
+        "configFiles": {
+          "$ref": "#/definitions/TerraformConfigFilesWrapper"
+        },
+        "environmentVariables": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/definitions/NumberNGVariable"
+              },
+              {
+                "$ref": "#/definitions/SecretNGVariable"
+              },
+              {
+                "$ref": "#/definitions/StringNGVariable"
+              }
+            ]
+          }
+        },
+        "targets": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "varFiles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TerraformVarFileWrapper"
+          }
+        },
+        "workspace": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "TerraformPlanExecutionData": {
+      "type": "object",
+      "required": [
+        "command",
+        "configFiles",
+        "secretManagerRef"
+      ],
+      "properties": {
+        "backendConfig": {
+          "$ref": "#/definitions/TerraformBackendConfig"
+        },
+        "command": {
+          "type": "string",
+          "enum": [
+            "Apply",
+            "Destroy"
+          ]
+        },
+        "configFiles": {
+          "$ref": "#/definitions/TerraformConfigFilesWrapper"
+        },
+        "environmentVariables": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              {
+                "$ref": "#/definitions/NumberNGVariable"
+              },
+              {
+                "$ref": "#/definitions/SecretNGVariable"
+              },
+              {
+                "$ref": "#/definitions/StringNGVariable"
+              }
+            ]
+          }
+        },
+        "secretManagerRef": {
+          "type": "string"
+        },
+        "targets": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "varFiles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TerraformVarFileWrapper"
+          }
+        },
+        "workspace": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "TerraformPlanStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CDStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "configuration",
+            "provisionerIdentifier"
+          ],
+          "properties": {
+            "configuration": {
+              "$ref": "#/definitions/TerraformPlanExecutionData"
+            },
+            "delegateSelectors": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
+                }
+              ]
+            },
+            "provisionerIdentifier": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "TerraformRollbackStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/CDStepInfo"
+        },
+        {
+          "type": "object",
+          "required": [
+            "provisionerIdentifier"
+          ],
+          "properties": {
+            "delegateSelectors": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength": 1
+                }
+              ]
+            },
+            "provisionerIdentifier": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "TerraformStepConfiguration": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "spec": {
+          "$ref": "#/definitions/TerraformExecutionData"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "Inline",
+            "InheritFromPlan",
+            "InheritFromApply"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "TerraformVarFile": {
+      "type": "object",
+      "required": [
+        "identifier",
+        "spec",
+        "type"
+      ],
+      "properties": {
+        "identifier": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Inline"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/InlineTerraformVarFileSpec"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Remote"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/RemoteTerraformVarFileSpec"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "TerraformVarFileSpec": {
+      "type": "object",
+      "discriminator": "type",
+      "properties": {
+        "type": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "TerraformVarFileWrapper": {
+      "type": "object",
+      "required": [
+        "varFile"
+      ],
+      "properties": {
+        "varFile": {
+          "$ref": "#/definitions/TerraformVarFile"
+        }
+      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     }
   }
