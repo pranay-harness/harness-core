@@ -11,7 +11,8 @@ import io.harness.overviewdashboard.dtos.TopProjectsPanel;
 
 @OwnedBy(HarnessTeam.PL)
 public interface OverviewDashboardService {
-  TopProjectsPanel getTopProjectsPanel(String accountIdentifier, String userId, long startInterval, long endInterval);
+  ExecutionResponse<TopProjectsPanel> getTopProjectsPanel(
+      String accountIdentifier, String userId, long startInterval, long endInterval);
 
   ExecutionResponse<DeploymentsStatsOverview> getDeploymentStatsOverview(
       String accountIdentifier, String userId, long startInterval, long endInterval, GroupBy groupBy, SortBy sortBy);

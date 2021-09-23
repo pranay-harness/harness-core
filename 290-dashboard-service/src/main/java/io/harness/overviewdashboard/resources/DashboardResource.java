@@ -70,17 +70,20 @@ public class DashboardResource {
   @Path("/top-projects")
   @ApiOperation(value = "Get Top Projects", nickname = "getTopProjects")
   @NGAccessControlCheck(resourceType = ACCOUNT, permission = VIEW_ACCOUNT_PERMISSION)
-  public ResponseDTO<TopProjectsPanel> getTopProjects(
+  public ResponseDTO<ExecutionResponse<TopProjectsPanel>> getTopProjects(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
       @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
     Optional<String> userId = getUserIdentifierFromSecurityContext();
     if (!userId.isPresent()) {
-      return ResponseDTO.newResponse(TopProjectsPanel.builder().build());
+      return ResponseDTO.newResponse(ExecutionResponse.<TopProjectsPanel>builder()
+                                         .executionStatus(ExecutionStatus.FAILURE)
+                                         .executionMessage(FAILURE_MESSAGE)
+                                         .build());
     }
     log.info("Getting top projects");
-    return ResponseDTO.newResponse(overviewDashboardService.getTopProjectsPanel(
-        accountIdentifier, userId.get(), startInterval, endInterval)); // TopProjectsPanel.builder().build());
+    return ResponseDTO.newResponse(
+        overviewDashboardService.getTopProjectsPanel(accountIdentifier, userId.get(), startInterval, endInterval));
   }
 
   @GET
@@ -96,7 +99,7 @@ public class DashboardResource {
     if (!userId.isPresent()) {
       return ResponseDTO.newResponse(ExecutionResponse.<DeploymentsStatsOverview>builder()
                                          .executionStatus(ExecutionStatus.FAILURE)
-                                         .executionMessage("Failed to get userId")
+                                         .executionMessage(FAILURE_MESSAGE)
                                          .build());
     }
     return ResponseDTO.newResponse(overviewDashboardService.getDeploymentStatsOverview(
@@ -115,7 +118,7 @@ public class DashboardResource {
     if (!userId.isPresent()) {
       return ResponseDTO.newResponse(ExecutionResponse.<CountOverview>builder()
                                          .executionStatus(ExecutionStatus.FAILURE)
-                                         .executionMessage("Failed to get userId")
+                                         .executionMessage(FAILURE_MESSAGE)
                                          .build());
     }
     return ResponseDTO.newResponse(
