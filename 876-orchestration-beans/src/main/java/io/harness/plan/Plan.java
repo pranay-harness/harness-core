@@ -54,11 +54,12 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @TypeAlias("plan")
 @Entity(value = "plans")
 @StoreIn(DbAliases.PMS)
-public class Plan implements PersistentEntity {
+public class Plan implements PersistentEntity, Node {
   static final long TTL_MONTHS = 6;
 
   @Default @Wither @Id @org.mongodb.morphia.annotations.Id String uuid = generateUuid();
-  @Singular List<PlanNodeProto> nodes;
+  @Deprecated @Singular List<PlanNodeProto> nodes;
+  @Singular List<PlanNode> planNodes;
 
   @NotNull String startingNodeId;
 
@@ -87,5 +88,22 @@ public class Plan implements PersistentEntity {
       return optional.get();
     }
     throw new InvalidRequestException("No node found with Id :" + nodeId);
+  }
+
+  public PlanNode fetchStartingPlanNode() {
+    return fetchPlanNode(startingNodeId);
+  }
+
+  public PlanNode fetchPlanNode(String nodeId) {
+    Optional<PlanNode> optional = planNodes.stream().filter(pn -> pn.getUuid().equals(nodeId)).findFirst();
+    if (optional.isPresent()) {
+      return optional.get();
+    }
+    throw new InvalidRequestException("No node found with Id :" + nodeId);
+  }
+
+  @Override
+  public NodeType getNodeType() {
+    return NodeType.PLAN;
   }
 }

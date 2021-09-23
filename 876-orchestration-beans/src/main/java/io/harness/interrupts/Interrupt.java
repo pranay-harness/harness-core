@@ -52,6 +52,7 @@ public class Interrupt implements PersistentRegularIterable, UuidAccess {
   @NotNull InterruptConfig interruptConfig;
   @NonNull String planExecutionId;
   String nodeExecutionId;
+  // TODO (prashant) : Remove this field from here
   StepParameters parameters;
   Map<String, String> metadata;
   @Wither @LastModifiedDate Long lastUpdatedAt;
