@@ -125,6 +125,8 @@ def create_dataset_and_tables(jsonData):
             print_("%s table exists" % table_ref)
             if table_ref == cluster_data_aggregated_table_ref:
                 alterTableAggregated(jsonData)
+            elif table_ref ==  cluster_data_table_ref:
+                alterTable(jsonData)
 
 
 def ingest_data_from_avro(jsonData):
@@ -292,7 +294,7 @@ def ingest_aggregated_data(jsonData):
         print_(query_job.job_id)
         query_job.result()
     except Exception as e:
-        print_(DELETE_EXISTING_PREAGG)
+        print_(DELETE_EXISTING_PREAGG, "ERROR")
         print_(e)
 
     # Gen preagg billing data
@@ -331,7 +333,7 @@ def ingest_aggregated_data(jsonData):
         print_(query_job.job_id)
         query_job.result()
     except Exception as e:
-        print_(PREAGG_QUERY)
+        print_(PREAGG_QUERY, "ERROR")
         print_(e)
 
     PREAGG_QUERY_ID = """INSERT INTO %s (MEMORYACTUALIDLECOST, CPUACTUALIDLECOST, STARTTIME, ENDTIME, 
@@ -366,7 +368,7 @@ def ingest_aggregated_data(jsonData):
         print_(query_job.job_id)
         query_job.result()
     except Exception as e:
-        print_(PREAGG_QUERY_ID)
+        print_(PREAGG_QUERY_ID, "ERROR")
         print_(e)
 
 
@@ -378,7 +380,10 @@ def alterTableAggregated(jsonData):
             ADD COLUMN IF NOT EXISTS servicename STRING, \
             ADD COLUMN IF NOT EXISTS envname STRING, \
             ADD COLUMN IF NOT EXISTS cloudprovider STRING, \
-            ADD COLUMN IF NOT EXISTS labels ARRAY<STRUCT<key STRING, value STRING>>;" % (jsonData["tableIdAggregated"])
+            ADD COLUMN IF NOT EXISTS labels ARRAY<STRUCT<key STRING, value STRING>>, \
+            ADD COLUMN IF NOT EXISTS storageactualidlecost FLOAT64, \
+            ADD COLUMN IF NOT EXISTS maxstorageutilizationvalue FLOAT64, \
+            ADD COLUMN IF NOT EXISTS maxstoragerequest FLOAT64;" % (jsonData["tableIdAggregated"])
     try:
         query_job = client.query(query)
         print_(query_job.job_id)
@@ -389,6 +394,21 @@ def alterTableAggregated(jsonData):
     else:
         print_("Finished altering %s table" % jsonData["tableIdAggregated"])
 
+def alterTable(jsonData):
+    print_("Altering %s Table" % jsonData["tableId"])
+    query = "ALTER TABLE `%s` \
+            ADD COLUMN IF NOT EXISTS storageactualidlecost FLOAT64, \
+            ADD COLUMN IF NOT EXISTS maxstorageutilizationvalue FLOAT64, \
+            ADD COLUMN IF NOT EXISTS maxstoragerequest FLOAT64;" % (jsonData["tableId"])
+    try:
+        query_job = client.query(query)
+        print_(query_job.job_id)
+        query_job.result()
+    except Exception as e:
+        print_(query)
+        print_(e)
+    else:
+        print_("Finished altering %s table" % jsonData["tableId"])
 
 MONTHMAP = {
     "JANUARY": 1,
