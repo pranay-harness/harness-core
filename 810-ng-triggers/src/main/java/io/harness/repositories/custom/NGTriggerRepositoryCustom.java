@@ -14,5 +14,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public interface NGTriggerRepositoryCustom {
   Page<NGTriggerEntity> findAll(Criteria criteria, Pageable pageable);
   NGTriggerEntity update(Criteria criteria, NGTriggerEntity ngTriggerEntity);
+  NGTriggerEntity updateValidationStatus(Criteria criteria, NGTriggerEntity ngTriggerEntity);
   UpdateResult delete(Criteria criteria);
 }

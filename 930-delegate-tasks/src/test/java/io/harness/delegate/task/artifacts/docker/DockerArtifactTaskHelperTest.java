@@ -4,6 +4,7 @@ import static io.harness.rule.OwnerRule.SAHIL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -17,7 +18,6 @@ import io.harness.delegate.task.artifacts.response.ArtifactTaskExecutionResponse
 import io.harness.delegate.task.artifacts.response.ArtifactTaskResponse;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
-import io.harness.security.encryption.SecretDecryptionService;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -28,7 +28,6 @@ import org.mockito.MockitoAnnotations;
 
 public class DockerArtifactTaskHelperTest extends CategoryTest {
   @Mock private DockerArtifactTaskHandler dockerArtifactTaskHandler;
-  @Mock private SecretDecryptionService secretDecryptionService;
 
   @InjectMocks private DockerArtifactTaskHelper dockerArtifactTaskHelper;
 
@@ -41,7 +40,7 @@ public class DockerArtifactTaskHelperTest extends CategoryTest {
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
   public void testGetArtifactCollectResponseGetLastSuccessfulBuild() {
-    when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
+    doNothing().when(dockerArtifactTaskHandler).decryptRequestDTOs(any());
     DockerArtifactDelegateRequest dockerArtifactDelegateRequest =
         DockerArtifactDelegateRequest.builder()
             .dockerConnectorDTO(DockerConnectorDTO.builder().auth(DockerAuthenticationDTO.builder().build()).build())
@@ -59,7 +58,7 @@ public class DockerArtifactTaskHelperTest extends CategoryTest {
     assertThat(artifactTaskResponse).isNotNull();
     assertThat(artifactTaskResponse.getArtifactTaskExecutionResponse()).isEqualTo(artifactTaskExecutionResponse);
 
-    verify(secretDecryptionService).decrypt(any(), any());
+    verify(dockerArtifactTaskHandler).decryptRequestDTOs(any());
     verify(dockerArtifactTaskHandler).getLastSuccessfulBuild(dockerArtifactDelegateRequest);
   }
 
@@ -67,7 +66,7 @@ public class DockerArtifactTaskHelperTest extends CategoryTest {
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
   public void testGetArtifactCollectResponseGetBuilds() {
-    when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
+    doNothing().when(dockerArtifactTaskHandler).decryptRequestDTOs(any());
     DockerArtifactDelegateRequest dockerArtifactDelegateRequest =
         DockerArtifactDelegateRequest.builder()
             .dockerConnectorDTO(DockerConnectorDTO.builder().auth(DockerAuthenticationDTO.builder().build()).build())
@@ -84,7 +83,7 @@ public class DockerArtifactTaskHelperTest extends CategoryTest {
     assertThat(artifactTaskResponse).isNotNull();
     assertThat(artifactTaskResponse.getArtifactTaskExecutionResponse()).isEqualTo(artifactTaskExecutionResponse);
 
-    verify(secretDecryptionService).decrypt(any(), any());
+    verify(dockerArtifactTaskHandler).decryptRequestDTOs(any());
     verify(dockerArtifactTaskHandler).getBuilds(dockerArtifactDelegateRequest);
   }
 
@@ -92,7 +91,7 @@ public class DockerArtifactTaskHelperTest extends CategoryTest {
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
   public void testGetArtifactCollectResponseGetLabels() {
-    when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
+    doNothing().when(dockerArtifactTaskHandler).decryptRequestDTOs(any());
     DockerArtifactDelegateRequest dockerArtifactDelegateRequest =
         DockerArtifactDelegateRequest.builder()
             .dockerConnectorDTO(DockerConnectorDTO.builder().auth(DockerAuthenticationDTO.builder().build()).build())
@@ -109,7 +108,7 @@ public class DockerArtifactTaskHelperTest extends CategoryTest {
     assertThat(artifactTaskResponse).isNotNull();
     assertThat(artifactTaskResponse.getArtifactTaskExecutionResponse()).isEqualTo(artifactTaskExecutionResponse);
 
-    verify(secretDecryptionService).decrypt(any(), any());
+    verify(dockerArtifactTaskHandler).decryptRequestDTOs(any());
     verify(dockerArtifactTaskHandler).getLabels(dockerArtifactDelegateRequest);
   }
 
@@ -117,7 +116,7 @@ public class DockerArtifactTaskHelperTest extends CategoryTest {
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
   public void testGetArtifactCollectResponseValidateArtifactServers() {
-    when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
+    doNothing().when(dockerArtifactTaskHandler).decryptRequestDTOs(any());
     DockerArtifactDelegateRequest dockerArtifactDelegateRequest =
         DockerArtifactDelegateRequest.builder()
             .dockerConnectorDTO(DockerConnectorDTO.builder().auth(DockerAuthenticationDTO.builder().build()).build())
@@ -135,7 +134,7 @@ public class DockerArtifactTaskHelperTest extends CategoryTest {
     assertThat(artifactTaskResponse).isNotNull();
     assertThat(artifactTaskResponse.getArtifactTaskExecutionResponse()).isEqualTo(artifactTaskExecutionResponse);
 
-    verify(secretDecryptionService).decrypt(any(), any());
+    verify(dockerArtifactTaskHandler).decryptRequestDTOs(any());
     verify(dockerArtifactTaskHandler).validateArtifactServer(dockerArtifactDelegateRequest);
   }
 
@@ -143,7 +142,7 @@ public class DockerArtifactTaskHelperTest extends CategoryTest {
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
   public void testGetArtifactCollectResponseValidateArtifactSource() {
-    when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
+    doNothing().when(dockerArtifactTaskHandler).decryptRequestDTOs(any());
     DockerArtifactDelegateRequest dockerArtifactDelegateRequest =
         DockerArtifactDelegateRequest.builder()
             .dockerConnectorDTO(DockerConnectorDTO.builder()
@@ -164,7 +163,7 @@ public class DockerArtifactTaskHelperTest extends CategoryTest {
     assertThat(artifactTaskResponse).isNotNull();
     assertThat(artifactTaskResponse.getArtifactTaskExecutionResponse()).isEqualTo(artifactTaskExecutionResponse);
 
-    verify(secretDecryptionService).decrypt(any(), any());
+    verify(dockerArtifactTaskHandler).decryptRequestDTOs(any());
     verify(dockerArtifactTaskHandler).validateArtifactImage(dockerArtifactDelegateRequest);
   }
 
@@ -172,7 +171,7 @@ public class DockerArtifactTaskHelperTest extends CategoryTest {
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
   public void testGetArtifactCollectResponsegetFeeds() {
-    when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
+    doNothing().when(dockerArtifactTaskHandler).decryptRequestDTOs(any());
     DockerArtifactDelegateRequest dockerArtifactDelegateRequest =
         DockerArtifactDelegateRequest.builder()
             .dockerConnectorDTO(DockerConnectorDTO.builder().auth(DockerAuthenticationDTO.builder().build()).build())
@@ -188,6 +187,6 @@ public class DockerArtifactTaskHelperTest extends CategoryTest {
     assertThat(artifactTaskResponse.getArtifactTaskExecutionResponse()).isNull();
     assertThat(artifactTaskResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
 
-    verify(secretDecryptionService).decrypt(any(), any());
+    verify(dockerArtifactTaskHandler).decryptRequestDTOs(any());
   }
 }

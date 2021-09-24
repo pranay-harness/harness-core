@@ -17,6 +17,7 @@ import io.harness.engine.pms.commons.events.PmsEventSender;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.expression.EngineExpressionEvaluator;
+import io.harness.plan.PlanNode;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
@@ -77,11 +78,12 @@ public class NodeStartHelper {
   }
 
   private void sendEvent(NodeExecution nodeExecution, ByteString passThroughData) {
-    String serviceName = nodeExecution.getNode().getServiceName();
+    PlanNode planNode = nodeExecution.getNode();
+    String serviceName = planNode.getServiceName();
     NodeStartEvent nodeStartEvent =
         NodeStartEvent.newBuilder()
             .setAmbiance(nodeExecution.getAmbiance())
-            .addAllRefObjects(nodeExecution.getNode().getRebObjectsList())
+            .addAllRefObjects(planNode.getRefObjects())
             .setFacilitatorPassThoroughData(passThroughData)
             .setStepParameters(ByteString.copyFromUtf8(HarnessStringUtils.emptyIfNull(
                 RecastOrchestrationUtils.toJson(nodeExecution.getResolvedStepParameters()))))
@@ -98,8 +100,8 @@ public class NodeStartHelper {
       log.warn("NodeExecution Status update failed while preparing for invocation Target Status : {}", targetStatus);
       return null;
     }
-    List<String> timeoutInstanceIds =
-        registerTimeouts(nodeExecution.getAmbiance(), nodeExecution.getNode().getTimeoutObtainmentsList());
+    PlanNode planNode = nodeExecution.getNode();
+    List<String> timeoutInstanceIds = registerTimeouts(nodeExecution.getAmbiance(), planNode.getTimeoutObtainments());
     return nodeExecutionService.update(
         nodeExecution.getUuid(), ops -> setUnset(ops, NodeExecutionKeys.timeoutInstanceIds, timeoutInstanceIds));
   }

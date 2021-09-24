@@ -81,7 +81,7 @@ public class RedisNodeResumeEventPublisherTest extends OrchestrationTestBase {
                                           .setAmbiance(nodeExecution.getAmbiance())
                                           .setExecutionMode(nodeExecution.getMode())
                                           .setStepParameters(nodeExecution.getResolvedStepParametersBytes())
-                                          .addAllRefObjects(nodeExecution.getNode().getRebObjectsList())
+                                          .addAllRefObjects(nodeExecution.getNode().getRefObjects())
                                           .setAsyncError(false)
                                           .putAllResponse(new HashMap<>())
                                           .build();

@@ -87,7 +87,6 @@ import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.accesscontrol.migrations.AccessControlMigrationModule;
-import io.harness.ng.accesscontrol.mockserver.MockRoleAssignmentModule;
 import io.harness.ng.accesscontrol.user.AggregateUserService;
 import io.harness.ng.accesscontrol.user.AggregateUserServiceImpl;
 import io.harness.ng.authenticationsettings.AuthenticationSettingsModule;
@@ -526,7 +525,6 @@ public class NextGenModule extends AbstractModule {
       install(new AccessControlAdminClientModule(
           appConfig.getAccessControlAdminClientConfiguration(), NG_MANAGER.getServiceId()));
     }
-    install(new MockRoleAssignmentModule());
     install(new AbstractTelemetryModule() {
       @Override
       public TelemetryConfiguration telemetryConfiguration() {

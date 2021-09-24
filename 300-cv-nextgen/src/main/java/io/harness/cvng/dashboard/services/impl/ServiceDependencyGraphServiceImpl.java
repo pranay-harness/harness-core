@@ -46,10 +46,16 @@ public class ServiceDependencyGraphServiceImpl implements ServiceDependencyGraph
       @NonNull ProjectParams projectParams, @Nullable String serviceIdentifier, @Nullable String envIdentifier) {
     List<MonitoredService> monitoredServices =
         monitoredServiceService.list(projectParams, serviceIdentifier, envIdentifier);
-    List<String> identifiers =
-        monitoredServices.stream().map(MonitoredService::getIdentifier).collect(Collectors.toList());
+    Set<String> identifiers =
+        monitoredServices.stream().map(MonitoredService::getIdentifier).collect(Collectors.toSet());
     List<ServiceDependency> serviceDependencies =
-        serviceDependencyService.getServiceDependencies(projectParams, identifiers);
+        serviceDependencyService.getServiceDependencies(projectParams, new ArrayList<>(identifiers));
+
+    // Get nodes for dependent services
+    serviceDependencies.forEach(
+        serviceDependency -> identifiers.add(serviceDependency.getFromMonitoredServiceIdentifier()));
+    monitoredServices = monitoredServiceService.list(projectParams, new ArrayList<>(identifiers));
+
     List<HeatMap> heatMaps = heatMapService.getLatestHeatMaps(projectParams, serviceIdentifier, envIdentifier);
     List<ActivityDashboardDTO> changes = activityService.listActivitiesInTimeRange(
         projectParams, serviceIdentifier, envIdentifier, clock.instant().minus(1, ChronoUnit.DAYS), clock.instant());

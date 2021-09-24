@@ -24,7 +24,7 @@ public class DelegateConfigurationUpdateEvent extends AbstractDelegateConfigurat
   @Override
   public Resource getResource() {
     return Resource.builder()
-        .identifier(newProfile.getUuid())
+        .identifier(newProfile.getIdentifier())
         .type(ResourceTypeConstants.DELEGATE_CONFIGURATION)
         .build();
   }

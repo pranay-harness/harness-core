@@ -6,6 +6,7 @@ import static io.harness.data.structure.UUIDGenerator.generateTimeBasedUuid;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.DelegateProfile.DelegateProfileBuilder;
 import static io.harness.delegate.beans.DelegateProfile.builder;
+import static io.harness.delegate.beans.DelegateRegisterResponse.Action;
 import static io.harness.delegate.beans.DelegateType.ECS;
 import static io.harness.delegate.beans.DelegateType.SHELL_SCRIPT;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
@@ -15,6 +16,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
 import static io.harness.rule.OwnerRule.ANKIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.ARPIT;
 import static io.harness.rule.OwnerRule.BOJAN;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.DESCRIPTION;
@@ -1126,6 +1128,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldRegisterDelegateParamsWithOrgId() {
     final String accountId = generateUuid();
+    final String delegateGroupId = generateUuid();
     final String orgId = "orgId";
     final DelegateEntityOwner owner = DelegateEntityOwnerHelper.buildOwner(orgId, StringUtils.EMPTY);
 
@@ -1138,7 +1141,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .delegateType(DOCKER_DELEGATE)
                                 .ip("127.0.0.1")
                                 .delegateGroupName(DELEGATE_GROUP_NAME)
-                                .delegateGroupId(generateUuid())
+                                .delegateGroupId(delegateGroupId)
                                 .version(VERSION)
                                 .ng(true)
                                 .proxy(true)
@@ -1147,6 +1150,9 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .build();
 
     DelegateProfile profile = createDelegateProfileBuilder().accountId(accountId).primary(true).build();
+    DelegateGroup group =
+        DelegateGroup.builder().accountId(accountId).uuid(delegateGroupId).name(DELEGATE_GROUP_NAME).build();
+    persistence.save(group);
     when(delegateProfileService.fetchNgPrimaryProfile(accountId, owner)).thenReturn(profile);
     when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
 
@@ -1161,6 +1167,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldRegisterDelegateParamsWithProjectId() {
     final String accountId = generateUuid();
+    final String delegateGroupId = generateUuid();
     final String orgId = "orgId";
     final String projectId = "projectId";
     final DelegateEntityOwner owner = DelegateEntityOwnerHelper.buildOwner(orgId, projectId);
@@ -1175,7 +1182,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .delegateType(DOCKER_DELEGATE)
                                 .ip("127.0.0.1")
                                 .delegateGroupName(DELEGATE_GROUP_NAME)
-                                .delegateGroupId(generateUuid())
+                                .delegateGroupId(delegateGroupId)
                                 .version(VERSION)
                                 .proxy(true)
                                 .ng(true)
@@ -1184,6 +1191,9 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .build();
 
     DelegateProfile profile = createDelegateProfileBuilder().accountId(accountId).primary(true).build();
+    DelegateGroup group =
+        DelegateGroup.builder().accountId(accountId).uuid(delegateGroupId).name(DELEGATE_GROUP_NAME).build();
+    persistence.save(group);
     when(delegateProfileService.fetchNgPrimaryProfile(accountId, owner)).thenReturn(profile);
     when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
 
@@ -3338,6 +3348,55 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(persistence.get(Delegate.class, d1.getUuid())).isNull();
     assertThat(persistence.get(Delegate.class, d2.getUuid())).isNull();
     verify(eventProducer, times(2)).send(any());
+  }
+
+  @Test
+  @Owner(developers = ARPIT)
+  @Category(UnitTests.class)
+  public void shouldNotRegisterDelegateIfGroupIdIsPresentButGroupIsAbsent() {
+    Delegate delegate = createDelegateBuilder().delegateGroupId(generateUuid()).build();
+    DelegateProfile primaryDelegateProfile =
+        createDelegateProfileBuilder().accountId(delegate.getAccountId()).primary(true).build();
+
+    delegate.setDelegateProfileId(primaryDelegateProfile.getUuid());
+    when(delegateProfileService.fetchCgPrimaryProfile(delegate.getAccountId())).thenReturn(primaryDelegateProfile);
+    when(delegatesFeature.getMaxUsageAllowedForAccount(ACCOUNT_ID)).thenReturn(Integer.MAX_VALUE);
+
+    DelegateRegisterResponse registerResponse = delegateService.register(delegate);
+    assertThat(registerResponse.getAction()).isEqualTo(Action.SELF_DESTRUCT);
+    assertThat(registerResponse.getDelegateId()).isNull();
+  }
+
+  @Test
+  @Owner(developers = ARPIT)
+  @Category(UnitTests.class)
+  public void shouldNotRegisterParamsIfGroupIdIsPresentButGroupIsAbsent() {
+    String accountId = generateUuid();
+
+    DelegateParams params = DelegateParams.builder()
+                                .accountId(accountId)
+                                .sessionIdentifier("sessionId")
+                                .delegateSize(DelegateSize.LAPTOP.name())
+                                .hostName(HOST_NAME)
+                                .description(DESCRIPTION)
+                                .delegateType(KUBERNETES_DELEGATE)
+                                .ip("127.0.0.1")
+                                .delegateGroupName(DELEGATE_GROUP_NAME)
+                                .delegateGroupId(generateUuid())
+                                .ng(true)
+                                .version(VERSION)
+                                .proxy(true)
+                                .pollingModeEnabled(true)
+                                .sampleDelegate(true)
+                                .build();
+
+    DelegateProfile profile = createDelegateProfileBuilder().accountId(accountId).primary(true).build();
+    when(delegateProfileService.fetchNgPrimaryProfile(accountId, null)).thenReturn(profile);
+    when(delegatesFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
+
+    DelegateRegisterResponse registerResponse = delegateService.register(params);
+    assertThat(registerResponse.getAction()).isEqualTo(Action.SELF_DESTRUCT);
+    assertThat(registerResponse.getDelegateId()).isNull();
   }
 
   private CapabilityRequirement buildCapabilityRequirement() {

@@ -1,16 +1,19 @@
 package software.wings.beans.sso;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SecretText;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.mixin.SocketConnectivityCapabilityGenerator;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.iterator.PersistentCronIterable;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.helpers.ext.ldap.LdapConstants;
@@ -18,8 +21,10 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -33,6 +38,7 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotBlank;
+import org.mongodb.morphia.annotations.Transient;
 
 /**
  * Bean to store all the ldap sso provider configuration details
@@ -46,7 +52,7 @@ import org.hibernate.validator.constraints.NotBlank;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("LDAP")
-public class LdapSettings extends SSOSettings implements ExecutionCapabilityDemander {
+public class LdapSettings extends SSOSettings implements ExecutionCapabilityDemander, PersistentCronIterable {
   @NotBlank String accountId;
   @NotNull @Valid LdapConnectionSettings connectionSettings;
 
@@ -61,6 +67,18 @@ public class LdapSettings extends SSOSettings implements ExecutionCapabilityDema
   @Valid List<LdapUserSettings> userSettingsList;
 
   @Valid List<LdapGroupSettings> groupSettingsList;
+
+  private String cronExpression;
+
+  @JsonIgnore @Transient private String defaultCronExpression;
+
+  public String getCronExpression() {
+    return isEmpty(cronExpression) ? defaultCronExpression : cronExpression;
+  }
+
+  public void setCronExpression(String cronExpression) {
+    this.cronExpression = isEmpty(cronExpression) ? defaultCronExpression : cronExpression;
+  }
 
   /**
    * Keeping this attribute only for migration purpose.
@@ -129,5 +147,21 @@ public class LdapSettings extends SSOSettings implements ExecutionCapabilityDema
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return Collections.singletonList(SocketConnectivityCapabilityGenerator.buildSocketConnectivityCapability(
         connectionSettings.getHost(), Integer.toString(connectionSettings.getPort())));
+  }
+
+  @Override
+  public List<Long> recalculateNextIterations(String fieldName, boolean skipMissed, long throttled) {
+    nextIterations = isEmpty(nextIterations) ? new ArrayList<>() : nextIterations;
+
+    if (expandNextIterations(skipMissed, throttled, getCronExpression(), nextIterations)) {
+      return isNotEmpty(nextIterations) ? nextIterations : Collections.singletonList(Long.MAX_VALUE);
+    }
+
+    return Collections.singletonList(Long.MAX_VALUE);
+  }
+
+  @Override
+  public Long obtainNextIteration(String fieldName) {
+    return EmptyPredicate.isEmpty(nextIterations) ? null : nextIterations.get(0);
   }
 }

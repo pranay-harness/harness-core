@@ -2,6 +2,7 @@ package io.harness.pms.data.stepparameters;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.data.OrchestrationMap;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
@@ -16,14 +17,14 @@ public class PmsStepParameters extends OrchestrationMap {
   }
 
   public static PmsStepParameters parse(String json) {
-    if (json == null) {
+    if (EmptyPredicate.isEmpty(json)) {
       return null;
     }
     return new PmsStepParameters(RecastOrchestrationUtils.fromJson(json));
   }
 
   public static PmsStepParameters parse(Map<String, Object> map) {
-    if (map == null) {
+    if (EmptyPredicate.isEmpty(map)) {
       return null;
     }
 

@@ -899,3 +899,7 @@ fi
 if [[ "" != "$LDAP_GROUP_SYNC_POOL_SIZE" ]]; then
   yq write -i $CONFIG_FILE ldapSyncJobConfig.poolSize "$LDAP_GROUP_SYNC_POOL_SIZE"
 fi
+
+if [[ "" != "$LDAP_GROUP_SYNC_DEFAULT_CRON" ]]; then
+  yq write -i $CONFIG_FILE ldapSyncJobConfig.defaultCronExpression "$LDAP_GROUP_SYNC_DEFAULT_CRON"
+fi

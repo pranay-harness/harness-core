@@ -8,6 +8,7 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.pms.commons.events.PmsEventSender;
 import io.harness.execution.NodeExecution;
 import io.harness.interrupts.InterruptEffect;
+import io.harness.plan.PlanNode;
 import io.harness.pms.contracts.advisers.AdviseEvent;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.events.base.PmsEventCategory;
@@ -23,12 +24,13 @@ public class RedisNodeAdviseEventPublisher implements NodeAdviseEventPublisher {
   @Override
   public String publishEvent(String nodeExecutionId, Status fromStatus) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
-    String serviceName = nodeExecution.getNode().getServiceName();
+    PlanNode planNode = nodeExecution.getNode();
+    String serviceName = planNode.getServiceName();
     AdviseEvent adviseEvent =
         AdviseEvent.newBuilder()
             .setAmbiance(nodeExecution.getAmbiance())
             .setFailureInfo(nodeExecution.getFailureInfo())
-            .addAllAdviserObtainments(nodeExecution.getNode().getAdviserObtainmentsList())
+            .addAllAdviserObtainments(planNode.getAdviserObtainments())
             .setIsPreviousAdviserExpired(isPreviousAdviserExpired(nodeExecution.getInterruptHistories()))
             .addAllRetryIds(nodeExecution.getRetryIds())
             .setNotifyId(generateUuid())

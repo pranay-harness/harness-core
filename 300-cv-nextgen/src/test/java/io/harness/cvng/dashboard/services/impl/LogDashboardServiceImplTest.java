@@ -1,5 +1,6 @@
 package io.harness.cvng.dashboard.services.impl;
 
+import static io.harness.cvng.core.utils.DateTimeUtils.roundDownTo5MinBoundary;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KANHAIYA;
 import static io.harness.rule.OwnerRule.NEMANJA;
@@ -43,7 +44,9 @@ import io.harness.rule.Owner;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -67,10 +70,10 @@ public class LogDashboardServiceImplTest extends CvNextGenTestBase {
   private String envIdentifier;
   private String accountId;
   private ServiceEnvironmentParams serviceEnvironmentParams;
+  private Clock clock;
 
   @Inject private LogDashboardService logDashboardService;
   @Inject private HPersistence hPersistence;
-
   @Mock private LogAnalysisService mockLogAnalysisService;
   @Mock private CVConfigService mockCvConfigService;
   @Mock private ActivityService mockActivityService;
@@ -90,6 +93,7 @@ public class LogDashboardServiceImplTest extends CvNextGenTestBase {
                                    .serviceIdentifier(serviceIdentifier)
                                    .environmentIdentifier(envIdentifier)
                                    .build();
+    clock = Clock.fixed(Instant.parse("2020-04-22T10:02:06Z"), ZoneOffset.UTC);
     MockitoAnnotations.initMocks(this);
     FieldUtils.writeField(logDashboardService, "logAnalysisService", mockLogAnalysisService, true);
     FieldUtils.writeField(logDashboardService, "cvConfigService", mockCvConfigService, true);
@@ -792,6 +796,81 @@ public class LogDashboardServiceImplTest extends CvNextGenTestBase {
       }
     }
     assertThat(containsKnown).isTrue();
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetAllLogsData_withFilteringAndTheSameClustersHavingKNOWNAndUNKNOWNTag() {
+    String cvConfigId = generateUuid();
+    Instant startTime = clock.instant().minus(10, ChronoUnit.MINUTES);
+    Instant endTime = clock.instant();
+    List<Long> labelList = Arrays.asList(0l, 1l, 2l);
+
+    Instant time = roundDownTo5MinBoundary(clock.instant());
+    List<LogAnalysisResult> logAnalysisResults = Arrays.asList(
+        LogAnalysisResult.builder()
+            .analysisStartTime(time.minus(10, ChronoUnit.MINUTES))
+            .analysisEndTime(time.minus(5, ChronoUnit.MINUTES))
+            .verificationTaskId(cvConfigId)
+            .accountId(accountId)
+            .logAnalysisResults(Arrays.asList(
+                AnalysisResult.builder().label(labelList.get(0)).tag(LogAnalysisTag.UNKNOWN).count(10).build(),
+                AnalysisResult.builder().label(labelList.get(1)).tag(LogAnalysisTag.KNOWN).count(20).build(),
+                AnalysisResult.builder().label(labelList.get(2)).tag(LogAnalysisTag.KNOWN).count(30).build()))
+            .build(),
+        LogAnalysisResult.builder()
+            .analysisStartTime(time.minus(5, ChronoUnit.MINUTES))
+            .analysisEndTime(time)
+            .verificationTaskId(cvConfigId)
+            .accountId(accountId)
+            .logAnalysisResults(Arrays.asList(
+                AnalysisResult.builder().label(labelList.get(0)).tag(LogAnalysisTag.KNOWN).count(30).build(),
+                AnalysisResult.builder().label(labelList.get(1)).tag(LogAnalysisTag.KNOWN).count(40).build(),
+                AnalysisResult.builder().label(labelList.get(2)).tag(LogAnalysisTag.UNEXPECTED).count(300).build()))
+            .build());
+
+    TimeRangeParams timeRangeParams = TimeRangeParams.builder().startTime(startTime).endTime(endTime).build();
+    PageParams pageParams = PageParams.builder().page(0).size(10).build();
+
+    when(mockCvConfigService.list(serviceEnvironmentParams))
+        .thenReturn(Arrays.asList(createCvConfig(cvConfigId, serviceIdentifier)));
+    when(mockLogAnalysisService.getAnalysisResults(anyString(), anyList(), any(), any()))
+        .thenReturn(logAnalysisResults);
+    when(mockLogAnalysisService.getAnalysisClusters(cvConfigId, new HashSet<>(labelList)))
+        .thenReturn(buildLogAnalysisClusters(labelList));
+
+    LiveMonitoringLogAnalysisFilter liveMonitoringLogAnalysisFilter = LiveMonitoringLogAnalysisFilter.builder().build();
+    PageResponse<AnalyzedLogDataDTO> pageResponse = logDashboardService.getAllLogsData(
+        serviceEnvironmentParams, timeRangeParams, liveMonitoringLogAnalysisFilter, pageParams);
+    verify(mockCvConfigService).list(serviceEnvironmentParams);
+    assertThat(pageResponse).isNotNull();
+    assertThat(pageResponse.getContent()).isNotEmpty();
+    assertThat(pageResponse.getContent().size()).isEqualTo(3);
+
+    liveMonitoringLogAnalysisFilter =
+        LiveMonitoringLogAnalysisFilter.builder().clusterTypes(Arrays.asList(LogAnalysisTag.KNOWN)).build();
+    pageResponse = logDashboardService.getAllLogsData(
+        serviceEnvironmentParams, timeRangeParams, liveMonitoringLogAnalysisFilter, pageParams);
+    assertThat(pageResponse).isNotNull();
+    assertThat(pageResponse.getContent()).isNotEmpty();
+    assertThat(pageResponse.getContent().size()).isEqualTo(1);
+
+    liveMonitoringLogAnalysisFilter =
+        LiveMonitoringLogAnalysisFilter.builder().clusterTypes(Arrays.asList(LogAnalysisTag.UNKNOWN)).build();
+    pageResponse = logDashboardService.getAllLogsData(
+        serviceEnvironmentParams, timeRangeParams, liveMonitoringLogAnalysisFilter, pageParams);
+    assertThat(pageResponse).isNotNull();
+    assertThat(pageResponse.getContent()).isNotEmpty();
+    assertThat(pageResponse.getContent().size()).isEqualTo(1);
+
+    liveMonitoringLogAnalysisFilter =
+        LiveMonitoringLogAnalysisFilter.builder().clusterTypes(Arrays.asList(LogAnalysisTag.UNEXPECTED)).build();
+    pageResponse = logDashboardService.getAllLogsData(
+        serviceEnvironmentParams, timeRangeParams, liveMonitoringLogAnalysisFilter, pageParams);
+    assertThat(pageResponse).isNotNull();
+    assertThat(pageResponse.getContent()).isNotEmpty();
+    assertThat(pageResponse.getContent().size()).isEqualTo(1);
   }
 
   private List<LogAnalysisResult> buildLogAnalysisResults(

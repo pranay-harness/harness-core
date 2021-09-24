@@ -1,0 +1,36 @@
+extend type Mutation {
+  # Get details about all templates for account
+  templateList(input: TemplateListInput!): TemplateListPayload @dataFetcher(name: templateList)
+}
+
+input TemplateListInput {
+  limit: String
+  offset: String
+  accountId: String!
+  clientMutationId: String
+}
+
+type TemplateListPayload {
+  clientMutationId: String
+  nodes: [Template]
+}
+
+type Template {
+  name: String
+  type: TemplateType
+  uuid: String
+  version: Long
+  folderId: String
+  folderPathId: String
+  galleryId: String
+}
+
+enum TemplateType {
+  HTTP
+  SSH
+  SERVICE_COMMAND
+  SHELL_SCRIPT
+  CF_COMMAND
+  ARTIFACT_SOURCE
+  DEPLOYMENT_TEMPLATE
+}

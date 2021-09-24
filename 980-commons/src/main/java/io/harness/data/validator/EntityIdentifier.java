@@ -27,4 +27,5 @@ public @interface EntityIdentifier {
   Class<? extends Payload>[] payload() default {};
 
   boolean allowBlank() default false;
+  boolean allowScoped() default false;
 }

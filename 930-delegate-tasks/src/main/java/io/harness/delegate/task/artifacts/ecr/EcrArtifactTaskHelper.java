@@ -3,7 +3,6 @@ package io.harness.delegate.task.artifacts.ecr;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.context.MdcGlobalContextData;
-import io.harness.delegate.beans.connector.awsconnector.AwsManualConfigSpecDTO;
 import io.harness.delegate.task.artifacts.request.ArtifactTaskParameters;
 import io.harness.delegate.task.artifacts.response.ArtifactTaskExecutionResponse;
 import io.harness.delegate.task.artifacts.response.ArtifactTaskResponse;
@@ -12,7 +11,6 @@ import io.harness.exception.exceptionmanager.exceptionhandler.ExceptionMetadataK
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.manage.GlobalContextManager;
-import io.harness.security.encryption.SecretDecryptionService;
 
 import com.amazonaws.AmazonServiceException;
 import com.google.inject.Inject;
@@ -27,14 +25,13 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.PIPELINE)
 public class EcrArtifactTaskHelper {
   private final EcrArtifactTaskHandler ecrArtifactTaskHandler;
-  private final SecretDecryptionService secretDecryptionService;
   public ArtifactTaskResponse getArtifactCollectResponse(ArtifactTaskParameters artifactTaskParameters) {
     return getArtifactCollectResponse(artifactTaskParameters, null);
   }
   public ArtifactTaskResponse getArtifactCollectResponse(
       ArtifactTaskParameters artifactTaskParameters, LogCallback executionLogCallback) {
     EcrArtifactDelegateRequest attributes = (EcrArtifactDelegateRequest) artifactTaskParameters.getAttributes();
-    decryptRequestDTOs(attributes);
+    ecrArtifactTaskHandler.decryptRequestDTOs(attributes);
     ArtifactTaskResponse artifactTaskResponse;
     try {
       switch (artifactTaskParameters.getArtifactTaskType()) {
@@ -119,14 +116,7 @@ public class EcrArtifactTaskHelper {
     }
     return artifactTaskResponse;
   }
-  private void decryptRequestDTOs(EcrArtifactDelegateRequest ecrRequest) {
-    if (ecrRequest.getAwsConnectorDTO().getCredential() != null
-        && ecrRequest.getAwsConnectorDTO().getCredential().getConfig() != null) {
-      secretDecryptionService.decrypt(
-          (AwsManualConfigSpecDTO) ecrRequest.getAwsConnectorDTO().getCredential().getConfig(),
-          ecrRequest.getEncryptedDataDetails());
-    }
-  }
+
   private ArtifactTaskResponse getSuccessTaskResponse(ArtifactTaskExecutionResponse taskExecutionResponse) {
     return ArtifactTaskResponse.builder()
         .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
