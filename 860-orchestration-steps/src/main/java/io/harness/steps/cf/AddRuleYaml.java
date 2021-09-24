@@ -42,7 +42,6 @@ public class AddRuleYaml implements PatchInstruction {
   @NoArgsConstructor
   @AllArgsConstructor
   public static class AddRuleYamlSpec {
-    @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) private ParameterField<String> uuid;
     @NotNull @ApiModelProperty(dataType = SwaggerConstants.INTEGER_CLASSPATH) private ParameterField<Integer> priority;
     private DistributionYamlSpec distribution;
 

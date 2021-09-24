@@ -2,6 +2,7 @@ package io.harness.cdng;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
+import io.harness.NGBeanModule;
 import io.harness.NGPipelineCommonsModule;
 import io.harness.WalkTreeModule;
 import io.harness.annotations.dev.OwnedBy;
@@ -23,9 +24,15 @@ import io.harness.cdng.jira.resources.service.JiraResourceService;
 import io.harness.cdng.jira.resources.service.JiraResourceServiceImpl;
 import io.harness.cdng.k8s.resources.gcp.service.GcpResourceService;
 import io.harness.cdng.k8s.resources.gcp.service.impl.GcpResourceServiceImpl;
+import io.harness.cdng.usage.impl.CDLicenseUsageImpl;
 import io.harness.cdng.yaml.CdYamlSchemaService;
 import io.harness.cdng.yaml.CdYamlSchemaServiceImpl;
+import io.harness.licensing.usage.interfaces.LicenseUsageInterface;
 import io.harness.ng.core.NGCoreModule;
+import io.harness.ng.core.service.services.ServiceEntityService;
+import io.harness.ng.core.service.services.impl.ServiceEntityServiceImpl;
+import io.harness.service.instance.InstanceService;
+import io.harness.service.instance.InstanceServiceImpl;
 
 import com.google.inject.AbstractModule;
 import java.util.concurrent.atomic.AtomicReference;
@@ -48,6 +55,7 @@ public class NGModule extends AbstractModule {
     install(NGCoreModule.getInstance());
     install(WalkTreeModule.getInstance());
     install(NGPipelineCommonsModule.getInstance());
+    install(NGBeanModule.getInstance());
 
     bind(ArtifactSourceService.class).to(ArtifactSourceServiceImpl.class);
     bind(DockerResourceService.class).to(DockerResourceServiceImpl.class);
@@ -59,5 +67,8 @@ public class NGModule extends AbstractModule {
     bind(S3ResourceService.class).to(S3ResourceServiceImpl.class);
     bind(GcsResourceService.class).to(GcsResourceServiceImpl.class);
     bind(InstanceInfoService.class).to(InstanceInfoServiceImpl.class);
+    bind(LicenseUsageInterface.class).to(CDLicenseUsageImpl.class);
+    bind(InstanceService.class).to(InstanceServiceImpl.class);
+    bind(ServiceEntityService.class).to(ServiceEntityServiceImpl.class);
   }
 }

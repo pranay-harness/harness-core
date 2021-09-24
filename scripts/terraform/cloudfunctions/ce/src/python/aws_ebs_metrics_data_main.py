@@ -219,3 +219,4 @@ def main(event, context):
     job = client.load_table_from_file(data_as_file, awsEbsInventoryMetricsTableName, job_config=job_config)
     print_(job.job_id)
     job.result()
+    print_("Completed")

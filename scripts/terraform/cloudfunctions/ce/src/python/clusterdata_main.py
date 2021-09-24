@@ -125,6 +125,8 @@ def create_dataset_and_tables(jsonData):
             print_("%s table exists" % table_ref)
             if table_ref == cluster_data_aggregated_table_ref:
                 alterTableAggregated(jsonData)
+            elif table_ref ==  cluster_data_table_ref:
+                alterTable(jsonData)
 
 
 def ingest_data_from_avro(jsonData):
@@ -148,13 +150,12 @@ def ingest_data_from_avro(jsonData):
     )  # Make an API request.
     try:
         load_job.result()  # Wait for the job to complete.
+        table = client.get_table(jsonData["tableId"])
+        print_("Total: {} rows in table {}".format(table.num_rows, jsonData["tableId"]))
+        delete_from_gcs(jsonData)
     except Exception as e:
         print_(e, "WARN")
         # Probably the file was deleted in earlier runs
-
-    table = client.get_table(jsonData["tableId"])
-    print_("Total: {} rows in table {}".format(table.num_rows, jsonData["tableId"]))
-    delete_from_gcs(jsonData)
 
 
 def delete_from_gcs(jsonData):
@@ -217,10 +218,10 @@ def delete_existing_data(jsonData):
                 query_job.job_id, location=query_job.location
             )
             print_("Job {} is currently in state {}".format(query_job.job_id, query_job.state))
-            if query_job.state in ["DONE", "SUCCESS"] or count >= 24: # 2 minutes
+            if query_job.state in ["DONE", "SUCCESS"] or count >= 24: # 4 minutes
                 break
             else:
-                time.sleep(5)
+                time.sleep(10)
                 count += 1
         if query_job.state not in ["DONE", "SUCCESS"]:
             raise Exception("Timeout waiting for job in pending state")
@@ -293,7 +294,7 @@ def ingest_aggregated_data(jsonData):
         print_(query_job.job_id)
         query_job.result()
     except Exception as e:
-        print_(DELETE_EXISTING_PREAGG)
+        print_(DELETE_EXISTING_PREAGG, "ERROR")
         print_(e)
 
     # Gen preagg billing data
@@ -332,7 +333,7 @@ def ingest_aggregated_data(jsonData):
         print_(query_job.job_id)
         query_job.result()
     except Exception as e:
-        print_(PREAGG_QUERY)
+        print_(PREAGG_QUERY, "ERROR")
         print_(e)
 
     PREAGG_QUERY_ID = """INSERT INTO %s (MEMORYACTUALIDLECOST, CPUACTUALIDLECOST, STARTTIME, ENDTIME, 
@@ -367,7 +368,7 @@ def ingest_aggregated_data(jsonData):
         print_(query_job.job_id)
         query_job.result()
     except Exception as e:
-        print_(PREAGG_QUERY_ID)
+        print_(PREAGG_QUERY_ID, "ERROR")
         print_(e)
 
 
@@ -379,7 +380,10 @@ def alterTableAggregated(jsonData):
             ADD COLUMN IF NOT EXISTS servicename STRING, \
             ADD COLUMN IF NOT EXISTS envname STRING, \
             ADD COLUMN IF NOT EXISTS cloudprovider STRING, \
-            ADD COLUMN IF NOT EXISTS labels ARRAY<STRUCT<key STRING, value STRING>>;" % (jsonData["tableIdAggregated"])
+            ADD COLUMN IF NOT EXISTS labels ARRAY<STRUCT<key STRING, value STRING>>, \
+            ADD COLUMN IF NOT EXISTS storageactualidlecost FLOAT64, \
+            ADD COLUMN IF NOT EXISTS maxstorageutilizationvalue FLOAT64, \
+            ADD COLUMN IF NOT EXISTS maxstoragerequest FLOAT64;" % (jsonData["tableIdAggregated"])
     try:
         query_job = client.query(query)
         print_(query_job.job_id)
@@ -390,6 +394,21 @@ def alterTableAggregated(jsonData):
     else:
         print_("Finished altering %s table" % jsonData["tableIdAggregated"])
 
+def alterTable(jsonData):
+    print_("Altering %s Table" % jsonData["tableId"])
+    query = "ALTER TABLE `%s` \
+            ADD COLUMN IF NOT EXISTS storageactualidlecost FLOAT64, \
+            ADD COLUMN IF NOT EXISTS maxstorageutilizationvalue FLOAT64, \
+            ADD COLUMN IF NOT EXISTS maxstoragerequest FLOAT64;" % (jsonData["tableId"])
+    try:
+        query_job = client.query(query)
+        print_(query_job.job_id)
+        query_job.result()
+    except Exception as e:
+        print_(query)
+        print_(e)
+    else:
+        print_("Finished altering %s table" % jsonData["tableId"])
 
 MONTHMAP = {
     "JANUARY": 1,

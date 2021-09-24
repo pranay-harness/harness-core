@@ -28,6 +28,7 @@ java_library(
         "//460-capability:module",
         "//470-alert:module",
         "//490-ce-commons:module",
+        "//815-cg-triggers:module",
         "//820-platform-service:module",
         "//835-notification-senders:module",
         "//865-cg-events:module",
