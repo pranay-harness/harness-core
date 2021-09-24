@@ -44,14 +44,12 @@ import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
 import io.harness.pms.contracts.steps.io.StepResponseProto.Builder;
-import io.harness.pms.data.stepparameters.PmsStepParameters;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.EngineExceptionUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
-import io.harness.pms.utils.OrchestrationMapBackwardCompatibilityUtils;
 import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -152,9 +150,7 @@ public class OrchestrationEngine {
       NodeExecution updatedNodeExecution =
           Preconditions.checkNotNull(nodeExecutionService.update(nodeExecution.getUuid(), ops -> {
             setUnset(ops, NodeExecutionKeys.resolvedStepParameters, resolvedStepParameters);
-            setUnset(ops, NodeExecutionKeys.resolvedInputs,
-                PmsStepParameters.parse(
-                    OrchestrationMapBackwardCompatibilityUtils.extractToOrchestrationMap(resolvedStepInputs)));
+            setUnset(ops, NodeExecutionKeys.resolvedStepInputs, resolvedStepInputs);
           }));
 
       facilitationHelper.facilitateExecution(updatedNodeExecution);

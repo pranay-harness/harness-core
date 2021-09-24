@@ -84,7 +84,6 @@ public class NodeExecution implements PersistentEntity, UuidAccess {
   // Resolved StepParameters stored just before invoking step.
   Map<String, Object> resolvedStepParameters;
   Map<String, Object> resolvedStepInputs;
-  PmsStepParameters resolvedInputs;
 
   // For Wait Notify
   String notifyId;
@@ -231,11 +230,8 @@ public class NodeExecution implements PersistentEntity, UuidAccess {
   }
 
   public PmsStepParameters getPmsStepParameters() {
-    if (resolvedStepInputs != null) {
-      return PmsStepParameters.parse(
-          OrchestrationMapBackwardCompatibilityUtils.extractToOrchestrationMap(resolvedStepInputs));
-    }
-    return PmsStepParameters.parse(resolvedInputs);
+    return PmsStepParameters.parse(
+        OrchestrationMapBackwardCompatibilityUtils.extractToOrchestrationMap(resolvedStepInputs));
   }
 
   public OrchestrationMap getPmsProgressData() {

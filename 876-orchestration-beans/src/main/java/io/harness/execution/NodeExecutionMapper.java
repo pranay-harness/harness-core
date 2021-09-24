@@ -66,4 +66,62 @@ public class NodeExecutionMapper {
         .setInterruptType(interruptEffect.getInterruptType())
         .build();
   }
+
+  public NodeExecutionProto toNodeExecutionProto(NodeExecution nodeExecution) {
+    NodeExecutionProto.Builder builder = NodeExecutionProto.newBuilder()
+                                             .setUuid(nodeExecution.getUuid())
+                                             .setAmbiance(nodeExecution.getAmbiance())
+                                             .setNode(nodeExecution.getNode())
+                                             .setStatus(nodeExecution.getStatus())
+                                             .setOldRetry(nodeExecution.isOldRetry())
+                                             .addAllRetryIds(CollectionUtils.emptyIfNull(nodeExecution.getRetryIds()));
+
+    if (nodeExecution.getMode() != null) {
+      builder.setMode(nodeExecution.getMode());
+    }
+    if (nodeExecution.getStartTs() != null) {
+      builder.setStartTs(ProtoUtils.unixMillisToTimestamp(nodeExecution.getStartTs()));
+    }
+    if (nodeExecution.getEndTs() != null) {
+      builder.setEndTs(ProtoUtils.unixMillisToTimestamp(nodeExecution.getEndTs()));
+    }
+    if (nodeExecution.getInitialWaitDuration() != null) {
+      builder.setInitialWaitDuration(ProtoUtils.javaDurationToDuration(nodeExecution.getInitialWaitDuration()));
+    }
+    if (nodeExecution.getResolvedStepParameters() != null) {
+      builder.setResolvedStepParameters(RecastOrchestrationUtils.toJson(nodeExecution.getResolvedStepParameters()));
+    }
+    if (nodeExecution.getResolvedStepInputs() != null) {
+      builder.setResolvedStepInputs(RecastOrchestrationUtils.toJson(nodeExecution.getResolvedStepInputs()));
+    }
+    if (nodeExecution.getNotifyId() != null) {
+      builder.setNotifyId(nodeExecution.getNotifyId());
+    }
+    if (nodeExecution.getParentId() != null) {
+      builder.setParentId(nodeExecution.getParentId());
+    }
+    if (nodeExecution.getNextId() != null) {
+      builder.setNextId(nodeExecution.getNextId());
+    }
+    if (nodeExecution.getPreviousId() != null) {
+      builder.setPreviousId(nodeExecution.getPreviousId());
+    }
+    if (nodeExecution.getExecutableResponses() != null) {
+      builder.addAllExecutableResponses(nodeExecution.getExecutableResponses());
+    }
+    if (nodeExecution.getOutcomeRefs() != null) {
+      builder.addAllOutcomeRefs(nodeExecution.getOutcomeRefs());
+    }
+    if (nodeExecution.getFailureInfo() != null) {
+      builder.setFailureInfo(nodeExecution.getFailureInfo());
+    }
+    if (EmptyPredicate.isNotEmpty(nodeExecution.getInterruptHistories())) {
+      builder.addAllInterruptHistories(nodeExecution.getInterruptHistories()
+                                           .stream()
+                                           .map(NodeExecutionMapper::toInterruptEffect)
+                                           .collect(Collectors.toList()));
+    }
+
+    return builder.build();
+  }
 }
