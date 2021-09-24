@@ -73,8 +73,7 @@
     "AddRuleYamlSpec": {
       "type": "object",
       "required": [
-        "priority",
-        "uuid"
+        "priority"
       ],
       "properties": {
         "clauses": {
@@ -92,9 +91,6 @@
         },
         "serve": {
           "$ref": "#/definitions/Serve"
-        },
-        "uuid": {
-          "type": "string"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -1037,6 +1033,12 @@
                   },
                   {
                     "$ref": "#/definitions/SetFeatureFlagStateYaml"
+                  },
+                  {
+                    "$ref": "#/definitions/SetOffVariationYaml"
+                  },
+                  {
+                    "$ref": "#/definitions/SetOnVariationYaml"
                   },
                   {
                     "$ref": "#/definitions/UpdateRuleYaml"
@@ -3154,6 +3156,8 @@
           "type": "string",
           "enum": [
             "SetFeatureFlagState",
+            "SetOnVariation",
+            "SetOffVariation",
             "AddRule",
             "UpdateRule",
             "AddTargetsToVariationTargetMap",
@@ -3840,6 +3844,90 @@
       ],
       "properties": {
         "state": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "SetOffVariationYaml": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PatchInstruction"
+        },
+        {
+          "type": "object",
+          "required": [
+            "identifier",
+            "spec",
+            "type"
+          ],
+          "properties": {
+            "identifier": {
+              "type": "string"
+            },
+            "spec": {
+              "$ref": "#/definitions/SetOffVariationYamlSpec"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "SetOffVariation"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "SetOffVariationYamlSpec": {
+      "type": "object",
+      "required": [
+        "variation"
+      ],
+      "properties": {
+        "variation": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "SetOnVariationYaml": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PatchInstruction"
+        },
+        {
+          "type": "object",
+          "required": [
+            "identifier",
+            "spec",
+            "type"
+          ],
+          "properties": {
+            "identifier": {
+              "type": "string"
+            },
+            "spec": {
+              "$ref": "#/definitions/SetOnVariationYamlSpec"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "SetOnVariation"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "SetOnVariationYamlSpec": {
+      "type": "object",
+      "required": [
+        "variation"
+      ],
+      "properties": {
+        "variation": {
           "type": "string"
         }
       },

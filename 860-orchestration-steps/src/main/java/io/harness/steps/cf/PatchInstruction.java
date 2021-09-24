@@ -14,7 +14,9 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", include = PROPERTY, visible = true)
 @JsonSubTypes({
   @JsonSubTypes.Type(value = SetFeatureFlagStateYaml.class, name = "SetFeatureFlagState")
-  , @JsonSubTypes.Type(value = AddRuleYaml.class, name = "AddRule"),
+  , @JsonSubTypes.Type(value = SetOnVariationYaml.class, name = "SetOnVariation"),
+      @JsonSubTypes.Type(value = SetOffVariationYaml.class, name = "SetOffVariation"),
+      @JsonSubTypes.Type(value = AddRuleYaml.class, name = "AddRule"),
       @JsonSubTypes.Type(value = UpdateRuleYaml.class, name = "UpdateRule"),
       @JsonSubTypes.Type(value = AddTargetsToVariationTargetMapYaml.class, name = "AddTargetsToVariationTargetMap"),
       @JsonSubTypes.Type(
@@ -28,6 +30,8 @@ public interface PatchInstruction {
   @TypeAlias("instruction_kind")
   enum Type {
     @JsonProperty("SetFeatureFlagState") SET_FEATURE_FLAG_STATE("SetFeatureFlagState"),
+    @JsonProperty("SetOnVariation") SET_ON_VARIATION("SetOnVariation"),
+    @JsonProperty("SetOffVariation") SET_OFF_VARIATION("SetOffVariation"),
     @JsonProperty("AddRule") ADD_RULE("AddRule"),
     @JsonProperty("UpdateRule") UPDATE_RULE("UpdateRule"),
     @JsonProperty("AddTargetsToVariationTargetMap")
