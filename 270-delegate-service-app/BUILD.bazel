@@ -17,9 +17,10 @@ java_binary(
         "src/main/java/**/*.java",
     ]),
     data = [":resource"],
-     main_class = "io.harness.delegate.app.DelegateServiceApplication",
-        resources = [
-            "//270-delegate-service-app/src/main/resources:resource",],
+    main_class = "io.harness.delegate.app.DelegateServiceApplication",
+    resources = [
+        "//270-delegate-service-app/src/main/resources:resource",
+    ],
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
@@ -88,6 +89,52 @@ java_binary(
         "@maven//:ru_vyarus_guice_validator",
     ],
 )
+
+java_library(
+    name = "tests",
+    testonly = True,
+    srcs = glob(
+        ["src/test/**/*.java"],
+    ),
+    data = [
+        "//270-delegate-service-app/src/test/resources:resource",
+        "//400-rest/src/test/resources:resource",
+    ],
+    resources = [
+        "//:resource",
+        "//270-delegate-service-app/src/test/resources:resource",
+        "//400-rest/src/main/resources:resource",
+        "//980-commons/src/main/resources:resource",
+        "//980-commons/src/main/resources-filtered:resource",
+        "//980-commons/src/test/resources:resource",
+    ],
+    visibility = ["//visibility:public"],
+    runtime_deps = [
+        "//400-rest/src/main/resources",
+        "//980-commons/src/main/resources",
+        "//980-commons/src/main/resources-filtered:resources",
+        "//980-commons/src/test/resources",
+        "@maven//:javax_ws_rs_javax_ws_rs_api",
+    ],
+    deps = shared_dependencies + [
+        "//400-rest:supporter-test",
+        "//955-alert-beans:module",
+        "//990-commons-test:module",
+        ":module",
+        "@maven//:com_icegreen_greenmail",
+        "@maven//:com_openpojo_openpojo",
+        "@maven//:com_squareup_okhttp3_okhttp",
+        "@maven//:io_dropwizard_dropwizard_testing",
+        "@maven//:io_github_benas_random_beans",
+        "@maven//:io_grpc_grpc_testing",
+        "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_grizzly2",
+        "@maven//:org_glassfish_jersey_test_framework_providers_jersey_test_framework_provider_inmemory",
+        "@maven//:org_mockito_mockito_core",
+        "@maven//:pl_pragmatists_JUnitParams",
+    ],
+)
+
+run_tests()
 
 run_analysis()
 
