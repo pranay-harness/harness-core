@@ -17,10 +17,10 @@ shared_dependencies = [
     "@maven//:io_grpc_grpc_stub",
 ] + [
     "//:lombok",
-    "//121-instance:module",
     "//122-ng-authentication-settings:module",
     "//123-ng-core-user:module",
     "//125-cd-nextgen:module",
+    "//126-instance:module",
     "//136-git-sync-manager:module",
     "//295-cdng-contracts:module",
     "//920-ng-signup:module",

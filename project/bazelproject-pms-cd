@@ -3,7 +3,7 @@ java_language_level: 8
 
 directories:
   120-ng-manager
-  121-instance
+  126-instance
   122-ng-authentication-settings
   123-ng-core-user
   125-cd-nextgen

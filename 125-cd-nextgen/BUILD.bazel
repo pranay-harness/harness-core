@@ -11,6 +11,8 @@ java_library(
     visibility = ["//visibility:public"],
     deps = [
         "//:lombok",
+        "//126-instance:module",
+        "//127-cd-nextgen-beans:module",
         "//400-rest:module",
         "//440-connector-nextgen:module",
         "//445-gitops:module",
@@ -22,6 +24,7 @@ java_library(
         "//888-pms-client:module",
         "//890-sm-core:module",
         "//910-delegate-service-driver:module",
+        "//945-license-usage-sdk:module",
         "//948-access-control-sdk:module",
         "//954-connector-beans:module",
         "//955-delegate-beans:module",
