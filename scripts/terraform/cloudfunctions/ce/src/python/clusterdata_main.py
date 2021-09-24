@@ -148,13 +148,12 @@ def ingest_data_from_avro(jsonData):
     )  # Make an API request.
     try:
         load_job.result()  # Wait for the job to complete.
+        table = client.get_table(jsonData["tableId"])
+        print_("Total: {} rows in table {}".format(table.num_rows, jsonData["tableId"]))
+        delete_from_gcs(jsonData)
     except Exception as e:
         print_(e, "WARN")
         # Probably the file was deleted in earlier runs
-
-    table = client.get_table(jsonData["tableId"])
-    print_("Total: {} rows in table {}".format(table.num_rows, jsonData["tableId"]))
-    delete_from_gcs(jsonData)
 
 
 def delete_from_gcs(jsonData):
@@ -217,10 +216,10 @@ def delete_existing_data(jsonData):
                 query_job.job_id, location=query_job.location
             )
             print_("Job {} is currently in state {}".format(query_job.job_id, query_job.state))
-            if query_job.state in ["DONE", "SUCCESS"] or count >= 24: # 2 minutes
+            if query_job.state in ["DONE", "SUCCESS"] or count >= 24: # 4 minutes
                 break
             else:
-                time.sleep(5)
+                time.sleep(10)
                 count += 1
         if query_job.state not in ["DONE", "SUCCESS"]:
             raise Exception("Timeout waiting for job in pending state")
