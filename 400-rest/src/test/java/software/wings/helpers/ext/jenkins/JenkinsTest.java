@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.jenkins;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.AADITI;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
@@ -26,6 +27,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.artifact.ArtifactFileMetadata;
 import io.harness.exception.ArtifactServerException;
@@ -61,6 +63,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.client.HttpResponseException;
 import org.joor.Reflect;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -68,6 +71,7 @@ import org.junit.experimental.categories.Category;
 /**
  * The Class JenkinsTest.
  */
+@OwnedBy(CDC)
 public class JenkinsTest extends CategoryTest {
   private static final String JENKINS_URL = "http://localhost:%s/";
   private static final String USERNAME = "wingsbuild";
@@ -173,6 +177,7 @@ public class JenkinsTest extends CategoryTest {
   @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
+  @Ignore("Will need to be fixed due to License violation")
   public void shouldReturnArtifactsByBuildNumber() throws URISyntaxException, IOException {
     Pair<String, InputStream> fileInfo =
         jenkins.downloadArtifact("scheduler", "57", "build/libs/docker-scheduler-*.jar");
@@ -189,6 +194,7 @@ public class JenkinsTest extends CategoryTest {
   @Test
   @Owner(developers = RAMA)
   @Category(UnitTests.class)
+  @Ignore("Will need to be fixed due to License violation")
   public void shouldReturnLastCompletedBuildArtifacts() throws URISyntaxException, IOException {
     Pair<String, InputStream> fileInfo = jenkins.downloadArtifact("scheduler", "build/libs/docker-scheduler-*.jar");
     assertThat(fileInfo.getKey()).isEqualTo("docker-scheduler-1.0-SNAPSHOT-all.jar");
@@ -399,6 +405,7 @@ public class JenkinsTest extends CategoryTest {
   @Test
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
+  @Ignore("Will need to be fixed due to License violation")
   public void shouldTestGetFileSize() {
     long size = jenkins.getFileSize("scheduler", "57", "build/libs/docker-scheduler-1.0-SNAPSHOT-all.jar");
     assertThat(size).isGreaterThan(0);

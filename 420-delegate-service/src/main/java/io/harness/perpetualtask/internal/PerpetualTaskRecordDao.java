@@ -46,10 +46,9 @@ public class PerpetualTaskRecordDao {
           persistence.createUpdateOperations(PerpetualTaskRecord.class)
               .set(PerpetualTaskRecordKeys.delegateId, delegateId)
               .set(PerpetualTaskRecordKeys.state, TASK_ASSIGNED)
-              .unset(PerpetualTaskRecordKeys.assignAfterMs)
+              .set(PerpetualTaskRecordKeys.assignAfterMs, 0)
               .unset(PerpetualTaskRecordKeys.assignTryCount)
               .unset(PerpetualTaskRecordKeys.unassignedReason)
-              .unset(PerpetualTaskRecordKeys.assignerIterations)
               .set(PerpetualTaskRecordKeys.client_context_last_updated, lastContextUpdated);
       persistence.update(query, updateOperations);
     }
@@ -84,8 +83,7 @@ public class PerpetualTaskRecordDao {
         persistence.createUpdateOperations(PerpetualTaskRecord.class)
             .set(PerpetualTaskRecordKeys.delegateId, "")
             .set(PerpetualTaskRecordKeys.state, PerpetualTaskState.TASK_UNASSIGNED)
-            .unset(PerpetualTaskRecordKeys.unassignedReason)
-            .unset(PerpetualTaskRecordKeys.assignerIterations);
+            .unset(PerpetualTaskRecordKeys.unassignedReason);
 
     if (taskExecutionBundle != null) {
       updateOperations.set(PerpetualTaskRecordKeys.task_parameters, taskExecutionBundle.toByteArray());
@@ -107,8 +105,7 @@ public class PerpetualTaskRecordDao {
             .set(PerpetualTaskRecordKeys.delegateId, "")
             .set(PerpetualTaskRecordKeys.state, PerpetualTaskState.TASK_UNASSIGNED)
             .set(PerpetualTaskRecordKeys.intervalSeconds, intervalInMillis / 1000)
-            .unset(PerpetualTaskRecordKeys.unassignedReason)
-            .unset(PerpetualTaskRecordKeys.assignerIterations);
+            .unset(PerpetualTaskRecordKeys.unassignedReason);
 
     UpdateResults updateResults = persistence.update(query, updateOperations);
     return updateResults.getUpdatedCount();
@@ -122,8 +119,7 @@ public class PerpetualTaskRecordDao {
     UpdateOperations<PerpetualTaskRecord> updateOperations =
         persistence.createUpdateOperations(PerpetualTaskRecord.class)
             .set(PerpetualTaskRecordKeys.delegateId, "")
-            .set(PerpetualTaskRecordKeys.state, PerpetualTaskState.TASK_PAUSED)
-            .unset(PerpetualTaskRecordKeys.assignerIterations);
+            .set(PerpetualTaskRecordKeys.state, PerpetualTaskState.TASK_PAUSED);
 
     updateOperations.unset(PerpetualTaskRecordKeys.task_parameters);
 

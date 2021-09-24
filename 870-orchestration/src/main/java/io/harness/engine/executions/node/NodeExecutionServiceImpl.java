@@ -32,6 +32,7 @@ import io.harness.execution.NodeExecutionMapper;
 import io.harness.execution.PlanExecutionMetadata;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.observer.Subject;
+import io.harness.plan.PlanNode;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
@@ -39,7 +40,6 @@ import io.harness.pms.contracts.execution.events.OrchestrationEvent;
 import io.harness.pms.contracts.execution.events.OrchestrationEvent.Builder;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.interrupts.InterruptConfig;
-import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.execution.ExecutionStatus;
@@ -480,7 +480,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     }
 
     for (NodeExecution nodeExecution : nodeExecutionList) {
-      PlanNodeProto node = nodeExecution.getNode();
+      PlanNode node = nodeExecution.getNode();
       String nextId = nodeExecution.getNextId();
       String parentId = nodeExecution.getParentId();
       RetryStageInfo stageDetail = RetryStageInfo.builder()

@@ -292,6 +292,12 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
         .intValue();
   }
 
+  @Override
+  public ServiceEntity find(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String serviceIdentifier, boolean deleted) {
+    return serviceRepository.find(accountIdentifier, orgIdentifier, projectIdentifier, serviceIdentifier, deleted);
+  }
+
   @VisibleForTesting
   String getDuplicateServiceExistsErrorMessage(String exceptionString) {
     String errorMessageToBeReturned = null;

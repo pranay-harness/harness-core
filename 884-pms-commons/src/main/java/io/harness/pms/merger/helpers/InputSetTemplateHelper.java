@@ -1,0 +1,51 @@
+package io.harness.pms.merger.helpers;
+
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.pms.merger.helpers.RuntimeInputFormHelper.createRuntimeInputForm;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.common.NGExpressionUtils;
+import io.harness.data.structure.EmptyPredicate;
+import io.harness.pms.merger.YamlConfig;
+import io.harness.pms.merger.fqn.FQN;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import lombok.experimental.UtilityClass;
+
+@OwnedBy(PIPELINE)
+@UtilityClass
+public class InputSetTemplateHelper {
+  public String createTemplateFromPipeline(String pipelineYaml) {
+    return createRuntimeInputForm(pipelineYaml, true);
+  }
+
+  public String createTemplateFromPipelineForGivenStages(String pipelineYaml, List<String> stageIdentifiers) {
+    String template = createRuntimeInputForm(pipelineYaml, true);
+    return removeNonRequiredStages(template, pipelineYaml, stageIdentifiers);
+  }
+
+  public String removeRuntimeInputFromYaml(String runtimeInputYaml) {
+    return createRuntimeInputForm(runtimeInputYaml, false);
+  }
+
+  public String removeNonRequiredStages(String template, String pipelineYaml, List<String> stageIdentifiers) {
+    YamlConfig pipelineYamlConfig = new YamlConfig(pipelineYaml);
+    YamlConfig templateConfig = new YamlConfig(template);
+    Map<FQN, Object> templateFQNMap = templateConfig.getFqnToValueMap();
+    Set<FQN> nonRuntimeInputFQNs = new HashSet<>();
+    templateFQNMap.keySet().forEach(key -> {
+      String value = templateFQNMap.get(key).toString().replace("\"", "");
+      if (!NGExpressionUtils.matchesInputSetPattern(value)) {
+        nonRuntimeInputFQNs.add(key);
+      }
+    });
+    nonRuntimeInputFQNs.forEach(templateFQNMap::remove);
+    if (EmptyPredicate.isNotEmpty(stageIdentifiers)) {
+      FQNHelper.removeNonRequiredStages(templateFQNMap, stageIdentifiers);
+    }
+    return new YamlConfig(templateFQNMap, pipelineYamlConfig.getYamlMap()).getYaml();
+  }
+}

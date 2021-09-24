@@ -58,11 +58,12 @@ public class ServiceDependencyGraphServiceImplTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
-  public void testGetHeatMaps() {
+  public void testGetDependencyGraph() {
     Instant endTime = roundDownTo5MinBoundary(clock.instant());
     MonitoredServiceDTO monitoredServiceDTO =
         builderFactory.monitoredServiceDTOBuilder().sources(Sources.builder().build()).build();
     monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
+
     HeatMap heatMap = builderFactory.heatMapBuilder().heatMapResolution(FIVE_MIN).build();
     setStartTimeEndTimeAndRiskScoreWith5MinBucket(heatMap, endTime, 0.15, 0.25);
     hPersistence.save(heatMap);
@@ -73,6 +74,7 @@ public class ServiceDependencyGraphServiceImplTest extends CvNextGenTestBase {
 
     ServiceDependencyGraphDTO graphDTO = serviceDependencyGraphService.getDependencyGraph(
         context.getProjectParams(), context.getServiceIdentifier(), context.getEnvIdentifier());
+
     assertThat(graphDTO).isNotNull();
     assertThat(graphDTO.getNodes().size()).isEqualTo(1);
     assertThat(graphDTO.getNodes().get(0).getServiceRef()).isEqualTo(context.getServiceIdentifier());
@@ -82,6 +84,37 @@ public class ServiceDependencyGraphServiceImplTest extends CvNextGenTestBase {
     assertThat(graphDTO.getNodes().get(0).getRiskLevel()).isEqualTo(Risk.LOW);
     assertThat(graphDTO.getNodes().get(0).getAnomalousMetricsCount()).isEqualTo(2);
     assertThat(graphDTO.getNodes().get(0).getAnomalousLogsCount()).isEqualTo(4);
+    assertThat(graphDTO.getEdges().size()).isEqualTo(2);
+  }
+
+  @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testGetDependencyGraph_forMonitoredService() {
+    Instant endTime = roundDownTo5MinBoundary(clock.instant());
+    MonitoredServiceDTO monitoredServiceDTO =
+        builderFactory.monitoredServiceDTOBuilder().sources(Sources.builder().build()).build();
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
+
+    MonitoredServiceDTO edgeDTO =
+        builderFactory.monitoredServiceDTOBuilder().sources(Sources.builder().build()).build();
+    edgeDTO.setIdentifier(monitoredServiceDTO.getDependencies().iterator().next().getMonitoredServiceIdentifier());
+    edgeDTO.setServiceRef(monitoredServiceDTO.getDependencies().iterator().next().getMonitoredServiceIdentifier());
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), edgeDTO);
+
+    HeatMap heatMap = builderFactory.heatMapBuilder().heatMapResolution(FIVE_MIN).build();
+    setStartTimeEndTimeAndRiskScoreWith5MinBucket(heatMap, endTime, 0.15, 0.25);
+    hPersistence.save(heatMap);
+    heatMap =
+        builderFactory.heatMapBuilder().heatMapResolution(FIVE_MIN).category(CVMonitoringCategory.PERFORMANCE).build();
+    setStartTimeEndTimeAndRiskScoreWith5MinBucket(heatMap, endTime, 0.15, 0.25);
+    hPersistence.save(heatMap);
+
+    ServiceDependencyGraphDTO graphDTO = serviceDependencyGraphService.getDependencyGraph(
+        context.getProjectParams(), context.getServiceIdentifier(), context.getEnvIdentifier());
+
+    assertThat(graphDTO).isNotNull();
+    assertThat(graphDTO.getNodes().size()).isEqualTo(2);
     assertThat(graphDTO.getEdges().size()).isEqualTo(2);
   }
 

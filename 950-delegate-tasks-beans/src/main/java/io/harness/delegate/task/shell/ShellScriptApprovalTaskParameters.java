@@ -1,22 +1,27 @@
 package io.harness.delegate.task.shell;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.expression.Expression.ALLOW_SECRETS;
 
-import static java.util.Collections.emptyList;
-
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
+import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.Expression;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.shell.ScriptType;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 
 @Data
 @Builder
+@OwnedBy(HarnessTeam.CDC)
 public class ShellScriptApprovalTaskParameters implements TaskParameters, ExecutionCapabilityDemander {
   private String accountId;
   private String appId;
@@ -27,9 +32,14 @@ public class ShellScriptApprovalTaskParameters implements TaskParameters, Execut
   private final String outputVars;
   @Expression(ALLOW_SECRETS) private final String script;
   private String workingDirectory;
+  private List<String> delegateSelectors;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
-    return emptyList();
+    List<ExecutionCapability> capabilities = new ArrayList<>();
+    if (isNotEmpty(delegateSelectors)) {
+      capabilities.add(SelectorCapability.builder().selectors(new HashSet<>(delegateSelectors)).build());
+    }
+    return capabilities;
   }
 }

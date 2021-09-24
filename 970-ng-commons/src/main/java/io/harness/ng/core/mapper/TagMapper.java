@@ -5,15 +5,18 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Collections.EMPTY_LIST;
 import static java.util.Collections.EMPTY_MAP;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.common.beans.NGTag;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@OwnedBy(HarnessTeam.PL)
 public class TagMapper {
   public static List<NGTag> convertToList(Map<String, String> tags) {
     if (isEmpty(tags)) {
@@ -31,6 +34,6 @@ public class TagMapper {
       return EMPTY_MAP;
     }
 
-    return tags.stream().collect(toMap(NGTag::getKey, NGTag::getValue));
+    return tags.stream().collect(HashMap::new, (m, v) -> m.put(v.getKey(), v.getValue()), HashMap::putAll);
   }
 }

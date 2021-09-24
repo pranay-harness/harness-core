@@ -16,6 +16,7 @@ import lombok.experimental.FieldNameConstants;
 @FieldNameConstants(innerTypeName = "QLSSOProviderKeys")
 @Scope(PermissionAttribute.ResourceType.USER)
 @OwnedBy(HarnessTeam.PL)
+
 public class QLSSOSetting implements QLObject {
   QLLinkedSSOSetting linkedSSOSetting;
 }

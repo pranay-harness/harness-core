@@ -3,7 +3,9 @@ package software.wings.utils;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.ConstraintViolationExceptionMapper;
 
 import software.wings.jersey.KryoMessageBodyProvider;
@@ -43,6 +45,7 @@ import org.junit.runners.model.Statement;
 @OwnedBy(PL)
 @Getter
 @Builder
+@TargetModule(HarnessModule._980_COMMONS)
 public class ResourceTestRule implements TestRule {
   @Singular private final Set<Object> instances;
   @Singular private final Set<Class<?>> types;
