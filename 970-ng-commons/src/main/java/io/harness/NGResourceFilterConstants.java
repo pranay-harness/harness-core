@@ -29,4 +29,6 @@ public class NGResourceFilterConstants {
   public static final String SCOPE_KEY = "scope";
   public static final String SCOPE = "scope";
   public static final String TIME_GROUP_BY_TYPE = "timeGroupByType";
+  public static final String GROUP_BY = "groupBy";
+  public static final String SORT_BY = "sortBy";
 }
