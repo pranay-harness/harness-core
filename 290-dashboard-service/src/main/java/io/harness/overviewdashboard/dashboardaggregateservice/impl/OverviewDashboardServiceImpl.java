@@ -262,7 +262,7 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
   private MostActiveServicesList getMostActiveServicesList(SortBy sortBy, ServicesDashboardInfo servicesDashboardInfo,
       Map<String, String> mapOfProjectIdentifierAndProjectName) {
     List<ActiveServiceInfo> activeServiceInfoList = new ArrayList<>();
-    for (ServiceDashboardInfo serviceDashboardInfo : servicesDashboardInfo.getServiceDashboardInfoList()) {
+    for (ServiceDashboardInfo serviceDashboardInfo :emptyIfNull( servicesDashboardInfo.getServiceDashboardInfoList())) {
       ActiveServiceInfo activeServiceInfo =
           ActiveServiceInfo.builder()
               .accountInfo(AccountInfo.builder().accountIdentifier(serviceDashboardInfo.getAccountIdentifier()).build())
@@ -273,7 +273,7 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
                                    serviceDashboardInfo.getProjectIdentifier()))
                                .build())
               .serviceInfo(ServiceInfo.builder()
-                               .serviceInfo(serviceDashboardInfo.getIdentifier())
+                               .serviceIdentifier(serviceDashboardInfo.getIdentifier())
                                .serviceName(serviceDashboardInfo.getName())
                                .build())
               .countWithSuccessFailureDetails(

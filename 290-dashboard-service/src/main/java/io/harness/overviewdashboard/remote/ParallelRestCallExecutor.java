@@ -63,4 +63,11 @@ public class ParallelRestCallExecutor {
     }
     return RestCallResponse.<T>builder().requestType(restCallRequest.getRequestType()).response(response).build();
   }
+//
+//  boolean isError(ResonseObject response) {
+//    if (responseObject.ex is not null) {
+//      return true;
+//    }
+//    return false;
+//  }
 }

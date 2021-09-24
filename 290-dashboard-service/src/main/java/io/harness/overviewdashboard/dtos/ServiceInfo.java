@@ -11,5 +11,5 @@ import lombok.Value;
 @OwnedBy(HarnessTeam.PL)
 public class ServiceInfo {
   String serviceName;
-  String serviceInfo;
+  String serviceIdentifier;
 }
