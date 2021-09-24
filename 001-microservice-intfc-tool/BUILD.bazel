@@ -8,10 +8,11 @@ java_binary(
     deps = [
         "//110-change-data-capture:module",
         "//120-ng-manager:module",
-        "//121-instance:module",
         "//122-ng-authentication-settings:module",
         "//123-ng-core-user:module",
         "//125-cd-nextgen:module",
+        "//126-instance:module",
+        "//127-cd-nextgen-beans:module",
         "//136-git-sync-manager:module",
         "//160-stress-tester:module",
         "//210-command-library-xxxxxxxxmodule",

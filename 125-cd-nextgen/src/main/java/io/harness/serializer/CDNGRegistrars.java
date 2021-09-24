@@ -30,6 +30,7 @@ public class CDNGRegistrars {
           .addAll(GitOpsRegistrars.kryoRegistrars)
           .addAll(YamlBeansModuleRegistrars.kryoRegistrars)
           .addAll(OrchestrationStepsModuleRegistrars.kryoRegistrars)
+          .addAll(CDNGBeanRegistrars.kryoRegistrars)
           .add(NGKryoRegistrar.class)
           .add(PollingKryoRegistrar.class)
           .build();
@@ -46,6 +47,8 @@ public class CDNGRegistrars {
           .addAll(ConnectorBeansRegistrars.morphiaRegistrars)
           .addAll(YamlBeansModuleRegistrars.morphiaRegistrars)
           .addAll(OrchestrationStepsModuleRegistrars.morphiaRegistrars)
+          .addAll(CDNGBeanRegistrars.morphiaRegistrars)
+          .addAll(InstanceRegistrars.morphiaRegistrars)
           .build();
 
   public static final ImmutableList<YamlSchemaRootClass> yamlSchemaRegistrars =
