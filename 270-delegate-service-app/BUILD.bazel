@@ -116,11 +116,11 @@ java_library(
         "//980-commons/src/test/resources",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
     ],
-    deps = shared_dependencies + [
+    deps = [
+        ":module",
         "//400-rest:supporter-test",
         "//955-alert-beans:module",
         "//990-commons-test:module",
-        ":module",
         "@maven//:com_icegreen_greenmail",
         "@maven//:com_openpojo_openpojo",
         "@maven//:com_squareup_okhttp3_okhttp",
