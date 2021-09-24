@@ -8,6 +8,8 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -21,6 +23,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(HarnessTeam.CDC)
 public class ShellScriptApprovalServiceTest extends CategoryTest {
   private static final int RETRY_INTERVAL = 30000;
   @Mock private ApprovalPolingService approvalPolingService;
@@ -36,7 +39,9 @@ public class ShellScriptApprovalServiceTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldUpdateNextIteration() {
-    Mockito.doReturn(false).when(shellScriptApprovalService).tryShellScriptApproval(any(), any(), any(), any(), any());
+    Mockito.doReturn(false)
+        .when(shellScriptApprovalService)
+        .tryShellScriptApproval(any(), any(), any(), any(), any(), any(), any());
     shellScriptApprovalService.handleShellScriptPolling(
         ApprovalPollingJobEntity.builder().retryInterval(RETRY_INTERVAL).approvalId("id").build());
     Mockito.verify(approvalPolingService).updateNextIteration(any(), anyLong());
@@ -46,7 +51,9 @@ public class ShellScriptApprovalServiceTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldNotUpdateNextIterationWhenNotRetryScript() {
-    Mockito.doReturn(true).when(shellScriptApprovalService).tryShellScriptApproval(any(), any(), any(), any(), any());
+    Mockito.doReturn(true)
+        .when(shellScriptApprovalService)
+        .tryShellScriptApproval(any(), any(), any(), any(), any(), any(), any());
     shellScriptApprovalService.handleShellScriptPolling(
         ApprovalPollingJobEntity.builder().retryInterval(RETRY_INTERVAL).approvalId("id").build());
     Mockito.verify(approvalPolingService, Mockito.never()).updateNextIteration(any(), anyLong());
@@ -56,7 +63,9 @@ public class ShellScriptApprovalServiceTest extends CategoryTest {
   @Owner(developers = AGORODETKI)
   @Category(UnitTests.class)
   public void shouldNotUpdateNextIterationWhenRetryIntervalIsEqualToTargetInterval() {
-    Mockito.doReturn(true).when(shellScriptApprovalService).tryShellScriptApproval(any(), any(), any(), any(), any());
+    Mockito.doReturn(true)
+        .when(shellScriptApprovalService)
+        .tryShellScriptApproval(any(), any(), any(), any(), any(), any(), any());
     shellScriptApprovalService.handleShellScriptPolling(
         ApprovalPollingJobEntity.builder().retryInterval(TARGET_INTERVAL.toMillis()).approvalId("id").build());
     Mockito.verify(approvalPolingService, Mockito.never()).updateNextIteration(any(), anyLong());
