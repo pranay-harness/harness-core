@@ -6,14 +6,13 @@ import static io.harness.rule.OwnerRule.ANJAN;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
-import io.harness.cvng.beans.DataCollectionConnectorBundle;
-import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.beans.change.ChangeSourceType;
 import io.harness.cvng.client.VerificationManagerService;
@@ -197,12 +196,7 @@ public class ChangeSourceServiceImplTest extends CvNextGenTestBase {
 
     when(verificationManagerService.createDataCollectionTask(eq(builderFactory.getContext().getAccountId()),
              eq(builderFactory.getContext().getOrgIdentifier()), eq(builderFactory.getContext().getProjectIdentifier()),
-             eq(DataCollectionConnectorBundle.builder()
-                     .dataCollectionType(DataCollectionType.KUBERNETES)
-                     .connectorIdentifier(kubeChangeSource.getConnectorIdentifier())
-                     .sourceIdentifier(kubeChangeSource.getIdentifier())
-                     .dataCollectionWorkerId(kubeChangeSource.getUuid())
-                     .build())))
+             any()))
         .thenReturn(datacollectionTaskId);
     changeSourceService.enqueueDataCollectionTask(kubeChangeSource);
 

@@ -1,6 +1,9 @@
 package io.harness.ngtriggers.helpers;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.ngtriggers.Constants.ARTIFACT_BUILD_EXPR;
+import static io.harness.ngtriggers.Constants.ARTIFACT_EXPR;
+import static io.harness.ngtriggers.Constants.ARTIFACT_TYPE;
 import static io.harness.ngtriggers.Constants.BASE_COMMIT_SHA;
 import static io.harness.ngtriggers.Constants.BRANCH;
 import static io.harness.ngtriggers.Constants.COMMIT_SHA;
@@ -8,6 +11,9 @@ import static io.harness.ngtriggers.Constants.CUSTOM_TYPE;
 import static io.harness.ngtriggers.Constants.EVENT;
 import static io.harness.ngtriggers.Constants.GIT_USER;
 import static io.harness.ngtriggers.Constants.HEADER;
+import static io.harness.ngtriggers.Constants.MANIFEST_EXPR;
+import static io.harness.ngtriggers.Constants.MANIFEST_TYPE;
+import static io.harness.ngtriggers.Constants.MANIFEST_VERSION_EXPR;
 import static io.harness.ngtriggers.Constants.PR;
 import static io.harness.ngtriggers.Constants.PR_NUMBER;
 import static io.harness.ngtriggers.Constants.PR_TITLE;
@@ -52,6 +58,7 @@ import lombok.experimental.UtilityClass;
 public class TriggerHelper {
   public Map<String, Object> buildJsonObjectFromAmbiance(TriggerPayload triggerPayload) {
     Map<String, Object> jsonObject = new HashMap<>();
+
     ParsedPayload parsedPayload = triggerPayload.getParsedPayload();
     // branchesxv
     switch (parsedPayload.getPayloadCase()) {
@@ -94,7 +101,28 @@ public class TriggerHelper {
 
     setSourceType(jsonObject, triggerPayload);
     jsonObject.put(HEADER, triggerPayload.getHeadersMap());
+
+    if (triggerPayload.hasArtifactData() || triggerPayload.hasManifestData()) {
+      addBuildData(jsonObject, triggerPayload);
+    }
     return jsonObject;
+  }
+
+  private void addBuildData(Map<String, Object> jsonObject, TriggerPayload triggerPayload) {
+    HashMap<String, Object> map = new HashMap<>();
+    if (triggerPayload.hasArtifactData()) {
+      // <+trigger.artifact.build>
+      map.put(ARTIFACT_BUILD_EXPR, triggerPayload.getArtifactData().getBuild());
+      jsonObject.put(TYPE, ARTIFACT_TYPE);
+      jsonObject.remove(SOURCE_TYPE);
+      jsonObject.put(ARTIFACT_EXPR, map);
+    } else if (triggerPayload.hasManifestData()) {
+      // <+trigger.manifest.version>
+      map.put(MANIFEST_VERSION_EXPR, triggerPayload.getManifestData().getVersion());
+      jsonObject.put(MANIFEST_EXPR, map);
+      jsonObject.put(TYPE, MANIFEST_TYPE);
+      jsonObject.remove(SOURCE_TYPE);
+    }
   }
 
   private String getGitUser(ParsedPayload parsedPayload) {

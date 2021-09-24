@@ -14,6 +14,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.Size;
@@ -30,6 +31,7 @@ import lombok.experimental.FieldDefaults;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(NON_NULL)
 @ApiModel(value = "Project")
+@Schema(name = "Project", description = "This is the view of the Project entity defined in Harness")
 public class ProjectDTO {
   @EntityIdentifier(allowBlank = true) String orgIdentifier;
   @ApiModelProperty(required = true) @EntityIdentifier(allowBlank = false) String identifier;

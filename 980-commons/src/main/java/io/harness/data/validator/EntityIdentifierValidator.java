@@ -27,11 +27,13 @@ public class EntityIdentifierValidator implements ConstraintValidator<EntityIden
               "var", "return")
           .collect(Collectors.toCollection(HashSet::new));
   private boolean allowBlank;
+  private boolean allowScoped;
 
   @Override
   public void initialize(EntityIdentifier constraintAnnotation) {
     // Nothing to initialize
     allowBlank = constraintAnnotation.allowBlank();
+    allowScoped = constraintAnnotation.allowScoped();
   }
 
   @Override
@@ -43,6 +45,13 @@ public class EntityIdentifierValidator implements ConstraintValidator<EntityIden
       context.disableDefaultConstraintViolation();
       context.buildConstraintViolationWithTemplate("cannot be empty").addConstraintViolation();
       return false;
+    }
+    if (allowScoped) {
+      if (identifier.startsWith("account.")) {
+        identifier = identifier.replaceFirst("account.", "");
+      } else if (identifier.startsWith("org.")) {
+        identifier = identifier.replaceFirst("org.", "");
+      }
     }
     if (!matchesIdentifierPattern(identifier)) {
       context.disableDefaultConstraintViolation();

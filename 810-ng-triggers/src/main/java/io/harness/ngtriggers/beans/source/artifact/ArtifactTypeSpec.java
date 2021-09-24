@@ -13,10 +13,15 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.util.List;
 
 @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
-@JsonSubTypes({ @JsonSubTypes.Type(value = GcrArtifactSpec.class, name = "GCR") })
+@JsonSubTypes({
+  @JsonSubTypes.Type(value = GcrSpec.class, name = "Gcr")
+  , @JsonSubTypes.Type(value = EcrSpec.class, name = "Ecr"),
+      @JsonSubTypes.Type(value = DockerRegistrySpec.class, name = "DockerRegistry")
+})
 
 @OwnedBy(PIPELINE)
 public interface ArtifactTypeSpec {
   String fetchConnectorRef();
+
   List<TriggerEventDataCondition> fetchEventDataConditions();
 }

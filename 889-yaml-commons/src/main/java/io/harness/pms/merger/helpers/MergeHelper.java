@@ -4,7 +4,6 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.NGExpressionUtils;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.merger.YamlConfig;
 import io.harness.pms.merger.fqn.FQN;
@@ -19,7 +18,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,24 +25,14 @@ import lombok.extern.slf4j.Slf4j;
 @UtilityClass
 @Slf4j
 public class MergeHelper {
-  public String mergeInputSetIntoPipeline(
-      String pipelineYaml, String inputSetPipelineCompYaml, boolean appendInputSetValidator) {
-    return mergeInputSetIntoOriginYaml(pipelineYaml, inputSetPipelineCompYaml, appendInputSetValidator, null);
+  public String mergeInputSetFormatYamlToOriginYaml(String originYaml, String inputSetFormatYaml) {
+    return mergeRuntimeInputValuesIntoOriginalYaml(originYaml, inputSetFormatYaml, false);
   }
 
-  public String mergeInputSetIntoPipelineForGivenStages(String pipelineYaml, String inputSetPipelineCompYaml,
-      boolean appendInputSetValidator, List<String> stageIdentifiers) {
-    return mergeInputSetIntoOriginYaml(
-        pipelineYaml, inputSetPipelineCompYaml, appendInputSetValidator, stageIdentifiers);
-  }
-
-  private String mergeInputSetIntoOriginYaml(String originalYaml, String inputSetPipelineCompYaml,
-      boolean appendInputSetValidator, List<String> stageIdentifiers) {
+  public String mergeRuntimeInputValuesIntoOriginalYaml(
+      String originalYaml, String inputSetPipelineCompYaml, boolean appendInputSetValidator) {
     YamlConfig inputSetConfig = new YamlConfig(inputSetPipelineCompYaml);
     Map<FQN, Object> inputSetFQNMap = inputSetConfig.getFqnToValueMap();
-    if (EmptyPredicate.isNotEmpty(stageIdentifiers)) {
-      FQNHelper.removeNonRequiredStages(inputSetFQNMap, stageIdentifiers);
-    }
 
     YamlConfig originalYamlConfig = new YamlConfig(originalYaml);
 
@@ -76,28 +64,6 @@ public class MergeHelper {
   private void throwUpdatedKeyException(FQN key, Object templateValue, Object value) {
     throw new InvalidRequestException("The value for " + key.getExpressionFqn() + " is " + templateValue.toString()
         + "in the pipeline yaml, but the input set has it as " + value.toString());
-  }
-
-  public String mergeInputSets(String template, List<String> inputSetYamlList, boolean appendInputSetValidator) {
-    return mergeInputSetsForGivenStages(template, inputSetYamlList, appendInputSetValidator, null);
-  }
-
-  public String mergeInputSetsForGivenStages(
-      String template, List<String> inputSetYamlList, boolean appendInputSetValidator, List<String> stageIdentifiers) {
-    List<String> inputSetPipelineCompYamlList = inputSetYamlList.stream()
-                                                    .map(yaml -> {
-                                                      try {
-                                                        return InputSetYamlHelper.getPipelineComponent(yaml);
-                                                      } catch (InvalidRequestException e) {
-                                                        return yaml;
-                                                      }
-                                                    })
-                                                    .collect(Collectors.toList());
-    String res = template;
-    for (String yaml : inputSetPipelineCompYamlList) {
-      res = mergeInputSetIntoOriginYaml(res, yaml, appendInputSetValidator, stageIdentifiers);
-    }
-    return res;
   }
 
   private Object checkForRuntimeInputExpressions(Object inputSetValue, Object pipelineValue) {

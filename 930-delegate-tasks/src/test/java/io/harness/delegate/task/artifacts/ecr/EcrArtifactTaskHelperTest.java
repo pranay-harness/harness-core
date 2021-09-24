@@ -7,11 +7,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
@@ -28,7 +28,6 @@ import io.harness.delegate.task.artifacts.response.ArtifactTaskResponse;
 import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
-import io.harness.security.encryption.SecretDecryptionService;
 
 import java.util.Arrays;
 import org.junit.Rule;
@@ -43,7 +42,6 @@ import org.mockito.junit.MockitoRule;
 public class EcrArtifactTaskHelperTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Mock private EcrArtifactTaskHandler ecrArtifactTaskHandler;
-  @Mock private SecretDecryptionService secretDecryptionService;
 
   @InjectMocks EcrArtifactTaskHelper ecrArtifactTaskHelper;
   private AwsConnectorDTO awsConnectorDTO =
@@ -68,7 +66,7 @@ public class EcrArtifactTaskHelperTest extends CategoryTest {
         EcrArtifactDelegateRequest.builder().awsConnectorDTO(awsConnectorDTO).build();
     ArtifactTaskParameters artifactTaskParameters =
         ArtifactTaskParameters.builder().artifactTaskType(ArtifactTaskType.GET_IMAGES).attributes(attributes).build();
-    when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
+    doNothing().when(ecrArtifactTaskHandler).decryptRequestDTOs(any());
     doReturn(artifactTaskExecutionResponse).when(ecrArtifactTaskHandler).getImages(eq(attributes));
 
     ArtifactTaskResponse response = ecrArtifactTaskHelper.getArtifactCollectResponse(artifactTaskParameters);
@@ -76,7 +74,7 @@ public class EcrArtifactTaskHelperTest extends CategoryTest {
     assertThat(response.getCommandExecutionStatus()).isEqualTo(SUCCESS);
     assertThat(response.getArtifactTaskExecutionResponse()).isEqualTo(artifactTaskExecutionResponse);
 
-    verify(secretDecryptionService, times(1)).decrypt(any(), any());
+    verify(ecrArtifactTaskHandler, times(1)).decryptRequestDTOs(any());
     verify(ecrArtifactTaskHandler, times(1)).getImages(eq(attributes));
   }
 
@@ -88,14 +86,14 @@ public class EcrArtifactTaskHelperTest extends CategoryTest {
         EcrArtifactDelegateRequest.builder().awsConnectorDTO(awsConnectorDTO).build();
     ArtifactTaskParameters artifactTaskParameters =
         ArtifactTaskParameters.builder().artifactTaskType(ArtifactTaskType.GET_IMAGES).attributes(attributes).build();
-    when(secretDecryptionService.decrypt(any(), any())).thenReturn(null);
+    doNothing().when(ecrArtifactTaskHandler).decryptRequestDTOs(any());
     doThrow(new InvalidRequestException("Region not specified")).when(ecrArtifactTaskHandler).getImages(eq(attributes));
 
     assertThatExceptionOfType(InvalidRequestException.class)
         .isThrownBy(() -> ecrArtifactTaskHelper.getArtifactCollectResponse(artifactTaskParameters))
         .withMessageContaining("Region not specified");
 
-    verify(secretDecryptionService, times(1)).decrypt(any(), any());
+    verify(ecrArtifactTaskHandler, times(1)).decryptRequestDTOs(any());
     verify(ecrArtifactTaskHandler, times(1)).getImages(eq(attributes));
   }
 }

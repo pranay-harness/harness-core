@@ -1984,7 +1984,6 @@ public class DelegateServiceImpl implements DelegateService {
     if (isDelegateWithoutPollingEnabled(delegate)) {
       eventEmitter.send(Channel.DELEGATES,
           anEvent().withOrgId(delegate.getAccountId()).withUuid(delegate.getUuid()).withType(Type.CREATE).build());
-      assignDelegateService.clearConnectionResults(delegate.getAccountId());
     }
 
     updateWithTokenAndSeqNumIfEcsDelegate(delegate, savedDelegate);
@@ -2219,7 +2218,7 @@ public class DelegateServiceImpl implements DelegateService {
     if (isNotBlank(delegate.getDelegateGroupId())) {
       DelegateGroup delegateGroup = persistence.get(DelegateGroup.class, delegate.getDelegateGroupId());
 
-      if (delegateGroup != null && DelegateGroupStatus.DELETED == delegateGroup.getStatus()) {
+      if (delegateGroup == null || DelegateGroupStatus.DELETED == delegateGroup.getStatus()) {
         log.warn("Sending self destruct command from register delegate because the delegate group is deleted.");
         return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
       }
@@ -2284,7 +2283,7 @@ public class DelegateServiceImpl implements DelegateService {
     if (isNotBlank(delegateParams.getDelegateGroupId())) {
       DelegateGroup delegateGroup = persistence.get(DelegateGroup.class, delegateParams.getDelegateGroupId());
 
-      if (delegateGroup != null && DelegateGroupStatus.DELETED == delegateGroup.getStatus()) {
+      if (delegateGroup == null || DelegateGroupStatus.DELETED == delegateGroup.getStatus()) {
         log.warn(
             "Sending self destruct command from register delegate parameters because the delegate group is deleted.");
         return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
@@ -2800,11 +2799,6 @@ public class DelegateServiceImpl implements DelegateService {
   public void delegateDisconnected(String accountId, String delegateId, String delegateConnectionId) {
     delegateConnectionDao.delegateDisconnected(accountId, delegateConnectionId);
     subject.fireInform(DelegateObxxxxxxxx:onDisconnected, accountId, delegateId);
-  }
-
-  @Override
-  public void clearCache(String accountId, String delegateId) {
-    assignDelegateService.clearConnectionResults(accountId, delegateId);
   }
 
   @Override

@@ -64,7 +64,7 @@ public class NodeExecutionValue implements LateBindingValue {
   }
 
   private boolean canAdd(NodeExecution nodeExecution) {
-    return !nodeExecution.getNode().getSkipExpressionChain()
+    return !nodeExecution.getNode().isSkipExpressionChain()
         && EmptyPredicate.isNotEmpty(nodeExecution.getNode().getIdentifier()) && !nodeExecution.isOldRetry();
   }
 

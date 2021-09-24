@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
+import io.harness.ngtriggers.beans.entity.NGTriggerEntity.NGTriggerEntityKeys;
 import io.harness.ngtriggers.mapper.TriggerFilterHelper;
 
 import com.google.inject.Inject;
@@ -46,6 +47,19 @@ public class NGTriggerRepositoryCustomImpl implements NGTriggerRepositoryCustom 
   public NGTriggerEntity update(Criteria criteria, NGTriggerEntity ngTriggerEntity) {
     Query query = new Query(criteria);
     Update update = TriggerFilterHelper.getUpdateOperations(ngTriggerEntity);
+    RetryPolicy<Object> retryPolicy = getRetryPolicy(
+        "[Retrying]: Failed updating Trigger; attempt: {}", "[Failed]: Failed updating Trigger; attempt: {}");
+    return Failsafe.with(retryPolicy)
+        .get(()
+                 -> mongoTemplate.findAndModify(
+                     query, update, new FindAndModifyOptions().returnNew(true), NGTriggerEntity.class));
+  }
+
+  @Override
+  public NGTriggerEntity updateValidationStatus(Criteria criteria, NGTriggerEntity ngTriggerEntity) {
+    Query query = new Query(criteria);
+    Update update = new Update();
+    update.set(NGTriggerEntityKeys.triggerStatus, ngTriggerEntity.getTriggerStatus());
     RetryPolicy<Object> retryPolicy = getRetryPolicy(
         "[Retrying]: Failed updating Trigger; attempt: {}", "[Failed]: Failed updating Trigger; attempt: {}");
     return Failsafe.with(retryPolicy)
