@@ -7,6 +7,7 @@ import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.logging.AutoLogContext;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ng.DbAliases;
@@ -16,6 +17,8 @@ import io.harness.pms.contracts.interrupts.InterruptType;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 
 import com.google.common.collect.ImmutableList;
+import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +48,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @TypeAlias("interrupt")
 @StoreIn(DbAliases.PMS)
 public class Interrupt implements PersistentRegularIterable, UuidAccess {
+  public static final long TTL_MONTHS = 4;
   public enum State { REGISTERED, PROCESSING, PROCESSED_SUCCESSFULLY, PROCESSED_UNSUCCESSFULLY, DISCARDED }
 
   @Wither @Id @org.mongodb.morphia.annotations.Id @NotNull String uuid;
@@ -61,6 +65,7 @@ public class Interrupt implements PersistentRegularIterable, UuidAccess {
   @Wither @Version Long version;
 
   @Getter @NonFinal @Setter Long nextIteration;
+  @Builder.Default @FdTtlIndex Date validUntil = Date.from(OffsetDateTime.now().plusMonths(TTL_MONTHS).toInstant());
 
   @Override
   public Long obtainNextIteration(String fieldName) {

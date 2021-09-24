@@ -78,6 +78,7 @@ interrupts {"name": "planExecutionId_createdAt_idx", "background": true} {"planE
 interrupts {"name": "planExecutionId_nodeExecutionId_createdAt_idx", "background": true} {"planExecutionId": 1, "nodeExecutionId": 1, "createdAt": -1}
 interrupts {"name": "planExecutionId_state_type_createdAt_idx", "background": true} {"planExecutionId": 1, "state": 1, "type": 1, "createdAt": -1}
 interrupts {"name": "state_type_monitoring_createdAt_idx", "background": true} {"state": 1, "type": 1, "createdAt": -1}
+interrupts {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 kmsTransitionEvent2 {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
 kmsTransitionEvent2 {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 nodeExecutions {"name": "createdAt_1", "background": true} {"createdAt": 1}
