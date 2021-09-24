@@ -141,5 +141,5 @@ run_analysis()
 exports_files([
     "keystore.jks",
     "newrelic.yml",
-    "config.yml",
+    "delegate-service-config.yml",
 ])
