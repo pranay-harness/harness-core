@@ -16,6 +16,7 @@ import lombok.experimental.FieldNameConstants;
 @FieldNameConstants(innerTypeName = "QLSSHCredentialUpdateKeys")
 @Scope(PermissionAttribute.ResourceType.SETTING)
 @OwnedBy(HarnessTeam.PL)
+
 public class QLSSHAuthenticationUpdate {
   RequestField<String> userName;
   RequestField<Integer> port;
