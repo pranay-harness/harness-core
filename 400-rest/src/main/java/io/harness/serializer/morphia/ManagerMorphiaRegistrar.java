@@ -981,8 +981,8 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(PricingProfile.class);
     set.add(PrometheusCVServiceConfiguration.class);
     set.add(ProvisionerWithOnlyAuditNeededData.class);
-    set.add(PruneEvent.class);
     set.add(ResourceConstraintInstance.class);
+    set.add(PruneEvent.class);
     set.add(ResourceConstraintNotification.class);
     set.add(ResourceLookup.class);
     set.add(Role.class);
