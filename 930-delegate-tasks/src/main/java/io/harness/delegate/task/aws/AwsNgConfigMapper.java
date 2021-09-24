@@ -1,5 +1,8 @@
 package io.harness.delegate.task.aws;
 
+import static io.harness.delegate.beans.connector.awsconnector.AwsCredentialType.INHERIT_FROM_DELEGATE;
+import static io.harness.delegate.beans.connector.awsconnector.AwsCredentialType.IRSA;
+import static io.harness.delegate.beans.connector.awsconnector.AwsCredentialType.MANUAL_CREDENTIALS;
 import static io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsAuthType.ACCESS_KEY_AND_SECRET_KEY;
 import static io.harness.utils.FieldWithPlainTextOrSecretValueHelper.getSecretAsStringFromPlainTextOrSecretRef;
 
@@ -8,6 +11,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.aws.AwsAccessKeyCredential;
 import io.harness.aws.AwsConfig;
 import io.harness.aws.CrossAccountAccess;
+import io.harness.aws.beans.AwsInternalConfig;
+import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
 import io.harness.delegate.beans.connector.awsconnector.AwsManualConfigSpecDTO;
@@ -17,14 +22,18 @@ import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitAuthen
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitHttpsCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.awscodecommit.AwsCodeCommitSecretKeyAccessKeyDTO;
 import io.harness.encryption.SecretRefData;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.govern.Switch;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
+
+import software.wings.beans.AwsCrossAccountAttributes;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
+import org.apache.commons.lang3.tuple.Pair;
 
 @OwnedBy(HarnessTeam.DX)
 @Singleton
@@ -39,6 +48,42 @@ public class AwsNgConfigMapper {
         .crossAccountRoleArn(crossAccountAccess.getCrossAccountRoleArn())
         .externalId(crossAccountAccess.getExternalId())
         .build();
+  }
+
+  public AwsInternalConfig createAwsInternalConfig(AwsConnectorDTO awsConnectorDTO) {
+    AwsInternalConfig awsInternalConfig = AwsInternalConfig.builder().build();
+    if (awsConnectorDTO == null) {
+      throw new InvalidArgumentsException("Aws Connector DTO cannot be null");
+    }
+
+    AwsCredentialDTO credential = awsConnectorDTO.getCredential();
+    if (MANUAL_CREDENTIALS == credential.getAwsCredentialType()) {
+      AwsManualConfigSpecDTO awsManualConfigSpecDTO = (AwsManualConfigSpecDTO) credential.getConfig();
+      String accessKey = getSecretAsStringFromPlainTextOrSecretRef(
+          awsManualConfigSpecDTO.getAccessKey(), awsManualConfigSpecDTO.getAccessKeyRef());
+      if (accessKey == null) {
+        throw new InvalidArgumentsException(Pair.of("accessKey", "Missing or empty"));
+      }
+
+      awsInternalConfig = AwsInternalConfig.builder()
+                              .accessKey(accessKey.toCharArray())
+                              .secretKey(awsManualConfigSpecDTO.getSecretKeyRef().getDecryptedValue())
+                              .build();
+    } else if (INHERIT_FROM_DELEGATE == credential.getAwsCredentialType()) {
+      awsInternalConfig.setUseEc2IamCredentials(true);
+    } else if (IRSA == credential.getAwsCredentialType()) {
+      awsInternalConfig.setUseIRSA(true);
+    }
+
+    CrossAccountAccessDTO crossAccountAccess = credential.getCrossAccountAccess();
+    if (crossAccountAccess != null) {
+      awsInternalConfig.setAssumeCrossAccountRole(true);
+      awsInternalConfig.setCrossAccountAttributes(AwsCrossAccountAttributes.builder()
+                                                      .crossAccountRoleArn(crossAccountAccess.getCrossAccountRoleArn())
+                                                      .externalId(crossAccountAccess.getExternalId())
+                                                      .build());
+    }
+    return awsInternalConfig;
   }
 
   public AwsConfig mapAwsConfigWithDecryption(
