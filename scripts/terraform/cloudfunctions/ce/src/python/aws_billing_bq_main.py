@@ -76,6 +76,7 @@ def main(event, context):
     ingest_data_to_awscur(jsonData)
     ingest_data_to_preagg(jsonData)
     ingest_data_to_unified(jsonData)
+    print_("Completed")
 
 
 def create_dataset_and_tables(jsonData):
