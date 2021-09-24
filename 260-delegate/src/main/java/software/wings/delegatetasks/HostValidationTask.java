@@ -1,5 +1,7 @@
 package software.wings.delegatetasks;
 
+import static java.lang.String.format;
+
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -36,7 +38,14 @@ public class HostValidationTask extends AbstractDelegateRunnableTask {
 
   @Override
   public RemoteMethodReturnValueData run(TaskParameters parameters) {
-    HostValidationTaskParameters hostValidationTaskParameters = (HostValidationTaskParameters) parameters;
+    HostValidationTaskParameters hostValidationTaskParameters = null;
+    if (!(parameters instanceof HostValidationTaskParameters)) {
+      String message = format(
+          "Unrecognized task params while running HostValidationTask: [%s]", parameters.getClass().getSimpleName());
+      log.error(message);
+      return RemoteMethodReturnValueData.builder().returnValue(message).build();
+    }
+    hostValidationTaskParameters = (HostValidationTaskParameters) parameters;
     return getTaskExecutionResponseData(hostValidationTaskParameters);
   }
 
