@@ -96,9 +96,6 @@ public class NodeExecutionMapper {
     if (nodeExecution.getResolvedStepInputs() != null) {
       builder.setResolvedStepInputs(RecastOrchestrationUtils.toJson(nodeExecution.getResolvedStepInputs()));
     }
-    if (nodeExecution.getResolvedInputs() != null) {
-      builder.setResolvedStepInputs(nodeExecution.getResolvedInputs().toJson());
-    }
     if (nodeExecution.getNotifyId() != null) {
       builder.setNotifyId(nodeExecution.getNotifyId());
     }

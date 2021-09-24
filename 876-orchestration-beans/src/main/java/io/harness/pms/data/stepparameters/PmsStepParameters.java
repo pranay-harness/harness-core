@@ -9,8 +9,6 @@ import java.util.Map;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class PmsStepParameters extends OrchestrationMap {
-  public PmsStepParameters() {}
-
   public PmsStepParameters(Map<String, Object> map) {
     super(map);
   }
