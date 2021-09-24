@@ -55,9 +55,9 @@ import lombok.extern.slf4j.Slf4j;
 public class DashboardResource {
   private final String FAILURE_MESSAGE = "failed to get userId";
 
-  OverviewDashboardService overviewDashboardService;
+  private final OverviewDashboardService overviewDashboardService;
 
-  public Optional<String> getUserIdentifierFromSecurityContext() {
+  private Optional<String> getUserIdentifierFromSecurityContext() {
     Optional<String> userId = Optional.empty();
     if (SourcePrincipalContextBuilder.getSourcePrincipal() != null
         && SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER) {
@@ -81,7 +81,6 @@ public class DashboardResource {
                                          .executionMessage(FAILURE_MESSAGE)
                                          .build());
     }
-    log.info("Getting top projects");
     return ResponseDTO.newResponse(
         overviewDashboardService.getTopProjectsPanel(accountIdentifier, userId.get(), startInterval, endInterval));
   }
@@ -94,7 +93,8 @@ public class DashboardResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
       @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval,
-      @NotNull @QueryParam("groupBy") GroupBy groupBy, @NotNull @QueryParam("sortBy") SortBy sortBy) throws Exception {
+      @NotNull @QueryParam(NGResourceFilterConstants.GROUP_BY) GroupBy groupBy,
+      @NotNull @QueryParam(NGResourceFilterConstants.SORT_BY) SortBy sortBy) throws Exception {
     Optional<String> userId = getUserIdentifierFromSecurityContext();
     if (!userId.isPresent()) {
       return ResponseDTO.newResponse(ExecutionResponse.<DeploymentsStatsOverview>builder()

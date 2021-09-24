@@ -49,14 +49,16 @@ import io.harness.pms.dashboards.PipelinesCount;
 import com.google.inject.Inject;
 import dashboards.CDLandingDashboardResourceClient;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @OwnedBy(HarnessTeam.PL)
 public class OverviewDashboardServiceImpl implements OverviewDashboardService {
-  private final String SUCCESS_MESSAGE = "succes";
-  private final String FAILURE_MESSAGE = "failed to get data";
+  private final String SUCCESS_MESSAGE = "successfully fetched data";
+  private final String FAILURE_MESSAGE = "failed to fetch data";
 
   @Inject DashboardRBACService dashboardRBACService;
   @Inject CDLandingDashboardResourceClient cdLandingDashboardResourceClient;
@@ -66,7 +68,10 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
   @Override
   public ExecutionResponse<TopProjectsPanel> getTopProjectsPanel(
       String accountIdentifier, String userId, long startInterval, long endInterval) {
-    List<OrgProjectIdentifier> orgProjectIdentifierList = getOrgProjectIdentifier(accountIdentifier, userId);
+    List<ProjectDTO> listOfAccessibleProject = dashboardRBACService.listAccessibleProject(accountIdentifier, userId);
+    List<OrgProjectIdentifier> orgProjectIdentifierList = getOrgProjectIdentifier(listOfAccessibleProject);
+    Map<String, String> mapOfProjectIdentifierAndProjectName =
+        getMapOfProjectIdentifierAndProjectName(listOfAccessibleProject);
     List<RestCallRequest> restCallRequestList = getRestCallRequestListForTopProjectsPanel(
         accountIdentifier, startInterval, endInterval, orgProjectIdentifierList);
     List<RestCallResponse> restCallResponses = parallelRestCallExecutor.executeRestCalls(restCallRequestList);
@@ -75,8 +80,8 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
         getResponseOptional(restCallResponses, OverviewDashboardRequestType.GET_CD_TOP_PROJECT_LIST);
 
     ExecutionResponse<List<TopProjectsDashboardInfo<CountWithSuccessFailureDetails>>>
-        executionResponseCDTopProjectsInfoList =
-            getExecutionResponseCDTopProjectsInfoList(cdProjectsDashBoardInfoOptional);
+        executionResponseCDTopProjectsInfoList = getExecutionResponseCDTopProjectsInfoList(
+            cdProjectsDashBoardInfoOptional, mapOfProjectIdentifierAndProjectName);
     ExecutionResponse<List<TopProjectsDashboardInfo<CountWithSuccessFailureDetails>>>
         executionResponseCITopProjectsInfoList = getExecutionResponseCITopProjectsInfoList();
     ExecutionResponse<List<TopProjectsDashboardInfo<CountInfo>>> executionResponseCFTopProjectsInfoList =
@@ -110,7 +115,10 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
   @Override
   public ExecutionResponse<DeploymentsStatsOverview> getDeploymentStatsOverview(
       String accountIdentifier, String userId, long startInterval, long endInterval, GroupBy groupBy, SortBy sortBy) {
-    List<OrgProjectIdentifier> orgProjectIdentifierList = getOrgProjectIdentifier(accountIdentifier, userId);
+    List<ProjectDTO> listOfAccessibleProject = dashboardRBACService.listAccessibleProject(accountIdentifier, userId);
+    List<OrgProjectIdentifier> orgProjectIdentifierList = getOrgProjectIdentifier(listOfAccessibleProject);
+    Map<String, String> mapOfProjectIdentifierAndProjectName =
+        getMapOfProjectIdentifierAndProjectName(listOfAccessibleProject);
     List<RestCallRequest> restCallRequestList = getRestCallRequestListForDeploymentStatsOverview(
         accountIdentifier, startInterval, endInterval, orgProjectIdentifierList, groupBy, sortBy);
     List<RestCallResponse> restCallResponses = parallelRestCallExecutor.executeRestCalls(restCallRequestList);
@@ -141,7 +149,8 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
             .response(DeploymentsStatsOverview.builder()
                           .deploymentsStatsSummary(
                               getDeploymentStatsSummary(deploymentStatsSummary, timeBasedDeploymentInfoList))
-                          .mostActiveServicesList(getMostActiveServicesList(sortBy, servicesDashboardInfo))
+                          .mostActiveServicesList(getMostActiveServicesList(
+                              sortBy, servicesDashboardInfo, mapOfProjectIdentifierAndProjectName))
                           .build())
             .executionStatus(ExecutionStatus.SUCCESS)
             .executionMessage(SUCCESS_MESSAGE)
@@ -157,7 +166,8 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
   @Override
   public ExecutionResponse<CountOverview> getCountOverview(
       String accountIdentifier, String userId, long startInterval, long endInterval) {
-    List<OrgProjectIdentifier> orgProjectIdentifierList = getOrgProjectIdentifier(accountIdentifier, userId);
+    List<ProjectDTO> listOfAccessibleProject = dashboardRBACService.listAccessibleProject(accountIdentifier, userId);
+    List<OrgProjectIdentifier> orgProjectIdentifierList = getOrgProjectIdentifier(listOfAccessibleProject);
     List<RestCallRequest> restCallRequestList =
         getRestCallRequestListForCountOverview(accountIdentifier, startInterval, endInterval, orgProjectIdentifierList);
     List<RestCallResponse> restCallResponses = parallelRestCallExecutor.executeRestCalls(restCallRequestList);
@@ -231,6 +241,7 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
         .deploymentStats(getTimeWiseDeploymentInfo(timeBasedDeploymentInfoList))
         .build();
   }
+
   private List<TimeBasedStats> getTimeWiseDeploymentInfo(List<TimeBasedDeploymentInfo> timeBasedDeploymentInfoList) {
     List<TimeBasedStats> timeBasedStatsList = new ArrayList<>();
     for (TimeBasedDeploymentInfo timeBasedDeploymentInfo : timeBasedDeploymentInfoList) {
@@ -248,14 +259,19 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
     return timeBasedStatsList;
   }
 
-  private MostActiveServicesList getMostActiveServicesList(SortBy sortBy, ServicesDashboardInfo servicesDashboardInfo) {
+  private MostActiveServicesList getMostActiveServicesList(SortBy sortBy, ServicesDashboardInfo servicesDashboardInfo,
+      Map<String, String> mapOfProjectIdentifierAndProjectName) {
     List<ActiveServiceInfo> activeServiceInfoList = new ArrayList<>();
     for (ServiceDashboardInfo serviceDashboardInfo : servicesDashboardInfo.getServiceDashboardInfoList()) {
       ActiveServiceInfo activeServiceInfo =
           ActiveServiceInfo.builder()
               .accountInfo(AccountInfo.builder().accountIdentifier(serviceDashboardInfo.getAccountIdentifier()).build())
               .orgInfo(OrgInfo.builder().orgIdentifier(serviceDashboardInfo.getOrgIdentifier()).build())
-              .projectInfo(ProjectInfo.builder().projectIdentifier(serviceDashboardInfo.getProjectIdentifier()).build())
+              .projectInfo(ProjectInfo.builder()
+                               .projectIdentifier(serviceDashboardInfo.getProjectIdentifier())
+                               .projectName(mapOfProjectIdentifierAndProjectName.get(
+                                   serviceDashboardInfo.getProjectIdentifier()))
+                               .build())
               .serviceInfo(ServiceInfo.builder()
                                .serviceInfo(serviceDashboardInfo.getIdentifier())
                                .serviceName(serviceDashboardInfo.getName())
@@ -303,12 +319,18 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
         .build();
   }
 
-  private List<OrgProjectIdentifier> getOrgProjectIdentifier(String accountIdentifier, String userId) {
-    List<ProjectDTO> listOfAccessibleProject = dashboardRBACService.listAccessibleProject(accountIdentifier, userId);
+  private List<OrgProjectIdentifier> getOrgProjectIdentifier(List<ProjectDTO> listOfAccessibleProject) {
     return emptyIfNull(listOfAccessibleProject)
         .stream()
         .map(projectDTO -> new OrgProjectIdentifier(projectDTO.getOrgIdentifier() + ":" + projectDTO.getIdentifier()))
         .collect(Collectors.toList());
+  }
+
+  private Map<String, String> getMapOfProjectIdentifierAndProjectName(List<ProjectDTO> listOfAccessibleProject) {
+    Map<String, String> mapOfProjectIdentifierAndProjectName = new HashMap<String, String>();
+    listOfAccessibleProject.stream().map(
+        projectDTO -> mapOfProjectIdentifierAndProjectName.put(projectDTO.getIdentifier(), projectDTO.getName()));
+    return mapOfProjectIdentifierAndProjectName;
   }
 
   private Optional<RestCallResponse> getResponseOptional(
@@ -331,14 +353,18 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
   }
 
   private List<TopProjectsDashboardInfo<CountWithSuccessFailureDetails>> getCDTopProjectsInfoList(
-      ProjectsDashboardInfo cdProjectsDashBoardInfo) {
+      ProjectsDashboardInfo cdProjectsDashBoardInfo, Map<String, String> mapOfProjectIdentifierAndProjectName) {
     List<TopProjectsDashboardInfo<CountWithSuccessFailureDetails>> cdTopProjectsInfoList = new ArrayList<>();
     for (ProjectDashBoardInfo projectDashBoardInfo : cdProjectsDashBoardInfo.getProjectDashBoardInfoList()) {
       cdTopProjectsInfoList.add(
           TopProjectsDashboardInfo.<CountWithSuccessFailureDetails>builder()
               .accountInfo(AccountInfo.builder().accountIdentifier(projectDashBoardInfo.getAccountId()).build())
               .orgInfo(OrgInfo.builder().orgIdentifier(projectDashBoardInfo.getOrgIdentifier()).build())
-              .projectInfo(ProjectInfo.builder().projectIdentifier(projectDashBoardInfo.getProjectIdentifier()).build())
+              .projectInfo(ProjectInfo.builder()
+                               .projectIdentifier(projectDashBoardInfo.getProjectIdentifier())
+                               .projectName(mapOfProjectIdentifierAndProjectName.get(
+                                   projectDashBoardInfo.getProjectIdentifier()))
+                               .build())
               .countDetails(CountWithSuccessFailureDetails.builder()
                                 .count(projectDashBoardInfo.getDeploymentsCount())
                                 .countChangeAndCountChangeRateInfo(CountChangeAndCountChangeRateInfo.builder().build())
@@ -392,7 +418,8 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
   }
 
   private ExecutionResponse<List<TopProjectsDashboardInfo<CountWithSuccessFailureDetails>>>
-  getExecutionResponseCDTopProjectsInfoList(Optional<RestCallResponse> cdProjectsDashBoardInfoOptional) {
+  getExecutionResponseCDTopProjectsInfoList(Optional<RestCallResponse> cdProjectsDashBoardInfoOptional,
+      Map<String, String> mapOfProjectIdentifierAndProjectName) {
     ExecutionResponse<List<TopProjectsDashboardInfo<CountWithSuccessFailureDetails>>>
         executionResponseCDTopProjectsInfoList;
     if (cdProjectsDashBoardInfoOptional.isPresent()) {
@@ -407,7 +434,7 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
             (ProjectsDashboardInfo) cdProjectsDashBoardInfoOptional.get().getResponse();
         executionResponseCDTopProjectsInfoList =
             ExecutionResponse.<List<TopProjectsDashboardInfo<CountWithSuccessFailureDetails>>>builder()
-                .response(getCDTopProjectsInfoList(cdProjectsDashBoardInfo))
+                .response(getCDTopProjectsInfoList(cdProjectsDashBoardInfo, mapOfProjectIdentifierAndProjectName))
                 .executionStatus(ExecutionStatus.SUCCESS)
                 .executionMessage(SUCCESS_MESSAGE)
                 .build();
