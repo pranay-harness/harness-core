@@ -103,7 +103,7 @@ public class LearningEngineDevResource {
   }
 
   @GET
-  @Path("/log-analysis-by-time")
+  @Path("/log-analysis-result-by-time")
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
