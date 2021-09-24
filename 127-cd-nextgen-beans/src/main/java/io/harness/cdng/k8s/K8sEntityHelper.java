@@ -3,6 +3,7 @@ package io.harness.cdng.k8s;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_DIRECT;
 import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_GCP;
+import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 
@@ -37,6 +38,7 @@ import io.harness.utils.IdentifierRefHelper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nonnull;
@@ -44,8 +46,8 @@ import javax.annotation.Nonnull;
 @OwnedBy(CDP)
 @Singleton
 public class K8sEntityHelper {
-  @Inject private SecretManagerClientService secretManagerClientService;
-  @Inject private ConnectorService connectorService;
+  @Named("PRIVILEGED") @Inject private SecretManagerClientService secretManagerClientService;
+  @Named(DEFAULT_CONNECTOR_SERVICE) @Inject private ConnectorService connectorService;
   public List<EncryptedDataDetail> getEncryptionDataDetails(
       @Nonnull ConnectorInfoDTO connectorDTO, @Nonnull NGAccess ngAccess) {
     switch (connectorDTO.getConnectorType()) {
