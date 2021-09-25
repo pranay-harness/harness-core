@@ -342,3 +342,6 @@ scopeAccessCheckEnabled: true
 hostname: ${HOSTNAME:-localhost}
 
 basePathPrefix: ${BASE_PATH_PREFIX:-""}
+
+enforcementClientConfiguration:
+  enforcementCheckEnabled: false
