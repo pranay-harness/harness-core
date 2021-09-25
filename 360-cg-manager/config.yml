@@ -248,7 +248,7 @@ grpcServerConfig:
 
 #Currently this should be pointing to the managers (71 - rest) grpc server from the grpcServerConfig property until delegate service becomes standalone service
 grpcDelegateServiceClientConfig:
-  target: localhost:9880
+  target: localhost:9890
   authority: localhost
 
 grpcClientConfig:
@@ -626,7 +626,7 @@ auditClientConfig:
 
 enableAudit: false
 
-disableDelegateMgmtInManager: false
+disableDelegateMgmtInManager: true
 
 ldapSyncJobConfig:
   poolSize: 3

@@ -113,7 +113,7 @@ auditClientConfig:
 enableAuth: true
 
 grpcClient:
-  target: localhost:9880
+  target: localhost:9890
   authority: localhost
 
 grpcServer:

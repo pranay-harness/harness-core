@@ -87,7 +87,7 @@ notificationServiceConfig:
     shouldOverrideAllPredefinedTemplates: true
 
   delegateServiceGrpcConfig:
-    target: localhost:9880
+    target: localhost:9890
     authority: localhost
 
 auditServiceConfig:
