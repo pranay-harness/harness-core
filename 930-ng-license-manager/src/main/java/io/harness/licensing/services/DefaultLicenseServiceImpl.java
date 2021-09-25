@@ -19,7 +19,9 @@ import io.harness.licensing.beans.modules.AccountLicenseDTO;
 import io.harness.licensing.beans.modules.ModuleLicenseDTO;
 import io.harness.licensing.beans.modules.StartTrialDTO;
 import io.harness.licensing.beans.response.CheckExpiryResultDTO;
+import io.harness.licensing.beans.summary.LicensesWithSummaryDTO;
 import io.harness.licensing.entities.modules.ModuleLicense;
+import io.harness.licensing.helpers.ModuleLicenseSummaryHelper;
 import io.harness.licensing.interfaces.ModuleLicenseInterface;
 import io.harness.licensing.mappers.LicenseObjectConverter;
 import io.harness.ng.core.account.DefaultExperience;
@@ -36,6 +38,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -286,6 +289,39 @@ public class DefaultLicenseServiceImpl implements LicenseService {
 
   @Override
   public void softDelete(String accountIdentifier) {}
+
+  @Override
+  public LicensesWithSummaryDTO getLicenseSummary(String accountIdentifier, ModuleType moduleType) {
+    List<ModuleLicenseDTO> moduleLicenses = getModuleLicenses(accountIdentifier, moduleType);
+    if (moduleLicenses.isEmpty()) {
+      return null;
+    }
+    return ModuleLicenseSummaryHelper.generateSummary(moduleType, moduleLicenses);
+  }
+
+  @Override
+  public Edition calculateAccountEdition(String accountIdentifier) {
+    AccountLicenseDTO accountLicense = getAccountLicense(accountIdentifier);
+    Map<ModuleType, List<ModuleLicenseDTO>> allModuleLicenses = accountLicense.getAllModuleLicenses();
+
+    long currentTime = Instant.now().toEpochMilli();
+    Optional<ModuleLicenseDTO> highestEditionLicense =
+        allModuleLicenses.values()
+            .stream()
+            .flatMap(Collection::stream)
+            .filter(license -> license.getExpiryTime() > currentTime)
+            .reduce((compareLicense, currentLicense) -> {
+              if (compareLicense.getEdition().compareTo(currentLicense.getEdition()) < 0) {
+                return currentLicense;
+              }
+              return compareLicense;
+            });
+
+    if (!highestEditionLicense.isPresent()) {
+      return null;
+    }
+    return highestEditionLicense.get().getEdition();
+  }
 
   private void sendSucceedTelemetryEvents(String eventName, ModuleLicense moduleLicense, String accountIdentifier) {
     String email = getEmailFromPrincipal();

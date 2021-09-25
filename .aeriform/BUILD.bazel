@@ -282,6 +282,10 @@ aeriform("//925-access-control-service:module")
 
 aeriform("//925-access-control-service:tests")
 
+aeriform("//925-enforcement-service:module")
+
+aeriform("//925-enforcement-service:tests")
+
 aeriform("//930-delegate-tasks:module")
 
 aeriform("//930-delegate-tasks:tests")
@@ -302,6 +306,10 @@ aeriform("//940-cg-audit-service:module")
 
 aeriform("//940-cg-audit-service:tests")
 
+aeriform("//940-enforcement-sdk:module")
+
+aeriform("//940-enforcement-sdk:tests")
+
 aeriform("//940-feature-flag:module")
 
 aeriform("//940-feature-flag:tests")
@@ -312,10 +320,6 @@ aeriform("//940-ng-audit-service:tests")
 
 aeriform("//940-notification-client:module")
 
-aeriform("//940-plan-feature-sdk:module")
-
-aeriform("//940-plan-feature-sdk:tests")
-
 aeriform("//940-primary-version-manager:module")
 
 aeriform("//940-primary-version-manager:tests")
@@ -323,6 +327,8 @@ aeriform("//940-primary-version-manager:tests")
 aeriform("//940-resource-group-beans:module")
 
 aeriform("//940-secret-manager-client:module")
+
+aeriform("//943-enforcement-beans:module")
 
 aeriform("//945-account-mgmt:module")
 
