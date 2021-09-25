@@ -575,7 +575,8 @@ public class DelegateAgentResource {
       return new RestResponse<>(accountService.hasNonPrimaryDelegateConfiguration(accountId));
 
     } catch (InvalidRequestException ex) {
-      return null;
+      log.info("Exprection getting VERSION_INFO Configuration", ex);
+      return new RestResponse<>(Boolean.FALSE);
     }
   }
 

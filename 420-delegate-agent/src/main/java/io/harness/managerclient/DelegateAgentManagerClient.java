@@ -4,7 +4,16 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateHeartbeatResponse;
 import io.harness.beans.DelegateTaskEventsResponse;
-import io.harness.delegate.beans.*;
+import io.harness.delegate.beans.DelegateConnectionHeartbeat;
+import io.harness.delegate.beans.DelegateFile;
+import io.harness.delegate.beans.DelegateParams;
+import io.harness.delegate.beans.DelegateProfileParams;
+import io.harness.delegate.beans.DelegateRegisterResponse;
+import io.harness.delegate.beans.DelegateResponseData;
+import io.harness.delegate.beans.DelegateScripts;
+import io.harness.delegate.beans.DelegateTaskPackage;
+import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
 import io.harness.delegate.beans.instancesync.InstanceSyncPerpetualTaskResponse;
 import io.harness.delegate.task.validation.DelegateConnectionResultDetail;
@@ -147,10 +156,6 @@ public interface DelegateAgentManagerClient {
   Call<DelegateTaskPackage> reportConnectionResults(@Path("delegateId") String delegateId, @Path("taskId") String uuid,
       @Query("accountId") String accountId, @Body List<DelegateConnectionResultDetail> results);
 
-  @GET("agent/delegates/configuration")
-  Call<RestResponse<DelegateConfiguration>> getDelegateConfiguration(@Query("accountId") String accountId);
-
   @GET("agent/delegates/configuration/version")
   Call<RestResponse<Boolean>> hasNonPrimaryDelegateConfiguration(@Query("accountId") String accountId);
-
 }

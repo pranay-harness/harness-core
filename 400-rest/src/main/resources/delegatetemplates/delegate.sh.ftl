@@ -119,8 +119,8 @@ if [ -z $INSTALL_CLIENT_TOOLS_IN_BACKGROUND ]; then
   export INSTALL_CLIENT_TOOLS_IN_BACKGROUND=true
 fi
 
-if [ -z $DISABLE_VERSION_INFO ]; then
-  export DISABLE_VERSION_INFO=false
+if [ -z $VERSION_INFO_FROM_CONFIGURATION ]; then
+  export VERSION_INFO_FROM_CONFIGURATION=false
 fi
 
 if [ ! -e config-delegate.yml ]; then

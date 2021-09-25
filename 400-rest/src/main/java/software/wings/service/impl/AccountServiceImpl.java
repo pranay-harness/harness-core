@@ -963,7 +963,7 @@ public class AccountServiceImpl implements AccountService {
             .filter(AccountKeys.uuid, accountId)
             .project(AccountKeys.DELEGATE_CONFIGURATION_DELEGATE_VERSIONS, true)
             .get();
-
+   log.info("Account has VERSION_INFO {}",account.getDelegateConfiguration().getDelegateVersions());
     return account.getDelegateConfiguration() != null;
   }
 

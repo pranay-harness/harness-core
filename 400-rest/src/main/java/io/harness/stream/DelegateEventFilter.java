@@ -8,13 +8,13 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.delegate.beans.DelegateTaskAbortEvent;
 import io.harness.serializer.JsonUtils;
 
-import lombok.extern.slf4j.Slf4j;
 import software.wings.beans.DelegateTaskBroadcast;
 import software.wings.beans.PerpetualTaskBroadcastEvent;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.DelegateTaskServiceClassic;
 
 import com.google.inject.Inject;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.atmosphere.cpr.AtmosphereRequest;
 import org.atmosphere.cpr.AtmosphereResource;
@@ -32,10 +32,10 @@ public class DelegateEventFilter extends BroadcastFilterAdapter {
     AtmosphereRequest req = r.getRequest();
     String delegateId = req.getParameter("delegateId");
     String version = req.getHeader("Version");
-    log.info("Received request with  version Id {}", version);
+
     if (message instanceof DelegateTaskBroadcast) {
       DelegateTaskBroadcast broadcast = (DelegateTaskBroadcast) message;
-
+      log.info("Received request with VERSION_INFO for DelegateTaskBroadcast version Id {}", version);
       if (!StringUtils.equals(version, broadcast.getVersion())) {
         return abort(message);
       }
@@ -62,6 +62,7 @@ public class DelegateEventFilter extends BroadcastFilterAdapter {
     }
 
     if (message instanceof DelegateTaskAbortEvent) {
+      log.info("Received request with VERSION_INFO for DelegateTaskAbortEvent version Id {}", version);
       DelegateTaskAbortEvent abortEvent = (DelegateTaskAbortEvent) message;
       if (!delegateTaskServiceClassic.filter(delegateId, abortEvent)) {
         return abort(message);
@@ -71,6 +72,7 @@ public class DelegateEventFilter extends BroadcastFilterAdapter {
     }
 
     if (message instanceof String && ((String) message).startsWith("[X]")) {
+      log.info("Received request with VERSION_INFO for XXX version Id {}", version);
       String msg = (String) message;
       int seqIndex = msg.lastIndexOf("[TOKEN]");
       if (seqIndex != -1) {
@@ -86,6 +88,7 @@ public class DelegateEventFilter extends BroadcastFilterAdapter {
     }
 
     if (message instanceof PerpetualTaskBroadcastEvent) {
+      log.info("Received request with VERSION_INFO for PerpetualTaskBroadcastEvent version Id {}", version);
       PerpetualTaskBroadcastEvent taskBroadcastEvent = (PerpetualTaskBroadcastEvent) message;
 
       if (isNotBlank(taskBroadcastEvent.getBroadcastDelegateId())

@@ -126,6 +126,7 @@ import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.delegate.task.TaskLogContext;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.validation.DelegateConnectionResultDetail;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.filesystem.FileIo;
@@ -550,6 +551,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       log.info("[New] Delegate registered in {} ms", clock.millis() - start);
       DelegateStackdriverLogAppender.setDelegateId(delegateId);
 
+      setVersionInfoFromDelegateConfiguration();
+
       if (isPollingForTasksEnabled()) {
         log.info("Polling is enabled for Delegate");
         pollingForTasks.set(true);
@@ -598,9 +601,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       startTaskPolling();
       startHeartbeatWhenPollingEnabled(builder);
       startKeepAliveRequestWhenPollingEnabled(builder);
-
-      //
-      delegateConfiguration.setDisableVersionInfo(true);
 
       if (!multiVersion) {
         startUpgradeCheck(getVersion());
@@ -725,9 +725,11 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
       // Stream the request body
       RequestBuilder requestBuilder;
-      if (delegateConfiguration.isDisableVersionInfo()) {
+      if (delegateConfiguration.isVersionInfoFromConfiguration()) {
+        log.info("Not Sending version info as part of header ");
         requestBuilder = client.newRequestBuilder().method(METHOD.GET).uri(uri.toString());
       } else {
+        log.info("Sending version info as part of header ");
         requestBuilder =
             client.newRequestBuilder().method(METHOD.GET).uri(uri.toString()).header("Version", getVersion());
       }
@@ -1096,14 +1098,16 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }, 0, 3, TimeUnit.MINUTES);
   }
 
-  private void setVersionInfoOnConfiguration() {
+  private void setVersionInfoFromDelegateConfiguration() {
     try {
       RestResponse<Boolean> restResponse = HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMinutes(1),
           () -> delegateExecute(delegateAgentManagerClient.hasNonPrimaryDelegateConfiguration(accountId)));
       if (restResponse.getResource()) {
-        delegateConfiguration.setDisableVersionInfo(true);
+        delegateConfiguration.setVersionInfoFromConfiguration(true);
+        log.info("Setting VERSION_INFO to send ");
       }
     } catch (Exception e) {
+      log.warn("Unable to get VERSION_INFO from account delegate configuration for account {}", accountId, e);
     }
   }
 
@@ -1294,11 +1298,11 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           } else if (DELEGATE_RESUME.equals(message.getMessage())) {
             resume();
           } else if (DELEGATE_SEND_VERSION_HEADER.equals(message.getMessage())) {
-            if (!delegateConfiguration.isDisableVersionInfo()) {
-              log.info("Sending version info as part of header");
+            if (!delegateConfiguration.isVersionInfoFromConfiguration()) {
+              log.info("Sending VERSION_INFO as part of header");
               DelegateAgentManagerClientFactory.setSendVersionHeader(Boolean.parseBoolean(message.getParams().get(0)));
             } else {
-              log.info("No version header");
+              log.info("No VERSION_INFO in header");
             }
             delegateAgentManagerClient = injector.getInstance(DelegateAgentManagerClient.class);
           } else if (DELEGATE_START_GRPC.equals(message.getMessage())) {

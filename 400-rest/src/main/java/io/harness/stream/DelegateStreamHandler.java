@@ -20,7 +20,6 @@ import io.harness.logging.AutoLogContext;
 import io.harness.serializer.JsonUtils;
 import io.harness.service.intfc.DelegateCache;
 
-import lombok.extern.slf4j.Slf4j;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.DelegateService;
 
@@ -29,6 +28,7 @@ import com.google.common.io.CharStreams;
 import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.atmosphere.cache.UUIDBroadcasterCache;
 import org.atmosphere.config.service.AtmosphereHandlerService;
 import org.atmosphere.cpr.AtmosphereRequest;
@@ -68,7 +68,7 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
              AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
           String delegateConnectionId = req.getParameter("delegateConnectionId");
           String delegateVersion = req.getHeader("Version");
-          log.info("Received request with  version Id {}", delegateVersion);
+          log.info("Received request with VERSION_INFO version Id {}", delegateVersion);
           // These 2 will be sent by ECS delegate only
           String sequenceNum = req.getParameter("sequenceNum");
           String delegateToken = req.getParameter("delegateToken");

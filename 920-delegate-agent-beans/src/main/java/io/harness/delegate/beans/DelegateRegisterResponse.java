@@ -12,6 +12,5 @@ public class DelegateRegisterResponse {
   String sequenceNum;
   String delegateRandomToken;
 
-
   public enum Action { SELF_DESTRUCT, MIGRATE }
 }

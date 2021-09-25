@@ -115,7 +115,7 @@
           "value": "true"
         },
         {
-          "name": "DISABLE_VERSION_INFO",
+          "name": "VERSION_INFO_FROM_CONFIGURATION",
           "value": "false"
         }
       ],
