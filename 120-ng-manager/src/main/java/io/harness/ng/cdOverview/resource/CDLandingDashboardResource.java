@@ -17,6 +17,7 @@ import io.harness.dashboards.ServicesCount;
 import io.harness.dashboards.ServicesDashboardInfo;
 import io.harness.dashboards.SortBy;
 import io.harness.dashboards.TimeBasedDeploymentInfo;
+import io.harness.ng.cdOverview.service.CDLandingDashboardService;
 import io.harness.ng.core.OrgProjectIdentifier;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -53,12 +54,15 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class CDLandingDashboardResource {
+  private final CDLandingDashboardService cdLandingDashboardService;
   private final long HR_IN_MS = 60 * 60 * 1000;
   private final long DAY_IN_MS = 24 * HR_IN_MS;
 
   private long epochShouldBeOfStartOfDay(long epoch) {
     return epoch - epoch % DAY_IN_MS;
   }
+
+  @GET
   @Path("/activeServices")
   @ApiOperation(value = "Get Most Active Services", nickname = "getActiveServices")
   @NGAccessControlCheck(resourceType = ACCOUNT, permission = VIEW_ACCOUNT_PERMISSION)
@@ -69,7 +73,8 @@ public class CDLandingDashboardResource {
       @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval,
       @NotNull @QueryParam("sortBy") SortBy sortBy) {
     log.info("Getting most active services by : " + sortBy);
-    return ResponseDTO.newResponse(ServicesDashboardInfo.builder().build());
+    return ResponseDTO.newResponse(cdLandingDashboardService.getActiveServices(
+        accountIdentifier, orgProjectIdentifiers, startInterval, endInterval, sortBy));
   }
   @GET
   @Path("/topProjects")

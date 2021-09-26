@@ -10,6 +10,8 @@ import io.harness.timescaledb.tables.KubernetesUtilizationData;
 import io.harness.timescaledb.tables.NodeInfo;
 import io.harness.timescaledb.tables.NodePoolAggregated;
 import io.harness.timescaledb.tables.PodInfo;
+import io.harness.timescaledb.tables.ServiceInfraInfo;
+import io.harness.timescaledb.tables.Services;
 import io.harness.timescaledb.tables.WorkloadInfo;
 
 /**
@@ -52,6 +54,16 @@ public class Tables {
    * The table <code>public.pod_info</code>.
    */
   public static final PodInfo POD_INFO = PodInfo.POD_INFO;
+
+  /**
+   * The table <code>public.service_infra_info</code>.
+   */
+  public static final ServiceInfraInfo SERVICE_INFRA_INFO = ServiceInfraInfo.SERVICE_INFRA_INFO;
+
+  /**
+   * The table <code>public.services</code>.
+   */
+  public static final Services SERVICES = Services.SERVICES;
 
   /**
    * The table <code>public.workload_info</code>.

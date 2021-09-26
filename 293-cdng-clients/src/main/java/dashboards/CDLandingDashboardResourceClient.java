@@ -48,7 +48,7 @@ public interface CDLandingDashboardResourceClient {
       @NotNull @Query(NGResourceFilterConstants.END_TIME) long endInterval);
 
   @GET(LANDING_DASHBOARDS_API + "/timeDeploymentStats")
-  Call<ResponseDTO<ServicesDashboardInfo>> getTimeWiseDeploymentInfo(
+  Call<ResponseDTO<List<TimeBasedDeploymentInfo>>> getTimeWiseDeploymentInfo(
       @NotNull @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @NotNull @Query("orgProjectIdentifiers") List<OrgProjectIdentifier> orgProjectIdentifiers,
       @NotNull @Query(NGResourceFilterConstants.START_TIME) long startInterval,

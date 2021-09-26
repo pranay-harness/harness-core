@@ -10,6 +10,8 @@ import io.harness.timescaledb.tables.KubernetesUtilizationData;
 import io.harness.timescaledb.tables.NodeInfo;
 import io.harness.timescaledb.tables.NodePoolAggregated;
 import io.harness.timescaledb.tables.PodInfo;
+import io.harness.timescaledb.tables.ServiceInfraInfo;
+import io.harness.timescaledb.tables.Services;
 import io.harness.timescaledb.tables.WorkloadInfo;
 
 import java.util.Arrays;
@@ -67,6 +69,16 @@ public class Public extends SchemaImpl {
   public final PodInfo POD_INFO = PodInfo.POD_INFO;
 
   /**
+   * The table <code>public.service_infra_info</code>.
+   */
+  public final ServiceInfraInfo SERVICE_INFRA_INFO = ServiceInfraInfo.SERVICE_INFRA_INFO;
+
+  /**
+   * The table <code>public.services</code>.
+   */
+  public final Services SERVICES = Services.SERVICES;
+
+  /**
    * The table <code>public.workload_info</code>.
    */
   public final WorkloadInfo WORKLOAD_INFO = WorkloadInfo.WORKLOAD_INFO;
@@ -87,6 +99,7 @@ public class Public extends SchemaImpl {
   public final List<Table<?>> getTables() {
     return Arrays.<Table<?>>asList(Anomalies.ANOMALIES, BillingData.BILLING_DATA, CeRecommendations.CE_RECOMMENDATIONS,
         KubernetesUtilizationData.KUBERNETES_UTILIZATION_DATA, NodeInfo.NODE_INFO,
-        NodePoolAggregated.NODE_POOL_AGGREGATED, PodInfo.POD_INFO, WorkloadInfo.WORKLOAD_INFO);
+        NodePoolAggregated.NODE_POOL_AGGREGATED, PodInfo.POD_INFO, ServiceInfraInfo.SERVICE_INFRA_INFO,
+        Services.SERVICES, WorkloadInfo.WORKLOAD_INFO);
   }
 }

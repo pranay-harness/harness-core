@@ -74,6 +74,7 @@ public class ChangeDataCaptureModule extends AbstractModule {
     cdcEntityMultibinder.addBinding().to(OrganizationEntity.class);
     cdcEntityMultibinder.addBinding().to(AccountEntity.class);
     cdcEntityMultibinder.addBinding().to(PipelineCDCEntity.class);
+    cdcEntityMultibinder.addBinding().to(ServiceCDCEntity.class);
   }
 
   @Provides
