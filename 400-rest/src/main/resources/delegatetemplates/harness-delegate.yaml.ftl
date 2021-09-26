@@ -171,7 +171,7 @@ spec:
         - name: INSTALL_CLIENT_TOOLS_IN_BACKGROUND
           value: "true"
         - name: VERSION_INFO_FROM_CONFIGURATION
-           value: "false"
+          value: "false"
         - name: DELEGATE_NAMESPACE
           valueFrom:
             fieldRef:
