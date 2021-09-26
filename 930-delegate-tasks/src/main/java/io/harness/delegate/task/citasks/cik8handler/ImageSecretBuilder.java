@@ -1,11 +1,13 @@
 package io.harness.delegate.task.citasks.cik8handler;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.aws.AwsExceptionHandler.handleAmazonClientException;
 import static io.harness.aws.AwsExceptionHandler.handleAmazonServiceException;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.aws.AwsClient;
 import io.harness.aws.AwsConfig;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
@@ -22,6 +24,7 @@ import io.harness.delegate.task.aws.AwsNgConfigMapper;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.SecretDecryptionService;
+import io.harness.utils.FieldWithPlainTextOrSecretValueHelper;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.services.ec2.model.AmazonEC2Exception;
@@ -30,6 +33,7 @@ import com.google.inject.Singleton;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 
+@OwnedBy(CI)
 @Singleton
 @Slf4j
 public class ImageSecretBuilder {
@@ -74,13 +78,14 @@ public class ImageSecretBuilder {
       log.info("Decrypted docker username and password for id:[{}], type:[{}]", connectorDetails.getIdentifier(),
           connectorDetails.getConnectorType());
       String registryUrl = dockerConfig.getDockerRegistryUrl();
-      String username = dockerUserNamePasswordDTO.getUsername();
       if (dockerUserNamePasswordDTO == null || dockerUserNamePasswordDTO.getPasswordRef() == null
           || isEmpty(dockerUserNamePasswordDTO.getPasswordRef().getDecryptedValue())) {
         throw new InvalidArgumentsException(
             format("Password should not be empty for docker connector: %s", connectorDetails.getIdentifier()),
             WingsException.USER);
       }
+      String username = FieldWithPlainTextOrSecretValueHelper.getSecretAsStringFromPlainTextOrSecretRef(
+          dockerUserNamePasswordDTO.getUsername(), dockerUserNamePasswordDTO.getUsernameRef());
 
       String password = String.valueOf(dockerUserNamePasswordDTO.getPasswordRef().getDecryptedValue());
 
