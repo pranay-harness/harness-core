@@ -8,6 +8,7 @@ import io.harness.app.datafetcher.delegate.AttachScopeToDelegateDataFetcher;
 import io.harness.app.datafetcher.delegate.DelegateApprovalDataFetcher;
 import io.harness.app.datafetcher.delegate.DelegateListDataFetcher;
 import io.harness.app.datafetcher.delegate.DeleteDelegateDataFetcher;
+import io.harness.app.datafetcher.template.TemplateListDataFetcher;
 
 import software.wings.app.WingsGraphQLModule;
 import software.wings.graphql.datafetcher.approval.ApprovalDetailsDataFetcher;
@@ -128,6 +129,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(DeploymentFreezeWindowConnectionDataFetcher.class);
     bindDataFetcherWithAnnotation(DeploymentFreezeWindowDataFetcher.class);
     bindDataFetcherWithAnnotation(ToggleDeploymentFreezeWindowDataFetcher.class);
+    bindDataFetcherWithAnnotation(TemplateListDataFetcher.class);
     binder()
         .bind(SecretManagerMutationDataFetcher.class)
         .annotatedWith(Names.named(SecretManagerDataFetchers.HASHICORP_VAULT_DATA_FETCHER.getName()))

@@ -109,4 +109,18 @@ public class CFApi extends DefaultApi {
         .parameters(UpdateRuleParam.updatePercentageRollout(uuid, serve))
         .build();
   }
+
+  public PatchInstruction setOnVariation(String variation) {
+    return PatchInstruction.builder()
+        .kind("updateDefaultServe")
+        .parameters(new UpdateDefaultServeParams(variation))
+        .build();
+  }
+
+  public PatchInstruction setOffVariation(String variation) {
+    return PatchInstruction.builder()
+        .kind("updateOffVariation")
+        .parameters(new UpdateDefaultServeParams(variation))
+        .build();
+  }
 }

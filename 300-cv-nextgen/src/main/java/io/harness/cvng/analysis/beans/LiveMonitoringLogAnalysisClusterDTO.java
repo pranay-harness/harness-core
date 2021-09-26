@@ -17,12 +17,11 @@ public class LiveMonitoringLogAnalysisClusterDTO {
   public static class LiveMonitoringLogAnalysisClusterDTOBuilder {
     public LiveMonitoringLogAnalysisClusterDTOBuilder tag(LogAnalysisTag logAnalysisTag) {
       this.tag = logAnalysisTag;
-      if (logAnalysisTag.equals(LogAnalysisTag.UNKNOWN) || logAnalysisTag.equals(LogAnalysisTag.UNEXPECTED)) {
+      if (LogAnalysisTag.getAnomalousTags().contains(logAnalysisTag)) {
         this.risk(Risk.HIGH);
       } else {
         this.risk(Risk.LOW);
       }
-
       return this;
     }
   }

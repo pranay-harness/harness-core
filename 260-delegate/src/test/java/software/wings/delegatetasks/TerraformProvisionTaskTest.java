@@ -147,7 +147,9 @@ public class TerraformProvisionTaskTest extends WingsBaseTest {
     doReturn("latestCommit")
         .when(terraformProvisionTaskSpy)
         .getLatestCommitSHAFromLocalRepo(any(GitOperationContext.class));
-    doReturn(new ArrayList<String>()).when(terraformProvisionTaskSpy).getWorkspacesList(anyString(), anyLong());
+    doReturn(new ArrayList<String>())
+        .when(terraformProvisionTaskSpy)
+        .getWorkspacesList(anyString(), any(), anyLong(), any(), any());
     doReturn(new char[] {'v', 'a', 'l', '2'}).when(mockEncryptionService).getDecryptedValue(encryptedDataDetail, false);
     doReturn(planContent).when(planEncryptDecryptHelper).getDecryptedContent(any(), any());
     doReturn(true).when(planEncryptDecryptHelper).deleteEncryptedRecord(any(), any());

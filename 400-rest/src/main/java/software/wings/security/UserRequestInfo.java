@@ -1,8 +1,10 @@
 package software.wings.security;
 
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
@@ -15,6 +17,7 @@ import lombok.Data;
 @OwnedBy(PL)
 @Data
 @Builder
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
 public class UserRequestInfo {
   private String accountId;
   private List<String> appIds;

@@ -16,10 +16,10 @@ import io.harness.engine.facilitation.facilitator.sync.SyncFacilitator;
 import io.harness.engine.facilitation.facilitator.task.TaskFacilitator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
+import io.harness.plan.PlanNode;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
-import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
 
 import com.google.inject.Inject;
@@ -32,14 +32,14 @@ public class FacilitationHelper {
   @Inject Injector injector;
 
   public void facilitateExecution(NodeExecution nodeExecution) {
-    if (customFacilitatorPresent(nodeExecution.getNode())) {
+    PlanNode node = nodeExecution.getNode();
+    if (customFacilitatorPresent(node)) {
       facilitateEventPublisher.publishEvent(nodeExecution.getUuid());
       return;
     }
 
-    PlanNodeProto node = nodeExecution.getNode();
     FacilitatorResponseProto currFacilitatorResponse = null;
-    for (FacilitatorObtainment obtainment : node.getFacilitatorObtainmentsList()) {
+    for (FacilitatorObtainment obtainment : node.getFacilitatorObtainments()) {
       CoreFacilitator facilitator = getFacilitatorFromType(obtainment.getType());
       currFacilitatorResponse =
           facilitator.facilitate(nodeExecution.getAmbiance(), obtainment.getParameters().toByteArray());
@@ -53,11 +53,11 @@ public class FacilitationHelper {
     orchestrationEngine.facilitateExecution(nodeExecution.getUuid(), currFacilitatorResponse);
   }
 
-  private boolean customFacilitatorPresent(PlanNodeProto node) {
-    if (isEmpty(node.getFacilitatorObtainmentsList())) {
+  private boolean customFacilitatorPresent(PlanNode node) {
+    if (isEmpty(node.getFacilitatorObtainments())) {
       return true;
     }
-    return !node.getFacilitatorObtainmentsList()
+    return !node.getFacilitatorObtainments()
                 .stream()
                 .map(fo -> fo.getType().getType())
                 .allMatch(OrchestrationFacilitatorType.ALL_FACILITATOR_TYPES::contains);

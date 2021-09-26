@@ -6,10 +6,10 @@ import static java.util.stream.Collectors.toMap;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.pms.merger.PipelineYamlConfig;
+import io.harness.pms.merger.YamlConfig;
 import io.harness.pms.merger.fqn.FQN;
+import io.harness.pms.merger.helpers.InputSetTemplateHelper;
 import io.harness.pms.merger.helpers.InputSetYamlHelper;
-import io.harness.pms.merger.helpers.TemplateHelper;
 
 import com.fasterxml.jackson.databind.node.TextNode;
 import java.util.Map;
@@ -28,7 +28,7 @@ public class InputSetSanitizer {
   }
 
   private String sanitizeInputSet(String pipelineYaml, String runtimeInput, boolean isInputSet) {
-    String templateYaml = TemplateHelper.createTemplateFromPipeline(pipelineYaml);
+    String templateYaml = InputSetTemplateHelper.createTemplateFromPipeline(pipelineYaml);
 
     if (templateYaml == null) {
       return "";
@@ -40,11 +40,11 @@ public class InputSetSanitizer {
       runtimeInput = InputSetYamlHelper.getPipelineComponent(runtimeInput);
     }
 
-    String filteredInputSetYaml = TemplateHelper.removeRuntimeInputFromYaml(runtimeInput);
+    String filteredInputSetYaml = InputSetTemplateHelper.removeRuntimeInputFromYaml(runtimeInput);
     if (EmptyPredicate.isEmpty(filteredInputSetYaml)) {
       return "";
     }
-    PipelineYamlConfig inputSetConfig = new PipelineYamlConfig(filteredInputSetYaml);
+    YamlConfig inputSetConfig = new YamlConfig(filteredInputSetYaml);
 
     Set<FQN> invalidFQNsInInputSet =
         InputSetErrorsHelper.getInvalidFQNsInInputSet(templateYaml, filteredInputSetYaml).keySet();
@@ -55,11 +55,11 @@ public class InputSetSanitizer {
                                     .filter(entry -> !invalidFQNsInInputSet.contains(entry.getKey()))
                                     .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-    return new PipelineYamlConfig(filtered, inputSetConfig.getYamlMap()).getYaml();
+    return new YamlConfig(filtered, inputSetConfig.getYamlMap()).getYaml();
   }
 
   public String trimValues(String yaml) {
-    PipelineYamlConfig config = new PipelineYamlConfig(yaml);
+    YamlConfig config = new YamlConfig(yaml);
     Map<FQN, Object> fqnToValueMap = config.getFqnToValueMap();
     for (FQN fqn : fqnToValueMap.keySet()) {
       Object value = fqnToValueMap.get(fqn);
@@ -69,7 +69,7 @@ public class InputSetSanitizer {
       }
     }
 
-    PipelineYamlConfig config1 = new PipelineYamlConfig(fqnToValueMap, config.getYamlMap());
+    YamlConfig config1 = new YamlConfig(fqnToValueMap, config.getYamlMap());
     return config1.getYaml();
   }
 }

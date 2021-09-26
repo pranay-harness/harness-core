@@ -41,7 +41,7 @@ import javax.ws.rs.core.MediaType;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @OwnedBy(DEL)
 @BreakDependencyOn("software.wings.service.intfc.ownership.OwnedByAccount")
 public interface DelegateService extends OwnedByAccount {
@@ -140,8 +140,6 @@ public interface DelegateService extends OwnedByAccount {
   List<String> obtainDelegateIdsUsingName(String accountId, String delegateName);
 
   void saveDelegateTask(DelegateTask task, DelegateTask.Status status);
-
-  void clearCache(String accountId, String delegateId);
 
   boolean filter(String accountId, String delegateId);
 

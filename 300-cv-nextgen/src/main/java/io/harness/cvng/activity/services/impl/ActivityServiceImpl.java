@@ -7,6 +7,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.PageRequest;
 import io.harness.cvng.activity.beans.ActivityDashboardDTO;
 import io.harness.cvng.activity.beans.ActivityVerificationResultDTO;
 import io.harness.cvng.activity.beans.ActivityVerificationResultDTO.CategoryRisk;
@@ -675,7 +676,8 @@ public class ActivityServiceImpl implements ActivityService {
         verificationJobInstanceService.get(getVerificationJobInstanceId(activityId));
     verificationJobInstances.forEach(verificationJobInstance -> {
       verificationJobInstance.getCvConfigMap().forEach((s, cvConfig) -> {
-        healthSourceDTOS.add(HealthSourceDTO.toHealthSourceDTO(HealthSourceDTO.toHealthSource(cvConfig, injector)));
+        healthSourceDTOS.add(
+            HealthSourceDTO.toHealthSourceDTO(HealthSourceDTO.toHealthSource(Arrays.asList(cvConfig), injector)));
       });
     });
     return healthSourceDTOS;
@@ -700,6 +702,11 @@ public class ActivityServiceImpl implements ActivityService {
     log.info("Registered demo activity of type {} for account {}, project {}, org {}", activity.getType(),
         activity.getAccountId(), activity.getProjectIdentifier(), activity.getOrgIdentifier());
     return activity.getUuid();
+  }
+
+  @Override
+  public io.harness.beans.PageResponse<Activity> getPaginated(PageRequest pageRequest) {
+    return hPersistence.query(Activity.class, pageRequest);
   }
 
   private List<String> getVerificationJobInstanceId(String activityId) {
@@ -783,6 +790,22 @@ public class ActivityServiceImpl implements ActivityService {
     return query.count();
   }
 
+  @Override
+  public Long getCount(ProjectParams projectParams, List<String> serviceIdentifiers,
+      List<String> environmentIdentifiers, Instant startTime, Instant endTime, List<ActivityType> activityTypes) {
+    Query<Activity> query = createQuery(projectParams, startTime, endTime);
+    if (CollectionUtils.isNotEmpty(serviceIdentifiers)) {
+      query = query.field(ActivityKeys.serviceIdentifier).in(serviceIdentifiers);
+    }
+    if (CollectionUtils.isNotEmpty(environmentIdentifiers)) {
+      query = query.field(ActivityKeys.environmentIdentifier).in(environmentIdentifiers);
+    }
+    if (CollectionUtils.isNotEmpty(activityTypes)) {
+      query = query.field(ActivityKeys.type).in(activityTypes);
+    }
+    return query.count();
+  }
+
   private Query<Activity> createQuery(ServiceEnvironmentParams serviceEnvironmentParams,
       List<String> changeSourceIdentifiers, Instant startTime, Instant endTime) {
     return createQuery(serviceEnvironmentParams)
@@ -801,6 +824,17 @@ public class ActivityServiceImpl implements ActivityService {
         .filter(ActivityKeys.projectIdentifier, serviceEnvironmentParams.getProjectIdentifier())
         .filter(ActivityKeys.environmentIdentifier, serviceEnvironmentParams.getEnvironmentIdentifier())
         .filter(ActivityKeys.serviceIdentifier, serviceEnvironmentParams.getServiceIdentifier());
+  }
+
+  private Query<Activity> createQuery(ProjectParams projectParams, Instant startTime, Instant endTime) {
+    return hPersistence.createQuery(Activity.class)
+        .filter(ActivityKeys.accountId, projectParams.getAccountIdentifier())
+        .filter(ActivityKeys.orgIdentifier, projectParams.getOrgIdentifier())
+        .filter(ActivityKeys.projectIdentifier, projectParams.getProjectIdentifier())
+        .field(ActivityKeys.eventTime)
+        .lessThan(endTime)
+        .field(ActivityKeys.eventTime)
+        .greaterThanOrEq(startTime);
   }
 
   private Optional<Activity> getFromDb(Activity activity) {

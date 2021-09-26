@@ -1,14 +1,14 @@
 package software.wings.utils;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static org.apache.commons.lang3.StringUtils.trim;
 
-import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.logging.Misc;
 
-@OwnedBy(HarnessTeam.PL)
+@OwnedBy(CDP)
 public class ServiceVersionConvention {
   public static final String DELIMITER = "__";
 

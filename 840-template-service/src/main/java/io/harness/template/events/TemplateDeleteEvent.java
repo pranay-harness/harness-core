@@ -26,13 +26,15 @@ public class TemplateDeleteEvent implements Event {
   private String orgIdentifier;
   private String projectIdentifier;
   private TemplateEntity templateEntity;
+  private String comments;
 
-  public TemplateDeleteEvent(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, TemplateEntity templateEntity) {
+  public TemplateDeleteEvent(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      TemplateEntity templateEntity, String comments) {
     this.accountIdentifier = accountIdentifier;
     this.orgIdentifier = orgIdentifier;
     this.projectIdentifier = projectIdentifier;
     this.templateEntity = templateEntity;
+    this.comments = comments;
   }
 
   @JsonIgnore

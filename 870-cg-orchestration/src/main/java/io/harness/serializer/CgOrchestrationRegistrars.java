@@ -3,6 +3,7 @@ package io.harness.serializer;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.morphia.CgOrchestrationBeansMorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.serializer.kryo.CgOrchestrationBeansKryoRegistrar;
 import io.harness.serializer.kryo.CgOrchestrationKryoRegister;
@@ -48,6 +49,8 @@ public class CgOrchestrationRegistrars {
           .addAll(SMCoreRegistrars.morphiaRegistrars)
           .addAll(DelegateServiceBeansRegistrars.morphiaRegistrars)
           .addAll(FeatureFlagBeansRegistrars.morphiaRegistrars)
+          .addAll(EventsFrameworkRegistrars.morphiaRegistrars)
+          .add(CgOrchestrationBeansMorphiaRegistrar.class)
           .build();
 
   public static final ImmutableSet<Class<? extends TypeConverter>> morphiaConverters =

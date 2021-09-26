@@ -18,6 +18,9 @@ import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
+import software.wings.beans.template.Template;
+import software.wings.beans.template.Template.TemplateKeys;
+import software.wings.dl.WingsPersistence;
 import software.wings.graphql.datafetcher.application.AppFilterController;
 import software.wings.graphql.datafetcher.environment.EnvFilterController;
 import software.wings.graphql.schema.type.QLAppFilter;
@@ -29,6 +32,7 @@ import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.template.TemplateService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -54,7 +58,9 @@ public class UserGroupPermissionValidator {
   @Inject PipelineService pipelineService;
   @Inject ServiceResourceService serviceResourceService;
   @Inject InfrastructureProvisionerService infrastructureProvisionerService;
+  @Inject TemplateService templateService;
   @Inject AppFilterController appFilterController;
+  @Inject WingsPersistence wingsPersistence;
 
   private void checkForInvalidIds(List<String> idsInput, List<String> idsPresent) {
     idsInput.removeAll(idsPresent);
@@ -77,6 +83,21 @@ public class UserGroupPermissionValidator {
     PageResponse<Service> res = serviceResourceService.list(req, false, false, false, null);
     // This Ids are wrong
     List<String> idsPresent = res.stream().map(Service::getUuid).collect(Collectors.toList());
+    checkForInvalidIds(ids, idsPresent);
+  }
+
+  private void checkTemplatesExists(Set<String> templateIds, String accountId) {
+    if (isEmpty(templateIds)) {
+      return;
+    }
+    List<String> ids = new ArrayList<>(templateIds);
+    final List<Template> templates = wingsPersistence.createQuery(Template.class)
+                                         .filter(TemplateKeys.accountId, accountId)
+                                         .field(TemplateKeys.uuid)
+                                         .in(templateIds)
+                                         .asList();
+    // This Ids are wrong
+    List<String> idsPresent = templates.stream().map(Template::getUuid).collect(Collectors.toList());
     checkForInvalidIds(ids, idsPresent);
   }
 
@@ -132,6 +153,9 @@ public class UserGroupPermissionValidator {
     switch (appPermissions.getPermissionType()) {
       case SERVICE:
         checkServiceExists(appPermissions.getServices().getServiceIds(), accountId);
+        break;
+      case TEMPLATE:
+        checkTemplatesExists(appPermissions.getTemplates().getTemplateIds(), accountId);
         break;
       case ENV:
         envFilterController.checkEnvExists(appPermissions.getEnvironments().getEnvIds(), accountId);
@@ -194,6 +218,13 @@ public class UserGroupPermissionValidator {
         if (appPermission.getServices() != null
             && (isNotEmpty(appPermission.getServices().getServiceIds())
                 || appPermission.getServices().getFilterType() != null)) {
+          return;
+        }
+        break;
+      case TEMPLATE:
+        if (appPermission.getTemplates() != null
+            && (isNotEmpty(appPermission.getTemplates().getTemplateIds())
+                || appPermission.getTemplates().getFilterType() != null)) {
           return;
         }
         break;
@@ -263,6 +294,11 @@ public class UserGroupPermissionValidator {
         return;
       case SERVICE:
         if (appPermission.getServices().getServiceIds() == null) {
+          return;
+        }
+        break;
+      case TEMPLATE:
+        if (appPermission.getTemplates().getTemplateIds() == null) {
           return;
         }
         break;

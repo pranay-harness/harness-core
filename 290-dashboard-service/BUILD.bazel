@@ -21,6 +21,17 @@ shared_dependencies = [
     "@maven//:com_squareup_okhttp3_okhttp",
     "@maven//:com_squareup_retrofit2_converter_jackson",
     "@maven//:com_squareup_retrofit2_retrofit",
+    "@maven//:io_swagger_core_v3_swagger_jaxrs2",
+    "@maven//:io_swagger_core_v3_swagger_jaxrs2_servlet_initializer_v2",
+    "@maven//:io_swagger_core_v3_swagger_core",
+    "@maven//:io_swagger_core_v3_swagger_annotations",
+    "@maven//:io_swagger_core_v3_swagger_models",
+    "@maven//:io_swagger_core_v3_swagger_integration",
+    "@maven//:io_swagger_swagger_core",
+    "@maven//:io_swagger_swagger_jaxrs",
+    "@maven//:io_swagger_swagger_jersey2_jaxrs",
+    "@maven//:io_swagger_swagger_models",
+    "@maven//:com_smoketurner_dropwizard_swagger",
     "//:lombok",
 ]
 

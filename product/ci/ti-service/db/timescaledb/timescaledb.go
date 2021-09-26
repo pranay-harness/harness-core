@@ -137,18 +137,29 @@ func (tdb *TimeScaleDb) Write(ctx context.Context, accountId, orgId, projectId, 
 // Summary provides test case summary by querying the DB
 func (tdb *TimeScaleDb) Summary(ctx context.Context, accountId, orgId, projectId, pipelineId,
 	buildId, stepId, stageId, report string) (types.SummaryResponse, error) {
+	args := []string{"account_id", "org_id", "project_id", "pipeline_id", "build_id", "step_id", "stage_id", "report"}
+	values := []string{accountId, orgId, projectId, pipelineId, buildId, stepId, stageId, report}
+	var newArgs []string
+	var newValues []interface{}
+	for idx := range args {
+		if values[idx] != "" {
+			newArgs = append(newArgs, args[idx])
+			newValues = append(newValues, values[idx])
+		}
+	}
 	query := fmt.Sprintf(`
-		SELECT duration_ms, result, name FROM %s WHERE account_id = $1
-		AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND step_id = $6 AND stage_id = $7 AND report = $8;`, tdb.EvalTable)
+		SELECT duration_ms, result, name FROM %s WHERE %s;`, tdb.EvalTable, constructWhereClause(newArgs))
 
-	rows, err := tdb.Conn.QueryContext(ctx, query, accountId, orgId, projectId, pipelineId, buildId, stepId, stageId, report)
+	rows, err := tdb.Conn.QueryContext(ctx, query, newValues...)
 	if err != nil {
 		logger.FromContext(ctx).Errorw("could not query database for test summary", zap.Error(err))
 		return types.SummaryResponse{}, err
 	}
 	total := 0
+	failed := 0
+	passed := 0
+	skipped := 0
 	var timeTakenMs int64
-	tests := []types.TestSummary{}
 	for rows.Next() {
 		var zdur zero.Int
 		var status string
@@ -160,13 +171,19 @@ func (tdb *TimeScaleDb) Summary(ctx context.Context, accountId, orgId, projectId
 			return types.SummaryResponse{}, err
 		}
 		total++
+		if status == types.StatusFailed || status == types.StatusError {
+			failed++
+		} else if status == types.StatusSkipped {
+			skipped++
+		} else {
+			passed++
+		}
 		timeTakenMs = timeTakenMs + zdur.ValueOrZero()
-		tests = append(tests, types.TestSummary{Name: testName, Status: types.Status(status)})
 	}
 	if rows.Err() != nil {
 		return types.SummaryResponse{}, rows.Err()
 	}
-	return types.SummaryResponse{Tests: tests, TotalTests: total, TimeMs: timeTakenMs}, nil
+	return types.SummaryResponse{TotalTests: total, SkippedTests: skipped, SuccessfulTests: passed, FailedTests: failed, TimeMs: timeTakenMs}, nil
 }
 
 func (tdb *TimeScaleDb) GetReportsInfo(ctx context.Context, accountId, orgId, projectId, pipelineId,
@@ -288,16 +305,25 @@ func (tdb *TimeScaleDb) GetTestCases(
 	if sortAttribute == "" || sortAttribute == "status" {
 		sortAttribute = failureOrder // In case no sort order is specified or we want to sort by status
 	}
+	args := []string{"account_id", "org_id", "project_id", "pipeline_id", "build_id", "step_id", "stage_id", "report", "suite_name"}
+	values := []string{accountID, orgId, projectId, pipelineId, buildId, stepId, stageId, report, suiteName}
+	var newArgs []string
+	var newValues []interface{}
+	for idx := range args {
+		if values[idx] != "" {
+			newArgs = append(newArgs, args[idx])
+			newValues = append(newValues, values[idx])
+		}
+	}
 	query := fmt.Sprintf(
 		`
 		SELECT name, suite_name, class_name, duration_ms, result, message,
 		description, type, stdout, stderr, COUNT(*) OVER() AS full_count
-		FROM %s
-		WHERE account_id = $1 AND org_id = $2 AND project_id = $3 AND pipeline_id = $4 AND build_id = $5 AND step_id = $6 AND stage_id = $7 AND report = $8 AND suite_name = $9 AND result IN (%s)
+		FROM %s WHERE %s AND result IN (%s)
 		ORDER BY %s %s, %s %s
-		LIMIT $10 OFFSET $11;`, tdb.EvalTable, statusFilter, sortAttribute, order, defaultSortAttribute, defaultOrder)
-
-	rows, err := tdb.Conn.QueryContext(ctx, query, accountID, orgId, projectId, pipelineId, buildId, stepId, stageId, report, suiteName, limit, offset)
+		LIMIT $%d OFFSET $%d;`, tdb.EvalTable, constructWhereClause(newArgs), statusFilter, sortAttribute, order, defaultSortAttribute, defaultOrder, len(newValues)+1, len(newValues)+2)
+	newValues = append(newValues, limit, offset)
+	rows, err := tdb.Conn.QueryContext(ctx, query, newValues...)
 	if err != nil {
 		logger.FromContext(ctx).Errorw("could not query database for test cases", zap.Error(err))
 		return types.TestCases{}, err
@@ -609,4 +635,19 @@ func (tdb *TimeScaleDb) GetDiffFiles(ctx context.Context, accountID, orgId, proj
 	}
 
 	return res, nil
+}
+
+// constructWhereClause creates a where clause with all the keys
+func constructWhereClause(equalKeys []string) string {
+	var whereClause string
+	var cnt int64
+	cnt = 1
+	for idx, k := range equalKeys {
+		whereClause = whereClause + fmt.Sprintf("%s = $%s", k, strconv.FormatInt(cnt, 10))
+		if idx != len(equalKeys)-1 {
+			whereClause = whereClause + " AND "
+		}
+		cnt++
+	}
+	return whereClause
 }

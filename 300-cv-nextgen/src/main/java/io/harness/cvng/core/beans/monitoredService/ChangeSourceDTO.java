@@ -5,6 +5,7 @@ import static io.harness.cvng.CVConstants.DATA_SOURCE_TYPE;
 import io.harness.cvng.beans.change.ChangeCategory;
 import io.harness.cvng.beans.change.ChangeSourceType;
 import io.harness.cvng.core.beans.monitoredService.changeSourceSpec.ChangeSourceSpec;
+import io.harness.data.validator.EntityIdentifier;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -23,7 +24,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 public class ChangeSourceDTO {
   @NotEmpty String name;
-  @NotEmpty String identifier;
+  @NotEmpty @EntityIdentifier String identifier;
   @JsonProperty(DATA_SOURCE_TYPE) ChangeSourceType type;
 
   boolean enabled;

@@ -2,12 +2,15 @@ package software.wings.service.impl.notifications;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import lombok.experimental.UtilityClass;
 
 @OwnedBy(CDC)
 @UtilityClass
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class SlackApprovalMessageKeys {
   // The paths to pick the Templates of the messages and the JSON payloads
 

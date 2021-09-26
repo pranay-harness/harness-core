@@ -36,10 +36,6 @@ public interface AssignDelegateService {
 
   void saveConnectionResults(List<DelegateConnectionResult> results);
 
-  void clearConnectionResults(String accountId, String delegateId);
-
-  void clearConnectionResults(String accountId);
-
   String getActiveDelegateAssignmentErrorMessage(TaskFailureReason reason, DelegateTask delegateTask);
 
   List<Delegate> getAccountDelegates(String accountId);

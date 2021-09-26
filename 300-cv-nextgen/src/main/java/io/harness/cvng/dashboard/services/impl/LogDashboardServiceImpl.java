@@ -243,7 +243,8 @@ public class LogDashboardServiceImpl implements LogDashboardService {
     cvConfigIds.forEach(cvConfigId -> {
       callables.add(() -> {
         Map<String, List<AnalysisResult>> configResult = new HashMap<>();
-        configResult.put(cvConfigId, getAnalysisResultForCvConfigId(cvConfigId, tags, startTime, endTime));
+        configResult.put(cvConfigId,
+            getAnalysisResultForCvConfigId(cvConfigId, Arrays.asList(LogAnalysisTag.values()), startTime, endTime));
         return configResult;
       });
     });
@@ -268,15 +269,16 @@ public class LogDashboardServiceImpl implements LogDashboardService {
 
     List<AnalyzedLogDataDTO> sortedList = new ArrayList<>();
     // create the sorted set first. Then form the page response.
-    logDataToBeReturned.forEach(logData -> {
-      sortedList.add(AnalyzedLogDataDTO.builder()
-                         .projectIdentifier(projectIdentifier)
-                         .orgIdentifier(orgIdentifier)
-                         .serviceIdentifier(serviceIdentifier)
-                         .environmentIdentifier(environmentIdentifer)
-                         .logData(logData)
-                         .build());
-    });
+    logDataToBeReturned.stream()
+        .filter(logData -> tags.contains(logData.getTag()))
+        .forEach(logData
+            -> sortedList.add(AnalyzedLogDataDTO.builder()
+                                  .projectIdentifier(projectIdentifier)
+                                  .orgIdentifier(orgIdentifier)
+                                  .serviceIdentifier(serviceIdentifier)
+                                  .environmentIdentifier(environmentIdentifer)
+                                  .logData(logData)
+                                  .build()));
     Collections.sort(sortedList);
     return PageUtils.offsetAndLimit(sortedList, page, size);
   }
@@ -326,8 +328,7 @@ public class LogDashboardServiceImpl implements LogDashboardService {
 
       // TODO:going forward this if condition needs to be removed as we are saving high riskScore for unknown and
       // unexpected tags in the db itself.
-      if (analysisResult.getTag().equals(LogAnalysisTag.UNKNOWN)
-          || analysisResult.getTag().equals(LogAnalysisTag.UNEXPECTED)) {
+      if (LogAnalysisTag.getAnomalousTags().contains(analysisResult.getTag())) {
         analysisResult.setRiskScore(1.0);
       }
       LogData data = LogData.builder()

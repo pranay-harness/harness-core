@@ -45,6 +45,7 @@ import io.harness.audit.client.remote.AuditClientModule;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
+import io.harness.ccm.license.remote.CeLicenseClientModule;
 import io.harness.cdng.NGModule;
 import io.harness.cdng.expressions.CDExpressionEvaluatorProvider;
 import io.harness.cdng.fileservice.FileServiceClient;
@@ -61,6 +62,8 @@ import io.harness.encryptors.VaultEncryptor;
 import io.harness.encryptors.clients.AwsKmsEncryptor;
 import io.harness.encryptors.clients.GcpKmsEncryptor;
 import io.harness.encryptors.clients.LocalEncryptor;
+import io.harness.enforcement.EnforcementModule;
+import io.harness.enforcement.client.EnforcementClientModule;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
@@ -86,7 +89,6 @@ import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.accesscontrol.migrations.AccessControlMigrationModule;
-import io.harness.ng.accesscontrol.mockserver.MockRoleAssignmentModule;
 import io.harness.ng.accesscontrol.user.AggregateUserService;
 import io.harness.ng.accesscontrol.user.AggregateUserServiceImpl;
 import io.harness.ng.authenticationsettings.AuthenticationSettingsModule;
@@ -442,12 +444,13 @@ public class NextGenModule extends AbstractModule {
         this.appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId(),
         appConfig.getSignupNotificationConfiguration(), appConfig.getAccessControlClientConfiguration()));
     install(ConnectorModule.getInstance());
-    install(new GitopsModule());
+    install(GitopsModule.getInstance());
     install(new GitSyncModule());
     install(JooqModule.getInstance());
     install(new DefaultOrganizationModule());
     install(new NGAggregateModule());
     install(new DelegateServiceModule());
+    install(new io.harness.service.DelegateServiceModule());
     install(NGModule.getInstance());
     install(ExceptionModule.getInstance());
     install(new EventsFrameworkModule(this.appConfig.getEventsFrameworkConfiguration()));
@@ -461,15 +464,8 @@ public class NextGenModule extends AbstractModule {
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(new SecretNGManagerClientModule(this.appConfig.getNgManagerClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
-
-    if (this.appConfig.isUseDms()) {
-      install(new DelegateServiceDriverGrpcClientModule(this.appConfig.getDmsGrpcClient().getSecret(),
-          this.appConfig.getDmsGrpcClient().getTarget(), this.appConfig.getDmsGrpcClient().getAuthority(), true));
-    } else {
-      install(new DelegateServiceDriverGrpcClientModule(this.appConfig.getNextGenConfig().getManagerServiceSecret(),
-          this.appConfig.getGrpcClientConfig().getTarget(), this.appConfig.getGrpcClientConfig().getAuthority(), true));
-    }
-
+    install(new DelegateServiceDriverGrpcClientModule(this.appConfig.getNextGenConfig().getManagerServiceSecret(),
+        this.appConfig.getGrpcClientConfig().getTarget(), this.appConfig.getGrpcClientConfig().getAuthority(), true));
     install(new EntitySetupUsageClientModule(this.appConfig.getNgManagerClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
     install(new ModulesClientModule(this.appConfig.getManagerClientConfig(),
@@ -482,6 +478,10 @@ public class NextGenModule extends AbstractModule {
     install(new InstanceModule());
     install(new TokenClientModule(this.appConfig.getNgManagerClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
+    install(EnforcementModule.getInstance());
+    install(EnforcementClientModule.getInstance(appConfig.getNgManagerClientConfig(),
+        appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId(),
+        appConfig.getEnforcementClientConfiguration()));
 
     install(new ProviderModule() {
       @Provides
@@ -546,7 +546,6 @@ public class NextGenModule extends AbstractModule {
       install(new AccessControlAdminClientModule(
           appConfig.getAccessControlAdminClientConfiguration(), NG_MANAGER.getServiceId()));
     }
-    install(new MockRoleAssignmentModule());
     install(new AbstractTelemetryModule() {
       @Override
       public TelemetryConfiguration telemetryConfiguration() {
@@ -590,6 +589,8 @@ public class NextGenModule extends AbstractModule {
         .to(SetupUsageChangeEventMessageProcessor.class);
     install(AccessControlClientModule.getInstance(
         appConfig.getAccessControlClientConfiguration(), NG_MANAGER.getServiceId()));
+    install(CeLicenseClientModule.getInstance(appConfig.getManagerClientConfig(),
+        appConfig.getNextGenConfig().getManagerServiceSecret(), NG_MANAGER.getServiceId()));
 
     bind(SourceCodeManagerService.class).to(SourceCodeManagerServiceImpl.class);
     bind(ApiKeyService.class).to(ApiKeyServiceImpl.class);

@@ -92,7 +92,7 @@ public class ViewsQueryBuilder {
   private static final String leftJoinSelectiveLabels =
       " LEFT JOIN UNNEST(labels) as labelsUnnested ON labelsUnnested.key IN (%s)";
   private static final ImmutableSet<String> podInfoImmutableSet =
-      ImmutableSet.of("namespace", "workloadName", "appId", "envId", "serviceId");
+      ImmutableSet.of("namespace", "workloadName", "appId", "envId", "serviceId", "parentInstanceId");
   private static final ImmutableSet<String> clusterFilterImmutableSet =
       ImmutableSet.of("product", "region", "PROVIDERS");
   private static final ImmutableList<String> applicationGroupBys =

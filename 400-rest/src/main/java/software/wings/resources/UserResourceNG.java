@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.security.dto.PrincipalType.USER;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -20,6 +21,7 @@ import io.harness.ng.core.user.PasswordChangeResponse;
 import io.harness.ng.core.user.TwoFactorAdminOverrideSettings;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserRequestDTO;
+import io.harness.ng.core.user.UtmInfo;
 import io.harness.rest.RestResponse;
 import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.annotations.NextGenManagerAuth;
@@ -107,15 +109,15 @@ public class UserResourceNG {
     UserInfo userInfo = convertUserToNgUser(createdUser);
     userInfo.setIntent(userInviteInDB.getIntent());
 
-    if (userInviteInDB.getSignupAction() != null) {
+    if (isNotEmpty(userInviteInDB.getSignupAction())) {
       userInfo.setSignupAction(userInviteInDB.getSignupAction());
     }
 
-    if (userInviteInDB.getEdition() != null) {
+    if (isNotEmpty(userInviteInDB.getEdition())) {
       userInfo.setEdition(userInviteInDB.getEdition());
     }
 
-    if (userInviteInDB.getBillingFrequency() != null) {
+    if (isNotEmpty(userInviteInDB.getBillingFrequency())) {
       userInfo.setBillingFrequency(userInviteInDB.getBillingFrequency());
     }
 
@@ -334,6 +336,14 @@ public class UserResourceNG {
                 .map(x
                     -> x.stream().anyMatch(y -> ACCOUNT_ADMINISTRATOR_USER_GROUP.equals(y.getName()) && y.isDefault()))
                 .orElse(false))
+        .utmInfo(user.getUtmInfo() != null ? UtmInfo.builder()
+                                                 .utmCampaign(user.getUtmInfo().getUtmCampaign())
+                                                 .utmContent(user.getUtmInfo().getUtmContent())
+                                                 .utmMedium(user.getUtmInfo().getUtmMedium())
+                                                 .utmSource(user.getUtmInfo().getUtmSource())
+                                                 .utmTerm(user.getUtmInfo().getUtmTerm())
+                                                 .build()
+                                           : UtmInfo.builder().build())
         .build();
   }
 

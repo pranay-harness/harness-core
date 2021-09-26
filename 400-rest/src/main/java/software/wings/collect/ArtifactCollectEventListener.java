@@ -42,6 +42,7 @@ import software.wings.beans.artifact.AzureArtifactsArtifactStream;
 import software.wings.beans.artifact.BambooArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
+import software.wings.beans.aws.AmazonS3CollectionTaskParameters;
 import software.wings.beans.command.JenkinsTaskParams;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
@@ -204,7 +205,13 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
         AmazonS3ArtifactStream amazonS3ArtifactStream = (AmazonS3ArtifactStream) artifactStream;
         SettingAttribute settingAttribute = settingsService.get(amazonS3ArtifactStream.getSettingId());
         AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
-
+        final AmazonS3CollectionTaskParameters amazonS3CollectionTaskParameters =
+            AmazonS3CollectionTaskParameters.builder()
+                .awsConfig(awsConfig)
+                .encryptedDataDetails(secretManager.getEncryptionDetails(awsConfig, null, null))
+                .jobName(amazonS3ArtifactStream.getJobname())
+                .artifactPaths(amazonS3ArtifactStream.getArtifactPaths())
+                .build();
         return DelegateTask.builder()
             .accountId(accountId)
             .tags(isNotEmpty(awsConfig.getTag()) ? singletonList(awsConfig.getTag()) : null)
@@ -213,8 +220,7 @@ public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
             .data(TaskData.builder()
                       .async(true)
                       .taskType(TaskType.AMAZON_S3_COLLECTION.name())
-                      .parameters(new Object[] {awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null),
-                          amazonS3ArtifactStream.getJobname(), amazonS3ArtifactStream.getArtifactPaths()})
+                      .parameters(new Object[] {amazonS3CollectionTaskParameters})
                       .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                       .build())
             .build();
