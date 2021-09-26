@@ -23,7 +23,13 @@ import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import org.jooq.*;
+import org.jooq.DSLContext;
+import org.jooq.Field;
+import org.jooq.Record2;
+import org.jooq.Record3;
+import org.jooq.Row2;
+import org.jooq.Row3;
+import org.jooq.Table;
 import org.jooq.impl.DSL;
 
 public class CDLandingDashboardServiceImpl implements CDLandingDashboardService {
