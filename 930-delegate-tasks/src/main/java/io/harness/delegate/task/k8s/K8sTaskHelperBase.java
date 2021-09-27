@@ -144,6 +144,7 @@ import com.google.inject.Singleton;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1LoadBalancerIngress;
 import io.kubernetes.client.openapi.models.V1LoadBalancerStatus;
@@ -2237,8 +2238,14 @@ public class K8sTaskHelperBase {
 
   private ConnectorValidationResult createConnectivityFailureValidationResult(Exception ex) {
     String errorMessage = ex.getMessage();
+
+    if (ex instanceof ApiException) {
+      errorMessage = ((ApiException) ex).getResponseBody();
+    }
+
     ErrorDetail errorDetail = ngErrorHelper.createErrorDetail(errorMessage);
     String errorSummary = ngErrorHelper.getErrorSummary(errorMessage);
+
     return ConnectorValidationResult.builder()
         .status(ConnectivityStatus.FAILURE)
         .errors(Collections.singletonList(errorDetail))
