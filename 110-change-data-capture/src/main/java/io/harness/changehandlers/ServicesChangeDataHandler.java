@@ -1,7 +1,10 @@
 package io.harness.changehandlers;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
 import static java.util.Arrays.asList;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.changestreamsframework.ChangeEvent;
 import io.harness.ng.core.service.entity.ServiceEntity.ServiceEntityKeys;
 
@@ -10,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@OwnedBy(PIPELINE)
 public class ServicesChangeDataHandler extends AbstractChangeDataHandler {
   @Override
   public Map<String, String> getColumnValueMapping(ChangeEvent<?> changeEvent, String[] fields) {
