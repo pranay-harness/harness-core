@@ -124,6 +124,7 @@ public class ExecutionResourceTest extends CategoryTest {
                                               .workflowId(WORKFLOW_ID)
                                               .workflowType(WorkflowType.ORCHESTRATION)
                                               .build();
+    workflowExecution.setValidUntil(null);
     doNothing().when(authService).authorizeAppAccess(anyString(), anyString(), any(User.class), any());
     when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean(), anyBoolean()))
         .thenReturn(workflowExecution);
