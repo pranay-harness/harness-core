@@ -1,15 +1,15 @@
-package io.harness.batch.processing.pricing.banzai;
+package io.harness.pricing.dto.cloudinfo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.AllArgsConstructor;
+import com.google.gson.annotations.SerializedName;
 import lombok.Builder;
 import lombok.Value;
 
 @Value
 @Builder
-@AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ZonePrice {
-  private String zone;
-  private double price;
+  @SerializedName("price") Double price;
+
+  @SerializedName("zone") String zone;
 }
