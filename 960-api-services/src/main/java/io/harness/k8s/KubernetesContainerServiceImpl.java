@@ -36,6 +36,7 @@ import static io.harness.network.Http.connectableHttpUrl;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static io.harness.threading.Morpheus.sleep;
 
+import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
@@ -149,7 +150,9 @@ import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodList;
 import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1SecretBuilder;
+import io.kubernetes.client.openapi.models.V1SelfSubjectAccessReview;
 import io.kubernetes.client.openapi.models.V1Service;
+import io.kubernetes.client.openapi.models.V1Status;
 import io.kubernetes.client.openapi.models.V1TokenReview;
 import io.kubernetes.client.openapi.models.V1TokenReviewBuilder;
 import io.kubernetes.client.openapi.models.V1TokenReviewStatus;
@@ -176,6 +179,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import me.snowdrop.istio.api.IstioResource;
@@ -540,6 +544,26 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Override
   public List<CEK8sDelegatePrerequisite.Rule> validateCEResourcePermissions(KubernetesConfig kubernetesConfig) {
     return k8sResourceValidator.validateCEPermissions2(kubernetesHelperService.getApiClient(kubernetesConfig));
+  }
+
+  @Override
+  @NotNull
+  public List<V1SelfSubjectAccessReview> validateLightwingResourcePermissions(KubernetesConfig kubernetesConfig)
+      throws Exception {
+    List<V1SelfSubjectAccessReview> statuses = k8sResourceValidator.validateLightwingResourcePermissions(
+        kubernetesHelperService.getApiClient(kubernetesConfig));
+    log.info("Validated validateLightwingResourcePermissions, returning failed checks of size: {}",
+        statuses.stream().filter(x -> FALSE.equals(x.getStatus().getAllowed())).count());
+    return statuses;
+  }
+
+  @Override
+  @NotNull
+  public List<V1Status> validateLightwingResourceExists(KubernetesConfig kubernetesConfig) throws Exception {
+    List<V1Status> statuses =
+        k8sResourceValidator.validateLightwingResourceExists(kubernetesHelperService.getApiClient(kubernetesConfig));
+    log.info("Validated validateLightwingResourceExists, returning failed checks of size: {}", statuses.size());
+    return statuses;
   }
 
   @SneakyThrows
