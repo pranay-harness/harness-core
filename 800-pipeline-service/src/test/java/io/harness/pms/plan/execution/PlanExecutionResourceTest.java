@@ -5,13 +5,17 @@ import static io.harness.rule.OwnerRule.NAMAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.execution.PlanExecution;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
+import io.harness.pms.plan.execution.beans.dto.RunStageRequestDTO;
 import io.harness.pms.stages.StageExecutionResponse;
 import io.harness.rule.Owner;
 
@@ -29,6 +33,7 @@ import org.mockito.MockitoAnnotations;
 public class PlanExecutionResourceTest extends CategoryTest {
   @InjectMocks PlanExecutionResource planExecutionResource;
   @Mock PMSPipelineService pmsPipelineService;
+  @Mock PipelineExecuteHelper pipelineExecuteHelper;
 
   private final String ACCOUNT_ID = "account_id";
   private final String ORG_IDENTIFIER = "orgId";
@@ -83,5 +88,23 @@ public class PlanExecutionResourceTest extends CategoryTest {
     assertThat(stage1Data.getMessage()).isNull();
     assertThat(stage1Data.getStagesRequired()).hasSize(1);
     assertThat(stage1Data.getStagesRequired().get(0)).isEqualTo("qaStage");
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testRunStagesWithRuntimeInputYaml() throws IOException {
+    PlanExecutionResponseDto planExecutionResponseDto =
+        PlanExecutionResponseDto.builder().planExecution(PlanExecution.builder().planId("someId").build()).build();
+    doReturn(planExecutionResponseDto)
+        .when(pipelineExecuteHelper)
+        .runStagesWithRuntimeInputYaml(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, "cd",
+            RunStageRequestDTO.builder().build(), false);
+    ResponseDTO<PlanExecutionResponseDto> dto = planExecutionResource.runStagesWithRuntimeInputYaml(ACCOUNT_ID,
+        ORG_IDENTIFIER, PROJ_IDENTIFIER, "cd", PIPELINE_IDENTIFIER, null, false, RunStageRequestDTO.builder().build());
+    assertThat(dto.getData()).isEqualTo(planExecutionResponseDto);
+    verify(pipelineExecuteHelper, times(1))
+        .runStagesWithRuntimeInputYaml(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, "cd",
+            RunStageRequestDTO.builder().build(), false);
   }
 }
