@@ -960,10 +960,14 @@ public class AccountServiceImpl implements AccountService {
     }
 
     Account account = wingsPersistence.createQuery(Account.class, excludeAuthorityCount)
-            .filter(AccountKeys.uuid, accountId)
-            .project(AccountKeys.DELEGATE_CONFIGURATION_DELEGATE_VERSIONS, true)
-            .get();
-   log.info("Account has VERSION_INFO {}",account.getDelegateConfiguration().getDelegateVersions());
+                          .filter(AccountKeys.uuid, accountId)
+                          .project("delegateConfiguration", true)
+                          .get();
+    if (account.getDelegateConfiguration() != null) {
+      log.info("Account has VERSION_INFO {}", account.getDelegateConfiguration().getDelegateVersions());
+    } else {
+      log.info("NO Account has VERSION_INFO ");
+    }
     return account.getDelegateConfiguration() != null;
   }
 

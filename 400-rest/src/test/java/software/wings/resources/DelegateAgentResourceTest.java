@@ -650,4 +650,25 @@ public class DelegateAgentResourceTest extends CategoryTest {
     assertThat(delegateTaskEventsResponse.isProcessTaskEventsAsync()).isTrue();
     assertThat(delegateTaskEventsResponse.getDelegateTaskEvents().get(0).getDelegateTaskId()).isEqualTo("123");
   }
+
+  @Test
+  @Owner(developers = JENNY)
+  @Category(UnitTests.class)
+  public void hasNonPrimaryDelegateConfiguration() {
+    List<String> delegateVersions = new ArrayList<>();
+    DelegateConfiguration delegateConfiguration =
+        DelegateConfiguration.builder().delegateVersions(delegateVersions).build();
+    doReturn(delegateConfiguration).when(accountService).getDelegateConfiguration(ACCOUNT_ID);
+
+    when(accountService.hasNonPrimaryDelegateConfiguration(ACCOUNT_ID)).thenReturn(true);
+    RequestBody requestBody = RequestBody.create(okhttp3.MediaType.parse("application/octet-stream"), "");
+
+    RestResponse<Boolean> restResponse =
+        RESOURCES.client()
+            .target("/agent/delegates/configuration/version?accountId=" + ACCOUNT_ID)
+            .request()
+            .post(entity(requestBody, "application/x-kryo"), new GenericType<RestResponse<Boolean>>() {});
+
+    assertThat(restResponse.getResource() == Boolean.TRUE);
+  }
 }
