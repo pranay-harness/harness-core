@@ -9,11 +9,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
-import io.harness.batch.processing.pricing.banzai.BanzaiPricingClient;
-import io.harness.batch.processing.pricing.banzai.PricingResponse;
-import io.harness.batch.processing.pricing.banzai.VMComputePricingInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.constants.CloudProvider;
+import io.harness.pricing.client.CloudInfoPricingClient;
+import io.harness.pricing.dto.cloudinfo.ProductDetails;
+import io.harness.pricing.dto.cloudinfo.ProductDetailsResponse;
 import io.harness.rule.Owner;
 
 import java.io.IOException;
@@ -32,7 +32,7 @@ import retrofit2.Response;
 @RunWith(MockitoJUnitRunner.class)
 public class VMPricingServiceImplTest extends CategoryTest {
   @InjectMocks private VMPricingServiceImpl vmPricingService;
-  @Mock private BanzaiPricingClient banzaiPricingClient;
+  @Mock private CloudInfoPricingClient banzaiPricingClient;
   private static final String REGION = "us-east-1";
   private static final String COMPUTE_SERVICE = "compute";
   private static final String DEFAULT_INSTANCE_FAMILY = "c4.8xlarge";
@@ -45,18 +45,18 @@ public class VMPricingServiceImplTest extends CategoryTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetComputeVMPricingInfo() throws IOException {
-    Call<PricingResponse> pricingInfoCall = mock(Call.class);
+    Call<ProductDetailsResponse> pricingInfoCall = mock(Call.class);
     when(pricingInfoCall.execute()).thenReturn(createPricingResponse());
     when(banzaiPricingClient.getPricingInfo(CloudProvider.AWS.getCloudProviderName(), COMPUTE_SERVICE, REGION))
         .thenReturn(pricingInfoCall);
-    VMComputePricingInfo computeVMPricingInfo =
+    ProductDetails computeVMPricingInfo =
         vmPricingService.getComputeVMPricingInfo(DEFAULT_INSTANCE_FAMILY, REGION, CloudProvider.AWS);
     assertThat(computeVMPricingInfo).isNotNull();
     assertThat(computeVMPricingInfo.getCpusPerVm()).isEqualTo(DEFAULT_INSTANCE_CPU);
     assertThat(computeVMPricingInfo.getMemPerVm()).isEqualTo(DEFAULT_INSTANCE_MEMORY);
     assertThat(computeVMPricingInfo.getOnDemandPrice()).isEqualTo(DEFAULT_INSTANCE_PRICE);
     assertThat(computeVMPricingInfo.getType()).isEqualTo(DEFAULT_INSTANCE_FAMILY);
-    VMComputePricingInfo computeVMPricingInfoCached =
+    ProductDetails computeVMPricingInfoCached =
         vmPricingService.getComputeVMPricingInfo(DEFAULT_INSTANCE_FAMILY, REGION, CloudProvider.AWS);
     assertThat(computeVMPricingInfoCached).isNotNull();
   }
@@ -65,18 +65,18 @@ public class VMPricingServiceImplTest extends CategoryTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetComputeVMPricingInfoAzure() throws IOException {
-    Call<PricingResponse> pricingInfoCall = mock(Call.class);
+    Call<ProductDetailsResponse> pricingInfoCall = mock(Call.class);
     when(pricingInfoCall.execute()).thenReturn(createPricingResponse());
     when(banzaiPricingClient.getPricingInfo(CloudProvider.AZURE.getCloudProviderName(), COMPUTE_SERVICE, "uksouth"))
         .thenReturn(pricingInfoCall);
-    VMComputePricingInfo computeVMPricingInfo =
+    ProductDetails computeVMPricingInfo =
         vmPricingService.getComputeVMPricingInfo(DEFAULT_INSTANCE_FAMILY, "germanywestcentral", CloudProvider.AZURE);
     assertThat(computeVMPricingInfo).isNotNull();
     assertThat(computeVMPricingInfo.getCpusPerVm()).isEqualTo(DEFAULT_INSTANCE_CPU);
     assertThat(computeVMPricingInfo.getMemPerVm()).isEqualTo(DEFAULT_INSTANCE_MEMORY);
     assertThat(computeVMPricingInfo.getOnDemandPrice()).isEqualTo(DEFAULT_INSTANCE_PRICE);
     assertThat(computeVMPricingInfo.getType()).isEqualTo(DEFAULT_INSTANCE_FAMILY);
-    VMComputePricingInfo computeVMPricingInfoCached =
+    ProductDetails computeVMPricingInfoCached =
         vmPricingService.getComputeVMPricingInfo(DEFAULT_INSTANCE_FAMILY, "germanywestcentral", CloudProvider.AZURE);
     assertThat(computeVMPricingInfoCached).isNotNull();
   }
@@ -85,7 +85,7 @@ public class VMPricingServiceImplTest extends CategoryTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testGetHardCodedComputeVMPricingInfo() throws IOException {
-    VMComputePricingInfo computeVMPricingInfo =
+    ProductDetails computeVMPricingInfo =
         vmPricingService.getComputeVMPricingInfo("n2-standard-16", REGION, CloudProvider.GCP);
     assertThat(computeVMPricingInfo).isNotNull();
     assertThat(computeVMPricingInfo.getCpusPerVm()).isEqualTo(16.0);
@@ -98,12 +98,12 @@ public class VMPricingServiceImplTest extends CategoryTest {
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void testGetCustomComputeVMPricingInfo() throws IOException {
-    Call<PricingResponse> pricingInfoCall = mock(Call.class);
+    Call<ProductDetailsResponse> pricingInfoCall = mock(Call.class);
     when(pricingInfoCall.execute()).thenReturn(createPricingResponse());
     when(banzaiPricingClient.getPricingInfo(CloudProvider.GCP.getCloudProviderName(), COMPUTE_SERVICE, REGION))
         .thenReturn(pricingInfoCall);
 
-    VMComputePricingInfo computeVMPricingInfo =
+    ProductDetails computeVMPricingInfo =
         vmPricingService.getComputeVMPricingInfo("e2-custom-12-32768", REGION, CloudProvider.GCP);
 
     assertThat(computeVMPricingInfo).isNotNull();
@@ -119,11 +119,11 @@ public class VMPricingServiceImplTest extends CategoryTest {
   @Owner(developers = HITESH)
   @Category(UnitTests.class)
   public void testShouldReturnNullVMPricingInfo() throws IOException {
-    Call<PricingResponse> pricingInfoCall = mock(Call.class);
+    Call<ProductDetailsResponse> pricingInfoCall = mock(Call.class);
     when(pricingInfoCall.execute()).thenThrow(IOException.class);
     when(banzaiPricingClient.getPricingInfo(CloudProvider.AWS.getCloudProviderName(), COMPUTE_SERVICE, REGION))
         .thenReturn(pricingInfoCall);
-    VMComputePricingInfo computeVMPricingInfo =
+    ProductDetails computeVMPricingInfo =
         vmPricingService.getComputeVMPricingInfo(DEFAULT_INSTANCE_FAMILY, REGION, CloudProvider.AWS);
     assertThat(computeVMPricingInfo).isNull();
   }
@@ -139,13 +139,14 @@ public class VMPricingServiceImplTest extends CategoryTest {
   }
 
   private Response createPricingResponse() {
-    VMComputePricingInfo vmComputePricingInfo = VMComputePricingInfo.builder()
-                                                    .cpusPerVm(DEFAULT_INSTANCE_CPU)
-                                                    .memPerVm(DEFAULT_INSTANCE_MEMORY)
-                                                    .onDemandPrice(DEFAULT_INSTANCE_PRICE)
-                                                    .type(DEFAULT_INSTANCE_FAMILY)
-                                                    .build();
-    PricingResponse pricingResponse = new PricingResponse(Arrays.asList(vmComputePricingInfo));
+    ProductDetails productDetails = ProductDetails.builder()
+                                        .cpusPerVm(DEFAULT_INSTANCE_CPU)
+                                        .memPerVm(DEFAULT_INSTANCE_MEMORY)
+                                        .onDemandPrice(DEFAULT_INSTANCE_PRICE)
+                                        .type(DEFAULT_INSTANCE_FAMILY)
+                                        .build();
+    ProductDetailsResponse pricingResponse =
+        ProductDetailsResponse.builder().products(Arrays.asList(productDetails)).build();
     return Response.success(pricingResponse);
   }
 }
