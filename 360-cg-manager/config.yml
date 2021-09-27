@@ -279,9 +279,9 @@ mongo:
   aliasDBName: harness
   traceMode: DISABLED
   mongoSSLConfig:
-  mongoSSLEnabled: false
-  mongoTrustStorePath:
-  mongoTrustStorePassword:
+    mongoSSLEnabled: false
+    mongoTrustStorePath:
+    mongoTrustStorePassword:
 
 events-mongo:
   uri: mongodb://localhost:27017/events
