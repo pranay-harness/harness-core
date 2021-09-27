@@ -266,7 +266,7 @@ for kustomizeVersion in v3.5.4; do
 
 done
 
-for scmVersion in b276dd03; do
+for scmVersion in a275d0b8; do
   echo "Adding scm" $scmVersion
 
   SCM_LINUX_DIR="${IMAGES_DIR}/scm/linux/$scmVersion/"

@@ -307,7 +307,7 @@ deployMode: KUBERNETES
 envPath: ""
 
 kubectlVersion: v1.13.2
-scmVersion: b276dd03
+scmVersion: a275d0b8
 
 ngAuthUIEnabled: false
 
