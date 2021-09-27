@@ -1,9 +1,9 @@
 # to be used when building in Jenkins
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 RUN apt-get update && \
     apt-get -y upgrade && \
-    apt-get -y install apt-utils curl unzip apt-transport-https gnupg2 locales && \
+    apt-get -y install curl unzip gnupg2 locales && \
     locale-gen en_US.UTF-8 && \
     export LANG=en_US.UTF-8 && \
     apt-get clean
