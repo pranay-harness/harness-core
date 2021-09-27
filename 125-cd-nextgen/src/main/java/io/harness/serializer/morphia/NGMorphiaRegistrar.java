@@ -18,8 +18,6 @@ import io.harness.cdng.manifest.yaml.ManifestsOutcome;
 import io.harness.cdng.provision.terraform.TerraformConfig;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceConfigOutcome;
-import io.harness.cdng.service.beans.ServiceOutcome;
-import io.harness.cdng.service.beans.ServiceOutcome.ArtifactsOutcome;
 import io.harness.cdng.service.beans.ServiceUseFromStage;
 import io.harness.cdng.service.beans.ServiceUseFromStage.Overrides;
 import io.harness.cdng.service.beans.StageOverridesConfig;
@@ -52,9 +50,7 @@ public class NGMorphiaRegistrar implements MorphiaRegistrar {
     h.put("cdng.artifact.bean.yaml.DockerHubArtifactConfig", DockerHubArtifactConfig.class);
     h.put("cdng.artifact.bean.yaml.GcrArtifactConfig", GcrArtifactConfig.class);
     h.put("cdng.artifact.bean.yaml.SidecarArtifact", SidecarArtifact.class);
-    h.put("cdng.service.beans.ServiceOutcome", ServiceOutcome.class);
     h.put("cdng.service.beans.ServiceConfigOutcome", ServiceConfigOutcome.class);
-    h.put("cdng.service.beans.ServiceOutcome$ArtifactsOutcome", ArtifactsOutcome.class);
     h.put("cdng.manifest.yaml.ManifestsOutcome", ManifestsOutcome.class);
     h.put("cdng.service.beans.StageOverridesConfig", StageOverridesConfig.class);
     h.put("cdng.service.beans.ServiceUseFromStage", ServiceUseFromStage.class);

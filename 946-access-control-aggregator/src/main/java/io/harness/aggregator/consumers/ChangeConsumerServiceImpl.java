@@ -21,7 +21,6 @@ import io.harness.annotations.dev.OwnedBy;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -55,9 +54,12 @@ public class ChangeConsumerServiceImpl implements ChangeConsumerService {
       principals.add(roleAssignment.getPrincipalIdentifier());
     }
 
-    Set<String> resourceSelectors = resourceGroup.get().isFullScopeSelected()
-        ? Collections.singleton("/*/*")
-        : resourceGroup.get().getResourceSelectors();
+    Set<String> resourceSelectors = new HashSet<>();
+    if (resourceGroup.get().isFullScopeSelected()) {
+      resourceSelectors.add("/*/*");
+    } else if (resourceGroup.get().getResourceSelectors() != null) {
+      resourceSelectors = resourceGroup.get().getResourceSelectors();
+    }
 
     List<ACL> acls = new ArrayList<>();
     for (String permission : role.get().getPermissions()) {

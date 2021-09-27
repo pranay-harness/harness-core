@@ -3,11 +3,11 @@ package io.harness.batch.processing.pricing.vmpricing;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.codec.digest.DigestUtils.md5Hex;
 
-import io.harness.batch.processing.pricing.banzai.BanzaiPricingClient;
-import io.harness.batch.processing.pricing.banzai.PricingResponse;
-import io.harness.batch.processing.pricing.banzai.VMComputePricingInfo;
 import io.harness.batch.processing.pricing.service.support.GCPCustomInstanceDetailProvider;
 import io.harness.ccm.commons.constants.CloudProvider;
+import io.harness.pricing.client.CloudInfoPricingClient;
+import io.harness.pricing.dto.cloudinfo.ProductDetails;
+import io.harness.pricing.dto.cloudinfo.ProductDetailsResponse;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -23,24 +23,24 @@ import retrofit2.Response;
 @Service
 @Slf4j
 public class VMPricingServiceImpl implements VMPricingService {
-  private final BanzaiPricingClient banzaiPricingClient;
+  private final CloudInfoPricingClient banzaiPricingClient;
 
   private static final String COMPUTE_SERVICE = "compute";
 
   @Autowired
-  public VMPricingServiceImpl(BanzaiPricingClient banzaiPricingClient) {
+  public VMPricingServiceImpl(CloudInfoPricingClient banzaiPricingClient) {
     this.banzaiPricingClient = banzaiPricingClient;
   }
 
-  private final Cache<String, VMComputePricingInfo> vmPricingInfoCache = Caffeine.newBuilder().build();
+  private final Cache<String, ProductDetails> vmPricingInfoCache = Caffeine.newBuilder().build();
 
   @Override
-  public VMComputePricingInfo getComputeVMPricingInfo(String instanceType, String region, CloudProvider cloudProvider) {
+  public ProductDetails getComputeVMPricingInfo(String instanceType, String region, CloudProvider cloudProvider) {
     if (ImmutableSet.of("switzerlandnorth", "switzerlandwest", "germanywestcentral").contains(region)) {
       region = "uksouth";
     }
 
-    VMComputePricingInfo vmComputePricingInfo = getVMPricingInfoFromCacheIfPresent(instanceType, region, cloudProvider);
+    ProductDetails vmComputePricingInfo = getVMPricingInfoFromCacheIfPresent(instanceType, region, cloudProvider);
 
     if (vmComputePricingInfo == null
         && (ImmutableSet.of("n2-standard-16", "n2-standard-2").contains(instanceType)
@@ -61,7 +61,7 @@ public class VMPricingServiceImpl implements VMPricingService {
     return EcsFargatePricingInfo.builder().region(region).cpuPrice(0.04656).memoryPrice(0.00511).build();
   }
 
-  private VMComputePricingInfo getVMPricingInfoFromCacheIfPresent(
+  private ProductDetails getVMPricingInfoFromCacheIfPresent(
       String instanceType, String region, CloudProvider cloudProvider) {
     String vmCacheKey = getVMCacheKey(instanceType, region, cloudProvider);
     return vmPricingInfoCache.getIfPresent(vmCacheKey);
@@ -69,11 +69,11 @@ public class VMPricingServiceImpl implements VMPricingService {
 
   private void refreshCache(String region, String serviceName, CloudProvider cloudProvider) {
     try {
-      Call<PricingResponse> pricingInfoCall =
+      Call<ProductDetailsResponse> pricingInfoCall =
           banzaiPricingClient.getPricingInfo(cloudProvider.getCloudProviderName(), serviceName, region);
-      Response<PricingResponse> pricingInfo = pricingInfoCall.execute();
+      Response<ProductDetailsResponse> pricingInfo = pricingInfoCall.execute();
       if (null != pricingInfo.body() && null != pricingInfo.body().getProducts()) {
-        List<VMComputePricingInfo> products = pricingInfo.body().getProducts();
+        List<ProductDetails> products = pricingInfo.body().getProducts();
         products.forEach(
             product -> vmPricingInfoCache.put(getVMCacheKey(product.getType(), region, cloudProvider), product));
         log.info("Cache size {}", vmPricingInfoCache.asMap().size());

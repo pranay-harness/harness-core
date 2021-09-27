@@ -189,6 +189,7 @@ public class K8sStepHelperTest extends CategoryTest {
   @Mock private StoreConfig storeConfig;
   @Mock private SecretManagerClientService secretManagerClientService;
   @Mock private FeatureFlagService featureFlagService;
+  @Spy @InjectMocks private K8sEntityHelper k8sEntityHelper;
   @Spy @InjectMocks private K8sStepHelper k8sStepHelper;
 
   @Mock private LogCallback mockLogCallback;

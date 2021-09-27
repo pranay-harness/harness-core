@@ -11,7 +11,6 @@ import io.harness.exception.UnexpectedException;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
-import com.hazelcast.util.Preconditions;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
@@ -60,25 +59,35 @@ public class CEYamlServiceImpl implements CEYamlService {
       @NonNull K8sClusterSetupRequest request) throws IOException {
     String yamlFileContent = "";
 
+    K8sServiceAccountInfoResponse serviceAccount;
+    try {
+      serviceAccount = k8sTaskClient.fetchServiceAccount(
+          request.getConnectorIdentifier(), accountId, request.getOrgIdentifier(), request.getProjectIdentifier());
+
+      log.info(
+          "serviceAccount associated with accountId:{}, connectorIdentifier:{}, orgIdentifier:{}, projectIdentifier:{} is {}",
+          accountId, request.getConnectorIdentifier(), request.getOrgIdentifier(), request.getProjectIdentifier(),
+          serviceAccount);
+    } catch (Exception ex) {
+      log.error("Failed delegate task K8S_SERVICE_ACCOUNT_INFO", ex);
+      throw ex;
+    }
+
     if (request.getFeaturesEnabled().contains(CEFeatures.VISIBILITY)) {
-      yamlFileContent = getK8sVisibilityYaml(
-          accountId, request.getConnectorIdentifier(), request.getOrgIdentifier(), request.getProjectIdentifier());
+      yamlFileContent = getK8sVisibilityYaml(serviceAccount);
     }
 
     if (request.getFeaturesEnabled().contains(CEFeatures.OPTIMIZATION)) {
-      if (!yamlFileContent.isEmpty()) {
-        yamlFileContent += "\n---\n";
-      }
-
-      yamlFileContent +=
-          getK8sOptimisationYaml(accountId, request.getCcmConnectorIdentifier(), harnessHost, serverName);
+      yamlFileContent += getK8sOptimisationYaml(
+          accountId, request.getCcmConnectorIdentifier(), harnessHost, serverName, serviceAccount);
     }
 
     return yamlFileContent;
   }
 
   private String getK8sOptimisationYaml(@NonNull String accountId, @NonNull String connectorIdentifier,
-      @NonNull String harnessHost, @NonNull String serverName) throws IOException {
+      @NonNull String harnessHost, @NonNull String serverName, K8sServiceAccountInfoResponse serviceAccount)
+      throws IOException {
     final String costOptimisationFileName = "cost-optimisation-crd";
 
     ImmutableMap<String, String> scriptParams = ImmutableMap.<String, String>builder()
@@ -86,38 +95,19 @@ public class CEYamlServiceImpl implements CEYamlService {
                                                     .put("connectorIdentifier", connectorIdentifier)
                                                     .put("envoyHarnessHostname", serverName)
                                                     .put("harnessHostname", harnessHost)
+                                                    .put("serviceAccountName", serviceAccount.getName())
+                                                    .put("serviceAccountNamespace", serviceAccount.getNamespace())
                                                     .build();
 
     return getProcessedYaml(costOptimisationFileName, scriptParams);
   }
 
-  private String getK8sVisibilityYaml(@NonNull String accountId, @NonNull String connectorIdentifier,
-      String orgIdentifier, String projectIdentifier) throws IOException {
+  private String getK8sVisibilityYaml(K8sServiceAccountInfoResponse serviceAccount) throws IOException {
     final String visibilityYamlFileName = "k8s-visibility-clusterrole";
-    K8sServiceAccountInfoResponse serviceAccount;
-    try {
-      serviceAccount =
-          k8sTaskClient.fetchServiceAccount(connectorIdentifier, accountId, orgIdentifier, projectIdentifier);
-    } catch (Exception ex) {
-      log.error("Failed delegate task K8S_SERVICE_ACCOUNT_INFO", ex);
-      throw ex;
-    }
-
-    log.info(
-        "serviceAccount associated with accountId:{}, connectorIdentifier:{}, orgIdentifier:{}, projectIdentifier:{} is {}",
-        accountId, connectorIdentifier, orgIdentifier, projectIdentifier, serviceAccount);
-
-    // "username": "system:serviceaccount:harness-delegate:default"
-    final String[] username = serviceAccount.getUsername().split(":");
-
-    Preconditions.checkState(username.length == 4,
-        String.format("serviceAccount username [%s] is not of size 4", serviceAccount.getUsername()));
-    final String namespace = username[2];
-    final String name = username[3];
 
     ImmutableMap<String, String> scriptParams = ImmutableMap.<String, String>builder()
-                                                    .put("serviceAccountName", name)
-                                                    .put("serviceAccountNamespace", namespace)
+                                                    .put("serviceAccountName", serviceAccount.getName())
+                                                    .put("serviceAccountNamespace", serviceAccount.getNamespace())
                                                     .build();
 
     return getProcessedYaml(visibilityYamlFileName, scriptParams);

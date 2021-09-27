@@ -33,11 +33,12 @@ import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import retrofit2.http.Body;
 
-@Api(CHANGE_EVENT_PATH)
+@Api("change-event")
 @Path("")
 @Produces("application/json")
 @ExposeInternalException
@@ -98,6 +99,17 @@ public class ChangeEventResource {
       @ApiParam(required = true) @NotNull @QueryParam("endTime") long endTime) {
     return new RestResponse<>(changeEventService.getChangeSummary(projectParams, serviceIdentifiers, envIdentifiers,
         Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime)));
+  }
+
+  @GET
+  @Timed
+  @NextGenManagerAuth
+  @Path(CHANGE_EVENT_PATH + "/{activityId}")
+  @ExceptionMetered
+  @ApiOperation(value = "get ChangeEvent detail", nickname = "getChangeEventDetail")
+  public RestResponse<ChangeEventDTO> getChangeEventDetail(
+      @BeanParam ProjectParams projectParams, @PathParam("activityId") String activityId) {
+    return new RestResponse<>(changeEventService.get(activityId));
   }
 
   @GET

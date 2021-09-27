@@ -286,7 +286,7 @@ ngManagerServiceHttpClientConfig:
   baseUrl: http://localhost:7457/
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
-  enableHttpLogging: true
+  enableHttpLogging: ${ENABLE_HTTP_LOGGING:-false}
 
 eventsFramework:
   redis:

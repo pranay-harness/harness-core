@@ -1,12 +1,12 @@
 package io.harness.batch.processing.service.impl;
 
-import io.harness.batch.processing.pricing.banzai.VMComputePricingInfo;
 import io.harness.batch.processing.pricing.service.support.GCPCustomInstanceDetailProvider;
 import io.harness.batch.processing.pricing.vmpricing.VMPricingService;
 import io.harness.batch.processing.service.intfc.InstanceResourceService;
 import io.harness.batch.processing.tasklet.util.K8sResourceUtils;
 import io.harness.ccm.commons.beans.Resource;
 import io.harness.ccm.commons.constants.CloudProvider;
+import io.harness.pricing.dto.cloudinfo.ProductDetails;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +25,7 @@ public class InstanceResourceServiceImpl implements InstanceResourceService {
       cpu = gcpInstanceResource.getCpuUnits() / 1024.0;
       memory = gcpInstanceResource.getMemoryMb() / 1024.0;
     } else {
-      VMComputePricingInfo computeVMPricingInfo =
+      ProductDetails computeVMPricingInfo =
           vmPricingService.getComputeVMPricingInfo(instanceType, region, cloudProvider);
       if (null == computeVMPricingInfo) {
         log.info("Instance detail for null resource {} {} {}", instanceType, region, cloudProvider);

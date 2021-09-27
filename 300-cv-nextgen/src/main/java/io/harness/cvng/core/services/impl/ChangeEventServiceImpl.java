@@ -88,6 +88,11 @@ public class ChangeEventServiceImpl implements ChangeEventService {
   }
 
   @Override
+  public ChangeEventDTO get(String activityId) {
+    return transformer.getDto(activityService.get(activityId));
+  }
+
+  @Override
   public ChangeSummaryDTO getChangeSummary(ServiceEnvironmentParams serviceEnvironmentParams,
       List<String> changeSourceIdentifiers, Instant startTime, Instant endTime) {
     return ChangeSummaryDTO.builder()

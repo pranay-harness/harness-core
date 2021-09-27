@@ -112,18 +112,20 @@ BAZEL_MODULES="\
   //920-delegate-service-beans:module \
   //920-ng-signup:module \
   //925-access-control-service:module \
+  //925-enforcement-service:module \
   //930-delegate-tasks:module \
   //930-ng-core-clients:module \
   //935-analyser-service:module \
   //937-persistence-tracer:module \
+  //940-enforcement-sdk:module \
   //940-feature-flag:module \
   //940-ng-audit-service:module \
   //940-notification-client:module \
   //940-notification-client:module \
   //940-notification-client:module_deploy.jar \
-  //940-plan-feature-sdk:module \
   //940-resource-group-beans:module \
   //940-secret-manager-client:module \
+  //943-enforcement-beans:module \
   //945-account-mgmt:module \
   //945-license-usage-sdk:module \
   //945-ng-audit-client:module \
@@ -464,4 +466,5 @@ bazel ${bazelrc} run ${BAZEL_ARGUMENTS} //001-microservice-intfc-tool:module | g
 
 if [ "${PLATFORM}" == "jenkins" ]; then
  build_protocol_info 800-pipeline-service pipeline-service
+ build_protocol_info 310-ci-manager ci-manager
 fi

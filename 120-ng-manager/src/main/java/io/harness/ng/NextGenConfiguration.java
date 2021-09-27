@@ -10,6 +10,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cache.CacheConfig;
 import io.harness.cf.CfClientConfig;
+import io.harness.enforcement.client.EnforcementClientConfiguration;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.ff.FeatureFlagConfig;
 import io.harness.file.FileServiceConfiguration;
@@ -63,6 +64,8 @@ public class NextGenConfiguration extends Configuration {
   public static final String ACCOUNT_PACKAGE = "io.harness.account.resource";
   public static final String LICENSE_PACKAGE = "io.harness.licensing.api.resource";
   public static final String POLLING_PACKAGE = "io.harness.polling.resource";
+  public static final String ENFORCEMENT_PACKAGE = "io.harness.enforcement.resource";
+  public static final String ENFORCEMENT_CLIENT_PACKAGE = "io.harness.enforcement.client.resources";
 
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
   @Setter @JsonProperty("mongo") private MongoConfig mongoConfig;
@@ -115,6 +118,7 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty(value = "scopeAccessCheckEnabled", defaultValue = "false") private boolean isScopeAccessCheckEnabled;
   @JsonProperty("hostname") String hostname;
   @JsonProperty("basePathPrefix") String basePathPrefix;
+  @JsonProperty("enforcementClientConfiguration") EnforcementClientConfiguration enforcementClientConfiguration;
 
   // [secondary-db]: Uncomment this and the corresponding config in yaml file if you want to connect to another database
   //  @JsonProperty("secondary-mongo") MongoConfig secondaryMongoConfig;
@@ -136,7 +140,8 @@ public class NextGenConfiguration extends Configuration {
   public static Collection<Class<?>> getResourceClasses() {
     Reflections reflections = new Reflections(BASE_PACKAGE, CONNECTOR_PACKAGE, GITOPS_PROVIDER_RESOURCE_PACKAGE,
         GIT_SYNC_PACKAGE, CDNG_RESOURCES_PACKAGE, OVERLAY_INPUT_SET_RESOURCE_PACKAGE, YAML_PACKAGE, FILTER_PACKAGE,
-        SIGNUP_PACKAGE, MOCKSERVER_PACKAGE, ACCOUNT_PACKAGE, LICENSE_PACKAGE, POLLING_PACKAGE);
+        SIGNUP_PACKAGE, MOCKSERVER_PACKAGE, ACCOUNT_PACKAGE, LICENSE_PACKAGE, POLLING_PACKAGE, ENFORCEMENT_PACKAGE,
+        ENFORCEMENT_CLIENT_PACKAGE);
     return reflections.getTypesAnnotatedWith(Path.class);
   }
 

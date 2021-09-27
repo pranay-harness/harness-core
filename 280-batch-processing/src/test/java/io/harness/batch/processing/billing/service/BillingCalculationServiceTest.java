@@ -13,8 +13,6 @@ import io.harness.batch.processing.ccm.ClusterType;
 import io.harness.batch.processing.pricing.InstancePricingStrategyFactory;
 import io.harness.batch.processing.pricing.PricingData;
 import io.harness.batch.processing.pricing.PricingSource;
-import io.harness.batch.processing.pricing.banzai.VMComputePricingInfo;
-import io.harness.batch.processing.pricing.banzai.ZonePrice;
 import io.harness.batch.processing.pricing.fargatepricing.EcsFargateInstancePricingStrategy;
 import io.harness.batch.processing.pricing.pricingprofile.PricingProfileService;
 import io.harness.batch.processing.pricing.service.intfc.AwsCustomBillingService;
@@ -35,6 +33,8 @@ import io.harness.ccm.commons.beans.billing.InstanceCategory;
 import io.harness.ccm.commons.constants.CloudProvider;
 import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
 import io.harness.ccm.commons.entities.batch.InstanceData;
+import io.harness.pricing.dto.cloudinfo.ProductDetails;
+import io.harness.pricing.dto.cloudinfo.ZonePrice;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
@@ -85,8 +85,8 @@ public class BillingCalculationServiceTest extends CategoryTest {
   private final String DEFAULT_INSTANCE_FAMILY = "c4.8xlarge";
   private final String GCP_INSTANCE_FAMILY = "n1-standard-4";
   private final String GCP_CUSTOM_INSTANCE_FAMILY = "custom-8-20480";
-  private final double DEFAULT_INSTANCE_CPU = 36;
-  private final double DEFAULT_INSTANCE_MEMORY = 60;
+  private final Double DEFAULT_INSTANCE_CPU = 36D;
+  private final Double DEFAULT_INSTANCE_MEMORY = 60D;
   private final double DEFAULT_INSTANCE_PRICE = 1.60;
   private final double CPU_UTILIZATION = 0.5;
   private final double CPU_UTILIZATION_HIGH = 1.5;
@@ -841,8 +841,8 @@ public class BillingCalculationServiceTest extends CategoryTest {
     return Resource.builder().cpuUnits(DEFAULT_INSTANCE_CPU).memoryMb(DEFAULT_INSTANCE_MEMORY).build();
   }
 
-  private VMComputePricingInfo createVMComputePricingInfo() {
-    return VMComputePricingInfo.builder()
+  private ProductDetails createVMComputePricingInfo() {
+    return ProductDetails.builder()
         .cpusPerVm(DEFAULT_INSTANCE_CPU)
         .memPerVm(DEFAULT_INSTANCE_MEMORY)
         .onDemandPrice(DEFAULT_INSTANCE_PRICE)
@@ -853,8 +853,8 @@ public class BillingCalculationServiceTest extends CategoryTest {
 
   private List<ZonePrice> createZonePrice() {
     List<ZonePrice> zonePrices = new ArrayList<>();
-    zonePrices.add(new ZonePrice(GCP_ZONE_1, 0.4));
-    zonePrices.add(new ZonePrice(GCP_ZONE_2, 0.5));
+    zonePrices.add(ZonePrice.builder().price(0.4).zone(GCP_ZONE_1).build());
+    zonePrices.add(ZonePrice.builder().price(0.5).zone(GCP_ZONE_2).build());
     return zonePrices;
   }
 
