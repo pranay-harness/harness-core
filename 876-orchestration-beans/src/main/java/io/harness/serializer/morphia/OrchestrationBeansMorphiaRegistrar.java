@@ -9,6 +9,7 @@ import io.harness.data.OutcomeInstance;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecutionMetadata;
+import io.harness.execution.PmsNodeExecution;
 import io.harness.interrupts.Interrupt;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
@@ -32,6 +33,7 @@ public class OrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
     set.add(PlanExecutionMetadata.class);
     set.add(StepDetailInstance.class);
     set.add(Node.class);
+    set.add(PmsNodeExecution.class);
   }
 
   @Override
