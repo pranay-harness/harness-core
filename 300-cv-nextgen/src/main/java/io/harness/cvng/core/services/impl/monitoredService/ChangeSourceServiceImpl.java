@@ -16,7 +16,7 @@ import io.harness.cvng.core.services.api.ChangeEventService;
 import io.harness.cvng.core.services.api.monitoredService.ChangeSourceService;
 import io.harness.cvng.core.services.impl.ChangeSourceUpdateHandler;
 import io.harness.cvng.core.transformer.changeSource.ChangeSourceEntityAndDTOTransformer;
-import io.harness.exception.DuplicateFieldException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;
@@ -30,7 +30,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.NonNull;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
@@ -201,7 +200,8 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
             .map(entrySet -> entrySet.getKey())
             .findAny();
     if (noUniqueIdentifier.isPresent()) {
-      throw new DuplicateFieldException(Pair.of(ChangeSourceKeys.identifier, noUniqueIdentifier.get()));
+      throw new InvalidRequestException(
+          String.format("Multiple Change Sources exists with the same identifier %s", noUniqueIdentifier.get()));
     }
   }
 
@@ -220,8 +220,8 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
         changeSourceDTOs.stream().map(changeSourceDTO -> changeSourceDTO.getIdentifier()).collect(Collectors.toList()));
 
     if (CollectionUtils.isNotEmpty(changeSourceDTOS)) {
-      throw new DuplicateFieldException(
-          Pair.of(ChangeSourceKeys.identifier, changeSourceDTOS.iterator().next().getIdentifier()));
+      throw new InvalidRequestException(String.format("Multiple Change Sources exists with the same identifier %s",
+          changeSourceDTOS.iterator().next().getIdentifier()));
     }
   }
 
