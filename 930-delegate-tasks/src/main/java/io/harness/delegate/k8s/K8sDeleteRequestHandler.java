@@ -125,10 +125,7 @@ public class K8sDeleteRequestHandler extends K8sRequestHandler {
     }
 
     try {
-      success = k8sTaskHelperBase.deleteManifests(client, resources, k8sDelegateTaskParams, executionLogCallback);
-      if (!success) {
-        return getGenericFailureResponse(null);
-      }
+      k8sTaskHelperBase.deleteManifests(client, resources, k8sDelegateTaskParams, executionLogCallback);
     } catch (Exception ex) {
       log.error("Exception:", ex);
       executionLogCallback.saveExecutionLog(ExceptionUtils.getMessage(ex), ERROR);
@@ -203,12 +200,7 @@ public class K8sDeleteRequestHandler extends K8sRequestHandler {
       return k8sDeleteBaseHandler.getSuccessResponse();
     }
 
-    success =
-        k8sTaskHelperBase.executeDelete(client, k8sDelegateTaskParams, resourceIdsToDelete, executionLogCallback, true);
-    if (!success) {
-      return getGenericFailureResponse(null);
-    }
-
+    k8sTaskHelperBase.delete(client, k8sDelegateTaskParams, resourceIdsToDelete, executionLogCallback, true);
     return k8sDeleteBaseHandler.getSuccessResponse();
   }
 

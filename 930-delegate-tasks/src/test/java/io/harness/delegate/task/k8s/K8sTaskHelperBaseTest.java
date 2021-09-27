@@ -1453,7 +1453,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
         .when(spyK8sTaskHelperBase)
         .runK8sExecutable(eq(params), eq(executionLogCallback), any(AbstractExecutable.class));
 
-    spyK8sTaskHelperBase.executeDelete(kubectl, params, kubernetesResourceIds, executionLogCallback, true);
+    spyK8sTaskHelperBase.delete(kubectl, params, kubernetesResourceIds, executionLogCallback, true);
     ArgumentCaptor<AbstractExecutable> captor = ArgumentCaptor.forClass(AbstractExecutable.class);
     verify(spyK8sTaskHelperBase, times(2)).runK8sExecutable(eq(params), eq(executionLogCallback), captor.capture());
     assertThat(captor.getAllValues().get(0)).isInstanceOf(DeleteCommand.class);
