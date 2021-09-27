@@ -92,8 +92,7 @@ public class FacilitatorEventHandlerTest extends PmsSdkCoreTestBase {
   public void testHandleEventWithContextWithNullResponse() {
     facilitatorEventHandler.handleEventWithContext(facilitatorEvent);
     Mockito.verify(sdkNodeExecutionService)
-        .handleFacilitationResponse(ambiance.getPlanExecutionId(), AmbianceUtils.obtainCurrentRuntimeId(ambiance),
-            NOTIFY_ID, FacilitatorResponseProto.newBuilder().build());
+        .handleFacilitationResponse(ambiance, NOTIFY_ID, FacilitatorResponseProto.newBuilder().build());
   }
 
   private class Type1Facilitator implements Facilitator {

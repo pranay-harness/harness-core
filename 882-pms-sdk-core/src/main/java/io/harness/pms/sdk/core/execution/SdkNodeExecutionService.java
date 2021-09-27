@@ -22,36 +22,35 @@ import lombok.NonNull;
 
 @OwnedBy(CDC)
 public interface SdkNodeExecutionService {
-  void suspendChainExecution(
-      String planExecutionId, String currentNodeExecutionId, SuspendChainRequest suspendChainRequest);
+  void suspendChainExecution(Ambiance ambiance, SuspendChainRequest suspendChainRequest);
 
-  void addExecutableResponse(
-      @NonNull String planExecutionId, @NonNull String nodeExecutionId, ExecutableResponse executableResponse);
+  void addExecutableResponse(Ambiance ambiance, ExecutableResponse executableResponse);
 
-  default void handleStepResponse(
-      String planExecutionId, @NonNull String nodeExecutionId, @NonNull StepResponseProto stepResponse) {
-    handleStepResponse(planExecutionId, nodeExecutionId, stepResponse, null);
+  default void handleStepResponse(Ambiance ambiance, @NonNull StepResponseProto stepResponse) {
+    handleStepResponse(ambiance, stepResponse, null);
   }
 
-  void handleStepResponse(String planExecutionId, @NonNull String nodeExecutionId,
-      @NonNull StepResponseProto stepResponse, ExecutableResponse executableResponse);
+  void handleStepResponse(
+      Ambiance ambiance, @NonNull StepResponseProto stepResponse, ExecutableResponse executableResponse);
 
+  void resumeNodeExecution(Ambiance ambiance, Map<String, ResponseData> response, boolean asyncError);
+
+  @Deprecated
   void resumeNodeExecution(
       String planExecutionId, String nodeExecutionId, Map<String, ResponseData> response, boolean asyncError);
 
-  void handleFacilitationResponse(String planExecutionId, @NonNull String nodeExecutionId, @NonNull String notifyId,
-      FacilitatorResponseProto facilitatorResponseProto);
+  void handleFacilitationResponse(
+      Ambiance ambiance, @NonNull String notifyId, FacilitatorResponseProto facilitatorResponseProto);
 
-  void handleAdviserResponse(String planExecutionId, @NonNull String nodeExecutionId, @NonNull String notifyId,
-      AdviserResponse adviserResponse);
+  void handleAdviserResponse(Ambiance ambiance, @NonNull String notifyId, AdviserResponse adviserResponse);
 
   void handleEventError(NodeExecutionEventType eventType, String eventNotifyId, FailureInfo failureInfo);
 
-  void spawnChild(String planExecutionId, String nodeExecutionId, SpawnChildRequest spawnChildRequest);
+  void spawnChild(Ambiance ambiance, SpawnChildRequest spawnChildRequest);
 
-  void queueTaskRequest(String planExecutionId, String nodeExecutionId, QueueTaskRequest queueTaskRequest);
+  void queueTaskRequest(Ambiance ambiance, QueueTaskRequest queueTaskRequest);
 
-  void spawnChildren(String planExecutionId, String nodeExecutionId, SpawnChildrenRequest spawnChildrenRequest);
+  void spawnChildren(Ambiance ambiance, SpawnChildrenRequest spawnChildrenRequest);
 
   void handleProgressResponse(Ambiance ambiance, ProgressData progressData);
 }

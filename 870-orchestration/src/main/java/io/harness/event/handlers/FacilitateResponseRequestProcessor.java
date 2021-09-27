@@ -8,6 +8,7 @@ import io.harness.pms.contracts.execution.events.FacilitatorResponseRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
+import io.harness.pms.execution.utils.SdkResponseEventUtils;
 import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.inject.Inject;
@@ -27,10 +28,11 @@ public class FacilitateResponseRequestProcessor implements SdkResponseProcessor 
     FacilitatorResponseRequest request = event.getFacilitatorResponseRequest();
     FacilitatorResponseProto facilitatorResponseProto = request.getFacilitatorResponse();
     if (facilitatorResponseProto.getIsSuccessful()) {
-      orchestrationEngine.facilitateExecution(event.getNodeExecutionId(), facilitatorResponseProto);
+      orchestrationEngine.facilitateExecution(
+          SdkResponseEventUtils.getNodeExecutionId(event), facilitatorResponseProto);
     } else {
       StepResponseProto stepResponseProto = StepResponseProto.newBuilder().setStatus(Status.FAILED).build();
-      orchestrationEngine.handleStepResponse(event.getNodeExecutionId(), stepResponseProto);
+      orchestrationEngine.handleStepResponse(SdkResponseEventUtils.getNodeExecutionId(event), stepResponseProto);
     }
   }
 }

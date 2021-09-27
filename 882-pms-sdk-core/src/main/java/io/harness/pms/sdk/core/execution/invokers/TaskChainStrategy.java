@@ -65,8 +65,7 @@ public class TaskChainStrategy extends ProgressableStrategy {
         log.error("Exception occurred while calling finalizeExecution, nodeExecutionId: {}", nodeExecutionId, e);
         stepResponse = strategyHelper.handleException(e);
       }
-      sdkNodeExecutionService.handleStepResponse(
-          ambiance.getPlanExecutionId(), nodeExecutionId, StepResponseMapper.toStepResponseProto(stepResponse), null);
+      sdkNodeExecutionService.handleStepResponse(ambiance, StepResponseMapper.toStepResponseProto(stepResponse), null);
     } else {
       try {
         TaskChainResponse chainResponse =
@@ -75,8 +74,8 @@ public class TaskChainStrategy extends ProgressableStrategy {
         handleResponse(ambiance, stepParameters, chainResponse);
       } catch (Exception e) {
         log.error("Exception occurred while calling executeNextLink, nodeExecutionId: {}", nodeExecutionId, e);
-        sdkNodeExecutionService.handleStepResponse(ambiance.getPlanExecutionId(), nodeExecutionId,
-            StepResponseMapper.toStepResponseProto(strategyHelper.handleException(e)));
+        sdkNodeExecutionService.handleStepResponse(
+            ambiance, StepResponseMapper.toStepResponseProto(strategyHelper.handleException(e)));
       }
     }
   }
@@ -94,8 +93,7 @@ public class TaskChainStrategy extends ProgressableStrategy {
         log.error("Exception occurred while calling finalizeExecution, nodeExecutionId: {}", nodeExecutionId, e);
         stepResponse = strategyHelper.handleException(e);
       }
-      sdkNodeExecutionService.handleStepResponse(ambiance.getPlanExecutionId(), nodeExecutionId,
-          StepResponseMapper.toStepResponseProto(stepResponse),
+      sdkNodeExecutionService.handleStepResponse(ambiance, StepResponseMapper.toStepResponseProto(stepResponse),
           ExecutableResponse.newBuilder()
               .setTaskChain(TaskChainExecutableResponse.newBuilder()
                                 .setChainEnd(true)
@@ -128,7 +126,7 @@ public class TaskChainStrategy extends ProgressableStrategy {
                                             .setExecutableResponse(executableResponse)
                                             .setStatus(Status.TASK_WAITING)
                                             .build();
-    sdkNodeExecutionService.queueTaskRequest(ambiance.getPlanExecutionId(), nodeExecutionId, queueTaskRequest);
+    sdkNodeExecutionService.queueTaskRequest(ambiance, queueTaskRequest);
   }
 
   @Override

@@ -12,6 +12,7 @@ import io.harness.eventsframework.producer.Message;
 import io.harness.pms.contracts.execution.events.EventErrorRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
 import io.harness.pms.contracts.execution.events.SdkResponseEventType;
+import io.harness.pms.execution.utils.SdkResponseEventUtils;
 import io.harness.rule.Owner;
 
 import java.util.HashMap;
@@ -49,8 +50,8 @@ public class RedisSdkResponseEventPublisherTest {
     Map<String, String> metadataMap = new HashMap<>();
     metadataMap.put(PIPELINE_MONITORING_ENABLED, "false");
     metadataMap.put("eventType", SdkResponseEventType.ADD_EXECUTABLE_RESPONSE.name());
-    metadataMap.put("nodeExecutionId", event.getNodeExecutionId());
-    metadataMap.put("planExecutionId", event.getPlanExecutionId());
+    metadataMap.put("nodeExecutionId", SdkResponseEventUtils.getNodeExecutionId(event));
+    metadataMap.put("planExecutionId", SdkResponseEventUtils.getPlanExecutionId(event));
     sdkResponseEventPublisher.publishEvent(event);
     verify(producer).send(Message.newBuilder().putAllMetadata(metadataMap).setData(event.toByteString()).build());
   }
