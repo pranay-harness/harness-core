@@ -6,6 +6,7 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.perpetualtask.PerpetualTaskScheduleConfig;
 import io.harness.grpc.auth.DelegateAuthServerInterceptor;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.logging.AccountLogContext;
@@ -47,13 +48,16 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
   private PerpetualTaskRecordDao perpetualTaskRecordDao;
   private PerpetualTaskServiceClientRegistry clientRegistry;
   private final BroadcasterFactory broadcasterFactory;
+  private final PerpetualTaskScheduleService perpetualTaskScheduleService;
 
   @Inject
   public PerpetualTaskServiceImpl(PerpetualTaskRecordDao perpetualTaskRecordDao,
-      PerpetualTaskServiceClientRegistry clientRegistry, BroadcasterFactory broadcasterFactory) {
+      PerpetualTaskServiceClientRegistry clientRegistry, BroadcasterFactory broadcasterFactory,
+      PerpetualTaskScheduleService perpetualTaskScheduleService) {
     this.perpetualTaskRecordDao = perpetualTaskRecordDao;
     this.clientRegistry = clientRegistry;
     this.broadcasterFactory = broadcasterFactory;
+    this.perpetualTaskScheduleService = perpetualTaskScheduleService;
   }
 
   @Getter private Subject<PerpetualTaskCrudObserver> perpetualTaskCrudSubject = new Subject<>();
@@ -97,12 +101,21 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
         }
       }
 
+      long intervalSeconds = schedule.getInterval().getSeconds();
+      PerpetualTaskScheduleConfig perpetualTaskScheduleConfig =
+          perpetualTaskScheduleService.getByAccountIdAndPerpetualTaskType(accountId, perpetualTaskType);
+      if (perpetualTaskScheduleConfig != null) {
+        intervalSeconds = perpetualTaskScheduleConfig.getTimeIntervalInMillis() / 1000;
+        log.info("Creating new perpetual task with custom time interval : {} for task type : {}",
+            perpetualTaskScheduleConfig.getTimeIntervalInMillis(), perpetualTaskScheduleConfig.getPerpetualTaskType());
+      }
+
       PerpetualTaskRecord record = PerpetualTaskRecord.builder()
                                        .accountId(accountId)
                                        .perpetualTaskType(perpetualTaskType)
                                        .clientContext(clientContext)
                                        .timeoutMillis(Durations.toMillis(schedule.getTimeout()))
-                                       .intervalSeconds(schedule.getInterval().getSeconds())
+                                       .intervalSeconds(intervalSeconds)
                                        .delegateId("")
                                        .state(PerpetualTaskState.TASK_UNASSIGNED)
                                        .taskDescription(taskDescription)
