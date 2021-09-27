@@ -1,5 +1,7 @@
 package io.harness.async;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.OldNotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
@@ -11,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.experimental.SuperBuilder;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @SuperBuilder
 public abstract class AsyncResponseCallback<T extends Message> implements OldNotifyCallback {
   private static final int MAX_DEPTH = 10;
@@ -49,13 +52,14 @@ public abstract class AsyncResponseCallback<T extends Message> implements OldNot
       handleMaxDepthExceeded();
       return;
     }
-    T response = handleResponseData(responseDataMap);
-    finalResponse = mergeResponses(response, finalResponse);
 
+    T response = handleResponseData(responseDataMap);
+    finalResponse = mergeResponses(finalResponse, response);
     if (hasErrorResponse(finalResponse)) {
       handleError(finalResponse);
       return;
     }
+
     if (hasUnresolvedDependency()) {
       List<String> waitIds = handleUnresolvedDependencies();
       if (!waitIds.isEmpty()) {

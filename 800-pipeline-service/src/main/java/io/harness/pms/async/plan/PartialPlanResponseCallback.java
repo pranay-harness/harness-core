@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import lombok.Value;
 import lombok.experimental.SuperBuilder;
@@ -64,43 +65,27 @@ public class PartialPlanResponseCallback extends AsyncResponseCallback<PartialPl
   public PartialPlanResponse handleResponseData(Map<String, ResponseData> responseDataMap) {
     PartialPlanResponse.Builder finalResponseBuilder = PartialPlanResponse.newBuilder();
 
-    for (Map.Entry<String, ResponseData> entry : responseDataMap.entrySet()) {
-      try {
-        PartialPlanCreatorResponseData responseData = (PartialPlanCreatorResponseData) entry.getValue();
-        PartialPlanResponse partialPlanResponse = responseData.getPartialPlanResponse();
-        if (partialPlanResponse.hasBlobResponse()) {
-          PlanCreationBlobResponse currIterationResponse = partialPlanResponse.getBlobResponse();
-          PlanCreationBlobResponseUtils.addNodes(
-              finalResponseBuilder.getBlobResponseBuilder(), currIterationResponse.getNodesMap());
-          PlanCreationBlobResponseUtils.mergeStartingNodeId(
-              finalResponseBuilder.getBlobResponseBuilder(), currIterationResponse.getStartingNodeId());
-          PlanCreationBlobResponseUtils.mergeLayoutNodeInfo(
-              finalResponseBuilder.getBlobResponseBuilder(), currIterationResponse);
-          if (EmptyPredicate.isNotEmpty(finalResponseBuilder.getBlobResponseBuilder().getDependenciesMap())) {
-            finalResponseBuilder.setErrorResponse(
-                ErrorResponse.newBuilder()
-                    .addMessages(PmsExceptionUtils.getUnresolvedDependencyErrorMessage(
-                        finalResponseBuilder.getBlobResponse().getDependenciesMap().values()))
-                    .build());
-          }
-          PlanCreationBlobResponseUtils.mergeContext(
-              finalResponseBuilder.getBlobResponseBuilder(), currIterationResponse.getContextMap());
-          PlanCreationBlobResponseUtils.addDependenciesV2(
-              finalResponseBuilder.getBlobResponseBuilder(), currIterationResponse);
-        } else {
-          finalResponseBuilder.setErrorResponse(
-              ErrorResponse.newBuilder()
-                  .addMessages(PmsExceptionUtils.getUnresolvedDependencyErrorMessage(
-                      finalResponseBuilder.getBlobResponse().getDependenciesMap().values()))
-                  .build());
-        }
-      } catch (Exception ex) {
-        finalResponseBuilder.setErrorResponse(
-            ErrorResponse.newBuilder()
-                .addMessages(PmsExceptionUtils.getUnresolvedDependencyErrorMessage(
-                    finalResponseBuilder.getBlobResponse().getDependenciesMap().values()))
-                .build());
+    List<ErrorResponse> errorResponses;
+    try {
+      List<PartialPlanCreatorResponseData> planCreationResponses =
+          responseDataMap.values()
+              .stream()
+              .map(responseData -> (PartialPlanCreatorResponseData) responseData)
+              .collect(Collectors.toList());
+      errorResponses = planCreationResponses.stream()
+                           .filter(resp -> resp.getPartialPlanResponse().hasErrorResponse())
+                           .map(response -> response.getPartialPlanResponse().getErrorResponse())
+                           .collect(Collectors.toList());
+      if (EmptyPredicate.isEmpty(errorResponses)) {
+        planCreationResponses.forEach(resp
+            -> PlanCreationBlobResponseUtils.merge(
+                finalResponseBuilder.getBlobResponseBuilder(), resp.getPartialPlanResponse().getBlobResponse()));
       }
+    } catch (Exception ex) {
+      finalResponseBuilder.setErrorResponse(ErrorResponse.newBuilder()
+                                                .addMessages(PmsExceptionUtils.getUnresolvedDependencyPathsErrorMessage(
+                                                    finalResponseBuilder.getBlobResponse().getDeps()))
+                                                .build());
     }
     return finalResponseBuilder.build();
   }
@@ -111,14 +96,14 @@ public class PartialPlanResponseCallback extends AsyncResponseCallback<PartialPl
     List<String> waitIds = new ArrayList<>();
     Map<String, PlanCreatorServiceInfo> services = pmsSdkHelper.getServices();
     for (Map.Entry<String, PlanCreatorServiceInfo> serviceEntry : services.entrySet()) {
-      if (!pmsSdkHelper.containsSupportedDependency(
-              serviceEntry.getValue(), planCreationBlobResponse.getDependenciesMap())) {
+      if (!pmsSdkHelper.containsSupportedDependencyByYamlPath(
+              serviceEntry.getValue(), planCreationBlobResponse.getDeps())) {
         continue;
       }
       String waitId = generateUuid();
       waitIds.add(waitId);
       pmsEventSender.sendEvent(CreatePartialPlanEvent.newBuilder()
-                                   .putAllDependencies(planCreationBlobResponse.getDependenciesMap())
+                                   .setDeps(planCreationBlobResponse.getDeps())
                                    .putAllContext(planCreationBlobResponse.getContextMap())
                                    .setNotifyId(waitId)
                                    .build()
@@ -130,7 +115,7 @@ public class PartialPlanResponseCallback extends AsyncResponseCallback<PartialPl
 
   @Override
   public boolean hasUnresolvedDependency() {
-    return !finalResponse.getBlobResponse().getDependenciesMap().isEmpty();
+    return !finalResponse.getBlobResponse().getDeps().getDependenciesMap().isEmpty();
   }
 
   @Override
@@ -201,8 +186,8 @@ public class PartialPlanResponseCallback extends AsyncResponseCallback<PartialPl
       if (entry.getValue() instanceof ErrorResponseData) {
         finalResponseBuilder.setErrorResponse(
             ErrorResponse.newBuilder()
-                .addMessages(PmsExceptionUtils.getUnresolvedDependencyErrorMessage(
-                    finalResponseBuilder.getBlobResponse().getDependenciesMap().values()))
+                .addMessages(PmsExceptionUtils.getUnresolvedDependencyPathsErrorMessage(
+                    finalResponseBuilder.getBlobResponse().getDeps()))
                 .build());
       }
     }

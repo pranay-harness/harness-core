@@ -4,9 +4,8 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
-import io.harness.exception.InvalidRequestException;
 import io.harness.exception.exceptionmanager.ExceptionManager;
-import io.harness.pms.contracts.plan.YamlFieldBlob;
+import io.harness.pms.contracts.plan.Dependencies;
 import io.harness.pms.gitsync.PmsGitSyncBranchContextGuard;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.sdk.execution.events.PmsCommonsBaseEventHandler;
@@ -15,7 +14,6 @@ import io.harness.pms.yaml.YamlField;
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
-import java.util.HashMap;
 import java.util.Map;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -29,26 +27,15 @@ public abstract class AsyncCreatorBaseEventHandler<T extends Message, C extends 
 
   @NonNull protected abstract Map<String, String> extraLogProperties(T event);
 
-  protected abstract Map<String, YamlFieldBlob> extractDependencies(T message);
+  protected abstract Dependencies extractDependencies(T message);
 
   protected abstract C extractContext(T message);
 
   @Override
   public void handleEvent(T event, Map<String, String> metadataMap, long createdAt) {
     try {
-      Map<String, YamlFieldBlob> dependencyBlobs = extractDependencies(event);
-      Map<String, YamlField> initialDependencies = new HashMap<>();
-      if (EmptyPredicate.isNotEmpty(dependencyBlobs)) {
-        try {
-          for (Map.Entry<String, YamlFieldBlob> entry : dependencyBlobs.entrySet()) {
-            initialDependencies.put(entry.getKey(), YamlField.fromFieldBlob(entry.getValue()));
-          }
-        } catch (Exception e) {
-          log.error("Invalid YAML found in dependency blobs", e);
-          throw new InvalidRequestException("Invalid YAML found in dependency blobs", e);
-        }
-      }
-      AsyncCreatorResponse finalResponse = handleDependenciesRecursive(initialDependencies, extractContext(event));
+      AsyncCreatorResponse finalResponse =
+          handleDependenciesRecursive(extractDependencies(event), extractContext(event));
       handleResult(event, finalResponse);
     } catch (Exception ex) {
       log.error(ExceptionUtils.getMessage(ex), ex);
@@ -58,10 +45,10 @@ public abstract class AsyncCreatorBaseEventHandler<T extends Message, C extends 
 
   protected abstract void handleResult(T event, AsyncCreatorResponse creatorResponse);
 
-  private AsyncCreatorResponse handleDependenciesRecursive(Map<String, YamlField> initialDependencies, C context) {
+  private AsyncCreatorResponse handleDependenciesRecursive(Dependencies initialDependencies, C context) {
     // TODO: Add patch version before sending the response back
-    AsyncCreatorResponse finalResponse = createNewAsyncCreatorResponse();
-    if (EmptyPredicate.isEmpty(initialDependencies)) {
+    AsyncCreatorResponse finalResponse = createNewAsyncCreatorResponse(context);
+    if (EmptyPredicate.isEmpty(initialDependencies.getDependenciesMap())) {
       return finalResponse;
     }
 
@@ -69,24 +56,37 @@ public abstract class AsyncCreatorBaseEventHandler<T extends Message, C extends 
 
     try (PmsGitSyncBranchContextGuard ignore =
              pmsGitSyncHelper.createGitSyncBranchContextGuardFromBytes(gitSyncBranchContext, true)) {
-      Map<String, YamlField> dependencies = new HashMap<>(initialDependencies);
-      while (!dependencies.isEmpty()) {
-        handleDependencies(context, finalResponse, dependencies);
-        initialDependencies.keySet().forEach(dependencies::remove);
+      Dependencies dependencies = initialDependencies.toBuilder().build();
+      while (!dependencies.getDependenciesMap().isEmpty()) {
+        dependencies = handleDependencies(context, finalResponse, dependencies);
+        removeInitialDependencies(dependencies, initialDependencies);
       }
     }
 
-    if (EmptyPredicate.isNotEmpty(finalResponse.getDependencies().getDependenciesMap())) {
-      initialDependencies.keySet().forEach(k -> finalResponse.getDependencies().getDependenciesMap().remove(k));
+    if (finalResponse.getDependencies() != null
+        && EmptyPredicate.isNotEmpty(finalResponse.getDependencies().getDependenciesMap())) {
+      finalResponse.setDependencies(removeInitialDependencies(finalResponse.getDependencies(), initialDependencies));
     }
     return finalResponse;
   }
 
-  protected abstract AsyncCreatorResponse createNewAsyncCreatorResponse();
+  protected abstract AsyncCreatorResponse createNewAsyncCreatorResponse(C context);
 
-  public abstract void handleDependencies(
-      C ctx, AsyncCreatorResponse finalResponse, Map<String, YamlField> dependencies);
+  public abstract Dependencies handleDependencies(C ctx, AsyncCreatorResponse finalResponse, Dependencies dependencies);
 
   protected abstract void handleException(T event, YamlField field, Exception ex);
   protected abstract void handleException(T event, Exception ex);
+
+  private Dependencies removeInitialDependencies(Dependencies dependencies, Dependencies initialDependencies) {
+    if (initialDependencies == null || EmptyPredicate.isEmpty(initialDependencies.getDependenciesMap())) {
+      return dependencies;
+    }
+    if (dependencies == null || EmptyPredicate.isEmpty(dependencies.getDependenciesMap())) {
+      return dependencies;
+    }
+
+    Dependencies.Builder builder = dependencies.toBuilder();
+    initialDependencies.getDependenciesMap().keySet().forEach(builder::removeDependencies);
+    return builder.build();
+  }
 }
