@@ -20,7 +20,7 @@ import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
-import io.harness.steps.common.NGSectionStep;
+import io.harness.steps.common.NGExecutionStep;
 import io.harness.steps.common.NGSectionStepParameters;
 
 import com.google.common.base.Preconditions;
@@ -70,7 +70,7 @@ public class ExecutionPmsPlanCreator extends ChildrenPlanCreator<ExecutionElemen
     return PlanNode.builder()
         .uuid(ctx.getCurrentField().getNode().getUuid())
         .identifier(OrchestrationConstants.EXECUTION_NODE_IDENTIFIER)
-        .stepType(NGSectionStep.STEP_TYPE)
+        .stepType(NGExecutionStep.STEP_TYPE)
         .group(StepOutcomeGroup.EXECUTION.name())
         .name(OrchestrationConstants.EXECUTION_NODE_NAME)
         .stepParameters(stepParameters)

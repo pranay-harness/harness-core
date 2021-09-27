@@ -12,6 +12,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildrenExecutableResponse;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
@@ -24,10 +25,13 @@ import java.util.Collections;
 import java.util.Map;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 @OwnedBy(PIPELINE)
 public class NGForkStepTest extends OrchestrationStepsTestBase {
-  @Inject private NGForkStep ngForkStep;
+  @Mock private ExecutionSweepingOutputService executionSweepingOutputService;
+  @Inject @InjectMocks private NGForkStep ngForkStep;
   private static final String CHILD_ID = generateUuid();
 
   @Test
@@ -55,7 +59,7 @@ public class NGForkStepTest extends OrchestrationStepsTestBase {
 
     Map<String, io.harness.tasks.ResponseData> responseDataMap =
         ImmutableMap.<String, ResponseData>builder()
-            .put(CHILD_ID, StepResponseNotifyData.builder().status(Status.FAILED).build())
+            .put(CHILD_ID, StepResponseNotifyData.builder().nodeUuid(CHILD_ID).status(Status.FAILED).build())
             .build();
     StepResponse stepResponse = ngForkStep.handleChildrenResponse(ambiance, stateParameters, responseDataMap);
     assertThat(stepResponse.getStatus()).isEqualTo(Status.FAILED);
