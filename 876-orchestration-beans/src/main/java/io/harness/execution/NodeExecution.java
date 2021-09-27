@@ -14,6 +14,7 @@ import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
+import io.harness.plan.NodeType;
 import io.harness.plan.PlanNode;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -65,7 +66,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("nodeExecutions")
 @TypeAlias("nodeExecution")
 @StoreIn(DbAliases.PMS)
-public class NodeExecution implements PersistentEntity, UuidAccess {
+public class NodeExecution implements PersistentEntity, UuidAccess, PmsNodeExecution {
   public static final long TTL_MONTHS = 6;
 
   // Immutable
@@ -129,6 +130,16 @@ public class NodeExecution implements PersistentEntity, UuidAccess {
       return null;
     }
     return executableResponses.get(executableResponses.size() - 1);
+  }
+
+  @Override
+  public String getNodeId() {
+    return getNode().getUuid();
+  }
+
+  @Override
+  public NodeType getNodeType() {
+    return getNode().getNodeType();
   }
 
   @UtilityClass
