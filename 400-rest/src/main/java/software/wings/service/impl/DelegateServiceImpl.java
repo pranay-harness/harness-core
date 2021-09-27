@@ -2029,6 +2029,9 @@ public class DelegateServiceImpl implements DelegateService {
                                     .get();
 
     if (existingDelegate != null) {
+      if (delegateConnectionDao.checkAnyDelegateIsConnected(accountId, Arrays.asList(delegateId))) {
+        throw new InvalidRequestException(format("Unable to delete delegate. Delegate %s is connected", delegateId));
+      }
       // before deleting delegate, check if any alert is open for delegate, if yes, close it.
       alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.DelegatesDown,
           DelegatesDownAlert.builder()
@@ -2057,6 +2060,10 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public void retainOnlySelectedDelegatesAndDeleteRest(String accountId, List<String> delegatesToRetain) {
     if (EmptyPredicate.isNotEmpty(delegatesToRetain)) {
+      if (delegateConnectionDao.checkAnyDelegateIsConnected(accountId, delegatesToRetain)) {
+        throw new InvalidRequestException(
+            format("Unable to delete delegate[s]. Anyone delegate %s is connected", delegatesToRetain));
+      }
       persistence.delete(persistence.createQuery(Delegate.class)
                              .filter(DelegateKeys.accountId, accountId)
                              .field(DelegateKeys.uuid)
