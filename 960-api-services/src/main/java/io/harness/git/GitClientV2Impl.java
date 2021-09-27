@@ -111,7 +111,6 @@ import org.eclipse.jgit.transport.SshTransport;
 import org.eclipse.jgit.transport.TagOpt;
 import org.eclipse.jgit.transport.TransportHttp;
 import org.eclipse.jgit.transport.http.HttpConnectionFactory;
-import org.eclipse.jgit.transport.http.JDKHttpConnectionFactory;
 import org.eclipse.jgit.transport.http.apache.HttpClientConnectionFactory;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 
@@ -1161,6 +1160,7 @@ public class GitClientV2Impl implements GitClientV2 {
 
   /**
    * Ensure repo locally cloned. This is called before performing any git operation with remote
+   *
    * @param request
    */
   private synchronized void cloneRepoForFilePathCheckout(GitBaseRequest request) {
