@@ -16,6 +16,9 @@ public interface ChangeEventService {
   Boolean register(ChangeEventDTO changeEventDTO);
   List<ChangeEventDTO> get(ServiceEnvironmentParams serviceEnvironmentParams, List<String> changeSourceIdentifiers,
       Instant startTime, Instant endTime, List<ChangeCategory> changeCategories);
+
+  ChangeEventDTO get(String activityId);
+
   ChangeSummaryDTO getChangeSummary(ServiceEnvironmentParams serviceEnvironmentParams,
       List<String> changeSourceIdentifiers, Instant startTime, Instant endTime);
   PageResponse<ChangeEventDTO> getPaginated(ProjectParams projectParams, List<String> serviceIdentifiers,
