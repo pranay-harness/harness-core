@@ -8,6 +8,14 @@ Var:delivery.put("url", Env:url)
 
 Var events = []
 Var:events.append("incident.triggered")
+Var:events.append("incident.acknowledged")
+Var:events.append("incident.delegated")
+Var:events.append("incident.escalated")
+Var:events.append("incident.priority_updated")
+Var:events.append("incident.reassigned")
+Var:events.append("incident.reopened")
+Var:events.append("incident.resolved")
+Var:events.append("incident.unacknowledged")
 
 Var filter = {}
 Var:filter.put("id", Env:pagerDutyServiceId)

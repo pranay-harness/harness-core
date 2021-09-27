@@ -1,6 +1,6 @@
 package io.harness.cvng.core.services.api;
 
-import io.harness.cvng.core.beans.PagerDutyIncidentDTO;
+import io.harness.cvng.core.beans.PagerDutyWebhookEvent;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.entities.PagerDutyWebhook;
@@ -14,5 +14,5 @@ public interface WebhookService extends DeleteEntityByHandler<Webhook> {
 
   void deleteWebhook(Webhook webhook);
 
-  void handlePagerDutyWebhook(String token, PagerDutyIncidentDTO payload);
+  void handlePagerDutyWebhook(String token, PagerDutyWebhookEvent payload);
 }

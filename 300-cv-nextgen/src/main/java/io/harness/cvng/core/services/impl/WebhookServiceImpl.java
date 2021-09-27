@@ -1,9 +1,11 @@
 package io.harness.cvng.core.services.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.beans.change.ChangeSourceType;
 import io.harness.cvng.beans.change.PagerDutyEventMetaData;
-import io.harness.cvng.core.beans.PagerDutyIncidentDTO;
+import io.harness.cvng.core.beans.PagerDutyWebhookEvent;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.entities.PagerDutyWebhook;
@@ -16,7 +18,6 @@ import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;
 import groovy.util.logging.Slf4j;
-import java.time.Instant;
 
 @Slf4j
 public class WebhookServiceImpl implements WebhookService {
@@ -55,14 +56,29 @@ public class WebhookServiceImpl implements WebhookService {
   }
 
   @Override
-  public void handlePagerDutyWebhook(String token, PagerDutyIncidentDTO payload) {
+  public void handlePagerDutyWebhook(String token, PagerDutyWebhookEvent payload) {
     PagerDutyWebhook webhook =
         (PagerDutyWebhook) hPersistence.createQuery(Webhook.class).filter(WebhookKeys.token, token).get();
     PagerDutyEventMetaData eventMetaData = PagerDutyEventMetaData.builder()
-                                               .eventId(payload.getId())
-                                               .pagerDutyUrl(payload.getSelf())
-                                               .title(payload.getTitle())
+                                               .eventId(payload.getEvent().getData().getId())
+                                               .pagerDutyUrl(payload.getEvent().getData().getSelf())
+                                               .title(payload.getEvent().getData().getTitle())
+                                               .status(payload.getEvent().getData().getStatus())
+                                               .triggeredAt(payload.getEvent().getTriggeredAt())
+                                               .urgency(payload.getEvent().getData().getUrgency())
+                                               .htmlUrl(payload.getEvent().getData().getHtmlUrl())
                                                .build();
+    if (isNotEmpty(payload.getEvent().getData().getAssignments())) {
+      eventMetaData.setAssignment(payload.getEvent().getData().getAssignments().get(0).getSummary());
+      eventMetaData.setAssignmentUrl(payload.getEvent().getData().getAssignments().get(0).getHtmlUrl());
+    }
+    if (payload.getEvent().getData().getEscalationPolicy() != null) {
+      eventMetaData.setEscalationPolicy(payload.getEvent().getData().getEscalationPolicy().getSummary());
+      eventMetaData.setEscalationPolicyUrl(payload.getEvent().getData().getEscalationPolicy().getHtmlUrl());
+    }
+    if (payload.getEvent().getData().getPriority() != null) {
+      eventMetaData.setPriority(payload.getEvent().getData().getPriority().getSummary());
+    }
     ChangeEventDTO changeEventDTO = ChangeEventDTO.builder()
                                         .accountId(webhook.getAccountId())
                                         .orgIdentifier(webhook.getOrgIdentifier())
@@ -70,7 +86,7 @@ public class WebhookServiceImpl implements WebhookService {
                                         .serviceIdentifier(webhook.getServiceIdentifier())
                                         .envIdentifier(webhook.getEnvIdentifier())
                                         .type(ChangeSourceType.PAGER_DUTY)
-                                        .eventTime(Instant.now().toEpochMilli())
+                                        .eventTime(eventMetaData.getTriggeredAt().toEpochMilli())
                                         .metadata(eventMetaData)
                                         .build();
     changeEventService.register(changeEventDTO);
