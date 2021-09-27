@@ -27,7 +27,7 @@ import io.harness.cvng.core.services.api.ChangeEventService;
 import io.harness.cvng.core.services.api.monitoredService.ChangeSourceService;
 import io.harness.cvng.core.transformer.changeSource.ChangeSourceEntityAndDTOTransformer;
 import io.harness.data.structure.UUIDGenerator;
-import io.harness.exception.DuplicateFieldException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
@@ -93,7 +93,7 @@ public class ChangeSourceServiceImplTest extends CvNextGenTestBase {
         builderFactory.getHarnessCDChangeSourceDTOBuilder().identifier(changeSourceDto1.getIdentifier()).build();
     Set<ChangeSourceDTO> changeSourceDTOToBeCreated = new HashSet<>(Arrays.asList(changeSourceDto1, changeSourceDto2));
     assertThatThrownBy(() -> changeSourceService.create(environmentParams, changeSourceDTOToBeCreated))
-        .isInstanceOf(DuplicateFieldException.class);
+        .isInstanceOf(InvalidRequestException.class);
   }
 
   @Test

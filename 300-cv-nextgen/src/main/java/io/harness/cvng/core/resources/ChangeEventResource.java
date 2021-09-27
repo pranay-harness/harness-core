@@ -50,7 +50,7 @@ public class ChangeEventResource {
   @Timed
   @ExceptionMetered
   @NextGenManagerAuth
-  @Path(CHANGE_EVENT_RESOURCE + "/register")
+  @Path(CHANGE_EVENT_PATH + "/register")
   @ApiOperation(value = "register a ChangeEvent", nickname = "registerChangeEvent")
   public RestResponse<Boolean> register(@ApiParam(required = true) @NotNull @QueryParam("accountId") String accountId,
       @NotNull @Valid @Body ChangeEventDTO changeEventDTO) {
