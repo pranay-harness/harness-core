@@ -180,7 +180,7 @@ cp ../../alpn-boot-8.1.13.v20181017.jar .
 cp ../../dockerization/ci-manager/Dockerfile-ci-manager-jenkins-k8-openjdk ./Dockerfile
 cp ../../dockerization/ci-manager/Dockerfile-ci-manager-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
 cp -r ../../dockerization/ci-manager/scripts/ .
-cp ../../protocol.info .
+cp ../../ci-manager-protocol.info .
 echo ${JDK} > jdk.txt
 echo ${VERSION} > version.txt
 if [ ! -z ${PURPOSE} ]
