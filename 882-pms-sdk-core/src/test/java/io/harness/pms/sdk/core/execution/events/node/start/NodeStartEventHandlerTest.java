@@ -12,7 +12,6 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.start.NodeStartEvent;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
-import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.AmbianceTestUtils;
 import io.harness.pms.sdk.core.DummyExecutionStrategy;
 import io.harness.pms.sdk.core.PmsSdkCoreTestBase;
@@ -104,9 +103,6 @@ public class NodeStartEventHandlerTest extends PmsSdkCoreTestBase {
     Mockito.verify(executableProcessorFactory).obtainProcessor(ExecutionMode.APPROVAL);
     Mockito.verify(engineObtainmentHelper)
         .obtainInputPackage(nodeStartEvent.getAmbiance(), nodeStartEvent.getRefObjectsList());
-    Mockito.verify(sdkNodeExecutionService)
-        .handleStepResponse(nodeStartEvent.getAmbiance().getPlanExecutionId(),
-            AmbianceUtils.obtainCurrentRuntimeId(nodeStartEvent.getAmbiance()),
-            NodeExecutionUtils.constructStepResponse(ex));
+    Mockito.verify(sdkNodeExecutionService).handleStepResponse(ambiance, NodeExecutionUtils.constructStepResponse(ex));
   }
 }

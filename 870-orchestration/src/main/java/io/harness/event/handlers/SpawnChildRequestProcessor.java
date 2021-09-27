@@ -21,6 +21,7 @@ import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
 import io.harness.pms.contracts.execution.events.SpawnChildRequest;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.execution.utils.SdkResponseEventUtils;
 import io.harness.waiter.OldNotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
 
@@ -45,16 +46,18 @@ public class SpawnChildRequestProcessor implements SdkResponseProcessor {
   public void handleEvent(SdkResponseEventProto event) {
     SpawnChildRequest request = event.getSpawnChildRequest();
 
-    NodeExecution childNodeExecution = buildChildNodeExecution(event.getNodeExecutionId(), request);
+    NodeExecution childNodeExecution =
+        buildChildNodeExecution(SdkResponseEventUtils.getNodeExecutionId(event), request);
 
     log.info("For Child Executable starting Child NodeExecution with id: {}", childNodeExecution.getUuid());
 
     // Attach a Callback to the parent for the child
-    OldNotifyCallback callback = EngineResumeCallback.builder().nodeExecutionId(event.getNodeExecutionId()).build();
+    OldNotifyCallback callback =
+        EngineResumeCallback.builder().nodeExecutionId(SdkResponseEventUtils.getNodeExecutionId(event)).build();
     waitNotifyEngine.waitForAllOn(publisherName, callback, childNodeExecution.getUuid());
 
     // Update the parent with executable response
-    nodeExecutionService.update(event.getNodeExecutionId(),
+    nodeExecutionService.update(SdkResponseEventUtils.getNodeExecutionId(event),
         ops -> ops.addToSet(NodeExecutionKeys.executableResponses, buildExecutableResponse(request)));
 
     executorService.submit(ExecutionEngineDispatcher.builder()
