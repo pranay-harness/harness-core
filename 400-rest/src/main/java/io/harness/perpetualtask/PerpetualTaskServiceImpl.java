@@ -101,21 +101,12 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
         }
       }
 
-      long intervalSeconds = schedule.getInterval().getSeconds();
-      PerpetualTaskScheduleConfig perpetualTaskScheduleConfig =
-          perpetualTaskScheduleService.getByAccountIdAndPerpetualTaskType(accountId, perpetualTaskType);
-      if (perpetualTaskScheduleConfig != null) {
-        intervalSeconds = perpetualTaskScheduleConfig.getTimeIntervalInMillis() / 1000;
-        log.info("Creating new perpetual task with custom time interval : {} for task type : {}",
-            perpetualTaskScheduleConfig.getTimeIntervalInMillis(), perpetualTaskScheduleConfig.getPerpetualTaskType());
-      }
-
       PerpetualTaskRecord record = PerpetualTaskRecord.builder()
                                        .accountId(accountId)
                                        .perpetualTaskType(perpetualTaskType)
                                        .clientContext(clientContext)
                                        .timeoutMillis(Durations.toMillis(schedule.getTimeout()))
-                                       .intervalSeconds(intervalSeconds)
+                                       .intervalSeconds(getTaskTimeInterval(schedule, accountId, perpetualTaskType))
                                        .delegateId("")
                                        .state(PerpetualTaskState.TASK_UNASSIGNED)
                                        .taskDescription(taskDescription)
@@ -277,5 +268,19 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
   @Override
   public void onReconnected(String accountId, String delegateId) {
     // do nothing
+  }
+
+  private long getTaskTimeInterval(PerpetualTaskSchedule schedule, String accountId, String perpetualTaskType) {
+    long intervalSeconds = schedule.getInterval().getSeconds();
+
+    PerpetualTaskScheduleConfig perpetualTaskScheduleConfig =
+        perpetualTaskScheduleService.getByAccountIdAndPerpetualTaskType(accountId, perpetualTaskType);
+    if (perpetualTaskScheduleConfig != null) {
+      intervalSeconds = perpetualTaskScheduleConfig.getTimeIntervalInMillis() / 1000;
+      log.info("Creating new perpetual task with custom time interval : {} for task type : {}",
+          perpetualTaskScheduleConfig.getTimeIntervalInMillis(), perpetualTaskScheduleConfig.getPerpetualTaskType());
+    }
+
+    return intervalSeconds;
   }
 }
