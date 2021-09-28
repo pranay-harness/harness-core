@@ -55,10 +55,12 @@ import io.harness.ngtriggers.beans.entity.metadata.NGTriggerMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.WebhookMetadata;
 import io.harness.ngtriggers.beans.entity.metadata.WebhookMetadata.WebhookMetadataBuilder;
 import io.harness.ngtriggers.beans.source.NGTriggerSourceV2;
+import io.harness.ngtriggers.beans.source.NGTriggerSpecV2;
 import io.harness.ngtriggers.beans.source.NGTriggerType;
 import io.harness.ngtriggers.beans.source.WebhookTriggerType;
 import io.harness.ngtriggers.beans.source.artifact.ArtifactTriggerConfig;
 import io.harness.ngtriggers.beans.source.artifact.ArtifactTypeSpec;
+import io.harness.ngtriggers.beans.source.artifact.BuildAware;
 import io.harness.ngtriggers.beans.source.artifact.HelmManifestSpec;
 import io.harness.ngtriggers.beans.source.artifact.ManifestTriggerConfig;
 import io.harness.ngtriggers.beans.source.artifact.ManifestTypeSpec;
@@ -425,10 +427,12 @@ public class NGTriggerElementMapper {
       ngTriggerDetailsResponseDTO.registrationStatus(
           ngTriggerEntity.getMetadata().getWebhook().getRegistrationStatus());
     } else if (ngTriggerEntity.getType() == MANIFEST || ngTriggerEntity.getType() == ARTIFACT) {
-      ngTriggerDetailsResponseDTO.buildDetails(
-          BuildDetails.builder()
-              .buildType(ngTriggerEntity.getMetadata().getBuildMetadata().getBuildSourceType())
-              .build());
+      NGTriggerConfigV2 ngTriggerConfigV2 = toTriggerConfigV2(ngTriggerEntity.getYaml());
+      NGTriggerSpecV2 ngTriggerSpecV2 = ngTriggerConfigV2.getSource().getSpec();
+      if (BuildAware.class.isAssignableFrom(ngTriggerSpecV2.getClass())) {
+        BuildAware buildAware = (BuildAware) ngTriggerSpecV2;
+        ngTriggerDetailsResponseDTO.buildDetails(BuildDetails.builder().buildType(buildAware.fetchBuildType()).build());
+      }
     }
 
     Optional<TriggerEventHistory> triggerEventHistory = fetchLatestExecutionForTrigger(ngTriggerEntity);
