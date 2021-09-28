@@ -59,6 +59,9 @@ public class CIK8ExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
     params.put("image", request.getStep().getRun().getImage());
     params.put("step_id", request.getStep().getId());
     params.put("log_key", request.getStep().getLogKey());
+    params.put("log_stream_url", "http://localhost:8079");
+    params.put("log_stream_account_id", request.getStep().getAccountId());
+    params.put("log_stream_token", "token");
 //    params.put("dump", jsonDump);
     params.put("stage_id", taskParams.getPodName());
 
