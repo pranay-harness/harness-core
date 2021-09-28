@@ -11,10 +11,10 @@ import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.INDER;
-import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SRINIVAS;
 import static io.harness.rule.OwnerRule.TMACARI;
+import static io.harness.rule.OwnerRule.VUK;
 import static io.harness.rule.OwnerRule.YOGESH;
 
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
@@ -612,10 +612,10 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     serviceVariableService.save(variable, false);
   }
 
-  @Test(expected = InvalidRequestException.class)
-  @Owner(developers = MILOS)
+  @Test
+  @Owner(developers = VUK)
   @Category(UnitTests.class)
-  public void shouldNotSaveServiceVariableWithDashInName() {
+  public void shouldSaveServiceVariableWithDashInName() {
     ServiceVariable variable = ServiceVariable.builder()
                                    .envId(ENV_ID)
                                    .entityType(EntityType.SERVICE_TEMPLATE)
@@ -628,8 +628,9 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
 
     variable.setAppId(APP_ID);
     variable.setUuid(SERVICE_VARIABLE_ID);
-    when(wingsPersistence.getWithAppId(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(variable);
+
     serviceVariableService.save(variable, false);
+    verify(wingsPersistence).saveAndGet(ServiceVariable.class, variable);
   }
 
   @Test(expected = InvalidRequestException.class)

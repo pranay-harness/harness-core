@@ -148,11 +148,6 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     if (serviceVariable.getType() == TEXT || serviceVariable.getType() == ENCRYPTED_TEXT) {
       String variableName = serviceVariable.getName();
 
-      if (variableName.contains("-")) {
-        throw new InvalidRequestException(
-            format("Adding variable name %s with hyphens (dashes) is not allowed", variableName));
-      }
-
       if (isEmpty(serviceVariable.getValue())) {
         throw new InvalidRequestException(format("Service Variable [%s] value cannot be empty", variableName));
       } else {
