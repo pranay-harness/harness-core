@@ -2,6 +2,7 @@ package io.harness.ngtriggers.validations.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.ngtriggers.Constants.ARTIFACT_REF;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
@@ -51,6 +52,9 @@ public class ArtifactTriggerValidator implements TriggerValidator {
         return builder.success(false).message("Pipeline doesn't exists").build();
       }
 
+      // make sure, stage and artifact identifiers are given
+      validationHelper.verifyStageAndBuildRef(triggerDetails, ARTIFACT_REF);
+
       String pipelineYml = pipelineYmlOptional.get();
       BuildTriggerOpsData buildTriggerOpsData =
           validationHelper.generateBuildTriggerOpsDataForArtifact(triggerDetails, pipelineYml);
@@ -70,8 +74,10 @@ public class ArtifactTriggerValidator implements TriggerValidator {
                            .append(TriggerHelper.getTriggerRef(triggerDetails.getNgTriggerEntity()))
                            .toString();
       log.error(message, e);
-      builder.success(false).message(
-          new StringBuilder(message).append(". Exception: ").append(e.getMessage()).toString());
+
+      builder.success(false).message(new StringBuilder("Error while validating Artifact Trigger Yaml. Exception: ")
+                                         .append(e.getMessage())
+                                         .toString());
     }
 
     return builder.build();
@@ -81,8 +87,11 @@ public class ArtifactTriggerValidator implements TriggerValidator {
     String typeFromTrigger = validationHelper.fetchBuildType(buildTriggerOpsData.getTriggerSpecMap());
     if (!artifactTypesSupported.contains(typeFromTrigger)) {
       throw new InvalidRequestException(
-          String.format("Artifact Type in Trigger:%s is not supported. Supported types are [Gcr, Ecr, DockerRegistry]",
-              typeFromTrigger));
+          new StringBuilder(128)
+              .append("Artifact Type in Trigger (")
+              .append(typeFromTrigger)
+              .append(") is not supported. Supported artifact types are [Gcr, Ecr, DockerRegistry]")
+              .toString());
     }
 
     PollingItemGenerator pollingItemGenerator = generatorFactory.retrievePollingItemGenerator(buildTriggerOpsData);
