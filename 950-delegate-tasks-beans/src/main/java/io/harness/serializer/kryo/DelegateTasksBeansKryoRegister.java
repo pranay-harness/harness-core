@@ -428,6 +428,7 @@ import software.wings.service.impl.appdynamics.AppdynamicsMetricDataValue;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.aws.model.AwsAmiPreDeploymentData;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
+import software.wings.service.impl.aws.model.AwsLambdaVpcConfig;
 import software.wings.service.impl.aws.model.AwsSubnet;
 import software.wings.service.impl.aws.model.AwsVPC;
 import software.wings.service.impl.aws.model.embed.AwsLambdaDetails;
@@ -797,6 +798,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AwsCodeCommitApiTaskResponse.class, 543273);
     kryo.register(AwsCodeCommitDataObtainmentTaskResult.class, 543274);
     kryo.register(AwsCodeCommitRequestType.class, 543275);
+    kryo.register(AwsLambdaVpcConfig.class, 5450);
 
     kryo.register(CIK8ExecuteStepTaskParams.class, 543276);
     kryo.register(LiteEngineConnectionCapability.class, 543277);

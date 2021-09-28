@@ -9,6 +9,8 @@ import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
 import static io.harness.k8s.model.Kind.Namespace;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
+import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
 
@@ -26,6 +28,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FileContentBatchResponse;
 import io.harness.beans.FileData;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
+import io.harness.delegate.k8s.beans.K8sHandlerConfig;
 import io.harness.delegate.k8s.kustomize.KustomizeTaskHelper;
 import io.harness.delegate.k8s.openshift.OpenShiftDelegateService;
 import io.harness.delegate.task.helm.HelmChartInfo;
@@ -39,6 +42,7 @@ import io.harness.filesystem.FileIo;
 import io.harness.git.model.GitFile;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.kubectl.Kubectl;
+import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.KubernetesResource;
@@ -59,8 +63,10 @@ import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.ScmFetchFilesHelper;
 import software.wings.delegatetasks.helm.HelmTaskHelper;
 import software.wings.exception.ShellScriptException;
+import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.helm.HelmHelper;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
+import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sDeleteTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
@@ -98,6 +104,7 @@ public class K8sTaskHelper {
   @Inject private K8sTaskHelperBase k8sTaskHelperBase;
   @Inject private HelmHelper helmHelper;
   @Inject private CustomManifestService customManifestService;
+  @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   @Inject private ScmDelegateClient scmDelegateClient;
   @Inject private ScmServiceClient scmServiceClient;
   @Inject private ScmFetchFilesHelper scmFetchFilesHelper;
@@ -558,5 +565,24 @@ public class K8sTaskHelper {
     }
 
     return k8sTaskHelperBase.arrangeResourceIdsInDeletionOrder(kubernetesResourceIds);
+  }
+
+  public boolean restore(List<KubernetesResource> kubernetesResources, K8sClusterConfig clusterConfig,
+      K8sDelegateTaskParams k8sDelegateTaskParams, K8sHandlerConfig k8sHandlerConfig,
+      ExecutionLogCallback executionLogCallback) {
+    try {
+      executionLogCallback.saveExecutionLog("Restoring inherited resources: \n");
+      executionLogCallback.saveExecutionLog(ManifestHelper.toYamlForLogs(kubernetesResources));
+      k8sHandlerConfig.setKubernetesConfig(containerDeploymentDelegateHelper.getKubernetesConfig(clusterConfig, false));
+      k8sHandlerConfig.setClient(
+          Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath()));
+      k8sHandlerConfig.setResources(kubernetesResources);
+      executionLogCallback.saveExecutionLog("Done.. \n", INFO, SUCCESS);
+    } catch (Exception e) {
+      executionLogCallback.saveExecutionLog("Failed to restore inherited resources: \n", ERROR, FAILURE);
+      log.error("Exception while restoring inherited resources:", e);
+      return false;
+    }
+    return true;
   }
 }

@@ -13,6 +13,7 @@ import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.expression.Expression;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.k8s.model.HelmVersion;
+import io.harness.k8s.model.KubernetesResource;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +34,9 @@ public class K8sRollingDeployTaskParameters extends K8sTaskParameters implements
   private boolean localOverrideFeatureFlag;
   private Boolean skipVersioningForAllK8sObjects;
   private boolean isPruningEnabled;
+  private boolean exportManifests;
+  private boolean inheritManifests;
+  private List<KubernetesResource> kubernetesResources;
 
   @Builder
   public K8sRollingDeployTaskParameters(String accountId, String appId, String commandName, String activityId,
@@ -40,6 +44,7 @@ public class K8sRollingDeployTaskParameters extends K8sTaskParameters implements
       Integer timeoutIntervalInMin, K8sDelegateManifestConfig k8sDelegateManifestConfig, List<String> valuesYamlList,
       boolean isInCanaryWorkflow, boolean skipDryRun, HelmVersion helmVersion, boolean localOverrideFeatureFlag,
       Boolean skipVersioningForAllK8sObjects, Set<String> delegateSelectors, boolean isPruningEnabled,
+      boolean exportManifests, boolean inheritManifests, List<KubernetesResource> kubernetesResources,
       boolean useLatestChartMuseumVersion) {
     super(accountId, appId, commandName, activityId, k8sClusterConfig, workflowExecutionId, releaseName,
         timeoutIntervalInMin, k8sTaskType, helmVersion, delegateSelectors, useLatestChartMuseumVersion);
@@ -50,6 +55,9 @@ public class K8sRollingDeployTaskParameters extends K8sTaskParameters implements
     this.localOverrideFeatureFlag = localOverrideFeatureFlag;
     this.skipVersioningForAllK8sObjects = skipVersioningForAllK8sObjects;
     this.isPruningEnabled = isPruningEnabled;
+    this.exportManifests = exportManifests;
+    this.inheritManifests = inheritManifests;
+    this.kubernetesResources = kubernetesResources;
   }
 
   @Override
