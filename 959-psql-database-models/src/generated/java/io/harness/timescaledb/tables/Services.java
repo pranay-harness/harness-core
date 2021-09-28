@@ -3,7 +3,7 @@
  */
 package io.harness.timescaledb.tables;
 
-import io.harness.timescaledb.Keys;
+import io.harness.timescaledb.Indexes;
 import io.harness.timescaledb.Public;
 import io.harness.timescaledb.tables.records.ServicesRecord;
 
@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
+import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Row9;
@@ -18,7 +19,6 @@ import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
-import org.jooq.UniqueKey;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
@@ -53,7 +53,7 @@ public class Services extends TableImpl<ServicesRecord> {
    * The column <code>public.services.account_id</code>.
    */
   public final TableField<ServicesRecord, String> ACCOUNT_ID =
-      createField(DSL.name("account_id"), SQLDataType.CLOB, this, "");
+      createField(DSL.name("account_id"), SQLDataType.CLOB.nullable(false), this, "");
 
   /**
    * The column <code>public.services.org_identifier</code>.
@@ -135,13 +135,8 @@ public class Services extends TableImpl<ServicesRecord> {
   }
 
   @Override
-  public UniqueKey<ServicesRecord> getPrimaryKey() {
-    return Keys.SERVICES_PKEY;
-  }
-
-  @Override
-  public List<UniqueKey<ServicesRecord>> getKeys() {
-    return Arrays.<UniqueKey<ServicesRecord>>asList(Keys.SERVICES_PKEY);
+  public List<Index> getIndexes() {
+    return Arrays.<Index>asList(Indexes.SERVICES_ACCOUNT_ID_CREATED_AT_IDX);
   }
 
   @Override

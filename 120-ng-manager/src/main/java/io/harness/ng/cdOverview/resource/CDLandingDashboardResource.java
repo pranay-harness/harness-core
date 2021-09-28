@@ -76,6 +76,7 @@ public class CDLandingDashboardResource {
     return ResponseDTO.newResponse(cdLandingDashboardService.getActiveServices(
         accountIdentifier, orgProjectIdentifiers, startInterval, endInterval, sortBy));
   }
+
   @GET
   @Path("/topProjects")
   @ApiOperation(value = "Get Top Projects as per Deployments", nickname = "getTopProjects")
@@ -86,7 +87,8 @@ public class CDLandingDashboardResource {
       @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
       @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
     log.info("Getting top projects");
-    return ResponseDTO.newResponse(ProjectsDashboardInfo.builder().build());
+    return ResponseDTO.newResponse(
+        cdLandingDashboardService.getTopProjects(accountIdentifier, orgProjectIdentifiers, startInterval, endInterval));
   }
 
   @GET
@@ -122,8 +124,9 @@ public class CDLandingDashboardResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam("orgProjectIdentifiers") List<OrgProjectIdentifier> orgProjectIdentifiers,
       @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
-      @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) throws Exception {
-    return ResponseDTO.newResponse(ServicesCount.builder().build());
+      @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
+    return ResponseDTO.newResponse(cdLandingDashboardService.getServicesCount(
+        accountIdentifier, orgProjectIdentifiers, startInterval, endInterval));
   }
 
   @GET
@@ -134,7 +137,8 @@ public class CDLandingDashboardResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,
       @NotNull @QueryParam("orgProjectIdentifiers") List<OrgProjectIdentifier> orgProjectIdentifiers,
       @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
-      @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) throws Exception {
-    return ResponseDTO.newResponse(EnvCount.builder().build());
+      @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
+    return ResponseDTO.newResponse(
+        cdLandingDashboardService.getEnvCount(accountIdentifier, orgProjectIdentifiers, startInterval, endInterval));
   }
 }

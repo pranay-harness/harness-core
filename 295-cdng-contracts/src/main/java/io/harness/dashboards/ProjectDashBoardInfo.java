@@ -5,10 +5,10 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import io.harness.annotations.dev.OwnedBy;
 
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
 
 @OwnedBy(PIPELINE)
-@Value
+@Data
 @Builder
 public class ProjectDashBoardInfo {
   String projectIdentifier;
@@ -17,4 +17,6 @@ public class ProjectDashBoardInfo {
 
   long deploymentsCount;
   double deploymentsCountChangeRate;
+  long successDeploymentsCount;
+  long failedDeploymentsCount;
 }

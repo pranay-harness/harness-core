@@ -163,7 +163,8 @@ public class PodInfo extends TableImpl<PodInfoRecord> {
 
   @Override
   public List<Index> getIndexes() {
-    return Arrays.<Index>asList(Indexes.POD_INFO_STARTTIME_IDX, Indexes.POD_INFO_STARTTIME_UNIQUE_RECORD_INDEX);
+    return Arrays.<Index>asList(Indexes.POD_INFO_KUBESYSTEM_NAMESPACE_PINDEX, Indexes.POD_INFO_STARTTIME_IDX,
+        Indexes.POD_INFO_STARTTIME_UNIQUE_RECORD_INDEX);
   }
 
   @Override

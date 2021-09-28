@@ -10,9 +10,9 @@
     <properties>
         <jdbc.driver>org.postgresql.Driver</jdbc.driver>
         <skip.jooq.generation>false</skip.jooq.generation>
-        <timescaledb.password />
-        <timescaledb.url>jdbc:postgresql://localhost:5432/harness</timescaledb.url>
-        <timescaledb.user>postgres</timescaledb.user>
+        <timescaledb.password>harnessappdev</timescaledb.password>
+        <timescaledb.url>jdbc:postgresql://34.83.25.129:5432/harnessdev</timescaledb.url>
+        <timescaledb.user>harnessappdev</timescaledb.user>
     </properties>
     <dependencies>
         <dependency>
@@ -54,7 +54,14 @@
                             ce_recommendations |
                             billing_data |
                             node_pool_aggregated |
-                            is_alive | time_bucket | anomalies </includes>
+                            is_alive |
+                            time_bucket |
+                            anomalies |
+                            service_infra_info |
+                            services |
+                            pipeline_execution_summary_cd|
+                            environments|
+                            pipelines</includes>
                             <excludes />
                             <inputSchema>public</inputSchema>
                         </database>
