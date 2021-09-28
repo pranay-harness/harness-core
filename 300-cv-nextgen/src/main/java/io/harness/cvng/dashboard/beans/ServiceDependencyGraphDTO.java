@@ -24,6 +24,7 @@ public class ServiceDependencyGraphDTO {
   @Builder
   @FieldDefaults(level = AccessLevel.PRIVATE)
   public static class ServiceSummaryDetails {
+    String identifierRef;
     String serviceRef;
     String environmentRef;
     double riskScore;
