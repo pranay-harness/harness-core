@@ -1104,6 +1104,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           () -> delegateExecute(delegateAgentManagerClient.hasNonPrimaryDelegateConfiguration(accountId)));
       if (restResponse.getResource()) {
         delegateConfiguration.setVersionInfoFromConfiguration(true);
+        DelegateAgentManagerClientFactory.setSendVersionHeader(false);
         log.info("Setting VERSION_INFO to send ");
       }
     } catch (Exception e) {
