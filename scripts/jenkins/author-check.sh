@@ -3,6 +3,10 @@ set -e
 
 git config --global log.mailmap true
 
+echo "GITHUB Email $GITHUB_EMAIL"
+echo "Git Email $GIT_EMAIL"
+echo "GIT Name $GIT_NAME"
+
 UNKNOWN_USERS=`\
 git log -1000 --oneline --format='%aN <%aE>' | sort -u |\
     grep -iv "^Aaditi Joag <aaditi.joag@harness.io>$" |\
