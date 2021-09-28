@@ -25,6 +25,7 @@ import static io.harness.beans.ExecutionStatus.brokeStatuses;
 import static io.harness.beans.ExecutionStatus.isBrokeStatus;
 import static io.harness.beans.ExecutionStatus.isFinalStatus;
 import static io.harness.beans.ExecutionStatus.isPositiveStatus;
+import static io.harness.beans.FeatureName.TIMEOUT_FAILURE_SUPPORT;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -1543,11 +1544,21 @@ public class StateMachineExecutor implements StateInspectionListener {
 
       updated = terminateAndTransition(context, stateExecutionInstance, finalStatus, errorMessage);
 
-      invokeAdvisors(ExecutionEvent.builder()
-                         .failureTypes(EnumSet.<FailureType>of(FailureType.EXPIRED))
-                         .context(context)
-                         .state(currentState)
-                         .build());
+      if (stateExecutionInstance.getStateType().equals(StateType.SHELL_SCRIPT.name())
+          && featureFlagService.isEnabled(TIMEOUT_FAILURE_SUPPORT, context.getAccountId())) {
+        invokeAdvisors(ExecutionEvent.builder()
+                           .failureTypes(EnumSet.<FailureType>of(FailureType.EXPIRED, FailureType.TIMEOUT_ERROR))
+                           .context(context)
+                           .state(currentState)
+                           .build());
+      } else {
+        invokeAdvisors(ExecutionEvent.builder()
+                           .failureTypes(EnumSet.<FailureType>of(FailureType.EXPIRED))
+                           .context(context)
+                           .state(currentState)
+                           .build());
+      }
+
     } catch (Exception e) {
       log.error("[AbortInstance] Error in discontinuing", e);
     }
