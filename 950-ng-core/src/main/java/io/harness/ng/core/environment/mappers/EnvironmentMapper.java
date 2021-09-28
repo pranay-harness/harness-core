@@ -1,9 +1,11 @@
 package io.harness.ng.core.environment.mappers;
 
 import static io.harness.NGConstants.HARNESS_BLUE;
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.ng.core.mapper.TagMapper.convertToList;
 import static io.harness.ng.core.mapper.TagMapper.convertToMap;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.environment.beans.Environment;
 import io.harness.ng.core.environment.dto.EnvironmentRequestDTO;
 import io.harness.ng.core.environment.dto.EnvironmentResponse;
@@ -12,6 +14,7 @@ import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import java.util.Optional;
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(PIPELINE)
 @UtilityClass
 public class EnvironmentMapper {
   public Environment toEnvironmentEntity(String accountId, EnvironmentRequestDTO environmentRequestDTO) {

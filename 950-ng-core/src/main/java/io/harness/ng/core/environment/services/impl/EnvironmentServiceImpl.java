@@ -67,8 +67,11 @@ public class EnvironmentServiceImpl implements EnvironmentService {
   private final OutboxService outboxService;
   private final RetryPolicy<Object> transactionRetryPolicy = DEFAULT_TRANSACTION_RETRY_POLICY;
   @Inject @Named(OUTBOX_TRANSACTION_TEMPLATE) private final TransactionTemplate transactionTemplate;
-  private static final String DUP_KEY_EXP_FORMAT_STRING =
-      "Environment [%s] under Project[%s], Organization [%s] already exists";
+  private static final String DUP_KEY_EXP_FORMAT_STRING_FOR_PROJECT =
+      "Environment [%s] under Project[%s], Organization [%s] in Account [%s] already exists";
+  private static final String DUP_KEY_EXP_FORMAT_STRING_FOR_ORG =
+      "Environment [%s] under Organization [%s] in Account [%s] already exists";
+  private static final String DUP_KEY_EXP_FORMAT_STRING_FOR_ACCOUNT = "Environment [%s] in Account [%s] already exists";
 
   @Inject
   public EnvironmentServiceImpl(EnvironmentRepository environmentRepository,
@@ -84,8 +87,7 @@ public class EnvironmentServiceImpl implements EnvironmentService {
   @Override
   public Environment create(@NotNull @Valid Environment environment) {
     try {
-      validatePresenceOfRequiredFields(environment.getAccountId(), environment.getOrgIdentifier(),
-          environment.getProjectIdentifier(), environment.getIdentifier());
+      validatePresenceOfRequiredFields(environment.getAccountId(), environment.getIdentifier());
       setName(environment);
 
       Environment createdEnvironment =
@@ -103,10 +105,22 @@ public class EnvironmentServiceImpl implements EnvironmentService {
           environment.getIdentifier(), EventsFrameworkMetadataConstants.CREATE_ACTION);
       return createdEnvironment;
     } catch (DuplicateKeyException ex) {
-      throw new DuplicateFieldException(String.format(DUP_KEY_EXP_FORMAT_STRING, environment.getIdentifier(),
-                                            environment.getProjectIdentifier(), environment.getOrgIdentifier()),
+      throw new DuplicateFieldException(
+          getDuplicateServiceExistsErrorMessage(environment.getAccountId(), environment.getOrgIdentifier(),
+              environment.getProjectIdentifier(), environment.getIdentifier()),
           USER_SRE, ex);
     }
+  }
+
+  String getDuplicateServiceExistsErrorMessage(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceIdentifier) {
+    if (EmptyPredicate.isEmpty(orgIdentifier)) {
+      return String.format(DUP_KEY_EXP_FORMAT_STRING_FOR_ACCOUNT, serviceIdentifier, accountIdentifier);
+    } else if (EmptyPredicate.isEmpty(projectIdentifier)) {
+      return String.format(DUP_KEY_EXP_FORMAT_STRING_FOR_ORG, serviceIdentifier, orgIdentifier, accountIdentifier);
+    }
+    return String.format(
+        DUP_KEY_EXP_FORMAT_STRING_FOR_PROJECT, serviceIdentifier, projectIdentifier, orgIdentifier, accountIdentifier);
   }
 
   @Override
@@ -118,8 +132,7 @@ public class EnvironmentServiceImpl implements EnvironmentService {
 
   @Override
   public Environment update(@Valid Environment requestEnvironment) {
-    validatePresenceOfRequiredFields(requestEnvironment.getAccountId(), requestEnvironment.getOrgIdentifier(),
-        requestEnvironment.getProjectIdentifier(), requestEnvironment.getIdentifier());
+    validatePresenceOfRequiredFields(requestEnvironment.getAccountId(), requestEnvironment.getIdentifier());
     setName(requestEnvironment);
     Criteria criteria = getEnvironmentEqualityCriteria(requestEnvironment, requestEnvironment.getDeleted());
 
@@ -158,8 +171,7 @@ public class EnvironmentServiceImpl implements EnvironmentService {
 
   @Override
   public Environment upsert(Environment requestEnvironment) {
-    validatePresenceOfRequiredFields(requestEnvironment.getAccountId(), requestEnvironment.getOrgIdentifier(),
-        requestEnvironment.getProjectIdentifier(), requestEnvironment.getIdentifier());
+    validatePresenceOfRequiredFields(requestEnvironment.getAccountId(), requestEnvironment.getIdentifier());
     setName(requestEnvironment);
     Criteria criteria = getEnvironmentEqualityCriteria(requestEnvironment, requestEnvironment.getDeleted());
     Environment updatedResult = Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {

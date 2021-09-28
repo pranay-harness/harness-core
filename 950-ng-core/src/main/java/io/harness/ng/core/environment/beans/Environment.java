@@ -1,5 +1,8 @@
 package io.harness.ng.core.environment.beans;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
@@ -25,6 +28,7 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+@OwnedBy(PIPELINE)
 @Data
 @Builder
 @Entity(value = "environmentsNG", noClassnameStored = true)
@@ -47,8 +51,8 @@ public class Environment implements PersistentEntity {
   @Wither @Id @org.mongodb.morphia.annotations.Id private String id;
 
   @Trimmed @NotEmpty private String accountId;
-  @Trimmed @NotEmpty private String orgIdentifier;
-  @Trimmed @NotEmpty private String projectIdentifier;
+  @Trimmed private String orgIdentifier;
+  @Trimmed private String projectIdentifier;
 
   @NotEmpty @EntityIdentifier private String identifier;
   @EntityName private String name;
