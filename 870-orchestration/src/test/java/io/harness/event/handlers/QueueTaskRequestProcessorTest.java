@@ -20,6 +20,8 @@ import io.harness.engine.pms.resume.EngineResumeCallback;
 import io.harness.engine.pms.tasks.NgDelegate2TaskExecutor;
 import io.harness.engine.pms.tasks.TaskExecutor;
 import io.harness.engine.progress.EngineProgressCallback;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.TaskExecutableResponse;
@@ -99,11 +101,13 @@ public class QueueTaskRequestProcessorTest extends OrchestrationTestBase {
             .setExecutableResponse(ExecutableResponse.newBuilder().setTask(taskBuilder.build()).build())
             .build();
 
-    queueTaskResponseHandler.handleEvent(SdkResponseEventProto.newBuilder()
-                                             .setSdkResponseEventType(SdkResponseEventType.QUEUE_TASK)
-                                             .setQueueTaskRequest(queueTaskRequest)
-                                             .setNodeExecutionId(nodeExecutionId)
-                                             .build());
+    queueTaskResponseHandler.handleEvent(
+        SdkResponseEventProto.newBuilder()
+            .setSdkResponseEventType(SdkResponseEventType.QUEUE_TASK)
+            .setQueueTaskRequest(queueTaskRequest)
+            .setAmbiance(
+                Ambiance.newBuilder().addLevels(Level.newBuilder().setRuntimeId(nodeExecutionId).build()).build())
+            .build());
 
     verify(nodeExecutionService)
         .updateStatusWithOps(nExIDCaptor.capture(), sCaptor.capture(), uCaptor.capture(), esCaptor.capture());

@@ -99,12 +99,7 @@ public class OrchestrationEngine {
 
   @Getter private final Subject<OrchestrationEndObserver> orchestrationEndSubject = new Subject<>();
 
-  public void startNodeExecution(String nodeExecutionId) {
-    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
-    facilitateAndStartStep(nodeExecution.getAmbiance(), nodeExecution);
-  }
-
-  public void triggerExecution(Ambiance ambiance, PlanNode node) {
+  public void triggerNode(Ambiance ambiance, PlanNode node) {
     String uuid = generateUuid();
     NodeExecution previousNodeExecution = null;
     if (AmbianceUtils.obtainCurrentRuntimeId(ambiance) != null) {
@@ -127,6 +122,18 @@ public class OrchestrationEngine {
             .build();
     nodeExecutionService.save(nodeExecution);
     executorService.submit(ExecutionEngineDispatcher.builder().ambiance(cloned).orchestrationEngine(this).build());
+  }
+
+  public void startNodeExecution(Ambiance ambiance) {
+    NodeExecution nodeExecution = nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
+    facilitateAndStartStep(nodeExecution.getAmbiance(), nodeExecution);
+  }
+
+  // Just for backward compatibility will be removed in next release
+  @Deprecated
+  public void startNodeExecution(String nodeExecutionId) {
+    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
+    facilitateAndStartStep(nodeExecution.getAmbiance(), nodeExecution);
   }
 
   // Start to Facilitators
@@ -177,17 +184,16 @@ public class OrchestrationEngine {
     return rChecker.check(nodeExecution);
   }
 
-  public void facilitateExecution(String nodeExecutionId, FacilitatorResponseProto facilitatorResponse) {
+  public void processFacilitatorResponse(Ambiance ambiance, FacilitatorResponseProto facilitatorResponse) {
+    String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
     NodeExecution nodeExecution = nodeExecutionService.update(
         nodeExecutionId, ops -> ops.set(NodeExecutionKeys.mode, facilitatorResponse.getExecutionMode()));
-    Ambiance ambiance = nodeExecution.getAmbiance();
     if (facilitatorResponse.getInitialWait().getSeconds() != 0) {
       // Update Status
-      Preconditions.checkNotNull(
-          nodeExecutionService.updateStatusWithOps(AmbianceUtils.obtainCurrentRuntimeId(ambiance), Status.TIMED_WAITING,
-              ops
-              -> ops.set(NodeExecutionKeys.initialWaitDuration, facilitatorResponse.getInitialWait()),
-              EnumSet.noneOf(Status.class)));
+      Preconditions.checkNotNull(nodeExecutionService.updateStatusWithOps(nodeExecutionId, Status.TIMED_WAITING,
+          ops
+          -> ops.set(NodeExecutionKeys.initialWaitDuration, facilitatorResponse.getInitialWait()),
+          EnumSet.noneOf(Status.class)));
       String resumeId =
           delayEventHelper.delay(facilitatorResponse.getInitialWait().getSeconds(), Collections.emptyMap());
       waitNotifyEngine.waitForAllOn(publisherName,
@@ -198,7 +204,8 @@ public class OrchestrationEngine {
     startHelper.startNode(ambiance, facilitatorResponse);
   }
 
-  public void handleStepResponse(@NonNull String nodeExecutionId, @NonNull StepResponseProto stepResponse) {
+  public void processStepResponse(@NonNull Ambiance ambiance, @NonNull StepResponseProto stepResponse) {
+    String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
     NodeExecution nodeExecution = Preconditions.checkNotNull(
         nodeExecutionService.get(nodeExecutionId), "NodeExecution null for id" + nodeExecutionId);
     try (AutoLogContext ignore = AmbianceUtils.autoLogContext(nodeExecution.getAmbiance())) {
@@ -291,7 +298,12 @@ public class OrchestrationEngine {
     orchestrationEndSubject.fireInform(OrchestrationEndObxxxxxxxx:onEnd, ambiance);
   }
 
-  public void resume(String nodeExecutionId, Map<String, ByteString> response, boolean asyncError) {
+  public void resumeNodeExecution(Ambiance ambiance, Map<String, ByteString> response, boolean asyncError) {
+    String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
+    resumeNodeExecution(nodeExecutionId, response, asyncError);
+  }
+
+  public void resumeNodeExecution(String nodeExecutionId, Map<String, ByteString> response, boolean asyncError) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
     Ambiance ambiance = nodeExecution.getAmbiance();
     try (AutoLogContext ignore = AmbianceUtils.autoLogContext(ambiance)) {
@@ -315,10 +327,11 @@ public class OrchestrationEngine {
     }
   }
 
-  public void handleAdvise(String nodeExecutionId, AdviserResponse adviserResponse) {
+  public void processAdviserResponse(Ambiance ambiance, AdviserResponse adviserResponse) {
+    String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
     NodeExecution nodeExecution = Preconditions.checkNotNull(
         nodeExecutionService.get(nodeExecutionId), "NodeExecution not found for id: " + nodeExecutionId);
-    try (AutoLogContext autoLogContext = AmbianceUtils.autoLogContext(nodeExecution.getAmbiance())) {
+    try (AutoLogContext ignore = AmbianceUtils.autoLogContext(nodeExecution.getAmbiance())) {
       if (adviserResponse.getType() == AdviseType.UNKNOWN) {
         log.warn("Got null advise for node execution with id {}", nodeExecutionId);
         endNodeExecutionHelper.endNodeForNullAdvise(nodeExecution);
