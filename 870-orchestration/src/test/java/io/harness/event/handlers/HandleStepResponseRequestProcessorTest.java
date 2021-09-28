@@ -1,6 +1,5 @@
 package io.harness.event.handlers;
 
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.SAHIL;
 
 import static org.mockito.Mockito.verify;
@@ -44,12 +43,10 @@ public class HandleStepResponseRequestProcessorTest extends OrchestrationTestBas
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
   public void testHandleEvent() {
-    String nodeExecutionId = generateUuid();
     Ambiance ambiance = Ambiance.newBuilder().build();
     HandleStepResponseRequest handleStepResponseRequest = HandleStepResponseRequest.newBuilder().build();
     handleStepResponseEventHandler.handleEvent(SdkResponseEventProto.newBuilder()
                                                    .setAmbiance(ambiance)
-                                                   .setNodeExecutionId(nodeExecutionId)
                                                    .setHandleStepResponseRequest(handleStepResponseRequest)
                                                    .setSdkResponseEventType(SdkResponseEventType.HANDLE_STEP_RESPONSE)
                                                    .build());
