@@ -17,7 +17,6 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureData;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
-import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.AmbianceTestUtils;
 import io.harness.pms.sdk.core.PmsSdkCoreTestBase;
 import io.harness.pms.sdk.core.adviser.Adviser;
@@ -99,8 +98,7 @@ public class NodeAdviseEventHandlerTest extends PmsSdkCoreTestBase {
   public void testHandleEventWithContextWithNullResponse() {
     nodeAdviseEventHandler.handleEventWithContext(adviseEvent);
     Mockito.verify(sdkNodeExecutionService)
-        .handleAdviserResponse(ambiance.getPlanExecutionId(), AmbianceUtils.obtainCurrentRuntimeId(ambiance), NOTIFY_ID,
-            AdviserResponse.newBuilder().setType(AdviseType.UNKNOWN).build());
+        .handleAdviserResponse(ambiance, NOTIFY_ID, AdviserResponse.newBuilder().setType(AdviseType.UNKNOWN).build());
   }
 
   private class Type1Adviser implements Adviser {

@@ -13,6 +13,7 @@ import io.harness.plancreator.steps.StepGroupElementConfig;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ChildExecutableResponse;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingGrpcOutputService;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
@@ -28,10 +29,13 @@ import java.util.Collections;
 import java.util.Map;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 @OwnedBy(PIPELINE)
 public class StepGroupStepTest extends OrchestrationStepsTestBase {
-  @Inject private StepGroupStep stepGroupStep;
+  @Mock ExecutionSweepingGrpcOutputService executionSweepingGrpcOutputService;
+  @Inject @InjectMocks private StepGroupStep stepGroupStep;
 
   private static final String CHILD_ID = generateUuid();
 

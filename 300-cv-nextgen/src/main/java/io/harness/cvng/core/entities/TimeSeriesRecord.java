@@ -45,8 +45,8 @@ public final class TimeSeriesRecord
     return ImmutableList.<MongoIndex>builder()
         .add(CompoundMongoIndex.builder()
                  .name("query_idx")
-                 .field(TimeSeriesRecordKeys.bucketStartTime)
                  .field(TimeSeriesRecordKeys.verificationTaskId)
+                 .field(TimeSeriesRecordKeys.bucketStartTime)
                  .field(TimeSeriesRecordKeys.metricName)
                  .build())
         .build();

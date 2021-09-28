@@ -17,9 +17,13 @@ import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.interrupts.InterruptService;
+import io.harness.engine.pms.resume.EngineResumeAllCallback;
 import io.harness.exception.InvalidRequestException;
+import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.interrupts.Interrupt;
+import io.harness.plan.PlanNode;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.interrupts.InterruptConfig;
 import io.harness.pms.contracts.interrupts.InterruptType;
@@ -157,11 +161,19 @@ public class PauseAllInterruptHandlerTest extends OrchestrationTestBase {
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldTestHandleInterruptForNodeExecution() {
+    Ambiance ambiance = Ambiance.newBuilder().build();
     String nodeExecutionId = generateUuid();
     String interruptUuid = generateUuid();
     when(nodeExecutionService.updateStatusWithOps(
              eq(nodeExecutionId), eq(Status.PAUSED), any(), eq(EnumSet.noneOf(Status.class))))
-        .thenReturn(null);
+        .thenReturn(NodeExecution.builder()
+                        .uuid(generateUuid())
+                        .status(Status.PAUSED)
+                        .parentId(generateUuid())
+                        .planNode(PlanNode.builder().identifier(generateUuid()).build())
+                        .ambiance(ambiance)
+                        .version(1L)
+                        .build());
     when(waitNotifyEngine.waitForAllOn(any(), any(), eq(interruptUuid))).thenReturn(null);
 
     pauseAllInterruptHandler.handleInterruptForNodeExecution(Interrupt.builder()
@@ -172,8 +184,10 @@ public class PauseAllInterruptHandlerTest extends OrchestrationTestBase {
                                                                  .build(),
         nodeExecutionId);
 
+    ArgumentCaptor<EngineResumeAllCallback> captor = ArgumentCaptor.forClass(EngineResumeAllCallback.class);
     verify(nodeExecutionService)
         .updateStatusWithOps(eq(nodeExecutionId), eq(Status.PAUSED), any(), eq(EnumSet.noneOf(Status.class)));
-    verify(waitNotifyEngine).waitForAllOn(any(), any(), eq(interruptUuid));
+    verify(waitNotifyEngine).waitForAllOn(any(), captor.capture(), eq(interruptUuid));
+    assertThat(captor.getValue().getAmbiance()).isEqualTo(ambiance);
   }
 }

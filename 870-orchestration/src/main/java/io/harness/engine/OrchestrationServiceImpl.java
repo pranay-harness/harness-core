@@ -101,7 +101,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
 
   @VisibleForTesting
   void submitToEngine(Ambiance ambiance, PlanNode planNode) {
-    executorService.submit(() -> orchestrationEngine.triggerExecution(ambiance, planNode));
+    executorService.submit(() -> orchestrationEngine.triggerNode(ambiance, planNode));
   }
 
   private PlanExecution createPlanExecution(@Valid Plan plan, Map<String, String> setupAbstractions,

@@ -76,16 +76,20 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
   public void handleStepResponseWithError() {
+    String nodeExecutionId = generateUuid();
     StepResponseProto stepResponseProto = StepResponseProto.newBuilder().build();
-    Ambiance ambiance =
-        Ambiance.newBuilder().setPlanExecutionId("planExecutionId").putAllSetupAbstractions(prepareInputArgs()).build();
-    NodeExecution nodeExecution = NodeExecution.builder().uuid(generateUuid()).ambiance(ambiance).build();
+    Ambiance ambiance = Ambiance.newBuilder()
+                            .setPlanExecutionId("planExecutionId")
+                            .putAllSetupAbstractions(prepareInputArgs())
+                            .addLevels(Level.newBuilder().setRuntimeId(nodeExecutionId).build())
+                            .build();
+    NodeExecution nodeExecution = NodeExecution.builder().uuid(nodeExecutionId).ambiance(ambiance).build();
     when(nodeExecutionService.get(nodeExecution.getUuid())).thenReturn(nodeExecution);
     doThrow(new InvalidRequestException("test"))
         .when(endNodeExecutionHelper)
         .endNodeExecutionWithNoAdvisers(nodeExecution, stepResponseProto);
     doNothing().when(orchestrationEngine).handleError(any(), any());
-    orchestrationEngine.handleStepResponse(nodeExecution.getUuid(), stepResponseProto);
+    orchestrationEngine.processStepResponse(ambiance, stepResponseProto);
     verify(orchestrationEngine).handleError(any(), any());
   }
 
@@ -110,7 +114,7 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
                     .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
                     .build())
             .build();
-    orchestrationEngine.triggerExecution(ambiance, planNode);
+    orchestrationEngine.triggerNode(ambiance, planNode);
     verify(executorService).submit(any(ExecutionEngineDispatcher.class));
   }
 

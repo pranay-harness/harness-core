@@ -99,6 +99,12 @@ public class InstanceInfoTimescaleDAOImpl implements InstanceInfoTimescaleDAO {
     instanceInfoList.forEach(this::insertIntoPodInfo);
   }
 
+  /**
+   * https://stackoverflow.com/questions/1109061/insert-on-duplicate-update-in-postgresql
+   * A hypertable involving a column must include it in unique constraint as well (starttime here)
+   * We are assuming that for (accountId, clusterId, instanceId) starttime will be unique.
+   * Else we could do update then insert into 2 statements but it could face race condition
+   */
   @Override
   public void insertIntoPodInfo(@NotNull InstanceInfo instanceInfo) {
     final String workloadId =
@@ -109,27 +115,28 @@ public class InstanceInfoTimescaleDAOImpl implements InstanceInfoTimescaleDAO {
         InstanceMetaDataConstants.ACTUAL_PARENT_RESOURCE_ID, instanceInfo.getMetaData());
     final Resource resource = firstNonNull(instanceInfo.getResource(), Resource.builder().build());
 
-    TimescaleUtils.execute(dslContext.insertInto(POD_INFO)
-                               .set(POD_INFO.ACCOUNTID, instanceInfo.getAccountId())
-                               .set(POD_INFO.CLUSTERID, instanceInfo.getClusterId())
-                               .set(POD_INFO.INSTANCEID, instanceInfo.getInstanceId())
-                               .set(POD_INFO.STARTTIME, instantToOffsetDateTime(instanceInfo.getUsageStartTime()))
-                               .set(POD_INFO.NAMESPACE, namespace)
-                               .set(POD_INFO.NAME, instanceInfo.getInstanceName())
-                               .set(POD_INFO.WORKLOADID, workloadId)
-                               .set(POD_INFO.CPUREQUEST, resource.getCpuUnits())
-                               .set(POD_INFO.MEMORYREQUEST, resource.getMemoryMb())
-                               .set(POD_INFO.PARENTNODEID, parentId)
-                               .onConflict(POD_INFO.ACCOUNTID, POD_INFO.CLUSTERID, POD_INFO.INSTANCEID)
-                               .doUpdate()
-                               .set(POD_INFO.STARTTIME, instantToOffsetDateTime(instanceInfo.getUsageStartTime()))
-                               .set(POD_INFO.NAMESPACE, namespace)
-                               .set(POD_INFO.NAME, instanceInfo.getInstanceName())
-                               .set(POD_INFO.WORKLOADID, workloadId)
-                               .set(POD_INFO.CPUREQUEST, resource.getCpuUnits())
-                               .set(POD_INFO.MEMORYREQUEST, resource.getMemoryMb())
-                               .set(POD_INFO.PARENTNODEID, parentId)
-                               .set(POD_INFO.UPDATEDAT, offsetDateTimeNow()));
+    TimescaleUtils.execute(
+        dslContext.insertInto(POD_INFO)
+            .set(POD_INFO.ACCOUNTID, instanceInfo.getAccountId())
+            .set(POD_INFO.CLUSTERID, instanceInfo.getClusterId())
+            .set(POD_INFO.INSTANCEID, instanceInfo.getInstanceId())
+            .set(POD_INFO.STARTTIME, instantToOffsetDateTime(instanceInfo.getUsageStartTime()))
+            .set(POD_INFO.NAMESPACE, namespace)
+            .set(POD_INFO.NAME, instanceInfo.getInstanceName())
+            .set(POD_INFO.WORKLOADID, workloadId)
+            .set(POD_INFO.CPUREQUEST, resource.getCpuUnits())
+            .set(POD_INFO.MEMORYREQUEST, resource.getMemoryMb())
+            .set(POD_INFO.PARENTNODEID, parentId)
+            .onConflict(POD_INFO.ACCOUNTID, POD_INFO.CLUSTERID, POD_INFO.INSTANCEID, POD_INFO.STARTTIME)
+            .doUpdate()
+            .set(POD_INFO.STARTTIME, instantToOffsetDateTime(instanceInfo.getUsageStartTime()))
+            .set(POD_INFO.NAMESPACE, namespace)
+            .set(POD_INFO.NAME, instanceInfo.getInstanceName())
+            .set(POD_INFO.WORKLOADID, workloadId)
+            .set(POD_INFO.CPUREQUEST, resource.getCpuUnits())
+            .set(POD_INFO.MEMORYREQUEST, resource.getMemoryMb())
+            .set(POD_INFO.PARENTNODEID, parentId)
+            .set(POD_INFO.UPDATEDAT, offsetDateTimeNow()));
   }
 
   @Override

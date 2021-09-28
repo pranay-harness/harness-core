@@ -23,18 +23,21 @@ public class SdkGraphVisualizationDataServiceImpl implements SdkGraphVisualizati
   @Override
   public void publishStepDetailInformation(Ambiance ambiance, StepDetailsInfo stepDetailsInfo, String name) {
     String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
-    log.info("Publishing stepDetail update event for given nodeExecutionId: {} ", nodeExecutionId);
-    String planExecutionId = ambiance.getPlanExecutionId();
-    AddStepDetailsInstanceRequest addStepDetailsInstanceRequest =
-        AddStepDetailsInstanceRequest.newBuilder().setStepDetails(stepDetailsInfo.toViewJson()).setName(name).build();
-    SdkResponseEventProto sdkResponseEvent =
-        SdkResponseEventProto.newBuilder()
-            .setSdkResponseEventType(SdkResponseEventType.ADD_STEP_DETAILS_INSTANCE_REQUEST)
-            .setNodeExecutionId(nodeExecutionId)
-            .setPlanExecutionId(planExecutionId)
-            .setStepDetailsInstanceRequest(addStepDetailsInstanceRequest)
-            .build();
-    sdkResponseEventPublisher.publishEvent(sdkResponseEvent);
-    log.info("Published stepDetail update event for given nodeExecutionId: {} ", nodeExecutionId);
+    try {
+      log.info("Publishing stepDetail update event for given nodeExecutionId: {} ", nodeExecutionId);
+      AddStepDetailsInstanceRequest addStepDetailsInstanceRequest =
+          AddStepDetailsInstanceRequest.newBuilder().setStepDetails(stepDetailsInfo.toViewJson()).setName(name).build();
+      SdkResponseEventProto sdkResponseEvent =
+          SdkResponseEventProto.newBuilder()
+              .setSdkResponseEventType(SdkResponseEventType.ADD_STEP_DETAILS_INSTANCE_REQUEST)
+              .setAmbiance(ambiance)
+              .setStepDetailsInstanceRequest(addStepDetailsInstanceRequest)
+              .build();
+      sdkResponseEventPublisher.publishEvent(sdkResponseEvent);
+      log.info("Published stepDetail update event for given nodeExecutionId: {} ", nodeExecutionId);
+    } catch (Exception e) {
+      log.error("Failed to published stepDetail update event for given nodeExecutionId: {} ", nodeExecutionId, e);
+      throw e;
+    }
   }
 }

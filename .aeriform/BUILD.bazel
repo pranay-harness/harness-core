@@ -8,10 +8,6 @@ aeriform("//120-ng-manager:module")
 
 aeriform("//120-ng-manager:tests")
 
-aeriform("//121-instance:module")
-
-aeriform("//121-instance:tests")
-
 aeriform("//122-ng-authentication-settings:module")
 
 aeriform("//123-ng-core-user:module")
@@ -21,6 +17,12 @@ aeriform("//123-ng-core-user:tests")
 aeriform("//125-cd-nextgen:module")
 
 aeriform("//125-cd-nextgen:tests")
+
+aeriform("//126-instance:module")
+
+aeriform("//126-instance:tests")
+
+aeriform("//127-cd-nextgen-beans:module")
 
 aeriform("//136-git-sync-manager:module")
 
@@ -68,9 +70,9 @@ aeriform("//290-dashboard-service:module")
 
 aeriform("//290-dashboard-service:tests")
 
-aeriform("//295-cdng-contracts:module")
+aeriform("//293-cdng-clients:module")
 
-aeriform("//295-cdng-contracts:tests")
+aeriform("//295-cdng-contracts:module")
 
 aeriform("//300-cv-nextgen:module")
 
@@ -147,6 +149,8 @@ aeriform("//441-cg-instance-sync:module")
 aeriform("//445-cg-connectors:module")
 
 aeriform("//445-gitops:module")
+
+aeriform("//445-gitops:tests")
 
 aeriform("//450-ce-views:module")
 
@@ -278,6 +282,10 @@ aeriform("//925-access-control-service:module")
 
 aeriform("//925-access-control-service:tests")
 
+aeriform("//925-enforcement-service:module")
+
+aeriform("//925-enforcement-service:tests")
+
 aeriform("//930-delegate-tasks:module")
 
 aeriform("//930-delegate-tasks:tests")
@@ -298,6 +306,10 @@ aeriform("//940-cg-audit-service:module")
 
 aeriform("//940-cg-audit-service:tests")
 
+aeriform("//940-enforcement-sdk:module")
+
+aeriform("//940-enforcement-sdk:tests")
+
 aeriform("//940-feature-flag:module")
 
 aeriform("//940-feature-flag:tests")
@@ -308,10 +320,6 @@ aeriform("//940-ng-audit-service:tests")
 
 aeriform("//940-notification-client:module")
 
-aeriform("//940-plan-feature-sdk:module")
-
-aeriform("//940-plan-feature-sdk:tests")
-
 aeriform("//940-primary-version-manager:module")
 
 aeriform("//940-primary-version-manager:tests")
@@ -319,6 +327,8 @@ aeriform("//940-primary-version-manager:tests")
 aeriform("//940-resource-group-beans:module")
 
 aeriform("//940-secret-manager-client:module")
+
+aeriform("//943-enforcement-beans:module")
 
 aeriform("//945-account-mgmt:module")
 

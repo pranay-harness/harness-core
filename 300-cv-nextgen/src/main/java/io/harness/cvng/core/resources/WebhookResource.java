@@ -1,6 +1,6 @@
 package io.harness.cvng.core.resources;
 
-import io.harness.cvng.core.beans.PagerDutyIncidentDTO;
+import io.harness.cvng.core.beans.PagerDutyWebhookEvent;
 import io.harness.cvng.core.services.api.WebhookService;
 import io.harness.security.annotations.PublicApi;
 
@@ -26,7 +26,7 @@ public class WebhookResource {
   @PublicApi
   @ExceptionMetered
   @ApiOperation(value = "accepts a webhook request", nickname = "handleWebhookRequest")
-  public void handleWebhookRequest(@PathParam("token") String token, PagerDutyIncidentDTO payload) {
+  public void handleWebhookRequest(@PathParam("token") String token, PagerDutyWebhookEvent payload) {
     webhookService.handlePagerDutyWebhook(token, payload);
   }
 }

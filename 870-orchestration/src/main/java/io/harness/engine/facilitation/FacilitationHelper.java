@@ -50,7 +50,7 @@ public class FacilitationHelper {
     if (currFacilitatorResponse == null) {
       throw new InvalidRequestException("Cannot Determine Execution mode as facilitator Response is null");
     }
-    orchestrationEngine.facilitateExecution(nodeExecution.getUuid(), currFacilitatorResponse);
+    orchestrationEngine.processFacilitatorResponse(nodeExecution.getAmbiance(), currFacilitatorResponse);
   }
 
   private boolean customFacilitatorPresent(PlanNode node) {

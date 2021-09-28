@@ -115,6 +115,8 @@ import io.harness.delegate.beans.connector.helm.HttpHelmConnectivityTaskResponse
 import io.harness.delegate.beans.connector.helm.HttpHelmValidationParams;
 import io.harness.delegate.beans.connector.jira.JiraConnectionTaskParams;
 import io.harness.delegate.beans.connector.jira.connection.JiraTestConnectionTaskNGResponse;
+import io.harness.delegate.beans.connector.k8Connector.CEK8sValidationParams;
+import io.harness.delegate.beans.connector.k8Connector.CEKubernetesConnectionTaskParams;
 import io.harness.delegate.beans.connector.k8Connector.K8sServiceAccountInfoResponse;
 import io.harness.delegate.beans.connector.k8Connector.K8sValidationParams;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskParams;
@@ -426,6 +428,7 @@ import software.wings.service.impl.appdynamics.AppdynamicsMetricDataValue;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.aws.model.AwsAmiPreDeploymentData;
 import software.wings.service.impl.aws.model.AwsAsgGetRunningCountData;
+import software.wings.service.impl.aws.model.AwsLambdaVpcConfig;
 import software.wings.service.impl.aws.model.AwsSubnet;
 import software.wings.service.impl.aws.model.AwsVPC;
 import software.wings.service.impl.aws.model.embed.AwsLambdaDetails;
@@ -795,6 +798,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AwsCodeCommitApiTaskResponse.class, 543273);
     kryo.register(AwsCodeCommitDataObtainmentTaskResult.class, 543274);
     kryo.register(AwsCodeCommitRequestType.class, 543275);
+    kryo.register(AwsLambdaVpcConfig.class, 5450);
 
     kryo.register(CIK8ExecuteStepTaskParams.class, 543276);
     kryo.register(LiteEngineConnectionCapability.class, 543277);
@@ -899,6 +903,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(CommandUnitProgress.class, 543428);
     kryo.register(K8sCanaryDeleteRequest.class, 543429);
     kryo.register(K8sRollingDeployRollbackResponse.class, 543430);
+
     kryo.register(PollingDelegateResponse.class, 543431);
     kryo.register(ManifestPollingDelegateResponse.class, 543432);
     kryo.register(ArtifactPollingDelegateResponse.class, 543433);
@@ -917,5 +922,8 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(CodeDeployParams.class, 5189);
     kryo.register(ServiceNowAction.class, 7156);
     kryo.register(ServiceNowFields.class, 7169);
+
+    kryo.register(CEKubernetesConnectionTaskParams.class, 543437);
+    kryo.register(CEK8sValidationParams.class, 543438);
   }
 }

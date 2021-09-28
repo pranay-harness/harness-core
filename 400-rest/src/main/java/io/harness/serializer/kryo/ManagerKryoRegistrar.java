@@ -608,7 +608,6 @@ import software.wings.service.impl.aws.model.AwsLambdaFunctionResponse;
 import software.wings.service.impl.aws.model.AwsLambdaFunctionResult;
 import software.wings.service.impl.aws.model.AwsLambdaRequest;
 import software.wings.service.impl.aws.model.AwsLambdaRequest.AwsLambdaRequestType;
-import software.wings.service.impl.aws.model.AwsLambdaVpcConfig;
 import software.wings.service.impl.aws.model.AwsRequest;
 import software.wings.service.impl.aws.model.AwsResponse;
 import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
@@ -740,6 +739,7 @@ import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSwapExecuti
 import software.wings.sm.states.gcbconfigs.GcbOptions;
 import software.wings.sm.states.gcbconfigs.GcbRemoteBuildSpec;
 import software.wings.sm.states.gcbconfigs.GcbTriggerBuildSpec;
+import software.wings.sm.states.k8s.K8sResourcesSweepingOutput;
 import software.wings.sm.states.spotinst.SpotInstDeployStateExecutionData;
 import software.wings.sm.states.spotinst.SpotInstListenerUpdateStateExecutionData;
 import software.wings.sm.states.spotinst.SpotInstSetupContextElement;
@@ -1189,7 +1189,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AwsLambdaFunctionResult.class, 5452);
     kryo.register(AwsLambdaRequestType.class, 5447);
     kryo.register(AwsLambdaRequest.class, 5446);
-    kryo.register(AwsLambdaVpcConfig.class, 5450);
     kryo.register(AwsRequest.class, 5380);
     kryo.register(AwsResponse.class, 5381);
     kryo.register(BugsnagApplication.class, 5491);
@@ -1637,6 +1636,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(StackStatus.class, 40113);
     kryo.register(EventsDeliveryCallback.class, 40014);
     kryo.register(PerpetualTaskBroadcastEvent.class, 40015);
+    kryo.register(K8sResourcesSweepingOutput.class, 40019);
     kryo.register(ProviderType.class, 40022);
   }
 }
