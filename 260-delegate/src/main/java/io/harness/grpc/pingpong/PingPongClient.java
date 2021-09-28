@@ -32,6 +32,7 @@ public class PingPongClient extends AbstractScheduledService {
   protected void runOneIteration() {
     try {
       Instant timestamp = Instant.now();
+      log.info("Ping pong version" + version);
       Ping ping = Ping.newBuilder()
                       .setDelegateId(DelegateAgentServiceImpl.getDelegateId().orElse("UNREGISTERED"))
                       .setPingTimestamp(HTimestamps.fromInstant(timestamp))
