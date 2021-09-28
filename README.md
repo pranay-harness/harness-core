@@ -149,9 +149,9 @@ NOTE: the data from it is used for every git operation github does on you behave
 
 5. If Global Search is not required:
 
-    Install and start MongoDB Docker Image (v3.6):
+    Install and start MongoDB Docker Image (v4.2):
     ```
-    $ docker run -p 27017:27017 -v ~/_mongodb_data:/data/db --name mongoContainer -d --rm mongo:3.6
+    $ docker run -p 127.0.0.1:27017:27017 -v ~/_mongodb_data:/data/db --name mongoContainer -d --rm mongo:4.2
     ```
     Verify the container is running using `docker ps`
 
