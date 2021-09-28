@@ -45,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 @PipelineServiceAuth
 @Slf4j
 public class PMSLandingDashboardResource {
-  private final PipelineDashboardService pipelineDashboardService;
+  private final PMSLandingDashboardService pmsLandingDashboardService;
 
   @GET
   @Path("/pipelinesCount")
@@ -56,6 +56,7 @@ public class PMSLandingDashboardResource {
       @NotNull @QueryParam("orgProjectIdentifiers") List<OrgProjectIdentifier> orgProjectIdentifiers,
       @NotNull @QueryParam(NGResourceFilterConstants.START_TIME) long startInterval,
       @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
-    return ResponseDTO.newResponse(PipelinesCount.builder().build());
+    return ResponseDTO.newResponse(pmsLandingDashboardService.getPipelinesCount(
+        accountIdentifier, orgProjectIdentifiers, startInterval, endInterval));
   }
 }

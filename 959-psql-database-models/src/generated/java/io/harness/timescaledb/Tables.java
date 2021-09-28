@@ -6,10 +6,15 @@ package io.harness.timescaledb;
 import io.harness.timescaledb.tables.Anomalies;
 import io.harness.timescaledb.tables.BillingData;
 import io.harness.timescaledb.tables.CeRecommendations;
+import io.harness.timescaledb.tables.Environments;
 import io.harness.timescaledb.tables.KubernetesUtilizationData;
 import io.harness.timescaledb.tables.NodeInfo;
 import io.harness.timescaledb.tables.NodePoolAggregated;
+import io.harness.timescaledb.tables.PipelineExecutionSummaryCd;
+import io.harness.timescaledb.tables.Pipelines;
 import io.harness.timescaledb.tables.PodInfo;
+import io.harness.timescaledb.tables.ServiceInfraInfo;
+import io.harness.timescaledb.tables.Services;
 import io.harness.timescaledb.tables.WorkloadInfo;
 
 /**
@@ -33,6 +38,11 @@ public class Tables {
   public static final CeRecommendations CE_RECOMMENDATIONS = CeRecommendations.CE_RECOMMENDATIONS;
 
   /**
+   * The table <code>public.environments</code>.
+   */
+  public static final Environments ENVIRONMENTS = Environments.ENVIRONMENTS;
+
+  /**
    * The table <code>public.kubernetes_utilization_data</code>.
    */
   public static final KubernetesUtilizationData KUBERNETES_UTILIZATION_DATA =
@@ -49,9 +59,30 @@ public class Tables {
   public static final NodePoolAggregated NODE_POOL_AGGREGATED = NodePoolAggregated.NODE_POOL_AGGREGATED;
 
   /**
+   * The table <code>public.pipeline_execution_summary_cd</code>.
+   */
+  public static final PipelineExecutionSummaryCd PIPELINE_EXECUTION_SUMMARY_CD =
+      PipelineExecutionSummaryCd.PIPELINE_EXECUTION_SUMMARY_CD;
+
+  /**
+   * The table <code>public.pipelines</code>.
+   */
+  public static final Pipelines PIPELINES = Pipelines.PIPELINES;
+
+  /**
    * The table <code>public.pod_info</code>.
    */
   public static final PodInfo POD_INFO = PodInfo.POD_INFO;
+
+  /**
+   * The table <code>public.service_infra_info</code>.
+   */
+  public static final ServiceInfraInfo SERVICE_INFRA_INFO = ServiceInfraInfo.SERVICE_INFRA_INFO;
+
+  /**
+   * The table <code>public.services</code>.
+   */
+  public static final Services SERVICES = Services.SERVICES;
 
   /**
    * The table <code>public.workload_info</code>.

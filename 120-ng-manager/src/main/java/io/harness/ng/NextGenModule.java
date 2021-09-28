@@ -92,6 +92,8 @@ import io.harness.ng.accesscontrol.migrations.AccessControlMigrationModule;
 import io.harness.ng.accesscontrol.user.AggregateUserService;
 import io.harness.ng.accesscontrol.user.AggregateUserServiceImpl;
 import io.harness.ng.authenticationsettings.AuthenticationSettingsModule;
+import io.harness.ng.cdOverview.service.CDLandingDashboardService;
+import io.harness.ng.cdOverview.service.CDLandingDashboardServiceImpl;
 import io.harness.ng.cdOverview.service.CDOverviewDashboardService;
 import io.harness.ng.cdOverview.service.CDOverviewDashboardServiceImpl;
 import io.harness.ng.core.CoreModule;
@@ -199,9 +201,11 @@ import io.harness.steps.shellscript.ShellScriptHelperServiceImpl;
 import io.harness.telemetry.AbstractTelemetryModule;
 import io.harness.telemetry.TelemetryConfiguration;
 import io.harness.time.TimeModule;
+import io.harness.timescaledb.JooqModule;
 import io.harness.timescaledb.TimeScaleDBConfig;
 import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.timescaledb.TimeScaleDBServiceImpl;
+import io.harness.timescaledb.metrics.HExecuteListener;
 import io.harness.token.TokenClientModule;
 import io.harness.user.UserClientModule;
 import io.harness.version.VersionModule;
@@ -234,6 +238,7 @@ import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
+import org.jooq.ExecuteListener;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.reflections.Reflections;
 import org.springframework.core.convert.converter.Converter;
@@ -258,6 +263,13 @@ public class NextGenModule extends AbstractModule {
         .put(DelegateAsyncTaskResponse.class, "ngManager_delegateAsyncTaskResponses")
         .put(DelegateTaskProgressResponse.class, "ngManager_delegateTaskProgressResponses")
         .build();
+  }
+
+  @Provides
+  @Singleton
+  @Named("PSQLExecuteListener")
+  ExecuteListener executeListener() {
+    return HExecuteListener.getInstance();
   }
 
   @Provides
@@ -376,6 +388,7 @@ public class NextGenModule extends AbstractModule {
     });
 
     bind(CDOverviewDashboardService.class).to(CDOverviewDashboardServiceImpl.class);
+    bind(CDLandingDashboardService.class).to(CDLandingDashboardServiceImpl.class);
 
     try {
       bind(TimeScaleDBService.class)
@@ -433,6 +446,7 @@ public class NextGenModule extends AbstractModule {
     install(ConnectorModule.getInstance());
     install(GitopsModule.getInstance());
     install(new GitSyncModule());
+    install(JooqModule.getInstance());
     install(new DefaultOrganizationModule());
     install(new NGAggregateModule());
     install(new DelegateServiceModule());

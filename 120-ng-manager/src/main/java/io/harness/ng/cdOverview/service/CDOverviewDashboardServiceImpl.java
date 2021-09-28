@@ -105,9 +105,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
 
   private String tableNameCD = "pipeline_execution_summary_cd";
   private String tableNameServiceAndInfra = "service_infra_info";
-  private List<String> failedStatusList = Arrays.asList(ExecutionStatus.FAILED.name(), ExecutionStatus.ABORTED.name(),
-      ExecutionStatus.EXPIRED.name(), ExecutionStatus.IGNOREFAILED.name(), ExecutionStatus.ERRORED.name());
-  private List<String> activeStatusList = Arrays.asList(ExecutionStatus.RUNNING.name(),
+  private static List<String> activeStatusList = Arrays.asList(ExecutionStatus.RUNNING.name(),
       ExecutionStatus.ASYNCWAITING.name(), ExecutionStatus.TASKWAITING.name(), ExecutionStatus.TIMEDWAITING.name(),
       ExecutionStatus.PAUSED.name(), ExecutionStatus.PAUSING.name());
   private List<String> pendingStatusList = Arrays.asList(ExecutionStatus.INTERVENTIONWAITING.name(),
@@ -397,14 +395,14 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         if (status.get(i).contentEquals(ExecutionStatus.SUCCESS.name())) {
           currentSuccess++;
           successCountMap.put(currentTimeEpoch, successCountMap.get(currentTimeEpoch) + 1);
-        } else if (failedStatusList.contains(status.get(i))) {
+        } else if (CDDashboardServiceHelper.failedStatusList.contains(status.get(i))) {
           currentFailed++;
           failedCountMap.put(currentTimeEpoch, failedCountMap.get(currentTimeEpoch) + 1);
         }
       } else {
         if (status.get(i).contentEquals(ExecutionStatus.SUCCESS.name())) {
           previousSuccess++;
-        } else if (failedStatusList.contains(status.get(i))) {
+        } else if (CDDashboardServiceHelper.failedStatusList.contains(status.get(i))) {
           previousFailed++;
         }
       }
@@ -532,7 +530,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
       totalCountMap.put(currentTimeEpoch, totalCountMap.get(currentTimeEpoch) + 1);
       if (status.get(i).contentEquals(ExecutionStatus.SUCCESS.name())) {
         successCountMap.put(currentTimeEpoch, successCountMap.get(currentTimeEpoch) + 1);
-      } else if (failedStatusList.contains(status.get(i))) {
+      } else if (CDDashboardServiceHelper.failedStatusList.contains(status.get(i))) {
         failedCountMap.put(currentTimeEpoch, failedCountMap.get(currentTimeEpoch) + 1);
       }
     }
@@ -764,7 +762,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
           deployments.setTotal(deployments.getTotal() + numberOfRecords);
           if ((ExecutionStatus.SUCCESS).toString().equals(status)) {
             deployments.setSuccess(deployments.getSuccess() + numberOfRecords);
-          } else if (failedStatusList.contains(status)) {
+          } else if (CDDashboardServiceHelper.failedStatusList.contains(status)) {
             deployments.setFailure(deployments.getFailure() + numberOfRecords);
           }
         }
@@ -1114,9 +1112,10 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
   public DashboardExecutionStatusInfo getDeploymentActiveFailedRunningInfo(
       String accountId, String orgId, String projectId, long days) {
     // failed
-    String queryFailed = queryBuilderStatus(accountId, orgId, projectId, days, failedStatusList);
-    String queryServiceNameTagIdFailed =
-        queryBuilderSelectIdLimitTimeCdTable(accountId, orgId, projectId, days, failedStatusList);
+    String queryFailed =
+        queryBuilderStatus(accountId, orgId, projectId, days, CDDashboardServiceHelper.failedStatusList);
+    String queryServiceNameTagIdFailed = queryBuilderSelectIdLimitTimeCdTable(
+        accountId, orgId, projectId, days, CDDashboardServiceHelper.failedStatusList);
     List<ExecutionStatusInfo> failure = getDeploymentStatusInfo(queryFailed, queryServiceNameTagIdFailed);
 
     // active
@@ -1237,7 +1236,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
             if (status.get(i).contentEquals(ExecutionStatus.SUCCESS.name())) {
               success++;
             }
-            if (failedStatusList.contains(status.get(i))) {
+            if (CDDashboardServiceHelper.failedStatusList.contains(status.get(i))) {
               failure++;
             }
             if (lastExecutedStartTs == 0) {
