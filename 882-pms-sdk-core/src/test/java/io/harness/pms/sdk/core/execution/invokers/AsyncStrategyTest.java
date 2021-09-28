@@ -91,7 +91,7 @@ public class AsyncStrategyTest extends PmsSdkCoreTestBase {
             correlationIdsCaptor.capture());
     // Wait Engine Mock verify interactions
     AsyncSdkResumeCallback resumeCallback = notifyCallbackArgumentCaptor.getValue();
-    assertThat(resumeCallback.getAmbiance()).isEqualTo(ambiance);
+    assertThat(resumeCallback.getAmbianceBytes()).isEqualTo(ambiance.toByteArray());
 
     AsyncSdkProgressCallback progressCallback = progressCallbackArgumentCaptor.getValue();
     assertThat(progressCallback.getAmbianceBytes()).isEqualTo(ambiance.toByteArray());
