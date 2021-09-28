@@ -17,8 +17,6 @@ option java_multiple_files = true;
 message SdkResponseEventProto {
   SdkResponseEventType sdkResponseEventType = 1;
   google.protobuf.Timestamp createdAt = 3;
-  string nodeExecutionId = 4 [deprecated = true];
-  string planExecutionId = 5 [deprecated = true];
   oneof request {
     QueueTaskRequest queueTaskRequest = 6;
     AddExecutableResponseRequest addExecutableResponseRequest = 7;
