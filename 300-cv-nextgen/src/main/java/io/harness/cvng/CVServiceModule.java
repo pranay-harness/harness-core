@@ -134,6 +134,7 @@ import io.harness.cvng.core.services.impl.DefaultDeleteEntityByHandler;
 import io.harness.cvng.core.services.impl.DeletedCVConfigServiceImpl;
 import io.harness.cvng.core.services.impl.FeatureFlagServiceImpl;
 import io.harness.cvng.core.services.impl.HostRecordServiceImpl;
+import io.harness.cvng.core.services.impl.KubernetesChangeSourceUpdateHandler;
 import io.harness.cvng.core.services.impl.LogRecordServiceImpl;
 import io.harness.cvng.core.services.impl.MetricPackServiceImpl;
 import io.harness.cvng.core.services.impl.MonitoringSourcePerpetualTaskServiceImpl;
@@ -521,6 +522,8 @@ public class CVServiceModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), ChangeSourceType.class, ChangeSourceUpdateHandler.class);
     changeSourceUpdateHandlerMapBinder.addBinding(ChangeSourceType.PAGER_DUTY)
         .to(PagerdutyChangeSourceUpdateHandler.class);
+    changeSourceUpdateHandlerMapBinder.addBinding(ChangeSourceType.KUBERNETES)
+        .to(KubernetesChangeSourceUpdateHandler.class);
 
     bind(ChangeEventService.class).to(ChangeEventServiceImpl.class);
     bind(ChangeEventEntityAndDTOTransformer.class);

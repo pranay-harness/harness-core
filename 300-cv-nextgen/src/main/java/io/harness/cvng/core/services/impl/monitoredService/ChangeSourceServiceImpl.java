@@ -107,40 +107,28 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
             .stream()
             .collect(Collectors.toMap(sc -> sc.getIdentifier(), Function.identity()));
 
-    newChangeSourceMap.keySet()
-        .stream()
-        .filter(key -> replaceable(key, newChangeSourceMap, existingChangeSourceMap))
-        .forEach(identifer -> {
-          ChangeSource existingChangeSource = existingChangeSourceMap.get(identifer);
-          ChangeSource newChangeSource = newChangeSourceMap.get(identifer);
-          update(existingChangeSource, newChangeSource);
-          if (changeSourceUpdateHandlerMap.containsKey(newChangeSource.getType())) {
-            changeSourceUpdateHandlerMap.get(newChangeSource.getType())
-                .handleUpdate(existingChangeSource, newChangeSource);
-          }
-        });
+    newChangeSourceMap.forEach((identifier, changeSource) -> {
+      if (replaceable(identifier, newChangeSourceMap, existingChangeSourceMap)) {
+        ChangeSource existingChangeSource = existingChangeSourceMap.remove(identifier);
+        update(existingChangeSource, changeSource);
+        if (changeSourceUpdateHandlerMap.containsKey(changeSource.getType())) {
+          changeSourceUpdateHandlerMap.get(changeSource.getType()).handleUpdate(existingChangeSource, changeSource);
+        }
+      } else {
+        hPersistence.save(changeSource);
+        if (changeSourceUpdateHandlerMap.containsKey(changeSource.getType())) {
+          changeSourceUpdateHandlerMap.get(changeSource.getType()).handleCreate(changeSource);
+        }
+      }
+    });
 
-    newChangeSourceMap.keySet()
-        .stream()
-        .filter(key -> !replaceable(key, newChangeSourceMap, existingChangeSourceMap))
-        .forEach(identifier -> {
-          ChangeSource changeSource = newChangeSourceMap.get(identifier);
-          hPersistence.save(changeSource);
-          if (changeSourceUpdateHandlerMap.containsKey(changeSource.getType())) {
-            changeSourceUpdateHandlerMap.get(changeSource.getType()).handleCreate(changeSource);
-          }
-        });
-
-    existingChangeSourceMap.keySet()
-        .stream()
-        .filter(key -> !replaceable(key, newChangeSourceMap, existingChangeSourceMap))
-        .forEach(identifier -> {
-          ChangeSource changeSource = existingChangeSourceMap.get(identifier);
-          hPersistence.delete(changeSource);
-          if (changeSourceUpdateHandlerMap.containsKey(changeSource.getType())) {
-            changeSourceUpdateHandlerMap.get(changeSource.getType()).handleDelete(changeSource);
-          }
-        });
+    existingChangeSourceMap.keySet().forEach(identifier -> {
+      ChangeSource changeSource = existingChangeSourceMap.get(identifier);
+      hPersistence.delete(changeSource);
+      if (changeSourceUpdateHandlerMap.containsKey(changeSource.getType())) {
+        changeSourceUpdateHandlerMap.get(changeSource.getType()).handleDelete(changeSource);
+      }
+    });
   }
 
   protected void update(ChangeSource existingChangeSource, ChangeSource newChangeSource) {
