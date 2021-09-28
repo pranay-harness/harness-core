@@ -8,6 +8,7 @@ import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BOJANA;
+import static io.harness.rule.OwnerRule.TMACARI;
 import static io.harness.rule.OwnerRule.YOGESH;
 
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
@@ -22,11 +23,14 @@ import static software.wings.utils.WingsTestConstants.STATE_NAME;
 
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
@@ -40,14 +44,16 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.helm.HelmChartInfo;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
-import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.k8s.model.K8sPod;
+import io.harness.k8s.model.KubernetesResource;
 import io.harness.rule.Owner;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.k8s.K8sStateExecutionData;
+import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
@@ -68,6 +74,7 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.ApplicationManifestUtils;
 
 import com.google.common.collect.ImmutableMap;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -137,12 +144,85 @@ public class K8sRollingDeployTest extends CategoryTest {
     assertThat(taskParams.getCommandName()).isEqualTo(K8S_ROLLING_DEPLOY_COMMAND_NAME);
     assertThat(taskParams.getTimeoutIntervalInMin()).isEqualTo(10);
     assertThat(taskParams.isSkipDryRun()).isTrue();
+    assertThat(taskParams.getKubernetesResources()).isNull();
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testExecuteK8sTaskWhenInheritManifestsAndNoResourcesFound() {
+    k8sRollingDeploy.setSkipDryRun(false);
+    k8sRollingDeploy.setInheritManifests(true);
+    when(applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES)).thenReturn(new HashMap<>());
+    when(k8sStateHelper.fetchContainerInfrastructureMapping(context))
+        .thenReturn(aGcpKubernetesInfrastructureMapping().build());
+
+    doReturn(null).when(k8sStateHelper).getResourcesFromSweepingOutput(any(), anyString());
+    doReturn(true).when(k8sStateHelper).isExportManifestsEnabled(any());
+    doReturn(K8sDelegateManifestConfig.builder().build())
+        .when(k8sRollingDeploy)
+        .createDelegateManifestConfig(any(), any());
+    doReturn(emptyList()).when(k8sRollingDeploy).fetchRenderedValuesFiles(any(), any());
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().skipVersioningForAllK8sObjects(true).storeType(Local).build();
+    Map<K8sValuesLocation, ApplicationManifest> applicationManifestMap = new HashMap<>();
+    applicationManifestMap.put(K8sValuesLocation.Service, applicationManifest);
+    doReturn(applicationManifestMap).when(k8sRollingDeploy).fetchApplicationManifests(any());
+
+    assertThatThrownBy(() -> k8sRollingDeploy.executeK8sTask(context, ACTIVITY_ID))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("No kubernetes resources found to inherit");
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testExecuteK8sTaskWhenInheritManifests() {
+    k8sRollingDeploy.setSkipDryRun(false);
+    k8sRollingDeploy.setInheritManifests(true);
+    List<KubernetesResource> kubernetesResources = new ArrayList<>();
+    kubernetesResources.add(KubernetesResource.builder().build());
+    when(applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES)).thenReturn(new HashMap<>());
+    when(k8sStateHelper.fetchContainerInfrastructureMapping(context))
+        .thenReturn(aGcpKubernetesInfrastructureMapping().build());
+
+    doReturn(true).when(k8sStateHelper).isExportManifestsEnabled(any());
+    doReturn(kubernetesResources).when(k8sStateHelper).getResourcesFromSweepingOutput(any(), anyString());
+    doReturn(RELEASE_NAME).when(k8sRollingDeploy).fetchReleaseName(any(), any());
+    doReturn(K8sDelegateManifestConfig.builder().build())
+        .when(k8sRollingDeploy)
+        .createDelegateManifestConfig(any(), any());
+    doReturn(emptyList()).when(k8sRollingDeploy).fetchRenderedValuesFiles(any(), any());
+    doReturn(ExecutionResponse.builder().build()).when(k8sRollingDeploy).queueK8sDelegateTask(any(), any(), any());
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().skipVersioningForAllK8sObjects(true).storeType(Local).build();
+    Map<K8sValuesLocation, ApplicationManifest> applicationManifestMap = new HashMap<>();
+    applicationManifestMap.put(K8sValuesLocation.Service, applicationManifest);
+    doReturn(applicationManifestMap).when(k8sRollingDeploy).fetchApplicationManifests(any());
+
+    k8sRollingDeploy.executeK8sTask(context, ACTIVITY_ID);
+
+    ArgumentCaptor<K8sTaskParameters> k8sTaskParamsArgumentCaptor = ArgumentCaptor.forClass(K8sTaskParameters.class);
+    verify(k8sRollingDeploy, times(1))
+        .queueK8sDelegateTask(any(), k8sTaskParamsArgumentCaptor.capture(), any(applicationManifestMap.getClass()));
+    K8sRollingDeployTaskParameters taskParams = (K8sRollingDeployTaskParameters) k8sTaskParamsArgumentCaptor.getValue();
+
+    assertThat(taskParams.getReleaseName()).isEqualTo(RELEASE_NAME);
+    assertThat(taskParams.getActivityId()).isEqualTo(ACTIVITY_ID);
+    assertThat(taskParams.getCommandType()).isEqualTo(DEPLOYMENT_ROLLING);
+    assertThat(taskParams.isInCanaryWorkflow()).isFalse();
+    assertThat(taskParams.getCommandName()).isEqualTo(K8S_ROLLING_DEPLOY_COMMAND_NAME);
+    assertThat(taskParams.getTimeoutIntervalInMin()).isEqualTo(10);
+    assertThat(taskParams.isSkipDryRun()).isFalse();
+    assertThat(taskParams.isInheritManifests()).isTrue();
+    assertThat(taskParams.getKubernetesResources()).isEqualTo(kubernetesResources);
   }
 
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testDelegateExecuteToK8sStateHelper() {
+    k8sRollingDeploy.setInheritManifests(false);
     doReturn(ExecutionResponse.builder().build())
         .when(k8sRollingDeploy)
         .executeWrapperWithManifest(any(K8sStateExecutor.class), any(ExecutionContext.class), anyLong());
@@ -150,6 +230,18 @@ public class K8sRollingDeployTest extends CategoryTest {
     verify(k8sRollingDeploy, times(1))
         .executeWrapperWithManifest(
             k8sRollingDeploy, context, fetchSafeTimeoutInMillis(k8sRollingDeploy.getTimeoutMillis()));
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testExecuteWhenInheritManifests() {
+    k8sRollingDeploy.setInheritManifests(true);
+    doReturn(true).when(k8sStateHelper).isExportManifestsEnabled(any());
+    doReturn(Activity.builder().build()).when(k8sRollingDeploy).createK8sActivity(any(), any(), any(), any(), any());
+    doReturn(ExecutionResponse.builder().build()).when(k8sRollingDeploy).executeK8sTask(any(), any());
+    k8sRollingDeploy.execute(context);
+    verify(k8sRollingDeploy, times(1)).executeK8sTask(eq(context), any());
   }
 
   @Test
@@ -191,15 +283,15 @@ public class K8sRollingDeployTest extends CategoryTest {
   }
 
   @Test
-  @Owner(developers = BOJANA)
+  @Owner(developers = TMACARI)
   @Category(UnitTests.class)
   public void testCommandUnitList() {
-    List<CommandUnit> blueGreenCommandUnits = k8sRollingDeploy.commandUnitList(true, "accountId");
-    assertThat(blueGreenCommandUnits).isNotEmpty();
-    assertThat(blueGreenCommandUnits.get(0).getName()).isEqualTo(K8sCommandUnitConstants.FetchFiles);
-    assertThat(blueGreenCommandUnits.get(1).getName()).isEqualTo(K8sCommandUnitConstants.Init);
-    assertThat(blueGreenCommandUnits.get(blueGreenCommandUnits.size() - 1).getName())
-        .isEqualTo(K8sCommandUnitConstants.WrapUp);
+    List<CommandUnit> commandUnits = new ArrayList<>();
+    doReturn(commandUnits)
+        .when(k8sStateHelper)
+        .getCommandUnits(anyBoolean(), any(), anyBoolean(), anyBoolean(), anyBoolean());
+    List<CommandUnit> result = k8sRollingDeploy.commandUnitList(true, "accountId");
+    assertThat(result).isEqualTo(commandUnits);
   }
 
   @Test
@@ -240,6 +332,40 @@ public class K8sRollingDeployTest extends CategoryTest {
 
     verify(activityService, times(1)).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.FAILED);
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+    assertThat(executionResponse.getStateExecutionData()).isEqualTo(stateExecutionData);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseForK8sTaskK8sResourcesReturned() {
+    Application app = Application.Builder.anApplication().accountId("accountId").uuid(APP_ID).build();
+    K8sStateExecutionData stateExecutionData = K8sStateExecutionData.builder().build();
+    List<KubernetesResource> kubernetesResources = new ArrayList<>();
+    WorkflowStandardParams standardParams =
+        spy(WorkflowStandardParams.Builder.aWorkflowStandardParams().withAppId(APP_ID).build());
+    stateExecutionInstance.setStateExecutionMap(
+        ImmutableMap.of(stateExecutionInstance.getDisplayName(), stateExecutionData));
+    K8sTaskExecutionResponse taskResponse =
+        K8sTaskExecutionResponse.builder()
+            .k8sTaskResponse(K8sRollingDeployResponse.builder().resources(kubernetesResources).build())
+            .commandExecutionStatus(SUCCESS)
+            .build();
+
+    context.pushContextElement(standardParams);
+    doReturn(true).when(k8sStateHelper).isExportManifestsEnabled(any());
+    doReturn(app).when(standardParams).getApp();
+    doReturn(app).when(appService).get(APP_ID);
+    doReturn(ACTIVITY_ID).when(k8sRollingDeploy).fetchActivityId(context);
+    doReturn(APP_ID).when(k8sRollingDeploy).fetchAppId(context);
+
+    ExecutionResponse executionResponse =
+        k8sRollingDeploy.handleAsyncResponseForK8sTask(context, ImmutableMap.of(ACTIVITY_ID, taskResponse));
+
+    verify(k8sStateHelper, times(1))
+        .saveResourcesToSweepingOutput(context, kubernetesResources, K8S_DEPLOYMENT_ROLLING.name());
+    verify(activityService, times(1)).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(executionResponse.getStateExecutionData()).isEqualTo(stateExecutionData);
   }
 
