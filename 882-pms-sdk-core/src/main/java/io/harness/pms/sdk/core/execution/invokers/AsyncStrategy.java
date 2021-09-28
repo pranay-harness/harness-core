@@ -69,7 +69,7 @@ public class AsyncStrategy extends ProgressableStrategy {
     // this
     sdkNodeExecutionService.addExecutableResponse(ambiance, ExecutableResponse.newBuilder().setAsync(response).build());
 
-    AsyncSdkResumeCallback callback = AsyncSdkResumeCallback.builder().ambiance(ambiance).build();
+    AsyncSdkResumeCallback callback = AsyncSdkResumeCallback.builder().ambianceBytes(ambiance.toByteArray()).build();
     AsyncSdkProgressCallback progressCallback =
         AsyncSdkProgressCallback.builder()
             .ambianceBytes(ambiance.toByteArray())
