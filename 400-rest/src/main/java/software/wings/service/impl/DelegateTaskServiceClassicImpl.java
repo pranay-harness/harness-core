@@ -375,7 +375,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
              TaskType.valueOf(task.getData().getTaskType()).getTaskGroup().name(), task.getRank(), OVERRIDE_NESTS);
          AutoLogContext ignore2 = new AccountLogContext(task.getAccountId(), OVERRIDE_ERROR)) {
       saveDelegateTask(task, QUEUED);
-      log.debug("Queueing async task");
+      log.info("Queueing async task");
       broadcastHelper.broadcastNewDelegateTaskAsync(task);
     }
     return task.getUuid();
@@ -402,7 +402,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
         }
       }
 
-      log.debug("Processing sync task {}", task.getUuid());
+      log.info("Processing sync task {}", task.getUuid());
       broadcastHelper.rebroadcastDelegateTask(task);
     }
   }
