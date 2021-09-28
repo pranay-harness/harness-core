@@ -9,5 +9,5 @@ import java.util.List;
 
 @OwnedBy(PL)
 public interface DashboardRBACService {
-  List<ProjectDTO> listAccessibleProject(String accountId, String userId);
+  List<ProjectDTO> listAccessibleProject(String accountIdentifier, String userId);
 }

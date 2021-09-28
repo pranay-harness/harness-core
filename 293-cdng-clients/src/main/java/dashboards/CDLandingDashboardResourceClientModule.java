@@ -13,6 +13,7 @@ import com.google.inject.Scopes;
 
 @OwnedBy(PIPELINE)
 public class CDLandingDashboardResourceClientModule extends AbstractModule {
+  private static CDLandingDashboardResourceClientModule instance;
   private final ServiceHttpClientConfig serviceHttpClientConfig;
   private final String serviceSecret;
   private final String clientId;
@@ -22,6 +23,15 @@ public class CDLandingDashboardResourceClientModule extends AbstractModule {
     this.serviceHttpClientConfig = serviceHttpClientConfig;
     this.serviceSecret = serviceSecret;
     this.clientId = clientId;
+  }
+
+  public static CDLandingDashboardResourceClientModule getInstance(
+      ServiceHttpClientConfig serviceHttpClientConfig, String serviceSecret, String clientId) {
+    if (instance == null) {
+      instance = new CDLandingDashboardResourceClientModule(serviceHttpClientConfig, serviceSecret, clientId);
+    }
+
+    return instance;
   }
 
   @Provides
