@@ -108,9 +108,10 @@ public class LogDashboardServiceImpl implements LogDashboardService {
     List<LogAnalysisTag> tags = liveMonitoringLogAnalysisFilter.filterByClusterTypes()
         ? liveMonitoringLogAnalysisFilter.getClusterTypes()
         : Arrays.asList(LogAnalysisTag.values());
+
     cvConfigIds.forEach(cvConfigId -> {
-      List<AnalysisResult> logAnalysisResults = getAnalysisResultForCvConfigId(
-          cvConfigId, tags, timeRangeParams.getStartTime(), timeRangeParams.getEndTime());
+      List<AnalysisResult> logAnalysisResults =
+          getAnalysisResultForCvConfigId(cvConfigId, timeRangeParams.getStartTime(), timeRangeParams.getEndTime());
 
       Map<Long, LogAnalysisTag> labelTagMap = new HashMap<>();
       logAnalysisResults.forEach(result -> {
@@ -133,7 +134,9 @@ public class LogDashboardServiceImpl implements LogDashboardService {
                                                      .build());
       });
     });
-    return liveMonitoringLogAnalysisClusterDTOS;
+    return liveMonitoringLogAnalysisClusterDTOS.stream()
+        .filter(cluster -> tags.contains(cluster.getTag()))
+        .collect(Collectors.toList());
   }
 
   private List<CVConfig> getCVConfigs(ServiceEnvironmentParams serviceEnvironmentParams,
@@ -243,8 +246,7 @@ public class LogDashboardServiceImpl implements LogDashboardService {
     cvConfigIds.forEach(cvConfigId -> {
       callables.add(() -> {
         Map<String, List<AnalysisResult>> configResult = new HashMap<>();
-        configResult.put(cvConfigId,
-            getAnalysisResultForCvConfigId(cvConfigId, Arrays.asList(LogAnalysisTag.values()), startTime, endTime));
+        configResult.put(cvConfigId, getAnalysisResultForCvConfigId(cvConfigId, startTime, endTime));
         return configResult;
       });
     });
@@ -283,14 +285,11 @@ public class LogDashboardServiceImpl implements LogDashboardService {
     return PageUtils.offsetAndLimit(sortedList, page, size);
   }
 
-  private List<AnalysisResult> getAnalysisResultForCvConfigId(
-      String cvConfigId, List<LogAnalysisTag> tags, Instant startTime, Instant endTime) {
-    List<LogAnalysisResult> analysisResults =
-        logAnalysisService.getAnalysisResults(cvConfigId, tags, startTime, endTime);
+  private List<AnalysisResult> getAnalysisResultForCvConfigId(String cvConfigId, Instant startTime, Instant endTime) {
+    List<LogAnalysisResult> analysisResults = logAnalysisService.getAnalysisResults(cvConfigId, startTime, endTime);
     return analysisResults.stream()
         .map(LogAnalysisResult::getLogAnalysisResults)
         .flatMap(Collection::stream)
-        .filter(a -> tags.contains(a.getTag()))
         .collect(Collectors.toList());
   }
 
