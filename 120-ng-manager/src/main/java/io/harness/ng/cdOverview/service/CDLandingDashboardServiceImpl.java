@@ -499,13 +499,12 @@ public class CDLandingDashboardServiceImpl implements CDLandingDashboardService 
             .where(PIPELINE_EXECUTION_SUMMARY_CD.ACCOUNTID.eq(accountIdentifier)
                        .and(PIPELINE_EXECUTION_SUMMARY_CD.STARTTS.greaterOrEqual(startInterval))
                        .and(PIPELINE_EXECUTION_SUMMARY_CD.STARTTS.lessThan(endInterval)))
-            .andExists(
-                dsl.selectOne()
-                    .from(orgProjectTable)
-                    .where(
-                        PIPELINE_EXECUTION_SUMMARY_CD.ORGIDENTIFIER.eq((Field<String>) orgProjectTable.field("orgId"))
-                            .and(PIPELINE_EXECUTION_SUMMARY_CD.PROJECTIDENTIFIER.eq(
-                                (Field<String>) orgProjectTable.fieAbstractTimeScaleDBMigrationld("projectId")))))
+            .andExists(dsl.selectOne()
+                           .from(orgProjectTable)
+                           .where(PIPELINE_EXECUTION_SUMMARY_CD.ORGIDENTIFIER
+                                      .eq((Field<String>) orgProjectTable.field("orgId"))
+                                      .and(PIPELINE_EXECUTION_SUMMARY_CD.PROJECTIDENTIFIER.eq(
+                                          (Field<String>) orgProjectTable.field("projectId")))))
             .groupBy(PIPELINE_EXECUTION_SUMMARY_CD.ORGIDENTIFIER, PIPELINE_EXECUTION_SUMMARY_CD.PROJECTIDENTIFIER)
             .fetchInto(AggregateProjectInfo.class);
 
