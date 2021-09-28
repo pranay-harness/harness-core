@@ -19,6 +19,7 @@ import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.dl.WingsPersistence;
 import software.wings.resources.UserResource.UpdatePasswordRequest;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.SignupHandler;
 import software.wings.service.intfc.SignupService;
 import software.wings.service.intfc.UserService;
@@ -37,6 +38,7 @@ public class OnpremSignupHandler implements SignupHandler {
   @Inject private UserService userService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private MainConfiguration mainConfiguration;
+  @Inject private AccountService accountService;
 
   @Override
   public boolean handle(UserInvite userInvite) {
@@ -44,6 +46,7 @@ public class OnpremSignupHandler implements SignupHandler {
     userInvite.setPasswordHash(hashpw(new String(userInvite.getPassword()), BCrypt.gensalt()));
     userService.saveUserInvite(userInvite);
     userService.completeTrialSignupAndSignIn(userInvite);
+    accountService.updateFeatureFlagsForOnPremAccount();
     return true;
   }
 
