@@ -42,7 +42,7 @@ public class CIK8ExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
   }
 
   public K8sTaskExecutionResponse callDrone(ExecuteStepRequest request, CIK8ExecuteStepTaskParams taskParams) {
-    if (!request.getStep().hasRun()) {
+    if (request.getStep().hasRunTests()) {
       throw new InvalidArgumentsException("Invalid step type");
     }
 
@@ -54,11 +54,26 @@ public class CIK8ExecuteStepTaskHandler implements CIExecuteStepTaskHandler {
       ex.printStackTrace();
     }
 
+    String command = "";
+    String image = "";
+    Map<String, String> env = new HashMap<>();
+    if (request.getStep().hasRun()) {
+      command = request.getStep().getRun().getCommand();
+      image = request.getStep().getRun().getImage();
+      env = request.getStep().getRun().getEnvironmentMap();
+    } else if (request.getStep().hasPlugin()) {
+      image = request.getStep().getPlugin().getImage();
+      env = request.getStep().getPlugin().getEnvironmentMap();
+    }
+
+    JSONObject envObj = new JSONObject(env);
+
     Map<String, String> params = new HashMap<>();
-    params.put("command", request.getStep().getRun().getCommand());
-    params.put("image", request.getStep().getRun().getImage());
+    params.put("command", command);
+    params.put("image", image);
     params.put("step_id", request.getStep().getId());
     params.put("log_key", request.getStep().getLogKey());
+    params.put("env", envObj.toString());
     params.put("log_stream_url", "http://localhost:8079");
     params.put("log_stream_account_id", request.getStep().getAccountId());
     params.put("log_stream_token", "token");

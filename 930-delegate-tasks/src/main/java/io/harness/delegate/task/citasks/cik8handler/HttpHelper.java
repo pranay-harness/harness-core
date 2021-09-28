@@ -8,6 +8,7 @@ import okhttp3.*;
 import org.json.JSONObject;
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Singleton
@@ -26,7 +27,11 @@ public class HttpHelper {
                     .addHeader("Content-Type", "application/json")
                     .build();
 
-            OkHttpClient client = new OkHttpClient();
+            OkHttpClient client = new OkHttpClient.Builder()
+                    .connectTimeout(100, TimeUnit.SECONDS)
+                    .writeTimeout(100, TimeUnit.SECONDS)
+                    .readTimeout(100, TimeUnit.SECONDS)
+                    .build();
             return client.newCall(request).execute();
         } catch (Exception e) {
             log.error("Error sending post data", e);

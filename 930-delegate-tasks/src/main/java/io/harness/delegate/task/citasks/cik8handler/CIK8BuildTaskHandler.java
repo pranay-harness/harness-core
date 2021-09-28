@@ -69,6 +69,7 @@ import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
+import org.json.JSONObject;
 
 @Slf4j
 @Singleton
@@ -96,7 +97,8 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     return type;
   }
 
-  public K8sTaskExecutionResponse callDrone(String podName, CIK8BuildTaskParams taskParams) {
+  public K8sTaskExecutionResponse callDrone(String podName, CIK8BuildTaskParams taskParams,
+                                            CIK8PodParams<CIK8ContainerParams> podParams, Map<String, SecretParams> gitSecret) {
     ObjectMapper Obj = new ObjectMapper();
     String jsonDump = "";
     try {
@@ -105,10 +107,30 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
       e.printStackTrace();
     }
 
+    Map<String, String> stageEnv = new HashMap<>();
+    for(CIK8ContainerParams containerParams: podParams.getContainerParamsList()) {
+      if (containerParams.getName().equals("step-1")) {
+        stageEnv = containerParams.getEnvVars();
+      }
+    }
+
+    Map<String, String> secretEnv = new HashMap<>();
+    if (isNotEmpty(gitSecret)) {
+      for (Map.Entry<String, SecretParams> entry : gitSecret.entrySet()) {
+        secretEnv.put(entry.getValue().getSecretKey(), new String(EncodingUtils.decodeBase64(entry.getValue().getValue())));
+      }
+    }
+
+    JSONObject envObj = new JSONObject(stageEnv);
+    JSONObject secretEnvObj = new JSONObject(secretEnv);
+
     Map<String, String> params = new HashMap<>();
     params.put("stage_id", podName);
+    params.put("stage_env", envObj.toString());
+    params.put("secret_env", secretEnvObj.toString());
 //    params.put("dump", jsonDump);
     Response response = httpHelper.call("http://127.0.0.1:3000/setup", params);
+
     if (response == null || !response.isSuccessful()) {
       log.error("Setup response not Successful. Response body: {}", response);
       return K8sTaskExecutionResponse.builder()
@@ -134,28 +156,19 @@ public class CIK8BuildTaskHandler implements CIBuildTaskHandler {
     String namespace = podParams.getNamespace();
     String podName = podParams.getName();
 
-    return callDrone(podName, cik8BuildTaskParams);
+    Map<String, SecretParams> gitSecretData = new HashMap<>();
+    if (gitConnectorDetails!= null) {
+      gitSecretData = secretSpecBuilder.decryptGitSecretVariables(gitConnectorDetails);
+    }
+
+    return callDrone(podName, cik8BuildTaskParams, (CIK8PodParams<CIK8ContainerParams>) podParams, gitSecretData);
 
     /*
     K8sTaskExecutionResponse result;
     CiK8sTaskResponse k8sTaskResponse = null;
     try (AutoLogContext ignore1 = new K8LogContext(podParams.getName(), null, OVERRIDE_ERROR)) {
       try {
-        KubernetesConfig kubernetesConfig =
-            k8sConnectorHelper.getKubernetesConfig(cik8BuildTaskParams.getK8sConnector());
-        ApiClient apiClient = apiClientFactory.getClient(kubernetesConfig);
-        CoreV1Api coreV1Api = new CoreV1Api(apiClient);
 
-        createImageSecrets(coreV1Api, namespace, (CIK8PodParams<CIK8ContainerParams>) podParams);
-        createEnvVariablesSecrets(
-            coreV1Api, namespace, (CIK8PodParams<CIK8ContainerParams>) podParams, gitConnectorDetails);
-
-        if (cik8BuildTaskParams.getServicePodParams() != null) {
-          for (CIK8ServicePodParams servicePodParams : cik8BuildTaskParams.getServicePodParams()) {
-            log.info("Creating service for container: {}", servicePodParams);
-            createServicePod(coreV1Api, namespace, servicePodParams);
-          }
-        }
 
         log.info("Setting up pod spec");
         V1Pod pod = podSpecBuilder.createSpec(podParams).build();
