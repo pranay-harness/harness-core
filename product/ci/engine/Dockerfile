@@ -6,9 +6,9 @@
 
 FROM alpine:3.12
 RUN apk add --update \
-    curl \
+    curl>=7.79.0-r0 \
     && rm -rf /var/cache/apk/*
-RUN apk add git
+RUN apk add git>=2.30.2-r0
 COPY engine_/engine /usr/local/bin/ci-lite-engine
 RUN chmod +x /usr/local/bin/ci-lite-engine
 
