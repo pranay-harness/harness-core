@@ -13,7 +13,6 @@ import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
-import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.plan.execution.SetupAbstractionKeys;
 import io.harness.pms.sdk.core.PmsSdkCoreTestBase;
 import io.harness.pms.sdk.core.execution.InvokerPackage;
@@ -69,18 +68,16 @@ public class SyncStrategyTest extends PmsSdkCoreTestBase {
                                         .stepParameters(TestStepParameters.builder().build())
                                         .build();
 
-    ArgumentCaptor<String> planExecutionIdCaptor = ArgumentCaptor.forClass(String.class);
-    ArgumentCaptor<String> nodeExecutionIdCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<Ambiance> ambianceCaptor = ArgumentCaptor.forClass(Ambiance.class);
     ArgumentCaptor<StepResponseProto> stepResponseCaptor = ArgumentCaptor.forClass(StepResponseProto.class);
     ArgumentCaptor<ExecutableResponse> executableResponseArgumentCaptor =
         ArgumentCaptor.forClass(ExecutableResponse.class);
 
     syncStrategy.start(invokerPackage);
     Mockito.verify(sdkNodeExecutionService, Mockito.times(1))
-        .handleStepResponse(planExecutionIdCaptor.capture(), nodeExecutionIdCaptor.capture(),
-            stepResponseCaptor.capture(), executableResponseArgumentCaptor.capture());
-    assertThat(planExecutionIdCaptor.getValue()).isEqualTo(ambiance.getPlanExecutionId());
-    assertThat(nodeExecutionIdCaptor.getValue()).isEqualTo(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
+        .handleStepResponse(
+            ambianceCaptor.capture(), stepResponseCaptor.capture(), executableResponseArgumentCaptor.capture());
+    assertThat(ambianceCaptor.getValue()).isEqualTo(ambiance);
   }
 
   private Map<String, String> setupAbstractions() {

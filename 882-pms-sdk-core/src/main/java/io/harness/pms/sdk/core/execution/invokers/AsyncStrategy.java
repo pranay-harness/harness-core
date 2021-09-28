@@ -52,8 +52,7 @@ public class AsyncStrategy extends ProgressableStrategy {
     AsyncExecutable asyncExecutable = extractStep(ambiance);
     StepResponse stepResponse = asyncExecutable.handleAsyncResponse(
         ambiance, resumePackage.getStepParameters(), resumePackage.getResponseDataMap());
-    sdkNodeExecutionService.handleStepResponse(ambiance.getPlanExecutionId(),
-        AmbianceUtils.obtainCurrentRuntimeId(ambiance), StepResponseMapper.toStepResponseProto(stepResponse));
+    sdkNodeExecutionService.handleStepResponse(ambiance, StepResponseMapper.toStepResponseProto(stepResponse));
   }
 
   private void handleResponse(
@@ -68,13 +67,9 @@ public class AsyncStrategy extends ProgressableStrategy {
     }
     // TODO : This is the last use of add executable response need to remove it as causing issues. Find a way to remove
     // this
-    sdkNodeExecutionService.addExecutableResponse(
-        ambiance.getPlanExecutionId(), nodeExecutionId, ExecutableResponse.newBuilder().setAsync(response).build());
+    sdkNodeExecutionService.addExecutableResponse(ambiance, ExecutableResponse.newBuilder().setAsync(response).build());
 
-    AsyncSdkResumeCallback callback = AsyncSdkResumeCallback.builder()
-                                          .planExecutionId(ambiance.getPlanExecutionId())
-                                          .nodeExecutionId(nodeExecutionId)
-                                          .build();
+    AsyncSdkResumeCallback callback = AsyncSdkResumeCallback.builder().ambiance(ambiance).build();
     AsyncSdkProgressCallback progressCallback =
         AsyncSdkProgressCallback.builder()
             .ambianceBytes(ambiance.toByteArray())

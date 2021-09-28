@@ -33,6 +33,7 @@ import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSYamlSchemaService;
 import io.harness.pms.plan.creation.PlanCreatorMergeService;
+import io.harness.pms.plan.execution.beans.dto.RunStageRequestDTO;
 import io.harness.pms.rbac.validator.PipelineRbacService;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.threading.Morpheus;
@@ -89,8 +90,30 @@ public class PipelineExecuteHelper {
         fetchPipelineEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier);
     ExecutionTriggerInfo triggerInfo = buildTriggerInfo(null);
     ExecArgs execArgs =
-        buildExecutionArgs(pipelineEntity, moduleType, inputSetPipelineYaml, triggerInfo, false, null, null);
+        buildExecutionArgs(pipelineEntity, moduleType, inputSetPipelineYaml, null, triggerInfo, false, null, null);
     PlanExecution planExecution = null;
+    if (useV2) {
+      planExecution = startExecutionV2(
+          accountId, orgIdentifier, projectIdentifier, execArgs.metadata, execArgs.planExecutionMetadata, false);
+    } else {
+      planExecution = startExecution(
+          accountId, orgIdentifier, projectIdentifier, execArgs.metadata, execArgs.planExecutionMetadata, false);
+    }
+    return PlanExecutionResponseDto.builder()
+        .planExecution(planExecution)
+        .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(pipelineEntity))
+        .build();
+  }
+
+  public PlanExecutionResponseDto runStagesWithRuntimeInputYaml(@NotNull String accountId,
+      @NotNull String orgIdentifier, @NotNull String projectIdentifier, @NotNull String pipelineIdentifier,
+      String moduleType, RunStageRequestDTO runStageRequestDTO, boolean useV2) throws IOException {
+    PipelineEntity pipelineEntity =
+        fetchPipelineEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier);
+    ExecutionTriggerInfo triggerInfo = buildTriggerInfo(null);
+    ExecArgs execArgs = buildExecutionArgs(pipelineEntity, moduleType, runStageRequestDTO.getRuntimeInputYaml(),
+        runStageRequestDTO.getStageIdentifiers(), triggerInfo, false, null, null);
+    PlanExecution planExecution;
     if (useV2) {
       planExecution = startExecutionV2(
           accountId, orgIdentifier, projectIdentifier, execArgs.metadata, execArgs.planExecutionMetadata, false);
@@ -125,7 +148,7 @@ public class PipelineExecuteHelper {
     }
     String previousProcessedYaml = optionalPlanExecutionMetadata.get().getProcessedYaml();
 
-    ExecArgs execArgs = buildExecutionArgs(pipelineEntity, moduleType, inputSetPipelineYaml, triggerInfo, true,
+    ExecArgs execArgs = buildExecutionArgs(pipelineEntity, moduleType, inputSetPipelineYaml, null, triggerInfo, true,
         previousProcessedYaml, retryStagesIdentifier);
     PlanExecution planExecution = null;
     if (useV2) {
@@ -150,7 +173,7 @@ public class PipelineExecuteHelper {
     ExecutionTriggerInfo triggerInfo = buildTriggerInfo(originalExecutionId);
 
     ExecArgs execArgs =
-        buildExecutionArgs(pipelineEntity, moduleType, inputSetPipelineYaml, triggerInfo, false, null, null);
+        buildExecutionArgs(pipelineEntity, moduleType, inputSetPipelineYaml, null, triggerInfo, false, null, null);
 
     // TODO: this is Quick fix for CIGA :( we would need to refactor this later
     populateTriggerDataForRerun(originalExecutionId, execArgs);
@@ -208,7 +231,7 @@ public class PipelineExecuteHelper {
 
     ExecutionTriggerInfo triggerInfo = buildTriggerInfo(null);
     ExecArgs execArgs =
-        buildExecutionArgs(pipelineEntity, moduleType, mergedRuntimeInputYaml, triggerInfo, false, null, null);
+        buildExecutionArgs(pipelineEntity, moduleType, mergedRuntimeInputYaml, null, triggerInfo, false, null, null);
 
     PlanExecution planExecution = startExecution(
         accountId, orgIdentifier, projectIdentifier, execArgs.metadata, execArgs.planExecutionMetadata, false);
@@ -229,7 +252,7 @@ public class PipelineExecuteHelper {
     ExecutionTriggerInfo triggerInfo = buildTriggerInfo(originalExecutionId);
 
     ExecArgs execArgs =
-        buildExecutionArgs(pipelineEntity, moduleType, mergedRuntimeInputYaml, triggerInfo, false, null, null);
+        buildExecutionArgs(pipelineEntity, moduleType, mergedRuntimeInputYaml, null, triggerInfo, false, null, null);
 
     // TODO: this is Quick fix for CIGA :( we would need to refactor this later
     populateTriggerDataForRerun(originalExecutionId, execArgs);
@@ -254,10 +277,15 @@ public class PipelineExecuteHelper {
     }
   }
 
-  private String buildAndValidatePipelineYaml(String inputSetPipelineYaml, PipelineEntity pipelineEntity) {
+  private String buildAndValidatePipelineYaml(
+      String inputSetPipelineYaml, List<String> stagesToRun, PipelineEntity pipelineEntity) {
     String pipelineYaml;
     if (EmptyPredicate.isEmpty(inputSetPipelineYaml)) {
       pipelineYaml = pipelineEntity.getYaml();
+    } else if (EmptyPredicate.isNotEmpty(stagesToRun)) {
+      pipelineYaml = InputSetMergeHelper.mergeInputSetIntoPipelineForGivenStages(
+          pipelineEntity.getYaml(), inputSetPipelineYaml, true, stagesToRun);
+      pipelineYaml = InputSetMergeHelper.removeNonRequiredStages(pipelineYaml, stagesToRun);
     } else {
       pipelineYaml =
           InputSetMergeHelper.mergeInputSetIntoPipeline(pipelineEntity.getYaml(), inputSetPipelineYaml, true);
@@ -272,7 +300,7 @@ public class PipelineExecuteHelper {
   }
 
   private ExecArgs buildExecutionArgs(PipelineEntity pipelineEntity, String moduleType, String mergedRuntimeInputYaml,
-      ExecutionTriggerInfo triggerInfo, boolean isRetry, String previousProcessedYaml,
+      List<String> stagesToRun, ExecutionTriggerInfo triggerInfo, boolean isRetry, String previousProcessedYaml,
       List<String> retryStagesIdentifier) throws IOException {
     final String executionId = generateUuid();
 
@@ -281,7 +309,7 @@ public class PipelineExecuteHelper {
         buildExecutionMetadata(pipelineEntity.getIdentifier(), moduleType, triggerInfo, pipelineEntity, executionId);
 
     // Build PlanExecution Metadata
-    String pipelineYaml = buildAndValidatePipelineYaml(mergedRuntimeInputYaml, pipelineEntity);
+    String pipelineYaml = buildAndValidatePipelineYaml(mergedRuntimeInputYaml, stagesToRun, pipelineEntity);
 
     PlanExecutionMetadata planExecutionMetadata = obtainMetadataBuilder(
         mergedRuntimeInputYaml, executionId, pipelineYaml, isRetry, previousProcessedYaml, retryStagesIdentifier);

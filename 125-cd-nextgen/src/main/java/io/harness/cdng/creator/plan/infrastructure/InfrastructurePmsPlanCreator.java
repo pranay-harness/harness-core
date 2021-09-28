@@ -3,12 +3,15 @@ package io.harness.cdng.creator.plan.infrastructure;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.advisers.RollbackCustomAdviser;
+import io.harness.cdng.creator.plan.CDPlanCreatorUtils;
 import io.harness.cdng.creator.plan.PlanCreatorConstants;
 import io.harness.cdng.creator.plan.stage.DeploymentStageConfig;
 import io.harness.cdng.infra.steps.InfraSectionStepParameters;
 import io.harness.cdng.infra.steps.InfrastructureSectionStep;
 import io.harness.cdng.infra.steps.InfrastructureStep;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
+import io.harness.cdng.rollback.steps.InfrastructureDefinitionStep;
+import io.harness.cdng.rollback.steps.InfrastructureProvisionerStep;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.data.structure.EmptyPredicate;
@@ -18,7 +21,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.YamlException;
 import io.harness.plancreator.execution.ExecutionElementConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
-import io.harness.plancreator.utils.CommonPlanCreatorUtils;
 import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
@@ -40,7 +42,6 @@ import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.serializer.KryoSerializer;
-import io.harness.steps.common.NGSectionStep;
 import io.harness.steps.common.NGSectionStepParameters;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -229,7 +230,7 @@ public class InfrastructurePmsPlanCreator {
     }
 
     // Add Steps Node
-    PlanNode stepsNode = CommonPlanCreatorUtils.getStepsPlanNode(
+    PlanNode stepsNode = CDPlanCreatorUtils.getCdStepsNode(
         stepsYamlField.getNode().getUuid(), stepYamlFields.get(0).getNode().getUuid(), "Provisioner Steps Element");
     responseMap.put(stepsNode.getUuid(), PlanCreationResponse.builder().node(stepsNode.getUuid(), stepsNode).build());
 
@@ -262,7 +263,7 @@ public class InfrastructurePmsPlanCreator {
     return PlanNode.builder()
         .uuid(provisionerYamlField.getNode().getUuid())
         .identifier(YAMLFieldNameConstants.PROVISIONER)
-        .stepType(NGSectionStep.STEP_TYPE)
+        .stepType(InfrastructureProvisionerStep.STEP_TYPE)
         .name(YAMLFieldNameConstants.PROVISIONER)
         .stepParameters(stepParameters)
         .facilitatorObtainment(
@@ -295,7 +296,7 @@ public class InfrastructurePmsPlanCreator {
     return PlanNode.builder()
         .uuid(infrastructureDefField.getNode().getUuid())
         .identifier(YamlTypes.INFRASTRUCTURE_DEF)
-        .stepType(NGSectionStep.STEP_TYPE)
+        .stepType(InfrastructureDefinitionStep.STEP_TYPE)
         .name(YamlTypes.INFRASTRUCTURE_DEF)
         .stepParameters(stepParameters)
         .facilitatorObtainment(

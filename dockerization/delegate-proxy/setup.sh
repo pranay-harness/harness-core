@@ -152,7 +152,7 @@ for helmversion in v2.13.1 v3.0.2 v3.1.2; do
     curl -L -o "${HELM_MAC_DIR}helm" "${HELM_MAC_URL}"
 done
 
-for chartmuseumversion in v0.8.2; do
+for chartmuseumversion in v0.8.2 v0.13.0; do
     echo "Adding chartmuseumversion $chartmuseumversion"
     CHARTMUSEUM_LINUX_DIR="${IMAGES_DIR}/chartmuseum/linux/$chartmuseumversion/"
     CHARTMUSEUM_MAC_DIR="${IMAGES_DIR}/chartmuseum/darwin/$chartmuseumversion/"
@@ -276,7 +276,7 @@ function setupClientUtils(){
             cp images/helm/${platform}/$helmversion/helm ${STORAGE_DIR_LOCATION}/harness-download/harness-helm/release/$helmversion/bin/${platform}/amd64/
         done
 
-        for chartmuseumversion in v0.8.2; do
+        for chartmuseumversion in v0.8.2 v0.13.0; do
             mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/harness-chartmuseum/release/$chartmuseumversion/bin/${platform}/amd64/
             cp images/chartmuseum/${platform}/$chartmuseumversion/chartmuseum ${STORAGE_DIR_LOCATION}/harness-download/harness-chartmuseum/release/$chartmuseumversion/bin/${platform}/amd64/
         done

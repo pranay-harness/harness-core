@@ -32,8 +32,7 @@ public class SyncStrategy implements ExecuteStrategy {
     StepResponse stepResponse = syncExecutable.executeSync(ambiance, invokerPackage.getStepParameters(),
         invokerPackage.getInputPackage(), invokerPackage.getPassThroughData());
 
-    sdkNodeExecutionService.handleStepResponse(ambiance.getPlanExecutionId(),
-        AmbianceUtils.obtainCurrentRuntimeId(ambiance), StepResponseMapper.toStepResponseProto(stepResponse),
+    sdkNodeExecutionService.handleStepResponse(ambiance, StepResponseMapper.toStepResponseProto(stepResponse),
         ExecutableResponse.newBuilder()
             .setSync(SyncExecutableResponse.newBuilder()
                          .addAllLogKeys(syncExecutable.getLogKeys(ambiance))

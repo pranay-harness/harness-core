@@ -591,12 +591,16 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     }
 
     AuthenticationV1Api api = new AuthenticationV1Api(apiClient);
-    V1TokenReview tokenReview = api.createTokenReview(
-        new V1TokenReviewBuilder().withNewSpec().withNewToken(token).endSpec().build(), null, null, null);
+    try {
+      V1TokenReview tokenReview = api.createTokenReview(
+          new V1TokenReviewBuilder().withNewSpec().withNewToken(token).endSpec().build(), null, null, null);
 
-    log.info("V1TokenReviewStatus: [{}]", tokenReview.getStatus());
+      log.info("V1TokenReviewStatus: [{}]", tokenReview.getStatus());
 
-    return tokenReview.getStatus();
+      return tokenReview.getStatus();
+    } catch (ApiException ex) {
+      throw new InvalidRequestException(ex.getResponseBody());
+    }
   }
 
   @Override

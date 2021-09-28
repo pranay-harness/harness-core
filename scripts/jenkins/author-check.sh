@@ -12,6 +12,7 @@ git log -1000 --oneline --format='%aN <%aE>' | sort -u |\
     grep -iv "^Abhinav Hinger <abhinav.hinger@harness.io>$" |\
     grep -iv "^Abhinav Mittal <abhinav.mittal@harness.io>$" |\
     grep -iv "^Abhinav Singh <abhinav.singh@harness.io>$" |\
+    grep -iv "^Abhinav Singh <abhinav.singh2@harness.io>$" |\
     grep -iv "^Achyuth Prakash <achyuth.prakash@harness.io>$" |\
     grep -iv "^Adam Hancock <adam.hancock@harness.io>$" |\
     grep -iv "^Adarsh Agarwal <adarsh.agarwal@harness.io>$" |\
@@ -221,7 +222,7 @@ mv .mailmap.tmp .mailmap
 
 echo $EXECPTION_COMMITS exceptions
 
-if [ $EXECPTION_COMMITS -gt 246 ]
+if [ $EXECPTION_COMMITS -gt 250 ]
 then
     echo "You bringing commit with excepted author that is no longer allowed"
     git log --oneline --format='%aN <%aE>' | grep  "$EXCEPTIONS"

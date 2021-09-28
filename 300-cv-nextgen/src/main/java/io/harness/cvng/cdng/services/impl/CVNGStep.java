@@ -200,10 +200,6 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
       Ambiance ambiance, CVNGStepParameter stepParameters, Map<String, ResponseData> responseDataMap) {
     log.info("handleAsyncResponse async response");
     CVNGResponseData cvngResponseData = (CVNGResponseData) responseDataMap.values().iterator().next();
-    // Status.ERRORED - for exceptions
-    // FAILED - for verification failed
-    // SUCCEEDED - for verification success
-
     StepResponseBuilder stepResponseBuilder = StepResponse.builder();
     if (cvngResponseData.isSkip()) {
       stepResponseBuilder.status(Status.SKIPPED)
@@ -220,16 +216,25 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
                   .build());
     } else {
       Status status;
+      FailureType failureType = null;
+      String failureMessage = null;
+      ErrorCode errorCode = null;
       switch (cvngResponseData.getActivityStatusDTO().getStatus()) {
         case VERIFICATION_PASSED:
           status = Status.SUCCEEDED;
           break;
         case VERIFICATION_FAILED:
           status = Status.FAILED;
+          errorCode = ErrorCode.DEFAULT_ERROR_CODE;
+          failureType = FailureType.VERIFICATION_FAILURE;
+          failureMessage = "Verification failed";
           break;
         case ERROR:
         case IGNORED:
-          status = Status.ERRORED;
+          status = Status.FAILED;
+          errorCode = ErrorCode.UNKNOWN_ERROR;
+          failureType = FailureType.UNKNOWN_FAILURE;
+          failureMessage = "Verification could not complete due to an unknown error";
           break;
         default:
           throw new IllegalStateException(
@@ -249,23 +254,12 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
       if (status == Status.FAILED) {
         stepResponseBuilder.failureInfo(FailureInfo.newBuilder()
                                             .addFailureData(FailureData.newBuilder()
-                                                                .setCode(ErrorCode.DEFAULT_ERROR_CODE.name())
+                                                                .setCode(errorCode.name())
                                                                 .setLevel(Level.ERROR.name())
-                                                                .addFailureTypes(FailureType.VERIFICATION_FAILURE)
-                                                                .setMessage("Verification failed")
+                                                                .addFailureTypes(failureType)
+                                                                .setMessage(failureMessage)
                                                                 .build())
                                             .build());
-      }
-      if (status == Status.ERRORED) {
-        stepResponseBuilder.failureInfo(
-            FailureInfo.newBuilder()
-                .addFailureData(FailureData.newBuilder()
-                                    .setCode(ErrorCode.UNKNOWN_ERROR.name())
-                                    .setLevel(Level.ERROR.name())
-                                    .addFailureTypes(FailureType.UNKNOWN_FAILURE)
-                                    .setMessage("Verification could not complete due to an unknown error")
-                                    .build())
-                .build());
       }
     }
     return stepResponseBuilder.build();

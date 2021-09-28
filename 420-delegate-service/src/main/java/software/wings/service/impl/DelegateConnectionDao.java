@@ -120,6 +120,18 @@ public class DelegateConnectionDao {
         > 0;
   }
 
+  public boolean checkAnyDelegateIsConnected(String accountId, List<String> delegateIdList) {
+    return persistence.createQuery(DelegateConnection.class)
+               .filter(DelegateConnectionKeys.accountId, accountId)
+               .field(DelegateConnectionKeys.delegateId)
+               .in(delegateIdList)
+               .filter(DelegateConnectionKeys.disconnected, Boolean.FALSE)
+               .field(DelegateConnectionKeys.lastHeartbeat)
+               .greaterThan(currentTimeMillis() - EXPIRY_TIME.toMillis())
+               .count(upToOne)
+        > 0;
+  }
+
   public DelegateConnection upsertCurrentConnection(
       String accountId, String delegateId, String delegateConnectionId, String version, String location) {
     Query<DelegateConnection> query = persistence.createQuery(DelegateConnection.class)

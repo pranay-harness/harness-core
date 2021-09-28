@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.ARPIT;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.HANTANG;
@@ -30,6 +31,7 @@ import software.wings.beans.DelegateConnection.DelegateConnectionKeys;
 import software.wings.service.intfc.DelegateService;
 
 import com.google.inject.Inject;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import org.junit.Before;
@@ -41,6 +43,7 @@ import org.junit.experimental.categories.Category;
 public class DelegateConnectionDaoTest extends WingsBaseTest {
   private String delegateId = "DELEGATE_ID";
   private String delegateId2 = "DELEGATE_ID2";
+  private String accountId = "ACCOUNT_ID";
   private Delegate delegate;
 
   @Inject private DelegateConnectionDao delegateConnectionDao;
@@ -101,7 +104,6 @@ public class DelegateConnectionDaoTest extends WingsBaseTest {
   public void testDelegateDisconnected() {
     String delegateId = generateUuid();
     String delegateConnectionId = generateUuid();
-    String accountId = generateUuid();
 
     DelegateConnection delegateConnection = DelegateConnection.builder()
                                                 .accountId(accountId)
@@ -123,5 +125,25 @@ public class DelegateConnectionDaoTest extends WingsBaseTest {
     assertThat(retrievedDelegateConnection.getDelegateId()).isEqualTo(delegateId);
     assertThat(retrievedDelegateConnection.getAccountId()).isEqualTo(accountId);
     assertThat(retrievedDelegateConnection.isDisconnected()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ARPIT)
+  @Category(UnitTests.class)
+  public void testCheckAnyDelegateIsConnected() {
+    String delegateConnectionId1 = generateUuid();
+
+    persistence.save(DelegateConnection.builder()
+                         .accountId(accountId)
+                         .uuid(delegateConnectionId1)
+                         .delegateId(delegateId)
+                         .disconnected(false)
+                         .lastHeartbeat(System.currentTimeMillis())
+                         .build());
+
+    assertThat(delegateConnectionDao.checkAnyDelegateIsConnected(accountId, Arrays.asList(delegateId, delegateId2)))
+        .isTrue();
+    assertThat(delegateConnectionDao.checkAnyDelegateIsConnected(accountId, Arrays.asList(delegateId2, "DELEGATE_ID3")))
+        .isFalse();
   }
 }
