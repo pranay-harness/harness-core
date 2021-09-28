@@ -38,6 +38,8 @@ import io.harness.ngtriggers.beans.entity.metadata.status.TriggerStatus;
 import io.harness.ngtriggers.beans.entity.metadata.status.ValidationStatus;
 import io.harness.ngtriggers.beans.entity.metadata.status.WebhookAutoRegistrationStatus;
 import io.harness.ngtriggers.beans.source.NGTriggerSourceV2;
+import io.harness.ngtriggers.beans.source.NGTriggerSpecV2;
+import io.harness.ngtriggers.beans.source.artifact.BuildAware;
 import io.harness.ngtriggers.beans.source.scheduled.CronTriggerSpec;
 import io.harness.ngtriggers.beans.source.scheduled.ScheduledTriggerConfig;
 import io.harness.ngtriggers.events.TriggerCreateEvent;
@@ -201,7 +203,7 @@ public class NGTriggerServiceImpl implements NGTriggerService {
     Criteria criteria = getTriggerEqualityCriteria(ngTriggerEntity, false);
 
     stampPollingStatusInfo(ngTriggerEntity, pollingDocument, statusResult);
-    NGTriggerEntity updatedEntity = ngTriggerRepository.updateValidationStatus(criteria, ngTriggerEntity);
+    NGTriggerEntity updatedEntity = ngTriggerRepository.updateValidationStatusAndMetadata(criteria, ngTriggerEntity);
 
     if (updatedEntity == null) {
       throw new InvalidRequestException(
@@ -527,6 +529,7 @@ public class NGTriggerServiceImpl implements NGTriggerService {
     }
 
     NGTriggerSourceV2 triggerSource = triggerDetails.getNgTriggerConfigV2().getSource();
+    NGTriggerSpecV2 spec = triggerSource.getSpec();
     switch (triggerSource.getType()) {
       case WEBHOOK:
         return; // TODO(adwait): define trigger source validation
@@ -541,8 +544,31 @@ public class NGTriggerServiceImpl implements NGTriggerService {
           throw new InvalidArgumentsException("cannot find iteration time!");
         }
         return;
+      case MANIFEST:
+        validateStageIdentifierAndBuildRef((BuildAware) spec, "manifestRef");
+        return;
+      case ARTIFACT:
+        validateStageIdentifierAndBuildRef((BuildAware) spec, "artifactRef");
+        return;
       default:
         return; // not implemented
+    }
+  }
+
+  private void validateStageIdentifierAndBuildRef(BuildAware buildAware, String fieldName) {
+    StringBuilder msg = new StringBuilder(128);
+    boolean validationFailed = false;
+    if (isBlank(buildAware.fetchStageRef())) {
+      msg.append("stageIdentifier can not be blank/missing. ");
+      validationFailed = true;
+    }
+    if (isBlank(buildAware.fetchbuildRef())) {
+      msg.append(fieldName).append(" can not be blank/missing. ");
+      validationFailed = true;
+    }
+
+    if (validationFailed) {
+      throw new InvalidArgumentsException(msg.toString());
     }
   }
 

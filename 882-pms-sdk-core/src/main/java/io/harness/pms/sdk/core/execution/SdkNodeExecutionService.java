@@ -35,10 +35,6 @@ public interface SdkNodeExecutionService {
 
   void resumeNodeExecution(Ambiance ambiance, Map<String, ResponseData> response, boolean asyncError);
 
-  @Deprecated
-  void resumeNodeExecution(
-      String planExecutionId, String nodeExecutionId, Map<String, ResponseData> response, boolean asyncError);
-
   void handleFacilitationResponse(
       Ambiance ambiance, @NonNull String notifyId, FacilitatorResponseProto facilitatorResponseProto);
 

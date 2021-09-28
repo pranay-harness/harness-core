@@ -96,6 +96,7 @@ public class ServiceDependencyGraphServiceImpl implements ServiceDependencyGraph
       }
       Risk risk = Risk.getRiskFromRiskScore(riskScore);
       nodes.add(ServiceSummaryDetails.builder()
+                    .identifierRef(value.getIdentifier())
                     .serviceRef(value.getServiceIdentifier())
                     .environmentRef(value.getEnvironmentIdentifier())
                     .riskScore(riskScore)

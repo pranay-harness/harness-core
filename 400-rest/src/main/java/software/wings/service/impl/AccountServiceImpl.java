@@ -35,7 +35,9 @@ import static software.wings.beans.SystemCatalog.CatalogType.APPSTACK;
 import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofDays;
 import static java.time.Duration.ofHours;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.account.ProvisionStep;
@@ -163,6 +165,7 @@ import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.verification.CVConfiguration;
 
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -984,6 +987,26 @@ public class AccountServiceImpl implements AccountService {
       return false;
     }
     return false;
+  }
+
+  @Override
+  public void updateFeatureFlagsForOnPremAccount() {
+    Optional<Account> onPremAccount = getOnPremAccount();
+    if (!onPremAccount.isPresent()) {
+      return;
+    }
+    String featureNames = mainConfiguration.getFeatureNames();
+    List<String> enabled = isBlank(featureNames)
+        ? emptyList()
+        : Splitter.on(',').omitEmptyStrings().trimResults().splitToList(featureNames);
+    for (String name : Arrays.stream(FeatureName.values()).map(FeatureName::name).collect(toSet())) {
+      if (enabled.contains(name)) {
+        featureFlagService.enableAccount(FeatureName.valueOf(name), onPremAccount.get().getUuid());
+      }
+    }
+    if (enabled.contains("NEXT_GEN_ENABLED")) {
+      updateNextGenEnabled(onPremAccount.get().getUuid(), true);
+    }
   }
 
   @Override
