@@ -21,6 +21,7 @@ import software.wings.service.impl.DelegateObserver;
 import software.wings.service.impl.DelegateTaskBroadcastHelper;
 import software.wings.service.intfc.perpetualtask.PerpetualTaskCrudObserver;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.Any;
@@ -270,7 +271,8 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
     // do nothing
   }
 
-  private long getTaskTimeInterval(PerpetualTaskSchedule schedule, String accountId, String perpetualTaskType) {
+  @VisibleForTesting
+  long getTaskTimeInterval(PerpetualTaskSchedule schedule, String accountId, String perpetualTaskType) {
     long intervalSeconds = schedule.getInterval().getSeconds();
 
     PerpetualTaskScheduleConfig perpetualTaskScheduleConfig =
