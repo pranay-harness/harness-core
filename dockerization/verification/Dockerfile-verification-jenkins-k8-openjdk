@@ -5,6 +5,10 @@ COPY --chown=65534:65534 verification-config.yml /opt/harness/
 COPY --chown=65534:65534 verification-capsule.jar /opt/harness/
 COPY --chown=65534:65534 scripts /opt/harness/
 
-RUN  chmod 500 /opt/harness/*.sh
+RUN chmod 700 -R /opt/harness/*.sh
+RUN chmod 700 -R /tmp
+USER 65534
+
+WORKDIR /opt/harness
 
 CMD [ "./run.sh" ]
