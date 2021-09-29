@@ -30,10 +30,10 @@ public class LicenseUsageInterfaceImpl implements LicenseUsageInterface<CELicens
   @Inject BigQueryService bigQueryService;
   @Inject CENextGenConfiguration configuration;
 
-  public static final String DATA_SET_NAME_TEMPLATE = "BillingReport_%s";
-  public static final String TABLE_NAME = "dailyCostAggregated";
+  public static final String DATA_SET_NAME = "CE_INTERNAL";
+  public static final String TABLE_NAME = "costAggregated";
   public static final String QUERY_TEMPLATE =
-      "SELECT SUM(cost) FROM `%s` WHERE cloudProvider IN ('AWS','GCP','AZURE') AND startTime >= TIMESTAMP_MILLIS(%s)";
+      "SELECT SUM(cost) FROM `%s` WHERE cloudProvider IN ('AWS','GCP','AZURE') AND day >= TIMESTAMP_MILLIS(%s) AND accountId = %s";
 
   private final Cache<CacheKey, CELicenseUsageDTO> licenseUsageCache =
       Caffeine.newBuilder().expireAfterWrite(8, TimeUnit.HOURS).build();
@@ -66,8 +66,8 @@ public class LicenseUsageInterfaceImpl implements LicenseUsageInterface<CELicens
 
   private Long getActiveSpend(long timestamp, String accountIdentifier) {
     String gcpProjectId = configuration.getGcpConfig().getGcpProjectId();
-    String cloudProviderTableName = getCloudProviderTableName(gcpProjectId, accountIdentifier, TABLE_NAME);
-    String query = String.format(QUERY_TEMPLATE, cloudProviderTableName, timestamp);
+    String cloudProviderTableName = format("%s.%s.%s", gcpProjectId, DATA_SET_NAME, TABLE_NAME);
+    String query = format(QUERY_TEMPLATE, cloudProviderTableName, timestamp, accountIdentifier);
 
     BigQuery bigQuery = bigQueryService.get();
     QueryJobConfiguration queryConfig = QueryJobConfiguration.newBuilder(query).build();
@@ -96,19 +96,6 @@ public class LicenseUsageInterfaceImpl implements LicenseUsageInterface<CELicens
       }
     }
     return cost;
-  }
-
-  public String getCloudProviderTableName(String gcpProjectId, String accountId, String tableName) {
-    String dataSetId = getDataSetId(accountId);
-    return format("%s.%s.%s", gcpProjectId, dataSetId, tableName);
-  }
-
-  public String getDataSetId(String accountId) {
-    return String.format(DATA_SET_NAME_TEMPLATE, modifyStringToComplyRegex(accountId));
-  }
-
-  public String modifyStringToComplyRegex(String accountInfo) {
-    return accountInfo.toLowerCase().replaceAll("[^a-z0-9]", "_");
   }
 
   private long getNumericValue(FieldValueList row, Field field) {
