@@ -824,7 +824,7 @@ public class K8sTaskHelperBase {
   }
 
   public boolean scale(Kubectl client, K8sDelegateTaskParams k8sDelegateTaskParams, KubernetesResourceId resourceId,
-      int targetReplicaCount, LogCallback executionLogCallback) throws Exception {
+      int targetReplicaCount, LogCallback executionLogCallback, boolean isErrorFrameworkEnabled) throws Exception {
     executionLogCallback.saveExecutionLog("\nScaling " + resourceId.kindNameRef());
 
     final ScaleCommand scaleCommand = client.scale()
@@ -838,6 +838,18 @@ public class K8sTaskHelperBase {
     } else {
       executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
       log.warn("Failed to scale workload. Error {}", result.getOutput());
+      if (isErrorFrameworkEnabled) {
+        String printableCommand = getPrintableCommand(scaleCommand.command());
+        String explanation = result.hasOutput()
+            ? format(KubernetesExceptionExplanation.SCALE_CLI_FAILED_OUTPUT, printableCommand, result.getExitValue(),
+                result.outputUTF8())
+            : format(KubernetesExceptionExplanation.SCALE_CLI_FAILED, printableCommand, result.getExitValue());
+        throw NestedExceptionUtils.hintWithExplanationException(
+            format(KubernetesExceptionHints.SCALE_CLI_FAILED, resourceId.kindNameRef()), explanation,
+            new KubernetesTaskException(
+                format(KubernetesExceptionMessages.SCALE_CLI_FAILED, resourceId.kindNameRef())));
+      }
+
       return false;
     }
   }

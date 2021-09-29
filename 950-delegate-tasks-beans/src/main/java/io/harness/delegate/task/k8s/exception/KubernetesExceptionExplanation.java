@@ -42,4 +42,7 @@ public class KubernetesExceptionExplanation {
       "Found %s services in manifest: [%s]. Could not locate primary service";
   public final String BG_CONFLICTING_SERVICE =
       "For blue/green deployment, the label [" + HarnessLabels.color + "] is required in service selector";
+
+  public final String SCALE_CLI_FAILED = "%s failed with exit code: %d";
+  public final String SCALE_CLI_FAILED_OUTPUT = "%s failed with exit code: %d and output: %s";
 }

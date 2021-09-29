@@ -864,7 +864,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
         .runK8sExecutable(any(), any(), any());
     final boolean success = spyK8sTaskHelperBase.scale(kubectl, K8sDelegateTaskParams.builder().build(),
         KubernetesResourceId.builder().name("nginx").kind("Deployment").namespace("default").build(), 5,
-        executionLogCallback);
+        executionLogCallback, false);
     assertThat(success).isFalse();
     ArgumentCaptor<ScaleCommand> captor = ArgumentCaptor.forClass(ScaleCommand.class);
     verify(spyK8sTaskHelperBase, times(1)).runK8sExecutable(any(), any(), captor.capture());
@@ -881,7 +881,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
     final boolean success =
         spyK8sTaskHelperBase.scale(kubectl, K8sDelegateTaskParams.builder().workingDirectory(".").build(),
             KubernetesResourceId.builder().name("nginx").kind("Deployment").namespace("default").build(), 5,
-            executionLogCallback);
+            executionLogCallback, true);
 
     assertThat(success).isTrue();
     ArgumentCaptor<ScaleCommand> captor = ArgumentCaptor.forClass(ScaleCommand.class);

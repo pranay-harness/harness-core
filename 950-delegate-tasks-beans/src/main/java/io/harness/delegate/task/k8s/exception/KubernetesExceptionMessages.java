@@ -19,4 +19,5 @@ public class KubernetesExceptionMessages {
   public final String NO_SERVICE_FOUND = "Missing service in kubernetes manifest";
   public final String MULTIPLE_SERVICES = "Multiple unmarked services found in manifest";
   public final String BG_CONFLICTING_SERVICE = "Found conflicting service [%s] in the cluster";
+  public final String SCALE_CLI_FAILED = "Failed to scale resource: %s";
 }
