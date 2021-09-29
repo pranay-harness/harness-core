@@ -56,6 +56,8 @@ public class HExecuteListener extends DefaultExecuteListener implements QuerySta
       long endTime = Instant.now().toEpochMilli();
       String sqlQuery = ctx.sql().replace("\"", "").replace("public.", "");
 
+      log.info("PSQL Query: [{}]", ctx.query());
+
       long startTime = (long) ctx.data(START_TIME);
       long diff = endTime - startTime;
 
