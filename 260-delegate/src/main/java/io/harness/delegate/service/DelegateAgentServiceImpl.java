@@ -300,7 +300,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private final String delegateSessionIdentifier = System.getenv().get("DELEGATE_SESSION_IDENTIFIER");
   private final String delegateOrgIdentifier = System.getenv().get("DELEGATE_ORG_IDENTIFIER");
   private final String delegateProjectIdentifier = System.getenv().get("DELEGATE_PROJECT_IDENTIFIER");
-  private final String delegateSize = System.getenv().get("DELEGATE_SIZE");
   private final String delegateDescription = System.getenv().get("DELEGATE_DESCRIPTION");
   // TODO remove this dependency of delegateNg on SESSION_ID once DEL-2413 has gone into prod for several weeks.
   private final boolean delegateNg = isNotBlank(delegateSessionIdentifier)
@@ -527,7 +526,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                           .sessionIdentifier(delegateSessionIdentifier)
                                           .orgIdentifier(delegateOrgIdentifier)
                                           .projectIdentifier(delegateProjectIdentifier)
-                                          .delegateSize(delegateSize)
                                           .hostName(HOST_NAME)
                                           .delegateName(delegateName)
                                           .delegateGroupName(DELEGATE_GROUP_NAME)

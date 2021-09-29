@@ -100,7 +100,6 @@ import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateSetupDetails;
-import io.harness.delegate.beans.DelegateSize;
 import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.delegate.beans.DelegateType;
 import io.harness.delegate.beans.DuplicateDelegateException;
@@ -315,6 +314,7 @@ public class DelegateServiceImpl implements DelegateService {
     templateConfiguration.setTemplateLoader(new ClassTemplateLoader(DelegateServiceImpl.class, "/delegatetemplates"));
   }
 
+  private static final int DELEGATE_RAM_PER_REPLICA = 2560;
   private static final int WATCHER_RAM_IN_MB = 500;
   // Calculated as 30% of total RAM for delegate + watcher, in LAPTOP delegate which was 1250 (500 watcher + 250
   // base delegate memory + 250 to handle 50 tasks + 250 for ramp down for old version delegate during release)
@@ -1075,15 +1075,9 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  public DelegateScripts getDelegateScriptsNg(String accountId, String version, String managerHost,
-      String verificationHost, DelegateSize delegateSize) throws IOException {
-    DelegateSizeDetails sizeDetails =
-        fetchAvailableSizes().stream().filter(size -> size.getSize() == delegateSize).findFirst().orElse(null);
-    String delegateXmx = "-Xmx4096m";
-    if (sizeDetails != null) {
-      delegateXmx =
-          "-Xmx" + (sizeDetails.getRam() / sizeDetails.getReplicas() - WATCHER_RAM_IN_MB - POD_BASE_RAM_IN_MB) + "m";
-    }
+  public DelegateScripts getDelegateScriptsNg(
+      String accountId, String version, String managerHost, String verificationHost) throws IOException {
+    String delegateXmx = "-Xmx" + (DELEGATE_RAM_PER_REPLICA - WATCHER_RAM_IN_MB - POD_BASE_RAM_IN_MB) + "m";
 
     ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
         ScriptRuntimeParamMapInquiry.builder()
@@ -2347,15 +2341,6 @@ public class DelegateServiceImpl implements DelegateService {
 
     log.info("Registering delegate for Hostname: {} IP: {}", delegateParams.getHostName(), delegateParams.getIp());
 
-    DelegateSizeDetails sizeDetails = null;
-    if (isNotBlank(delegateParams.getDelegateSize())) {
-      sizeDetails = fetchAvailableSizes()
-                        .stream()
-                        .filter(size -> size.getSize().name().equals(delegateParams.getDelegateSize()))
-                        .findFirst()
-                        .orElse(null);
-    }
-
     String delegateGroupId = delegateParams.getDelegateGroupId();
     if (isBlank(delegateGroupId) && isNotBlank(delegateParams.getDelegateGroupName())) {
       DelegateGroup delegateGroup =
@@ -2380,7 +2365,6 @@ public class DelegateServiceImpl implements DelegateService {
                 isNotBlank(delegateParams.getSessionIdentifier()) ? delegateParams.getSessionIdentifier() : null)
             .owner(owner)
             .ng(delegateParams.isNg())
-            .sizeDetails(sizeDetails)
             .description(delegateParams.getDescription())
             .ip(delegateParams.getIp())
             .hostName(delegateParams.getHostName())

@@ -1074,19 +1074,9 @@ public class DelegateServiceTest extends WingsBaseTest {
         DelegateGroup.builder().accountId(accountId).name(generateUuid()).status(DelegateGroupStatus.ENABLED).build();
     persistence.save(delegateGroup);
 
-    DelegateSizeDetails sizeDetails = DelegateSizeDetails.builder()
-                                          .size(DelegateSize.LAPTOP)
-                                          .label("Laptop")
-                                          .replicas(1)
-                                          .taskLimit(50)
-                                          .cpu(0.5)
-                                          .ram(2560)
-                                          .build();
-
     DelegateParams params = DelegateParams.builder()
                                 .accountId(accountId)
                                 .sessionIdentifier("sessionId")
-                                .delegateSize(DelegateSize.LAPTOP.name())
                                 .hostName(HOST_NAME)
                                 .description(DESCRIPTION)
                                 .delegateType(DOCKER_DELEGATE)
@@ -1112,7 +1102,6 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(delegateFromDb.getAccountId()).isEqualTo(params.getAccountId());
     assertThat(delegateFromDb.getSessionIdentifier()).isEqualTo(params.getSessionIdentifier());
     assertThat(delegateFromDb.isNg()).isTrue();
-    assertThat(delegateFromDb.getSizeDetails()).isEqualTo(sizeDetails);
     assertThat(delegateFromDb.getHostName()).isEqualTo(params.getHostName());
     assertThat(delegateFromDb.getDescription()).isEqualTo(params.getDescription());
     assertThat(delegateFromDb.getDelegateType()).isEqualTo(params.getDelegateType());
