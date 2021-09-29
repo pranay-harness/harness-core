@@ -29,6 +29,7 @@ import io.harness.exception.JiraClientException;
 import io.harness.exception.KryoHandlerNotFoundException;
 import io.harness.exception.KubernetesApiTaskException;
 import io.harness.exception.KubernetesTaskException;
+import io.harness.exception.KubernetesYamlException;
 import io.harness.exception.SecretNotFoundException;
 import io.harness.exception.ServiceNowException;
 import io.harness.exception.ShellExecutionException;
@@ -101,5 +102,6 @@ public class CommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(AuthorizationException.class, 980012);
     kryo.register(KubernetesApiTaskException.class, 980014);
     kryo.register(KubernetesTaskException.class, 980015);
+    kryo.register(KubernetesYamlException.class, 980016);
   }
 }
