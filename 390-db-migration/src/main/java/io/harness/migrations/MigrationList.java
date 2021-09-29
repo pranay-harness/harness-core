@@ -92,6 +92,7 @@ import io.harness.migrations.all.EntityNameValidationMigration_All_02;
 import io.harness.migrations.all.EntityNameValidationMigration_All_03;
 import io.harness.migrations.all.EntityNameValidationMigration_All_04;
 import io.harness.migrations.all.FixCVDashboardStatusMigration;
+import io.harness.migrations.all.GcpServiceAccountMigration;
 import io.harness.migrations.all.GcsArtifactProjectIdMigration;
 import io.harness.migrations.all.GitCommitStatusMigration;
 import io.harness.migrations.all.GitSyncToAllAccounts;
@@ -434,6 +435,7 @@ public class MigrationList {
         .add(Pair.of(364, BaseMigration.class))
         .add(Pair.of(365, BaseMigration.class))
         .add(Pair.of(366, EnableIteratorsForLdapSync.class))
+        .add(Pair.of(367, GcpServiceAccountMigration.class))
         .build();
   }
 }

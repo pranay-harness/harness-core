@@ -33,7 +33,7 @@ def main(event, context):
     event_json = json.loads(pubsub_message)
     print(event_json)
     manage_scheduler_jobs(event_json)
-    print_("Completed")
+    print("Completed")
 
 
 def manage_scheduler_jobs(event_json):
