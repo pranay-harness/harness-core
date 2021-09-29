@@ -1424,7 +1424,7 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.HELM_VALUES_FETCH).toInstance(HelmValuesFetchTask.class);
     mapBinder.addBinding(TaskType.HELM_VALUES_FETCH_NG).toInstance(HelmValuesFetchTaskNG.class);
     mapBinder.addBinding(TaskType.SLACK).toInstance(ServiceImplDelegateTask.class);
-    mapBinder.addBinding(TaskType.CI_BUILD).toInstance(CIBuildCommandTask.class);
+    mapBinder.addBinding(TaskType.INITIALIZATION_PHASE).toInstance(CIBuildCommandTask.class);
     mapBinder.addBinding(TaskType.CI_EXECUTE_STEP).toInstance(CIExecuteStepTask.class);
     mapBinder.addBinding(TaskType.CI_LE_STATUS).toInstance(StepStatusTask.class);
     mapBinder.addBinding(TaskType.EXECUTE_COMMAND).toInstance(ExecuteCommandTask.class);
