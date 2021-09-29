@@ -11,7 +11,7 @@ import software.wings.beans.Event.Type;
 import java.util.concurrent.Future;
 
 @OwnedBy(HarnessTeam.DX)
-@TargetModule(HarnessModule._870_CG_YAML)
+@TargetModule(HarnessModule._955_CG_YAML)
 public interface YamlPushService {
   <T> Future<?> pushYamlChangeSet(
       String accountId, T oldEntity, T newEntity, Type type, boolean syncFromGit, boolean isRename);

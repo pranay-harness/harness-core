@@ -13,6 +13,9 @@ use strum_macros::EnumString;
 use crate::java_class::{JavaClass, JavaClassTraits, UNKNOWN_LOCATION};
 use crate::java_module::{modules, JavaModule, JavaModuleTraits};
 use crate::team::UNKNOWN_TEAM;
+use std::cmp::Ordering;
+
+const DEPENDENCY_WARNING_LEVEL: u32 = 10;
 
 #[derive(PartialEq, Eq, Debug, Copy, Clone, EnumIter, EnumString)]
 enum Kind {
@@ -35,6 +38,7 @@ enum Explanation {
     DeprecatedModule,
     UsedInDeprecatedClass,
     BreakDependencyOnModule,
+    CircularDependencyWithMultipleTargets,
 }
 
 pub const EXPLANATION_TEAM_IS_MISSING: &str =
@@ -75,6 +79,14 @@ pub const EXPLANATION_DEPENDENCY_TO_CLASS_IN_BREAK_DEPENDENCY_ON_MODULE: &str =
 depends on class from such module, this dependency needs to be broken.
 This can be done with breaking the dependency of the two classes or moving the
 classes accordingly, so they do not belong to module that should not depend to each other.";
+
+pub const EXPLANATION_CIRCULAR_DEPENDENCY_WITH_MULTIPLE_TARGETS: &str =
+    "When a class is circularly dependent to itself which is allowed in a
+java module, this means that all these classes need to be mainteined in a
+single module. Obviously, if we have classes in the circle that point to
+different targets we have a problem. This could be resolved with changing the
+target modules for the classes to be the same or with breaking some of the
+dependencies in the chain.";
 
 /// A sub-command to analyze the project module targets and dependencies
 #[derive(Clap)]
@@ -219,75 +231,79 @@ pub fn analyze(opts: Analyze) {
         results.extend(check_for_reversed_dependency(tuple.1, &modules));
     });
 
-    class_modules.iter().for_each(|tuple| {
-        results.extend(check_for_package(
-            tuple.0,
-            tuple.1,
-            &tuple.0.target_module_team(&modules),
-        ));
-        results.extend(check_for_team(tuple.0, tuple.1, &tuple.0.target_module_team(&modules)));
-        results.extend(check_already_in_target(
-            tuple.0,
-            tuple.1,
-            &tuple.0.target_module_team(&modules),
-        ));
-        results.extend(check_for_extra_break(
-            tuple.0,
-            tuple.1,
-            &tuple.0.target_module_team(&modules),
-        ));
-        results.extend(check_for_module_that_need_to_break_dependency_on(
-            tuple.0,
-            tuple.1,
-            &modules,
-            &classes,
-            &class_modules,
-        ));
-        results.extend(check_for_promotion(
-            tuple.0,
-            tuple.1,
-            &modules,
-            &classes,
-            &class_modules,
-        ));
-        results.extend(check_for_demotion(
-            tuple.0,
-            class_dependees.get_vec(&tuple.0.name),
-            tuple.1,
-            &modules,
-            &classes,
-            &class_modules,
-        ));
-        results.extend(check_for_deprecated_module(
-            tuple.0,
-            tuple.1,
-            &tuple.0.target_module_team(&modules),
-        ));
-        results.extend(check_for_deprecation(
-            tuple.0,
-            class_dependees.get_vec(&tuple.0.name),
-            tuple.1,
-            &modules,
-            &classes,
-            &class_modules,
-        ));
-    });
+    results.extend(
+        class_modules
+            .par_iter()
+            .map(|tuple| {
+                let mut class_results: Vec<Report> = Vec::new();
+                class_results.extend(check_for_circular_dependency(tuple.0, &classes, &class_modules));
+                class_results.extend(check_for_package(
+                    tuple.0,
+                    tuple.1,
+                    &tuple.0.target_module_team(&modules),
+                ));
+                class_results.extend(check_for_team(tuple.0, tuple.1, &tuple.0.target_module_team(&modules)));
+                class_results.extend(check_already_in_target(
+                    tuple.0,
+                    tuple.1,
+                    &tuple.0.target_module_team(&modules),
+                ));
+                class_results.extend(check_for_extra_break(
+                    tuple.0,
+                    tuple.1,
+                    &tuple.0.target_module_team(&modules),
+                ));
+                class_results.extend(check_for_module_that_need_to_break_dependency_on(
+                    tuple.0,
+                    tuple.1,
+                    &modules,
+                    &classes,
+                    &class_modules,
+                ));
+                class_results.extend(check_for_promotion(
+                    tuple.0,
+                    tuple.1,
+                    &modules,
+                    &classes,
+                    &class_modules,
+                ));
+                class_results.extend(check_for_demotion(
+                    tuple.0,
+                    class_dependees.get_vec(&tuple.0.name),
+                    tuple.1,
+                    &modules,
+                    &classes,
+                    &class_modules,
+                ));
+                class_results.extend(check_for_deprecated_module(
+                    tuple.0,
+                    tuple.1,
+                    &tuple.0.target_module_team(&modules),
+                ));
+                class_results.extend(check_for_deprecation(
+                    tuple.0,
+                    class_dependees.get_vec(&tuple.0.name),
+                    tuple.1,
+                    &modules,
+                    &classes,
+                    &class_modules,
+                ));
+
+                class_results
+            })
+            .flatten()
+            .collect::<Vec<Report>>(),
+    );
 
     let mut kind_summary: HashMap<usize, i32> = HashMap::new();
     let mut team_summary: HashMap<&String, HashMap<usize, i32>> = HashMap::new();
 
     results.sort_by(|a, b| {
-        let ordering = (a.kind as usize).cmp(&(b.kind as usize));
-        if ordering != Equal {
-            ordering
-        } else {
-            let ordering = a.message.cmp(&b.message);
-            if ordering != Equal {
-                ordering
-            } else {
-                a.for_team.cmp(&b.for_team)
-            }
-        }
+        cmp_report(a, b)
+    });
+
+    results.dedup_by(|a, b| {
+        cmp_report(a, b) == Equal
     });
 
     println!("Detecting indirectly involved classes...");
@@ -373,6 +389,10 @@ pub fn analyze(opts: Analyze) {
         println!();
         println!("{}", EXPLANATION_DEPENDENCY_TO_CLASS_IN_BREAK_DEPENDENCY_ON_MODULE);
     }
+    if explanations.contains(Explanation::CircularDependencyWithMultipleTargets) {
+        println!();
+        println!("{}", EXPLANATION_CIRCULAR_DEPENDENCY_WITH_MULTIPLE_TARGETS);
+    }
 
     if opts.issue_points_per_class_limit.is_some() && opts.issue_points_per_class_limit.unwrap() < ipc {
         println!();
@@ -387,6 +407,20 @@ pub fn analyze(opts: Analyze) {
 
     if opts.exit_code {
         exit(1);
+    }
+}
+
+fn cmp_report(a: &Report, b: &Report) -> Ordering {
+    let ordering = (a.kind as usize).cmp(&(b.kind as usize));
+    if ordering != Equal {
+        ordering
+    } else {
+        let ordering = a.message.cmp(&b.message);
+        if ordering != Equal {
+            ordering
+        } else {
+            a.for_team.cmp(&b.for_team)
+        }
     }
 }
 
@@ -504,11 +538,13 @@ fn filter_by_class(opts: &Analyze, report: &Report, class_locations: &HashMap<St
 }
 
 fn filter_by_module(opts: &Analyze, report: &Report) -> bool {
-    report.for_modules.iter().any(|module| {
-        !module.eq("//990-commons-test:abstract-module")
-            && !module.eq("//990-commons-test:module")
-            && !module.eq("//990-commons-test:tests")
-    }) && (opts.module_filter.is_none() || report.for_modules.contains(opts.module_filter.as_ref().unwrap()))
+    (report.for_modules.is_empty()
+        || report.for_modules.iter().any(|module| {
+            !module.eq("//990-commons-test:abstract-module")
+                && !module.eq("//990-commons-test:module")
+                && !module.eq("//990-commons-test:tests")
+        }))
+        && (opts.module_filter.is_none() || report.for_modules.contains(opts.module_filter.as_ref().unwrap()))
 }
 
 fn filter_by_kind(opts: &Analyze, report: &Report) -> bool {
@@ -1111,6 +1147,141 @@ fn target_module_needed(class: &JavaClass) -> Report {
         indirect_classes: Default::default(),
         for_modules: Default::default(),
     }
+}
+
+fn check_for_circular_dependency(
+    class: &JavaClass,
+    classes: &HashMap<String, &JavaClass>,
+    class_modules: &HashMap<&JavaClass, &JavaModule>,
+) -> Vec<Report> {
+    let module = *class_modules.get(class).expect("Class module is missing");
+
+    let mut circle: usize = 0;
+    let mut paths: Vec<(&String, usize, u32)> = Vec::new();
+    let mut reached: HashSet<&String> = HashSet::new();
+
+    paths.push((&class.name, 0, 0));
+
+    let mut i: usize = 0;
+    while i < paths.len() {
+        let class_name = paths[i].0;
+        let level = paths[i].2 + 1;
+
+        i = i + 1;
+        if i > 1 && class_name.eq(&class.name) {
+            circle = i;
+            break;
+        }
+        let cls_element = *classes.get(class_name).expect("Class is missing");
+
+        cls_element
+            .dependencies
+            .iter()
+            .filter(|&name| !cls_element.break_dependencies_on.contains(name))
+            .filter(|&name| match classes.get(name) {
+                None => false,
+                Some(&cls) => match class_modules.get(cls) {
+                    None => false,
+                    Some(&dependent_module) => dependent_module.index == module.index,
+                },
+            })
+            .for_each(|name| {
+                if reached.insert(name) {
+                    paths.push((name, i, level));
+                }
+            });
+    }
+
+    let mut results: Vec<Report> = Vec::new();
+
+    let max_level = paths[paths.len() - 1].2;
+    if max_level > DEPENDENCY_WARNING_LEVEL {
+        results.push(Report {
+            kind: Kind::Warning,
+            explanation: Explanation::Empty,
+            message: format!("{} dependency level {} is too deep", class.name, max_level),
+            action: Default::default(),
+            for_class: class.name.clone(),
+            for_team: class.simple_team(),
+            indirect_classes: Default::default(),
+            for_modules: [module.name.clone()].iter().cloned().collect(),
+        });
+    }
+
+    if circle <= 1 {
+        return results;
+    }
+
+    let mut path: Vec<String> = Vec::new();
+    circle = paths[circle - 1].1;
+    while circle != 0 {
+        path.push(paths[circle - 1].0.clone());
+        circle = paths[circle - 1].1;
+    }
+
+    path.reverse();
+
+    results.push(Report {
+        kind: Kind::Warning,
+        explanation: Explanation::Empty,
+        message: format!(
+            "{} has circular dependency to it-self after {} levels",
+            class.name,
+            path.len(),
+        ),
+        action: Default::default(),
+        for_class: class.name.clone(),
+        for_team: class.simple_team(),
+        indirect_classes: Default::default(),
+        for_modules: [module.name.clone()].iter().cloned().collect(),
+    });
+
+    let empty = &String::new();
+    let target_modules: HashSet<&String> = path
+        .iter()
+        .map(|name| match &classes.get(name).unwrap().target_module {
+            None => empty,
+            Some(mdl) => mdl,
+        })
+        .collect();
+
+    if target_modules.len() > 1 {
+        results.push(Report {
+            kind: Kind::Error,
+            explanation: Explanation::CircularDependencyWithMultipleTargets,
+            message: format!(
+                "{} has circular dependency and not all classes have the same target_module: {}",
+                class.name,
+                path.join(", "),
+            ),
+            action: Default::default(),
+            for_class: class.name.clone(),
+            for_team: class.simple_team(),
+            indirect_classes: Default::default(),
+            for_modules: [module.name.clone()].iter().cloned().collect(),
+        });
+    } else {
+        let target_module = *target_modules.iter().next().unwrap();
+
+        if !target_module.is_empty() {
+            results.push(Report {
+                kind: Kind::DevAction,
+                explanation: Explanation::Empty,
+                message: format!(
+                    "Try to move this dependency circle to module {}: {}",
+                    target_modules.iter().next().unwrap(),
+                    path.join(", "),
+                ),
+                action: Default::default(),
+                for_class: class.name.clone(),
+                for_team: class.simple_team(),
+                indirect_classes: Default::default(),
+                for_modules: [module.name.clone(), target_module.clone()].iter().cloned().collect(),
+            });
+        }
+    }
+
+    return results;
 }
 
 fn check_for_package(class: &JavaClass, module: &JavaModule, target_module_team: &Option<String>) -> Vec<Report> {

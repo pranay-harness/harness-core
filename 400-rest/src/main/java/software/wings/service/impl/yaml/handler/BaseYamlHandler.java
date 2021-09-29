@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler;
 
-import static io.harness.annotations.dev.HarnessModule._870_CG_YAML;
+import static io.harness.annotations.dev.HarnessModule._955_CG_YAML;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -25,7 +25,7 @@ import java.util.List;
  * @author rktummala on 10/16/17
  */
 @OwnedBy(DX)
-@TargetModule(_870_CG_YAML)
+@TargetModule(_955_CG_YAML)
 public abstract class BaseYamlHandler<Y extends BaseYaml, B extends Object> {
   @Inject(optional = true) protected HarnessTagYamlHelper harnessTagYamlHelper;
 
