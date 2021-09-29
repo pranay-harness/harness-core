@@ -3,6 +3,7 @@ package io.harness.delegate.task.k8s.exception;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.k8s.model.HarnessAnnotations;
 
 import lombok.experimental.UtilityClass;
 
@@ -29,4 +30,9 @@ public class KubernetesExceptionHints {
   public final String WAIT_FOR_STEADY_STATE_JOB_FAILED = "Verify job logs or output for the failure reason";
   public final String WAIT_FOR_STEADY_STATE_CRD_FAILED_CHECK_CONDITION = "The steady check condition [%s] is wrong";
   public final String WAIT_FOR_STEADY_STATE_CRD_FAILED_CHECK_CONTROLLER = "Check if custom controller is running";
+
+  public final String CANARY_NO_WORKLOADS_FOUND =
+      "Add Deployment, DeploymentConfig (Openshift) or StatefulSet workload in manifest";
+  public final String CANARY_MULTIPLE_WORKLOADS =
+      "Mark non-primary workloads with annotation " + HarnessAnnotations.directApply + ": true";
 }

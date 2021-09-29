@@ -26,4 +26,9 @@ public class KubernetesExceptionExplanation {
   public final String WAIT_FOR_STEADY_STATE_FAILED_OUTPUT = "%s failed with exit code: %d and output: %s";
   public final String WAIT_FOR_STEADY_STATE_JOB_FAILED = "Job execution failed";
   public final String WAIT_FOR_STEADY_STATE_CRD_FAILED = "Steady check condition [%s] never resolved to true";
+
+  public final String CANARY_NO_WORKLOADS_FOUND =
+      "No workload found in the Manifests. Can't do Canary Deployment. Only Deployment, DeploymentConfig (OpenShift) and StatefulSet workloads are supported in Canary workflow type.";
+  public final String CANARY_MULTIPLE_WORKLOADS =
+      "Found %d workloads in manifest: [%s]. Canary deployment supports only one workload";
 }
