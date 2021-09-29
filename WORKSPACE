@@ -7,29 +7,35 @@ load("//tools/bazel/pmd:dependencies.bzl", "rules_pmd_dependencies")
 rules_pmd_dependencies()
 
 http_archive(
-    name = "com_github_bazelbuild_buildtools",
-    sha256 = "932160d5694e688cb7a05ac38efba4b9a90470c75f39716d85fb1d2f95eec96d",
-    strip_prefix = "buildtools-4.0.1",
-    url = "https://harness.jfrog.io/artifactory/bazel-buildtools-github/archive/refs/tags/4.0.1.zip",
+    name = "io_bazel_rules_go",
+    sha256 = "8e968b5fcea1d2d64071872b12737bbb5514524ee5f0a4f54f5920266c261acb",
+    urls = [
+        "https://mirror.bazel.build/github.com/bazelbuild/rules_go/releases/download/v0.28.0/rules_go-v0.28.0.zip",
+        "https://github.com/bazelbuild/rules_go/releases/download/v0.28.0/rules_go-v0.28.0.zip",
+    ],
 )
 
-# Download the Go rules
 http_archive(
-    name = "io_bazel_rules_go",
-    sha256 = "7904dbecbaffd068651916dce77ff3437679f9d20e1a7956bff43826e7645fcc",
-    urls = [
-        #"https://mirror.bazel.build/github.com/bazelbuild/rules_go/releases/download/v0.25.1/rules_go-v0.25.1.tar.gz",
-        "https://harness.jfrog.io/artifactory/rules-go-github/download/v0.25.1/rules_go-v0.25.1.tar.gz",
-    ],
+    name = "com_google_protobuf",
+    sha256 = "bf0e5070b4b99240183b29df78155eee335885e53a8af8683964579c214ad301",
+    strip_prefix = "protobuf-3.14.0",
+    urls = ["https://github.com/protocolbuffers/protobuf/archive/v3.14.0.zip"],
 )
 
 http_archive(
     name = "bazel_gazelle",
-    sha256 = "222e49f034ca7a1d1231422cdb67066b885819885c356673cb1f72f748a3c9d4",
+    sha256 = "62ca106be173579c0a167deb23358fdfe71ffa1e4cfdddf5582af26520f1c66f",
     urls = [
-        #"https://mirror.bazel.build/github.com/bazelbuild/bazel-gazelle/releases/download/v0.22.3/bazel-gazelle-v0.22.3.tar.gz",
-        "https://harness.jfrog.io/artifactory/bazel-gazelle-github/download/v0.22.3/bazel-gazelle-v0.22.3.tar.gz",
+        "https://mirror.bazel.build/github.com/bazelbuild/bazel-gazelle/releases/download/v0.23.0/bazel-gazelle-v0.23.0.tar.gz",
+        "https://github.com/bazelbuild/bazel-gazelle/releases/download/v0.23.0/bazel-gazelle-v0.23.0.tar.gz",
     ],
+)
+
+http_archive(
+    name = "com_github_bazelbuild_buildtools",
+    sha256 = "932160d5694e688cb7a05ac38efba4b9a90470c75f39716d85fb1d2f95eec96d",
+    strip_prefix = "buildtools-4.0.1",
+    url = "https://harness.jfrog.io/artifactory/bazel-buildtools-github/archive/refs/tags/4.0.1.zip",
 )
 
 # Load and call the dependencies
@@ -38,9 +44,16 @@ load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies", "go_repository")
 
 go_rules_dependencies()
 
-go_register_toolchains(version = "1.16.4")
+go_register_toolchains(version = "1.17.1")
 
 gazelle_dependencies()
+
+go_repository(
+    name = "org_golang_x_net",
+    importpath = "golang.org/x/net",
+    sum = "h1:uwuIcX0g4Yl1NC5XAz37xsr2lTtcqevgzYNVt49waME=",
+    version = "v0.0.0-20201110031124-69a78807bb2b",
+)
 
 http_archive(
     name = "rules_proto_grpc",
@@ -657,13 +670,6 @@ go_repository(
     importpath = "golang.org/x/mobile",
     sum = "h1:4+4C/Iv2U4fMZBiMCc98MG1In4gJY5YRhtpDNeDeHWs=",
     version = "v0.0.0-20190719004257-d2bd2a29d028",
-)
-
-go_repository(
-    name = "org_golang_x_net",
-    importpath = "golang.org/x/net",
-    sum = "h1:uwuIcX0g4Yl1NC5XAz37xsr2lTtcqevgzYNVt49waME=",
-    version = "v0.0.0-20201110031124-69a78807bb2b",
 )
 
 go_repository(
