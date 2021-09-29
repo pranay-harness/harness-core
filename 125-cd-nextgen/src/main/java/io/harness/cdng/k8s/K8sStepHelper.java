@@ -83,6 +83,7 @@ import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
+import io.harness.delegate.exception.TaskNGDataException;
 import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.git.GitFetchRequest;
 import io.harness.delegate.task.git.GitFetchResponse;
@@ -1227,7 +1228,13 @@ public class K8sStepHelper {
   }
 
   public StepResponse handleTaskException(
-      Ambiance ambiance, K8sExecutionPassThroughData executionPassThroughData, Exception e) {
+      Ambiance ambiance, K8sExecutionPassThroughData executionPassThroughData, Exception e) throws Exception {
+    // Trying to figure out if exception is coming from k8s task or it is an exception from delegate service.
+    // In the second case we need to close log stream and provide unit progress data as part of response
+    if (ExceptionUtils.cause(TaskNGDataException.class, e) != null) {
+      throw e;
+    }
+
     UnitProgressData unitProgressData =
         completeUnitProgressData(executionPassThroughData.getLastActiveUnitProgressData(), ambiance, e);
     FailureData failureData = FailureData.newBuilder()
