@@ -84,7 +84,7 @@ import org.springframework.data.domain.Page;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
-@Tag(name = "project", description = "This contains APIs related to projects")
+@Tag(name = "Project", description = "This contains APIs related to Project as defined in Harness")
 @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
     content =
     {
@@ -104,7 +104,7 @@ public class ProjectResource {
   @POST
   @ApiOperation(value = "Create a Project", nickname = "postProject")
   @NGAccessControlCheck(resourceType = PROJECT, permission = CREATE_PROJECT_PERMISSION)
-  @Operation(operationId = "postProject", summary = "Create a Project",
+  @Operation(operationId = "postProject", summary = "Creates a Project",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
