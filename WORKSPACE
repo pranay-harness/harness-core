@@ -4529,7 +4529,7 @@ plain_artifacts = [
     "io.fabric8:kubernetes-api:3.0.11",
     "io.fabric8:kubernetes-client:4.9.0",
     "io.fabric8:kubernetes-model:4.9.0",
-    "io.fabric8:openshift-client:3.1.12",
+    "io.fabric8:openshift-client:4.9.0",
     "io.fabric8:zjsonpatch:0.3.0",
     "io.github.benas:random-beans:3.7.0",
     "io.github.resilience4j:resilience4j-circuitbreaker:1.5.0",
