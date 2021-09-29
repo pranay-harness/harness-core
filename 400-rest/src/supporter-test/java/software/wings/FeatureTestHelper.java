@@ -23,7 +23,7 @@ import java.util.Collections;
 
 @Singleton
 @OwnedBy(HarnessTeam.PL)
-@TargetModule(HarnessModule._950_FEATURE_FLAG)
+@TargetModule(HarnessModule._940_FEATURE_FLAG)
 public class FeatureTestHelper {
   @Inject protected HPersistence persistence;
   @Inject protected FeatureFlagService featureFlagService;

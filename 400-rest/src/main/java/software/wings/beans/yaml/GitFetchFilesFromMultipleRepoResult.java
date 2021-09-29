@@ -1,9 +1,7 @@
 package software.wings.beans.yaml;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.GitFetchFilesConfig;
 
@@ -16,7 +14,6 @@ import lombok.EqualsAndHashCode;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @OwnedBy(HarnessTeam.DX)
-@TargetModule(HarnessModule._870_YAML_BEANS)
 public class GitFetchFilesFromMultipleRepoResult extends GitCommandResult {
   Map<String, GitFetchFilesResult> filesFromMultipleRepo;
   Map<String, GitFetchFilesConfig> gitFetchFilesConfigMap;

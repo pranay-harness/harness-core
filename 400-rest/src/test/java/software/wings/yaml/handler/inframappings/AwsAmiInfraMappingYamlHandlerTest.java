@@ -1,6 +1,6 @@
 package software.wings.yaml.handler.inframappings;
 
-import static io.harness.annotations.dev.HarnessModule._870_CG_YAML;
+import static io.harness.annotations.dev.HarnessModule._955_CG_YAML;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.GEORGE;
 
@@ -31,7 +31,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 
 @OwnedBy(CDP)
-@TargetModule(_870_CG_YAML)
+@TargetModule(_955_CG_YAML)
 public class AwsAmiInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandlerTestBase {
   private String validYamlContent = "harnessApiVersion: '1.0'\n"
       + "type: AWS_AMI\n"

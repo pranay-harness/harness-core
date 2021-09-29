@@ -104,13 +104,10 @@ import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
-/**
- * @author rktummala on 10/17/17
- */
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
-@TargetModule(HarnessModule._870_CG_YAML)
+@TargetModule(HarnessModule._955_CG_YAML)
 public class YamlHelper {
   @Inject ServiceResourceService serviceResourceService;
   @Inject AppService appService;
