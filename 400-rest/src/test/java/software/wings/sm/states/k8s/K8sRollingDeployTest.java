@@ -8,6 +8,7 @@ import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BOJANA;
+import static io.harness.rule.OwnerRule.NAMAN_TALAYCHA;
 import static io.harness.rule.OwnerRule.TMACARI;
 import static io.harness.rule.OwnerRule.YOGESH;
 
@@ -33,6 +34,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -52,9 +54,11 @@ import io.harness.rule.Owner;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.InstanceElementListParam;
+import software.wings.api.k8s.K8sApplicationManifestSourceInfo;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
+import software.wings.beans.Service;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.command.CommandUnit;
@@ -66,6 +70,8 @@ import software.wings.helpers.ext.k8s.response.K8sRollingDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputInquiry;
+import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -95,6 +101,7 @@ public class K8sRollingDeployTest extends CategoryTest {
   @Mock private K8sStateHelper k8sStateHelper;
   @Mock private ApplicationManifestUtils applicationManifestUtils;
   @Mock private AppService appService;
+  @Mock private SweepingOutputService mockedSweepingOutputService;
   @Mock private ActivityService activityService;
   @InjectMocks K8sRollingDeploy k8sRollingDeploy = spy(new K8sRollingDeploy(K8S_DEPLOYMENT_ROLLING.name()));
 
@@ -216,6 +223,41 @@ public class K8sRollingDeployTest extends CategoryTest {
     assertThat(taskParams.isSkipDryRun()).isFalse();
     assertThat(taskParams.isInheritManifests()).isTrue();
     assertThat(taskParams.getKubernetesResources()).isEqualTo(kubernetesResources);
+  }
+
+  @Test
+  @Owner(developers = NAMAN_TALAYCHA)
+  @Category(UnitTests.class)
+  public void testExecuteK8sTask_FF_InheritManifest() {
+    when(applicationManifestUtils.getApplicationManifests(context, AppManifestKind.VALUES)).thenReturn(new HashMap<>());
+    when(k8sStateHelper.fetchContainerInfrastructureMapping(context))
+        .thenReturn(aGcpKubernetesInfrastructureMapping().build());
+    doReturn(RELEASE_NAME).when(k8sRollingDeploy).fetchReleaseName(any(), any());
+    doReturn(K8sDelegateManifestConfig.builder().build())
+        .when(k8sRollingDeploy)
+        .createDelegateManifestConfig(any(), any());
+    doReturn(emptyList()).when(k8sRollingDeploy).fetchRenderedValuesFiles(any(), any());
+    doReturn(ExecutionResponse.builder().build()).when(k8sRollingDeploy).queueK8sDelegateTask(any(), any(), any());
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().skipVersioningForAllK8sObjects(true).storeType(Local).build();
+    Map<K8sValuesLocation, ApplicationManifest> applicationManifestMap = new HashMap<>();
+    applicationManifestMap.put(K8sValuesLocation.Service, applicationManifest);
+    doReturn(applicationManifestMap).when(k8sRollingDeploy).fetchApplicationManifests(any());
+    doReturn(true).when(featureFlagService).isEnabled(any(), any());
+    doReturn(Service.builder().uuid("serviceId").build()).when(applicationManifestUtils).fetchServiceFromContext(any());
+
+    k8sRollingDeploy.executeK8sTask(context, ACTIVITY_ID);
+    ArgumentCaptor<SweepingOutputInquiry> sweepingOutputInquiryCaptor =
+        ArgumentCaptor.forClass(SweepingOutputInquiry.class);
+    verify(mockedSweepingOutputService, times(1)).findSweepingOutput(sweepingOutputInquiryCaptor.capture());
+    assertThat(sweepingOutputInquiryCaptor.getValue().getName())
+        .isEqualTo(K8sApplicationManifestSourceInfo.SWEEPING_OUTPUT_NAME_PREFIX + "-serviceId");
+
+    reset(featureFlagService);
+    doReturn(false).when(featureFlagService).isEnabled(any(), any());
+    reset(mockedSweepingOutputService);
+    k8sRollingDeploy.executeK8sTask(context, ACTIVITY_ID);
+    verify(mockedSweepingOutputService, times(0)).findSweepingOutput(any());
   }
 
   @Test

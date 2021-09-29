@@ -47,6 +47,7 @@ public class GitFetchFilesTaskParams
   private Set<String> delegateSelectors;
   private boolean isGitHostConnectivityCheck;
   private boolean optimizedFilesFetch;
+  private boolean shouldInheritGitFetchFilesConfigMap;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

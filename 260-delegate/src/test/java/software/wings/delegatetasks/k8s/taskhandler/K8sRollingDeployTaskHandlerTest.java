@@ -244,7 +244,10 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void getFailureResponse() throws Exception {
     k8sRollingDeployTaskHandler.executeTaskInternal(
-        K8sRollingDeployTaskParameters.builder().build(), K8sDelegateTaskParams.builder().build());
+        K8sRollingDeployTaskParameters.builder()
+            .k8sDelegateManifestConfig(K8sDelegateManifestConfig.builder().build())
+            .build(),
+        K8sDelegateTaskParams.builder().build());
     verify(k8sTaskHelper, times(1))
         .fetchManifestFilesAndWriteToDirectory(
             any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class), anyLong());
@@ -271,8 +274,11 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
         .when(k8sTaskHelperBase)
         .applyManifests(any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class),
             any(ExecutionLogCallback.class), anyBoolean());
-    handler.executeTaskInternal(
-        K8sRollingDeployTaskParameters.builder().releaseName("releaseName").isInCanaryWorkflow(false).build(),
+    handler.executeTaskInternal(K8sRollingDeployTaskParameters.builder()
+                                    .k8sDelegateManifestConfig(K8sDelegateManifestConfig.builder().build())
+                                    .releaseName("releaseName")
+                                    .isInCanaryWorkflow(false)
+                                    .build(),
         K8sDelegateTaskParams.builder().build());
 
     verify(k8sTaskHelper, times(1))
@@ -316,8 +322,11 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
         .when(k8sTaskHelperBase)
         .applyManifests(any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class),
             any(ExecutionLogCallback.class), anyBoolean());
-    handler.executeTaskInternal(
-        K8sRollingDeployTaskParameters.builder().releaseName("releaseName").isInCanaryWorkflow(true).build(),
+    handler.executeTaskInternal(K8sRollingDeployTaskParameters.builder()
+                                    .k8sDelegateManifestConfig(K8sDelegateManifestConfig.builder().build())
+                                    .releaseName("releaseName")
+                                    .isInCanaryWorkflow(true)
+                                    .build(),
         K8sDelegateTaskParams.builder().build());
 
     verify(k8sTaskHelper, times(1))
@@ -376,10 +385,12 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
 
     assertThatExceptionOfType(InvalidArgumentsException.class)
         .isThrownBy(()
-                        -> k8sRollingDeployTaskHandler.executeTaskInternal(K8sRollingDeployTaskParameters.builder()
-                                                                               .releaseName("releaseName")
-                                                                               .isInCanaryWorkflow(true)
-                                                                               .build(),
+                        -> k8sRollingDeployTaskHandler.executeTaskInternal(
+                            K8sRollingDeployTaskParameters.builder()
+                                .k8sDelegateManifestConfig(K8sDelegateManifestConfig.builder().build())
+                                .releaseName("releaseName")
+                                .isInCanaryWorkflow(true)
+                                .build(),
                             K8sDelegateTaskParams.builder().build()))
         .withMessageContaining("reason");
 
@@ -574,8 +585,11 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
         .dryRunManifests(
             any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
 
-    handler.executeTaskInternal(
-        K8sRollingDeployTaskParameters.builder().releaseName("releaseName").isInCanaryWorkflow(false).build(),
+    handler.executeTaskInternal(K8sRollingDeployTaskParameters.builder()
+                                    .k8sDelegateManifestConfig(K8sDelegateManifestConfig.builder().build())
+                                    .releaseName("releaseName")
+                                    .isInCanaryWorkflow(false)
+                                    .build(),
         K8sDelegateTaskParams.builder().build());
     ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
     verify(k8sTaskHelperBase, times(1))
@@ -586,8 +600,11 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
 
     kubernetesResources.clear();
     kubernetesResources.addAll(ManifestHelper.processYaml(SECRET_YAML));
-    handler.executeTaskInternal(
-        K8sRollingDeployTaskParameters.builder().releaseName("releaseName").isInCanaryWorkflow(false).build(),
+    handler.executeTaskInternal(K8sRollingDeployTaskParameters.builder()
+                                    .k8sDelegateManifestConfig(K8sDelegateManifestConfig.builder().build())
+                                    .releaseName("releaseName")
+                                    .isInCanaryWorkflow(false)
+                                    .build(),
         K8sDelegateTaskParams.builder().build());
     captor = ArgumentCaptor.forClass(List.class);
     verify(k8sTaskHelperBase, times(2))
@@ -598,8 +615,11 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
 
     kubernetesResources.addAll(ManifestHelper.processYaml(CONFIG_MAP_YAML));
     kubernetesResources.addAll(ManifestHelper.processYaml(DEPLOYMENT_YAML));
-    handler.executeTaskInternal(
-        K8sRollingDeployTaskParameters.builder().releaseName("releaseName").isInCanaryWorkflow(false).build(),
+    handler.executeTaskInternal(K8sRollingDeployTaskParameters.builder()
+                                    .k8sDelegateManifestConfig(K8sDelegateManifestConfig.builder().build())
+                                    .releaseName("releaseName")
+                                    .isInCanaryWorkflow(false)
+                                    .build(),
         K8sDelegateTaskParams.builder().build());
     captor = ArgumentCaptor.forClass(List.class);
     verify(k8sTaskHelperBase, times(3))
@@ -637,6 +657,7 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
             any(Kubectl.class), anyList(), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
 
     handler.executeTaskInternal(K8sRollingDeployTaskParameters.builder()
+                                    .k8sDelegateManifestConfig(K8sDelegateManifestConfig.builder().build())
                                     .releaseName("releaseName")
                                     .isInCanaryWorkflow(false)
                                     .skipVersioningForAllK8sObjects(true)
@@ -760,11 +781,14 @@ public class K8sRollingDeployTaskHandlerTest extends WingsBaseTest {
         .when(k8sRollingBaseHandler)
         .getPods(anyLong(), anyListOf(KubernetesResource.class), any(KubernetesConfig.class), anyString());
 
-    assertThatThrownBy(
-        ()
-            -> k8sRollingDeployTaskHandler.executeTaskInternal(
-                K8sRollingDeployTaskParameters.builder().releaseName("releaseName").isInCanaryWorkflow(false).build(),
-                K8sDelegateTaskParams.builder().build()))
+    assertThatThrownBy(()
+                           -> k8sRollingDeployTaskHandler.executeTaskInternal(
+                               K8sRollingDeployTaskParameters.builder()
+                                   .k8sDelegateManifestConfig(K8sDelegateManifestConfig.builder().build())
+                                   .releaseName("releaseName")
+                                   .isInCanaryWorkflow(false)
+                                   .build(),
+                               K8sDelegateTaskParams.builder().build()))
         .isEqualTo(thrownException);
   }
 
