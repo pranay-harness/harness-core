@@ -118,6 +118,5 @@ public class ManagerGrpcClientModule extends ProviderModule {
     String accountId;
     String accountSecret;
     String scheme;
-    boolean accountVersion;
   }
 }

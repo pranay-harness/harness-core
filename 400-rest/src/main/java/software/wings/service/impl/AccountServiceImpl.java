@@ -956,18 +956,6 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
-  public String getAccountPrimaryDelegateVersion(String accountId) {
-    if (licenseService.isAccountDeleted(accountId)) {
-      throw new InvalidRequestException("Deleted AccountId: " + accountId);
-    }
-    Account account = wingsPersistence.createQuery(Account.class, excludeAuthorityCount)
-            .filter(AccountKeys.uuid, accountId)
-            .project("delegateConfiguration", true)
-            .get();
-   return account.getDelegateConfiguration().getDelegateVersions().stream().reduce((first, last) -> last).orElse("");
-  }
-
-  @Override
   public boolean updateAccountPreference(String accountId, String preferenceKey, Object value) {
     Account account = get(accountId);
     notNullCheck("Invalid Account for the given Id: " + accountId, USER);

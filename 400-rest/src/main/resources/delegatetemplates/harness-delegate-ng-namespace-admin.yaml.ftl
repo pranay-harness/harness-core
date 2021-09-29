@@ -194,8 +194,6 @@ spec:
           value: "${grpcServiceEnabled}"
         - name: GRPC_SERVICE_CONNECTOR_PORT
           value: "${grpcServiceConnectorPort}"
-        - name: ACCOUNT_PRIMARY_VERSION
-          value: "${accountPrimaryVersion}"
         - name: DELEGATE_NAMESPACE
           valueFrom:
             fieldRef:

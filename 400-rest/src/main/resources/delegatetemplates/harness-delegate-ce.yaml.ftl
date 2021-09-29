@@ -238,6 +238,4 @@ spec:
           value: ""
         - name: ENABlE_CE
           value: "${enableCE}"
-        - name: ACCOUNT_PRIMARY_VERSION
-          value: "${accountPrimaryVersion}"
       restartPolicy: Always

@@ -142,9 +142,6 @@ public class DelegateApplication {
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
         new ThreadFactoryBuilder().setNameFormat("sync-task-%d").setPriority(Thread.NORM_PRIORITY).build()));
 
-    boolean hasAccountPrimaryVersion = isNotBlank(System.getenv().get("ACCOUNT_PRIMARY_VERSION"));
-    log.info("ACCOUNT VERSION "+ System.getenv().get("ACCOUNT_PRIMARY_VERSION"));
-
     List<Module> modules = new ArrayList<>();
     modules.add(KryoModule.getInstance());
 
@@ -180,7 +177,6 @@ public class DelegateApplication {
             .scheme(extractScheme(configuration.getManagerUrl()))
             .accountId(configuration.getAccountId())
             .accountSecret(configuration.getAccountSecret())
-            .accountVersion(hasAccountPrimaryVersion)
             .build();
       }
 

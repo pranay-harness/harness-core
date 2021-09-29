@@ -296,7 +296,6 @@ public class DelegateServiceImpl implements DelegateService {
   public static final String HARNESS_DELEGATE_VALUES_YAML = HARNESS_DELEGATE + "-values";
   private static final String YAML = ".yaml";
   private static final String UPGRADE_VERSION = "upgradeVersion";
-  private static final String ACCOUNT_PRIMARY_VERSION = "accountPrimaryVersion";
   private static final String STREAM_DELEGATE = "/stream/delegate/";
   private static final String TAR_GZ = ".tar.gz";
   private static final String README = "README";
@@ -625,7 +624,6 @@ public class DelegateServiceImpl implements DelegateService {
               .delegateCpu(sizeDetails.getCpu() / sizeDetails.getReplicas())
               .delegateRequestsRam(sizeDetails.getRam() / sizeDetails.getReplicas())
               .delegateRequestsCpu(sizeDetails.getCpu() / sizeDetails.getReplicas())
-              .accountPrimaryVersion(getAccountPrimaryDelegateVersion(accountId))
               .delegateGroupId(delegateGroup.getUuid())
               .delegateTags(
                   isNotEmpty(delegateSetupDetails.getTags()) ? String.join(",", delegateSetupDetails.getTags()) : "")
@@ -1089,7 +1087,6 @@ public class DelegateServiceImpl implements DelegateService {
             .verificationHost(verificationHost)
             .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
             .delegateXmx(delegateXmx)
-            .accountPrimaryVersion(getAccountPrimaryDelegateVersion(accountId))
             .build());
 
     DelegateScripts delegateScripts = DelegateScripts.builder().version(version).doUpgrade(false).build();
@@ -1136,7 +1133,6 @@ public class DelegateServiceImpl implements DelegateService {
             .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
             .delegateTokenName(delegateTokenName)
             .delegateName(StringUtils.defaultString(delegateName))
-            .accountPrimaryVersion(getAccountPrimaryDelegateVersion(accountId))
             .build());
 
     DelegateScripts delegateScripts = DelegateScripts.builder().version(version).doUpgrade(false).build();
@@ -1213,7 +1209,6 @@ public class DelegateServiceImpl implements DelegateService {
     private String delegateNamespace;
     private String delegateTokenName;
     private String delegateTags;
-    private String accountPrimaryVersion;
   }
 
   private ImmutableMap<String, String> getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry inquiry) {
@@ -1548,7 +1543,6 @@ public class DelegateServiceImpl implements DelegateService {
               .delegateType(SHELL_SCRIPT)
               .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
               .delegateTokenName(tokenName)
-              .accountPrimaryVersion(getAccountPrimaryDelegateVersion(accountId))
               .build());
 
       if (isEmpty(scriptParams)) {
@@ -1669,7 +1663,6 @@ public class DelegateServiceImpl implements DelegateService {
               .delegateName(delegateName)
               .delegateProfile(delegateProfile)
               .delegateType(DOCKER)
-              .accountPrimaryVersion(getAccountPrimaryDelegateVersion(accountId))
               .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
               .delegateTokenName(tokenName)
               .build());
@@ -1746,7 +1739,6 @@ public class DelegateServiceImpl implements DelegateService {
               .ciEnabled(isCiEnabled)
               .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
               .delegateTokenName(tokenName)
-              .accountPrimaryVersion(getAccountPrimaryDelegateVersion(accountId))
               .build());
 
       File yaml = File.createTempFile(HARNESS_DELEGATE, YAML);
@@ -1795,7 +1787,6 @@ public class DelegateServiceImpl implements DelegateService {
             .ceEnabled(true)
             .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
             .delegateTokenName(tokenName)
-            .accountPrimaryVersion(getAccountPrimaryDelegateVersion(accountId))
             .build());
 
     File yaml = File.createTempFile(HARNESS_DELEGATE, YAML);
@@ -1840,7 +1831,6 @@ public class DelegateServiceImpl implements DelegateService {
             .delegateType(HELM_DELEGATE)
             .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
             .delegateTokenName(tokenName)
-            .accountPrimaryVersion(getAccountPrimaryDelegateVersion(accountId))
             .build());
 
     File yaml = File.createTempFile(HARNESS_DELEGATE_VALUES_YAML, YAML);
@@ -1880,7 +1870,6 @@ public class DelegateServiceImpl implements DelegateService {
               .delegateGroupId(delegateGroup.getUuid())
               .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
               .delegateTokenName(tokenName)
-              .accountPrimaryVersion(getAccountPrimaryDelegateVersion(accountId))
               .build());
 
       scriptParams = updateMapForEcsDelegate(awsVpcMode, hostname, delegateGroupName, scriptParams);
@@ -2927,11 +2916,6 @@ public class DelegateServiceImpl implements DelegateService {
             .delegateSetupDetails(delegateSetupDetails)
             .build());
     return delegateGroup;
-  }
-
-  @Override
-  public String getAccountPrimaryDelegateVersion(String accountId) {
-    return accountService.getAccountPrimaryDelegateVersion(accountId);
   }
 
   @NotNull

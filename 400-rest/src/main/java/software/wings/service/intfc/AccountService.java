@@ -109,8 +109,6 @@ public interface AccountService {
 
   DelegateConfiguration getDelegateConfiguration(String accountId);
 
-  String getAccountPrimaryDelegateVersion(String accountId);
-
   List<Account> listAllAccounts();
 
   List<Account> listAllActiveAccounts();
