@@ -49,7 +49,6 @@ import io.harness.delegate.beans.DelegateProfileParams;
 import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateScripts;
-import io.harness.delegate.beans.DelegateSize;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -413,7 +412,7 @@ public class DelegateAgentResourceTest extends CategoryTest {
                                           .stopScript("stopScript")
                                           .build();
     when(delegateService.getDelegateScriptsNg(ACCOUNT_ID, delegateVersion,
-             subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl, DelegateSize.LAPTOP))
+             subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl))
         .thenReturn(delegateScripts);
 
     RestResponse<DelegateScripts> restResponse =
@@ -425,7 +424,7 @@ public class DelegateAgentResourceTest extends CategoryTest {
 
     verify(delegateService, atLeastOnce())
         .getDelegateScriptsNg(ACCOUNT_ID, delegateVersion,
-            subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl, DelegateSize.LAPTOP);
+            subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl);
     assertThat(restResponse.getResource()).isInstanceOf(DelegateScripts.class).isNotNull().isEqualTo(delegateScripts);
   }
 
