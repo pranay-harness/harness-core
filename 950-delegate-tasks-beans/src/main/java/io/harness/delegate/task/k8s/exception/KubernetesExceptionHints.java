@@ -35,4 +35,14 @@ public class KubernetesExceptionHints {
       "Add Deployment, DeploymentConfig (Openshift) or StatefulSet workload in manifest";
   public final String CANARY_MULTIPLE_WORKLOADS =
       "Mark non-primary workloads with annotation " + HarnessAnnotations.directApply + ": true";
+  public final String BG_NO_WORKLOADS_FOUND =
+      "Add Deployment, DeploymentConfig (Openshift) or StatefulSet workload in manifest";
+  public final String BG_MULTIPLE_WORKLOADS =
+      "Mark non-primary workloads with annotation " + HarnessAnnotations.directApply + ": true";
+  public final String BG_NO_SERVICE_FOUND =
+      "Add at least one service in manifest. Two services [i.e. primary and stage] can be specified with annotations "
+      + HarnessAnnotations.primaryService + " and " + HarnessAnnotations.stageService;
+  public final String BG_MULTIPLE_PRIMARY_SERVICE = "Mark primary and stage service with "
+      + HarnessAnnotations.primaryService + " and " + HarnessAnnotations.stageService + " annotations";
+  public final String BG_CONFLICTING_SERVICE = "Delete existing service [%s] to proceed";
 }
