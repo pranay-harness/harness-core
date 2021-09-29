@@ -23,6 +23,7 @@ public class KubernetesExceptionExplanation {
   public final String DRY_RUN_MANIFEST_FAILED_OUTPUT = "%s failed with exit code: %d and output: %s";
   public final String APPLY_MANIFEST_FAILED = "%s failed with exit code: %d";
   public final String APPLY_MANIFEST_FAILED_OUTPUT = "%s failed with exit code: %d and output: %s";
+  public final String APPLY_NO_FILEPATH_SPECIFIED = "No file specified in the state";
   public final String WAIT_FOR_STEADY_STATE_FAILED = "%s failed with exit code: %d";
   public final String WAIT_FOR_STEADY_STATE_FAILED_OUTPUT = "%s failed with exit code: %d and output: %s";
   public final String WAIT_FOR_STEADY_STATE_JOB_FAILED = "Job execution failed";

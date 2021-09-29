@@ -11,6 +11,7 @@ import lombok.experimental.UtilityClass;
 public class KubernetesExceptionMessages {
   public final String DRY_RUN_MANIFEST_FAILED = "Dry run of manifest failed";
   public final String APPLY_MANIFEST_FAILED = "Apply manifest failed";
+  public final String APPLY_NO_FILEPATH_SPECIFIED = "No file specified in the state";
   public final String WAIT_FOR_STEADY_STATE_FAILED = "Wait for steady state failed";
 
   public final String NO_WORKLOADS_FOUND = "Missing managed workload in kubernetes manifest";
