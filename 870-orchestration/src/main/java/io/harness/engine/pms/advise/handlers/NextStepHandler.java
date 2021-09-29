@@ -9,7 +9,7 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanService;
 import io.harness.engine.pms.advise.AdviserResponseHandler;
 import io.harness.execution.NodeExecution;
-import io.harness.plan.PlanNode;
+import io.harness.plan.Node;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.NextStepAdvise;
 import io.harness.pms.contracts.execution.Status;
@@ -32,11 +32,11 @@ public class NextStepHandler implements AdviserResponseHandler {
           nodeExecution.getUuid(), advise.getToStatus(), null, EnumSet.noneOf(Status.class));
     }
     if (EmptyPredicate.isNotEmpty(advise.getNextNodeId())) {
-      PlanNode nextNode = Preconditions.checkNotNull(
+      Node nextNode = Preconditions.checkNotNull(
           planService.fetchNode(nodeExecution.getAmbiance().getPlanId(), advise.getNextNodeId()));
       engine.triggerNode(nodeExecution.getAmbiance(), nextNode);
     } else {
-      engine.endTransition(nodeExecution);
+      engine.endNodeExecution(nodeExecution.getAmbiance());
     }
   }
 }

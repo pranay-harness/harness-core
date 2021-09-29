@@ -59,7 +59,7 @@ public class Plan implements PersistentEntity, Node {
 
   @Default @Wither @Id @org.mongodb.morphia.annotations.Id String uuid = generateUuid();
   @Deprecated @Singular List<PlanNodeProto> nodes;
-  @Singular List<PlanNode> planNodes;
+  @Singular List<Node> planNodes;
 
   @NotNull String startingNodeId;
 
@@ -90,12 +90,12 @@ public class Plan implements PersistentEntity, Node {
     throw new InvalidRequestException("No node found with Id :" + nodeId);
   }
 
-  public PlanNode fetchStartingPlanNode() {
+  public Node fetchStartingPlanNode() {
     return fetchPlanNode(startingNodeId);
   }
 
-  public PlanNode fetchPlanNode(String nodeId) {
-    Optional<PlanNode> optional = planNodes.stream().filter(pn -> pn.getUuid().equals(nodeId)).findFirst();
+  public Node fetchPlanNode(String nodeId) {
+    Optional<Node> optional = planNodes.stream().filter(pn -> pn.getUuid().equals(nodeId)).findFirst();
     if (optional.isPresent()) {
       return optional.get();
     }
