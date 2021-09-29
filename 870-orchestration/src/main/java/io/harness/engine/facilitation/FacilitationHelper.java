@@ -4,14 +4,12 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.facilitation.facilitator.CoreFacilitator;
 import io.harness.engine.facilitation.facilitator.async.AsyncFacilitator;
 import io.harness.engine.facilitation.facilitator.chain.ChildChainFacilitator;
 import io.harness.engine.facilitation.facilitator.chain.TaskChainFacilitator;
 import io.harness.engine.facilitation.facilitator.child.ChildFacilitator;
 import io.harness.engine.facilitation.facilitator.chilidren.ChildrenFacilitator;
-import io.harness.engine.facilitation.facilitator.publisher.FacilitateEventPublisher;
 import io.harness.engine.facilitation.facilitator.sync.SyncFacilitator;
 import io.harness.engine.facilitation.facilitator.task.TaskFacilitator;
 import io.harness.exception.InvalidRequestException;
@@ -27,33 +25,9 @@ import com.google.inject.Injector;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class FacilitationHelper {
-  @Inject private OrchestrationEngine orchestrationEngine;
-  @Inject private FacilitateEventPublisher facilitateEventPublisher;
   @Inject Injector injector;
 
-  public void facilitateExecution(NodeExecution nodeExecution) {
-    PlanNode node = nodeExecution.getNode();
-    if (customFacilitatorPresent(node)) {
-      facilitateEventPublisher.publishEvent(nodeExecution.getUuid());
-      return;
-    }
-
-    FacilitatorResponseProto currFacilitatorResponse = null;
-    for (FacilitatorObtainment obtainment : node.getFacilitatorObtainments()) {
-      CoreFacilitator facilitator = getFacilitatorFromType(obtainment.getType());
-      currFacilitatorResponse =
-          facilitator.facilitate(nodeExecution.getAmbiance(), obtainment.getParameters().toByteArray());
-      if (currFacilitatorResponse != null) {
-        break;
-      }
-    }
-    if (currFacilitatorResponse == null) {
-      throw new InvalidRequestException("Cannot Determine Execution mode as facilitator Response is null");
-    }
-    orchestrationEngine.processFacilitatorResponse(nodeExecution.getAmbiance(), currFacilitatorResponse);
-  }
-
-  private boolean customFacilitatorPresent(PlanNode node) {
+  public boolean customFacilitatorPresent(PlanNode node) {
     if (isEmpty(node.getFacilitatorObtainments())) {
       return true;
     }
@@ -61,6 +35,23 @@ public class FacilitationHelper {
                 .stream()
                 .map(fo -> fo.getType().getType())
                 .allMatch(OrchestrationFacilitatorType.ALL_FACILITATOR_TYPES::contains);
+  }
+
+  public FacilitatorResponseProto calculateFacilitatorResponse(NodeExecution nodeExecution) {
+    PlanNode planNode = nodeExecution.getNode();
+    FacilitatorResponseProto facilitatorResponse = null;
+    for (FacilitatorObtainment obtainment : planNode.getFacilitatorObtainments()) {
+      CoreFacilitator facilitator = getFacilitatorFromType(obtainment.getType());
+      facilitatorResponse =
+          facilitator.facilitate(nodeExecution.getAmbiance(), obtainment.getParameters().toByteArray());
+      if (facilitatorResponse != null) {
+        break;
+      }
+    }
+    if (facilitatorResponse == null) {
+      throw new InvalidRequestException("Cannot Determine Execution mode as facilitator Response is null");
+    }
+    return facilitatorResponse;
   }
 
   private CoreFacilitator getFacilitatorFromType(FacilitatorType type) {

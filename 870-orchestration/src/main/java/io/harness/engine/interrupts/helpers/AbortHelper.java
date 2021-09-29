@@ -89,6 +89,6 @@ public class AbortHelper {
                   .interruptConfig(interruptConfig)
                   .build());
         }, EnumSet.noneOf(Status.class));
-    engine.endTransition(updatedNodeExecution);
+    engine.endNodeExecution(updatedNodeExecution.getAmbiance());
   }
 }
