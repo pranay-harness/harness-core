@@ -177,7 +177,7 @@ public class DelegateApplication {
             .scheme(extractScheme(configuration.getManagerUrl()))
             .accountId(configuration.getAccountId())
             .accountSecret(configuration.getAccountSecret())
-            .accountVersion(configuration.isVersionInfoFromConfiguration())
+            .accountVersion(true)
             .build();
       }
 
