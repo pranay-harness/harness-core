@@ -21,6 +21,8 @@ import io.harness.delegate.task.k8s.K8sCanaryDeployRequest;
 import io.harness.delegate.task.k8s.K8sCanaryDeployResponse;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
 import io.harness.delegate.task.k8s.K8sTaskType;
+import io.harness.delegate.task.k8s.data.K8sCanaryDataException;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.ExecutionNodeType;
@@ -142,18 +144,31 @@ public class K8sCanaryStep extends TaskChainExecutableWithRollbackAndRbac implem
     }
 
     K8sExecutionPassThroughData executionPassThroughData = (K8sExecutionPassThroughData) passThroughData;
+    InfrastructureOutcome infrastructure = executionPassThroughData.getInfrastructure();
 
     K8sDeployResponse k8sTaskExecutionResponse;
     try {
-      // In case the Fetch files task fails, we need to close the log streams
       k8sTaskExecutionResponse = (K8sDeployResponse) responseDataSupplier.get();
     } catch (Exception e) {
       log.error("Error while processing K8s Task response: {}", e.getMessage(), e);
+      K8sCanaryDataException k8sCanaryDataException = ExceptionUtils.cause(K8sCanaryDataException.class, e);
+      if (k8sCanaryDataException != null) {
+        K8sCanaryOutcome k8sCanaryOutcome =
+            K8sCanaryOutcome.builder()
+                .releaseName(k8sStepHelper.getReleaseName(ambiance, infrastructure))
+                .canaryWorkload(k8sCanaryDataException.getCanaryWorkload())
+                .canaryWorkloadDeployed(k8sCanaryDataException.isCanaryWorkloadDeployed())
+                .build();
+
+        executionSweepingOutputService.consume(
+            ambiance, OutcomeExpressionConstants.K8S_CANARY_OUTCOME, k8sCanaryOutcome, StepOutcomeGroup.STEP.name());
+      }
+
       return k8sStepHelper.handleTaskException(ambiance, executionPassThroughData, e);
     }
+
     StepResponseBuilder responseBuilder =
         StepResponse.builder().unitProgressList(k8sTaskExecutionResponse.getCommandUnitsProgress().getUnitProgresses());
-    InfrastructureOutcome infrastructure = executionPassThroughData.getInfrastructure();
     K8sCanaryDeployResponse k8sCanaryDeployResponse =
         (K8sCanaryDeployResponse) k8sTaskExecutionResponse.getK8sNGTaskResponse();
 
@@ -167,11 +182,12 @@ public class K8sCanaryStep extends TaskChainExecutableWithRollbackAndRbac implem
 
     executionSweepingOutputService.consume(
         ambiance, OutcomeExpressionConstants.K8S_CANARY_OUTCOME, k8sCanaryOutcome, StepOutcomeGroup.STEP.name());
+
     if (k8sTaskExecutionResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
       return K8sStepHelper.getFailureResponseBuilder(k8sTaskExecutionResponse, responseBuilder).build();
     }
 
-    StepResponse.StepOutcome stepOutcome = instanceInfoService.saveServerInstancesIntoSweepingOutput(
+    instanceInfoService.saveServerInstancesIntoSweepingOutput(
         ambiance, K8sPodToServiceInstanceInfoMapper.toServerInstanceInfoList(k8sCanaryDeployResponse.getK8sPodList()));
     return responseBuilder.status(Status.SUCCEEDED)
         .stepOutcome(StepResponse.StepOutcome.builder()

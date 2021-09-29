@@ -1069,7 +1069,7 @@ public class K8sTaskHelperBase {
   }
 
   public boolean doStatusCheck(Kubectl client, KubernetesResourceId resourceId, String workingDirectory, String ocPath,
-      String kubeconfigPath, LogCallback executionLogCallback) throws Exception {
+      String kubeconfigPath, LogCallback executionLogCallback, boolean isErrorFrameworkEnabled) throws Exception {
     final String eventFormat = "%-7s: %s";
     final String statusFormat = "%n%-7s: %s";
 
@@ -1117,11 +1117,12 @@ public class K8sTaskHelperBase {
       eventWatchProcess = getEventWatchProcess(workingDirectory, getEventsCommand, watchInfoStream, watchErrorStream);
 
       ProcessResult result;
+      String printableExecutedCommand;
       if (Kind.DeploymentConfig.name().equals(resourceId.getKind())) {
         String rolloutStatusCommand = getRolloutStatusCommandForDeploymentConfig(ocPath, kubeconfigPath, resourceId);
+        printableExecutedCommand = rolloutStatusCommand.substring(rolloutStatusCommand.indexOf("oc --kubeconfig"));
 
-        executionLogCallback.saveExecutionLog(
-            rolloutStatusCommand.substring(rolloutStatusCommand.indexOf("oc --kubeconfig")) + "\n");
+        executionLogCallback.saveExecutionLog(printableExecutedCommand + "\n");
 
         result = executeCommandUsingUtils(workingDirectory, statusInfoStream, statusErrorStream, rolloutStatusCommand);
       } else {
@@ -1130,9 +1131,9 @@ public class K8sTaskHelperBase {
                                                         .resource(resourceId.kindNameRef())
                                                         .namespace(resourceId.getNamespace())
                                                         .watch(true);
+        printableExecutedCommand = RolloutStatusCommand.getPrintableCommand(rolloutStatusCommand.command());
 
-        executionLogCallback.saveExecutionLog(
-            RolloutStatusCommand.getPrintableCommand(rolloutStatusCommand.command()) + "\n");
+        executionLogCallback.saveExecutionLog(printableExecutedCommand + "\n");
 
         result = rolloutStatusCommand.execute(workingDirectory, statusInfoStream, statusErrorStream, false);
       }
@@ -1141,10 +1142,23 @@ public class K8sTaskHelperBase {
 
       if (!success) {
         log.warn(result.outputUTF8());
+        if (isErrorFrameworkEnabled) {
+          String explanation = isNotEmpty(result.outputUTF8())
+              ? format(KubernetesExceptionExplanation.WAIT_FOR_STEADY_STATE_FAILED_OUTPUT, printableExecutedCommand,
+                  result.getExitValue(), result.outputUTF8())
+              : format(KubernetesExceptionExplanation.WAIT_FOR_STEADY_STATE_FAILED, printableExecutedCommand,
+                  result.getExitValue());
+          throw NestedExceptionUtils.hintWithExplanationException(KubernetesExceptionHints.WAIT_FOR_STEADY_STATE_FAILED,
+              explanation, new KubernetesTaskException(KubernetesExceptionMessages.WAIT_FOR_STEADY_STATE_FAILED));
+        }
       }
       return success;
     } catch (Exception e) {
       log.error("Exception while doing statusCheck", e);
+      if (isErrorFrameworkEnabled) {
+        throw e;
+      }
+
       executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
       return false;
     } finally {
@@ -1163,7 +1177,15 @@ public class K8sTaskHelperBase {
   public boolean doStatusCheck(Kubectl client, KubernetesResourceId resourceId,
       K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback) throws Exception {
     return doStatusCheck(client, resourceId, k8sDelegateTaskParams.getWorkingDirectory(),
-        k8sDelegateTaskParams.getOcPath(), k8sDelegateTaskParams.getKubeconfigPath(), executionLogCallback);
+        k8sDelegateTaskParams.getOcPath(), k8sDelegateTaskParams.getKubeconfigPath(), executionLogCallback, false);
+  }
+
+  public boolean doStatusCheck(Kubectl client, KubernetesResourceId resourceId,
+      K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback, boolean isErrorFrameworkEnabled)
+      throws Exception {
+    return doStatusCheck(client, resourceId, k8sDelegateTaskParams.getWorkingDirectory(),
+        k8sDelegateTaskParams.getOcPath(), k8sDelegateTaskParams.getKubeconfigPath(), executionLogCallback,
+        isErrorFrameworkEnabled);
   }
 
   public boolean getJobStatus(K8sDelegateTaskParams k8sDelegateTaskParams, LogOutputStream statusInfoStream,

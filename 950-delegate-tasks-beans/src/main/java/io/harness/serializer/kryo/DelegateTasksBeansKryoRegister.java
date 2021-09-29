@@ -318,6 +318,7 @@ import io.harness.delegate.task.k8s.K8sSwapServiceSelectorsRequest;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.delegate.task.k8s.KustomizeManifestDelegateConfig;
 import io.harness.delegate.task.k8s.OpenshiftManifestDelegateConfig;
+import io.harness.delegate.task.k8s.data.K8sCanaryDataException;
 import io.harness.delegate.task.manifests.request.CustomManifestFetchConfig;
 import io.harness.delegate.task.manifests.request.CustomManifestValuesFetchParams;
 import io.harness.delegate.task.manifests.response.CustomManifestValuesFetchResponse;
@@ -935,5 +936,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(CEK8sValidationParams.class, 543438);
     kryo.register(ReleaseInfo.class, 543439);
     kryo.register(TaskNGDataException.class, 543440);
+    kryo.register(K8sCanaryDataException.class, 543441);
   }
 }
