@@ -118,9 +118,11 @@ import software.wings.api.helm.HelmReleaseInfoElement;
 import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.api.jira.JiraExecutionData;
 import software.wings.api.jira.JiraExecutionData.JiraIssueData;
+import software.wings.api.k8s.K8sApplicationManifestSourceInfo;
 import software.wings.api.k8s.K8sContextElement;
 import software.wings.api.k8s.K8sElement;
 import software.wings.api.k8s.K8sExecutionSummary;
+import software.wings.api.k8s.K8sGitConfigMapInfo;
 import software.wings.api.k8s.K8sHelmDeploymentElement;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.api.k8s.K8sSwapServiceElement;
@@ -1638,5 +1640,7 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(PerpetualTaskBroadcastEvent.class, 40015);
     kryo.register(K8sResourcesSweepingOutput.class, 40019);
     kryo.register(ProviderType.class, 40022);
+    kryo.register(K8sGitConfigMapInfo.class, 40023);
+    kryo.register(K8sApplicationManifestSourceInfo.class, 40024);
   }
 }

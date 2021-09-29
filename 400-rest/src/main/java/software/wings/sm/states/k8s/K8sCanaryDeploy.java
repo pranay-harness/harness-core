@@ -14,9 +14,11 @@ import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
+import io.harness.beans.FeatureName;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.logging.CommandExecutionStatus;
@@ -34,6 +36,7 @@ import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.k8s.request.K8sCanaryDeployTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sCanaryDeployTaskParameters.K8sCanaryDeployTaskParametersBuilder;
+import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.helpers.ext.k8s.response.K8sCanaryDeployResponse;
@@ -78,6 +81,7 @@ public class K8sCanaryDeploy extends AbstractK8sState {
   @Inject private transient AwsCommandHelper awsCommandHelper;
   @Inject private ApplicationManifestUtils applicationManifestUtils;
   @Inject private transient OpenShiftManagerService openShiftManagerService;
+  @Inject private FeatureFlagService featureFlagService;
 
   public static final String K8S_CANARY_DEPLOY_COMMAND_NAME = "Canary Deploy";
 
@@ -116,6 +120,17 @@ public class K8sCanaryDeploy extends AbstractK8sState {
   }
 
   @Override
+  protected boolean shouldInheritManifest(ExecutionContext context) {
+    return false;
+  }
+
+  @Override
+  protected boolean shouldSaveManifest(ExecutionContext context) {
+    return featureFlagService.isEnabled(
+        FeatureName.MANIFEST_INHERIT_FROM_CANARY_TO_PRIMARY_PHASE, context.getAccountId());
+  }
+
+  @Override
   public ExecutionResponse execute(ExecutionContext context) {
     if (k8sStateHelper.isExportManifestsEnabled(context.getAccountId()) && inheritManifests) {
       Activity activity = createK8sActivity(
@@ -131,6 +146,9 @@ public class K8sCanaryDeploy extends AbstractK8sState {
     ContainerInfrastructureMapping infraMapping = k8sStateHelper.fetchContainerInfrastructureMapping(context);
     storePreviousHelmDeploymentInfo(context, appManifestMap.get(K8sValuesLocation.Service));
 
+    K8sDelegateManifestConfig k8sDelegateManifestConfig =
+        createDelegateManifestConfig(context, appManifestMap.get(K8sValuesLocation.Service));
+    k8sDelegateManifestConfig.setShouldSaveManifest(shouldSaveManifest(context));
     K8sCanaryDeployTaskParametersBuilder builder = K8sCanaryDeployTaskParameters.builder();
 
     if (k8sStateHelper.isExportManifestsEnabled(context.getAccountId())) {
@@ -154,8 +172,7 @@ public class K8sCanaryDeploy extends AbstractK8sState {
             .instances(Integer.valueOf(context.renderExpression(this.instances)))
             .instanceUnitType(this.instanceUnitType)
             .timeoutIntervalInMin(stateTimeoutInMinutes)
-            .k8sDelegateManifestConfig(
-                createDelegateManifestConfig(context, appManifestMap.get(K8sValuesLocation.Service)))
+            .k8sDelegateManifestConfig(k8sDelegateManifestConfig)
             .valuesYamlList(fetchRenderedValuesFiles(appManifestMap, context))
             .skipDryRun(skipDryRun)
             .skipVersioningForAllK8sObjects(
@@ -231,6 +248,12 @@ public class K8sCanaryDeploy extends AbstractK8sState {
     stateExecutionData.setNewInstanceStatusSummaries(
         fetchInstanceStatusSummaries(instanceElementListParam.getInstanceElements(), executionStatus));
 
+    if (shouldSaveManifest(context)) {
+      if (null != k8sCanaryDeployResponse.getGitFetchFilesConfig()) {
+        saveK8sApplicationManifestInfo(context, applicationManifestUtils.fetchServiceFromContext(context).getUuid(),
+            k8sCanaryDeployResponse.getGitFetchFilesConfig());
+      }
+    }
     saveK8sElement(context,
         K8sElement.builder()
             .releaseName(stateExecutionData.getReleaseName())

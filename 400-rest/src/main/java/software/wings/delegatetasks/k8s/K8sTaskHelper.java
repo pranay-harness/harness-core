@@ -314,6 +314,7 @@ public class K8sTaskHelper {
 
   private boolean downloadManifestFilesFromGit(K8sDelegateManifestConfig delegateManifestConfig,
       String manifestFilesDirectory, ExecutionLogCallback executionLogCallback) {
+    String latestCommitSha = null;
     if (isBlank(delegateManifestConfig.getGitFileConfig().getFilePath())) {
       delegateManifestConfig.getGitFileConfig().setFilePath(StringUtils.EMPTY);
     }
@@ -327,10 +328,22 @@ public class K8sTaskHelper {
       if (scmFetchFilesHelper.shouldUseScm(delegateManifestConfig.isOptimizedFilesFetch(), gitConfig)) {
         downloadFilesUsingScm(manifestFilesDirectory, gitFileConfig, gitConfig, executionLogCallback);
       } else {
-        gitService.downloadFiles(gitConfig, gitFileConfig, manifestFilesDirectory);
+        latestCommitSha = gitService.downloadFiles(
+            gitConfig, gitFileConfig, manifestFilesDirectory, delegateManifestConfig.isShouldSaveManifest());
+        if (delegateManifestConfig.isShouldSaveManifest()) {
+          delegateManifestConfig.getGitFileConfig().setUseBranch(false);
+          delegateManifestConfig.getGitFileConfig().setCommitId(latestCommitSha);
+        }
       }
       executionLogCallback.saveExecutionLog(color("Successfully fetched following files:", White, Bold));
       executionLogCallback.saveExecutionLog(k8sTaskHelperBase.getManifestFileNamesInLogFormat(manifestFilesDirectory));
+      if (delegateManifestConfig.isShouldSaveManifest()) {
+        executionLogCallback.saveExecutionLog(color(
+            String.format(
+                "Recorded Latest CommitId: %s and will use this Commit Id to fetch manifest from git throughout this workflow",
+                latestCommitSha),
+            White, Bold));
+      }
       executionLogCallback.saveExecutionLog("Done.", INFO, CommandExecutionStatus.SUCCESS);
 
       return true;

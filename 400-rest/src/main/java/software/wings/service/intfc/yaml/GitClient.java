@@ -31,9 +31,11 @@ public interface GitClient {
 
   @Deprecated String validate(GitConfig gitConfig);
 
-  GitFetchFilesResult fetchFilesByPath(GitConfig gitConfig, GitFetchFilesRequest gitRequest);
+  GitFetchFilesResult fetchFilesByPath(
+      GitConfig gitConfig, GitFetchFilesRequest gitRequest, boolean shouldExportCommitSha);
 
   GitFetchFilesResult fetchFilesBetweenCommits(GitConfig gitConfig, GitFilesBetweenCommitsRequest gitRequest);
 
-  void downloadFiles(GitConfig gitConfig, GitFetchFilesRequest gitRequest, String destinationDirectory);
+  String downloadFiles(
+      GitConfig gitConfig, GitFetchFilesRequest gitRequest, String destinationDirectory, boolean shouldExportCommitSha);
 }
