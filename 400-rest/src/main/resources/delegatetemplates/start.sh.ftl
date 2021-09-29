@@ -221,6 +221,9 @@ export DELEGATE_PROFILE=${delegateProfile}
 <#if delegateType??>
 export DELEGATE_TYPE=${delegateType}
 </#if>
+<#if accountPrimaryVersion??>
+export ACCOUNT_PRIMARY_VERSION=${accountPrimaryVersion}
+</#if>
 
 export HOSTNAME
 export CAPSULE_CACHE_DIR="$DIR/.cache"

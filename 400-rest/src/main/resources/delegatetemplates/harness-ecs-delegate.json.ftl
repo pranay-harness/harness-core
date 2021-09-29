@@ -113,6 +113,10 @@
         {
           "name": "INSTALL_CLIENT_TOOLS_IN_BACKGROUND",
           "value": "true"
+        },
+        {
+          "name": "ACCOUNT_PRIMARY_VERSION",
+          "value": "${accountPrimaryVersion}"
         }
       ],
       "memory": 6144,

@@ -307,6 +307,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private final int delegateTaskLimit = isNotBlank(System.getenv().get("DELEGATE_TASK_LIMIT"))
       ? Integer.parseInt(System.getenv().get("DELEGATE_TASK_LIMIT"))
       : 0;
+  private final boolean hasAccountPrimaryVersion = isNotBlank(System.getenv().get("ACCOUNT_PRIMARY_VERSION"));
 
   public static final String JAVA_VERSION = "java.version";
 
@@ -719,8 +720,15 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       URI uri = uriBuilder.build();
 
       // Stream the request body
-      RequestBuilder requestBuilder =
-          client.newRequestBuilder().method(METHOD.GET).uri(uri.toString()).header("Version", getVersion());
+      RequestBuilder requestBuilder;
+      if (hasAccountPrimaryVersion) {
+        log.info("Not Sending version info as part of header ");
+        requestBuilder = client.newRequestBuilder().method(METHOD.GET).uri(uri.toString());
+      } else {
+        log.info("Sending version info as part of header ");
+        requestBuilder =
+            client.newRequestBuilder().method(METHOD.GET).uri(uri.toString()).header("Version", getVersion());
+      }
 
       requestBuilder
           .encoder(new Encoder<Delegate, Reader>() { // Do not change this, wasync doesn't like lambdas
@@ -1233,7 +1241,12 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           } else if (DELEGATE_RESUME.equals(message.getMessage())) {
             resume();
           } else if (DELEGATE_SEND_VERSION_HEADER.equals(message.getMessage())) {
-            DelegateAgentManagerClientFactory.setSendVersionHeader(Boolean.parseBoolean(message.getParams().get(0)));
+            if (!hasAccountPrimaryVersion) {
+              log.info("Sending VERSION_INFO as part of header");
+              DelegateAgentManagerClientFactory.setSendVersionHeader(Boolean.parseBoolean(message.getParams().get(0)));
+            } else {
+              log.info("No VERSION_INFO in header");
+            }
             delegateAgentManagerClient = injector.getInstance(DelegateAgentManagerClient.class);
           } else if (DELEGATE_START_GRPC.equals(message.getMessage())) {
             startGrpcService();
