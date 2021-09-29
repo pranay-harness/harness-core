@@ -144,6 +144,8 @@ spec:
           value: "${delegateSize}"
         - name: DELEGATE_SESSION_IDENTIFIER
           value: "${delegateSessionIdentifier}"
+        - name: DELEGATE_TAGS
+          value: "${delegateTags}"
         - name: DELEGATE_TASK_LIMIT
           value: "${delegateTaskLimit}"
         - name: DELEGATE_ORG_IDENTIFIER

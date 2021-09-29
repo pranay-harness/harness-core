@@ -196,6 +196,8 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -294,6 +296,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private static final String DUPLICATE_DELEGATE_ERROR_MESSAGE =
       "Duplicate delegate with same delegateId:%s and connectionId:%s exists";
 
+  private final String delegateTags = System.getenv().get("DELEGATE_TAGS");
   private final String delegateSessionIdentifier = System.getenv().get("DELEGATE_SESSION_IDENTIFIER");
   private final String delegateOrgIdentifier = System.getenv().get("DELEGATE_ORG_IDENTIFIER");
   private final String delegateProjectIdentifier = System.getenv().get("DELEGATE_PROJECT_IDENTIFIER");
@@ -536,6 +539,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                           //.proxy(set to true if there is a system proxy)
                                           .pollingModeEnabled(delegateConfiguration.isPollForTasks())
                                           .ng(delegateNg)
+                                          .tags(isNotBlank(delegateTags) ? new ArrayList<>(
+                                                    Arrays.asList(delegateTags.trim().split("\\s*,+\\s*,*\\s*")))
+                                                                         : Collections.emptyList())
                                           .sampleDelegate(isSample)
                                           .location(Paths.get("").toAbsolutePath().toString())
                                           .ceEnabled(Boolean.parseBoolean(System.getenv("ENABlE_CE")));

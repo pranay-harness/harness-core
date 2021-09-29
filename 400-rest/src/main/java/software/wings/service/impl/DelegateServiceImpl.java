@@ -625,6 +625,8 @@ public class DelegateServiceImpl implements DelegateService {
               .delegateRequestsRam(sizeDetails.getRam() / sizeDetails.getReplicas())
               .delegateRequestsCpu(sizeDetails.getCpu() / sizeDetails.getReplicas())
               .delegateGroupId(delegateGroup.getUuid())
+              .delegateTags(
+                  isNotEmpty(delegateSetupDetails.getTags()) ? String.join(",", delegateSetupDetails.getTags()) : "")
               .delegateNamespace(delegateSetupDetails.getK8sConfigDetails().getNamespace())
               .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
               .build());
@@ -1212,6 +1214,7 @@ public class DelegateServiceImpl implements DelegateService {
     private double delegateRequestsCpu;
     private String delegateNamespace;
     private String delegateTokenName;
+    private String delegateTags;
   }
 
   private ImmutableMap<String, String> getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry inquiry) {
@@ -1385,6 +1388,12 @@ public class DelegateServiceImpl implements DelegateService {
         params.put("delegateOrgIdentifier", inquiry.getDelegateOrgIdentifier());
       } else {
         params.put("delegateOrgIdentifier", EMPTY);
+      }
+
+      if (isNotBlank(inquiry.getDelegateTags())) {
+        params.put("delegateTags", inquiry.getDelegateTags());
+      } else {
+        params.put("delegateTags", EMPTY);
       }
 
       if (isNotBlank(inquiry.getDelegateProjectIdentifier())) {
@@ -2354,6 +2363,12 @@ public class DelegateServiceImpl implements DelegateService {
       delegateGroupId = delegateGroup.getUuid();
     }
 
+    if (isNotBlank(delegateGroupId) && isNotEmpty(delegateParams.getTags())) {
+      persistence.update(persistence.createQuery(DelegateGroup.class).filter(DelegateGroupKeys.uuid, delegateGroupId),
+          persistence.createUpdateOperations(DelegateGroup.class)
+              .set(DelegateGroupKeys.tags, new HashSet<>(delegateParams.getTags())));
+    }
+
     DelegateEntityOwner owner =
         DelegateEntityOwnerHelper.buildOwner(delegateParams.getOrgIdentifier(), delegateParams.getProjectIdentifier());
 
@@ -2379,6 +2394,7 @@ public class DelegateServiceImpl implements DelegateService {
             .delegateType(delegateParams.getDelegateType())
             .delegateRandomToken(delegateParams.getDelegateRandomToken())
             .keepAlivePacket(delegateParams.isKeepAlivePacket())
+            .tags(delegateParams.getTags())
             .polllingModeEnabled(delegateParams.isPollingModeEnabled())
             .proxy(delegateParams.isProxy())
             .sampleDelegate(delegateParams.isSampleDelegate())
@@ -2867,10 +2883,6 @@ public class DelegateServiceImpl implements DelegateService {
     K8sConfigDetails k8sConfigDetails =
         delegateSetupDetails != null ? delegateSetupDetails.getK8sConfigDetails() : null;
 
-    Set<String> tags = delegateSetupDetails != null && isNotEmpty(delegateSetupDetails.getTags())
-        ? delegateSetupDetails.getTags()
-        : null;
-
     DelegateEntityOwner owner = DelegateEntityOwnerHelper.buildOwner(orgIdentifier, projectIdentifier);
 
     Query<DelegateGroup> query = this.persistence.createQuery(DelegateGroup.class)
@@ -2909,7 +2921,6 @@ public class DelegateServiceImpl implements DelegateService {
     setUnset(updateOperations, DelegateGroupKeys.description, description);
     setUnset(updateOperations, DelegateGroupKeys.delegateConfigurationId, delegateConfigurationId);
     setUnset(updateOperations, DelegateGroupKeys.sizeDetails, sizeDetails);
-    setUnset(updateOperations, DelegateGroupKeys.tags, tags);
 
     DelegateGroup delegateGroup = persistence.upsert(query, updateOperations, HPersistence.upsertReturnNewOptions);
     outboxService.save(
