@@ -3,11 +3,14 @@ package io.harness.cvng.core.services.impl;
 import static org.apache.commons.collections4.iterators.PeekingIterator.peekingIterator;
 
 import io.harness.beans.PageRequest.PageRequestBuilder;
+import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.Activity.ActivityKeys;
+import io.harness.cvng.activity.entities.KubernetesClusterActivity.KubernetesClusterActivityKeys;
+import io.harness.cvng.activity.entities.KubernetesClusterActivity.ServiceEnvironment.ServiceEnvironmentKeys;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.change.ChangeCategory;
@@ -105,37 +108,20 @@ public class ChangeEventServiceImpl implements ChangeEventService {
   }
 
   @Override
-  public PageResponse<ChangeEventDTO> getPaginated(ProjectParams projectParams, List<String> serviceIdentifiers,
+  public PageResponse<ChangeEventDTO> getChangeEvents(ProjectParams projectParams, List<String> serviceIdentifiers,
       List<String> environmentIdentifier, Instant startTime, Instant endTime, List<ChangeCategory> changeCategories,
       PageRequest pageRequest) {
     PageRequestBuilder pageRequestBuilder =
-        PageRequestBuilder.aPageRequest()
+        getPageRequestBuilder(projectParams, startTime, endTime, serviceIdentifiers, environmentIdentifier)
             .withOffset(String.valueOf(pageRequest.getPageIndex() * pageRequest.getPageSize()))
             .withLimit(String.valueOf(pageRequest.getPageSize()))
-            .addFilter(ActivityKeys.accountId, Operator.EQ, projectParams.getAccountIdentifier())
-            .addFilter(ActivityKeys.orgIdentifier, Operator.EQ, projectParams.getOrgIdentifier())
-            .addFilter(ActivityKeys.projectIdentifier, Operator.EQ, projectParams.getProjectIdentifier())
-            .addFilter(ActivityKeys.eventTime, Operator.GE, startTime)
-            .addFilter(ActivityKeys.eventTime, Operator.LT, endTime)
             .addOrder(SortOrder.Builder.aSortOrder().withField(ActivityKeys.eventTime, OrderType.DESC).build());
 
-    if (CollectionUtils.isNotEmpty(serviceIdentifiers)) {
-      pageRequestBuilder.addFilter(ActivityKeys.serviceIdentifier, Operator.IN, serviceIdentifiers.toArray());
-    }
-    if (CollectionUtils.isNotEmpty(environmentIdentifier)) {
-      pageRequestBuilder.addFilter(ActivityKeys.environmentIdentifier, Operator.IN, environmentIdentifier.toArray());
-    }
     if (CollectionUtils.isNotEmpty(changeCategories)) {
       List<ActivityType> activityTypes = changeCategories.stream()
                                              .map(ChangeSourceType::getForCategory)
                                              .flatMap(Collection::stream)
                                              .map(ChangeSourceType::getActivityType)
-                                             .collect(Collectors.toList());
-      pageRequestBuilder.addFilter(ActivityKeys.type, Operator.IN, activityTypes.toArray());
-    } else {
-      List<ActivityType> activityTypes = Arrays.stream(ChangeSourceType.values())
-                                             .map(ChangeSourceType::getActivityType)
-                                             .distinct()
                                              .collect(Collectors.toList());
       pageRequestBuilder.addFilter(ActivityKeys.type, Operator.IN, activityTypes.toArray());
     }
@@ -155,27 +141,11 @@ public class ChangeEventServiceImpl implements ChangeEventService {
   @Override
   public ChangeTimeline getTimeline(ProjectParams projectParams, List<String> serviceIdentifiers,
       List<String> environmentIdentifier, Instant startTime, Instant endTime, Integer pointCount) {
-    List<ActivityType> activityTypes = Arrays.stream(ChangeSourceType.values())
-                                           .map(ChangeSourceType::getActivityType)
-                                           .distinct()
-                                           .collect(Collectors.toList());
     PageRequestBuilder pageRequestBuilder =
-        PageRequestBuilder.aPageRequest()
+        getPageRequestBuilder(projectParams, startTime, endTime, serviceIdentifiers, environmentIdentifier)
             .addFieldsIncluded(ActivityKeys.type, ActivityKeys.eventTime)
-            .addFilter(ActivityKeys.accountId, Operator.EQ, projectParams.getAccountIdentifier())
-            .addFilter(ActivityKeys.orgIdentifier, Operator.EQ, projectParams.getOrgIdentifier())
-            .addFilter(ActivityKeys.projectIdentifier, Operator.EQ, projectParams.getProjectIdentifier())
-            .addFilter(ActivityKeys.eventTime, Operator.GE, startTime)
-            .addFilter(ActivityKeys.eventTime, Operator.LT, endTime)
-            .addFilter(ActivityKeys.type, Operator.IN, activityTypes.toArray())
             .addOrder(SortOrder.Builder.aSortOrder().withField(ActivityKeys.eventTime, OrderType.ASC).build());
-    pageRequestBuilder.addFilter(ActivityKeys.type, Operator.IN, activityTypes.toArray());
-    if (CollectionUtils.isNotEmpty(serviceIdentifiers)) {
-      pageRequestBuilder.addFilter(ActivityKeys.serviceIdentifier, Operator.IN, serviceIdentifiers.toArray());
-    }
-    if (CollectionUtils.isNotEmpty(environmentIdentifier)) {
-      pageRequestBuilder.addFilter(ActivityKeys.environmentIdentifier, Operator.IN, environmentIdentifier.toArray());
-    }
+
     io.harness.beans.PageResponse<Activity> pageResponse = activityService.getPaginated(pageRequestBuilder.build());
     Map<ChangeCategory, List<Activity>> changeCategoryActivitiesMap = pageResponse.stream().collect(
         Collectors.groupingBy(activity -> ChangeSourceType.ofActivityType(activity.getType()).getChangeCategory()));
@@ -265,5 +235,50 @@ public class ChangeEventServiceImpl implements ChangeEventService {
         .countInPrecedingWindow(activityService.getCount(projectParams, serviceIdentifiers, environmentIdentifiers,
             startTimeOfPreviousWindow, startTime, activityTypes))
         .build();
+  }
+
+  private PageRequestBuilder getPageRequestBuilder(ProjectParams projectParams, Instant startTime, Instant endTime,
+      List<String> serviceIdentifiers, List<String> environmentIdentifiers) {
+    List<ActivityType> activityTypes = Arrays.stream(ChangeSourceType.values())
+                                           .map(ChangeSourceType::getActivityType)
+                                           .distinct()
+                                           .collect(Collectors.toList());
+    PageRequestBuilder pageRequestBuilder =
+        PageRequestBuilder.aPageRequest()
+            .addFilter(ActivityKeys.accountId, Operator.EQ, projectParams.getAccountIdentifier())
+            .addFilter(ActivityKeys.orgIdentifier, Operator.EQ, projectParams.getOrgIdentifier())
+            .addFilter(ActivityKeys.projectIdentifier, Operator.EQ, projectParams.getProjectIdentifier())
+            .addFilter(ActivityKeys.type, Operator.IN, activityTypes.toArray())
+            .addFilter(ActivityKeys.eventTime, Operator.GE, startTime)
+            .addFilter(ActivityKeys.eventTime, Operator.LT, endTime);
+    if (CollectionUtils.isNotEmpty(serviceIdentifiers)) {
+      pageRequestBuilder.addFilter(ActivityKeys.serviceIdentifier, Operator.OR,
+          SearchFilter.builder()
+              .fieldName(ActivityKeys.serviceIdentifier)
+              .op(Operator.IN)
+              .fieldValues(serviceIdentifiers.toArray())
+              .build(),
+          SearchFilter.builder()
+              .fieldName(
+                  KubernetesClusterActivityKeys.relatedAppServices + "." + ServiceEnvironmentKeys.serviceIdentifier)
+              .op(Operator.IN)
+              .fieldValues(serviceIdentifiers.toArray())
+              .build());
+    }
+    if (CollectionUtils.isNotEmpty(environmentIdentifiers)) {
+      pageRequestBuilder.addFilter(ActivityKeys.environmentIdentifier, Operator.OR,
+          SearchFilter.builder()
+              .fieldName(ActivityKeys.environmentIdentifier)
+              .op(Operator.IN)
+              .fieldValues(environmentIdentifiers.toArray())
+              .build(),
+          SearchFilter.builder()
+              .fieldName(
+                  KubernetesClusterActivityKeys.relatedAppServices + "." + ServiceEnvironmentKeys.environmentIdentifier)
+              .op(Operator.IN)
+              .fieldValues(environmentIdentifiers.toArray())
+              .build());
+    }
+    return pageRequestBuilder;
   }
 }

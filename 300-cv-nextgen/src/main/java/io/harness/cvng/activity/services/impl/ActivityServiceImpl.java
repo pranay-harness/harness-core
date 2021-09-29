@@ -25,6 +25,8 @@ import io.harness.cvng.activity.entities.CustomActivity;
 import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.activity.entities.DeploymentActivity.DeploymentActivityKeys;
 import io.harness.cvng.activity.entities.InfrastructureActivity;
+import io.harness.cvng.activity.entities.KubernetesClusterActivity.KubernetesClusterActivityKeys;
+import io.harness.cvng.activity.entities.KubernetesClusterActivity.ServiceEnvironment.ServiceEnvironmentKeys;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.alert.util.VerificationStatus;
@@ -55,6 +57,7 @@ import io.harness.cvng.verificationjob.entities.VerificationJobInstance.Executio
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceBuilder;
 import io.harness.cvng.verificationjob.services.api.VerificationJobInstanceService;
 import io.harness.cvng.verificationjob.services.api.VerificationJobService;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.ng.beans.PageResponse;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.HQuery;
@@ -84,6 +87,7 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.mongodb.morphia.query.Criteria;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -706,7 +710,7 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public io.harness.beans.PageResponse<Activity> getPaginated(PageRequest pageRequest) {
-    return hPersistence.query(Activity.class, pageRequest);
+    return hPersistence.query(Activity.class, pageRequest, HQuery.excludeValidate);
   }
 
   private List<String> getVerificationJobInstanceId(String activityId) {
@@ -793,14 +797,22 @@ public class ActivityServiceImpl implements ActivityService {
   @Override
   public Long getCount(ProjectParams projectParams, List<String> serviceIdentifiers,
       List<String> environmentIdentifiers, Instant startTime, Instant endTime, List<ActivityType> activityTypes) {
-    Query<Activity> query = createQuery(projectParams, startTime, endTime);
-    if (CollectionUtils.isNotEmpty(serviceIdentifiers)) {
-      query = query.field(ActivityKeys.serviceIdentifier).in(serviceIdentifiers);
+    Query<Activity> query = createQuery(projectParams, startTime, endTime).disableValidation();
+    if (EmptyPredicate.isNotEmpty(serviceIdentifiers)) {
+      query.or(new Criteria[] {query.criteria(ActivityKeys.serviceIdentifier).in(serviceIdentifiers),
+          query
+              .criteria(
+                  KubernetesClusterActivityKeys.relatedAppServices + "." + ServiceEnvironmentKeys.serviceIdentifier)
+              .in(serviceIdentifiers)});
     }
-    if (CollectionUtils.isNotEmpty(environmentIdentifiers)) {
-      query = query.field(ActivityKeys.environmentIdentifier).in(environmentIdentifiers);
+    if (EmptyPredicate.isNotEmpty(environmentIdentifiers)) {
+      query.or(new Criteria[] {query.criteria(ActivityKeys.environmentIdentifier).in(environmentIdentifiers),
+          query
+              .criteria(
+                  KubernetesClusterActivityKeys.relatedAppServices + "." + ServiceEnvironmentKeys.environmentIdentifier)
+              .in(environmentIdentifiers)});
     }
-    if (CollectionUtils.isNotEmpty(activityTypes)) {
+    if (EmptyPredicate.isNotEmpty(activityTypes)) {
       query = query.field(ActivityKeys.type).in(activityTypes);
     }
     return query.count();

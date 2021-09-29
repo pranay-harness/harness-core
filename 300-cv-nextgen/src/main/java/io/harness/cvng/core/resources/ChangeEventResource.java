@@ -82,7 +82,7 @@ public class ChangeEventResource {
       @ApiParam(required = true) @NotNull @QueryParam("endTime") long endTime,
       @ApiParam @QueryParam("changeCategories") List<ChangeCategory> changeCategories,
       @BeanParam PageRequest pageRequest) {
-    return new RestResponse<>(changeEventService.getPaginated(projectParams, serviceIdentifiers, envIdentifiers,
+    return new RestResponse<>(changeEventService.getChangeEvents(projectParams, serviceIdentifiers, envIdentifiers,
         Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime), changeCategories, pageRequest));
   }
 
