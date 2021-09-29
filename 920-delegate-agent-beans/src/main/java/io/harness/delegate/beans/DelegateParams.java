@@ -42,4 +42,5 @@ public class DelegateParams {
   boolean ceEnabled;
 
   List<String> currentlyExecutingDelegateTasks;
+  List<String> tags;
 }

@@ -10,5 +10,5 @@ import lombok.Value;
 @Builder
 @OwnedBy(HarnessTeam.CDP)
 public class QLArtifactQueryParameters {
-  private String artifactId;
+  String artifactId;
 }

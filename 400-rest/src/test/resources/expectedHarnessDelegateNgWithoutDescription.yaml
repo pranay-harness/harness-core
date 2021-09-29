@@ -124,6 +124,8 @@ spec:
           value: "LARGE"
         - name: DELEGATE_SESSION_IDENTIFIER
           value: "9S5HMP0xROugl3_QgO62rQ"
+        - name: DELEGATE_TAGS
+          value: ""
         - name: DELEGATE_TASK_LIMIT
           value: "50"
         - name: DELEGATE_ORG_IDENTIFIER

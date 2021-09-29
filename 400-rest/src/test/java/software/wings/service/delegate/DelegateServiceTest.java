@@ -1098,6 +1098,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .proxy(true)
                                 .pollingModeEnabled(true)
                                 .sampleDelegate(true)
+                                .tags(ImmutableList.of("tag1", "tag2"))
                                 .build();
 
     DelegateProfile profile = createDelegateProfileBuilder().accountId(accountId).primary(true).build();
@@ -1106,6 +1107,7 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     DelegateRegisterResponse registerResponse = delegateService.register(params);
     Delegate delegateFromDb = delegateCache.get(accountId, registerResponse.getDelegateId(), true);
+    DelegateGroup delegateGroupFromDb = delegateCache.getDelegateGroup(accountId, delegateGroup.getUuid());
 
     assertThat(delegateFromDb.getAccountId()).isEqualTo(params.getAccountId());
     assertThat(delegateFromDb.getSessionIdentifier()).isEqualTo(params.getSessionIdentifier());
@@ -1121,6 +1123,8 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(delegateFromDb.isProxy()).isEqualTo(params.isProxy());
     assertThat(delegateFromDb.isPolllingModeEnabled()).isEqualTo(params.isPollingModeEnabled());
     assertThat(delegateFromDb.isSampleDelegate()).isEqualTo(params.isSampleDelegate());
+    assertThat(delegateFromDb.getTags()).containsExactly("tag1", "tag2");
+    assertThat(delegateGroupFromDb.getTags()).containsExactlyInAnyOrder("tag1", "tag2");
   }
 
   @Test
