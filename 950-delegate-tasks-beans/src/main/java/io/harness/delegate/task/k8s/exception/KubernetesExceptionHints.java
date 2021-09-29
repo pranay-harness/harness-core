@@ -35,6 +35,7 @@ public class KubernetesExceptionHints {
 
   public final String CANARY_NO_WORKLOADS_FOUND =
       "Add Deployment, DeploymentConfig (Openshift) or StatefulSet workload in manifest";
+
   public final String CANARY_MULTIPLE_WORKLOADS =
       "Mark non-primary workloads with annotation " + HarnessAnnotations.directApply + ": true";
   public final String BG_NO_WORKLOADS_FOUND =
