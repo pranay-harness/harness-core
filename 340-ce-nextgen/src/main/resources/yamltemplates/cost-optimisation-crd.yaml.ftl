@@ -1,3 +1,85 @@
+  - apiGroups:
+      - lightwing.lightwing.io
+    resources:
+      - autostoppingrules
+      - autostoppingrules/status
+    verbs:
+      - get
+      - list
+      - watch
+      - delete
+      - create
+      - patch
+      - update
+      - deletecollection
+  - apiGroups:
+      - networking.k8s.io
+    resources:
+      - ingresses
+    verbs:
+      - get
+      - list
+      - watch
+      - delete
+      - create
+      - patch
+      - update
+  - apiGroups:
+      - ""
+    resources:
+      - services
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - patch
+      - update
+  - apiGroups:
+      - apps
+      - extensions
+    resources:
+      - deployments
+    verbs:
+      - patch
+      - update
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: autostopping-secret-reader-role
+  namespace: harness-autostopping
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - secrets
+      - configmaps
+    verbs:
+      - get
+      - list
+      - watch
+      - create
+      - patch
+      - delete
+      - update
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ce-clusterrolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ce-clusterrole
+subjects:
+  - kind: ServiceAccount
+    name: ${serviceAccountName}
+    namespace: ${serviceAccountNamespace}
+
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -136,7 +218,12 @@ data:
                 address:
                   socket_address:
                     address: ${envoyHarnessHostname}
-                    port_value: 80
+                    port_value: 443
+        transport_socket:
+          name: envoy.transport_sockets.tls
+          typed_config:
+            "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.UpstreamTlsContext
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -186,7 +273,6 @@ spec:
         name: as-controller-config
 
 ---
-
 apiVersion: v1
 kind: Service
 metadata:
@@ -200,6 +286,7 @@ spec:
   selector:
     app: ascontroller
   type: ClusterIP
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -232,6 +319,7 @@ spec:
         ports:
         - containerPort: 18000
       serviceAccountName: harness-autostopping-sa
+
 ---
 apiVersion: v1
 kind: Service
@@ -246,12 +334,14 @@ spec:
     protocol: TCP
   selector:
     app: harness-operator
+
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: harness-autostopping-sa
   namespace: harness-autostopping
+
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -260,11 +350,26 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: cluster-admin
+  name: ce-clusterrole
 subjects:
   - kind: ServiceAccount
     name: harness-autostopping-sa
     namespace: harness-autostopping
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: harness-autostopping-secret-reader-sa
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: autostopping-secret-reader-role
+subjects:
+  - kind: ServiceAccount
+    name: harness-autostopping-sa
+    namespace: harness-autostopping
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -292,6 +397,7 @@ spec:
           value: "${harnessHostname}/gateway/lw/api/"
         ports:
         - containerPort: 8093
+
 ---
 apiVersion: v1
 kind: Service

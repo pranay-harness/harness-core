@@ -55,8 +55,7 @@ public class ChildChainStrategy implements ExecuteStrategy {
     if (chainDetails.isShouldEnd()) {
       StepResponse stepResponse = childChainExecutable.finalizeExecution(
           ambiance, resumePackage.getStepParameters(), chainDetails.getPassThroughBytes(), accumulatedResponse);
-      sdkNodeExecutionService.handleStepResponse(ambiance.getPlanExecutionId(),
-          AmbianceUtils.obtainCurrentRuntimeId(ambiance), StepResponseMapper.toStepResponseProto(stepResponse));
+      sdkNodeExecutionService.handleStepResponse(ambiance, StepResponseMapper.toStepResponseProto(stepResponse));
     } else {
       ChildChainExecutableResponse chainResponse =
           childChainExecutable.executeNextChild(ambiance, resumePackage.getStepParameters(),
@@ -80,8 +79,7 @@ public class ChildChainStrategy implements ExecuteStrategy {
 
   private void executeChild(Ambiance ambiance, ChildChainExecutableResponse childChainResponse) {
     SpawnChildRequest spawnChildRequest = SpawnChildRequest.newBuilder().setChildChain(childChainResponse).build();
-    sdkNodeExecutionService.spawnChild(
-        ambiance.getPlanExecutionId(), AmbianceUtils.obtainCurrentRuntimeId(ambiance), spawnChildRequest);
+    sdkNodeExecutionService.spawnChild(ambiance, spawnChildRequest);
   }
 
   private void suspendChain(Ambiance ambiance, ChildChainExecutableResponse childChainResponse) {
@@ -95,7 +93,7 @@ public class ChildChainStrategy implements ExecuteStrategy {
                 .status(SUSPENDED)
                 .description("Ignoring Execution as next child found to be null")
                 .build()));
-    sdkNodeExecutionService.suspendChainExecution(ambiance.getPlanExecutionId(), currentLevel.getRuntimeId(),
+    sdkNodeExecutionService.suspendChainExecution(ambiance,
         SuspendChainRequest.newBuilder()
             .setExecutableResponse(ExecutableResponse.newBuilder().setChildChain(childChainResponse).build())
             .setIsError(false)

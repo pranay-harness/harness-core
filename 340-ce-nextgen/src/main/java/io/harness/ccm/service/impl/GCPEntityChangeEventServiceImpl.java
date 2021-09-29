@@ -2,12 +2,10 @@ package io.harness.ccm.service.impl;
 
 import static java.lang.String.format;
 
-import io.harness.ccm.commons.dao.CEGcpServiceAccountDao;
 import io.harness.ccm.service.intf.GCPEntityChangeEventService;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResourceClient;
-import io.harness.delegate.beans.connector.gcpccm.GcpCloudCostConnectorDTO;
 import io.harness.eventsframework.entity_crud.EntityChangeDTO;
 import io.harness.exception.InvalidRequestException;
 import io.harness.remote.client.NGRestUtils;
@@ -17,17 +15,9 @@ import java.util.Optional;
 
 public class GCPEntityChangeEventServiceImpl implements GCPEntityChangeEventService {
   @Inject ConnectorResourceClient connectorResourceClient;
-  @Inject CEGcpServiceAccountDao ceGcpServiceAccountDao;
 
   @Override
   public boolean processGCPEntityCreateEvent(EntityChangeDTO entityChangeDTO) {
-    String identifier = entityChangeDTO.getIdentifier().getValue();
-    String accountIdentifier = entityChangeDTO.getAccountIdentifier().getValue();
-
-    GcpCloudCostConnectorDTO gcpCloudCostConnectorDTO =
-        (GcpCloudCostConnectorDTO) getConnectorConfigDTO(accountIdentifier, identifier).getConnectorConfig();
-    ceGcpServiceAccountDao.setProjectId(
-        gcpCloudCostConnectorDTO.getServiceAccountEmail(), gcpCloudCostConnectorDTO.getProjectId(), accountIdentifier);
     return true;
   }
 

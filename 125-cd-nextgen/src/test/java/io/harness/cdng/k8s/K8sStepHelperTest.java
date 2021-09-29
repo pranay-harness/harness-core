@@ -39,6 +39,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.common.beans.SetupAbstractionKeys;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
@@ -113,6 +114,7 @@ import io.harness.exception.ExceptionUtils;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitFile;
 import io.harness.helm.HelmSubCommandType;
@@ -186,6 +188,8 @@ public class K8sStepHelperTest extends CategoryTest {
   @Mock private ConnectorInfoDTO connectorInfoDTO;
   @Mock private StoreConfig storeConfig;
   @Mock private SecretManagerClientService secretManagerClientService;
+  @Mock private FeatureFlagService featureFlagService;
+  @Spy @InjectMocks private K8sEntityHelper k8sEntityHelper;
   @Spy @InjectMocks private K8sStepHelper k8sStepHelper;
 
   @Mock private LogCallback mockLogCallback;
@@ -195,6 +199,7 @@ public class K8sStepHelperTest extends CategoryTest {
   @Before
   public void setup() {
     doReturn(mockLogCallback).when(k8sStepHelper).getLogCallback(anyString(), eq(ambiance), anyBoolean());
+    doReturn(true).when(featureFlagService).isEnabled(FeatureName.USE_LATEST_CHARTMUSEUM_VERSION, "test-account");
     doAnswer(invocation -> invocation.getArgumentAt(1, String.class))
         .when(engineExpressionService)
         .renderExpression(eq(ambiance), anyString());

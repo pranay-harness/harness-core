@@ -328,6 +328,7 @@ import software.wings.beans.ce.CEAwsConfig;
 import software.wings.beans.ce.CEAzureConfig;
 import software.wings.beans.ce.CEGcpConfig;
 import software.wings.beans.ce.depricated.CECloudAccountOld;
+import software.wings.beans.ce.depricated.GcpServiceAccountOld;
 import software.wings.beans.command.AmiCommandUnit;
 import software.wings.beans.command.AwsLambdaCommandUnit;
 import software.wings.beans.command.AzureARMCommandUnit;
@@ -909,6 +910,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(GcpKubernetesInfrastructureMapping.class);
     set.add(GcpOrganization.class);
     set.add(GcpServiceAccount.class);
+    set.add(GcpServiceAccountOld.class);
     set.add(GCPUsageReport.class);
     set.add(GcrArtifactStream.class);
     set.add(GcsArtifactStream.class);
@@ -981,8 +983,8 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(PricingProfile.class);
     set.add(PrometheusCVServiceConfiguration.class);
     set.add(ProvisionerWithOnlyAuditNeededData.class);
-    set.add(PruneEvent.class);
     set.add(ResourceConstraintInstance.class);
+    set.add(PruneEvent.class);
     set.add(ResourceConstraintNotification.class);
     set.add(ResourceLookup.class);
     set.add(Role.class);

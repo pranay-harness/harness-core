@@ -12,6 +12,7 @@ import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 import java.util.Set;
@@ -87,6 +88,7 @@ public class UserGroupDBO implements PersistentRegularIterable, AccessControlEnt
   }
 
   @Override
+  @JsonIgnore
   public String getUuid() {
     return id;
   }

@@ -1,11 +1,13 @@
 package io.harness.delegate.task.cek8s;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
-import io.harness.delegate.beans.connector.k8Connector.K8sValidationParams;
-import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskParams;
+import io.harness.delegate.beans.connector.k8Connector.CEK8sValidationParams;
+import io.harness.delegate.beans.connector.k8Connector.CEKubernetesConnectionTaskParams;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskResponse;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
@@ -16,6 +18,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import org.apache.commons.lang3.NotImplementedException;
 
+@OwnedBy(HarnessTeam.CE)
 public class CEKubernetesTestConnectionDelegateTask extends AbstractDelegateRunnableTask {
   @Inject private CEKubernetesValidationHandler ceKubernetesValidationHandler;
 
@@ -32,14 +35,15 @@ public class CEKubernetesTestConnectionDelegateTask extends AbstractDelegateRunn
 
   @Override
   public DelegateResponseData run(TaskParameters parameters) {
-    KubernetesConnectionTaskParams kubernetesConnectionTaskParams = (KubernetesConnectionTaskParams) parameters;
-    final K8sValidationParams k8sValidationParams =
-        K8sValidationParams.builder()
-            .encryptedDataDetails(kubernetesConnectionTaskParams.getEncryptionDetails())
-            .kubernetesClusterConfigDTO(kubernetesConnectionTaskParams.getKubernetesClusterConfig())
+    CEKubernetesConnectionTaskParams ceKubernetesConnectionTaskParams = (CEKubernetesConnectionTaskParams) parameters;
+    final CEK8sValidationParams cek8sValidationParams =
+        CEK8sValidationParams.builder()
+            .encryptedDataDetails(ceKubernetesConnectionTaskParams.getEncryptionDetails())
+            .kubernetesClusterConfigDTO(ceKubernetesConnectionTaskParams.getKubernetesClusterConfig())
+            .featuresEnabled(ceKubernetesConnectionTaskParams.getFeaturesEnabled())
             .build();
     ConnectorValidationResult connectorValidationResult =
-        ceKubernetesValidationHandler.validate(k8sValidationParams, getAccountId());
+        ceKubernetesValidationHandler.validate(cek8sValidationParams, getAccountId());
     connectorValidationResult.setDelegateId(getDelegateId());
     return KubernetesConnectionTaskResponse.builder().connectorValidationResult(connectorValidationResult).build();
   }

@@ -100,7 +100,8 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
     String basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), dockerConfig.getPassword());
     List<BuildDetailsInternal> buildDetails = new ArrayList<>();
     String token = null;
-    Response<DockerImageTagResponse> response = registryRestClient.listImageTags(basicAuthHeader, imageName).execute();
+    String authHeader = basicAuthHeader;
+    Response<DockerImageTagResponse> response = registryRestClient.listImageTags(authHeader, imageName).execute();
     if (DockerRegistryUtils.fallbackToTokenAuth(response.code(), dockerConfig)) { // unauthorized
       token = getToken(dockerConfig, response.headers(), registryRestClient);
       ErrorHandlingGlobalContextData globalContextData =
@@ -111,7 +112,8 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
               "Unable to validate with given credentials. invalid username or password");
         }
       }
-      response = registryRestClient.listImageTags(BEARER + token, imageName).execute();
+      authHeader = BEARER + token;
+      response = registryRestClient.listImageTags(authHeader, imageName).execute();
       if (response.code() == 401) {
         if (globalContextData != null && globalContextData.isSupportedErrorFramework()) {
           Map<String, String> imageDataMap = new HashMap<>();
@@ -153,10 +155,11 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       int queryParamIndex = nextLink.indexOf('?');
       String nextPageUrl =
           queryParamIndex == -1 ? baseUrl.concat(nextLink) : baseUrl.concat(nextLink.substring(queryParamIndex));
-      response = registryRestClient.listImageTagsByUrl(BEARER + token, nextPageUrl).execute();
+      response = registryRestClient.listImageTagsByUrl(authHeader, nextPageUrl).execute();
       if (DockerRegistryUtils.fallbackToTokenAuth(response.code(), dockerConfig)) { // unauthorized
         token = getToken(dockerConfig, response.headers(), registryRestClient);
-        response = registryRestClient.listImageTagsByUrl(BEARER + token, nextPageUrl).execute();
+        authHeader = BEARER + token;
+        response = registryRestClient.listImageTagsByUrl(authHeader, nextPageUrl).execute();
       }
       dockerImageTagResponse = response.body();
       if (dockerImageTagResponse == null || isEmpty(dockerImageTagResponse.getTags())) {

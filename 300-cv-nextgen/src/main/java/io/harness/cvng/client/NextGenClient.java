@@ -9,9 +9,7 @@ import io.harness.ng.core.dto.OrganizationResponse;
 import io.harness.ng.core.dto.ProjectResponse;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.environment.dto.EnvironmentResponse;
-import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.ng.core.service.dto.ServiceResponse;
-import io.harness.ng.core.service.dto.ServiceResponseDTO;
 
 import java.util.List;
 import java.util.Set;
@@ -40,9 +38,9 @@ public interface NextGenClient {
       @Query("accountIdentifier") String accountId, @Query("orgIdentifier") String orgIdentifier,
       @Query("projectIdentifier") String projectIdentifier);
 
-  @GET("services/{serviceIdentifier}")
-  Call<ResponseDTO<ServiceResponseDTO>> getService(@Path("serviceIdentifier") String serviceIdentifier,
-      @Query("accountId") String accountId, @Query("orgIdentifier") String orgIdentifier,
+  @GET("servicesV2/{serviceIdentifier}")
+  Call<ResponseDTO<ServiceResponse>> getService(@Path("serviceIdentifier") String serviceIdentifier,
+      @Query("accountIdentifier") String accountId, @Query("orgIdentifier") String orgIdentifier,
       @Query("projectIdentifier") String projectIdentifier);
 
   @GET("servicesV2")
@@ -55,17 +53,17 @@ public interface NextGenClient {
       @Query("orgIdentifier") String orgIdentifier, @Query("projectIdentifier") String projectIdentifier,
       @Query("envIdentifiers") List<String> environmentIdentifier);
 
-  @GET("services")
-  Call<ResponseDTO<PageResponse<ServiceResponseDTO>>> listServicesForProject(@Query("page") int page,
-      @Query("size") int size, @Query("accountId") String accountId, @Query("orgIdentifier") String orgIdentifier,
-      @Query("projectIdentifier") String projectIdentifier,
+  @GET("servicesV2")
+  Call<ResponseDTO<PageResponse<ServiceResponse>>> listServicesForProject(@Query("page") int page,
+      @Query("size") int size, @Query("accountIdentifier") String accountId,
+      @Query("orgIdentifier") String orgIdentifier, @Query("projectIdentifier") String projectIdentifier,
       @Query("serviceIdentifiers") Set<String> serviceIdentifiers);
 
-  @GET("environments")
-  Call<ResponseDTO<PageResponse<EnvironmentResponseDTO>>> listEnvironmentsForProject(@Query("page") int page,
-      @Query("size") int size, @Query("accountId") String accountId, @Query("orgIdentifier") String orgIdentifier,
-      @Query("projectIdentifier") String projectIdentifier, @Query("envIdentifiers") Set<String> envIdentifiers,
-      @Query("sort") List<String> sort);
+  @GET("environmentsV2")
+  Call<ResponseDTO<PageResponse<EnvironmentResponse>>> listEnvironmentsForProject(@Query("page") int page,
+      @Query("size") int size, @Query("accountIdentifier") String accountId,
+      @Query("orgIdentifier") String orgIdentifier, @Query("projectIdentifier") String projectIdentifier,
+      @Query("envIdentifiers") Set<String> envIdentifiers, @Query("sort") List<String> sort);
 
   @GET("projects/{projectIdentifier}")
   Call<ResponseDTO<ProjectResponse>> getProject(@Path("projectIdentifier") String projectIdentifier,

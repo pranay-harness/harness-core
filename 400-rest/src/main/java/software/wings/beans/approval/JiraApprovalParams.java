@@ -2,13 +2,16 @@ package software.wings.beans.approval;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import javax.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class JiraApprovalParams {
   @Getter @Setter @NotNull String jiraConnectorId;
   @Getter @Setter private String approvalField;

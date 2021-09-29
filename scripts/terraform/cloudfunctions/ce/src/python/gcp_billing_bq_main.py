@@ -104,6 +104,7 @@ def main(event, context):
     # Sync dataset
     jsonData["isFreshSync"] = isFreshSync(jsonData)
     syncDataset(jsonData)
+    print_("Completed")
     return
 
 

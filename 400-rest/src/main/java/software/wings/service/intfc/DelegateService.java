@@ -9,7 +9,6 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.delegate.DelegateProfileExecutedAtResponse;
 import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateApproval;
@@ -42,7 +41,7 @@ import javax.ws.rs.core.MediaType;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @OwnedBy(DEL)
 @BreakDependencyOn("software.wings.service.intfc.ownership.OwnedByAccount")
 public interface DelegateService extends OwnedByAccount {
@@ -142,8 +141,6 @@ public interface DelegateService extends OwnedByAccount {
 
   void saveDelegateTask(DelegateTask task, DelegateTask.Status status);
 
-  void clearCache(String accountId, String delegateId);
-
   boolean filter(String accountId, String delegateId);
 
   Delegate updateHeartbeatForDelegateWithPollingEnabled(Delegate delegate);
@@ -172,8 +169,4 @@ public interface DelegateService extends OwnedByAccount {
   void regenerateCapabilityPermissions(String accountId, String delegateId);
 
   DelegateGroup upsertDelegateGroup(String name, String accountId, DelegateSetupDetails delegateSetupDetails);
-
-  Delegate clearProfileExecutedAt(String accountId, String delegateId);
-
-  DelegateProfileExecutedAtResponse fetchProfileExecutedAt(String accountId, String delegateId);
 }

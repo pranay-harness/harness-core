@@ -413,6 +413,19 @@ public class BillingData extends TableImpl<BillingDataRecord> {
   public final TableField<BillingDataRecord, Double> STORAGECOST =
       createField(DSL.name("storagecost"), SQLDataType.DOUBLE, this, "");
 
+  /**
+   * The column <code>public.billing_data.maxstoragerequest</code>.
+   */
+  public final TableField<BillingDataRecord, Double> MAXSTORAGEREQUEST = createField(DSL.name("maxstoragerequest"),
+      SQLDataType.DOUBLE.defaultValue(DSL.field("'0'::double precision", SQLDataType.DOUBLE)), this, "");
+
+  /**
+   * The column <code>public.billing_data.maxstorageutilizationvalue</code>.
+   */
+  public final TableField<BillingDataRecord, Double> MAXSTORAGEUTILIZATIONVALUE =
+      createField(DSL.name("maxstorageutilizationvalue"),
+          SQLDataType.DOUBLE.defaultValue(DSL.field("'0'::double precision", SQLDataType.DOUBLE)), this, "");
+
   private BillingData(Name alias, Table<BillingDataRecord> aliased) {
     this(alias, aliased, null);
   }

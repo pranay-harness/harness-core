@@ -79,7 +79,6 @@ import io.harness.capability.CapabilityTaskSelectionDetails.CapabilityTaskSelect
 import io.harness.capability.service.CapabilityService;
 import io.harness.configuration.DeployMode;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.delegate.DelegateProfileExecutedAtResponse;
 import io.harness.delegate.beans.AvailableDelegateSizes;
 import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.Delegate;
@@ -927,48 +926,6 @@ public class DelegateServiceImpl implements DelegateService {
     }
 
     return updatedDelegate;
-  }
-
-  public Delegate clearProfileExecutedAt(String accountId, String delegateId) {
-    Delegate currentDelegate = persistence.createQuery(Delegate.class)
-                                   .filter(DelegateKeys.accountId, accountId)
-                                   .filter(DelegateKeys.uuid, delegateId)
-                                   .get();
-
-    Query<Delegate> updateQuery = persistence.createQuery(Delegate.class)
-                                      .filter(DelegateKeys.accountId, accountId)
-                                      .filter(DelegateKeys.uuid, delegateId);
-
-    UpdateOperations<Delegate> updateOperations =
-        persistence.createUpdateOperations(Delegate.class).set(DelegateKeys.profileExecutedAt, 0l);
-
-    log.debug("Clear profileExecutedAt property for delegate {}:{}", accountId, delegateId);
-    Delegate updatedDelegate = persistence.findAndModify(updateQuery, updateOperations, HPersistence.returnNewOptions);
-    auditServiceHelper.reportForAuditingUsingAccountId(accountId, currentDelegate, updatedDelegate, Type.UPDATE);
-    return updatedDelegate;
-  }
-
-  @Override
-  public DelegateProfileExecutedAtResponse fetchProfileExecutedAt(String accountId, String delegateId) {
-    Delegate delegate = persistence.createQuery(Delegate.class)
-                            .filter(DelegateKeys.accountId, accountId)
-                            .filter(DelegateKeys.uuid, delegateId)
-                            .get();
-
-    log.debug("Fetch profileExecutedAt property for delegate {}:{}", accountId, delegateId);
-    DelegateProfileExecutedAtResponse result;
-    if (delegate == null) {
-      result = DelegateProfileExecutedAtResponse.newBuilder().build();
-    } else if (delegate.getDelegateProfileId() != null) {
-      result = DelegateProfileExecutedAtResponse.newBuilder()
-                   .setProfileId(delegate.getDelegateProfileId())
-                   .setProfileExecutedAt(delegate.getProfileExecutedAt())
-                   .build();
-    } else {
-      result =
-          DelegateProfileExecutedAtResponse.newBuilder().setProfileExecutedAt(delegate.getProfileExecutedAt()).build();
-    }
-    return result;
   }
 
   private DelegateInstanceStatus mapApprovalActionToDelegateStatus(DelegateApproval action) {
@@ -2027,7 +1984,6 @@ public class DelegateServiceImpl implements DelegateService {
     if (isDelegateWithoutPollingEnabled(delegate)) {
       eventEmitter.send(Channel.DELEGATES,
           anEvent().withOrgId(delegate.getAccountId()).withUuid(delegate.getUuid()).withType(Type.CREATE).build());
-      assignDelegateService.clearConnectionResults(delegate.getAccountId());
     }
 
     updateWithTokenAndSeqNumIfEcsDelegate(delegate, savedDelegate);
@@ -2073,6 +2029,9 @@ public class DelegateServiceImpl implements DelegateService {
                                     .get();
 
     if (existingDelegate != null) {
+      if (delegateConnectionDao.checkAnyDelegateIsConnected(accountId, Arrays.asList(delegateId))) {
+        throw new InvalidRequestException(format("Unable to delete delegate. Delegate %s is connected", delegateId));
+      }
       // before deleting delegate, check if any alert is open for delegate, if yes, close it.
       alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.DelegatesDown,
           DelegatesDownAlert.builder()
@@ -2101,6 +2060,10 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public void retainOnlySelectedDelegatesAndDeleteRest(String accountId, List<String> delegatesToRetain) {
     if (EmptyPredicate.isNotEmpty(delegatesToRetain)) {
+      if (delegateConnectionDao.checkAnyDelegateIsConnected(accountId, delegatesToRetain)) {
+        throw new InvalidRequestException(
+            format("Unable to delete delegate[s]. Anyone delegate %s is connected", delegatesToRetain));
+      }
       persistence.delete(persistence.createQuery(Delegate.class)
                              .filter(DelegateKeys.accountId, accountId)
                              .field(DelegateKeys.uuid)
@@ -2262,7 +2225,7 @@ public class DelegateServiceImpl implements DelegateService {
     if (isNotBlank(delegate.getDelegateGroupId())) {
       DelegateGroup delegateGroup = persistence.get(DelegateGroup.class, delegate.getDelegateGroupId());
 
-      if (delegateGroup != null && DelegateGroupStatus.DELETED == delegateGroup.getStatus()) {
+      if (delegateGroup == null || DelegateGroupStatus.DELETED == delegateGroup.getStatus()) {
         log.warn("Sending self destruct command from register delegate because the delegate group is deleted.");
         return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
       }
@@ -2327,7 +2290,7 @@ public class DelegateServiceImpl implements DelegateService {
     if (isNotBlank(delegateParams.getDelegateGroupId())) {
       DelegateGroup delegateGroup = persistence.get(DelegateGroup.class, delegateParams.getDelegateGroupId());
 
-      if (delegateGroup != null && DelegateGroupStatus.DELETED == delegateGroup.getStatus()) {
+      if (delegateGroup == null || DelegateGroupStatus.DELETED == delegateGroup.getStatus()) {
         log.warn(
             "Sending self destruct command from register delegate parameters because the delegate group is deleted.");
         return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
@@ -2556,9 +2519,7 @@ public class DelegateServiceImpl implements DelegateService {
 
     if (isNotBlank(delegate.getDelegateProfileId())) {
       DelegateProfile profile = delegateProfileService.get(accountId, delegate.getDelegateProfileId());
-      if (profile != null
-          && (!profile.getUuid().equals(profileId) || profile.getLastUpdatedAt() > lastUpdatedAt
-              || delegate.getProfileExecutedAt() == 0L)) {
+      if (profile != null && (!profile.getUuid().equals(profileId) || profile.getLastUpdatedAt() > lastUpdatedAt)) {
         Map<String, Object> context = new HashMap<>();
         context.put("secrets",
             SecretFunctor.builder()
@@ -2572,8 +2533,6 @@ public class DelegateServiceImpl implements DelegateService {
             .name(profile.getName())
             .profileLastUpdatedAt(profile.getLastUpdatedAt())
             .scriptContent(scriptContent)
-            .delegateId(delegateId)
-            .profileLastExecutedOnDelegate(delegate.getProfileExecutedAt())
             .build();
       }
     }
@@ -2847,11 +2806,6 @@ public class DelegateServiceImpl implements DelegateService {
   public void delegateDisconnected(String accountId, String delegateId, String delegateConnectionId) {
     delegateConnectionDao.delegateDisconnected(accountId, delegateConnectionId);
     subject.fireInform(DelegateObxxxxxxxx:onDisconnected, accountId, delegateId);
-  }
-
-  @Override
-  public void clearCache(String accountId, String delegateId) {
-    assignDelegateService.clearConnectionResults(accountId, delegateId);
   }
 
   @Override

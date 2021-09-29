@@ -1,7 +1,10 @@
 package io.harness.secret;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.generator.AccountGenerator;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.OwnerManager;
@@ -16,6 +19,7 @@ import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
+import software.wings.graphql.schema.type.secrets.QLSSHAuthenticationMethodOutput;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingVariableTypes;
 
@@ -24,6 +28,7 @@ import com.google.inject.Singleton;
 import lombok.Data;
 
 @Singleton
+@OwnedBy(PL)
 public class SSHCredentialHelper {
   @Inject private OwnerManager ownerManager;
   @Inject private AccountGenerator accountGenerator;
@@ -36,6 +41,7 @@ public class SSHCredentialHelper {
   public static class SSHAuthenticationType {
     String userName;
     int port;
+    QLSSHAuthenticationMethodOutput sshAuthenticationMethod;
   }
 
   @Data

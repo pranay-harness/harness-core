@@ -13,6 +13,7 @@ import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.expression.Expression;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.k8s.model.HelmVersion;
+import io.harness.k8s.model.KubernetesResource;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,15 +34,19 @@ public class K8sApplyTaskParameters extends K8sTaskParameters implements Manifes
   private boolean skipSteadyStateCheck;
   private boolean skipDryRun;
   private boolean skipRendering;
+  private boolean exportManifests;
+  private boolean inheritManifests;
+  private List<KubernetesResource> kubernetesResources;
 
   @Builder
   public K8sApplyTaskParameters(String accountId, String appId, String commandName, String activityId,
       K8sTaskType k8sTaskType, K8sClusterConfig k8sClusterConfig, String workflowExecutionId, String releaseName,
       Integer timeoutIntervalInMin, K8sDelegateManifestConfig k8sDelegateManifestConfig, List<String> valuesYamlList,
       String filePaths, boolean skipSteadyStateCheck, boolean skipDryRun, HelmVersion helmVersion,
-      Set<String> delegateSelectors, boolean skipRendering) {
+      Set<String> delegateSelectors, boolean skipRendering, boolean exportManifests, boolean inheritManifests,
+      List<KubernetesResource> kubernetesResources, boolean useLatestChartMuseumVersion) {
     super(accountId, appId, commandName, activityId, k8sClusterConfig, workflowExecutionId, releaseName,
-        timeoutIntervalInMin, k8sTaskType, helmVersion, delegateSelectors);
+        timeoutIntervalInMin, k8sTaskType, helmVersion, delegateSelectors, useLatestChartMuseumVersion);
 
     this.k8sDelegateManifestConfig = k8sDelegateManifestConfig;
     this.valuesYamlList = valuesYamlList;
@@ -49,6 +54,9 @@ public class K8sApplyTaskParameters extends K8sTaskParameters implements Manifes
     this.skipSteadyStateCheck = skipSteadyStateCheck;
     this.skipDryRun = skipDryRun;
     this.skipRendering = skipRendering;
+    this.exportManifests = exportManifests;
+    this.inheritManifests = inheritManifests;
+    this.kubernetesResources = kubernetesResources;
   }
 
   @Override

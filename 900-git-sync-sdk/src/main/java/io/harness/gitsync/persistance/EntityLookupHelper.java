@@ -12,6 +12,7 @@ import com.google.inject.name.Named;
 import javax.annotation.ParametersAreNonnullByDefault;
 import javax.cache.Cache;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 @ParametersAreNonnullByDefault
@@ -29,9 +30,23 @@ public class EntityLookupHelper implements EntityKeySource {
     this.harnessToGitPushInfoServiceBlockingStub = harnessToGitPushInfoServiceBlockingStub;
   }
 
+  private String getKey(EntityScopeInfo entityScopeInfo) {
+    String scope = "";
+    if (!StringUtils.isEmpty(entityScopeInfo.getAccountId())) {
+      scope += "/" + entityScopeInfo.getAccountId();
+    }
+    if (!StringUtils.isEmpty(entityScopeInfo.getOrgId().getValue())) {
+      scope += "/" + entityScopeInfo.getOrgId().getValue();
+    }
+
+    if (!StringUtils.isEmpty(entityScopeInfo.getProjectId().getValue())) {
+      scope += "/" + entityScopeInfo.getProjectId().getValue();
+    }
+    return scope;
+  }
   @Override
   public boolean fetchKey(EntityScopeInfo entityScopeInfo) {
-    final String scope = entityScopeInfo.toString();
+    final String scope = getKey(entityScopeInfo);
     Boolean isGitEnabled = gitEnabledCache.get(scope);
     if (isGitEnabled != null) {
       return isGitEnabled;
@@ -46,6 +61,6 @@ public class EntityLookupHelper implements EntityKeySource {
   @Override
   public void updateKey(EntityScopeInfo entityScopeInfo) {
     log.info("Invalidating cache {}", entityScopeInfo);
-    gitEnabledCache.remove(entityScopeInfo.toString());
+    gitEnabledCache.remove(getKey(entityScopeInfo));
   }
 }

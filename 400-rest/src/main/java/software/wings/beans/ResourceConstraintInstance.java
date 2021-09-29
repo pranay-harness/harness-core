@@ -3,7 +3,9 @@ package software.wings.beans;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.distribution.constraint.Consumer.State;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.CompoundMongoIndex;
@@ -34,6 +36,7 @@ import org.mongodb.morphia.annotations.Id;
 @FieldNameConstants(innerTypeName = "ResourceConstraintInstanceKeys")
 @Entity(value = "resourceConstraintInstances", noClassnameStored = true)
 @HarnessEntity(exportable = false)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class ResourceConstraintInstance implements PersistentRegularIterable, UuidAware, AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

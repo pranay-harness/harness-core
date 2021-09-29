@@ -2,6 +2,8 @@ package software.wings.sm.states.k8s;
 
 import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.exception.WingsException.USER;
 
 import static software.wings.sm.StateType.K8S_CANARY_DEPLOY;
 
@@ -14,22 +16,24 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.task.k8s.K8sTaskType;
-import io.harness.k8s.K8sCommandUnitConstants;
+import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.model.K8sPod;
+import io.harness.k8s.model.KubernetesResource;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.k8s.K8sElement;
 import software.wings.api.k8s.K8sStateExecutionData;
+import software.wings.beans.Activity;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.command.CommandUnit;
-import software.wings.beans.command.K8sDummyCommandUnit;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.k8s.request.K8sCanaryDeployTaskParameters;
+import software.wings.helpers.ext.k8s.request.K8sCanaryDeployTaskParameters.K8sCanaryDeployTaskParametersBuilder;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
 import software.wings.helpers.ext.k8s.response.K8sCanaryDeployResponse;
@@ -52,7 +56,7 @@ import software.wings.utils.ApplicationManifestUtils;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import com.google.inject.Inject;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.Getter;
@@ -85,6 +89,8 @@ public class K8sCanaryDeploy extends AbstractK8sState {
   @Getter @Setter @Attributes(title = "Instance Unit Type") private InstanceUnitType instanceUnitType;
   @Getter @Setter @Attributes(title = "Timeout (Minutes)") @DefaultValue("10") private Integer stateTimeoutInMinutes;
   @Getter @Setter @Attributes(title = "Skip Dry Run") private boolean skipDryRun;
+  @Getter @Setter @Attributes(title = "Export manifests") private boolean exportManifests;
+  @Getter @Setter @Attributes(title = "Inherit manifests") private boolean inheritManifests;
 
   @Override
   public Integer getTimeoutMillis() {
@@ -103,12 +109,19 @@ public class K8sCanaryDeploy extends AbstractK8sState {
 
   @Override
   public void validateParameters(ExecutionContext context) {
-    parseInt(context.renderExpression(this.instances));
+    if (!exportManifests) {
+      parseInt(context.renderExpression(this.instances));
+    }
     validateK8sV2TypeServiceUsed(context);
   }
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
+    if (k8sStateHelper.isExportManifestsEnabled(context.getAccountId()) && inheritManifests) {
+      Activity activity = createK8sActivity(
+          context, commandName(), stateType(), activityService, commandUnitList(false, context.getAccountId()));
+      return executeK8sTask(context, activity.getUuid());
+    }
     return executeWrapperWithManifest(this, context, K8sStateHelper.fetchSafeTimeoutInMillis(getTimeoutMillis()));
   }
 
@@ -118,9 +131,23 @@ public class K8sCanaryDeploy extends AbstractK8sState {
     ContainerInfrastructureMapping infraMapping = k8sStateHelper.fetchContainerInfrastructureMapping(context);
     storePreviousHelmDeploymentInfo(context, appManifestMap.get(K8sValuesLocation.Service));
 
+    K8sCanaryDeployTaskParametersBuilder builder = K8sCanaryDeployTaskParameters.builder();
+
+    if (k8sStateHelper.isExportManifestsEnabled(context.getAccountId())) {
+      builder.exportManifests(exportManifests);
+      if (inheritManifests) {
+        List<KubernetesResource> kubernetesResources =
+            k8sStateHelper.getResourcesFromSweepingOutput(context, getStateType());
+        if (isEmpty(kubernetesResources)) {
+          throw new InvalidRequestException("No kubernetes resources found to inherit", USER);
+        }
+        builder.inheritManifests(inheritManifests);
+        builder.kubernetesResources(kubernetesResources);
+      }
+    }
+
     K8sTaskParameters k8sTaskParameters =
-        K8sCanaryDeployTaskParameters.builder()
-            .activityId(activityId)
+        builder.activityId(activityId)
             .releaseName(fetchReleaseName(context, infraMapping))
             .commandName(K8S_CANARY_DEPLOY_COMMAND_NAME)
             .k8sTaskType(K8sTaskType.CANARY_DEPLOY)
@@ -179,6 +206,16 @@ public class K8sCanaryDeploy extends AbstractK8sState {
 
     K8sCanaryDeployResponse k8sCanaryDeployResponse = (K8sCanaryDeployResponse) executionResponse.getK8sTaskResponse();
 
+    if (k8sStateHelper.isExportManifestsEnabled(context.getAccountId())
+        && k8sCanaryDeployResponse.getResources() != null) {
+      k8sStateHelper.saveResourcesToSweepingOutput(context, k8sCanaryDeployResponse.getResources(), getStateType());
+      stateExecutionData.setExportManifests(true);
+      return ExecutionResponse.builder()
+          .executionStatus(executionStatus)
+          .stateExecutionData(stateExecutionData)
+          .build();
+    }
+
     Integer targetInstances = parseInt(context.renderExpression(this.instances));
     if (k8sCanaryDeployResponse.getCurrentInstances() != null) {
       targetInstances = k8sCanaryDeployResponse.getCurrentInstances();
@@ -219,18 +256,15 @@ public class K8sCanaryDeploy extends AbstractK8sState {
 
   @Override
   public List<CommandUnit> commandUnitList(boolean remoteStoreType, String accountId) {
-    List<CommandUnit> canaryCommandUnits = new ArrayList<>();
+    return k8sStateHelper.getCommandUnits(remoteStoreType, accountId, isInheritManifests(), isExportManifests(), false);
+  }
 
-    if (remoteStoreType) {
-      canaryCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.FetchFiles));
+  @Override
+  public Map<String, String> validateFields() {
+    Map<String, String> invalidFields = new HashMap<>();
+    if (exportManifests && inheritManifests) {
+      invalidFields.put("Export manifests & inherit manifests", "Can't export and inherit manifests at the same time");
     }
-
-    canaryCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Init));
-    canaryCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Prepare));
-    canaryCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Apply));
-    canaryCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.WaitForSteadyState));
-    canaryCommandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.WrapUp));
-
-    return canaryCommandUnits;
+    return invalidFields;
   }
 }

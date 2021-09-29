@@ -10,6 +10,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
 import io.harness.pms.events.base.PmsBaseEventHandler;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.execution.utils.SdkResponseEventUtils;
 import io.harness.registries.SdkResponseProcessorFactory;
 
 import com.google.common.collect.ImmutableMap;
@@ -26,7 +27,8 @@ public class SdkResponseHandler extends PmsBaseEventHandler<SdkResponseEventProt
   @Override
   protected Map<String, String> extraLogProperties(SdkResponseEventProto event) {
     return ImmutableMap.of("eventType", event.getSdkResponseEventType().name(), "nodeExecutionId",
-        event.getNodeExecutionId(), "planExecutionId", event.getPlanExecutionId());
+        SdkResponseEventUtils.getNodeExecutionId(event), "planExecutionId",
+        SdkResponseEventUtils.getPlanExecutionId(event));
   }
 
   @Override
@@ -46,10 +48,17 @@ public class SdkResponseHandler extends PmsBaseEventHandler<SdkResponseEventProt
 
   @Override
   protected void handleEventWithContext(SdkResponseEventProto event) {
-    SdkResponseProcessor handler = handlerRegistry.getHandler(event.getSdkResponseEventType());
-    NodeExecution nodeExecution = nodeExecutionService.get(event.getNodeExecutionId());
-    try (AutoLogContext ignore = AmbianceUtils.autoLogContext(nodeExecution.getAmbiance())) {
+    // This is the event for new execution
+    Ambiance ambiance;
+    if (event.hasAmbiance()) {
+      ambiance = event.getAmbiance();
+    } else {
+      NodeExecution nodeExecution = nodeExecutionService.get(SdkResponseEventUtils.getNodeExecutionId(event));
+      ambiance = nodeExecution.getAmbiance();
+    }
+    try (AutoLogContext ignore = AmbianceUtils.autoLogContext(ambiance)) {
       log.info("Event for SdkResponseEvent received for eventType {}", event.getSdkResponseEventType());
+      SdkResponseProcessor handler = handlerRegistry.getHandler(event.getSdkResponseEventType());
       handler.handleEvent(event);
       log.info("Event for SdkResponseEvent for event type {} completed successfully", event.getSdkResponseEventType());
     }

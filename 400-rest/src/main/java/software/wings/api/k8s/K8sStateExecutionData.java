@@ -55,6 +55,7 @@ public class K8sStateExecutionData extends StateExecutionData implements Delegat
   private String blueGreenStageColor;
   private Set<String> delegateSelectors;
   private List<KubernetesResourceId> prunedResourcesIds;
+  private boolean exportManifests;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
@@ -102,6 +103,7 @@ public class K8sStateExecutionData extends StateExecutionData implements Delegat
         .blueGreenStageColor(blueGreenStageColor)
         .delegateSelectors(delegateSelectors)
         .prunedResourcesIds(prunedResourcesIds)
+        .exportManifests(exportManifests)
         .build();
   }
 }

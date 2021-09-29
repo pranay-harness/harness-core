@@ -18,7 +18,7 @@ import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.rule.Owner;
-import io.harness.steps.common.NGSectionStep;
+import io.harness.steps.StagesStep;
 import io.harness.steps.common.NGSectionStepParameters;
 
 import com.google.common.base.Charsets;
@@ -69,7 +69,7 @@ public class StagesPlanCreatorTest extends CategoryTest {
 
     assertThat(planForParentNode.getUuid()).isEqualTo(stagesYamlField.getNode().getUuid());
     assertThat(planForParentNode.getIdentifier()).isEqualTo("stages");
-    assertThat(planForParentNode.getStepType()).isEqualTo(NGSectionStep.STEP_TYPE);
+    assertThat(planForParentNode.getStepType()).isEqualTo(StagesStep.STEP_TYPE);
     assertThat(planForParentNode.getGroup()).isEqualTo("STAGES");
     assertThat(planForParentNode.getName()).isEqualTo("stages");
 

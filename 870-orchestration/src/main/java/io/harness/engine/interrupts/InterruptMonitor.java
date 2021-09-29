@@ -97,7 +97,13 @@ public class InterruptMonitor implements Handler<Interrupt> {
       // This is probably just for some legacy handling should happen no more as all the interrupts
       // get closed on plan completion now
       // The null check is for really old plans which are cleared by mongo
-      PlanExecution planExecution = planExecutionService.get(interrupt.getPlanExecutionId());
+      PlanExecution planExecution = null;
+      try {
+        planExecution = planExecutionService.get(interrupt.getPlanExecutionId());
+      } catch (Exception ex) {
+        // Just ignoring this exception this happens again for old executions where the plan execution have been removed
+        // from database
+      }
       if (planExecution == null || StatusUtils.isFinalStatus(planExecution.getStatus())) {
         log.info("Interrupt active but plan finished, Closing the interrupt");
         interruptService.markProcessed(interrupt.getUuid(), PROCESSED_SUCCESSFULLY);

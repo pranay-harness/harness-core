@@ -6,11 +6,14 @@ import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.InputSetReference;
 import io.harness.common.EntityReference;
+import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
+import io.harness.eventsframework.schemas.entity.InputSetReferenceProtoDTO;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.FileChange;
 import io.harness.gitsync.ScopeDetails;
 import io.harness.gitsync.entityInfo.AbstractGitSdkEntityHandler;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
+import io.harness.grpc.utils.StringValueUtils;
 import io.harness.ng.core.EntityDetail;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity.InputSetEntityKeys;
@@ -135,5 +138,17 @@ public class InputSetEntityGitSyncHelper extends AbstractGitSdkEntityHandler<Inp
   @Override
   public InputSetYamlDTO getYamlDTO(String yaml) {
     return InputSetYamlDTOMapper.toDTO(yaml);
+  }
+
+  @Override
+  public String getYamlFromEntityRef(EntityDetailProtoDTO entityReference) {
+    final InputSetReferenceProtoDTO inputSetRef = entityReference.getInputSetRef();
+    final Optional<InputSetEntity> inputSetEntity =
+        pmsInputSetService.get(StringValueUtils.getStringFromStringValue(inputSetRef.getAccountIdentifier()),
+            StringValueUtils.getStringFromStringValue(inputSetRef.getOrgIdentifier()),
+            StringValueUtils.getStringFromStringValue(inputSetRef.getProjectIdentifier()),
+            StringValueUtils.getStringFromStringValue(inputSetRef.getPipelineIdentifier()),
+            StringValueUtils.getStringFromStringValue(inputSetRef.getIdentifier()), false);
+    return inputSetEntity.get().getYaml();
   }
 }

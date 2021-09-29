@@ -2,6 +2,7 @@ package io.harness.cvng.activity.services.api;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.PageRequest;
 import io.harness.cvng.activity.beans.ActivityDashboardDTO;
 import io.harness.cvng.activity.beans.ActivityVerificationResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
@@ -88,5 +89,11 @@ public interface ActivityService {
 
   Long getCount(ServiceEnvironmentParams serviceEnvironmentParams, List<String> changeSourceIdentifiers,
       Instant startTime, Instant endTime, List<ActivityType> activityTypes);
+
+  Long getCount(ProjectParams projectParams, List<String> serviceIdentifiers, List<String> environmentIdentifiers,
+      Instant startTime, Instant endTime, List<ActivityType> activityTypes);
+
   String createActivityForDemo(Activity activity, ActivityVerificationStatus verificationStatus);
+
+  io.harness.beans.PageResponse<Activity> getPaginated(PageRequest pageRequest);
 }

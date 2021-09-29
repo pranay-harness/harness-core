@@ -8,8 +8,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.merger.YamlConfig;
 import io.harness.pms.merger.fqn.FQN;
+import io.harness.pms.merger.helpers.InputSetTemplateHelper;
 import io.harness.pms.merger.helpers.InputSetYamlHelper;
-import io.harness.pms.merger.helpers.YamlTemplateHelper;
 
 import com.fasterxml.jackson.databind.node.TextNode;
 import java.util.Map;
@@ -28,7 +28,7 @@ public class InputSetSanitizer {
   }
 
   private String sanitizeInputSet(String pipelineYaml, String runtimeInput, boolean isInputSet) {
-    String templateYaml = YamlTemplateHelper.createTemplateFromPipeline(pipelineYaml);
+    String templateYaml = InputSetTemplateHelper.createTemplateFromPipeline(pipelineYaml);
 
     if (templateYaml == null) {
       return "";
@@ -40,7 +40,7 @@ public class InputSetSanitizer {
       runtimeInput = InputSetYamlHelper.getPipelineComponent(runtimeInput);
     }
 
-    String filteredInputSetYaml = YamlTemplateHelper.removeRuntimeInputFromYaml(runtimeInput);
+    String filteredInputSetYaml = InputSetTemplateHelper.removeRuntimeInputFromYaml(runtimeInput);
     if (EmptyPredicate.isEmpty(filteredInputSetYaml)) {
       return "";
     }

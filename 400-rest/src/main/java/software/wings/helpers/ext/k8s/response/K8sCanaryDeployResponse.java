@@ -8,6 +8,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.k8s.model.K8sPod;
+import io.harness.k8s.model.KubernetesResource;
 
 import java.util.List;
 import lombok.Builder;
@@ -23,4 +24,5 @@ public class K8sCanaryDeployResponse implements K8sTaskResponse {
   Integer currentInstances;
   String canaryWorkload;
   HelmChartInfo helmChartInfo;
+  List<KubernetesResource> resources;
 }

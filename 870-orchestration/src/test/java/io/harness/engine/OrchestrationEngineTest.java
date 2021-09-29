@@ -19,13 +19,13 @@ import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
+import io.harness.plan.PlanNode;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
-import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
@@ -76,16 +76,20 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
   public void handleStepResponseWithError() {
+    String nodeExecutionId = generateUuid();
     StepResponseProto stepResponseProto = StepResponseProto.newBuilder().build();
-    Ambiance ambiance =
-        Ambiance.newBuilder().setPlanExecutionId("planExecutionId").putAllSetupAbstractions(prepareInputArgs()).build();
-    NodeExecution nodeExecution = NodeExecution.builder().uuid(generateUuid()).ambiance(ambiance).build();
+    Ambiance ambiance = Ambiance.newBuilder()
+                            .setPlanExecutionId("planExecutionId")
+                            .putAllSetupAbstractions(prepareInputArgs())
+                            .addLevels(Level.newBuilder().setRuntimeId(nodeExecutionId).build())
+                            .build();
+    NodeExecution nodeExecution = NodeExecution.builder().uuid(nodeExecutionId).ambiance(ambiance).build();
     when(nodeExecutionService.get(nodeExecution.getUuid())).thenReturn(nodeExecution);
     doThrow(new InvalidRequestException("test"))
         .when(endNodeExecutionHelper)
         .endNodeExecutionWithNoAdvisers(nodeExecution, stepResponseProto);
     doNothing().when(orchestrationEngine).handleError(any(), any());
-    orchestrationEngine.handleStepResponse(nodeExecution.getUuid(), stepResponseProto);
+    orchestrationEngine.processStepResponse(ambiance, stepResponseProto);
     verify(orchestrationEngine).handleError(any(), any());
   }
 
@@ -99,18 +103,18 @@ public class OrchestrationEngineTest extends OrchestrationTestBase {
                             .putAllSetupAbstractions(prepareInputArgs())
                             .addLevels(Level.newBuilder().setRuntimeId(generateUuid()).build())
                             .build();
-    PlanNodeProto planNode =
-        PlanNodeProto.newBuilder()
-            .setName("Test Node")
-            .setUuid(generateUuid())
-            .setIdentifier("test")
-            .setStepType(TEST_STEP_TYPE)
-            .addFacilitatorObtainments(
+    PlanNode planNode =
+        PlanNode.builder()
+            .name("Test Node")
+            .uuid(generateUuid())
+            .identifier("test")
+            .stepType(TEST_STEP_TYPE)
+            .facilitatorObtainment(
                 FacilitatorObtainment.newBuilder()
                     .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
                     .build())
             .build();
-    orchestrationEngine.triggerExecution(ambiance, planNode);
+    orchestrationEngine.triggerNode(ambiance, planNode);
     verify(executorService).submit(any(ExecutionEngineDispatcher.class));
   }
 

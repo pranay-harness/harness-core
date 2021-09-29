@@ -4,8 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.withinPercentage;
 
 import io.harness.CategoryTest;
-import io.harness.batch.processing.pricing.banzai.VMComputePricingInfo;
 import io.harness.category.element.UnitTests;
+import io.harness.pricing.dto.cloudinfo.ProductDetails;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
@@ -26,7 +26,7 @@ public class GCPCustomInstanceDetailProviderTest extends CategoryTest {
     final double cpuUnit = 12.0D;
     final double memoryUnit = 32.0D;
 
-    VMComputePricingInfo pricingInfo = GCPCustomInstanceDetailProvider.getCustomVMPricingInfo(instanceType, REGION);
+    ProductDetails pricingInfo = GCPCustomInstanceDetailProvider.getCustomVMPricingInfo(instanceType, REGION);
 
     assertThat(pricingInfo.getCpusPerVm()).isCloseTo(cpuUnit, MAX_RELATIVE_ERROR_PCT);
     assertThat(pricingInfo.getMemPerVm()).isCloseTo(memoryUnit, MAX_RELATIVE_ERROR_PCT);
@@ -47,7 +47,7 @@ public class GCPCustomInstanceDetailProviderTest extends CategoryTest {
     final double cpuUnit = 6.0D;
     final double memoryUnit = 3.0D;
 
-    VMComputePricingInfo pricingInfo = GCPCustomInstanceDetailProvider.getCustomVMPricingInfo(instanceType, REGION);
+    ProductDetails pricingInfo = GCPCustomInstanceDetailProvider.getCustomVMPricingInfo(instanceType, REGION);
 
     assertThat(pricingInfo.getCpusPerVm()).isCloseTo(cpuUnit, MAX_RELATIVE_ERROR_PCT);
     assertThat(pricingInfo.getMemPerVm()).isCloseTo(memoryUnit, MAX_RELATIVE_ERROR_PCT);
@@ -65,7 +65,7 @@ public class GCPCustomInstanceDetailProviderTest extends CategoryTest {
   public void testHardCodedInstanceType() throws Exception {
     final String instanceType = "n2-standard-16";
 
-    VMComputePricingInfo pricingInfo = GCPCustomInstanceDetailProvider.getCustomVMPricingInfo(instanceType, REGION);
+    ProductDetails pricingInfo = GCPCustomInstanceDetailProvider.getCustomVMPricingInfo(instanceType, REGION);
 
     assertThat(pricingInfo.getCpusPerVm()).isCloseTo(16D, MAX_RELATIVE_ERROR_PCT);
     assertThat(pricingInfo.getMemPerVm()).isCloseTo(64D, MAX_RELATIVE_ERROR_PCT);
@@ -80,7 +80,7 @@ public class GCPCustomInstanceDetailProviderTest extends CategoryTest {
   public void testDefaultCustomInstanceFamily() throws Exception {
     final String instanceType = "custom-8-24576";
 
-    VMComputePricingInfo pricingInfo = GCPCustomInstanceDetailProvider.getCustomVMPricingInfo(instanceType, REGION);
+    ProductDetails pricingInfo = GCPCustomInstanceDetailProvider.getCustomVMPricingInfo(instanceType, REGION);
 
     assertThat(pricingInfo.getCpusPerVm()).isCloseTo(8D, MAX_RELATIVE_ERROR_PCT);
     assertThat(pricingInfo.getMemPerVm()).isCloseTo(24D, MAX_RELATIVE_ERROR_PCT);

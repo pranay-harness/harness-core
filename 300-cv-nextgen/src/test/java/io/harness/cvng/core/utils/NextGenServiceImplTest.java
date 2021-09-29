@@ -19,10 +19,12 @@ import io.harness.ng.core.dto.ProjectResponse;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.environment.dto.EnvironmentResponse;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
+import io.harness.ng.core.service.dto.ServiceResponse;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.rule.Owner;
 
 import com.google.common.cache.CacheLoader;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.inject.Inject;
 import java.io.IOException;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -88,13 +90,15 @@ public class NextGenServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
   public void testGetService() throws IOException {
-    Call<ResponseDTO<ServiceResponseDTO>> call = Mockito.mock(Call.class);
+    Call<ResponseDTO<ServiceResponse>> call = Mockito.mock(Call.class);
     when(call.clone()).thenReturn(call);
     String serviceIdentifier = generateUuid();
     when(nextGenClient.getService(serviceIdentifier, accountId, orgIdentifier, projectIdentifier)).thenReturn(call);
     when(call.execute())
         .thenReturn(Response.success(ResponseDTO.newResponse(
-            ServiceResponseDTO.builder().identifier(serviceIdentifier).name("service").build())));
+            ServiceResponse.builder()
+                .service(ServiceResponseDTO.builder().identifier(serviceIdentifier).name("service").build())
+                .build())));
     ServiceResponseDTO service =
         nextGenService.getService(accountId, orgIdentifier, projectIdentifier, serviceIdentifier);
     assertThat(service).isNotNull();
@@ -106,15 +110,8 @@ public class NextGenServiceImplTest extends CvNextGenTestBase {
     when(call.execute()).thenReturn(Response.success(ResponseDTO.newResponse(null)));
     assertThatThrownBy(
         () -> nextGenService.getService(accountId, orgIdentifier, projectIdentifier, newServiceIdentifier))
-        .isInstanceOf(CacheLoader.InvalidCacheLoadException.class)
-        .hasMessage("CacheLoader returned null for key "
-            + EntityKey.builder()
-                  .accountId(accountId)
-                  .orgIdentifier(orgIdentifier)
-                  .projectIdentifier(projectIdentifier)
-                  .entityIdentifier(newServiceIdentifier)
-                  .build()
-            + ".");
+        .isInstanceOf(UncheckedExecutionException.class)
+        .hasMessage("java.lang.NullPointerException: Service Response from Ng Manager cannot be null");
   }
 
   @Test

@@ -14,6 +14,7 @@ public class DelegateFilterPropertiesMapper
   @Override
   public FilterPropertiesDTO writeDTO(FilterProperties filterProperties) {
     ModelMapper modelMapper = new ModelMapper();
+    modelMapper.getConfiguration().setAmbiguityIgnored(true);
     FilterPropertiesDTO filterPropertiesDTO = modelMapper.map(filterProperties, DelegateFilterPropertiesDTO.class);
     filterPropertiesDTO.setTags(TagMapper.convertToMap(filterProperties.getTags()));
     return filterPropertiesDTO;
@@ -22,6 +23,7 @@ public class DelegateFilterPropertiesMapper
   @Override
   public FilterProperties toEntity(FilterPropertiesDTO filterPropertiesDTO) {
     ModelMapper modelMapper = new ModelMapper();
+    modelMapper.getConfiguration().setAmbiguityIgnored(true);
     DelegateFilterProperties filterProperties = modelMapper.map(filterPropertiesDTO, DelegateFilterProperties.class);
     filterProperties.setType(filterPropertiesDTO.getFilterType());
     filterProperties.setTags(TagMapper.convertToList(filterPropertiesDTO.getTags()));

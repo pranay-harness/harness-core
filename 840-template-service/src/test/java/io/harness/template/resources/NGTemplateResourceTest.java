@@ -17,7 +17,9 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.git.model.ChangeType;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.rule.Owner;
+import io.harness.template.beans.TemplateDeleteListRequestDTO;
 import io.harness.template.beans.TemplateEntityType;
+import io.harness.template.beans.TemplateListType;
 import io.harness.template.beans.TemplateResponseDTO;
 import io.harness.template.beans.TemplateSummaryResponseDTO;
 import io.harness.template.entity.TemplateEntity;
@@ -28,10 +30,13 @@ import io.harness.template.services.NGTemplateServiceHelper;
 import com.google.common.io.Resources;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -75,6 +80,7 @@ public class NGTemplateResourceTest extends CategoryTest {
                  .name(TEMPLATE_IDENTIFIER)
                  .versionLabel(TEMPLATE_VERSION_LABEL)
                  .yaml(yaml)
+                 .description("")
                  .templateEntityType(TemplateEntityType.STEP_TEMPLATE)
                  .childType(TEMPLATE_CHILD_TYPE)
                  .fullyQualifiedIdentifier("account_id/orgId/projId/template1/version1/")
@@ -101,9 +107,9 @@ public class NGTemplateResourceTest extends CategoryTest {
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
   public void testCreateTemplate() throws IOException {
-    doReturn(entityWithMongoVersion).when(templateService).create(entity);
+    doReturn(entityWithMongoVersion).when(templateService).create(entity, false, "");
     ResponseDTO<TemplateResponseDTO> responseDTO =
-        templateResource.create(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, null, yaml);
+        templateResource.create(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, null, yaml, false, "");
     assertThat(responseDTO.getData()).isNotNull();
     assertThat(responseDTO.getData().getVersion()).isEqualTo(1L);
     assertThat(responseDTO.getData().getIdentifier()).isEqualTo(TEMPLATE_IDENTIFIER);
@@ -141,9 +147,9 @@ public class NGTemplateResourceTest extends CategoryTest {
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
   public void testUpdateTemplate() {
-    doReturn(entityWithMongoVersion).when(templateService).updateTemplateEntity(entity, ChangeType.MODIFY);
-    ResponseDTO<TemplateResponseDTO> responseDTO = templateResource.updateExistingTemplateLabel(
-        "", ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, TEMPLATE_VERSION_LABEL, null, yaml);
+    doReturn(entityWithMongoVersion).when(templateService).updateTemplateEntity(entity, ChangeType.MODIFY, false, "");
+    ResponseDTO<TemplateResponseDTO> responseDTO = templateResource.updateExistingTemplateLabel("", ACCOUNT_ID,
+        ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, TEMPLATE_VERSION_LABEL, null, yaml, false, "");
     assertThat(responseDTO.getData()).isNotNull();
     assertThat(responseDTO.getData().getIdentifier()).isEqualTo(TEMPLATE_IDENTIFIER);
   }
@@ -155,9 +161,9 @@ public class NGTemplateResourceTest extends CategoryTest {
     doReturn(entityWithMongoVersion)
         .when(templateService)
         .updateStableTemplateVersion(
-            ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, TEMPLATE_VERSION_LABEL, null);
+            ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, TEMPLATE_VERSION_LABEL);
     ResponseDTO<String> responseDTO = templateResource.updateStableTemplate(
-        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, TEMPLATE_VERSION_LABEL, null);
+        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, TEMPLATE_VERSION_LABEL, null, "");
     assertThat(responseDTO.getData()).isNotNull();
     assertThat(responseDTO.getData()).isEqualTo(TEMPLATE_VERSION_LABEL);
   }
@@ -167,9 +173,10 @@ public class NGTemplateResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testUpdateTemplateWithWrongIdentifier() {
     String incorrectPipelineIdentifier = "notTheIdentifierWeNeed";
-    assertThatThrownBy(()
-                           -> templateResource.updateExistingTemplateLabel("", ACCOUNT_ID, ORG_IDENTIFIER,
-                               PROJ_IDENTIFIER, incorrectPipelineIdentifier, TEMPLATE_VERSION_LABEL, null, yaml))
+    assertThatThrownBy(
+        ()
+            -> templateResource.updateExistingTemplateLabel("", ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER,
+                incorrectPipelineIdentifier, TEMPLATE_VERSION_LABEL, null, yaml, false, ""))
         .isInstanceOf(InvalidRequestException.class);
   }
 
@@ -179,9 +186,39 @@ public class NGTemplateResourceTest extends CategoryTest {
   public void testDeleteTemplate() {
     doReturn(true)
         .when(templateService)
-        .delete(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, TEMPLATE_VERSION_LABEL, null);
+        .delete(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, TEMPLATE_VERSION_LABEL, null, "");
     ResponseDTO<Boolean> responseDTO = templateResource.deleteTemplate(
-        "", ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, TEMPLATE_VERSION_LABEL, null);
+        "", ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, TEMPLATE_VERSION_LABEL, null, "");
+    assertThat(responseDTO.getData()).isEqualTo(true);
+  }
+
+  @Test
+  @Owner(developers = ARCHIT)
+  @Category(UnitTests.class)
+  public void testDeleteTemplateList() {
+    Set<String> templateVersions = new HashSet<>();
+    templateVersions.add("v1");
+    templateVersions.add("v2");
+    doReturn(true)
+        .when(templateService)
+        .deleteTemplates(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, templateVersions, "");
+    ResponseDTO<Boolean> responseDTO = templateResource.deleteTemplateVersionsOfParticularIdentifier(ACCOUNT_ID,
+        ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER,
+        TemplateDeleteListRequestDTO.builder().templateVersionLabels(new ArrayList<>(templateVersions)).build(), null,
+        "");
+    assertThat(responseDTO.getData()).isEqualTo(true);
+  }
+
+  @Test
+  @Owner(developers = ARCHIT)
+  @Category(UnitTests.class)
+  public void testUpdateTemplateSettings() {
+    doReturn(true)
+        .when(templateService)
+        .updateTemplateSettings(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, Scope.PROJECT,
+            Scope.ORG, TEMPLATE_VERSION_LABEL, false);
+    ResponseDTO<Boolean> responseDTO = templateResource.updateTemplateSettings(ACCOUNT_ID, ORG_IDENTIFIER,
+        PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, TEMPLATE_VERSION_LABEL, Scope.PROJECT, Scope.ORG, null, false);
     assertThat(responseDTO.getData()).isEqualTo(true);
   }
 
@@ -195,7 +232,8 @@ public class NGTemplateResourceTest extends CategoryTest {
     doReturn(templateEntities).when(templateService).list(any(), any(), any(), any(), any(), anyBoolean());
     List<TemplateSummaryResponseDTO> content =
         templateResource
-            .listTemplates(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, 0, 25, null, null, null, null, null, null)
+            .listTemplates(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, 0, 25, null, null, null,
+                TemplateListType.ALL_TEMPLATE_TYPE, false, null, null, null)
             .getData()
             .getContent();
     assertThat(content).isNotEmpty();

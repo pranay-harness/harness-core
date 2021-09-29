@@ -30,4 +30,6 @@ public abstract class DelegateArtifactTaskHandler<T extends ArtifactSourceDelega
   public ArtifactTaskExecutionResponse getImages(T attributesRequest) {
     throw new InvalidRequestException("Operation not supported");
   }
+
+  public abstract void decryptRequestDTOs(T dto);
 }
