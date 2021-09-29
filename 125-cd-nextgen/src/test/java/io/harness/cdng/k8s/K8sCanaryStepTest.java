@@ -214,7 +214,7 @@ public class K8sCanaryStepTest extends AbstractK8sStepExecutorTestBase {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  public void testFinalizeExecutionException() {
+  public void testFinalizeExecutionException() throws Exception {
     final StepElementParameters stepElementParameters = StepElementParameters.builder().build();
     final Exception thrownException = new GeneralException("Something went wrong");
     final K8sExecutionPassThroughData executionPassThroughData = K8sExecutionPassThroughData.builder().build();

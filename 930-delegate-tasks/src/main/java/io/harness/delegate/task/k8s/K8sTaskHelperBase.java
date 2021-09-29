@@ -78,12 +78,17 @@ import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.delegate.task.git.GitDecryptionHelper;
 import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.helm.HelmTaskHelperBase;
+import io.harness.delegate.task.k8s.exception.KubernetesExceptionExplanation;
+import io.harness.delegate.task.k8s.exception.KubernetesExceptionHints;
+import io.harness.delegate.task.k8s.exception.KubernetesExceptionMessages;
 import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.GitOperationException;
 import io.harness.exception.HelmClientException;
+import io.harness.exception.HintException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.KubernetesTaskException;
 import io.harness.exception.KubernetesValuesException;
 import io.harness.exception.NestedExceptionUtils;
 import io.harness.exception.UrlNotProvidedException;
@@ -747,6 +752,12 @@ public class K8sTaskHelperBase {
   public boolean applyManifests(Kubectl client, List<KubernetesResource> resources,
       K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback, boolean denoteOverallSuccess)
       throws Exception {
+    return applyManifests(client, resources, k8sDelegateTaskParams, executionLogCallback, denoteOverallSuccess, false);
+  }
+
+  public boolean applyManifests(Kubectl client, List<KubernetesResource> resources,
+      K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback, boolean denoteOverallSuccess,
+      boolean isErrorFrameworkEnabled) throws Exception {
     FileIo.writeUtf8StringToFile(
         k8sDelegateTaskParams.getWorkingDirectory() + "/manifests.yaml", ManifestHelper.toYaml(resources));
 
@@ -763,6 +774,16 @@ public class K8sTaskHelperBase {
     if (result.getExitValue() != 0) {
       log.error(format("\nFailed. Process terminated with exit value: [%s] and output: [%s]", result.getExitValue(),
           result.outputUTF8()));
+      if (isErrorFrameworkEnabled) {
+        String explanation = isNotEmpty(result.outputUTF8())
+            ? format(KubernetesExceptionExplanation.APPLY_MANIFEST_FAILED_OUTPUT,
+                getPrintableCommand(applyCommand.command()), result.getExitValue(), result.outputUTF8())
+            : format(KubernetesExceptionExplanation.APPLY_MANIFEST_FAILED, getPrintableCommand(applyCommand.command()),
+                result.getExitValue());
+        throw NestedExceptionUtils.hintWithExplanationException(KubernetesExceptionHints.APPLY_MANIFEST_FAILED,
+            explanation, new KubernetesTaskException(KubernetesExceptionMessages.APPLY_MANIFEST_FAILED));
+      }
+
       executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
       return false;
     }
@@ -998,6 +1019,18 @@ public class K8sTaskHelperBase {
   public boolean dryRunManifests(Kubectl client, List<KubernetesResource> resources,
       K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback) {
     try {
+      return dryRunManifests(client, resources, k8sDelegateTaskParams, executionLogCallback, false);
+    } catch (Exception ignore) {
+      // Not expected if error framework is not enabled. Make the compiler happy until will not adopt error framework
+      // for all steps
+      return false;
+    }
+  }
+
+  public boolean dryRunManifests(Kubectl client, List<KubernetesResource> resources,
+      K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback, boolean isErrorFrameworkEnabled)
+      throws Exception {
+    try {
       executionLogCallback.saveExecutionLog(color("\nValidating manifests with Dry Run", White, Bold), INFO);
 
       FileIo.writeUtf8StringToFile(
@@ -1009,10 +1042,24 @@ public class K8sTaskHelperBase {
       ProcessResult result = runK8sExecutable(k8sDelegateTaskParams, executionLogCallback, dryrun);
       if (result.getExitValue() != 0) {
         executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
+        if (isErrorFrameworkEnabled) {
+          String explanation = isNotEmpty(result.outputUTF8())
+              ? format(KubernetesExceptionExplanation.DRY_RUN_MANIFEST_FAILED_OUTPUT,
+                  getPrintableCommand(dryrun.command()), result.getExitValue(), result.outputUTF8())
+              : format(KubernetesExceptionExplanation.DRY_RUN_MANIFEST_FAILED, getPrintableCommand(dryrun.command()),
+                  result.getExitValue(), result.outputUTF8());
+          throw NestedExceptionUtils.hintWithExplanationException(KubernetesExceptionHints.DRY_RUN_MANIFEST_FAILED,
+              explanation, new KubernetesTaskException(KubernetesExceptionMessages.DRY_RUN_MANIFEST_FAILED));
+        }
+
         return false;
       }
     } catch (Exception e) {
       log.error("Exception in running dry-run", e);
+      if (isErrorFrameworkEnabled) {
+        throw e;
+      }
+
       executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
       return false;
     }
@@ -1122,6 +1169,14 @@ public class K8sTaskHelperBase {
   public boolean getJobStatus(K8sDelegateTaskParams k8sDelegateTaskParams, LogOutputStream statusInfoStream,
       LogOutputStream statusErrorStream, GetJobCommand jobCompleteCommand, GetJobCommand jobFailedCommand,
       GetJobCommand jobStatusCommand, GetJobCommand jobCompletionTimeCommand) throws Exception {
+    return getJobStatus(k8sDelegateTaskParams, statusInfoStream, statusErrorStream, jobCompleteCommand,
+        jobFailedCommand, jobStatusCommand, jobCompletionTimeCommand, false);
+  }
+
+  public boolean getJobStatus(K8sDelegateTaskParams k8sDelegateTaskParams, LogOutputStream statusInfoStream,
+      LogOutputStream statusErrorStream, GetJobCommand jobCompleteCommand, GetJobCommand jobFailedCommand,
+      GetJobCommand jobStatusCommand, GetJobCommand jobCompletionTimeCommand, boolean isErrorFrameworkEnabled)
+      throws Exception {
     while (true) {
       jobStatusCommand.execute(k8sDelegateTaskParams.getWorkingDirectory(), statusInfoStream, statusErrorStream, false);
 
@@ -1130,6 +1185,17 @@ public class K8sTaskHelperBase {
       boolean success = 0 == result.getExitValue();
       if (!success) {
         log.warn(result.outputUTF8());
+        if (isErrorFrameworkEnabled) {
+          String explanation = isNotEmpty(result.outputUTF8())
+              ? format(KubernetesExceptionExplanation.WAIT_FOR_STEADY_STATE_FAILED_OUTPUT,
+                  getPrintableCommand(jobCompleteCommand.command()), result.getExitValue(), result.outputUTF8())
+              : format(KubernetesExceptionExplanation.WAIT_FOR_STEADY_STATE_FAILED,
+                  getPrintableCommand(jobCompleteCommand.command()), result.getExitValue());
+          throw NestedExceptionUtils.hintWithExplanationException(
+              KubernetesExceptionHints.WAIT_FOR_STEADY_STATE_CLI_FAILED, explanation,
+              new KubernetesTaskException(KubernetesExceptionMessages.WAIT_FOR_STEADY_STATE_FAILED));
+        }
+
         return false;
       }
 
@@ -1140,6 +1206,17 @@ public class K8sTaskHelperBase {
         success = 0 == result.getExitValue();
         if (!success) {
           log.warn(result.outputUTF8());
+          if (isErrorFrameworkEnabled) {
+            String explanation = isNotEmpty(result.outputUTF8())
+                ? format(KubernetesExceptionExplanation.WAIT_FOR_STEADY_STATE_FAILED_OUTPUT,
+                    getPrintableCommand(jobCompletionTimeCommand.command()), result.getExitValue(), result.outputUTF8())
+                : format(KubernetesExceptionExplanation.WAIT_FOR_STEADY_STATE_FAILED,
+                    getPrintableCommand(jobCompletionTimeCommand.command()), result.getExitValue());
+            throw NestedExceptionUtils.hintWithExplanationException(
+                KubernetesExceptionHints.WAIT_FOR_STEADY_STATE_CLI_FAILED, explanation,
+                new KubernetesTaskException(KubernetesExceptionMessages.WAIT_FOR_STEADY_STATE_FAILED));
+          }
+
           return false;
         }
 
@@ -1154,11 +1231,28 @@ public class K8sTaskHelperBase {
       success = 0 == result.getExitValue();
       if (!success) {
         log.warn(result.outputUTF8());
+
+        if (isErrorFrameworkEnabled) {
+          String explanation = isNotEmpty(result.outputUTF8())
+              ? format(KubernetesExceptionExplanation.WAIT_FOR_STEADY_STATE_FAILED_OUTPUT,
+                  getPrintableCommand(jobFailedCommand.command()), result.getExitValue(), result.outputUTF8())
+              : format(KubernetesExceptionExplanation.WAIT_FOR_STEADY_STATE_FAILED,
+                  getPrintableCommand(jobFailedCommand.command()), result.getExitValue());
+          throw NestedExceptionUtils.hintWithExplanationException(
+              KubernetesExceptionHints.WAIT_FOR_STEADY_STATE_CLI_FAILED, explanation,
+              new KubernetesTaskException(KubernetesExceptionMessages.WAIT_FOR_STEADY_STATE_FAILED));
+        }
         return false;
       }
 
       jobStatus = result.outputUTF8().replace("'", "");
       if ("True".equals(jobStatus)) {
+        if (isErrorFrameworkEnabled) {
+          throw NestedExceptionUtils.hintWithExplanationException(
+              KubernetesExceptionHints.WAIT_FOR_STEADY_STATE_JOB_FAILED,
+              KubernetesExceptionExplanation.WAIT_FOR_STEADY_STATE_JOB_FAILED,
+              new KubernetesTaskException(KubernetesExceptionMessages.WAIT_FOR_STEADY_STATE_FAILED));
+        }
         return false;
       }
 
@@ -1167,8 +1261,8 @@ public class K8sTaskHelperBase {
   }
 
   public boolean doStatusCheckForJob(Kubectl client, KubernetesResourceId resourceId,
-      K8sDelegateTaskParams k8sDelegateTaskParams, String statusFormat, LogCallback executionLogCallback)
-      throws Exception {
+      K8sDelegateTaskParams k8sDelegateTaskParams, String statusFormat, LogCallback executionLogCallback,
+      boolean isErrorFrameworkEnabled) throws Exception {
     try (LogOutputStream statusInfoStream =
              new LogOutputStream() {
                @Override
@@ -1197,13 +1291,13 @@ public class K8sTaskHelperBase {
       executionLogCallback.saveExecutionLog(getPrintableCommand(jobStatusCommand.command()) + "\n");
 
       return getJobStatus(k8sDelegateTaskParams, statusInfoStream, statusErrorStream, jobCompleteCommand,
-          jobFailedCommand, jobStatusCommand, jobCompletionTimeCommand);
+          jobFailedCommand, jobStatusCommand, jobCompletionTimeCommand, isErrorFrameworkEnabled);
     }
   }
 
   public boolean doStatusCheckForWorkloads(Kubectl client, KubernetesResourceId resourceId,
-      K8sDelegateTaskParams k8sDelegateTaskParams, String statusFormat, LogCallback executionLogCallback)
-      throws Exception {
+      K8sDelegateTaskParams k8sDelegateTaskParams, String statusFormat, LogCallback executionLogCallback,
+      boolean isErrorFrameworkEnabled) throws Exception {
     try (LogOutputStream statusErrorStream =
              new LogOutputStream() {
                @Override
@@ -1221,13 +1315,14 @@ public class K8sTaskHelperBase {
                }
              }) {
       ProcessResult result;
+      String printableExecutedCommand;
 
       if (Kind.DeploymentConfig.name().equals(resourceId.getKind())) {
         String rolloutStatusCommand = getRolloutStatusCommandForDeploymentConfig(
             k8sDelegateTaskParams.getOcPath(), k8sDelegateTaskParams.getKubeconfigPath(), resourceId);
 
-        executionLogCallback.saveExecutionLog(
-            rolloutStatusCommand.substring(rolloutStatusCommand.indexOf("oc --kubeconfig")) + "\n");
+        printableExecutedCommand = rolloutStatusCommand.substring(rolloutStatusCommand.indexOf("oc --kubeconfig"));
+        executionLogCallback.saveExecutionLog(printableExecutedCommand + "\n");
 
         result =
             executeCommandUsingUtils(k8sDelegateTaskParams, statusInfoStream, statusErrorStream, rolloutStatusCommand);
@@ -1238,7 +1333,8 @@ public class K8sTaskHelperBase {
                                                         .namespace(resourceId.getNamespace())
                                                         .watch(true);
 
-        executionLogCallback.saveExecutionLog(getPrintableCommand(rolloutStatusCommand.command()) + "\n");
+        printableExecutedCommand = getPrintableCommand(rolloutStatusCommand.command());
+        executionLogCallback.saveExecutionLog(printableExecutedCommand + "\n");
 
         result = rolloutStatusCommand.execute(
             k8sDelegateTaskParams.getWorkingDirectory(), statusInfoStream, statusErrorStream, false);
@@ -1247,6 +1343,15 @@ public class K8sTaskHelperBase {
       boolean success = 0 == result.getExitValue();
       if (!success) {
         log.warn(result.outputUTF8());
+        if (isErrorFrameworkEnabled) {
+          String explanation = isNotEmpty(result.outputUTF8())
+              ? format(KubernetesExceptionExplanation.WAIT_FOR_STEADY_STATE_FAILED_OUTPUT, printableExecutedCommand,
+                  result.getExitValue(), result.outputUTF8())
+              : format(KubernetesExceptionExplanation.WAIT_FOR_STEADY_STATE_FAILED, printableExecutedCommand,
+                  result.getExitValue());
+          throw NestedExceptionUtils.hintWithExplanationException(KubernetesExceptionHints.WAIT_FOR_STEADY_STATE_FAILED,
+              explanation, new KubernetesTaskException(KubernetesExceptionMessages.WAIT_FOR_STEADY_STATE_FAILED));
+        }
       }
 
       return success;
@@ -1256,6 +1361,13 @@ public class K8sTaskHelperBase {
   public boolean doStatusCheckForAllResources(Kubectl client, List<KubernetesResourceId> resourceIds,
       K8sDelegateTaskParams k8sDelegateTaskParams, String namespace, LogCallback executionLogCallback,
       boolean denoteOverallSuccess) throws Exception {
+    return doStatusCheckForAllResources(
+        client, resourceIds, k8sDelegateTaskParams, namespace, executionLogCallback, denoteOverallSuccess, false);
+  }
+
+  public boolean doStatusCheckForAllResources(Kubectl client, List<KubernetesResourceId> resourceIds,
+      K8sDelegateTaskParams k8sDelegateTaskParams, String namespace, LogCallback executionLogCallback,
+      boolean denoteOverallSuccess, boolean isErrorFrameworkEnabled) throws Exception {
     if (isEmpty(resourceIds)) {
       return true;
     }
@@ -1319,11 +1431,11 @@ public class K8sTaskHelperBase {
 
       for (KubernetesResourceId kubernetesResourceId : resourceIds) {
         if (Kind.Job.name().equals(kubernetesResourceId.getKind())) {
-          success = doStatusCheckForJob(
-              client, kubernetesResourceId, k8sDelegateTaskParams, statusFormat, executionLogCallback);
+          success = doStatusCheckForJob(client, kubernetesResourceId, k8sDelegateTaskParams, statusFormat,
+              executionLogCallback, isErrorFrameworkEnabled);
         } else {
-          success = doStatusCheckForWorkloads(
-              client, kubernetesResourceId, k8sDelegateTaskParams, statusFormat, executionLogCallback);
+          success = doStatusCheckForWorkloads(client, kubernetesResourceId, k8sDelegateTaskParams, statusFormat,
+              executionLogCallback, isErrorFrameworkEnabled);
         }
 
         if (!success) {
@@ -1334,6 +1446,10 @@ public class K8sTaskHelperBase {
       return success;
     } catch (Exception e) {
       log.error("Exception while doing statusCheck", e);
+      if (isErrorFrameworkEnabled) {
+        throw e;
+      }
+
       executionLogCallback.saveExecutionLog("\nFailed.", INFO, FAILURE);
       return false;
     } finally {
@@ -1679,6 +1795,13 @@ public class K8sTaskHelperBase {
   public boolean doStatusCheckForAllCustomResources(Kubectl client, List<KubernetesResource> resources,
       K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback, boolean denoteOverallSuccess,
       long timeoutInMillis) throws Exception {
+    return doStatusCheckForAllCustomResources(
+        client, resources, k8sDelegateTaskParams, executionLogCallback, denoteOverallSuccess, timeoutInMillis, false);
+  }
+
+  public boolean doStatusCheckForAllCustomResources(Kubectl client, List<KubernetesResource> resources,
+      K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback, boolean denoteOverallSuccess,
+      long timeoutInMillis, boolean isErrorFrameworkEnabled) throws Exception {
     List<KubernetesResourceId> resourceIds =
         resources.stream().map(KubernetesResource::getResourceId).collect(Collectors.toList());
     if (isEmpty(resourceIds)) {
@@ -1725,7 +1848,7 @@ public class K8sTaskHelperBase {
         success = HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofMillis(timeoutInMillis),
             ()
                 -> doStatusCheckForCustomResources(client, kubernetesResource.getResourceId(), steadyCondition,
-                    k8sDelegateTaskParams, executionLogCallback));
+                    k8sDelegateTaskParams, executionLogCallback, isErrorFrameworkEnabled));
 
         if (!success) {
           break;
@@ -1741,6 +1864,19 @@ public class K8sTaskHelperBase {
               "%nPossible reasons: %n\t 1. The steady check condition [%s] is wrong. %n\t 2. The custom controller is not running.",
               currentSteadyCondition),
           Yellow, Bold));
+
+      if (isErrorFrameworkEnabled) {
+        if (e instanceof WingsException) {
+          throw e;
+        }
+
+        throw new HintException(
+            format(KubernetesExceptionHints.WAIT_FOR_STEADY_STATE_CRD_FAILED_CHECK_CONDITION, currentSteadyCondition),
+            NestedExceptionUtils.hintWithExplanationException(
+                KubernetesExceptionHints.WAIT_FOR_STEADY_STATE_CRD_FAILED_CHECK_CONTROLLER,
+                format(KubernetesExceptionExplanation.WAIT_FOR_STEADY_STATE_CRD_FAILED, currentSteadyCondition),
+                new KubernetesTaskException(KubernetesExceptionMessages.WAIT_FOR_STEADY_STATE_FAILED)));
+      }
 
       executionLogCallback.saveExecutionLog("\nFailed.", INFO, CommandExecutionStatus.FAILURE);
       return false;
@@ -1802,6 +1938,13 @@ public class K8sTaskHelperBase {
 
   boolean doStatusCheckForCustomResources(Kubectl client, KubernetesResourceId resourceId, String steadyCondition,
       K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback) throws Exception {
+    return doStatusCheckForCustomResources(
+        client, resourceId, steadyCondition, k8sDelegateTaskParams, executionLogCallback, false);
+  }
+
+  boolean doStatusCheckForCustomResources(Kubectl client, KubernetesResourceId resourceId, String steadyCondition,
+      K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback, boolean isErrorFrameworkEnabled)
+      throws Exception {
     GetCommand crdStatusCommand =
         client.get().resources(resourceId.kindNameRef()).namespace(resourceId.getNamespace()).output("json");
 
@@ -1814,6 +1957,17 @@ public class K8sTaskHelperBase {
       boolean success = 0 == result.getExitValue();
       if (!success) {
         log.warn(result.outputUTF8());
+        if (isErrorFrameworkEnabled) {
+          String explanation = isNotEmpty(result.outputUTF8())
+              ? format(KubernetesExceptionExplanation.WAIT_FOR_STEADY_STATE_FAILED_OUTPUT,
+                  getPrintableCommand(crdStatusCommand.command()), result.getExitValue(), result.outputUTF8())
+              : format(KubernetesExceptionExplanation.WAIT_FOR_STEADY_STATE_FAILED,
+                  getPrintableCommand(crdStatusCommand.command()), result.getExitValue());
+
+          throw NestedExceptionUtils.hintWithExplanationException(
+              KubernetesExceptionHints.WAIT_FOR_STEADY_STATE_CLI_FAILED, explanation,
+              new KubernetesTaskException(KubernetesExceptionMessages.WAIT_FOR_STEADY_STATE_FAILED));
+        }
         return false;
       }
 

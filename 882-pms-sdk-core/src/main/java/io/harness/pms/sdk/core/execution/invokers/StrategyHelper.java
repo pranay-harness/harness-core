@@ -4,7 +4,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.exception.TaskNGDataException;
 import io.harness.eraro.ResponseMessage;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.GeneralException;
 import io.harness.exception.exceptionmanager.ExceptionManager;
 import io.harness.pms.contracts.execution.Status;
@@ -46,6 +48,11 @@ public class StrategyHelper {
     List<ResponseMessage> responseMessages = exceptionManager.buildResponseFromException(ex);
     StepResponseBuilder stepResponseBuilder = StepResponse.builder().status(Status.FAILED);
     FailureInfo failureInfo = EngineExceptionUtils.transformResponseMessagesToFailureInfo(responseMessages);
+    TaskNGDataException taskFailureData = ExceptionUtils.cause(TaskNGDataException.class, ex);
+    if (taskFailureData != null && taskFailureData.getCommandUnitsProgress() != null) {
+      stepResponseBuilder.unitProgressList(taskFailureData.getCommandUnitsProgress().getUnitProgresses());
+    }
+
     return stepResponseBuilder.failureInfo(failureInfo).build();
   }
 }

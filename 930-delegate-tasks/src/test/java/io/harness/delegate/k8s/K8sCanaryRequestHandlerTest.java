@@ -183,7 +183,7 @@ public class K8sCanaryRequestHandlerTest extends CategoryTest {
   @Test
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
-  public void failureInFetchingManifestFiles() {
+  public void failureInFetchingManifestFiles() throws Exception {
     K8sCanaryDeployRequest k8sCanaryDeployRequest = K8sCanaryDeployRequest.builder()
                                                         .manifestDelegateConfig(manifestDelegateConfig)
                                                         .accountId(accountId)
