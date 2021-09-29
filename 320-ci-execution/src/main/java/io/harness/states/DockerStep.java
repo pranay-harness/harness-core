@@ -41,11 +41,13 @@ public class DockerStep extends AbstractStepExecutable {
           String digest = desc.getDigest().replace(":", "-");
           String image = imageWithTag[0];
           String tag = imageWithTag[1];
-          stepArtifactsBuilder.publishedImageArtifact(PublishedImageArtifact.builder()
-                                                          .imageName(image)
-                                                          .tag(tag)
-                                                          .url(format(DOCKER_URL_FORMAT, repo, tag, digest))
-                                                          .build());
+          String url = null;
+          if (isNotEmpty(dockerArtifactMetadata.getRegistryUrl())
+              && dockerArtifactMetadata.getRegistryUrl().contains("index.docker.io")) {
+            url = format(DOCKER_URL_FORMAT, repo, tag, digest);
+          }
+          stepArtifactsBuilder.publishedImageArtifact(
+              PublishedImageArtifact.builder().imageName(image).tag(tag).url(url).build());
         });
       }
     }
