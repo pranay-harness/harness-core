@@ -9,6 +9,7 @@ import io.harness.migration.beans.MigrationType;
 import io.harness.migrations.timescale.CreateInstanceStatsDayTable;
 import io.harness.migrations.timescale.CreateInstanceStatsHourTable;
 import io.harness.migrations.timescale.CreateInstanceStatsTable;
+import io.harness.migrations.timescale.InitTriggerFunctions;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
@@ -29,9 +30,10 @@ public class InstanceStatsTimeScaleMigrationDetails implements MigrationDetails 
   @Override
   public List<Pair<Integer, Class<? extends NGMigration>>> getMigrations() {
     return new ImmutableList.Builder<Pair<Integer, Class<? extends NGMigration>>>()
-        .add(Pair.of(1, CreateInstanceStatsTable.class))
-        .add(Pair.of(2, CreateInstanceStatsHourTable.class))
-        .add(Pair.of(3, CreateInstanceStatsDayTable.class))
+        .add(Pair.of(1, InitTriggerFunctions.class))
+        .add(Pair.of(2, CreateInstanceStatsTable.class))
+        .add(Pair.of(3, CreateInstanceStatsHourTable.class))
+        .add(Pair.of(4, CreateInstanceStatsDayTable.class))
         .build();
   }
 }
