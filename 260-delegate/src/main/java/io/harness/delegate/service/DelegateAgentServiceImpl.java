@@ -307,6 +307,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private final int delegateTaskLimit = isNotBlank(System.getenv().get("DELEGATE_TASK_LIMIT"))
       ? Integer.parseInt(System.getenv().get("DELEGATE_TASK_LIMIT"))
       : 0;
+  private final boolean hasAccountPrimaryVersion = isNotBlank(System.getenv().get("ACCOUNT_PRIMARY_VERSION"));
 
   public static final String JAVA_VERSION = "java.version";
 
@@ -496,7 +497,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
           ? descriptionFromConfigFile
           : delegateConfiguration.getDescription();
 
-      String delegateName = System.getenv().get("DELEGATE_NAME");
+      String delegateName = System.getenv().get("delegateName");
       if (isNotBlank(delegateName)) {
         log.info("Registering delegate with delegate name: {}", delegateName);
       } else {
