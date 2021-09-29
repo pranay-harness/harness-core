@@ -109,7 +109,7 @@ pub struct Analyze {
 
     /// Filter the reports by affected module root root_filter.
     #[clap(short, long)]
-    root_filter: Option<String>,
+    root_filter: Vec<String>,
 
     /// Filter the reports by team.
     #[clap(short, long)]
@@ -215,8 +215,8 @@ pub fn analyze(opts: Analyze) {
 
     if opts.module_filter.is_some() {
         println!("analyzing for module {} ...", opts.module_filter.as_ref().unwrap());
-    } else if opts.root_filter.is_some() {
-        println!("analyzing for root {} ...", opts.root_filter.as_ref().unwrap());
+    } else if !opts.root_filter.is_empty() {
+        println!("analyzing for root {:?} ...", opts.root_filter);
     } else {
         println!("analyzing...");
     }
@@ -298,13 +298,9 @@ pub fn analyze(opts: Analyze) {
     let mut kind_summary: HashMap<usize, i32> = HashMap::new();
     let mut team_summary: HashMap<&String, HashMap<usize, i32>> = HashMap::new();
 
-    results.sort_by(|a, b| {
-        cmp_report(a, b)
-    });
+    results.sort_by(|a, b| cmp_report(a, b));
 
-    results.dedup_by(|a, b| {
-        cmp_report(a, b) == Equal
-    });
+    results.dedup_by(|a, b| cmp_report(a, b) == Equal);
 
     println!("Detecting indirectly involved classes...");
 
@@ -562,12 +558,13 @@ fn filter_by_auto_actionable(opts: &Analyze, report: &Report) -> bool {
 }
 
 fn filter_by_root(opts: &Analyze, report: &Report) -> bool {
-    opts.root_filter.is_none() || report.for_modules.iter().any(|name| is_with_root(opts, name))
+    opts.root_filter.is_empty() || report.for_modules.iter().any(|name| is_with_root(opts, name))
 }
 
 fn is_with_root(opts: &Analyze, module_name: &String) -> bool {
-    let root = opts.root_filter.as_ref().unwrap();
-    module_name.starts_with(root) && module_name.chars().nth(root.len()).unwrap() == ':'
+    opts.root_filter
+        .iter()
+        .any(|root| module_name.starts_with(root) && module_name.chars().nth(root.len()).unwrap() == ':')
 }
 
 fn check_for_extra_break(class: &JavaClass, module: &JavaModule, target_module_team: &Option<String>) -> Vec<Report> {
