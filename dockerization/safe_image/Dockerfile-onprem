@@ -17,8 +17,6 @@ RUN set -x \
 
 # create application user and working directory
 RUN set -x \
-    && addgroup -S 65534 \
-    && adduser -S 65534 -G 65534 \
     && mkdir -p /opt/harness/plugins \
     && chown -R 65534:65534 /opt/harness \
     && chmod -R 700 /opt/harness
