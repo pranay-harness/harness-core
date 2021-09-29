@@ -1,10 +1,12 @@
 package software.wings.yaml.directory;
 
-import software.wings.service.intfc.yaml.YamlGitService;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
 
+@OwnedBy(HarnessTeam.DX)
 public class DirectoryNode {
   private String accountId;
   private NodeType type;
@@ -64,8 +66,7 @@ public class DirectoryNode {
     }
   }
 
-  public DirectoryNode(String accountId, String name, Class theClass, DirectoryPath directoryPath,
-      YamlGitService yamlGitSyncService, NodeType type) {
+  public DirectoryNode(String accountId, String name, Class theClass, DirectoryPath directoryPath, NodeType type) {
     this(accountId, name, theClass);
     this.directoryPath = directoryPath;
     this.type = type;

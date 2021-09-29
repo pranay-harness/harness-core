@@ -55,15 +55,6 @@ public class NodeResumeEventHandler extends PmsBaseEventHandler<NodeResumeEvent>
   @Inject private KryoSerializer kryoSerializer;
 
   @Override
-  protected Map<String, String> extractMetricContext(NodeResumeEvent message) {
-    return ImmutableMap.<String, String>builder()
-        .put("accountId", AmbianceUtils.getAccountId(message.getAmbiance()))
-        .put("orgIdentifier", AmbianceUtils.getOrgIdentifier(message.getAmbiance()))
-        .put("projectIdentifier", AmbianceUtils.getProjectIdentifier(message.getAmbiance()))
-        .build();
-  }
-
-  @Override
   protected String getMetricPrefix(NodeResumeEvent message) {
     return "resume_event";
   }
@@ -103,16 +94,14 @@ public class NodeResumeEventHandler extends PmsBaseEventHandler<NodeResumeEvent>
                                     .setErrorMessage(errorResponseData.getErrorMessage())
                                     .build())
                 .build();
-        sdkNodeExecutionService.handleStepResponse(
-            event.getAmbiance().getPlanExecutionId(), nodeExecutionId, stepResponse);
+        sdkNodeExecutionService.handleStepResponse(event.getAmbiance(), stepResponse);
         return;
       }
 
       processor.handleResume(buildResumePackage(event, response));
     } catch (Exception ex) {
       log.error("Error while resuming execution", ex);
-      sdkNodeExecutionService.handleStepResponse(
-          event.getAmbiance().getPlanExecutionId(), nodeExecutionId, NodeExecutionUtils.constructStepResponse(ex));
+      sdkNodeExecutionService.handleStepResponse(event.getAmbiance(), NodeExecutionUtils.constructStepResponse(ex));
     }
   }
 

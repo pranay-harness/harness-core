@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.security.dto.PrincipalType.USER;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -17,14 +18,15 @@ import io.harness.mappers.AccountMapper;
 import io.harness.ng.core.dto.UserInviteDTO;
 import io.harness.ng.core.user.PasswordChangeDTO;
 import io.harness.ng.core.user.PasswordChangeResponse;
-import io.harness.ng.core.user.SignupInviteDTO;
 import io.harness.ng.core.user.TwoFactorAdminOverrideSettings;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserRequestDTO;
+import io.harness.ng.core.user.UtmInfo;
 import io.harness.rest.RestResponse;
 import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.security.dto.UserPrincipal;
+import io.harness.signup.dto.SignupInviteDTO;
 import io.harness.user.remote.UserFilterNG;
 
 import software.wings.beans.User;
@@ -106,6 +108,19 @@ public class UserResourceNG {
     User createdUser = userService.completeNewSignupInvite(userInviteInDB);
     UserInfo userInfo = convertUserToNgUser(createdUser);
     userInfo.setIntent(userInviteInDB.getIntent());
+
+    if (isNotEmpty(userInviteInDB.getSignupAction())) {
+      userInfo.setSignupAction(userInviteInDB.getSignupAction());
+    }
+
+    if (isNotEmpty(userInviteInDB.getEdition())) {
+      userInfo.setEdition(userInviteInDB.getEdition());
+    }
+
+    if (isNotEmpty(userInviteInDB.getBillingFrequency())) {
+      userInfo.setBillingFrequency(userInviteInDB.getBillingFrequency());
+    }
+
     return new RestResponse<>(userInfo);
   }
 
@@ -321,6 +336,14 @@ public class UserResourceNG {
                 .map(x
                     -> x.stream().anyMatch(y -> ACCOUNT_ADMINISTRATOR_USER_GROUP.equals(y.getName()) && y.isDefault()))
                 .orElse(false))
+        .utmInfo(user.getUtmInfo() != null ? UtmInfo.builder()
+                                                 .utmCampaign(user.getUtmInfo().getUtmCampaign())
+                                                 .utmContent(user.getUtmInfo().getUtmContent())
+                                                 .utmMedium(user.getUtmInfo().getUtmMedium())
+                                                 .utmSource(user.getUtmInfo().getUtmSource())
+                                                 .utmTerm(user.getUtmInfo().getUtmTerm())
+                                                 .build()
+                                           : UtmInfo.builder().build())
         .build();
   }
 

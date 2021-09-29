@@ -17,6 +17,6 @@ public class AdviserResponseRequestProcessor implements SdkResponseProcessor {
   @Override
   public void handleEvent(SdkResponseEventProto event) {
     AdviserResponseRequest request = event.getAdviserResponseRequest();
-    orchestrationEngine.handleAdvise(event.getNodeExecutionId(), request.getAdviserResponse());
+    orchestrationEngine.processAdviserResponse(event.getAmbiance(), request.getAdviserResponse());
   }
 }

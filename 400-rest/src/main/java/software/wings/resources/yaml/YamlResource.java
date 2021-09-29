@@ -6,6 +6,7 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
+import static software.wings.security.PermissionAttribute.PermissionType.APP_TEMPLATE;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_APPLICATIONS;
@@ -57,6 +58,7 @@ import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.ApiKeyAuthorized;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.security.auth.TemplateAuthHandler;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
@@ -111,7 +113,7 @@ import org.jvnet.hk2.annotations.Optional;
 @Path("setup-as-code/yaml")
 @Produces(APPLICATION_JSON)
 @Scope(SETTING)
-@ApiKeyAuthorized
+@ApiKeyAuthorized(permissionType = LOGGED_IN, skipAuth = true)
 @OwnedBy(DX)
 @Slf4j
 public class YamlResource {
@@ -126,6 +128,7 @@ public class YamlResource {
   @Inject private MainConfiguration configuration;
   @Inject private YamlCloneService yamlCloneService;
   @Inject private ExecutorService executorService;
+  @Inject TemplateAuthHandler templateAuthHandler;
 
   /**
    * Instantiates a new service resource.
@@ -190,11 +193,12 @@ public class YamlResource {
   @Path("/templates/{templateId}")
   @Timed
   @ExceptionMetered
-  @ApiKeyAuthorized(permissionType = TEMPLATE_MANAGEMENT, action = Action.UPDATE)
-  @AuthRule(permissionType = TEMPLATE_MANAGEMENT, action = Action.UPDATE)
+  @ApiKeyAuthorized(permissionType = TEMPLATE_MANAGEMENT, action = Action.UPDATE, skipAuth = true)
+  @AuthRule(permissionType = APP_TEMPLATE, skipAuth = true)
   public RestResponse<Template> updateTemplate(@QueryParam("accountId") String accountId,
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, YamlPayload yamlPayload,
       @PathParam("templateId") String templateId) {
+    templateAuthHandler.authorizeUpdate(appId, templateId);
     return yamlService.update(yamlPayload, accountId, templateId);
   }
 

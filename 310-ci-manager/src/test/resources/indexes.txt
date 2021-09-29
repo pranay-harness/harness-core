@@ -46,16 +46,6 @@ encryptedRecords {"name": "ngSecretManagerIdx", "background": true} {"ngMetadata
 encryptedRecords {"name": "ngSecretManagerTypeIdx", "background": true} {"accountId": 1, "type": 1, "createdAt": 1}
 encryptedRecords {"name": "parents_1", "background": true} {"parents": 1}
 encryptedRecords {"name": "path_1", "background": true} {"path": 1}
-entitySetupUsage {"name": "EntitySetupUsage_unique_index", "unique": true} {"referredByEntityType": 1, "referredByEntityFQN": 1, "referredByEntityRepoIdentifier": 1, "referredByEntityBranch": 1, "referredEntityType": 1, "referredEntityFQN": 1, "referredEntityRepoIdentifier": 1, "referredEntityBranch": 1, "accountIdentifier": 1}
-entitySetupUsage {"name": "ReferredByEntityIndex", "background": true} {"accountIdentifier": 1, "referredByEntityType": 1, "referredByEntityFQN": 1}
-entitySetupUsage {"name": "ReferredEntityIndex", "background": true} {"accountIdentifier": 1, "referredEntityType": 1, "referredEntityFQN": 1}
-entitySetupUsage {"name": "accountIdentifier_1", "background": true} {"accountIdentifier": 1}
-entitySetupUsage {"name": "account_referredByFQN_referredByIsDefault_createdAt_index", "background": true} {"accountIdentifier": 1, "referredByEntityFQN": 1, "referredByEntityIsDefault": 1, "createdAt": -1}
-entitySetupUsage {"name": "account_referredBy_createdAt_index", "background": true} {"accountIdentifier": 1, "referredByEntityFQN": 1, "referredByEntityType": 1, "referredEntityType": 1, "referredByEntityIsDefault": 1, "createdAt": -1}
-entitySetupUsage {"name": "account_referredBy_referred_index", "background": true} {"accountIdentifier": 1, "referredByEntityFQN": 1, "referredByEntityType": 1, "referredEntityFQN": 1, "referredEntityType": 1}
-entitySetupUsage {"name": "account_referredBy_referred_type_index", "background": true} {"accountIdentifier": 1, "referredByEntityFQN": 1, "referredByEntityType": 1, "referredEntityType": 1, "createdAt": 1}
-entitySetupUsage {"name": "referredByEntityFQN_1", "background": true} {"referredByEntityFQN": 1}
-entitySetupUsage {"name": "referredEntityFQN_1", "background": true} {"referredEntityFQN": 1}
 environmentsNG {"name": "unique_accountId_organizationIdentifier_projectIdentifier_envIdentifier", "unique": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "identifier": 1}
 featureFlag {"name": "name_1", "background": true} {"name": 1}
 filters {"name": "unique_accountId_orgId_projectId_name_type_Index", "unique": true} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "name": 1, "filterType": 1}
@@ -71,6 +61,7 @@ notifyResponses {"name": "createdAt_1", "background": true} {"createdAt": 1}
 notifyResponses {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 outboxEvents {"name": "blocked_createdAt_nextUnblockAttemptAt_outbox_Idx", "background": true} {"blocked": 1, "createdAt": 1, "nextUnblockAttemptAt": 1}
 outboxEvents {"name": "eventType_blocked_outbox_Idx", "background": true} {"eventType": 1, "blocked": 1}
+perpetualTaskScheduleConfig {"name": "unique_perpetualTaskScheduleConfig_index1", "unique": true} {"accountId": 1, "perpetualTaskType": 1}
 podDetails {"name": "accountId_1", "background": true} {"accountId": 1}
 primaryVersion {"name": "createdAt_1", "background": true} {"createdAt": 1}
 primaryVersion {"name": "lastUpdatedAt_1", "background": true} {"lastUpdatedAt": 1}

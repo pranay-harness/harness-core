@@ -61,6 +61,8 @@ then
      ;;
      "ONP") export HARNESS_TEAM="PL"
      ;;
+     "GIT") export HARNESS_TEAM="CDP"
+     ;;
   esac
 fi
 
@@ -72,7 +74,7 @@ fi
 
 if [ -z "${ghprbTargetBranch}" ]
 then
-  if which hub > /dev/null
+  if which hub &>/dev/null
   then
     ghprbTargetBranch=`hub pr show --format=%B` || true
   fi
@@ -85,10 +87,12 @@ fi
 
 BASE_SHA=`git merge-base origin/${ghprbTargetBranch} HEAD`
 
-FIXES=$(git diff ${BASE_SHA}..HEAD | grep '+@BreakDependencyOn\|@TargetModule' | wc -l)
+FIXES=$(git diff ${BASE_SHA}..HEAD | grep '+@BreakDependencyOn\|+@TargetModule' | wc -l)
 
-git diff --diff-filter=ACM --name-status ${BASE_SHA}..HEAD | grep ".java$" | awk '{ print $2}' > raw_list.txt
-TRACK_FILES=`while read file; do echo $(git log --pretty=format:%ad -n 1 --date=format:'%Y%m%d%H%M%S' -- $file) $file; done < raw_list.txt | sort | head -n 5 | awk '{ print "--location-class-filter "$2}'`
+TMP_FILE=$(mktemp)
+
+git diff --diff-filter=ACM --name-status ${BASE_SHA}..HEAD | grep ".java$" | awk '{ print $2}' > $TMP_FILE
+TRACK_FILES=`while read file; do echo $(git log --pretty=format:%ad -n 1 --date=format:'%Y%m%d%H%M%S' -- $file) $file; done < $TMP_FILE | sort | head -n 5 | awk '{ print "--location-class-filter "$2}'`
 
 scripts/bazel/prepare_aeriform.sh
 
@@ -107,7 +111,6 @@ if [ ! -z "$TRACK_FILES" ]
 then
 	scripts/bazel/aeriform.sh analyze \
     ${TRACK_FILES} \
-    --kind-filter Critical \
     --kind-filter ToDo \
     --exit-code
 
@@ -119,3 +122,4 @@ then
     --kind-filter Warning \
     --exit-code
 fi
+

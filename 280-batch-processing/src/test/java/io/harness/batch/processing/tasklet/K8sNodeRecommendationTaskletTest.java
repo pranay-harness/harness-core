@@ -11,10 +11,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.harness.batch.processing.pricing.client.BanzaiRecommenderClient;
-import io.harness.batch.processing.pricing.data.VMComputePricingInfo;
-import io.harness.batch.processing.pricing.data.ZonePrice;
-import io.harness.batch.processing.pricing.service.intfc.VMPricingService;
+import io.harness.batch.processing.pricing.banzai.BanzaiRecommenderClient;
+import io.harness.batch.processing.pricing.vmpricing.VMPricingService;
 import io.harness.batch.processing.tasklet.util.ClusterHelper;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.commons.beans.billing.InstanceCategory;
@@ -27,6 +25,8 @@ import io.harness.ccm.commons.beans.recommendation.models.RecommendationResponse
 import io.harness.ccm.commons.constants.CloudProvider;
 import io.harness.ccm.commons.dao.recommendation.K8sRecommendationDAO;
 import io.harness.ccm.commons.dao.recommendation.RecommendationCrudService;
+import io.harness.pricing.dto.cloudinfo.ProductDetails;
+import io.harness.pricing.dto.cloudinfo.ZonePrice;
 import io.harness.rule.Owner;
 import io.harness.testsupport.BaseTaskletTest;
 
@@ -80,8 +80,8 @@ public class K8sNodeRecommendationTaskletTest extends BaseTaskletTest {
                              .region("us-west-1")
                              .instanceFamily("xyz")
                              .build();
-    VMComputePricingInfo pricingInfo =
-        VMComputePricingInfo.builder()
+    ProductDetails pricingInfo =
+        ProductDetails.builder()
             .onDemandPrice(2D)
             .cpusPerVm(4D)
             .memPerVm(64D)

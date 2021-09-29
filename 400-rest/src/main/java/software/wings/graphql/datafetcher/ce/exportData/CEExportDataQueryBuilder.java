@@ -99,6 +99,13 @@ public class CEExportDataQueryBuilder {
       groupBy.add(0, QLCEEntityGroupBy.Namespace);
     }
 
+    if (isGroupByEntityPresent(groupBy, QLCEEntityGroupBy.Namespace)) {
+      filters.add(
+          QLCEFilter.builder()
+              .instanceType(QLIdFilter.builder().operator(QLIdOperator.NOT_IN).values(new String[] {"K8S_PV"}).build())
+              .build());
+    }
+
     decorateQueryWithAggregations(selectQuery, aggregateFunction, fieldNames);
 
     if (!isGroupByHour(groupByTime)) {

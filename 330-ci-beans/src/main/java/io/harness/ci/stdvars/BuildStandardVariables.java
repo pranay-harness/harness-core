@@ -2,6 +2,7 @@ package io.harness.ci.stdvars;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.sdk.core.data.ExecutionSweepingOutput;
 import io.harness.validation.Update;
@@ -19,6 +20,7 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("buildStandardVariables")
 @JsonTypeName("buildStandardVariables")
 @OwnedBy(CI)
+@RecasterAlias("io.harness.ci.stdvars.BuildStandardVariables")
 public class BuildStandardVariables implements ExecutionSweepingOutput {
   public static final String BUILD_VARIABLE = "build";
   GitVariables git;

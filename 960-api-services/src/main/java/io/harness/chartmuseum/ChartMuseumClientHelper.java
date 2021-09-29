@@ -57,22 +57,23 @@ public class ChartMuseumClientHelper {
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
 
   public ChartMuseumServer startS3ChartMuseumServer(String bucket, String basePath, String region,
-      boolean useEc2IamCredentials, char[] accessKey, char[] secretKey, boolean useIRSA) throws Exception {
-    Map<String, String> environment = getEnvForAwsConfig(accessKey, secretKey, useEc2IamCredentials || useIRSA);
+      boolean useEc2IamCredentials, char[] accessKey, char[] secretKey, boolean useIRSA,
+      boolean useLatestChartMuseumVersion) throws Exception {
+    Map<String, String> environment = getEnvForAwsConfig(accessKey, secretKey, useEc2IamCredentials, useIRSA);
     String evaluatedTemplate = AMAZON_S3_COMMAND_TEMPLATE.replace("${BUCKET_NAME}", bucket)
                                    .replace("${FOLDER_PATH}", basePath == null ? "" : basePath)
                                    .replace("${REGION}", region);
 
     StringBuilder builder = new StringBuilder(128);
-    builder.append(encloseWithQuotesIfNeeded(k8sGlobalConfigService.getChartMuseumPath()))
+    builder.append(encloseWithQuotesIfNeeded(k8sGlobalConfigService.getChartMuseumPath(useLatestChartMuseumVersion)))
         .append(' ')
         .append(evaluatedTemplate);
 
     return startServer(builder.toString(), environment);
   }
 
-  public ChartMuseumServer startGCSChartMuseumServer(
-      String bucket, String basePath, char[] serviceAccountKey, String resourceDirectory) throws Exception {
+  public ChartMuseumServer startGCSChartMuseumServer(String bucket, String basePath, char[] serviceAccountKey,
+      String resourceDirectory, boolean useLatestChartMuseumVersion) throws Exception {
     Map<String, String> environment = new HashMap<>();
     if (serviceAccountKey != null) {
       String credentialFilePath = writeGCSCredentialsFile(resourceDirectory, serviceAccountKey);
@@ -83,7 +84,7 @@ public class ChartMuseumClientHelper {
                                    .replace("${FOLDER_PATH}", basePath == null ? "" : basePath);
 
     StringBuilder builder = new StringBuilder(128);
-    builder.append(encloseWithQuotesIfNeeded(k8sGlobalConfigService.getChartMuseumPath()))
+    builder.append(encloseWithQuotesIfNeeded(k8sGlobalConfigService.getChartMuseumPath(useLatestChartMuseumVersion)))
         .append(' ')
         .append(evaluatedTemplate);
 
@@ -170,9 +171,17 @@ public class ChartMuseumClientHelper {
   }
 
   @VisibleForTesting
-  static Map<String, String> getEnvForAwsConfig(char[] accessKey, char[] secretKey, boolean useIamCredentials) {
+  static Map<String, String> getEnvForAwsConfig(
+      char[] accessKey, char[] secretKey, boolean useIamCredentials, boolean useIrsa) {
     Map<String, String> environment = new HashMap<>();
-    if (!useIamCredentials) {
+    if (useIrsa) {
+      environment.put("AWS_ROLE_ARN", System.getenv("AWS_ROLE_ARN"));
+      environment.put("AWS_WEB_IDENTITY_TOKEN_FILE", System.getenv("AWS_WEB_IDENTITY_TOKEN_FILE"));
+      environment.put("AWS_ROLE_SESSION_NAME", "aws-sdk-java-" + System.currentTimeMillis());
+
+      // adding this env variable allows access to IRSA creds:
+      environment.put("AWS_SDK_LOAD_CONFIG", "true");
+    } else if (!useIamCredentials) {
       environment.put(AWS_ACCESS_KEY_ID, new String(accessKey));
       environment.put(AWS_SECRET_ACCESS_KEY, new String(secretKey));
     }

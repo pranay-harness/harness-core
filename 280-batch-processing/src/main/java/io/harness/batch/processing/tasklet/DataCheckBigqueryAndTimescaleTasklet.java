@@ -5,7 +5,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.billing.timeseries.service.impl.BillingDataServiceImpl;
 import io.harness.batch.processing.ccm.CCMJobConstants;
 import io.harness.batch.processing.entities.ClusterDataDetails;
-import io.harness.batch.processing.pricing.gcp.bigquery.impl.BigQueryHelperServiceImpl;
+import io.harness.batch.processing.pricing.gcp.bigquery.BigQueryHelperServiceImpl;
 
 import java.time.Instant;
 import lombok.extern.slf4j.Slf4j;

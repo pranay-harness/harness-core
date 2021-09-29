@@ -14,6 +14,8 @@ import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_ORCHE
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_ORCHESTRATION_EVENT_TOPIC;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_PROGRESS_BATCH_SIZE;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_PROGRESS_EVENT_TOPIC;
+import static io.harness.eventsframework.EventsFrameworkConstants.START_PARTIAL_PLAN_CREATOR_BATCH_SIZE;
+import static io.harness.eventsframework.EventsFrameworkConstants.START_PARTIAL_PLAN_CREATOR_EVENT_TOPIC;
 import static io.harness.pms.events.PmsEventFrameworkConstants.MAX_PROCESSING_TIME_SECONDS;
 import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_FACILITATOR_CONSUMER;
 import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_INTERRUPT_CONSUMER;
@@ -22,6 +24,7 @@ import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.
 import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_NODE_START_CONSUMER;
 import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_ORCHESTRATION_EVENT_CONSUMER;
 import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_PROGRESS_CONSUMER;
+import static io.harness.pms.sdk.execution.events.PmsSdkEventFrameworkConstants.PT_START_PLAN_CREATION_EVENT_CONSUMER;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -93,6 +96,11 @@ public class PmsSdkEventsFrameworkModule extends AbstractModule {
           .toInstance(
               NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
 
+      bind(Consumer.class)
+          .annotatedWith(Names.named(PT_START_PLAN_CREATION_EVENT_CONSUMER))
+          .toInstance(
+              NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
+
     } else {
       bind(Consumer.class)
           .annotatedWith(Names.named(PT_INTERRUPT_CONSUMER))
@@ -128,6 +136,11 @@ public class PmsSdkEventsFrameworkModule extends AbstractModule {
           .annotatedWith(Names.named(PT_NODE_RESUME_CONSUMER))
           .toInstance(RedisConsumer.of(PIPELINE_NODE_RESUME_EVENT_TOPIC, serviceName, redisConfig,
               Duration.ofSeconds(MAX_PROCESSING_TIME_SECONDS), PIPELINE_NODE_RESUME_BATCH_SIZE));
+
+      bind(Consumer.class)
+          .annotatedWith(Names.named(PT_START_PLAN_CREATION_EVENT_CONSUMER))
+          .toInstance(RedisConsumer.of(START_PARTIAL_PLAN_CREATOR_EVENT_TOPIC, serviceName, redisConfig,
+              Duration.ofSeconds(MAX_PROCESSING_TIME_SECONDS), START_PARTIAL_PLAN_CREATOR_BATCH_SIZE));
     }
   }
 }

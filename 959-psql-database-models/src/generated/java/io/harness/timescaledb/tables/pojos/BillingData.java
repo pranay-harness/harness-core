@@ -75,6 +75,8 @@ public class BillingData implements Serializable {
   private Double storagerequest;
   private Double storagembseconds;
   private Double storagecost;
+  private Double maxstoragerequest;
+  private Double maxstorageutilizationvalue;
 
   public BillingData() {}
 
@@ -141,6 +143,8 @@ public class BillingData implements Serializable {
     this.storagerequest = value.storagerequest;
     this.storagembseconds = value.storagembseconds;
     this.storagecost = value.storagecost;
+    this.maxstoragerequest = value.maxstoragerequest;
+    this.maxstorageutilizationvalue = value.maxstorageutilizationvalue;
   }
 
   public BillingData(OffsetDateTime starttime, OffsetDateTime endtime, String accountid, String settingid,
@@ -157,7 +161,7 @@ public class BillingData implements Serializable {
       Double maxcpuutilizationvalue, Double maxmemoryutilizationvalue, Double avgcpuutilizationvalue,
       Double avgmemoryutilizationvalue, Double networkcost, String pricingsource, Double storageactualidlecost,
       Double storageunallocatedcost, Double storageutilizationvalue, Double storagerequest, Double storagembseconds,
-      Double storagecost) {
+      Double storagecost, Double maxstoragerequest, Double maxstorageutilizationvalue) {
     this.starttime = starttime;
     this.endtime = endtime;
     this.accountid = accountid;
@@ -220,6 +224,8 @@ public class BillingData implements Serializable {
     this.storagerequest = storagerequest;
     this.storagembseconds = storagembseconds;
     this.storagecost = storagecost;
+    this.maxstoragerequest = maxstoragerequest;
+    this.maxstorageutilizationvalue = maxstorageutilizationvalue;
   }
 
   /**
@@ -1152,6 +1158,36 @@ public class BillingData implements Serializable {
     return this;
   }
 
+  /**
+   * Getter for <code>public.billing_data.maxstoragerequest</code>.
+   */
+  public Double getMaxstoragerequest() {
+    return this.maxstoragerequest;
+  }
+
+  /**
+   * Setter for <code>public.billing_data.maxstoragerequest</code>.
+   */
+  public BillingData setMaxstoragerequest(Double maxstoragerequest) {
+    this.maxstoragerequest = maxstoragerequest;
+    return this;
+  }
+
+  /**
+   * Getter for <code>public.billing_data.maxstorageutilizationvalue</code>.
+   */
+  public Double getMaxstorageutilizationvalue() {
+    return this.maxstorageutilizationvalue;
+  }
+
+  /**
+   * Setter for <code>public.billing_data.maxstorageutilizationvalue</code>.
+   */
+  public BillingData setMaxstorageutilizationvalue(Double maxstorageutilizationvalue) {
+    this.maxstorageutilizationvalue = maxstorageutilizationvalue;
+    return this;
+  }
+
   @Override
   public boolean equals(Object obj) {
     if (this == obj)
@@ -1471,6 +1507,16 @@ public class BillingData implements Serializable {
         return false;
     } else if (!storagecost.equals(other.storagecost))
       return false;
+    if (maxstoragerequest == null) {
+      if (other.maxstoragerequest != null)
+        return false;
+    } else if (!maxstoragerequest.equals(other.maxstoragerequest))
+      return false;
+    if (maxstorageutilizationvalue == null) {
+      if (other.maxstorageutilizationvalue != null)
+        return false;
+    } else if (!maxstorageutilizationvalue.equals(other.maxstorageutilizationvalue))
+      return false;
     return true;
   }
 
@@ -1542,6 +1588,9 @@ public class BillingData implements Serializable {
     result = prime * result + ((this.storagerequest == null) ? 0 : this.storagerequest.hashCode());
     result = prime * result + ((this.storagembseconds == null) ? 0 : this.storagembseconds.hashCode());
     result = prime * result + ((this.storagecost == null) ? 0 : this.storagecost.hashCode());
+    result = prime * result + ((this.maxstoragerequest == null) ? 0 : this.maxstoragerequest.hashCode());
+    result =
+        prime * result + ((this.maxstorageutilizationvalue == null) ? 0 : this.maxstorageutilizationvalue.hashCode());
     return result;
   }
 
@@ -1611,6 +1660,8 @@ public class BillingData implements Serializable {
     sb.append(", ").append(storagerequest);
     sb.append(", ").append(storagembseconds);
     sb.append(", ").append(storagecost);
+    sb.append(", ").append(maxstoragerequest);
+    sb.append(", ").append(maxstorageutilizationvalue);
 
     sb.append(")");
     return sb.toString();

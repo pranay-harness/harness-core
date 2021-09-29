@@ -6,6 +6,7 @@ import static io.harness.container.ContainerInfo.Status.SUCCESS;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.GEORGE;
+import static io.harness.rule.OwnerRule.RAGHVENDRA;
 import static io.harness.rule.OwnerRule.SAINATH;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.TMACARI;
@@ -109,6 +110,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @OwnedBy(CDP)
 @Slf4j
@@ -1290,6 +1292,88 @@ public class EcsSetupCommandTaskHelperTest extends WingsBaseTest {
         .getCreateServiceRequest(any(), anyList(), any(), any(), anyString(), any(), any(), any(), eq(false));
     ecsSetupCommandTaskHelper.createEcsService(params, taskDefinition, attribute, emptyList(), builder, mockCallback);
     verify(awsClusterService).createService(anyString(), any(), anyList(), any());
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testCreateEcsServiceEnableExecuteCommandNotPresent() {
+    String ecsServiceSpec = "{\n"
+        + "\"capacityProviderStrategy\":[ ],\n"
+        + "\"placementConstraints\":[ ],\n"
+        + "\"placementStrategy\":[ ],\n"
+        + "\"healthCheckGracePeriodSeconds\":null,\n"
+        + "\"tags\":[ ],\n"
+        + "\"schedulingStrategy\":\"REPLICA\"\n"
+        + "}";
+    EcsServiceSpecification ecsServiceSpecification =
+        EcsServiceSpecification.builder().serviceSpecJson(ecsServiceSpec).build();
+    ImageDetails imageDetails = new ImageDetails();
+    imageDetails.setName("imageDetailsName");
+    imageDetails.setTag("imageDetailsTag");
+    imageDetails.setDomainName("imageDetailsDomainName");
+    EcsSetupParams params = anEcsSetupParams()
+                                .withRegion("us-east-1")
+                                .withClusterName("cluster")
+                                .withTaskFamily("foo")
+                                .withImageDetails(imageDetails)
+                                .withEcsServiceSpecification(ecsServiceSpecification)
+                                .build();
+    TaskDefinition taskDefinition = new TaskDefinition().withRevision(2);
+    SettingAttribute attribute = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
+    ContainerSetupCommandUnitExecutionDataBuilder builder = ContainerSetupCommandUnitExecutionData.builder();
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    LinkedHashMap<String, Integer> result = new LinkedHashMap<>();
+    result.put("foo__1", 2);
+    doReturn(result)
+        .when(awsClusterService)
+        .getActiveServiceCounts(anyString(), any(), anyList(), anyString(), anyString());
+    CreateServiceRequest createServiceRequest =
+        ecsSetupCommandTaskHelper.getCreateServiceRequest(attribute, emptyList(), params, taskDefinition,
+            "containerServiceName", mockCallback, LoggerFactory.getLogger("test-logger"), builder, false);
+  }
+
+  @Test
+  @Owner(developers = RAGHVENDRA)
+  @Category(UnitTests.class)
+  public void testCreateEcsServiceEnableExecuteCommandTrue() {
+    String ecsServiceSpec = "{\n"
+        + "\"capacityProviderStrategy\":[ ],\n"
+        + "\"placementConstraints\":[ ],\n"
+        + "\"placementStrategy\":[ ],\n"
+        + "\"healthCheckGracePeriodSeconds\":null,\n"
+        + "\"tags\":[ ],\n"
+        + "\"schedulingStrategy\":\"REPLICA\",\n"
+        + "\"enableExecuteCommand\":true\n"
+        + "}";
+    EcsServiceSpecification ecsServiceSpecification =
+        EcsServiceSpecification.builder().serviceSpecJson(ecsServiceSpec).build();
+    ImageDetails imageDetails = new ImageDetails();
+    imageDetails.setName("imageDetailsName");
+    imageDetails.setTag("imageDetailsTag");
+    imageDetails.setDomainName("imageDetailsDomainName");
+    EcsSetupParams params = anEcsSetupParams()
+                                .withRegion("us-east-1")
+                                .withClusterName("cluster")
+                                .withTaskFamily("foo")
+                                .withImageDetails(imageDetails)
+                                .withEcsServiceSpecification(ecsServiceSpecification)
+                                .build();
+    TaskDefinition taskDefinition = new TaskDefinition().withRevision(2);
+    SettingAttribute attribute = aSettingAttribute().withValue(AwsConfig.builder().build()).build();
+    ContainerSetupCommandUnitExecutionDataBuilder builder = ContainerSetupCommandUnitExecutionData.builder();
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    LinkedHashMap<String, Integer> result = new LinkedHashMap<>();
+    result.put("foo__1", 2);
+    doReturn(result)
+        .when(awsClusterService)
+        .getActiveServiceCounts(anyString(), any(), anyList(), anyString(), anyString());
+    CreateServiceRequest createServiceRequest =
+        ecsSetupCommandTaskHelper.getCreateServiceRequest(attribute, emptyList(), params, taskDefinition,
+            "containerServiceName", mockCallback, LoggerFactory.getLogger("test-logger"), builder, false);
+    assertThat(createServiceRequest.getEnableExecuteCommand()).isTrue();
   }
 
   @Test

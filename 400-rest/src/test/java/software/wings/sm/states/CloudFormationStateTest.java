@@ -519,17 +519,13 @@ public class CloudFormationStateTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testValidation() {
     // create stack
-    assertThat(cloudFormationCreateStackState.validateFields().size()).isEqualTo(2);
-    cloudFormationCreateStackState.setProvisionerId("test provisioner");
     assertThat(cloudFormationCreateStackState.validateFields().size()).isEqualTo(1);
-    cloudFormationCreateStackState.setAwsConfigId("AWS_CONFIG_ID");
+    cloudFormationCreateStackState.setProvisionerId("test provisioner");
     assertThat(cloudFormationCreateStackState.validateFields().size()).isEqualTo(0);
 
     // delete stack
-    assertThat(cloudFormationDeleteStackState.validateFields().size()).isEqualTo(2);
-    cloudFormationDeleteStackState.setProvisionerId("test provisioner");
     assertThat(cloudFormationDeleteStackState.validateFields().size()).isEqualTo(1);
-    cloudFormationDeleteStackState.setAwsConfigId("AWS_CONFIG_ID");
+    cloudFormationDeleteStackState.setProvisionerId("test provisioner");
     assertThat(cloudFormationDeleteStackState.validateFields().size()).isEqualTo(0);
   }
 }

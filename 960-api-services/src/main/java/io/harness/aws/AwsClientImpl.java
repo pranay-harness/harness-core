@@ -1,11 +1,14 @@
 package io.harness.aws;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.defaultString;
 
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.ExplanationException;
 import io.harness.exception.HintException;
@@ -18,6 +21,7 @@ import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.EC2ContainerCredentialsProviderWrapper;
 import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
+import com.amazonaws.auth.WebIdentityTokenCredentialsProvider;
 import com.amazonaws.auth.policy.Policy;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.codecommit.AWSCodeCommitClient;
@@ -75,6 +79,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 
+@OwnedBy(CDP)
 @Singleton
 @Slf4j
 public class AwsClientImpl implements AwsClient {
@@ -89,7 +94,7 @@ public class AwsClientImpl implements AwsClient {
       tracker.trackEC2Call("Get Ec2 client");
       closeableAmazonEC2Client.getClient().describeRegions();
     } catch (AmazonEC2Exception amazonEC2Exception) {
-      if (amazonEC2Exception.getStatusCode() == 401 && !awsConfig.isEc2IamCredentials()) {
+      if (amazonEC2Exception.getStatusCode() == 401 && !awsConfig.isEc2IamCredentials() && !awsConfig.isIRSA()) {
         if (isEmpty(awsConfig.getAwsAccessKeyCredential().getAccessKey())) {
           throw NestedExceptionUtils.hintWithExplanationException(HintException.HINT_EMPTY_ACCESS_KEY,
               ExplanationException.EXPLANATION_EMPTY_ACCESS_KEY, amazonEC2Exception);
@@ -101,6 +106,10 @@ public class AwsClientImpl implements AwsClient {
       throw amazonEC2Exception;
     } catch (Exception e) {
       log.error("Exception validateAwsAccountCredential", e);
+      if (awsConfig.isIRSA()) {
+        throw NestedExceptionUtils.hintWithExplanationException(HintException.HINT_AWS_IRSA_CHECK,
+            ExplanationException.EXPLANATION_IRSA_ROLE_CHECK, new InvalidRequestException(e.getMessage()));
+      }
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }
@@ -126,7 +135,7 @@ public class AwsClientImpl implements AwsClient {
   }
 
   private void checkCredentials(AwsConfig awsConfig) {
-    if (!awsConfig.isEc2IamCredentials()) {
+    if (!awsConfig.isEc2IamCredentials() && !awsConfig.isIRSA()) {
       if (isEmpty(awsConfig.getAwsAccessKeyCredential().getAccessKey())) {
         throw new InvalidRequestException("Access Key should not be empty");
       } else if (isEmpty(awsConfig.getAwsAccessKeyCredential().getSecretKey())) {
@@ -229,7 +238,16 @@ public class AwsClientImpl implements AwsClient {
     if (awsConfig.isEc2IamCredentials()) {
       log.info("Instantiating EC2ContainerCredentialsProviderWrapper");
       credentialsProvider = new EC2ContainerCredentialsProviderWrapper();
-    } else {
+    }
+
+    else if (awsConfig.isIRSA()) {
+      WebIdentityTokenCredentialsProvider.Builder providerBuilder = WebIdentityTokenCredentialsProvider.builder();
+      providerBuilder.roleSessionName("IRSA" + UUIDGenerator.generateUuid());
+
+      credentialsProvider = providerBuilder.build();
+    }
+
+    else {
       credentialsProvider =
           constructStaticBasicAwsCredentials(defaultString(awsConfig.getAwsAccessKeyCredential().getAccessKey(), ""),
               awsConfig.getAwsAccessKeyCredential().getSecretKey() != null

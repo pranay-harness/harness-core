@@ -4,11 +4,12 @@ import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.PipelineServiceConfiguration.getResourceClasses;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
+import static io.harness.pms.async.plan.PlanNotifyEventConsumer.PMS_PLAN_CREATION;
 import static io.harness.waiter.PmsNotifyEventListener.PMS_ORCHESTRATION;
 
 import static com.google.common.collect.ImmutableMap.of;
-import static java.util.Collections.singletonList;
 
+import io.harness.accesscontrol.NGAccessDeniedExceptionMapper;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cache.CacheModule;
 import io.harness.consumers.GraphUpdateRedisConsumer;
@@ -22,6 +23,8 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionServiceImpl;
+import io.harness.engine.expressions.OrchestrationConstants;
+import io.harness.engine.interrupts.InterruptMonitor;
 import io.harness.engine.interrupts.OrchestrationEndInterruptHandler;
 import io.harness.engine.timeouts.TimeoutInstanceRemover;
 import io.harness.event.OrchestrationEndGraphHandler;
@@ -54,10 +57,13 @@ import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.notification.module.NotificationClientModule;
 import io.harness.outbox.OutboxEventPollService;
+import io.harness.plan.consumers.PartialPlanResponseRedisConsumer;
 import io.harness.plancreator.pipeline.PipelineConfig;
 import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.pms.approval.ApprovalInstanceExpirationJob;
 import io.harness.pms.approval.ApprovalInstanceHandler;
+import io.harness.pms.async.plan.PlanNotifyEventConsumer;
+import io.harness.pms.async.plan.PlanNotifyEventPublisher;
 import io.harness.pms.event.PMSEventConsumerService;
 import io.harness.pms.events.base.PipelineEventConsumerController;
 import io.harness.pms.inputset.gitsync.InputSetEntityGitSyncHelper;
@@ -96,6 +102,7 @@ import io.harness.pms.sdk.execution.events.node.advise.NodeAdviseEventRedisConsu
 import io.harness.pms.sdk.execution.events.node.resume.NodeResumeEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.node.start.NodeStartEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.orchestrationevent.OrchestrationEventRedisConsumer;
+import io.harness.pms.sdk.execution.events.plan.CreatePartialPlanRedisConsumer;
 import io.harness.pms.sdk.execution.events.progress.ProgressEventRedisConsumer;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.pms.triggers.scheduled.ScheduledTriggerHandler;
@@ -132,7 +139,9 @@ import io.harness.waiter.NotifierScheduledExecutorService;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
+import io.harness.waiter.PmsNotifyEventConsumerRedis;
 import io.harness.waiter.PmsNotifyEventListener;
+import io.harness.waiter.PmsNotifyEventPublisher;
 import io.harness.waiter.ProgressUpdateService;
 import io.harness.yaml.YamlSdkConfiguration;
 import io.harness.yaml.YamlSdkInitHelper;
@@ -140,6 +149,7 @@ import io.harness.yaml.YamlSdkInitHelper;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -283,7 +293,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     Injector injector = Guice.createInjector(modules);
     registerEventListeners(injector);
     registerWaitEnginePublishers(injector);
-    registerScheduledJobs(injector);
+    registerScheduledJobs(injector, appConfig);
     registerCorsFilter(appConfig, environment);
     registerResources(environment, injector);
     registerJerseyProviders(environment, injector);
@@ -300,6 +310,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     injector.getInstance(BarrierServiceImpl.class).registerIterators();
     injector.getInstance(ApprovalInstanceHandler.class).registerIterators();
     injector.getInstance(ResourceRestraintPersistenceMonitor.class).registerIterators();
+    injector.getInstance(InterruptMonitor.class).registerIterators();
     injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
 
     log.info("Initializing gRPC servers...");
@@ -455,6 +466,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         .engineSteps(PipelineServiceStepRegistrar.getEngineSteps())
         .engineFacilitators(PipelineServiceFacilitatorRegistrar.getEngineFacilitators())
         .engineAdvisers(PipelineServiceUtilAdviserRegistrar.getEngineAdvisers())
+        .staticAliases(getStaticAliases())
         .engineEventHandlersMap(of())
         .executionSummaryModuleInfoProviderClass(PmsExecutionServiceInfoProvider.class)
         .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
@@ -462,6 +474,21 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         .orchestrationEventPoolConfig(
             ThreadPoolConfig.builder().corePoolSize(10).maxPoolSize(50).idleTime(120L).build())
         .build();
+  }
+
+  @VisibleForTesting
+  public Map<String, String> getStaticAliases() {
+    Map<String, String> aliases = new HashMap<>();
+    aliases.put(OrchestrationConstants.STAGE_SUCCESS,
+        "<+stage.currentStatus> == \"SUCCEEDED\" || <+stage.currentStatus> == \"IGNORE_FAILED\"");
+    aliases.put(OrchestrationConstants.STAGE_FAILURE,
+        "<+stage.currentStatus> == \"FAILED\" || <+stage.currentStatus> == \"ERRORED\" || <+stage.currentStatus> == \"EXPIRED\"");
+    aliases.put(OrchestrationConstants.PIPELINE_FAILURE,
+        "<+pipeline.currentStatus> == \"FAILED\" || <+pipeline.currentStatus> == \"ERRORED\" || <+pipeline.currentStatus> == \"EXPIRED\"");
+    aliases.put(OrchestrationConstants.PIPELINE_SUCCESS,
+        "<+pipeline.currentStatus> == \"SUCCEEDED\" || <+pipeline.currentStatus> == \"IGNORE_FAILED\"");
+    aliases.put(OrchestrationConstants.ALWAYS, "true");
+    return aliases;
   }
 
   private void registerGitSyncSdk(PipelineServiceConfiguration config, Injector injector, Environment environment) {
@@ -516,19 +543,23 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         injector.getInstance(Key.get(new TypeLiteral<QueuePublisher<NotifyEvent>>() {}));
     final NotifyQueuePublisherRegister notifyQueuePublisherRegister =
         injector.getInstance(NotifyQueuePublisherRegister.class);
-    notifyQueuePublisherRegister.register(
-        PMS_ORCHESTRATION, payload -> publisher.send(singletonList(PMS_ORCHESTRATION), payload));
+    notifyQueuePublisherRegister.register(PMS_ORCHESTRATION, injector.getInstance(PmsNotifyEventPublisher.class));
+    notifyQueuePublisherRegister.register(PMS_PLAN_CREATION, injector.getInstance(PlanNotifyEventPublisher.class));
   }
 
-  private void registerScheduledJobs(Injector injector) {
+  private void registerScheduledJobs(Injector injector, PipelineServiceConfiguration appConfig) {
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
-        .scheduleWithFixedDelay(injector.getInstance(DelegateSyncServiceImpl.class), 0L, 2L, TimeUnit.SECONDS);
+        .scheduleWithFixedDelay(injector.getInstance(DelegateSyncServiceImpl.class), 0L,
+            appConfig.getDelegatePollingConfig().getSyncDelay(), TimeUnit.MILLISECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
-        .scheduleWithFixedDelay(injector.getInstance(DelegateAsyncServiceImpl.class), 0L, 5L, TimeUnit.SECONDS);
+        .scheduleWithFixedDelay(injector.getInstance(DelegateAsyncServiceImpl.class), 0L,
+            appConfig.getDelegatePollingConfig().getAsyncDelay(), TimeUnit.MILLISECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
-        .scheduleWithFixedDelay(injector.getInstance(DelegateProgressServiceImpl.class), 0L, 5L, TimeUnit.SECONDS);
+        .scheduleWithFixedDelay(injector.getInstance(DelegateProgressServiceImpl.class), 0L,
+            appConfig.getDelegatePollingConfig().getProgressDelay(), TimeUnit.MILLISECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("progressUpdateServiceExecutor")))
-        .scheduleWithFixedDelay(injector.getInstance(ProgressUpdateService.class), 0L, 5L, TimeUnit.SECONDS);
+        .scheduleWithFixedDelay(injector.getInstance(ProgressUpdateService.class), 0L,
+            appConfig.getDelegatePollingConfig().getProgressDelay(), TimeUnit.MILLISECONDS);
 
     injector.getInstance(NotifierScheduledExecutorService.class)
         .scheduleWithFixedDelay(
@@ -556,6 +587,10 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     pipelineEventConsumerController.register(injector.getInstance(NodeResumeEventRedisConsumer.class), 2);
     pipelineEventConsumerController.register(injector.getInstance(SdkResponseEventRedisConsumer.class), 3);
     pipelineEventConsumerController.register(injector.getInstance(GraphUpdateRedisConsumer.class), 3);
+    pipelineEventConsumerController.register(injector.getInstance(PartialPlanResponseRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(CreatePartialPlanRedisConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(PlanNotifyEventConsumer.class), 1);
+    pipelineEventConsumerController.register(injector.getInstance(PmsNotifyEventConsumerRedis.class), 2);
   }
 
   private void registerCorsFilter(PipelineServiceConfiguration appConfig, Environment environment) {
@@ -579,6 +614,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   private void registerJerseyProviders(Environment environment, Injector injector) {
     environment.jersey().register(JsonProcessingExceptionMapper.class);
     environment.jersey().register(EarlyEofExceptionMapper.class);
+    environment.jersey().register(NGAccessDeniedExceptionMapper.class);
     environment.jersey().register(WingsExceptionMapperV2.class);
 
     environment.jersey().register(MultiPartFeature.class);

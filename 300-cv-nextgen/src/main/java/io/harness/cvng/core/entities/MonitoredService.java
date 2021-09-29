@@ -77,6 +77,7 @@ public final class MonitoredService
   String environmentIdentifier;
   MonitoredServiceType type;
   List<String> healthSourceIdentifiers;
+  List<String> changeSourceIdentifiers;
   private long lastUpdatedAt;
   private long createdAt;
   private boolean enabled;
@@ -88,5 +89,12 @@ public final class MonitoredService
       return new ArrayList<>();
     }
     return healthSourceIdentifiers;
+  }
+
+  public List<String> getChangeSourceIdentifiers() {
+    if (changeSourceIdentifiers == null) {
+      return new ArrayList<>();
+    }
+    return changeSourceIdentifiers;
   }
 }

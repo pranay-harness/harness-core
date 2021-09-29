@@ -226,7 +226,7 @@ public class WaitNotifyEngineTest extends WaitEngineTestBase {
 
   @Test
   @SpringWaiter
-  @Owner(developers = PRASHANT)
+  @Owner(developers = PRASHANT, intermittent = true)
   @Category(UnitTests.class)
   public void shouldTestTimeoutWithResponse() {
     String uuid1 = generateUuid();
@@ -247,6 +247,62 @@ public class WaitNotifyEngineTest extends WaitEngineTestBase {
       assertThat(responseMap).hasSize(1).containsAllEntriesOf(of(uuid1, data));
       assertThat(mongoTemplate.findOne(query(where(WaitInstanceKeys.uuid).is(waitInstanceId)), WaitInstance.class))
           .isNull();
+    }
+  }
+
+  @Test
+  @SpringWaiter
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void shouldNoopDoneWith() {
+    String uuid1 = generateUuid();
+    List<String> correlationIds = Arrays.asList(uuid1);
+
+    try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
+      String waitInstanceId = waitNotifyEngine.waitForAllOnInList(
+          TEST_PUBLISHER, new TestNotifyCallback(), correlationIds, Duration.ofSeconds(3));
+      WaitInstance waitInstance =
+          mongoTemplate.findOne(query(where(WaitInstanceKeys.uuid).is(waitInstanceId)), WaitInstance.class);
+      assertThat(waitInstance).isNotNull();
+      assertThat(waitInstance.getTimeout()).isEqualTo(Duration.ofSeconds(3));
+      boolean result = waitNotifyEngine.doneWithWithoutCallback(uuid1);
+      assertThat(result).isTrue();
+      WaitInstance deleted =
+          mongoTemplate.findOne(query(where(WaitInstanceKeys.uuid).is(waitInstanceId)), WaitInstance.class);
+      assertThat(deleted).isNull();
+    }
+  }
+
+  @Test
+  @SpringWaiter
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void shouldNoopDoneWithMultipleCorrelationIds() {
+    String uuid1 = generateUuid();
+    String uuid2 = generateUuid();
+    List<String> correlationIds = Arrays.asList(uuid1, uuid2);
+
+    try (MaintenanceGuard guard = new MaintenanceGuard(false)) {
+      String waitInstanceId = waitNotifyEngine.waitForAllOnInList(
+          TEST_PUBLISHER, new TestNotifyCallback(), correlationIds, Duration.ofSeconds(3));
+      WaitInstance waitInstance =
+          mongoTemplate.findOne(query(where(WaitInstanceKeys.uuid).is(waitInstanceId)), WaitInstance.class);
+      assertThat(waitInstance).isNotNull();
+      assertThat(waitInstance.getTimeout()).isEqualTo(Duration.ofSeconds(3));
+
+      boolean result1 = waitNotifyEngine.doneWithWithoutCallback(uuid1);
+      assertThat(result1).isTrue();
+      WaitInstance firstCallbackInstance =
+          mongoTemplate.findOne(query(where(WaitInstanceKeys.uuid).is(waitInstanceId)), WaitInstance.class);
+      assertThat(firstCallbackInstance).isNotNull();
+      assertThat(firstCallbackInstance.getWaitingOnCorrelationIds()).hasSize(1);
+      assertThat(firstCallbackInstance.getWaitingOnCorrelationIds()).containsExactly(uuid2);
+
+      boolean result2 = waitNotifyEngine.doneWithWithoutCallback(uuid2);
+      assertThat(result2).isTrue();
+      WaitInstance firstCallbackInstance2 =
+          mongoTemplate.findOne(query(where(WaitInstanceKeys.uuid).is(waitInstanceId)), WaitInstance.class);
+      assertThat(firstCallbackInstance2).isNull();
     }
   }
 

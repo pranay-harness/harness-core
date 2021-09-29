@@ -52,6 +52,8 @@ fi
 BAZEL_MODULES="\
   //270-verification:module \
   //280-batch-processing:module \
+  //290-dashboard-service:module \
+  //295-cdng-contracts:module \
   //300-cv-nextgen:module \
   //310-ci-manager:module \
   //320-ci-execution:module \
@@ -68,6 +70,7 @@ BAZEL_MODULES="\
   //425-verification-commons:module \
   //430-cv-nextgen-commons:module \
   //440-connector-nextgen:module \
+  //440-secret-management-service:module \
   //441-cg-instance-sync:module \
   //445-cg-connectors:module \
   //450-ce-views:module \
@@ -86,6 +89,7 @@ BAZEL_MODULES="\
   //860-orchestration-steps:module \
   //860-orchestration-visualization:module \
   //865-cg-events:module \
+  //867-polling-contracts:module \
   //870-cg-orchestration:module \
   //870-orchestration:module \
   //874-orchestration-delay:module \
@@ -108,18 +112,20 @@ BAZEL_MODULES="\
   //920-delegate-service-beans:module \
   //920-ng-signup:module \
   //925-access-control-service:module \
+  //925-enforcement-service:module \
   //930-delegate-tasks:module \
   //930-ng-core-clients:module \
   //935-analyser-service:module \
   //937-persistence-tracer:module \
+  //940-enforcement-sdk:module \
   //940-feature-flag:module \
   //940-ng-audit-service:module \
   //940-notification-client:module \
   //940-notification-client:module \
   //940-notification-client:module_deploy.jar \
-  //940-plan-feature-sdk:module \
   //940-resource-group-beans:module \
   //940-secret-manager-client:module \
+  //943-enforcement-beans:module \
   //945-account-mgmt:module \
   //945-license-usage-sdk:module \
   //945-ng-audit-client:module \
@@ -135,10 +141,12 @@ BAZEL_MODULES="\
   //950-events-framework:module \
   //950-events-framework-monitor:module \
   //950-log-client:module \
+  //951-cg-git-sync:module \
   //951-ng-audit-commons:module \
   //950-ng-authentication-service:module \
   //950-ng-core:module \
   //950-ng-project-n-orgs:module \
+  //950-ng-signup-beans:module \
   //950-telemetry:module \
   //950-wait-engine:module \
   //950-walktree-visitor:module \
@@ -167,7 +175,6 @@ BAZEL_MODULES="\
   //960-ng-core-beans:module \
   //960-ng-license-beans:module \
   //960-ng-license-usage-beans:module \
-  //960-ng-signup-beans:module \
   //960-notification-beans/src/main/proto:all \
   //960-notification-beans:module \
   //960-persistence:module \
@@ -337,6 +344,17 @@ build_proto_module() {
   fi
 }
 
+build_protocol_info(){
+  module=$1
+  moduleName=$2
+
+  bazel query "deps(//${module}:module)" | grep -i "KryoRegistrar" | rev | cut -f 1 -d "/" | rev | cut -f 1 -d "." > /tmp/KryoDeps.text
+  cp scripts/interface-hash/module-deps.sh .
+  sh module-deps.sh //${module}:module > /tmp/ProtoDeps.text
+  bazel ${bazelrc} run ${BAZEL_ARGUMENTS}  //001-microservice-intfc-tool:module -- kryo-file=/tmp/KryoDeps.text proto-file=/tmp/ProtoDeps.text ignore-json | grep "Codebase Hash:" > ${moduleName}-protocol.info
+  rm module-deps.sh /tmp/ProtoDeps.text /tmp/KryoDeps.text
+}
+
 build_bazel_application 940-notification-client
 build_bazel_application 820-platform-service
 
@@ -350,6 +368,7 @@ build_bazel_module 420-delegate-service
 build_bazel_module 425-verification-commons
 build_bazel_module 430-cv-nextgen-commons
 build_bazel_module 440-connector-nextgen
+build_bazel_module 440-secret-management-service
 build_bazel_module 445-cg-connectors
 build_bazel_module 450-ce-views
 build_bazel_module 460-capability
@@ -362,6 +381,7 @@ build_bazel_module 835-notification-senders
 build_bazel_module 865-cg-events
 build_bazel_module 860-orchestration-steps
 build_bazel_module 860-orchestration-visualization
+build_bazel_module 867-polling-contracts
 build_bazel_module 870-cg-orchestration
 build_bazel_module 870-orchestration
 build_bazel_module 874-orchestration-delay
@@ -400,6 +420,7 @@ build_bazel_module 950-ng-core
 build_bazel_module 950-ng-project-n-orgs
 build_bazel_module 950-wait-engine
 build_bazel_module 950-walktree-visitor
+build_bazel_module 951-cg-git-sync
 build_bazel_module 951-ng-audit-commons
 build_bazel_module 952-scm-java-client
 build_bazel_module 953-events-api
@@ -442,3 +463,8 @@ build_proto_module ciengine product/ci/engine/proto
 build_proto_module ciscm product/ci/scm/proto
 
 bazel ${bazelrc} run ${BAZEL_ARGUMENTS} //001-microservice-intfc-tool:module | grep "Codebase Hash:" > protocol.info
+
+if [ "${PLATFORM}" == "jenkins" ]; then
+ build_protocol_info 800-pipeline-service pipeline-service
+ build_protocol_info 310-ci-manager ci-manager
+fi

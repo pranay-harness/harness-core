@@ -69,10 +69,11 @@ public class ExpiryHelperTest extends OrchestrationTestBase {
     String planExecutionId = generateUuid();
     String nodeExecutionId = generateUuid();
 
+    Ambiance ambiance = Ambiance.newBuilder().setPlanExecutionId(planExecutionId).build();
     NodeExecutionBuilder nodeExecutionBuilder =
         NodeExecution.builder()
             .uuid(nodeExecutionId)
-            .ambiance(Ambiance.newBuilder().setPlanExecutionId(planExecutionId).build())
+            .ambiance(ambiance)
             .status(Status.RUNNING)
             .mode(ExecutionMode.TASK)
             .executableResponse(ExecutableResponse.newBuilder()
@@ -100,7 +101,7 @@ public class ExpiryHelperTest extends OrchestrationTestBase {
                         .build());
     expiryHelper.expireMarkedInstance(nodeExecutionBuilder.build(), interrupt);
 
-    verify(engine).handleStepResponse(nodeExecutionId,
+    verify(engine).processStepResponse(ambiance,
         StepResponseProto.newBuilder()
             .setStatus(Status.EXPIRED)
             .setFailureInfo(FailureInfo.newBuilder()

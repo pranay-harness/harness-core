@@ -17,13 +17,16 @@ shared_dependencies = [
     "@maven//:io_grpc_grpc_stub",
 ] + [
     "//:lombok",
-    "//121-instance:module",
     "//122-ng-authentication-settings:module",
     "//123-ng-core-user:module",
     "//125-cd-nextgen:module",
+    "//126-instance:module",
     "//136-git-sync-manager:module",
+    "//295-cdng-contracts:module",
     "//920-ng-signup:module",
+    "//925-enforcement-service:module",
     "//930-ng-license-manager:module",
+    "//940-enforcement-sdk:module",
     "//940-primary-version-manager:module",
     "//948-access-control-admin-client:module",
     "//950-telemetry:module",
@@ -272,7 +275,6 @@ shared_dependencies = [
     "@maven//:de_jkeylockmanager_jkeylockmanager",
     "@maven//:dk_brics_automaton_automaton",
     "@maven//:dnsjava_dnsjava",
-    "@maven//:dom4j_dom4j",
     "@maven//:es_moki_ratelimitj_ratelimitj_core",
     "@maven//:es_moki_ratelimitj_ratelimitj_inmemory",
     "@maven//:guru_nidi_com_kitfox_svgSalamander",
@@ -435,7 +437,7 @@ shared_dependencies = [
     "@maven//:org_apache_httpcomponents_httpcore",
     "@maven//:org_apache_httpcomponents_httpcore_nio",
     "@maven//:org_apache_httpcomponents_httpmime",
-    "@maven//:org_apache_ibatis_ibatis_core",
+    "@maven//:org_mybatis_mybatis",
     "@maven//:org_apache_logging_log4j_log4j_api",
     "@maven//:org_apache_logging_log4j_log4j_to_slf4j",
     "@maven//:org_apache_lucene_lucene_analyzers_common",
@@ -631,6 +633,12 @@ shared_dependencies = [
     "@maven//:xpp3_xpp3",
     "@maven//:io_harness_ff_java_server_sdk",
     "@maven//:io_harness_cv_data_collection_dsl",
+    "@maven//:io_swagger_core_v3_swagger_jaxrs2",
+    "@maven//:io_swagger_core_v3_swagger_jaxrs2_servlet_initializer_v2",
+    "@maven//:io_swagger_core_v3_swagger_core",
+    "@maven//:io_swagger_core_v3_swagger_annotations",
+    "@maven//:io_swagger_core_v3_swagger_models",
+    "@maven//:io_swagger_core_v3_swagger_integration",
 ]
 
 java_binary(
@@ -678,3 +686,8 @@ java_library(
 run_tests()
 
 run_analysis()
+
+exports_files([
+    "keystore.jks",
+    "config.yml",
+])

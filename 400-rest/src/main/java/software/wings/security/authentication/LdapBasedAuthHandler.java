@@ -10,7 +10,10 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.EncryptedData;
 import io.harness.beans.SecretText;
 import io.harness.exception.WingsException;
 import io.harness.logging.AutoLogContext;
@@ -32,13 +35,13 @@ import software.wings.service.intfc.security.SecretManager;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import java.util.HashMap;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class LdapBasedAuthHandler implements AuthHandler {
   @Inject private SSOSettingService ssoSettingService;
   @Inject private AuthenticationUtils authenticationUtils;
@@ -83,26 +86,22 @@ public class LdapBasedAuthHandler implements AuthHandler {
                                   .name(UUID.randomUUID().toString())
                                   .scopedToAccount(true)
                                   .build();
-      String encryptedPassword = secretManager.saveSecretText(settings.getAccountId(), secretText, false);
+      EncryptedData encryptedSecret = secretManager.encryptSecret(settings.getAccountId(), secretText, false);
       EncryptedDataDetail passwordEncryptedDataDetail =
-          secretManager.encryptedDataDetails(settings.getAccountId(), "password", encryptedPassword, null).get();
-      try {
-        SyncTaskContext syncTaskContext = SyncTaskContext.builder()
-                                              .accountId(settings.getAccountId())
-                                              .appId(GLOBAL_APP_ID)
-                                              .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
-                                              .build();
-        LdapResponse authenticationResponse =
-            delegateProxyFactory.get(LdapDelegateService.class, syncTaskContext)
-                .authenticate(settings, settingsEncryptedDataDetail, username, passwordEncryptedDataDetail);
-        if (authenticationResponse.getStatus() == Status.SUCCESS) {
-          return new AuthenticationResponse(user);
-        }
-        throw new WingsException(INVALID_CREDENTIAL, USER);
-      } finally {
-        secretManager.deleteSecret(
-            settings.getAccountId(), passwordEncryptedDataDetail.getEncryptedData().getUuid(), new HashMap<>(), false);
+          secretManager.getEncryptedDataDetails(settings.getAccountId(), "password", encryptedSecret, null).get();
+
+      SyncTaskContext syncTaskContext = SyncTaskContext.builder()
+                                            .accountId(settings.getAccountId())
+                                            .appId(GLOBAL_APP_ID)
+                                            .timeout(DEFAULT_SYNC_CALL_TIMEOUT)
+                                            .build();
+      LdapResponse authenticationResponse =
+          delegateProxyFactory.get(LdapDelegateService.class, syncTaskContext)
+              .authenticate(settings, settingsEncryptedDataDetail, username, passwordEncryptedDataDetail);
+      if (authenticationResponse.getStatus() == Status.SUCCESS) {
+        return new AuthenticationResponse(user);
       }
+      throw new WingsException(INVALID_CREDENTIAL, USER);
     }
   }
 

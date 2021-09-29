@@ -623,6 +623,7 @@ public abstract class TerraformProvisionState extends State {
       if (isNotEmpty(branch)) {
         gitConfig.setBranch(branch);
       }
+
     } else {
       throw new InvalidRequestException("No commit id found in context inherit tf plan element.");
     }
@@ -664,6 +665,14 @@ public abstract class TerraformProvisionState extends State {
         ? getSecretManagerContainingTfPlan(terraformProvisioner.getKmsId(), context.getAccountId())
         : null;
 
+    TfVarSource tfVarSource = element.getTfVarSource();
+    if (tfVarSource != null && TfVarSourceType.GIT.equals(tfVarSource.getTfVarSourceType())) {
+      setTfVarGitFileConfig(((TfVarGitSource) element.getTfVarSource()).getGitFileConfig());
+      if (getTfVarGitFileConfig() != null) {
+        tfVarSource = fetchTfVarGitSource(context);
+      }
+    }
+
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
     TerraformProvisionParameters parameters =
         TerraformProvisionParameters.builder()
@@ -689,7 +698,7 @@ public abstract class TerraformProvisionState extends State {
             .encryptedEnvironmentVariables(encryptedEnvVars)
             .targets(targets)
             .tfVarFiles(element.getTfVarFiles())
-            .tfVarSource(element.getTfVarSource())
+            .tfVarSource(tfVarSource)
             .runPlanOnly(false)
             .exportPlanToApplyStep(false)
             .workspace(workspace)
@@ -1203,6 +1212,7 @@ public abstract class TerraformProvisionState extends State {
     if (isEmpty(provisionerId)) {
       results.put("Provisioner", "Provisioner must be provided.");
     }
+    // if more fields need to validated, please make sure templatized fields are not broken.
     return results;
   }
 }

@@ -3,12 +3,17 @@ package io.harness;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.cache.CacheBackend.CAFFEINE;
 import static io.harness.cache.CacheBackend.NOOP;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+
+import static org.mockito.Mockito.mock;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.PrimaryVersionManagerModule;
 import io.harness.cache.CacheConfig;
 import io.harness.cache.CacheConfig.CacheConfigBuilder;
 import io.harness.cache.CacheModule;
+import io.harness.callback.DelegateCallbackToken;
+import io.harness.delegate.DelegateServiceGrpc;
 import io.harness.factory.ClosingFactory;
 import io.harness.gitsync.persistance.GitAwarePersistence;
 import io.harness.gitsync.persistance.GitSyncSdkService;
@@ -17,21 +22,30 @@ import io.harness.gitsync.persistance.testing.GitSyncablePersistenceTestModule;
 import io.harness.gitsync.persistance.testing.NoOpGitAwarePersistenceImpl;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
+import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.outbox.api.OutboxService;
+import io.harness.outbox.api.impl.OutboxDaoImpl;
+import io.harness.outbox.api.impl.OutboxServiceImpl;
 import io.harness.persistence.HPersistence;
+import io.harness.repositories.outbox.OutboxEventRepository;
 import io.harness.rule.Cache;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.TemplateServiceModuleRegistrars;
+import io.harness.service.intfc.DelegateAsyncService;
+import io.harness.service.intfc.DelegateSyncService;
 import io.harness.springdata.HTransactionTemplate;
 import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
+import io.harness.utils.NGObjectMapperHelper;
 
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
@@ -39,13 +53,16 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
 import com.google.inject.name.Named;
+import io.grpc.inprocess.InProcessChannelBuilder;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.MethodRule;
 import org.junit.runners.model.FrameworkMethod;
@@ -110,6 +127,13 @@ public class TemplateServiceTestRule implements InjectorRuleMixin, MethodRule, M
       }
 
       @Provides
+      @Singleton
+      OutboxService getOutboxService(OutboxEventRepository outboxEventRepository) {
+        return new OutboxServiceImpl(
+            new OutboxDaoImpl(outboxEventRepository), NGObjectMapperHelper.NG_PIPELINE_OBJECT_MAPPER);
+      }
+
+      @Provides
       @Named("disableDeserialization")
       @Singleton
       public boolean getSerializationForDelegate() {
@@ -121,6 +145,13 @@ public class TemplateServiceTestRule implements InjectorRuleMixin, MethodRule, M
       @Override
       protected void configure() {
         bind(HPersistence.class).to(MongoPersistence.class);
+        bind(new TypeLiteral<Supplier<DelegateCallbackToken>>() {
+        }).toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
+        bind(DelegateServiceGrpcClient.class).toInstance(mock(DelegateServiceGrpcClient.class));
+        bind(DelegateSyncService.class).toInstance(mock(DelegateSyncService.class));
+        bind(DelegateAsyncService.class).toInstance(mock(DelegateAsyncService.class));
+        bind(new TypeLiteral<DelegateServiceGrpc.DelegateServiceBlockingStub>() {
+        }).toInstance(DelegateServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName(generateUuid()).build()));
         bind(GitAwarePersistence.class).to(NoOpGitAwarePersistenceImpl.class);
         bind(GitSyncSdkService.class).to(NoOpGitSyncSdkServiceImpl.class);
       }

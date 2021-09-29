@@ -891,6 +891,7 @@ public abstract class TerragruntProvisionState extends State {
     if (isEmpty(provisionerId)) {
       results.put("Provisioner", "Provisioner must be provided.");
     }
+    // if more fields need to validated, please make sure templatized fields are not broken.
     return results;
   }
 }

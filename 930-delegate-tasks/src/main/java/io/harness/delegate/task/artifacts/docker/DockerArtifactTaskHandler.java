@@ -7,6 +7,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.artifacts.DelegateArtifactTaskHandler;
 import io.harness.delegate.task.artifacts.mappers.DockerRequestResponseMapper;
 import io.harness.delegate.task.artifacts.response.ArtifactTaskExecutionResponse;
+import io.harness.security.encryption.SecretDecryptionService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -21,6 +22,7 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 public class DockerArtifactTaskHandler extends DelegateArtifactTaskHandler<DockerArtifactDelegateRequest> {
   private final DockerRegistryService dockerRegistryService;
+  private final SecretDecryptionService secretDecryptionService;
 
   @Override
   public ArtifactTaskExecutionResponse getLastSuccessfulBuild(DockerArtifactDelegateRequest attributesRequest) {
@@ -85,5 +87,12 @@ public class DockerArtifactTaskHandler extends DelegateArtifactTaskHandler<Docke
 
   boolean isRegex(DockerArtifactDelegateRequest artifactDelegateRequest) {
     return EmptyPredicate.isNotEmpty(artifactDelegateRequest.getTagRegex());
+  }
+
+  public void decryptRequestDTOs(DockerArtifactDelegateRequest dockerRequest) {
+    if (dockerRequest.getDockerConnectorDTO().getAuth() != null) {
+      secretDecryptionService.decrypt(
+          dockerRequest.getDockerConnectorDTO().getAuth().getCredentials(), dockerRequest.getEncryptedDataDetails());
+    }
   }
 }

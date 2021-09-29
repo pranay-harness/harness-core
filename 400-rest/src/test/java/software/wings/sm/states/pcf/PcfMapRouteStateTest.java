@@ -574,8 +574,8 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
         (CfCommandRouteUpdateRequest) stateExecutionData.getPcfCommandRequest();
 
     assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData()).isNotNull();
-    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getNewApplicatiaonName()).isNotNull();
-    String appName = cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getNewApplicatiaonName();
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getNewApplicationName()).isNotNull();
+    String appName = cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getNewApplicationName();
     assertThat(appName).isEqualTo("APP_NAME_SERVICE_NAME_ENV_NAME__2");
 
     assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes()).isNotNull();
@@ -600,8 +600,8 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
 
     cfCommandRouteUpdateRequest = (CfCommandRouteUpdateRequest) delegateTask.getData().getParameters()[0];
     assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData()).isNotNull();
-    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getNewApplicatiaonName()).isNotNull();
-    appName = cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getNewApplicatiaonName();
+    assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getNewApplicationName()).isNotNull();
+    appName = cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getNewApplicationName();
     assertThat(appName).isEqualTo("APP_NAME_SERVICE_NAME_ENV_NAME__2");
 
     assertThat(cfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes()).isNotNull();

@@ -28,6 +28,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public class GitFullSyncEntityIterator implements Handler<GitFullSyncEntityInfo> {
   private final PersistenceIteratorFactory persistenceIteratorFactory;
   private final MongoTemplate mongoTemplate;
+  private final GitFullSyncProcessorService gitFullSyncProcessorService;
 
   public void registerIterators() {
     SpringFilterExpander filterExpander = getFilterQuery();
@@ -36,7 +37,7 @@ public class GitFullSyncEntityIterator implements Handler<GitFullSyncEntityInfo>
 
   @Override
   public void handle(GitFullSyncEntityInfo entity) {
-    // todo(abhinav): implement this
+    gitFullSyncProcessorService.processFile(entity);
   }
 
   private void registerIteratorWithFactory(@NotNull SpringFilterExpander filterExpander) {

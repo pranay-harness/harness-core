@@ -1,11 +1,13 @@
 package io.harness.pms.plan.execution;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.plan.Plan.PlanBuilder;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.dto.LevelDTO;
 import io.harness.plan.Plan;
+import io.harness.plan.PlanNode;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
 import io.harness.pms.contracts.plan.PlanNodeProto;
@@ -22,14 +24,23 @@ import lombok.experimental.UtilityClass;
 public class PlanExecutionUtils {
   public Plan extractPlan(PlanCreationBlobResponse planCreationBlobResponse) {
     PlanBuilder planBuilder = Plan.builder();
+    return buildPlan(planCreationBlobResponse, planBuilder);
+  }
+
+  public Plan extractPlan(String planNodeUuid, PlanCreationBlobResponse planCreationBlobResponse) {
+    PlanBuilder planBuilder = Plan.builder().uuid(planNodeUuid);
+    return buildPlan(planCreationBlobResponse, planBuilder);
+  }
+
+  private Plan buildPlan(PlanCreationBlobResponse planCreationBlobResponse, PlanBuilder planBuilder) {
     Collection<PlanNodeProto> planNodeProtoList = planCreationBlobResponse.getNodesMap().values();
     for (PlanNodeProto planNodeProto : planNodeProtoList) {
-      planBuilder.node(planNodeProto);
+      planBuilder.planNode(PlanNode.fromPlanNodeProto(planNodeProto));
     }
-    if (planCreationBlobResponse.getStartingNodeId() != null) {
+    if (isNotEmpty(planCreationBlobResponse.getStartingNodeId())) {
       planBuilder.startingNodeId(planCreationBlobResponse.getStartingNodeId());
     }
-    if (planCreationBlobResponse.getGraphLayoutInfo() != null) {
+    if (planCreationBlobResponse.hasGraphLayoutInfo()) {
       planBuilder.graphLayoutInfo(planCreationBlobResponse.getGraphLayoutInfo());
     }
     return planBuilder.build();

@@ -14,6 +14,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -37,6 +38,7 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.ng.core.utils.NGUtils;
 import io.harness.observer.Subject;
 import io.harness.persistence.HPersistence;
+import io.harness.secrets.SecretService;
 import io.harness.service.intfc.DelegateCache;
 import io.harness.service.intfc.DelegateProfileObserver;
 
@@ -54,8 +56,11 @@ import com.google.inject.name.Named;
 import com.google.protobuf.StringValue;
 import io.dropwizard.jersey.validation.JerseyViolationException;
 import io.fabric8.utils.Strings;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.Getter;
@@ -67,15 +72,20 @@ import org.mongodb.morphia.query.UpdateOperations;
 @ValidateOnExecution
 @Slf4j
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+@BreakDependencyOn("software.wings.beans.Event")
 @OwnedBy(DEL)
 public class DelegateProfileServiceImpl implements DelegateProfileService, AccountCrudObserver {
   public static final String CG_PRIMARY_PROFILE_NAME = "Primary";
   public static final String NG_PRIMARY_PROFILE_NAME_TEMPLATE = "Primary %s Configuration";
   public static final String PRIMARY_PROFILE_DESCRIPTION = "The primary profile for the";
 
+  // Command to use secrets in startUp script is ${secrets.getValue("secretName")}. Hence the pattern is like this.
+  private static final Pattern secretNamePattern = Pattern.compile("\\$\\{secrets.getValue\\([^{}]+\\)}");
+
   @Inject private HPersistence persistence;
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private SecretService secretService;
   @Inject private DelegateCache delegateCache;
   @Inject @Named(EventsFrameworkConstants.ENTITY_CRUD) private Producer eventProducer;
 
@@ -128,6 +138,14 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
 
   @Override
   public DelegateProfile update(DelegateProfile delegateProfile) {
+    List<String> secretsName =
+        findInvalidSecretsUsedInScript(delegateProfile.getAccountId(), delegateProfile.getStartupScript());
+    if (isNotEmpty(secretsName)) {
+      throw new InvalidRequestException(format(
+          "Either secret[s] %s  don't exist or not scoped to account. Secrets used in delegate profile need to be scoped to account ",
+          secretsName));
+    }
+
     DelegateProfile originalProfile = get(delegateProfile.getAccountId(), delegateProfile.getUuid());
 
     UpdateOperations<DelegateProfile> updateOperations = persistence.createUpdateOperations(DelegateProfile.class);
@@ -318,6 +336,16 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
       throw new InvalidRequestException(
           "The identifier already exists. Could not add delegate profile with identifier: "
           + delegateProfile.getIdentifier());
+    }
+
+    if (!delegateProfile.isNg()) {
+      List<String> secretsName =
+          findInvalidSecretsUsedInScript(delegateProfile.getAccountId(), delegateProfile.getStartupScript());
+      if (isNotEmpty(secretsName)) {
+        throw new InvalidRequestException(format(
+            "Either secret[s] %s  don't exist or not scoped to account. Secrets used in delegate profile need to be scoped to account ",
+            secretsName));
+      }
     }
 
     persistence.save(delegateProfile);
@@ -520,5 +548,21 @@ public class DelegateProfileServiceImpl implements DelegateProfileService, Accou
                                         .field(DelegateProfileKeys.identifier)
                                         .equalIgnoreCase(proposedIdentifier);
     return result.get() != null;
+  }
+
+  private List<String> findInvalidSecretsUsedInScript(String accountId, String script) {
+    List<String> secretsName = new ArrayList<>();
+    if (script == null) {
+      return secretsName;
+    }
+    Matcher matcher = secretNamePattern.matcher(script);
+    while (matcher.find()) {
+      String secret =
+          matcher.group(0).substring(matcher.group(0).indexOf("\"") + 1, matcher.group(0).lastIndexOf("\""));
+      if (!secretService.getAccountScopedSecretByName(accountId, secret).isPresent()) {
+        secretsName.add(secret);
+      }
+    }
+    return secretsName;
   }
 }

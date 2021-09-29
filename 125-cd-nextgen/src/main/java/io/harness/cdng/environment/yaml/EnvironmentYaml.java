@@ -2,6 +2,7 @@ package io.harness.cdng.environment.yaml;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SwaggerConstants;
 import io.harness.cdng.visitor.helpers.pipelineinfrastructure.EnvironmentYamlVisitorHelper;
@@ -26,6 +27,7 @@ import org.springframework.data.annotation.TypeAlias;
 @SimpleVisitorHelper(helperClass = EnvironmentYamlVisitorHelper.class)
 @TypeAlias("environmentYaml")
 @OwnedBy(CDC)
+@RecasterAlias("io.harness.cdng.environment.yaml.EnvironmentYaml")
 public class EnvironmentYaml implements OverridesApplier<EnvironmentYaml>, Visitable {
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither String name;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) @Wither String identifier;

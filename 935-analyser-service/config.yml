@@ -22,6 +22,22 @@ xxxxxxxx
   rootPath: /api
   maxThreads: 1024
 
+logging:
+  level: INFO
+  loggers:
+    org.glassfish.jersey: WARN
+    allbegray.slack: WARN
+    org.glassfish.jersey.server.ServerRuntime.Responder: "OFF"
+  appenders:
+    - type: console
+      threshold: TRACE
+      target: STDOUT
+      logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %cyan(%logger) - %msg %yellow(%replace(%mdc){'(.+)', '[$1]'}) %n"
+    - type: gke-console
+      threshold: TRACE
+      target: STDOUT
+      stackdriverLogEnabled: false
+
 executionTimeLimitMillis: 5000
 manyEntriesAlertFactor: 3
 # in minutes

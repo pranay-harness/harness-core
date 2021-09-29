@@ -43,6 +43,7 @@ import io.harness.util.WebhookTriggerProcessorUtils;
 import io.harness.yaml.extended.ci.codebase.Build;
 import io.harness.yaml.extended.ci.codebase.BuildType;
 import io.harness.yaml.extended.ci.codebase.impl.BranchBuildSpec;
+import io.harness.yaml.extended.ci.codebase.impl.PRBuildSpec;
 import io.harness.yaml.extended.ci.codebase.impl.TagBuildSpec;
 
 import com.google.inject.Inject;
@@ -70,6 +71,7 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
   public PipelineModuleInfo getPipelineLevelModuleInfo(OrchestrationEvent event) {
     String branch = null;
     String tag = null;
+    String prNumber = null;
     String repoName = null;
 
     Ambiance ambiance = event.getAmbiance();
@@ -104,6 +106,10 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
         branch = (String) ((BranchBuildSpec) build.getSpec()).getBranch().fetchFinalValue();
       }
 
+      if (build != null && build.getType().equals(BuildType.PR)) {
+        prNumber = (String) ((PRBuildSpec) build.getSpec()).getNumber().fetchFinalValue();
+      }
+
       if (build != null && build.getType().equals(BuildType.TAG)) {
         tag = (String) ((TagBuildSpec) build.getSpec()).getTag().fetchFinalValue();
       }
@@ -136,6 +142,8 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
 
         return CIPipelineModuleInfo.builder()
             .branch(branch)
+            .prNumber(prNumber)
+            .tag(tag)
             .repoName(repoName)
             .ciExecutionInfoDTO(getCiExecutionInfoDTO(codebaseSweepingOutput))
             .build();
@@ -145,6 +153,7 @@ public class CIModuleInfoProvider implements ExecutionSummaryModuleInfoProvider 
     return CIPipelineModuleInfo.builder()
         .branch(branch)
         .tag(tag)
+        .prNumber(prNumber)
         .repoName(repoName)
         .ciExecutionInfoDTO(CIModuleInfoMapper.getCIBuildResponseDTO(executionSource))
         .build();

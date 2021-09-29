@@ -6,20 +6,21 @@ import io.harness.cvng.beans.activity.KubernetesActivityDTO;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceBuilder;
 import io.harness.mongo.index.FdIndex;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.time.Instant;
 import java.util.Set;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
+import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 @Data
 @FieldNameConstants(innerTypeName = "KubernetesActivityKeys")
 @SuperBuilder
 @EqualsAndHashCode(callSuper = true)
-@JsonTypeName("KUBERNETES")
+@Deprecated
 public class KubernetesActivity extends Activity {
   String namespace;
   String workloadName;
@@ -29,7 +30,7 @@ public class KubernetesActivity extends Activity {
 
   @Override
   public ActivityType getType() {
-    return ActivityType.KUBERNETES;
+    throw new NotImplementedException();
   }
 
   @Override
@@ -53,5 +54,24 @@ public class KubernetesActivity extends Activity {
   @Override
   public boolean deduplicateEvents() {
     return true;
+  }
+
+  public static class KubernetesActivityUpdatableEntity
+      extends ActivityUpdatableEntity<KubernetesActivity, KubernetesActivity> {
+    @Override
+    public Class getEntityClass() {
+      return KubernetesActivity.class;
+    }
+
+    @Override
+    public Query<KubernetesActivity> populateKeyQuery(Query<KubernetesActivity> query, KubernetesActivity changeEvent) {
+      throw new UnsupportedOperationException("KubernetesActivity events have no unique key");
+    }
+
+    @Override
+    public void setUpdateOperations(
+        UpdateOperations<KubernetesActivity> updateOperations, KubernetesActivity activity) {
+      setCommonUpdateOperations(updateOperations, activity);
+    }
   }
 }

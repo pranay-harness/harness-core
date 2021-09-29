@@ -13,6 +13,7 @@ import io.harness.ng.cdOverview.dto.InstancesByBuildIdList;
 import io.harness.ng.cdOverview.dto.ServiceDeploymentInfoDTO;
 import io.harness.ng.cdOverview.dto.ServiceDeploymentListInfo;
 import io.harness.ng.cdOverview.dto.ServiceDetailsInfoDTO;
+import io.harness.ng.cdOverview.dto.ServiceHeaderInfo;
 import io.harness.ng.cdOverview.dto.TimeValuePairListDTO;
 import io.harness.ng.core.activityhistory.dto.TimeGroupType;
 import io.harness.ng.core.dashboard.DashboardExecutionStatusInfo;
@@ -69,4 +70,7 @@ public interface CDOverviewDashboardService {
 
   DeploymentsInfo getDeploymentsByServiceId(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String serviceId, long startTimeInMs, long endTimeInMs);
+
+  ServiceHeaderInfo getServiceHeaderInfo(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId);
 }

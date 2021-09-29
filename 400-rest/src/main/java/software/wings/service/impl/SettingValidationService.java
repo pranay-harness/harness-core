@@ -2,6 +2,8 @@ package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.FeatureName.AWS_OVERRIDE_REGION;
+import static io.harness.beans.FeatureName.AZURE_CLOUD_PROVIDER_VALIDATION_ON_DELEGATE;
+import static io.harness.beans.FeatureName.USE_LATEST_CHARTMUSEUM_VERSION;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
@@ -104,6 +106,7 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.aws.manager.AwsEc2HelperServiceManager;
+import software.wings.service.intfc.azure.manager.AzureVMSSHelperServiceManager;
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -165,6 +168,7 @@ public class SettingValidationService {
   @Inject private SettingServiceHelper settingServiceHelper;
   @Inject private AwsHelperResourceService awsHelperResourceService;
   @Inject private SSHVaultService sshVaultService;
+  @Inject private AzureVMSSHelperServiceManager azureVMSSHelperServiceManager;
 
   public ValidationResult validateConnectivity(SettingAttribute settingAttribute) {
     SettingValue settingValue = settingAttribute.getValue();
@@ -271,7 +275,20 @@ public class SettingValidationService {
         gcpHelperServiceManager.validateCredential((GcpConfig) settingValue, encryptedDataDetails);
       }
     } else if (settingValue instanceof AzureConfig) {
-      azureHelperService.validateAzureAccountCredential((AzureConfig) settingValue, encryptedDataDetails);
+      if (featureFlagService.isEnabled(AZURE_CLOUD_PROVIDER_VALIDATION_ON_DELEGATE, settingAttribute.getAccountId())) {
+        try {
+          AzureConfig azureConfig = (AzureConfig) settingValue;
+          // Need to add these modifications to azure config for secret to get resolved on delegate side
+          azureConfig.setDecrypted(false);
+          azureConfig.setKey(null);
+          List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(azureConfig, null, null);
+          azureVMSSHelperServiceManager.listSubscriptions(azureConfig, encryptionDetails, null);
+        } catch (Exception e) {
+          azureHelperService.handleAzureAuthenticationException(e);
+        }
+      } else {
+        azureHelperService.validateAzureAccountCredential((AzureConfig) settingValue, encryptedDataDetails);
+      }
     } else if (settingValue instanceof PcfConfig) {
       if (!((PcfConfig) settingValue).isSkipValidation()) {
         validatePcfConfig((PcfConfig) settingValue, encryptedDataDetails);
@@ -513,7 +530,29 @@ public class SettingValidationService {
             throw new InvalidRequestException("Private key is not specified", USER);
           }
         }
+        validateIfSpecifiedSecretsExist(hostConnectionAttributes);
       }
+    }
+  }
+
+  private void validateIfSpecifiedSecretsExist(HostConnectionAttributes hostConnectionAttributes) {
+    if (isNotEmpty(hostConnectionAttributes.getEncryptedKey())
+        && null
+            == secretManager.getSecretById(
+                hostConnectionAttributes.getAccountId(), hostConnectionAttributes.getEncryptedKey())) {
+      throw new InvalidRequestException("Specified Encrypted SSH key File doesn't exist", USER);
+    }
+    if (isNotEmpty(hostConnectionAttributes.getEncryptedPassphrase())
+        && null
+            == secretManager.getSecretById(
+                hostConnectionAttributes.getAccountId(), hostConnectionAttributes.getEncryptedPassphrase())) {
+      throw new InvalidRequestException("Specified Encrypted Passphrase field doesn't exist", USER);
+    }
+    if (isNotEmpty(hostConnectionAttributes.getEncryptedSshPassword())
+        && null
+            == secretManager.getSecretById(
+                hostConnectionAttributes.getAccountId(), hostConnectionAttributes.getEncryptedSshPassword())) {
+      throw new InvalidRequestException("Specified password field doesn't exist", USER);
     }
   }
 
@@ -539,13 +578,16 @@ public class SettingValidationService {
 
   private HelmRepoConfigValidationTaskParams getHelmRepoConfigValidationTaskParams(
       SettingAttribute settingAttribute, List<EncryptedDataDetail> encryptedDataDetails) {
-    HelmRepoConfigValidationTaskParams taskParams = HelmRepoConfigValidationTaskParams.builder()
-                                                        .accountId(settingAttribute.getAccountId())
-                                                        .appId(settingAttribute.getAppId())
-                                                        .encryptedDataDetails(encryptedDataDetails)
-                                                        .helmRepoConfig((HelmRepoConfig) settingAttribute.getValue())
-                                                        .repoDisplayName(settingAttribute.getName())
-                                                        .build();
+    HelmRepoConfigValidationTaskParams taskParams =
+        HelmRepoConfigValidationTaskParams.builder()
+            .accountId(settingAttribute.getAccountId())
+            .appId(settingAttribute.getAppId())
+            .encryptedDataDetails(encryptedDataDetails)
+            .helmRepoConfig((HelmRepoConfig) settingAttribute.getValue())
+            .repoDisplayName(settingAttribute.getName())
+            .useLatestChartMuseumVersion(
+                featureFlagService.isEnabled(USE_LATEST_CHARTMUSEUM_VERSION, settingAttribute.getAccountId()))
+            .build();
 
     String connectorId = ((HelmRepoConfig) settingAttribute.getValue()).getConnectorId();
     if (isNotBlank(connectorId)) {

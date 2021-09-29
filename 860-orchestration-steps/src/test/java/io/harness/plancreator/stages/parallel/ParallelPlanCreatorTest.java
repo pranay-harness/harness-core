@@ -110,16 +110,22 @@ public class ParallelPlanCreatorTest extends CategoryTest {
 
     PlanCreationResponse planCreationResponse0 = planForChildrenNodes.get(stage0Field.getNode().getUuid());
     PlanCreationResponse planCreationResponse1 = planForChildrenNodes.get(stage1Field.getNode().getUuid());
-    assertThat(planCreationResponse0.getDependencies()).hasSize(1);
-    assertThat(planCreationResponse1.getDependencies()).hasSize(1);
+    assertThat(planCreationResponse0.getDependencies().getDependenciesMap()).hasSize(1);
+    assertThat(planCreationResponse1.getDependencies().getDependenciesMap()).hasSize(1);
     assertThat(planCreationResponse0.getNodes()).isNullOrEmpty();
     assertThat(planCreationResponse1.getNodes()).isNullOrEmpty();
 
-    assertThat(planCreationResponse0.getDependencies().containsKey(stage0Field.getNode().getUuid())).isTrue();
-    assertThat(planCreationResponse1.getDependencies().containsKey(stage1Field.getNode().getUuid())).isTrue();
+    assertThat(
+        planCreationResponse0.getDependencies().getDependenciesMap().containsKey(stage0Field.getNode().getUuid()))
+        .isTrue();
+    assertThat(
+        planCreationResponse1.getDependencies().getDependenciesMap().containsKey(stage1Field.getNode().getUuid()))
+        .isTrue();
 
-    assertThat(planCreationResponse0.getDependencies().get(stage0Field.getNode().getUuid())).isEqualTo(stage0Field);
-    assertThat(planCreationResponse1.getDependencies().get(stage1Field.getNode().getUuid())).isEqualTo(stage1Field);
+    assertThat(planCreationResponse0.getDependencies().getDependenciesMap().get(stage0Field.getNode().getUuid()))
+        .isEqualTo("pipeline/stages/[1]/parallel/[0]/stage");
+    assertThat(planCreationResponse1.getDependencies().getDependenciesMap().get(stage1Field.getNode().getUuid()))
+        .isEqualTo("pipeline/stages/[1]/parallel/[1]/stage");
   }
 
   @Test
@@ -201,16 +207,20 @@ public class ParallelPlanCreatorTest extends CategoryTest {
 
     PlanCreationResponse planCreationResponse0 = planForChildrenNodes.get(step0Field.getNode().getUuid());
     PlanCreationResponse planCreationResponse1 = planForChildrenNodes.get(step1Field.getNode().getUuid());
-    assertThat(planCreationResponse0.getDependencies()).hasSize(1);
-    assertThat(planCreationResponse1.getDependencies()).hasSize(1);
+    assertThat(planCreationResponse0.getDependencies().getDependenciesMap()).hasSize(1);
+    assertThat(planCreationResponse1.getDependencies().getDependenciesMap()).hasSize(1);
     assertThat(planCreationResponse0.getNodes()).isNullOrEmpty();
     assertThat(planCreationResponse1.getNodes()).isNullOrEmpty();
 
-    assertThat(planCreationResponse0.getDependencies().containsKey(step0Field.getNode().getUuid())).isTrue();
-    assertThat(planCreationResponse1.getDependencies().containsKey(step1Field.getNode().getUuid())).isTrue();
+    assertThat(planCreationResponse0.getDependencies().getDependenciesMap().containsKey(step0Field.getNode().getUuid()))
+        .isTrue();
+    assertThat(planCreationResponse1.getDependencies().getDependenciesMap().containsKey(step1Field.getNode().getUuid()))
+        .isTrue();
 
-    assertThat(planCreationResponse0.getDependencies().get(step0Field.getNode().getUuid())).isEqualTo(step0Field);
-    assertThat(planCreationResponse1.getDependencies().get(step1Field.getNode().getUuid())).isEqualTo(step1Field);
+    assertThat(planCreationResponse0.getDependencies().getDependenciesMap().get(step0Field.getNode().getUuid()))
+        .isEqualTo("pipeline/stages/[0]/stage/spec/execution/steps/[1]/parallel/[0]/step");
+    assertThat(planCreationResponse1.getDependencies().getDependenciesMap().get(step1Field.getNode().getUuid()))
+        .isEqualTo("pipeline/stages/[0]/stage/spec/execution/steps/[1]/parallel/[1]/step");
   }
 
   @Test

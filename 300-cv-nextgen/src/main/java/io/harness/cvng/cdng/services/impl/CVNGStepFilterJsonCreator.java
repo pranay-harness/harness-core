@@ -5,6 +5,7 @@ import static io.harness.walktree.visitor.utilities.VisitorParentPathUtils.PATH_
 import io.harness.common.NGExpressionUtils;
 import io.harness.cvng.cdng.beans.CVNGStepInfo;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
+import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
@@ -25,12 +26,6 @@ import java.util.List;
 import java.util.Set;
 
 public class CVNGStepFilterJsonCreator extends GenericStepPMSFilterJsonCreator {
-  private static final String INFRASTRUCTURE_KEY = "infrastructure";
-  private static final String SERVICE_CONFIG_KEY = "serviceConfig";
-  private static final String SERVICE_REF_KEY = "serviceRef";
-  private static final String ENVIRONMENT_REF_KEY = "environmentRef";
-  private static final String SPEC_KEY = "spec";
-  private static final String STAGE_KEY = "stage";
   @Inject private MonitoredServiceService monitoredServiceService;
   @Override
   public Set<String> getSupportedStepTypes() {
@@ -49,13 +44,21 @@ public class CVNGStepFilterJsonCreator extends GenericStepPMSFilterJsonCreator {
     // This is handling the case when the monitoring service is defined. Runtime case needs to be handled separately
     // https://harness.atlassian.net/browse/CDNG-10512
     YamlNode stageLevelYamlNode = getStageSpecYamlNode(filterCreationContext.getCurrentField().getNode());
-    String serviceIdentifier = getServiceRefNode(stageLevelYamlNode).asText();
-    String envIdentifier = getEnvRefNode(stageLevelYamlNode).asText();
+    String serviceIdentifier = CVNGStepUtils.getServiceRefNode(stageLevelYamlNode).asText();
+    String envIdentifier = CVNGStepUtils.getEnvRefNode(stageLevelYamlNode).asText();
+
+    ServiceEnvironmentParams serviceEnvironmentParams = ServiceEnvironmentParams.builder()
+                                                            .accountIdentifier(accountIdentifier)
+                                                            .orgIdentifier(orgIdentifier)
+                                                            .projectIdentifier(projectIdentifier)
+                                                            .serviceIdentifier(serviceIdentifier)
+                                                            .environmentIdentifier(envIdentifier)
+                                                            .build();
 
     if (!(NGExpressionUtils.isRuntimeOrExpressionField(serviceIdentifier)
             || NGExpressionUtils.isRuntimeOrExpressionField(envIdentifier))) {
-      MonitoredServiceDTO monitoredServiceDTO = monitoredServiceService.getMonitoredServiceDTO(
-          accountIdentifier, orgIdentifier, projectIdentifier, serviceIdentifier, envIdentifier);
+      MonitoredServiceDTO monitoredServiceDTO =
+          monitoredServiceService.getMonitoredServiceDTO(serviceEnvironmentParams);
       Preconditions.checkNotNull(monitoredServiceDTO, "MonitoredService does not exist for service %s and env %s",
           serviceIdentifier, envIdentifier);
       Preconditions.checkState(!monitoredServiceDTO.getSources().getHealthSources().isEmpty(),
@@ -73,27 +76,10 @@ public class CVNGStepFilterJsonCreator extends GenericStepPMSFilterJsonCreator {
     return FilterCreationResponse.builder().referredEntities(result).build();
   }
 
-  private YamlNode getServiceRefNode(YamlNode stageYaml) {
-    return stageYaml.getField(SPEC_KEY)
-        .getNode()
-        .getField(SERVICE_CONFIG_KEY)
-        .getNode()
-        .getField(SERVICE_REF_KEY)
-        .getNode();
-  }
-  private YamlNode getEnvRefNode(YamlNode stageYaml) {
-    return stageYaml.getField(SPEC_KEY)
-        .getNode()
-        .getField(INFRASTRUCTURE_KEY)
-        .getNode()
-        .getField(ENVIRONMENT_REF_KEY)
-        .getNode();
-  }
-
   private YamlNode getStageSpecYamlNode(YamlNode yamlNode) {
     Preconditions.checkNotNull(yamlNode, "Invalid yaml. Can't find stage spec.");
-    if (yamlNode.getField(STAGE_KEY) != null) {
-      return yamlNode.getField(STAGE_KEY).getNode();
+    if (yamlNode.getField(CVNGStepUtils.STAGE_KEY) != null) {
+      return yamlNode.getField(CVNGStepUtils.STAGE_KEY).getNode();
     } else {
       return getStageSpecYamlNode(yamlNode.getParentNode());
     }

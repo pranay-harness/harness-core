@@ -8,13 +8,20 @@ SUITE_INDEX = "index"
 SUITE_TEST_CLASS = "test_class"
 COMBINED_TESTS_TARGET = "combined_tests"
 
-def run_tests(**kwargs):
+def run_tests_targets():
+    targets = []
     test_files = native.glob(["src/test/**/*Test.java"])
     for idx in range(len(test_files)):
         test = test_files[idx][14:][:-5].replace("/", ".")
         x = hash(test)
         if (x % DISTRIBUTE_TESTING_WORKERS != DISTRIBUTE_TESTING_WORKER):
             continue
+        targets += [test]
+    return targets
+
+def run_tests(**kwargs):
+    targets = run_tests_targets()
+    for test in targets:
         native.java_test(
             name = test,
             runtime_deps = ["tests"],
@@ -32,6 +39,7 @@ def run_tests(**kwargs):
             visibility = ["//visibility:private"],
             **kwargs
         )
+    return targets
 
 template = """
 package %s;
@@ -53,8 +61,9 @@ def calculate_index(length, i):
 
 def run_package_tests(deps = [], data = [], resources = []):
     if OPTIMIZED_PACKAGE_TESTS == 1:
-        optimized_run_package_tests(deps, data, resources)
-        return
+        return optimized_run_package_tests(deps, data, resources)
+
+    targets = []
 
     all_srcs = native.glob(["src/test/**/*.java"])
 
@@ -77,7 +86,9 @@ def run_package_tests(deps = [], data = [], resources = []):
     )
 
     for directory in directories.items():
-        junit_package_test(directory[0], directory[1], deps)
+        targets += junit_package_test(directory[0], directory[1], deps)
+
+    return targets
 
 def junit_package_test(directory, srcs, deps):
     truncate = len(directory) + 1
@@ -90,8 +101,10 @@ def junit_package_test(directory, srcs, deps):
         else:
             shared_src += [src]
 
+    targets = []
+
     if len(all_tests) == 0:
-        return
+        return targets
 
     package = directory.replace("src/test/java/", "").replace("/", ".")
 
@@ -118,6 +131,7 @@ cat <<EOF >> $@
 EOF""" % code,
         )
 
+        target_name = package + ".tests" + index
         native.java_test(
             name = package + ".tests" + index,
             test_class = package + "." + test_class,
@@ -138,6 +152,10 @@ EOF""" % code,
             env = {"JAVA_HOME": "$(JAVABASE)"},
             toolchains = ["@bazel_tools//tools/jdk:current_host_java_runtime"],
         )
+
+        targets += [target_name]
+
+    return targets
 
 def optimized_junit_package_test_suites(directory, srcs):
     truncate = len(directory) + 1
@@ -186,10 +204,11 @@ EOF""" % code,
 
 def optimized_package_test(combined_tests_target_index, package, index, test_class):
     if (hash(package) % DISTRIBUTE_TESTING_WORKERS != DISTRIBUTE_TESTING_WORKER):
-        return
+        return []
 
+    target_name = package + ".tests" + index
     native.java_test(
-        name = package + ".tests" + index,
+        name = target_name,
         test_class = package + "." + test_class,
         runtime_deps = [COMBINED_TESTS_TARGET + str(combined_tests_target_index)],
         size = "enormous",
@@ -203,6 +222,7 @@ def optimized_package_test(combined_tests_target_index, package, index, test_cla
             "-XX:HeapDumpPath=$${TEST_WARNINGS_OUTPUT_FILE}/../heap.hprof",
         ],
     )
+    return [target_name]
 
 def optimized_run_package_tests(deps = [], data = [], resources = []):
     all_srcs = native.glob(["src/test/**/*.java"])
@@ -214,7 +234,7 @@ def optimized_run_package_tests(deps = [], data = [], resources = []):
         srcs.append(src)
 
     if len(all_directories) == 0:
-        return
+        return []
 
     directories = {}
     key = all_directories.keys()[0]
@@ -233,7 +253,7 @@ def optimized_run_package_tests(deps = [], data = [], resources = []):
         directories[directory[0]] = directory[1]
         total += len(directory[1])
 
-    optimized_run_directories_package_tests(directories, index, deps, data, resources)
+    return optimized_run_directories_package_tests(directories, index, deps, data, resources)
 
 def optimized_run_directories_package_tests(directories, combined_tests_target_index, deps = [], data = [], resources = []):
     srcs = []
@@ -253,5 +273,8 @@ def optimized_run_directories_package_tests(directories, combined_tests_target_i
         deps = deps + packages.keys(),
     )
 
+    targets = []
     for package in packages.items():
-        optimized_package_test(combined_tests_target_index, package[1][SUITE_PACKAGE_NAME], package[1][SUITE_INDEX], package[1][SUITE_TEST_CLASS])
+        targets += optimized_package_test(combined_tests_target_index, package[1][SUITE_PACKAGE_NAME], package[1][SUITE_INDEX], package[1][SUITE_TEST_CLASS])
+
+    return targets

@@ -552,6 +552,12 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @VisibleForTesting
   public void validateAndPrepareInfraDefinition(@Valid InfrastructureDefinition infraDefinition) {
     validateCloudProviderAndDeploymentType(infraDefinition.getCloudProviderType(), infraDefinition.getDeploymentType());
+    if (infraDefinition.getCloudProviderType() != CloudProviderType.CUSTOM
+        && settingsService.getByAccountAndId(
+               infraDefinition.getAccountId(), infraDefinition.getInfrastructure().getCloudProviderId())
+            == null) {
+      throw new InvalidRequestException("Invalid Cloud Provider Id", USER);
+    }
     if (infraDefinition.getDeploymentType() == DeploymentType.SSH
         && infraDefinition.getInfrastructure() instanceof SshBasedInfrastructure) {
       notEmptyCheck("Connection Attributes can't be empty",
@@ -581,6 +587,10 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
       }
     }
     if (isNotEmpty(infraDefinition.getProvisionerId())) {
+      if (infrastructureProvisionerService.get(infraDefinition.getAppId(), infraDefinition.getProvisionerId())
+          == null) {
+        throw new InvalidRequestException("ProvisionerId is Invaild", USER);
+      }
       ProvisionerAware provisionerAwareInfra = (ProvisionerAware) infraDefinition.getInfrastructure();
       Map<String, String> expressions = provisionerAwareInfra.getExpressions();
       if (isEmpty(expressions)) {

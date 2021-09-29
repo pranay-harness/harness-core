@@ -98,12 +98,22 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>815-cg-triggers</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>820-platform-service</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>835-notification-senders</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>867-polling-contracts</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

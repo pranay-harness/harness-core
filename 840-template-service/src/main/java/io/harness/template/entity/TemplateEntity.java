@@ -63,21 +63,22 @@ public class TemplateEntity
   @Setter @NonFinal @Id @org.mongodb.morphia.annotations.Id String uuid;
 
   @NotEmpty String accountId;
-  @Trimmed String orgIdentifier;
-  @Trimmed String projectIdentifier;
+  @Wither @Trimmed String orgIdentifier;
+  @Wither @Trimmed String projectIdentifier;
   @NotEmpty String identifier;
 
   @Wither @EntityName String name;
   @Wither @Size(max = 1024) String description;
   @Wither @Singular @Size(max = 128) List<NGTag> tags;
 
-  @NotEmpty String fullyQualifiedIdentifier;
+  @Wither @NotEmpty String fullyQualifiedIdentifier;
 
   @Wither @NotEmpty String yaml;
   @Wither @Builder.Default Boolean deleted = Boolean.FALSE;
 
   @Wither String versionLabel;
   @Wither boolean isStableTemplate;
+  @Wither boolean isLastUpdatedTemplate;
   @Wither TemplateEntityType templateEntityType;
   @Wither String childType;
   @Wither Scope templateScope;
@@ -122,16 +123,24 @@ public class TemplateEntity
                  .field(TemplateEntityKeys.identifier)
                  .build())
         .add(CompoundMongoIndex.builder()
-                 .name("accountId_organizationId_projectId_identifier_isStable")
+                 .name("accountId_organizationId_projectId_identifier_isStable_repo_branch")
                  .field(TemplateEntityKeys.accountId)
                  .field(TemplateEntityKeys.orgIdentifier)
                  .field(TemplateEntityKeys.projectIdentifier)
                  .field(TemplateEntityKeys.identifier)
                  .field(TemplateEntityKeys.isStableTemplate)
+                 .field(TemplateEntityKeys.yamlGitConfigRef)
+                 .field(TemplateEntityKeys.branch)
                  .build())
         .add(CompoundMongoIndex.builder()
-                 .name("fullyQualifiedIdentifier_deleted")
-                 .fields(Arrays.asList(TemplateEntityKeys.fullyQualifiedIdentifier, TemplateEntityKeys.deleted))
+                 .name("accountId_organizationId_projectId_identifier_isLastUpdated_repo_branch")
+                 .field(TemplateEntityKeys.accountId)
+                 .field(TemplateEntityKeys.orgIdentifier)
+                 .field(TemplateEntityKeys.projectIdentifier)
+                 .field(TemplateEntityKeys.identifier)
+                 .field(TemplateEntityKeys.isLastUpdatedTemplate)
+                 .field(TemplateEntityKeys.yamlGitConfigRef)
+                 .field(TemplateEntityKeys.branch)
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("accountId_org_project_childType")

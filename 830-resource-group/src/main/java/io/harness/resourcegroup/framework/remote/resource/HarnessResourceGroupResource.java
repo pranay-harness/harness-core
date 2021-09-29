@@ -8,6 +8,7 @@ import static io.harness.utils.PageUtils.getNGPageResponse;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
+import io.harness.accesscontrol.AccessDeniedErrorDTO;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
@@ -20,6 +21,7 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.resourcegroup.framework.service.ResourceGroupService;
+import io.harness.resourcegroup.remote.dto.ResourceGroupFilterDTO;
 import io.harness.resourcegroup.remote.dto.ResourceGroupRequest;
 import io.harness.resourcegroupclient.ResourceGroupResponse;
 import io.harness.security.annotations.InternalApi;
@@ -54,7 +56,8 @@ import lombok.AllArgsConstructor;
 @ApiResponses(value =
     {
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
-      , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
+      , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error"),
+          @ApiResponse(code = 403, response = AccessDeniedErrorDTO.class, message = "Unauthorized")
     })
 @NextGenManagerAuth
 @OwnedBy(HarnessTeam.PL)
@@ -88,6 +91,18 @@ public class HarnessResourceGroupResource {
         Resource.of(RESOURCE_GROUP, null), VIEW_RESOURCEGROUP_PERMISSION);
     return ResponseDTO.newResponse(getNGPageResponse(resourceGroupService.list(
         Scope.of(accountIdentifier, orgIdentifier, projectIdentifier), pageRequest, searchTerm)));
+  }
+
+  @POST
+  @Path("filter")
+  @ApiOperation(value = "Get filtered resource group list", nickname = "getFilterResourceGroupList")
+  public ResponseDTO<PageResponse<ResourceGroupResponse>> list(
+      @NotNull ResourceGroupFilterDTO resourceGroupFilterDTO, @BeanParam PageRequest pageRequest) {
+    accessControlClient.checkForAccessOrThrow(
+        ResourceScope.of(resourceGroupFilterDTO.getAccountIdentifier(), resourceGroupFilterDTO.getOrgIdentifier(),
+            resourceGroupFilterDTO.getProjectIdentifier()),
+        Resource.of(RESOURCE_GROUP, null), VIEW_RESOURCEGROUP_PERMISSION);
+    return ResponseDTO.newResponse(getNGPageResponse(resourceGroupService.list(resourceGroupFilterDTO, pageRequest)));
   }
 
   @POST

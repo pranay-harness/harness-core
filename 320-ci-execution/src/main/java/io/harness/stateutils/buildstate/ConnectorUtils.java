@@ -220,7 +220,7 @@ public class ConnectorUtils {
       AwsCodeCommitConnectorDTO gitConfigDTO = (AwsCodeCommitConnectorDTO) gitConnector.getConnectorConfig();
       return gitConfigDTO.getUrl();
     } else {
-      throw new CIStageExecutionException("scmType " + gitConnector.getConnectorType() + "is not supported");
+      throw new CIStageExecutionException("scmType " + gitConnector.getConnectorType() + "is not supported.");
     }
   }
 
@@ -267,6 +267,8 @@ public class ConnectorUtils {
       encryptedDataDetails = secretManagerClientService.getEncryptionDetails(ngAccess, awsManualConfigSpecDTO);
       return connectorDetailsBuilder.encryptedDataDetails(encryptedDataDetails).build();
     } else if (awsCredentialDTO.getAwsCredentialType() == AwsCredentialType.INHERIT_FROM_DELEGATE) {
+      return connectorDetailsBuilder.build();
+    } else if (awsCredentialDTO.getAwsCredentialType() == AwsCredentialType.IRSA) {
       return connectorDetailsBuilder.build();
     }
     throw new InvalidArgumentsException(format("Unsupported aws credential type:[%s] on connector:[%s]",

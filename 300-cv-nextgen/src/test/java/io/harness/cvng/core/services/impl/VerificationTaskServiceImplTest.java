@@ -53,7 +53,7 @@ public class VerificationTaskServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testCreate_cvConfigNull() {
     assertThatThrownBy(() -> verificationTaskService.getCVConfigId(generateUuid()))
-        .isInstanceOf(NullPointerException.class)
+        .isInstanceOf(IllegalStateException.class)
         .hasMessage("Invalid verificationTaskId. Verification mapping does not exist.");
   }
 
@@ -79,7 +79,7 @@ public class VerificationTaskServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testCreate_verificationTaskIsNull() {
     assertThatThrownBy(() -> verificationTaskService.getVerificationJobInstanceId(generateUuid()))
-        .isInstanceOf(NullPointerException.class)
+        .isInstanceOf(IllegalStateException.class)
         .hasMessage("Invalid verificationTaskId. Verification mapping does not exist.");
   }
 
@@ -138,7 +138,7 @@ public class VerificationTaskServiceImplTest extends CvNextGenTestBase {
   public void testIsServiceGuardId_ifDoesNotExist() {
     String verificationTaskId = generateUuid();
     assertThatThrownBy(() -> verificationTaskService.isServiceGuardId(verificationTaskId))
-        .isInstanceOf(NullPointerException.class)
+        .isInstanceOf(IllegalStateException.class)
         .hasMessage("Invalid verificationTaskId. Verification mapping does not exist.");
   }
 

@@ -9,14 +9,16 @@ import (
 	"time"
 
 	"github.com/wings-software/portal/product/ci/ti-service/db"
+	"github.com/wings-software/portal/product/ci/ti-service/logger"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 )
 
 // HandleWrite returns an http.HandlerFunc that writes test information to the DB
-func HandleWrite(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
+func HandleWrite(db db.Db) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		st := time.Now()
-		ctx := r.Context()
+
+		log := logger.FromContext(r.Context())
 		err := validate(r, accountIDParam, orgIdParam, projectIdParam,
 			pipelineIdParam, buildIdParam, stageIdParam,
 			stepIdParam, reportParam)
@@ -44,7 +46,7 @@ func HandleWrite(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 			return
 		}
 
-		if err := db.Write(ctx, accountId, orgId, projectId, pipelineId, buildId, stageId, stepId, report, repo, sha, in...); err != nil {
+		if err := db.Write(r.Context(), accountId, orgId, projectId, pipelineId, buildId, stageId, stepId, report, repo, sha, in...); err != nil {
 			WriteInternalError(w, err)
 			log.Errorw("api: cannot write to db", "account_id", accountId, "org_id", orgId,
 				"project_id", projectId, "build_id", buildId, zap.Error(err))
@@ -59,11 +61,13 @@ func HandleWrite(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 }
 
 // HandleSummary returns an http.HandlerFunc that summarises test reports.
-func HandleSummary(adb db.Db, log *zap.SugaredLogger) http.HandlerFunc {
+func HandleSummary(adb db.Db) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
 		ctx := r.Context()
+		log := logger.FromContext(ctx)
 		st := time.Now()
-		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam, reportParam, stepIdParam, stageIdParam)
+		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam, reportParam)
 		if err != nil {
 			WriteInternalError(w, err)
 			return
@@ -95,11 +99,13 @@ func HandleSummary(adb db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 }
 
 // HandleTestCases returns an http.HandlerFunc that returns test case information.
-func HandleTestCases(adb db.Db, log *zap.SugaredLogger) http.HandlerFunc {
+func HandleTestCases(adb db.Db) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
 		ctx := r.Context()
+		log := logger.FromContext(ctx)
 		st := time.Now()
-		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam, stepIdParam, stageIdParam, suiteNameParam, reportParam)
+		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam, stepIdParam, stageIdParam, reportParam)
 		if err != nil {
 			WriteInternalError(w, err)
 			return
@@ -156,9 +162,11 @@ func HandleTestCases(adb db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 }
 
 // HandleTestSuites returns an http.HandlerFunc that return test suite information.
-func HandleTestSuites(adb db.Db, log *zap.SugaredLogger) http.HandlerFunc {
+func HandleTestSuites(adb db.Db) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
 		ctx := r.Context()
+		log := logger.FromContext(ctx)
 		st := time.Now()
 		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam, reportParam, stepIdParam, stageIdParam)
 		if err != nil {

@@ -286,6 +286,14 @@ public class PipelineResource implements YamlSchemaResource {
   }
 
   @POST
+  @Path("/steps/v2")
+  @ApiOperation(value = "Get Steps for given modules Version 2", nickname = "getStepsV2")
+  public ResponseDTO<StepCategory> getStepsV2(
+      @QueryParam("accountId") String accountId, StepPalleteFilterWrapper stepPalleteFilterWrapper) {
+    return ResponseDTO.newResponse(pmsPipelineService.getStepsV2(accountId, stepPalleteFilterWrapper));
+  }
+
+  @POST
   @Path("/execution/summary")
   @ApiOperation(value = "Gets Executions list", nickname = "getListOfExecutions")
   @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
@@ -343,12 +351,19 @@ public class PipelineResource implements YamlSchemaResource {
         pmsExecutionService.getPipelineExecutionSummaryEntity(accountId, orgId, projectId, planExecutionId, false);
 
     Optional<PipelineEntity> optionalPipelineEntity;
-    try (PmsGitSyncBranchContextGuard ignore = pmsGitSyncHelper.createGitSyncBranchContextGuardFromBytes(
-             executionSummaryEntity.getGitSyncBranchContext(), false)) {
-      optionalPipelineEntity =
-          pmsPipelineService.get(accountId, orgId, projectId, executionSummaryEntity.getPipelineIdentifier(), false);
+    if (executionSummaryEntity.getEntityGitDetails() == null) {
+      try (PmsGitSyncBranchContextGuard ignore = pmsGitSyncHelper.createGitSyncBranchContextGuardFromBytes(
+               executionSummaryEntity.getGitSyncBranchContext(), false)) {
+        optionalPipelineEntity =
+            pmsPipelineService.get(accountId, orgId, projectId, executionSummaryEntity.getPipelineIdentifier(), false);
+      }
+    } else {
+      try (PmsGitSyncBranchContextGuard ignore = new PmsGitSyncBranchContextGuard(
+               executionSummaryEntity.getEntityGitDetails().toGitSyncBranchContext(), false)) {
+        optionalPipelineEntity =
+            pmsPipelineService.get(accountId, orgId, projectId, executionSummaryEntity.getPipelineIdentifier(), false);
+      }
     }
-
     if (!optionalPipelineEntity.isPresent()) {
       throw new InvalidRequestException(
           "Pipeline with identifier " + executionSummaryEntity.getPipelineIdentifier() + " not found");

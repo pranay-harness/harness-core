@@ -77,29 +77,12 @@
           "enum": [
             "branch",
             "tag",
-            "PR",
-            "CommitSha"
+            "PR"
           ]
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#",
       "allOf": [
-        {
-          "if": {
-            "properties": {
-              "type": {
-                "const": "CommitSha"
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "spec": {
-                "$ref": "#/definitions/CommitShaBuildSpec"
-              }
-            }
-          }
-        },
         {
           "if": {
             "properties": {
@@ -204,28 +187,6 @@
           "type": "boolean"
         }
       },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "CommitShaBuildSpec": {
-      "allOf": [
-        {
-          "$ref": "#/definitions/BuildSpec"
-        },
-        {
-          "type": "object",
-          "required": [
-            "commitSha"
-          ],
-          "properties": {
-            "branchName": {
-              "type": "string"
-            },
-            "commitSha": {
-              "type": "string"
-            }
-          }
-        }
-      ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "ContainerResource": {
@@ -1185,7 +1146,6 @@
       "required": [
         "identifier",
         "name",
-        "timeout",
         "type"
       ],
       "properties": {
@@ -1242,12 +1202,6 @@
         "name": {
           "type": "string",
           "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
-        },
-        "rollbackSteps": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/ExecutionWrapperConfig"
-          }
         },
         "steps": {
           "type": "array",

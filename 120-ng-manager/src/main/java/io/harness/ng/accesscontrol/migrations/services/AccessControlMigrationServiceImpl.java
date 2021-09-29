@@ -2,6 +2,8 @@ package io.harness.ng.accesscontrol.migrations.services;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import static java.util.Collections.emptyList;
+
 import io.harness.accesscontrol.AccessControlAdminClient;
 import io.harness.accesscontrol.principals.PrincipalDTO;
 import io.harness.accesscontrol.principals.PrincipalType;
@@ -16,8 +18,6 @@ import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.GeneralException;
 import io.harness.ng.accesscontrol.migrations.dao.AccessControlMigrationDAO;
 import io.harness.ng.accesscontrol.migrations.models.AccessControlMigration;
-import io.harness.ng.accesscontrol.mockserver.MockRoleAssignment.MockRoleAssignmentKeys;
-import io.harness.ng.accesscontrol.mockserver.MockRoleAssignmentService;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import io.harness.ng.core.entities.Project;
@@ -56,7 +56,6 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 @OwnedBy(HarnessTeam.PL)
@@ -67,7 +66,6 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
   private final AccessControlMigrationDAO accessControlMigrationDAO;
   private final ProjectService projectService;
   private final OrganizationService organizationService;
-  private final MockRoleAssignmentService mockRoleAssignmentService;
   private final AccessControlAdminClient accessControlAdminClient;
   private final UserClient userClient;
   private final ResourceGroupClient resourceGroupClient;
@@ -77,13 +75,11 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
   @Inject
   public AccessControlMigrationServiceImpl(AccessControlMigrationDAO accessControlMigrationDAO,
       ProjectService projectService, OrganizationService organizationService,
-      MockRoleAssignmentService mockRoleAssignmentService,
       @Named("PRIVILEGED") AccessControlAdminClient accessControlAdminClient, UserClient userClient,
       ResourceGroupClient resourceGroupClient, NgUserService ngUserService) {
     this.accessControlMigrationDAO = accessControlMigrationDAO;
     this.projectService = projectService;
     this.organizationService = organizationService;
-    this.mockRoleAssignmentService = mockRoleAssignmentService;
     this.accessControlAdminClient = accessControlAdminClient;
     this.userClient = userClient;
     this.resourceGroupClient = resourceGroupClient;
@@ -193,7 +189,6 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
     try {
       ensureManagedResourceGroup(scope);
       assignViewerRoleToUsers(scope);
-      migrateMockRoleAssignments(scope);
       if (!hasAdmin(scope)) {
         assignAdminRoleToUsers(scope);
       }
@@ -232,40 +227,13 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
 
   private boolean hasAdmin(Scope scope) {
     List<UserMetadataDTO> admins = ngUserService.listUsersHavingRole(scope, getManagedAdminRole(scope));
-    log.info("Admins in scope {} are {}", scope, admins == null ? Collections.emptyList() : admins);
+    log.info("Admins in scope {} are {}", scope, admins == null ? emptyList() : admins);
     return !isEmpty(admins);
   }
 
   private void ensureManagedResourceGroup(Scope scope) {
     NGRestUtils.getResponse(resourceGroupClient.createManagedResourceGroup(
         scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier()));
-  }
-
-  private void migrateMockRoleAssignments(Scope scope) {
-    List<RoleAssignmentResponseDTO> mockRoleAssignments = getMockRoleAssignments(scope);
-    if (mockRoleAssignments.isEmpty()) {
-      return;
-    }
-
-    mockRoleAssignments.stream()
-        .map(roleAssignment -> roleAssignment.getRoleAssignment().getPrincipal().getIdentifier())
-        .distinct()
-        .forEach(roleAssignment -> upsertUserMembership(scope, roleAssignment));
-
-    List<RoleAssignmentDTO> managedRoleAssignments = new ArrayList<>();
-    List<RoleAssignmentDTO> nonManagedRoleAssignments = new ArrayList<>();
-    mockRoleAssignments.forEach(mockRoleAssignment -> {
-      if (Boolean.TRUE.equals(mockRoleAssignment.getRoleAssignment().isManaged())) {
-        managedRoleAssignments.add(mockRoleAssignment.getRoleAssignment());
-      } else {
-        nonManagedRoleAssignments.add(mockRoleAssignment.getRoleAssignment());
-      }
-    });
-
-    log.info("Created {} MANAGED role assignments from MockRoleAssignments for scope: {}",
-        createRoleAssignments(scope, true, managedRoleAssignments), scope);
-    log.info("Created {} NON-MANAGED role assignments from MockRoleAssignments for scope: {}",
-        createRoleAssignments(scope, false, nonManagedRoleAssignments), scope);
   }
 
   private void assignAdminRoleToUsers(Scope scope) {
@@ -300,7 +268,7 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
               .orgIdentifier(scope.getOrgIdentifier())
               .projectIdentifier(scope.getProjectIdentifier())
               .build(),
-          false, UserMembershipUpdateSource.SYSTEM);
+          emptyList(), emptyList(), UserMembershipUpdateSource.SYSTEM);
     } catch (DuplicateKeyException | DuplicateFieldException duplicateException) {
       // ignore
     }
@@ -359,18 +327,6 @@ public class AccessControlMigrationServiceImpl implements AccessControlMigration
                                                                // throw UnsupportedOperationException
     Collections.shuffle(projects);
     return projects;
-  }
-
-  private List<RoleAssignmentResponseDTO> getMockRoleAssignments(Scope scope) {
-    return mockRoleAssignmentService
-        .list(Criteria.where(MockRoleAssignmentKeys.accountIdentifier)
-                  .is(scope.getAccountIdentifier())
-                  .and(MockRoleAssignmentKeys.orgIdentifier)
-                  .is(scope.getOrgIdentifier())
-                  .and(MockRoleAssignmentKeys.projectIdentifier)
-                  .is(scope.getProjectIdentifier()),
-            Pageable.unpaged())
-        .getContent();
   }
 
   private List<String> getUsersInScope(Scope scope) {

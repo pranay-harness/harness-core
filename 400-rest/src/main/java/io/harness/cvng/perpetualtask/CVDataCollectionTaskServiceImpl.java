@@ -16,6 +16,7 @@ import io.harness.cvng.beans.CVNGPerpetualTaskState;
 import io.harness.cvng.beans.CVNGPerpetualTaskUnassignedReason;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionRequest;
+import io.harness.cvng.beans.K8ActivityDataCollectionInfo;
 import io.harness.delegate.Capability;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
@@ -120,6 +121,16 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
         perpetualTaskPack = Any.pack(params);
         break;
       case KUBERNETES:
+        cvDataCollectionInfo = K8ActivityDataCollectionInfo.builder()
+                                   .connectorConfigDTO(bundle.getConnectorDTO().getConnectorConfig())
+                                   .encryptedDataDetails(encryptedDataDetailList)
+                                   .dataCollectionType(bundle.getDataCollectionType())
+                                   .projectIdentifier(bundle.getProjectIdentifier())
+                                   .orgIdentifier(bundle.getOrgIdentifier())
+                                   .envIdentifier(bundle.getEnvIdentifier())
+                                   .serviceIdentifier(bundle.getServiceIdentifier())
+                                   .changeSourceIdentifier(bundle.getSourceIdentifier())
+                                   .build();
         K8ActivityCollectionPerpetualTaskParams k8ActivityCollectionPerpetualTaskParams =
             K8ActivityCollectionPerpetualTaskParams.newBuilder()
                 .setAccountId(accountId)

@@ -11,19 +11,19 @@ import io.harness.engine.interrupts.InterruptManager;
 import io.harness.engine.interrupts.InterruptPackage;
 import io.harness.engine.observers.OrchestrationStartObserver;
 import io.harness.engine.observers.beans.OrchestrationStartInfo;
-import io.harness.engine.utils.TransactionUtils;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecutionMetadata;
 import io.harness.interrupts.Interrupt;
 import io.harness.observer.Subject;
 import io.harness.plan.Plan;
+import io.harness.plan.PlanNode;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.OrchestrationEvent;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
-import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.triggers.TriggerPayload;
+import io.harness.springdata.TransactionHelper;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -43,7 +43,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
   @Inject private InterruptManager interruptManager;
   @Inject private PlanService planService;
   @Inject private PlanExecutionMetadataService planExecutionMetadataService;
-  @Inject private TransactionUtils transactionUtils;
+  @Inject private TransactionHelper transactionHelper;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
 
   @Getter private final Subject<OrchestrationStartObserver> orchestrationStartSubject = new Subject<>();
@@ -53,6 +53,19 @@ public class OrchestrationServiceImpl implements OrchestrationService {
       ExecutionMetadata metadata, PlanExecutionMetadata planExecutionMetadata) {
     Plan savedPlan = planService.save(plan);
     return executePlan(savedPlan, setupAbstractions, metadata, planExecutionMetadata);
+  }
+
+  @Override
+  public PlanExecution retryExecution(@Valid Plan plan, Map<String, String> setupAbstractions,
+      ExecutionMetadata metadata, PlanExecutionMetadata planExecutionMetadata) {
+    Plan savedPlan = planService.save(plan);
+    log.info("Need to execute the plan for retry stages");
+    return null;
+  }
+
+  public PlanExecution startExecutionV2(String planId, Map<String, String> setupAbstractions,
+      ExecutionMetadata metadata, PlanExecutionMetadata planExecutionMetadata) {
+    return executePlan(planService.fetchPlan(planId), setupAbstractions, metadata, planExecutionMetadata);
   }
 
   private PlanExecution executePlan(@Valid Plan plan, Map<String, String> setupAbstractions, ExecutionMetadata metadata,
@@ -77,7 +90,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
     orchestrationStartSubject.fireInform(OrchestrationStartObxxxxxxxx:onStart,
         OrchestrationStartInfo.builder().ambiance(ambiance).planExecutionMetadata(planExecutionMetadata).build());
 
-    PlanNodeProto planNode = plan.fetchStartingNode();
+    PlanNode planNode = plan.fetchStartingPlanNode();
     if (planNode == null) {
       log.error("Cannot Start Execution for empty plan");
       return null;
@@ -87,8 +100,8 @@ public class OrchestrationServiceImpl implements OrchestrationService {
   }
 
   @VisibleForTesting
-  void submitToEngine(Ambiance ambiance, PlanNodeProto planNode) {
-    executorService.submit(() -> orchestrationEngine.triggerExecution(ambiance, planNode));
+  void submitToEngine(Ambiance ambiance, PlanNode planNode) {
+    executorService.submit(() -> orchestrationEngine.triggerNode(ambiance, planNode));
   }
 
   private PlanExecution createPlanExecution(@Valid Plan plan, Map<String, String> setupAbstractions,
@@ -102,7 +115,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
                                       .metadata(metadata)
                                       .build();
 
-    return transactionUtils.performTransaction(() -> {
+    return transactionHelper.performTransaction(() -> {
       planExecutionMetadataService.save(planExecutionMetadata);
       return planExecutionService.save(planExecution);
     });

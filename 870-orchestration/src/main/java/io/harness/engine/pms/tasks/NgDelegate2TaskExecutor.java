@@ -2,6 +2,8 @@ package io.harness.engine.pms.tasks;
 
 import static java.lang.System.currentTimeMillis;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.delegate.AccountId;
 import io.harness.delegate.CancelTaskRequest;
@@ -16,6 +18,7 @@ import io.harness.grpc.utils.HTimestamps;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.execution.tasks.TaskRequest.RequestCase;
 import io.harness.pms.plan.execution.SetupAbstractionKeys;
+import io.harness.pms.utils.PmsGrpcClientUtils;
 import io.harness.service.intfc.DelegateAsyncService;
 import io.harness.service.intfc.DelegateSyncService;
 import io.harness.tasks.ResponseData;
@@ -24,12 +27,13 @@ import com.google.inject.Inject;
 import com.google.protobuf.util.Timestamps;
 import java.time.Duration;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import lombok.Builder;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.NotImplementedException;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Slf4j
 public class NgDelegate2TaskExecutor implements TaskExecutor {
   @Inject private DelegateServiceBlockingStub delegateServiceBlockingStub;
@@ -44,8 +48,9 @@ public class NgDelegate2TaskExecutor implements TaskExecutor {
       throw new InvalidRequestException(check.getMessage());
     }
 
-    SubmitTaskResponse submitTaskResponse = delegateServiceBlockingStub.submitTask(
-        buildTaskRequestWithToken(taskRequest.getDelegateTaskRequest().getRequest()));
+    SubmitTaskResponse submitTaskResponse =
+        PmsGrpcClientUtils.retryAndProcessException(delegateServiceBlockingStub::submitTask,
+            buildTaskRequestWithToken(taskRequest.getDelegateTaskRequest().getRequest()));
     delegateAsyncService.setupTimeoutForTask(submitTaskResponse.getTaskId().getId(),
         Timestamps.toMillis(submitTaskResponse.getTotalExpiry()), currentTimeMillis() + holdFor.toMillis());
     return submitTaskResponse.getTaskId().getId();
@@ -58,7 +63,8 @@ public class NgDelegate2TaskExecutor implements TaskExecutor {
       throw new InvalidRequestException(check.getMessage());
     }
     SubmitTaskRequest submitTaskRequest = buildTaskRequestWithToken(taskRequest.getDelegateTaskRequest().getRequest());
-    SubmitTaskResponse submitTaskResponse = delegateServiceBlockingStub.submitTask(submitTaskRequest);
+    SubmitTaskResponse submitTaskResponse =
+        PmsGrpcClientUtils.retryAndProcessException(delegateServiceBlockingStub::submitTask, submitTaskRequest);
     return delegateSyncService.waitForTask(submitTaskResponse.getTaskId().getId(),
         submitTaskRequest.getDetails().getType().getType(),
         Duration.ofMillis(HTimestamps.toMillis(submitTaskResponse.getTotalExpiry()) - currentTimeMillis()));
@@ -83,7 +89,7 @@ public class NgDelegate2TaskExecutor implements TaskExecutor {
 
   @Override
   public void expireTask(Map<String, String> setupAbstractions, String taskId) {
-    // Needs to be implemented
+    throw new NotImplementedException("Expire task is not implemented");
   }
 
   private SubmitTaskRequest buildTaskRequestWithToken(SubmitTaskRequest request) {
@@ -93,14 +99,11 @@ public class NgDelegate2TaskExecutor implements TaskExecutor {
   @Override
   public boolean abortTask(Map<String, String> setupAbstractions, String taskId) {
     try {
-      CancelTaskResponse response =
-          delegateServiceBlockingStub.withDeadlineAfter(30, TimeUnit.SECONDS)
-              .cancelTask(
-                  CancelTaskRequest.newBuilder()
-                      .setAccountId(
-                          AccountId.newBuilder().setId(setupAbstractions.get(SetupAbstractionKeys.accountId)).build())
-                      .setTaskId(TaskId.newBuilder().setId(taskId).build())
-                      .build());
+      CancelTaskResponse response = PmsGrpcClientUtils.retryAndProcessException(delegateServiceBlockingStub::cancelTask,
+          CancelTaskRequest.newBuilder()
+              .setAccountId(AccountId.newBuilder().setId(setupAbstractions.get(SetupAbstractionKeys.accountId)).build())
+              .setTaskId(TaskId.newBuilder().setId(taskId).build())
+              .build());
       return true;
     } catch (Exception ex) {
       log.error("Failed to abort task with taskId: {}, Error : {}", taskId, ex.getMessage());

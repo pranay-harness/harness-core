@@ -1,0 +1,14 @@
+pipeline:
+  identifier: "pipeline2"
+  stages:
+    - stage:
+        identifier: "stage1"
+        type: "Deployment"
+        spec:
+          serviceConfig:
+            serviceRef: "<+input>"
+          execution:
+            steps:
+              - step:
+                  type: "Verify"
+                  identifier: verify

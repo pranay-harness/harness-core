@@ -19,7 +19,7 @@ go_proto_library(
 )
 
 go_library(
-    name = "go_default_library",
+    name = "proto",
     embed = [":ciscmpb_go_proto"],
     importpath = "github.com/wings-software/portal/product/ci/scm/proto",
     visibility = ["//visibility:public"],

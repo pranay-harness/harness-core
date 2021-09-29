@@ -36,6 +36,7 @@ public class AwsAmiServiceTrafficShiftAlbDeployRequest extends AwsAmiRequest {
   private boolean rollback;
   private List<String> baseScalingPolicyJSONs;
   private List<String> infraMappingTargetGroupArns;
+  private List<String> baseAsgScheduledActionJSONs;
 
   @Builder
   public AwsAmiServiceTrafficShiftAlbDeployRequest(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
@@ -43,9 +44,10 @@ public class AwsAmiServiceTrafficShiftAlbDeployRequest extends AwsAmiRequest {
       String newAutoScalingGroupName, String oldAutoScalingGroupName, Integer oldAsgFinalDesiredCount,
       Integer autoScalingSteadyStateTimeout, int minInstances, int maxInstances,
       AwsAmiPreDeploymentData preDeploymentData, boolean rollback, List<String> baseScalingPolicyJSONs,
-      int desiredInstances, List<String> infraMappingTargetGroupArns, boolean amiInServiceHealthyStateFFEnabled) {
+      int desiredInstances, List<String> infraMappingTargetGroupArns, boolean amiInServiceHealthyStateFFEnabled,
+      List<String> baseAsgScheduledActionJSONs, boolean amiAsgConfigCopyEnabled) {
     super(awsConfig, encryptionDetails, EXECUTE_AMI_SERVICE_TRAFFIC_SHIFT_ALB_DEPLOY, region,
-        amiInServiceHealthyStateFFEnabled);
+        amiInServiceHealthyStateFFEnabled, amiAsgConfigCopyEnabled);
     this.accountId = accountId;
     this.appId = appId;
     this.commandName = commandName;
@@ -61,5 +63,6 @@ public class AwsAmiServiceTrafficShiftAlbDeployRequest extends AwsAmiRequest {
     this.rollback = rollback;
     this.baseScalingPolicyJSONs = baseScalingPolicyJSONs;
     this.infraMappingTargetGroupArns = infraMappingTargetGroupArns;
+    this.baseAsgScheduledActionJSONs = baseAsgScheduledActionJSONs;
   }
 }

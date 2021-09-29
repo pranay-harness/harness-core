@@ -18,7 +18,7 @@ go_proto_library(
 )
 
 go_library(
-    name = "go_default_library",
+    name = "owner",
     embed = [":920_delegate_service_beans_go_proto"],
     importpath = "github.com/wings-software/portal/920-delegate-service-beans/src/main/proto/io/harness/owner",
     visibility = ["//visibility:public"],

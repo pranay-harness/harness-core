@@ -7,6 +7,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import software.wings.beans.AzureContainerRegistry;
+import software.wings.beans.AzureImageDefinition;
+import software.wings.beans.AzureImageGallery;
+import software.wings.beans.AzureResourceGroup;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
@@ -494,6 +497,24 @@ public interface BuildSourceService {
   }
 
   default List<String> listAzureContainerRegistryNames(String cloudProviderId, String subscriptionId) {
+    throw new UnsupportedOperationException();
+  }
+
+  default Map<String, String> listSubscriptions(String settingId) {
+    throw new UnsupportedOperationException();
+  }
+
+  default List<AzureImageGallery> listImageGalleries(
+      String cloudProviderId, String subscriptionId, String resourceGroupName) {
+    throw new UnsupportedOperationException();
+  }
+
+  default List<AzureImageDefinition> listImageDefinitions(
+      String cloudProviderId, String subscriptionId, String resourceGroupName, String galleryName) {
+    throw new UnsupportedOperationException();
+  }
+
+  default List<AzureResourceGroup> listResourceGroups(String cloudProviderId, String subscriptionId) {
     throw new UnsupportedOperationException();
   }
 }

@@ -12,6 +12,8 @@ import static software.wings.sm.StateExecutionInstance.StateExecutionInstanceKey
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureFlag;
 import io.harness.beans.FeatureName;
@@ -89,6 +91,7 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 
 @Slf4j
+@OwnedBy(HarnessTeam.CDP)
 public abstract class AbstractFunctionalTest extends CategoryTest implements GraphQLTestMixin, MultilineStringMixin {
   protected static final String ADMIN_USER = "admin@harness.io";
 

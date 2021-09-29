@@ -2,7 +2,9 @@ package software.wings.service.impl.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -36,6 +38,7 @@ import java.util.Set;
  * Created by rsingh on 9/7/18.
  */
 @OwnedBy(PL)
+@TargetModule(HarnessModule._440_SECRET_MANAGEMENT_SERVICE)
 public class NoOpSecretManagerImpl implements SecretManager, EncryptedSettingAttributes {
   @Override
   public List<SecretManagerConfig> listSecretManagers(String accountId) {
@@ -97,6 +100,12 @@ public class NoOpSecretManagerImpl implements SecretManager, EncryptedSettingAtt
   @Override
   public Optional<EncryptedDataDetail> encryptedDataDetails(
       String accountId, String fieldName, String refId, String workflowExecutionId) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Optional<EncryptedDataDetail> getEncryptedDataDetails(
+      String accountId, String fieldName, EncryptedData encryptedData, String workflowExecutionId) {
     throw new UnsupportedOperationException();
   }
 
@@ -170,6 +179,11 @@ public class NoOpSecretManagerImpl implements SecretManager, EncryptedSettingAtt
 
   @Override
   public String saveSecretText(String accountId, SecretText secretText, boolean validateScopes) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public EncryptedData encryptSecret(String accountId, SecretText secretText, boolean validateScopes) {
     throw new UnsupportedOperationException();
   }
 

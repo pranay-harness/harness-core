@@ -14,7 +14,7 @@ fi
 
 echo "REPORT_UNUSED = True" > project/flags/report_unused.bzl
 
-echo "start analyzing ..."
+echo "# start analyzing ..."
 TARGETS=$(bazel query 'attr(tags, "unused_dependency", //...:*)')
 
 bazel build -k \

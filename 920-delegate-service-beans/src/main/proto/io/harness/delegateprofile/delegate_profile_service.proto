@@ -9,7 +9,7 @@ import "955-delegate-beans/src/main/proto/io/harness/delegate/account.proto";
 import "920-delegate-service-beans/src/main/proto/io/harness/delegateprofile/delegate_profile.proto";
 import "920-delegate-service-beans/src/main/proto/io/harness/paging/paging.proto";
 import "920-delegate-service-beans/src/main/proto/io/harness/owner/owner.proto";
-import "io/harness/virtualstack/virtual_stack.proto";
+import "980-commons/src/main/proto/io/harness/virtualstack/virtual_stack.proto";
 
 service DelegateProfileService {
   rpc ListProfiles(ListProfilesRequest) returns (ListProfilesResponse);

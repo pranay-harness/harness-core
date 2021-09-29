@@ -394,6 +394,17 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   }
 
   @Override
+  public List<LogAnalysisResult> getAnalysisResults(String verificationTaskId, Instant startTime, Instant endTime) {
+    return hPersistence.createQuery(LogAnalysisResult.class, excludeAuthority)
+        .filter(LogAnalysisResultKeys.verificationTaskId, verificationTaskId)
+        .field(LogAnalysisResultKeys.analysisStartTime)
+        .greaterThanOrEq(startTime)
+        .field(LogAnalysisResultKeys.analysisEndTime)
+        .lessThanOrEq(endTime)
+        .asList(new FindOptions().maxTime(MONGO_QUERY_TIMEOUT_SEC, TimeUnit.SECONDS));
+  }
+
+  @Override
   public LogAnalysisResult getLatestAnalysisForVerificationTaskId(
       String verificationTaskId, Instant startTime, Instant endTime) {
     return hPersistence.createQuery(LogAnalysisResult.class, excludeAuthority)

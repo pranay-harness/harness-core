@@ -110,6 +110,7 @@ import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
+import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
@@ -384,7 +385,7 @@ public class PcfStateHelper {
   }
 
   public Activity createActivity(ExecutionContext executionContext, String commandName, String stateType,
-      CommandUnitType commandUnitType, ActivityService activityService) {
+      CommandUnitType commandUnitType, ActivityService activityService, List<CommandUnit> commandUnitList) {
     Application app = ((ExecutionContextImpl) executionContext).getApp();
     notNullCheck("Application does not exist", app, USER);
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
@@ -399,7 +400,7 @@ public class PcfStateHelper {
                                                              .executionContext(executionContext)
                                                              .commandType(stateType)
                                                              .commandUnitType(commandUnitType)
-                                                             .commandUnits(emptyList())
+                                                             .commandUnits(commandUnitList)
                                                              .build());
 
     return activityService.save(activityBuilder.build());

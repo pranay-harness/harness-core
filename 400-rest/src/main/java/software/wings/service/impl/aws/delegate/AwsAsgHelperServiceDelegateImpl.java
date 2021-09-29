@@ -57,6 +57,7 @@ import com.amazonaws.services.autoscaling.model.CreateOrUpdateTagsRequest;
 import com.amazonaws.services.autoscaling.model.DeleteAutoScalingGroupRequest;
 import com.amazonaws.services.autoscaling.model.DeleteLaunchConfigurationRequest;
 import com.amazonaws.services.autoscaling.model.DeletePolicyRequest;
+import com.amazonaws.services.autoscaling.model.DeleteScheduledActionRequest;
 import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest;
 import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsResult;
 import com.amazonaws.services.autoscaling.model.DescribeLaunchConfigurationsRequest;
@@ -64,12 +65,16 @@ import com.amazonaws.services.autoscaling.model.DescribePoliciesRequest;
 import com.amazonaws.services.autoscaling.model.DescribePoliciesResult;
 import com.amazonaws.services.autoscaling.model.DescribeScalingActivitiesRequest;
 import com.amazonaws.services.autoscaling.model.DescribeScalingActivitiesResult;
+import com.amazonaws.services.autoscaling.model.DescribeScheduledActionsRequest;
+import com.amazonaws.services.autoscaling.model.DescribeScheduledActionsResult;
 import com.amazonaws.services.autoscaling.model.DetachLoadBalancerTargetGroupsRequest;
 import com.amazonaws.services.autoscaling.model.DetachLoadBalancersRequest;
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import com.amazonaws.services.autoscaling.model.PutScalingPolicyRequest;
 import com.amazonaws.services.autoscaling.model.PutScalingPolicyResult;
+import com.amazonaws.services.autoscaling.model.PutScheduledUpdateGroupActionRequest;
 import com.amazonaws.services.autoscaling.model.ScalingPolicy;
+import com.amazonaws.services.autoscaling.model.ScheduledUpdateGroupAction;
 import com.amazonaws.services.autoscaling.model.SetDesiredCapacityRequest;
 import com.amazonaws.services.autoscaling.model.Tag;
 import com.amazonaws.services.autoscaling.model.UpdateAutoScalingGroupRequest;
@@ -102,6 +107,7 @@ public class AwsAsgHelperServiceDelegateImpl
   private static final long AUTOSCALING_REQUEST_STATUS_CHECK_INTERVAL = TimeUnit.SECONDS.toSeconds(15);
   @Inject private AwsEc2HelperServiceDelegate awsEc2HelperServiceDelegate;
   @Inject private TimeLimiter timeLimiter;
+  private final Integer MAX_SCHEDULED_ACTIONS_BATCH_SIZE = 100;
 
   @VisibleForTesting
   AmazonAutoScalingClient getAmazonAutoScalingClient(Regions region, AwsConfig awsConfig) {
@@ -590,7 +596,7 @@ public class AwsAsgHelperServiceDelegateImpl
             });
       }
     } catch (Exception e) {
-      log.warn("Failed to describe autoScalingGroup for [%s]", autoScalingGroupName, e);
+      log.warn("Failed to describe autoScalingGroup for [%s] %s", autoScalingGroupName, e);
     }
   }
 
@@ -866,6 +872,23 @@ public class AwsAsgHelperServiceDelegateImpl
     }
   }
 
+  private String getJSONForScheduledAction(
+      ScheduledUpdateGroupAction scheduledAction, ExecutionLogCallback logCallback) {
+    if (scheduledAction == null) {
+      return EMPTY;
+    }
+    ObjectMapper mapper = new ObjectMapper();
+    try {
+      return mapper.writeValueAsString(scheduledAction);
+    } catch (Exception ex) {
+      String errorMessage = format("Exception: [%s] while extracting JSON for scheduled action: [%s]. Ignored.",
+          ex.getMessage(), scheduledAction.getScheduledActionARN());
+      log.error(errorMessage, ex);
+      logCallback.saveExecutionLog(errorMessage);
+      return EMPTY;
+    }
+  }
+
   private List<ScalingPolicy> listAllScalingPoliciesOfAsg(
       AmazonAutoScalingClient amazonAutoScalingClient, String asgName) {
     List<ScalingPolicy> scalingPolicies = newArrayList();
@@ -949,7 +972,19 @@ public class AwsAsgHelperServiceDelegateImpl
     try {
       return mapper.readValue(json, ScalingPolicy.class);
     } catch (Exception ex) {
-      String errorMessage = format("Exception: [%s] while desirializing cached JSON", ex.getMessage());
+      String errorMessage = format("Exception: [%s] while deserializing cached JSON", ex.getMessage());
+      logCallback.saveExecutionLog(errorMessage);
+      log.error(errorMessage, ex);
+      return null;
+    }
+  }
+
+  private ScheduledUpdateGroupAction getScheduledActionFromJSON(String json, ExecutionLogCallback logCallback) {
+    ObjectMapper mapper = new ObjectMapper();
+    try {
+      return mapper.readValue(json, ScheduledUpdateGroupAction.class);
+    } catch (Exception ex) {
+      String errorMessage = format("Exception: [%s] while deserializing cached JSON", ex.getMessage());
       logCallback.saveExecutionLog(errorMessage);
       log.error(errorMessage, ex);
       return null;
@@ -1029,6 +1064,135 @@ public class AwsAsgHelperServiceDelegateImpl
       handleAmazonClientException(amazonClientException);
     } catch (Exception e) {
       log.error("Exception attachScalingPoliciesToAsg", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
+    }
+  }
+
+  public void attachScheduledActionsToAsg(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, String asgName, List<String> scheduledActionJSONs, ExecutionLogCallback logCallback) {
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonAutoScalingClient> closeableAmazonAutoScalingClient =
+             new CloseableAmazonWebServiceClient(getAmazonAutoScalingClient(Regions.fromName(region), awsConfig))) {
+      logCallback.saveExecutionLog(format("Attaching scheduled actions to Asg: [%s]", asgName));
+      if (isEmpty(scheduledActionJSONs)) {
+        logCallback.saveExecutionLog("No scheduled action to attach");
+        return;
+      }
+      scheduledActionJSONs.forEach(scheduledActionJSON -> {
+        if (isNotEmpty(scheduledActionJSON)) {
+          ScheduledUpdateGroupAction scheduledAction = getScheduledActionFromJSON(scheduledActionJSON, logCallback);
+          logCallback.saveExecutionLog(format(
+              "Found scheduled action : [%s]. Attaching to: [%s]", scheduledAction.getScheduledActionName(), asgName));
+          PutScheduledUpdateGroupActionRequest putScheduledUpdateGroupActionRequest =
+              new PutScheduledUpdateGroupActionRequest()
+                  .withAutoScalingGroupName(asgName)
+                  .withScheduledActionName(scheduledAction.getScheduledActionName())
+                  .withTime(scheduledAction.getTime())
+                  .withStartTime(scheduledAction.getStartTime())
+                  .withEndTime(scheduledAction.getEndTime())
+                  .withRecurrence(scheduledAction.getRecurrence())
+                  .withMinSize(scheduledAction.getMinSize())
+                  .withMaxSize(scheduledAction.getMaxSize())
+                  .withDesiredCapacity(scheduledAction.getDesiredCapacity());
+          tracker.trackASGCall("Put ASG Scheduled Action");
+          closeableAmazonAutoScalingClient.getClient().putScheduledUpdateGroupAction(
+              putScheduledUpdateGroupActionRequest);
+          logCallback.saveExecutionLog(
+              format("Created scheduled action with Arn: [%s]", scheduledAction.getScheduledActionARN()));
+        }
+      });
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception attachScheduledActionsToAsg", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
+    }
+  }
+
+  @Override
+  public List<String> getScheduledActionJSONs(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, String asgName, ExecutionLogCallback logCallback) {
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    List<ScheduledUpdateGroupAction> scheduledUpdateGroupActionList = new ArrayList<>();
+    List<String> scheduledUpdateGroupActionJSONList = new ArrayList<>();
+    logCallback.saveExecutionLog(format("Extracting scheduled actions from: [%s]", asgName));
+    try (CloseableAmazonWebServiceClient<AmazonAutoScalingClient> closeableAmazonAutoScalingClient =
+             new CloseableAmazonWebServiceClient(getAmazonAutoScalingClient(Regions.fromName(region), awsConfig))) {
+      scheduledUpdateGroupActionList = listScheduledActions(closeableAmazonAutoScalingClient.getClient(), asgName);
+
+      if (isEmpty(scheduledUpdateGroupActionList)) {
+        logCallback.saveExecutionLog("No scheduled actions found");
+      } else {
+        scheduledUpdateGroupActionList.forEach(scheduledUpdateGroupAction -> {
+          logCallback.saveExecutionLog(
+              format("Found scheduled action: [%s]", scheduledUpdateGroupAction.getScheduledActionName()));
+          scheduledUpdateGroupActionJSONList.add(getJSONForScheduledAction(scheduledUpdateGroupAction, logCallback));
+        });
+      }
+
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception getScheduledActionJSONs", e);
+      throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
+    }
+
+    return scheduledUpdateGroupActionJSONList;
+  }
+
+  private List<ScheduledUpdateGroupAction> listScheduledActions(
+      AmazonAutoScalingClient amazonAutoScalingClient, String asgName) {
+    List<ScheduledUpdateGroupAction> scheduledUpdateGroupActionList = new ArrayList<>();
+    String nextToken;
+    tracker.trackASGCall("Describe Scheduled Actions");
+    do {
+      DescribeScheduledActionsRequest describeScheduledActionsRequest =
+          new DescribeScheduledActionsRequest().withAutoScalingGroupName(asgName).withMaxRecords(
+              MAX_SCHEDULED_ACTIONS_BATCH_SIZE);
+      DescribeScheduledActionsResult describeScheduledActionsResult =
+          amazonAutoScalingClient.describeScheduledActions(describeScheduledActionsRequest);
+
+      scheduledUpdateGroupActionList.addAll(describeScheduledActionsResult.getScheduledUpdateGroupActions());
+
+      nextToken = describeScheduledActionsResult.getNextToken();
+    } while (nextToken != null);
+
+    return scheduledUpdateGroupActionList;
+  }
+
+  public void clearAllScheduledActionsForAsg(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, String asgName, ExecutionLogCallback logCallback) {
+    encryptionService.decrypt(awsConfig, encryptionDetails, false);
+    try (CloseableAmazonWebServiceClient<AmazonAutoScalingClient> closeableAmazonAutoScalingClient =
+             new CloseableAmazonWebServiceClient(getAmazonAutoScalingClient(Regions.fromName(region), awsConfig))) {
+      logCallback.saveExecutionLog(format("Clearing away all scheduled actions for Asg: [%s]", asgName));
+      List<ScheduledUpdateGroupAction> scheduledUpdateGroupActions =
+          listScheduledActions(closeableAmazonAutoScalingClient.getClient(), asgName);
+
+      if (isEmpty(scheduledUpdateGroupActions)) {
+        logCallback.saveExecutionLog("No scheduled actions found");
+        return;
+      }
+
+      scheduledUpdateGroupActions.forEach(scheduledUpdateGroupAction -> {
+        logCallback.saveExecutionLog(
+            format("Found scheduled action: [%s]. Deleting it.", scheduledUpdateGroupAction.getScheduledActionName()));
+        DeleteScheduledActionRequest deleteScheduledActionRequest =
+            new DeleteScheduledActionRequest().withAutoScalingGroupName(asgName).withScheduledActionName(
+                scheduledUpdateGroupAction.getScheduledActionName());
+        tracker.trackASGCall("Delete ASG Scheduled Actions");
+        closeableAmazonAutoScalingClient.getClient().deleteScheduledAction(deleteScheduledActionRequest);
+      });
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
+    } catch (Exception e) {
+      log.error("Exception clearAllScheduledActionsForAsg", e);
       throw new InvalidRequestException(ExceptionUtils.getMessage(e), e);
     }
   }

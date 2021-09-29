@@ -1,23 +1,18 @@
 package io.harness.cvng.core.services.impl.monitoredService;
 
-import static io.harness.cvng.beans.MonitoredServiceDataSourceType.dataSourceTypeMonitoredServiceDataSourceTypeMap;
-
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.HealthSource.CVConfigUpdateResult;
-import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceSpec;
+import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.cvng.core.services.api.monitoredService.HealthSourceService;
-import io.harness.cvng.core.utils.monitoredService.CVConfigToHealthSourceTransformer;
 import io.harness.exception.DuplicateFieldException;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.name.Names;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -76,9 +71,10 @@ public class HealthSourceServiceImpl implements HealthSourceService {
   @Override
   public void delete(String accountId, String orgIdentifier, String projectIdentifier, String nameSpaceIdentifier,
       List<String> identifiers) {
-    identifiers.forEach(identifier
-        -> cvConfigService.deleteByIdentifier(accountId, orgIdentifier, projectIdentifier,
-            HealthSourceService.getNameSpacedIdentifier(nameSpaceIdentifier, identifier)));
+    identifiers.forEach(identifier -> {
+      String nameSpacedIdentifier = HealthSourceService.getNameSpacedIdentifier(nameSpaceIdentifier, identifier);
+      cvConfigService.deleteByIdentifier(accountId, orgIdentifier, projectIdentifier, nameSpacedIdentifier);
+    });
   }
 
   @Override
@@ -117,15 +113,8 @@ public class HealthSourceServiceImpl implements HealthSourceService {
             HealthSourceService.getNameSpacedIdentifier(nameSpaceIdentifier, identifier), orgIdentifier,
             projectIdentifier));
 
-    CVConfigToHealthSourceTransformer<CVConfig, HealthSourceSpec> cvConfigToHealthSourceTransformer =
-        injector.getInstance(
-            Key.get(CVConfigToHealthSourceTransformer.class, Names.named(cvConfigs.get(0).getType().name())));
-
-    return HealthSource.builder()
-        .name(cvConfigs.get(0).getMonitoringSourceName())
-        .type(dataSourceTypeMonitoredServiceDataSourceTypeMap.get(cvConfigs.get(0).getType()))
-        .identifier(identifier)
-        .spec(cvConfigToHealthSourceTransformer.transform(cvConfigs))
-        .build();
+    HealthSource healthSource = HealthSourceDTO.toHealthSource(cvConfigs, injector);
+    healthSource.setIdentifier(identifier);
+    return healthSource;
   }
 }

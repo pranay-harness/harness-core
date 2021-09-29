@@ -10,11 +10,13 @@ java_library(
     deps = [
         "//:lombok",
         "//890-pms-contracts:module",
+        "//900-git-sync-sdk:module",
         "//950-walktree-visitor:module",
         "//959-timeout-engine:module",
         "//960-yaml-sdk:module",
         "//970-ng-commons:module",
         "//980-commons:module",
+        "//999-annotations:module",
         "@maven//:com_esotericsoftware_kryo",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:com_fasterxml_jackson_core_jackson_core",
@@ -29,6 +31,7 @@ java_library(
         "@maven//:io_swagger_swagger_annotations",
         "@maven//:javax_validation_validation_api",
         "@maven//:org_hibernate_hibernate_validator",
+        "@maven//:org_springframework_data_spring_data_commons",
     ],
 )
 
@@ -41,6 +44,7 @@ java_library(
     deps = [
         ":module",
         "//:lombok",
+        "//970-ng-commons:module",
         "//990-commons-test:module",
         "@maven//:junit_junit",
         "@maven//:org_assertj_assertj_core",

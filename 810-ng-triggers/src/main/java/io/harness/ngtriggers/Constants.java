@@ -38,12 +38,19 @@ public interface Constants {
   String HEADER = "header";
   String REPO_URL = "repoUrl";
   String GIT_USER = "gitUser";
+  String TAG = "tag";
   String PR_TITLE = "prTitle";
   String SOURCE_TYPE = "sourceType";
+  String ARTIFACT_EXPR = "artifact";
+  String MANIFEST_EXPR = "manifest";
+  String MANIFEST_VERSION_EXPR = "version";
+  String ARTIFACT_BUILD_EXPR = "build";
 
   String WEBHOOK_TYPE = "Webhook";
   String SCHEDULED_TYPE = "Scheduled";
   String CUSTOM_TYPE = "Custom";
+  String ARTIFACT_TYPE = "Artifact";
+  String MANIFEST_TYPE = "Manifest";
 
   String GITHUB_REPO_EXPR_VAL = "Github";
   String GITLAB_REPO_EXPR_VAL = "Gitlab";
@@ -68,6 +75,12 @@ public interface Constants {
   String DOT_GIT = ".git";
   String MANIFEST = "Manifest";
   String ARTIFACT = "Artifact";
+  String ARTIFACT_REF = "artifactRef";
+  String MANIFEST_REF = "manifestRef";
+  String DOCKER_REGISTRY = "DockerRegistry";
+  String GCR = "Gcr";
+  String ECR = "Ecr";
+  String HELM_CHART = "HelmChart";
 
   String MANIFEST_VERSION = "<+trigger.manifest.version>";
   String ARTIFACT_VERSION = "<+trigger.artifact.build>";

@@ -299,6 +299,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private final String delegateProjectIdentifier = System.getenv().get("DELEGATE_PROJECT_IDENTIFIER");
   private final String delegateSize = System.getenv().get("DELEGATE_SIZE");
   private final String delegateDescription = System.getenv().get("DELEGATE_DESCRIPTION");
+  // TODO remove this dependency of delegateNg on SESSION_ID once DEL-2413 has gone into prod for several weeks.
+  private final boolean delegateNg = isNotBlank(delegateSessionIdentifier)
+      || (isNotBlank(System.getenv().get("NEXT_GEN")) && Boolean.parseBoolean(System.getenv().get("NEXT_GEN")));
   private final int delegateTaskLimit = isNotBlank(System.getenv().get("DELEGATE_TASK_LIMIT"))
       ? Integer.parseInt(System.getenv().get("DELEGATE_TASK_LIMIT"))
       : 0;
@@ -532,6 +535,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                           .delegateType(DELEGATE_TYPE)
                                           //.proxy(set to true if there is a system proxy)
                                           .pollingModeEnabled(delegateConfiguration.isPollForTasks())
+                                          .ng(delegateNg)
                                           .sampleDelegate(isSample)
                                           .location(Paths.get("").toAbsolutePath().toString())
                                           .ceEnabled(Boolean.parseBoolean(System.getenv("ENABlE_CE")));
@@ -1480,7 +1484,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       statusData.put(DELEGATE_SELF_DESTRUCT, true);
     } else {
       statusData.put(DELEGATE_HEARTBEAT, clock.millis());
-      statusData.put(DELEGATE_VERSION, getVersion());
+      statusData.put(DELEGATE_VERSION, getVersionWithPatch());
       statusData.put(DELEGATE_IS_NEW, false);
       statusData.put(DELEGATE_RESTART_NEEDED, doRestartDelegate());
       statusData.put(DELEGATE_UPGRADE_NEEDED, upgradeNeeded.get());
@@ -1531,8 +1535,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       log.warn("Watcher version mismatched for {} seconds. Version is {} but should be {}",
           WATCHER_VERSION_MATCH_TIMEOUT / 1000L, watcherVersion, expectedVersion);
     }
-    boolean multiVersionRestartNeeded =
-        multiVersion && clock.millis() - startTime > WATCHER_VERSION_MATCH_TIMEOUT && !new File(getVersion()).exists();
+
+    boolean multiVersionRestartNeeded = multiVersion && clock.millis() - startTime > WATCHER_VERSION_MATCH_TIMEOUT
+        && !new File(getVersionWithPatch()).exists();
 
     if (heartbeatTimedOut || versionMatchTimedOut
         || (multiVersionRestartNeeded && multiVersionWatcherStarted.compareAndSet(false, true))) {
@@ -2364,7 +2369,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private void removeDelegateVersionFromCapsule() {
     try {
-      cleanup(new File(System.getProperty("capsule.dir")).getParentFile(), getVersion(), upgradeVersion, "delegate-");
+      cleanup(new File(System.getProperty("capsule.dir")).getParentFile(), getVersionWithPatch(), upgradeVersion,
+          "delegate-");
     } catch (Exception ex) {
       log.error("Failed to clean delegate version [{}] from Capsule", upgradeVersion, ex);
     }
@@ -2381,6 +2387,13 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private String getVersion() {
     return versionInfoManager.getVersionInfo().getVersion();
+  }
+
+  private String getVersionWithPatch() {
+    if (multiVersion) {
+      return versionInfoManager.getFullVersion();
+    }
+    return getVersion();
   }
 
   private void initiateSelfDestruct() {

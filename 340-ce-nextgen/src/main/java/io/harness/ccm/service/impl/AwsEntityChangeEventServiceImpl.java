@@ -34,8 +34,6 @@ import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.services.costandusagereport.model.ReportDefinition;
 import com.amazonaws.services.organizations.model.AWSOrganizationsNotInUseException;
 import com.amazonaws.services.organizations.model.AccessDeniedException;
-import com.amazonaws.services.s3.model.AmazonS3Exception;
-import com.amazonaws.services.s3.model.ObjectListing;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.core.ApiFuture;
 import com.google.cloud.pubsub.v1.Publisher;
@@ -49,7 +47,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
 
 @Slf4j
 @OwnedBy(HarnessTeam.CE)
@@ -203,16 +200,6 @@ public class AwsEntityChangeEventServiceImpl implements AwsEntityChangeEventServ
     Optional<ReportDefinition> report =
         awsClient.getReportDefinition(credentialProvider, curAttributes.getReportName());
     if (!report.isPresent()) {
-      return false;
-    }
-    // S3 Bucket Exists
-    try {
-      ObjectListing s3BucketObject =
-          awsClient.getBucket(credentialProvider, curAttributes.getS3BucketName(), curAttributes.getS3Prefix());
-      if (CollectionUtils.isEmpty(s3BucketObject.getObjectSummaries())) {
-        return false;
-      }
-    } catch (AmazonS3Exception ex) {
       return false;
     }
 

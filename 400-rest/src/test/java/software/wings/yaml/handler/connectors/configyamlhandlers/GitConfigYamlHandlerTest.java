@@ -8,6 +8,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
 import software.wings.beans.GitConfig;
+import software.wings.beans.GitConfig.ProviderType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.ChangeContext;
@@ -46,6 +47,7 @@ public class GitConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
                               .username(SAMPLE_STRING)
                               .url(SAMPLE_STRING)
                               .delegateSelectors(Collections.emptyList())
+                              .providerType(ProviderType.GIT)
                               .build();
 
     Change change = Change.Builder.aFileChange()
@@ -70,6 +72,7 @@ public class GitConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
     assertThat(gitConfig.getBranch()).isEqualTo(SAMPLE_STRING);
     assertThat(gitConfig.getRepoUrl()).isEqualTo(SAMPLE_STRING);
     assertThat(gitConfig.getDelegateSelectors()).isEqualTo(Collections.emptyList());
+    assertThat(gitConfig.getProviderType()).isEqualTo(ProviderType.GIT);
   }
 
   @Test
@@ -84,6 +87,7 @@ public class GitConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
                               .description(SAMPLE_STRING)
                               .sshSettingId(null)
                               .delegateSelectors(Collections.emptyList())
+                              .providerType(ProviderType.GIT)
                               .build();
 
     SettingValue settingValue = (SettingValue) gitConfig;
@@ -103,5 +107,6 @@ public class GitConfigYamlHandlerTest extends SettingValueConfigYamlHandlerTestB
     assertThat(yaml.getDescription()).isEqualTo(SAMPLE_STRING);
     assertThat(yaml.getSshKeyName()).isEqualTo(null);
     assertThat(yaml.getDelegateSelectors()).isEqualTo(Collections.emptyList());
+    assertThat(yaml.getProviderType()).isEqualTo(ProviderType.GIT);
   }
 }

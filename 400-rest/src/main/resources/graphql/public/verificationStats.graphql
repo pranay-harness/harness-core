@@ -19,7 +19,12 @@ input VerificationResultFilter {
 input VerificationAggregation {
   entityAggregation: CVEntityAggregation
   timeAggregation: TimeSeriesAggregation
-  tagAggregation: DeploymentTagAggregation
+  tagAggregation: CVTagAggregation
+}
+
+input CVTagAggregation {
+  entityType: CVWorkflowTagType
+  tagName: String
 }
 
 enum CVEntityAggregation {

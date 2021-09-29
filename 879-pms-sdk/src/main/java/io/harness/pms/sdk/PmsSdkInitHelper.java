@@ -7,10 +7,12 @@ import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_NODE_
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_NODE_START_EVENT_TOPIC;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_ORCHESTRATION_EVENT_TOPIC;
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_PROGRESS_EVENT_TOPIC;
+import static io.harness.eventsframework.EventsFrameworkConstants.START_PARTIAL_PLAN_CREATOR_EVENT_TOPIC;
 
 import io.harness.ModuleType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.exception.InvalidRequestException;
@@ -130,13 +132,22 @@ public class PmsSdkInitHelper {
         .setInterruptConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.INTERRUPT_EVENT))
         .setOrchestrationEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.ORCHESTRATION_EVENT))
         .setFacilitatorEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.FACILITATOR_EVENT))
+        .putAllStaticAliases(CollectionUtils.emptyIfNull(sdkConfiguration.getStaticAliases()))
+        .addAllSdkFunctors(PmsSdkInitHelper.getSupportedSdkFunctorsList(sdkConfiguration))
         .setNodeStartEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.NODE_START))
         .setProgressEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.PROGRESS_EVENT))
         .setNodeAdviseEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.NODE_ADVISE))
         .setNodeResumeEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.NODE_RESUME))
+        .setPlanCreationEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.CREATE_PARTIAL_PLAN))
         .build();
   }
 
+  private static List<String> getSupportedSdkFunctorsList(PmsSdkConfiguration sdkConfiguration) {
+    if (sdkConfiguration.getSdkFunctors() == null) {
+      return new ArrayList<>();
+    }
+    return new ArrayList<>(sdkConfiguration.getSdkFunctors().keySet());
+  }
   private static List<SdkStep> mapToSdkStep(List<StepType> stepTypeList, List<StepInfo> stepInfos) {
     Map<String, StepType> stepTypeStringToStepType =
         stepTypeList.stream().collect(Collectors.toMap(StepType::getType, stepType -> stepType));
@@ -192,6 +203,8 @@ public class PmsSdkInitHelper {
         return Redis.newBuilder().setTopicName(PIPELINE_NODE_ADVISE_EVENT_TOPIC).build();
       case NODE_RESUME:
         return Redis.newBuilder().setTopicName(PIPELINE_NODE_RESUME_EVENT_TOPIC).build();
+      case CREATE_PARTIAL_PLAN:
+        return Redis.newBuilder().setTopicName(START_PARTIAL_PLAN_CREATOR_EVENT_TOPIC).build();
       default:
         throw new InvalidRequestException("Not a valid Event Category");
     }

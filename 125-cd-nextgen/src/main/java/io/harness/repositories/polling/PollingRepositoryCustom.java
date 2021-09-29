@@ -13,9 +13,14 @@ import java.util.List;
 public interface PollingRepositoryCustom {
   PollingDocument addSubscribersToExistingPollingDoc(String accountId, String orgId, String projectId,
       PollingType pollingType, PollingInfo pollingInfo, List<String> signatures);
+  PollingDocument addSubscribersToExistingPollingDoc(String accountId, String uuId, List<String> signatures);
   PollingDocument deleteDocumentIfOnlySubscriber(String accountId, String orgId, String projectId,
       PollingType pollingType, PollingInfo pollingInfo, List<String> signatures);
+  PollingDocument removeDocumentIfOnlySubscriber(String accountId, String pollingDocId, List<String> signatures);
   PollingDocument deleteSubscribersFromExistingPollingDoc(String accountId, String orgId, String projectId,
       PollingType pollingType, PollingInfo pollingInfo, List<String> signatures);
+  PollingDocument removeSubscribersFromExistingPollingDoc(
+      String accountId, String pollingDocId, List<String> signatures);
   UpdateResult updateSelectiveEntity(String accountId, String pollDocId, String key, Object value);
+  PollingDocument findByUuidAndAccountIdAndSignature(String pollingDocId, String accountId, List<String> signature);
 }

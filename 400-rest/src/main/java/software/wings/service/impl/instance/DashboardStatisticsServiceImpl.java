@@ -123,6 +123,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.mongodb.AggregationOptions;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
 import com.mongodb.ReadPreference;
 import com.mongodb.TagSet;
 import java.util.ArrayList;
@@ -938,20 +940,14 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     // Find the timestamp of latest instance alive at toTimestamp
     long rhsCreatedAt = getCreatedTimeOfInstanceAtTimestamp(accountId, toTimestamp, query, false);
 
-    query = wingsPersistence.createQuery(Instance.class);
-    query.field("accountId").equal(accountId);
-    query.field(Instance.CREATED_AT_KEY).greaterThanOrEq(lhsCreatedAt);
-    query.field(Instance.CREATED_AT_KEY).lessThanOrEq(rhsCreatedAt);
-    query.project("appId", true);
-
-    List<Instance> instanceList = new ArrayList<>();
-    try (HIterator<Instance> iterator = new HIterator<>(query.fetch())) {
-      for (Instance instance : iterator) {
-        instanceList.add(instance);
-      }
-    }
-
-    Set<String> appIdsFromInstances = instanceList.stream().map(Instance::getAppId).collect(Collectors.toSet());
+    DBCollection dbCollection = wingsPersistence.getCollection(Instance.class);
+    BasicDBObject instanceQuery = new BasicDBObject();
+    List<BasicDBObject> conditions = new ArrayList<>();
+    conditions.add(new BasicDBObject(InstanceKeys.accountId, accountId));
+    conditions.add(new BasicDBObject(Instance.CREATED_AT_KEY, new BasicDBObject("$gte", lhsCreatedAt)));
+    conditions.add(new BasicDBObject(Instance.CREATED_AT_KEY, new BasicDBObject("$lte", rhsCreatedAt)));
+    instanceQuery.put("$and", conditions);
+    Set<String> appIdsFromInstances = new HashSet<>(dbCollection.distinct(InstanceKeys.appId, instanceQuery));
 
     List<Application> appsByAccountId = appService.getAppsByAccountId(accountId);
     Set<String> existingApps = appsByAccountId.stream().map(Application::getUuid).collect(Collectors.toSet());

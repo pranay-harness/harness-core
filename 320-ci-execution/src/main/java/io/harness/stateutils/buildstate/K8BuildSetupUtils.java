@@ -9,6 +9,10 @@ import static io.harness.beans.sweepingoutputs.CISweepingOutputNames.CODE_BASE_C
 import static io.harness.beans.sweepingoutputs.ContainerPortDetails.PORT_DETAILS;
 import static io.harness.beans.sweepingoutputs.PodCleanupDetails.CLEANUP_DETAILS;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_AWS_REGION;
+import static io.harness.common.BuildEnvironmentConstants.DRONE_BUILD_EVENT;
+import static io.harness.common.BuildEnvironmentConstants.DRONE_COMMIT_AUTHOR;
+import static io.harness.common.BuildEnvironmentConstants.DRONE_COMMIT_AUTHOR_AVATAR;
+import static io.harness.common.BuildEnvironmentConstants.DRONE_COMMIT_AUTHOR_EMAIL;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_COMMIT_BEFORE;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_COMMIT_BRANCH;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_COMMIT_REF;
@@ -17,10 +21,12 @@ import static io.harness.common.BuildEnvironmentConstants.DRONE_NETRC_MACHINE;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_NETRC_PORT;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_NETRC_USERNAME;
 import static io.harness.common.BuildEnvironmentConstants.DRONE_REMOTE_URL;
+import static io.harness.common.BuildEnvironmentConstants.DRONE_SOURCE_BRANCH;
+import static io.harness.common.BuildEnvironmentConstants.DRONE_TAG;
+import static io.harness.common.BuildEnvironmentConstants.DRONE_TARGET_BRANCH;
 import static io.harness.common.CIExecutionConstants.ACCOUNT_ID_ATTR;
 import static io.harness.common.CIExecutionConstants.AWS_CODE_COMMIT_URL_REGEX;
 import static io.harness.common.CIExecutionConstants.BUILD_NUMBER_ATTR;
-import static io.harness.common.CIExecutionConstants.GIT_URL_SUFFIX;
 import static io.harness.common.CIExecutionConstants.HARNESS_ACCOUNT_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_BUILD_ID_VARIABLE;
 import static io.harness.common.CIExecutionConstants.HARNESS_LOG_PREFIX_VARIABLE;
@@ -34,7 +40,6 @@ import static io.harness.common.CIExecutionConstants.LABEL_REGEX;
 import static io.harness.common.CIExecutionConstants.LOG_SERVICE_ENDPOINT_VARIABLE;
 import static io.harness.common.CIExecutionConstants.LOG_SERVICE_TOKEN_VARIABLE;
 import static io.harness.common.CIExecutionConstants.ORG_ID_ATTR;
-import static io.harness.common.CIExecutionConstants.PATH_SEPARATOR;
 import static io.harness.common.CIExecutionConstants.PIPELINE_EXECUTION_ID_ATTR;
 import static io.harness.common.CIExecutionConstants.PIPELINE_ID_ATTR;
 import static io.harness.common.CIExecutionConstants.POD_MAX_WAIT_UNTIL_READY_SECS;
@@ -310,6 +315,33 @@ public class K8BuildSetupUtils {
     if (isNotEmpty(codebaseSweeping.getBranch())) {
       codebaseRuntimeVars.put(DRONE_COMMIT_BRANCH, codebaseSweeping.getBranch());
     }
+
+    if (!isEmpty(codebaseSweeping.getTag())) {
+      codebaseRuntimeVars.put(DRONE_TAG, codebaseSweeping.getTag());
+      codebaseRuntimeVars.put(DRONE_BUILD_EVENT, "tag");
+    }
+
+    if (!isEmpty(codebaseSweeping.getTargetBranch())) {
+      codebaseRuntimeVars.put(DRONE_TARGET_BRANCH, codebaseSweeping.getTargetBranch());
+    }
+
+    if (!isEmpty(codebaseSweeping.getSourceBranch())) {
+      codebaseRuntimeVars.put(DRONE_SOURCE_BRANCH, codebaseSweeping.getSourceBranch());
+    }
+
+    if (!isEmpty(codebaseSweeping.getSourceBranch())) {
+      codebaseRuntimeVars.put(DRONE_SOURCE_BRANCH, codebaseSweeping.getSourceBranch());
+    }
+    if (!isEmpty(codebaseSweeping.getGitUserEmail())) {
+      codebaseRuntimeVars.put(DRONE_COMMIT_AUTHOR_EMAIL, codebaseSweeping.getGitUserEmail());
+    }
+    if (!isEmpty(codebaseSweeping.getGitUserAvatar())) {
+      codebaseRuntimeVars.put(DRONE_COMMIT_AUTHOR_AVATAR, codebaseSweeping.getGitUserAvatar());
+    }
+
+    if (!isEmpty(codebaseSweeping.getGitUserId())) {
+      codebaseRuntimeVars.put(DRONE_COMMIT_AUTHOR, codebaseSweeping.getGitUserId());
+    }
     if (isNotEmpty(codebaseSweeping.getBaseCommitSha())) {
       codebaseRuntimeVars.put(DRONE_COMMIT_BEFORE, codebaseSweeping.getBaseCommitSha());
     }
@@ -422,7 +454,7 @@ public class K8BuildSetupUtils {
       Map<String, String> volumeToMountPath, String workDirPath, String logPrefix,
       List<SecretVariableDetails> secretVariableDetails,
       Map<String, ConnectorDetails> githubApiTokenFunctorConnectors) {
-    Map<String, String> envVars = new HashMap<>(commonEnvVars);
+    Map<String, String> envVars = new HashMap<>();
     if (isNotEmpty(containerDefinitionInfo.getEnvVars())) {
       envVars.putAll(containerDefinitionInfo.getEnvVars()); // Put customer input env variables
     }
@@ -452,7 +484,7 @@ public class K8BuildSetupUtils {
         getSecretVariableDetails(ngAccess, containerDefinitionInfo, secretVariableDetails);
 
     Map<String, String> envVarsWithSecretRef = removeEnvVarsWithSecretRef(envVars);
-
+    envVars.putAll(commonEnvVars); //  commonEnvVars needs to be put in end because they overrides webhook parameters
     if (containerDefinitionInfo.getContainerType() == CIContainerType.SERVICE) {
       envVars.put(HARNESS_SERVICE_LOG_KEY_VARIABLE,
           format("%s/serviceId:%s", logPrefix, containerDefinitionInfo.getStepIdentifier()));
@@ -646,7 +678,7 @@ public class K8BuildSetupUtils {
 
   private Map<String, String> retrieveGitSCMEnvVar(CodeBase ciCodebase, GitConnectionType connectionType, String url) {
     Map<String, String> envVars = new HashMap<>();
-    String gitUrl = getGitURL(ciCodebase, connectionType, url);
+    String gitUrl = IntegrationStageUtils.getGitURL(ciCodebase, connectionType, url);
     String domain = GitClientHelper.getGitSCM(gitUrl);
     String port = GitClientHelper.getGitSCMPort(gitUrl);
     if (port != null) {
@@ -711,7 +743,8 @@ public class K8BuildSetupUtils {
 
   private Map<String, String> retrieveGitEnvVar(GitConfigDTO gitConfigDTO, CodeBase ciCodebase) {
     Map<String, String> envVars = new HashMap<>();
-    String gitUrl = getGitURL(ciCodebase, gitConfigDTO.getGitConnectionType(), gitConfigDTO.getUrl());
+    String gitUrl =
+        IntegrationStageUtils.getGitURL(ciCodebase, gitConfigDTO.getGitConnectionType(), gitConfigDTO.getUrl());
     String domain = GitClientHelper.getGitSCM(gitUrl);
 
     envVars.put(DRONE_REMOTE_URL, gitUrl);
@@ -733,7 +766,7 @@ public class K8BuildSetupUtils {
     Map<String, String> envVars = new HashMap<>();
     GitConnectionType gitConnectionType =
         gitConfigDTO.getUrlType() == AwsCodeCommitUrlType.REPO ? GitConnectionType.REPO : GitConnectionType.ACCOUNT;
-    String gitUrl = getGitURL(ciCodebase, gitConnectionType, gitConfigDTO.getUrl());
+    String gitUrl = IntegrationStageUtils.getGitURL(ciCodebase, gitConnectionType, gitConfigDTO.getUrl());
 
     envVars.put(DRONE_REMOTE_URL, gitUrl);
     envVars.put(DRONE_AWS_REGION, getAwsCodeCommitRegion(gitConfigDTO.getUrl()));
@@ -748,42 +781,6 @@ public class K8BuildSetupUtils {
           "Unsupported aws code commit connector auth" + gitConfigDTO.getAuthentication().getAuthType());
     }
     return envVars;
-  }
-
-  private String retrieveGenericGitConnectorURL(CodeBase ciCodebase, GitConnectionType connectionType, String url) {
-    String gitUrl;
-    if (connectionType == GitConnectionType.REPO) {
-      gitUrl = url;
-    } else if (connectionType == GitConnectionType.ACCOUNT) {
-      if (ciCodebase == null) {
-        throw new IllegalArgumentException("CI codebase spec is not set");
-      }
-
-      if (isEmpty(ciCodebase.getRepoName())) {
-        throw new IllegalArgumentException("Repo name is not set in CI codebase spec");
-      }
-
-      String repoName = ciCodebase.getRepoName();
-      if (url.endsWith(PATH_SEPARATOR)) {
-        gitUrl = url + repoName;
-      } else {
-        gitUrl = url + PATH_SEPARATOR + repoName;
-      }
-    } else {
-      throw new InvalidArgumentsException(
-          format("Invalid connection type for git connector: %s", connectionType.toString()), WingsException.USER);
-    }
-
-    return gitUrl;
-  }
-
-  private String getGitURL(CodeBase ciCodebase, GitConnectionType connectionType, String url) {
-    String gitUrl = retrieveGenericGitConnectorURL(ciCodebase, connectionType, url);
-
-    if (!url.endsWith(GIT_URL_SUFFIX) && !url.contains("dev.azure.com")) {
-      gitUrl += GIT_URL_SUFFIX;
-    }
-    return gitUrl;
   }
 
   private String getAwsCodeCommitRegion(String url) {

@@ -68,6 +68,7 @@ mongo:
   indexManagerMode: AUTO
   transactionsEnabled: false
   aliasDBName: ng-harness
+  traceMode: DISABLED
 
 accountConfig:
   deploymentClusterName: ""
@@ -198,6 +199,9 @@ ceAzureSetupConfig:
   azureAppClientId: azureAppClientIdPlaceholder
   azureAppClientSecret: azureAppClientSecretplaceholder
 
+ceGcpSetupConfig:
+  gcpProjectId: gcpProjectIdPlaceHolder
+
 ciDefaultEntityConfiguration:
   harnessImageUseName: harnessdev
   harnessImagePassword: harnessPass
@@ -266,6 +270,9 @@ gitGrpcClientConfigs:
   core:
     target: localhost:13001
     authority: localhost
+  templateservice:
+    target: localhost:16001
+    authority: localhost
 
 gitSdkConfiguration:
   gitSdkGrpcServerConfig:
@@ -331,3 +338,10 @@ cacheConfig:
   disabledCaches: [ ]
 
 scopeAccessCheckEnabled: true
+
+hostname: ${HOSTNAME:-localhost}
+
+basePathPrefix: ${BASE_PATH_PREFIX:-""}
+
+enforcementClientConfiguration:
+  enforcementCheckEnabled: false

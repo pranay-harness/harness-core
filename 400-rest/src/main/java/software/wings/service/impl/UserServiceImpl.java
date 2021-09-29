@@ -21,6 +21,7 @@ import static io.harness.ng.core.invites.dto.InviteOperationResponse.INVITE_INVA
 import static io.harness.ng.core.invites.dto.InviteOperationResponse.USER_ALREADY_ADDED;
 import static io.harness.ng.core.invites.dto.InviteOperationResponse.USER_ALREADY_INVITED;
 import static io.harness.ng.core.invites.dto.InviteOperationResponse.USER_INVITED_SUCCESSFULLY;
+import static io.harness.persistence.AccountAccess.ACCOUNT_ID_KEY;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static software.wings.app.ManagerCacheRegistrar.PRIMARY_CACHE_PREFIX;
@@ -53,6 +54,8 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.authenticationservice.beans.LogoutResponse;
+import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
@@ -91,13 +94,17 @@ import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.marketplace.gcp.procurement.GcpProcurementService;
 import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.ng.core.account.DefaultExperience;
+import io.harness.ng.core.account.OauthProviderType;
 import io.harness.ng.core.common.beans.Generation;
 import io.harness.ng.core.dto.UserInviteDTO;
 import io.harness.ng.core.invites.dto.InviteDTO;
 import io.harness.ng.core.invites.dto.InviteOperationResponse;
+import io.harness.ng.core.switchaccount.LdapIdentificationInfo;
+import io.harness.ng.core.switchaccount.OauthIdentificationInfo;
+import io.harness.ng.core.switchaccount.RestrictedSwitchAccountInfo;
+import io.harness.ng.core.switchaccount.SamlIdentificationInfo;
 import io.harness.ng.core.user.PasswordChangeDTO;
 import io.harness.ng.core.user.PasswordChangeResponse;
-import io.harness.ng.core.user.SignupInviteDTO;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.UuidAware;
@@ -105,6 +112,7 @@ import io.harness.remote.client.NGRestUtils;
 import io.harness.sanitizer.HtmlInputSanitizer;
 import io.harness.security.dto.UserPrincipal;
 import io.harness.serializer.KryoSerializer;
+import io.harness.signup.dto.SignupInviteDTO;
 import io.harness.usermembership.remote.UserMembershipClient;
 import io.harness.version.VersionInfoManager;
 
@@ -148,9 +156,11 @@ import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.UserGroup.UserGroupKeys;
+import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.OauthSettings;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SamlSettings;
+import software.wings.beans.utm.UtmInfo;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.EmailData;
@@ -168,8 +178,6 @@ import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.authentication.AuthenticationManager;
 import software.wings.security.authentication.AuthenticationUtils;
-import software.wings.security.authentication.LogoutResponse;
-import software.wings.security.authentication.OauthProviderType;
 import software.wings.security.authentication.TOTPAuthHandler;
 import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings;
@@ -407,6 +415,8 @@ public class UserServiceImpl implements UserService {
     UserInvite userInviteInDB = signupService.getUserInviteByEmail(emailAddress);
 
     if (userInviteInDB == null) {
+      io.harness.ng.core.user.UtmInfo signupInviteUtmInfo = signupInvite.getUtmInfo();
+
       UserInvite userInvite = new UserInvite();
       userInvite.setEmail(emailAddress);
       userInvite.setPasswordHash(signupInvite.getPasswordHash());
@@ -414,6 +424,28 @@ public class UserServiceImpl implements UserService {
       userInvite.setCreatedFromNG(true);
       userInvite.setSource(UserInviteSource.builder().type(SourceType.TRIAL).build());
       userInvite.setCompleted(false);
+
+      if (signupInviteUtmInfo != null) {
+        userInvite.setUtmInfo(UtmInfo.builder()
+                                  .utmSource(signupInviteUtmInfo.getUtmSource())
+                                  .utmTerm(signupInviteUtmInfo.getUtmTerm())
+                                  .utmCampaign(signupInviteUtmInfo.getUtmCampaign())
+                                  .utmContent(signupInviteUtmInfo.getUtmContent())
+                                  .utmMedium(signupInviteUtmInfo.getUtmMedium())
+                                  .build());
+      }
+
+      if (signupInvite.getEdition() != null) {
+        userInvite.setEdition(signupInvite.getEdition().name());
+      }
+
+      if (signupInvite.getBillingFrequency() != null) {
+        userInvite.setBillingFrequency(signupInvite.getBillingFrequency().name());
+      }
+
+      if (signupInvite.getSignupAction() != null) {
+        userInvite.setSignupAction(signupInvite.getSignupAction().name());
+      }
 
       String inviteId = wingsPersistence.save(userInvite);
       userInvite.setUuid(inviteId);
@@ -472,6 +504,7 @@ public class UserServiceImpl implements UserService {
                     .accounts(Lists.newArrayList(createdAccount))
                     .emailVerified(true)
                     .defaultAccountId(createdAccount.getUuid())
+                    .utmInfo(userInvite.getUtmInfo())
                     .build();
     completeUserInviteForSignup(userInvite, createdAccount.getUuid());
     return createNewUserAndSignIn(user, createdAccount.getUuid());
@@ -689,6 +722,7 @@ public class UserServiceImpl implements UserService {
     userSummary.setUserLocked(user.isUserLocked());
     userSummary.setPasswordExpired(user.isPasswordExpired());
     userSummary.setImported(user.isImported());
+    userSummary.setDisabled(user.isDisabled());
     return userSummary;
   }
 
@@ -793,6 +827,43 @@ public class UserServiceImpl implements UserService {
     } else {
       return getCGDashboardUrl(accountId);
     }
+  }
+
+  @Override
+  public RestrictedSwitchAccountInfo getSwitchAccountInfo(String accountId, String userId) {
+    Account account = accountService.get(accountId);
+    RestrictedSwitchAccountInfo.Builder builder =
+        RestrictedSwitchAccountInfo.builder()
+            .skipReAuthentication(
+                featureFlagService.isEnabled(FeatureName.SKIP_SWITCH_ACCOUNT_REAUTHENTICATION, accountId))
+            .isHarnessSupportGroupUser(harnessUserGroupService.isHarnessSupportUser(userId))
+            .whitelistedDomains(accountService.getWhitelistedDomains(accountId))
+            .authenticationMechanism(account.getAuthenticationMechanism())
+            .isTwoFactorAuthEnabledForAccount(accountService.getTwoFactorEnforceInfo(accountId));
+
+    LdapSettings ldapSettings = ssoService.getLdapSettings(accountId);
+    if (ldapSettings != null) {
+      builder.ldapIdentificationInfo(LdapIdentificationInfo.builder()
+                                         .host(ldapSettings.getConnectionSettings().getHost())
+                                         .port(ldapSettings.getConnectionSettings().getPort())
+                                         .build());
+    }
+
+    SamlSettings samlSettings = ssoSettingService.getSamlSettingsByAccountId(accountId);
+    if (samlSettings != null) {
+      builder.samlIdentificationInfo(SamlIdentificationInfo.builder()
+                                         .origin(samlSettings.getOrigin())
+                                         .metaDataFile(samlSettings.getMetaDataFile())
+                                         .build());
+    }
+
+    OauthSettings oauthSettings = ssoSettingService.getOauthSettingsByAccountId(accountId);
+    if (oauthSettings != null) {
+      builder.oauthIdentificationInfo(
+          OauthIdentificationInfo.builder().providers(oauthSettings.getAllowedProviders()).build());
+    }
+
+    return builder.build();
   }
 
   private URI getUserInfoSubmitUrl(String accountId, String email, String jwtToken) throws URISyntaxException {
@@ -1196,8 +1267,8 @@ public class UserServiceImpl implements UserService {
       user.getPendingAccounts().remove(account);
       user.getAccounts().add(account);
     } else {
+      userInvite.setUuid(wingsPersistence.save(userInvite));
       if (isInviteAcceptanceRequired) {
-        userInvite.setUuid(wingsPersistence.save(userInvite));
         user.getPendingAccounts().add(account);
       } else {
         user.getAccounts().add(account);
@@ -2583,10 +2654,11 @@ public class UserServiceImpl implements UserService {
             if (accountService.isNextGenEnabled(accountId)) {
               Boolean isUserPartOfAccountInNG =
                   NGRestUtils.getResponse(userMembershipClient.isUserInScope(userId, accountId, null, null));
-              log.info(
-                  "User {} is {} of nextgen in account {}", userId, isUserPartOfAccountInNG ? "" : "not", accountId);
-              if (isUserPartOfAccountInNG) {
-                updatedActiveAccounts.add(account);
+              log.info("User {} is {} of nextgen in account {}", userId,
+                  Boolean.TRUE.equals(isUserPartOfAccountInNG) ? "" : "not", accountId);
+              if (Boolean.TRUE.equals(isUserPartOfAccountInNG)) {
+                throw new InvalidRequestException(
+                    "User cannot be deleted because user is part of Harness NextGen as well. Please remove the user from NextGen first.");
               }
             }
           } else {
@@ -2969,8 +3041,8 @@ public class UserServiceImpl implements UserService {
     // Serialise to JWT compact form
     String jwtString = jwsObject.serialize();
 
-    String redirectUrl = "https://"
-        + "harnesssupport.zendesk.com/access/jwt?jwt=" + jwtString;
+    String redirectUrl =
+        String.format("%s/access/jwt?jwt=%s", configuration.getPortal().getZendeskBaseUrl(), jwtString);
 
     if (returnToUrl != null) {
       redirectUrl += "&return_to=" + returnToUrl;
@@ -3040,8 +3112,21 @@ public class UserServiceImpl implements UserService {
     return pageResponse.getResponse();
   }
 
+  public Map<String, String> populateUserPrincipalClaim(
+      User user, Map<String, String> claims, boolean persistOldAccountId) {
+    String oldAccountId = claims.get(ACCOUNT_ID_KEY);
+    // User Principal needed in token for environments without gateway as this token will be sent back to different
+    // microservices
+    addUserPrincipal(claims, user);
+    if (persistOldAccountId && isNotEmpty(oldAccountId)) {
+      claims.put(ACCOUNT_ID_KEY, oldAccountId);
+    }
+    return claims;
+  }
+
   @Override
-  public String generateJWTToken(User user, Map<String, String> claims, JWT_CATEGORY category) {
+  public String generateJWTToken(
+      User user, Map<String, String> claims, JWT_CATEGORY category, boolean persistOldAccountId) {
     String jwtPasswordSecret = secretManager.getJWTSecret(category);
     if (jwtPasswordSecret == null) {
       throw new InvalidRequestException(INCORRECT_PORTAL_SETUP);
@@ -3054,9 +3139,7 @@ public class UserServiceImpl implements UserService {
               .withIssuer(HARNESS_ISSUER)
               .withIssuedAt(new Date())
               .withExpiresAt(new Date(System.currentTimeMillis() + category.getValidityDuration()));
-      // User Principal needed in token for environments without gateway as this token will be sent back to different
-      // microservices
-      addUserPrincipal(claims, user);
+      claims = populateUserPrincipalClaim(user, claims, persistOldAccountId);
       if (claims != null && claims.size() > 0) {
         claims.forEach(jwtBuilder::withClaim);
       }
@@ -3486,7 +3569,6 @@ public class UserServiceImpl implements UserService {
     } else {
       query = getListUserQuery(accountId, includeUsersPendingInviteAcceptance);
     }
-    query.criteria(UserKeys.disabled).notEqual(true);
     applySortFilter(pageRequest, query);
     FindOptions findOptions = new FindOptions().skip(offset).limit(pageSize);
     List<User> userList = query.asList(findOptions);

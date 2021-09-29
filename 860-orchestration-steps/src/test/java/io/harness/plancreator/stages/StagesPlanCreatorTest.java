@@ -18,7 +18,7 @@ import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.rule.Owner;
-import io.harness.steps.common.NGSectionStep;
+import io.harness.steps.StagesStep;
 import io.harness.steps.common.NGSectionStepParameters;
 
 import com.google.common.base.Charsets;
@@ -69,7 +69,7 @@ public class StagesPlanCreatorTest extends CategoryTest {
 
     assertThat(planForParentNode.getUuid()).isEqualTo(stagesYamlField.getNode().getUuid());
     assertThat(planForParentNode.getIdentifier()).isEqualTo("stages");
-    assertThat(planForParentNode.getStepType()).isEqualTo(NGSectionStep.STEP_TYPE);
+    assertThat(planForParentNode.getStepType()).isEqualTo(StagesStep.STEP_TYPE);
     assertThat(planForParentNode.getGroup()).isEqualTo("STAGES");
     assertThat(planForParentNode.getName()).isEqualTo("stages");
 
@@ -105,14 +105,16 @@ public class StagesPlanCreatorTest extends CategoryTest {
     assertThat(planForChildrenNodes.containsKey(parallelStagesUuid)).isTrue();
 
     PlanCreationResponse approvalStageResponse = planForChildrenNodes.get(approvalStageUuid);
-    assertThat(approvalStageResponse.getDependencies()).hasSize(1);
-    assertThat(approvalStageResponse.getDependencies().containsKey(approvalStageUuid)).isTrue();
-    assertThat(approvalStageResponse.getDependencies().get(approvalStageUuid)).isEqualTo(approvalStage);
+    assertThat(approvalStageResponse.getDependencies().getDependenciesMap()).hasSize(1);
+    assertThat(approvalStageResponse.getDependencies().getDependenciesMap().containsKey(approvalStageUuid)).isTrue();
+    assertThat(approvalStageResponse.getDependencies().getDependenciesMap().get(approvalStageUuid))
+        .isEqualTo("pipeline/stages/[0]/stage");
 
     PlanCreationResponse parallelStagesResponse = planForChildrenNodes.get(parallelStagesUuid);
-    assertThat(parallelStagesResponse.getDependencies()).hasSize(1);
-    assertThat(parallelStagesResponse.getDependencies().containsKey(parallelStagesUuid)).isTrue();
-    assertThat(parallelStagesResponse.getDependencies().get(parallelStagesUuid)).isEqualTo(parallelDeploymentStages);
+    assertThat(parallelStagesResponse.getDependencies().getDependenciesMap()).hasSize(1);
+    assertThat(parallelStagesResponse.getDependencies().getDependenciesMap().containsKey(parallelStagesUuid)).isTrue();
+    assertThat(parallelStagesResponse.getDependencies().getDependenciesMap().get(parallelStagesUuid))
+        .isEqualTo("pipeline/stages/[1]/parallel");
   }
 
   @Test

@@ -2,5 +2,5 @@ name: Advise Metrics Group
 identifier: advise_event_group
 labels:
   - accountId
-  - orgIdentifier
-  - projectIdentifier
+  - stepType
+  - module

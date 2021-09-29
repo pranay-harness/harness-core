@@ -1,6 +1,7 @@
 package io.harness.serializer;
 
 import io.harness.EntityType;
+import io.harness.accesscontrol.serializer.AccessControlClientRegistrars;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
@@ -25,8 +26,10 @@ import org.mongodb.morphia.converters.TypeConverter;
 public class NextGenRegistrars {
   public static final ImmutableSet<Class<? extends KryoRegistrar>> kryoRegistrars =
       ImmutableSet.<Class<? extends KryoRegistrar>>builder()
+          .addAll(AccessControlClientRegistrars.kryoRegistrars)
           .addAll(SecretManagerClientRegistrars.kryoRegistrars)
           .addAll(ConnectorNextGenRegistrars.kryoRegistrars)
+          .addAll(GitOpsRegistrars.kryoRegistrars)
           .addAll(CDNGRegistrars.kryoRegistrars)
           .addAll(OutboxEventRegistrars.kryoRegistrars)
           .addAll(NGFileServiceRegistrars.kryoRegistrars)
@@ -39,6 +42,7 @@ public class NextGenRegistrars {
       ImmutableSet.<Class<? extends MorphiaRegistrar>>builder()
           .addAll(SecretManagerClientRegistrars.morphiaRegistrars)
           .addAll(ConnectorNextGenRegistrars.morphiaRegistrars)
+          .addAll(GitOpsRegistrars.morphiaRegistrars)
           .addAll(CDNGRegistrars.morphiaRegistrars)
           .add(NgUserGroupMorphiaRegistrar.class)
           .add(NgUserMorphiaRegistrar.class)
@@ -63,6 +67,7 @@ public class NextGenRegistrars {
   public static final ImmutableList<YamlSchemaRootClass> yamlSchemaRegistrars =
       ImmutableList.<YamlSchemaRootClass>builder()
           .addAll(ConnectorNextGenRegistrars.yamlSchemaRegistrars)
+          .addAll(GitOpsRegistrars.yamlSchemaRegistrars)
           .addAll(CDNGRegistrars.yamlSchemaRegistrars)
           .add(YamlSchemaRootClass.builder()
                    .entityType(EntityType.SECRETS)

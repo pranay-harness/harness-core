@@ -5,6 +5,5 @@ harness_grpc_library(
     visibility = ["//visibility:public"],
     deps = [
         "//920-delegate-agent-beans/src/main/proto/io/harness/managerclient:920_delegate_agent_beans_proto",
-        "//920-delegate-agent-beans/src/main/proto/io/harness/perpetualtask:920_delegate_agent_beans_proto",
     ],
 )

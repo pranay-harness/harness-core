@@ -1,6 +1,7 @@
 package io.harness.cvng.dashboard.services.impl;
 
 import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_SERVICE_GUARD_WINDOW_SIZE;
+import static io.harness.cvng.core.utils.DateTimeUtils.roundDownToMinBoundary;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -10,6 +11,10 @@ import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.TimeSeriesMetricType;
+import io.harness.cvng.core.beans.params.PageParams;
+import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
+import io.harness.cvng.core.beans.params.TimeRangeParams;
+import io.harness.cvng.core.beans.params.filterParams.TimeSeriesAnalysisFilter;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.TimeSeriesRecord;
 import io.harness.cvng.core.services.api.CVConfigService;
@@ -49,6 +54,49 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
   @Inject private ActivityService activityService;
 
   @Override
+  public PageResponse<TimeSeriesMetricDataDTO> getTimeSeriesMetricData(
+      ServiceEnvironmentParams serviceEnvironmentParams, TimeRangeParams timeRangeParams,
+      TimeSeriesAnalysisFilter timeSeriesAnalysisFilter, PageParams pageParams) {
+    List<CVConfig> cvConfigs;
+    if (timeSeriesAnalysisFilter.filterByHealthSourceIdentifiers()) {
+      cvConfigs = cvConfigService.list(serviceEnvironmentParams, timeSeriesAnalysisFilter.getHealthSourceIdentifiers());
+    } else {
+      cvConfigs = cvConfigService.list(serviceEnvironmentParams);
+    }
+    List<String> cvConfigIds = cvConfigs.stream().map(CVConfig::getUuid).collect(Collectors.toList());
+    PageResponse<TimeSeriesMetricDataDTO> timeSeriesMetricDataDTOPageResponse = getMetricData(cvConfigIds,
+        serviceEnvironmentParams.getAccountIdentifier(), serviceEnvironmentParams.getProjectIdentifier(),
+        serviceEnvironmentParams.getOrgIdentifier(), serviceEnvironmentParams.getEnvironmentIdentifier(),
+        serviceEnvironmentParams.getServiceIdentifier(), null, timeRangeParams.getStartTime(),
+        timeRangeParams.getEndTime(), timeRangeParams.getStartTime(), timeSeriesAnalysisFilter.isAnomalous(),
+        pageParams.getPage(), pageParams.getSize(), timeSeriesAnalysisFilter.getFilter());
+    setUpMetricDataForFullTimeRange(timeRangeParams, timeSeriesMetricDataDTOPageResponse);
+    return timeSeriesMetricDataDTOPageResponse;
+  }
+
+  private void setUpMetricDataForFullTimeRange(
+      TimeRangeParams timeRangeParams, PageResponse<TimeSeriesMetricDataDTO> timeSeriesMetricDataDTOPageResponse) {
+    Instant startTime = roundDownToMinBoundary(timeRangeParams.getStartTime(), 1);
+    Instant endTime = roundDownToMinBoundary(timeRangeParams.getEndTime(), 1);
+    timeSeriesMetricDataDTOPageResponse.getContent().forEach(timeSeriesMetricDataDTO -> {
+      List<MetricData> metricDataList = new ArrayList<>();
+      Instant time = startTime;
+      while (time.isBefore(endTime) || time.compareTo(endTime) == 0) {
+        metricDataList.add(MetricData.builder().timestamp(time.toEpochMilli()).value(null).risk(Risk.NO_DATA).build());
+        time = time.plus(1, ChronoUnit.MINUTES);
+      }
+      timeSeriesMetricDataDTO.getMetricDataList().forEach(metricData -> {
+        int index = (int) ChronoUnit.MINUTES.between(startTime, Instant.ofEpochMilli(metricData.getTimestamp()));
+        if (index >= 0 && index < metricDataList.size()) {
+          metricDataList.set(index, metricData);
+        }
+      });
+      SortedSet<MetricData> metricDataSortedSet = new TreeSet<>(metricDataList);
+      timeSeriesMetricDataDTO.setMetricDataList(metricDataSortedSet);
+    });
+  }
+
+  @Override
   public PageResponse<TimeSeriesMetricDataDTO> getSortedMetricData(String accountId, String projectIdentifier,
       String orgIdentifier, String environmentIdentifier, String serviceIdentifier,
       CVMonitoringCategory monitoringCategory, Long startTimeMillis, Long endTimeMillis, Long analysisStartTimeMillis,
@@ -68,8 +116,8 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
     }
     List<String> cvConfigIds = cvConfigList.stream().map(CVConfig::getUuid).collect(Collectors.toList());
 
-    return getMetricData(cvConfigIds, projectIdentifier, orgIdentifier, environmentIdentifier, serviceIdentifier,
-        monitoringCategory, startTime, endTime, analysisStartTime, anomalous, page, size, filter);
+    return getMetricData(cvConfigIds, accountId, projectIdentifier, orgIdentifier, environmentIdentifier,
+        serviceIdentifier, monitoringCategory, startTime, endTime, analysisStartTime, anomalous, page, size, filter);
   }
 
   @Override
@@ -89,17 +137,27 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
     List<String> cvConfigIds = verificationTaskIds.stream()
                                    .map(verificationTaskId -> verificationTaskService.getCVConfigId(verificationTaskId))
                                    .collect(Collectors.toList());
-    return getMetricData(cvConfigIds, projectIdentifier, orgIdentifier, environmentIdentifier, serviceIdentifier, null,
-        Instant.ofEpochMilli(startTimeMillis), Instant.ofEpochMilli(endTimeMillis), activity.getActivityStartTime(),
-        anomalousOnly, page, size, null);
+    return getMetricData(cvConfigIds, accountId, projectIdentifier, orgIdentifier, environmentIdentifier,
+        serviceIdentifier, null, Instant.ofEpochMilli(startTimeMillis), Instant.ofEpochMilli(endTimeMillis),
+        activity.getActivityStartTime(), anomalousOnly, page, size, null);
   }
 
-  private PageResponse<TimeSeriesMetricDataDTO> getMetricData(List<String> cvConfigIds, String projectIdentifier,
-      String orgIdentifier, String environmentIdentifier, String serviceIdentifier,
+  private PageResponse<TimeSeriesMetricDataDTO> getMetricData(List<String> cvConfigIds, String accountId,
+      String projectIdentifier, String orgIdentifier, String environmentIdentifier, String serviceIdentifier,
       CVMonitoringCategory monitoringCategory, Instant startTime, Instant endTime, Instant analysisStartTime,
       boolean anomalousOnly, int page, int size, String filter) {
     List<Callable<List<TimeSeriesRecord>>> recordsPerId = new ArrayList<>();
 
+    // TODO: this should be passed as parameter, needs refactoring in other methods as well
+    ServiceEnvironmentParams serviceEnvironmentParams = ServiceEnvironmentParams.builder()
+                                                            .accountIdentifier(accountId)
+                                                            .orgIdentifier(orgIdentifier)
+                                                            .projectIdentifier(projectIdentifier)
+                                                            .serviceIdentifier(serviceIdentifier)
+                                                            .environmentIdentifier(environmentIdentifier)
+                                                            .build();
+    Map<String, DataSourceType> cvConfigIdToDataSourceTypeMap =
+        cvConfigService.getDataSourceTypeForCVConfigs(serviceEnvironmentParams, cvConfigIds);
     cvConfigIds.forEach(cvConfigId -> recordsPerId.add(() -> {
       List<TimeSeriesRecord> timeSeriesRecordsfromDB =
           timeSeriesRecordService.getTimeSeriesRecordsForConfigs(Arrays.asList(cvConfigId), startTime, endTime, false);
@@ -180,6 +238,7 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
                   .projectIdentifier(projectIdentifier)
                   .orgIdentifier(orgIdentifier)
                   .metricType(record.getMetricType())
+                  .dataSourceType(cvConfigIdToDataSourceTypeMap.get(record.getVerificationTaskId()))
                   .build());
         }
         TimeSeriesMetricDataDTO timeSeriesMetricDataDTO = transactionMetricDataMap.get(key);
@@ -192,8 +251,8 @@ public class TimeSeriesDashboardServiceImpl implements TimeSeriesDashboardServic
               timeSeriesGroupValue.getTimeStamp().toEpochMilli(), timeSeriesGroupValue.getRiskScore());
         } else {
           // if there is no percent for error then zero fill
-          timeSeriesMetricDataDTO.addMetricData(
-              0, timeSeriesGroupValue.getTimeStamp().toEpochMilli(), timeSeriesGroupValue.getRiskScore());
+          timeSeriesMetricDataDTO.addMetricData(Double.valueOf(0), timeSeriesGroupValue.getTimeStamp().toEpochMilli(),
+              timeSeriesGroupValue.getRiskScore());
         }
       });
     });

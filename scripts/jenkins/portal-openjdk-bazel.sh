@@ -2,42 +2,26 @@
 set -x
 set -e
 
-mkdir -p dist ;
-cd dist
+SCRIPT_DIR="$(dirname $0)"
+source "${SCRIPT_DIR}/portal-openjdk-bazel-commons.sh"
 
-cp -R ../scripts/jenkins/ .
-cd ..
+prepare_to_copy_jars
 
-curl https://storage.googleapis.com/harness-prod-public/public/shared/tools/alpn/release/8.1.13.v20181017/alpn-boot-8.1.13.v20181017.jar  --output alpn-boot-8.1.13.v20181017.jar
 
-mkdir -p dist/manager ;
+copy_cg_manager_jars
 
-cd dist/manager
+copy_event_server_jars
 
-cp ${HOME}/.bazel-dirs/bin/360-cg-manager/module_deploy.jar rest-capsule.jar
-cp ../../400-rest/src/main/resources/hazelcast.xml .
-cp ../../keystore.jks .
-cp ../../360-cg-manager/key.pem .
-cp ../../360-cg-manager/cert.pem .
-cp ../../360-cg-manager/newrelic.yml .
-cp ../../360-cg-manager/config.yml .
-cp ../../400-rest/src/main/resources/redisson-jcache.yaml .
-cp ../../alpn-boot-8.1.13.v20181017.jar .
+copy_batch_processing_jars
 
-cp ../../dockerization/manager/Dockerfile-manager-jenkins-k8-openjdk ./Dockerfile
-cp ../../dockerization/manager/Dockerfile-manager-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
-cp -r ../../dockerization/manager/scripts/ .
-mv scripts/start_process_bazel.sh scripts/start_process.sh
+copy_change_data_capture_jars
 
-cp ../../protocol.info .
-echo ${JDK} > jdk.txt
-echo ${VERSION} > version.txt
-if [ ! -z ${PURPOSE} ]
-then
-    echo ${PURPOSE} > purpose.txt
-fi
+copy_ce_nextgen_jars
 
-cd ../..
+copy_ng_manager_jars
+
+copy_ng_dashboard_jars
+
 
 mkdir -p dist/delegate-service-app ;
 
@@ -132,75 +116,6 @@ fi
 
 cd ../..
 
-mkdir -p dist/event-server ;
-cd dist/event-server
-cp ${HOME}/.bazel-dirs/bin/350-event-server/module_deploy.jar event-server-capsule.jar
-cp ../../350-event-server/key.pem .
-cp ../../350-event-server/cert.pem .
-cp ../../350-event-server/event-service-config.yml .
-cp ../../dockerization/event-server/Dockerfile-event-server-jenkins-k8-openjdk Dockerfile
-cp ../../dockerization/event-server/Dockerfile-event-server-jenkins-k8-gcr-openjdk Dockerfile-gcr
-cp -r ../../dockerization/event-server/scripts/ .
-cp ../../protocol.info .
-echo ${JDK} > jdk.txt
-echo ${VERSION} > version.txt
-if [ ! -z ${PURPOSE} ]
-then
-    echo ${PURPOSE} > purpose.txt
-fi
-cd ../..
-
-mkdir -p dist/batch-processing ;
-cd dist/batch-processing
-cp ${HOME}/.bazel-dirs/bin/280-batch-processing/module_deploy.jar batch-processing-capsule.jar
-cp ../../280-batch-processing/batch-processing-config.yml .
-cp ../../dockerization/batch-processing/Dockerfile-batch-processing-jenkins-k8-openjdk Dockerfile
-cp ../../dockerization/batch-processing/Dockerfile-batch-processing-jenkins-k8-gcr-openjdk Dockerfile-gcr
-cp -r ../../dockerization/batch-processing/scripts/ .
-cp ../../protocol.info .
-echo ${JDK} > jdk.txt
-echo ${VERSION} > version.txt
-if [ ! -z ${PURPOSE} ]
-then
-    echo ${PURPOSE} > purpose.txt
-fi
-cd ../..
-
-mkdir -p dist/change-data-capture ;
-cd dist/change-data-capture
-cp ${HOME}/.bazel-dirs/bin/110-change-data-capture/module_deploy.jar change-data-capture.jar
-cp ../../110-change-data-capture/config.yml .
-cp ../../dockerization/change-data-capture/Dockerfile-change-data-capture-jenkins-k8-openjdk Dockerfile
-cp ../../dockerization/change-data-capture/Dockerfile-change-data-capture-jenkins-k8-gcr-openjdk Dockerfile-gcr
-cp -r ../../dockerization/change-data-capture/scripts/ .
-cp ../../protocol.info .
-echo ${JDK} > jdk.txt
-echo ${VERSION} > version.txt
-if [ ! -z ${PURPOSE} ]
-then
-    echo ${PURPOSE} > purpose.txt
-fi
-cd ../..
-
-MODULE_NAME="340-ce-nextgen";
-FOLDER_NAME="ce-nextgen";
-mkdir -p dist/${FOLDER_NAME} ;
-cd dist/${FOLDER_NAME}
-cp ${HOME}/.bazel-dirs/bin/${MODULE_NAME}/module_deploy.jar ce-nextgen-capsule.jar
-cp ../../${MODULE_NAME}/keystore.jks .
-cp ../../${MODULE_NAME}/config.yml .
-cp ../../alpn-boot-8.1.13.v20181017.jar .
-cp ../../dockerization/${FOLDER_NAME}/Dockerfile-ce-nextgen-jenkins-k8-gcr-openjdk Dockerfile-gcr
-cp ../../dockerization/${FOLDER_NAME}/Dockerfile-ce-nextgen-jenkins-k8-openjdk Dockerfile
-cp -r ../../dockerization/${FOLDER_NAME}/scripts/ .
-cp ../../protocol.info .
-echo ${JDK} > jdk.txt
-echo ${VERSION} > version.txt
-if [ ! -z ${PURPOSE} ]
-then
-    echo ${PURPOSE} > purpose.txt
-fi
-cd ../..
 
 mkdir -p dist/delegate
 cp 260-delegate/target/delegate-capsule.jar dist/delegate/delegate-capsule.jar
@@ -251,31 +166,6 @@ then
 fi
 cd ../..
 
-mkdir -p dist/ng-manager
-cd dist/ng-manager
-
-cp ${HOME}/.bazel-dirs/bin/120-ng-manager/module_deploy.jar ng-manager-capsule.jar
-cp ../../120-ng-manager/config.yml .
-cp ../../keystore.jks .
-cp ../../120-ng-manager/key.pem .
-cp ../../120-ng-manager/cert.pem .
-cp ../../alpn-boot-8.1.13.v20181017.jar .
-cp ../../120-ng-manager/src/main/resources/redisson-jcache.yaml .
-
-cp ../../dockerization/ng-manager/Dockerfile-ng-manager-jenkins-k8-openjdk ./Dockerfile
-cp ../../dockerization/ng-manager/Dockerfile-ng-manager-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
-cp -r ../../dockerization/ng-manager/scripts/ .
-cp ../../protocol.info .
-echo ${JDK} > jdk.txt
-echo ${VERSION} > version.txt
-if [ ! -z ${PURPOSE} ]
-then
-    echo ${PURPOSE} > purpose.txt
-fi
-
-cd ../..
-
-
 mkdir -p dist/ci-manager
 cd dist/ci-manager
 cp ${HOME}/.bazel-dirs/bin/310-ci-manager/module_deploy.jar ci-manager-capsule.jar
@@ -290,7 +180,7 @@ cp ../../alpn-boot-8.1.13.v20181017.jar .
 cp ../../dockerization/ci-manager/Dockerfile-ci-manager-jenkins-k8-openjdk ./Dockerfile
 cp ../../dockerization/ci-manager/Dockerfile-ci-manager-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
 cp -r ../../dockerization/ci-manager/scripts/ .
-cp ../../protocol.info .
+cp ../../ci-manager-protocol.info .
 echo ${JDK} > jdk.txt
 echo ${VERSION} > version.txt
 if [ ! -z ${PURPOSE} ]
@@ -336,7 +226,7 @@ cp ../../alpn-boot-8.1.13.v20181017.jar .
 cp ../../dockerization/pipeline-service/Dockerfile-pipeline-service-jenkins-k8-openjdk ./Dockerfile
 cp ../../dockerization/pipeline-service/Dockerfile-pipeline-service-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
 cp -r ../../dockerization/pipeline-service/scripts/ .
-cp ../../protocol.info .
+cp ../../pipeline-service-protocol.info .
 echo ${JDK} > jdk.txt
 echo ${VERSION} > version.txt
 if [ ! -z ${PURPOSE} ]
@@ -346,6 +236,29 @@ fi
 
 cd ../..
 
+mkdir -p dist/template-service
+cd dist/template-service
+
+cp ${HOME}/.bazel-dirs/bin/840-template-service/module_deploy.jar template-service-capsule.jar
+cp ../../840-template-service/config.yml .
+cp ../../840-template-service/keystore.jks .
+cp ../../840-template-service/key.pem .
+cp ../../840-template-service/cert.pem .
+cp ../../840-template-service/src/main/resources/redisson-jcache.yaml .
+
+cp ../../alpn-boot-8.1.13.v20181017.jar .
+cp ../../dockerization/template-service/Dockerfile-template-service-jenkins-k8-openjdk ./Dockerfile
+cp ../../dockerization/template-service/Dockerfile-template-service-jenkins-k8-gcr-openjdk ./Dockerfile-gcr
+cp -r ../../dockerization/template-service/scripts/ .
+cp ../../protocol.info .
+echo ${JDK} > jdk.txt
+echo ${VERSION} > version.txt
+if [ ! -z ${PURPOSE} ]
+then
+    echo ${PURPOSE} > purpose.txt
+fi
+
+cd ../..
 
 mkdir -p dist/eventsapi-monitor
 cd dist/eventsapi-monitor

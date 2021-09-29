@@ -9,7 +9,7 @@
 
 FROM alpine:3.12
 # Copy ci-addon binary
-COPY linux_amd64_pure_stripped/ci-addon /usr/local/bin/ci-addon-linux-amd64
+COPY ci-addon_/ci-addon /usr/local/bin/ci-addon-linux-amd64
 RUN chmod +x /usr/local/bin/ci-addon-linux-amd64
 COPY java-agent.jar /usr/local/bin/
 

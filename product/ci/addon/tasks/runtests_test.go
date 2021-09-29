@@ -96,7 +96,7 @@ instrPackages: p1, p2, p3`
 }
 
 func TestGetMavenCmd(t *testing.T) {
-	ctrl, _ := gomock.WithContext(context.Background(), t)
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
 	defer ctrl.Finish()
 
 	log, _ := logs.GetObservedLogger(zap.InfoLevel)
@@ -189,7 +189,248 @@ instrPackages: p1, p2, p3`
 			addonLogger:          log.Sugar(),
 		}
 
-		got, err := r.getMavenCmd(tc.tests)
+		got, err := r.getMavenCmd(ctx, tc.tests, false)
+		if tc.expectedErr == (err == nil) {
+			t.Fatalf("%s: expected error: %v, got: %v", tc.name, tc.expectedErr, got)
+		}
+		assert.Equal(t, got, tc.want)
+	}
+}
+
+func TestGetMavenCmd_Manual(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	fs := filesystem.NewMockFileSystem(ctrl)
+
+	tmpFilePath := "/test/tmp"
+	packages := "p1, p2, p3"
+
+	expDir := fmt.Sprintf(outDir, tmpFilePath)
+	expData := `outDir: /test/tmp/ti/callgraph/
+logLevel: 0
+logConsole: false
+writeTo: COVERAGE_JSON
+instrPackages: p1, p2, p3`
+	fs.EXPECT().MkdirAll(expDir, os.ModePerm).Return(nil).AnyTimes()
+	mf := filesystem.NewMockFile(ctrl)
+	mf.EXPECT().Write([]byte(expData)).Return(0, nil).AnyTimes()
+	fs.EXPECT().Create("/test/tmp/config.ini").Return(mf, nil).AnyTimes()
+
+	tests := []struct {
+		name                 string // description of test
+		args                 string
+		runOnlySelectedTests bool
+		want                 string
+		expectedErr          bool
+		tests                []types.RunnableTest
+	}{
+		{
+			name:                 "run all tests with empty test list and no -Duser parameters",
+			args:                 "clean test",
+			runOnlySelectedTests: false,
+			want:                 "mvn clean test",
+			expectedErr:          false,
+			tests:                []types.RunnableTest{},
+		},
+		{
+			name:                 "run selected tests with zero tests and -Duser parameters",
+			args:                 "clean test -Duser.timezone=US/Mountain -Duser.locale=en/US",
+			runOnlySelectedTests: true,
+			want:                 "mvn clean test -Duser.timezone=US/Mountain -Duser.locale=en/US",
+			expectedErr:          false,
+			tests:                []types.RunnableTest{},
+		},
+	}
+
+	for _, tc := range tests {
+		r := runTestsTask{
+			id:                   "id",
+			runOnlySelectedTests: tc.runOnlySelectedTests,
+			fs:                   fs,
+			tmpFilePath:          tmpFilePath,
+			args:                 tc.args,
+			packages:             packages,
+			log:                  log.Sugar(),
+			addonLogger:          log.Sugar(),
+		}
+
+		got, err := r.getMavenCmd(ctx, tc.tests, true)
+		if tc.expectedErr == (err == nil) {
+			t.Fatalf("%s: expected error: %v, got: %v", tc.name, tc.expectedErr, got)
+		}
+		assert.Equal(t, got, tc.want)
+	}
+}
+
+// ---------------------------------------------------------------------------------------------------
+func TestGetGradleCmd(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	fs := filesystem.NewMockFileSystem(ctrl)
+
+	fs.EXPECT().Stat("gradlew").Return(nil, nil).AnyTimes()
+
+	tmpFilePath := "/test/tmp"
+	packages := "p1, p2, p3"
+
+	expDir := fmt.Sprintf(outDir, tmpFilePath)
+	expData := `outDir: /test/tmp/ti/callgraph/
+logLevel: 0
+logConsole: false
+writeTo: COVERAGE_JSON
+instrPackages: p1, p2, p3`
+	fs.EXPECT().MkdirAll(expDir, os.ModePerm).Return(nil).AnyTimes()
+	mf := filesystem.NewMockFile(ctrl)
+	mf.EXPECT().Write([]byte(expData)).Return(0, nil).AnyTimes()
+	fs.EXPECT().Create("/test/tmp/config.ini").Return(mf, nil).AnyTimes()
+
+	t1 := types.RunnableTest{Pkg: "pkg1", Class: "cls1", Method: "m1"}
+	t2 := types.RunnableTest{Pkg: "pkg2", Class: "cls2", Method: "m2"}
+
+	tests := []struct {
+		name                 string // description of test
+		args                 string
+		runOnlySelectedTests bool
+		want                 string
+		expectedErr          bool
+		tests                []types.RunnableTest
+	}{
+		{
+			name:                 "run all tests with run only selected tests as false",
+			args:                 "test",
+			runOnlySelectedTests: false,
+			want:                 "./gradlew test -DHARNESS_JAVA_AGENT=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini",
+			expectedErr:          false,
+			tests:                []types.RunnableTest{t1, t2},
+		},
+		{
+			name:                 "run selected tests with given test list and extra args",
+			args:                 "test -Duser.timezone=US/Mountain",
+			runOnlySelectedTests: true,
+			want:                 "./gradlew test -Duser.timezone=US/Mountain -DHARNESS_JAVA_AGENT=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini --tests \"pkg1.cls1\" --tests \"pkg2.cls2\"",
+			expectedErr:          false,
+			tests:                []types.RunnableTest{t1, t2},
+		},
+		{
+			name:                 "run selected tests with zero tests",
+			args:                 "test -Duser.timezone=US/Mountain -Duser.locale=en/US",
+			runOnlySelectedTests: true,
+			want:                 "echo \"Skipping test run, received no tests to execute\"",
+			expectedErr:          false,
+			tests:                []types.RunnableTest{},
+		},
+		{
+			name:                 "run selected tests with repeating test list and -Duser parameters",
+			args:                 "test -Duser.timezone=US/Mountain -Duser.locale=en/US",
+			runOnlySelectedTests: true,
+			want:                 "./gradlew test -Duser.timezone=US/Mountain -Duser.locale=en/US -DHARNESS_JAVA_AGENT=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini --tests \"pkg1.cls1\" --tests \"pkg2.cls2\"",
+			expectedErr:          false,
+			tests:                []types.RunnableTest{t1, t2, t1, t2},
+		},
+		{
+			name:                 "run selected tests with single test and -Duser parameters and or condition",
+			args:                 "test -Duser.timezone=US/Mountain -Duser.locale=en/US || true",
+			runOnlySelectedTests: true,
+			want:                 "./gradlew test -Duser.timezone=US/Mountain -Duser.locale=en/US -DHARNESS_JAVA_AGENT=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini --tests \"pkg2.cls2\" || true",
+			expectedErr:          false,
+			tests:                []types.RunnableTest{t2},
+		},
+		{
+			name:                 "run selected tests with single test and -Duser parameters and multiple or conditions",
+			args:                 "test -Duser.timezone=US/Mountain -Duser.locale=en/US || true || false || other",
+			runOnlySelectedTests: true,
+			want:                 "./gradlew test -Duser.timezone=US/Mountain -Duser.locale=en/US -DHARNESS_JAVA_AGENT=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini --tests \"pkg2.cls2\" || true || false || other",
+			expectedErr:          false,
+			tests:                []types.RunnableTest{t2},
+		},
+	}
+
+	for _, tc := range tests {
+		r := runTestsTask{
+			id:                   "id",
+			runOnlySelectedTests: tc.runOnlySelectedTests,
+			fs:                   fs,
+			tmpFilePath:          tmpFilePath,
+			args:                 tc.args,
+			packages:             packages,
+			log:                  log.Sugar(),
+			addonLogger:          log.Sugar(),
+		}
+
+		got, err := r.getGradleCmd(ctx, tc.tests, false)
+		if tc.expectedErr == (err == nil) {
+			t.Fatalf("%s: expected error: %v, got: %v", tc.name, tc.expectedErr, got)
+		}
+		assert.Equal(t, got, tc.want, tc.name)
+	}
+}
+
+func TestGetGradleCmd_Manual(t *testing.T) {
+	ctrl, ctx := gomock.WithContext(context.Background(), t)
+	defer ctrl.Finish()
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	fs := filesystem.NewMockFileSystem(ctrl)
+
+	fs.EXPECT().Stat("gradlew").Return(nil, os.ErrNotExist).AnyTimes()
+
+	tmpFilePath := "/test/tmp"
+	packages := "p1, p2, p3"
+
+	expDir := fmt.Sprintf(outDir, tmpFilePath)
+	expData := `outDir: /test/tmp/ti/callgraph/
+logLevel: 0
+logConsole: false
+writeTo: COVERAGE_JSON
+instrPackages: p1, p2, p3`
+	fs.EXPECT().MkdirAll(expDir, os.ModePerm).Return(nil).AnyTimes()
+	mf := filesystem.NewMockFile(ctrl)
+	mf.EXPECT().Write([]byte(expData)).Return(0, nil).AnyTimes()
+	fs.EXPECT().Create("/test/tmp/config.ini").Return(mf, nil).AnyTimes()
+
+	tests := []struct {
+		name                 string // description of test
+		args                 string
+		runOnlySelectedTests bool
+		want                 string
+		expectedErr          bool
+		tests                []types.RunnableTest
+	}{
+		{
+			name:                 "run all tests with empty test list and run only selected tests as false",
+			args:                 "test -Duser.timezone=en/US",
+			runOnlySelectedTests: false,
+			want:                 "gradle test -Duser.timezone=en/US",
+			expectedErr:          false,
+			tests:                []types.RunnableTest{},
+		},
+		{
+			name:                 "run selected tests with run only selected tests as true",
+			args:                 "test -Duser.timezone=US/Mountain -Duser.locale=en/US",
+			runOnlySelectedTests: true,
+			want:                 "gradle test -Duser.timezone=US/Mountain -Duser.locale=en/US",
+			expectedErr:          false,
+			tests:                []types.RunnableTest{},
+		},
+	}
+
+	for _, tc := range tests {
+		r := runTestsTask{
+			id:                   "id",
+			runOnlySelectedTests: tc.runOnlySelectedTests,
+			fs:                   fs,
+			tmpFilePath:          tmpFilePath,
+			args:                 tc.args,
+			packages:             packages,
+			log:                  log.Sugar(),
+			addonLogger:          log.Sugar(),
+		}
+
+		got, err := r.getGradleCmd(ctx, tc.tests, true)
 		if tc.expectedErr == (err == nil) {
 			t.Fatalf("%s: expected error: %v, got: %v", tc.name, tc.expectedErr, got)
 		}
@@ -424,17 +665,6 @@ func TestGetCmd_ManualExecution(t *testing.T) {
 	tmpFilePath := "/test/tmp"
 	packages := "p1, p2, p3"
 
-	expDir := fmt.Sprintf(outDir, tmpFilePath)
-	expData := `outDir: /test/tmp/ti/callgraph/
-logLevel: 0
-logConsole: false
-writeTo: COVERAGE_JSON
-instrPackages: p1, p2, p3`
-	fs.EXPECT().MkdirAll(expDir, os.ModePerm).Return(nil).AnyTimes()
-	mf := filesystem.NewMockFile(ctrl)
-	mf.EXPECT().Write([]byte(expData)).Return(0, nil).AnyTimes()
-	fs.EXPECT().Create("/test/tmp/config.ini").Return(mf, nil).AnyTimes()
-
 	diffFiles, _ := json.Marshal([]types.File{{Name: "abc.java", Status: types.FileModified}})
 
 	r := runTestsTask{
@@ -472,7 +702,7 @@ instrPackages: p1, p2, p3`
 export TMPDIR=/test/tmp
 export HARNESS_JAVA_AGENT=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini
 echo x
-mvn -am -DargLine=-javaagent:/addon/bin/java-agent.jar=/test/tmp/config.ini clean test
+mvn clean test
 echo y`
 	got, err := r.getCmd(ctx, outputFile)
 	assert.Nil(t, err)
@@ -764,6 +994,15 @@ instrPackages: p1, p2, p3`
 		return nil
 	}
 
+	// Set isManual to false
+	oldIsManual := isManualFn
+	defer func() {
+		isManualFn = oldIsManual
+	}()
+	isManualFn = func() bool {
+		return false
+	}
+
 	// Mock test reports
 	oldReports := collectTestReportsFn
 	defer func() {
@@ -864,6 +1103,15 @@ instrPackages: p1, p2, p3`
 		return errCg
 	}
 
+	// Set isManual to false
+	oldIsManual := isManualFn
+	defer func() {
+		isManualFn = oldIsManual
+	}()
+	isManualFn = func() bool {
+		return false
+	}
+
 	// Mock test reports
 	oldReports := collectTestReportsFn
 	defer func() {
@@ -959,6 +1207,15 @@ instrPackages: p1, p2, p3`
 	}()
 	collectCgFn = func(ctx context.Context, stepID, collectcgDir string, timeTakenMs int64, log *zap.SugaredLogger) error {
 		return nil
+	}
+
+	// Set isManual to false
+	oldIsManual := isManualFn
+	defer func() {
+		isManualFn = oldIsManual
+	}()
+	isManualFn = func() bool {
+		return false
 	}
 
 	// Mock test reports

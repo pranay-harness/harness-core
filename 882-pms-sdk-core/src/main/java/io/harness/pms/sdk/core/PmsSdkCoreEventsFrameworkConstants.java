@@ -9,4 +9,5 @@ import lombok.experimental.UtilityClass;
 @OwnedBy(HarnessTeam.PIPELINE)
 public class PmsSdkCoreEventsFrameworkConstants {
   public static final String SDK_RESPONSE_EVENT_PRODUCER = "SDK_RESPONSE_EVENT_PRODUCER";
+  public static final String PARTIAL_PLAN_RESPONSE_EVENT_PRODUCER = "PARTIAL_PLAN_RESPONSE_EVENT_PRODUCER";
 }

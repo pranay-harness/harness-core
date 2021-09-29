@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_INFRA_STATE;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.logging.LogLevel.ERROR;
@@ -42,7 +43,6 @@ import static software.wings.beans.LogColor.White;
 import static software.wings.beans.LogHelper.color;
 import static software.wings.beans.LogWeight.Bold;
 
-import static com.google.common.base.Charsets.UTF_8;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -57,11 +57,13 @@ import io.harness.delegate.beans.pcf.CfServiceData;
 import io.harness.delegate.task.pcf.exception.InvalidPcfStateException;
 import io.harness.delegate.task.pcf.request.CfCommandDeployRequest;
 import io.harness.delegate.task.pcf.request.CfCommandRollbackRequest;
+import io.harness.delegate.utils.CFLogCallbackFormatter;
 import io.harness.eraro.ErrorCode;
+import io.harness.eraro.Level;
+import io.harness.exception.FileCreationException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
-import io.harness.exception.WingsException;
 import io.harness.logging.LogCallback;
 import io.harness.pcf.CfCliDelegateResolver;
 import io.harness.pcf.CfDeploymentManager;
@@ -77,13 +79,13 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.TreeMap;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
@@ -101,9 +103,6 @@ import org.jetbrains.annotations.NotNull;
 @Slf4j
 @OwnedBy(CDP)
 public class PcfCommandTaskBaseHelper {
-  public static final String CURRENT_INSTANCE_COUNT = "CURRENT-INSTANCE-COUNT: ";
-  public static final String DESIRED_INSTANCE_COUNT = "DESIRED-INSTANCE-COUNT: ";
-
   public static final String DELIMITER = "__";
   public static final String APPLICATION = "APPLICATION: ";
 
@@ -134,14 +133,8 @@ public class PcfCommandTaskBaseHelper {
       List<CfInternalInstanceElement> pcfInstanceElements) throws PivotalClientApiException {
     executionLogCallback.saveExecutionLog(color("# Upsizing new application:", White, Bold));
 
-    executionLogCallback.saveExecutionLog(new StringBuilder()
-                                              .append("APPLICATION-NAME: ")
-                                              .append(encodeColor(details.getName()))
-                                              .append("\n" + CURRENT_INSTANCE_COUNT)
-                                              .append(details.getInstances())
-                                              .append("\n" + DESIRED_INSTANCE_COUNT)
-                                              .append(cfCommandDeployRequest.getUpdateCount())
-                                              .toString());
+    executionLogCallback.saveExecutionLog(CFLogCallbackFormatter.formatAppInstancesState(
+        details.getName(), details.getInstances(), cfCommandDeployRequest.getUpdateCount()));
 
     // Upscale new app
     cfRequestConfig.setApplicationName(cfCommandDeployRequest.getNewReleaseName());
@@ -184,8 +177,7 @@ public class PcfCommandTaskBaseHelper {
 
     // Instance token is ApplicationGuid:InstanceIndex, that can be used to connect to instance from outside world
     List<InstanceDetail> instancesAfterUpsize = new ArrayList<>(detailsAfterUpsize.getInstanceDetails());
-    executionLogCallback.saveExecutionLog(
-        new StringBuilder().append("\n# Application state details after upsize:  ").toString());
+    executionLogCallback.saveExecutionLog("\n# Application state details after upsize:  ");
     printApplicationDetail(detailsAfterUpsize, executionLogCallback);
     printInstanceDetails(executionLogCallback, instancesAfterUpsize);
   }
@@ -209,15 +201,8 @@ public class PcfCommandTaskBaseHelper {
 
   public ApplicationDetail printApplicationDetail(
       ApplicationDetail applicationDetail, LogCallback executionLogCallback) {
-    executionLogCallback.saveExecutionLog(new StringBuilder()
-                                              .append("NAME: ")
-                                              .append(encodeColor(applicationDetail.getName()))
-                                              .append("\nINSTANCE-COUNT: ")
-                                              .append(applicationDetail.getInstances())
-                                              .append("\nROUTES: ")
-                                              .append(applicationDetail.getUrls())
-                                              .append("\n")
-                                              .toString());
+    executionLogCallback.saveExecutionLog(CFLogCallbackFormatter.formatAppInstancesRoutes(
+        applicationDetail.getName(), applicationDetail.getInstances(), applicationDetail.getUrls()));
     return applicationDetail;
   }
 
@@ -255,14 +240,8 @@ public class PcfCommandTaskBaseHelper {
 
     cfRequestConfig.setApplicationName(downsizeAppDetails.getApplicationName());
     ApplicationDetail applicationDetail = pcfDeploymentManager.getApplicationByName(cfRequestConfig);
-    executionLogCallback.saveExecutionLog(new StringBuilder()
-                                              .append("APPLICATION-NAME: ")
-                                              .append(encodeColor(applicationDetail.getName()))
-                                              .append("\nCURRENT-INSTANCE-COUNT: ")
-                                              .append(applicationDetail.getInstances())
-                                              .append("\nDESIRED-INSTANCE-COUNT: ")
-                                              .append(updateCount)
-                                              .toString());
+    executionLogCallback.saveExecutionLog(CFLogCallbackFormatter.formatAppInstancesState(
+        applicationDetail.getName(), applicationDetail.getInstances(), updateCount));
 
     CfServiceData cfServiceData = CfServiceData.builder()
                                       .name(applicationDetail.getName())
@@ -312,14 +291,8 @@ public class PcfCommandTaskBaseHelper {
 
     for (CfServiceData cfServiceData : upsizeList) {
       executionLogCallback.saveExecutionLog(color("# Upsizing application:", White, Bold));
-      executionLogCallback.saveExecutionLog(new StringBuilder()
-                                                .append("\nAPPLICATION-NAME: ")
-                                                .append(encodeColor(cfServiceData.getName()))
-                                                .append("\n" + CURRENT_INSTANCE_COUNT)
-                                                .append(cfServiceData.getPreviousCount())
-                                                .append("\n" + DESIRED_INSTANCE_COUNT)
-                                                .append(cfServiceData.getDesiredCount())
-                                                .toString());
+      executionLogCallback.saveExecutionLog(CFLogCallbackFormatter.formatAppInstancesState(
+          cfServiceData.getName(), cfServiceData.getPreviousCount(), cfServiceData.getDesiredCount()));
       cfRequestConfig.setApplicationName(cfServiceData.getName());
       cfRequestConfig.setDesiredCount(cfServiceData.getDesiredCount());
       upsizeInstance(
@@ -335,14 +308,8 @@ public class PcfCommandTaskBaseHelper {
     executionLogCallback.saveExecutionLog("\n");
     for (CfServiceData cfServiceData : downSizeList) {
       executionLogCallback.saveExecutionLog(color("# Downsizing application:", White, Bold));
-      executionLogCallback.saveExecutionLog(new StringBuilder()
-                                                .append("\nAPPLICATION-NAME: ")
-                                                .append(encodeColor(cfServiceData.getName()))
-                                                .append("\n" + CURRENT_INSTANCE_COUNT)
-                                                .append(cfServiceData.getPreviousCount())
-                                                .append("\n" + DESIRED_INSTANCE_COUNT)
-                                                .append(cfServiceData.getDesiredCount())
-                                                .toString());
+      executionLogCallback.saveExecutionLog(CFLogCallbackFormatter.formatAppInstancesState(
+          cfServiceData.getName(), cfServiceData.getPreviousCount(), cfServiceData.getDesiredCount()));
 
       cfRequestConfig.setApplicationName(cfServiceData.getName());
       cfRequestConfig.setDesiredCount(cfServiceData.getDesiredCount());
@@ -462,11 +429,11 @@ public class PcfCommandTaskBaseHelper {
   @NotNull
   private File writeToManifestFile(String content, File manifestFile) throws IOException {
     if (!manifestFile.createNewFile()) {
-      throw new WingsException(ErrorCode.GENERAL_ERROR)
-          .addParam("message", "Failed to create file " + manifestFile.getCanonicalPath());
+      throw new FileCreationException("Failed to create file " + manifestFile.getCanonicalPath(), null,
+          ErrorCode.FILE_CREATE_ERROR, Level.ERROR, USER, null);
     }
 
-    FileUtils.writeStringToFile(manifestFile, content, UTF_8);
+    FileUtils.writeStringToFile(manifestFile, content, StandardCharsets.UTF_8);
     return manifestFile;
   }
 
@@ -587,7 +554,7 @@ public class PcfCommandTaskBaseHelper {
   }
 
   public File getManifestFile(CfCreateApplicationRequestData requestData) {
-    return new File(requestData.getConfigPathVar() + "/" + requestData.getNewReleaseName() + ".yml");
+    return new File(format("%s/%s.yml", requestData.getConfigPathVar(), requestData.getNewReleaseName()));
   }
 
   public File createManifestVarsYamlFileLocally(
@@ -623,7 +590,7 @@ public class PcfCommandTaskBaseHelper {
     return path.replace(".yml", "_1.yml");
   }
 
-  public Map<String, Object> generateFinalMapForYamlDump(TreeMap<String, Object> applicationToBeUpdated) {
+  public Map<String, Object> generateFinalMapForYamlDump(Map<String, Object> applicationToBeUpdated) {
     Map<String, Object> yamlMap = new LinkedHashMap<>();
 
     addToMapIfExists(yamlMap, applicationToBeUpdated, NAME_MANIFEST_YML_ELEMENT);
@@ -654,14 +621,14 @@ public class PcfCommandTaskBaseHelper {
     return yamlMap;
   }
 
-  private void addToMapIfExists(Map destMap, Map sourceMap, String element) {
+  private void addToMapIfExists(Map<String, Object> destMap, Map<String, Object> sourceMap, String element) {
     if (sourceMap.containsKey(element)) {
       destMap.put(element, sourceMap.get(element));
     }
   }
 
   @VisibleForTesting
-  public void handleManifestWithNoRoute(Map applicationToBeUpdated, boolean isBlueGreen) {
+  public void handleManifestWithNoRoute(Map<String, Object> applicationToBeUpdated, boolean isBlueGreen) {
     // No route is not allowed for BG
     if (isBlueGreen) {
       throw new InvalidRequestException("Invalid Config. \"no-route\" can not be used with BG deployment");
@@ -671,11 +638,11 @@ public class PcfCommandTaskBaseHelper {
     applicationToBeUpdated.remove(ROUTES_MANIFEST_YML_ELEMENT);
   }
 
-  public boolean shouldUseRandomRoute(Map applicationToBeUpdated, List<String> routeMaps) {
+  public boolean shouldUseRandomRoute(Map<String, Object> applicationToBeUpdated, List<String> routeMaps) {
     return manifestContainsRandomRouteElement(applicationToBeUpdated) || isEmpty(routeMaps);
   }
 
-  private boolean manifestContainsRandomRouteElement(Map applicationToBeUpdated) {
+  private boolean manifestContainsRandomRouteElement(Map<String, Object> applicationToBeUpdated) {
     return applicationToBeUpdated.containsKey(RANDOM_ROUTE_MANIFEST_YML_ELEMENT)
         && (boolean) applicationToBeUpdated.get(RANDOM_ROUTE_MANIFEST_YML_ELEMENT);
   }

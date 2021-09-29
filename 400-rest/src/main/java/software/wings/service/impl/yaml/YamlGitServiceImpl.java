@@ -53,6 +53,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 
 import io.harness.alert.AlertData;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.PageRequest;
@@ -164,6 +166,7 @@ import org.mongodb.morphia.query.Query;
 @ValidateOnExecution
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CDP)
 public class YamlGitServiceImpl implements YamlGitService {
   /**
    * The constant SETUP_ENTITY_ID.
@@ -439,8 +442,8 @@ public class YamlGitServiceImpl implements YamlGitService {
   public List<GitFileChange> obtainApplicationYamlGitFileChanges(String accountId, Application app) {
     DirectoryPath directoryPath = new DirectoryPath(SETUP_FOLDER);
 
-    FolderNode applicationsFolder = new FolderNode(
-        accountId, APPLICATIONS_FOLDER, Application.class, directoryPath.add(APPLICATIONS_FOLDER), yamlGitSyncService);
+    FolderNode applicationsFolder =
+        new FolderNode(accountId, APPLICATIONS_FOLDER, Application.class, directoryPath.add(APPLICATIONS_FOLDER));
 
     yamlDirectoryService.doApplication(app.getUuid(), false, null, applicationsFolder, directoryPath);
 
@@ -455,7 +458,7 @@ public class YamlGitServiceImpl implements YamlGitService {
     List<GitFileChange> gitFileChanges = new ArrayList<>();
     DirectoryPath directoryPath = new DirectoryPath(SETUP_FOLDER);
     FolderNode templateFolder = yamlDirectoryService.doTemplateLibrary(accountId, directoryPath.clone(), GLOBAL_APP_ID,
-        GLOBAL_TEMPLATE_LIBRARY_FOLDER, YamlVersion.Type.GLOBAL_TEMPLATE_LIBRARY);
+        GLOBAL_TEMPLATE_LIBRARY_FOLDER, YamlVersion.Type.GLOBAL_TEMPLATE_LIBRARY, false, Collections.EMPTY_SET);
     gitFileChanges = yamlDirectoryService.traverseDirectory(
         gitFileChanges, accountId, templateFolder, SETUP_FOLDER, includeFiles, true, Optional.empty());
 
@@ -467,7 +470,8 @@ public class YamlGitServiceImpl implements YamlGitService {
     directoryPath.add(APPLICATIONS_FOLDER);
     DirectoryPath appPath = directoryPath.clone();
     appPath.add(app.getName());
-    FolderNode appTemplates = yamlDirectoryService.doTemplateLibraryForApp(app, appPath.clone());
+    FolderNode appTemplates =
+        yamlDirectoryService.doTemplateLibraryForApp(app, appPath.clone(), false, Collections.EMPTY_SET);
 
     List<GitFileChange> gitFileChanges = new ArrayList<>();
     return yamlDirectoryService.traverseDirectory(

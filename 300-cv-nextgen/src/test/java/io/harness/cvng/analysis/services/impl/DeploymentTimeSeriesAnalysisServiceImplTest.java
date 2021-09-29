@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.NEMANJA;
 import static io.harness.rule.OwnerRule.PRAVEEN;
+import static io.harness.rule.OwnerRule.SOWMYA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -25,7 +26,9 @@ import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.job.CanaryVerificationJobDTO;
 import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.client.NextGenService;
-import io.harness.cvng.core.beans.ProjectParams;
+import io.harness.cvng.core.beans.params.PageParams;
+import io.harness.cvng.core.beans.params.ProjectParams;
+import io.harness.cvng.core.beans.params.filterParams.DeploymentTimeSeriesAnalysisFilter;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
@@ -162,11 +165,20 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
 
     deploymentTimeSeriesAnalysisService.save(createDeploymentTimeSeriesAnalysis(verificationTaskId));
 
+    DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter = DeploymentTimeSeriesAnalysisFilter.builder()
+                                                                                .healthSourceIdentifiers(null)
+                                                                                .filter(null)
+                                                                                .anomalous(false)
+                                                                                .hostName(null)
+                                                                                .build();
+    PageParams pageParams = PageParams.builder().page(0).size(10).build();
+
     TransactionMetricInfoSummaryPageDTO transactionMetricInfoSummaryPageDTO =
-        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, null, null, 0);
+        deploymentTimeSeriesAnalysisService.getMetrics(
+            accountId, verificationJobInstanceId, deploymentTimeSeriesAnalysisFilter, pageParams);
 
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageIndex()).isEqualTo(0);
-    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getTotalPages()).isEqualTo(0);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getTotalPages()).isEqualTo(1);
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent()).isNotNull();
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse()
                    .getContent()
@@ -199,8 +211,16 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
   public void testGetMetrics_withNoVerificationTaskMapping() {
     verificationJobService.create(accountId, createCanaryVerificationJobDTO());
     String verificationJobInstanceId = verificationJobInstanceService.create(createVerificationJobInstance());
+    DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter = DeploymentTimeSeriesAnalysisFilter.builder()
+                                                                                .healthSourceIdentifiers(null)
+                                                                                .filter(null)
+                                                                                .anomalous(false)
+                                                                                .hostName(null)
+                                                                                .build();
+    PageParams pageParams = PageParams.builder().page(0).size(10).build();
     TransactionMetricInfoSummaryPageDTO transactionMetricInfoSummaryPageDTO =
-        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, null, null, 0);
+        deploymentTimeSeriesAnalysisService.getMetrics(
+            accountId, verificationJobInstanceId, deploymentTimeSeriesAnalysisFilter, pageParams);
 
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageIndex()).isEqualTo(0);
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getTotalPages()).isEqualTo(0);
@@ -220,11 +240,19 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
         verificationTaskService.create(accountId, cvConfig.getUuid(), verificationJobInstanceId, cvConfig.getType());
     deploymentTimeSeriesAnalysisService.save(createDeploymentTimeSeriesAnalysis(verificationTaskId));
 
+    DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter = DeploymentTimeSeriesAnalysisFilter.builder()
+                                                                                .healthSourceIdentifiers(null)
+                                                                                .filter(null)
+                                                                                .anomalous(false)
+                                                                                .hostName("node1")
+                                                                                .build();
+    PageParams pageParams = PageParams.builder().page(0).size(10).build();
     TransactionMetricInfoSummaryPageDTO transactionMetricInfoSummaryPageDTO =
-        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, "node1", null, 0);
+        deploymentTimeSeriesAnalysisService.getMetrics(
+            accountId, verificationJobInstanceId, deploymentTimeSeriesAnalysisFilter, pageParams);
 
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageIndex()).isEqualTo(0);
-    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getTotalPages()).isEqualTo(0);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getTotalPages()).isEqualTo(1);
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent()).isNotNull();
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().get(0).getConnectorName())
         .isEqualTo("AppDynamics Connector");
@@ -241,6 +269,56 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
   }
 
   @Test
+  @Owner(developers = SOWMYA)
+  @Category(UnitTests.class)
+  public void testGetMetrics_withDataSourceTypeFilter() {
+    verificationJobService.create(accountId, createCanaryVerificationJobDTO());
+    VerificationJobInstance verificationJobInstance = createVerificationJobInstance();
+    CVConfig cvConfig = verificationJobInstance.getCvConfigMap().values().iterator().next();
+    List<String> healthSourceIdentifiersFilter = Arrays.asList(cvConfig.getIdentifier());
+    String verificationJobInstanceId = verificationJobInstanceService.create(verificationJobInstance);
+    String verificationTaskId =
+        verificationTaskService.create(accountId, cvConfig.getUuid(), verificationJobInstanceId, cvConfig.getType());
+    deploymentTimeSeriesAnalysisService.save(createDeploymentTimeSeriesAnalysis(verificationTaskId));
+    DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter =
+        DeploymentTimeSeriesAnalysisFilter.builder()
+            .healthSourceIdentifiers(healthSourceIdentifiersFilter)
+            .filter(null)
+            .anomalous(false)
+            .hostName(null)
+            .build();
+    PageParams pageParams = PageParams.builder().page(0).size(10).build();
+
+    TransactionMetricInfoSummaryPageDTO transactionMetricInfoSummaryPageDTO =
+        deploymentTimeSeriesAnalysisService.getMetrics(
+            accountId, verificationJobInstanceId, deploymentTimeSeriesAnalysisFilter, pageParams);
+
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageIndex()).isEqualTo(0);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getTotalPages()).isEqualTo(1);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent()).isNotNull();
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().size()).isEqualTo(2);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().get(0).getConnectorName())
+        .isEqualTo("AppDynamics Connector");
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().get(0).getNodes().size())
+        .isEqualTo(3);
+
+    deploymentTimeSeriesAnalysisFilter = DeploymentTimeSeriesAnalysisFilter.builder()
+                                             .healthSourceIdentifiers(Arrays.asList("some-identifier"))
+                                             .filter(null)
+                                             .anomalous(false)
+                                             .hostName(null)
+                                             .build();
+
+    transactionMetricInfoSummaryPageDTO = deploymentTimeSeriesAnalysisService.getMetrics(
+        accountId, verificationJobInstanceId, deploymentTimeSeriesAnalysisFilter, pageParams);
+
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageIndex()).isEqualTo(0);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getTotalPages()).isEqualTo(0);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent()).isNotNull();
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().size()).isEqualTo(0);
+  }
+
+  @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
   public void testGetMetrics_withHostNameFilterWithOnlyFewTxn() {
@@ -252,11 +330,20 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
         verificationTaskService.create(accountId, cvConfig.getUuid(), verificationJobInstanceId, cvConfig.getType());
     deploymentTimeSeriesAnalysisService.save(createDeploymentTimeSeriesAnalysis(verificationTaskId));
 
+    DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter = DeploymentTimeSeriesAnalysisFilter.builder()
+                                                                                .healthSourceIdentifiers(null)
+                                                                                .filter(null)
+                                                                                .anomalous(false)
+                                                                                .hostName("node3")
+                                                                                .build();
+    PageParams pageParams = PageParams.builder().page(0).size(10).build();
+
     TransactionMetricInfoSummaryPageDTO transactionMetricInfoSummaryPageDTO =
-        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, "node3", null, 0);
+        deploymentTimeSeriesAnalysisService.getMetrics(
+            accountId, verificationJobInstanceId, deploymentTimeSeriesAnalysisFilter, pageParams);
 
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageIndex()).isEqualTo(0);
-    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getTotalPages()).isEqualTo(0);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getTotalPages()).isEqualTo(1);
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent()).isNotNull();
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().get(0).getConnectorName())
         .isEqualTo("AppDynamics Connector");
@@ -282,8 +369,15 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
     String verificationTaskId =
         verificationTaskService.create(accountId, cvConfig.getUuid(), verificationJobInstanceId, cvConfig.getType());
     deploymentTimeSeriesAnalysisService.save(createDeploymentTimeSeriesAnalysis(verificationTaskId));
+    DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter = DeploymentTimeSeriesAnalysisFilter.builder()
+                                                                                .healthSourceIdentifiers(null)
+                                                                                .filter(null)
+                                                                                .anomalous(false)
+                                                                                .hostName("randomnode")
+                                                                                .build();
+    PageParams pageParams = PageParams.builder().page(0).size(10).build();
     TransactionMetricInfoSummaryPageDTO summaryPageDTO = deploymentTimeSeriesAnalysisService.getMetrics(
-        accountId, verificationJobInstanceId, false, "randomNode", null, 0);
+        accountId, verificationJobInstanceId, deploymentTimeSeriesAnalysisFilter, pageParams);
     assertThat(summaryPageDTO).isNotNull();
     assertThat(summaryPageDTO.getPageResponse().getTotalItems()).isEqualTo(0);
   }
@@ -300,11 +394,19 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
         verificationTaskService.create(accountId, cvConfig.getUuid(), verificationJobInstanceId, cvConfig.getType());
     deploymentTimeSeriesAnalysisService.save(createDeploymentTimeSeriesAnalysis(verificationTaskId));
 
+    DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter = DeploymentTimeSeriesAnalysisFilter.builder()
+                                                                                .healthSourceIdentifiers(null)
+                                                                                .filter(null)
+                                                                                .anomalous(true)
+                                                                                .hostName(null)
+                                                                                .build();
+    PageParams pageParams = PageParams.builder().page(0).size(10).build();
     TransactionMetricInfoSummaryPageDTO transactionMetricInfoSummaryPageDTO =
-        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, true, null, null, 0);
+        deploymentTimeSeriesAnalysisService.getMetrics(
+            accountId, verificationJobInstanceId, deploymentTimeSeriesAnalysisFilter, pageParams);
 
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageIndex()).isEqualTo(0);
-    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getTotalPages()).isEqualTo(0);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getTotalPages()).isEqualTo(1);
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent()).isNotNull();
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().size()).isEqualTo(1);
     assertThat(
@@ -326,11 +428,19 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
         verificationTaskService.create(accountId, cvConfig.getUuid(), verificationJobInstanceId, cvConfig.getType());
     deploymentTimeSeriesAnalysisService.save(createDeploymentTimeSeriesAnalysis(verificationTaskId));
 
+    DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter = DeploymentTimeSeriesAnalysisFilter.builder()
+                                                                                .healthSourceIdentifiers(null)
+                                                                                .filter(null)
+                                                                                .anomalous(true)
+                                                                                .hostName("node2")
+                                                                                .build();
+    PageParams pageParams = PageParams.builder().page(0).size(10).build();
     TransactionMetricInfoSummaryPageDTO transactionMetricInfoSummaryPageDTO =
-        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, true, "node2", null, 0);
+        deploymentTimeSeriesAnalysisService.getMetrics(
+            accountId, verificationJobInstanceId, deploymentTimeSeriesAnalysisFilter, pageParams);
 
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageIndex()).isEqualTo(0);
-    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getTotalPages()).isEqualTo(0);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getTotalPages()).isEqualTo(1);
     List<TransactionMetricInfo> content = transactionMetricInfoSummaryPageDTO.getPageResponse().getContent();
     assertThat(content).isNotNull();
     assertThat(content.size()).isEqualTo(2);
@@ -364,11 +474,20 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
     deploymentTimeSeriesAnalysis.setTransactionMetricSummaries(Arrays.asList(transactionMetricHostData));
     deploymentTimeSeriesAnalysisService.save(deploymentTimeSeriesAnalysis);
 
+    DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter = DeploymentTimeSeriesAnalysisFilter.builder()
+                                                                                .healthSourceIdentifiers(null)
+                                                                                .filter(null)
+                                                                                .anomalous(false)
+                                                                                .hostName(null)
+                                                                                .build();
+    PageParams pageParams = PageParams.builder().page(0).size(10).build();
+
     TransactionMetricInfoSummaryPageDTO transactionMetricInfoSummaryPageDTO =
-        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, null, null, 0);
+        deploymentTimeSeriesAnalysisService.getMetrics(
+            accountId, verificationJobInstanceId, deploymentTimeSeriesAnalysisFilter, pageParams);
 
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageIndex()).isEqualTo(0);
-    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getTotalPages()).isEqualTo(0);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getTotalPages()).isEqualTo(1);
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent()).isNotNull();
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().size()).isEqualTo(1);
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse()
@@ -400,27 +519,37 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
     deploymentTimeSeriesAnalysis.setTransactionMetricSummaries(transactionSummaries);
     deploymentTimeSeriesAnalysisService.save(deploymentTimeSeriesAnalysis);
 
-    TransactionMetricInfoSummaryPageDTO page1 =
-        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, null, null, 0);
+    DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter = DeploymentTimeSeriesAnalysisFilter.builder()
+                                                                                .healthSourceIdentifiers(null)
+                                                                                .filter(null)
+                                                                                .anomalous(false)
+                                                                                .hostName(null)
+                                                                                .build();
+    PageParams pageParams = PageParams.builder().page(0).size(10).build();
+
+    TransactionMetricInfoSummaryPageDTO page1 = deploymentTimeSeriesAnalysisService.getMetrics(
+        accountId, verificationJobInstanceId, deploymentTimeSeriesAnalysisFilter, pageParams);
 
     assertThat(page1.getPageResponse().getPageIndex()).isEqualTo(0);
-    assertThat(page1.getPageResponse().getTotalPages()).isEqualTo(2);
+    assertThat(page1.getPageResponse().getTotalPages()).isEqualTo(3);
     assertThat(page1.getPageResponse().getContent()).isNotNull();
     assertThat(page1.getPageResponse().getContent().size()).isEqualTo(10);
 
-    TransactionMetricInfoSummaryPageDTO page2 =
-        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, null, null, 1);
+    pageParams = PageParams.builder().page(1).size(10).build();
+    TransactionMetricInfoSummaryPageDTO page2 = deploymentTimeSeriesAnalysisService.getMetrics(
+        accountId, verificationJobInstanceId, deploymentTimeSeriesAnalysisFilter, pageParams);
 
     assertThat(page2.getPageResponse().getPageIndex()).isEqualTo(1);
-    assertThat(page2.getPageResponse().getTotalPages()).isEqualTo(2);
+    assertThat(page2.getPageResponse().getTotalPages()).isEqualTo(3);
     assertThat(page2.getPageResponse().getContent()).isNotNull();
     assertThat(page2.getPageResponse().getContent().size()).isEqualTo(10);
 
-    TransactionMetricInfoSummaryPageDTO page3 =
-        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, null, null, 2);
+    pageParams = PageParams.builder().page(2).size(10).build();
+    TransactionMetricInfoSummaryPageDTO page3 = deploymentTimeSeriesAnalysisService.getMetrics(
+        accountId, verificationJobInstanceId, deploymentTimeSeriesAnalysisFilter, pageParams);
 
     assertThat(page3.getPageResponse().getPageIndex()).isEqualTo(2);
-    assertThat(page3.getPageResponse().getTotalPages()).isEqualTo(2);
+    assertThat(page3.getPageResponse().getTotalPages()).isEqualTo(3);
     assertThat(page3.getPageResponse().getContent()).isNotNull();
     assertThat(page3.getPageResponse().getContent().size()).isEqualTo(5);
   }
@@ -435,8 +564,17 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
     String verificationJobInstanceId = verificationJobInstanceService.create(verificationJobInstance);
     verificationTaskService.create(accountId, cvConfig.getUuid(), verificationJobInstanceId, cvConfig.getType());
 
+    DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter = DeploymentTimeSeriesAnalysisFilter.builder()
+                                                                                .healthSourceIdentifiers(null)
+                                                                                .filter(null)
+                                                                                .anomalous(false)
+                                                                                .hostName(null)
+                                                                                .build();
+    PageParams pageParams = PageParams.builder().page(0).size(10).build();
+
     TransactionMetricInfoSummaryPageDTO transactionMetricInfoSummaryPageDTO =
-        deploymentTimeSeriesAnalysisService.getMetrics(accountId, verificationJobInstanceId, false, null, null, 0);
+        deploymentTimeSeriesAnalysisService.getMetrics(
+            accountId, verificationJobInstanceId, deploymentTimeSeriesAnalysisFilter, pageParams);
 
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getPageIndex()).isEqualTo(0);
     assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getTotalPages()).isEqualTo(0);

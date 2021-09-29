@@ -10,4 +10,6 @@ import java.util.Optional;
 public interface PlanExecutionMetadataService {
   Optional<PlanExecutionMetadata> findByPlanExecutionId(String planExecutionId);
   PlanExecutionMetadata save(PlanExecutionMetadata planExecutionMetadata);
+
+  String getYamlFromPlanExecutionId(String planExecutionId);
 }

@@ -90,6 +90,9 @@ public class BuildSourceCallback implements OldNotifyCallback {
     this.settingId = settingId;
   }
 
+  // token used for exclusion filter for stack driver
+  private static String CDC_LOG_EXCLUSION = "CDC_LOG_EXCLUSION";
+
   private void handleResponseForSuccess(DelegateResponseData notifyResponseData, ArtifactStream artifactStream) {
     try {
       executorService.submit(() -> {
@@ -112,8 +115,8 @@ public class BuildSourceCallback implements OldNotifyCallback {
   @VisibleForTesting
   void handleResponseForSuccessInternal(DelegateResponseData notifyResponseData, ArtifactStream artifactStream) {
     log.info(
-        "Processing response for BuildSourceCallback for accountId:[{}] artifactStreamId:[{}] permitId:[{}] settingId:[{}]",
-        accountId, artifactStreamId, permitId, settingId);
+        "{}: Processing response for BuildSourceCallback for accountId:[{}] artifactStreamId:[{}] permitId:[{}] settingId:[{}]",
+        CDC_LOG_EXCLUSION, accountId, artifactStreamId, permitId, settingId);
 
     BuildSourceExecutionResponse buildSourceExecutionResponse = (BuildSourceExecutionResponse) notifyResponseData;
     BuildSourceResponse buildSourceResponse = buildSourceExecutionResponse.getBuildSourceResponse();

@@ -4,6 +4,7 @@ import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.beans.monitoredService.HealthSource.CVConfigUpdateResult;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.MetricPackService;
+import io.harness.data.validator.EntityIdentifier;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -27,7 +28,7 @@ import org.hibernate.validator.constraints.NotEmpty;
       @JsonSubTypes.Type(value = StackdriverMetricHealthSourceSpec.class, name = "Stackdriver")
 })
 public abstract class HealthSourceSpec {
-  @NotEmpty String connectorRef;
+  @NotEmpty @EntityIdentifier(allowScoped = true) String connectorRef;
   public abstract CVConfigUpdateResult getCVConfigUpdateResult(String accountId, String orgIdentifier,
       String projectIdentifier, String environmentRef, String serviceRef, String identifier, String name,
       List<CVConfig> existingCVConfigs, MetricPackService metricPackService);

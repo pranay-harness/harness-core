@@ -1,13 +1,25 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
 load("@rules_proto//proto:defs.bzl", "proto_library")
 
 proto_library(
     name = "920_delegate_service_beans_proto",
     srcs = ["delegate_service_ping_pong.proto"],
-    strip_import_prefix = "",
     visibility = ["//visibility:public"],
-    deps = [
-        "@com_google_protobuf//:any_proto",
-        "@com_google_protobuf//:duration_proto",
-        "@com_google_protobuf//:timestamp_proto",
-    ],
+    deps = ["@com_google_protobuf//:timestamp_proto"],
+)
+
+go_proto_library(
+    name = "io_harness_pingpong_go_proto",
+    compilers = ["@io_bazel_rules_go//proto:go_grpc"],
+    importpath = "github.com/wings-software/portal/920-delegate-service-beans/src/main/proto/io/harness/pingpong",
+    proto = ":920_delegate_service_beans_proto",
+    visibility = ["//visibility:public"],
+)
+
+go_library(
+    name = "pingpong",
+    embed = [":io_harness_pingpong_go_proto"],
+    importpath = "github.com/wings-software/portal/920-delegate-service-beans/src/main/proto/io/harness/pingpong",
+    visibility = ["//visibility:public"],
 )

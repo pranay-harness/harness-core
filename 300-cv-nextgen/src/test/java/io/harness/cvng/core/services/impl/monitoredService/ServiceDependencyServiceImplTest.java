@@ -1,5 +1,6 @@
 package io.harness.cvng.core.services.impl.monitoredService;
 
+import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.SOWMYA;
 
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
@@ -9,7 +10,8 @@ import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.BuilderFactory.Context;
-import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceRef;
+import io.harness.cvng.core.beans.dependency.KubernetesDependencyMetadata;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.ServiceDependencyDTO;
 import io.harness.cvng.core.entities.ServiceDependency;
 import io.harness.cvng.core.services.api.monitoredService.ServiceDependencyService;
 import io.harness.rule.Owner;
@@ -40,47 +42,65 @@ public class ServiceDependencyServiceImplTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
-  public void testCreateOrDelete_empty() {
+  public void testUpdateDependencies_empty() {
     createOrDeleteFromContext(context, new HashSet<>());
-    Set<ServiceRef> updatedRefs = serviceDependencyService.getDependentServicesForMonitoredService(
-        context.getAccountId(), context.getOrgIdentifier(), context.getProjectIdentifier(),
-        context.getServiceIdentifier(), context.getEnvIdentifier());
+    Set<ServiceDependencyDTO> updatedRefs = serviceDependencyService.getDependentServicesForMonitoredService(
+        context.getProjectParams(), context.getServiceIdentifier());
     assertThat(updatedRefs).isEqualTo(new HashSet<>());
   }
 
   @Test
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
-  public void testCreateOrDelete_create() {
-    Set<ServiceRef> serviceRefs = Sets.newHashSet(ServiceRef.builder().serviceRef(randomAlphanumeric(20)).build(),
-        ServiceRef.builder().serviceRef(randomAlphanumeric(20)).build(),
-        ServiceRef.builder().serviceRef(randomAlphanumeric(20)).build());
-    createOrDeleteFromContext(context, serviceRefs);
-    Set<ServiceRef> newRefs = serviceDependencyService.getDependentServicesForMonitoredService(context.getAccountId(),
-        context.getOrgIdentifier(), context.getProjectIdentifier(), context.getServiceIdentifier(),
-        context.getEnvIdentifier());
-    assertThat(newRefs).isEqualTo(serviceRefs);
+  public void testUpdateDependencies_create() {
+    Set<ServiceDependencyDTO> serviceDependencyDTOS =
+        Sets.newHashSet(ServiceDependencyDTO.builder().monitoredServiceIdentifier(randomAlphanumeric(20)).build(),
+            ServiceDependencyDTO.builder().monitoredServiceIdentifier(randomAlphanumeric(20)).build(),
+            ServiceDependencyDTO.builder().monitoredServiceIdentifier(randomAlphanumeric(20)).build());
+    createOrDeleteFromContext(context, serviceDependencyDTOS);
+    Set<ServiceDependencyDTO> newRefs = serviceDependencyService.getDependentServicesForMonitoredService(
+        context.getProjectParams(), context.getServiceIdentifier());
+    assertThat(newRefs).isEqualTo(serviceDependencyDTOS);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testUpdateDependencies_createWithMetadata() {
+    Set<ServiceDependencyDTO> serviceDependencyDTOS =
+        Sets.newHashSet(ServiceDependencyDTO.builder().monitoredServiceIdentifier(randomAlphanumeric(20)).build(),
+            ServiceDependencyDTO.builder()
+                .monitoredServiceIdentifier(randomAlphanumeric(20))
+                .dependencyMetadata(
+                    KubernetesDependencyMetadata.builder().namespace("namespce").workload("workload").build())
+                .build(),
+            ServiceDependencyDTO.builder().monitoredServiceIdentifier(randomAlphanumeric(20)).build());
+    createOrDeleteFromContext(context, serviceDependencyDTOS);
+    Set<ServiceDependencyDTO> newRefs = serviceDependencyService.getDependentServicesForMonitoredService(
+        context.getProjectParams(), context.getServiceIdentifier());
+    assertThat(newRefs).isEqualTo(serviceDependencyDTOS);
   }
 
   @Test
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
-  public void testCreateOrDelete_existingDependencies() {
-    List<ServiceRef> serviceRefs = generateRandomRefs(4);
-    createOrDeleteFromContext(context, new HashSet<>(serviceRefs));
-    Set<ServiceRef> newRefs = serviceDependencyService.getDependentServicesForMonitoredService(context.getAccountId(),
-        context.getOrgIdentifier(), context.getProjectIdentifier(), context.getServiceIdentifier(),
-        context.getEnvIdentifier());
-    assertThat(newRefs).isEqualTo(new HashSet<>(serviceRefs));
+  public void testUpdateDependencies_existingDependencies() {
+    List<ServiceDependencyDTO> serviceDependencyDTOS = generateRandomRefs(4);
+    createOrDeleteFromContext(context, new HashSet<>(serviceDependencyDTOS));
+    Set<ServiceDependencyDTO> newRefs = serviceDependencyService.getDependentServicesForMonitoredService(
+        context.getProjectParams(), context.getServiceIdentifier());
+    assertThat(newRefs).isEqualTo(new HashSet<>(serviceDependencyDTOS));
 
-    serviceRefs = Lists.newArrayList(ServiceRef.builder().serviceRef(serviceRefs.get(0).getServiceRef()).build(),
-        ServiceRef.builder().serviceRef(randomAlphanumeric(20)).build(),
-        ServiceRef.builder().serviceRef(randomAlphanumeric(20)).build());
-    createOrDeleteFromContext(context, new HashSet<>(serviceRefs));
-    Set<ServiceRef> updatedRefs = serviceDependencyService.getDependentServicesForMonitoredService(
-        context.getAccountId(), context.getOrgIdentifier(), context.getProjectIdentifier(),
-        context.getServiceIdentifier(), context.getEnvIdentifier());
-    assertThat(updatedRefs).isEqualTo(new HashSet<>(serviceRefs));
+    serviceDependencyDTOS =
+        Lists.newArrayList(ServiceDependencyDTO.builder()
+                               .monitoredServiceIdentifier(serviceDependencyDTOS.get(0).getMonitoredServiceIdentifier())
+                               .build(),
+            ServiceDependencyDTO.builder().monitoredServiceIdentifier(randomAlphanumeric(20)).build(),
+            ServiceDependencyDTO.builder().monitoredServiceIdentifier(randomAlphanumeric(20)).build());
+    createOrDeleteFromContext(context, new HashSet<>(serviceDependencyDTOS));
+    Set<ServiceDependencyDTO> updatedRefs = serviceDependencyService.getDependentServicesForMonitoredService(
+        context.getProjectParams(), context.getServiceIdentifier());
+    assertThat(updatedRefs).isEqualTo(new HashSet<>(serviceDependencyDTOS));
     assertThat(updatedRefs).isNotEqualTo(newRefs);
   }
 
@@ -88,18 +108,15 @@ public class ServiceDependencyServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testDeleteDependenciesForService() {
-    Set<ServiceRef> serviceRefs = new HashSet<>(generateRandomRefs(3));
-    createOrDeleteFromContext(context, serviceRefs);
-    Set<ServiceRef> newRefs = serviceDependencyService.getDependentServicesForMonitoredService(context.getAccountId(),
-        context.getOrgIdentifier(), context.getProjectIdentifier(), context.getServiceIdentifier(),
-        context.getEnvIdentifier());
-    assertThat(newRefs).isEqualTo(serviceRefs);
+    Set<ServiceDependencyDTO> serviceDependencyDTOS = new HashSet<>(generateRandomRefs(3));
+    createOrDeleteFromContext(context, serviceDependencyDTOS);
+    Set<ServiceDependencyDTO> newRefs = serviceDependencyService.getDependentServicesForMonitoredService(
+        context.getProjectParams(), context.getServiceIdentifier());
+    assertThat(newRefs).isEqualTo(serviceDependencyDTOS);
 
-    serviceDependencyService.deleteDependenciesForService(context.getAccountId(), context.getOrgIdentifier(),
-        context.getProjectIdentifier(), context.getServiceIdentifier(), context.getEnvIdentifier());
-    Set<ServiceRef> updatedRefs = serviceDependencyService.getDependentServicesForMonitoredService(
-        context.getAccountId(), context.getOrgIdentifier(), context.getProjectIdentifier(),
-        context.getServiceIdentifier(), context.getEnvIdentifier());
+    serviceDependencyService.deleteDependenciesForService(context.getProjectParams(), context.getServiceIdentifier());
+    Set<ServiceDependencyDTO> updatedRefs = serviceDependencyService.getDependentServicesForMonitoredService(
+        context.getProjectParams(), context.getServiceIdentifier());
     assertThat(updatedRefs).isEqualTo(new HashSet<>());
   }
 
@@ -107,34 +124,35 @@ public class ServiceDependencyServiceImplTest extends CvNextGenTestBase {
   @Owner(developers = SOWMYA)
   @Category(UnitTests.class)
   public void testGetServiceDependencies() {
-    Set<ServiceRef> serviceRefs = new HashSet<>(generateRandomRefs(3));
-    createOrDeleteFromContext(context, serviceRefs);
+    Set<ServiceDependencyDTO> serviceDependencyDTOS = new HashSet<>(generateRandomRefs(3));
+    createOrDeleteFromContext(context, serviceDependencyDTOS);
 
     List<ServiceDependency> serviceDependencies = serviceDependencyService.getServiceDependencies(
-        context.getProjectParams(), context.getServiceIdentifier(), context.getEnvIdentifier());
+        context.getProjectParams(), Lists.newArrayList(context.getServiceIdentifier()));
     assertThat(serviceDependencies.size()).isEqualTo(3);
 
     serviceDependencies = serviceDependencyService.getServiceDependencies(
-        context.getProjectParams(), context.getServiceIdentifier(), null);
+        context.getProjectParams(), Lists.newArrayList(context.getServiceIdentifier()));
     assertThat(serviceDependencies.size()).isEqualTo(3);
 
-    serviceDependencies =
-        serviceDependencyService.getServiceDependencies(context.getProjectParams(), null, context.getEnvIdentifier());
+    serviceDependencies = serviceDependencyService.getServiceDependencies(
+        context.getProjectParams(), Lists.newArrayList(context.getServiceIdentifier()));
     assertThat(serviceDependencies.size()).isEqualTo(3);
 
-    serviceDependencies = serviceDependencyService.getServiceDependencies(context.getProjectParams(), null, null);
+    serviceDependencies = serviceDependencyService.getServiceDependencies(
+        context.getProjectParams(), Lists.newArrayList(context.getServiceIdentifier()));
     assertThat(serviceDependencies.size()).isEqualTo(3);
   }
 
-  private void createOrDeleteFromContext(Context context, Set<ServiceRef> serviceRefs) {
-    serviceDependencyService.updateDependencies(context.getAccountId(), context.getOrgIdentifier(),
-        context.getProjectIdentifier(), context.getServiceIdentifier(), context.getEnvIdentifier(), serviceRefs);
+  private void createOrDeleteFromContext(Context context, Set<ServiceDependencyDTO> serviceDependencyDTOS) {
+    serviceDependencyService.updateDependencies(
+        context.getProjectParams(), context.getServiceIdentifier(), serviceDependencyDTOS);
   }
 
-  private List<ServiceRef> generateRandomRefs(int num) {
-    List<ServiceRef> random = new ArrayList<>();
+  private List<ServiceDependencyDTO> generateRandomRefs(int num) {
+    List<ServiceDependencyDTO> random = new ArrayList<>();
     for (int i = 0; i < num; i++) {
-      random.add(ServiceRef.builder().serviceRef(randomAlphanumeric(20)).build());
+      random.add(ServiceDependencyDTO.builder().monitoredServiceIdentifier(randomAlphanumeric(20)).build());
     }
     return random;
   }

@@ -1,20 +1,15 @@
 package io.harness.delegate.task.aws;
 
-import static io.harness.delegate.beans.connector.awsconnector.AwsCredentialType.INHERIT_FROM_DELEGATE;
-import static io.harness.delegate.beans.connector.awsconnector.AwsCredentialType.MANUAL_CREDENTIALS;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
-import static io.harness.utils.FieldWithPlainTextOrSecretValueHelper.getSecretAsStringFromPlainTextOrSecretRef;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.aws.beans.AwsInternalConfig;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
-import io.harness.delegate.beans.connector.awsconnector.AwsCredentialDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsManualConfigSpecDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsS3BucketResponse;
 import io.harness.delegate.beans.connector.awsconnector.AwsTaskParams;
-import io.harness.exception.InvalidArgumentsException;
 import io.harness.security.encryption.SecretDecryptionService;
 
 import software.wings.service.impl.AwsApiHelperService;
@@ -27,7 +22,6 @@ import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Pair;
 
 @AllArgsConstructor(access = AccessLevel.PACKAGE, onConstructor = @__({ @Inject }))
 @Slf4j
@@ -36,6 +30,7 @@ import org.apache.commons.lang3.tuple.Pair;
 public class AwsS3DelegateTaskHelper {
   private final SecretDecryptionService secretDecryptionService;
   private final AwsApiHelperService awsApiHelperService;
+  @Inject private final AwsNgConfigMapper awsNgConfigMapper;
 
   public DelegateResponseData getS3Buckets(AwsTaskParams awsTaskParams) {
     decryptRequestDTOs(awsTaskParams);
@@ -49,25 +44,9 @@ public class AwsS3DelegateTaskHelper {
   }
 
   private AwsInternalConfig getAwsInternalConfig(AwsTaskParams awsTaskParams) {
-    AwsInternalConfig awsInternalConfig = AwsInternalConfig.builder().build();
-    if (awsTaskParams.getAwsConnector() != null) {
-      AwsCredentialDTO credential = awsTaskParams.getAwsConnector().getCredential();
-      if (MANUAL_CREDENTIALS == credential.getAwsCredentialType()) {
-        AwsManualConfigSpecDTO awsManualConfigSpecDTO = (AwsManualConfigSpecDTO) credential.getConfig();
-        String accessKey = getSecretAsStringFromPlainTextOrSecretRef(
-            awsManualConfigSpecDTO.getAccessKey(), awsManualConfigSpecDTO.getAccessKeyRef());
-        if (accessKey == null) {
-          throw new InvalidArgumentsException(Pair.of("accessKey", "Missing or empty"));
-        }
-
-        awsInternalConfig = AwsInternalConfig.builder()
-                                .accessKey(accessKey.toCharArray())
-                                .secretKey(awsManualConfigSpecDTO.getSecretKeyRef().getDecryptedValue())
-                                .build();
-      } else if (INHERIT_FROM_DELEGATE == credential.getAwsCredentialType()) {
-        awsInternalConfig.setUseEc2IamCredentials(true);
-      }
-    }
+    AwsConnectorDTO awsConnectorDTO = awsTaskParams.getAwsConnector();
+    AwsInternalConfig awsInternalConfig = awsNgConfigMapper.createAwsInternalConfig(awsConnectorDTO);
+    awsInternalConfig.setDefaultRegion(awsTaskParams.getRegion());
     return awsInternalConfig;
   }
 

@@ -7,6 +7,7 @@ import static io.harness.beans.SwaggerConstants.STRING_CLASSPATH;
 import static io.harness.beans.SwaggerConstants.STRING_MAP_CLASSPATH;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.CIStepInfoType;
@@ -42,6 +43,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName("RunTests")
 @TypeAlias("runTestsStepInfo")
 @OwnedBy(CI)
+@RecasterAlias("io.harness.beans.steps.stepinfo.RunTestsStepInfo")
 public class RunTestsStepInfo implements CIStepInfo {
   public static final int DEFAULT_RETRY = 0;
   // Keeping the timeout to a day as its a test step and might take lot of time

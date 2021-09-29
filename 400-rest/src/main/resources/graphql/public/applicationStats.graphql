@@ -1,0 +1,26 @@
+# Possible values for application entity aggregation
+enum ApplicationEntityAggregation {
+  Application
+}
+
+# Set application aggregation criteria
+input ApplicationAggregation {
+  # Aggregate by entity
+  entityAggregation: ApplicationEntityAggregation
+  # Aggregate by tag
+  tagAggregation: ApplicationTagAggregation
+}
+
+# Set Application Tag aggregation criteria
+input ApplicationTagAggregation {
+  # Aggregate by entity type
+  entityType: ApplicationTagType
+  # Aggregate by tag name
+  tagName: String
+}
+
+extend type Query {
+  #Get statistics of a Harness application.
+  applicationStats(filters: [ApplicationFilter], groupBy: [ApplicationAggregation]): Data
+    @dataFetcher(name: applicationStats)
+}

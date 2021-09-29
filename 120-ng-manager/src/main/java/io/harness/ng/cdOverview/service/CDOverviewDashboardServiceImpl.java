@@ -47,6 +47,7 @@ import io.harness.ng.cdOverview.dto.ServiceDeploymentListInfo;
 import io.harness.ng.cdOverview.dto.ServiceDetailsDTO;
 import io.harness.ng.cdOverview.dto.ServiceDetailsDTO.ServiceDetailsDTOBuilder;
 import io.harness.ng.cdOverview.dto.ServiceDetailsInfoDTO;
+import io.harness.ng.cdOverview.dto.ServiceHeaderInfo;
 import io.harness.ng.cdOverview.dto.ServicePipelineInfo;
 import io.harness.ng.cdOverview.dto.TimeAndStatusDeployment;
 import io.harness.ng.cdOverview.dto.TimeValuePair;
@@ -87,9 +88,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -640,22 +641,14 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         item -> serviceIdToWorkloadDeploymentInfo.putIfAbsent(item.getServiceId(), item));
 
     List<String> serviceIdentifiers = services.stream().map(ServiceEntity::getIdentifier).collect(Collectors.toList());
-    List<String> servicesDeployedBeforePrevTime = new ArrayList<>(serviceIdentifiers);
-    servicesDeployedBeforePrevTime.removeAll(
-        workloadDeploymentInfoList.stream().map(WorkloadDeploymentInfo::getServiceId).collect(Collectors.toList()));
 
-    Map<String, String> serviceIdToPipelineIdMapForOldDeployments =
-        getLastPipeline(accountIdentifier, orgIdentifier, projectIdentifier, servicesDeployedBeforePrevTime);
-    List<String> pipelineExecutionIdList = workloadDeploymentInfoList.stream()
-                                               .map(WorkloadDeploymentInfo::getLastPipelineExecutionId)
-                                               .collect(Collectors.toList());
-    List<String> oldPipelineExecutionIdList =
-        serviceIdToPipelineIdMapForOldDeployments.values().stream().collect(Collectors.toList());
+    Map<String, String> serviceIdToPipelineIdMap =
+        getLastPipeline(accountIdentifier, orgIdentifier, projectIdentifier, serviceIdentifiers);
+
+    List<String> pipelineExecutionIdList = serviceIdToPipelineIdMap.values().stream().collect(Collectors.toList());
 
     // Gets all the details for the pipeline execution id's in the list and stores it in a map.
-    Map<String, ServicePipelineInfo> pipelineExecutionDetailsMap =
-        getPipelineExecutionDetails(Stream.concat(pipelineExecutionIdList.stream(), oldPipelineExecutionIdList.stream())
-                                        .collect(Collectors.toList()));
+    Map<String, ServicePipelineInfo> pipelineExecutionDetailsMap = getPipelineExecutionDetails(pipelineExecutionIdList);
 
     Map<String, Set<String>> serviceIdToDeploymentTypeMap =
         getDeploymentType(accountIdentifier, orgIdentifier, projectIdentifier, serviceIdentifiers);
@@ -670,12 +663,15 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         services.stream()
             .map(service -> {
               final String serviceId = service.getIdentifier();
+              final String pipelineId = serviceIdToPipelineIdMap.getOrDefault(serviceId, null);
+
               ServiceDetailsDTOBuilder serviceDetailsDTOBuilder = ServiceDetailsDTO.builder();
               serviceDetailsDTOBuilder.serviceName(service.getName());
               serviceDetailsDTOBuilder.serviceIdentifier(serviceId);
               serviceDetailsDTOBuilder.deploymentTypeList(serviceIdToDeploymentTypeMap.getOrDefault(serviceId, null));
               serviceDetailsDTOBuilder.instanceCountDetails(
                   serviceIdToInstanceCountDetails.getOrDefault(serviceId, null));
+              serviceDetailsDTOBuilder.lastPipelineExecuted(pipelineExecutionDetailsMap.getOrDefault(pipelineId, null));
 
               if (serviceIdToWorkloadDeploymentInfo.containsKey(serviceId)) {
                 final WorkloadDeploymentInfo workloadDeploymentInfo = serviceIdToWorkloadDeploymentInfo.get(serviceId);
@@ -688,11 +684,6 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
                 serviceDetailsDTOBuilder.failureRateChangeRate(workloadDeploymentInfo.getFailureRateChangeRate());
                 serviceDetailsDTOBuilder.frequency(workloadDeploymentInfo.getFrequency());
                 serviceDetailsDTOBuilder.frequencyChangeRate(workloadDeploymentInfo.getFrequencyChangeRate());
-                serviceDetailsDTOBuilder.lastPipelineExecuted(pipelineExecutionDetailsMap.getOrDefault(
-                    workloadDeploymentInfo.getLastPipelineExecutionId(), null));
-              } else if (pipelineExecutionDetailsMap.containsKey(serviceId)) {
-                serviceDetailsDTOBuilder.lastPipelineExecuted(
-                    pipelineExecutionDetailsMap.getOrDefault(pipelineExecutionDetailsMap.get(serviceId), null));
               }
 
               return serviceDetailsDTOBuilder.build();
@@ -745,8 +736,6 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
   @Override
   public ServiceDeploymentInfoDTO getServiceDeployments(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, long startTime, long endTime, String serviceIdentifier, long bucketSizeInDays) {
-    startTime = getStartTimeOfTheDayAsEpoch(startTime);
-    endTime = getStartTimeOfNextDay(endTime);
     String query = queryBuilderServiceDeployments(
         accountIdentifier, orgIdentifier, projectIdentifier, startTime, endTime, bucketSizeInDays, serviceIdentifier);
 
@@ -847,9 +836,9 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
       totalBuildSqlBuilder.append(String.format(" and service_id='%s'", serviceIdentifier));
     }
 
-    totalBuildSqlBuilder.append(
-        String.format(") and service_startts>=%s and service_startts<%s) as innertable group by status, time_entity;",
-            startTime, endTime));
+    totalBuildSqlBuilder.append(String.format(
+        ") and accountid='%s' and orgidentifier='%s' and projectidentifier='%s' and service_startts>=%s and service_startts<%s) as innertable group by status, time_entity;",
+        accountIdentifier, orgIdentifier, projectIdentifier, startTime, endTime));
 
     return totalBuildSqlBuilder.toString();
   }
@@ -887,24 +876,25 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
   public ServiceDeploymentListInfo getServiceDeploymentsInfo(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, long startTime, long endTime, String serviceIdentifier, long bucketSizeInDays)
       throws Exception {
+    startTime = getStartTimeOfTheDayAsEpoch(startTime);
+    endTime = getStartTimeOfNextDay(endTime);
     long numberOfDays = getNumberOfDays(startTime, endTime);
     validateBucketSize(numberOfDays, bucketSizeInDays);
-    long prevStartTime = startTime - (endTime - startTime + DAY_IN_MS);
-    long prevEndTime = startTime - DAY_IN_MS;
+    long prevStartTime = getStartTimeOfPreviousInterval(startTime, numberOfDays);
 
     ServiceDeploymentInfoDTO serviceDeployments = getServiceDeployments(
         accountIdentifier, orgIdentifier, projectIdentifier, startTime, endTime, serviceIdentifier, bucketSizeInDays);
     List<ServiceDeployment> serviceDeploymentList = serviceDeployments.getServiceDeploymentList();
 
     ServiceDeploymentInfoDTO prevServiceDeployment = getServiceDeployments(accountIdentifier, orgIdentifier,
-        projectIdentifier, prevStartTime, prevEndTime, serviceIdentifier, bucketSizeInDays);
+        projectIdentifier, prevStartTime, startTime, serviceIdentifier, bucketSizeInDays);
     List<ServiceDeployment> prevServiceDeploymentList = prevServiceDeployment.getServiceDeploymentList();
 
     long totalDeployments = getTotalDeployments(serviceDeploymentList);
     long prevTotalDeployments = getTotalDeployments(prevServiceDeploymentList);
     double failureRate = getFailureRate(serviceDeploymentList);
-    double frequency = totalDeployments / numberOfDays;
-    double prevFrequency = prevTotalDeployments / numberOfDays;
+    double frequency = totalDeployments / (double) numberOfDays;
+    double prevFrequency = prevTotalDeployments / (double) numberOfDays;
 
     double totalDeploymentChangeRate = calculateChangeRate(prevTotalDeployments, totalDeployments);
     double failureRateChangeRate = getFailureRateChangeRate(serviceDeploymentList, prevServiceDeploymentList);
@@ -1179,8 +1169,8 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     double failureRate = 0.0;
     double failureRateChangeRate = calculateChangeRate(previousFailure, failure);
     double totalDeploymentChangeRate = calculateChangeRate(prevTotalDeployment, totalDeployment);
-    double frequency = totalDeployment / numberOfDays;
-    double prevFrequency = prevTotalDeployment / numberOfDays;
+    double frequency = totalDeployment / (double) numberOfDays;
+    double prevFrequency = prevTotalDeployment / (double) numberOfDays;
     double frequencyChangeRate = calculateChangeRate(prevFrequency, frequency);
     if (totalDeployment != 0) {
       percentSuccess = success / (double) totalDeployment;
@@ -1266,6 +1256,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
               }
             }
           } else {
+            prevTotalDeployments++;
             if (status.get(i).contentEquals(ExecutionStatus.SUCCESS.name())) {
               previousSuccess++;
             }
@@ -1314,7 +1305,6 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
   public DashboardWorkloadDeployment getDashboardWorkloadDeployment(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, long startInterval, long endInterval, long previousStartInterval,
       EnvironmentType envType) {
-    endInterval = endInterval + DAY_IN_MS;
     String query = queryBuilderSelectWorkload(
         accountIdentifier, orgIdentifier, projectIdentifier, previousStartInterval, endInterval, envType);
 
@@ -1344,7 +1334,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
           if (resultSet.getString("endTs") != null) {
             timeInterval.add(Pair.of(startTime, Long.valueOf(resultSet.getString("endTs"))));
           } else {
-            timeInterval.add(Pair.of(startInterval, -1L));
+            timeInterval.add(Pair.of(startTime, -1L));
           }
           deploymentTypeList.add(resultSet.getString("deployment_type"));
 
@@ -1480,9 +1470,10 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
   public TimeValuePairListDTO<Integer> getInstanceGrowthTrend(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String serviceId, long startTimeInMs, long endTimeInMs) {
     List<TimeValuePair<Integer>> timeValuePairList = new ArrayList<>();
+    Map<Long, Integer> timeValuePairMap = new HashMap<>();
 
     final long tunedStartTimeInMs = getStartTimeOfTheDayAsEpoch(startTimeInMs);
-    final long tunedEndTimeInMs = NGDateUtils.getNextNearestWholeDayUTC(endTimeInMs);
+    final long tunedEndTimeInMs = getStartTimeOfNextDay(endTimeInMs);
 
     final String query =
         "select reportedat, SUM(instancecount) as count from ng_instance_stats_day where accountid = ? and orgid = ? and projectid = ? and serviceid = ? and reportedat >= ? and reportedat <= ? group by reportedat order by reportedat asc";
@@ -1505,7 +1496,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
           final long timestamp =
               resultSet.getTimestamp(TimescaleConstants.REPORTEDAT.getKey(), DateUtils.getDefaultCalendar()).getTime();
           final int count = Integer.parseInt(resultSet.getString("count"));
-          timeValuePairList.add(new TimeValuePair<>(getStartTimeOfTheDayAsEpoch(timestamp), count));
+          timeValuePairMap.put(getStartTimeOfTheDayAsEpoch(timestamp), count);
         }
         successfulOperation = true;
       } catch (SQLException ex) {
@@ -1514,6 +1505,13 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         DBUtils.close(resultSet);
       }
     }
+
+    long currTime = tunedStartTimeInMs;
+    while (currTime < tunedEndTimeInMs) {
+      timeValuePairList.add(new TimeValuePair<>(currTime, timeValuePairMap.getOrDefault(currTime, 0)));
+      currTime = currTime + DAY.getDurationInMs();
+    }
+
     return new TimeValuePairListDTO<>(timeValuePairList);
   }
 
@@ -1527,7 +1525,7 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
     Map<String, Map<Long, Integer>> envIdToTimestampAndCountMap = new HashMap<>();
 
     final long tunedStartTimeInMs = getStartTimeOfTheDayAsEpoch(startTimeInMs);
-    final long tunedEndTimeInMs = NGDateUtils.getNextNearestWholeDayUTC(endTimeInMs);
+    final long tunedEndTimeInMs = getStartTimeOfNextDay(endTimeInMs);
 
     final String query =
         "select reportedat, envid, SUM(instancecount) as count from ng_instance_stats_day where accountid = ? and orgid = ? and projectid = ? and serviceid = ? and reportedat >= ? and reportedat <= ? group by reportedat, envid order by reportedat asc";
@@ -1600,5 +1598,23 @@ public class CDOverviewDashboardServiceImpl implements CDOverviewDashboardServic
         + String.format("accountid='%s' and ", accountIdentifier)
         + String.format("orgidentifier='%s' and ", orgIdentifier)
         + String.format("projectidentifier='%s' and ", projectIdentifier) + String.format("service_id='%s'", serviceId);
+  }
+
+  public ServiceHeaderInfo getServiceHeaderInfo(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String serviceId) {
+    Optional<ServiceEntity> service =
+        ServiceEntityServiceImpl.get(accountIdentifier, orgIdentifier, projectIdentifier, serviceId, false);
+    ServiceEntity serviceEntity = service.get();
+    Set<String> deploymentTypes =
+        getDeploymentType(accountIdentifier, orgIdentifier, projectIdentifier, Arrays.asList(serviceId))
+            .getOrDefault(serviceId, new HashSet<>());
+    return ServiceHeaderInfo.builder()
+        .identifier(serviceId)
+        .name(serviceEntity.getName())
+        .description(serviceEntity.getDescription())
+        .deploymentTypes(deploymentTypes)
+        .createdAt(serviceEntity.getCreatedAt())
+        .lastModifiedAt(serviceEntity.getLastModifiedAt())
+        .build();
   }
 }

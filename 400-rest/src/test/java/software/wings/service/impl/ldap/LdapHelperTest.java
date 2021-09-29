@@ -13,6 +13,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 
@@ -56,6 +58,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({LdapSearch.class, LdapHelper.class})
 @PowerMockIgnore({"javax.security.*", "javax.net.*"})
+@OwnedBy(HarnessTeam.PL)
 public class LdapHelperTest extends WingsBaseTest {
   private LdapSettings ldapSettings;
   private LdapHelper helper;
@@ -165,7 +168,7 @@ public class LdapHelperTest extends WingsBaseTest {
     when(search.execute(Matchers.anyVararg())).thenReturn(searchResult);
     when(searchResult.getEntries()).thenReturn(Collections.singletonList(group));
     when(searchResult.size()).thenReturn(1);
-    helper.populateGroupSize(groups, ldapSettings.getUserSettingsList());
+    helper.populateGroupSize(groups, ldapSettings);
     assertThat(group.getAttribute("groupSize").getStringValue()).isEqualTo("1");
   }
 
@@ -182,7 +185,7 @@ public class LdapHelperTest extends WingsBaseTest {
         .thenReturn(searchResult);
     when(searchResult.getEntries()).thenReturn(Collections.singletonList(group));
     when(searchResult.size()).thenReturn(1);
-    helper.populateGroupSize(groups, ldapSettings.getUserSettingsList());
+    helper.populateGroupSize(groups, ldapSettings);
     assertThat(group.getAttribute("groupSize").getStringValue()).isEqualTo("1");
   }
 

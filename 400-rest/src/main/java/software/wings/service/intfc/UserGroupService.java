@@ -197,4 +197,8 @@ public interface UserGroupService extends OwnedByAccount, OwnedByApplication {
   boolean deleteNonAdminUserGroups(String accountId);
 
   boolean deleteUserGroupsByName(String accountId, List<String> userGroupsToRetain);
+
+  void maskCePermissions(UserGroup userGroup);
+
+  void maintainTemplatePermissions(UserGroup userGroup);
 }

@@ -14,11 +14,13 @@ import io.harness.ff.FeatureFlagService;
 import software.wings.beans.Application;
 import software.wings.beans.Application.Yaml;
 import software.wings.beans.EntityType;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.yaml.gitSync.YamlGitConfig;
 import software.wings.yaml.gitSync.YamlGitConfig.SyncMode;
@@ -38,6 +40,7 @@ public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Ap
   @Inject AppService appService;
   @Inject YamlGitService yamlGitService;
   @Inject FeatureFlagService featureFlagService;
+  @Inject SettingsService settingsService;
 
   @Override
   public void delete(ChangeContext<Yaml> changeContext) {
@@ -50,10 +53,29 @@ public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Ap
 
   @Override
   public Application.Yaml toYaml(Application application, String appId) {
+    boolean gitSync = false;
+    String gitConnector = null;
+    String branchName = null;
+    String repoName = null;
+
+    if (application.getYamlGitConfig() != null && application.getYamlGitConfig().isEnabled()) {
+      gitSync = application.getYamlGitConfig().isEnabled();
+      branchName = application.getYamlGitConfig().getBranchName();
+      repoName = application.getYamlGitConfig().getRepositoryName();
+      SettingAttribute encryptedYamlRef = settingsService.get(application.getYamlGitConfig().getGitConnectorId());
+      if (encryptedYamlRef != null) {
+        gitConnector = encryptedYamlRef.getName();
+      }
+    }
+
     Yaml yaml = Yaml.builder()
                     .type(APPLICATION.name())
                     .description(application.getDescription())
                     .harnessApiVersion(getHarnessApiVersion())
+                    .isGitSyncEnabled(gitSync)
+                    .gitConnector(gitConnector)
+                    .branchName(branchName)
+                    .repoName(repoName)
                     .build();
 
     if (featureFlagService.isEnabled(WEBHOOK_TRIGGER_AUTHORIZATION, application.getAccountId())) {
@@ -128,6 +150,7 @@ public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Ap
         .accountId(accountId)
         .gitConnectorId(yamlGitConfig.getGitConnectorId())
         .branchName(yamlGitConfig.getBranchName())
+        .repositoryName(yamlGitConfig.getRepositoryName())
         .syncMode(SyncMode.BOTH)
         .enabled(true)
         .build();

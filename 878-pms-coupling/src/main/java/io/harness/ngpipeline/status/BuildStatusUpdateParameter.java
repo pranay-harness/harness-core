@@ -1,5 +1,7 @@
 package io.harness.ngpipeline.status;
 
+import io.harness.annotation.RecasterAlias;
+
 import lombok.Builder;
 import lombok.Data;
 import org.springframework.data.annotation.TypeAlias;
@@ -7,6 +9,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Data
 @Builder
 @TypeAlias("buildStatusUpdateParameter")
+@RecasterAlias("io.harness.ngpipeline.status.BuildStatusUpdateParameter")
 public class BuildStatusUpdateParameter implements BuildUpdateParameters {
   @Override
   public BuildUpdateType getBuildUpdateType() {

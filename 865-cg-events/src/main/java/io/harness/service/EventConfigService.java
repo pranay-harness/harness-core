@@ -5,10 +5,12 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.CgEventConfig;
 
+import software.wings.service.intfc.ownership.OwnedByApplication;
+
 import java.util.List;
 
 @OwnedBy(CDC)
-public interface EventConfigService {
+public interface EventConfigService extends OwnedByApplication {
   List<CgEventConfig> listAllEventsConfig(String accountId, String appId);
 
   CgEventConfig getEventsConfig(String accountId, String appId, String eventConfigId);

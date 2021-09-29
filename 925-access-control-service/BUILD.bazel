@@ -12,6 +12,9 @@ java_binary(
     ],
     visibility = ["//visibility:public"],
     runtime_deps = [
+        "@maven//:io_opencensus_opencensus_api",
+        "@maven//:io_opencensus_opencensus_exporter_stats_stackdriver",
+        "@maven//:io_opencensus_opencensus_impl",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
     ],
     deps = [
@@ -112,7 +115,6 @@ java_library(
         "@maven//:com_google_inject_guice",
         "@maven//:junit_junit",
         "@maven//:org_apache_commons_commons_lang3",
-        "@maven//:org_assertj_assertj_core",
         "@maven//:org_mockito_mockito_core",
         "@maven//:org_mongodb_mongo_java_driver",
         "@maven//:org_mongodb_morphia_morphia",
@@ -130,71 +132,7 @@ run_tests()
 
 run_analysis()
 
-#Docker Build Config
-load("@io_bazel_rules_docker//container:container.bzl", "container_image", "container_push")
-load("@io_bazel_rules_docker//docker/util:run.bzl", "container_run_and_commit")
-
-container_run_and_commit(
-    name = "base_image",
-    commands = [
-        "wget https://github.com/mikefarah/yq/releases/download/3.3.2/yq_linux_amd64 -O /usr/bin/yq -O /usr/bin/yq",
-        "chmod +x /usr/bin/yq",
-        "mkdir /opt/harness/plugins",
-    ],
-    image = "@platform_alpine//image",
-    tags = [
-        "manual",
-        "no-cache",
-        "no-ide",
-    ],
-)
-
-container_image(
-    name = "base_image_access_control",
-    base = "base_image_commit.tar",
-    cmd = [
-        "chmod +x /opt/harness/*.sh",
-    ],
-    directory = "/opt/harness",
-    files = [
-        "config.yml",
-        "container-image/scripts/replace_configs.sh",
-        "container-image/scripts/run.sh",
-        "container-image/scripts/start_process.sh",
-        "keystore.jks",
-        ":module_deploy.jar",
-    ],
-    tags = [
-        "manual",
-        "no-cache",
-        "no-ide",
-    ],
-)
-
-container_image(
-    name = "access_control_docker_image",
-    base = ":base_image_access_control",
-    cmd = "./run.sh",
-    repository = "us.gcr.io/harness-playground/access-control-service",
-    tags = [
-        "manual",
-        "no-cache",
-        "no-ide",
-    ],
-    workdir = "/opt/harness",
-)
-
-#TO-DO: Fix the repo path and use of dynamic tag in CI.
-container_push(
-    name = "push_access_control_docker_image",
-    format = "Docker",
-    image = ":access_control_docker_image",
-    registry = "gcr.io",
-    repository = "harness-playground/access-control-service",
-    tag = "bazel-docker-image-test",
-    tags = [
-        "manual",
-        "no-cache",
-        "no-ide",
-    ],
-)
+exports_files([
+    "keystore.jks",
+    "config.yml",
+])

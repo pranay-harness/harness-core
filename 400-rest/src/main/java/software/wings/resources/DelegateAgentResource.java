@@ -346,19 +346,6 @@ public class DelegateAgentResource {
   }
 
   @DelegateAuth
-  @PUT
-  @Path("{delegateId}/clear-cache")
-  @Timed
-  @ExceptionMetered
-  public void clearCache(
-      @PathParam("delegateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
-    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
-         AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      delegateService.clearCache(accountId, delegateId);
-    }
-  }
-
-  @DelegateAuth
   @GET
   @Path("{delegateId}/upgrade")
   @Timed
@@ -382,9 +369,11 @@ public class DelegateAgentResource {
   public RestResponse<DelegateScripts> getDelegateScriptsNg(@Context HttpServletRequest request,
       @QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("delegateVersion") @NotEmpty String delegateVersion,
-      @QueryParam("delegateSize") @javax.validation.constraints.NotNull DelegateSize delegateSize) throws IOException {
+      @QueryParam("delegateSize") @javax.validation.constraints.NotNull DelegateSize delegateSize,
+      @QueryParam("patchVersion") String patchVersion) throws IOException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      return new RestResponse<>(delegateService.getDelegateScriptsNg(accountId, delegateVersion,
+      String fullVersion = isNotEmpty(patchVersion) ? delegateVersion + "-" + patchVersion : delegateVersion;
+      return new RestResponse<>(delegateService.getDelegateScriptsNg(accountId, fullVersion,
           subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request), delegateSize));
     }
   }
@@ -396,10 +385,11 @@ public class DelegateAgentResource {
   @ExceptionMetered
   public RestResponse<DelegateScripts> getDelegateScripts(@Context HttpServletRequest request,
       @QueryParam("accountId") @NotEmpty String accountId,
-      @QueryParam("delegateVersion") @NotEmpty String delegateVersion, @QueryParam("delegateName") String delegateName)
-      throws IOException {
+      @QueryParam("delegateVersion") @NotEmpty String delegateVersion, @QueryParam("patchVersion") String patchVersion,
+      @QueryParam("delegateName") String delegateName) throws IOException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
-      return new RestResponse<>(delegateService.getDelegateScripts(accountId, delegateVersion,
+      String fullVersion = isNotEmpty(patchVersion) ? delegateVersion + "-" + patchVersion : delegateVersion;
+      return new RestResponse<>(delegateService.getDelegateScripts(accountId, fullVersion,
           subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request), delegateName));
     }
   }
@@ -454,9 +444,9 @@ public class DelegateAgentResource {
       @PathParam("delegateId") String delegateId, @QueryParam("accountId") String accountId, byte[] logsBlob) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
          AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      log.info("About to convert logsBlob byte array into ThirdPartyApiCallLog.");
+      log.debug("About to convert logsBlob byte array into ThirdPartyApiCallLog.");
       List<ThirdPartyApiCallLog> logs = (List<ThirdPartyApiCallLog>) kryoSerializer.asObject(logsBlob);
-      log.info("LogsBlob byte array converted successfully into ThirdPartyApiCallLog.");
+      log.debug("LogsBlob byte array converted successfully into ThirdPartyApiCallLog.");
 
       persistence.save(logs);
     }
@@ -479,7 +469,7 @@ public class DelegateAgentResource {
       BuildSourceExecutionResponse executionResponse = (BuildSourceExecutionResponse) kryoSerializer.asObject(response);
 
       if (executionResponse.getBuildSourceResponse() != null) {
-        log.info("Received artifact collection {}", executionResponse.getBuildSourceResponse().getBuildDetails());
+        log.debug("Received artifact collection {}", executionResponse.getBuildSourceResponse().getBuildDetails());
       }
       artifactCollectionResponseHandler.processArtifactCollectionResult(accountId, perpetualTaskId, executionResponse);
     }
@@ -528,7 +518,7 @@ public class DelegateAgentResource {
           (ManifestCollectionExecutionResponse) kryoSerializer.asObject(serializedExecutionResponse);
 
       if (executionResponse.getManifestCollectionResponse() != null) {
-        log.info("Received manifest collection {}", executionResponse.getManifestCollectionResponse().getHelmCharts());
+        log.debug("Received manifest collection {}", executionResponse.getManifestCollectionResponse().getHelmCharts());
       }
       manifestCollectionResponseHandler.handleManifestCollectionResponse(accountId, perpetualTaskId, executionResponse);
     }
@@ -589,6 +579,7 @@ public class DelegateAgentResource {
         .delegateRandomToken(delegateParams.getDelegateRandomToken())
         .keepAlivePacket(delegateParams.isKeepAlivePacket())
         .polllingModeEnabled(delegateParams.isPollingModeEnabled())
+        .ng(delegateParams.isNg())
         .sampleDelegate(delegateParams.isSampleDelegate())
         .currentlyExecutingDelegateTasks(delegateParams.getCurrentlyExecutingDelegateTasks())
         .location(delegateParams.getLocation())

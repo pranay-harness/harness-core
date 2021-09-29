@@ -2,6 +2,7 @@ package io.harness.delegate.task.aws;
 
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ACASIAN;
+import static io.harness.rule.OwnerRule.ACHYUTH;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -112,6 +113,37 @@ public class AwsDelegateTaskTest extends CategoryTest {
     assertThat(awsValidateTaskResponse.getConnectorValidationResult().getStatus())
         .isEqualTo(ConnectivityStatus.SUCCESS);
     assertThat(awsValidateTaskResponse.getConnectorValidationResult().getTestedAt()).isNotNull();
+
+    verify(awsNgConfigMapper, times(1)).mapAwsConfigWithDecryption(any(), any(), any());
+    verify(awsClient, times(1)).validateAwsAccountCredential(eq(awsConfig));
+  }
+
+  @Test
+  @Owner(developers = ACHYUTH)
+  @Category(UnitTests.class)
+  public void testShouldHandleValidationTaskIRSA() {
+    AwsConnectorDTO awsConnectorDTO =
+        AwsConnectorDTO.builder()
+            .credential(AwsCredentialDTO.builder().awsCredentialType(AwsCredentialType.IRSA).build())
+            .build();
+    AwsTaskParams awsTaskParams = AwsTaskParams.builder()
+                                      .awsConnector(awsConnectorDTO)
+                                      .awsTaskType(AwsTaskType.VALIDATE)
+                                      .encryptionDetails(Collections.emptyList())
+                                      .build();
+
+    AwsConfig awsConfig = AwsConfig.builder().isIRSA(true).build();
+
+    doReturn(awsConfig).when(awsNgConfigMapper).mapAwsConfigWithDecryption(any(), any(), any());
+
+    DelegateResponseData result = task.run(awsTaskParams);
+    assertThat(result).isNotNull();
+    assertThat(result).isInstanceOf(AwsValidateTaskResponse.class);
+    AwsValidateTaskResponse awsValidateTaskResponse = (AwsValidateTaskResponse) result;
+    assertThat(awsValidateTaskResponse.getConnectorValidationResult().getStatus())
+        .isEqualTo(ConnectivityStatus.SUCCESS);
+    assertThat(awsValidateTaskResponse.getConnectorValidationResult().getTestedAt()).isNotNull();
+    assertThat(awsConfig.isIRSA()).isEqualTo(true);
 
     verify(awsNgConfigMapper, times(1)).mapAwsConfigWithDecryption(any(), any(), any());
     verify(awsClient, times(1)).validateAwsAccountCredential(eq(awsConfig));

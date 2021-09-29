@@ -1,6 +1,7 @@
 package io.harness.ng.core.user.remote;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.ng.accesscontrol.PlatformPermissions.MANAGE_USER_PERMISSION;
 import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_USER_PERMISSION;
 import static io.harness.ng.accesscontrol.PlatformResourceTypes.USER;
@@ -25,6 +26,8 @@ import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.services.ProjectService;
+import io.harness.ng.core.user.AddUsersDTO;
+import io.harness.ng.core.user.AddUsersResponse;
 import io.harness.ng.core.user.PasswordChangeDTO;
 import io.harness.ng.core.user.PasswordChangeResponse;
 import io.harness.ng.core.user.TwoFactorAuthMechanismInfo;
@@ -48,6 +51,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -66,6 +70,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.validator.constraints.NotEmpty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import retrofit2.http.Body;
@@ -149,16 +154,38 @@ public class UserResource {
     return ResponseDTO.newResponse(projectService.listProjectsForUser(userId.get(), accountId, pageRequest));
   }
 
+  @GET
+  @Path("all-projects")
+  @ApiOperation(value = "get user all projects information", nickname = "getUserAllProjectsInfo")
+  public ResponseDTO<List<ProjectDTO>> getUserAllProjectsInfo(
+      @QueryParam("accountId") String accountId, @QueryParam("userId") String userId) {
+    return ResponseDTO.newResponse(projectService.listProjectsForUser(userId, accountId));
+  }
+
   @POST
   @Path("batch")
   @ApiOperation(value = "Get a list of users", nickname = "getUsers")
   public ResponseDTO<PageResponse<UserMetadataDTO>> getUsers(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @NotNull @NotEmpty @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @Valid @BeanParam PageRequest pageRequest, UserFilter userFilter) {
-    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
-        Resource.of(USER, null), VIEW_USER_PERMISSION);
+    if (userFilter == null || UserFilter.ParentFilter.NO_PARENT_SCOPES.equals(userFilter.getParentFilter())) {
+      accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+          Resource.of(USER, null), VIEW_USER_PERMISSION);
+    } else {
+      accessControlClient.checkForAccessOrThrow(
+          ResourceScope.of(accountIdentifier, null, null), Resource.of(USER, null), VIEW_USER_PERMISSION);
+      if (isNotEmpty(orgIdentifier)) {
+        accessControlClient.checkForAccessOrThrow(
+            ResourceScope.of(accountIdentifier, orgIdentifier, null), Resource.of(USER, null), VIEW_USER_PERMISSION);
+        if (isNotEmpty(projectIdentifier)) {
+          accessControlClient.checkForAccessOrThrow(
+              ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier), Resource.of(USER, null),
+              VIEW_USER_PERMISSION);
+        }
+      }
+    }
     Scope scope = Scope.builder()
                       .accountIdentifier(accountIdentifier)
                       .orgIdentifier(orgIdentifier)
@@ -210,6 +237,20 @@ public class UserResource {
       return ResponseDTO.newResponse(aggregateUserService.getAggregatedUsers(scope, aclAggregateFilter, pageRequest));
     }
     return ResponseDTO.newResponse(aggregateUserService.getAggregatedUsers(scope, searchTerm, pageRequest));
+  }
+
+  @POST
+  @Path("users")
+  @ApiOperation(value = "Add users to a scope", nickname = "addUsers")
+  public ResponseDTO<AddUsersResponse> addUsers(
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
+      @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @Valid AddUsersDTO addUsersDTO) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
+        Resource.of(USER, null), MANAGE_USER_PERMISSION);
+    return ResponseDTO.newResponse(
+        ngUserService.addUsers(Scope.of(accountIdentifier, orgIdentifier, projectIdentifier), addUsersDTO));
   }
 
   @PUT

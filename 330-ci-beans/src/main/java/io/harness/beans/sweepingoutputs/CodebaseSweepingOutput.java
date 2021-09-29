@@ -2,6 +2,7 @@ package io.harness.beans.sweepingoutputs;
 
 import static io.harness.beans.sweepingoutputs.CISweepingOutputNames.CODEBASE;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.sdk.core.data.ExecutionSweepingOutput;
@@ -21,6 +22,7 @@ import org.springframework.data.annotation.TypeAlias;
 @OwnedBy(HarnessTeam.CI)
 @TypeAlias(CODEBASE)
 @JsonTypeName(CODEBASE)
+@RecasterAlias("io.harness.beans.sweepingoutputs.CodebaseSweepingOutput")
 public class CodebaseSweepingOutput implements ExecutionSweepingOutput {
   String branch;
   String tag;

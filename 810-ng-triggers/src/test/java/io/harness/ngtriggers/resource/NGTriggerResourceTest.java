@@ -176,6 +176,10 @@ public class NGTriggerResourceTest extends CategoryTest {
     doReturn(triggerDetails)
         .when(ngTriggerElementMapper)
         .mergeTriggerEntity(triggerDetails.getNgTriggerEntity(), ngTriggerYaml);
+    doReturn(triggerDetails)
+        .when(ngTriggerService)
+        .fetchTriggerEntity(
+            ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, IDENTIFIER, ngTriggerYaml);
     when(ngTriggerElementMapper.toResponseDTO(ngTriggerEntity)).thenReturn(ngTriggerResponseDTO);
 
     NGTriggerResponseDTO responseDTO =

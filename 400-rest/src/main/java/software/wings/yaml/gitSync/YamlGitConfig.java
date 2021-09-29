@@ -1,8 +1,13 @@
 package software.wings.yaml.gitSync;
 
+import static io.harness.annotations.dev.HarnessModule._951_CG_GIT_SYNC;
+
 import static software.wings.settings.SettingVariableTypes.YAML_GIT_SYNC;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
@@ -31,6 +36,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
 
+@OwnedBy(HarnessTeam.DX)
+@TargetModule(_951_CG_GIT_SYNC)
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)

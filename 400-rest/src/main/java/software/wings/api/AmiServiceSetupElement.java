@@ -46,6 +46,7 @@ public class AmiServiceSetupElement implements ContextElement, SweepingOutput {
   private boolean blueGreen;
   private ResizeStrategy resizeStrategy;
   private List<String> baseScalingPolicyJSONs;
+  private List<String> baseAsgScheduledActionJSONs;
 
   @Override
   public ContextElementType getElementType() {

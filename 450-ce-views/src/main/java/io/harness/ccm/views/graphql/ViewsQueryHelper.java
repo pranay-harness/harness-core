@@ -4,7 +4,9 @@ import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.AFTER;
 import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.BEFORE;
 
 import io.harness.ccm.views.entities.ViewFieldIdentifier;
+import io.harness.ccm.views.entities.ViewQueryParams;
 
+import com.sun.istack.internal.Nullable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.NumberFormat;
@@ -19,6 +21,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 
@@ -159,10 +162,17 @@ public class ViewsQueryHelper {
                      : Instant.ofEpochMilli(currentDay - ONE_DAY_MILLIS);
   }
 
-  private static List<QLCEViewTimeFilter> getTimeFilters(List<QLCEViewFilterWrapper> filters) {
+  public List<QLCEViewTimeFilter> getTimeFilters(List<QLCEViewFilterWrapper> filters) {
     return filters.stream()
         .filter(f -> f.getTimeFilter() != null)
         .map(QLCEViewFilterWrapper::getTimeFilter)
+        .collect(Collectors.toList());
+  }
+
+  public List<QLCEViewFilter> getIdFilters(List<QLCEViewFilterWrapper> filters) {
+    return filters.stream()
+        .filter(f -> f.getIdFilter() != null)
+        .map(QLCEViewFilterWrapper::getIdFilter)
         .collect(Collectors.toList());
   }
 
@@ -241,5 +251,39 @@ public class ViewsQueryHelper {
   public List<QLCEViewAggregation> getPerspectiveTotalCostAggregation() {
     return Collections.singletonList(
         QLCEViewAggregation.builder().columnName("cost").operationType(QLCEViewAggregateOperation.SUM).build());
+  }
+
+  public ViewQueryParams buildQueryParams(String accountId, boolean isTimeTruncGroupByRequired,
+      boolean isUsedByTimeSeriesStats, boolean isClusterQuery, boolean isTotalCountQuery) {
+    return ViewQueryParams.builder()
+        .accountId(accountId)
+        .isClusterQuery(isClusterQuery)
+        .isUsedByTimeSeriesStats(isUsedByTimeSeriesStats)
+        .isTimeTruncGroupByRequired(isTimeTruncGroupByRequired)
+        .isTotalCountQuery(isTotalCountQuery)
+        .build();
+  }
+
+  public ViewQueryParams buildQueryParams(String accountId, boolean isClusterQuery) {
+    return buildQueryParams(accountId, false, false, isClusterQuery, false);
+  }
+
+  public ViewQueryParams buildQueryParams(String accountId, boolean isClusterQuery, boolean skipRoundOff) {
+    return ViewQueryParams.builder()
+        .accountId(accountId)
+        .isClusterQuery(isClusterQuery)
+        .skipRoundOff(skipRoundOff)
+        .isUsedByTimeSeriesStats(false)
+        .isTimeTruncGroupByRequired(false)
+        .isTotalCountQuery(false)
+        .build();
+  }
+
+  @Nullable
+  public static Optional<String> getPerspectiveIdFromMetadataFilter(List<QLCEViewFilterWrapper> filters) {
+    return filters.stream()
+        .filter(f -> f.getViewMetadataFilter() != null)
+        .findFirst()
+        .map(x -> x.getViewMetadataFilter().getViewId());
   }
 }

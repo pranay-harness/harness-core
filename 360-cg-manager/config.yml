@@ -276,6 +276,7 @@ mongo:
   maxConnectionIdleTime: 600000
   connectionsPerHost: 300
   indexManagerMode: AUTO
+  traceMode: DISABLED
   mongoSSLConfig:
     mongoSSLEnabled: false
     mongoTrustStorePath:
@@ -306,12 +307,13 @@ deployMode: KUBERNETES
 envPath: ""
 
 kubectlVersion: v1.13.2
-scmVersion: b276dd03
+scmVersion: 802ac188
 
 ngAuthUIEnabled: false
 
 portal:
   url: https://localhost:8000
+  zendeskBaseUrl: "https://harnesssupport.zendesk.com"
   gatewayPathPrefix: "gateway/"
   allowedOrigins: http://localhost:8000, https://localhost:8000, https://127.0.0.1:8000, https://localhost:8181, https://127.0.0.1:8181, http://127.0.0.1:8000
   companyName: Harness Inc
@@ -625,3 +627,8 @@ auditClientConfig:
 enableAudit: false
 
 disableDelegateMgmtInManager: false
+
+ldapSyncJobConfig:
+  poolSize: 3
+  syncInterval: 15
+  defaultCronExpression: "0 0/15 * 1/1 * ? *"

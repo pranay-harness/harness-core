@@ -38,7 +38,7 @@ import org.apache.commons.lang3.StringUtils;
  * @author rktummala on 10/11/17
  */
 @Slf4j
-@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class Utils {
   private static final String MULTIPLE_FILES_DELIMITER = ",";
   private static final String UNDERSCORE = "_";

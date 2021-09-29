@@ -1,3 +1,10 @@
 DockerFile* diptiman.adak@harness.io udham.singh@harness.io george@harness.io guna.chandrasekaran@harness.io
 WORKSPACE diptiman.adak@harness.io
 /925-access-control-service/src/main/resources/io/harness/accesscontrol/ @gupta-utkarsh @ankit-harness
+/125-cd-nextgen/src/test/resources/recaster/alias/alias.txt @prashantpal31
+/300-cv-nextgen/src/test/resources/recaster/alias/alias.txt @prashantpal31
+/320-ci-execution/src/test/resources/recaster/alias/alias.txt @prashantpal31
+/800-pipeline-service/src/test/resources/recaster/alias/alias.txt @prashantpal31
+/860-orchestration-steps/src/test/resources/recaster/alias/alias.txt @prashantpal31
+/860-orchestration-visualization/src/test/resources/recaster/alias/alias.txt @prashantpal31
+/870-orchestration/src/test/resources/recaster/alias/alias.txt @prashantpal31

@@ -1,13 +1,18 @@
 package io.harness.cvng.dashboard.resources;
 
 import io.harness.annotations.ExposeInternalException;
+import io.harness.cvng.analysis.beans.LiveMonitoringLogAnalysisClusterDTO;
+import io.harness.cvng.analysis.entities.LogAnalysisResult.LogAnalysisTag;
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.core.beans.params.PageParams;
+import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
+import io.harness.cvng.core.beans.params.TimeRangeParams;
+import io.harness.cvng.core.beans.params.filterParams.LiveMonitoringLogAnalysisFilter;
 import io.harness.cvng.dashboard.beans.AnalyzedLogDataDTO;
 import io.harness.cvng.dashboard.beans.LogDataByTag;
 import io.harness.cvng.dashboard.services.api.LogDashboardService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.rest.RestResponse;
-import io.harness.security.annotations.LearningEngineAuth;
 import io.harness.security.annotations.NextGenManagerAuth;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -16,6 +21,7 @@ import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import java.time.Instant;
+import java.util.List;
 import java.util.SortedSet;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.DefaultValue;
@@ -37,7 +43,6 @@ public class LogDashboardResource {
   @Path("/anomalous-logs")
   @Timed
   @ExceptionMetered
-  @LearningEngineAuth
   @ApiOperation(value = "get anomalous logs for a time range", nickname = "getAnomalousLogs")
   public RestResponse<PageResponse<AnalyzedLogDataDTO>> getAnomalousLogs(@QueryParam("accountId") String accountId,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
@@ -57,7 +62,6 @@ public class LogDashboardResource {
   @Path("/all-logs")
   @Timed
   @ExceptionMetered
-  @LearningEngineAuth
   @ApiOperation(value = "get all logs for a time range", nickname = "getAllLogs")
   public RestResponse<PageResponse<AnalyzedLogDataDTO>> getAllLogs(@QueryParam("accountId") String accountId,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
@@ -77,7 +81,6 @@ public class LogDashboardResource {
   @Path("/log-count-by-tags")
   @Timed
   @ExceptionMetered
-  @LearningEngineAuth
   @ApiOperation(value = "get a sorted tag vs logs list", nickname = "getTagCount")
   public RestResponse<SortedSet<LogDataByTag>> getTagCount(@QueryParam("accountId") String accountId,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
@@ -96,7 +99,6 @@ public class LogDashboardResource {
   @Path("/{activityId}/log-count-by-tags")
   @Timed
   @ExceptionMetered
-  @LearningEngineAuth
   @ApiOperation(value = "get a sorted tag vs logs list for an activity", nickname = "getTagCountForActivity")
   public RestResponse<SortedSet<LogDataByTag>> getTagCountForActivity(@QueryParam("accountId") String accountId,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
@@ -121,5 +123,75 @@ public class LogDashboardResource {
       @NotNull @PathParam("activityId") String activityId) {
     return new RestResponse(logDashboardService.getActivityLogs(activityId, accountId, projectIdentifier, orgIdentifier,
         environmentIdentifier, serviceIdentifier, startTimeMillis, endTimeMillis, anomalousOnly, page, size));
+  }
+
+  @GET
+  @Path("/logs-data")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "get all log data for a time range", nickname = "getAllLogsData")
+  public RestResponse<PageResponse<AnalyzedLogDataDTO>> getAllLogsData(@QueryParam("accountId") String accountId,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @NotNull @QueryParam("serviceIdentifier") String serviceIdentifier,
+      @NotNull @QueryParam("environmentIdentifier") String environmentIdentifier,
+      @QueryParam("clusterTypes") List<LogAnalysisTag> clusterTypes,
+      @NotNull @QueryParam("startTime") Long startTimeMillis, @NotNull @QueryParam("endTime") Long endTimeMillis,
+      @QueryParam("healthSources") List<String> healthSourceIdentifiers,
+      @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("10") int size) {
+    ServiceEnvironmentParams serviceEnvironmentParams = ServiceEnvironmentParams.builder()
+                                                            .accountIdentifier(accountId)
+                                                            .orgIdentifier(orgIdentifier)
+                                                            .projectIdentifier(projectIdentifier)
+                                                            .serviceIdentifier(serviceIdentifier)
+                                                            .environmentIdentifier(environmentIdentifier)
+                                                            .build();
+    TimeRangeParams timeRangeParams = TimeRangeParams.builder()
+                                          .startTime(Instant.ofEpochMilli(startTimeMillis))
+                                          .endTime(Instant.ofEpochMilli(endTimeMillis))
+                                          .build();
+    PageParams pageParams = PageParams.builder().page(page).size(size).build();
+    LiveMonitoringLogAnalysisFilter liveMonitoringLogAnalysisFilter =
+        LiveMonitoringLogAnalysisFilter.builder()
+            .healthSourceIdentifiers(healthSourceIdentifiers)
+            .clusterTypes(clusterTypes)
+            .build();
+
+    return new RestResponse<>(logDashboardService.getAllLogsData(
+        serviceEnvironmentParams, timeRangeParams, liveMonitoringLogAnalysisFilter, pageParams));
+  }
+
+  @GET
+  @Path("/logs-cluster")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "get all log cluster data for a time range", nickname = "getAllLogsClusterData")
+  public RestResponse<List<LiveMonitoringLogAnalysisClusterDTO>> getLogsClusterData(
+      @QueryParam("accountId") String accountId, @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @NotNull @QueryParam("serviceIdentifier") String serviceIdentifier,
+      @NotNull @QueryParam("environmentIdentifier") String environmentIdentifier,
+      @QueryParam("clusterTypes") List<LogAnalysisTag> clusterTypes,
+      @NotNull @QueryParam("startTime") Long startTimeMillis, @NotNull @QueryParam("endTime") Long endTimeMillis,
+      @QueryParam("healthSources") List<String> healthSourceIdentifiers) {
+    ServiceEnvironmentParams serviceEnvironmentParams = ServiceEnvironmentParams.builder()
+                                                            .accountIdentifier(accountId)
+                                                            .orgIdentifier(orgIdentifier)
+                                                            .projectIdentifier(projectIdentifier)
+                                                            .serviceIdentifier(serviceIdentifier)
+                                                            .environmentIdentifier(environmentIdentifier)
+                                                            .build();
+    TimeRangeParams timeRangeParams = TimeRangeParams.builder()
+                                          .startTime(Instant.ofEpochMilli(startTimeMillis))
+                                          .endTime(Instant.ofEpochMilli(endTimeMillis))
+                                          .build();
+    LiveMonitoringLogAnalysisFilter liveMonitoringLogAnalysisFilter =
+        LiveMonitoringLogAnalysisFilter.builder()
+            .healthSourceIdentifiers(healthSourceIdentifiers)
+            .clusterTypes(clusterTypes)
+            .build();
+
+    return new RestResponse<>(logDashboardService.getLogAnalysisClusters(
+        serviceEnvironmentParams, timeRangeParams, liveMonitoringLogAnalysisFilter));
   }
 }

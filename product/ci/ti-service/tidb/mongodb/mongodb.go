@@ -13,6 +13,7 @@ import (
 	cgp "github.com/wings-software/portal/product/ci/addon/parser/cg"
 
 	"github.com/wings-software/portal/commons/go/lib/utils"
+	"github.com/wings-software/portal/product/ci/ti-service/logger"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -25,7 +26,6 @@ import (
 type MongoDb struct {
 	Client   *mongo.Client
 	Database *mongo.Database
-	Log      *zap.SugaredLogger
 }
 
 func getDefaultConfig() *mgm.Config {
@@ -99,6 +99,12 @@ type VCSInfo struct {
 // NewNode creates Node object form given fields
 func NewNode(id, classId int, pkg, method, params, class, typ, file string, callsReflection bool, vcs VCSInfo, acc, org, proj string) *Node {
 	return &Node{
+		DefaultModel: mgm.DefaultModel{
+			DateFields: mgm.DateFields{
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+			},
+		},
 		Id:              id,
 		ClassId:         classId,
 		Package:         pkg,
@@ -118,6 +124,12 @@ func NewNode(id, classId int, pkg, method, params, class, typ, file string, call
 // NewRelation creates Relation object form given fields
 func NewRelation(source int, tests []int, vcs VCSInfo, acc, org, proj string) *Relation {
 	return &Relation{
+		DefaultModel: mgm.DefaultModel{
+			DateFields: mgm.DateFields{
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+			},
+		},
 		Source:  source,
 		Tests:   tests,
 		Acct:    acc,
@@ -129,6 +141,12 @@ func NewRelation(source int, tests []int, vcs VCSInfo, acc, org, proj string) *R
 
 func NewVisEdge(caller int, callee []int, account, org, project string, vcs VCSInfo) *VisEdge {
 	return &VisEdge{
+		DefaultModel: mgm.DefaultModel{
+			DateFields: mgm.DateFields{
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+			},
+		},
 		Caller:  caller,
 		Callee:  callee,
 		Acct:    account,
@@ -171,7 +189,7 @@ func New(username, password, host, port, dbName string, connStr string, log *zap
 	}
 
 	log.Infow("successfully pinged mongo server")
-	return &MongoDb{Client: client, Database: client.Database(dbName), Log: log}, nil
+	return &MongoDb{Client: client, Database: client.Database(dbName)}, nil
 }
 
 // queryHelper gets the tests that need to be run corresponding to the parsed file nodes
@@ -267,11 +285,6 @@ func (mdb *MongoDb) queryHelper(ctx context.Context, targetBranch, repo string, 
 	if err != nil {
 		return nil, false, err
 	}
-	if len(tnodes) != len(tids) {
-		// Log error message for debugging if we don't find a test ID in the node list
-		mdb.Log.Errorw("number of elements in test IDs and retrieved nodes don't match",
-			"test IDs", tids, "nodes", tnodes, "length(test ids)", len(tids), "length(nodes)", len(tnodes))
-	}
 	for _, t := range tnodes {
 		result = append(result, types.RunnableTest{Pkg: t.Package, Class: t.Class})
 	}
@@ -283,56 +296,67 @@ func toVis(n Node, imp bool) types.VisNode {
 	return types.VisNode{Id: n.ClassId, Package: n.Package, Class: n.Class, File: n.File, Type: n.Type, Important: imp}
 }
 
-// Helper function to check whether the file caused the test to be run
-// <pkg, cls>: package and class of a test file
-// It also returns the corresponding vis nodes for the changed file
-func check(ctx context.Context, branch, repo, file, pkg, cls, account string) (bool, []types.VisNode, error) {
-	fn, _ := utils.ParseJavaNode(file)
+/* Helper function which returns corresponding visualisation nodes that led to a test being run.
+pkg and cls here are the package and the class of the test which is run and files are the list
+of changed files in the PR. */
+func getVisDirectRelations(ctx context.Context, files []types.File, branch, repo, pkg, cls, account string) ([]types.VisNode, error) {
+	fl := []string{}
 	resp := []types.VisNode{}
-	var q interface{}
-	if fn.Type == utils.NodeType_SOURCE || fn.Type == utils.NodeType_TEST {
-		q = bson.M{"package": fn.Pkg, "class": fn.Class,
-			"vcs_info.repo":   repo,
-			"vcs_info.branch": branch,
-			"account":         account}
-	} else if fn.Type == utils.NodeType_RESOURCE {
-		q = bson.M{"type": "resource", "file": fn.File,
-			"vcs_info.repo":   repo,
-			"vcs_info.branch": branch,
-			"account":         account}
-	} else {
-		return false, resp, nil
+	for _, f := range files {
+		fl = append(fl, f.Name)
 	}
-	// Check the node IDs corresponding to this query
+	fn, _ := utils.ParseFileNames(fl) // Get file nodes corresponding to changed list
+
 	nodes := []Node{}
-	err := mgm.Coll(&Node{}).SimpleFindWithCtx(ctx, &nodes, q)
-	if err != nil {
-		return false, resp, err
-	}
-	if len(nodes) == 0 { // No nodes were found for the file
-		return false, resp, nil
-	}
-
-	nids := []int{}
-	m := make(map[int]struct{})
-	for _, n := range nodes {
-		nids = append(nids, n.Id)
-		// Check whether it needs to be added in visualisation or not
-		if _, ok := m[n.ClassId]; ok {
-			continue
+	mResources := make(map[string]struct{})
+	allowedPairs := []interface{}{}
+	for _, n := range fn {
+		if n.Type == utils.NodeType_SOURCE {
+			allowedPairs = append(allowedPairs,
+				bson.M{"type": "source", "package": n.Pkg, "class": n.Class,
+					"vcs_info.repo":   repo,
+					"vcs_info.branch": branch,
+					"account":         account})
+		} else if n.Type == utils.NodeType_RESOURCE {
+			// There can be multiple resource files with the same name
+			if _, ok := mResources[n.File]; ok {
+				continue
+			}
+			mResources[n.File] = struct{}{}
+			allowedPairs = append(allowedPairs,
+				bson.M{"type": "resource", "file": n.File,
+					"vcs_info.repo":   repo,
+					"vcs_info.branch": branch,
+					"account":         account})
 		}
-		m[n.ClassId] = struct{}{}
-		resp = append(resp, toVis(n, true))
+	}
+	if len(allowedPairs) == 0 {
+		return resp, nil
 	}
 
-	// Get test ID nodes
-	q = bson.M{"vcs_info.repo": repo,
+	// Check the node IDs corresponding to this query
+	all := []Node{}
+	err := mgm.Coll(&Node{}).SimpleFindWithCtx(ctx, &all, bson.M{"$or": allowedPairs})
+	if err != nil {
+		return resp, err
+	}
+	if len(all) == 0 { // No nodes were found for any file changes
+		return resp, nil
+	}
+	nids := []int{}
+	// Get node IDs
+	for _, n := range all {
+		nids = append(nids, n.Id)
+	}
+
+	// Get test IDs
+	q := bson.M{"vcs_info.repo": repo,
 		"vcs_info.branch": branch,
 		"account":         account, "package": pkg, "class": cls}
 	nodes = []Node{}
 	err = mgm.Coll(&Node{}).SimpleFindWithCtx(ctx, &nodes, q)
 	if err != nil {
-		return false, resp, err
+		return resp, err
 	}
 	tids := []int{}
 	for _, n := range nodes {
@@ -344,13 +368,23 @@ func check(ctx context.Context, branch, repo, file, pkg, cls, account string) (b
 	relns := []Relation{}
 	err = mgm.Coll(&Relation{}).SimpleFindWithCtx(ctx, &relns, q)
 	if err != nil {
-		return false, resp, err
+		return resp, err
 	}
 	if len(relns) == 0 {
-		return false, resp, nil
+		return resp, nil
 	}
 
-	return true, resp, nil
+	validNodes := make(map[int]struct{})
+	for _, r := range relns {
+		validNodes[r.Source] = struct{}{}
+	}
+
+	for _, n := range all {
+		if _, ok := validNodes[n.Id]; ok {
+			resp = append(resp, toVis(n, true))
+		}
+	}
+	return resp, nil
 }
 
 // isValid checks whether the test is valid or not
@@ -389,7 +423,7 @@ func (mdb *MongoDb) GetVg(ctx context.Context, req types.GetVgReq) (types.GetVgR
 		if err != nil {
 			if err == mongo.ErrNoDocuments {
 				// If nothing is present in the source branch, we try to get information from the target branch
-				mdb.Log.Infow("could not find a source branch visualization mapping. Defaulting to target branch",
+				logger.FromContext(ctx).Infow("could not find a source branch visualization mapping. Defaulting to target branch",
 					"source_branch", req.SourceBranch, "target_branch", req.TargetBranch, "account", req.AccountId, "repo",
 					req.Repo, "package", pkg, "class", cls)
 				branch = req.TargetBranch
@@ -403,15 +437,14 @@ func (mdb *MongoDb) GetVg(ctx context.Context, req types.GetVgReq) (types.GetVgR
 			return resp, err
 		}
 
-		// Check which changed files led to this test being run and add that in the nodes collection.
-		for _, f := range req.DiffFiles {
-			ok, vnodes, err := check(ctx, branch, req.Repo, f.Name, pkg, cls, req.AccountId)
-			if !ok || err != nil {
-				continue
-			}
-			for _, vn := range vnodes {
-				resp.Nodes = append(resp.Nodes, vn)
-			}
+		// Get the direct relations among the changed files which led to this test being run
+		f, err := getVisDirectRelations(ctx, req.DiffFiles, branch, req.Repo, pkg, cls, req.AccountId)
+		if err != nil {
+			logger.FromContext(ctx).Errorw("could not get linked files for visualization mapping", "diff_files", req.DiffFiles, "branch", branch,
+				"repo", req.Repo, "package", pkg, "class", cls, "account", req.AccountId)
+		}
+		for _, k := range f {
+			resp.Nodes = append(resp.Nodes, k)
 		}
 		return formatVis(resp), nil
 	} else {
@@ -573,15 +606,18 @@ func contains(s []int, check int) bool {
 	return false
 }
 
-// TODO: (Vistaar) Improve this to be a map so that we don't have to iterate
-// over all the files each time.
+// Check whether the vis node occurs in the changed files list or not
 func isImportant(vn types.VisNode, diffFiles []types.File) bool {
 	for _, f := range diffFiles {
 		n, _ := utils.ParseJavaNode(f.Name)
-		if vn.File != "" && n.File == vn.File { // For resource type
-			return true
-		} else if vn.Package == n.Pkg && vn.Class == n.Class { // For source or test types
-			return true
+		if vn.Type == "resource" { // Resource type
+			if vn.File == n.File {
+				return true
+			}
+		} else { // Source or test type
+			if vn.Package == n.Pkg && vn.Class == n.Class {
+				return true
+			}
 		}
 	}
 	return false
@@ -670,11 +706,11 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq,
 		} else if utils.IsTest(node) {
 			t := types.RunnableTest{Pkg: node.Pkg, Class: node.Class}
 			if !isValid(t) {
-				mdb.Log.Errorw("received test without pkg/class as input")
+				logger.FromContext(ctx).Errorw("received test without pkg/class as input")
 			} else {
 				// If there is any test which was deleted in this PR, don't process it
 				if _, ok := deletedTests[t]; ok {
-					mdb.Log.Warnw(fmt.Sprintf("removing test %s from selection as it was deleted", t))
+					logger.FromContext(ctx).Warnw(fmt.Sprintf("removing test %s from selection as it was deleted", t))
 					continue
 				}
 				// Test is valid, add the test
@@ -725,11 +761,11 @@ func (mdb *MongoDb) GetTestsToRun(ctx context.Context, req types.SelectTestsReq,
 	}
 	for _, t := range tests {
 		if !isValid(t) {
-			mdb.Log.Errorw("found test without pkg/class data in mongo")
+			logger.FromContext(ctx).Errorw("found test without pkg/class data in mongo")
 		} else {
 			// If there is any test which was deleted in this PR, don't process it
 			if _, ok := deletedTests[t]; ok {
-				mdb.Log.Warnw(fmt.Sprintf("removing test %s from selection as it was deleted", t))
+				logger.FromContext(ctx).Warnw(fmt.Sprintf("removing test %s from selection as it was deleted", t))
 				continue
 			}
 			// Test is valid, add the test
@@ -833,7 +869,7 @@ func (mdb *MongoDb) UploadPartialCg(ctx context.Context, cg *cgp.Callgraph, info
 			fmt.Sprintf("failed to expire records from vis_edges collection "+
 				"repo: %s, branch: %s acc: %s", info.Repo, info.Branch, account))
 	}
-	mdb.Log.Infow(
+	logger.FromContext(ctx).Infow(
 		fmt.Sprintf("expired records in nodes: %d, relations:  %d, vis_edges: %d collection",
 			r1.ModifiedCount, r2.ModifiedCount, r3.ModifiedCount), "account", account, "repo", info.Repo, "branch", info.Branch)
 
@@ -932,7 +968,7 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 	}
 
 	n, err := utils.ParseFileNames(deletedF)
-	mdb.Log.Infow(fmt.Sprintf("deleted %d files", len(n)),
+	logger.FromContext(ctx).Infow(fmt.Sprintf("deleted %d files", len(n)),
 		"repo", repo,
 		"branch", branch,
 		"commit", commit,
@@ -957,7 +993,7 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 		}
 		delIDs = append(delIDs, node.Id)
 	}
-	mdb.Log.Infow(fmt.Sprintf("node ids to be deleted: [%v]", delIDs), "branch", branch, "repo", repo)
+	logger.FromContext(ctx).Infow(fmt.Sprintf("node ids to be deleted: [%v]", delIDs), "branch", branch, "repo", repo)
 	if len(delIDs) > 0 {
 		// delete nodes with id in delIDs
 		f = bson.M{"id": bson.M{"$in": delIDs}, "vcs_info.repo": repo, "vcs_info.branch": branch, "account": req.AccountId}
@@ -972,7 +1008,7 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 		if err != nil {
 			return formatError(err, fmt.Sprintf("failed to delete records from relns coll delIDs: %v", delIDs), repo, branch, commit)
 		}
-		mdb.Log.Infow(fmt.Sprintf("deleted %d, %d records from nodes, relations collection for deleted files",
+		logger.FromContext(ctx).Infow(fmt.Sprintf("deleted %d, %d records from nodes, relations collection for deleted files",
 			r.DeletedCount, r1.DeletedCount), "branch", branch, "repo", repo)
 
 		// update tests fields which contains delIDs in relations
@@ -982,7 +1018,7 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 		if err != nil {
 			return formatError(err, "failed to get records in relations collection", repo, branch, commit)
 		}
-		mdb.Log.Infow(fmt.Sprintf("matched %d, updated %d records from relations collection for deleted files",
+		logger.FromContext(ctx).Infow(fmt.Sprintf("matched %d, updated %d records from relations collection for deleted files",
 			res.MatchedCount, res.ModifiedCount), "branch", branch, "repo", repo)
 
 		// delete edges with caller in delIDs
@@ -991,7 +1027,7 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 		if err != nil {
 			return formatError(err, fmt.Sprintf("failed to delete records from vis_edge coll delIDs: %v", delIDs), repo, branch, commit)
 		}
-		mdb.Log.Infow(fmt.Sprintf("deleted %d records from vis_edge collection for deleted files",
+		logger.FromContext(ctx).Infow(fmt.Sprintf("deleted %d records from vis_edge collection for deleted files",
 			r.DeletedCount), "branch", branch, "repo", repo)
 
 		// update callee fields which contains delIDs in vis_edge collection
@@ -1001,7 +1037,7 @@ func (mdb *MongoDb) MergePartialCg(ctx context.Context, req types.MergePartialCg
 		if err != nil {
 			return formatError(err, "failed to get records in vis_edge collection", repo, branch, commit)
 		}
-		mdb.Log.Infow(fmt.Sprintf("matched %d, updated %d records in vis_edge collection for deleted files",
+		logger.FromContext(ctx).Infow(fmt.Sprintf("matched %d, updated %d records in vis_edge collection for deleted files",
 			res.MatchedCount, res.ModifiedCount), "branch", branch, "repo", repo)
 
 	}
@@ -1096,7 +1132,7 @@ func (mdb *MongoDb) mergeNodes(ctx context.Context, commit, branch, repo, accoun
 		if err != nil {
 			return formatError(err, "failed to merge cg in nodes collection for", repo, branch, commit)
 		}
-		mdb.Log.Infow(
+		logger.FromContext(ctx).Infow(
 			fmt.Sprintf("matched %d, updated %d records", res.MatchedCount, res.ModifiedCount),
 			"account", account,
 			"repo", repo,
@@ -1112,7 +1148,7 @@ func (mdb *MongoDb) mergeNodes(ctx context.Context, commit, branch, repo, accoun
 	if err != nil {
 		return formatError(err, "failed to delete records in nodes collection", repo, branch, commit)
 	}
-	mdb.Log.Infow(fmt.Sprintf("marked %d records as expired from nodes collection", res.ModifiedCount),
+	logger.FromContext(ctx).Infow(fmt.Sprintf("marked %d records as expired from nodes collection", res.ModifiedCount),
 		"account", account,
 		"repo", repo,
 		"branch", branch,
@@ -1137,7 +1173,7 @@ func (mdb *MongoDb) mergeRelations(ctx context.Context, commit, branch, repo, ac
 		if err != nil {
 			return formatError(err, "failed to merge cg in nodes collection for", repo, branch, commit)
 		}
-		mdb.Log.Infow(
+		logger.FromContext(ctx).Infow(
 			fmt.Sprintf("moving records: matched %d, updated %d records", res.MatchedCount, res.ModifiedCount),
 			"account", account,
 			"repo", repo,
@@ -1149,8 +1185,7 @@ func (mdb *MongoDb) mergeRelations(ctx context.Context, commit, branch, repo, ac
 	// updating commons records in relations collection in source and destination branches
 	var srcRelation, destRelation []Relation
 	relIDToUpdate := utils.GetSliceDiff(sIDs, relToMove)
-	mdb.Log.Infow("updating relations",
-		"relIDToUpdate", relIDToUpdate,
+	logger.FromContext(ctx).Infow("updating relations",
 		"len(sIDs)", len(sIDs),
 		"len(relToMove)", len(relToMove),
 		"repo", repo,
@@ -1187,7 +1222,7 @@ func (mdb *MongoDb) mergeRelations(ctx context.Context, commit, branch, repo, ac
 		if err != nil {
 			return formatError(err, "failed to merge relations collection", repo, branch, commit)
 		}
-		mdb.Log.Infow(
+		logger.FromContext(ctx).Infow(
 			fmt.Sprintf("relations merge: matched %d, updated %d records", res.MatchedCount, res.ModifiedCount),
 			"account", account,
 			"repo", repo,
@@ -1203,7 +1238,7 @@ func (mdb *MongoDb) mergeRelations(ctx context.Context, commit, branch, repo, ac
 	if err != nil {
 		return formatError(err, "failed to delete records in relations collection", repo, branch, commit)
 	}
-	mdb.Log.Infow(fmt.Sprintf("marked %d records as deleted from relation collection", res.ModifiedCount),
+	logger.FromContext(ctx).Infow(fmt.Sprintf("marked %d records as deleted from relation collection", res.ModifiedCount),
 		"account", account,
 		"repo", repo,
 		"branch", branch,
@@ -1228,7 +1263,7 @@ func (mdb *MongoDb) mergeVisEdges(ctx context.Context, commit, branch, repo, acc
 		if err != nil {
 			return formatError(err, "failed to merge vis_edge collection for", repo, branch, commit)
 		}
-		mdb.Log.Infow(
+		logger.FromContext(ctx).Infow(
 			fmt.Sprintf("moving vis_edge records: matched %d, updated %d records", res.MatchedCount, res.ModifiedCount),
 			"account", account,
 			"repo", repo,
@@ -1240,8 +1275,7 @@ func (mdb *MongoDb) mergeVisEdges(ctx context.Context, commit, branch, repo, acc
 	// updating commons records in vis_edge collection in source and destination branches
 	var srcEdges, destEdges []VisEdge
 	edgeIDsToUpdate := utils.GetSliceDiff(sIDs, edgesToMove)
-	mdb.Log.Infow("updating vis_edges",
-		"relIDToUpdate", edgeIDsToUpdate,
+	logger.FromContext(ctx).Infow("updating vis_edges",
 		"len(sIDs)", len(sIDs),
 		"len(relToMove)", len(edgesToMove),
 		"repo", repo,
@@ -1278,7 +1312,7 @@ func (mdb *MongoDb) mergeVisEdges(ctx context.Context, commit, branch, repo, acc
 		if err != nil {
 			return formatError(err, "failed to merge vis_edges collection", repo, branch, commit)
 		}
-		mdb.Log.Infow(
+		logger.FromContext(ctx).Infow(
 			fmt.Sprintf("edges merged: matched %d, updated %d records", res.MatchedCount, res.ModifiedCount),
 			"account", account,
 			"repo", repo,
@@ -1293,7 +1327,7 @@ func (mdb *MongoDb) mergeVisEdges(ctx context.Context, commit, branch, repo, acc
 	if err != nil {
 		return formatError(err, "failed to delete records in vis_edges collection", repo, branch, commit)
 	}
-	mdb.Log.Infow(fmt.Sprintf("marked %d records as deleted from vis_edges collection", res.ModifiedCount),
+	logger.FromContext(ctx).Infow(fmt.Sprintf("marked %d records as deleted from vis_edges collection", res.ModifiedCount),
 		"account", account,
 		"repo", repo,
 		"branch", branch,
@@ -1310,7 +1344,7 @@ func (mdb *MongoDb) mergeVisEdges(ctx context.Context, commit, branch, repo, acc
 // 2. In new nodes received as part of current pr callgraph, only the nodes which are not already present in db will be created.
 // it is checked using Id key. If the Id already exists, skip the node.
 func (mdb *MongoDb) upsertNodes(ctx context.Context, nodes []Node, info VCSInfo, account string) error {
-	mdb.Log.Infow("uploading partialcg in nodes collection",
+	logger.FromContext(ctx).Infow("uploading partialcg in nodes collection",
 		"#nodes", len(nodes), "repo", info.Repo, "branch", info.Branch, "account", account)
 	// fetch existing records for branch
 	f := bson.M{"vcs_info.branch": info.Branch, "vcs_info.commit_id": info.CommitId, "vcs_info.repo": info.Repo, "account": account}
@@ -1332,7 +1366,7 @@ func (mdb *MongoDb) upsertNodes(ctx context.Context, nodes []Node, info VCSInfo,
 				err,
 				fmt.Sprintf("failed to add nodes while uploading partial cg, repo: %s, branch: %s", info.Repo, info.Branch))
 		}
-		mdb.Log.Infow(fmt.Sprintf("inserted %d records in nodes collection", len(res.InsertedIDs)),
+		logger.FromContext(ctx).Infow(fmt.Sprintf("inserted %d records in nodes collection", len(res.InsertedIDs)),
 			"account", account,
 			"repo", info.Repo,
 			"branch", info.Branch,
@@ -1347,7 +1381,7 @@ func (mdb *MongoDb) upsertNodes(ctx context.Context, nodes []Node, info VCSInfo,
 // 2. Relations received in cg which are new will be inserted in relations collection.
 // relations which are already present in the db needs to be merged.
 func (mdb *MongoDb) upsertTestRelations(ctx context.Context, relns []Relation, info VCSInfo, account string) error {
-	mdb.Log.Infow("uploading partialcg in relations collection",
+	logger.FromContext(ctx).Infow("uploading partialcg in relations collection",
 		"#relns", len(relns), "repo", info.Repo, "branch", info.Branch)
 	// fetch existing records for branch
 	f := bson.M{"vcs_info.branch": info.Branch, "vcs_info.commit_id": info.CommitId, "vcs_info.repo": info.Repo, "account": account}
@@ -1372,7 +1406,7 @@ func (mdb *MongoDb) upsertTestRelations(ctx context.Context, relns []Relation, i
 				err,
 				fmt.Sprintf("failed to add relns while uploading partial cg, repo: %s, branch: %s", info.Repo, info.Branch))
 		}
-		mdb.Log.Infow(fmt.Sprintf("inserted %d records in relns collection", len(res.InsertedIDs)),
+		logger.FromContext(ctx).Infow(fmt.Sprintf("inserted %d records in relns collection", len(res.InsertedIDs)),
 			"account", account,
 			"repo", info.Repo,
 			"branch", info.Branch,
@@ -1404,7 +1438,7 @@ func (mdb *MongoDb) upsertTestRelations(ctx context.Context, relns []Relation, i
 		if err != nil {
 			return formatError(err, "failed to update relations collection", info.Repo, info.Branch, info.CommitId)
 		}
-		mdb.Log.Infow(
+		logger.FromContext(ctx).Infow(
 			fmt.Sprintf("relations updated: matched %d, updated %d records", res.MatchedCount, res.ModifiedCount),
 			"account", account,
 			"repo", info.Repo,
@@ -1421,7 +1455,7 @@ func (mdb *MongoDb) upsertTestRelations(ctx context.Context, relns []Relation, i
 // 2. Relations received in vg which are new will be inserted in relations collection.
 // relations which are already present in the db needs to be merged.
 func (mdb *MongoDb) upsertVisRelations(ctx context.Context, relns []VisEdge, info VCSInfo, account string) error {
-	mdb.Log.Infow("uploading partialcg in vis_edge collection",
+	logger.FromContext(ctx).Infow("uploading partialcg in vis_edge collection",
 		"#relns", len(relns), "repo", info.Repo, "branch", info.Branch)
 	// fetch existing records for branch
 	f := bson.M{"vcs_info.branch": info.Branch, "vcs_info.commit_id": info.CommitId, "vcs_info.repo": info.Repo, "account": account}
@@ -1446,7 +1480,7 @@ func (mdb *MongoDb) upsertVisRelations(ctx context.Context, relns []VisEdge, inf
 				err,
 				fmt.Sprintf("failed to add relns while uploading partial cg, repo: %s, branch: %s", info.Repo, info.Branch))
 		}
-		mdb.Log.Infow(fmt.Sprintf("inserted %d records in vis_edge collection", len(res.InsertedIDs)),
+		logger.FromContext(ctx).Infow(fmt.Sprintf("inserted %d records in vis_edge collection", len(res.InsertedIDs)),
 			"account", account,
 			"repo", info.Repo,
 			"branch", info.Branch,
@@ -1478,7 +1512,7 @@ func (mdb *MongoDb) upsertVisRelations(ctx context.Context, relns []VisEdge, inf
 		if err != nil {
 			return formatError(err, "failed to update relations collection", info.Repo, info.Branch, info.CommitId)
 		}
-		mdb.Log.Infow(
+		logger.FromContext(ctx).Infow(
 			fmt.Sprintf("relations updated: matched %d, updated %d records", res.MatchedCount, res.ModifiedCount),
 			"account", account,
 			"repo", info.Repo,

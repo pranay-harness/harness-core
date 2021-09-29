@@ -3,6 +3,7 @@ package io.harness.cdng.manifest.yaml;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.runtime;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SwaggerConstants;
 import io.harness.cdng.manifest.ManifestStoreType;
@@ -40,6 +41,7 @@ import org.springframework.data.annotation.TypeAlias;
 @SimpleVisitorHelper(helperClass = ConnectorRefExtractorHelper.class)
 @TypeAlias("githubStore")
 @OwnedBy(CDP)
+@RecasterAlias("io.harness.cdng.manifest.yaml.GithubStore")
 public class GithubStore implements GitStoreConfig, Visitable, WithConnectorRef {
   @NotNull
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)

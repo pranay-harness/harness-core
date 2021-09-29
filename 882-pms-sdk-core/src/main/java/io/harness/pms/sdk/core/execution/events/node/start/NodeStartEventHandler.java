@@ -6,7 +6,6 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.start.NodeStartEvent;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.events.base.PmsBaseEventHandler;
-import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.ExecutableProcessor;
 import io.harness.pms.sdk.core.execution.ExecutableProcessorFactory;
@@ -43,14 +42,6 @@ public class NodeStartEventHandler extends PmsBaseEventHandler<NodeStartEvent> {
   }
 
   @Override
-  protected Map<String, String> extractMetricContext(NodeStartEvent message) {
-    return ImmutableMap.<String, String>builder()
-        .put("accountId", AmbianceUtils.getAccountId(message.getAmbiance()))
-        .put("orgIdentifier", AmbianceUtils.getOrgIdentifier(message.getAmbiance()))
-        .put("projectIdentifier", AmbianceUtils.getProjectIdentifier(message.getAmbiance()))
-        .build();
-  }
-  @Override
   protected String getMetricPrefix(NodeStartEvent message) {
     return "start_event";
   }
@@ -75,9 +66,8 @@ public class NodeStartEventHandler extends PmsBaseEventHandler<NodeStartEvent> {
                                 .build());
     } catch (Exception ex) {
       log.error("Error while handle NodeStart event", ex);
-      sdkNodeExecutionService.handleStepResponse(nodeStartEvent.getAmbiance().getPlanExecutionId(),
-          AmbianceUtils.obtainCurrentRuntimeId(nodeStartEvent.getAmbiance()),
-          NodeExecutionUtils.constructStepResponse(ex));
+      sdkNodeExecutionService.handleStepResponse(
+          nodeStartEvent.getAmbiance(), NodeExecutionUtils.constructStepResponse(ex));
     }
   }
 }

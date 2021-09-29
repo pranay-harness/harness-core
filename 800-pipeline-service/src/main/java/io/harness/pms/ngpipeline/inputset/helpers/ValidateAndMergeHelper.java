@@ -1,8 +1,8 @@
 package io.harness.pms.ngpipeline.inputset.helpers;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
-import static io.harness.pms.merger.helpers.MergeHelper.mergeInputSets;
-import static io.harness.pms.merger.helpers.TemplateHelper.createTemplateFromPipeline;
+import static io.harness.pms.merger.helpers.InputSetMergeHelper.mergeInputSets;
+import static io.harness.pms.merger.helpers.InputSetTemplateHelper.createTemplateFromPipeline;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
@@ -12,8 +12,8 @@ import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.interceptor.GitSyncBranchContext;
 import io.harness.pms.gitsync.PmsGitSyncBranchContextGuard;
 import io.harness.pms.inputset.InputSetErrorWrapperDTOPMS;
+import io.harness.pms.merger.helpers.InputSetMergeHelper;
 import io.harness.pms.merger.helpers.InputSetYamlHelper;
-import io.harness.pms.merger.helpers.MergeHelper;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntityType;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
@@ -171,6 +171,6 @@ public class ValidateAndMergeHelper {
       String pipelineIdentifier, String mergedRuntimeInputYaml, String pipelineBranch, String pipelineRepoID) {
     String pipelineYaml = getPipelineYaml(
         accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineBranch, pipelineRepoID);
-    return MergeHelper.mergeInputSetIntoPipeline(pipelineYaml, mergedRuntimeInputYaml, false);
+    return InputSetMergeHelper.mergeInputSetIntoPipeline(pipelineYaml, mergedRuntimeInputYaml, false);
   }
 }

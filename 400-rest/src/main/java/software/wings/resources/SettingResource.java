@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -16,6 +17,9 @@ import static java.util.stream.Collectors.toList;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -98,6 +102,8 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Consumes(APPLICATION_JSON)
 @Produces(APPLICATION_JSON)
 @Scope(ResourceType.SETTING)
+@OwnedBy(CDC)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 public class SettingResource {
   private static final String LIMIT = "" + Integer.MAX_VALUE;
   private static final String CUSTOM_MAX_LIMIT = "1200";
@@ -183,7 +189,7 @@ public class SettingResource {
   @ExceptionMetered
   public RestResponse<SettingAttribute> save(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, SettingAttribute variable) {
-    settingAuthHandler.authorize(variable);
+    settingAuthHandler.authorize(variable, appId);
     SettingAttribute savedSettingAttribute = settingsService.saveWithPruning(variable, appId, accountId);
     settingServiceHelper.updateSettingAttributeBeforeResponse(savedSettingAttribute, false);
     return new RestResponse<>(savedSettingAttribute);
@@ -203,7 +209,7 @@ public class SettingResource {
   @ExceptionMetered
   public RestResponse<ValidationResult> validate(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, SettingAttribute variable) {
-    settingAuthHandler.authorize(variable);
+    settingAuthHandler.authorize(variable, appId);
     return new RestResponse<>(settingsService.validateWithPruning(variable, appId, accountId));
   }
 
@@ -214,7 +220,7 @@ public class SettingResource {
   public RestResponse<ValidationResult> validateConnectivity(
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @QueryParam("accountId") String accountId,
       SettingAttribute variable) {
-    settingAuthHandler.authorize(variable);
+    settingAuthHandler.authorize(variable, appId);
     return new RestResponse<>(settingsService.validateConnectivityWithPruning(variable, appId, accountId));
   }
 
@@ -257,7 +263,7 @@ public class SettingResource {
               .withCategory(SettingCategory.getCategory(SettingVariableTypes.valueOf(value.getType())))
               .withUsageRestrictions(usageRestrictionsFromJson)
               .build();
-      settingAuthHandler.authorize(settingAttribute);
+      settingAuthHandler.authorize(settingAttribute, appId);
       return new RestResponse<>(settingsService.save(settingAttribute));
     }
     return new RestResponse<>();
@@ -280,7 +286,7 @@ public class SettingResource {
   @ExceptionMetered
   public RestResponse<SettingAttribute> update(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
       @PathParam("attrId") String attrId, SettingAttribute variable) {
-    settingAuthHandler.authorize(variable);
+    settingAuthHandler.authorize(variable, appId);
     SettingAttribute updatedSettingAttribute = settingsService.updateWithSettingFields(variable, attrId, appId);
     settingServiceHelper.updateSettingAttributeBeforeResponse(updatedSettingAttribute, false);
     return new RestResponse<>(updatedSettingAttribute);
@@ -329,7 +335,7 @@ public class SettingResource {
       ((EncryptableSetting) value).setDecrypted(true);
       settingAttribute.setValue(value);
     }
-    settingAuthHandler.authorize(settingAttribute);
+    settingAuthHandler.authorize(settingAttribute, appId);
     return new RestResponse<>(settingsService.update(settingAttribute));
   }
 
@@ -416,7 +422,7 @@ public class SettingResource {
             .withCategory(SettingCategory.getCategory(SettingVariableTypes.valueOf(type)))
             .withValue(value)
             .build();
-    settingAuthHandler.authorize(settingAttribute);
+    settingAuthHandler.authorize(settingAttribute, appId);
     return new RestResponse<>(settingsService.validateConnectivity(settingAttribute));
   }
 
@@ -548,7 +554,7 @@ public class SettingResource {
   @ExceptionMetered
   public RestResponse<Map<String, String>> listSubscriptions(
       @QueryParam("accountId") String accountId, @QueryParam("settingId") String settingId) {
-    return new RestResponse(azureResourceService.listSubscriptions(settingId));
+    return new RestResponse(azureResourceService.listSubscriptions(accountId, settingId));
   }
 
   @GET

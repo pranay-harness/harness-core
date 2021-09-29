@@ -3,13 +3,22 @@ package io.harness.pms.expressions;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ARCHIT;
+import static io.harness.rule.OwnerRule.BRIJESH;
 
 import static java.util.Arrays.asList;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.PipelineServiceApplication;
 import io.harness.PipelineServiceTestBase;
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
@@ -25,10 +34,14 @@ import io.harness.expression.field.dummy.DummyOrchestrationField;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.expression.ExpressionResponse;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.expressions.functors.RemoteExpressionFunctor;
+import io.harness.pms.sdk.PmsSdkInstance;
+import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.rule.Owner;
@@ -40,9 +53,11 @@ import java.util.Collections;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
+import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
 @OwnedBy(HarnessTeam.PIPELINE)
@@ -50,6 +65,8 @@ public class PMSExpressionEvaluatorTest extends PipelineServiceTestBase {
   @Mock private PlanExecutionService planExecutionService;
   @Mock NodeExecutionService nodeExecutionService;
   @Mock PmsOutcomeService pmsOutcomeService;
+  @Mock PmsSdkInstanceService pmsSdkInstanceService;
+  @Mock RemoteExpressionFunctor remoteExpressionFunctor;
 
   private Ambiance ambiance;
   NodeExecution nodeExecution1;
@@ -60,36 +77,48 @@ public class PMSExpressionEvaluatorTest extends PipelineServiceTestBase {
 
   @Before
   public void setup() {
+    String nodeExecution1Id = generateUuid();
+    String nodeExecution2Id = generateUuid();
+    String nodeExecution3Id = generateUuid();
+    String nodeExecution4Id = generateUuid();
+    String nodeExecution5Id = generateUuid();
+
     nodeExecution1 = NodeExecution.builder()
-                         .uuid(generateUuid())
+                         .uuid(nodeExecution1Id)
                          .node(preparePlanNode(false, "pipeline", "pipelineValue", "PIPELINE"))
                          .resolvedStepParameters(prepareStepParameters("pipelineResolvedValue"))
                          .build();
     nodeExecution2 = NodeExecution.builder()
-                         .uuid(generateUuid())
+                         .uuid(nodeExecution2Id)
                          .node(preparePlanNode(false, "stages", "stagesValue", null))
                          .resolvedStepParameters(prepareStepParameters("stagesResolvedValue"))
+                         .parentId(nodeExecution1Id)
                          .build();
     nodeExecution3 = NodeExecution.builder()
-                         .uuid(generateUuid())
+                         .uuid(nodeExecution3Id)
                          .node(preparePlanNode(false, "stage", "stageValue", "STAGE"))
                          .resolvedStepParameters(prepareStepParameters("stageResolvedValue"))
+                         .parentId(nodeExecution2Id)
                          .build();
     nodeExecution4 = NodeExecution.builder()
-                         .uuid(generateUuid())
+                         .uuid(nodeExecution4Id)
                          .node(preparePlanNode(false, "d", "di1", null))
                          .resolvedStepParameters(prepareStepParameters("dResolvedValue"))
+                         .parentId(nodeExecution3Id)
+                         .nextId(nodeExecution5Id)
                          .build();
 
     nodeExecution5 = NodeExecution.builder()
-                         .uuid(generateUuid())
+                         .uuid(nodeExecution4Id)
                          .node(preparePlanNode(false, "e", "ei1", null))
                          .resolvedStepParameters(prepareStepParameters("eResolvedValue"))
+                         .previousId(nodeExecution4Id)
+                         .parentId(nodeExecution3Id)
                          .build();
 
-    Level pipelineLevel = Level.newBuilder().setRuntimeId(nodeExecution1.getUuid()).build();
-    Level stagesLevel = Level.newBuilder().setRuntimeId(nodeExecution2.getUuid()).build();
-    Level stageLevel = Level.newBuilder().setRuntimeId(nodeExecution3.getUuid()).build();
+    Level pipelineLevel = Level.newBuilder().setRuntimeId(nodeExecution1Id).build();
+    Level stagesLevel = Level.newBuilder().setRuntimeId(nodeExecution2Id).build();
+    Level stageLevel = Level.newBuilder().setRuntimeId(nodeExecution3Id).build();
     List<Level> levels = new ArrayList<>();
     levels.add(pipelineLevel);
     levels.add(stagesLevel);
@@ -99,13 +128,6 @@ public class PMSExpressionEvaluatorTest extends PipelineServiceTestBase {
                    .putAllSetupAbstractions(ImmutableMap.of("accountId", generateUuid(), "appId", generateUuid()))
                    .setExpressionFunctorToken(1234)
                    .build();
-
-    nodeExecution2.setParentId(nodeExecution1.getUuid());
-    nodeExecution3.setParentId(nodeExecution2.getUuid());
-    nodeExecution4.setParentId(nodeExecution3.getUuid());
-    nodeExecution4.setNextId(nodeExecution5.getUuid());
-    nodeExecution5.setPreviousId(nodeExecution4.getUuid());
-    nodeExecution5.setParentId(nodeExecution3.getUuid());
 
     when(nodeExecutionService.get(nodeExecution1.getUuid())).thenReturn(nodeExecution1);
     when(nodeExecutionService.get(nodeExecution2.getUuid())).thenReturn(nodeExecution2);
@@ -141,10 +163,13 @@ public class PMSExpressionEvaluatorTest extends PipelineServiceTestBase {
     Ambiance newAmbiance =
         AmbianceUtils.cloneForChild(ambiance, Level.newBuilder().setRuntimeId(nodeExecution5.getUuid()).build());
 
-    nodeExecution5.setStatus(Status.IGNORE_FAILED);
-    nodeExecution4.setStatus(Status.SUCCEEDED);
+    Reflect.on(nodeExecution5).set("status", Status.IGNORE_FAILED);
+    Reflect.on(nodeExecution4).set("status", Status.SUCCEEDED);
 
     EngineExpressionEvaluator engineExpressionEvaluator = prepareEngineExpressionEvaluator(newAmbiance);
+    PmsSdkInstance pmsSdkInstance =
+        PmsSdkInstance.builder().staticAliases(new PipelineServiceApplication().getStaticAliases()).build();
+    doReturn(Collections.singletonList(pmsSdkInstance)).when(pmsSdkInstanceService).getActiveInstances();
     Object pipelineSuccess =
         engineExpressionEvaluator.evaluateExpression("<+" + OrchestrationConstants.PIPELINE_SUCCESS + ">");
     assertThat(pipelineSuccess).isInstanceOf(Boolean.class);
@@ -158,6 +183,38 @@ public class PMSExpressionEvaluatorTest extends PipelineServiceTestBase {
         engineExpressionEvaluator.evaluateExpression("<+" + OrchestrationConstants.STAGE_SUCCESS + ">");
     assertThat(stageSuccess).isInstanceOf(Boolean.class);
     assertThat((Boolean) stageSuccess).isEqualTo(true);
+  }
+
+  @Test
+  @Owner(developers = BRIJESH)
+  @Category(UnitTests.class)
+  public void testRemoteFunctor() {
+    Ambiance newAmbiance =
+        AmbianceUtils.cloneForChild(ambiance, Level.newBuilder().setRuntimeId(nodeExecution5.getUuid()).build());
+    EngineExpressionEvaluator engineExpressionEvaluator = prepareEngineExpressionEvaluator(newAmbiance);
+    ExpressionResponse expressionResponse = ExpressionResponse.newBuilder().build();
+    ArgumentCaptor<String> argumentCaptor = ArgumentCaptor.forClass(String.class);
+    doReturn(expressionResponse).when(remoteExpressionFunctor).get(any());
+
+    // testing that remoteFunctor is registered correctly
+    assertTrue(engineExpressionEvaluator.evaluateExpression("<+dummy>") instanceof RemoteExpressionFunctor);
+
+    // testing simple string argument
+    assertEquals(engineExpressionEvaluator.evaluateExpression("<+dummy.abc>"), expressionResponse);
+    verify(remoteExpressionFunctor, times(1)).get(argumentCaptor.capture());
+    assertEquals(argumentCaptor.getValue(), "abc");
+    assertEquals(engineExpressionEvaluator.evaluateExpression("<+dummy.get(\"arg1\")>"), expressionResponse);
+    verify(remoteExpressionFunctor, times(2)).get(argumentCaptor.capture());
+    assertEquals(argumentCaptor.getValue(), "arg1");
+
+    // testing array of strings as argument
+    assertEquals(engineExpressionEvaluator.evaluateExpression("<+dummy.get([\"arg1\",\"arg2\"])>"), expressionResponse);
+    ArgumentCaptor<String[]> arrayArgumentCaptor = ArgumentCaptor.forClass(String[].class);
+    verify(remoteExpressionFunctor, times(3)).get(arrayArgumentCaptor.capture());
+    String[] argsArray = arrayArgumentCaptor.getValue();
+    assertEquals(argsArray.length, 2);
+    assertEquals(argsArray[0], "arg1");
+    assertEquals(argsArray[1], "arg2");
   }
 
   private PlanNodeProto preparePlanNode(
@@ -182,20 +239,27 @@ public class PMSExpressionEvaluatorTest extends PipelineServiceTestBase {
   }
 
   private EngineExpressionEvaluator prepareEngineExpressionEvaluator(Ambiance ambiance) {
-    SampleEngineExpressionEvaluator evaluator = new SampleEngineExpressionEvaluator(ambiance);
+    SampleEngineExpressionEvaluator evaluator = new SampleEngineExpressionEvaluator(ambiance, pmsSdkInstanceService);
     on(evaluator).set("planExecutionService", planExecutionService);
     on(evaluator).set("nodeExecutionService", nodeExecutionService);
+
+    evaluator.addToContextMap("dummy", remoteExpressionFunctor);
     return evaluator;
   }
 
   public static class SampleEngineExpressionEvaluator extends PMSExpressionEvaluator {
-    public SampleEngineExpressionEvaluator(Ambiance ambiance) {
+    public SampleEngineExpressionEvaluator(Ambiance ambiance, PmsSdkInstanceService pmsSdkInstanceService) {
       super(null, ambiance, null, false);
+      this.pmsSdkInstanceService = pmsSdkInstanceService;
     }
 
     @Override
     protected void initialize() {
       super.initialize();
+    }
+
+    public void addToContextMap(String a, Object b) {
+      super.addToContext(a, b);
     }
 
     @Override
@@ -210,6 +274,7 @@ public class PMSExpressionEvaluatorTest extends PipelineServiceTestBase {
 
   @Data
   @Builder
+  @RecasterAlias("io.harness.pms.expressions.PMSExpressionEvaluatorTest$TestStepParameters")
   public static class TestStepParameters implements StepParameters {
     String param;
   }

@@ -50,6 +50,8 @@ public class PmsSdkInstance implements PersistentEntity, UuidAware {
 
   @NotNull @FdUniqueIndex String name;
   Map<String, Set<String>> supportedTypes;
+  Map<String, String> staticAliases;
+  List<String> sdkFunctors;
   List<SdkStep> supportedSdkSteps;
 
   @Deprecated List<StepInfo> supportedSteps;
@@ -64,6 +66,7 @@ public class PmsSdkInstance implements PersistentEntity, UuidAware {
   ConsumerConfig progressEventConsumerConfig;
   ConsumerConfig nodeAdviseEventConsumerConfig;
   ConsumerConfig nodeResumeEventConsumerConfig;
+  ConsumerConfig startPlanCreationEventConsumerConfig;
 
   @Default @Setter @NonFinal @SchemaIgnore @FdIndex @CreatedDate Long createdAt = System.currentTimeMillis();
   @Setter @NonFinal @SchemaIgnore @NotNull @LastModifiedDate Long lastUpdatedAt;

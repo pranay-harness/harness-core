@@ -3,6 +3,7 @@ package io.harness.steps.jira.create;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.runtime;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SwaggerConstants;
 import io.harness.filters.WithConnectorRef;
@@ -35,6 +36,7 @@ import org.springframework.data.annotation.TypeAlias;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonTypeName(StepSpecTypeConstants.JIRA_CREATE)
 @TypeAlias("jiraCreateStepInfo")
+@RecasterAlias("io.harness.steps.jira.create.JiraCreateStepInfo")
 public class JiraCreateStepInfo implements PMSStepInfo, WithConnectorRef {
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> connectorRef;
   @NotNull @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH) ParameterField<String> projectKey;

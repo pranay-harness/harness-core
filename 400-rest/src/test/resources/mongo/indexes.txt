@@ -249,16 +249,6 @@ encryptedRecords {"name": "parents_1", "background": true} {"parents": 1}
 encryptedRecords {"name": "path_1", "background": true} {"path": 1}
 entityAuditRecords {"name": "entityRecordIndex_1", "background": true} {"auditHeaderId": 1, "createdAt": -1}
 entityAuditRecords {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
-entitySetupUsage {"name": "EntitySetupUsage_unique_index", "unique": true} {"referredByEntityType": 1, "referredByEntityFQN": 1, "referredByEntityRepoIdentifier": 1, "referredByEntityBranch": 1, "referredEntityType": 1, "referredEntityFQN": 1, "referredEntityRepoIdentifier": 1, "referredEntityBranch": 1, "accountIdentifier": 1}
-entitySetupUsage {"name": "ReferredByEntityIndex", "background": true} {"accountIdentifier": 1, "referredByEntityType": 1, "referredByEntityFQN": 1}
-entitySetupUsage {"name": "ReferredEntityIndex", "background": true} {"accountIdentifier": 1, "referredEntityType": 1, "referredEntityFQN": 1}
-entitySetupUsage {"name": "accountIdentifier_1", "background": true} {"accountIdentifier": 1}
-entitySetupUsage {"name": "account_referredByFQN_referredByIsDefault_createdAt_index", "background": true} {"accountIdentifier": 1, "referredByEntityFQN": 1, "referredByEntityIsDefault": 1, "createdAt": -1}
-entitySetupUsage {"name": "account_referredBy_createdAt_index", "background": true} {"accountIdentifier": 1, "referredByEntityFQN": 1, "referredByEntityType": 1, "referredEntityType": 1, "referredByEntityIsDefault": 1, "createdAt": -1}
-entitySetupUsage {"name": "account_referredBy_referred_index", "background": true} {"accountIdentifier": 1, "referredByEntityFQN": 1, "referredByEntityType": 1, "referredEntityFQN": 1, "referredEntityType": 1}
-entitySetupUsage {"name": "account_referredBy_referred_type_index", "background": true} {"accountIdentifier": 1, "referredByEntityFQN": 1, "referredByEntityType": 1, "referredEntityType": 1, "createdAt": 1}
-entitySetupUsage {"name": "referredByEntityFQN_1", "background": true} {"referredByEntityFQN": 1}
-entitySetupUsage {"name": "referredEntityFQN_1", "background": true} {"referredEntityFQN": 1}
 entityVersions {"name": "accountId_1", "background": true} {"accountId": 1}
 entityVersions {"name": "appId_1", "background": true} {"appId": 1}
 entityVersions {"name": "app_type_uuid_createdAt", "background": true} {"appId": 1, "entityType": 1, "entityUuid": 1, "createdAt": -1}
@@ -534,9 +524,10 @@ permits {"name": "createdAt_1", "background": true} {"createdAt": 1}
 permits {"name": "expireAt_1", "background": true, "expireAfterSeconds": 0} {"expireAt": 1}
 permits {"name": "key_1", "unique": true} {"key": 1}
 perpetualTask {"name": "accountId_1", "background": true} {"accountId": 1}
-perpetualTask {"name": "assignerIterator", "background": true} {"state": 1, "assignerIterations": 1}
+perpetualTask {"name": "assignerIterator", "background": true} {"state": 1, "assignAfterMs": 1, "assignerIterations": 1}
 perpetualTask {"name": "delegateId_1", "background": true} {"delegateId": 1}
 perpetualTask {"name": "rebalanceIterator", "background": true} {"state": 1, "rebalanceIteration": 1}
+perpetualTaskScheduleConfig {"name": "unique_perpetualTaskScheduleConfig_index1", "unique": true} {"accountId": 1, "perpetualTaskType": 1}
 personalization {"name": "unique_identification", "unique": true} {"accountId": 1, "userId": 1}
 pipelineExecutions {"name": "appId_1", "background": true} {"appId": 1}
 pipelineExecutions {"name": "createdAt_1", "background": true} {"createdAt": 1}
@@ -649,6 +640,8 @@ settingAttributes {"name": "typeNextIterationIdx", "background": true} {"value.t
 ssoSettings {"name": "accountIdTypeIdx", "background": true} {"accountId": 1, "type": 1}
 ssoSettings {"name": "appId_1", "background": true} {"appId": 1}
 ssoSettings {"name": "createdAt_1", "background": true} {"createdAt": 1}
+ssoSettings {"name": "nextIterations_1", "background": true} {"nextIterations": 1}
+ssoSettings {"name": "typeNextIterations", "background": true} {"type": 1, "nextIterations": 1}
 stateExecutionInstances {"name": "accountId_1", "background": true} {"accountId": 1}
 stateExecutionInstances {"name": "appIdExecutionIdStatus", "background": true} {"appId": 1, "executionUuid": 1, "status": 1}
 stateExecutionInstances {"name": "appId_1", "background": true} {"appId": 1}

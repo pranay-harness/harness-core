@@ -1,5 +1,9 @@
 package software.wings.service.intfc.elk;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.ElkConfig;
@@ -17,6 +21,8 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by rsingh on 08/01/17.
  */
+@OwnedBy(HarnessTeam.CV)
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public interface ElkDelegateService {
   @DelegateTaskType(TaskType.ELK_CONFIGURATION_VALIDATE_TASK)
   boolean validateConfig(@NotNull ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails);
@@ -26,8 +32,7 @@ public interface ElkDelegateService {
       ElkLogFetchRequest logFetchRequest, ThirdPartyApiCallLog apiCallLog, int maxRecords) throws IOException;
 
   @DelegateTaskType(TaskType.ELK_COLLECT_INDICES)
-  Map<String, ElkIndexTemplate> getIndices(ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      ThirdPartyApiCallLog apiCallLog) throws IOException;
+  Map<String, ElkIndexTemplate> getIndices(ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails);
 
   @DelegateTaskType(TaskType.ELK_GET_LOG_SAMPLE)
   Object getLogSample(

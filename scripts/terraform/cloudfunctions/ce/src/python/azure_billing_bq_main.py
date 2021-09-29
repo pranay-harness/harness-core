@@ -104,7 +104,7 @@ def main(event, context):
     get_unique_subs_id(jsonData, azure_column_mapping)
     ingest_data_into_preagg(jsonData, azure_column_mapping)
     ingest_data_into_unified(jsonData, azure_column_mapping)
-
+    print_("Completed")
 
 def ingest_data_from_csv(jsonData):
     # Determine blob of highest size in this folder
@@ -125,6 +125,7 @@ def ingest_data_from_csv(jsonData):
     print_(csvtoingest)
 
     job_config = bigquery.LoadJobConfig(
+        max_bad_records=10,  # TODO: Temporary fix until https://issuetracker.google.com/issues/74021820 is available
         autodetect=True,
         skip_leading_rows=1,
         field_delimiter=",",

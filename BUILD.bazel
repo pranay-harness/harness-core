@@ -2,6 +2,23 @@ exports_files([
     "tools/bazel/signer.sh",
 ])
 
+filegroup(
+    name = "container_common_files",
+    srcs = glob([
+        "AppServerAgent-20.8.0.30686.zip",
+        "protocol.info",
+    ]),
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "delegate_proxy_files",
+    srcs = glob([
+        "destination/storage/**/*",
+    ]),
+    visibility = ["//visibility:public"],
+)
+
 ########################################################################################################
 ####################################################  Go Starts Here    ####################################################
 ########################################################################################################
@@ -11,7 +28,7 @@ exports_files([
 # gazelle:exclude vendor
 # gazelle:exclude build
 # gazelle:exclude */target
-# gazelle:exclude {990-commons-test,980-commons,970-grpc,970-api-services-beans,965-git-sync-commons,960-notification-beans,950-timeout-engine,950-delegate-tasks-beans,22-ng-delegate-service-beans,24-manager-delegate-service-beans,24-ng-manager-service-beans,890-pms-contracts,400-rest,460-capability,160-stress-tester}
+# gazelle:exclude {990-commons-test,970-grpc,970-api-services-beans,960-notification-beans,959-timeout-engine,953-git-sync-commons,959-timeout-engine,950-timeout-engine,950-delegate-tasks-beans,950-wait-engine,867-polling-contracts,22-ng-delegate-service-beans,24-manager-delegate-service-beans,24-ng-manager-service-beans,890-pms-contracts,400-rest,460-capability,160-stress-tester}
 
 # gazelle:exclude .git/
 # gazelle:exclude pkg/
@@ -23,7 +40,7 @@ load("@bazel_gazelle//:def.bzl", "gazelle")
 # gazelle:prefix github.com/wings-software/portal
 gazelle(name = "gazelle")
 
-load("@io_bazel_rules_go//go:def.bzl", "nogo")
+load("@io_bazel_rules_go//go:def.bzl", "go_path", "nogo")
 
 buildifier(
     name = "buildifier",
@@ -35,12 +52,36 @@ nogo(
     visibility = ["//visibility:public"],
 )
 
+# Reference: https://github.com/google/gvisor/blob/release-20210830.0/BUILD#L101
+
+# gopath defines a directory that is structured in a way that is compatible
+# with standard Go tools. Things like godoc, editors and refactor tools should
+# work as expected.
+#
+# The files in this tree are symlinks to the true sources.
+go_path(
+    name = "gopath",
+    mode = "link",
+    deps = [
+        # Main binaries.
+        #
+        # For reasons related to reproducibility of the generated
+        # files, in order to ensure that :gopath produces only a
+        # a single "pure" version of all files, we can only depend
+        # on go_library targets here, and not go_binary.
+
+        # Note: If any library is not referenced by below ones, then add them in this list.
+        "//product/ci/engine:engine_lib",
+        "//product/ci/addon:addon_lib",
+        "//product/ci/scm:scm_lib",
+        "//product/ci/ti-service:ti-service_lib",
+        "//product/log-service:log-service_lib",
+    ],
+)
+
 ########################################################################################################
 ####################################################  JAVA Starts Here    ####################################################
 ########################################################################################################
-
-load("//tools/bazel/sonarqube:defs.bzl", "sonarqube")
-load("//tools/bazel/sonarqube:defs.bzl", "get_sonar_targets")
 
 java_plugin(
     name = "lombok_plugin",
@@ -55,154 +96,6 @@ java_library(
     visibility = ["//visibility:public"],
     exports = ["@maven//:org_projectlombok_lombok"],
 )
-
-modules = [
-    "//110-change-data-capture",
-    "//120-ng-manager",
-    "//121-instance",
-    "//122-ng-authentication-settings",
-    "//123-ng-core-user",
-    "//125-cd-nextgen",
-    "//136-git-sync-manager",
-    #"//160-model-gen-tool",
-    "//160-stress-tester",
-    #"//190-deployment-functional-tests",
-    #"//200-functional-test",
-    "//210-command-library-server",
-    #"//220-graphql-test",
-    #"//230-model-test",
-    "//260-delegate",
-    "//270-delegate-service-app",
-    "//270-verification",
-    "//280-batch-processing",
-    "//300-cv-nextgen",
-    "//310-ci-manager",
-    "//320-ci-execution",
-    "//330-ci-beans",
-    "//340-ce-nextgen",
-    "//350-event-server",
-    "//360-cg-manager",
-    "//375-ce-graphql",
-    "//380-cg-graphql",
-    "//390-db-migration",
-    "//400-rest",
-    "//410-cg-rest",
-    "//420-delegate-agent",
-    "//420-delegate-service",
-    "//425-verification-commons",
-    "//430-cv-nextgen-commons",
-    "//440-connector-nextgen",
-    "//445-cg-connectors",
-    "//450-ce-views",
-    "//460-capability",
-    "//470-alert",
-    "//490-ce-commons",
-    "//800-pipeline-service",
-    "//810-ng-triggers",
-    "//815-cg-triggers",
-    "//820-platform-service",
-    "//830-notification-service",
-    "//830-resource-group",
-    "//835-notification-senders",
-    "//840-template-service",
-    "//860-orchestration-steps",
-    "//860-orchestration-visualization",
-    "//865-cg-events",
-    "//867-polling-contracts",
-    "//870-cg-orchestration",
-    "//870-orchestration",
-    "//874-orchestration-delay",
-    "//876-orchestration-beans",
-    "//878-pipeline-service-utilities",
-    "//878-pms-coupling",
-    "//879-pms-sdk",
-    "//882-pms-sdk-core",
-    "//884-pms-commons",
-    "//888-pms-client",
-    "//889-yaml-commons",
-    "//890-pms-contracts",
-    "//890-sm-core",
-    "//900-git-sync-sdk",
-    "//910-delegate-service-driver",
-    "//910-delegate-task-grpc-service",
-    "//920-delegate-agent-beans",
-    "//920-delegate-service-beans",
-    "//920-ng-signup",
-    "//925-access-control-service",
-    "//930-delegate-tasks",
-    "//930-ng-core-clients",
-    "//930-ng-license-manager",
-    "//935-analyser-service",
-    "//937-persistence-tracer",
-    "//940-cg-audit-service",
-    "//940-feature-flag",
-    "//940-ng-audit-service",
-    "//940-notification-client",
-    "//940-plan-feature-sdk",
-    "//940-primary-version-manager",
-    "//940-resource-group-beans",
-    "//940-secret-manager-client",
-    "//945-account-mgmt",
-    "//945-license-usage-sdk",
-    "//945-ng-audit-client",
-    "//946-access-control-aggregator",
-    "//947-access-control-core",
-    "//948-access-control-admin-client",
-    "//948-access-control-sdk",
-    "//949-access-control-commons",
-    "//950-command-library-common",
-    "//959-common-entities",
-    "//950-delegate-tasks-beans",
-    "//950-events-framework",
-    "//950-events-framework-monitor",
-    "//950-log-client",
-    "//950-ng-authentication-service",
-    "//950-ng-core",
-    "//950-ng-project-n-orgs",
-    "//950-telemetry",
-    #"//950-timeout-engine",
-    "//950-wait-engine",
-    "//950-walktree-visitor",
-    "//951-ng-audit-commons",
-    "//952-scm-java-client",
-    "//953-events-api",
-    "//953-git-sync-commons",
-    "//954-connector-beans",
-    "//954-feature-flag-sdk",
-    "//955-alert-beans",
-    "//955-cg-yaml",
-    "//955-delegate-beans",
-    "//955-filters-sdk",
-    "//955-outbox-sdk",
-    "//955-setup-usage-sdk",
-    "//956-feature-flag-beans",
-    "//957-cg-beans",
-    "//958-migration-sdk",
-    "//958-ng-file-service-sdk",
-    "//959-file-service-commons",
-    "//959-psql-database-models",
-    "//960-api-services",
-    "//960-continuous-features",
-    "//960-expression-service",
-    "//960-ng-core-beans",
-    "//960-ng-license-beans",
-    "//960-ng-license-usage-beans",
-    "//960-ng-signup-beans",
-    "//960-notification-beans",
-    "//960-persistence",
-    "//960-watcher",
-    "//960-yaml-sdk",
-    "//965-api-key-filter",
-    "//970-api-services-beans",
-    "//970-grpc",
-    "//970-ng-commons",
-    "//970-rbac-core",
-    "//970-telemetry-beans",
-    "//970-watcher-beans",
-    "//980-commons",
-    "//980-recaster",
-    "//999-annotations",
-]
 
 filegroup(
     name = "git",
@@ -227,11 +120,14 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 
+load("//tools/bazel/sonarqube:defs.bzl", "sonarqube")
+load("//project/flags:sonarqube_targets.bzl", "get_sonarqube_targets")
+
 sonarqube(
     name = "sq",
     srcs = [],
     coverage_report = ":coverage_report",
-    modules = get_sonar_targets(modules),
+    modules = get_sonarqube_targets(),
     project_key = "portal_bazel",
     project_name = "Bazel Portal",
     scm_info = [":git"],

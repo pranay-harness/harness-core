@@ -13,6 +13,8 @@ import static software.wings.sm.states.DynatraceState.TEST_HOST_NAME;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.context.ContextElementType;
 import io.harness.exception.ExceptionUtils;
@@ -72,6 +74,7 @@ import org.mongodb.morphia.annotations.Transient;
  * Created by rsingh on 9/25/17.
  */
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState {
   public static final int SMOOTH_WINDOW = 3;
   public static final int MIN_REQUESTS_PER_MINUTE = 10;

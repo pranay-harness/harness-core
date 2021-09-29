@@ -17,6 +17,7 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.k8Connector.K8sServiceAccountInfoResponse;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskParams;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -86,5 +87,24 @@ public class K8sFetchServiceAccountTaskTest extends CategoryTest {
     K8sServiceAccountInfoResponse response = (K8sServiceAccountInfoResponse) delegateResponseData;
     assertThat(response.getUsername()).isEqualTo(username);
     assertThat(response.getGroups()).containsExactlyInAnyOrder(group);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.UTSAV)
+  @Category(UnitTests.class)
+  public void testRunTaskParamsThrowsException() throws Exception {
+    final String message = "message";
+    when(k8sTaskHelperBase.fetchTokenReviewStatus(
+             isA(KubernetesClusterConfigDTO.class), isA((Class<List<EncryptedDataDetail>>) (Object) List.class)))
+        .thenThrow(new InvalidRequestException(message));
+
+    assertThatThrownBy(()
+                           -> k8sFetchServiceAccountTask.run(
+                               KubernetesConnectionTaskParams.builder()
+                                   .kubernetesClusterConfig(KubernetesClusterConfigDTO.builder().build())
+                                   .encryptionDetails(ImmutableList.of(EncryptedDataDetail.builder().build()))
+                                   .build()))
+        .isExactlyInstanceOf(InvalidRequestException.class)
+        .hasMessage(message);
   }
 }

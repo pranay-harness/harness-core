@@ -63,9 +63,11 @@ public class NGPipelinePlanCreatorTest extends CategoryTest {
     assertThat(planForChildrenNodes).isNotEmpty();
     assertThat(planForChildrenNodes).hasSize(1);
     assertThat(planForChildrenNodes.containsKey(stagesUuid)).isTrue();
-    assertThat(planForChildrenNodes.get(stagesUuid).getDependencies()).hasSize(1);
-    assertThat(planForChildrenNodes.get(stagesUuid).getDependencies().containsKey(stagesUuid)).isTrue();
-    assertThat(planForChildrenNodes.get(stagesUuid).getDependencies().get(stagesUuid)).isEqualTo(stagesField);
+    assertThat(planForChildrenNodes.get(stagesUuid).getDependencies().getDependenciesMap()).hasSize(1);
+    assertThat(planForChildrenNodes.get(stagesUuid).getDependencies().getDependenciesMap().containsKey(stagesUuid))
+        .isTrue();
+    assertThat(planForChildrenNodes.get(stagesUuid).getDependencies().getDependenciesMap().get(stagesUuid))
+        .isEqualTo("pipeline/stages");
   }
 
   @Test

@@ -3,6 +3,7 @@ package io.harness.delegate.task.helm;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.chartmuseum.ChartMuseumConstants.CHART_MUSEUM_SERVER_URL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.storeconfig.StoreDelegateConfigType.GCS_HELM;
@@ -624,7 +625,7 @@ public class HelmTaskHelperBase {
     }
   }
 
-  private String createDirectory(String directoryBase) throws IOException {
+  String createDirectory(String directoryBase) throws IOException {
     String workingDirectory = Paths.get(directoryBase).normalize().toAbsolutePath().toString();
 
     createDirectoryIfDoesNotExist(workingDirectory);
@@ -801,14 +802,21 @@ public class HelmTaskHelperBase {
     switch (helmStoreDelegateConfig.getType()) {
       case S3_HELM:
         S3HelmStoreDelegateConfig s3HelmStoreConfig = (S3HelmStoreDelegateConfig) helmStoreDelegateConfig;
-        for (DecryptableEntity entity : s3HelmStoreConfig.getAwsConnector().getDecryptableEntities()) {
-          decryptionService.decrypt(entity, s3HelmStoreConfig.getEncryptedDataDetails());
+        List<DecryptableEntity> s3DecryptableEntityList = s3HelmStoreConfig.getAwsConnector().getDecryptableEntities();
+        if (isNotEmpty(s3DecryptableEntityList)) {
+          for (DecryptableEntity entity : s3HelmStoreConfig.getAwsConnector().getDecryptableEntities()) {
+            decryptionService.decrypt(entity, s3HelmStoreConfig.getEncryptedDataDetails());
+          }
         }
         break;
       case GCS_HELM:
         GcsHelmStoreDelegateConfig gcsHelmStoreDelegateConfig = (GcsHelmStoreDelegateConfig) helmStoreDelegateConfig;
-        for (DecryptableEntity entity : gcsHelmStoreDelegateConfig.getGcpConnector().getDecryptableEntities()) {
-          decryptionService.decrypt(entity, gcsHelmStoreDelegateConfig.getEncryptedDataDetails());
+        List<DecryptableEntity> gcsDecryptableEntityList =
+            gcsHelmStoreDelegateConfig.getGcpConnector().getDecryptableEntities();
+        if (isNotEmpty(gcsDecryptableEntityList)) {
+          for (DecryptableEntity entity : gcsDecryptableEntityList) {
+            decryptionService.decrypt(entity, gcsHelmStoreDelegateConfig.getEncryptedDataDetails());
+          }
         }
         break;
       case HTTP_HELM:

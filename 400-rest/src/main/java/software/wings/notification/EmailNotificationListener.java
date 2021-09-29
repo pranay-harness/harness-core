@@ -1,5 +1,9 @@
 package software.wings.notification;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.queue.QueueConsumer;
 import io.harness.queue.QueueListener;
 
@@ -13,6 +17,8 @@ import com.google.inject.Inject;
  *
  * @see EmailData
  */
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._830_NOTIFICATION_SERVICE)
 public class EmailNotificationListener extends QueueListener<EmailData> {
   @Inject private EmailNotificationService emailNotificationService;
 

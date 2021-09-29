@@ -46,7 +46,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @ToString(exclude = "secretKey")
 @EqualsAndHashCode(callSuper = false)
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._957_CG_BEANS)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class AwsConfig extends SettingValue implements EncryptableSetting, CloudCostAware {
   private static final String AWS_URL = "https://aws.amazon.com/";
   @Attributes(title = "Access Key") @Encrypted(fieldName = "access_key", isReference = true) private char[] accessKey;
@@ -97,8 +97,10 @@ public class AwsConfig extends SettingValue implements EncryptableSetting, Cloud
         HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability(AWS_URL, maskingEvaluator));
 
     if ((this.isUseEc2IamCredentials() || this.useIRSA) && StringUtils.isNotEmpty(tag)) {
-      executionCapabilities.add(
-          SelectorCapability.builder().selectors(new HashSet<String>(Arrays.asList(tag))).build());
+      executionCapabilities.add(SelectorCapability.builder()
+                                    .selectors(new HashSet<String>(Arrays.asList(tag)))
+                                    .selectorOrigin("Cloud Provider")
+                                    .build());
     }
 
     return executionCapabilities;

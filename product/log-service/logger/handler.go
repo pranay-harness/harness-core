@@ -2,8 +2,6 @@ package logger
 
 import (
 	"net/http"
-	"strings"
-	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/sirupsen/logrus"
@@ -27,16 +25,6 @@ func Middleware(next http.Handler) http.Handler {
 			"remote":    r.RemoteAddr,
 		})
 		ctx = WithContext(ctx, log)
-		start := time.Now()
 		next.ServeHTTP(w, r.WithContext(ctx))
-		end := time.Now()
-		log = log.WithFields(logrus.Fields{
-			"latency": end.Sub(start),
-			"time":    end.Format(time.RFC3339),
-		})
-		// Don't spam log service logs with health checks
-		if !strings.Contains(r.RequestURI, "/healthz") {
-			log.Infof("completed request")
-		}
 	})
 }

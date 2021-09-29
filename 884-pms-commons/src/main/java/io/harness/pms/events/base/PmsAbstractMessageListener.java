@@ -8,6 +8,7 @@ import io.harness.eventsframework.consumer.Message;
 import io.harness.exception.InvalidRequestException;
 import io.harness.logging.AutoLogContext;
 import io.harness.ng.core.event.MessageListener;
+import io.harness.pms.sdk.execution.events.PmsCommonsBaseEventHandler;
 import io.harness.serializer.ProtoUtils;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -22,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.PIPELINE)
 @Slf4j
 public abstract class PmsAbstractMessageListener<T extends com.google.protobuf.Message, H
-                                                     extends PmsBaseEventHandler<T>> implements MessageListener {
+                                                     extends PmsCommonsBaseEventHandler<T>> implements MessageListener {
   private static final Duration THRESHOLD_PROCESS_DURATION = Duration.ofMillis(100);
 
   public final String serviceName;

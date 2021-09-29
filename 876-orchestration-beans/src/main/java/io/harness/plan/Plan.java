@@ -10,6 +10,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
+import io.harness.pms.contracts.plan.ErrorResponse;
 import io.harness.pms.contracts.plan.GraphLayoutInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 
@@ -53,11 +54,12 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @TypeAlias("plan")
 @Entity(value = "plans")
 @StoreIn(DbAliases.PMS)
-public class Plan implements PersistentEntity {
+public class Plan implements PersistentEntity, Node {
   static final long TTL_MONTHS = 6;
 
   @Default @Wither @Id @org.mongodb.morphia.annotations.Id String uuid = generateUuid();
-  @Singular List<PlanNodeProto> nodes;
+  @Deprecated @Singular List<PlanNodeProto> nodes;
+  @Singular List<PlanNode> planNodes;
 
   @NotNull String startingNodeId;
 
@@ -68,6 +70,9 @@ public class Plan implements PersistentEntity {
 
   @Wither @CreatedDate Long createdAt;
   @Wither @Version Long version;
+
+  @Builder.Default boolean valid = true;
+  ErrorResponse errorResponse;
 
   public boolean isEmpty() {
     return EmptyPredicate.isEmpty(nodes);
@@ -83,5 +88,22 @@ public class Plan implements PersistentEntity {
       return optional.get();
     }
     throw new InvalidRequestException("No node found with Id :" + nodeId);
+  }
+
+  public PlanNode fetchStartingPlanNode() {
+    return fetchPlanNode(startingNodeId);
+  }
+
+  public PlanNode fetchPlanNode(String nodeId) {
+    Optional<PlanNode> optional = planNodes.stream().filter(pn -> pn.getUuid().equals(nodeId)).findFirst();
+    if (optional.isPresent()) {
+      return optional.get();
+    }
+    throw new InvalidRequestException("No node found with Id :" + nodeId);
+  }
+
+  @Override
+  public NodeType getNodeType() {
+    return NodeType.PLAN;
   }
 }

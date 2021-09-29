@@ -257,32 +257,33 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
 
   private void saveRisk(ServiceGuardTimeSeriesAnalysisDTO analysis, Instant startTime, Instant endTime,
       String verificationTaskId, boolean isBaselineRun) {
-    List<Long> unexpectedClusters = new ArrayList<>();
+    Map<Long, Double> unexpectedClustersWithRiskScore = new HashMap<>();
     String cvConfigId = verificationTaskService.getCVConfigId(verificationTaskId);
     CVConfig cvConfig = cvConfigService.get(cvConfigId);
     Preconditions.checkNotNull(cvConfig, "Config not present for verification task id: {}", verificationTaskId);
 
-    saveRiskForLogClusters(analysis, startTime, endTime, verificationTaskId, unexpectedClusters);
+    saveRiskForLogClusters(analysis, startTime, endTime, verificationTaskId, unexpectedClustersWithRiskScore);
     updateRiskForLogAnalysisResult(
-        analysis, startTime, endTime, cvConfig, verificationTaskId, unexpectedClusters, isBaselineRun);
+        analysis, startTime, endTime, cvConfig, verificationTaskId, unexpectedClustersWithRiskScore, isBaselineRun);
   }
 
   private void updateRiskForLogAnalysisResult(ServiceGuardTimeSeriesAnalysisDTO analysis, Instant startTime,
-      Instant endTime, CVConfig cvConfig, String verificationTaskId, List<Long> unexpectedClusters,
+      Instant endTime, CVConfig cvConfig, String verificationTaskId, Map<Long, Double> unexpectedClustersWithRiskScore,
       boolean isBaselineRun) {
     LogAnalysisResult analysisResult = hPersistence.createQuery(LogAnalysisResult.class, excludeAuthority)
                                            .filter(LogAnalysisResultKeys.verificationTaskId, verificationTaskId)
                                            .filter(LogAnalysisResultKeys.analysisEndTime, endTime)
                                            .get();
-    if (isNotEmpty(unexpectedClusters)) {
+    if (isNotEmpty(unexpectedClustersWithRiskScore)) {
       long anomalousCount = 0;
       double score = Math.max(analysis.getOverallMetricScores().values().stream().mapToDouble(s -> s).max().orElse(0.0),
           analysisResult.getOverallRisk());
       analysisResult.setOverallRisk(score);
       for (LogAnalysisResult.AnalysisResult logAnalysisCluster : analysisResult.getLogAnalysisResults()) {
-        if (unexpectedClusters.contains(logAnalysisCluster.getLabel())
+        if (unexpectedClustersWithRiskScore.containsKey(logAnalysisCluster.getLabel())
             && logAnalysisCluster.getTag() == LogAnalysisTag.KNOWN && !isBaselineRun) {
           logAnalysisCluster.setTag(LogAnalysisTag.UNEXPECTED);
+          logAnalysisCluster.setRiskScore(unexpectedClustersWithRiskScore.get(logAnalysisCluster.getLabel()));
           anomalousCount++;
         }
       }
@@ -294,7 +295,7 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
   }
 
   private void saveRiskForLogClusters(ServiceGuardTimeSeriesAnalysisDTO analysis, Instant startTime, Instant endTime,
-      String verificationTaskId, List<Long> unexpectedClusters) {
+      String verificationTaskId, Map<Long, Double> unexpectedClustersWithRiskScore) {
     List<LogAnalysisCluster> logAnalysisClusters =
         hPersistence.createQuery(LogAnalysisCluster.class, excludeAuthority)
             .filter(LogAnalysisClusterKeys.verificationTaskId, verificationTaskId)
@@ -309,7 +310,7 @@ public class TrendAnalysisServiceImpl implements TrendAnalysisService {
       ServiceGuardTxnMetricAnalysisDataDTO analysisDataDTO = txnMetricAnalysis.getValue().get(TREND_METRIC_NAME);
       LogAnalysisCluster cluster = logAnalysisClusterMap.get(Long.valueOf(txnName));
       if (analysisDataDTO.getRisk().isGreaterThanEq(Risk.MEDIUM)) {
-        unexpectedClusters.add(cluster.getLabel());
+        unexpectedClustersWithRiskScore.put(cluster.getLabel(), analysisDataDTO.getScore());
       }
       int index = cluster.getFrequencyTrend().size() - 1;
       while (index >= 0) {

@@ -4,7 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.IGNORE_PCF_CONNECTION_CONTEXT_CACHE;
 import static io.harness.beans.FeatureName.LIMIT_PCF_THREADS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.pcf.CfCommandUnitConstants.FetchFiles;
+import static io.harness.pcf.CfCommandUnitConstants.FetchGitFiles;
 import static io.harness.pcf.CfCommandUnitConstants.Pcfplugin;
 import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 
@@ -291,7 +291,8 @@ public class PcfPluginState extends State {
     List<String> gitFiles = pathsFromScript.stream().map(this::toRelativePath).collect(Collectors.toList());
     // in case root folder is accessed, remove all the file paths
     if (gitFiles.contains("")) {
-      gitFiles = Collections.singletonList("");
+      gitFiles = new ArrayList<>();
+      gitFiles.add("");
     }
     serviceManifest.getGitFileConfig().setFilePathList(gitFiles);
     serviceManifest.getGitFileConfig().setFilePath(null);
@@ -444,7 +445,7 @@ public class PcfPluginState extends State {
   private List<FileData> prepareFilesForTransfer(
       ApplicationManifest serviceManifest, List<String> pathsFromScript, ExecutionContext context) {
     if (EmptyPredicate.isEmpty(pathsFromScript)) {
-      return Collections.emptyList();
+      return new ArrayList<>();
     }
     Map<String, String> pathToContentMap;
     if (isServiceManifestRemote(serviceManifest)) {
@@ -453,7 +454,7 @@ public class PcfPluginState extends State {
       pathToContentMap = getLocalFilesForTransfer(serviceManifest, pathsFromScript);
     }
     if (EmptyPredicate.isEmpty(pathToContentMap)) {
-      return Collections.emptyList();
+      return new ArrayList<>();
     }
 
     return pathToContentMap.entrySet()
@@ -559,7 +560,7 @@ public class PcfPluginState extends State {
     final Builder<CommandUnit> canaryCommandUnitsBuilder = ImmutableList.builder();
 
     if (remoteStoreType) {
-      canaryCommandUnitsBuilder.add(new PcfDummyCommandUnit(FetchFiles));
+      canaryCommandUnitsBuilder.add(new PcfDummyCommandUnit(FetchGitFiles));
     }
     canaryCommandUnitsBuilder.add(new PcfDummyCommandUnit(Pcfplugin));
     return canaryCommandUnitsBuilder.build();

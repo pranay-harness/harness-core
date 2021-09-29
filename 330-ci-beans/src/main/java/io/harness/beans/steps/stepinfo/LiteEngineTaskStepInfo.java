@@ -2,6 +2,7 @@ package io.harness.beans.steps.stepinfo;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.environment.BuildJobEnvInfo;
 import io.harness.beans.steps.CIStepInfo;
@@ -40,6 +41,7 @@ import org.springframework.data.annotation.TypeAlias;
 @YamlSchemaIgnoreSubtype
 @TypeAlias("liteEngineTaskStepInfo")
 @OwnedBy(CI)
+@RecasterAlias("io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo")
 public class LiteEngineTaskStepInfo implements CIStepInfo, WithConnectorRef {
   public static final int DEFAULT_RETRY = 0;
   public static final int DEFAULT_TIMEOUT = 600 * 1000;

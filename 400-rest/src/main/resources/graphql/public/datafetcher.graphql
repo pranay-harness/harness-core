@@ -162,4 +162,11 @@ enum DataFetcherEnum {
   verificationStats
   approvalDetails
   approveOrRejectApprovals
+  createDeploymentFreezeWindow
+  updateDeploymentFreezeWindow
+  deleteDeploymentFreezeWindow
+  deploymentFreezeWindow
+  deploymentFreezeWindowConnection
+  toggleDeploymentFreezeWindow
+  templateList
 }

@@ -15,6 +15,7 @@ import static java.util.stream.Collectors.toSet;
 
 import io.harness.AuthorizationServiceHeader;
 import io.harness.GodInjector;
+import io.harness.accesscontrol.NGAccessDeniedExceptionMapper;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
@@ -204,6 +205,7 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
   private void registerJerseyProviders(Environment environment) {
     environment.jersey().register(NotificationExceptionMapper.class);
     environment.jersey().register(JerseyViolationExceptionMapperV2.class);
+    environment.jersey().register(NGAccessDeniedExceptionMapper.class);
     environment.jersey().register(WingsExceptionMapperV2.class);
     environment.jersey().register(GenericExceptionMapperV2.class);
   }

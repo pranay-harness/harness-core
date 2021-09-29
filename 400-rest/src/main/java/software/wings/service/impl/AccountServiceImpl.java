@@ -35,7 +35,9 @@ import static software.wings.beans.SystemCatalog.CatalogType.APPSTACK;
 import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofDays;
 import static java.time.Duration.ofHours;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.account.ProvisionStep;
@@ -86,6 +88,7 @@ import io.harness.managerclient.HttpsCertRequirement.CertRequirement;
 import io.harness.network.Http;
 import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.ng.core.account.DefaultExperience;
+import io.harness.ng.core.account.OauthProviderType;
 import io.harness.observer.Subject;
 import io.harness.persistence.HIterator;
 import io.harness.reflection.ReflectionUtils;
@@ -140,7 +143,6 @@ import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.authentication.AccountSettingsResponse;
-import software.wings.security.authentication.OauthProviderType;
 import software.wings.service.impl.analysis.CVEnabledService;
 import software.wings.service.impl.event.AccountEntityEvent;
 import software.wings.service.impl.security.auth.AuthHandler;
@@ -163,6 +165,7 @@ import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.verification.CVConfiguration;
 
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
@@ -461,7 +464,6 @@ public class AccountServiceImpl implements AccountService {
   private void enableFeatureFlags(@NotNull Account account, boolean fromDataGen) {
     featureFlagService.enableAccount(FeatureName.DISABLE_ADDING_SERVICE_VARS_TO_ECS_SPEC, account.getUuid());
     featureFlagService.enableAccount(FeatureName.DISABLE_WINRM_ENV_VARIABLES, account.getUuid());
-    featureFlagService.enableAccount(FeatureName.HELM_CHART_NAME_SPLIT, account.getUuid());
 
     if (fromDataGen) {
       updateNextGenEnabled(account.getUuid(), true);
@@ -939,9 +941,16 @@ public class AccountServiceImpl implements AccountService {
     }
 
     Account account = wingsPersistence.createQuery(Account.class, excludeAuthorityCount)
-                          .filter(AccountKeys.uuid, GLOBAL_ACCOUNT_ID)
+                          .filter(AccountKeys.uuid, accountId)
                           .project("delegateConfiguration", true)
                           .get();
+
+    if (account.getDelegateConfiguration() == null) {
+      account = wingsPersistence.createQuery(Account.class, excludeAuthorityCount)
+                    .filter(AccountKeys.uuid, GLOBAL_ACCOUNT_ID)
+                    .project("delegateConfiguration", true)
+                    .get();
+    }
 
     return account.getDelegateConfiguration();
   }
@@ -978,6 +987,26 @@ public class AccountServiceImpl implements AccountService {
       return false;
     }
     return false;
+  }
+
+  @Override
+  public void updateFeatureFlagsForOnPremAccount() {
+    Optional<Account> onPremAccount = getOnPremAccount();
+    if (!onPremAccount.isPresent()) {
+      return;
+    }
+    String featureNames = mainConfiguration.getFeatureNames();
+    List<String> enabled = isBlank(featureNames)
+        ? emptyList()
+        : Splitter.on(',').omitEmptyStrings().trimResults().splitToList(featureNames);
+    for (String name : Arrays.stream(FeatureName.values()).map(FeatureName::name).collect(toSet())) {
+      if (enabled.contains(name)) {
+        featureFlagService.enableAccount(FeatureName.valueOf(name), onPremAccount.get().getUuid());
+      }
+    }
+    if (enabled.contains("NEXT_GEN_ENABLED")) {
+      updateNextGenEnabled(onPremAccount.get().getUuid(), true);
+    }
   }
 
   @Override

@@ -29,11 +29,13 @@ public class VaultMetadataRequestSpecDTO extends SecretManagerMetadataRequestSpe
   @JsonSubTypes(value =
       {
         @JsonSubTypes.Type(name = "APP_ROLE", value = VaultAppRoleCredentialDTO.class)
-        , @JsonSubTypes.Type(name = "TOKEN", value = VaultAuthTokenCredentialDTO.class)
+        , @JsonSubTypes.Type(name = "TOKEN", value = VaultAuthTokenCredentialDTO.class),
+            @JsonSubTypes.Type(name = "VAULT_AGENT", value = VaultAgentCredentialDTO.class)
       })
   @Valid
   private VaultCredentialDTO spec;
   private Set<String> delegateSelectors;
+  private String namespace;
 
   @Builder
   public VaultMetadataRequestSpecDTO(

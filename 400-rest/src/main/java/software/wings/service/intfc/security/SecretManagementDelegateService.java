@@ -1,8 +1,10 @@
 package software.wings.service.intfc.security;
 
+import static io.harness.annotations.dev.HarnessModule._890_SM_CORE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SecretChangeLog;
 import io.harness.helpers.ext.vault.SSHVaultAuthResult;
 import io.harness.helpers.ext.vault.SecretEngineSummary;
@@ -23,6 +25,7 @@ import java.util.List;
  * Created by rsingh on 10/2/17.
  */
 @OwnedBy(PL)
+@TargetModule(_890_SM_CORE)
 public interface SecretManagementDelegateService {
   int NUM_OF_RETRIES = 3;
 

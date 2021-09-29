@@ -76,6 +76,7 @@ def main(event, context):
     ingest_data_to_awscur(jsonData)
     ingest_data_to_preagg(jsonData)
     ingest_data_to_unified(jsonData)
+    print_("Completed")
 
 
 def create_dataset_and_tables(jsonData):
@@ -123,11 +124,13 @@ def create_table_from_manifest(jsonData):
     map_tags = {}
     schema = []
     for column in manifestdata.get("columns", []):
-        name = column["name"].lower()
+        name = column["name"].lower().strip()
+        name_converted = name
         if reg.search(name):
             # This must be a TAG ex. aws:autoscaling:groupName
-            name = "TAG_" + re.sub(reg, "_", column["name"])
-        name_for_map = column["name"].lower()
+            name_converted = re.sub(reg, "_", name)
+            name = "TAG_" + name_converted
+        name_for_map = name_converted
         try:
             name = name + "_" + str(map_tags[name_for_map])
             map_tags[name_for_map] += 1
@@ -312,7 +315,7 @@ def ingest_data_to_unified(jsonData):
     date_end = "%s-%s-%s" % (year, month, monthrange(int(year), int(month))[1])
     print_("Loading into %s table..." % tableName)
     query = """DELETE FROM `%s.unifiedTable` WHERE DATE(startTime) >= '%s' AND DATE(startTime) <= '%s'  AND cloudProvider = "AWS"
-                AND awsUsageAccountId IN (%s);
+                    AND awsUsageAccountId IN (%s);
                INSERT INTO `%s.unifiedTable` (product, startTime,
                     awsBlendedRate,awsBlendedCost,awsUnblendedRate, awsUnblendedCost, cost, awsServicecode,
                     region,awsAvailabilityzone,awsUsageaccountid,awsInstancetype,awsUsagetype,cloudProvider, labels)
@@ -322,8 +325,8 @@ def ingest_data_to_unified(jsonData):
                     awsAvailabilityzone, usageaccountid AS awsUsageaccountid, instancetype AS awsInstancetype, usagetype
                     AS awsUsagetype, "AWS" AS cloudProvider, tags AS labels 
                FROM `%s.awscur_%s` 
-               WHERE lineitemtype != 'Tax'; 
-     """ % (ds, date_start, date_end, jsonData["usageaccountid"], ds, ds, jsonData["awsCurTableSuffix"])
+               WHERE lineitemtype != 'Tax' AND usageaccountid IN (%s);
+     """ % (ds, date_start, date_end, jsonData["usageaccountid"], ds, ds, jsonData["awsCurTableSuffix"], jsonData["usageaccountid"])
 
     # Configure the query job.
     job_config = bigquery.QueryJobConfig(

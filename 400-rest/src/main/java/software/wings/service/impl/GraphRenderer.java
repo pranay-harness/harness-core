@@ -26,7 +26,9 @@ import static software.wings.sm.StateType.SUB_WORKFLOW;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.ExecutionStatusCategory;
 import io.harness.delegate.beans.DelegateSelectionLogParams;
@@ -73,6 +75,7 @@ import org.apache.commons.lang3.StringUtils;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class GraphRenderer {
   public static final int AGGREGATION_LIMIT = 10;
 

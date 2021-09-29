@@ -2,6 +2,7 @@ package io.harness.polling.client;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.dto.PollingResponseDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 
 import okhttp3.RequestBody;
@@ -19,7 +20,7 @@ public interface PollingResourceClient {
   Call<ResponseDTO> processPolledResult(@Path("perpetualTaskId") String perpetualTaskId,
       @Query("accountId") String accountId, @Body RequestBody buildSourceExecutionResponse);
 
-  @POST(POLLING_API + "/subscribe") Call<ResponseDTO<byte[]>> subscribe(@Body RequestBody pollingItem);
+  @POST(POLLING_API + "/subscribe") Call<ResponseDTO<PollingResponseDTO>> subscribe(@Body RequestBody pollingItem);
 
-  @POST(POLLING_API + "/unsubscribe") Call<ResponseDTO<Boolean>> unsubscribe(@Body byte[] pollingItem);
+  @POST(POLLING_API + "/unsubscribe") Call<Boolean> unsubscribe(@Body RequestBody pollingItem);
 }

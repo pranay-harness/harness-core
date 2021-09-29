@@ -20,7 +20,6 @@ import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.contracts.resume.ChainDetails;
 import io.harness.pms.contracts.resume.NodeResumeEvent;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
-import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.AmbianceTestUtils;
 import io.harness.pms.sdk.core.DummyExecutionStrategy;
 import io.harness.pms.sdk.core.PmsSdkCoreTestBase;
@@ -93,18 +92,6 @@ public class NodeResumeEventHandlerTest extends PmsSdkCoreTestBase {
   @Test
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
-  public void testExtractMetricContext() {
-    Map<String, String> metricsMap = nodeResumeEventHandler.extractMetricContext(nodeResumeEvent);
-    assertThat(metricsMap.isEmpty()).isFalse();
-    assertThat(metricsMap.size()).isEqualTo(3);
-    assertThat(metricsMap.get("accountId")).isEqualTo(AmbianceTestUtils.ACCOUNT_ID);
-    assertThat(metricsMap.get("orgIdentifier")).isEqualTo(AmbianceTestUtils.ORG_ID);
-    assertThat(metricsMap.get("projectIdentifier")).isEqualTo(AmbianceTestUtils.PROJECT_ID);
-  }
-
-  @Test
-  @Owner(developers = SAHIL)
-  @Category(UnitTests.class)
   public void testMetricPrefix() {
     assertThat(nodeResumeEventHandler.getMetricPrefix(nodeResumeEvent)).isEqualTo("resume_event");
   }
@@ -170,9 +157,7 @@ public class NodeResumeEventHandlerTest extends PmsSdkCoreTestBase {
     nodeResumeEvent = nodeResumeEvent.toBuilder().setAsyncError(true).putAllResponse(responseDataMap).build();
     nodeResumeEventHandler.handleEventWithContext(nodeResumeEvent);
     Mockito.verify(executableProcessorFactory).obtainProcessor(ExecutionMode.APPROVAL);
-    Mockito.verify(sdkNodeExecutionService)
-        .handleStepResponse(eq(nodeResumeEvent.getAmbiance().getPlanExecutionId()),
-            eq(AmbianceUtils.obtainCurrentRuntimeId(nodeResumeEvent.getAmbiance())), any(StepResponseProto.class));
+    Mockito.verify(sdkNodeExecutionService).handleStepResponse(eq(ambiance), any(StepResponseProto.class));
   }
 
   @Test

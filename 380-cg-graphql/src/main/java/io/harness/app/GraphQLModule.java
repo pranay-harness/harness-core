@@ -8,6 +8,7 @@ import io.harness.app.datafetcher.delegate.AttachScopeToDelegateDataFetcher;
 import io.harness.app.datafetcher.delegate.DelegateApprovalDataFetcher;
 import io.harness.app.datafetcher.delegate.DelegateListDataFetcher;
 import io.harness.app.datafetcher.delegate.DeleteDelegateDataFetcher;
+import io.harness.app.datafetcher.template.TemplateListDataFetcher;
 
 import software.wings.app.WingsGraphQLModule;
 import software.wings.graphql.datafetcher.approval.ApprovalDetailsDataFetcher;
@@ -15,11 +16,18 @@ import software.wings.graphql.datafetcher.approval.ApproveOrRejectApprovalsDataF
 import software.wings.graphql.datafetcher.artifact.ArtifactCleanupDataFetcher;
 import software.wings.graphql.datafetcher.artifact.ArtifactConnectionDataFetcher;
 import software.wings.graphql.datafetcher.artifact.ArtifactDataFetcher;
+import software.wings.graphql.datafetcher.deploymentfreezewindow.CreateDeploymentFreezeWindowDataFetcher;
+import software.wings.graphql.datafetcher.deploymentfreezewindow.DeleteDeploymentFreezeWindowDataFetcher;
+import software.wings.graphql.datafetcher.deploymentfreezewindow.DeploymentFreezeWindowConnectionDataFetcher;
+import software.wings.graphql.datafetcher.deploymentfreezewindow.DeploymentFreezeWindowDataFetcher;
+import software.wings.graphql.datafetcher.deploymentfreezewindow.ToggleDeploymentFreezeWindowDataFetcher;
+import software.wings.graphql.datafetcher.deploymentfreezewindow.UpdateDeploymentFreezeWindowDataFetcher;
 import software.wings.graphql.datafetcher.event.CreateEventsConfigDataFetcher;
 import software.wings.graphql.datafetcher.event.DeleteEventsConfigDataFetcher;
 import software.wings.graphql.datafetcher.event.EventsConfigConnectionDataFetcher;
 import software.wings.graphql.datafetcher.event.EventsConfigDataFetcher;
 import software.wings.graphql.datafetcher.event.UpdateEventsConfigDataFetcher;
+import software.wings.graphql.datafetcher.execution.DeploymentStatsDataFetcher;
 import software.wings.graphql.datafetcher.instance.instanceInfo.InstanceController;
 import software.wings.graphql.datafetcher.secretManager.HashicorpVaultDataFetcher;
 import software.wings.graphql.datafetcher.secretManager.SecretManagerDataFetchers;
@@ -113,7 +121,15 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(EventsConfigDataFetcher.class);
     bindDataFetcherWithAnnotation(UpdateEventsConfigDataFetcher.class);
     bindDataFetcherWithAnnotation(ApprovalDetailsDataFetcher.class);
+    bindDataFetcherWithAnnotation(DeploymentStatsDataFetcher.class);
     bindDataFetcherWithAnnotation(ApproveOrRejectApprovalsDataFetcher.class);
+    bindDataFetcherWithAnnotation(CreateDeploymentFreezeWindowDataFetcher.class);
+    bindDataFetcherWithAnnotation(UpdateDeploymentFreezeWindowDataFetcher.class);
+    bindDataFetcherWithAnnotation(DeleteDeploymentFreezeWindowDataFetcher.class);
+    bindDataFetcherWithAnnotation(DeploymentFreezeWindowConnectionDataFetcher.class);
+    bindDataFetcherWithAnnotation(DeploymentFreezeWindowDataFetcher.class);
+    bindDataFetcherWithAnnotation(ToggleDeploymentFreezeWindowDataFetcher.class);
+    bindDataFetcherWithAnnotation(TemplateListDataFetcher.class);
     binder()
         .bind(SecretManagerMutationDataFetcher.class)
         .annotatedWith(Names.named(SecretManagerDataFetchers.HASHICORP_VAULT_DATA_FETCHER.getName()))

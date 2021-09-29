@@ -1,0 +1,32 @@
+pipeline:
+  identifier: "pipeline3"
+  stages:
+    - stage:
+        identifier: "stage1"
+        type: "Deployment"
+        spec:
+          serviceConfig:
+            serviceRef: "<+input>"
+          infrastructure:
+            environmentRef: "<+input>"
+          execution:
+            steps:
+              - step:
+                  type: Verify
+                  identifier: Verify
+    - stage:
+        identifier: "stage2"
+        type: "Deployment"
+        spec:
+          serviceConfig:
+            serviceRef: "<+input>"
+          infrastructure:
+            environmentRef: "<+input>"
+          execution:
+            steps:
+              - stepGroup:
+                  identifier: canaryDepoyment
+                  steps:
+                    - step:
+                        type: Verify
+                        identifier: Verify

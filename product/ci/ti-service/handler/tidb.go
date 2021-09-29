@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"strconv"
@@ -12,6 +13,7 @@ import (
 	"github.com/wings-software/portal/product/ci/common/avro"
 	"github.com/wings-software/portal/product/ci/ti-service/config"
 	"github.com/wings-software/portal/product/ci/ti-service/db"
+	"github.com/wings-software/portal/product/ci/ti-service/logger"
 	"github.com/wings-software/portal/product/ci/ti-service/tidb"
 	"github.com/wings-software/portal/product/ci/ti-service/tidb/mongodb"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
@@ -24,10 +26,11 @@ const (
 
 // HandleSelect returns an http.HandlerFunc that figures out which tests to run
 // based on the files provided.
-func HandleSelect(tidb tidb.TiDB, db db.Db, config config.Config, log *zap.SugaredLogger) http.HandlerFunc {
+func HandleSelect(tidb tidb.TiDB, db db.Db, config config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		st := time.Now()
 		ctx := r.Context()
+		log := logger.FromContext(ctx)
 
 		// TODO: Use this information while retrieving from TIDB
 		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam,
@@ -90,8 +93,8 @@ func HandleSelect(tidb tidb.TiDB, db db.Db, config config.Config, log *zap.Sugar
 		// Write the selected tests back
 		WriteJSON(w, selected, 200)
 		log.Infow("completed test selection", "account_id", accountId,
-			"repo", repo, "source", source, "target", target, "sha", sha, "tests",
-			selected.Tests, "num_tests", len(selected.Tests), "time_taken", time.Since(st))
+			"repo", repo, "source", source, "target", target, "sha", sha,
+			"num_tests", len(selected.Tests), "time_taken", time.Since(st))
 
 	}
 }
@@ -102,10 +105,11 @@ func HandleSelect(tidb tidb.TiDB, db db.Db, config config.Config, log *zap.Sugar
 // the source branch. Otherwise, if the source call graph does not exist, we use the target branch call graph.
 // If a class name is not specified, this will provide a partial visualization graph containing at max limit
 // number of nodes.
-func HandleVgSearch(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
+func HandleVgSearch(tidb tidb.TiDB, db db.Db) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		st := time.Now()
 		ctx := r.Context()
+		log := logger.FromContext(ctx)
 
 		// Info needed:
 		// i) account ID, ... buildID
@@ -142,6 +146,13 @@ func HandleVgSearch(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 			WriteInternalError(w, err)
 			log.Errorw("api: could not get selection overview for VG search", accountIDParam, accountId, orgIdParam, orgId, projectIdParam, projectId,
 				pipelineIdParam, pipelineId, buildIdParam, buildId, stageIdParam, stageId, stepIdParam, stepId, zap.Error(err))
+			return
+		}
+
+		if overview.Skipped == 0 {
+			WriteInternalError(w, errors.New("no call graph is generated when all tests are run"))
+			log.Errorw("api: could not get visualisation graph as all tests were selected", accountIDParam, accountId, orgIdParam, orgId, projectIdParam, projectId,
+				pipelineIdParam, pipelineId, buildIdParam, buildId, stageIdParam, stageId, stepIdParam, stepId)
 			return
 		}
 
@@ -189,10 +200,11 @@ func HandleVgSearch(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 	}
 }
 
-func HandleReportsInfo(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
+func HandleReportsInfo(db db.Db) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		st := time.Now()
 		ctx := r.Context()
+		log := logger.FromContext(ctx)
 
 		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam)
 		if err != nil {
@@ -218,10 +230,11 @@ func HandleReportsInfo(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 	}
 }
 
-func HandleIntelligenceInfo(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
+func HandleIntelligenceInfo(db db.Db) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		st := time.Now()
 		ctx := r.Context()
+		log := logger.FromContext(ctx)
 
 		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam)
 		if err != nil {
@@ -249,9 +262,10 @@ func HandleIntelligenceInfo(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 
 // HandlePing returns an http.HandlerFunc that pings
 // the backends to ensure smooth working of TI service.
-func HandlePing(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
+func HandlePing(db db.Db) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx, _ := context.WithTimeout(r.Context(), 5*time.Second) // 5 second timeout for pings
+		log := logger.FromContext(ctx)
 
 		if err := db.Ping(ctx); err != nil {
 			if err != nil {
@@ -265,10 +279,11 @@ func HandlePing(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 	}
 }
 
-func HandleOverview(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
+func HandleOverview(db db.Db) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		st := time.Now()
 		ctx := r.Context()
+		log := logger.FromContext(ctx)
 
 		// TODO: Use this information while retrieving from TIDB
 		err := validate(r, accountIDParam, orgIdParam, projectIdParam, pipelineIdParam, buildIdParam, stepIdParam, stageIdParam)
@@ -297,7 +312,7 @@ func HandleOverview(db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
 	}
 }
 
-func HandleUploadCg(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
+func HandleUploadCg(tidb tidb.TiDB, db db.Db) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := validate(r, accountIDParam, orgIdParam, projectIdParam, repoParam, sourceBranchParam, targetBranchParam)
 		if err != nil {
@@ -313,6 +328,9 @@ func HandleUploadCg(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 		stageId := r.FormValue(stageIdParam)
 		stepId := r.FormValue(stepIdParam)
 		timeMsStr := r.FormValue(timeMsParam)
+
+		ctx := r.Context()
+		log := logger.FromContext(ctx)
 		timeMs, err := strconv.ParseInt(timeMsStr, 10, 32)
 		if err != nil {
 			log.Errorw("could not parse time taken", zap.Error(err))
@@ -358,7 +376,7 @@ func HandleUploadCg(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 
 		st := time.Now()
 		resp, err := tidb.UploadPartialCg(r.Context(), cg, info, acc, org, proj, target)
-		log.Infow("completed partial CG upload to mongo", "account", acc, "org", org, "project", proj, "build", buildId, "stage", stageId, "step", stepId, "time_taken", time.Since(st).String())
+		log.Infow("completed partial CG upload to mongo", "account", acc, "org", org, "project", proj, "pipeline", pipelineId, "build", buildId, "stage", stageId, "step", stepId, "time_taken", time.Since(st).String())
 		// Try to update counts even if uploading partial CG failed
 		werr := db.WriteSelectedTests(r.Context(), acc, org, proj, pipelineId, buildId, stageId, stepId, "", "", "", resp, int(timeMs), true)
 		if err != nil {
@@ -373,13 +391,5 @@ func HandleUploadCg(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.Handl
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
-	}
-}
-
-func HandleUploadVg(tidb tidb.TiDB, db db.Db, log *zap.SugaredLogger) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		_ = tidb
-		_ = db
-		_ = log
 	}
 }

@@ -7,6 +7,7 @@ import static software.wings.security.PermissionAttribute.PermissionType;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.authenticationservice.beans.LogoutResponse;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.event.model.EventType;
@@ -14,9 +15,10 @@ import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.ng.core.common.beans.Generation;
 import io.harness.ng.core.dto.UserInviteDTO;
 import io.harness.ng.core.invites.dto.InviteOperationResponse;
+import io.harness.ng.core.switchaccount.RestrictedSwitchAccountInfo;
 import io.harness.ng.core.user.PasswordChangeDTO;
 import io.harness.ng.core.user.PasswordChangeResponse;
-import io.harness.ng.core.user.SignupInviteDTO;
+import io.harness.signup.dto.SignupInviteDTO;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 
@@ -35,7 +37,6 @@ import software.wings.beans.security.UserGroup;
 import software.wings.resources.UserResource;
 import software.wings.security.JWT_CATEGORY;
 import software.wings.security.UserPermissionInfo;
-import software.wings.security.authentication.LogoutResponse;
 import software.wings.security.authentication.TwoFactorAuthenticationSettings;
 import software.wings.security.authentication.oauth.OauthUserInfo;
 import software.wings.service.intfc.ownership.OwnedByAccount;
@@ -514,10 +515,12 @@ public interface UserService extends OwnedByAccount {
    *
    * @param user
    * @param claims Map of claims
+   * @param claims Persist accountId present in claims or not
    * @return
    */
 
-  String generateJWTToken(User user, Map<String, String> claims, @NotNull JWT_CATEGORY category);
+  String generateJWTToken(
+      User user, Map<String, String> claims, @NotNull JWT_CATEGORY category, boolean persistOldAccountId);
 
   /**
    *
@@ -628,4 +631,6 @@ public interface UserService extends OwnedByAccount {
 
   URI getInviteAcceptRedirectURL(InviteOperationResponse inviteResponse, UserInvite userInvite, String jwtToken)
       throws URISyntaxException;
+
+  RestrictedSwitchAccountInfo getSwitchAccountInfo(String accountId, String userId);
 }

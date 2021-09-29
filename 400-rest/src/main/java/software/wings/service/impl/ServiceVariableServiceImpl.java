@@ -153,7 +153,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
             format("Adding variable name %s with hyphens (dashes) is not allowed", variableName));
       }
 
-      if (serviceVariable.getValue() == null) {
+      if (isEmpty(serviceVariable.getValue())) {
         throw new InvalidRequestException(format("Service Variable [%s] value cannot be empty", variableName));
       } else {
         checkDuplicateNameServiceVariable(serviceVariable);

@@ -16,6 +16,7 @@ import static io.harness.beans.ExecutionInterruptType.RESUME;
 import static io.harness.beans.ExecutionInterruptType.RESUME_ALL;
 import static io.harness.beans.ExecutionInterruptType.RETRY;
 import static io.harness.beans.ExecutionInterruptType.ROLLBACK;
+import static io.harness.beans.ExecutionInterruptType.ROLLBACK_PROVISIONER_AFTER_PHASES;
 import static io.harness.beans.ExecutionStatus.ABORTED;
 import static io.harness.beans.ExecutionStatus.DISCONTINUING;
 import static io.harness.beans.ExecutionStatus.ERROR;
@@ -440,7 +441,7 @@ public class ExecutionInterruptManager {
                                               .addFilter("appId", EQ, appId)
                                               .addFilter("executionUuid", EQ, executionUuid)
                                               .addFilter("executionInterruptType", IN, ABORT_ALL, PAUSE_ALL, RESUME_ALL,
-                                                  ROLLBACK, CONTINUE_PIPELINE_STAGE)
+                                                  ROLLBACK, ROLLBACK_PROVISIONER_AFTER_PHASES, CONTINUE_PIPELINE_STAGE)
                                               .addFilter("seized", EQ, false)
                                               .addOrder(ExecutionInterrupt.CREATED_AT_KEY, OrderType.DESC)
                                               .build();

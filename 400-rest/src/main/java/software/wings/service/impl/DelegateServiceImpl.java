@@ -275,7 +275,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 @BreakDependencyOn("software.wings.service.intfc.AccountService")
 @BreakDependencyOn("software.wings.app.MainConfiguration")
 @BreakDependencyOn("software.wings.beans.User")
-@BreakDependencyOn("io.harness.grpc.DelegateServiceClassicGrpcClient")
 @BreakDependencyOn("software.wings.beans.Event")
 @OwnedBy(DEL)
 public class DelegateServiceImpl implements DelegateService {
@@ -404,12 +403,6 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public PageResponse<Delegate> list(PageRequest<Delegate> pageRequest) {
     return persistence.query(Delegate.class, pageRequest);
-  }
-
-  @Override
-  public boolean checkDelegateConnected(String accountId, String delegateId) {
-    return delegateConnectionDao.checkDelegateConnected(
-        accountId, delegateId, versionInfoManager.getVersionInfo().getVersion());
   }
 
   @Override
@@ -552,8 +545,10 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public Double getConnectedRatioWithPrimary(String targetVersion) {
-    long primary =
-        delegateConnectionDao.numberOfActiveDelegateConnectionsPerVersion(configurationController.getPrimaryVersion());
+    targetVersion = Arrays.stream(targetVersion.split("-")).findFirst().get();
+    String primaryVersion = Arrays.stream(configurationController.getPrimaryVersion().split("-")).findFirst().get();
+
+    long primary = delegateConnectionDao.numberOfActiveDelegateConnectionsPerVersion(primaryVersion);
 
     // If we do not have any delegates in the primary version, lets unblock the deployment,
     // that will be very rare and we are in trouble anyways, let report 1 to let the new deployment go.
@@ -731,10 +726,14 @@ public class DelegateServiceImpl implements DelegateService {
     List<DelegateScalingGroup> scalingGroups = getDelegateScalingGroups(accountId, activeDelegateConnections);
 
     return DelegateStatus.builder()
-        .publishedVersions(delegateConfiguration.getDelegateVersions())
+        .publishedVersions(delegateVersionListWithoutPatch(delegateConfiguration.getDelegateVersions()))
         .scalingGroups(scalingGroups)
         .delegates(buildInnerDelegates(delegatesWithoutScalingGroup, activeDelegateConnections, false))
         .build();
+  }
+
+  private List<String> delegateVersionListWithoutPatch(List<String> delegateVersions) {
+    return delegateVersions.stream().map(version -> substringBefore(version, "-")).collect(toList());
   }
 
   @NotNull
@@ -1240,8 +1239,8 @@ public class DelegateServiceImpl implements DelegateService {
       if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
         log.info("Multi-Version is enabled");
         latestVersion = inquiry.getVersion();
-        String minorVersion = Optional.ofNullable(getMinorVersion(inquiry.getVersion())).orElse(0).toString();
-        delegateJarDownloadUrl = infraDownloadService.getDownloadUrlForDelegate(minorVersion, inquiry.getAccountId());
+        String fullVersion = Optional.ofNullable(getDelegateBuildVersion(inquiry.getVersion())).orElse(null);
+        delegateJarDownloadUrl = infraDownloadService.getDownloadUrlForDelegate(fullVersion, inquiry.getAccountId());
         if (useCDN) {
           delegateStorageUrl = cdnConfig.getUrl();
           log.info("Using CDN delegateStorageUrl " + delegateStorageUrl);
@@ -1497,6 +1496,14 @@ public class DelegateServiceImpl implements DelegateService {
       } catch (NumberFormatException e) {
         // Leave it null
       }
+    }
+    return delegateVersionNumber;
+  }
+
+  private String getDelegateBuildVersion(String delegateVersion) {
+    String delegateVersionNumber = null;
+    if (isNotBlank(delegateVersion)) {
+      delegateVersionNumber = delegateVersion.substring(delegateVersion.lastIndexOf('.') + 1);
     }
     return delegateVersionNumber;
   }
@@ -1977,7 +1984,6 @@ public class DelegateServiceImpl implements DelegateService {
     if (isDelegateWithoutPollingEnabled(delegate)) {
       eventEmitter.send(Channel.DELEGATES,
           anEvent().withOrgId(delegate.getAccountId()).withUuid(delegate.getUuid()).withType(Type.CREATE).build());
-      assignDelegateService.clearConnectionResults(delegate.getAccountId());
     }
 
     updateWithTokenAndSeqNumIfEcsDelegate(delegate, savedDelegate);
@@ -2023,6 +2029,9 @@ public class DelegateServiceImpl implements DelegateService {
                                     .get();
 
     if (existingDelegate != null) {
+      if (delegateConnectionDao.checkAnyDelegateIsConnected(accountId, Arrays.asList(delegateId))) {
+        throw new InvalidRequestException(format("Unable to delete delegate. Delegate %s is connected", delegateId));
+      }
       // before deleting delegate, check if any alert is open for delegate, if yes, close it.
       alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.DelegatesDown,
           DelegatesDownAlert.builder()
@@ -2051,6 +2060,10 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public void retainOnlySelectedDelegatesAndDeleteRest(String accountId, List<String> delegatesToRetain) {
     if (EmptyPredicate.isNotEmpty(delegatesToRetain)) {
+      if (delegateConnectionDao.checkAnyDelegateIsConnected(accountId, delegatesToRetain)) {
+        throw new InvalidRequestException(
+            format("Unable to delete delegate[s]. Anyone delegate %s is connected", delegatesToRetain));
+      }
       persistence.delete(persistence.createQuery(Delegate.class)
                              .filter(DelegateKeys.accountId, accountId)
                              .field(DelegateKeys.uuid)
@@ -2212,7 +2225,7 @@ public class DelegateServiceImpl implements DelegateService {
     if (isNotBlank(delegate.getDelegateGroupId())) {
       DelegateGroup delegateGroup = persistence.get(DelegateGroup.class, delegate.getDelegateGroupId());
 
-      if (delegateGroup != null && DelegateGroupStatus.DELETED == delegateGroup.getStatus()) {
+      if (delegateGroup == null || DelegateGroupStatus.DELETED == delegateGroup.getStatus()) {
         log.warn("Sending self destruct command from register delegate because the delegate group is deleted.");
         return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
       }
@@ -2277,7 +2290,7 @@ public class DelegateServiceImpl implements DelegateService {
     if (isNotBlank(delegateParams.getDelegateGroupId())) {
       DelegateGroup delegateGroup = persistence.get(DelegateGroup.class, delegateParams.getDelegateGroupId());
 
-      if (delegateGroup != null && DelegateGroupStatus.DELETED == delegateGroup.getStatus()) {
+      if (delegateGroup == null || DelegateGroupStatus.DELETED == delegateGroup.getStatus()) {
         log.warn(
             "Sending self destruct command from register delegate parameters because the delegate group is deleted.");
         return DelegateRegisterResponse.builder().action(DelegateRegisterResponse.Action.SELF_DESTRUCT).build();
@@ -2341,9 +2354,6 @@ public class DelegateServiceImpl implements DelegateService {
       delegateGroupId = delegateGroup.getUuid();
     }
 
-    // Check if delegate is NG delegate and set the flag to true, if needed
-    boolean isNgDelegate = isNotBlank(delegateParams.getSessionIdentifier());
-
     DelegateEntityOwner owner =
         DelegateEntityOwnerHelper.buildOwner(delegateParams.getOrgIdentifier(), delegateParams.getProjectIdentifier());
 
@@ -2354,7 +2364,7 @@ public class DelegateServiceImpl implements DelegateService {
             .sessionIdentifier(
                 isNotBlank(delegateParams.getSessionIdentifier()) ? delegateParams.getSessionIdentifier() : null)
             .owner(owner)
-            .ng(isNgDelegate)
+            .ng(delegateParams.isNg())
             .sizeDetails(sizeDetails)
             .description(delegateParams.getDescription())
             .ip(delegateParams.getIp())
@@ -2637,6 +2647,22 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
+  public List<String> obtainDelegateIdsUsingName(String accountId, String delegateName) {
+    try {
+      return persistence.createQuery(Delegate.class)
+          .filter(DelegateKeys.accountId, accountId)
+          .filter(DelegateKeys.delegateName, delegateName)
+          .asKeyList()
+          .stream()
+          .map(key -> (String) key.getId())
+          .collect(toList());
+    } catch (Exception e) {
+      log.error("Could not get delegates from DB.", e);
+      return null;
+    }
+  }
+
+  @Override
   public void saveDelegateTask(DelegateTask task, Status status) {
     delegateTaskServiceClassic.saveDelegateTask(task, status);
   }
@@ -2780,11 +2806,6 @@ public class DelegateServiceImpl implements DelegateService {
   public void delegateDisconnected(String accountId, String delegateId, String delegateConnectionId) {
     delegateConnectionDao.delegateDisconnected(accountId, delegateConnectionId);
     subject.fireInform(DelegateObxxxxxxxx:onDisconnected, accountId, delegateId);
-  }
-
-  @Override
-  public void clearCache(String accountId, String delegateId) {
-    assignDelegateService.clearConnectionResults(accountId, delegateId);
   }
 
   @Override
@@ -2970,7 +2991,7 @@ public class DelegateServiceImpl implements DelegateService {
    */
   @VisibleForTesting
   void handleEcsDelegateKeepAlivePacket(Delegate delegate) {
-    log.info("Handling Keep alive packet ");
+    log.debug("Handling Keep alive packet ");
     if (isBlank(delegate.getHostName()) || isBlank(delegate.getDelegateRandomToken()) || isBlank(delegate.getUuid())
         || isBlank(delegate.getSequenceNum())) {
       return;

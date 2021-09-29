@@ -60,6 +60,11 @@ public class RoleServiceImpl implements RoleService {
       "[Failed]: Failed to remove role assignments for the role and remove the role; attempt: {}",
       ImmutableList.of(TransactionException.class), Duration.ofSeconds(5), 3, log);
 
+  private static final RetryPolicy<Object> removeRoleScopeLevelsTransactionPolicy = RetryUtils.getRetryPolicy(
+      "[Retrying]: Failed to remove role assignments for the erased scope levels of the role and update the role; attempt: {}",
+      "[Failed]: Failed to remove role assignments for the erased scope levels of the role and update the role; attempt: {}",
+      ImmutableList.of(TransactionException.class), Duration.ofSeconds(5), 3, log);
+
   @Inject
   public RoleServiceImpl(RoleDao roleDao, PermissionService permissionService, ScopeService scopeService,
       RoleAssignmentService roleAssignmentService, TransactionTemplate transactionTemplate) {
@@ -98,7 +103,7 @@ public class RoleServiceImpl implements RoleService {
           String.format("Could not find the role in the scope %s", roleUpdate.getScopeIdentifier()));
     }
     Role currentRole = currentRoleOptional.get();
-    if (!currentRole.getAllowedScopeLevels().equals(roleUpdate.getAllowedScopeLevels())) {
+    if (areScopeLevelsUpdated(currentRole, roleUpdate) && !roleUpdate.isManaged()) {
       throw new InvalidRequestException("Cannot change the the scopes at which this role can be used.");
     }
     validatePermissions(roleUpdate);
@@ -106,8 +111,25 @@ public class RoleServiceImpl implements RoleService {
     roleUpdate.setVersion(currentRole.getVersion());
     roleUpdate.setCreatedAt(currentRole.getCreatedAt());
     roleUpdate.setLastModifiedAt(currentRole.getLastModifiedAt());
-    Role updatedRole = roleDao.update(roleUpdate);
+    Role updatedRole =
+        Failsafe.with(removeRoleScopeLevelsTransactionPolicy).get(() -> transactionTemplate.execute(status -> {
+          if (areScopeLevelsUpdated(currentRole, roleUpdate) && roleUpdate.isManaged()) {
+            Set<String> removedScopeLevels =
+                Sets.difference(currentRole.getAllowedScopeLevels(), roleUpdate.getAllowedScopeLevels());
+            roleAssignmentService.deleteMulti(RoleAssignmentFilter.builder()
+                                                  .roleFilter(Collections.singleton(roleUpdate.getIdentifier()))
+                                                  .scopeFilter("/")
+                                                  .includeChildScopes(true)
+                                                  .scopeLevelFilter(removedScopeLevels)
+                                                  .build());
+          }
+          return roleDao.update(roleUpdate);
+        }));
     return RoleUpdateResult.builder().originalRole(currentRole).updatedRole(updatedRole).build();
+  }
+
+  private boolean areScopeLevelsUpdated(Role currentRole, Role roleUpdate) {
+    return !currentRole.getAllowedScopeLevels().equals(roleUpdate.getAllowedScopeLevels());
   }
 
   @Override
@@ -225,8 +247,14 @@ public class RoleServiceImpl implements RoleService {
             .build();
     List<Permission> permissionList = permissionService.list(permissionFilter);
     permissionList = permissionList == null ? new ArrayList<>() : permissionList;
-    Set<String> compulsoryPermissions =
-        permissionList.stream().map(Permission::getIdentifier).collect(Collectors.toSet());
+    Set<String> compulsoryPermissions = permissionList.stream()
+                                            .filter(permission -> {
+                                              Set<String> scopesMissingInPermission = Sets.difference(
+                                                  role.getAllowedScopeLevels(), permission.getAllowedScopeLevels());
+                                              return scopesMissingInPermission.isEmpty();
+                                            })
+                                            .map(Permission::getIdentifier)
+                                            .collect(Collectors.toSet());
     role.getPermissions().addAll(compulsoryPermissions);
   }
 }

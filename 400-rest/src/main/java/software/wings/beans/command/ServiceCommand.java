@@ -4,6 +4,8 @@ import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.mongo.index.FdIndex;
 
@@ -32,6 +34,7 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity(value = "serviceCommands", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "ServiceCommandKeys")
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ServiceCommand extends Base {
   public static final String TEMPLATE_UUID_KEY = "templateUuid";
 

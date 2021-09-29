@@ -21,6 +21,7 @@ import io.harness.config.PipelineConfig;
 import io.harness.config.PublisherConfiguration;
 import io.harness.config.WorkersConfiguration;
 import io.harness.configuration.DeployMode;
+import io.harness.delegate.beans.FileUploadLimit;
 import io.harness.event.handler.marketo.MarketoConfig;
 import io.harness.event.handler.segment.SalesforceConfig;
 import io.harness.event.handler.segment.SegmentConfig;
@@ -46,6 +47,7 @@ import software.wings.beans.security.access.GlobalWhitelistConfig;
 import software.wings.cdn.CdnConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.jre.JreConfig;
+import software.wings.scheduler.LdapSyncJobConfig;
 import software.wings.search.framework.ElasticsearchConfig;
 import software.wings.security.authentication.MarketPlaceConfig;
 import software.wings.security.authentication.oauth.AzureConfig;
@@ -84,7 +86,7 @@ import lombok.EqualsAndHashCode;
 /**
  * Used to load all the application configuration.
  */
-@TargetModule(HarnessModule._360_CG_MANAGER)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Singleton
@@ -107,7 +109,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty(defaultValue = "true") private boolean enableIterators = true;
   @JsonProperty(defaultValue = "true") private boolean enableAuth = true;
   @JsonProperty(defaultValue = "50") private int jenkinsBuildQuerySize = 50;
-  @JsonProperty private FileUploadLimit fileUploadLimits = new FileUploadLimit();
+  @JsonProperty private io.harness.delegate.beans.FileUploadLimit fileUploadLimits = new FileUploadLimit();
   @JsonProperty("backgroundScheduler") private SchedulerConfig backgroundSchedulerConfig = new SchedulerConfig();
   @JsonProperty("serviceScheduler") private SchedulerConfig serviceSchedulerConfig = new SchedulerConfig();
   @JsonProperty("watcherMetadataUrl") private String watcherMetadataUrl;
@@ -190,6 +192,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("dmsSecret") private String dmsSecret;
   @JsonProperty(value = "disableDelegateMgmtInManager", defaultValue = "false")
   private boolean disableDelegateMgmtInManager;
+  @JsonProperty("ldapSyncJobConfig") private LdapSyncJobConfig ldapSyncJobConfig;
 
   private int applicationPort;
   private boolean sslEnabled;

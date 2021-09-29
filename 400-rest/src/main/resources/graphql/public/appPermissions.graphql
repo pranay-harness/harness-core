@@ -7,6 +7,7 @@ input ApplicationPermissionInput {
   deployments: DeploymentPermissionFilterInput
   pipelines: PipelinePermissionFilterInput
   provisioners: ProvisionerPermissionFilterInput
+  templates: TemplatePermissionFilterInput
   actions: [Actions]!
 }
 
@@ -20,6 +21,7 @@ type ApplicationPermission {
   deployments: DeploymentPermissionFilter
   pipelines: PipelinePermissionFilter
   provisioners: ProvisionerPermissionFilter
+  templates: TemplatePermissionFilter
 }
 
 enum AppPermissionType {
@@ -30,6 +32,7 @@ enum AppPermissionType {
   PIPELINE
   DEPLOYMENT
   PROVISIONER
+  TEMPLATE
 }
 
 enum FilterType {
@@ -75,16 +78,19 @@ enum WorkflowPermissionFilterType {
   PRODUCTION_WORKFLOWS
   NON_PRODUCTION_WORKFLOWS
   WORKFLOW_TEMPLATES
+  ALL_WORKFLOWS
 }
 
 type WorkflowPermissionFilter {
   filterTypes: [WorkflowPermissionFilterType]
   envIds: [String]
+  workflowIds: [String]
 }
 
 input WorkflowPermissionFilterInput {
   filterTypes: [WorkflowPermissionFilterType]
   envIds: [String!]
+  workflowIds: [String!]
 }
 
 enum DeploymentPermissionFilterType {
@@ -105,16 +111,19 @@ type DeploymentPermissionFilter {
 enum PipelinePermissionFilterType {
   PRODUCTION_PIPELINES
   NON_PRODUCTION_PIPELINES
+  ALL_PIPELINES
 }
 
 input PipelinePermissionFilterInput {
   filterTypes: [PipelinePermissionFilterType]
   envIds: [String!]
+  pipelineIds: [String!]
 }
 
 type PipelinePermissionFilter {
   filterTypes: [PipelinePermissionFilterType]
   envIds: [String]
+  pipelineIds: [String]
 }
 
 input ProvisionerPermissionFilterInput {
@@ -122,7 +131,17 @@ input ProvisionerPermissionFilterInput {
   provisionerIds: [String!]
 }
 
+input TemplatePermissionFilterInput {
+  filterType: FilterType
+  templateIds: [String!]
+}
+
 type ProvisionerPermissionFilter {
   filterType: FilterType
   provisionerIds: [String]
+}
+
+type TemplatePermissionFilter {
+  filterType: FilterType
+  templateIds: [String]
 }

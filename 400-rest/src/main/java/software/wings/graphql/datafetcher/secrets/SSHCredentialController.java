@@ -25,6 +25,7 @@ import io.harness.shell.KerberosConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.SettingAttribute;
 import software.wings.graphql.schema.type.secrets.QLInlineSSHKey;
+import software.wings.graphql.schema.type.secrets.QLInlineSSHKeyOutput;
 import software.wings.graphql.schema.type.secrets.QLKerberosAuthentication;
 import software.wings.graphql.schema.type.secrets.QLKerberosAuthenticationInput;
 import software.wings.graphql.schema.type.secrets.QLKerberosPassword;
@@ -32,6 +33,7 @@ import software.wings.graphql.schema.type.secrets.QLKeyTabFile;
 import software.wings.graphql.schema.type.secrets.QLSSHAuthentication;
 import software.wings.graphql.schema.type.secrets.QLSSHAuthenticationInput;
 import software.wings.graphql.schema.type.secrets.QLSSHAuthenticationMethod;
+import software.wings.graphql.schema.type.secrets.QLSSHAuthenticationMethodOutput;
 import software.wings.graphql.schema.type.secrets.QLSSHAuthenticationScheme;
 import software.wings.graphql.schema.type.secrets.QLSSHAuthenticationType;
 import software.wings.graphql.schema.type.secrets.QLSSHCredential;
@@ -39,7 +41,9 @@ import software.wings.graphql.schema.type.secrets.QLSSHCredentialInput;
 import software.wings.graphql.schema.type.secrets.QLSSHCredentialType;
 import software.wings.graphql.schema.type.secrets.QLSSHCredentialUpdate;
 import software.wings.graphql.schema.type.secrets.QLSSHKeyFile;
+import software.wings.graphql.schema.type.secrets.QLSSHKeyFileOutput;
 import software.wings.graphql.schema.type.secrets.QLSSHPassword;
+import software.wings.graphql.schema.type.secrets.QLSSHPasswordOutput;
 import software.wings.graphql.schema.type.secrets.QLSecretType;
 import software.wings.graphql.schema.type.secrets.QLTGTGenerationMethod;
 import software.wings.graphql.schema.type.secrets.QLTGTGenerationUsing;
@@ -73,9 +77,48 @@ public class SSHCredentialController {
                                   .principal(sshCreds.getKerberosConfig().getPrincipal())
                                   .realm(sshCreds.getKerberosConfig().getRealm())
                                   .build();
-    } else if (sshCreds.getAccessType() == AccessType.KEY || sshCreds.getAccessType() == AccessType.USER_PASSWORD) {
-      sshAuthenticationType =
-          QLSSHAuthentication.builder().port(sshCreds.getSshPort()).userName(sshCreds.getUserName()).build();
+    } else if (sshCreds.getAccessType() == AccessType.KEY) {
+      if (!sshCreds.isKeyless()) {
+        QLInlineSSHKeyOutput qlInlineSSHKeyOutput = QLInlineSSHKeyOutput.builder()
+                                                        .sshKeySecretFileId(sshCreds.getEncryptedKey())
+                                                        .passphraseSecretId(sshCreds.getEncryptedPassphrase())
+                                                        .build();
+        QLSSHAuthenticationMethodOutput qlsshAuthenticationMethodOutput = QLSSHAuthenticationMethodOutput.builder()
+                                                                              .sshCredentialType("SSH_KEY")
+                                                                              .inlineSSHKey(qlInlineSSHKeyOutput)
+                                                                              .build();
+        sshAuthenticationType = QLSSHAuthentication.builder()
+                                    .port(sshCreds.getSshPort())
+                                    .userName(sshCreds.getUserName())
+                                    .sshAuthenticationMethod(qlsshAuthenticationMethodOutput)
+                                    .build();
+      } else {
+        QLSSHKeyFileOutput qlsshKeyFileOutput = QLSSHKeyFileOutput.builder()
+                                                    .passphraseSecretId(sshCreds.getEncryptedPassphrase())
+                                                    .path(sshCreds.getKeyPath())
+                                                    .build();
+        QLSSHAuthenticationMethodOutput qlsshAuthenticationMethodOutput = QLSSHAuthenticationMethodOutput.builder()
+                                                                              .sshCredentialType("SSH_KEY_FILE_PATH")
+                                                                              .sshKeyFile(qlsshKeyFileOutput)
+                                                                              .build();
+        sshAuthenticationType = QLSSHAuthentication.builder()
+                                    .port(sshCreds.getSshPort())
+                                    .userName(sshCreds.getUserName())
+                                    .sshAuthenticationMethod(qlsshAuthenticationMethodOutput)
+                                    .build();
+      }
+    } else if (sshCreds.getAccessType() == AccessType.USER_PASSWORD) {
+      QLSSHPasswordOutput qlsshPasswordOutput =
+          QLSSHPasswordOutput.builder().passwordSecretId(sshCreds.getEncryptedSshPassword()).build();
+      QLSSHAuthenticationMethodOutput qlsshAuthenticationMethodOutput = QLSSHAuthenticationMethodOutput.builder()
+                                                                            .sshCredentialType("PASSWORD")
+                                                                            .serverPassword(qlsshPasswordOutput)
+                                                                            .build();
+      sshAuthenticationType = QLSSHAuthentication.builder()
+                                  .port(sshCreds.getSshPort())
+                                  .userName(sshCreds.getUserName())
+                                  .sshAuthenticationMethod(qlsshAuthenticationMethodOutput)
+                                  .build();
     }
     return QLSSHCredential.builder()
         .id(settingAttribute.getUuid())

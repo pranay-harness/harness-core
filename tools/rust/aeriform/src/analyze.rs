@@ -281,7 +281,12 @@ pub fn analyze(opts: Analyze) {
         if ordering != Equal {
             ordering
         } else {
-            a.message.cmp(&b.message)
+            let ordering = a.message.cmp(&b.message);
+            if ordering != Equal {
+                ordering
+            } else {
+                a.for_team.cmp(&b.for_team)
+            }
         }
     });
 
@@ -628,7 +633,7 @@ fn check_already_in_target(class: &JavaClass, module: &JavaModule, target_module
     } else {
         if module.name.eq(target_module.unwrap()) {
             results.push(Report {
-                kind: Kind::Warning,
+                kind: Kind::Critical,
                 explanation: Explanation::ClassAlreadyInTheTargetModule,
                 message: format!("{} target module is the same as the module of the class", class.name),
                 action: Default::default(),
@@ -740,10 +745,6 @@ fn check_for_promotion(
             .get(src)
             .expect(&format!("The source {} is not find in any module", src));
 
-        if dependent_class.deprecated {
-            return ();
-        }
-
         let &dependent_real_module = class_modules.get(dependent_class).expect(&format!(
             "The class {} is not find in the modules",
             dependent_class.name
@@ -766,6 +767,11 @@ fn check_for_promotion(
             && !target_module.dependencies.contains(&dependent_target_module.name)
         {
             issue = true;
+
+            if dependent_class.deprecated {
+                return ();
+            }
+
             let mdls = [
                 module.name.clone(),
                 dependent_target_module.name.clone(),
@@ -790,13 +796,22 @@ fn check_for_promotion(
                     for_modules: mdls,
                 });
             } else if !dependent_real_module.external() {
+                let msg = if dependent_target_module.index > target_module.index {
+                    format!(
+                        "{} depends on {} that is in module {} but {} does not depend on it",
+                        class.name, dependent_class.name, dependent_target_module.name, target_module.name
+                    )
+                } else {
+                    format!(
+                        "{} depends on {} that is in module {} but {} cannot depend on it",
+                        class.name, dependent_class.name, dependent_target_module.name, target_module.name
+                    )
+                };
+
                 results.push(Report {
                     kind: Kind::Error,
                     explanation: Explanation::Empty,
-                    message: format!(
-                        "{} depends on {} that is in module {} but {} does not depend on it",
-                        class.name, dependent_class.name, dependent_target_module.name, target_module.name
-                    ),
+                    message: msg,
                     action: Default::default(),
                     for_class: class.name.clone(),
                     for_team: class.team(module, &target_module.team),
@@ -852,6 +867,8 @@ fn check_for_promotion(
 
     if !issue && !not_ready_yet.is_empty() {
         all_classes.insert(class.name.clone());
+
+        not_ready_yet.sort_by(|a, b| a.cmp(b));
 
         results.push(Report {
             kind: Kind::Blocked,
@@ -921,7 +938,7 @@ fn check_for_demotion(
                 let indirect_classes = [dependee_class.name.clone()].iter().cloned().collect();
 
                 results.push(Report {
-                    kind: Kind::Warning,
+                    kind: Kind::DevAction,
                     explanation: Explanation::UsedInDeprecatedClass,
                     message: format!(
                         "{} is deprecated and depends on {}, this dependency has to be broken",
@@ -981,13 +998,22 @@ fn check_for_demotion(
                         for_modules: mdls,
                     });
                 } else {
+                    let msg = if target_module.index > dependee_target_module.index {
+                        format!(
+                            "{} depends on {} that is in module {} but {} does not depend on it",
+                            dependee_class.name, class.name, target_module.name, dependee_target_module.name
+                        )
+                    } else {
+                        format!(
+                            "{} depends on {} that is in module {} but {} cannot depend on it",
+                            dependee_class.name, class.name, target_module.name, dependee_target_module.name
+                        )
+                    };
+
                     results.push(Report {
                         kind: Kind::Error,
                         explanation: Explanation::Empty,
-                        message: format!(
-                            "{} depends on {} that is in module {} but {} does not depend on it",
-                            dependee_class.name, class.name, target_module.name, dependee_target_module.name
-                        ),
+                        message: msg,
                         action: Default::default(),
                         for_team: class.team(module, &target_module.team),
                         for_class: class.name.clone(),
@@ -1045,6 +1071,8 @@ fn check_for_demotion(
 
     if !issue && !not_ready_yet.is_empty() {
         all_classes.insert(class.name.clone());
+
+        not_ready_yet.sort_by(|a, b| a.cmp(b));
 
         results.push(Report {
             kind: Kind::Blocked,

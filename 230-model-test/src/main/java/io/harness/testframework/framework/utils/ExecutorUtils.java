@@ -40,6 +40,7 @@ public class ExecutorUtils {
   }
 
   public static String getBazelBinPath(File file) {
+    log.info("Fetching bazel bin path");
     Process processFinal = null;
     try {
       String rc = file == null ? "--noworkspace_rc" : "";
@@ -64,7 +65,8 @@ public class ExecutorUtils {
             }
             error += line;
           }
-          throw new RuntimeException(error);
+          log.error("Error getBazelBinPath {}", error);
+          return "/tmp/execroot/harness_monorepo/bazel-out/k8-fastbuild/bin";
         }
       }
     } catch (IOException | InterruptedException e) {

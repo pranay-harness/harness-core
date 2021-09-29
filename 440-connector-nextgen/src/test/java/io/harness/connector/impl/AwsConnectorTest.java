@@ -144,6 +144,53 @@ public class AwsConnectorTest extends ConnectorsTestBase {
     assertThat(awsConnectorDTO.getCredential().getCrossAccountAccess().getCrossAccountRoleArn())
         .isEqualTo("crossAccountRoleArn");
   }
+
+  @Test
+  @Owner(developers = OwnerRule.ACHYUTH)
+  @Category(UnitTests.class)
+  public void testCreateAwsConnectorIRSA() {
+    AwsCredentialDTO awsCredentialDTO =
+        AwsCredentialDTO.builder().awsCredentialType(AwsCredentialType.IRSA).config(null).build();
+    Set<String> delegateSelectors = new HashSet<>(Collections.singleton("delegate"));
+    ConnectorDTO connectorDTO = createConnectorDTO(awsCredentialDTO, delegateSelectors);
+    ConnectorResponseDTO connectorDTOOutput = createConnector(connectorDTO);
+    ensureAwsConnectorFieldsAreCorrect(connectorDTOOutput);
+    AwsConnectorDTO awsConnectorDTO = (AwsConnectorDTO) connectorDTOOutput.getConnector().getConnectorConfig();
+    assertThat(awsConnectorDTO).isNotNull();
+    assertThat(awsConnectorDTO.getCredential()).isNotNull();
+    assertThat(awsConnectorDTO.getCredential().getAwsCredentialType()).isEqualByComparingTo(AwsCredentialType.IRSA);
+    assertThat(awsConnectorDTO.getCredential().getConfig()).isNull();
+    assertThat(awsConnectorDTO.getDelegateSelectors()).isNotNull();
+    assertThat(awsConnectorDTO.getDelegateSelectors()).isEqualTo(delegateSelectors);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.ACHYUTH)
+  @Category(UnitTests.class)
+  public void testCreateAwsConnectorWithCrossAccountAccessIRSA() {
+    AwsCredentialDTO awsCredentialDTO =
+        AwsCredentialDTO.builder()
+            .awsCredentialType(AwsCredentialType.IRSA)
+            .config(null)
+            .crossAccountAccess(CrossAccountAccessDTO.builder().crossAccountRoleArn("crossAccountRoleArn").build())
+            .build();
+    Set<String> delegateSelectors = new HashSet<>(Collections.singleton("delegate"));
+    ConnectorDTO connectorDTO = createConnectorDTO(awsCredentialDTO, delegateSelectors);
+    ConnectorResponseDTO connectorDTOOutput = createConnector(connectorDTO);
+    ensureAwsConnectorFieldsAreCorrect(connectorDTOOutput);
+    AwsConnectorDTO awsConnectorDTO = (AwsConnectorDTO) connectorDTOOutput.getConnector().getConnectorConfig();
+    assertThat(awsConnectorDTO).isNotNull();
+    assertThat(awsConnectorDTO.getCredential()).isNotNull();
+    assertThat(awsConnectorDTO.getCredential().getAwsCredentialType()).isEqualByComparingTo(AwsCredentialType.IRSA);
+    assertThat(awsConnectorDTO.getCredential().getConfig()).isNull();
+    assertThat(awsConnectorDTO.getDelegateSelectors()).isNotNull();
+    assertThat(awsConnectorDTO.getDelegateSelectors()).isEqualTo(delegateSelectors);
+    assertThat(awsConnectorDTO.getCredential().getCrossAccountAccess()).isNotNull();
+    assertThat(awsConnectorDTO.getCredential().getCrossAccountAccess().getCrossAccountRoleArn()).isNotNull();
+    assertThat(awsConnectorDTO.getCredential().getCrossAccountAccess().getCrossAccountRoleArn())
+        .isEqualTo("crossAccountRoleArn");
+  }
+
   private ConnectorResponseDTO createConnector(ConnectorDTO connectorRequest) {
     return connectorService.create(connectorRequest, accountIdentifier);
   }

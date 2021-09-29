@@ -1,0 +1,37 @@
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@io_bazel_rules_go//go:def.bzl", "go_library")
+load("@io_bazel_rules_go//proto:def.bzl", "go_proto_library")
+
+proto_library(
+    name = "930_delegate_tasks_proto",
+    srcs = [
+        "perpetual_task_execution.proto",
+        "perpetual_task_service.proto",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//955-delegate-beans/src/main/proto/io/harness/delegate:955_delegate_beans_proto",
+        "//955-delegate-beans/src/main/proto/io/harness/perpetualtask:955_delegate_beans_proto",
+        "@com_google_protobuf//:any_proto",
+        "@com_google_protobuf//:timestamp_proto",
+    ],
+)
+
+go_proto_library(
+    name = "930_delegate_tasks_go_proto",
+    compilers = ["@io_bazel_rules_go//proto:go_grpc"],
+    importpath = "github.com/wings-software/portal/930-delegate-tasks/src/main/proto/io/harness/perpetualtask",
+    proto = ":930_delegate_tasks_proto",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//955-delegate-beans/src/main/proto/io/harness/delegate",
+        "//955-delegate-beans/src/main/proto/io/harness/perpetualtask",
+    ],
+)
+
+go_library(
+    name = "perpetualtask",
+    embed = [":930_delegate_tasks_go_proto"],
+    importpath = "github.com/wings-software/portal/930-delegate-tasks/src/main/proto/io/harness/perpetualtask",
+    visibility = ["//visibility:public"],
+)

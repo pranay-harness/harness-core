@@ -38,6 +38,7 @@ public class HelmChartConfigParams implements ExecutionCapabilityDemander {
   private String basePath;
 
   private HelmVersion helmVersion;
+  private boolean useLatestChartMuseumVersion;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

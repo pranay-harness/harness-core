@@ -1,10 +1,16 @@
 package software.wings.helpers.ext.chartmuseum;
 
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.rule.OwnerRule.ABOSII;
+import static io.harness.rule.OwnerRule.ACHYUTH;
 
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.chartmuseum.ChartMuseumClientHelper;
 import io.harness.rule.Owner;
@@ -20,6 +26,14 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(CDP)
+@TargetModule(HarnessModule._960_API_SERVICES)
+@BreakDependencyOn("software.wings.beans.AwsConfig")
+@BreakDependencyOn("software.wings.beans.GcpConfig")
+@BreakDependencyOn("software.wings.beans.settings.helm.AmazonS3HelmRepoConfig")
+@BreakDependencyOn("software.wings.beans.settings.helm.GCSHelmRepoConfig")
+@BreakDependencyOn("software.wings.beans.settings.helm.HelmRepoConfig")
+@BreakDependencyOn("software.wings.settings.SettingValue")
 public class ChartMuseumClientImplTest extends WingsBaseTest {
   @Mock ChartMuseumClientHelper clientHelper;
   @InjectMocks private ChartMuseumClientImpl chartMuseumClient;
@@ -38,10 +52,10 @@ public class ChartMuseumClientImplTest extends WingsBaseTest {
     AmazonS3HelmRepoConfig s3HelmRepoConfig =
         AmazonS3HelmRepoConfig.builder().bucketName(bucketName).region(region).build();
 
-    chartMuseumClient.startChartMuseumServer(s3HelmRepoConfig, awsConfig, "resource-directory", basePath);
+    chartMuseumClient.startChartMuseumServer(s3HelmRepoConfig, awsConfig, "resource-directory", basePath, false);
 
     verify(clientHelper, times(1))
-        .startS3ChartMuseumServer(bucketName, basePath, region, true, accessKey, secretKey, true);
+        .startS3ChartMuseumServer(bucketName, basePath, region, true, accessKey, secretKey, true, false);
   }
 
   @Test
@@ -55,8 +69,25 @@ public class ChartMuseumClientImplTest extends WingsBaseTest {
     GcpConfig gcpConfig = GcpConfig.builder().serviceAccountKeyFileContent(serviceAccountKey).build();
     GCSHelmRepoConfig helmRepoConfig = GCSHelmRepoConfig.builder().bucketName(bucketName).build();
 
-    chartMuseumClient.startChartMuseumServer(helmRepoConfig, gcpConfig, resourceDirectory, basePath);
+    chartMuseumClient.startChartMuseumServer(helmRepoConfig, gcpConfig, resourceDirectory, basePath, false);
     verify(clientHelper, times(1))
-        .startGCSChartMuseumServer(bucketName, basePath, serviceAccountKey, resourceDirectory);
+        .startGCSChartMuseumServer(bucketName, basePath, serviceAccountKey, resourceDirectory, false);
+  }
+
+  @Test
+  @Owner(developers = ACHYUTH)
+  @Category(UnitTests.class)
+  public void testChartMuseumServerAwsS3IRSA() throws Exception {
+    final String bucketName = "bucket-name";
+    final String region = "us-west1";
+    final String basePath = "base-path";
+    AwsConfig awsConfig = AwsConfig.builder().useEc2IamCredentials(false).useIRSA(true).build();
+    AmazonS3HelmRepoConfig s3HelmRepoConfig =
+        AmazonS3HelmRepoConfig.builder().bucketName(bucketName).region(region).build();
+
+    chartMuseumClient.startChartMuseumServer(s3HelmRepoConfig, awsConfig, "resource-directory", basePath, false);
+
+    verify(clientHelper, times(1))
+        .startS3ChartMuseumServer(bucketName, basePath, region, false, null, null, true, false);
   }
 }

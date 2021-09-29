@@ -4,11 +4,14 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.interrupts.Interrupt.State.DISCARDED;
 import static io.harness.interrupts.Interrupt.State.PROCESSING;
 import static io.harness.interrupts.Interrupt.State.REGISTERED;
+import static io.harness.rule.OwnerRule.ALEXEI;
 import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -18,8 +21,11 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.ExecutionCheck;
 import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.interrupts.handlers.AbortInterruptHandler;
 import io.harness.engine.interrupts.handlers.MarkExpiredInterruptHandler;
+import io.harness.engine.interrupts.handlers.PauseAllInterruptHandler;
+import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.interrupts.Interrupt;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -41,6 +47,8 @@ public class InterruptServiceImplTest extends OrchestrationTestBase {
   @Mock private NodeExecutionService nodeExecutionService;
   @Mock private AbortInterruptHandler abortInterruptHandler;
   @Mock private MarkExpiredInterruptHandler markExpiredInterruptHandler;
+  @Mock private PauseAllInterruptHandler pauseAllInterruptHandler;
+  @Mock private PlanExecutionService planExecutionService;
   @Inject @InjectMocks private InterruptService interruptService;
 
   @Test
@@ -205,6 +213,129 @@ public class InterruptServiceImplTest extends OrchestrationTestBase {
     assertThat(executionCheck).isNotNull();
     assertThat(executionCheck.isProceed()).isFalse();
     verify(markExpiredInterruptHandler).handleInterruptForNodeExecution(any(), eq(nodeExecution.getUuid()));
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void testPauseAllPreInvocationParent() {
+    String planExecutionId = generateUuid();
+    Interrupt interrupt =
+        Interrupt.builder().uuid(generateUuid()).planExecutionId(planExecutionId).type(InterruptType.PAUSE_ALL).build();
+    interruptService.save(interrupt);
+    NodeExecution nodeExecution = NodeExecution.builder()
+                                      .uuid(generateUuid())
+                                      .status(Status.QUEUED)
+                                      .node(PlanNodeProto.newBuilder().setIdentifier(generateUuid()).build())
+                                      .ambiance(Ambiance.newBuilder().build())
+                                      .mode(ExecutionMode.CHILD)
+                                      .version(1L)
+                                      .build();
+
+    when(nodeExecutionService.get(nodeExecution.getUuid())).thenReturn(nodeExecution);
+
+    ExecutionCheck executionCheck =
+        interruptService.checkInterruptsPreInvocation(planExecutionId, nodeExecution.getUuid());
+    assertThat(executionCheck).isNotNull();
+    assertThat(executionCheck.isProceed()).isTrue();
+    assertThat(executionCheck.getReason()).isEqualTo("[InterruptCheck] No Interrupts Found");
+
+    verify(nodeExecutionService).get(nodeExecution.getUuid());
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void testPauseAllPreInvocationNotParentWhereNodeExecutionIdIsNull() {
+    String planExecutionId = generateUuid();
+    Interrupt interrupt =
+        Interrupt.builder().uuid(generateUuid()).planExecutionId(planExecutionId).type(InterruptType.PAUSE_ALL).build();
+    interruptService.save(interrupt);
+
+    NodeExecution nodeExecution = NodeExecution.builder()
+                                      .uuid(generateUuid())
+                                      .status(Status.QUEUED)
+                                      .node(PlanNodeProto.newBuilder().setIdentifier(generateUuid()).build())
+                                      .ambiance(Ambiance.newBuilder().build())
+                                      .mode(ExecutionMode.TASK)
+                                      .version(1L)
+                                      .build();
+
+    when(nodeExecutionService.get(nodeExecution.getUuid())).thenReturn(nodeExecution);
+    when(pauseAllInterruptHandler.handleInterruptForNodeExecution(interrupt, nodeExecution.getUuid()))
+        .thenReturn(interrupt);
+
+    ExecutionCheck executionCheck =
+        interruptService.checkInterruptsPreInvocation(planExecutionId, nodeExecution.getUuid());
+    assertThat(executionCheck).isNotNull();
+    assertThat(executionCheck.isProceed()).isFalse();
+    assertThat(executionCheck.getReason()).isEqualTo("[InterruptCheck] PAUSE_ALL interrupt found");
+
+    verify(nodeExecutionService).get(nodeExecution.getUuid());
+    verify(pauseAllInterruptHandler).handleInterruptForNodeExecution(any(), eq(nodeExecution.getUuid()));
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void testPauseAllPreInvocationNotParentForStageInterruptWhenNodeIsFinal() {
+    String planExecutionId = generateUuid();
+    String stageNodeExecutionId = generateUuid();
+    Interrupt interruptInstance = Interrupt.builder()
+                                      .uuid(generateUuid())
+                                      .planExecutionId(planExecutionId)
+                                      .nodeExecutionId(stageNodeExecutionId)
+                                      .type(InterruptType.PAUSE_ALL)
+                                      .build();
+    interruptService.save(interruptInstance);
+    NodeExecution nodeExecution = NodeExecution.builder()
+                                      .uuid(stageNodeExecutionId)
+                                      .status(Status.SUCCEEDED)
+                                      .node(PlanNodeProto.newBuilder().setIdentifier(generateUuid()).build())
+                                      .ambiance(Ambiance.newBuilder().build())
+                                      .mode(ExecutionMode.TASK)
+                                      .version(1L)
+                                      .build();
+
+    when(nodeExecutionService.get(nodeExecution.getUuid())).thenReturn(nodeExecution);
+    when(planExecutionService.calculateStatusExcluding(any(), any())).thenReturn(Status.PAUSING);
+
+    ExecutionCheck executionCheck =
+        interruptService.checkInterruptsPreInvocation(planExecutionId, stageNodeExecutionId);
+    assertThat(executionCheck).isNotNull();
+    assertThat(executionCheck.isProceed()).isTrue();
+    assertThat(executionCheck.getReason()).isEqualTo("[InterruptCheck] No Interrupts Found");
+
+    verify(nodeExecutionService, times(2)).get(nodeExecution.getUuid());
+    verify(planExecutionService).calculateStatusExcluding(any(), any());
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldTestGet() {
+    String interruptId = generateUuid();
+    Interrupt expectedInterrupt =
+        Interrupt.builder().uuid(interruptId).planExecutionId(generateUuid()).type(InterruptType.EXPIRE_ALL).build();
+    interruptService.save(expectedInterrupt);
+
+    Interrupt interrupt = interruptService.get(interruptId);
+
+    assertThat(interrupt).isNotNull();
+    assertThat(interrupt.getUuid()).isNotNull();
+    assertThat(interrupt.getPlanExecutionId()).isEqualTo(expectedInterrupt.getPlanExecutionId());
+    assertThat(interrupt.getType()).isEqualTo(expectedInterrupt.getType());
+    assertThat(interrupt.getState()).isEqualTo(REGISTERED);
+  }
+
+  @Test
+  @Owner(developers = ALEXEI)
+  @Category(UnitTests.class)
+  public void shouldThrowInvalidRequestExceptionWhenGet() {
+    String interruptId = generateUuid();
+    assertThatThrownBy(() -> interruptService.get(interruptId))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessageContaining("Interrupt Not found for id: " + interruptId);
   }
 
   private void saveInterruptList(String planExecutionId, boolean retryDiscarded) {

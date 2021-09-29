@@ -56,8 +56,8 @@ public class ClusterTableKeys {
   public static final String UNALLOCATED_COST = "unallocatedcost";
   public static final String SYSTEM_COST = "systemCost";
   public static final String NETWORK_COST = "networkCost";
-  public static final String MAX_CPU_UTILIZATION_VALUE = "maxCpuUtilizationValue";
-  public static final String MAX_MEMORY_UTILIZATION_VALUE = "maxMemoryUtilizationValue";
+  public static final String MAX_CPU_UTILIZATION_VALUE = "maxcpuutilizationvalue";
+  public static final String MAX_MEMORY_UTILIZATION_VALUE = "maxmemoryutilizationvalue";
   public static final String AVG_CPU_UTILIZATION_VALUE = "avgcpuutilizationvalue";
   public static final String AVG_MEMORY_UTILIZATION_VALUE = "avgmemoryutilizationvalue";
   public static final String CPU_REQUEST = "cpurequest";
@@ -77,6 +77,9 @@ public class ClusterTableKeys {
   public static final String EFFECTIVE_MEMORY_LIMIT = "memorylimit*usagedurationseconds";
   public static final String EFFECTIVE_CPU_UTILIZATION_VALUE = "avgcpuutilizationvalue*usagedurationseconds";
   public static final String EFFECTIVE_MEMORY_UTILIZATION_VALUE = "avgmemoryutilizationvalue*usagedurationseconds";
+  public static final String COUNT = "totalCount";
+  public static final String COUNT_INNER = "totalCountInner";
+  public static final String PRICING_SOURCE = "pricingsource";
 
   // Some default constants
   public static final String DEFAULT_STRING_VALUE = "";

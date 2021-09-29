@@ -392,6 +392,12 @@ public class AwsAmiServiceDeployState extends State {
             .infraMappingTargetGroupArns(amiResizeTaskRequestData.getTargetGroupArns())
             .amiInServiceHealthyStateFFEnabled(
                 featureFlagService.isEnabled(FeatureName.AMI_IN_SERVICE_HEALTHY_WAIT, accountId))
+            .baseAsgScheduledActionJSONs(
+                featureFlagService.isEnabled(FeatureName.AMI_ASG_CONFIG_COPY, context.getAccountId())
+                    ? serviceSetupElement.getBaseAsgScheduledActionJSONs()
+                    : null)
+            .amiAsgConfigCopyEnabled(
+                featureFlagService.isEnabled(FeatureName.AMI_ASG_CONFIG_COPY, context.getAccountId()))
             .build();
 
     addExistingInstanceIds(amiResizeTaskRequestData, request);

@@ -749,7 +749,6 @@
       "required": [
         "identifier",
         "name",
-        "timeout",
         "type"
       ],
       "properties": {
@@ -806,12 +805,6 @@
         "name": {
           "type": "string",
           "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
-        },
-        "rollbackSteps": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/ExecutionWrapperConfig"
-          }
         },
         "steps": {
           "type": "array",

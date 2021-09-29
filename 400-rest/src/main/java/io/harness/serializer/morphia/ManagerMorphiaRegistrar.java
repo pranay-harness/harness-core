@@ -265,7 +265,6 @@ import software.wings.beans.SpotInstConfig;
 import software.wings.beans.StringValue;
 import software.wings.beans.SumoConfig;
 import software.wings.beans.SystemCatalog;
-import software.wings.beans.TerraGroupProvisioners;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.TerragruntInfrastructureProvisioner;
 import software.wings.beans.User;
@@ -382,7 +381,6 @@ import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
-import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.beans.entityinterface.TagAware;
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.infrastructure.CloudFormationRollbackConfig;
@@ -582,7 +580,6 @@ import software.wings.service.impl.yaml.gitdiff.gitaudit.AuditYamlHelperForFaile
 import software.wings.service.impl.yaml.gitdiff.gitaudit.AuditYamlHelperForFailedChanges.InfraMappingWithOnlyAuditNeededData;
 import software.wings.service.impl.yaml.gitdiff.gitaudit.AuditYamlHelperForFailedChanges.ProvisionerWithOnlyAuditNeededData;
 import software.wings.sm.AwsLambdaVerification;
-import software.wings.sm.BarrierStatusData;
 import software.wings.sm.ElementNotifyResponseData;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionResumeAllCallback;
@@ -941,7 +938,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(InstanceStatsSnapshot.class);
     set.add(InstanceSyncPerpetualTaskInfo.class);
     set.add(JenkinsArtifactStream.class);
-    set.add(KeywordsAware.class);
     set.add(KubernetesContainerTask.class);
     set.add(LabeledLogRecord.class);
     set.add(LambdaSpecification.class);
@@ -985,8 +981,8 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(PricingProfile.class);
     set.add(PrometheusCVServiceConfiguration.class);
     set.add(ProvisionerWithOnlyAuditNeededData.class);
-    set.add(PruneEvent.class);
     set.add(ResourceConstraintInstance.class);
+    set.add(PruneEvent.class);
     set.add(ResourceConstraintNotification.class);
     set.add(ResourceLookup.class);
     set.add(Role.class);
@@ -1024,7 +1020,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(TemplateVersion.class);
     set.add(TerraformConfig.class);
     set.add(TerraformInfrastructureProvisioner.class);
-    set.add(TerraGroupProvisioners.class);
     set.add(TerragruntConfig.class);
     set.add(TerragruntInfrastructureProvisioner.class);
     set.add(ThirdPartyApiCallLog.class);
@@ -1418,7 +1413,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("service.impl.WorkflowExecutionUpdate", WorkflowExecutionUpdate.class);
     w.put("service.impl.yaml.GitCommandCallback", GitCommandCallback.class);
     w.put("sm.AwsLambdaVerification", AwsLambdaVerification.class);
-    w.put("sm.BarrierStatusData", BarrierStatusData.class);
     w.put("sm.ElementNotifyResponseData", ElementNotifyResponseData.class);
     w.put("sm.ExecutionResumeAllCallback", ExecutionResumeAllCallback.class);
     w.put("sm.ExecutionStatusData", ExecutionStatusData.class);

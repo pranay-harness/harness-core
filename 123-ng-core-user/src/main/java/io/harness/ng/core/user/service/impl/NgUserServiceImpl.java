@@ -4,6 +4,9 @@ import static io.harness.accesscontrol.principals.PrincipalType.SERVICE_ACCOUNT;
 import static io.harness.accesscontrol.principals.PrincipalType.USER;
 import static io.harness.accesscontrol.principals.PrincipalType.USER_GROUP;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.ng.core.invites.mapper.RoleBindingMapper.createRoleAssignmentDTOs;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 import static io.harness.remote.client.NGRestUtils.getResponse;
 import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_POLICY;
@@ -11,9 +14,11 @@ import static io.harness.utils.PageUtils.getPageRequest;
 
 import static java.lang.Boolean.TRUE;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.Team;
 import io.harness.accesscontrol.AccessControlAdminClient;
 import io.harness.accesscontrol.principals.PrincipalDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentCreateRequestDTO;
@@ -27,10 +32,21 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ProcessingException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
+import io.harness.ng.core.AccountOrgProjectHelper;
 import io.harness.ng.core.api.UserGroupService;
+import io.harness.ng.core.dto.GatewayAccountRequestDTO;
 import io.harness.ng.core.dto.UserGroupFilterDTO;
 import io.harness.ng.core.events.AddCollaboratorEvent;
 import io.harness.ng.core.events.RemoveCollaboratorEvent;
+import io.harness.ng.core.invites.InviteType;
+import io.harness.ng.core.invites.api.InviteService;
+import io.harness.ng.core.invites.dto.CreateInviteDTO;
+import io.harness.ng.core.invites.dto.InviteOperationResponse;
+import io.harness.ng.core.invites.dto.RoleBinding;
+import io.harness.ng.core.invites.utils.InviteUtils;
+import io.harness.ng.core.user.AddUserResponse;
+import io.harness.ng.core.user.AddUsersDTO;
+import io.harness.ng.core.user.AddUsersResponse;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserMembershipUpdateSource;
 import io.harness.ng.core.user.entities.UserGroup;
@@ -43,6 +59,9 @@ import io.harness.ng.core.user.remote.dto.UserFilter;
 import io.harness.ng.core.user.remote.dto.UserMetadataDTO;
 import io.harness.ng.core.user.remote.mapper.UserMetadataMapper;
 import io.harness.ng.core.user.service.NgUserService;
+import io.harness.notification.channeldetails.EmailChannel;
+import io.harness.notification.channeldetails.EmailChannel.EmailChannelBuilder;
+import io.harness.notification.notificationclient.NotificationClient;
 import io.harness.outbox.api.OutboxService;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.remote.client.RestClientUtils;
@@ -54,14 +73,18 @@ import io.harness.utils.PageUtils;
 import io.harness.utils.ScopeUtils;
 import io.harness.utils.TimeLogger;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -95,6 +118,7 @@ public class NgUserServiceImpl implements NgUserService {
   private static final String ORG_ADMIN = "_organization_admin";
   private static final String PROJECT_ADMIN = "_project_admin";
   private static final String PROJECT_VIEWER = "_project_viewer";
+  private static final String DEFAULT_RESOURCE_GROUP_NAME = "All Resources";
   private static final String DEFAULT_RESOURCE_GROUP_IDENTIFIER = "_all_resources";
   private final List<String> MANAGED_ROLE_IDENTIFIERS =
       ImmutableList.of(ACCOUNT_VIEWER, ORGANIZATION_VIEWER, PROJECT_VIEWER);
@@ -107,6 +131,9 @@ public class NgUserServiceImpl implements NgUserService {
   private final UserGroupService userGroupService;
   private final UserMetadataRepository userMetadataRepository;
   private final ExecutorService executorService;
+  private final InviteService inviteService;
+  private final NotificationClient notificationClient;
+  private final AccountOrgProjectHelper accountOrgProjectHelper;
   private static final RetryPolicy<Object> transactionRetryPolicy = DEFAULT_TRANSACTION_RETRY_POLICY;
 
   @Inject
@@ -114,7 +141,8 @@ public class NgUserServiceImpl implements NgUserService {
       @Named("PRIVILEGED") AccessControlAdminClient accessControlAdminClient,
       @Named(OUTBOX_TRANSACTION_TEMPLATE) TransactionTemplate transactionTemplate, OutboxService outboxService,
       UserGroupService userGroupService, UserMetadataRepository userMetadataRepository,
-      @Named(THREAD_POOL_NAME) ExecutorService executorService) {
+      @Named(THREAD_POOL_NAME) ExecutorService executorService, InviteService inviteService,
+      NotificationClient notificationClient, AccountOrgProjectHelper accountOrgProjectHelper) {
     this.userClient = userClient;
     this.userMembershipRepository = userMembershipRepository;
     this.accessControlAdminClient = accessControlAdminClient;
@@ -123,6 +151,9 @@ public class NgUserServiceImpl implements NgUserService {
     this.userGroupService = userGroupService;
     this.userMetadataRepository = userMetadataRepository;
     this.executorService = executorService;
+    this.inviteService = inviteService;
+    this.notificationClient = notificationClient;
+    this.accountOrgProjectHelper = accountOrgProjectHelper;
   }
 
   @Override
@@ -136,12 +167,16 @@ public class NgUserServiceImpl implements NgUserService {
 
   @Override
   public PageResponse<UserMetadataDTO> listUsers(Scope scope, PageRequest pageRequest, UserFilter userFilter) {
-    Criteria userMembershipCriteria = Criteria.where(UserMembershipKeys.scope + "." + ScopeKeys.accountIdentifier)
-                                          .is(scope.getAccountIdentifier())
-                                          .and(UserMembershipKeys.scope + "." + ScopeKeys.orgIdentifier)
-                                          .is(scope.getOrgIdentifier())
-                                          .and(UserMembershipKeys.scope + "." + ScopeKeys.projectIdentifier)
-                                          .is(scope.getProjectIdentifier());
+    Criteria userMembershipCriteria;
+    if (userFilter == null || UserFilter.ParentFilter.NO_PARENT_SCOPES.equals(userFilter.getParentFilter())) {
+      userMembershipCriteria = getUserMembershipCriteria(scope, false);
+    } else if (UserFilter.ParentFilter.INCLUDE_PARENT_SCOPES.equals(userFilter.getParentFilter())) {
+      userMembershipCriteria = getUserMembershipCriteria(scope, true);
+    } else {
+      userMembershipCriteria = getUserMembershipCriteria(scope, true);
+      List<String> negativeUserIds = listUserIds(scope);
+      userMembershipCriteria.and(UserMembershipKeys.userId).nin(negativeUserIds);
+    }
     Criteria userMetadataCriteria = new Criteria();
     if (userFilter != null) {
       if (isNotBlank(userFilter.getSearchTerm())) {
@@ -163,6 +198,48 @@ public class NgUserServiceImpl implements NgUserService {
         userMetadataRepository.findAll(userMetadataCriteria, getPageRequest(pageRequest));
 
     return PageUtils.getNGPageResponse(userMetadataPage.map(UserMetadataMapper::toDTO));
+  }
+
+  private Criteria getUserMembershipCriteria(Scope scope, boolean includeParentScopes) {
+    Criteria userMembershipCriteria = new Criteria();
+    if (includeParentScopes) {
+      List<Criteria> scopeCriterion = new ArrayList<>();
+      scopeCriterion.add(Criteria.where(UserMembershipKeys.ACCOUNT_IDENTIFIER_KEY)
+                             .is(scope.getAccountIdentifier())
+                             .and(UserMembershipKeys.ORG_IDENTIFIER_KEY)
+                             .is(null)
+                             .and(UserMembershipKeys.PROJECT_IDENTIFIER_KEY)
+                             .is(null));
+      if (isNotEmpty(scope.getOrgIdentifier())) {
+        scopeCriterion.add(Criteria.where(UserMembershipKeys.ACCOUNT_IDENTIFIER_KEY)
+                               .is(scope.getAccountIdentifier())
+                               .and(UserMembershipKeys.ORG_IDENTIFIER_KEY)
+                               .is(scope.getOrgIdentifier())
+                               .and(UserMembershipKeys.PROJECT_IDENTIFIER_KEY)
+                               .is(null));
+        if (isNotEmpty(scope.getProjectIdentifier())) {
+          scopeCriterion.add(Criteria.where(UserMembershipKeys.ACCOUNT_IDENTIFIER_KEY)
+                                 .is(scope.getAccountIdentifier())
+                                 .and(UserMembershipKeys.ORG_IDENTIFIER_KEY)
+                                 .is(scope.getOrgIdentifier())
+                                 .and(UserMembershipKeys.PROJECT_IDENTIFIER_KEY)
+                                 .is(scope.getProjectIdentifier()));
+        }
+      }
+      if (scopeCriterion.size() == 1) {
+        userMembershipCriteria = scopeCriterion.get(0);
+      } else {
+        userMembershipCriteria.orOperator(scopeCriterion.toArray(new Criteria[0]));
+      }
+    } else {
+      userMembershipCriteria.and(UserMembershipKeys.ACCOUNT_IDENTIFIER_KEY)
+          .is(scope.getAccountIdentifier())
+          .and(UserMembershipKeys.ORG_IDENTIFIER_KEY)
+          .is(scope.getOrgIdentifier())
+          .and(UserMembershipKeys.PROJECT_IDENTIFIER_KEY)
+          .is(scope.getProjectIdentifier());
+    }
+    return userMembershipCriteria;
   }
 
   @Override
@@ -213,8 +290,9 @@ public class NgUserServiceImpl implements NgUserService {
         getResponse(accessControlAdminClient.getFilteredRoleAssignments(scope.getAccountIdentifier(),
             scope.getOrgIdentifier(), scope.getProjectIdentifier(), 0, DEFAULT_PAGE_SIZE,
             RoleAssignmentFilterDTO.builder().roleFilter(Collections.singleton(roleIdentifier)).build()));
-    List<PrincipalDTO> principals =
-        roleAssignmentPage.getContent().stream().map(dto -> dto.getRoleAssignment().getPrincipal()).collect(toList());
+    List<PrincipalDTO> principals = roleAssignmentPage.getContent() != null
+        ? roleAssignmentPage.getContent().stream().map(dto -> dto.getRoleAssignment().getPrincipal()).collect(toList())
+        : new ArrayList<>();
     Set<String> userIds = principals.stream()
                               .filter(principal -> USER.equals(principal.getType()))
                               .map(PrincipalDTO::getIdentifier)
@@ -257,6 +335,121 @@ public class NgUserServiceImpl implements NgUserService {
   }
 
   @Override
+  public AddUsersResponse addUsers(Scope scope, AddUsersDTO addUsersDTO) {
+    if (isEmpty(addUsersDTO.getEmails())) {
+      return AddUsersResponse.EMPTY_RESPONSE;
+    }
+    Criteria criteria = Criteria.where(UserMetadataKeys.email).in(addUsersDTO.getEmails());
+    List<UserMetadata> userMetadataList = userMetadataRepository.findAll(criteria, Pageable.unpaged()).getContent();
+
+    Set<String> userIdsAlreadyPartOfAccount =
+        getUsersAtScope(userMetadataList.stream().map(UserMetadata::getUserId).collect(toSet()),
+            Scope.of(scope.getAccountIdentifier(), null, null));
+
+    Set<UserMetadata> usersAlreadyPartOfAccount =
+        userMetadataList.stream()
+            .filter(userMetadata -> userIdsAlreadyPartOfAccount.contains(userMetadata.getUserId()))
+            .collect(toSet());
+
+    Set<String> allEmails = new HashSet<>(addUsersDTO.getEmails());
+    List<String> toBeInvitedUsers = new ArrayList<>(
+        Sets.difference(allEmails, usersAlreadyPartOfAccount.stream().map(UserMetadata::getEmail).collect(toSet())));
+
+    Map<String, AddUserResponse> invitedUsersResponseMap =
+        inviteUsers(scope, addUsersDTO.getRoleBindings(), addUsersDTO.getUserGroups(), toBeInvitedUsers);
+    Map<String, AddUserResponse> addUserResponseMap = addUsersWhichAreAlreadyPartOfAccount(
+        usersAlreadyPartOfAccount, scope, addUsersDTO.getRoleBindings(), addUsersDTO.getUserGroups());
+
+    addUserResponseMap.putAll(invitedUsersResponseMap);
+    return AddUsersResponse.builder().addUserResponseMap(addUserResponseMap).build();
+  }
+
+  private Map<String, AddUserResponse> addUsersWhichAreAlreadyPartOfAccount(Set<UserMetadata> usersAlreadyPartOfAccount,
+      Scope scope, List<RoleBinding> roleBindings, List<String> userGroups) {
+    if (isEmpty(usersAlreadyPartOfAccount)) {
+      return new HashMap<>();
+    }
+    String resourceScopeName = accountOrgProjectHelper.getResourceScopeName(scope);
+    String baseUrl = accountOrgProjectHelper.getBaseUrl(scope.getAccountIdentifier());
+
+    Map<String, AddUserResponse> addUserResponseMap = new HashMap<>();
+    usersAlreadyPartOfAccount.forEach(userMetadata -> {
+      if (isUserAtScope(userMetadata.getUserId(), scope)) {
+        addUserToScope(userMetadata.getUserId(), scope, roleBindings, userGroups, UserMembershipUpdateSource.USER);
+        addUserResponseMap.put(userMetadata.getEmail(), AddUserResponse.USER_ALREADY_ADDED);
+      } else {
+        addUserToScope(userMetadata.getUserId(), scope, roleBindings, userGroups, UserMembershipUpdateSource.USER);
+        sendSuccessfulUserAdditionNotification(userMetadata.getEmail(), scope, baseUrl, resourceScopeName);
+        addUserResponseMap.put(userMetadata.getEmail(), AddUserResponse.USER_ADDED_SUCCESSFULLY);
+      }
+    });
+    return addUserResponseMap;
+  }
+
+  @VisibleForTesting
+  protected Set<String> getUsersAtScope(Set<String> userFilter, Scope scope) {
+    Criteria userMembershipCriteria = Criteria.where(UserMembershipKeys.userId)
+                                          .in(userFilter)
+                                          .and(UserMembershipKeys.ACCOUNT_IDENTIFIER_KEY)
+                                          .is(scope.getAccountIdentifier())
+                                          .and(UserMembershipKeys.ORG_IDENTIFIER_KEY)
+                                          .is(scope.getOrgIdentifier())
+                                          .and(UserMembershipKeys.PROJECT_IDENTIFIER_KEY)
+                                          .is(scope.getProjectIdentifier());
+    return userMembershipRepository.findAll(userMembershipCriteria)
+        .stream()
+        .map(UserMembership::getUserId)
+        .collect(toSet());
+  }
+
+  @VisibleForTesting
+  protected Map<String, AddUserResponse> inviteUsers(
+      Scope scope, List<RoleBinding> roleBindings, List<String> userGroups, List<String> toBeInvitedUsers) {
+    if (isEmpty(toBeInvitedUsers)) {
+      return new HashMap<>();
+    }
+    CreateInviteDTO createInviteDTO = CreateInviteDTO.builder()
+                                          .inviteType(InviteType.ADMIN_INITIATED_INVITE)
+                                          .roleBindings(roleBindings)
+                                          .userGroups(userGroups)
+                                          .users(toBeInvitedUsers)
+                                          .build();
+    List<InviteOperationResponse> invitations = inviteService.createInvitations(
+        scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier(), createInviteDTO);
+    Map<String, AddUserResponse> addUserResponseMap = new HashMap<>();
+    for (int i = 0; i < invitations.size(); i++) {
+      addUserResponseMap.put(toBeInvitedUsers.get(i), AddUserResponse.fromInviteOperationResponse(invitations.get(i)));
+    }
+    return addUserResponseMap;
+  }
+
+  private void sendSuccessfulUserAdditionNotification(
+      String email, Scope scope, String baseUrl, String resourceScopeName) {
+    String url = InviteUtils
+                     .getResourceUrl(
+                         baseUrl, scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier())
+                     .toString();
+
+    EmailChannelBuilder emailChannelBuilder = EmailChannel.builder()
+                                                  .accountId(scope.getAccountIdentifier())
+                                                  .recipients(Collections.singletonList(email))
+                                                  .team(Team.PL)
+                                                  .templateId("email_notify")
+                                                  .userGroups(Collections.emptyList());
+    Map<String, String> templateData = new HashMap<>();
+    templateData.put("url", url);
+    if (isNotEmpty(scope.getProjectIdentifier())) {
+      templateData.put("projectname", resourceScopeName);
+    } else if (isNotEmpty(scope.getOrgIdentifier())) {
+      templateData.put("organizationname", resourceScopeName);
+    } else {
+      templateData.put("accountname", resourceScopeName);
+    }
+    emailChannelBuilder.templateData(templateData);
+    notificationClient.sendNotificationAsync(emailChannelBuilder.build());
+  }
+
+  @Override
   public List<UserMetadataDTO> getUserMetadata(List<String> userIds) {
     return userMetadataRepository.findAll(Criteria.where(UserMembershipKeys.userId).in(userIds), Pageable.unpaged())
         .map(UserMetadataMapper::toDTO)
@@ -287,28 +480,34 @@ public class NgUserServiceImpl implements NgUserService {
   }
 
   @Override
-  public void addUserToScope(String userId, Scope scope, String roleIdentifier, UserMembershipUpdateSource source) {
-    List<RoleAssignmentDTO> roleAssignmentDTOs = new ArrayList<>(1);
-    if (!StringUtils.isBlank(roleIdentifier)) {
-      RoleAssignmentDTO roleAssignmentDTO = RoleAssignmentDTO.builder()
-                                                .roleIdentifier(roleIdentifier)
-                                                .disabled(false)
-                                                .principal(PrincipalDTO.builder().type(USER).identifier(userId).build())
-                                                .resourceGroupIdentifier(DEFAULT_RESOURCE_GROUP_IDENTIFIER)
-                                                .build();
-      roleAssignmentDTOs.add(roleAssignmentDTO);
+  public void addUserToScope(String userId, Scope scope, List<RoleBinding> roleBindings, List<String> userGroups,
+      UserMembershipUpdateSource source) {
+    ensureUserMetadata(userId);
+    addUserToScopeInternal(userId, source, scope, getDefaultRoleIdentifier(scope));
+    addUserToParentScope(userId, scope, source);
+    createRoleAssignments(userId, scope, createRoleAssignmentDTOs(roleBindings, userId));
+    userGroupService.addUserToUserGroups(scope, userId, getValidUserGroups(scope, userGroups));
+  }
+
+  private List<String> getValidUserGroups(Scope scope, List<String> userGroupIdentifiers) {
+    if (isEmpty(userGroupIdentifiers)) {
+      return new ArrayList<>();
     }
-    addUserToScope(userId, scope, roleAssignmentDTOs, source);
+    Set<String> userGroupIdentifiersFilter = new HashSet<>(userGroupIdentifiers);
+    UserGroupFilterDTO userGroupFilterDTO = UserGroupFilterDTO.builder()
+                                                .accountIdentifier(scope.getAccountIdentifier())
+                                                .orgIdentifier(scope.getOrgIdentifier())
+                                                .projectIdentifier(scope.getProjectIdentifier())
+                                                .identifierFilter(userGroupIdentifiersFilter)
+                                                .build();
+    return userGroupService.list(userGroupFilterDTO).stream().map(UserGroup::getIdentifier).collect(toList());
   }
 
-  @Override
-  public void addUserToScope(
-      String userId, Scope scope, List<RoleAssignmentDTO> roleAssignmentDTOs, UserMembershipUpdateSource source) {
-    addUserToScope(userId, scope, true, source);
-    createRoleAssignments(userId, scope, roleAssignmentDTOs);
-  }
-
-  private void createRoleAssignments(String userId, Scope scope, List<RoleAssignmentDTO> roleAssignmentDTOs) {
+  @VisibleForTesting
+  protected void createRoleAssignments(String userId, Scope scope, List<RoleAssignmentDTO> roleAssignmentDTOs) {
+    if (isEmpty(roleAssignmentDTOs)) {
+      return;
+    }
     List<RoleAssignmentDTO> managedRoleAssignments =
         roleAssignmentDTOs.stream().filter(this::isRoleAssignmentManaged).collect(toList());
     List<RoleAssignmentDTO> userRoleAssignments =
@@ -337,16 +536,6 @@ public class NgUserServiceImpl implements NgUserService {
     return MANAGED_ROLE_IDENTIFIERS.stream().anyMatch(
                roleIdentifier -> roleIdentifier.equals(roleAssignmentDTO.getRoleIdentifier()))
         && DEFAULT_RESOURCE_GROUP_IDENTIFIER.equals(roleAssignmentDTO.getResourceGroupIdentifier());
-  }
-
-  @Override
-  public void addUserToScope(
-      String userId, Scope scope, boolean addUserToParentScope, UserMembershipUpdateSource source) {
-    ensureUserMetadata(userId);
-    addUserToScopeInternal(userId, source, scope, getDefaultRoleIdentifier(scope));
-    if (addUserToParentScope) {
-      addUserToParentScope(userId, scope, source);
-    }
   }
 
   private String getDefaultRoleIdentifier(Scope scope) {
@@ -398,7 +587,8 @@ public class NgUserServiceImpl implements NgUserService {
     }
   }
 
-  private void addUserToScopeInternal(
+  @VisibleForTesting
+  protected void addUserToScopeInternal(
       String userId, UserMembershipUpdateSource source, Scope scope, String roleIdentifier) {
     Optional<UserMetadata> userMetadata = userMetadataRepository.findDistinctByUserId(userId);
     String publicIdentifier = userMetadata.map(UserMetadata::getEmail).orElse(userId);
@@ -450,14 +640,8 @@ public class NgUserServiceImpl implements NgUserService {
   }
 
   @Override
-  public boolean isUserInAccount(String accountId, String userId) {
-    return TRUE.equals(RestClientUtils.getResponse(userClient.isUserInAccount(accountId, userId)));
-  }
-
-  @Override
   public boolean isUserAtScope(String userId, Scope scope) {
-    Optional<UserMembership> userMembershipOpt = getUserMembership(userId, scope);
-    return userMembershipOpt.isPresent();
+    return isNotEmpty(getUsersAtScope(Collections.singleton(userId), scope));
   }
 
   @Override
@@ -576,5 +760,18 @@ public class NgUserServiceImpl implements NgUserService {
   @Override
   public boolean isUserPasswordSet(String accountIdentifier, String email) {
     return RestClientUtils.getResponse(userClient.isUserPasswordSet(accountIdentifier, email));
+  }
+
+  @Override
+  public List<String> listUserAccountIds(String userId) {
+    Optional<UserInfo> userInfoOptional = getUserById(userId);
+    if (userInfoOptional.isPresent()) {
+      return userInfoOptional.get()
+          .getAccounts()
+          .stream()
+          .map(GatewayAccountRequestDTO::getUuid)
+          .collect(Collectors.toList());
+    }
+    return Collections.emptyList();
   }
 }

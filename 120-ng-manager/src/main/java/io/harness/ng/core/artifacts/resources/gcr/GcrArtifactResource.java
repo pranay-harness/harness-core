@@ -1,6 +1,9 @@
 package io.harness.ng.core.artifacts.resources.gcr;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import io.harness.NGCommonEntityConstants;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.cdng.artifact.resources.gcr.dtos.GcrBuildDetailsDTO;
 import io.harness.cdng.artifact.resources.gcr.dtos.GcrRequestDTO;
@@ -34,6 +37,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+@OwnedBy(CDC)
 @Api("artifacts")
 @Path("/artifacts/gcr")
 @Produces({"application/json"})
@@ -134,7 +138,7 @@ public class GcrArtifactResource {
     return ResponseDTO.newResponse(isValidArtifactImage);
   }
 
-  @GET
+  @POST
   @Path("validateArtifact")
   @ApiOperation(value = "Validate Gcr Artifact", nickname = "validateArtifactForGcr")
   public ResponseDTO<Boolean> validateArtifact(@NotNull @QueryParam("imagePath") String imagePath,

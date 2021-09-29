@@ -31,6 +31,7 @@ public class NGChartMuseumServiceImpl implements NGChartMuseumService {
         S3HelmStoreDelegateConfig s3StoreDelegateConfig = (S3HelmStoreDelegateConfig) storeDelegateConfig;
         AwsConnectorDTO awsConnector = s3StoreDelegateConfig.getAwsConnector();
         boolean inheritFromDelegate = false;
+        boolean irsa = false;
         char[] accessKey = null;
         char[] secretKey = null;
 
@@ -47,6 +48,10 @@ public class NGChartMuseumServiceImpl implements NGChartMuseumService {
             inheritFromDelegate = true;
             break;
 
+          case IRSA:
+            irsa = true;
+            break;
+
           default:
             throw new UnsupportedOperationException(
                 format("Credentials type %s are not supported", awsConnector.getCredential().getAwsCredentialType()));
@@ -54,7 +59,7 @@ public class NGChartMuseumServiceImpl implements NGChartMuseumService {
 
         return clientHelper.startS3ChartMuseumServer(s3StoreDelegateConfig.getBucketName(),
             s3StoreDelegateConfig.getFolderPath(), s3StoreDelegateConfig.getRegion(), inheritFromDelegate, accessKey,
-            secretKey, false);
+            secretKey, irsa, s3StoreDelegateConfig.isUseLatestChartMuseumVersion());
 
       case GCS_HELM:
         GcsHelmStoreDelegateConfig gcsHelmStoreDelegateConfig = (GcsHelmStoreDelegateConfig) storeDelegateConfig;
@@ -67,7 +72,8 @@ public class NGChartMuseumServiceImpl implements NGChartMuseumService {
         }
 
         return clientHelper.startGCSChartMuseumServer(gcsHelmStoreDelegateConfig.getBucketName(),
-            gcsHelmStoreDelegateConfig.getFolderPath(), serviceAccountKey, resourceDirectory);
+            gcsHelmStoreDelegateConfig.getFolderPath(), serviceAccountKey, resourceDirectory,
+            gcsHelmStoreDelegateConfig.isUseLatestChartMuseumVersion());
 
       default:
         throw new UnsupportedOperationException(

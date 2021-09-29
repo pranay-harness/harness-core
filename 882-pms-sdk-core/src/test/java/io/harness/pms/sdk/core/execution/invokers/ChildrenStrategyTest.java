@@ -14,7 +14,6 @@ import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.SpawnChildrenRequest;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
-import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.plan.execution.SetupAbstractionKeys;
 import io.harness.pms.sdk.core.PmsSdkCoreTestBase;
 import io.harness.pms.sdk.core.execution.InvokerPackage;
@@ -67,22 +66,19 @@ public class ChildrenStrategyTest extends PmsSdkCoreTestBase {
     InvokerPackage invokerPackage =
         InvokerPackage.builder()
             .ambiance(ambiance)
-            .executionMode(ExecutionMode.ASYNC)
+            .executionMode(ExecutionMode.CHILDREN)
             .passThroughData(null)
             .stepParameters(TestChildrenStepParameters.builder().parallelNodeId(childNodeId).build())
             .build();
 
-    ArgumentCaptor<String> planExecutionIdCaptor = ArgumentCaptor.forClass(String.class);
-    ArgumentCaptor<String> nodeExecutionIdCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<Ambiance> ambianceCaptor = ArgumentCaptor.forClass(Ambiance.class);
     ArgumentCaptor<SpawnChildrenRequest> spawnChildrenRequestArgumentCaptor =
         ArgumentCaptor.forClass(SpawnChildrenRequest.class);
 
     childrenStrategy.start(invokerPackage);
     Mockito.verify(sdkNodeExecutionService, Mockito.times(1))
-        .spawnChildren(planExecutionIdCaptor.capture(), nodeExecutionIdCaptor.capture(),
-            spawnChildrenRequestArgumentCaptor.capture());
-    assertThat(planExecutionIdCaptor.getValue()).isEqualTo(ambiance.getPlanExecutionId());
-    assertThat(nodeExecutionIdCaptor.getValue()).isEqualTo(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
+        .spawnChildren(ambianceCaptor.capture(), spawnChildrenRequestArgumentCaptor.capture());
+    assertThat(ambianceCaptor.getValue()).isEqualTo(ambiance);
     SpawnChildrenRequest spawnChildrenRequest = spawnChildrenRequestArgumentCaptor.getValue();
 
     ChildrenExecutableResponse children = spawnChildrenRequest.getChildren();
@@ -115,15 +111,12 @@ public class ChildrenStrategyTest extends PmsSdkCoreTestBase {
             .build();
 
     childrenStrategy.resume(resumePackage);
-    ArgumentCaptor<String> planExecutionIdCaptor = ArgumentCaptor.forClass(String.class);
-    ArgumentCaptor<String> nodeExecutionIdCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<Ambiance> ambianceCaptor = ArgumentCaptor.forClass(Ambiance.class);
     ArgumentCaptor<StepResponseProto> stepResponseCaptor = ArgumentCaptor.forClass(StepResponseProto.class);
 
     Mockito.verify(sdkNodeExecutionService, Mockito.times(1))
-        .handleStepResponse(
-            planExecutionIdCaptor.capture(), nodeExecutionIdCaptor.capture(), stepResponseCaptor.capture());
-    assertThat(nodeExecutionIdCaptor.getValue()).isEqualTo(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
-    assertThat(planExecutionIdCaptor.getValue()).isEqualTo(ambiance.getPlanExecutionId());
+        .handleStepResponse(ambianceCaptor.capture(), stepResponseCaptor.capture());
+    assertThat(ambianceCaptor.getValue()).isEqualTo(ambiance);
 
     StepResponseProto stepResponseProto = stepResponseCaptor.getValue();
     assertThat(stepResponseProto.getStatus()).isEqualTo(Status.SUCCEEDED);

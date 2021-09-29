@@ -11,12 +11,11 @@ import static io.harness.rule.OwnerRule.VUK;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
+import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.client.NextGenService;
@@ -24,6 +23,7 @@ import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.beans.AppDynamicsDSConfig;
 import io.harness.cvng.core.beans.AppDynamicsDSConfig.AppdynamicsAppConfig;
 import io.harness.cvng.core.beans.DatasourceTypeDTO;
+import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricPack;
@@ -53,7 +53,6 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 
 public class CVConfigServiceImplTest extends CvNextGenTestBase {
@@ -63,7 +62,6 @@ public class CVConfigServiceImplTest extends CvNextGenTestBase {
 
   @Mock private VerificationManagerService verificationManagerService;
 
-  @Mock private CVEventServiceImpl eventService;
   private String accountId;
   private String connectorIdentifier;
   private String productName;
@@ -73,18 +71,30 @@ public class CVConfigServiceImplTest extends CvNextGenTestBase {
   private String orgIdentifier;
   private String monitoringSourceIdentifier;
   private String monitoringSourceName;
+  private String environmentIdentifier;
+  BuilderFactory builderFactory;
+  ServiceEnvironmentParams serviceEnvironmentParams;
 
   @Before
   public void setup() throws IllegalAccessException {
-    accountId = generateUuid();
+    builderFactory = BuilderFactory.getDefault();
+    accountId = builderFactory.getContext().getAccountId();
     connectorIdentifier = generateUuid();
     productName = generateUuid();
     groupId = generateUuid();
     serviceInstanceIdentifier = generateUuid();
-    projectIdentifier = generateUuid();
-    orgIdentifier = generateUuid();
+    projectIdentifier = builderFactory.getContext().getProjectIdentifier();
+    orgIdentifier = builderFactory.getContext().getOrgIdentifier();
+    environmentIdentifier = generateUuid();
     monitoringSourceIdentifier = generateUuid();
     monitoringSourceName = generateUuid();
+    serviceEnvironmentParams = ServiceEnvironmentParams.builder()
+                                   .accountIdentifier(accountId)
+                                   .projectIdentifier(projectIdentifier)
+                                   .orgIdentifier(orgIdentifier)
+                                   .serviceIdentifier(serviceInstanceIdentifier)
+                                   .environmentIdentifier(environmentIdentifier)
+                                   .build();
     when(nextGenService.getEnvironment(anyString(), anyString(), anyString(), anyString())).then(invocation -> {
       Object[] args = invocation.getArguments();
       return EnvironmentResponseDTO.builder()
@@ -108,7 +118,6 @@ public class CVConfigServiceImplTest extends CvNextGenTestBase {
     });
     FieldUtils.writeField(cvConfigService, "nextGenService", nextGenService, true);
     FieldUtils.writeField(cvConfigService, "verificationManagerService", verificationManagerService, true);
-    FieldUtils.writeField(cvConfigService, "eventService", eventService, true);
   }
 
   @Test
@@ -119,11 +128,6 @@ public class CVConfigServiceImplTest extends CvNextGenTestBase {
     CVConfig updated = save(cvConfig);
     CVConfig saved = cvConfigService.get(updated.getUuid());
     assertCommons(saved, cvConfig);
-
-    ArgumentCaptor<CVConfig> argumentCaptor = ArgumentCaptor.forClass(CVConfig.class);
-    verify(eventService, times(1)).sendConnectorCreateEvent(argumentCaptor.capture());
-    verify(eventService, times(1)).sendServiceCreateEvent(argumentCaptor.capture());
-    verify(eventService, times(1)).sendEnvironmentCreateEvent(argumentCaptor.capture());
   }
 
   private CVConfig save(CVConfig cvConfig) {
@@ -810,5 +814,49 @@ public class CVConfigServiceImplTest extends CvNextGenTestBase {
     assertThat(results).hasSize(2);
     assertThat(results.get(0).getUuid()).isEqualTo(updated.getUuid());
     assertThat(results.get(1).getUuid()).isEqualTo(updated2.getUuid());
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testList_filteredWithIdentifiers() {
+    String identifierOne = "identifierOne";
+    String identifierTwo = "identifierTwo";
+    String identifierThree = "identifierThree";
+    List<String> healthSourceIds = Arrays.asList(identifierOne, identifierTwo);
+    save(builderFactory.appDynamicsCVConfigBuilder()
+             .identifier(identifierOne)
+             .serviceIdentifier(serviceInstanceIdentifier)
+             .envIdentifier(environmentIdentifier)
+             .build());
+    save(builderFactory.appDynamicsCVConfigBuilder()
+             .identifier(identifierThree)
+             .serviceIdentifier(serviceInstanceIdentifier)
+             .envIdentifier(environmentIdentifier)
+             .build());
+    List<CVConfig> cvConfigs = cvConfigService.list(serviceEnvironmentParams, healthSourceIds);
+    assertThat(cvConfigs).hasSize(1);
+    assertThat(cvConfigs.get(0).getIdentifier()).isEqualTo(identifierOne);
+  }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testList_fromServiceEnvironmentParams() {
+    String identifierOne = "identifierOne";
+    String identifierTwo = "identifierTwo";
+    List<String> healthSourceIds = Arrays.asList(identifierOne, identifierTwo);
+    save(builderFactory.appDynamicsCVConfigBuilder()
+             .identifier(identifierOne)
+             .serviceIdentifier(serviceInstanceIdentifier)
+             .envIdentifier(environmentIdentifier)
+             .build());
+    save(builderFactory.appDynamicsCVConfigBuilder()
+             .identifier(identifierTwo)
+             .serviceIdentifier(serviceInstanceIdentifier)
+             .envIdentifier(environmentIdentifier)
+             .build());
+    List<CVConfig> cvConfigs = cvConfigService.list(serviceEnvironmentParams);
+    assertThat(cvConfigs).hasSize(2);
   }
 }

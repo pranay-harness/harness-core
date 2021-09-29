@@ -14,6 +14,10 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.azure.model.ARMResourceType;
 import io.harness.azure.model.ARMScopeType;
 import io.harness.azure.model.AzureDeploymentMode;
@@ -47,6 +51,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ARMRollbackStateTest extends WingsBaseTest {
   @Mock private ARMStateHelper helper;
   @Mock private DelegateService delegateService;
@@ -353,18 +359,14 @@ public class ARMRollbackStateTest extends WingsBaseTest {
   public void testValidation() {
     // provision state
     ARMProvisionState armProvisionState = new ARMProvisionState("ARM Provision");
-    assertThat(armProvisionState.validateFields().size()).isEqualTo(2);
-    armProvisionState.setProvisionerId("test provisioner");
     assertThat(armProvisionState.validateFields().size()).isEqualTo(1);
-    armProvisionState.setCloudProviderId("AZURE_CONFIG_ID");
+    armProvisionState.setProvisionerId("test provisioner");
     assertThat(armProvisionState.validateFields().size()).isEqualTo(0);
 
     // rollback test
     ARMRollbackState armRollbackState = new ARMRollbackState("ARM Rollback");
-    assertThat(armRollbackState.validateFields().size()).isEqualTo(2);
-    armRollbackState.setProvisionerId("test provisioner");
     assertThat(armRollbackState.validateFields().size()).isEqualTo(1);
-    armRollbackState.setCloudProviderId("AZURE_CONFIG_ID");
+    armRollbackState.setProvisionerId("test provisioner");
     assertThat(armRollbackState.validateFields().size()).isEqualTo(0);
   }
 }

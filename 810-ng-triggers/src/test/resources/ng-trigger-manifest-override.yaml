@@ -1,0 +1,190 @@
+pipeline:
+  name: test01
+  identifier: test01
+  projectIdentifier: mtran
+  orgIdentifier: harness
+  tags: {}
+  stages:
+    - parallel:
+        - stage:
+            name: stage
+            identifier: stage
+            description: ""
+            type: Deployment
+            spec:
+              serviceConfig:
+                serviceDefinition:
+                  type: Kubernetes
+                  spec:
+                    artifacts:
+                      sidecars: []
+                    variables: []
+                    manifestOverrideSets: []
+                    manifests:
+                      - manifest:
+                          identifier: s3manifestid
+                          type: HelmChart
+                          spec:
+                            store:
+                              type: S3
+                              spec:
+                                connectorRef: <+input>
+                                bucketName: Bucket1
+                                folderPath: chartPathasdfasdfasdfasdfasdfadsf
+                                region: <+input>
+                            chartName: devChart
+                            chartVersion: <+input>
+                            helmVersion: V2
+                            skipResourceVersioning: false
+                serviceRef: <+input>
+              infrastructure:
+                environmentRef: <+input>
+                infrastructureDefinition:
+                  type: KubernetesDirect
+                  spec:
+                    connectorRef: <+input>
+                    namespace: <+input>
+                    releaseName: <+input>
+                allowSimultaneousDeployments: false
+                infrastructureKey: <+input>
+              execution:
+                steps:
+                  - step:
+                      name: Rollout Deployment
+                      identifier: rolloutDeployment
+                      type: K8sRollingDeploy
+                      timeout: 10m
+                      spec:
+                        skipDryRun: false
+                rollbackSteps:
+                  - step:
+                      name: Rollback Rollout Deployment
+                      identifier: rollbackRolloutDeployment
+                      type: K8sRollingRollback
+                      timeout: 10m
+                      spec: {}
+            tags: {}
+            failureStrategies:
+              - onFailure:
+                  errors:
+                    - AllErrors
+                  action:
+                    type: StageRollback
+        - stage:
+            name: stage3
+            identifier: stage3
+            description: ""
+            type: Deployment
+            spec:
+              serviceConfig:
+                useFromStage:
+                  stage: stage
+                stageOverrides:
+                  artifacts:
+                    sidecars: []
+                  manifests:
+                    - manifest:
+                        identifier: test0004
+                        type: HelmChart
+                        spec:
+                          store:
+                            type: Http
+                            spec:
+                              connectorRef: account.puthrayahelm
+                          chartName: test
+                          chartVersion: <+input>
+                          helmVersion: V2
+                          skipResourceVersioning: false
+                  variables: []
+              infrastructure:
+                environmentRef: env00005
+                infrastructureDefinition:
+                  type: KubernetesDirect
+                  spec:
+                    connectorRef: account.Devxdjkfdkfd
+                    namespace: default
+                    releaseName: release-<+INFRA_KEY>
+                allowSimultaneousDeployments: false
+              execution:
+                steps:
+                  - step:
+                      name: Rollout Deployment
+                      identifier: rolloutDeployment
+                      type: K8sRollingDeploy
+                      timeout: 10m
+                      spec:
+                        skipDryRun: false
+                rollbackSteps:
+                  - step:
+                      name: Rollback Rollout Deployment
+                      identifier: rollbackRolloutDeployment
+                      type: K8sRollingRollback
+                      timeout: 10m
+                      spec: {}
+            tags: {}
+            failureStrategies:
+              - onFailure:
+                  errors:
+                    - AllErrors
+                  action:
+                    type: StageRollback
+    - stage:
+        name: stage2
+        identifier: stage2
+        description: ""
+        type: Deployment
+        spec:
+          serviceConfig:
+            useFromStage:
+              stage: stage
+            stageOverrides:
+              artifacts:
+                sidecars: []
+              manifests:
+                - manifest:
+                    identifier: s3manifestid
+                    type: HelmChart
+                    spec:
+                      store:
+                        type: S3
+                        spec:
+                          bucketName: b
+                          folderPath: <+input>
+                      chartName: b
+                      chartVersion: <+input>
+                      helmVersion: V2
+                      skipResourceVersioning: false
+              variables: []
+          infrastructure:
+            environmentRef: <+input>
+            infrastructureDefinition:
+              type: KubernetesDirect
+              spec:
+                connectorRef: account.builfarm
+                namespace: a
+                releaseName: a
+            allowSimultaneousDeployments: false
+            infrastructureKey: a
+          execution:
+            steps:
+              - step:
+                  name: Rollout Deployment
+                  identifier: rolloutDeployment
+                  type: K8sRollingDeploy
+                  timeout: 10m
+                  spec:
+                    skipDryRun: false
+            rollbackSteps:
+              - step:
+                  name: Rollback Rollout Deployment
+                  identifier: rollbackRolloutDeployment
+                  type: K8sRollingRollback
+                  timeout: 10m
+                  spec: {}
+        tags: {}
+        failureStrategies:
+          - onFailure:
+              errors:
+                - AllErrors
+              action:
+                type: StageRollback

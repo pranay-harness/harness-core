@@ -3,13 +3,22 @@ package io.harness.cvng.core.resources;
 import io.harness.annotations.ExposeInternalException;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cvng.beans.MonitoredServiceType;
+import io.harness.cvng.beans.change.ChangeCategory;
+import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.core.beans.HealthMonitoringFlagResponse;
-import io.harness.cvng.core.beans.ProjectParams;
+import io.harness.cvng.core.beans.change.ChangeSummaryDTO;
+import io.harness.cvng.core.beans.monitoredService.AnomaliesSummaryDTO;
 import io.harness.cvng.core.beans.monitoredService.DurationDTO;
+import io.harness.cvng.core.beans.monitoredService.HealthScoreDTO;
 import io.harness.cvng.core.beans.monitoredService.HistoricalTrend;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceResponse;
+import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
+import io.harness.cvng.core.beans.params.ProjectParams;
+import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
+import io.harness.cvng.core.beans.params.TimeRangeParams;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -46,6 +55,8 @@ import retrofit2.http.Body;
 @NextGenManagerAuth
 @OwnedBy(HarnessTeam.CV)
 public class MonitoredServiceResource {
+  private static final String YAML_TEMPLATE_KEY = "yaml";
+
   @Inject MonitoredServiceService monitoredServiceService;
 
   @POST
@@ -103,8 +114,12 @@ public class MonitoredServiceResource {
       @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
       @NotNull @QueryParam("enable") Boolean enable) {
-    return new RestResponse<>(monitoredServiceService.setHealthMonitoringFlag(
-        accountId, orgIdentifier, projectIdentifier, identifier, enable));
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
+    return new RestResponse<>(monitoredServiceService.setHealthMonitoringFlag(projectParams, identifier, enable));
   }
 
   @GET
@@ -148,8 +163,32 @@ public class MonitoredServiceResource {
   public ResponseDTO<MonitoredServiceResponse> get(@NotNull @PathParam("identifier") String identifier,
       @NotNull @QueryParam("accountId") String accountId, @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier) {
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
+    return ResponseDTO.newResponse(monitoredServiceService.get(projectParams, identifier));
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @Path("/list")
+  @ApiOperation(value = "get list of monitored service data ", nickname = "getMonitoredServiceList")
+  public ResponseDTO<PageResponse<MonitoredServiceResponse>> getList(@NotNull @QueryParam("accountId") String accountId,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @NotNull @QueryParam("environmentIdentifier") String environmentIdentifier,
+      @QueryParam("offset") @NotNull Integer offset, @QueryParam("pageSize") @NotNull Integer pageSize,
+      @QueryParam("filter") String filter) {
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
     return ResponseDTO.newResponse(
-        monitoredServiceService.get(accountId, orgIdentifier, projectIdentifier, identifier));
+        monitoredServiceService.getList(projectParams, environmentIdentifier, offset, pageSize, filter));
   }
 
   @GET
@@ -164,8 +203,36 @@ public class MonitoredServiceResource {
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
       @NotNull @QueryParam("serviceIdentifier") String serviceIdentifier,
       @NotNull @QueryParam("environmentIdentifier") String environmentIdentifier) {
-    return ResponseDTO.newResponse(monitoredServiceService.get(
-        accountId, orgIdentifier, projectIdentifier, serviceIdentifier, environmentIdentifier));
+    ServiceEnvironmentParams serviceEnvironmentParams = ServiceEnvironmentParams.builder()
+                                                            .serviceIdentifier(serviceIdentifier)
+                                                            .environmentIdentifier(environmentIdentifier)
+                                                            .accountIdentifier(accountId)
+                                                            .orgIdentifier(orgIdentifier)
+                                                            .projectIdentifier(projectIdentifier)
+                                                            .build();
+    return ResponseDTO.newResponse(monitoredServiceService.get(serviceEnvironmentParams));
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @Path("/scores")
+  @ApiOperation(value = "get monitored service scores from service and env ref",
+      nickname = "getMonitoredServiceScoresFromServiceAndEnvironment")
+  public ResponseDTO<HealthScoreDTO>
+  getMonitoredServiceScoreFromServiceAndEnvironment(@NotNull @QueryParam("accountId") String accountId,
+      @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @NotNull @QueryParam("serviceIdentifier") String serviceIdentifier,
+      @NotNull @QueryParam("environmentIdentifier") String environmentIdentifier) {
+    ServiceEnvironmentParams serviceEnvironmentParams = ServiceEnvironmentParams.builder()
+                                                            .accountIdentifier(accountId)
+                                                            .orgIdentifier(orgIdentifier)
+                                                            .projectIdentifier(projectIdentifier)
+                                                            .serviceIdentifier(serviceIdentifier)
+                                                            .environmentIdentifier(environmentIdentifier)
+                                                            .build();
+    return ResponseDTO.newResponse(monitoredServiceService.getCurrentScore(serviceEnvironmentParams));
   }
 
   @DELETE
@@ -197,5 +264,113 @@ public class MonitoredServiceResource {
       @NotNull @QueryParam("projectIdentifier") String projectIdentifier) {
     return ResponseDTO.newResponse(
         monitoredServiceService.listEnvironments(accountId, orgIdentifier, projectIdentifier));
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @Path("/yaml-template")
+  @ApiOperation(value = "yaml template for monitored service", nickname = "getMonitoredServiceYamlTemplate")
+  public RestResponse<String> yamlTemplate(
+      @ApiParam(required = true) @NotNull @QueryParam("accountId") String accountId,
+      @ApiParam(required = true) @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @ApiParam(required = true) @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @ApiParam @QueryParam("type") MonitoredServiceType type) {
+    return new RestResponse<>(monitoredServiceService.getYamlTemplate(ProjectParams.builder()
+                                                                          .accountIdentifier(accountId)
+                                                                          .orgIdentifier(orgIdentifier)
+                                                                          .projectIdentifier(projectIdentifier)
+                                                                          .build(),
+        type));
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @Path("/health-sources")
+  @ApiOperation(value = "get all health sources for service and environment",
+      nickname = "getAllHealthSourcesForServiceAndEnvironment")
+  public RestResponse<List<HealthSourceDTO>>
+  getHealthSources(@ApiParam(required = true) @NotNull @QueryParam("accountId") String accountId,
+      @ApiParam(required = true) @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @ApiParam(required = true) @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @ApiParam(required = true) @NotNull @QueryParam("serviceIdentifier") String serviceIdentifier,
+      @ApiParam(required = true) @NotNull @QueryParam("environmentIdentifier") String environmentIdentifier) {
+    ServiceEnvironmentParams serviceEnvironmentParams = ServiceEnvironmentParams.builder()
+                                                            .accountIdentifier(accountId)
+                                                            .orgIdentifier(orgIdentifier)
+                                                            .projectIdentifier(projectIdentifier)
+                                                            .serviceIdentifier(serviceIdentifier)
+                                                            .environmentIdentifier(environmentIdentifier)
+                                                            .build();
+
+    return new RestResponse<>(monitoredServiceService.getHealthSources(serviceEnvironmentParams));
+  }
+
+  @GET
+  @Timed
+  @Path("{identifier}/change-event")
+  @ExceptionMetered
+  @ApiOperation(value = "get ChangeEvent List", nickname = "getChangeEventList")
+  public RestResponse<List<ChangeEventDTO>> get(
+      @ApiParam(required = true) @NotNull @QueryParam("accountId") String accountId,
+      @ApiParam(required = true) @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @ApiParam(required = true) @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @NotNull @PathParam("identifier") String identifier,
+      @ApiParam(required = true) @NotNull @QueryParam("startTime") long startTime,
+      @ApiParam(required = true) @NotNull @QueryParam("endTime") long endTime,
+      @ApiParam @NotNull @QueryParam("changeCategories") List<ChangeCategory> changeCategories) {
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
+    return new RestResponse<>(monitoredServiceService.getChangeEvents(
+        projectParams, identifier, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime), changeCategories));
+  }
+
+  @GET
+  @Timed
+  @Path("{identifier}/change-event/summary")
+  @ExceptionMetered
+  @ApiOperation(value = "get ChangeEvent summary", nickname = "getChangeSummary")
+  public RestResponse<ChangeSummaryDTO> get(
+      @ApiParam(required = true) @NotNull @QueryParam("accountId") String accountId,
+      @ApiParam(required = true) @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @ApiParam(required = true) @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @NotNull @PathParam("identifier") String identifier,
+      @ApiParam(required = true) @NotNull @QueryParam("startTime") long startTime,
+      @ApiParam(required = true) @NotNull @QueryParam("endTime") long endTime) {
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
+    return new RestResponse<>(monitoredServiceService.getChangeSummary(
+        projectParams, identifier, Instant.ofEpochMilli(startTime), Instant.ofEpochMilli(endTime)));
+  }
+
+  @GET
+  @Timed
+  @Path("{identifier}/anomaliesCount")
+  @ExceptionMetered
+  @ApiOperation(value = "get anomalies summary details", nickname = "getAnomaliesSummary")
+  public RestResponse<AnomaliesSummaryDTO> getAnomaliesSummary(
+      @ApiParam(required = true) @NotNull @QueryParam("accountId") String accountId,
+      @ApiParam(required = true) @NotNull @QueryParam("orgIdentifier") String orgIdentifier,
+      @ApiParam(required = true) @NotNull @QueryParam("projectIdentifier") String projectIdentifier,
+      @NotNull @PathParam("identifier") String identifier,
+      @ApiParam(required = true) @NotNull @QueryParam("startTime") long startTime,
+      @ApiParam(required = true) @NotNull @QueryParam("endTime") long endTime) {
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
+    TimeRangeParams timeRangeParams = TimeRangeParams.builder()
+                                          .startTime(Instant.ofEpochMilli(startTime))
+                                          .endTime(Instant.ofEpochMilli(endTime))
+                                          .build();
+    return new RestResponse<>(monitoredServiceService.getAnomaliesSummary(projectParams, identifier, timeRangeParams));
   }
 }

@@ -13,6 +13,7 @@ import io.harness.connector.services.ConnectorService;
 import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
 import io.harness.gitsync.FileChange;
 import io.harness.gitsync.ScopeDetails;
+import io.harness.gitsync.common.GitSyncFileConstants;
 import io.harness.ng.core.entitydetail.EntityDetailRestToProtoMapper;
 
 import com.google.inject.Inject;
@@ -54,7 +55,7 @@ public class ConnectorFullSyncHelper {
 
   @NotNull
   private String getFilePathForConnectorInFullSync(ConnectorInfoDTO connectorInfoDTO) {
-    return getConnectorBaseFilePath() + "/" + connectorInfoDTO.getIdentifier();
+    return getConnectorBaseFilePath() + "/" + connectorInfoDTO.getIdentifier() + GitSyncFileConstants.YAML_EXTENSION;
   }
 
   @NotNull

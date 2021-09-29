@@ -3,6 +3,7 @@ package tasks
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -25,12 +26,12 @@ const (
 	defaultRunTestsRetries int32 = 1
 	mvnCmd                       = "mvn"
 	bazelCmd                     = "bazel"
+	gradleWrapperCmd             = "./gradlew"
+	gradleCmd                    = "gradle"
 	outDir                       = "%s/ti/callgraph/"    // path passed as outDir in the config.ini file
 	cgDir                        = "%s/ti/callgraph/cg/" // path where callgraph files will be generated
-	// TODO: (vistaar) move the java agent path to come as an env variable from CI manager,
-	// as it is also used in init container.
-	javaAgentArg = "-javaagent:/addon/bin/java-agent.jar=%s"
-	tiConfigPath = ".ticonfig.yaml"
+	javaAgentArg                 = "-javaagent:/addon/bin/java-agent.jar=%s"
+	tiConfigPath                 = ".ticonfig.yaml"
 )
 
 var (
@@ -206,7 +207,10 @@ instrPackages: %s`, dir, r.packages)
 	return fmt.Sprintf(javaAgentArg, iniFile), nil
 }
 
-func (r *runTestsTask) getMavenCmd(tests []types.RunnableTest) (string, error) {
+func (r *runTestsTask) getMavenCmd(ctx context.Context, tests []types.RunnableTest, ignoreInstr bool) (string, error) {
+	if ignoreInstr {
+		return strings.TrimSpace(fmt.Sprintf("%s %s", mvnCmd, r.args)), nil
+	}
 	instrArg, err := r.createJavaAgentArg()
 	if err != nil {
 		return "", err
@@ -220,7 +224,6 @@ func (r *runTestsTask) getMavenCmd(tests []types.RunnableTest) (string, error) {
 	}
 	if !r.runOnlySelectedTests {
 		// Run all the tests
-		// TODO -- Aman - check if instumentation is required here too.
 		return strings.TrimSpace(fmt.Sprintf("%s -am -DargLine=%s %s", mvnCmd, instrArg, r.args)), nil
 	}
 	if len(tests) == 0 {
@@ -246,19 +249,92 @@ func (r *runTestsTask) getMavenCmd(tests []types.RunnableTest) (string, error) {
 	return strings.TrimSpace(fmt.Sprintf("%s -Dtest=%s -am -DargLine=%s %s", mvnCmd, testStr, instrArg, r.args)), nil
 }
 
-func (r *runTestsTask) getBazelCmd(ctx context.Context, tests []types.RunnableTest) (string, error) {
-	//tests = []types.RunnableTest{
-	//	{Pkg: "io.harness.pms.pipeline.service", Class: "PMSPipelineServiceImplTest"},
-	//	{Pkg: "software.wings.service.impl.trigger", Class: "TriggerServiceTest"},
-	//	{Pkg: "software.wings.service.impl.workflow", Class: "WorkflowServiceTest"},
-	//	{Pkg: "software.wings.service.impl.verification", Class: "CVConfigurationServiceImplTest"},
-	//}
+/*
+The following needs to be added to a build.gradle to make it compatible with test intelligence:
+// This adds HARNESS_JAVA_AGENT to the testing command if it's provided through the command line.
+// Local builds will still remain same as it only adds if the parameter is provided.
+tasks.withType(Test) {
+  if(System.getProperty("HARNESS_JAVA_AGENT")) {
+    jvmArgs += [System.getProperty("HARNESS_JAVA_AGENT")]
+  }
+}
+
+// This makes sure that any test tasks for subprojects don't fail in case the test filter does not match
+// with any tests. This is needed since we want to search for a filter in all subprojects without failing if
+// the filter does not match with any of the subprojects.
+gradle.projectsEvaluated {
+        tasks.withType(Test) {
+            filter {
+                setFailOnNoMatchingTests(false)
+            }
+        }
+}
+*/
+func (r *runTestsTask) getGradleCmd(ctx context.Context, tests []types.RunnableTest, ignoreInstr bool) (string, error) {
+	// Check if gradlew exists. If not, fallback to gradle
+	gc := gradleWrapperCmd
+	_, err := r.fs.Stat("gradlew")
+	if errors.Is(err, os.ErrNotExist) {
+		gc = gradleCmd
+	}
+
+	if ignoreInstr {
+		return strings.TrimSpace(fmt.Sprintf("%s %s", gc, r.args)), nil
+	}
+
+	var orCmd string
+
+	if strings.Contains(r.args, "||") {
+		// args = "test || orCond1 || orCond2" gets split as:
+		// [test, orCond1 || orCond2]
+		s := strings.SplitN(r.args, "||", 2)
+		orCmd = s[1]
+		r.args = s[0]
+	}
+	r.args = strings.TrimSpace(r.args)
+	if orCmd != "" {
+		orCmd = "|| " + strings.TrimSpace(orCmd)
+	}
+
+	instrArg, err := r.createJavaAgentArg()
+	if err != nil {
+		return "", err
+	}
+
+	if !r.runOnlySelectedTests {
+		// Run all the tests
+		return strings.TrimSpace(fmt.Sprintf("%s %s -DHARNESS_JAVA_AGENT=%s %s", gc, r.args, instrArg, orCmd)), nil
+	}
+	if len(tests) == 0 {
+		return fmt.Sprintf("echo \"Skipping test run, received no tests to execute\""), nil
+	}
+	// Use only unique <package, class> tuples
+	set := make(map[types.RunnableTest]interface{})
+	var testStr string
+	for _, t := range tests {
+		w := types.RunnableTest{Pkg: t.Pkg, Class: t.Class}
+		if _, ok := set[w]; ok {
+			// The test has already been added
+			continue
+		}
+		set[w] = struct{}{}
+		testStr = testStr + " --tests " + fmt.Sprintf("\"%s.%s\"", t.Pkg, t.Class)
+	}
+
+	return strings.TrimSpace(fmt.Sprintf("%s %s -DHARNESS_JAVA_AGENT=%s%s %s", gc, r.args, instrArg, testStr, orCmd)), nil
+}
+
+func (r *runTestsTask) getBazelCmd(ctx context.Context, tests []types.RunnableTest, ignoreInstr bool) (string, error) {
+	if ignoreInstr {
+		return fmt.Sprintf("%s %s //...", bazelCmd, r.args), nil
+	}
 	instrArg, err := r.createJavaAgentArg()
 	if err != nil {
 		return "", err
 	}
 	bazelInstrArg := fmt.Sprintf("--define=HARNESS_ARGS=%s", instrArg)
 	defaultCmd := fmt.Sprintf("%s %s %s //...", bazelCmd, r.args, bazelInstrArg) // run all the tests
+
 	if !r.runOnlySelectedTests {
 		// Run all the tests
 		return defaultCmd, nil
@@ -388,13 +464,19 @@ func (r *runTestsTask) getCmd(ctx context.Context, outputVarFile string) (string
 	switch r.buildTool {
 	case "maven":
 		r.log.Infow("setting up maven as the build tool")
-		testCmd, err = r.getMavenCmd(selection.Tests)
+		testCmd, err = r.getMavenCmd(ctx, selection.Tests, isManual)
 		if err != nil {
 			return "", err
 		}
 	case "bazel":
 		r.log.Infow("setting up bazel as the build tool")
-		testCmd, err = r.getBazelCmd(ctx, selection.Tests)
+		testCmd, err = r.getBazelCmd(ctx, selection.Tests, isManual)
+		if err != nil {
+			return "", err
+		}
+	case "gradle":
+		r.log.Infow("setting up gradle as the build tool")
+		testCmd, err = r.getGradleCmd(ctx, selection.Tests, isManual)
 		if err != nil {
 			return "", err
 		}

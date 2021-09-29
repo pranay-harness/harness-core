@@ -27,8 +27,10 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
 import javax.validation.constraints.NotNull;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
@@ -77,6 +79,10 @@ public class TimeoutEngine implements Handler<TimeoutInstance> {
     if (EmptyPredicate.isNotEmpty(timeoutInstanceIds)) {
       timeoutInstanceRepository.deleteByUuidIn(timeoutInstanceIds);
     }
+  }
+
+  public void deleteTimeout(@NonNull String timeoutInstanceId) {
+    deleteTimeouts(Collections.singletonList(timeoutInstanceId));
   }
 
   public void onEvent(List<String> timeoutInstanceIds, TimeoutEvent event) {

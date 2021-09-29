@@ -12,6 +12,7 @@ service PmsService {
   rpc initializeSdk(InitializeSdkRequest) returns (InitializeSdkResponse);
 }
 
+// Next number is 15
 message InitializeSdkRequest {
   string name = 1;
   map<string, Types> supportedTypes = 2;
@@ -24,6 +25,9 @@ message InitializeSdkRequest {
   ConsumerConfig progressEventConsumerConfig = 10;
   ConsumerConfig nodeAdviseEventConsumerConfig = 11;
   ConsumerConfig nodeResumeEventConsumerConfig = 12;
+  ConsumerConfig planCreationEventConsumerConfig = 14;
+  map<string, string> staticAliases = 15;
+  repeated string sdkFunctors = 16;
 }
 
 message InitializeSdkResponse {}

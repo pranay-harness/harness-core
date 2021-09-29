@@ -3,6 +3,7 @@ package io.harness.delegate.task.artifacts.ecr;
 import static io.harness.rule.OwnerRule.ACASIAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
@@ -18,6 +19,7 @@ import io.harness.delegate.beans.connector.awsconnector.AwsCredentialDTO;
 import io.harness.delegate.beans.connector.awsconnector.AwsCredentialType;
 import io.harness.delegate.beans.connector.awsconnector.AwsManualConfigSpecDTO;
 import io.harness.delegate.task.artifacts.response.ArtifactTaskExecutionResponse;
+import io.harness.delegate.task.aws.AwsNgConfigMapper;
 import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
 
@@ -38,7 +40,6 @@ public class EcrArtifactTaskHandlerTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Mock private EcrService ecrService;
   @Mock private AwsApiHelperService awsApiHelperService;
-
   @InjectMocks private EcrArtifactTaskHandler ecrArtifactTaskHandler;
 
   @Test
@@ -61,14 +62,13 @@ public class EcrArtifactTaskHandlerTest extends CategoryTest {
     String region = "us-east-1";
     EcrArtifactDelegateRequest ecrArtifactDelegateRequest =
         EcrArtifactDelegateRequest.builder().region(region).awsConnectorDTO(awsConnectorDTO).build();
-
+    on(ecrArtifactTaskHandler).set("awsNgConfigMapper", new AwsNgConfigMapper());
     doNothing().when(awsApiHelperService).attachCredentialsAndBackoffPolicy(any(), any());
     doReturn(Arrays.asList(nginx, todolist)).when(ecrService).listEcrRegistry(any(), any());
     ArtifactTaskExecutionResponse response = ecrArtifactTaskHandler.getImages(ecrArtifactDelegateRequest);
     assertThat(response.getArtifactImages()).isNotEmpty();
     assertThat(response.getArtifactImages()).containsExactly(nginx, todolist);
 
-    verify(awsApiHelperService, times(1)).attachCredentialsAndBackoffPolicy(any(), any());
     verify(ecrService, times(1)).listEcrRegistry(any(), any());
   }
 }

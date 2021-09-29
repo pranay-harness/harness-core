@@ -107,7 +107,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Transient;
 
-@TargetModule(HarnessModule._955_DELEGATE_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @OwnedBy(CDC)
 @Data
 @EqualsAndHashCode(of = {"uuid", "appId"}, callSuper = false)

@@ -169,6 +169,7 @@ func TestWrite_Success(t *testing.T) {
 	mock.On("Exists", []string{key}).Return(redis.NewIntResult(1, nil))
 	mock.On("XAdd", args1).Return(redis.NewStringResult("success", nil))
 	mock.On("XAdd", args2).Return(redis.NewStringResult("success", nil))
+	mock.On("TTL", key).Return(redis.NewDurationResult(20*time.Second, errors.New("could not get ttl")))
 
 	rdb := &Redis{
 		Client: mock,
@@ -211,6 +212,7 @@ func TestWrite_Failure(t *testing.T) {
 	mock.On("XAdd", args1).Return(redis.NewStringResult("success", nil))
 	mock.On("XAdd", args2).Return(redis.NewStringResult("", errors.New("err")))
 	mock.On("XAdd", args3).Return(redis.NewStringResult("success", nil))
+	mock.On("TTL", key).Return(redis.NewDurationResult(20*time.Second, errors.New("could not get ttl")))
 	rdb := &Redis{
 		Client: mock,
 	}

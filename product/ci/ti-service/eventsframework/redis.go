@@ -5,7 +5,8 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/base64"
-	"github.com/robinjoseph08/redisqueue"
+	"github.com/go-redis/redis/v7"
+	"github.com/robinjoseph08/redisqueue/v2"
 	"io/ioutil"
 	"strings"
 	"time"
@@ -14,6 +15,7 @@ import (
 	pb "github.com/wings-software/portal/953-events-api/src/main/proto/io/harness/eventsframework/schemas/webhookpayloads"
 	scmpb "github.com/wings-software/portal/product/ci/scm/proto"
 	"github.com/wings-software/portal/product/ci/ti-service/db"
+	"github.com/wings-software/portal/product/ci/ti-service/logger"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 	"go.uber.org/zap"
 )
@@ -37,40 +39,136 @@ const (
 	defaultErrorInterval = 1 * time.Second
 )
 
-func New(endpoint, password string, enableTLS bool, certPath string, log *zap.SugaredLogger) (*RedisBroker, error) {
-	// TODO: (vistaar) Configure with options using values suitable for prod and pass as env variables.
-	opt := redisqueue.RedisOptions{Addr: endpoint}
-	if password != "" {
-		opt.Password = password
-	}
-	if enableTLS == true {
-		// Create TLS config using cert PEM
-		rootPem, err := ioutil.ReadFile(certPath)
-		if err != nil {
-			log.Errorw("could not read certificate file", "path", certPath, zap.Error(err))
-			return nil, err
-		}
+type RedisBrokerConf struct {
+	Address            string
+	UseSentinel        bool
+	SentinelMasterName string
+	SentinelUrls       string
+	UseCluster         bool
+	ClusterUrls        string
+	Password           string
+	UseTLS             bool
+	TLSCaFilePath      string
+}
 
-		roots := x509.NewCertPool()
-		ok := roots.AppendCertsFromPEM(rootPem)
-		if !ok {
-			log.Errorw("could not use cert", "path", certPath, zap.Error(err))
-			return nil, err
-		}
-		opt.TLSConfig = &tls.Config{RootCAs: roots}
-	}
-	consumerOpts := redisqueue.ConsumerOptions{
-		RedisOptions:      &opt,
+func NewRedisBroker(conf RedisBrokerConf, log *zap.SugaredLogger) (*RedisBroker, error) {
+	log.Debug("NewRedisBroker")
+	redisClient := NewRedisClientFromConfig(conf.Address, conf.UseSentinel, conf.SentinelMasterName, conf.SentinelUrls,
+		conf.UseCluster, conf.ClusterUrls, conf.Password, conf.UseTLS, conf.TLSCaFilePath, log)
+	log.Debugf("Redis Broker config: %+v", conf)
+	opt := redisqueue.ConsumerOptions{
 		VisibilityTimeout: 60 * time.Second,
 		BlockingTimeout:   5 * time.Second,
 		ReclaimInterval:   5 * time.Second,
 		BufferSize:        100,
 		Concurrency:       5,
+		RedisClient:       redisClient,
 	}
+
 	return &RedisBroker{consumers: map[string]*ConsumerInfo{},
 		log:           log,
 		errorInterval: defaultErrorInterval,
-		consumerOpts:  &consumerOpts}, nil
+		consumerOpts:  &opt}, nil
+}
+
+// Using code from FF
+// https://github.com/wings-software/ff-server/blob/master/pkg/concurent/redis.go
+func NewRedisClientFromConfig(Address string, useSentinel bool, sentinelMaster string, sentinelURLs string,
+	useCluster bool, clusterURLs string, password string, useTLS bool, certPathForTLS string, log *zap.SugaredLogger) redis.UniversalClient {
+	log.Infof("NewRedisClientFromConfig")
+	var redisClient redis.UniversalClient
+
+	if useSentinel {
+		log.Infof("Sentinel enabled for redis, so setting it up for URLs: %s", sentinelURLs)
+		log.Infof("Sentinel master: %s", sentinelMaster)
+		opt := redis.FailoverOptions{
+			MasterName: sentinelMaster,
+		}
+		opt.Password = password
+		if useTLS {
+			log.Info("TLS enabled for redis sentinel, so setting it up")
+			log.Debugf("certPathForTLS: %s", certPathForTLS)
+			newTlSConfig, err := newTlSConfig(certPathForTLS, log)
+			if err != nil {
+				log.Fatal(err)
+			}
+			opt.TLSConfig = newTlSConfig
+		} else {
+			log.Info("TLS not enabled for redis sentinel, so not setting it up")
+		}
+
+		sentinelURLsArray := strings.Split(sentinelURLs, ",")
+		opt.SentinelAddrs = sentinelURLsArray
+		redisClient = newRedisSentinelClient(&opt)
+	} else if useCluster {
+		log.Infof("Cluster enabled for redis, so setting it up for URLs: %s", clusterURLs)
+		clusterURLsArray := strings.Split(clusterURLs, ",")
+		opt := redis.UniversalOptions{
+			Addrs: clusterURLsArray,
+		}
+		opt.Password = password
+
+		if useTLS {
+			log.Info("TLS enabled for redis, so setting it up")
+			newTlSConfig, err := newTlSConfig(certPathForTLS, log)
+			if err != nil {
+				log.Fatal(err)
+			}
+			opt.TLSConfig = newTlSConfig
+		} else {
+			log.Info("TLS not enabled for redis, so not setting it up")
+		}
+
+		redisClient = newRedisClusterClient(&opt)
+	} else {
+		log.Infof("Regular redis configured, so setting it up for address: %s", Address)
+
+		opt := redisqueue.RedisOptions{Addr: Address}
+		opt.Password = password
+
+		if useTLS {
+			log.Info("TLS enabled for redis, so setting it up")
+			newTlSConfig, err := newTlSConfig(certPathForTLS, log)
+			if err != nil {
+				log.Fatal(err)
+			}
+			opt.TLSConfig = newTlSConfig
+		} else {
+			log.Info("TLS not enabled for redis, so not setting it up")
+		}
+
+		redisClient = newRedisClient(&opt)
+	}
+	return redisClient
+}
+
+func newRedisClient(redisOptions *redis.Options) redis.UniversalClient {
+	return redis.NewClient(redisOptions)
+}
+
+func newRedisSentinelClient(redisOptions *redis.FailoverOptions) redis.UniversalClient {
+	return redis.NewFailoverClient(redisOptions)
+}
+
+func newRedisClusterClient(redisOptions *redis.UniversalOptions) redis.UniversalClient {
+	return redis.NewUniversalClient(redisOptions)
+}
+
+func newTlSConfig(certPathForTLS string, log *zap.SugaredLogger) (*tls.Config, error) {
+	// Create TLS config using cert PEM
+	rootPem, err := ioutil.ReadFile(certPathForTLS)
+	if err != nil {
+		log.Errorf("could not read certificate file (%s), error: %s", certPathForTLS, err.Error())
+		return nil, err
+	}
+
+	roots := x509.NewCertPool()
+	ok := roots.AppendCertsFromPEM(rootPem)
+	if !ok {
+		log.Errorf("error adding cert (%s) to pool, error: %s", certPathForTLS, err.Error())
+		return nil, err
+	}
+	return &tls.Config{RootCAs: roots}, nil
 }
 
 // Using code from FF
@@ -185,13 +283,17 @@ func (r *RedisBroker) getCallback(ctx context.Context, fn MergeCallbackFn, db db
 			source := pr.GetPr().GetSource() // Source branch
 			target := pr.GetPr().GetTarget() // Target branch for merge
 			sha := pr.GetPr().GetSha()       // Sha of the topmost commit in the commits list
+
+			// update ctx with log
+			log := r.log.With("request-id", sha, "accountId", accountId)
+
 			if repo == "" || source == "" || target == "" || sha == "" {
 				// These fields should always be populated
-				r.log.Errorw("[redis stream]: missing information for merge event", "account_id", accountId,
+				log.Errorw("[redis stream]: missing information for merge event", "account_id", accountId,
 					"repo", repo, "source", source, "target", target, "sha", sha)
 				return nil
 			}
-			r.log.Infow("[redis stream]: got a merge notification", "account_id", accountId,
+			log.Infow("[redis stream]: got a merge notification", "account_id", accountId,
 				"repo", repo, "source", source, "target", target, "sha", sha)
 			req := types.MergePartialCgRequest{AccountId: accountId,
 				TargetBranch: target, Repo: repo, Diff: types.DiffInfo{Sha: sha}}
@@ -207,11 +309,12 @@ func (r *RedisBroker) getCallback(ctx context.Context, fn MergeCallbackFn, db db
 			// Add this if statement once we start writing files with updated schema
 			//if len(req.Diff.Files) != 0 {
 			// Found the merge event with changed files
-			r.log.Infow("[redis stream]: calling merge CG", "account_id", accountId, "repo", repo,
+			log.Infow("[redis stream]: calling merge CG", "account_id", accountId, "repo", repo,
 				"source", source, "target", target, "sha", sha, "changed_files", req.Diff.Files)
-			err := fn(ctx, req)
+
+			err := fn(logger.WithContext(ctx, log), req)
 			if err != nil {
-				r.log.Errorw("[redis stream]: could not merge partial call graph to master", "account_id", accountId,
+				log.Errorw("[redis stream]: could not merge partial call graph to master", "account_id", accountId,
 					"repo", repo, "source", source, "target", target, "sha", sha, "changed_files", req.Diff.Files,
 					zap.Error(err))
 				return nil

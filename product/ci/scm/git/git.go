@@ -204,15 +204,14 @@ func GetLatestCommit(ctx context.Context, request *pb.GetLatestCommitRequest, lo
 	if err != nil {
 		log.Errorw("GetLatestCommit failure", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		// this is a hard error with no response
-		if refResponse == nil {
+		if response == nil {
 			return nil, err
 		}
 
 		// this is an error from the git provider
 		out = &pb.GetLatestCommitResponse{
-			CommitId: refResponse.Sha,
-			Error:    err.Error(),
-			Status:   int32(response.Status),
+			Error:  err.Error(),
+			Status: int32(response.Status),
 		}
 		return out, nil
 	}
@@ -364,6 +363,11 @@ func GetUserRepos(ctx context.Context, request *pb.GetUserReposRequest, log *zap
 
 	if err != nil {
 		log.Errorw("GetUserRepos failure", "provider", gitclient.GetProvider(*request.GetProvider()), "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
+		// this is a hard error with no response
+		if response == nil {
+			return nil, err
+		}
+
 		out = &pb.GetUserReposResponse{
 			Status: int32(response.Status),
 			Error:  err.Error(),

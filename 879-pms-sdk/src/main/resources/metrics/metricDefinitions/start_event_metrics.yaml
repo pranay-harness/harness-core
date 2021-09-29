@@ -2,8 +2,8 @@ name: Start event time
 identifier: start_event
 metricGroup: start_event_group
 metrics:
-  - metricName: start_event_queue_time
-    metricDefinition: Time for which start event was in the queue and was processed completely.
+  - metricName: start_event_service_time
+    metricDefinition: Time for which start event was was processed successfully by the service.
     type: LastValue
     unit: count
   - metricName: start_event_time_in_queue

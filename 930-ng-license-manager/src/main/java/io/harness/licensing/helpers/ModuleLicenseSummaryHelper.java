@@ -25,6 +25,7 @@ public class ModuleLicenseSummaryHelper {
   public static LicensesWithSummaryDTO generateSummary(
       ModuleType moduleType, List<ModuleLicenseDTO> moduleLicenseDTOs) {
     long currentTime = Instant.now().toEpochMilli();
+
     SummaryHandler summaryHandler;
     LicensesWithSummaryDTO licensesWithSummaryDTO;
     switch (moduleType) {
@@ -110,6 +111,7 @@ public class ModuleLicenseSummaryHelper {
         licensesWithSummaryDTO.setLicenseType(l.getLicenseType());
       }
     });
+    licensesWithSummaryDTO.setModuleType(moduleType);
     return licensesWithSummaryDTO;
   }
 

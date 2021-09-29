@@ -9,7 +9,6 @@ import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.contracts.refobjects.RefObject;
 import io.harness.pms.events.base.PmsBaseEventHandler;
-import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.SdkNodeExecutionService;
 import io.harness.pms.sdk.core.registries.FacilitatorRegistry;
@@ -31,15 +30,6 @@ public class FacilitatorEventHandler extends PmsBaseEventHandler<FacilitatorEven
   @Inject private FacilitatorRegistry facilitatorRegistry;
   @Inject private SdkNodeExecutionService sdkNodeExecutionService;
   @Inject private EngineObtainmentHelper engineObtainmentHelper;
-
-  @Override
-  protected Map<String, String> extractMetricContext(FacilitatorEvent message) {
-    return ImmutableMap.<String, String>builder()
-        .put("accountId", AmbianceUtils.getAccountId(message.getAmbiance()))
-        .put("orgIdentifier", AmbianceUtils.getOrgIdentifier(message.getAmbiance()))
-        .put("projectIdentifier", AmbianceUtils.getProjectIdentifier(message.getAmbiance()))
-        .build();
-  }
 
   @Override
   protected String getMetricPrefix(FacilitatorEvent message) {
@@ -77,12 +67,12 @@ public class FacilitatorEventHandler extends PmsBaseEventHandler<FacilitatorEven
       }
       if (currFacilitatorResponse == null) {
         log.info("Calculated Facilitator response is null. Returning response Successful false");
-        sdkNodeExecutionService.handleFacilitationResponse(ambiance.getPlanExecutionId(), event.getNodeExecutionId(),
-            event.getNotifyId(), FacilitatorResponseProto.newBuilder().setIsSuccessful(false).build());
+        sdkNodeExecutionService.handleFacilitationResponse(
+            ambiance, event.getNotifyId(), FacilitatorResponseProto.newBuilder().setIsSuccessful(false).build());
         return;
       }
-      sdkNodeExecutionService.handleFacilitationResponse(ambiance.getPlanExecutionId(), event.getNodeExecutionId(),
-          event.getNotifyId(), FacilitatorResponseMapper.toFacilitatorResponseProto(currFacilitatorResponse));
+      sdkNodeExecutionService.handleFacilitationResponse(
+          ambiance, event.getNotifyId(), FacilitatorResponseMapper.toFacilitatorResponseProto(currFacilitatorResponse));
       log.info("Facilitation Event Handled Successfully");
     } catch (Exception ex) {
       log.error("Error while facilitating execution", ex);

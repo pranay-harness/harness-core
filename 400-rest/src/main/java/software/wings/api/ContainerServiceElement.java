@@ -1,8 +1,10 @@
 package software.wings.api;
 
-import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
 import static io.harness.context.ContextElementType.CONTAINER_SERVICE;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SweepingOutput;
 import io.harness.context.ContextElementType;
@@ -29,7 +31,8 @@ import lombok.Data;
 @Data
 @Builder
 @JsonTypeName("containerServiceElement")
-@TargetModule(_957_CG_BEANS)
+@OwnedBy(HarnessTeam.CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ContainerServiceElement implements ContextElement, SweepingOutput {
   private String uuid;
   private String name;

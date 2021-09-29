@@ -32,7 +32,12 @@ import io.harness.migration.NGMigrationSdkModule;
 import io.harness.migration.beans.NGMigrationConfiguration;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
+import io.harness.outbox.OutboxEventPollService;
 import io.harness.request.RequestContextFilter;
+import io.harness.security.NextGenAuthenticationFilter;
+import io.harness.security.annotations.NextGenManagerAuth;
+import io.harness.service.impl.DelegateAsyncServiceImpl;
+import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.template.InspectCommand;
 import io.harness.template.beans.yaml.NGTemplateConfig;
 import io.harness.template.entity.TemplateEntity;
@@ -40,6 +45,7 @@ import io.harness.template.gitsync.TemplateEntityGitSyncHandler;
 import io.harness.template.migration.TemplateMigrationProvider;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
+import io.harness.token.remote.TokenClient;
 import io.harness.utils.NGObjectMapperHelper;
 
 import com.codahale.metrics.MetricRegistry;
@@ -49,9 +55,11 @@ import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.name.Names;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
@@ -63,14 +71,21 @@ import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ResourceInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.server.model.Resource;
@@ -167,11 +182,14 @@ public class TemplateServiceApplication extends Application<TemplateServiceConfi
     }
 
     Injector injector = Guice.createInjector(modules);
+    registerScheduledJobs(injector);
     registerCorsFilter(templateServiceConfiguration, environment);
     registerResources(environment, injector);
     registerJerseyProviders(environment, injector);
+    registerManagedBeans(environment, injector);
     registerHealthCheck(environment, injector);
     registerRequestContextFilter(environment);
+    registerAuthFilters(templateServiceConfiguration, environment, injector);
     registerCorrelationFilter(environment, injector);
 
     if (templateServiceConfiguration.isShouldDeployWithGitSync()) {
@@ -183,12 +201,23 @@ public class TemplateServiceApplication extends Application<TemplateServiceConfi
     MaintenanceController.forceMaintenance(false);
   }
 
+  private void registerManagedBeans(Environment environment, Injector injector) {
+    environment.lifecycle().manage(injector.getInstance(OutboxEventPollService.class));
+  }
+
   private void registerResources(Environment environment, Injector injector) {
     for (Class<?> resource : getResourceClasses()) {
       if (Resource.isAcceptable(resource)) {
         environment.jersey().register(injector.getInstance(resource));
       }
     }
+  }
+
+  private void registerScheduledJobs(Injector injector) {
+    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
+        .scheduleWithFixedDelay(injector.getInstance(DelegateSyncServiceImpl.class), 0L, 2L, TimeUnit.SECONDS);
+    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")))
+        .scheduleWithFixedDelay(injector.getInstance(DelegateAsyncServiceImpl.class), 0L, 5L, TimeUnit.SECONDS);
   }
 
   private void registerCorsFilter(TemplateServiceConfiguration appConfig, Environment environment) {
@@ -198,6 +227,21 @@ public class TemplateServiceApplication extends Application<TemplateServiceConfi
         "X-Requested-With,Content-Type,Accept,Origin,Authorization,X-api-key", "allowedMethods",
         "OPTIONS,GET,PUT,POST,DELETE,HEAD", "preflightMaxAge", "86400"));
     cors.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
+  }
+
+  private void registerAuthFilters(TemplateServiceConfiguration config, Environment environment, Injector injector) {
+    if (config.isEnableAuth()) {
+      Predicate<Pair<ResourceInfo, ContainerRequestContext>> predicate = resourceInfoAndRequest
+          -> resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(NextGenManagerAuth.class) != null
+          || resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(NextGenManagerAuth.class) != null;
+      Map<String, String> serviceToSecretMapping = new HashMap<>();
+      serviceToSecretMapping.put(AuthorizationServiceHeader.BEARER.getServiceId(), config.getJwtAuthSecret());
+      serviceToSecretMapping.put(
+          AuthorizationServiceHeader.IDENTITY_SERVICE.getServiceId(), config.getJwtIdentityServiceSecret());
+      serviceToSecretMapping.put(AuthorizationServiceHeader.DEFAULT.getServiceId(), config.getNgManagerServiceSecret());
+      environment.jersey().register(new NextGenAuthenticationFilter(predicate, null, serviceToSecretMapping,
+          injector.getInstance(Key.get(TokenClient.class, Names.named("PRIVILEGED")))));
+    }
   }
 
   private void registerJerseyProviders(Environment environment, Injector injector) {

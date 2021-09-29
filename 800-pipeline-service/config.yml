@@ -127,7 +127,6 @@ ngManagerServiceHttpClientConfig:
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
 
-
 pipelineServiceClientConfig:
   baseUrl: http://localhost:12001/api/
   connectTimeOutSeconds: 15
@@ -152,9 +151,16 @@ accessControlClient:
 pipelineServiceBaseUrl: https://localhost:8181/#
 pmsApiBaseUrl: http://localhost:12001/api/
 
+triggerConfig:
+  webhookBaseUrl: http://localhost:7457/api/
+  customBaseUrl: http://localhost:12001/api/
+
 logStreamingServiceConfig:
   baseUrl: http://localhost:8079
   serviceToken: token
+
+opaServerConfig:
+  baseUrl: http://localhost:3000
 
 iteratorsConfig:
   approvalInstanceIteratorConfig:
@@ -203,3 +209,12 @@ cacheConfig:
   cacheBackend: REDIS
   cacheNamespace: ""
   disabledCaches: [ ]
+
+hostname: ${HOSTNAME:-localhost}
+
+basePathPrefix: ${BASE_PATH_PREFIX:-}
+
+delegatePollingConfig:
+  syncDelay: 2000
+  asyncDelay: 2000
+  progressDelay: 2000

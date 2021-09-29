@@ -1225,6 +1225,11 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.AZURE_ARTIFACTS_COLLECTION).toInstance(AzureArtifactsCollectionTask.class);
     mapBinder.addBinding(TaskType.AZURE_MACHINE_IMAGE_VALIDATE_ARTIFACT_SERVER)
         .toInstance(ServiceImplDelegateTask.class);
+    mapBinder.addBinding(TaskType.AZURE_MACHINE_IMAGE_GET_IMAGE_GALLERIES).toInstance(ServiceImplDelegateTask.class);
+    mapBinder.addBinding(TaskType.AZURE_MACHINE_IMAGE_GET_IMAGE_DEFINITIONS).toInstance(ServiceImplDelegateTask.class);
+    mapBinder.addBinding(TaskType.AZURE_MACHINE_IMAGE_GET_RESOURCE_GROUPS).toInstance(ServiceImplDelegateTask.class);
+    mapBinder.addBinding(TaskType.AZURE_GET_SUBSCRIPTIONS).toInstance(ServiceImplDelegateTask.class);
+
     mapBinder.addBinding(TaskType.AZURE_MACHINE_IMAGE_GET_BUILDS).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.AZURE_VMSS_COMMAND_TASK).toInstance(AzureVMSSTask.class);
     mapBinder.addBinding(TaskType.AZURE_APP_SERVICE_TASK).toInstance(AzureAppServiceTask.class);
@@ -1579,6 +1584,8 @@ public class DelegateModule extends AbstractModule {
     connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.SUMOLOGIC.getDisplayName())
         .to(CVConnectorValidationHandler.class);
     connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.DYNATRACE.getDisplayName())
+        .to(CVConnectorValidationHandler.class);
+    connectorTypeToConnectorValidationHandlerMap.addBinding(ConnectorType.PAGER_DUTY.getDisplayName())
         .to(CVConnectorValidationHandler.class);
   }
 

@@ -1,38 +1,38 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_library", "go_test")
 
 go_library(
-    name = "go_default_library",
+    name = "engine_lib",
     srcs = ["main.go"],
     importpath = "github.com/wings-software/portal/product/ci/engine",
-    visibility = ["//visibility:private"],
+    visibility = ["//:__pkg__"],
     deps = [
-        "//commons/go/lib/logs:go_default_library",
-        "//commons/go/lib/metrics:go_default_library",
-        "//product/ci/common/external:go_default_library",
-        "//product/ci/engine/consts:go_default_library",
-        "//product/ci/engine/grpc:go_default_library",
-        "//product/ci/engine/legacy/executor:go_default_library",
-        "@com_github_alexflint_go_arg//:go_default_library",
-        "@org_uber_go_zap//:go_default_library",
+        "//commons/go/lib/logs",
+        "//commons/go/lib/metrics",
+        "//product/ci/common/external",
+        "//product/ci/engine/consts",
+        "//product/ci/engine/grpc",
+        "//product/ci/engine/legacy/executor",
+        "@com_github_alexflint_go_arg//:go-arg",
+        "@org_uber_go_zap//:zap",
     ],
 )
 
 go_binary(
     name = "engine",
-    embed = [":go_default_library"],
+    embed = [":engine_lib"],
     visibility = ["//visibility:public"],
 )
 
 go_test(
-    name = "go_default_test",
+    name = "engine_test",
     srcs = ["main_test.go"],
-    embed = [":go_default_library"],
+    embed = [":engine_lib"],
     deps = [
-        "//commons/go/lib/logs:go_default_library",
-        "//product/ci/engine/grpc:go_default_library",
-        "//product/ci/engine/proto:go_default_library",
-        "@com_github_golang_mock//gomock:go_default_library",
+        "//commons/go/lib/logs",
+        "//product/ci/engine/grpc",
+        "//product/ci/engine/proto",
+        "@com_github_golang_mock//gomock",
         "@com_github_golang_protobuf//proto:go_default_library",
-        "@org_uber_go_zap//:go_default_library",
+        "@org_uber_go_zap//:zap",
     ],
 )

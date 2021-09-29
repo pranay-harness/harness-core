@@ -2,6 +2,7 @@ package io.harness.cvng.activity.services.api;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.PageRequest;
 import io.harness.cvng.activity.beans.ActivityDashboardDTO;
 import io.harness.cvng.activity.beans.ActivityVerificationResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
@@ -9,14 +10,20 @@ import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivitySummaryDTO;
 import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.activity.entities.Activity;
-import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO.ClusterType;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
 import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
 import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
+import io.harness.cvng.beans.activity.ActivityType;
+import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.core.beans.DatasourceTypeDTO;
-import io.harness.cvng.core.beans.ProjectParams;
+import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
+import io.harness.cvng.core.beans.params.PageParams;
+import io.harness.cvng.core.beans.params.ProjectParams;
+import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
+import io.harness.cvng.core.beans.params.filterParams.DeploymentLogAnalysisFilter;
+import io.harness.cvng.core.beans.params.filterParams.DeploymentTimeSeriesAnalysisFilter;
 import io.harness.ng.beans.PageResponse;
 
 import java.time.Instant;
@@ -30,7 +37,6 @@ import lombok.NonNull;
 public interface ActivityService {
   Activity get(String activityId);
   Activity getByVerificationJobInstanceId(String verificationJobInstanceId);
-  String register(String accountId, String webhookToken, ActivityDTO activityDTO);
 
   String register(String accountId, ActivityDTO activityDTO);
   String register(Activity activity);
@@ -63,14 +69,31 @@ public interface ActivityService {
   ActivityStatusDTO getActivityStatus(String accountId, String activityId);
   List<String> createVerificationJobInstancesForActivity(Activity activity);
   TransactionMetricInfoSummaryPageDTO getDeploymentActivityTimeSeriesData(String accountId, String activityId,
-      boolean anomalousMetricsOnly, String hostName, String filter, int pageNumber, int pageSize);
+      DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter, PageParams pageParams);
   Set<DatasourceTypeDTO> getDataSourcetypes(String accountId, String activityId);
 
   List<LogAnalysisClusterChartDTO> getDeploymentActivityLogAnalysisClusters(
-      String accountId, String activityId, String hostName);
+      String accountId, String activityId, DeploymentLogAnalysisFilter deploymentLogAnalysisFilter);
 
   PageResponse<LogAnalysisClusterDTO> getDeploymentActivityLogAnalysisResult(String accountId, String activityId,
-      Integer label, int pageNumber, int pageSize, String hostName, ClusterType clusterType);
+      Integer label, DeploymentLogAnalysisFilter deploymentLogAnalysisFilter, PageParams pageParams);
 
   void abort(String activityId);
+
+  Set<HealthSourceDTO> healthSources(String accountId, String activityId);
+
+  void upsert(Activity activity);
+
+  List<Activity> get(ServiceEnvironmentParams serviceEnvironmentParams, List<String> changeSourceIdentifiers,
+      Instant startTime, Instant endTime, List<ActivityType> activityTypes);
+
+  Long getCount(ServiceEnvironmentParams serviceEnvironmentParams, List<String> changeSourceIdentifiers,
+      Instant startTime, Instant endTime, List<ActivityType> activityTypes);
+
+  Long getCount(ProjectParams projectParams, List<String> serviceIdentifiers, List<String> environmentIdentifiers,
+      Instant startTime, Instant endTime, List<ActivityType> activityTypes);
+
+  String createActivityForDemo(Activity activity, ActivityVerificationStatus verificationStatus);
+
+  io.harness.beans.PageResponse<Activity> getPaginated(PageRequest pageRequest);
 }

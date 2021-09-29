@@ -6,7 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.activity.beans.ActivityDashboardDTO;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.analysis.beans.Risk;
-import io.harness.cvng.core.beans.ProjectParams;
+import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.entities.MonitoredService;
 import io.harness.cvng.core.entities.ServiceDependency;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
@@ -46,8 +46,16 @@ public class ServiceDependencyGraphServiceImpl implements ServiceDependencyGraph
       @NonNull ProjectParams projectParams, @Nullable String serviceIdentifier, @Nullable String envIdentifier) {
     List<MonitoredService> monitoredServices =
         monitoredServiceService.list(projectParams, serviceIdentifier, envIdentifier);
+    Set<String> identifiers =
+        monitoredServices.stream().map(MonitoredService::getIdentifier).collect(Collectors.toSet());
     List<ServiceDependency> serviceDependencies =
-        serviceDependencyService.getServiceDependencies(projectParams, serviceIdentifier, envIdentifier);
+        serviceDependencyService.getServiceDependencies(projectParams, new ArrayList<>(identifiers));
+
+    // Get nodes for dependent services
+    serviceDependencies.forEach(
+        serviceDependency -> identifiers.add(serviceDependency.getFromMonitoredServiceIdentifier()));
+    monitoredServices = monitoredServiceService.list(projectParams, new ArrayList<>(identifiers));
+
     List<HeatMap> heatMaps = heatMapService.getLatestHeatMaps(projectParams, serviceIdentifier, envIdentifier);
     List<ActivityDashboardDTO> changes = activityService.listActivitiesInTimeRange(
         projectParams, serviceIdentifier, envIdentifier, clock.instant().minus(1, ChronoUnit.DAYS), clock.instant());
@@ -88,6 +96,7 @@ public class ServiceDependencyGraphServiceImpl implements ServiceDependencyGraph
       }
       Risk risk = Risk.getRiskFromRiskScore(riskScore);
       nodes.add(ServiceSummaryDetails.builder()
+                    .identifierRef(value.getIdentifier())
                     .serviceRef(value.getServiceIdentifier())
                     .environmentRef(value.getEnvironmentIdentifier())
                     .riskScore(riskScore)
@@ -98,9 +107,10 @@ public class ServiceDependencyGraphServiceImpl implements ServiceDependencyGraph
                     .build());
     });
 
-    Set<Edge> edges = serviceDependencies.stream()
-                          .map(x -> new Edge(x.getFromServiceIdentifier(), x.getToServiceIdentifier()))
-                          .collect(Collectors.toSet());
+    Set<Edge> edges =
+        serviceDependencies.stream()
+            .map(x -> new Edge(x.getFromMonitoredServiceIdentifier(), x.getToMonitoredServiceIdentifier()))
+            .collect(Collectors.toSet());
     return ServiceDependencyGraphDTO.builder().nodes(nodes).edges(new ArrayList<>(edges)).build();
   }
 

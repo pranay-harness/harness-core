@@ -381,9 +381,7 @@ public abstract class CloudFormationState extends State {
     if (isEmpty(provisionerId)) {
       results.put("Provisioner", "Provisioner must be provided.");
     }
-    if (isEmpty(awsConfigId)) {
-      results.put("AWS Cloud Provider", "AWS Cloud Provider must be provided.");
-    }
+    // if more fields need to validated, please make sure templatized fields are not broken.
     return results;
   }
 }

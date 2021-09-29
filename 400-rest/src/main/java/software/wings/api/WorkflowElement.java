@@ -1,5 +1,10 @@
 package software.wings.api;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.ArtifactVariable;
 import software.wings.beans.ManifestVariable;
 
@@ -10,6 +15,8 @@ import lombok.Data;
 
 @Data
 @Builder
+@OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class WorkflowElement {
   private String uuid;
   private String name;

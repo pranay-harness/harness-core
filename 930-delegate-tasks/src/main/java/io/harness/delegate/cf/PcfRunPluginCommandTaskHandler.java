@@ -29,7 +29,6 @@ import io.harness.filesystem.FileIo;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.Misc;
-import io.harness.pcf.PivotalClientApiException;
 import io.harness.pcf.model.CfCliVersion;
 import io.harness.pcf.model.CfRequestConfig;
 import io.harness.pcf.model.CfRunPluginScriptRequestData;
@@ -128,8 +127,6 @@ public class PcfRunPluginCommandTaskHandler extends PcfCommandTaskHandler {
           "\n ----------  PCF Run Plugin Command completed successfully", INFO, CommandExecutionStatus.SUCCESS);
       return CfCommandExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
 
-    } catch (PivotalClientApiException | IOException e) {
-      return handleError(executionLogCallback, pluginCommandRequest, e);
     } catch (Exception e) {
       return handleError(executionLogCallback, pluginCommandRequest, e);
     } finally {
@@ -145,7 +142,8 @@ public class PcfRunPluginCommandTaskHandler extends PcfCommandTaskHandler {
     return canonicalPath;
   }
 
-  private String prepareFinalScript(
+  @VisibleForTesting
+  String prepareFinalScript(
       String renderedScriptString, String workingDirCanonicalPathStr, String repoRoot, String cfCliPath) {
     // replace the path identifier with actual working directory path
     String finalScript =

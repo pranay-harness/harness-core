@@ -1,5 +1,6 @@
 package io.harness.mongo;
 
+import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtils.OneAndOnlyOne.MANY;
 import static io.harness.data.structure.ListUtils.OneAndOnlyOne.NONE;
@@ -21,6 +22,9 @@ import static java.util.stream.Collectors.toList;
 
 import io.harness.annotation.IgnoreUnusedIndex;
 import io.harness.annotation.StoreIn;
+import io.harness.annotation.StoreInMultiple;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.ListUtils.OneAndOnlyOne;
 import io.harness.govern.Switch;
 import io.harness.logging.AutoLogContext;
@@ -61,6 +65,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.Value;
@@ -73,6 +78,7 @@ import org.mongodb.morphia.mapping.MappedClass;
 import org.mongodb.morphia.mapping.MappedField;
 
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
 public class IndexManagerSession {
   public static final String UNIQUE = "unique";
   public static final String BACKGROUND = "background";
@@ -172,15 +178,15 @@ public class IndexManagerSession {
 
       DBCollection collection = datastore.getCollection(mc.getClazz());
 
-      StoreIn storeIn = mc.getClazz().getAnnotation(StoreIn.class);
-      if (storeIn != null) {
-        if (!DbAliases.ALL.equals(storeIn.value()) && (store == null || !store.getName().equals(storeIn.value()))) {
+      Set<String> storeInSet = new HashSet<>();
+      addStoreInInSet(mc, storeInSet);
+      if (isNotEmpty(storeInSet)) {
+        if (!storeInSet.contains(DbAliases.ALL) && (store == null || !storeInSet.contains(store.getName()))) {
           return;
         }
       } else if (!includeUnannotatedStoreIn) {
         return;
       }
-
       try (AutoLogContext ignore = new CollectionLogContext(collection.getName(), OVERRIDE_ERROR)) {
         if (processedCollections.contains(collection.getName())) {
           return;
@@ -200,6 +206,18 @@ public class IndexManagerSession {
     });
 
     return processedCollections;
+  }
+
+  private static void addStoreInInSet(MappedClass mc, Set<String> storeInSet) {
+    final StoreIn storeIn = mc.getClazz().getAnnotation(StoreIn.class);
+    final StoreInMultiple storeInMultiple = mc.getClazz().getAnnotation(StoreInMultiple.class);
+    if (storeIn != null) {
+      storeInSet.add(storeIn.value());
+    }
+    if (storeInMultiple != null) {
+      storeInSet.addAll(
+          emptyIfNull(Arrays.stream(storeInMultiple.value()).map(StoreIn::value).collect(Collectors.toList())));
+    }
   }
 
   // TODO(KARAN): clean includeUnannotatedStoreIn variable after all collections have @StoreIn annotations

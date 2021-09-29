@@ -114,8 +114,6 @@ public class ArtifactCollectionHandler implements Handler<ArtifactStream> {
         log.info("Permit [{}] acquired for artifactStream [failedCount: {}] for [{}] minutes", permitId,
             artifactStream.getFailedCronAttempts(), TimeUnit.MILLISECONDS.toMinutes(leaseDuration));
         artifactCollectionServiceAsync.collectNewArtifactsAsync(artifactStream, permitId);
-      } else {
-        log.info("Permit already exists for artifactStream");
       }
     } catch (WingsException exception) {
       log.warn("Failed to collect artifacts for artifact stream. Reason {}", exception.getMessage());

@@ -47,7 +47,7 @@ import org.eclipse.jgit.transport.URIish;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Singleton
 @Slf4j
-@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 public class CapabilityHelper {
   public static final String TERRAFORM = "terraform";
   public static final String TERRAGRUNT = "terragrunt";

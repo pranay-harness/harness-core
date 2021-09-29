@@ -2,6 +2,7 @@ package io.harness.pms.data;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import java.util.LinkedHashMap;
@@ -19,14 +20,14 @@ public class OrchestrationMap extends LinkedHashMap<String, Object> implements M
   }
 
   public static OrchestrationMap parse(String json) {
-    if (json == null) {
+    if (EmptyPredicate.isEmpty(json)) {
       return null;
     }
     return new OrchestrationMap(RecastOrchestrationUtils.fromJson(json));
   }
 
   public static OrchestrationMap parse(Map<String, Object> map) {
-    if (map == null) {
+    if (EmptyPredicate.isEmpty(map)) {
       return null;
     }
 

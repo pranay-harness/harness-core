@@ -34,7 +34,7 @@ public class QueryRecordsServiceImpl implements QueryRecordsService {
         QueryRecordKey queryRecordKey = QueryRecordKey.builder()
                                             .hash(queryRecordEntity.getHash())
                                             .serviceName(queryRecordEntity.getServiceName())
-                                            .version(queryRecordEntity.getVersion())
+                                            .version(queryRecordEntity.getMajorVersion())
                                             .build();
         if (result.containsKey(queryRecordKey)) {
           result.get(queryRecordKey).add(queryRecordEntity);

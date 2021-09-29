@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
@@ -11,6 +12,7 @@ import lombok.Data;
 
 @Data
 @Builder
+@BreakDependencyOn("software.wings.beans.GitConfig")
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class GitOperationContext {
   private String gitConnectorId;

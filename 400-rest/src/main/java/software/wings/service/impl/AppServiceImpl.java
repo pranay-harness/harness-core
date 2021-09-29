@@ -44,6 +44,8 @@ import io.harness.limits.LimitEnforcementUtils;
 import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.queue.QueuePublisher;
 import io.harness.scheduler.PersistentScheduler;
+import io.harness.service.EventConfigService;
+import io.harness.service.EventService;
 import io.harness.validation.PersistenceValidator;
 
 import software.wings.beans.AccountEvent;
@@ -155,6 +157,8 @@ public class AppServiceImpl implements AppService {
   @Inject private UserGroupService userGroupService;
   @Inject private AuthService authService;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private EventConfigService eventConfigService;
+  @Inject private EventService eventService;
 
   @Inject private QueuePublisher<PruneEvent> pruneQueue;
   @Inject @Named("ServiceJobScheduler") private PersistentScheduler serviceJobScheduler;
@@ -203,7 +207,7 @@ public class AppServiceImpl implements AppService {
         yamlGitService.save(yamlGitConfig, !app.isSyncFromGit());
       }
 
-      yamlPushService.pushYamlChangeSet(app.getAccountId(), null, application, Type.CREATE, app.isSyncFromGit(), false);
+      yamlPushService.pushYamlChangeSet(app.getAccountId(), null, app, Type.CREATE, app.isSyncFromGit(), false);
       if (!app.isSample()) {
         eventPublishHelper.publishAccountEvent(
             accountId, AccountEvent.builder().accountEventType(AccountEventType.APP_CREATED).build(), true, true);

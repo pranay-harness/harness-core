@@ -3,8 +3,11 @@ package io.harness.morphia;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.SweepingOutput;
 
+import software.wings.beans.TerraGroupProvisioners;
 import software.wings.beans.entityinterface.ApplicationAccess;
+import software.wings.beans.entityinterface.KeywordsAware;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeAware;
 
 import java.util.Set;
@@ -15,6 +18,9 @@ public class CgOrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
   public void registerClasses(Set<Class> set) {
     set.add(CustomDeploymentTypeAware.class);
     set.add(ApplicationAccess.class);
+    set.add(KeywordsAware.class);
+    set.add(TerraGroupProvisioners.class);
+    set.add(SweepingOutput.class);
   }
 
   @Override

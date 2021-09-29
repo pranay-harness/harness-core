@@ -2,6 +2,11 @@ package software.wings.infra;
 
 import static software.wings.beans.InfrastructureType.AZURE_VMSS;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.annotation.IncludeFieldMap;
 import software.wings.api.CloudProviderType;
 import software.wings.beans.AzureVMSSInfrastructureMapping;
@@ -20,6 +25,8 @@ import lombok.experimental.FieldNameConstants;
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "AzureVMSSInfraKeys")
+@OwnedBy(HarnessTeam.CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class AzureVMSSInfra implements InfraMappingInfrastructureProvider, FieldKeyValMapProvider {
   private String cloudProviderId;
   private String baseVMSSName;

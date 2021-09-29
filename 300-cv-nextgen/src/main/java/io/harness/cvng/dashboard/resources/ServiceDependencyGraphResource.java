@@ -1,7 +1,7 @@
 package io.harness.cvng.dashboard.resources;
 
 import io.harness.annotations.ExposeInternalException;
-import io.harness.cvng.core.beans.ProjectParams;
+import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.dashboard.beans.ServiceDependencyGraphDTO;
 import io.harness.cvng.dashboard.services.api.ServiceDependencyGraphService;
 import io.harness.rest.RestResponse;

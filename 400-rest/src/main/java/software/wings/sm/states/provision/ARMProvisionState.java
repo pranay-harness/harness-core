@@ -507,12 +507,11 @@ public class ARMProvisionState extends State {
   @Override
   public Map<String, String> validateFields() {
     Map<String, String> results = new HashMap<>();
+
     if (isEmpty(provisionerId)) {
       results.put("Provisioner", "Provisioner must be provided.");
     }
-    if (isEmpty(cloudProviderId)) {
-      results.put("Azure Cloud Provider", "Azure Cloud Provider must be provided.");
-    }
+    // if more fields need to validated, please make sure templatized fields are not broken.
     return results;
   }
 }

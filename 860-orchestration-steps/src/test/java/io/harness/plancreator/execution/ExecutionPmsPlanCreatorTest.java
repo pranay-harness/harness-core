@@ -7,8 +7,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.pms.contracts.steps.StepCategory;
-import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
@@ -16,6 +14,7 @@ import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.rule.Owner;
+import io.harness.steps.common.NGExecutionStep;
 import io.harness.steps.common.NGSectionStepParameters;
 
 import com.google.common.base.Charsets;
@@ -75,23 +74,27 @@ public class ExecutionPmsPlanCreatorTest {
 
     assertThat(planForChildrenNodes.containsKey(stepsField.getNode().getUuid())).isTrue();
     PlanCreationResponse stepsResponse = planForChildrenNodes.get(stepsField.getNode().getUuid());
-    assertThat(stepsResponse.getDependencies()).hasSize(0);
+    assertThat(stepsResponse.getDependencies()).isNull();
     assertThat(stepsResponse.getNodes()).hasSize(1);
     assertThat(stepsResponse.getNodes().containsKey(stepsField.getNode().getUuid())).isTrue();
 
     assertThat(planForChildrenNodes.containsKey(stepGroupField.getNode().getUuid())).isTrue();
     PlanCreationResponse stepGroupResponse = planForChildrenNodes.get(stepGroupField.getNode().getUuid());
     assertThat(stepGroupResponse.getNodes()).hasSize(0);
-    assertThat(stepGroupResponse.getDependencies()).hasSize(1);
-    assertThat(stepGroupResponse.getDependencies().containsKey(stepGroupField.getNode().getUuid())).isTrue();
-    assertThat(stepGroupResponse.getDependencies().get(stepGroupField.getNode().getUuid())).isEqualTo(stepGroupField);
+    assertThat(stepGroupResponse.getDependencies().getDependenciesMap()).hasSize(1);
+    assertThat(stepGroupResponse.getDependencies().getDependenciesMap().containsKey(stepGroupField.getNode().getUuid()))
+        .isTrue();
+    assertThat(stepGroupResponse.getDependencies().getDependenciesMap().get(stepGroupField.getNode().getUuid()))
+        .isEqualTo("pipeline/stages/[0]/stage/spec/execution/steps/[0]/stepGroup");
 
     assertThat(planForChildrenNodes.containsKey(parallelField.getNode().getUuid())).isTrue();
     PlanCreationResponse parallelResponse = planForChildrenNodes.get(parallelField.getNode().getUuid());
     assertThat(parallelResponse.getNodes()).hasSize(0);
-    assertThat(parallelResponse.getDependencies()).hasSize(1);
-    assertThat(parallelResponse.getDependencies().containsKey(parallelField.getNode().getUuid())).isTrue();
-    assertThat(parallelResponse.getDependencies().get(parallelField.getNode().getUuid())).isEqualTo(parallelField);
+    assertThat(parallelResponse.getDependencies().getDependenciesMap()).hasSize(1);
+    assertThat(parallelResponse.getDependencies().getDependenciesMap().containsKey(parallelField.getNode().getUuid()))
+        .isTrue();
+    assertThat(parallelResponse.getDependencies().getDependenciesMap().get(parallelField.getNode().getUuid()))
+        .isEqualTo("pipeline/stages/[0]/stage/spec/execution/steps/[1]/parallel");
   }
 
   @Test
@@ -105,8 +108,7 @@ public class ExecutionPmsPlanCreatorTest {
     PlanNode planForParentNode = executionPmsPlanCreator.createPlanForParentNode(context, executionElementConfig, null);
     assertThat(planForParentNode.getUuid()).isEqualTo(executionYamlField.getNode().getUuid());
     assertThat(planForParentNode.getIdentifier()).isEqualTo("execution");
-    assertThat(planForParentNode.getStepType())
-        .isEqualTo(StepType.newBuilder().setType("NG_SECTION").setStepCategory(StepCategory.STEP).build());
+    assertThat(planForParentNode.getStepType()).isEqualTo(NGExecutionStep.STEP_TYPE);
     assertThat(planForParentNode.getGroup()).isEqualTo("EXECUTION");
     assertThat(planForParentNode.getName()).isEqualTo("Execution");
     assertThat(planForParentNode.getFacilitatorObtainments()).hasSize(1);

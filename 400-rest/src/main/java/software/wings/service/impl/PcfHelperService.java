@@ -13,7 +13,9 @@ import static software.wings.service.impl.AssignDelegateServiceImpl.SCOPE_WILDCA
 
 import static java.lang.String.format;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.DelegateResponseData;
@@ -58,6 +60,7 @@ import org.jetbrains.annotations.NotNull;
 @Singleton
 @Slf4j
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._960_API_SERVICES)
 public class PcfHelperService {
   @Inject private DelegateService delegateService;
   @Inject private SecretManager secretManager;
@@ -183,12 +186,8 @@ public class PcfHelperService {
           || cfCommandExecutionResponse.getErrorMessage().contains(space + " does not exist")) {
         throw new PcfAppNotFoundException(cfCommandExecutionResponse.getErrorMessage());
       } else {
-        String errMsg = new StringBuilder(128)
-                            .append("Failed to fetch app details for PCF APP: ")
-                            .append(pcfApplicationName)
-                            .append(" with Error: ")
-                            .append(cfInstanceSyncResponse.getOutput())
-                            .toString();
+        String errMsg = format("Failed to fetch app details for PCF APP: %s with Error: %s", pcfApplicationName,
+            cfInstanceSyncResponse.getOutput());
         throw new WingsException(ErrorCode.GENERAL_ERROR, errMsg).addParam("message", errMsg);
       }
     }

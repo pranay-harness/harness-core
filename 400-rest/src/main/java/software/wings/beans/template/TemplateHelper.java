@@ -23,6 +23,8 @@ import static software.wings.common.TemplateConstants.PATH_DELIMITER;
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -33,6 +35,7 @@ import software.wings.beans.CommandCategory;
 import software.wings.beans.EntityType;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.Service;
+import software.wings.beans.User;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowKeys;
@@ -41,11 +44,15 @@ import software.wings.beans.artifact.ArtifactStream.ArtifactStreamKeys;
 import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.template.Template.TemplateKeys;
+import software.wings.beans.template.TemplateFolder.TemplateFolderKeys;
 import software.wings.beans.template.dto.HarnessImportedTemplateDetails;
 import software.wings.beans.template.dto.ImportedTemplateDetails;
 import software.wings.common.TemplateConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.infra.InfrastructureDefinition;
+import software.wings.security.AppPermissionSummary;
+import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig;
 import software.wings.security.encryption.secretsmanagerconfigs.CustomSecretsManagerConfig.CustomSecretsManagerConfigKeys;
 import software.wings.service.impl.command.CommandHelper;
@@ -66,6 +73,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.Query;
 
 @Singleton
+@OwnedBy(HarnessTeam.PL)
 public class TemplateHelper {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ServiceResourceService serviceResourceService;
@@ -404,5 +412,35 @@ public class TemplateHelper {
     return variables.stream()
         .filter(variable -> variable.getName() != null && variable.getValue() != null)
         .collect(Collectors.toMap(Variable::getName, Variable::getValue));
+  }
+
+  public List<TemplateFolder> getFolderDetails(String accountId, Set<String> templateFolderIds, List<String> appIds) {
+    Query<TemplateFolder> query = wingsPersistence.createQuery(TemplateFolder.class)
+                                      .filter(TemplateFolderKeys.accountId, accountId)
+                                      .field(TemplateFolderKeys.appId)
+                                      .in(appIds)
+                                      .field(TemplateFolderKeys.uuid)
+                                      .in(templateFolderIds);
+
+    return query.asList().stream().collect(Collectors.toList());
+  }
+
+  public boolean shouldAllowTemplateFolderDeletion(String appId, Set<String> templateIdsToBeDeleted) {
+    if (isEmpty(templateIdsToBeDeleted)) {
+      return true;
+    }
+    User user = UserThreadLocal.get();
+    if (user == null) {
+      return true;
+    }
+    final AppPermissionSummary appPermissionSummary =
+        user.getUserRequestContext().getUserPermissionInfo().getAppPermissionMapInternal().get(appId);
+    if (appPermissionSummary != null) {
+      final Set<String> templateIdsWithDeletePermissions =
+          appPermissionSummary.getTemplatePermissions().get(Action.DELETE);
+      return templateIdsWithDeletePermissions != null
+          && templateIdsWithDeletePermissions.containsAll(templateIdsToBeDeleted);
+    }
+    return true;
   }
 }

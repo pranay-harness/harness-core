@@ -12,4 +12,7 @@ public class PmsSdkEventFrameworkConstants {
   public static final String PT_NODE_ADVISE_CONSUMER = "NODE_ADVISE_CONSUMER";
   public static final String PT_NODE_RESUME_CONSUMER = "NODE_RESUME_CONSUMER";
   public static final String PT_ORCHESTRATION_EVENT_CONSUMER = "ORCHESTRATION_EVENT_CONSUMER";
+  public static final String PT_ORCHESTRATION_EVENT_LISTENER = "ORCHESTRATION_EVENT_LISTENER";
+
+  public static final String PT_START_PLAN_CREATION_EVENT_CONSUMER = "PT_START_PLAN_CREATION_EVENT_CONSUMER";
 }

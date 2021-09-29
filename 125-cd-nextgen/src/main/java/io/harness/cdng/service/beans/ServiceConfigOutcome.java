@@ -2,6 +2,7 @@ package io.harness.cdng.service.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.ToBeDeleted;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
@@ -20,6 +21,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName("serviceConfigOutcome")
 @OwnedBy(CDC)
 @ToBeDeleted
+@RecasterAlias("io.harness.cdng.service.beans.ServiceConfigOutcome")
 public class ServiceConfigOutcome implements Outcome {
   ServiceOutcome service;
 

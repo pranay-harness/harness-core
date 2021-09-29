@@ -47,8 +47,6 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 public interface DelegateService extends OwnedByAccount {
   PageResponse<Delegate> list(PageRequest<Delegate> pageRequest);
 
-  boolean checkDelegateConnected(String accountId, String delegateId);
-
   List<String> getKubernetesDelegateNames(String accountId);
 
   Set<String> getAllDelegateSelectors(String accountId);
@@ -139,9 +137,9 @@ public interface DelegateService extends OwnedByAccount {
 
   List<String> obtainDelegateIds(String accountId, String sessionIdentifier);
 
-  void saveDelegateTask(DelegateTask task, DelegateTask.Status status);
+  List<String> obtainDelegateIdsUsingName(String accountId, String delegateName);
 
-  void clearCache(String accountId, String delegateId);
+  void saveDelegateTask(DelegateTask task, DelegateTask.Status status);
 
   boolean filter(String accountId, String delegateId);
 

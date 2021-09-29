@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
-import lombok.Singular;
+import lombok.NonNull;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.Wither;
@@ -60,11 +60,11 @@ public class ExecutionSweepingOutputInstance implements PersistentEntity, UuidAc
         .build();
   }
   @Wither @Id @org.mongodb.morphia.annotations.Id String uuid;
-  @NotNull String planExecutionId;
-  @Singular List<Level> levels;
+  @NonNull String planExecutionId;
+  String stageExecutionId;
   @NotNull @Trimmed String name;
   String levelRuntimeIdIdx;
-
+  Level producedBy;
   @Deprecated Map<String, Object> value; // use valueOutput instead
   PmsSweepingOutput valueOutput;
   @Wither @CreatedDate Long createdAt;
@@ -72,6 +72,8 @@ public class ExecutionSweepingOutputInstance implements PersistentEntity, UuidAc
   @FdIndex @Builder.Default Date validUntil = Date.from(OffsetDateTime.now().plus(TTL).toInstant());
 
   @Wither @Version Long version;
+
+  String groupName;
 
   public String getOutputValueJson() {
     if (!EmptyPredicate.isEmpty(valueOutput)) {

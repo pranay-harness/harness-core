@@ -4,6 +4,7 @@ import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ngtriggers.TriggerConfiguration;
 import io.harness.ngtriggers.beans.source.webhook.WebhookSourceRepo;
 import io.harness.ngtriggers.service.NGTriggerService;
 import io.harness.ngtriggers.service.NGTriggerWebhookRegistrationService;
@@ -19,41 +20,55 @@ import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.webhook.WebhookConfigProvider;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 @OwnedBy(PIPELINE)
 public class NGTriggersModule extends AbstractModule {
   private static final AtomicReference<NGTriggersModule> instanceRef = new AtomicReference<>();
-  private String pmsApiBaseUrl;
+  private TriggerConfiguration triggerConfig;
   private ServiceHttpClientConfig pmsHttpClientConfig;
   private String pipelineServiceSecret;
 
   public static NGTriggersModule getInstance(
-      String pmsApiBaseUrl, ServiceHttpClientConfig pmsHttpClientConfig, String pipelineServiceSecret) {
+      TriggerConfiguration triggerConfig, ServiceHttpClientConfig pmsHttpClientConfig, String pipelineServiceSecret) {
     if (instanceRef.get() == null) {
-      instanceRef.compareAndSet(null, new NGTriggersModule(pmsApiBaseUrl, pmsHttpClientConfig, pipelineServiceSecret));
+      instanceRef.compareAndSet(null, new NGTriggersModule(triggerConfig, pmsHttpClientConfig, pipelineServiceSecret));
     }
     return instanceRef.get();
   }
 
   private NGTriggersModule(
-      String pmsApiBaseUrl, ServiceHttpClientConfig pmsHttpClientConfig, String pipelineServiceSecret) {
-    this.pmsApiBaseUrl = pmsApiBaseUrl;
+      TriggerConfiguration triggerConfig, ServiceHttpClientConfig pmsHttpClientConfig, String pipelineServiceSecret) {
+    this.triggerConfig = triggerConfig;
     this.pmsHttpClientConfig = pmsHttpClientConfig;
     this.pipelineServiceSecret = pipelineServiceSecret;
   }
 
   @Override
   protected void configure() {
+    MapBinder<String, List<String>> variablesMapBinder =
+        MapBinder.newMapBinder(binder(), new TypeLiteral<String>() {}, new TypeLiteral<List<String>>() {});
+    List<String> triggerExpressions = new ArrayList<>();
+    // TODO: add trigger expressions in this list
+    variablesMapBinder.addBinding("trigger").toInstance(triggerExpressions);
+
     install(SCMJavaClientModule.getInstance());
     bind(NGTriggerService.class).to(NGTriggerServiceImpl.class);
     bind(NGTriggerWebhookRegistrationService.class).to(NGTriggerWebhookRegistrationServiceImpl.class);
     bind(NGTriggerYamlSchemaService.class).to(NGTriggerYamlSchemaServiceImpl.class);
     bind(WebhookConfigProvider.class).toInstance(new WebhookConfigProvider() {
       @Override
-      public String getPmsApiBaseUrl() {
-        return pmsApiBaseUrl;
+      public String getCustomApiBaseUrl() {
+        return triggerConfig.getCustomBaseUrl();
+      }
+
+      @Override
+      public String getWebhookApiBaseUrl() {
+        return triggerConfig.getWebhookBaseUrl();
       }
     });
     install(new PipelineRemoteClientModule(

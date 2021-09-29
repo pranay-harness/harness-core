@@ -3,7 +3,6 @@ package io.harness.analyserservice;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.event.OverviewResponse;
 import io.harness.event.QueryAlertCategory;
 import io.harness.event.QueryStats;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -66,13 +65,6 @@ public class AnalyserResource {
   }
 
   @GET
-  @Path("/overview")
-  @ApiOperation(value = "get overview of a service", nickname = "getOverview")
-  public ResponseDTO<List<OverviewResponse>> getOverview() {
-    return ResponseDTO.newResponse(analyserService.getOverview());
-  }
-
-  @GET
   @Path("/alert")
   @ApiOperation(value = "get alerts of a service", nickname = "getAlerts")
   public ResponseDTO<List<QueryStats>> getAlerts(@NotNull @QueryParam(AnalyserServiceConstants.SERVICE) String service,
@@ -88,14 +80,6 @@ public class AnalyserResource {
       @NotNull @QueryParam(AnalyserServiceConstants.SERVICE) String service,
       @QueryParam(AnalyserServiceConstants.ALERT_TYPE) QueryAlertCategory alertType) {
     return ResponseDTO.newResponse(analyserService.getAlertMap(service, alertType));
-  }
-
-  @GET
-  @Path("/newqueries")
-  @ApiOperation(value = "get ne queries in latest version", nickname = "getNewQueriesInLatestVersion")
-  public ResponseDTO<List<QueryStats>> getNewQueriesInLatestVersion(
-      @NotNull @QueryParam(AnalyserServiceConstants.SERVICE) String service) {
-    return ResponseDTO.newResponse(analyserService.getNewQueriesInLatestVersion(service));
   }
 
   @GET

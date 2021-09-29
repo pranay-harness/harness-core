@@ -26,6 +26,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.ng.core.account.AuthenticationMechanism;
+import io.harness.ng.core.account.OauthProviderType;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.Account;
@@ -46,7 +47,6 @@ import software.wings.helpers.ext.ldap.LdapResponse;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
-import software.wings.security.authentication.OauthProviderType;
 import software.wings.security.authentication.SSOConfig;
 import software.wings.security.authentication.oauth.OauthOptions;
 import software.wings.security.saml.SamlClientService;
@@ -480,6 +480,11 @@ public class SSOServiceImpl implements SSOService {
   @Override
   public OauthSettings updateOauthSettings(String accountId, String filter, Set<OauthProviderType> allowedProviders) {
     return ssoSettingService.updateOauthSettings(accountId, filter, allowedProviders);
+  }
+
+  @Override
+  public List<Long> getIterationsFromCron(String accountId, String cron) {
+    return ssoSettingService.getIterationsFromCron(accountId, cron);
   }
 
   private boolean deleteSamlSettings(String accountId, String targetAccountType) {

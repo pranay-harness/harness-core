@@ -1,0 +1,31 @@
+# Possible entity values for Instance aggregation
+enum InstanceEntityAggregation {
+  Application
+  Service
+  Environment
+  CloudProvider
+  InstanceType
+}
+
+# Set Instance aggregation criteria
+input InstanceAggregation {
+  # Aggregate by entity
+  entityAggregation: InstanceEntityAggregation
+  # Aggregate by time aggregators
+  timeAggregation: TimeSeriesAggregation
+  # Aggregate by tag
+  tagAggregation: InstanceTagAggregation
+}
+
+# Aggregate by Instance tag
+input InstanceTagAggregation {
+  # Set entity type
+  entityType: InstanceTagType
+  # Set tag name
+  tagName: String
+}
+
+extend type Query {
+  # Get statistics about instances.
+  instanceStats(filters: [InstanceFilter], groupBy: [InstanceAggregation]): Data @dataFetcher(name: instanceStats)
+}

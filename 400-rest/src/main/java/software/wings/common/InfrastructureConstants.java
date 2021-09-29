@@ -2,12 +2,15 @@ package software.wings.common;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import lombok.experimental.UtilityClass;
 
 @OwnedBy(CDP)
 @UtilityClass
+@TargetModule(HarnessModule._957_CG_BEANS)
 public final class InfrastructureConstants {
   public static final String DEFAULT_AWS_HOST_NAME_CONVENTION = "${host.ec2Instance.privateDnsName.split('\\.')[0]}";
   public static final String DEFAULT_AZURE_VM_HOST_NAME_CONVENTION =

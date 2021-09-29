@@ -41,7 +41,7 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("stepElementConfig")
 @OwnedBy(CDC)
 // TODO this should go to yaml commons
-@TargetModule(HarnessModule._889_YAML_COMMONS)
+@TargetModule(HarnessModule._884_PMS_COMMONS)
 public class StepElementConfig {
   @JsonProperty(YamlNode.UUID_FIELD_NAME)
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) })
@@ -51,7 +51,6 @@ public class StepElementConfig {
   @NotNull @EntityIdentifier @Pattern(regexp = NGRegexValidatorConstants.IDENTIFIER_PATTERN) String identifier;
   @NotNull @EntityName @Pattern(regexp = NGRegexValidatorConstants.NAME_PATTERN) String name;
   String description;
-  @NotNull
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
   @Pattern(regexp = NGRegexValidatorConstants.TIMEOUT_PATTERN)
   ParameterField<Timeout> timeout;

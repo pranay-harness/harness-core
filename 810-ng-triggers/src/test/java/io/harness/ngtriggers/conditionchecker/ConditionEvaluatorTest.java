@@ -80,5 +80,7 @@ public class ConditionEvaluatorTest extends CategoryTest {
         ConditionEvaluator.evaluate("trigger unit-tests-22, recencycheck, unit-tests-1, unit-tests-3, author-metadata",
             "^.*trigger.*[, ](unit-tests-2$|unit-tests-2,.*)", REGEX_OPERATOR))
         .isFalse();
+
+    assertThat(ConditionEvaluator.evaluate("create_image xyz\r\n", "^create_image.*", REGEX_OPERATOR)).isTrue();
   }
 }

@@ -15,6 +15,8 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.AccountGenerator;
@@ -51,6 +53,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.PL)
 public class TemplateFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
   @Inject private AccountGenerator accountGenerator;
@@ -101,6 +104,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = AADITI)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void createUpdateDeleteShellScriptTemplate() {
     // Create template
     TemplateFolder parentFolder =
@@ -225,6 +229,7 @@ public class TemplateFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = AADITI)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void testCRUDTemplateRBAC() {
     String readOnlyPassword = "readonlyuser";
     String bearerToken = Setup.getAuthToken(readOnlyEmail, readOnlyPassword);

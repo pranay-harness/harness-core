@@ -75,6 +75,7 @@ import software.wings.app.TemplateModule;
 import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
 import software.wings.graphql.provider.QueryLanguageProvider;
+import software.wings.scheduler.LdapSyncJobConfig;
 import software.wings.search.framework.ElasticsearchConfig;
 import software.wings.service.impl.EventEmitter;
 
@@ -395,6 +396,8 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
                                            .org("testOrg")
                                            .project("testProject")
                                            .build());
+    configuration.setLdapSyncJobConfig(
+        LdapSyncJobConfig.builder().defaultCronExpression("0 0 23 ? * SAT *").poolSize(3).syncInterval(15).build());
     return configuration;
   }
 

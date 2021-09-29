@@ -1,5 +1,6 @@
 package software.wings.service.impl.apm;
 
+import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 import static io.harness.rule.OwnerRule.RAGHU;
 import static io.harness.rule.OwnerRule.SRIRAM;
@@ -218,6 +219,42 @@ public class APMParserTest extends WingsBaseTest {
         APMParserTest.class.getResource("/apm/graphana_sample_collected_response_500_multiple.json"), Charsets.UTF_8);
 
     assertThat(JsonUtils.asJson(records)).isEqualTo(output);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testExtract_loganalytics_sample() throws IOException {
+    String text500 =
+        Resources.toString(APMParserTest.class.getResource("/apm/loganalytics_sample.json"), Charsets.UTF_8);
+
+    Map<String, APMMetricInfo.ResponseMapper> responseMapperMap = new HashMap<>();
+    responseMapperMap.put("timestamp",
+        APMMetricInfo.ResponseMapper.builder()
+            .fieldName("timestamp")
+            .timestampFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+            .jsonPath("tables[0].rows[*].[1]")
+            .build());
+    responseMapperMap.put(
+        "value", APMMetricInfo.ResponseMapper.builder().fieldName("value").jsonPath("tables[0].rows[*].[2]").build());
+    responseMapperMap.put("txnName",
+        APMMetricInfo.ResponseMapper.builder().fieldName("txnName").jsonPath("tables[0].rows[*].[0]").build());
+
+    List<APMMetricInfo> metricInfos = Lists.newArrayList(APMMetricInfo.builder()
+                                                             .metricName("500")
+                                                             .metricType(MetricType.ERROR)
+                                                             .tag("nginix")
+                                                             .responseMappers(responseMapperMap)
+                                                             .build());
+
+    Collection<NewRelicMetricDataRecord> records =
+        APMResponseParser.extract(Lists.newArrayList(APMResponseParser.APMResponseData.builder()
+                                                         .text(text500)
+                                                         .groupName(DEFAULT_GROUP_NAME)
+                                                         .metricInfos(metricInfos)
+                                                         .build()));
+    // TODO: this test is for testing timestamp parsing logic. The metrics names are not parsed correctly
+    assertThat(records).hasSize(15);
   }
 
   @Test

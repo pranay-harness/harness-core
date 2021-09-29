@@ -27,5 +27,13 @@ public interface CVNextGenConstants {
   String ACTIVITY_SOURCE_RESOURCE = "activity-source";
   String INTERNAL_ACTIVITY_RESOURCE = "activity-internal-api";
   String KUBERNETES_RESOURCE = "kubernetes";
+  String CHANGE_EVENT_RESOURCE = "change-event";
   int CVNG_MAX_PARALLEL_THREADS = 20;
+
+  String ACCOUNT_IDENTIFIER_KEY = "accountIdentifier";
+  String ORG_IDENTIFIER_KEY = "orgIdentifier";
+  String PROJECT_IDENTIFIER_KEY = "projectIdentifier";
+  String PROJECT_PATH = "account/{" + ACCOUNT_IDENTIFIER_KEY + "}/org/{" + ORG_IDENTIFIER_KEY + "}/project/{"
+      + PROJECT_IDENTIFIER_KEY + "}";
+  String CHANGE_EVENT_PATH = PROJECT_PATH + "/change-event";
 }

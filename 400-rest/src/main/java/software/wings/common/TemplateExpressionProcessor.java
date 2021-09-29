@@ -3,6 +3,8 @@ package software.wings.common;
 import static software.wings.expression.ManagerExpressionEvaluator.matchesVariablePattern;
 import static software.wings.expression.ManagerExpressionEvaluator.wingsVariablePattern;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.WingsException;
 
 import software.wings.beans.InfrastructureMapping;
@@ -26,6 +28,7 @@ import org.jetbrains.annotations.NotNull;
 
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class TemplateExpressionProcessor {
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;

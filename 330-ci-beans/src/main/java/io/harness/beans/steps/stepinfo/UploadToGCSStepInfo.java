@@ -5,6 +5,7 @@ import static io.harness.beans.SwaggerConstants.INTEGER_CLASSPATH;
 import static io.harness.beans.SwaggerConstants.STRING_CLASSPATH;
 import static io.harness.yaml.schema.beans.SupportedPossibleFieldTypes.string;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
 import io.harness.beans.steps.CIStepInfoType;
@@ -39,6 +40,7 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TypeAlias("uploadToGCSStepInfo")
 @OwnedBy(CI)
+@RecasterAlias("io.harness.beans.steps.stepinfo.UploadToGCSStepInfo")
 public class UploadToGCSStepInfo implements PluginCompatibleStep, WithConnectorRef {
   public static final int DEFAULT_RETRY = 1;
   public static final int DEFAULT_TIMEOUT = 60 * 60 * 2; // 2 hour

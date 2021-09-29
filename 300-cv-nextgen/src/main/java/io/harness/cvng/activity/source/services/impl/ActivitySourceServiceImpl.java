@@ -20,7 +20,6 @@ import io.harness.cvng.beans.activity.ActivitySourceType;
 import io.harness.cvng.beans.activity.KubernetesActivitySourceDTO;
 import io.harness.cvng.beans.activity.cd10.CD10ActivitySourceDTO;
 import io.harness.cvng.client.VerificationManagerService;
-import io.harness.cvng.core.services.api.CVEventService;
 import io.harness.cvng.core.services.api.UpdatableEntity;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
@@ -44,7 +43,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 public class ActivitySourceServiceImpl implements ActivitySourceService {
   @Inject private HPersistence hPersistence;
   @Inject private VerificationManagerService verificationManagerService;
-  @Inject private CVEventService cvEventService;
   @Inject private Injector injector;
 
   @Override
@@ -56,7 +54,6 @@ public class ActivitySourceServiceImpl implements ActivitySourceService {
       case KUBERNETES:
         activitySource = KubernetesActivitySource.fromDTO(accountId, activitySourceDTO.getOrgIdentifier(),
             activitySourceDTO.getProjectIdentifier(), (KubernetesActivitySourceDTO) activitySourceDTO);
-        sendKubernetesActivitySourceCreateEvent((KubernetesActivitySource) activitySource);
         break;
       case HARNESS_CD10:
         validateSingleCD10Activity(
@@ -118,12 +115,6 @@ public class ActivitySourceServiceImpl implements ActivitySourceService {
     if (cd10ActivitySource != null) {
       throw new IllegalStateException("There can only be one CD 1.0 activity source per project");
     }
-  }
-
-  private void sendKubernetesActivitySourceCreateEvent(KubernetesActivitySource activitySource) {
-    cvEventService.sendKubernetesActivitySourceConnectorCreateEvent(activitySource);
-    cvEventService.sendKubernetesActivitySourceServiceCreateEvent(activitySource);
-    cvEventService.sendKubernetesActivitySourceEnvironmentCreateEvent(activitySource);
   }
 
   @Override
@@ -196,17 +187,7 @@ public class ActivitySourceServiceImpl implements ActivitySourceService {
         verificationManagerService.deletePerpetualTask(accountId, activitySource.getDataCollectionTaskId());
       }
     }
-    // TODO: refactor ActivitySource entity and this service.
-    if (activitySource.getType() == ActivitySourceType.KUBERNETES) {
-      sendKubernetesActivitySourceDeleteEvent((KubernetesActivitySource) activitySource);
-    }
     return hPersistence.delete(activitySource);
-  }
-
-  private void sendKubernetesActivitySourceDeleteEvent(KubernetesActivitySource activitySource) {
-    cvEventService.sendKubernetesActivitySourceConnectorDeleteEvent(activitySource);
-    cvEventService.sendKubernetesActivitySourceServiceDeleteEvent(activitySource);
-    cvEventService.sendKubernetesActivitySourceEnvironmentDeleteEvent(activitySource);
   }
 
   @Override

@@ -1,11 +1,13 @@
 package software.wings.beans;
 
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.data.structure.EmptyPredicate;
@@ -37,6 +39,7 @@ import org.mongodb.morphia.annotations.Transient;
 @Entity(value = "userInvites", noClassnameStored = true)
 @HarnessEntity(exportable = true)
 @FieldNameConstants(innerTypeName = "UserInviteKeys")
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
 public class UserInvite extends Base implements AccountAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
@@ -93,6 +96,12 @@ public class UserInvite extends Base implements AccountAccess {
   @Getter @Setter private boolean createdFromNG;
 
   @Getter @Setter private String intent;
+
+  @Getter @Setter private String signupAction;
+
+  @Getter @Setter private String edition;
+
+  @Getter @Setter private String billingFrequency;
 
   @Override
   public boolean equals(Object o) {

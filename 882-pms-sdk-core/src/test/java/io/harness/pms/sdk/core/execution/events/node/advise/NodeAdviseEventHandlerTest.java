@@ -17,7 +17,6 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.failure.FailureData;
 import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
-import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.AmbianceTestUtils;
 import io.harness.pms.sdk.core.PmsSdkCoreTestBase;
 import io.harness.pms.sdk.core.adviser.Adviser;
@@ -71,18 +70,6 @@ public class NodeAdviseEventHandlerTest extends PmsSdkCoreTestBase {
   @Test
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
-  public void testExtractMetricContext() {
-    Map<String, String> metricsMap = nodeAdviseEventHandler.extractMetricContext(adviseEvent);
-    assertThat(metricsMap.isEmpty()).isFalse();
-    assertThat(metricsMap.size()).isEqualTo(3);
-    assertThat(metricsMap.get("accountId")).isEqualTo(AmbianceTestUtils.ACCOUNT_ID);
-    assertThat(metricsMap.get("orgIdentifier")).isEqualTo(AmbianceTestUtils.ORG_ID);
-    assertThat(metricsMap.get("projectIdentifier")).isEqualTo(AmbianceTestUtils.PROJECT_ID);
-  }
-
-  @Test
-  @Owner(developers = SAHIL)
-  @Category(UnitTests.class)
   public void testMetricPrefix() {
     assertThat(nodeAdviseEventHandler.getMetricPrefix(adviseEvent)).isEqualTo("advise_event");
   }
@@ -111,8 +98,7 @@ public class NodeAdviseEventHandlerTest extends PmsSdkCoreTestBase {
   public void testHandleEventWithContextWithNullResponse() {
     nodeAdviseEventHandler.handleEventWithContext(adviseEvent);
     Mockito.verify(sdkNodeExecutionService)
-        .handleAdviserResponse(ambiance.getPlanExecutionId(), AmbianceUtils.obtainCurrentRuntimeId(ambiance), NOTIFY_ID,
-            AdviserResponse.newBuilder().setType(AdviseType.UNKNOWN).build());
+        .handleAdviserResponse(ambiance, NOTIFY_ID, AdviserResponse.newBuilder().setType(AdviseType.UNKNOWN).build());
   }
 
   private class Type1Adviser implements Adviser {

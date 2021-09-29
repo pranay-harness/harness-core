@@ -171,7 +171,7 @@ public class ViewTimeSeriesStatsDataFetcher
   @Override
   protected QLData fetchSelectedFields(String accountId, List<QLCEViewAggregation> aggregateFunction,
       List<QLCEViewFilterWrapper> filters, List<QLCEViewGroupBy> groupBy, List<QLCEViewSortCriteria> sort,
-      Integer limit, Integer offset, DataFetchingEnvironment dataFetchingEnvironment) {
+      Integer limit, Integer offset, boolean skipRoundOff, DataFetchingEnvironment dataFetchingEnvironment) {
     return null;
   }
 

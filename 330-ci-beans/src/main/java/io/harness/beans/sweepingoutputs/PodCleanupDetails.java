@@ -2,6 +2,7 @@ package io.harness.beans.sweepingoutputs;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
 
+import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.pms.sdk.core.data.ExecutionSweepingOutput;
@@ -21,6 +22,7 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("podCleanupDetails")
 @JsonTypeName("podCleanupDetails")
 @OwnedBy(CI)
+@RecasterAlias("io.harness.beans.sweepingoutputs.PodCleanupDetails")
 public class PodCleanupDetails implements ExecutionSweepingOutput {
   List<String> cleanUpContainerNames;
   Infrastructure infrastructure;

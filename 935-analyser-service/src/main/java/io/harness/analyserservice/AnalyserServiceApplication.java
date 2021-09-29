@@ -6,13 +6,20 @@ import static com.google.common.collect.ImmutableMap.of;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.app.PrimaryVersionManagerModule;
+import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.event.QueryAnalyserEventService;
 import io.harness.event.queryRecords.AnalyserSampleAggregatorService;
 import io.harness.govern.ProviderModule;
+import io.harness.health.HealthMonitor;
+import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
+import io.harness.threading.ExecutorModule;
+import io.harness.threading.ThreadPool;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -38,6 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.server.model.Resource;
 import org.reflections.Reflections;
+import org.springframework.data.mongodb.core.MongoTemplate;
 
 @Slf4j
 @OwnedBy(HarnessTeam.PIPELINE)
@@ -78,13 +86,27 @@ public class AnalyserServiceApplication extends Application<AnalyserServiceConfi
       }
     });
     modules.add(AnalyserServiceModule.getInstance(configuration));
+    modules.add(PrimaryVersionManagerModule.getInstance());
+    ExecutorModule executorModule = ExecutorModule.getInstance();
+    executorModule.setExecutorService(ThreadPool.create(
+        10, 20, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
+    modules.add(executorModule);
     Injector injector = Guice.createInjector(modules);
     registerCorsFilter(configuration, environment);
     registerResources(environment, injector);
-
+    registerHealthCheck(environment, injector);
     registerManagedBeans(environment, injector);
     registerScheduledJobs(injector, configuration);
+
+    injector.getInstance(PrimaryVersionChangeScheduler.class).registerExecutors();
+
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void registerHealthCheck(Environment environment, Injector injector) {
+    final HealthService healthService = injector.getInstance(HealthService.class);
+    environment.healthChecks().register("AnalyserService", healthService);
+    healthService.registerMonitor((HealthMonitor) injector.getInstance(MongoTemplate.class));
   }
 
   private void registerCorsFilter(AnalyserServiceConfiguration configuration, Environment environment) {

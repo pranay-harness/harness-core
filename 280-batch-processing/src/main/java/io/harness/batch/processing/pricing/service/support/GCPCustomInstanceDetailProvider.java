@@ -1,11 +1,11 @@
 package io.harness.batch.processing.pricing.service.support;
 
-import io.harness.batch.processing.billing.service.PricingData;
-import io.harness.batch.processing.pricing.data.VMComputePricingInfo;
-import io.harness.batch.processing.pricing.data.ZonePrice;
+import io.harness.batch.processing.pricing.PricingData;
 import io.harness.ccm.commons.beans.Resource;
 import io.harness.ccm.commons.beans.billing.InstanceCategory;
 import io.harness.ccm.commons.constants.CloudProvider;
+import io.harness.pricing.dto.cloudinfo.ProductDetails;
+import io.harness.pricing.dto.cloudinfo.ZonePrice;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
@@ -48,7 +48,7 @@ public class GCPCustomInstanceDetailProvider {
     return PricingData.builder().pricePerHour(pricePerHr).cpuUnit(cpu).memoryMb(memory).build();
   }
 
-  public VMComputePricingInfo getCustomVMPricingInfo(@NonNull String instanceType, String region) {
+  public ProductDetails getCustomVMPricingInfo(@NonNull String instanceType, String region) {
     if ("n2-standard-16".equals(instanceType)) {
       return getN2Standard16VMPricingInfo(instanceType, region);
     }
@@ -60,8 +60,8 @@ public class GCPCustomInstanceDetailProvider {
     final double cpuUnits = resource.getCpuUnits() / 1024.0; // vCPU
     final double memoryUnits = resource.getMemoryMb() / 1024.0; // GiB
 
-    VMComputePricingInfo vmComputePricingInfo =
-        VMComputePricingInfo.builder().cpusPerVm(cpuUnits).memPerVm(memoryUnits).type(instanceType).build();
+    ProductDetails vmComputePricingInfo =
+        ProductDetails.builder().cpusPerVm(cpuUnits).memPerVm(memoryUnits).type(instanceType).build();
 
     if (instanceType.startsWith("n2d-")) {
       return populateAndGetN2DCustomPricing(vmComputePricingInfo, region);
@@ -82,7 +82,7 @@ public class GCPCustomInstanceDetailProvider {
     return null;
   }
 
-  private VMComputePricingInfo populateAndGetN2DCustomPricing(VMComputePricingInfo pricingInfo, String region) {
+  private ProductDetails populateAndGetN2DCustomPricing(ProductDetails pricingInfo, String region) {
     CustomPricing customPricing = CustomPricing.builder()
                                       .cpuPrice(0.028877)
                                       .memoryPrice(0.003870)
@@ -94,7 +94,7 @@ public class GCPCustomInstanceDetailProvider {
     return populateCommonFields(pricingInfo, region, customPricing);
   }
 
-  private VMComputePricingInfo populateAndGetN2CustomPricing(VMComputePricingInfo pricingInfo, String region) {
+  private ProductDetails populateAndGetN2CustomPricing(ProductDetails pricingInfo, String region) {
     CustomPricing customPricing = CustomPricing.builder()
                                       .cpuPrice(0.033174)
                                       .memoryPrice(0.004446)
@@ -106,7 +106,7 @@ public class GCPCustomInstanceDetailProvider {
     return populateCommonFields(pricingInfo, region, customPricing);
   }
 
-  private VMComputePricingInfo populateAndGetE2CustomPricing(VMComputePricingInfo pricingInfo, String region) {
+  private ProductDetails populateAndGetE2CustomPricing(ProductDetails pricingInfo, String region) {
     CustomPricing customPricing = CustomPricing.builder()
                                       .cpuPrice(0.022890)
                                       .memoryPrice(0.003067)
@@ -118,7 +118,7 @@ public class GCPCustomInstanceDetailProvider {
     return populateCommonFields(pricingInfo, region, customPricing);
   }
 
-  private VMComputePricingInfo populateAndGetN1CustomPricing(VMComputePricingInfo pricingInfo, String region) {
+  private ProductDetails populateAndGetN1CustomPricing(ProductDetails pricingInfo, String region) {
     CustomPricing customPricing = CustomPricing.builder()
                                       .cpuPrice(0.033174)
                                       .memoryPrice(0.004446)
@@ -142,8 +142,7 @@ public class GCPCustomInstanceDetailProvider {
   }
 
   @NotNull
-  private VMComputePricingInfo populateCommonFields(
-      VMComputePricingInfo pricingInfo, String region, CustomPricing customPricing) {
+  private ProductDetails populateCommonFields(ProductDetails pricingInfo, String region, CustomPricing customPricing) {
     double onDemandPrice =
         customPricing.cpuPrice * pricingInfo.getCpusPerVm() + customPricing.memoryPrice * pricingInfo.getMemPerVm();
     pricingInfo.setOnDemandPrice(onDemandPrice);
@@ -157,27 +156,27 @@ public class GCPCustomInstanceDetailProvider {
     return pricingInfo;
   }
 
-  private VMComputePricingInfo getN2Standard16VMPricingInfo(String instanceType, String region) {
-    return VMComputePricingInfo.builder()
+  private ProductDetails getN2Standard16VMPricingInfo(String instanceType, String region) {
+    return ProductDetails.builder()
         .category(GENERAL_PURPOSE)
         .type(instanceType)
         .onDemandPrice(0.7769)
         .spotPrice(getZonePriceList(0.1880, region, ImmutableList.of("a", "b", "c")))
         .networkPrice(0.0)
-        .cpusPerVm(16)
-        .memPerVm(64)
+        .cpusPerVm(16D)
+        .memPerVm(64D)
         .build();
   }
 
-  private VMComputePricingInfo getN2Standard2VMPricingInfo(String instanceType, String region) {
-    return VMComputePricingInfo.builder()
+  private ProductDetails getN2Standard2VMPricingInfo(String instanceType, String region) {
+    return ProductDetails.builder()
         .category(GENERAL_PURPOSE)
         .type(instanceType)
         .onDemandPrice(0.097118)
         .spotPrice(getZonePriceList(0.02354, region, ImmutableList.of("a", "b", "c")))
         .networkPrice(0.0)
-        .cpusPerVm(2)
-        .memPerVm(8)
+        .cpusPerVm(2D)
+        .memPerVm(8D)
         .build();
   }
 

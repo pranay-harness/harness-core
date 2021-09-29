@@ -1,7 +1,7 @@
 load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
-    name = "go_default_library",
+    name = "handler",
     srcs = [
         "db.go",
         "handler.go",
@@ -14,26 +14,27 @@ go_library(
     importpath = "github.com/wings-software/portal/product/ci/ti-service/handler",
     visibility = ["//visibility:public"],
     deps = [
-        "//product/ci/addon/parser/cg:go_default_library",
-        "//product/ci/common/avro:go_default_library",
-        "//product/ci/ti-service/config:go_default_library",
-        "//product/ci/ti-service/db:go_default_library",
-        "//product/ci/ti-service/tidb:go_default_library",
-        "//product/ci/ti-service/tidb/mongodb:go_default_library",
-        "//product/ci/ti-service/types:go_default_library",
-        "@com_github_dchest_authcookie//:go_default_library",
-        "@com_github_go_chi_chi//:go_default_library",
-        "@org_uber_go_zap//:go_default_library",
+        "//product/ci/addon/parser/cg",
+        "//product/ci/common/avro",
+        "//product/ci/ti-service/config",
+        "//product/ci/ti-service/db",
+        "//product/ci/ti-service/logger",
+        "//product/ci/ti-service/tidb",
+        "//product/ci/ti-service/tidb/mongodb",
+        "//product/ci/ti-service/types",
+        "@com_github_dchest_authcookie//:authcookie",
+        "@com_github_go_chi_chi//:chi",
+        "@org_uber_go_zap//:zap",
     ],
 )
 
 go_test(
-    name = "go_default_test",
+    name = "handler_test",
     srcs = ["middleware_test.go"],
-    embed = [":go_default_library"],
+    embed = [":handler"],
     deps = [
-        "//product/ci/ti-service/config:go_default_library",
-        "@com_github_dchest_authcookie//:go_default_library",
-        "@com_github_stretchr_testify//assert:go_default_library",
+        "//product/ci/ti-service/config",
+        "@com_github_dchest_authcookie//:authcookie",
+        "@com_github_stretchr_testify//assert",
     ],
 )

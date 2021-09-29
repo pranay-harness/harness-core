@@ -12,7 +12,6 @@ import io.harness.exception.runtime.GcpClientRuntimeException;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.manage.GlobalContextManager;
-import io.harness.security.encryption.SecretDecryptionService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -27,7 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.PIPELINE)
 public class GcrArtifactTaskHelper {
   private final GcrArtifactTaskHandler gcrArtifactTaskHandler;
-  private final SecretDecryptionService secretDecryptionService;
 
   public ArtifactTaskResponse getArtifactCollectResponse(ArtifactTaskParameters artifactTaskParameters) {
     return getArtifactCollectResponse(artifactTaskParameters, null);
@@ -36,7 +34,7 @@ public class GcrArtifactTaskHelper {
       ArtifactTaskParameters artifactTaskParameters, LogCallback executionLogCallback) {
     GcrArtifactDelegateRequest attributes = (GcrArtifactDelegateRequest) artifactTaskParameters.getAttributes();
     String registryUrl = attributes.getRegistryHostname();
-    decryptRequestDTOs(attributes);
+    gcrArtifactTaskHandler.decryptRequestDTOs(attributes);
     ArtifactTaskResponse artifactTaskResponse;
     try {
       switch (artifactTaskParameters.getArtifactTaskType()) {
@@ -93,13 +91,7 @@ public class GcrArtifactTaskHelper {
     }
     return artifactTaskResponse;
   }
-  private void decryptRequestDTOs(GcrArtifactDelegateRequest gcrRequest) {
-    if (gcrRequest.getGcpConnectorDTO().getCredential() != null
-        && gcrRequest.getGcpConnectorDTO().getCredential().getConfig() != null) {
-      secretDecryptionService.decrypt(
-          gcrRequest.getGcpConnectorDTO().getCredential().getConfig(), gcrRequest.getEncryptedDataDetails());
-    }
-  }
+
   private ArtifactTaskResponse getSuccessTaskResponse(ArtifactTaskExecutionResponse taskExecutionResponse) {
     return ArtifactTaskResponse.builder()
         .commandExecutionStatus(CommandExecutionStatus.SUCCESS)

@@ -1,5 +1,9 @@
 package io.harness.ng.cdOverview.resource;
 
+import static io.harness.NGDateUtils.getNumberOfDays;
+import static io.harness.NGDateUtils.getStartTimeOfNextDay;
+import static io.harness.NGDateUtils.getStartTimeOfPreviousInterval;
+import static io.harness.NGDateUtils.getStartTimeOfTheDayAsEpoch;
 import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_PROJECT_PERMISSION;
 import static io.harness.ng.accesscontrol.PlatformResourceTypes.PROJECT;
 
@@ -23,6 +27,7 @@ import io.harness.ng.cdOverview.dto.InstancesByBuildIdList;
 import io.harness.ng.cdOverview.dto.ServiceDeploymentInfoDTO;
 import io.harness.ng.cdOverview.dto.ServiceDeploymentListInfo;
 import io.harness.ng.cdOverview.dto.ServiceDetailsInfoDTO;
+import io.harness.ng.cdOverview.dto.ServiceHeaderInfo;
 import io.harness.ng.cdOverview.dto.TimeValuePairListDTO;
 import io.harness.ng.cdOverview.service.CDOverviewDashboardService;
 import io.harness.ng.core.ProjectIdentifier;
@@ -165,10 +170,10 @@ public class CDDashboardOverviewResource {
       @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval,
       @QueryParam(NGServiceConstants.ENVIRONMENT_TYPE) EnvironmentType envType) {
     log.info("Getting workloads");
-    startInterval = epochShouldBeOfStartOfDay(startInterval);
-    endInterval = epochShouldBeOfStartOfDay(endInterval);
-
-    long previousStartInterval = startInterval - (endInterval - startInterval + DAY_IN_MS);
+    startInterval = getStartTimeOfTheDayAsEpoch(startInterval);
+    endInterval = getStartTimeOfNextDay(endInterval);
+    long numDays = getNumberOfDays(startInterval, endInterval);
+    long previousStartInterval = getStartTimeOfPreviousInterval(startInterval, numDays);
 
     return ResponseDTO.newResponse(cdOverviewDashboardService.getDashboardWorkloadDeployment(accountIdentifier,
         orgIdentifier, projectIdentifier, startInterval, endInterval, previousStartInterval, envType));
@@ -295,5 +300,17 @@ public class CDDashboardOverviewResource {
       @NotNull @QueryParam(NGResourceFilterConstants.END_TIME) long endInterval) {
     return ResponseDTO.newResponse(cdOverviewDashboardService.getDeploymentsByServiceId(
         accountIdentifier, orgIdentifier, projectIdentifier, serviceId, startInterval, endInterval));
+  }
+
+  @GET
+  @Path("/getServiceHeaderInfo")
+  @ApiOperation(value = "Get service header info", nickname = "getServiceHeaderInfo")
+  public ResponseDTO<ServiceHeaderInfo> getServiceHeaderInfo(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.SERVICE_KEY) String serviceId) {
+    return ResponseDTO.newResponse(cdOverviewDashboardService.getServiceHeaderInfo(
+        accountIdentifier, orgIdentifier, projectIdentifier, serviceId));
   }
 }

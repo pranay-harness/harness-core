@@ -11,6 +11,7 @@ import java.util.Set;
 public enum RepairActionCode {
   MANUAL_INTERVENTION,
   ROLLBACK_WORKFLOW,
+  ROLLBACK_PROVISIONER_AFTER_PHASES,
   ROLLBACK_PHASE,
   IGNORE,
   RETRY,

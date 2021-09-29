@@ -2,6 +2,7 @@ package io.harness.ngtriggers.validations.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.ngtriggers.Constants.MANIFEST_REF;
 import static io.harness.ngtriggers.beans.source.ManifestType.HELM_MANIFEST;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -45,6 +46,9 @@ public class ManifestTriggerValidator implements TriggerValidator {
         return builder.success(false).message("Pipeline doesn't exists").build();
       }
 
+      // make sure, stage and artifact identifiers are given
+      validationHelper.verifyStageAndBuildRef(triggerDetails, MANIFEST_REF);
+
       String pipelineYml = pipelineYmlOptional.get();
       BuildTriggerOpsData buildTriggerOpsData =
           validationHelper.generateBuildTriggerOpsDataForManifest(triggerDetails, pipelineYml);
@@ -57,17 +61,15 @@ public class ManifestTriggerValidator implements TriggerValidator {
 
       // type is validated {HemlChart}
       validationHelper.validateBuildType(buildTriggerOpsData);
-
       validateBasedOnManifestType(buildTriggerOpsData);
-
     } catch (Exception e) {
-      String message = new StringBuilder(128)
-                           .append("Exception while applying ManifestTriggerValidation for Trigger: ")
-                           .append(TriggerHelper.getTriggerRef(triggerDetails.getNgTriggerEntity()))
-                           .toString();
-      log.error(message, e);
+      log.error("Exception while applying ManifestTriggerValidation for Trigger: "
+              + TriggerHelper.getTriggerRef(triggerDetails.getNgTriggerEntity()),
+          e);
       builder.success(false).message(
-          new StringBuilder(message).append(". Exception: ").append(e.getMessage()).toString());
+          new StringBuilder("Exception while applying ManifestTriggerValidation for Trigger. Exception: ")
+              .append(e.getMessage())
+              .toString());
     }
 
     return builder.build();

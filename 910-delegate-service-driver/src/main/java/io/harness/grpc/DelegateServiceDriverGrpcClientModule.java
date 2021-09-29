@@ -6,9 +6,9 @@ import static io.harness.delegateprofile.DelegateProfileServiceGrpc.DelegateProf
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.DelegateServiceGrpc;
+import io.harness.delegatedetails.DelegateDetailsServiceGrpc;
+import io.harness.delegatedetails.DelegateDetailsServiceGrpc.DelegateDetailsServiceBlockingStub;
 import io.harness.delegateprofile.DelegateProfileServiceGrpc;
-import io.harness.delegatesetup.DelegateSetupServiceGrpc;
-import io.harness.delegatesetup.DelegateSetupServiceGrpc.DelegateSetupServiceBlockingStub;
 import io.harness.govern.ProviderModule;
 import io.harness.grpc.auth.ServiceAuthCallCredentials;
 import io.harness.security.ServiceTokenGenerator;
@@ -50,7 +50,7 @@ public class DelegateServiceDriverGrpcClientModule extends ProviderModule {
   protected void configure() {
     bind(DelegateServiceGrpcClient.class).in(Singleton.class);
     bind(DelegateProfileServiceGrpcClient.class).in(Singleton.class);
-    bind(DelegateSetupServiceGrpcClient.class).in(Singleton.class);
+    bind(DelegateDetailsServiceGrpcClient.class).in(Singleton.class);
   }
 
   @Named("delegate-service-channel")
@@ -116,9 +116,10 @@ public class DelegateServiceDriverGrpcClientModule extends ProviderModule {
 
   @Provides
   @Singleton
-  DelegateSetupServiceBlockingStub delegateSetupServiceBlockingStub(@Named("delegate-service-channel") Channel channel,
-      @Named("dss-call-credentials") CallCredentials callCredentials) {
-    return DelegateSetupServiceGrpc.newBlockingStub(channel).withCallCredentials(callCredentials);
+  DelegateDetailsServiceBlockingStub delegateDetailsServiceBlockingStub(
+      @Named("delegate-service-channel") Channel channel,
+      @Named("dds-call-credentials") CallCredentials callCredentials) {
+    return DelegateDetailsServiceGrpc.newBlockingStub(channel).withCallCredentials(callCredentials);
   }
 
   @Named("ds-call-credentials")
@@ -135,11 +136,11 @@ public class DelegateServiceDriverGrpcClientModule extends ProviderModule {
     return new ServiceAuthCallCredentials(serviceSecret, new ServiceTokenGenerator(), "delegate-profile-service");
   }
 
-  @Named("dss-call-credentials")
+  @Named("dds-call-credentials")
   @Provides
   @Singleton
-  CallCredentials dssCallCredentials() {
-    return new ServiceAuthCallCredentials(serviceSecret, new ServiceTokenGenerator(), "delegate-setup-service");
+  CallCredentials ddsCallCredentials() {
+    return new ServiceAuthCallCredentials(serviceSecret, new ServiceTokenGenerator(), "delegate-details-service");
   }
 
   @Named("driver-installed-in-ng-service")

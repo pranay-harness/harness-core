@@ -1,32 +1,22 @@
 package io.harness.pms.ngpipeline.inputset.helpers;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
-import static io.harness.beans.InputSetValidatorType.ALLOWED_VALUES;
-import static io.harness.beans.InputSetValidatorType.REGEX;
+import static io.harness.pms.merger.helpers.InputSetTemplateHelper.createTemplateFromPipeline;
 import static io.harness.pms.merger.helpers.InputSetYamlHelper.getPipelineComponent;
-import static io.harness.pms.merger.helpers.TemplateHelper.createTemplateFromPipeline;
+import static io.harness.pms.yaml.validation.RuntimeInputValuesValidator.validateStaticValues;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.common.NGExpressionUtils;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.exception.InvalidRequestException;
 import io.harness.pms.inputset.InputSetErrorDTOPMS;
 import io.harness.pms.inputset.InputSetErrorResponseDTOPMS;
 import io.harness.pms.inputset.InputSetErrorWrapperDTOPMS;
-import io.harness.pms.merger.PipelineYamlConfig;
+import io.harness.pms.merger.YamlConfig;
 import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.merger.helpers.InputSetYamlHelper;
 import io.harness.pms.merger.helpers.YamlSubMapExtractor;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntityType;
-import io.harness.pms.yaml.ParameterField;
-import io.harness.pms.yaml.YamlUtils;
-import io.harness.pms.yaml.validation.InputSetValidator;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -34,8 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 
 @OwnedBy(PIPELINE)
@@ -61,8 +49,8 @@ public class InputSetErrorsHelper {
   private String getErrorPipelineYaml(Set<FQN> invalidFQNs, String pipelineYaml) {
     Map<FQN, Object> map = new LinkedHashMap<>();
     invalidFQNs.forEach(fqn -> map.put(fqn, fqn.getExpressionFqn()));
-    PipelineYamlConfig config = new PipelineYamlConfig(pipelineYaml);
-    PipelineYamlConfig res = new PipelineYamlConfig(map, config.getYamlMap());
+    YamlConfig config = new YamlConfig(pipelineYaml);
+    YamlConfig res = new YamlConfig(map, config.getYamlMap());
     return res.getYaml();
   }
 
@@ -115,13 +103,13 @@ public class InputSetErrorsHelper {
 
   public Map<FQN, String> getInvalidFQNsInInputSet(String templateYaml, String inputSetPipelineCompYaml) {
     Map<FQN, String> errorMap = new LinkedHashMap<>();
-    PipelineYamlConfig inputSetConfig = new PipelineYamlConfig(inputSetPipelineCompYaml);
+    YamlConfig inputSetConfig = new YamlConfig(inputSetPipelineCompYaml);
     Set<FQN> inputSetFQNs = new LinkedHashSet<>(inputSetConfig.getFqnToValueMap().keySet());
     if (EmptyPredicate.isEmpty(templateYaml)) {
       inputSetFQNs.forEach(fqn -> errorMap.put(fqn, "Pipeline no longer contains any runtime input"));
       return errorMap;
     }
-    PipelineYamlConfig templateConfig = new PipelineYamlConfig(templateYaml);
+    YamlConfig templateConfig = new YamlConfig(templateYaml);
 
     templateConfig.getFqnToValueMap().keySet().forEach(key -> {
       if (inputSetFQNs.contains(key)) {
@@ -148,63 +136,5 @@ public class InputSetErrorsHelper {
     });
     inputSetFQNs.forEach(fqn -> errorMap.put(fqn, "Field either not present in pipeline or not a runtime input"));
     return errorMap;
-  }
-
-  private String validateStaticValues(Object templateObject, Object inputSetObject) {
-    /*
-      This if block is to validate static values inside an array of primitive values.
-      For example, the pipeline can have something like `a: <+input>.regex(a.*a)`, and the input set provides
-      the following value `a: [austria, australia, india]`. This block checks each element in the list against the
-      regex provided in the pipeline yaml.
-     */
-    if (inputSetObject instanceof ArrayNode) {
-      ArrayNode inputSetValueArray = (ArrayNode) inputSetObject;
-      List<JsonNode> invalidJsonNodes = new ArrayList<>();
-      for (JsonNode element : inputSetValueArray) {
-        String error = validateStaticValues(templateObject, element);
-        if (EmptyPredicate.isNotEmpty(error)) {
-          invalidJsonNodes.add(element);
-        }
-      }
-      if (invalidJsonNodes.isEmpty()) {
-        return "";
-      }
-      List<String> invalidValues = invalidJsonNodes.stream().map(JsonNode::textValue).collect(Collectors.toList());
-      return "Following values don't match the provided input set validator: " + invalidValues;
-    }
-    String error = "";
-    String templateValue = ((JsonNode) templateObject).asText();
-    String inputSetValue = ((JsonNode) inputSetObject).asText();
-
-    if (NGExpressionUtils.matchesInputSetPattern(templateValue)
-        && !NGExpressionUtils.isRuntimeOrExpressionField(inputSetValue)) {
-      try {
-        ParameterField<?> templateField = YamlUtils.read(templateValue, ParameterField.class);
-        if (templateField.getInputSetValidator() == null) {
-          return error;
-        }
-        InputSetValidator inputSetValidator = templateField.getInputSetValidator();
-        if (inputSetValidator.getValidatorType() == REGEX) {
-          boolean matchesPattern =
-              NGExpressionUtils.matchesPattern(Pattern.compile(inputSetValidator.getParameters()), inputSetValue);
-          error = matchesPattern ? "" : "The value provided does not match the required regex pattern";
-        } else if (inputSetValidator.getValidatorType() == ALLOWED_VALUES) {
-          String[] allowedValues = inputSetValidator.getParameters().split(", *");
-          boolean matches = false;
-          for (String allowedValue : allowedValues) {
-            if (NGExpressionUtils.isRuntimeOrExpressionField(allowedValue)) {
-              return error;
-            } else if (allowedValue.equals(inputSetValue)) {
-              matches = true;
-            }
-          }
-          error = matches ? "" : "The value provided does not match any of the allowed values";
-        }
-      } catch (IOException e) {
-        throw new InvalidRequestException(
-            "Input set expression " + templateValue + " or " + inputSetValue + " is not valid");
-      }
-    }
-    return error;
   }
 }

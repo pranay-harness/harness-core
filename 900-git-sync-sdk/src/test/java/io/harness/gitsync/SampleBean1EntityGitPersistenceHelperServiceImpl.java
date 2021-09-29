@@ -92,7 +92,7 @@ public class SampleBean1EntityGitPersistenceHelperServiceImpl
   }
 
   @Override
-  public SampleBean1 fullSyncEntity(String accountIdentifier, String yaml) {
+  public SampleBean1 fullSyncEntity(FullSyncChangeSet fullSyncChangeSet) {
     return null;
   }
 

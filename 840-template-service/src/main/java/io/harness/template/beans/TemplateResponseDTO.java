@@ -5,9 +5,11 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityName;
 import io.harness.encryption.Scope;
+import io.harness.gitsync.sdk.EntityGitDetails;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.annotations.ApiModel;
 import java.util.Map;
 import javax.validation.constraints.Size;
 import lombok.Builder;
@@ -19,6 +21,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@ApiModel("TemplateResponse")
 public class TemplateResponseDTO {
   @NotEmpty String accountId;
   String orgIdentifier;
@@ -38,4 +41,7 @@ public class TemplateResponseDTO {
   String childType;
 
   Scope templateScope;
+  Long version;
+  EntityGitDetails gitDetails;
+  long lastUpdatedAt;
 }

@@ -20,6 +20,7 @@ import io.harness.encryption.SecretRefData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.runtime.GcpClientRuntimeException;
 import io.harness.exception.runtime.SecretNotFoundRuntimeException;
+import io.harness.security.encryption.SecretDecryptionService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -38,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 public class GcrArtifactTaskHandler extends DelegateArtifactTaskHandler<GcrArtifactDelegateRequest> {
   private final GcrApiService gcrService;
   private final GcpHelperService gcpHelperService;
+  private final SecretDecryptionService secretDecryptionService;
 
   @Override
   public ArtifactTaskExecutionResponse getBuilds(GcrArtifactDelegateRequest attributesRequest) {
@@ -135,5 +137,13 @@ public class GcrArtifactTaskHandler extends DelegateArtifactTaskHandler<GcrArtif
     }
     return GcrRequestResponseMapper.toGcrInternalConfig(
         attributesRequest, gcpHelperService.getBasicAuthHeader(serviceAccountKeyFileContent, isUseDelegate));
+  }
+
+  public void decryptRequestDTOs(GcrArtifactDelegateRequest gcrRequest) {
+    if (gcrRequest.getGcpConnectorDTO().getCredential() != null
+        && gcrRequest.getGcpConnectorDTO().getCredential().getConfig() != null) {
+      secretDecryptionService.decrypt(
+          gcrRequest.getGcpConnectorDTO().getCredential().getConfig(), gcrRequest.getEncryptedDataDetails());
+    }
   }
 }

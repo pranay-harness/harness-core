@@ -11,7 +11,7 @@ import software.wings.settings.SettingVariableTypes;
 import com.github.reinert.jjschema.SchemaIgnore;
 
 @OwnedBy(HarnessTeam.PL)
-@TargetModule(HarnessModule._955_DELEGATE_BEANS)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public interface EncryptableSetting extends Encryptable {
   @SchemaIgnore SettingVariableTypes getSettingType();
 }

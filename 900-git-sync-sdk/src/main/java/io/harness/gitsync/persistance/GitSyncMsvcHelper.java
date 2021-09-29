@@ -36,6 +36,7 @@ public class GitSyncMsvcHelper {
             .setBranchName(gitBranchInfo.getBranch())
             .setIsNewBranch(checkIfItsANewBranch(gitBranchInfo))
             .putAllContextMap(MDC.getCopyOfContextMap())
+            .setIsSyncFromGit(gitBranchInfo.isSyncFromGit())
             .build());
     log.info("Posted information to git sync manager for commit id: [{}], entity detail: [{}]",
         scmResponse.getCommitId(), entityDetail);

@@ -19,7 +19,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.mongodb.morphia.annotations.Entity;
+import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Data
@@ -62,4 +64,7 @@ public class PollingDocument implements PersistentEntity, AccountAccess, UuidAwa
   private String perpetualTaskId;
 
   private int failedAttempts;
+
+  @CreatedDate Long createdAt;
+  @LastModifiedDate Long lastModifiedAt;
 }

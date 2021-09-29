@@ -12,10 +12,10 @@ import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.services.api.AnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.client.NextGenService;
-import io.harness.cvng.core.beans.ProjectParams;
 import io.harness.cvng.core.beans.monitoredService.DurationDTO;
 import io.harness.cvng.core.beans.monitoredService.HistoricalTrend;
 import io.harness.cvng.core.beans.monitoredService.RiskData;
+import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.dashboard.beans.CategoryRisksDTO;
@@ -551,7 +551,7 @@ public class HeatMapServiceImpl implements HeatMapService {
 
   @Override
   public List<RiskData> getLatestRiskScore(String accountId, String orgIdentifier, String projectIdentifier,
-      List<Pair<String, String>> serviceEnvIdentifiers) {
+      List<Pair<String, String>> serviceEnvIdentifiers, Duration bufferTime) {
     Preconditions.checkArgument(serviceEnvIdentifiers.size() <= 10,
         "Based on page size, the health score calculation should be done for less than 10 services");
     int size = serviceEnvIdentifiers.size();
@@ -566,7 +566,7 @@ public class HeatMapServiceImpl implements HeatMapService {
       serviceEnvironmentIndex.put(serviceEnvIdentifiers.get(i), i);
     }
 
-    Instant endTime = roundDownTo5MinBoundary(clock.instant().minus(5, ChronoUnit.MINUTES));
+    Instant endTime = roundDownTo5MinBoundary(clock.instant().minus(bufferTime));
     Instant startTime = endTime.minus(5, ChronoUnit.MINUTES);
 
     HeatMapResolution heatMapResolution = HeatMapResolution.FIVE_MIN;
@@ -614,12 +614,12 @@ public class HeatMapServiceImpl implements HeatMapService {
   @Override
   public HistoricalTrend getOverAllHealthScore(ProjectParams projectParams, String serviceIdentifier,
       String environmentIdentifier, DurationDTO duration, Instant endTime) {
-    HistoricalTrend historicalTrend = HistoricalTrend.builder().size(48).build();
-
     HeatMapResolution heatMapResolution = getHeatMapResolution(endTime.minus(duration.getDuration()), endTime);
     Instant trendEndTime = getBoundaryOfResolution(endTime, heatMapResolution.getResolution())
                                .plusMillis(heatMapResolution.getResolution().toMillis());
     Instant trendStartTime = trendEndTime.minus(duration.getDuration());
+
+    HistoricalTrend historicalTrend = HistoricalTrend.timeStampBuild(48, trendStartTime, trendEndTime);
 
     Query<HeatMap> heatMapQuery = hPersistence.createQuery(HeatMap.class, excludeAuthority)
                                       .filter(HeatMapKeys.accountId, projectParams.getAccountIdentifier())

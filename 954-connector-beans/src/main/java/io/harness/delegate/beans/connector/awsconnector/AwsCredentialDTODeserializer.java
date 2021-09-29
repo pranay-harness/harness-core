@@ -38,7 +38,7 @@ public class AwsCredentialDTODeserializer extends StdDeserializer<AwsCredentialD
     }
     if (type == AwsCredentialType.MANUAL_CREDENTIALS) {
       awsCredentialSpecDTO = mapper.readValue(authSpec.toString(), AwsManualConfigSpecDTO.class);
-    } else if (type == AwsCredentialType.INHERIT_FROM_DELEGATE) {
+    } else if (type == AwsCredentialType.INHERIT_FROM_DELEGATE || type == AwsCredentialType.IRSA) {
       if (authSpec != null && !authSpec.isNull()) {
         throw new InvalidRequestException("No spec should be provided with the inherit from delegate type");
       }

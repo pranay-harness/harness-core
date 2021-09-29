@@ -41,10 +41,11 @@ public class FacilitationHelperTest extends OrchestrationTestBase {
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void testFacilitateExecutionCustom() {
+    Ambiance ambiance = Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build();
     NodeExecution nodeExecution =
         NodeExecution.builder()
             .uuid(generateUuid())
-            .ambiance(Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build())
+            .ambiance(ambiance)
             .status(Status.QUEUED)
             .node(PlanNodeProto.newBuilder()
                       .setUuid(generateUuid())
@@ -58,17 +59,18 @@ public class FacilitationHelperTest extends OrchestrationTestBase {
     facilitationHelper.facilitateExecution(nodeExecution);
 
     verify(facilitateEventPublisher, times(1)).publishEvent(eq(nodeExecution.getUuid()));
-    verify(orchestrationEngine, times(0)).facilitateExecution(eq(nodeExecution.getUuid()), any());
+    verify(orchestrationEngine, times(0)).processFacilitatorResponse(eq(ambiance), any());
   }
 
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
   public void testFacilitateExecutionCore() {
+    Ambiance ambiance = Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build();
     NodeExecution nodeExecution =
         NodeExecution.builder()
             .uuid(generateUuid())
-            .ambiance(Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build())
+            .ambiance(ambiance)
             .status(Status.QUEUED)
             .node(PlanNodeProto.newBuilder()
                       .setUuid(generateUuid())
@@ -81,6 +83,6 @@ public class FacilitationHelperTest extends OrchestrationTestBase {
     facilitationHelper.facilitateExecution(nodeExecution);
 
     verify(facilitateEventPublisher, times(0)).publishEvent(eq(nodeExecution.getUuid()));
-    verify(orchestrationEngine, times(1)).facilitateExecution(eq(nodeExecution.getUuid()), any());
+    verify(orchestrationEngine, times(1)).processFacilitatorResponse(eq(ambiance), any());
   }
 }

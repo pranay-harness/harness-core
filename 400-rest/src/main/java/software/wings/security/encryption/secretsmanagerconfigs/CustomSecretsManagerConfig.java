@@ -1,6 +1,6 @@
 package software.wings.security.encryption.secretsmanagerconfigs;
 
-import static io.harness.annotations.dev.HarnessModule._360_CG_MANAGER;
+import static io.harness.annotations.dev.HarnessModule._440_SECRET_MANAGEMENT_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.SecretManagerCapabilities.CREATE_PARAMETERIZED_SECRET;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -43,7 +43,7 @@ import lombok.experimental.SuperBuilder;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(PL)
-@TargetModule(_360_CG_MANAGER)
+@TargetModule(_440_SECRET_MANAGEMENT_SERVICE)
 @Data
 @SuperBuilder
 @NoArgsConstructor

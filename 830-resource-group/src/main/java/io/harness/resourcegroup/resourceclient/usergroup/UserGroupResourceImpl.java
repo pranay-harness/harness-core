@@ -1,40 +1,73 @@
 package io.harness.resourcegroup.resourceclient.usergroup;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.resourcegroup.beans.ValidatorType.DYNAMIC;
+import static io.harness.resourcegroup.beans.ValidatorType.STATIC;
+
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.stripToNull;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
 import io.harness.beans.ScopeLevel;
+import io.harness.eventsframework.EventsFrameworkMetadataConstants;
 import io.harness.eventsframework.consumer.Message;
+import io.harness.eventsframework.entity_crud.EntityChangeDTO;
+import io.harness.ng.core.dto.UserGroupDTO;
+import io.harness.ng.core.dto.UserGroupFilterDTO;
+import io.harness.remote.client.NGRestUtils;
 import io.harness.resourcegroup.beans.ValidatorType;
 import io.harness.resourcegroup.framework.service.Resource;
 import io.harness.resourcegroup.framework.service.ResourceInfo;
+import io.harness.usergroups.UserGroupClient;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-@AllArgsConstructor(access = AccessLevel.PUBLIC, onConstructor = @__({ @Inject }))
 @Slf4j
 public class UserGroupResourceImpl implements Resource {
+  UserGroupClient userGroupClient;
+
+  @Inject
+  public UserGroupResourceImpl(@Named("PRIVILEGED") UserGroupClient userGroupClient) {
+    this.userGroupClient = userGroupClient;
+  }
+
   @Override
   public List<Boolean> validate(List<String> resourceIds, Scope scope) {
-    return Collections.emptyList();
+    if (isEmpty(resourceIds)) {
+      return Collections.emptyList();
+    }
+    UserGroupFilterDTO userGroupFilterDTO = UserGroupFilterDTO.builder()
+                                                .accountIdentifier(scope.getAccountIdentifier())
+                                                .orgIdentifier(scope.getOrgIdentifier())
+                                                .projectIdentifier(scope.getProjectIdentifier())
+                                                .identifierFilter(new HashSet<>(resourceIds))
+                                                .build();
+    List<UserGroupDTO> userGroupDTOS =
+        NGRestUtils.getResponse(userGroupClient.getFilteredUserGroups(userGroupFilterDTO));
+    Set<Object> validResourceIds = userGroupDTOS.stream().map(e -> e.getIdentifier()).collect(Collectors.toSet());
+    return resourceIds.stream().map(validResourceIds::contains).collect(toList());
   }
 
   @Override
   public EnumSet<ValidatorType> getSelectorKind() {
-    return EnumSet.of(DYNAMIC);
+    return EnumSet.of(STATIC, DYNAMIC);
   }
 
   @Override
@@ -49,11 +82,29 @@ public class UserGroupResourceImpl implements Resource {
 
   @Override
   public Optional<String> getEventFrameworkEntityType() {
-    return Optional.empty();
+    return Optional.of(EventsFrameworkMetadataConstants.USER_GROUP);
   }
 
   @Override
   public ResourceInfo getResourceInfoFromEvent(Message message) {
-    return null;
+    EntityChangeDTO entityChangeDTO = null;
+
+    try {
+      entityChangeDTO = EntityChangeDTO.parseFrom(message.getMessage().getData());
+    } catch (InvalidProtocolBufferException e) {
+      log.error("Exception in unpacking EntityChangeDTO for user group event with key {}", message.getId(), e);
+    }
+
+    if (Objects.isNull(entityChangeDTO)) {
+      return null;
+    }
+
+    return ResourceInfo.builder()
+        .accountIdentifier(stripToNull(entityChangeDTO.getAccountIdentifier().getValue()))
+        .orgIdentifier(stripToNull(entityChangeDTO.getOrgIdentifier().getValue()))
+        .projectIdentifier(stripToNull(entityChangeDTO.getProjectIdentifier().getValue()))
+        .resourceType(getType())
+        .resourceIdentifier(entityChangeDTO.getIdentifier().getValue())
+        .build();
   }
 }

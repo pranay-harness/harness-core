@@ -42,7 +42,7 @@ public class SdkOrchestrationEventHandler extends PmsBaseEventHandler<Orchestrat
   }
 
   @Override
-  protected Map<String, String> extractMetricContext(OrchestrationEvent message) {
+  protected Map<String, String> extractMetricContext(Map<String, String> metadataMap, OrchestrationEvent message) {
     return ImmutableMap.<String, String>builder()
         .put("accountId", AmbianceUtils.getAccountId(message.getAmbiance()))
         .put("orgIdentifier", AmbianceUtils.getOrgIdentifier(message.getAmbiance()))

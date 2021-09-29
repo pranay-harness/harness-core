@@ -28,6 +28,7 @@ public class AppPermissionSummary {
   private boolean canCreateWorkflow;
   private boolean canCreateTemplatizedWorkflow;
   private boolean canCreatePipeline;
+  private boolean canCreateTemplate;
 
   /**
    * The environment types that the user can create.
@@ -68,6 +69,11 @@ public class AppPermissionSummary {
   private Set<String> workflowExecutePermissionsForEnvs;
   private Set<String> pipelineExecutePermissionsForEnvs;
 
+  // Set of Workflows given Update permission by entity
+  private Set<String> workflowUpdatePermissionsByEntity;
+  // Set of Pipelines given Update permission by entity
+  private Set<String> pipelineUpdatePermissionsByEntity;
+
   /**
    * The environments that the user can rollback workflow to.
    */
@@ -81,6 +87,7 @@ public class AppPermissionSummary {
   // Key - action, Value - set of workflow ids / pipeline ids
   private Map<Action, Set<String>> deploymentPermissions;
   private Map<Action, Set<String>> pipelinePermissions;
+  private Map<Action, Set<String>> templatePermissions;
 
   @Data
   @Builder
@@ -96,16 +103,19 @@ public class AppPermissionSummary {
       Set<String> workflowUpdatePermissionsForEnvs, Set<String> pipelineCreatePermissionsForEnvs,
       Set<String> pipelineUpdatePermissionsForEnvs, Set<String> deploymentExecutePermissionsForEnvs,
       Set<String> pipelineExecutePermissionsForEnvs, Set<String> workflowExecutePermissionsForEnvs,
-      Set<String> rollbackWorkflowExecutePermissionsForEnvs, Map<Action, Set<String>> servicePermissions,
+      Set<String> rollbackWorkflowExecutePermissionsForEnvs, Set<String> pipelineUpdatePermissionsByEntity,
+      Set<String> workflowUpdatePermissionsByEntity, Map<Action, Set<String>> servicePermissions,
       Map<Action, Set<String>> provisionerPermissions, Map<Action, Set<EnvInfo>> envPermissions,
       Map<Action, Set<String>> workflowPermissions, Map<Action, Set<String>> deploymentPermissions,
-      Map<Action, Set<String>> pipelinePermissions) {
+      Map<Action, Set<String>> pipelinePermissions, boolean canCreateTemplate,
+      Map<Action, Set<String>> templatePermissions) {
     this.canCreateService = canCreateService;
     this.canCreateProvisioner = canCreateProvisioner;
     this.canCreateEnvironment = canCreateEnvironment;
     this.canCreateWorkflow = canCreateWorkflow;
     this.canCreateTemplatizedWorkflow = canCreateTemplatizedWorkflow;
     this.canCreatePipeline = canCreatePipeline;
+    this.canCreateTemplate = canCreateTemplate;
     this.envCreatePermissionsForEnvTypes = envCreatePermissionsForEnvTypes;
     this.workflowCreatePermissionsForEnvs = workflowCreatePermissionsForEnvs;
     this.workflowUpdatePermissionsForEnvs = workflowUpdatePermissionsForEnvs;
@@ -121,5 +131,8 @@ public class AppPermissionSummary {
     this.workflowPermissions = workflowPermissions;
     this.deploymentPermissions = deploymentPermissions;
     this.pipelinePermissions = pipelinePermissions;
+    this.templatePermissions = templatePermissions;
+    this.workflowUpdatePermissionsByEntity = workflowUpdatePermissionsByEntity;
+    this.pipelineUpdatePermissionsByEntity = pipelineUpdatePermissionsByEntity;
   }
 }

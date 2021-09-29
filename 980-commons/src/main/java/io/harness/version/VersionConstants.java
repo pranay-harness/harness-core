@@ -9,4 +9,5 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class VersionConstants {
   public static final String VERSION_KEY = "versionKey";
+  public static final String MAJOR_VERSION_KEY = "majorVersionKey";
 }

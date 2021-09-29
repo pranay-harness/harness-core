@@ -25,3 +25,4 @@ import_run_configurations:
   project/run-configurations/WingsApp.xml
   project/run-configurations/PipelineService.xml
   project/run-configurations/TemplateService.xml
+  project/run-configurations/DashboardApplication.xml

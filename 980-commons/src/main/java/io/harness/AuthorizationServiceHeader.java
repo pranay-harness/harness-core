@@ -24,7 +24,9 @@ public enum AuthorizationServiceHeader {
   ACCESS_CONTROL_SERVICE("accessControlService"),
   RESOUCE_GROUP_SERVICE("ResourceGroupService"),
   PLATFORM_SERVICE("PlatformService"),
-  DEFAULT("Default");
+  GIT_SYNC_SERVICE("GitSyncService"),
+  DEFAULT("Default"),
+  DASHBOAD_AGGREGATION_SERVICE("DashboardAggregationService");
 
   private final String serviceId;
 

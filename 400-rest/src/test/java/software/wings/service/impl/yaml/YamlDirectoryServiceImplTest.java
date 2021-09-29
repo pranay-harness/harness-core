@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.rule.OwnerRule.ABHINAV;
 import static io.harness.rule.OwnerRule.ANSHUL;
@@ -35,6 +36,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
@@ -81,6 +83,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(PL)
 public class YamlDirectoryServiceImplTest extends WingsBaseTest {
   @Mock private YamlGitService yamlGitSyncService;
   @Mock private TemplateService templateService;
@@ -115,7 +118,8 @@ public class YamlDirectoryServiceImplTest extends WingsBaseTest {
     doReturn(pageResponse).when(templateService).list(any(PageRequest.class), anyList(), anyString(), anyBoolean());
     doReturn(GalleryKey.ACCOUNT_TEMPLATE_GALLERY).when(templateGalleryService).getAccountGalleryKey();
 
-    final FolderNode folderNode = yamlDirectoryService.doTemplateLibraryForApp(application, directoryPath);
+    final FolderNode folderNode =
+        yamlDirectoryService.doTemplateLibraryForApp(application, directoryPath, false, Collections.EMPTY_SET);
     assertThat(folderNode.getName()).isEqualTo(APPLICATION_TEMPLATE_LIBRARY_FOLDER);
     assertThat(folderNode.getAccountId()).isEqualTo(accountid);
     final List<DirectoryNode> children = folderNode.getChildren();
@@ -158,8 +162,9 @@ public class YamlDirectoryServiceImplTest extends WingsBaseTest {
         .when(templateService)
         .getTemplateTree(anyString(), anyString(), anyString(), eq(TemplateConstants.TEMPLATE_TYPES_WITH_YAML_SUPPORT));
 
-    final FolderNode folderNode = yamlDirectoryService.doTemplateLibrary(accountid, directoryPath.clone(),
-        GLOBAL_APP_ID, GLOBAL_TEMPLATE_LIBRARY_FOLDER, YamlVersion.Type.GLOBAL_TEMPLATE_LIBRARY);
+    final FolderNode folderNode =
+        yamlDirectoryService.doTemplateLibrary(accountid, directoryPath.clone(), GLOBAL_APP_ID,
+            GLOBAL_TEMPLATE_LIBRARY_FOLDER, YamlVersion.Type.GLOBAL_TEMPLATE_LIBRARY, false, Collections.EMPTY_SET);
     assertThat(folderNode.getName()).isEqualTo(GLOBAL_TEMPLATE_LIBRARY_FOLDER);
     assertThat(folderNode.getAccountId()).isEqualTo(accountid);
     assertThat(folderNode.getDirectoryPath().getPath()).isEqualTo("/Setup/" + GLOBAL_TEMPLATE_LIBRARY_FOLDER);

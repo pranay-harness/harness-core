@@ -147,6 +147,8 @@ import io.harness.notifications.AlertVisibilityCheckerImpl;
 import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.pcf.CfDeploymentManager;
+import io.harness.perpetualtask.PerpetualTaskScheduleService;
+import io.harness.perpetualtask.PerpetualTaskScheduleServiceImpl;
 import io.harness.perpetualtask.PerpetualTaskServiceModule;
 import io.harness.persistence.HPersistence;
 import io.harness.polling.client.PollResourceClientModule;
@@ -306,6 +308,7 @@ import software.wings.ratelimit.DelegateRequestRateLimiter;
 import software.wings.resources.graphql.GraphQLRateLimiter;
 import software.wings.resources.graphql.GraphQLUtils;
 import software.wings.scheduler.BackgroundJobScheduler;
+import software.wings.scheduler.LdapSyncJobConfig;
 import software.wings.scheduler.ServiceJobScheduler;
 import software.wings.scim.ScimGroupService;
 import software.wings.scim.ScimGroupServiceImpl;
@@ -810,6 +813,12 @@ public class WingsModule extends AbstractModule implements ServersModule {
   }
 
   @Provides
+  @Singleton
+  LdapSyncJobConfig ldapSyncJobConfig() {
+    return configuration.getLdapSyncJobConfig();
+  }
+
+  @Provides
   public UrlConfiguration urlConfiguration() {
     return new UrlConfiguration(configuration.getPortal().getUrl(), configuration.getApiUrl(),
         configuration.getDelegateMetadataUrl(), configuration.getWatcherMetadataUrl());
@@ -1276,6 +1285,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(NGGitService.class).to(NGGitServiceImpl.class);
     bind(GitClientV2.class).to(GitClientV2Impl.class);
     bind(NGChartMuseumService.class).to(NGChartMuseumServiceImpl.class);
+    bind(PerpetualTaskScheduleService.class).to(PerpetualTaskScheduleServiceImpl.class);
 
     bind(AnomalyService.class).to(AnomalyServiceImpl.class);
 
@@ -1329,7 +1339,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
         configuration.getAccessControlClientConfiguration(), DELEGATE_SERVICE.getServiceId()));
 
     // ng-license dependencies
-    install(new NgLicenseHttpClientModule(configuration.getNgManagerServiceHttpClientConfig(),
+    install(NgLicenseHttpClientModule.getInstance(configuration.getNgManagerServiceHttpClientConfig(),
         configuration.getPortal().getJwtNextGenManagerSecret(), MANAGER.getServiceId()));
 
     // admin ng-license dependencies
