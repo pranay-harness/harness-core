@@ -3,6 +3,7 @@ package io.harness.ng.core.remote;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.ng.core.remote.OrganizationMapper.toOrganization;
 import static io.harness.rule.OwnerRule.KARAN;
+import static io.harness.rule.OwnerRule.MOHIT_GARG;
 import static io.harness.utils.PageTestUtils.getPage;
 
 import static java.lang.Long.parseLong;
@@ -19,6 +20,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.ng.beans.PageRequest;
@@ -39,6 +41,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
+import org.springframework.data.domain.Pageable;
 
 @OwnedBy(PL)
 public class OrganizationResourceTest extends CategoryTest {
@@ -128,6 +131,35 @@ public class OrganizationResourceTest extends CategoryTest {
     OrganizationFilterDTO organizationFilterDTO = argumentCaptor.getValue();
 
     assertEquals(searchTerm, organizationFilterDTO.getSearchTerm());
+    assertEquals(1, response.getData().getPageItemCount());
+    assertEquals(identifier, response.getData().getContent().get(0).getOrganization().getIdentifier());
+  }
+
+  @Test
+  @Owner(developers = MOHIT_GARG)
+  @Category(UnitTests.class)
+  public void testAllOrganizationsList() {
+    String searchTerm = randomAlphabetic(10);
+    OrganizationDTO organizationDTO = getOrganizationDTO(identifier, name);
+    Organization organization = toOrganization(organizationDTO);
+    organization.setVersion((long) 0);
+    ArgumentCaptor<OrganizationFilterDTO> orgArgumentCaptor = ArgumentCaptor.forClass(OrganizationFilterDTO.class);
+    ArgumentCaptor<Pageable> pageableArgumentCaptor = ArgumentCaptor.forClass(Pageable.class);
+
+    when(organizationService.listPermittedOrgs(eq(accountIdentifier), any(), any()))
+        .thenReturn(getPage(singletonList(organization), 1));
+
+    ResponseDTO<PageResponse<OrganizationResponse>> response =
+        organizationResource.listAllOrganizations(accountIdentifier, Collections.EMPTY_LIST, searchTerm);
+
+    verify(organizationService, times(1))
+        .listPermittedOrgs(eq(accountIdentifier), pageableArgumentCaptor.capture(), orgArgumentCaptor.capture());
+    OrganizationFilterDTO organizationFilterDTO = orgArgumentCaptor.getValue();
+    Pageable pageable = pageableArgumentCaptor.getValue();
+
+    assertEquals(searchTerm, organizationFilterDTO.getSearchTerm());
+    assertEquals(NGCommonEntityConstants.MAX_PAGE_SIZE.intValue(), pageable.getPageSize());
+    assertEquals(0, pageable.getPageNumber());
     assertEquals(1, response.getData().getPageItemCount());
     assertEquals(identifier, response.getData().getContent().get(0).getOrganization().getIdentifier());
   }
