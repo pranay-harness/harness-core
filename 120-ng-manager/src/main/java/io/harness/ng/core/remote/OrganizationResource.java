@@ -36,7 +36,9 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.entities.Organization;
 import io.harness.ng.core.entities.Organization.OrganizationKeys;
 import io.harness.ng.core.services.OrganizationService;
+import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.NextGenManagerAuth;
+import io.harness.utils.PageUtils;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -49,6 +51,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
@@ -163,6 +166,21 @@ public class OrganizationResource {
     }
     Page<Organization> orgsPage =
         organizationService.listPermittedOrgs(accountIdentifier, getPageRequest(pageRequest), organizationFilterDTO);
+    return ResponseDTO.newResponse(getNGPageResponse(orgsPage.map(OrganizationMapper::toResponseWrapper)));
+  }
+
+  @GET
+  @Path("all-organizations")
+  @ApiOperation(value = "Get All Organizations list", nickname = "getAllOrganizationList", hidden = true)
+  @InternalApi
+  public ResponseDTO<PageResponse<OrganizationResponse>> listAllOrganizations(
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @QueryParam(NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers,
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm) {
+    OrganizationFilterDTO organizationFilterDTO =
+        OrganizationFilterDTO.builder().searchTerm(searchTerm).identifiers(identifiers).build();
+    Page<Organization> orgsPage = organizationService.listPermittedOrgs(accountIdentifier,
+        PageUtils.getPageRequest(0, NGCommonEntityConstants.MAX_PAGE_SIZE, new ArrayList<>()), organizationFilterDTO);
     return ResponseDTO.newResponse(getNGPageResponse(orgsPage.map(OrganizationMapper::toResponseWrapper)));
   }
 

@@ -48,6 +48,7 @@ public class NGCommonEntityConstants {
   public static final String PERPETUAL_TASK_ID = "perpetualTaskId";
   public static final String RETRY_STAGES = "retryStages";
   public static final String RUN_ALL_STAGES = "runAllStages";
+  public static final Integer MAX_PAGE_SIZE = 10000;
 
   // TODO(UTSAV): Move to 340-ce-nextgen
   public static final String IS_EVENTS_ENABLED = "eventsEnabled";
