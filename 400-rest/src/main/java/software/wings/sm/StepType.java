@@ -700,7 +700,7 @@ public enum StepType {
   // Utility
   SHELL_SCRIPT(ShellScriptState.class, WorkflowServiceHelper.SHELL_SCRIPT, asList(UTILITY),
       asList(PhaseStepType.values()), asList(DeploymentType.values()),
-      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), ShellScriptStepYamlBuilder.class),
+      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), true, ShellScriptStepYamlBuilder.class),
   HTTP(HttpState.class, WorkflowServiceHelper.HTTP, asList(UTILITY), asList(PhaseStepType.values()),
       asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), true),
   NEW_RELIC_DEPLOYMENT_MARKER(NewRelicDeploymentMarkerState.class, WorkflowServiceHelper.NEW_RELIC_DEPLOYMENT_MARKER,
@@ -760,6 +760,19 @@ public enum StepType {
     this.phaseStepTypes = phaseStepTypes.stream().map(Enum::name).collect(toList());
     this.workflowStepTypes = workflowStepTypes;
     this.phaseTypes = phaseTypes;
+    this.yamlValidatorClass = yamlValidatorClass;
+  }
+
+  StepType(Class<? extends State> stateClass, String displayName, List<WorkflowStepType> workflowStepTypes,
+      List<PhaseStepType> phaseStepTypes, List<DeploymentType> deploymentTypes, List<PhaseType> phaseTypes,
+      boolean supportsTimeoutFailure, Class<? extends StepYamlBuilder> yamlValidatorClass) {
+    this.stateClass = stateClass;
+    this.displayName = displayName;
+    this.deploymentTypes = deploymentTypes;
+    this.phaseStepTypes = phaseStepTypes.stream().map(Enum::name).collect(toList());
+    this.workflowStepTypes = workflowStepTypes;
+    this.phaseTypes = phaseTypes;
+    this.supportsTimeoutFailure = supportsTimeoutFailure;
     this.yamlValidatorClass = yamlValidatorClass;
   }
 
