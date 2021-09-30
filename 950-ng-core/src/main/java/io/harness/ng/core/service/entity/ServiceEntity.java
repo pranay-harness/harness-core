@@ -31,7 +31,6 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@OwnedBy(PIPELINE)
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "ServiceEntityKeys")
