@@ -45,6 +45,8 @@ public class PlanExecutionMetadata implements PersistentEntity, UuidAware {
   private String yaml;
   private String processedYaml;
 
+  private StagesExecutionMetadata stagesExecutionMetadata;
+
   @Wither private String triggerJsonPayload;
   @Wither private TriggerPayload triggerPayload;
 
