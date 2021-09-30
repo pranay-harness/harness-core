@@ -63,6 +63,7 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
   @Mock K8sWatchPerpetualTaskServiceClient k8sWatchPerpetualTaskServiceClient;
   @Mock PerpetualTaskServiceClientRegistry clientRegistry;
   @Mock DelegateService delegateService;
+  @Mock DelegateTaskServiceClassic delegateTaskServiceClassic;
   @Mock PerpetualTaskService perpetualTaskService;
   @Mock PerpetualTaskRecordDao perpetualTaskRecordDao;
   @Mock AlertService alertService;

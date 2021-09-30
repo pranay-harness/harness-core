@@ -965,8 +965,6 @@ public class AccountServiceImpl implements AccountService {
                           .filter(AccountKeys.uuid, accountId)
                           .project("delegateConfiguration", true)
                           .get();
-    log.info("Account has primary version "
-        + account.getDelegateConfiguration().getDelegateVersions().stream().reduce((first, last) -> last).orElse(""));
     return account.getDelegateConfiguration().getDelegateVersions().stream().reduce((first, last) -> last).orElse("");
   }
 
