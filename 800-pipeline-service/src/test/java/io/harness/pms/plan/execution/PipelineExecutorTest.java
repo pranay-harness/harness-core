@@ -77,7 +77,7 @@ public class PipelineExecutorTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testRunPipelineWithInputSetPipelineYaml() {
-    doReturnStatementsForFreshRun(null, false, null);
+    doReturnStatementsForFreshRun(null, false, null, null);
 
     PlanExecutionResponseDto planExecutionResponse = pipelineExecutor.runPipelineWithInputSetPipelineYaml(
         accountId, orgId, projectId, pipelineId, moduleType, runtimeInputYaml, useV2);
@@ -91,7 +91,7 @@ public class PipelineExecutorTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testRunPipelineWithInputSetReferencesList() {
-    doReturnStatementsForFreshRun(null, true, null);
+    doReturnStatementsForFreshRun(null, true, null, null);
 
     PlanExecutionResponseDto planExecutionResponse = pipelineExecutor.runPipelineWithInputSetReferencesList(
         accountId, orgId, projectId, pipelineId, moduleType, inputSetReferences, pipelineBranch, pipelineRepoId);
@@ -108,7 +108,7 @@ public class PipelineExecutorTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testRunStagesWithRuntimeInputYaml() {
-    doReturnStatementsForFreshRun(null, false, stageIdentifiers);
+    doReturnStatementsForFreshRun(null, false, stageIdentifiers, null);
 
     PlanExecutionResponseDto planExecutionResponse = pipelineExecutor.runStagesWithRuntimeInputYaml(
         accountId, orgId, projectId, pipelineId, moduleType, runStageRequestDTO, useV2);
@@ -122,7 +122,7 @@ public class PipelineExecutorTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testRerunPipelineWithInputSetPipelineYaml() {
-    doReturnStatementsForFreshRun(originalExecutionId, false, null);
+    doReturnStatementsForFreshRun(originalExecutionId, false, null, null);
 
     PlanExecutionResponseDto planExecutionResponse = pipelineExecutor.rerunPipelineWithInputSetPipelineYaml(
         accountId, orgId, projectId, pipelineId, moduleType, originalExecutionId, runtimeInputYaml, useV2);
@@ -136,7 +136,7 @@ public class PipelineExecutorTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testRerunPipelineWithInputSetReferencesList() {
-    doReturnStatementsForFreshRun(originalExecutionId, true, null);
+    doReturnStatementsForFreshRun(originalExecutionId, true, null, null);
 
     PlanExecutionResponseDto planExecutionResponse =
         pipelineExecutor.rerunPipelineWithInputSetReferencesList(accountId, orgId, projectId, pipelineId, moduleType,
@@ -147,8 +147,8 @@ public class PipelineExecutorTest extends CategoryTest {
     verifyStatementsForFreshRun(originalExecutionId, true, null);
   }
 
-  private void doReturnStatementsForFreshRun(
-      String originalExecutionId, boolean addValidateAndMergeHelperDoReturn, List<String> stageIdentifiers) {
+  private void doReturnStatementsForFreshRun(String originalExecutionId, boolean addValidateAndMergeHelperDoReturn,
+      List<String> stageIdentifiers, List<String> uuidForSkipNodes) {
     if (addValidateAndMergeHelperDoReturn) {
       doReturn(runtimeInputYaml)
           .when(validateAndMergeHelper)
@@ -162,17 +162,17 @@ public class PipelineExecutorTest extends CategoryTest {
       doReturn(execArgs)
           .when(executionHelper)
           .buildExecutionArgs(pipelineEntity, moduleType, runtimeInputYaml, Collections.emptyList(),
-              executionTriggerInfo, originalExecutionId, false, null, null);
+              executionTriggerInfo, originalExecutionId, false, null, null, null);
     } else {
       doReturn(execArgs)
           .when(executionHelper)
           .buildExecutionArgs(pipelineEntity, moduleType, runtimeInputYaml, stageIdentifiers, executionTriggerInfo,
-              originalExecutionId, false, null, null);
+              originalExecutionId, false, null, null, null);
     }
 
     doReturn(planExecution)
         .when(executionHelper)
-        .startExecution(accountId, orgId, projectId, metadata, planExecutionMetadata, false);
+        .startExecution(accountId, orgId, projectId, metadata, planExecutionMetadata, false, null);
   }
 
   private void verifyStatementsForFreshRun(
@@ -188,15 +188,15 @@ public class PipelineExecutorTest extends CategoryTest {
     if (EmptyPredicate.isEmpty(stageIdentifiers)) {
       verify(executionHelper, times(1))
           .buildExecutionArgs(pipelineEntity, moduleType, runtimeInputYaml, Collections.emptyList(),
-              executionTriggerInfo, originalExecutionId, false, null, null);
+              executionTriggerInfo, originalExecutionId, false, null, null, null);
     } else {
       verify(executionHelper, times(1))
           .buildExecutionArgs(pipelineEntity, moduleType, runtimeInputYaml, stageIdentifiers, executionTriggerInfo,
-              originalExecutionId, false, null, null);
+              originalExecutionId, false, null, null, null);
     }
     verify(executionHelper, times(1))
-        .startExecution(accountId, orgId, projectId, metadata, planExecutionMetadata, false);
+        .startExecution(accountId, orgId, projectId, metadata, planExecutionMetadata, false, null);
     verify(executionHelper, times(0))
-        .startExecutionV2(anyString(), anyString(), anyString(), any(), any(), anyBoolean());
+        .startExecutionV2(anyString(), anyString(), anyString(), any(), any(), anyBoolean(), any());
   }
 }
