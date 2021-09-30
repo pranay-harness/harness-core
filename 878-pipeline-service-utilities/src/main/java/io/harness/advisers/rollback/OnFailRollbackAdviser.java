@@ -44,7 +44,7 @@ public class OnFailRollbackAdviser implements Adviser {
       try {
         executionSweepingOutputService.consume(advisingEvent.getAmbiance(),
             YAMLFieldNameConstants.USE_ROLLBACK_STRATEGY, OnFailRollbackOutput.builder().nextNodeId(nextNodeId).build(),
-            YAMLFieldNameConstants.PIPELINE_GROUP);
+            null);
       } catch (Exception e) {
         log.warn("Ignoring duplicate sweeping output of - " + YAMLFieldNameConstants.USE_ROLLBACK_STRATEGY);
       }

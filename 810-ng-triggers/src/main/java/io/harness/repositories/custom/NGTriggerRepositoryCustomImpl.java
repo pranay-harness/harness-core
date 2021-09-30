@@ -60,6 +60,21 @@ public class NGTriggerRepositoryCustomImpl implements NGTriggerRepositoryCustom 
     Query query = new Query(criteria);
     Update update = new Update();
     update.set(NGTriggerEntityKeys.triggerStatus, ngTriggerEntity.getTriggerStatus());
+    update.set(NGTriggerEntityKeys.enabled, ngTriggerEntity.getEnabled());
+    RetryPolicy<Object> retryPolicy = getRetryPolicy(
+        "[Retrying]: Failed updating Trigger; attempt: {}", "[Failed]: Failed updating Trigger; attempt: {}");
+    return Failsafe.with(retryPolicy)
+        .get(()
+                 -> mongoTemplate.findAndModify(
+                     query, update, new FindAndModifyOptions().returnNew(true), NGTriggerEntity.class));
+  }
+
+  @Override
+  public NGTriggerEntity updateValidationStatusAndMetadata(Criteria criteria, NGTriggerEntity ngTriggerEntity) {
+    Query query = new Query(criteria);
+    Update update = new Update();
+    update.set(NGTriggerEntityKeys.triggerStatus, ngTriggerEntity.getTriggerStatus());
+    update.set(NGTriggerEntityKeys.metadata, ngTriggerEntity.getMetadata());
     RetryPolicy<Object> retryPolicy = getRetryPolicy(
         "[Retrying]: Failed updating Trigger; attempt: {}", "[Failed]: Failed updating Trigger; attempt: {}");
     return Failsafe.with(retryPolicy)

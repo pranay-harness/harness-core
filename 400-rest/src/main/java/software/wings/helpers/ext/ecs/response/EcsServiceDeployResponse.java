@@ -1,6 +1,9 @@
 package software.wings.helpers.ext.ecs.response;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.container.ContainerInfo;
 import io.harness.logging.CommandExecutionStatus;
@@ -15,6 +18,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
+@OwnedBy(PL)
 public class EcsServiceDeployResponse extends EcsCommandResponse {
   private List<ContainerInfo> containerInfos;
   private List<ContainerInfo> previousContainerInfos;

@@ -14,6 +14,8 @@ import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
+import io.harness.plan.Node;
+import io.harness.plan.NodeType;
 import io.harness.plan.PlanNode;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -65,14 +67,14 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("nodeExecutions")
 @TypeAlias("nodeExecution")
 @StoreIn(DbAliases.PMS)
-public class NodeExecution implements PersistentEntity, UuidAccess {
+public class NodeExecution implements PersistentEntity, UuidAccess, PmsNodeExecution {
   public static final long TTL_MONTHS = 6;
 
   // Immutable
   @Wither @Id @org.mongodb.morphia.annotations.Id String uuid;
   @NotNull Ambiance ambiance;
   @Deprecated @Getter(AccessLevel.NONE) @Setter(AccessLevel.NONE) @NotNull PlanNodeProto node;
-  @Getter(AccessLevel.NONE) @Setter(AccessLevel.NONE) PlanNode planNode;
+  @Getter(AccessLevel.NONE) @Setter(AccessLevel.NONE) Node planNode;
   @NotNull ExecutionMode mode;
   @Wither @FdIndex @CreatedDate Long createdAt;
   private Long startTs;
@@ -131,6 +133,16 @@ public class NodeExecution implements PersistentEntity, UuidAccess {
     return executableResponses.get(executableResponses.size() - 1);
   }
 
+  @Override
+  public String getNodeId() {
+    return getNode().getUuid();
+  }
+
+  @Override
+  public NodeType getNodeType() {
+    return getNode().getNodeType();
+  }
+
   @UtilityClass
   public static class NodeExecutionKeys {
     public static final String id = "_id";
@@ -145,6 +157,9 @@ public class NodeExecution implements PersistentEntity, UuidAccess {
     public static final String planNodeId = NodeExecutionKeys.planNode + "."
         + "uuid";
     public static final String planNodeIdentifier = NodeExecutionKeys.planNode + "."
+        + "identifier";
+
+    public static final String nodeIdentifier = NodeExecutionKeys.node + "."
         + "identifier";
   }
 
@@ -242,10 +257,10 @@ public class NodeExecution implements PersistentEntity, UuidAccess {
     return OrchestrationMapBackwardCompatibilityUtils.extractToOrchestrationMap(progressData);
   }
 
-  public PlanNode getNode() {
+  public <T extends Node> T getNode() {
     if (planNode != null) {
-      return planNode;
+      return (T) planNode;
     }
-    return PlanNode.fromPlanNodeProto(node);
+    return (T) PlanNode.fromPlanNodeProto(node);
   }
 }

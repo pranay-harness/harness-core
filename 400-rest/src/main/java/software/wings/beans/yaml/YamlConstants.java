@@ -139,6 +139,7 @@ public interface YamlConstants {
   String CONN_STRINGS_FILE = "connstrings";
 
   String APP_SERVICE_MANIFEST_FILE_NAME = "appsettings";
+  String EMPTY_SETTINGS_CONTENT = "[]";
 
   // ECS PARAMS
   String ECS_NOT_USED = "ECS_NOT_USED";

@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.k8s.model.K8sPod;
+import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 
 import java.util.List;
@@ -23,4 +24,5 @@ public class K8sRollingDeployResponse implements K8sTaskResponse {
   String loadBalancer;
   HelmChartInfo helmChartInfo;
   List<KubernetesResourceId> prunedResourcesIds;
+  List<KubernetesResource> resources;
 }

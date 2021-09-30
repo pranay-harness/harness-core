@@ -1,6 +1,7 @@
 package io.harness.pms.quickFilters;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.rule.OwnerRule.NAMAN;
 import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -19,6 +20,7 @@ import io.harness.pms.plan.execution.beans.dto.PipelineExecutionFilterProperties
 import io.harness.pms.plan.execution.service.PMSExecutionServiceImpl;
 import io.harness.rule.Owner;
 
+import java.util.Arrays;
 import java.util.Collections;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
@@ -46,12 +48,11 @@ public class QuickFilterTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testFormCriteriaQuickFilters() {
     // testing pipelineIdentifier,status and myDeployments values
-    Criteria form = pmsExecutionServiceImpl.formCriteria(
-        "acc", "org", "pro", "pip", null, null, "mod", "sear", ExecutionStatus.FAILED, true, false, null);
+    Criteria form = pmsExecutionServiceImpl.formCriteria("acc", "org", "pro", "pip", null, null, "mod", "sear",
+        Arrays.asList(ExecutionStatus.FAILED, ExecutionStatus.ABORTED), true, false, null);
 
     // status
-    assertThat(form.getCriteriaObject().get("status").toString().contentEquals(ExecutionStatus.FAILED.name()))
-        .isEqualTo(true);
+    assertThat(form.getCriteriaObject().get("status").toString()).isEqualTo("Document{{$in=[FAILED, ABORTED]}}");
 
     // myDeployments
     assertThat(form.getCriteriaObject().containsKey("executionTriggerInfo")).isEqualTo(true);
@@ -63,10 +64,27 @@ public class QuickFilterTest extends CategoryTest {
     assertThat(form.getCriteriaObject().get("pipelineDeleted")).isNotEqualTo(true);
 
     // making myDeployments = false
-    Criteria allDeploymentsForm = pmsExecutionServiceImpl.formCriteria(
-        "acc", "org", "pro", "pip", null, null, "mod", "sear", ExecutionStatus.FAILED, false, false, null);
+    Criteria allDeploymentsForm = pmsExecutionServiceImpl.formCriteria("acc", "org", "pro", "pip", null, null, "mod",
+        "sear", Collections.singletonList(ExecutionStatus.FAILED), false, false, null);
     // allDeployment -> myDeployments = false
     assertThat(allDeploymentsForm.getCriteriaObject().containsKey("executionTriggerInfo")).isEqualTo(false);
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testFormCriteriaQuickFiltersWithBothStatusFilters() {
+    // testing pipelineIdentifier,status and myDeployments values
+    Criteria form = pmsExecutionServiceImpl.formCriteria("acc", "org", "pro", "pip", null,
+        PipelineExecutionFilterPropertiesDTO.builder()
+            .status(Arrays.asList(ExecutionStatus.ABORTED, ExecutionStatus.PAUSED))
+            .build(),
+        null, null, Arrays.asList(ExecutionStatus.FAILED, ExecutionStatus.ABORTED), false, false, null);
+
+    // status
+    assertThat(form.getCriteriaObject().get("status").toString()).isEqualTo("Document{{$in=[FAILED, ABORTED]}}");
+    assertThat(form.getCriteriaObject().get("$and").toString())
+        .isEqualTo("[Document{{status=Document{{$in=[ABORTED, PAUSED]}}}}, Document{{}}, Document{{}}, Document{{}}]");
   }
 
   @Test

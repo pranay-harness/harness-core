@@ -48,6 +48,7 @@ java_binary(
         "//450-ce-views:module",
         "//460-capability:module",
         "//470-alert:module",
+        "//480-pricing-service:module",
         "//490-ce-commons:module",
         "//800-pipeline-service:module",
         "//810-ng-triggers:module",

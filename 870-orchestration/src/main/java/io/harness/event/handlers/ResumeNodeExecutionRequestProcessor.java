@@ -17,6 +17,6 @@ public class ResumeNodeExecutionRequestProcessor implements SdkResponseProcessor
   @Override
   public void handleEvent(SdkResponseEventProto event) {
     ResumeNodeExecutionRequest request = event.getResumeNodeExecutionRequest();
-    engine.resume(event.getNodeExecutionId(), request.getResponseMap(), request.getAsyncError());
+    engine.resumeNodeExecution(event.getAmbiance(), request.getResponseMap(), request.getAsyncError());
   }
 }

@@ -3,6 +3,7 @@ package io.harness.plan;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import io.harness.ModuleType;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
@@ -13,6 +14,9 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.pms.contracts.plan.ErrorResponse;
 import io.harness.pms.contracts.plan.GraphLayoutInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.steps.SkipType;
+import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.data.stepparameters.PmsStepParameters;
 
 import java.time.OffsetDateTime;
 import java.util.Date;
@@ -59,7 +63,7 @@ public class Plan implements PersistentEntity, Node {
 
   @Default @Wither @Id @org.mongodb.morphia.annotations.Id String uuid = generateUuid();
   @Deprecated @Singular List<PlanNodeProto> nodes;
-  @Singular List<PlanNode> planNodes;
+  @Singular List<Node> planNodes;
 
   @NotNull String startingNodeId;
 
@@ -90,12 +94,12 @@ public class Plan implements PersistentEntity, Node {
     throw new InvalidRequestException("No node found with Id :" + nodeId);
   }
 
-  public PlanNode fetchStartingPlanNode() {
+  public Node fetchStartingPlanNode() {
     return fetchPlanNode(startingNodeId);
   }
 
-  public PlanNode fetchPlanNode(String nodeId) {
-    Optional<PlanNode> optional = planNodes.stream().filter(pn -> pn.getUuid().equals(nodeId)).findFirst();
+  public Node fetchPlanNode(String nodeId) {
+    Optional<Node> optional = planNodes.stream().filter(pn -> pn.getUuid().equals(nodeId)).findFirst();
     if (optional.isPresent()) {
       return optional.get();
     }
@@ -105,5 +109,55 @@ public class Plan implements PersistentEntity, Node {
   @Override
   public NodeType getNodeType() {
     return NodeType.PLAN;
+  }
+
+  @Override
+  public String getIdentifier() {
+    return getUuid();
+  }
+
+  @Override
+  public String getName() {
+    return getIdentifier();
+  }
+
+  @Override
+  public StepType getStepType() {
+    return StepType.newBuilder().setType("PLAN").build();
+  }
+
+  @Override
+  public String getGroup() {
+    return "PLAN";
+  }
+
+  @Override
+  public boolean isSkipExpressionChain() {
+    return false;
+  }
+
+  @Override
+  public String getWhenCondition() {
+    return null;
+  }
+
+  @Override
+  public String getSkipCondition() {
+    return null;
+  }
+
+  @Override
+  public PmsStepParameters getStepParameters() {
+    return null;
+  }
+
+  @Override
+  public String getServiceName() {
+    return ModuleType.PMS.name();
+  }
+
+  @Override
+  public SkipType getSkipGraphType() {
+    return SkipType.NOOP;
   }
 }

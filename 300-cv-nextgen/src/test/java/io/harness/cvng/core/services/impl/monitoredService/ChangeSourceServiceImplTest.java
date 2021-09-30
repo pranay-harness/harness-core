@@ -27,7 +27,7 @@ import io.harness.cvng.core.services.api.ChangeEventService;
 import io.harness.cvng.core.services.api.monitoredService.ChangeSourceService;
 import io.harness.cvng.core.transformer.changeSource.ChangeSourceEntityAndDTOTransformer;
 import io.harness.data.structure.UUIDGenerator;
-import io.harness.exception.DuplicateFieldException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
@@ -93,7 +93,7 @@ public class ChangeSourceServiceImplTest extends CvNextGenTestBase {
         builderFactory.getHarnessCDChangeSourceDTOBuilder().identifier(changeSourceDto1.getIdentifier()).build();
     Set<ChangeSourceDTO> changeSourceDTOToBeCreated = new HashSet<>(Arrays.asList(changeSourceDto1, changeSourceDto2));
     assertThatThrownBy(() -> changeSourceService.create(environmentParams, changeSourceDTOToBeCreated))
-        .isInstanceOf(DuplicateFieldException.class);
+        .isInstanceOf(InvalidRequestException.class);
   }
 
   @Test
@@ -101,19 +101,22 @@ public class ChangeSourceServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testUpdate() {
     ChangeSourceDTO changeSourceDto = builderFactory.getHarnessCDChangeSourceDTOBuilder().build();
-    Set<ChangeSourceDTO> updateDtos = new HashSet<>(Arrays.asList(changeSourceDto));
+    ChangeSourceDTO kubeChangeSourceDto = builderFactory.getKubernetesChangeSourceDTOBuilder().build();
+    Set<ChangeSourceDTO> updateDtos = new HashSet<>(Arrays.asList(changeSourceDto, kubeChangeSourceDto));
     String updatedName = "UPDATED_NAME";
 
     changeSourceService.create(environmentParams, updateDtos);
     ChangeSource initialChangeSource = getChangeSourceFromDb(changeSourceDto.getIdentifier());
-
     changeSourceDto.setName(updatedName);
+    updateDtos.remove(kubeChangeSourceDto);
     changeSourceService.update(environmentParams, updateDtos);
+
     ChangeSource updatedChangeSource = getChangeSourceFromDb(changeSourceDto.getIdentifier());
 
     assertThat(updatedChangeSource.getUuid()).isEqualTo(initialChangeSource.getUuid());
     assertThat(updatedChangeSource.getCreatedAt()).isEqualTo(initialChangeSource.getCreatedAt());
     assertThat(updatedChangeSource.getName()).isEqualTo(updatedName);
+    assertThat(getChangeSourceFromDb(kubeChangeSourceDto.getIdentifier())).isNull();
   }
 
   @Test

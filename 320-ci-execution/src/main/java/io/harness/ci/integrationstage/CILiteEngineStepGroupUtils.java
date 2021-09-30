@@ -23,6 +23,7 @@ import io.harness.beans.steps.CIStepInfo;
 import io.harness.beans.steps.stepinfo.LiteEngineTaskStepInfo;
 import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
+import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ngexception.CIStageExecutionException;
@@ -133,6 +134,7 @@ public class CILiteEngineStepGroupUtils {
                                                                 .name(LITE_ENGINE_TASK + liteEngineCounter)
                                                                 .uuid(generateUuid())
                                                                 .type("liteEngineTask")
+                                                                .timeout(getTimeout(infrastructure))
                                                                 .stepSpecType(liteEngineTaskStepInfo)
                                                                 .build());
       JsonNode jsonNode = JsonPipelineUtils.getMapper().readTree(jsonString);
@@ -144,6 +146,20 @@ public class CILiteEngineStepGroupUtils {
 
   private boolean isLiteEngineStep(ExecutionWrapperConfig executionWrapper) {
     return !isCIManagerStep(executionWrapper);
+  }
+
+  private ParameterField<Timeout> getTimeout(Infrastructure infrastructure) {
+    if (infrastructure == null || ((K8sDirectInfraYaml) infrastructure).getSpec() == null) {
+      throw new CIStageExecutionException("Input infrastructure can not be empty");
+    }
+
+    ParameterField<String> timeout = ((K8sDirectInfraYaml) infrastructure).getSpec().getInitTimeout();
+
+    if (timeout != null && timeout.fetchFinalValue() != null && isNotEmpty((String) timeout.fetchFinalValue())) {
+      return ParameterField.createValueField(Timeout.fromString((String) timeout.fetchFinalValue()));
+    } else {
+      return ParameterField.createValueField(Timeout.fromString("10m"));
+    }
   }
 
   private boolean containsManagerStep(List<ExecutionWrapperConfig> executionSections) {

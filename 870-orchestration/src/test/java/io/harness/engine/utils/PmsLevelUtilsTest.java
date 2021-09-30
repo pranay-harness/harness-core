@@ -1,10 +1,13 @@
 package io.harness.engine.utils;
 
+import static io.harness.plan.NodeType.PLAN_NODE;
 import static io.harness.rule.OwnerRule.GARVIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.OrchestrationTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.plan.PlanNode;
 import io.harness.pms.contracts.ambiance.Level;
@@ -15,12 +18,13 @@ import io.harness.rule.Owner;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class PmsLevelUtilsTest extends OrchestrationTestBase {
   @Test
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testBuildLevelFromPlanNode() {
-    Level level = PmsLevelUtils.buildLevelFromPlanNode("rid1",
+    Level level = PmsLevelUtils.buildLevelFromNode("rid1",
         PlanNode.builder()
             .uuid("uuid")
             .identifier("i1")
@@ -37,8 +41,9 @@ public class PmsLevelUtilsTest extends OrchestrationTestBase {
     assertThat(level.getStepType().getType()).isEqualTo("st");
     assertThat(level.getStepType().getStepCategory()).isEqualTo(StepCategory.STEP);
     assertThat(level.getStartTs()).isGreaterThan(0);
+    assertThat(level.getNodeType()).isEqualTo(PLAN_NODE.toString());
 
-    level = PmsLevelUtils.buildLevelFromPlanNode("rid2", 1,
+    level = PmsLevelUtils.buildLevelFromNode("rid2", 1,
         PlanNode.builder()
             .uuid("uuid")
             .identifier("i2")
@@ -54,5 +59,6 @@ public class PmsLevelUtilsTest extends OrchestrationTestBase {
     assertThat(level.getStepType().getType()).isEqualTo("st");
     assertThat(level.getStepType().getStepCategory()).isEqualTo(StepCategory.STEP);
     assertThat(level.getStartTs()).isGreaterThan(0);
+    assertThat(level.getNodeType()).isEqualTo(PLAN_NODE.toString());
   }
 }

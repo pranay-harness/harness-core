@@ -45,34 +45,30 @@ public class SdkNodeExecutionServiceImpl implements SdkNodeExecutionService {
   @Inject private SdkResponseEventPublisher sdkResponseEventPublisher;
 
   @Override
-  public void suspendChainExecution(
-      String planExecutionId, String currentNodeExecutionId, SuspendChainRequest suspendChainRequest) {
+  public void suspendChainExecution(Ambiance ambiance, SuspendChainRequest suspendChainRequest) {
     sdkResponseEventPublisher.publishEvent(SdkResponseEventProto.newBuilder()
                                                .setSdkResponseEventType(SdkResponseEventType.SUSPEND_CHAIN)
-                                               .setNodeExecutionId(currentNodeExecutionId)
-                                               .setPlanExecutionId(planExecutionId)
                                                .setSuspendChainRequest(suspendChainRequest)
+                                               .setAmbiance(ambiance)
                                                .build());
   }
 
   @Override
-  public void addExecutableResponse(
-      @NonNull String planExecutionId, @NonNull String nodeExecutionId, ExecutableResponse executableResponse) {
+  public void addExecutableResponse(Ambiance ambiance, ExecutableResponse executableResponse) {
     AddExecutableResponseRequest executableResponseRequest =
         AddExecutableResponseRequest.newBuilder().setExecutableResponse(executableResponse).build();
 
     SdkResponseEventProto sdkResponseEvent = SdkResponseEventProto.newBuilder()
                                                  .setSdkResponseEventType(SdkResponseEventType.ADD_EXECUTABLE_RESPONSE)
-                                                 .setNodeExecutionId(nodeExecutionId)
-                                                 .setPlanExecutionId(planExecutionId)
                                                  .setAddExecutableResponseRequest(executableResponseRequest)
+                                                 .setAmbiance(ambiance)
                                                  .build();
     sdkResponseEventPublisher.publishEvent(sdkResponseEvent);
   }
 
   @Override
-  public void handleStepResponse(String planExecutionId, @NonNull String nodeExecutionId,
-      @NonNull StepResponseProto stepResponse, ExecutableResponse executableResponse) {
+  public void handleStepResponse(
+      Ambiance ambiance, @NonNull StepResponseProto stepResponse, ExecutableResponse executableResponse) {
     HandleStepResponseRequest.Builder responseRequestBuilder =
         HandleStepResponseRequest.newBuilder().setStepResponse(stepResponse);
     if (executableResponse != null) {
@@ -81,33 +77,30 @@ public class SdkNodeExecutionServiceImpl implements SdkNodeExecutionService {
     SdkResponseEventProto sdkResponseEventProto =
         SdkResponseEventProto.newBuilder()
             .setSdkResponseEventType(SdkResponseEventType.HANDLE_STEP_RESPONSE)
-            .setNodeExecutionId(nodeExecutionId)
-            .setPlanExecutionId(planExecutionId)
             .setHandleStepResponseRequest(responseRequestBuilder.build())
+            .setAmbiance(ambiance)
             .build();
 
     sdkResponseEventPublisher.publishEvent(sdkResponseEventProto);
   }
 
   @Override
-  public void resumeNodeExecution(
-      String planExecutionId, String nodeExecutionId, Map<String, ResponseData> response, boolean asyncError) {
+  public void resumeNodeExecution(Ambiance ambiance, Map<String, ResponseData> response, boolean asyncError) {
     Map<String, ByteString> responseBytes = responseDataMapper.toResponseDataProto(response);
     ResumeNodeExecutionRequest resumeNodeExecutionRequest =
         ResumeNodeExecutionRequest.newBuilder().putAllResponse(responseBytes).setAsyncError(asyncError).build();
     SdkResponseEventProto sdkResponseEvent = SdkResponseEventProto.newBuilder()
                                                  .setSdkResponseEventType(SdkResponseEventType.RESUME_NODE_EXECUTION)
-                                                 .setNodeExecutionId(nodeExecutionId)
-                                                 .setPlanExecutionId(planExecutionId)
                                                  .setResumeNodeExecutionRequest(resumeNodeExecutionRequest)
+                                                 .setAmbiance(ambiance)
                                                  .build();
 
     sdkResponseEventPublisher.publishEvent(sdkResponseEvent);
   }
 
   @Override
-  public void handleFacilitationResponse(String planExecutionId, @NonNull String nodeExecutionId,
-      @NonNull String notifyId, FacilitatorResponseProto facilitatorResponseProto) {
+  public void handleFacilitationResponse(
+      Ambiance ambiance, @NonNull String notifyId, FacilitatorResponseProto facilitatorResponseProto) {
     FacilitatorResponseRequest facilitatorResponseRequest = FacilitatorResponseRequest.newBuilder()
                                                                 .setFacilitatorResponse(facilitatorResponseProto)
                                                                 .setNotifyId(notifyId)
@@ -116,23 +109,18 @@ public class SdkNodeExecutionServiceImpl implements SdkNodeExecutionService {
     sdkResponseEventPublisher.publishEvent(SdkResponseEventProto.newBuilder()
                                                .setFacilitatorResponseRequest(facilitatorResponseRequest)
                                                .setSdkResponseEventType(SdkResponseEventType.HANDLE_FACILITATE_RESPONSE)
-                                               .setPlanExecutionId(planExecutionId)
-                                               .setNodeExecutionId(nodeExecutionId)
+                                               .setAmbiance(ambiance)
                                                .build());
   }
 
   @Override
-  public void handleAdviserResponse(String planExecutionId, @NonNull String nodeExecutionId, @NonNull String notifyId,
-      AdviserResponse adviserResponse) {
+  public void handleAdviserResponse(Ambiance ambiance, @NonNull String notifyId, AdviserResponse adviserResponse) {
     SdkResponseEventProto handleAdviserResponseRequest =
         SdkResponseEventProto.newBuilder()
             .setSdkResponseEventType(SdkResponseEventType.HANDLE_ADVISER_RESPONSE)
-            .setNodeExecutionId(nodeExecutionId)
-            .setPlanExecutionId(planExecutionId)
-
             .setAdviserResponseRequest(
                 AdviserResponseRequest.newBuilder().setAdviserResponse(adviserResponse).setNotifyId(notifyId).build())
-
+            .setAmbiance(ambiance)
             .build();
     sdkResponseEventPublisher.publishEvent(handleAdviserResponseRequest);
   }
@@ -154,12 +142,11 @@ public class SdkNodeExecutionServiceImpl implements SdkNodeExecutionService {
   }
 
   @Override
-  public void spawnChild(String planExecutionId, String nodeExecutionId, SpawnChildRequest spawnChildRequest) {
+  public void spawnChild(Ambiance ambiance, SpawnChildRequest spawnChildRequest) {
     sdkResponseEventPublisher.publishEvent(SdkResponseEventProto.newBuilder()
                                                .setSdkResponseEventType(SdkResponseEventType.SPAWN_CHILD)
-                                               .setNodeExecutionId(nodeExecutionId)
-                                               .setPlanExecutionId(planExecutionId)
                                                .setSpawnChildRequest(spawnChildRequest)
+                                               .setAmbiance(ambiance)
                                                .build());
   }
 
@@ -170,31 +157,27 @@ public class SdkNodeExecutionServiceImpl implements SdkNodeExecutionService {
     sdkResponseEventPublisher.publishEvent(
         SdkResponseEventProto.newBuilder()
             .setSdkResponseEventType(SdkResponseEventType.HANDLE_PROGRESS)
-            .setNodeExecutionId(nodeExecutionId)
-            .setPlanExecutionId(ambiance.getPlanExecutionId())
-
+            .setAmbiance(ambiance)
             .setProgressRequest(HandleProgressRequest.newBuilder().setProgressJson(progressJson).build())
 
             .build());
   }
 
   @Override
-  public void spawnChildren(String planExecutionId, String nodeExecutionId, SpawnChildrenRequest spawnChildrenRequest) {
+  public void spawnChildren(Ambiance ambiance, SpawnChildrenRequest spawnChildrenRequest) {
     sdkResponseEventPublisher.publishEvent(SdkResponseEventProto.newBuilder()
                                                .setSdkResponseEventType(SdkResponseEventType.SPAWN_CHILDREN)
-                                               .setNodeExecutionId(nodeExecutionId)
-                                               .setPlanExecutionId(planExecutionId)
                                                .setSpawnChildrenRequest(spawnChildrenRequest)
+                                               .setAmbiance(ambiance)
                                                .build());
   }
 
   @Override
-  public void queueTaskRequest(String planExecutionId, String nodeExecutionId, QueueTaskRequest queueTaskRequest) {
+  public void queueTaskRequest(Ambiance ambiance, QueueTaskRequest queueTaskRequest) {
     sdkResponseEventPublisher.publishEvent(SdkResponseEventProto.newBuilder()
                                                .setSdkResponseEventType(SdkResponseEventType.QUEUE_TASK)
-                                               .setNodeExecutionId(nodeExecutionId)
-                                               .setPlanExecutionId(planExecutionId)
                                                .setQueueTaskRequest(queueTaskRequest)
+                                               .setAmbiance(ambiance)
                                                .build());
   }
 }

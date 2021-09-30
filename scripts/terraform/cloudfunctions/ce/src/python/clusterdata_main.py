@@ -7,7 +7,7 @@ import time
 from google.cloud import bigquery
 from google.cloud import storage
 
-from util import create_dataset, if_tbl_exists, createTable, print_
+from util import create_dataset, if_tbl_exists, createTable, print_, run_batch_query
 
 """
 Step1) Ingest data from avro to Bigquery's clusterData table.
@@ -208,26 +208,7 @@ def delete_existing_data(jsonData):
             )
         ]
     )
-    query_job = client.query(query, job_config=job_config)
-    try:
-        # Experimental
-        print_(query_job.job_id)
-        count = 0
-        while True:
-            query_job = client.get_job(
-                query_job.job_id, location=query_job.location
-            )
-            print_("Job {} is currently in state {}".format(query_job.job_id, query_job.state))
-            if query_job.state in ["DONE", "SUCCESS"] or count >= 24: # 4 minutes
-                break
-            else:
-                time.sleep(10)
-                count += 1
-        if query_job.state not in ["DONE", "SUCCESS"]:
-            raise Exception("Timeout waiting for job in pending state")
-    except Exception as e:
-        print_(query)
-        raise e
+    run_batch_query(client, query, job_config, timeout=240)
     print_("Deleted data from %s..." % jsonData["tableId"])
 
 

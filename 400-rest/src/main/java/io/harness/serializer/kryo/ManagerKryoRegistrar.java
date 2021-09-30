@@ -118,9 +118,11 @@ import software.wings.api.helm.HelmReleaseInfoElement;
 import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.api.jira.JiraExecutionData;
 import software.wings.api.jira.JiraExecutionData.JiraIssueData;
+import software.wings.api.k8s.K8sApplicationManifestSourceInfo;
 import software.wings.api.k8s.K8sContextElement;
 import software.wings.api.k8s.K8sElement;
 import software.wings.api.k8s.K8sExecutionSummary;
+import software.wings.api.k8s.K8sGitConfigMapInfo;
 import software.wings.api.k8s.K8sHelmDeploymentElement;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.api.k8s.K8sSwapServiceElement;
@@ -608,7 +610,6 @@ import software.wings.service.impl.aws.model.AwsLambdaFunctionResponse;
 import software.wings.service.impl.aws.model.AwsLambdaFunctionResult;
 import software.wings.service.impl.aws.model.AwsLambdaRequest;
 import software.wings.service.impl.aws.model.AwsLambdaRequest.AwsLambdaRequestType;
-import software.wings.service.impl.aws.model.AwsLambdaVpcConfig;
 import software.wings.service.impl.aws.model.AwsRequest;
 import software.wings.service.impl.aws.model.AwsResponse;
 import software.wings.service.impl.aws.model.AwsRoute53HostedZoneData;
@@ -740,6 +741,7 @@ import software.wings.sm.states.azure.appservices.AzureAppServiceSlotSwapExecuti
 import software.wings.sm.states.gcbconfigs.GcbOptions;
 import software.wings.sm.states.gcbconfigs.GcbRemoteBuildSpec;
 import software.wings.sm.states.gcbconfigs.GcbTriggerBuildSpec;
+import software.wings.sm.states.k8s.K8sResourcesSweepingOutput;
 import software.wings.sm.states.spotinst.SpotInstDeployStateExecutionData;
 import software.wings.sm.states.spotinst.SpotInstListenerUpdateStateExecutionData;
 import software.wings.sm.states.spotinst.SpotInstSetupContextElement;
@@ -772,6 +774,7 @@ import com.google.api.services.logging.v2.model.LogEntryOperation;
 import com.google.api.services.logging.v2.model.LogEntrySourceLocation;
 import com.google.api.services.logging.v2.model.MonitoredResource;
 import com.google.api.services.logging.v2.model.MonitoredResourceMetadata;
+import com.google.gson.internal.LinkedTreeMap;
 import com.splunk.HttpException;
 import com.sumologic.client.SumoClientException;
 import com.sumologic.client.SumoException;
@@ -1189,7 +1192,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(AwsLambdaFunctionResult.class, 5452);
     kryo.register(AwsLambdaRequestType.class, 5447);
     kryo.register(AwsLambdaRequest.class, 5446);
-    kryo.register(AwsLambdaVpcConfig.class, 5450);
     kryo.register(AwsRequest.class, 5380);
     kryo.register(AwsResponse.class, 5381);
     kryo.register(BugsnagApplication.class, 5491);
@@ -1637,6 +1639,10 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(StackStatus.class, 40113);
     kryo.register(EventsDeliveryCallback.class, 40014);
     kryo.register(PerpetualTaskBroadcastEvent.class, 40015);
+    kryo.register(K8sResourcesSweepingOutput.class, 40019);
     kryo.register(ProviderType.class, 40022);
+    kryo.register(K8sGitConfigMapInfo.class, 40023);
+    kryo.register(K8sApplicationManifestSourceInfo.class, 40024);
+    kryo.register(LinkedTreeMap.class, 40025);
   }
 }

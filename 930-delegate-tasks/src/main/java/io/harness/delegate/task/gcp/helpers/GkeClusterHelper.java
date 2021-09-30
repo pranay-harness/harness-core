@@ -164,11 +164,9 @@ public class GkeClusterHelper {
                                     .collect(toList())
                               : ImmutableList.of();
     } catch (GoogleJsonResponseException e) {
-      String errorMessage;
+      String errorMessage = e.getMessage();
       if (e.getDetails() != null && isNotEmpty(e.getDetails().getMessage())) {
         errorMessage = e.getDetails().getMessage();
-      } else {
-        errorMessage = e.getMessage();
       }
       log.error(errorMessage, e);
       throw new GcpServerException(

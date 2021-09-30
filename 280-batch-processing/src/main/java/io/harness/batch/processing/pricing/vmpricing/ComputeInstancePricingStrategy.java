@@ -5,8 +5,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.batch.processing.pricing.InstancePricingStrategy;
 import io.harness.batch.processing.pricing.PricingData;
 import io.harness.batch.processing.pricing.PricingSource;
-import io.harness.batch.processing.pricing.banzai.VMComputePricingInfo;
-import io.harness.batch.processing.pricing.banzai.ZonePrice;
 import io.harness.batch.processing.pricing.fargatepricing.EcsFargateInstancePricingStrategy;
 import io.harness.batch.processing.pricing.pricingprofile.PricingProfileService;
 import io.harness.batch.processing.pricing.service.intfc.AwsCustomBillingService;
@@ -23,6 +21,8 @@ import io.harness.ccm.commons.beans.billing.InstanceCategory;
 import io.harness.ccm.commons.constants.CloudProvider;
 import io.harness.ccm.commons.constants.InstanceMetaDataConstants;
 import io.harness.ccm.commons.entities.batch.InstanceData;
+import io.harness.pricing.dto.cloudinfo.ProductDetails;
+import io.harness.pricing.dto.cloudinfo.ZonePrice;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -84,7 +84,7 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
             instanceData, startTime, endTime, instanceActiveSeconds, parentInstanceActiveSecond);
       }
 
-      VMComputePricingInfo vmComputePricingInfo =
+      ProductDetails vmComputePricingInfo =
           vmPricingService.getComputeVMPricingInfo(instanceFamily, region, cloudProvider);
       if (null == vmComputePricingInfo) {
         return getUserCustomInstancePricingData(instanceData, instanceCategory);
@@ -118,8 +118,7 @@ public class ComputeInstancePricingStrategy implements InstancePricingStrategy {
         .build();
   }
 
-  private double getPricePerHour(
-      String zone, InstanceCategory instanceCategory, VMComputePricingInfo vmComputePricingInfo) {
+  private double getPricePerHour(String zone, InstanceCategory instanceCategory, ProductDetails vmComputePricingInfo) {
     double pricePerHour = vmComputePricingInfo.getOnDemandPrice();
     if (instanceCategory == InstanceCategory.SPOT) {
       return vmComputePricingInfo.getSpotPrice()

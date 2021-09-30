@@ -37,7 +37,9 @@ import io.harness.lock.PersistentLocker;
 import io.harness.lock.noop.PersistentNoopLocker;
 import io.harness.mongo.MongoConfig;
 import io.harness.persistence.HPersistence;
+import io.harness.pricing.client.CloudInfoPricingClientModule;
 import io.harness.remote.client.ClientMode;
+import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
 
@@ -91,9 +93,23 @@ public class BatchProcessingModule extends AbstractModule {
     bind(RecommendationCrudService.class).to(RecommendationCrudServiceImpl.class);
     bind(ClusterHelper.class).to(ClusterHelperImpl.class);
 
+    bindPricingServices();
+
     bindCFServices();
 
     bindRetryOnExceptionInterceptor();
+  }
+
+  private void bindPricingServices() {
+    final BanzaiConfig banzaiConfig = batchMainConfig.getBanzaiConfig();
+    final String pricingServiceUrl = String.format("%s:%s/", banzaiConfig.getHost(), banzaiConfig.getPort());
+    final ServiceHttpClientConfig httpClientConfig = ServiceHttpClientConfig.builder()
+                                                         .baseUrl(pricingServiceUrl)
+                                                         .connectTimeOutSeconds(120)
+                                                         .readTimeOutSeconds(120)
+                                                         .build();
+
+    install(new CloudInfoPricingClientModule(httpClientConfig));
   }
 
   /**

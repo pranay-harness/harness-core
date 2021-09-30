@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.InfraDefinition;
 
-import static io.harness.annotations.dev.HarnessModule._870_CG_YAML;
+import static io.harness.annotations.dev.HarnessModule._955_CG_YAML;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
@@ -23,7 +23,7 @@ import com.google.inject.Inject;
 import java.util.List;
 
 @OwnedBy(CDP)
-@TargetModule(_870_CG_YAML)
+@TargetModule(_955_CG_YAML)
 public class AwsAmiInfrastructureYamlHandler
     extends CloudProviderInfrastructureYamlHandler<Yaml, AwsAmiInfrastructure> {
   @Inject private SettingsService settingsService;

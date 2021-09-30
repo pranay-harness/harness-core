@@ -11,11 +11,22 @@ service SweepingOutputService {
   rpc resolve(SweepingOutputResolveBlobRequest) returns (SweepingOutputResolveBlobResponse);
   rpc resolveOptional(SweepingOutputResolveBlobRequest) returns (OptionalSweepingOutputResolveBlobResponse);
   rpc consume(SweepingOutputConsumeBlobRequest) returns (SweepingOutputConsumeBlobResponse);
+  rpc listOutputsUsingNodeIds(SweepingOutputListRequest) returns (SweepingOutputListResponse);
 }
 
 message SweepingOutputResolveBlobRequest {
   io.harness.pms.contracts.ambiance.Ambiance ambiance = 1;
   io.harness.pms.contracts.refobjects.RefObject refObject = 2;
+}
+
+message SweepingOutputListRequest {
+  io.harness.pms.contracts.ambiance.Ambiance ambiance = 1;
+  string name = 2;
+  repeated string nodeIds = 3;
+}
+
+message SweepingOutputListResponse {
+  repeated OptionalSweepingOutputResolveBlobResponse sweepingOutputResolveBlobResponses = 1;
 }
 
 message SweepingOutputResolveBlobResponse {

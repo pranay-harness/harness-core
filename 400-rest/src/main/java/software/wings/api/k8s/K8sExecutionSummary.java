@@ -33,4 +33,5 @@ public class K8sExecutionSummary extends StepExecutionSummary {
   private String blueGreenStageColor;
   private Set<String> delegateSelectors;
   private List<KubernetesResourceId> prunedResourcesIds;
+  private boolean exportManifests;
 }

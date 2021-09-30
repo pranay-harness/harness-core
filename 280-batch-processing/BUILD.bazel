@@ -13,6 +13,7 @@ shared_dependencies = [
     "//380-cg-graphql:module",
     "//400-rest:module",
     "//450-ce-views:module",
+    "//480-pricing-service:module",
     "//490-ce-commons:module",
     "//870-orchestration:module",
     "//920-delegate-service-beans:module",

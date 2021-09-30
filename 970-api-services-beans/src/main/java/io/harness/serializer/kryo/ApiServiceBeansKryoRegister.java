@@ -71,6 +71,7 @@ import io.harness.k8s.model.IstioDestinationWeight;
 import io.harness.k8s.model.K8sContainer;
 import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesClusterAuthType;
+import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.OidcGrantType;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
@@ -345,6 +346,7 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(HelmClientException.class, 97032);
     kryo.register(HelmCliCommandType.class, 97033);
     kryo.register(EnclaveOptions.class, 97034);
+    kryo.register(KubernetesResource.class, 97035);
 
     kryo.register(BuildOptions.class, 7414);
     kryo.register(BuiltImage.class, 7426);

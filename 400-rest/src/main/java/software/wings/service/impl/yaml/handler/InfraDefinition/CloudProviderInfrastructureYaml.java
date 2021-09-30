@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.InfraDefinition;
 
-import static io.harness.annotations.dev.HarnessModule._870_CG_YAML;
+import static io.harness.annotations.dev.HarnessModule._955_CG_YAML;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import static software.wings.beans.InfrastructureType.AWS_AMI;
@@ -65,7 +65,7 @@ import lombok.NoArgsConstructor;
       @JsonSubTypes.Type(value = CustomInfrastructure.Yaml.class, name = InfrastructureType.CUSTOM_INFRASTRUCTURE)
 })
 @OwnedBy(CDP)
-@TargetModule(_870_CG_YAML)
+@TargetModule(_955_CG_YAML)
 public abstract class CloudProviderInfrastructureYaml extends BaseYamlWithType {
   public CloudProviderInfrastructureYaml(String type) {
     super(type);

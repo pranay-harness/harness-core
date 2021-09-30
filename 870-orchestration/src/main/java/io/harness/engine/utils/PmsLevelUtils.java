@@ -1,15 +1,18 @@
 package io.harness.engine.utils;
 
-import io.harness.plan.PlanNode;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.plan.Node;
 import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.steps.StepType;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class PmsLevelUtils {
-  public static Level buildLevelFromPlanNode(String runtimeId, PlanNode node) {
-    return buildLevelFromPlanNode(runtimeId, 0, node);
+  public static Level buildLevelFromNode(String runtimeId, Node node) {
+    return buildLevelFromNode(runtimeId, 0, node);
   }
 
-  public static Level buildLevelFromPlanNode(String runtimeId, int retryIndex, PlanNode node) {
+  public static Level buildLevelFromNode(String runtimeId, int retryIndex, Node node) {
     Level.Builder levelBuilder = Level.newBuilder()
                                      .setSetupId(node.getUuid())
                                      .setRuntimeId(runtimeId)
@@ -20,7 +23,8 @@ public class PmsLevelUtils {
                                      .setStepType(StepType.newBuilder()
                                                       .setType(node.getStepType().getType())
                                                       .setStepCategory(node.getStepType().getStepCategory())
-                                                      .build());
+                                                      .build())
+                                     .setNodeType(node.getNodeType().toString());
     if (node.getGroup() != null) {
       levelBuilder.setGroup(node.getGroup());
     }

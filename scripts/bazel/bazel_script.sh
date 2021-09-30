@@ -466,4 +466,5 @@ bazel ${bazelrc} run ${BAZEL_ARGUMENTS} //001-microservice-intfc-tool:module | g
 
 if [ "${PLATFORM}" == "jenkins" ]; then
  build_protocol_info 800-pipeline-service pipeline-service
+ build_protocol_info 310-ci-manager ci-manager
 fi

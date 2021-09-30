@@ -27,6 +27,7 @@ import io.harness.execution.NodeExecution.NodeExecutionBuilder;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.State;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.interrupts.InterruptConfig;
 import io.harness.pms.contracts.interrupts.InterruptType;
@@ -120,10 +121,14 @@ public class AbortHelperTest extends OrchestrationTestBase {
                               .build();
     mongoTemplate.save(interrupt);
 
+    Ambiance ambiance = Ambiance.newBuilder()
+                            .setPlanExecutionId(generateUuid())
+                            .addLevels(Level.newBuilder().setRuntimeId(nodeExecutionId).build())
+                            .build();
     NodeExecutionBuilder nodeExecution =
         NodeExecution.builder()
             .uuid(nodeExecutionId)
-            .ambiance(Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build())
+            .ambiance(ambiance)
             .mode(ExecutionMode.SYNC)
             .node(PlanNodeProto.newBuilder()
                       .setUuid(generateUuid())
@@ -135,15 +140,14 @@ public class AbortHelperTest extends OrchestrationTestBase {
         .thenReturn(nodeExecution.status(ABORTED).endTs(System.currentTimeMillis()).build());
     abortHelper.discontinueMarkedInstance(nodeExecution.status(DISCONTINUING).build(), interrupt);
 
-    ArgumentCaptor<NodeExecution> nExCaptor = ArgumentCaptor.forClass(NodeExecution.class);
+    ArgumentCaptor<Ambiance> ambianceCaptor = ArgumentCaptor.forClass(Ambiance.class);
 
     verify(interruptEventPublisher, times(0)).publishEvent(any(), any(), any());
     verify(waitNotifyEngine, times(0)).waitForAllOn(any(), any(), any());
 
-    verify(engine, times(1)).endTransition(nExCaptor.capture());
-    assertThat(nExCaptor.getValue()).isNotNull();
-    assertThat(nExCaptor.getValue().getUuid()).isEqualTo(nodeExecutionId);
-    assertThat(nExCaptor.getValue().getStatus()).isEqualTo(ABORTED);
+    verify(engine, times(1)).endNodeExecution(ambianceCaptor.capture());
+    assertThat(ambianceCaptor.getValue()).isNotNull();
+    assertThat(ambianceCaptor.getValue()).isEqualTo(ambiance);
   }
 
   @Test
@@ -162,10 +166,14 @@ public class AbortHelperTest extends OrchestrationTestBase {
                               .build();
     mongoTemplate.save(interrupt);
 
+    Ambiance ambiance = Ambiance.newBuilder()
+                            .setPlanExecutionId(generateUuid())
+                            .addLevels(Level.newBuilder().setRuntimeId(nodeExecutionId).build())
+                            .build();
     NodeExecutionBuilder nodeExecution =
         NodeExecution.builder()
             .uuid(nodeExecutionId)
-            .ambiance(Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build())
+            .ambiance(ambiance)
             .mode(ExecutionMode.CHILD)
             .node(PlanNodeProto.newBuilder()
                       .setUuid(generateUuid())
@@ -178,15 +186,14 @@ public class AbortHelperTest extends OrchestrationTestBase {
 
     abortHelper.discontinueMarkedInstance(nodeExecution.status(DISCONTINUING).build(), interrupt);
 
-    ArgumentCaptor<NodeExecution> nExCaptor = ArgumentCaptor.forClass(NodeExecution.class);
+    ArgumentCaptor<Ambiance> ambianceCaptor = ArgumentCaptor.forClass(Ambiance.class);
 
     verify(interruptEventPublisher, times(0)).publishEvent(any(), any(), any());
     verify(waitNotifyEngine, times(0)).waitForAllOn(any(), any(), any());
 
-    verify(engine, times(1)).endTransition(nExCaptor.capture());
-    assertThat(nExCaptor.getValue()).isNotNull();
-    assertThat(nExCaptor.getValue().getUuid()).isEqualTo(nodeExecutionId);
-    assertThat(nExCaptor.getValue().getStatus()).isEqualTo(ABORTED);
+    verify(engine, times(1)).endNodeExecution(ambianceCaptor.capture());
+    assertThat(ambianceCaptor.getValue()).isNotNull();
+    assertThat(ambianceCaptor.getValue()).isEqualTo(ambiance);
   }
 
   @Test

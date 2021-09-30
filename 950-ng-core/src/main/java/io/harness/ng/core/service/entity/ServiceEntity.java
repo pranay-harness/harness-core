@@ -3,6 +3,7 @@ package io.harness.ng.core.service.entity;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotation.StoreIn;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.ChangeDataCapture;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityIdentifier;
@@ -31,6 +32,7 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+@OwnedBy(PIPELINE)
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "ServiceEntityKeys")
@@ -39,7 +41,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @TypeAlias("io.harness.ng.core.service.entity.ServiceEntity")
 @ChangeDataCapture(table = "services", dataStore = "ng-harness", fields = {}, handler = "Services")
 @StoreIn(DbAliases.NG_MANAGER)
-@OwnedBy(PIPELINE)
 public class ServiceEntity implements PersistentEntity {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
@@ -66,8 +67,8 @@ public class ServiceEntity implements PersistentEntity {
   @Wither @Id @org.mongodb.morphia.annotations.Id String id;
   @Trimmed @NotEmpty String accountId;
   @NotEmpty @EntityIdentifier String identifier;
-  @Trimmed @NotEmpty String orgIdentifier;
-  @Trimmed @NotEmpty String projectIdentifier;
+  @Trimmed String orgIdentifier;
+  @Trimmed String projectIdentifier;
   @Wither @Singular @Size(max = 128) private List<NGTag> tags;
 
   @NotEmpty @EntityName String name;

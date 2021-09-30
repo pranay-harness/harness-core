@@ -20,7 +20,6 @@ import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.contracts.resume.ChainDetails;
 import io.harness.pms.contracts.resume.NodeResumeEvent;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
-import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.AmbianceTestUtils;
 import io.harness.pms.sdk.core.DummyExecutionStrategy;
 import io.harness.pms.sdk.core.PmsSdkCoreTestBase;
@@ -158,9 +157,7 @@ public class NodeResumeEventHandlerTest extends PmsSdkCoreTestBase {
     nodeResumeEvent = nodeResumeEvent.toBuilder().setAsyncError(true).putAllResponse(responseDataMap).build();
     nodeResumeEventHandler.handleEventWithContext(nodeResumeEvent);
     Mockito.verify(executableProcessorFactory).obtainProcessor(ExecutionMode.APPROVAL);
-    Mockito.verify(sdkNodeExecutionService)
-        .handleStepResponse(eq(nodeResumeEvent.getAmbiance().getPlanExecutionId()),
-            eq(AmbianceUtils.obtainCurrentRuntimeId(nodeResumeEvent.getAmbiance())), any(StepResponseProto.class));
+    Mockito.verify(sdkNodeExecutionService).handleStepResponse(eq(ambiance), any(StepResponseProto.class));
   }
 
   @Test
