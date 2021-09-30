@@ -296,7 +296,6 @@ public class DelegateServiceImpl implements DelegateService {
   public static final String HARNESS_DELEGATE_VALUES_YAML = HARNESS_DELEGATE + "-values";
   private static final String YAML = ".yaml";
   private static final String UPGRADE_VERSION = "upgradeVersion";
-  private static final String ACCOUNT_PRIMARY_VERSION = "accountPrimaryVersion";
   private static final String STREAM_DELEGATE = "/stream/delegate/";
   private static final String TAR_GZ = ".tar.gz";
   private static final String README = "README";

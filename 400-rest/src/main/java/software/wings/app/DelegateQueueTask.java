@@ -18,7 +18,6 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
@@ -337,10 +336,5 @@ public class DelegateQueueTask implements Runnable {
 
   private boolean shouldExpireTask(DelegateTask task) {
     return !task.isForceExecute() || !handleTaskWithForceExecution(task);
-  }
-
-  private String getVersion(String accountId) {
-    String accountVersion = delegateService.getAccountPrimaryDelegateVersion(accountId);
-    return isNotBlank(accountVersion) ? accountVersion : versionInfoManager.getVersionInfo().getVersion();
   }
 }

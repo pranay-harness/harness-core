@@ -3,12 +3,34 @@ package software.wings.service;
 import static io.harness.annotations.dev.HarnessModule._955_ACCOUNT_MGMT;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.ANKIT;
+import static io.harness.rule.OwnerRule.BRETT;
+import static io.harness.rule.OwnerRule.DEEPAK;
+import static io.harness.rule.OwnerRule.HANTANG;
+import static io.harness.rule.OwnerRule.JENNY;
+import static io.harness.rule.OwnerRule.LAZAR;
+import static io.harness.rule.OwnerRule.MEHUL;
+import static io.harness.rule.OwnerRule.MOHIT;
+import static io.harness.rule.OwnerRule.NANDAN;
+import static io.harness.rule.OwnerRule.NATHAN;
+import static io.harness.rule.OwnerRule.PRAVEEN;
+import static io.harness.rule.OwnerRule.PUNEET;
+import static io.harness.rule.OwnerRule.RAGHU;
+import static io.harness.rule.OwnerRule.RAMA;
+import static io.harness.rule.OwnerRule.ROHITKARELIA;
+import static io.harness.rule.OwnerRule.SRINIVAS;
+import static io.harness.rule.OwnerRule.UJJAWAL;
+import static io.harness.rule.OwnerRule.UTKARSH;
+import static io.harness.rule.OwnerRule.VIKAS;
+import static io.harness.rule.OwnerRule.VOJIN;
 
-import static io.harness.rule.OwnerRule.*;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.common.VerificationConstants.SERVICE_GUAARD_LIMIT;
+import static software.wings.utils.WingsTestConstants.COMPANY_NAME;
+import static software.wings.utils.WingsTestConstants.ILLEGAL_ACCOUNT_NAME;
+import static software.wings.utils.WingsTestConstants.PORTAL_URL;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,7 +43,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.utils.WingsTestConstants.*;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -1373,21 +1394,19 @@ public class AccountServiceTest extends WingsBaseTest {
     assertThat(updated).isFalse();
   }
 
-
   @Test
   @Owner(developers = JENNY)
   @Category(UnitTests.class)
   public void getAccountPrimaryDelegateVersion() {
     wingsPersistence.save(anAccount()
-            .withUuid(ACCOUNT_ID)
-            .withCompanyName(HARNESS_NAME)
-            .withDelegateConfiguration(
-                    DelegateConfiguration.builder().delegateVersions(asList("accountVersion1.2")).build())
-            .build());
+                              .withCompanyName(HARNESS_NAME)
+                              .withDelegateConfiguration(
+                                  DelegateConfiguration.builder().delegateVersions(asList("accountVersion1.2")).build())
+                              .build());
 
     String accountId = wingsPersistence.save(anAccount().withCompanyName(HARNESS_NAME).build());
 
     assertThat(accountService.getDelegateConfiguration(accountId))
-            .hasFieldOrPropertyWithValue("delegateVersions", asList("accountVersion1.2"));
+        .hasFieldOrPropertyWithValue("delegateVersions", asList("accountVersion1.2"));
   }
 }
