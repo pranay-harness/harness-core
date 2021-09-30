@@ -1,5 +1,7 @@
 import json
 import bq_schema
+import time
+
 from google.cloud import bigquery
 from google.cloud.exceptions import NotFound
 
@@ -18,6 +20,8 @@ AWSEBSINVENTORYMETRICS = "awsEbsInventoryMetrics"
 AWSEBSINVENTORY = "awsEbsInventory"
 UNIFIED = "unifiedTable"
 AWSCURPREFIX = "awscur"
+COSTAGGREGATED = "costAggregated"
+CEINTERNALDATASET = "CE_INTERNAL"
 
 def print_(message, severity="INFO"):
     # Set account id in the beginning of your CF call
@@ -108,6 +112,12 @@ def createTable(client, table_ref):
             type_=bigquery.TimePartitioningType.DAY,
             field="startTime"  # name of column to use for partitioning
         )
+    elif tableName == COSTAGGREGATED:
+        fieldset = bq_schema.costAggregatedSchema
+        partition = bigquery.TimePartitioning(
+            type_=bigquery.TimePartitioningType.DAY,
+            field="day"  # name of column to use for partitioning
+        )
 
     for field in fieldset:
         if field.get("type") == "RECORD":
@@ -120,7 +130,7 @@ def createTable(client, table_ref):
         return False
     table = bigquery.Table("%s.%s.%s" % (table_ref.project, table_ref.dataset_id, tableName), schema=schema)
 
-    if tableName in [UNIFIED, PREAGGREGATED, AWSEC2INVENTORYMETRIC, AWSEBSINVENTORYMETRICS] or \
+    if tableName in [UNIFIED, PREAGGREGATED, AWSEC2INVENTORYMETRIC, AWSEBSINVENTORYMETRICS, COSTAGGREGATED] or \
         tableName.startswith(AWSCURPREFIX):
         table.time_partitioning = partition
     elif tableName.startswith(AWSEC2INVENTORY) or tableName.startswith(AWSEBSINVENTORY) or \
@@ -134,3 +144,45 @@ def createTable(client, table_ref):
         print_("Error while creating table\n {}".format(e), "WARN")
         return False
     return True
+
+
+def run_batch_query(client, query, job_config, timeout=120):
+    """
+    Util method which runs a BQ query in batch mode.
+    :param client:
+    :param query:
+    :param job_config:
+    :param timeout:
+    :return:
+    """
+    if not job_config:
+        job_config = bigquery.QueryJobConfig(
+            priority=bigquery.QueryPriority.BATCH
+        )
+    elif isinstance(job_config, bigquery.QueryJobConfig):
+        # Explicitly set BATCH priority
+        job_config.priority = bigquery.QueryPriority.BATCH
+
+    query_job = client.query(query, job_config=job_config)
+    print_(query)
+    try:
+        print_(query_job.job_id)
+        count = 0
+        while True:
+            query_job = client.get_job(
+                query_job.job_id, location=query_job.location
+            )
+            print_("Job {} is currently in state {}".format(query_job.job_id, query_job.state))
+            if query_job.state in ["DONE", "SUCCESS"] or count >= timeout/5: # 2 minutes
+                err = query_job.error_result
+                if err:
+                    print_(err, "ERROR")
+                break
+            else:
+                time.sleep(5)
+                count += 1
+        if query_job.state not in ["DONE", "SUCCESS"]:
+            raise Exception("Timeout waiting for job in pending state")
+    except Exception as e:
+        print_(query, "ERROR")
+        print_(e)
