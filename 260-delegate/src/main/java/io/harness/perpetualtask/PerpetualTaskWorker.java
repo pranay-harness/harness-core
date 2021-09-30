@@ -48,7 +48,7 @@ import org.slf4j.MarkerFactory;
 
 @Slf4j
 @Singleton
-@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public class PerpetualTaskWorker {
   private static final Marker THROTTLED = MarkerFactory.getMarker("THROTTLED");
   @Getter private final Map<PerpetualTaskId, PerpetualTaskAssignRecord> runningTaskMap = new ConcurrentHashMap<>();

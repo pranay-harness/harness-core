@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 @OwnedBy(CV)
-@TargetModule(HarnessModule._420_DELEGATE_AGENT)
+@TargetModule(HarnessModule._910_DELEGATE_SERVICE_DRIVER)
 public class CVNGDataCollectionDelegateServiceImpl implements CVNGDataCollectionDelegateService {
   @Inject private DataCollectionDSLService dataCollectionDSLService;
   @Inject private SecretDecryptionService secretDecryptionService;

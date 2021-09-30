@@ -1,5 +1,7 @@
 package software.wings.service.intfc.ldap;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.TaskType;
@@ -15,6 +17,7 @@ import java.util.Collection;
  *  Delegate Service Interface for LDAP API's.
  * Created by Pranjal on 08/21/2018
  */
+@TargetModule(HarnessModule._910_DELEGATE_SERVICE_DRIVER)
 public interface LdapDelegateService {
   /**
    * API to test LDAP connection settings for given {@link LdapSettings}

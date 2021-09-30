@@ -1,5 +1,7 @@
 package software.wings.service.intfc.dynatrace;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.DynaTraceConfig;
@@ -17,6 +19,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by rsingh on 01/29/18.
  */
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public interface DynaTraceDelegateService {
   @DelegateTaskType(TaskType.DYNA_TRACE_VALIDATE_CONFIGURATION_TASK)
   boolean validateConfig(@NotNull DynaTraceConfig dynaTraceConfig, List<EncryptedDataDetail> encryptedDataDetails);

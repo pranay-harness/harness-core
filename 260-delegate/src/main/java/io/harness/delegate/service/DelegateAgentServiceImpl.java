@@ -95,7 +95,6 @@ import io.harness.configuration.DeployMode;
 import io.harness.data.structure.HarnessStringUtils;
 import io.harness.data.structure.NullSafeImmutableMap;
 import io.harness.data.structure.UUIDGenerator;
-import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateConnectionHeartbeat;
 import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateParams;
@@ -151,6 +150,7 @@ import io.harness.taskprogress.TaskProgressClient;
 import io.harness.threading.Schedulable;
 import io.harness.utils.ProcessControl;
 import io.harness.version.VersionInfoManager;
+import io.harness.wsclient.DelegateWebSocketClient;
 
 import software.wings.beans.DelegateTaskFactory;
 import software.wings.beans.TaskType;
@@ -177,13 +177,10 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.ning.http.client.AsyncHttpClient;
 import com.sun.management.OperatingSystemMXBean;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.net.ConnectException;
@@ -222,7 +219,6 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
-import javax.net.ssl.SSLException;
 import javax.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -236,17 +232,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.math3.util.Precision;
 import org.apache.http.client.utils.URIBuilder;
-import org.atmosphere.wasync.Client;
-import org.atmosphere.wasync.Encoder;
-import org.atmosphere.wasync.Event;
-import org.atmosphere.wasync.Function;
-import org.atmosphere.wasync.Options;
-import org.atmosphere.wasync.Request.METHOD;
-import org.atmosphere.wasync.Request.TRANSPORT;
-import org.atmosphere.wasync.RequestBuilder;
-import org.atmosphere.wasync.Socket;
-import org.atmosphere.wasync.Socket.STATUS;
-import org.atmosphere.wasync.transport.TransportNotSupported;
+import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketError;
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
+import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -260,7 +251,6 @@ import retrofit2.Response;
 @Slf4j
 @TargetModule(HarnessModule._420_DELEGATE_AGENT)
 @BreakDependencyOn("software.wings.delegatetasks.validation.DelegateConnectionResult")
-@BreakDependencyOn("io.harness.delegate.beans.Delegate")
 @BreakDependencyOn("io.harness.delegate.beans.DelegateScripts")
 @BreakDependencyOn("io.harness.delegate.beans.FileBucket")
 @BreakDependencyOn("io.harness.delegate.message.Message")
@@ -273,6 +263,7 @@ import retrofit2.Response;
 @BreakDependencyOn("software.wings.delegatetasks.LogSanitizer")
 @BreakDependencyOn("software.wings.service.intfc.security.EncryptionService")
 @OwnedBy(HarnessTeam.DEL)
+@WebSocket
 public class DelegateAgentServiceImpl implements DelegateAgentService {
   private static final int POLL_INTERVAL_SECONDS = 3;
   private static final long UPGRADE_TIMEOUT = TimeUnit.HOURS.toMillis(2);
@@ -338,7 +329,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   @Inject private MessageService messageService;
   @Inject private Injector injector;
   @Inject private TokenGenerator tokenGenerator;
-  @Inject private AsyncHttpClient asyncHttpClient;
   @Inject private Clock clock;
   @Inject private TimeLimiter timeLimiter;
   @Inject private VersionInfoManager versionInfoManager;
@@ -351,6 +341,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   @Inject DelegateTaskFactory delegateTaskFactory;
   @Inject(optional = true) @Nullable private DelegateServiceGrpcAgentClient delegateServiceGrpcAgentClient;
   @Inject private KryoSerializer kryoSerializer;
+  @Inject private DelegateWebSocketClient socket;
 
   private final AtomicBoolean waiter = new AtomicBoolean(true);
 
@@ -381,8 +372,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private final AtomicBoolean reconnectingSocket = new AtomicBoolean(false);
   private final AtomicBoolean closingSocket = new AtomicBoolean(false);
 
-  private Client client;
-  private Socket socket;
   private String upgradeVersion;
   private String migrateTo;
   private long startTime;
@@ -552,43 +541,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         log.info("Polling is enabled for Delegate");
         pollingForTasks.set(true);
       } else {
-        client = org.atmosphere.wasync.ClientFactory.getDefault().newClient();
-
-        RequestBuilder requestBuilder = prepareRequestBuilder();
-
-        Options clientOptions = client.newOptionsBuilder().runtime(asyncHttpClient, true).reconnect(false).build();
-        socket = client.create(clientOptions);
-        socket
-            .on(Event.MESSAGE,
-                new Function<String>() { // Do not change this, wasync doesn't like lambdas
-                  @Override
-                  public void on(String message) {
-                    handleMessageSubmit(message);
-                  }
-                })
-            .on(Event.ERROR,
-                new Function<Exception>() { // Do not change this, wasync doesn't like lambdas
-                  @Override
-                  public void on(Exception e) {
-                    handleError(e);
-                  }
-                })
-            .on(Event.OPEN,
-                new Function<Object>() { // Do not change this, wasync doesn't like lambdas
-                  @Override
-                  public void on(Object o) {
-                    handleOpen(o);
-                  }
-                })
-            .on(Event.CLOSE, new Function<Object>() { // Do not change this, wasync doesn't like lambdas
-              @Override
-              public void on(Object o) {
-                handleClose(o);
-              }
-            });
-
-        socket.open(requestBuilder.build());
-
+        socket.addHeader("Version", getVersion());
+        socket.setWebSocket(this);
+        socket.open(buildUri());
         startHeartbeat(builder, socket);
         startKeepAlivePacket(builder, socket);
       }
@@ -696,7 +651,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       log.error("Exception while starting/running delegate", e);
-    } catch (RuntimeException | IOException e) {
+    } catch (RuntimeException e) {
       log.error("Exception while starting/running delegate", e);
     }
   }
@@ -706,31 +661,18 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         && ocInstalled && kustomizeInstalled && harnessPywinrmInstalled && scmInstalled;
   }
 
-  private RequestBuilder prepareRequestBuilder() {
+  public URI buildUri() {
     try {
       URIBuilder uriBuilder =
-          new URIBuilder(delegateConfiguration.getManagerUrl().replace("/api/", "/stream/") + "delegate/" + accountId)
+          new URIBuilder(delegateConfiguration.getManagerUrl().replace("/api/", "/stream/").replace("https", "wss")
+              + "delegate/" + accountId)
               .addParameter("delegateId", delegateId)
               .addParameter("delegateConnectionId", delegateConnectionId)
               .addParameter("token", tokenGenerator.getToken("https", "localhost", 9090, HOST_NAME))
               .addParameter("sequenceNum", getSequenceNumForEcsDelegate())
               .addParameter("delegateToken", getRandomTokenForEcsDelegate());
 
-      URI uri = uriBuilder.build();
-
-      // Stream the request body
-      RequestBuilder requestBuilder =
-          client.newRequestBuilder().method(METHOD.GET).uri(uri.toString()).header("Version", getVersion());
-
-      requestBuilder
-          .encoder(new Encoder<Delegate, Reader>() { // Do not change this, wasync doesn't like lambdas
-            @Override
-            public Reader encode(Delegate s) {
-              return new StringReader(JsonUtils.asJson(s));
-            }
-          })
-          .transport(TRANSPORT.WEBSOCKET);
-      return requestBuilder;
+      return uriBuilder.build();
     } catch (URISyntaxException e) {
       throw new UnexpectedException("Unable to prepare uri", e);
     }
@@ -786,11 +728,11 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   private void handleOpen(Object o) {
-    log.info("Event:{}, message:[{}]", Event.OPEN.name(), o.toString());
+    log.info("Event:{}, message:[{}]", "OPEN", o.toString());
   }
 
   private void handleClose(Object o) {
-    log.info("Event:{}, message:[{}]", Event.CLOSE.name(), o.toString());
+    log.info("Event:{}, message:[{}]", "CLOSE", o != null ? o.toString() : "");
     // TODO(brett): Disabling the fallback to poll for tasks as it can cause too much traffic to ingress controller
     // pollingForTasks.set(true);
     if (!closingSocket.get() && reconnectingSocket.compareAndSet(false, true)) {
@@ -803,10 +745,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   private void handleError(final Exception e) {
-    log.info("Event:{}, message:[{}]", Event.ERROR.name(), e.getMessage());
+    log.info("Event:{}, message:[{}]", "ERROR", e.getMessage());
     if (reconnectingSocket.compareAndSet(false, true)) {
       try {
-        if (e instanceof SSLException || e instanceof TransportNotSupported) {
+        if (e instanceof IOException) {
           log.warn("Reopening connection to manager because of exception", e);
           try {
             socket.close();
@@ -836,10 +778,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private void trySocketReconnect() {
     try {
-      FibonacciBackOff.executeForEver(() -> {
-        RequestBuilder requestBuilder = prepareRequestBuilder();
-        return socket.open(requestBuilder.build());
-      });
+      FibonacciBackOff.executeForEver(() -> { return socket.open(buildUri()); });
     } catch (IOException ex) {
       log.error("Unable to open socket", ex);
     }
@@ -847,7 +786,11 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private void finalizeSocket() {
     closingSocket.set(true);
-    socket.close();
+    try {
+      socket.close();
+    } catch (IOException e) {
+      log.error("Unable to close socket", e);
+    }
   }
 
   private void handleMessageSubmit(String message) {
@@ -910,7 +853,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       freeze();
     } else if (!StringUtils.equals(message, "X")) {
       if (log.isDebugEnabled()) {
-        log.debug("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
+        log.debug("Executing: Event:{}, message:[{}]", "MESSAGE", message);
       }
       try {
         DelegateTaskEvent delegateTaskEvent = JsonUtils.asObject(message, DelegateTaskEvent.class);
@@ -971,10 +914,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private void resume() {
     try {
       if (!delegateConfiguration.isPollForTasks()) {
-        FibonacciBackOff.executeForEver(() -> {
-          RequestBuilder requestBuilder = prepareRequestBuilder();
-          return socket.open(requestBuilder.build());
-        });
+        FibonacciBackOff.executeForEver(() -> { return socket.open(buildUri()); });
       }
       if (perpetualTaskWorker != null) {
         perpetualTaskWorker.start();
@@ -1390,7 +1330,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
   }
 
-  private void startHeartbeat(DelegateParamsBuilder builder, Socket socket) {
+  private void startHeartbeat(DelegateParamsBuilder builder, DelegateWebSocketClient socket) {
     log.info("Starting heartbeat at interval {} ms", delegateConfiguration.getHeartbeatIntervalMs());
     heartbeatExecutor.scheduleAtFixedRate(() -> {
       try {
@@ -1407,7 +1347,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }, 0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
   }
 
-  private void startKeepAlivePacket(DelegateParamsBuilder builder, Socket socket) {
+  private void startKeepAlivePacket(DelegateParamsBuilder builder, DelegateWebSocketClient socket) {
     if (!isEcsDelegate()) {
       return;
     }
@@ -1598,12 +1538,12 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         && (restartNeeded.get() || (!frozen.get() && heartbeatExpired) || (frozen.get() && freezeIntervalExpired));
   }
 
-  private void sendHeartbeat(DelegateParamsBuilder builder, Socket socket) {
+  private void sendHeartbeat(DelegateParamsBuilder builder, DelegateWebSocketClient socket) {
     if (!shouldContactManager() || !acquireTasks.get() || frozen.get()) {
       return;
     }
 
-    if (socket.status() == STATUS.OPEN || socket.status() == STATUS.REOPENED) {
+    if (socket.isOpen()) {
       log.info("Sending heartbeat...");
 
       // This will Add ECS delegate specific fields if DELEGATE_TYPE = "ECS"
@@ -1631,15 +1571,16 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       }
     } else {
       log.warn("Socket is not open");
+      trySocketReconnect();
     }
   }
 
-  private void sendKeepAlivePacket(DelegateParamsBuilder builder, Socket socket) {
+  private void sendKeepAlivePacket(DelegateParamsBuilder builder, DelegateWebSocketClient socket) {
     if (!shouldContactManager()) {
       return;
     }
 
-    if (socket.status() == STATUS.OPEN || socket.status() == STATUS.REOPENED) {
+    if (socket.isOpen()) {
       log.info("Sending keepAlive packet...");
       updateBuilderIfEcsDelegate(builder);
       try {
@@ -1650,10 +1591,11 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       } catch (UncheckedTimeoutException ex) {
         log.warn("Timed out sending keep alive packet", ex);
       } catch (Exception e) {
-        log.error("Error sending heartbeat", e);
+        log.error("Error sending keep alive packet", e);
       }
     } else {
       log.warn("Socket is not open");
+      trySocketReconnect();
     }
   }
 
@@ -2605,5 +2547,40 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private boolean shouldContactManager() {
     return !selfDestruct.get();
+  }
+
+  @OnWebSocketConnect
+  public void onConnect(Session session) {
+    log.info("onConnect({})", session);
+    handleOpen(session);
+  }
+
+  @OnWebSocketClose
+  public void onClose(int statusCode, String reason) {
+    log.info("onClose({}, {})", statusCode, reason);
+    handleClose(reason);
+  }
+
+  @OnWebSocketError
+  public void onError(Throwable cause) {
+    if (cause instanceof Exception) {
+      log.warn("WebSocket connection failed: ", cause.getLocalizedMessage());
+      handleError((Exception) cause);
+    } else {
+      log.warn("Reopening connection to manager because of ", cause);
+      try {
+        socket.close();
+      } catch (IOException e) {
+        log.error("Closing socket failed", e);
+      } catch (final Exception ex) {
+        log.error("Failed to close the socket", ex);
+      }
+      trySocketReconnect();
+    }
+  }
+
+  @OnWebSocketMessage
+  public void onMessage(String message) {
+    handleMessageSubmit(message);
   }
 }
