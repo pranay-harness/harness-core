@@ -3,7 +3,6 @@ package io.harness.pms.sdk.core.execution;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.tasks.ResponseData;
@@ -23,8 +22,6 @@ import lombok.extern.slf4j.Slf4j;
 public class AsyncSdkResumeCallback implements OldNotifyCallback {
   @Inject SdkNodeExecutionService sdkNodeExecutionService;
 
-  @Deprecated String nodeExecutionId;
-  @Deprecated String planExecutionId;
   byte[] ambianceBytes;
 
   @Override
@@ -39,18 +36,13 @@ public class AsyncSdkResumeCallback implements OldNotifyCallback {
   }
 
   private void notifyWithError(Map<String, ResponseData> response, boolean asyncError) {
-    if (EmptyPredicate.isEmpty(nodeExecutionId) && EmptyPredicate.isEmpty(planExecutionId)) {
-      try {
-        Ambiance ambiance = Ambiance.parseFrom(ambianceBytes);
-        log.info("AsyncSdkResumeCallback notify is called for ambiance with nodeExecutionId {}",
-            AmbianceUtils.obtainCurrentRuntimeId(ambiance));
-        sdkNodeExecutionService.resumeNodeExecution(ambiance, response, asyncError);
-      } catch (InvalidProtocolBufferException e) {
-        log.error("Not able to deserialize Ambiance bytes. Progress Callback will not be executed");
-      }
-      return;
+    try {
+      Ambiance ambiance = Ambiance.parseFrom(ambianceBytes);
+      log.info("AsyncSdkResumeCallback notify is called for ambiance with nodeExecutionId {}",
+          AmbianceUtils.obtainCurrentRuntimeId(ambiance));
+      sdkNodeExecutionService.resumeNodeExecution(ambiance, response, asyncError);
+    } catch (InvalidProtocolBufferException e) {
+      log.error("Not able to deserialize Ambiance bytes. Progress Callback will not be executed");
     }
-    log.info("AsyncSdkResumeCallback notify is called for nodeExecutionId {}", nodeExecutionId);
-    sdkNodeExecutionService.resumeNodeExecution(planExecutionId, nodeExecutionId, response, asyncError);
   }
 }

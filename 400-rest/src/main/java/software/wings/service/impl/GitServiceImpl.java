@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.exception.ExceptionUtils.getMessage;
 import static io.harness.shell.AuthenticationScheme.KERBEROS;
 import static io.harness.shell.SshSessionFactory.generateTGTUsingSshConfig;
@@ -8,6 +9,7 @@ import static io.harness.shell.SshSessionFactory.getSSHSession;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 import static software.wings.utils.SshHelperUtils.createSshSessionConfig;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.git.GitClientV2;
 import io.harness.git.UsernamePasswordAuthRequest;
@@ -60,6 +62,7 @@ import org.eclipse.jgit.util.FS;
 @Singleton
 @ValidateOnExecution
 @Slf4j
+@OwnedBy(DX)
 public class GitServiceImpl implements GitService {
   @Inject private GitClient gitClient;
   @Inject private GitClientV2 gitClientV2;
@@ -139,7 +142,7 @@ public class GitServiceImpl implements GitService {
 
   @Override
   public GitFetchFilesResult fetchFilesByPath(GitConfig gitConfig, String connectorId, String commitId, String branch,
-      List<String> filePaths, boolean useBranch) {
+      List<String> filePaths, boolean useBranch, boolean shouldExportCommitSha) {
     return gitClient.fetchFilesByPath(gitConfig,
         GitFetchFilesRequest.builder()
             .commitId(commitId)
@@ -148,12 +151,14 @@ public class GitServiceImpl implements GitService {
             .gitConnectorId(connectorId)
             .useBranch(useBranch)
             .recursive(true)
-            .build());
+            .build(),
+        shouldExportCommitSha);
   }
 
   @Override
-  public void downloadFiles(GitConfig gitConfig, GitFileConfig gitFileConfig, String destinationDirectory) {
-    gitClient.downloadFiles(gitConfig,
+  public String downloadFiles(
+      GitConfig gitConfig, GitFileConfig gitFileConfig, String destinationDirectory, boolean shouldExportCommitSha) {
+    return gitClient.downloadFiles(gitConfig,
         GitFetchFilesRequest.builder()
             .commitId(gitFileConfig.getCommitId())
             .branch(gitFileConfig.getBranch())
@@ -162,7 +167,7 @@ public class GitServiceImpl implements GitService {
             .useBranch(gitFileConfig.isUseBranch())
             .recursive(true)
             .build(),
-        destinationDirectory);
+        destinationDirectory, shouldExportCommitSha);
   }
 
   @Override
@@ -188,7 +193,8 @@ public class GitServiceImpl implements GitService {
             .useBranch(useBranch)
             .fileExtensions(fileExtensions)
             .recursive(isRecursive)
-            .build());
+            .build(),
+        false);
   }
 
   @Override

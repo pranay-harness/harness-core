@@ -6,14 +6,16 @@ import io.harness.cvng.beans.activity.ActivityDTO;
 import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.change.KubernetesChangeEventMetadata.Action;
 import io.harness.cvng.beans.change.KubernetesChangeEventMetadata.KubernetesResourceType;
-import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceBuilder;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
@@ -38,7 +40,7 @@ public class KubernetesClusterActivity extends Activity {
   String reason;
   String message;
   String resourceVersion;
-  ServiceEnvironmentParams relatedAppService;
+  List<ServiceEnvironment> relatedAppServices;
 
   @Override
   public ActivityType getType() {
@@ -104,5 +106,13 @@ public class KubernetesClusterActivity extends Activity {
         updateOperations.set(key, value);
       }
     }
+  }
+
+  @FieldNameConstants(innerTypeName = "ServiceEnvironmentKeys")
+  @Value
+  @Builder
+  public static class ServiceEnvironment {
+    String serviceIdentifier;
+    String environmentIdentifier;
   }
 }

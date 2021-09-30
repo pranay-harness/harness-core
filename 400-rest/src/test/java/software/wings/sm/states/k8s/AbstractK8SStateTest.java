@@ -11,6 +11,7 @@ import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BOJANA;
+import static io.harness.rule.OwnerRule.NAMAN_TALAYCHA;
 import static io.harness.rule.OwnerRule.PARDHA;
 import static io.harness.rule.OwnerRule.TATHAGAT;
 import static io.harness.rule.OwnerRule.YOGESH;
@@ -33,6 +34,8 @@ import static software.wings.delegatetasks.GitFetchFilesTask.GIT_FETCH_FILES_TAS
 import static software.wings.settings.SettingVariableTypes.GCP;
 import static software.wings.sm.ExecutionContextImpl.PHASE_PARAM;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
+import static software.wings.sm.StateType.K8S_CANARY_DEPLOY;
+import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING;
 import static software.wings.sm.StepType.K8S_SCALE;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.sm.states.k8s.K8sScale.K8S_SCALE_COMMAND_NAME;
@@ -74,6 +77,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -115,6 +119,7 @@ import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.instancedetails.InstanceInfoVariables;
 import software.wings.api.k8s.K8sElement;
+import software.wings.api.k8s.K8sGitConfigMapInfo;
 import software.wings.api.k8s.K8sHelmDeploymentElement;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Account;
@@ -143,6 +148,7 @@ import software.wings.beans.command.K8sDummyCommandUnit;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.info.K8sPodInfo;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
+import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
 import software.wings.common.VariableProcessor;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.expression.ManagerExpressionEvaluator;
@@ -242,10 +248,13 @@ public class AbstractK8SStateTest extends WingsBaseTest {
   @Mock private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
   @Mock private InstanceService instanceService;
   @Mock private GitConfigHelperService gitConfigHelperService;
+  @Mock private K8sStateHelper mockK8sStateHelper;
   @Mock private AwsCommandHelper awsCommandHelper;
   @Mock private StateExecutionService stateExecutionService;
 
   @InjectMocks private AbstractK8sState abstractK8SState = mock(AbstractK8sState.class, CALLS_REAL_METHODS);
+  @InjectMocks K8sCanaryDeploy k8sCanaryDeploy = spy(new K8sCanaryDeploy(K8S_CANARY_DEPLOY.name()));
+  @InjectMocks K8sRollingDeploy k8sRollingDeploy = spy(new K8sRollingDeploy(K8S_DEPLOYMENT_ROLLING.name()));
 
   @Inject private HPersistence persistence;
   @Inject KryoSerializer kryoSerializer;
@@ -357,6 +366,7 @@ public class AbstractK8SStateTest extends WingsBaseTest {
                                           .gitFileConfig(gitConfigAtService)
                                           .kind(AppManifestKind.HELM_CHART_OVERRIDE)
                                           .storeType(StoreType.HelmSourceRepo)
+                                          .serviceId("serviceId")
                                           .build();
 
     ApplicationManifest appManifestOverride = ApplicationManifest.builder()
@@ -370,6 +380,7 @@ public class AbstractK8SStateTest extends WingsBaseTest {
         .when(applicationManifestUtils)
         .getAppManifestByApplyingHelmChartOverride(context);
 
+    doReturn(SweepingOutputInquiry.builder()).when(context).prepareSweepingOutputInquiryBuilder();
     doReturn(true).when(featureFlagService).isEnabled(eq(OPTIMIZED_GIT_FETCH_FILES), any());
     when(gitFileConfigHelperService.renderGitFileConfig(any(), any())).thenAnswer(new Answer<GitFileConfig>() {
       @Override
@@ -823,6 +834,67 @@ public class AbstractK8SStateTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = NAMAN_TALAYCHA)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseForGitTaskWrapper_FF_InheritManifest() {
+    GitCommandExecutionResponse gitCommandExecutionResponse =
+        GitCommandExecutionResponse.builder()
+            .gitCommandStatus(GitCommandExecutionResponse.GitCommandStatus.SUCCESS)
+            .gitCommandResult(
+                GitFetchFilesFromMultipleRepoResult.builder().gitFetchFilesConfigMap(new HashMap<>()).build())
+            .build();
+    Map<String, ResponseData> response = new HashMap<>();
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
+    response.put(ACTIVITY_ID, gitCommandExecutionResponse);
+
+    K8sStateExecutor k8sStateExecutor = mock(K8sStateExecutor.class);
+    K8sStateExecutionData k8sStateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
+    k8sStateExecutionData.setCurrentTaskType(TaskType.GIT_COMMAND);
+    k8sStateExecutionData.setActivityId(ACTIVITY_ID);
+    k8sStateExecutionData.setValuesFiles(new HashMap<>());
+    k8sStateExecutionData.setApplicationManifestMap(appManifestMap);
+
+    Map<K8sValuesLocation, Collection<String>> valuesMap = new HashMap<>();
+    valuesMap.put(K8sValuesLocation.Environment, singletonList("EnvValues"));
+    when(applicationManifestUtils.getValuesFilesFromGitFetchFilesResponse(appManifestMap, gitCommandExecutionResponse))
+        .thenReturn(valuesMap);
+    doReturn(true).when(featureFlagService).isEnabled(any(), any());
+    doReturn(Service.builder().uuid("serviceId").build()).when(applicationManifestUtils).fetchServiceFromContext(any());
+    k8sCanaryDeploy.handleAsyncResponseWrapper(k8sStateExecutor, context, response);
+
+    ArgumentCaptor<SweepingOutputInstance> argumentCaptor = ArgumentCaptor.forClass(SweepingOutputInstance.class);
+    verify(mockedSweepingOutputService, times(1)).save(argumentCaptor.capture());
+    assertThat(argumentCaptor.getValue().getName())
+        .isEqualTo(K8sGitConfigMapInfo.SWEEPING_OUTPUT_NAME_PREFIX + "-serviceId");
+    assertThat(argumentCaptor.getValue().getAppId()).isEqualTo(APP_ID);
+
+    ArgumentCaptor<SweepingOutputInquiry> sweepingOutputInquiryCaptor =
+        ArgumentCaptor.forClass(SweepingOutputInquiry.class);
+    verify(mockedSweepingOutputService, times(1)).findSweepingOutput(sweepingOutputInquiryCaptor.capture());
+    assertThat(sweepingOutputInquiryCaptor.getValue().getName())
+        .isEqualTo(K8sGitConfigMapInfo.SWEEPING_OUTPUT_NAME_PREFIX + "-serviceId");
+    assertThat(sweepingOutputInquiryCaptor.getValue().getAppId()).isEqualTo(APP_ID);
+
+    reset(mockedSweepingOutputService);
+    k8sRollingDeploy.handleAsyncResponseWrapper(k8sStateExecutor, context, response);
+    verify(mockedSweepingOutputService, times(0)).save(any());
+    verify(mockedSweepingOutputService, times(0)).findSweepingOutput(any());
+
+    reset(featureFlagService);
+    doReturn(false).when(featureFlagService).isEnabled(any(), any());
+    k8sCanaryDeploy.handleAsyncResponseWrapper(k8sStateExecutor, context, response);
+    k8sStateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
+    assertThat(k8sStateExecutionData.getValuesFiles().get(K8sValuesLocation.Environment)).containsExactly("EnvValues");
+    verify(mockedSweepingOutputService, times(0)).save(any());
+    verify(mockedSweepingOutputService, times(0)).findSweepingOutput(any());
+
+    reset(mockedSweepingOutputService);
+    k8sRollingDeploy.handleAsyncResponseWrapper(k8sStateExecutor, context, response);
+    verify(mockedSweepingOutputService, times(0)).save(any());
+    verify(mockedSweepingOutputService, times(0)).findSweepingOutput(any());
+  }
+
+  @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
   public void testExceptionInHandleAsyncResponseWrapper() {
@@ -1025,6 +1097,48 @@ public class AbstractK8SStateTest extends WingsBaseTest {
     assertThat(delegateTask.getData().isAsync()).isTrue();
     assertThat(delegateTask.getData().getTimeout())
         .isEqualTo(TimeUnit.MINUTES.toMillis(GIT_FETCH_FILES_TASK_ASYNC_TIMEOUT));
+  }
+
+  @Test
+  @Owner(developers = NAMAN_TALAYCHA)
+  @Category(UnitTests.class)
+  public void testExecuteGitTask_FF_InheritManifest() {
+    Map<K8sValuesLocation, ApplicationManifest> appManifestMap = new HashMap<>();
+    K8sStateExecutionData k8sStateExecutionData = (K8sStateExecutionData) context.getStateExecutionData();
+    k8sStateExecutionData.setValuesFiles(new HashMap<>());
+    GitFetchFilesTaskParams fetchFilesTaskParams = GitFetchFilesTaskParams.builder().build();
+    fetchFilesTaskParams.setBindTaskFeatureSet(true);
+
+    DirectKubernetesInfrastructureMapping infrastructureMapping =
+        DirectKubernetesInfrastructureMapping.builder().build();
+    infrastructureMapping.setUuid(INFRA_MAPPING_ID);
+
+    doReturn(true).when(featureFlagService).isEnabled(any(), any());
+    when(applicationManifestUtils.createGitFetchFilesTaskParams(context, application, appManifestMap))
+        .thenReturn(fetchFilesTaskParams);
+    when(infrastructureMappingService.get(APP_ID, null)).thenReturn(infrastructureMapping);
+    doReturn(Service.builder().uuid("serviceId").build()).when(applicationManifestUtils).fetchServiceFromContext(any());
+
+    k8sRollingDeploy.executeGitTask(context, appManifestMap, ACTIVITY_ID, "commandName");
+    ArgumentCaptor<SweepingOutputInquiry> sweepingOutputInquiryCaptor =
+        ArgumentCaptor.forClass(SweepingOutputInquiry.class);
+    verify(mockedSweepingOutputService, times(1)).findSweepingOutput(sweepingOutputInquiryCaptor.capture());
+    assertThat(sweepingOutputInquiryCaptor.getValue().getName())
+        .isEqualTo(K8sGitConfigMapInfo.SWEEPING_OUTPUT_NAME_PREFIX + "-serviceId");
+    assertThat(sweepingOutputInquiryCaptor.getValue().getAppId()).isEqualTo(APP_ID);
+
+    reset(mockedSweepingOutputService);
+    k8sCanaryDeploy.executeGitTask(context, appManifestMap, ACTIVITY_ID, "commandName");
+    verify(mockedSweepingOutputService, times(0)).findSweepingOutput(any());
+
+    reset(featureFlagService);
+    doReturn(false).when(featureFlagService).isEnabled(any(), any());
+    k8sRollingDeploy.executeGitTask(context, appManifestMap, ACTIVITY_ID, "commandName");
+    verify(mockedSweepingOutputService, times(0)).findSweepingOutput(any());
+
+    reset(mockedSweepingOutputService);
+    k8sCanaryDeploy.executeGitTask(context, appManifestMap, ACTIVITY_ID, "commandName");
+    verify(mockedSweepingOutputService, times(0)).findSweepingOutput(any());
   }
 
   @Test

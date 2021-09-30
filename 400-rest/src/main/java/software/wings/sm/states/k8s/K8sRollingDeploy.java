@@ -22,6 +22,7 @@ import io.harness.logging.CommandExecutionStatus;
 import io.harness.tasks.ResponseData;
 
 import software.wings.api.InstanceElementListParam;
+import software.wings.api.k8s.K8sApplicationManifestSourceInfo;
 import software.wings.api.k8s.K8sElement;
 import software.wings.api.k8s.K8sStateExecutionData;
 import software.wings.beans.Activity;
@@ -31,6 +32,7 @@ import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.command.CommandUnit;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
+import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sRollingDeployTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sRollingDeployTaskParameters.K8sRollingDeployTaskParametersBuilder;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
@@ -106,6 +108,17 @@ public class K8sRollingDeploy extends AbstractK8sState {
   public void validateParameters(ExecutionContext context) {}
 
   @Override
+  protected boolean shouldInheritManifest(ExecutionContext context) {
+    return featureFlagService.isEnabled(
+        FeatureName.MANIFEST_INHERIT_FROM_CANARY_TO_PRIMARY_PHASE, context.getAccountId());
+  }
+
+  @Override
+  protected boolean shouldSaveManifest(ExecutionContext context) {
+    return false;
+  }
+
+  @Override
   public ExecutionResponse execute(ExecutionContext context) {
     if (k8sStateHelper.isExportManifestsEnabled(context.getAccountId()) && inheritManifests) {
       Activity activity = createK8sActivity(
@@ -119,12 +132,26 @@ public class K8sRollingDeploy extends AbstractK8sState {
   public ExecutionResponse executeK8sTask(ExecutionContext context, String activityId) {
     Map<K8sValuesLocation, ApplicationManifest> appManifestMap = fetchApplicationManifests(context);
     ContainerInfrastructureMapping infraMapping = k8sStateHelper.fetchContainerInfrastructureMapping(context);
-    storePreviousHelmDeploymentInfo(context, appManifestMap.get(K8sValuesLocation.Service));
+    ApplicationManifest serviceApplicationManifest = appManifestMap.get(K8sValuesLocation.Service);
+    storePreviousHelmDeploymentInfo(context, serviceApplicationManifest);
 
     boolean inCanaryFlow = false;
     K8sElement k8sElement = k8sStateHelper.fetchK8sElement(context);
     if (k8sElement != null) {
       inCanaryFlow = k8sElement.isCanary();
+    }
+
+    K8sDelegateManifestConfig k8sDelegateManifestConfig =
+        createDelegateManifestConfig(context, appManifestMap.get(K8sValuesLocation.Service));
+    k8sDelegateManifestConfig.setShouldSaveManifest(shouldSaveManifest(context));
+
+    if (shouldInheritManifest(context)) {
+      K8sApplicationManifestSourceInfo k8SApplicationManifestSourceInfo =
+          fetchK8sApplicationManifestInfo(context, applicationManifestUtils.fetchServiceFromContext(context).getUuid());
+      if (k8SApplicationManifestSourceInfo != null) {
+        k8sDelegateManifestConfig.setGitFileConfig(
+            k8SApplicationManifestSourceInfo.getGitFetchFilesConfig().getGitFileConfig());
+      }
     }
 
     K8sRollingDeployTaskParametersBuilder builder = K8sRollingDeployTaskParameters.builder();
@@ -149,14 +176,12 @@ public class K8sRollingDeploy extends AbstractK8sState {
             .commandName(K8S_ROLLING_DEPLOY_COMMAND_NAME)
             .k8sTaskType(K8sTaskType.DEPLOYMENT_ROLLING)
             .timeoutIntervalInMin(stateTimeoutInMinutes)
-            .k8sDelegateManifestConfig(
-                createDelegateManifestConfig(context, appManifestMap.get(K8sValuesLocation.Service)))
+            .k8sDelegateManifestConfig(k8sDelegateManifestConfig)
             .valuesYamlList(fetchRenderedValuesFiles(appManifestMap, context))
             .skipDryRun(skipDryRun)
             .localOverrideFeatureFlag(
                 featureFlagService.isEnabled(FeatureName.LOCAL_DELEGATE_CONFIG_OVERRIDE, infraMapping.getAccountId()))
-            .skipVersioningForAllK8sObjects(
-                appManifestMap.get(K8sValuesLocation.Service).getSkipVersioningForAllK8sObjects())
+            .skipVersioningForAllK8sObjects(serviceApplicationManifest.getSkipVersioningForAllK8sObjects())
             .isPruningEnabled(featureFlagService.isEnabled(PRUNE_KUBERNETES_RESOURCES, infraMapping.getAccountId()))
             .build();
 

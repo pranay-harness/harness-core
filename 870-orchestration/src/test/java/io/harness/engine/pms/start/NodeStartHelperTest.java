@@ -55,29 +55,6 @@ public class NodeStartHelperTest extends OrchestrationTestBase {
   @Test
   @Owner(developers = PRASHANT)
   @Category(UnitTests.class)
-  public void shouldTestStartNodeExecutionCheckProceedFalse() {
-    String planExecutionId = generateUuid();
-    String nodeExecutionId = generateUuid();
-    String planId = generateUuid();
-    Ambiance ambiance = Ambiance.newBuilder()
-                            .setPlanExecutionId(planExecutionId)
-                            .setPlanId(planId)
-                            .addLevels(Level.newBuilder()
-                                           .setRuntimeId(nodeExecutionId)
-                                           .setStepType(StepType.newBuilder().setType("DUMMY_TYPE").build())
-                                           .build())
-                            .build();
-    when(interruptService.checkInterruptsPreInvocation(planExecutionId, nodeExecutionId))
-        .thenReturn(ExecutionCheck.builder().proceed(false).build());
-    nodeStartHelper.startNode(
-        ambiance, FacilitatorResponseProto.newBuilder().setExecutionMode(ExecutionMode.TASK).build());
-
-    verify(nodeExecutionService, times(0)).get(nodeExecutionId);
-  }
-
-  @Test
-  @Owner(developers = PRASHANT)
-  @Category(UnitTests.class)
   public void shouldTestStartDiscontinuingNodeExecution() {
     String planExecutionId = generateUuid();
     String nodeExecutionId = generateUuid();

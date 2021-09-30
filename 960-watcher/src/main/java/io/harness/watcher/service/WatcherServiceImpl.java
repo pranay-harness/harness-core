@@ -179,7 +179,7 @@ public class WatcherServiceImpl implements WatcherService {
   private long delegateRestartedToUpgradeJreAt;
   private boolean watcherRestartedToUpgradeJre;
 
-  private final String delegateSize = System.getenv().get("DELEGATE_SIZE");
+  private final String delegateNg = System.getenv().get("NEXT_GEN");
 
   private final SecureRandom random = new SecureRandom();
 
@@ -226,10 +226,10 @@ public class WatcherServiceImpl implements WatcherService {
     try {
       log.info(upgrade ? "[New] Upgraded watcher process started. Sending confirmation" : "Watcher process started");
       log.info("Multiversion: {}", multiVersion);
-      if (isBlank(delegateSize)) {
-        log.info("No delegate size information found. Watcher will run standard delegates.");
+      if (isBlank(delegateNg)) {
+        log.info("Delegate is CG. Watcher will run CG delegates.");
       } else {
-        log.info("Delegate size {} is set. Watcher will run sized delegates.", delegateSize);
+        log.info("Delegate is NG. Watcher will run NG delegates.");
       }
       messageService.writeMessage(WATCHER_STARTED);
       startInputCheck();
@@ -1006,7 +1006,7 @@ public class WatcherServiceImpl implements WatcherService {
     final String updatedVersion = version.contains("-") ? substringBefore(version, "-") : version;
 
     RestResponse<DelegateScripts> restResponse = null;
-    if (isBlank(delegateSize)) {
+    if (isBlank(delegateNg)) {
       log.info(format("Calling getDelegateScripts with version %s and patch %s", updatedVersion, patchVersion));
       restResponse = callInterruptible21(timeLimiter, ofMinutes(1),
           ()
@@ -1017,7 +1017,7 @@ public class WatcherServiceImpl implements WatcherService {
       restResponse = callInterruptible21(timeLimiter, ofMinutes(1),
           ()
               -> SafeHttpCall.execute(managerClient.getDelegateScriptsNg(
-                  watcherConfiguration.getAccountId(), updatedVersion, delegateSize, patchVersion)));
+                  watcherConfiguration.getAccountId(), updatedVersion, patchVersion)));
     }
 
     if (restResponse == null) {

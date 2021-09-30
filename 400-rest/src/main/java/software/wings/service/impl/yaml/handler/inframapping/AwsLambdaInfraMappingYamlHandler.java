@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
-import static io.harness.annotations.dev.HarnessModule._870_CG_YAML;
+import static io.harness.annotations.dev.HarnessModule._955_CG_YAML;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.validation.Validator.notNullCheck;
@@ -21,7 +21,7 @@ import java.util.List;
  */
 @Singleton
 @OwnedBy(CDP)
-@TargetModule(_870_CG_YAML)
+@TargetModule(_955_CG_YAML)
 public class AwsLambdaInfraMappingYamlHandler
     extends InfraMappingYamlWithComputeProviderHandler<Yaml, AwsLambdaInfraStructureMapping> {
   @Override

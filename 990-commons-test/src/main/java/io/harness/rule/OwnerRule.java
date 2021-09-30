@@ -207,6 +207,7 @@ public class OwnerRule implements TestRule {
   public static final String NANA_XU = "nana.xu";
   public static final String JELENA = "jelena.arsenijevic";
   public static final String BHAVYA = "bhavya.agrawal";
+  public static final String BHARAT_GOEL = "bharat.goel";
 
   @Deprecated public static final String UNKNOWN = "unknown";
 
@@ -360,6 +361,7 @@ public class OwnerRule implements TestRule {
           .put(ABHINAV2, defaultUserInfo(ABHINAV2).slack("U02D3KJKF33").team(CDP).build())
           .put(BHAVYA, defaultUserInfo(BHAVYA).slack("U024WB5P1NF").team(PL).build())
           .put(MLUKIC, defaultUserInfo(MLUKIC).slack("U02DS8RGUSV").team(CDP).build())
+          .put(BHARAT_GOEL, defaultUserInfo(BHARAT_GOEL).slack("U02053C1QMA").team(DEL).build())
           .build();
 
   private static String prDeveloperId = findDeveloperId(System.getenv(GHPRB_PULL_AUTHOR_EMAIL));

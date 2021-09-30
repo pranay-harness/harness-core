@@ -1,6 +1,7 @@
 package io.harness.ngtriggers.beans.source.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.ngtriggers.Constants.DOCKER_REGISTRY;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ngtriggers.beans.source.webhook.v2.TriggerEventDataCondition;
@@ -23,6 +24,11 @@ public class DockerRegistrySpec implements ArtifactTypeSpec {
   @Override
   public String fetchConnectorRef() {
     return connectorRef;
+  }
+
+  @Override
+  public String fetchBuildType() {
+    return DOCKER_REGISTRY;
   }
 
   @Override

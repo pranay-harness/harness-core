@@ -18,6 +18,7 @@ import io.harness.tasks.ResponseData;
 import io.harness.waiter.OldNotifyCallback;
 
 import com.google.inject.Inject;
+import java.util.EnumSet;
 import java.util.Map;
 import lombok.Builder;
 
@@ -53,7 +54,8 @@ public class FailureInterruptCallback implements OldNotifyCallback {
                   .interruptType(interruptType)
                   .interruptConfig(interruptConfig)
                   .build()));
-      orchestrationEngine.concludeNodeExecution(updatedNodeExecution, Status.FAILED);
+      orchestrationEngine.concludeNodeExecution(
+          updatedNodeExecution.getAmbiance(), Status.FAILED, EnumSet.noneOf(Status.class));
     } catch (Exception ex) {
       interruptService.markProcessed(interruptId, PROCESSED_UNSUCCESSFULLY);
       throw ex;

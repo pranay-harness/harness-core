@@ -2,6 +2,7 @@ package io.harness.cvng.dashboard.services.impl;
 
 import static io.harness.cvng.core.utils.DateTimeUtils.roundDownTo5MinBoundary;
 import static io.harness.cvng.core.utils.DateTimeUtils.roundDownToMinBoundary;
+import static io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution.FIVE_MIN;
 import static io.harness.cvng.dashboard.entities.HeatMap.HeatMapResolution.getHeatMapResolution;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -496,13 +497,17 @@ public class HeatMapServiceImpl implements HeatMapService {
     List<HistoricalTrend> historicalTrendList = new ArrayList<>();
     Map<Pair<String, String>, Integer> serviceEnvironmentIndex = new HashMap<>();
 
-    for (int i = 0; i < size; i++) {
-      historicalTrendList.add(HistoricalTrend.builder().size(bucketsBasedOn30MinFrame).build());
-      serviceEnvironmentIndex.put(serviceEnvIdentifiers.get(i), i);
-    }
-
     Instant endTime = roundDownToMinBoundary(clock.instant(), 30);
     Instant startTime = endTime.minus(hours, ChronoUnit.HOURS);
+
+    for (int i = 0; i < size; i++) {
+      historicalTrendList.add(HistoricalTrend.builder()
+                                  .size(bucketsBasedOn30MinFrame)
+                                  .trendStartTime(startTime)
+                                  .trendEndTime(endTime)
+                                  .build());
+      serviceEnvironmentIndex.put(serviceEnvIdentifiers.get(i), i);
+    }
 
     HeatMapResolution heatMapResolution = HeatMapResolution.THIRTY_MINUTES;
 
@@ -614,13 +619,34 @@ public class HeatMapServiceImpl implements HeatMapService {
   @Override
   public HistoricalTrend getOverAllHealthScore(ProjectParams projectParams, String serviceIdentifier,
       String environmentIdentifier, DurationDTO duration, Instant endTime) {
-    HeatMapResolution heatMapResolution = getHeatMapResolution(endTime.minus(duration.getDuration()), endTime);
+    if (duration.equals(DurationDTO.FOUR_HOURS)) {
+      return getHealthScoreBars(projectParams, serviceIdentifier, environmentIdentifier, duration, endTime, FIVE_MIN);
+    } else {
+      return getHealthScoreBars(projectParams, serviceIdentifier, environmentIdentifier, duration, endTime);
+    }
+  }
+
+  private HistoricalTrend getHealthScoreBars(ProjectParams projectParams, String serviceIdentifier,
+      String environmentIdentifier, DurationDTO duration, Instant endTime) {
+    HistoricalTrend historicalTrend = getHealthScoreBars(
+        projectParams, serviceIdentifier, environmentIdentifier, duration, endTime, HeatMapResolution.THIRTY_MINUTES);
+    historicalTrend.reduceHealthScoreDataToXPoints((int) duration.getDuration().toHours() / 24);
+    return historicalTrend;
+  }
+
+  private HistoricalTrend getHealthScoreBars(ProjectParams projectParams, String serviceIdentifier,
+      String environmentIdentifier, DurationDTO duration, Instant endTime, HeatMapResolution resolutionToReadFrom) {
+    Preconditions.checkState(duration.getDuration().toMinutes() % resolutionToReadFrom.getResolution().toMinutes() == 0
+            && (duration.getDuration().toMinutes() / resolutionToReadFrom.getResolution().toMinutes()) % 48 == 0,
+        String.format("Cannot calculate health score bar for the given duration %s per minutes %s", duration,
+            resolutionToReadFrom.getResolution().toMinutes()));
+    int totalSize = (int) duration.getDuration().toMinutes() / (int) resolutionToReadFrom.getResolution().toMinutes();
+    HeatMapResolution heatMapResolution = resolutionToReadFrom;
     Instant trendEndTime = getBoundaryOfResolution(endTime, heatMapResolution.getResolution())
                                .plusMillis(heatMapResolution.getResolution().toMillis());
     Instant trendStartTime = trendEndTime.minus(duration.getDuration());
-
-    HistoricalTrend historicalTrend = HistoricalTrend.timeStampBuild(48, trendStartTime, trendEndTime);
-
+    HistoricalTrend historicalTrend =
+        HistoricalTrend.builder().size(totalSize).trendStartTime(trendStartTime).trendEndTime(trendEndTime).build();
     Query<HeatMap> heatMapQuery = hPersistence.createQuery(HeatMap.class, excludeAuthority)
                                       .filter(HeatMapKeys.accountId, projectParams.getAccountIdentifier())
                                       .filter(HeatMapKeys.orgIdentifier, projectParams.getOrgIdentifier())
@@ -632,14 +658,13 @@ public class HeatMapServiceImpl implements HeatMapService {
                                       .greaterThan(trendStartTime)
                                       .field(HeatMapKeys.heatMapBucketStartTime)
                                       .lessThanOrEq(trendEndTime);
-
     List<HeatMap> heatMaps = heatMapQuery.asList();
 
     heatMaps.forEach(heatMap -> {
       SortedSet<HeatMapRisk> risks = new TreeSet<>(heatMap.getHeatMapRisks());
       risks.forEach(heatMapRisk -> {
-        int index = getIndex(48, heatMapRisk.getEndTime(), trendEndTime, heatMapResolution);
-        if (index >= 0 && index < 48) {
+        int index = getIndex(totalSize, heatMapRisk.getEndTime(), trendEndTime, heatMapResolution);
+        if (index >= 0 && index < totalSize) {
           RiskData riskData = historicalTrend.getHealthScores().get(index);
           if (heatMapRisk.getHealthScore() != null
               && (riskData.getHealthScore() == null

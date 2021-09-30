@@ -64,7 +64,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._870_CG_YAML)
+@TargetModule(HarnessModule._955_CG_YAML)
 public class WorkflowYAMLHelperTest extends WingsBaseTest {
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private EnvironmentService environmentService;

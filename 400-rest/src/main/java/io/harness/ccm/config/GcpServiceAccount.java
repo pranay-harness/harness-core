@@ -2,6 +2,7 @@ package io.harness.ccm.config;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
 
+import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
@@ -23,10 +24,12 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 
 @Data
+@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "GcpServiceAccountKeys")
 @Entity(value = "gcpServiceAccount", noClassnameStored = true)
 @OwnedBy(CE)
+@StoreIn("events")
 public class GcpServiceAccount implements PersistentEntity, UuidAware, AccountAccess, CreatedAtAware, UpdatedAtAware {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
@@ -45,12 +48,4 @@ public class GcpServiceAccount implements PersistentEntity, UuidAware, AccountAc
   @NotEmpty String email;
   long createdAt;
   long lastUpdatedAt;
-
-  @Builder
-  public GcpServiceAccount(String serviceAccountId, String gcpUniqueId, String accountId, String email) {
-    this.serviceAccountId = serviceAccountId;
-    this.gcpUniqueId = gcpUniqueId;
-    this.accountId = accountId;
-    this.email = email;
-  }
 }

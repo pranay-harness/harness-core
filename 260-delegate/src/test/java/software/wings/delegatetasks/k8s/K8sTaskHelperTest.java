@@ -282,13 +282,14 @@ public class K8sTaskHelperTest extends CategoryTest {
         .isTrue();
 
     verify(mockGitService, times(1))
-        .downloadFiles(eq(GitConfig.builder().repoUrl(REPO_URL).build()), any(GitFileConfig.class), eq("./dir"));
+        .downloadFiles(
+            eq(GitConfig.builder().repoUrl(REPO_URL).build()), any(GitFileConfig.class), eq("./dir"), eq(false));
     verify(mockEncryptionService, times(1)).decrypt(any(), anyList(), eq(false));
 
     // handle exception
     doThrow(new RuntimeException())
         .when(mockGitService)
-        .downloadFiles(any(GitConfig.class), any(GitFileConfig.class), anyString());
+        .downloadFiles(any(GitConfig.class), any(GitFileConfig.class), anyString(), eq(false));
     assertThat(
         spyHelper.fetchManifestFilesAndWriteToDirectory(
             K8sDelegateManifestConfig.builder()
@@ -339,7 +340,8 @@ public class K8sTaskHelperTest extends CategoryTest {
 
     verify(scmDelegateClient, times(1)).processScmRequest(any());
     verify(mockGitService, times(0))
-        .downloadFiles(eq(GitConfig.builder().repoUrl(REPO_URL).build()), any(GitFileConfig.class), eq("./dir"));
+        .downloadFiles(
+            eq(GitConfig.builder().repoUrl(REPO_URL).build()), any(GitFileConfig.class), eq("./dir"), eq(false));
     verify(mockEncryptionService, times(1)).decrypt(any(), anyList(), eq(false));
 
     // handle exception
@@ -408,7 +410,8 @@ public class K8sTaskHelperTest extends CategoryTest {
 
     verify(scmDelegateClient, times(1)).processScmRequest(any());
     verify(mockGitService, times(0))
-        .downloadFiles(eq(GitConfig.builder().repoUrl(REPO_URL).build()), any(GitFileConfig.class), eq("./dir"));
+        .downloadFiles(
+            eq(GitConfig.builder().repoUrl(REPO_URL).build()), any(GitFileConfig.class), eq("./dir"), eq(false));
     verify(mockEncryptionService, times(1)).decrypt(any(), anyList(), eq(false));
 
     reset(mockGitService);
@@ -461,7 +464,8 @@ public class K8sTaskHelperTest extends CategoryTest {
 
     verify(scmDelegateClient, times(2)).processScmRequest(any());
     verify(mockGitService, times(0))
-        .downloadFiles(eq(GitConfig.builder().repoUrl(REPO_URL).build()), any(GitFileConfig.class), eq("./dir"));
+        .downloadFiles(
+            eq(GitConfig.builder().repoUrl(REPO_URL).build()), any(GitFileConfig.class), eq("./dir "), eq(false));
     verify(mockEncryptionService, times(1)).decrypt(any(), anyList(), eq(false));
 
     reset(mockGitService);
