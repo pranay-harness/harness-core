@@ -9,22 +9,27 @@ import static io.harness.resourcegroup.framework.beans.ResourceGroupConstants.AC
 import static io.harness.resourcegroup.framework.beans.ResourceGroupConstants.ORGANIZATION;
 import static io.harness.resourcegroup.framework.beans.ResourceGroupConstants.PROJECT;
 
+import static java.util.Collections.singleton;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.consumer.Message;
-import io.harness.resourcegroup.framework.remote.mapper.ResourceGroupMapper;
+import io.harness.ng.beans.PageRequest;
 import io.harness.resourcegroup.framework.service.Resource;
 import io.harness.resourcegroup.framework.service.ResourceGroupService;
 import io.harness.resourcegroup.framework.service.ResourceInfo;
-import io.harness.resourcegroup.model.ResourceGroup;
-import io.harness.resourcegroup.model.ResourceGroup.ResourceGroupKeys;
 import io.harness.resourcegroup.model.StaticResourceSelector;
-import io.harness.resourcegroup.model.StaticResourceSelector.StaticResourceSelectorKeys;
+import io.harness.resourcegroup.remote.dto.ManagedFilter;
+import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
+import io.harness.resourcegroup.remote.dto.ResourceGroupFilterDTO;
+import io.harness.resourcegroup.remote.dto.ResourceSelectorFilter;
+import io.harness.resourcegroupclient.ResourceGroupResponse;
 import io.harness.security.SecurityContextBuilder;
 import io.harness.security.dto.ServicePrincipal;
 
+import com.google.common.annotations.VisibleForTesting;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -36,8 +41,6 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.mongodb.core.query.Criteria;
 
 @OwnedBy(PL)
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -79,7 +82,8 @@ public class ResourceGroupSyncConciliationJob implements Runnable {
     }
   }
 
-  private void readEventsFrameworkMessages() throws InterruptedException {
+  @VisibleForTesting
+  protected void readEventsFrameworkMessages() throws InterruptedException {
     try {
       pollAndProcessMessages();
     } catch (EventsFrameworkDownException e) {
@@ -169,14 +173,14 @@ public class ResourceGroupSyncConciliationJob implements Runnable {
     int counter = 0;
     int maxLimit = 50;
     while (counter < maxLimit) {
-      Page<ResourceGroup> resourceGroupsPage =
-          resourceGroupService.list(getResourceGroupsWithResource(resource), PageRequest.of(counter, 20));
+      Page<ResourceGroupResponse> resourceGroupsPage = resourceGroupService.list(
+          getResourceGroupsWithResourceFilter(resource), PageRequest.builder().pageIndex(counter).pageSize(20).build());
       if (!resourceGroupsPage.hasContent()) {
         break;
       }
-      for (ResourceGroup resourceGroup : resourceGroupsPage.getContent()) {
-        deleteResourceFromResourceGroup(resource, resourceGroup);
-        resourceGroupService.update(ResourceGroupMapper.toDTO(resourceGroup), true);
+      for (ResourceGroupResponse resourceGroup : resourceGroupsPage.getContent()) {
+        deleteResourceFromResourceGroup(resource, resourceGroup.getResourceGroup());
+        resourceGroupService.update(resourceGroup.getResourceGroup(), true, resourceGroup.isHarnessManaged());
       }
       counter++;
     }
@@ -188,23 +192,20 @@ public class ResourceGroupSyncConciliationJob implements Runnable {
     return resourceType.equals(ACCOUNT) || resourceType.equals(ORGANIZATION) || resourceType.equals(PROJECT);
   }
 
-  private Criteria getResourceGroupsWithResource(ResourceInfo resourceInfo) {
-    Criteria criteria = Criteria.where(ResourceGroupKeys.accountIdentifier)
-                            .is(resourceInfo.getAccountIdentifier())
-                            .and(ResourceGroupKeys.orgIdentifier)
-                            .is(resourceInfo.getOrgIdentifier())
-                            .and(ResourceGroupKeys.projectIdentifier)
-                            .is(resourceInfo.getProjectIdentifier());
-
-    criteria.and(ResourceGroupKeys.resourceSelectors)
-        .elemMatch(Criteria.where(StaticResourceSelectorKeys.resourceType)
-                       .is(resourceInfo.getResourceType())
-                       .and(StaticResourceSelectorKeys.identifiers)
-                       .is(resourceInfo.getResourceIdentifier()));
-    return criteria;
+  private ResourceGroupFilterDTO getResourceGroupsWithResourceFilter(ResourceInfo resourceInfo) {
+    return ResourceGroupFilterDTO.builder()
+        .managedFilter(ManagedFilter.ONLY_CUSTOM)
+        .accountIdentifier(resourceInfo.getAccountIdentifier())
+        .orgIdentifier(resourceInfo.getOrgIdentifier())
+        .projectIdentifier(resourceInfo.getProjectIdentifier())
+        .resourceSelectorFilterList(singleton(ResourceSelectorFilter.builder()
+                                                  .resourceType(resourceInfo.getResourceType())
+                                                  .resourceIdentifier(resourceInfo.getResourceIdentifier())
+                                                  .build()))
+        .build();
   }
 
-  private void deleteResourceFromResourceGroup(ResourceInfo resource, ResourceGroup resourceGroup) {
+  private void deleteResourceFromResourceGroup(ResourceInfo resource, ResourceGroupDTO resourceGroup) {
     List<StaticResourceSelector> resourceSelectors =
         resourceGroup.getResourceSelectors()
             .stream()
