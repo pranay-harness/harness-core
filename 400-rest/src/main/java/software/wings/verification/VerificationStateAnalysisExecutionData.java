@@ -3,13 +3,11 @@ package software.wings.verification;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import software.wings.api.ExecutionDataValue;
-import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.sm.StateExecutionData;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.google.inject.Inject;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -28,8 +26,6 @@ import lombok.experimental.FieldNameConstants;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(callSuper = false)
 public class VerificationStateAnalysisExecutionData extends StateExecutionData {
-  @JsonIgnore @Inject private WingsPersistence wingsPersistence;
-
   private String correlationId;
   private String stateExecutionInstanceId;
   private String baselineExecutionId;

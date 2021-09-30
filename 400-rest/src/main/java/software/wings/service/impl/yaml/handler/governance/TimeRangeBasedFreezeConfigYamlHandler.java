@@ -168,6 +168,6 @@ public class TimeRangeBasedFreezeConfigYamlHandler
       }
     }
     // time zone from DB document
-    return new TimeRange(from, to, null, durationBased, duration, endTime, freezeOccurrence, false);
+    return new TimeRange(null, from, to, null, durationBased, duration, endTime, freezeOccurrence, false);
   }
 }
