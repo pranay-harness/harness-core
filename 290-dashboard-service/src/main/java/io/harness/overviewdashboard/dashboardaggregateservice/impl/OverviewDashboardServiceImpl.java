@@ -1,7 +1,6 @@
 package io.harness.overviewdashboard.dashboardaggregateservice.impl;
 
 import static io.harness.dashboards.SortBy.DEPLOYMENTS;
-import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -15,6 +14,7 @@ import io.harness.dashboards.ServicesCount;
 import io.harness.dashboards.ServicesDashboardInfo;
 import io.harness.dashboards.SortBy;
 import io.harness.dashboards.TimeBasedDeploymentInfo;
+import io.harness.data.structure.CollectionUtils;
 import io.harness.ng.core.OrgProjectIdentifier;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.overviewdashboard.bean.OverviewDashboardRequestType;
@@ -320,7 +320,7 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
   }
 
   private List<OrgProjectIdentifier> getOrgProjectIdentifier(List<ProjectDTO> listOfAccessibleProject) {
-    return emptyIfNull(listOfAccessibleProject)
+    return CollectionUtils.emptyIfNull(listOfAccessibleProject)
         .stream()
         .map(projectDTO -> new OrgProjectIdentifier(projectDTO.getOrgIdentifier() + ":" + projectDTO.getIdentifier()))
         .collect(Collectors.toList());
@@ -335,7 +335,7 @@ public class OverviewDashboardServiceImpl implements OverviewDashboardService {
 
   private Optional<RestCallResponse> getResponseOptional(
       List<RestCallResponse> restCallResponses, OverviewDashboardRequestType overviewDashboardRequestType) {
-    return emptyIfNull(restCallResponses)
+    return CollectionUtils.emptyIfNull(restCallResponses)
         .stream()
         .filter(k -> k.getRequestType() == overviewDashboardRequestType)
         .findAny();
