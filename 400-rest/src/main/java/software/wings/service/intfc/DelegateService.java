@@ -170,4 +170,6 @@ public interface DelegateService extends OwnedByAccount {
   DelegateGroup upsertDelegateGroup(String name, String accountId, DelegateSetupDetails delegateSetupDetails);
 
   String getAccountPrimaryDelegateVersion(String accountId);
+
+  boolean checkDelegateConnected(String accountId, String delegateId);
 }

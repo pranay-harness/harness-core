@@ -63,7 +63,6 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
   @Mock K8sWatchPerpetualTaskServiceClient k8sWatchPerpetualTaskServiceClient;
   @Mock PerpetualTaskServiceClientRegistry clientRegistry;
   @Mock DelegateService delegateService;
-  @Mock DelegateTaskServiceClassic delegateTaskServiceClassic;
   @Mock PerpetualTaskService perpetualTaskService;
   @Mock PerpetualTaskRecordDao perpetualTaskRecordDao;
   @Mock AlertService alertService;
@@ -224,7 +223,7 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
                  .perpetualTaskType(PerpetualTaskType.K8S_WATCH)
                  .clientContext(PerpetualTaskClientContext.builder().build())
                  .build();
-    when(delegateTaskServiceClassic.checkDelegateConnected(accountId, delegateId)).thenReturn(true);
+    when(delegateService.checkDelegateConnected(accountId, delegateId)).thenReturn(true);
     perpetualTaskRecordHandler.rebalance(record);
     verify(perpetualTaskService).appointDelegate(eq(accountId), eq(taskId), eq(delegateId), anyLong());
   }

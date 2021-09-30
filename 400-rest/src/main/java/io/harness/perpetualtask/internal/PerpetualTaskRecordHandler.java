@@ -53,6 +53,7 @@ import software.wings.service.InstanceSyncConstants;
 import software.wings.service.impl.PerpetualTaskCapabilityCheckResponse;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
+import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.DelegateTaskServiceClassic;
 import software.wings.service.intfc.perpetualtask.PerpetualTaskCrudObserver;
 
@@ -85,7 +86,7 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
   private static final int PERPETUAL_TASK_ASSIGNMENT_INTERVAL_MINUTE = 1;
 
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
-  @Inject private DelegateTaskServiceClassic delegateTaskServiceClassic;
+  @Inject private DelegateService delegateService;
   @Inject private PerpetualTaskService perpetualTaskService;
   @Inject private PerpetualTaskServiceClientRegistry clientRegistry;
   @Inject private MorphiaPersistenceProvider<PerpetualTaskRecord> persistenceProvider;
@@ -218,7 +219,7 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
   }
 
   public void rebalance(PerpetualTaskRecord taskRecord) {
-    if (delegateTaskServiceClassic.checkDelegateConnected(taskRecord.getAccountId(), taskRecord.getDelegateId())) {
+    if (delegateService.checkDelegateConnected(taskRecord.getAccountId(), taskRecord.getDelegateId())) {
       perpetualTaskService.appointDelegate(taskRecord.getAccountId(), taskRecord.getUuid(), taskRecord.getDelegateId(),
           taskRecord.getClientContext().getLastContextUpdated());
       return;

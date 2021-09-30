@@ -3530,9 +3530,8 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public List<String> getConnectedDelegates(String accountId, List<String> delegateIds) {
     return delegateIds.stream()
-        .filter(delegateId
-            -> delegateConnectionDao.checkDelegateConnected(
-                accountId, delegateId, versionInfoManager.getVersionInfo().getVersion()))
+        .filter(
+            delegateId -> delegateConnectionDao.checkDelegateConnected(accountId, delegateId, getVersion(accountId)))
         .collect(toList());
   }
 
@@ -3635,5 +3634,15 @@ public class DelegateServiceImpl implements DelegateService {
       return delegateServiceClassicGrpcClient.executeTask(task);
     }
     return delegateTaskServiceClassic.executeTask(task);
+  }
+
+  @Override
+  public boolean checkDelegateConnected(String accountId, String delegateId) {
+    return delegateConnectionDao.checkDelegateConnected(accountId, delegateId, getVersion(accountId));
+  }
+
+  private String getVersion(String accountId) {
+    String accountVersion = getAccountPrimaryDelegateVersion(accountId);
+    return isNotBlank(accountVersion) ? accountVersion : versionInfoManager.getVersionInfo().getVersion();
   }
 }

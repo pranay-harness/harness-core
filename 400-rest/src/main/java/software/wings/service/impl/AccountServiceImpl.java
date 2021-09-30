@@ -39,6 +39,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.account.ProvisionStep;
 import io.harness.account.ProvisionStep.ProvisionStepKeys;
@@ -961,11 +962,12 @@ public class AccountServiceImpl implements AccountService {
       throw new InvalidRequestException("Deleted AccountId: " + accountId);
     }
     Account account = wingsPersistence.createQuery(Account.class, excludeAuthorityCount)
-            .filter(AccountKeys.uuid, accountId)
-            .project("delegateConfiguration", true)
-            .get();
-    log.info("Account has primary version "+ account.getDelegateConfiguration().getDelegateVersions().stream().reduce((first, last) -> last).orElse(""));
-   return account.getDelegateConfiguration().getDelegateVersions().stream().reduce((first, last) -> last).orElse("");
+                          .filter(AccountKeys.uuid, accountId)
+                          .project("delegateConfiguration", true)
+                          .get();
+    log.info("Account has primary version "
+        + account.getDelegateConfiguration().getDelegateVersions().stream().reduce((first, last) -> last).orElse(""));
+    return account.getDelegateConfiguration().getDelegateVersions().stream().reduce((first, last) -> last).orElse("");
   }
 
   @Override
@@ -1227,7 +1229,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     return delegateConnectionDao.checkDelegateConnected(
-        accountId, delegateKey.getId().toString(), versionInfoManager.getVersionInfo().getVersion());
+        accountId, delegateKey.getId().toString(), getVersion(accountId));
   }
 
   @Override
@@ -1917,5 +1919,10 @@ public class AccountServiceImpl implements AccountService {
     wingsPersistence.updateField(Account.class, accountId, DEFAULT_EXPERIENCE, defaultExperience);
     dbCache.invalidate(Account.class, account.getUuid());
     return null;
+  }
+
+  private String getVersion(String accountId) {
+    String accountVersion = getAccountPrimaryDelegateVersion(accountId);
+    return isNotBlank(accountVersion) ? accountVersion : versionInfoManager.getVersionInfo().getVersion();
   }
 }
