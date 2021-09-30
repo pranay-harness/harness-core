@@ -42,4 +42,6 @@ public interface OrganizationService {
   boolean delete(String accountIdentifier, String identifier, Long version);
 
   boolean restore(String accountIdentifier, String identifier);
+
+  Long countOrgs(String accountIdentifier);
 }

@@ -4,6 +4,7 @@ import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
 import static io.harness.NGConstants.DEFAULT_RESOURCE_GROUP_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.enforcement.constants.FeatureRestrictionName.MULTIPLE_ORGANIZATIONS;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.accesscontrol.PlatformPermissions.INVITE_PERMISSION_IDENTIFIER;
 import static io.harness.ng.core.remote.OrganizationMapper.toOrganization;
@@ -18,11 +19,13 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
+import io.harness.enforcement.client.annotation.FeatureRestrictionCheck;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -99,7 +102,8 @@ public class OrganizationServiceImpl implements OrganizationService {
   }
 
   @Override
-  public Organization create(String accountIdentifier, OrganizationDTO organizationDTO) {
+  @FeatureRestrictionCheck(MULTIPLE_ORGANIZATIONS)
+  public Organization create(@AccountIdentifier String accountIdentifier, OrganizationDTO organizationDTO) {
     Organization organization = toOrganization(organizationDTO);
     organization.setAccountIdentifier(accountIdentifier);
     try {
@@ -292,6 +296,11 @@ public class OrganizationServiceImpl implements OrganizationService {
   @Override
   public List<Organization> list(Criteria criteria) {
     return organizationRepository.findAll(criteria);
+  }
+
+  @Override
+  public Long countOrgs(String accountIdentifier) {
+    return organizationRepository.countByAccountIdentifier(accountIdentifier);
   }
 
   private Criteria createOrganizationFilterCriteria(Criteria criteria, OrganizationFilterDTO organizationFilterDTO) {

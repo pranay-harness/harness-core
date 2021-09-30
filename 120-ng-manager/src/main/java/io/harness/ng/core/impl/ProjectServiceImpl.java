@@ -6,6 +6,7 @@ import static io.harness.NGConstants.DEFAULT_RESOURCE_GROUP_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.enforcement.constants.FeatureRestrictionName.MULTIPLE_PROJECTS;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.ng.accesscontrol.PlatformPermissions.INVITE_PERMISSION_IDENTIFIER;
@@ -27,12 +28,14 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.proj
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.sort;
 
 import io.harness.ModuleType;
+import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
 import io.harness.beans.Scope.ScopeKeys;
+import io.harness.enforcement.client.annotation.FeatureRestrictionCheck;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -134,7 +137,8 @@ public class ProjectServiceImpl implements ProjectService {
   }
 
   @Override
-  public Project create(String accountIdentifier, String orgIdentifier, ProjectDTO projectDTO) {
+  @FeatureRestrictionCheck(MULTIPLE_PROJECTS)
+  public Project create(@AccountIdentifier String accountIdentifier, String orgIdentifier, ProjectDTO projectDTO) {
     orgIdentifier = orgIdentifier == null ? DEFAULT_ORG_IDENTIFIER : orgIdentifier;
     validateCreateProjectRequest(accountIdentifier, orgIdentifier, projectDTO);
     Project project = toProject(projectDTO);
@@ -486,6 +490,11 @@ public class ProjectServiceImpl implements ProjectService {
         .forEach(projectsPerOrganizationCount
             -> result.put(projectsPerOrganizationCount.getOrgIdentifier(), projectsPerOrganizationCount.getCount()));
     return result;
+  }
+
+  @Override
+  public Long countProjects(String accountIdenifier) {
+    return projectRepository.countByAccountIdentifier(accountIdenifier);
   }
 
   private void validateCreateProjectRequest(String accountIdentifier, String orgIdentifier, ProjectDTO project) {

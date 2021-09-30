@@ -16,4 +16,6 @@ public interface OrganizationRepository
     extends PagingAndSortingRepository<Organization, String>, OrganizationRepositoryCustom {
   Optional<Organization> findByAccountIdentifierAndIdentifierAndDeletedNot(
       String accountIdentifier, String identifier, boolean notDeleted);
+
+  Long countByAccountIdentifier(String accountIdentifier);
 }
