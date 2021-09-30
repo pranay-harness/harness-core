@@ -535,18 +535,18 @@ resource "google_storage_bucket_object" "ce-aws-inventory-init-archive" {
   depends_on = ["data.archive_file.ce-aws-inventory-init"]
 }
 
-resource "google_storage_bucket_object" "ce-gcp-instance-inventory-archive" {
-  name = "ce-gcpdata.${data.archive_file.ce-gcp-instance-inventory.output_md5}.zip"
+resource "google_storage_bucket_object" "ce-gcp-instance-inventory-data-archive" {
+  name = "ce-gcpdata.${data.archive_file.ce-gcp-instance-inventory-data.output_md5}.zip"
   bucket = "${google_storage_bucket.bucket1.name}"
-  source = "${path.module}/files/ce-gcp-instance-inventory.zip"
-  depends_on = ["data.archive_file.ce-gcp-instance-inventory"]
+  source = "${path.module}/files/ce-gcp-instance-inventory-data.zip"
+  depends_on = ["data.archive_file.ce-gcp-instance-inventory-data"]
 }
 
-resource "google_storage_bucket_object" "ce-gcp-instance-inventory-load-archive" {
-  name = "ce-gcpdata.${data.archive_file.ce-gcp-instance-inventory-load.output_md5}.zip"
+resource "google_storage_bucket_object" "ce-gcp-instance-inventory-data-load-archive" {
+  name = "ce-gcpdata.${data.archive_file.ce-gcp-instance-inventory-data-load.output_md5}.zip"
   bucket = "${google_storage_bucket.bucket1.name}"
-  source = "${path.module}/files/ce-gcp-instance-inventory-load.zip"
-  depends_on = ["data.archive_file.ce-gcp-instance-inventory-load"]
+  source = "${path.module}/files/ce-gcp-instance-inventory-data-load.zip"
+  depends_on = ["data.archive_file.ce-gcp-instance-inventory-data-load"]
 }
 
 resource "google_cloudfunctions_function" "ce-clusterdata-function" {
@@ -922,6 +922,60 @@ resource "google_cloudfunctions_function" "ce-aws-inventory-init-function" {
   event_trigger {
     event_type = "google.pubsub.topic.publish"
     resource   = "${google_pubsub_topic.ce-aws-connector-crud-topic.name}"
+    failure_policy {
+      retry = false
+    }
+  }
+}
+
+resource "google_cloudfunctions_function" "ce-gcp-instance-inventory-data-function" {
+  name                      = "ce-gcp-instance-inventory-data-terraform"
+  description               = "This cloudfunction gets triggered upon event in a pubsub topic"
+  entry_point               = "main"
+  available_memory_mb       = 256
+  timeout                   = 540
+  runtime                   = "python38"
+  project                   = "${var.projectId}"
+  region                    = "${var.region}"
+  source_archive_bucket     = "${google_storage_bucket.bucket1.name}"
+  source_archive_object     = "${google_storage_bucket_object.ce-gcp-instance-inventory-data-archive.name}"
+
+  environment_variables = {
+    disabled = "false"
+    enable_for_accounts = ""
+    GCP_PROJECT = "${var.projectId}"
+  }
+
+  event_trigger {
+    event_type = "google.pubsub.topic.publish"
+    resource   = "${google_pubsub_topic.ce-gcp-instance-inventory-data-topic.name}"
+    failure_policy {
+      retry = false
+    }
+  }
+}
+
+resource "google_cloudfunctions_function" "ce-gcp-instance-inventory-data-load-function" {
+  name                      = "ce-gcp-instance-inventory-data-load-terraform"
+  description               = "This cloudfunction gets triggered upon event in a pubsub topic"
+  entry_point               = "main"
+  available_memory_mb       = 256
+  timeout                   = 540
+  runtime                   = "python38"
+  project                   = "${var.projectId}"
+  region                    = "${var.region}"
+  source_archive_bucket     = "${google_storage_bucket.bucket1.name}"
+  source_archive_object     = "${google_storage_bucket_object.ce-gcp-instance-inventory-data-load-archive.name}"
+
+  environment_variables = {
+    disabled = "false"
+    enable_for_accounts = ""
+    GCP_PROJECT = "${var.projectId}"
+  }
+
+  event_trigger {
+    event_type = "google.pubsub.topic.publish"
+    resource   = "${google_pubsub_topic.ce-gcp-instance-inventory-data-load-topic.name}"
     failure_policy {
       retry = false
     }
