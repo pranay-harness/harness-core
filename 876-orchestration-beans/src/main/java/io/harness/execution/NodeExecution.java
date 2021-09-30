@@ -158,6 +158,9 @@ public class NodeExecution implements PersistentEntity, UuidAccess, PmsNodeExecu
         + "uuid";
     public static final String planNodeIdentifier = NodeExecutionKeys.planNode + "."
         + "identifier";
+
+    public static final String nodeIdentifier = NodeExecutionKeys.node + "."
+        + "identifier";
   }
 
   public static class NodeExecutionBuilder {
