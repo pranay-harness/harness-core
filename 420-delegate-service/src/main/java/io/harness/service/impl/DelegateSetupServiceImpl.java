@@ -447,8 +447,9 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
     Map<String, List<Delegate>> delegatesByGroup =
         persistence.query(Delegate.class, pageRequest).stream().collect(groupingBy(Delegate::getDelegateGroupId));
 
+    String groupIdentifier = filterProperties != null ? filterProperties.getDelegateGroupIdentifier() : null;
     List<DelegateGroupDetails> delegateGroupDetails =
-        delegatesByGroup.keySet()
+        getDelegateGroupIds(accountId, orgId, projectId, groupIdentifier)
             .stream()
             .map(delegateGroupId -> {
               DelegateGroup delegateGroup = delegateCache.getDelegateGroup(accountId, delegateGroupId);
@@ -486,10 +487,6 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
           DelegateKeys.delegateGroupName, DelegateKeys.description, DelegateKeys.hostName, DelegateKeys.tags);
       pageRequest.addFilter(DelegateKeys.searchTermFilter, OR, filtersForSearchTerm);
     }
-
-    String delegateGroupIdentifier = filterProperties != null ? filterProperties.getDelegateGroupIdentifier() : null;
-    pageRequest.addFilter(DelegateKeys.delegateGroupId, IN,
-        getDelegateGroupIds(accountId, orgId, projectId, delegateGroupIdentifier).toArray());
 
     if (filterProperties != null) {
       populatePageRequestWithFilterProperties(pageRequest, filterProperties);
