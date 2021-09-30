@@ -223,6 +223,8 @@ public interface AccountService {
 
   boolean updateAccountPreference(String accountId, String preferenceKey, Object value);
 
+  void updateFeatureFlagsForOnPremAccount();
+
   boolean enableHarnessUserGroupAccess(String accountId);
 
   boolean disableHarnessUserGroupAccess(String accountId);

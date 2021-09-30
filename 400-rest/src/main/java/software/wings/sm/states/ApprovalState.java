@@ -464,7 +464,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
   private ExecutionResponse executeShellScriptApproval(ExecutionContext context, String accountId, String appId,
       String approvalId, ShellScriptApprovalParams parameters, ApprovalStateExecutionData executionData) {
     parameters.setScriptString(context.renderExpression(parameters.getScriptString()));
-    parameters.setDelegateSelectors(getDelegateSelectors(context, parameters.getDelegateSelectors()));
+    parameters.setDelegateSelectors(getDelegateSelectors(context, parameters.fetchDelegateSelectors()));
 
     String activityId = createActivity(context);
     executionData.setActivityId(activityId);
@@ -480,7 +480,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
             .workflowExecutionId(context.getWorkflowExecutionId())
             .activityId(activityId)
             .scriptString(parameters.getScriptString())
-            .delegateSelectors(parameters.getDelegateSelectors())
+            .delegateSelectors(parameters.fetchDelegateSelectors())
             .approvalType(approvalStateType)
             .retryInterval(parameters.getRetryInterval())
             .build();

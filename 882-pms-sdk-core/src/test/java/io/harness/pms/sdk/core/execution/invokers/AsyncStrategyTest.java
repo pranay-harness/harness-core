@@ -5,6 +5,8 @@ import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
@@ -40,6 +42,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class AsyncStrategyTest extends PmsSdkCoreTestBase {
   @Mock private SdkNodeExecutionService sdkNodeExecutionService;
   @Mock private AsyncWaitEngine asyncWaitEngine;
@@ -91,7 +94,7 @@ public class AsyncStrategyTest extends PmsSdkCoreTestBase {
             correlationIdsCaptor.capture());
     // Wait Engine Mock verify interactions
     AsyncSdkResumeCallback resumeCallback = notifyCallbackArgumentCaptor.getValue();
-    assertThat(resumeCallback.getAmbiance()).isEqualTo(ambiance);
+    assertThat(resumeCallback.getAmbianceBytes()).isEqualTo(ambiance.toByteArray());
 
     AsyncSdkProgressCallback progressCallback = progressCallbackArgumentCaptor.getValue();
     assertThat(progressCallback.getAmbianceBytes()).isEqualTo(ambiance.toByteArray());

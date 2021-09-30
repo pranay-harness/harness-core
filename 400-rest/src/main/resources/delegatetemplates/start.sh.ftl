@@ -99,6 +99,14 @@ if [[ $ACCOUNT_STATUS == "DELETED" ]]; then
   exit 0
 fi
 
+JRE_TAR_FILE=jre_x64_linux_8u242b08.tar.gz
+
+if [ -f "$JRE_TAR_FILE" ]; then
+  echo "untar jre"
+  tar -xzf $JRE_TAR_FILE
+  rm -f $JRE_TAR_FILE
+fi
+
 if [ ! -d $JRE_DIR -o ! -e $JRE_BINARY ]; then
   echo "Downloading JRE packages..."
   JVM_TAR_FILENAME=$(basename "$JVM_URL")

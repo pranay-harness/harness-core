@@ -13,6 +13,7 @@ import io.harness.delegate.task.k8s.K8sTaskType;
 import io.harness.expression.Expression;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.k8s.model.HelmVersion;
+import io.harness.k8s.model.KubernetesResource;
 
 import software.wings.beans.InstanceUnitType;
 
@@ -36,6 +37,9 @@ public class K8sCanaryDeployTaskParameters extends K8sTaskParameters implements 
   private InstanceUnitType instanceUnitType;
   private Optional<Integer> maxInstances;
   private boolean skipDryRun;
+  private boolean exportManifests;
+  private boolean inheritManifests;
+  private List<KubernetesResource> kubernetesResources;
 
   @Builder
   public K8sCanaryDeployTaskParameters(String accountId, String appId, String commandName, String activityId,
@@ -43,6 +47,7 @@ public class K8sCanaryDeployTaskParameters extends K8sTaskParameters implements 
       Integer timeoutIntervalInMin, K8sDelegateManifestConfig k8sDelegateManifestConfig, List<String> valuesYamlList,
       Integer instances, InstanceUnitType instanceUnitType, Integer maxInstances, boolean skipDryRun,
       HelmVersion helmVersion, Boolean skipVersioningForAllK8sObjects, Set<String> delegateSelectors,
+      boolean exportManifests, boolean inheritManifests, List<KubernetesResource> kubernetesResources,
       boolean useLatestChartMuseumVersion) {
     super(accountId, appId, commandName, activityId, k8sClusterConfig, workflowExecutionId, releaseName,
         timeoutIntervalInMin, k8sTaskType, helmVersion, delegateSelectors, useLatestChartMuseumVersion);
@@ -53,6 +58,9 @@ public class K8sCanaryDeployTaskParameters extends K8sTaskParameters implements 
     this.maxInstances = Optional.ofNullable(maxInstances);
     this.skipDryRun = skipDryRun;
     this.skipVersioningForAllK8sObjects = skipVersioningForAllK8sObjects;
+    this.exportManifests = exportManifests;
+    this.inheritManifests = inheritManifests;
+    this.kubernetesResources = kubernetesResources;
   }
 
   @Override

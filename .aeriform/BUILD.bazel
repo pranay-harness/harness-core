@@ -162,6 +162,8 @@ aeriform("//460-capability:tests")
 
 aeriform("//470-alert:module")
 
+aeriform("//480-pricing-service:module")
+
 aeriform("//490-ce-commons:module")
 
 aeriform("//490-ce-commons:tests")
@@ -307,8 +309,6 @@ aeriform("//940-cg-audit-service:module")
 aeriform("//940-cg-audit-service:tests")
 
 aeriform("//940-enforcement-sdk:module")
-
-aeriform("//940-enforcement-sdk:tests")
 
 aeriform("//940-feature-flag:module")
 

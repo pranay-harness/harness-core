@@ -106,7 +106,13 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   public Optional<NodeExecution> getByNodeIdentifier(String nodeIdentifier, String planExecutionId) {
     Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
                       .addCriteria(where(NodeExecutionKeys.planNodeIdentifier).in(nodeIdentifier));
-    return Optional.ofNullable(mongoTemplate.findOne(query, NodeExecution.class));
+    Optional<NodeExecution> nodeExecution = Optional.ofNullable(mongoTemplate.findOne(query, NodeExecution.class));
+    if (!nodeExecution.isPresent()) {
+      query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
+                  .addCriteria(where(NodeExecutionKeys.nodeIdentifier).in(nodeIdentifier));
+      return Optional.ofNullable(mongoTemplate.findOne(query, NodeExecution.class));
+    }
+    return nodeExecution;
   }
 
   @Override

@@ -16,7 +16,6 @@ import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.enforcement.exceptions.FeatureNotSupportedException;
 import io.harness.enforcement.exceptions.LimitExceededException;
 import io.harness.enforcement.utils.SuggestionMessageUtils;
-import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.licensing.Edition;
 
@@ -66,7 +65,7 @@ public class EnforcementClientServiceImpl implements EnforcementClientService {
     try {
       featureMetadataDTO =
           getResponse(enforcementClient.getFeatureRestrictionMetadata(featureRestrictionName, accountIdentifier));
-    } catch (InvalidRequestException | UnexpectedException e) {
+    } catch (UnexpectedException e) {
       log.error("Not able to fetch feature restriction metadata from ng-manager, failover to bypass the check", e);
       return;
     }

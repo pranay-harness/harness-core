@@ -28,12 +28,14 @@ import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.environment.beans.Environment;
 import io.harness.ng.core.environment.beans.Environment.EnvironmentKeys;
+import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.environment.dto.EnvironmentRequestDTO;
 import io.harness.ng.core.environment.dto.EnvironmentResponse;
 import io.harness.ng.core.environment.mappers.EnvironmentMapper;
@@ -49,11 +51,11 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -111,11 +113,15 @@ public class EnvironmentResourceV2 {
   @POST
   @ApiOperation(value = "Create an Environment", nickname = "createEnvironmentV2")
   public ResponseDTO<EnvironmentResponse> create(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @Valid EnvironmentRequestDTO environmentRequestDTO) {
+      @Valid EnvironmentRequestDTO environmentRequestDTO) {
+    throwExceptionForNoRequestDTO(environmentRequestDTO);
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, environmentRequestDTO.getOrgIdentifier(),
                                                   environmentRequestDTO.getProjectIdentifier()),
         Resource.of(ENVIRONMENT, null), ENVIRONMENT_CREATE_PERMISSION);
-
+    if (environmentRequestDTO.getType() == null) {
+      throw new InvalidRequestException(
+          "Type for an environment cannot be empty. Possible values: " + Arrays.toString(EnvironmentType.values()));
+    }
     Environment environmentEntity = EnvironmentMapper.toEnvironmentEntity(accountId, environmentRequestDTO);
     Environment createdEnvironment = environmentService.create(environmentEntity);
     return ResponseDTO.newResponse(
@@ -139,7 +145,8 @@ public class EnvironmentResourceV2 {
   @ApiOperation(value = "Update an environment by identifier", nickname = "updateEnvironmentV2")
   public ResponseDTO<EnvironmentResponse> update(@HeaderParam(IF_MATCH) String ifMatch,
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @Valid EnvironmentRequestDTO environmentRequestDTO) {
+      @Valid EnvironmentRequestDTO environmentRequestDTO) {
+    throwExceptionForNoRequestDTO(environmentRequestDTO);
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, environmentRequestDTO.getOrgIdentifier(),
                                                   environmentRequestDTO.getProjectIdentifier()),
         Resource.of(ENVIRONMENT, environmentRequestDTO.getIdentifier()), ENVIRONMENT_UPDATE_PERMISSION);
@@ -156,7 +163,8 @@ public class EnvironmentResourceV2 {
   @ApiOperation(value = "Upsert an environment by identifier", nickname = "upsertEnvironmentV2")
   public ResponseDTO<EnvironmentResponse> upsert(@HeaderParam(IF_MATCH) String ifMatch,
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @Valid EnvironmentRequestDTO environmentRequestDTO) {
+      @Valid EnvironmentRequestDTO environmentRequestDTO) {
+    throwExceptionForNoRequestDTO(environmentRequestDTO);
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, environmentRequestDTO.getOrgIdentifier(),
                                                   environmentRequestDTO.getProjectIdentifier()),
         Resource.of(ENVIRONMENT, environmentRequestDTO.getIdentifier()), ENVIRONMENT_UPDATE_PERMISSION);
@@ -238,5 +246,12 @@ public class EnvironmentResourceV2 {
       }
     }
     return filteredAccessControlDtoList;
+  }
+
+  private void throwExceptionForNoRequestDTO(EnvironmentRequestDTO dto) {
+    if (dto == null) {
+      throw new InvalidRequestException(
+          "No request body sent in the API. Following field is required: identifier, type. Other optional fields: name, orgIdentifier, projectIdentifier, tags, description, version");
+    }
   }
 }

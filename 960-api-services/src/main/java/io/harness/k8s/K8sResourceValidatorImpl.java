@@ -1,5 +1,7 @@
 package io.harness.k8s;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 
 import com.google.common.collect.ImmutableList;
@@ -35,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.CE)
 public class K8sResourceValidatorImpl implements K8sResourceValidator {
   public static final Gson GSON = new Gson();
   @Inject @Named("asyncExecutor") ExecutorService executorService;
@@ -279,9 +282,9 @@ public class K8sResourceValidatorImpl implements K8sResourceValidator {
 
   public List<V1SelfSubjectAccessReview> updateDeploymentReview(final ApiClient apiClient) throws ApiException {
     final V1ResourceAttributes attributes1 =
-        new V1ResourceAttributes().resource("deployments").verb("update").verb("apps");
+        new V1ResourceAttributes().resource("deployments").verb("update").group("apps");
     final V1ResourceAttributes attributes2 =
-        new V1ResourceAttributes().resource("deployments").verb("update").verb("extensions");
+        new V1ResourceAttributes().resource("deployments").verb("update").group("extensions");
 
     return ImmutableList.of(lightwingSubjectAccessReviewCommons(apiClient, attributes1),
         lightwingSubjectAccessReviewCommons(apiClient, attributes2));

@@ -26,7 +26,8 @@ import java.util.Map;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Spy;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
 public class OrchestrationServiceImplTest extends OrchestrationTestBase {
   private static final String PLAN_EXECUTION_ID = generateUuid();
@@ -38,7 +39,8 @@ public class OrchestrationServiceImplTest extends OrchestrationTestBase {
   private static final String ACCOUNT_ID = generateUuid();
   private static final String APP_ID = generateUuid();
 
-  @Spy @Inject private OrchestrationServiceImpl orchestrationService;
+  @Mock OrchestrationEngine orchestrationEngine;
+  @Inject @InjectMocks private OrchestrationServiceImpl orchestrationService;
 
   private static final StepType DUMMY_STEP_TYPE =
       StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build();
@@ -81,15 +83,14 @@ public class OrchestrationServiceImplTest extends OrchestrationTestBase {
     assertThat(planExecution.getUuid()).isEqualTo(PLAN_EXECUTION_ID);
     assertThat(planExecution.getStatus()).isEqualTo(Status.RUNNING);
     ArgumentCaptor<Ambiance> ambianceCaptor = ArgumentCaptor.forClass(Ambiance.class);
-    ArgumentCaptor<PlanNode> nodeCaptor = ArgumentCaptor.forClass(PlanNode.class);
-    verify(orchestrationService, times(1)).submitToEngine(ambianceCaptor.capture(), nodeCaptor.capture());
+    ArgumentCaptor<Plan> planCaptor = ArgumentCaptor.forClass(Plan.class);
+    verify(orchestrationEngine, times(1)).triggerNode(ambianceCaptor.capture(), planCaptor.capture());
 
     Ambiance ambiance = ambianceCaptor.getValue();
     assertThat(ambiance.getPlanExecutionId()).isEqualTo(PLAN_EXECUTION_ID);
     assertThat(ambiance.getPlanId()).isEqualTo(PLAN_ID);
     assertThat(ambiance.getSetupAbstractionsMap()).isEqualTo(setupAbstractions);
-
-    PlanNode planNode = nodeCaptor.getValue();
-    assertThat(planNode.getUuid()).isEqualTo(DUMMY_NODE_1_ID);
+    assertThat(planCaptor.getValue().getUuid()).isEqualTo(PLAN_ID);
+    assertThat(planCaptor.getValue().getNodeType()).isEqualTo(plan.getNodeType());
   }
 }

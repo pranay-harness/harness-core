@@ -77,9 +77,9 @@ public class ServiceDependencyGraphServiceImplTest extends CvNextGenTestBase {
 
     assertThat(graphDTO).isNotNull();
     assertThat(graphDTO.getNodes().size()).isEqualTo(1);
+    assertThat(graphDTO.getNodes().get(0).getIdentifierRef()).isEqualTo(monitoredServiceDTO.getIdentifier());
     assertThat(graphDTO.getNodes().get(0).getServiceRef()).isEqualTo(context.getServiceIdentifier());
     assertThat(graphDTO.getNodes().get(0).getEnvironmentRef()).isEqualTo(context.getEnvIdentifier());
-    assertThat(graphDTO.getNodes().get(0).getServiceRef()).isEqualTo(context.getServiceIdentifier());
     assertThat(graphDTO.getNodes().get(0).getRiskScore()).isEqualTo(0.25);
     assertThat(graphDTO.getNodes().get(0).getRiskLevel()).isEqualTo(Risk.LOW);
     assertThat(graphDTO.getNodes().get(0).getAnomalousMetricsCount()).isEqualTo(2);

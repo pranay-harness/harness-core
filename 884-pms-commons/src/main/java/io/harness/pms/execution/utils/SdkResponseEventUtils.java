@@ -20,23 +20,15 @@ public class SdkResponseEventUtils {
   private Map<String, String> logContextMap(SdkResponseEventProto sdkResponseEvent) {
     Map<String, String> logContext = new HashMap<>();
     logContext.put("sdkResponseEventType", sdkResponseEvent.getSdkResponseEventType().name());
-    logContext.put("nodeExecutionId", getNodeExecutionId(sdkResponseEvent));
+    logContext.putAll(AmbianceUtils.logContextMap(sdkResponseEvent.getAmbiance()));
     return logContext;
   }
 
   public static String getNodeExecutionId(SdkResponseEventProto event) {
-    if (event.hasAmbiance()) {
-      return AmbianceUtils.obtainCurrentRuntimeId(event.getAmbiance());
-    } else {
-      return event.getNodeExecutionId();
-    }
+    return AmbianceUtils.obtainCurrentRuntimeId(event.getAmbiance());
   }
 
   public static String getPlanExecutionId(SdkResponseEventProto event) {
-    if (event.hasAmbiance()) {
-      return event.getAmbiance().getPlanExecutionId();
-    } else {
-      return event.getPlanExecutionId();
-    }
+    return event.getAmbiance().getPlanExecutionId();
   }
 }

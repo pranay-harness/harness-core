@@ -306,7 +306,7 @@ public class PipelineResource implements YamlSchemaResource {
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("10") int size,
       @QueryParam("sort") List<String> sort, @QueryParam("filterIdentifier") String filterIdentifier,
       @QueryParam("module") String moduleName, FilterPropertiesDTO filterProperties,
-      @QueryParam("status") ExecutionStatus status, @QueryParam("myDeployments") boolean myDeployments,
+      @QueryParam("status") List<ExecutionStatus> statusesList, @QueryParam("myDeployments") boolean myDeployments,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     log.info("Get List of executions");
     ByteString gitSyncBranchContext = pmsGitSyncHelper.getGitSyncBranchContextBytesThreadLocal();
@@ -315,7 +315,7 @@ public class PipelineResource implements YamlSchemaResource {
       gitSyncBranchContext = null;
     }
     Criteria criteria = pmsExecutionService.formCriteria(accountId, orgId, projectId, pipelineIdentifier,
-        filterIdentifier, (PipelineExecutionFilterPropertiesDTO) filterProperties, moduleName, searchTerm, status,
+        filterIdentifier, (PipelineExecutionFilterPropertiesDTO) filterProperties, moduleName, searchTerm, statusesList,
         myDeployments, false, gitSyncBranchContext);
     Pageable pageRequest;
     if (EmptyPredicate.isEmpty(sort)) {
@@ -351,12 +351,19 @@ public class PipelineResource implements YamlSchemaResource {
         pmsExecutionService.getPipelineExecutionSummaryEntity(accountId, orgId, projectId, planExecutionId, false);
 
     Optional<PipelineEntity> optionalPipelineEntity;
-    try (PmsGitSyncBranchContextGuard ignore = pmsGitSyncHelper.createGitSyncBranchContextGuardFromBytes(
-             executionSummaryEntity.getGitSyncBranchContext(), false)) {
-      optionalPipelineEntity =
-          pmsPipelineService.get(accountId, orgId, projectId, executionSummaryEntity.getPipelineIdentifier(), false);
+    if (executionSummaryEntity.getEntityGitDetails() == null) {
+      try (PmsGitSyncBranchContextGuard ignore = pmsGitSyncHelper.createGitSyncBranchContextGuardFromBytes(
+               executionSummaryEntity.getGitSyncBranchContext(), false)) {
+        optionalPipelineEntity =
+            pmsPipelineService.get(accountId, orgId, projectId, executionSummaryEntity.getPipelineIdentifier(), false);
+      }
+    } else {
+      try (PmsGitSyncBranchContextGuard ignore = new PmsGitSyncBranchContextGuard(
+               executionSummaryEntity.getEntityGitDetails().toGitSyncBranchContext(), false)) {
+        optionalPipelineEntity =
+            pmsPipelineService.get(accountId, orgId, projectId, executionSummaryEntity.getPipelineIdentifier(), false);
+      }
     }
-
     if (!optionalPipelineEntity.isPresent()) {
       throw new InvalidRequestException(
           "Pipeline with identifier " + executionSummaryEntity.getPipelineIdentifier() + " not found");

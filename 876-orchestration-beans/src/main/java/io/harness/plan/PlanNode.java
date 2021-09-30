@@ -44,7 +44,7 @@ public class PlanNode implements Node {
   @Singular List<FacilitatorObtainment> facilitatorObtainments;
   @Singular List<TimeoutObtainment> timeoutObtainments;
 
-  String serviceName;
+  @Deprecated String serviceName;
 
   // Skip
   String skipCondition;

@@ -61,7 +61,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._870_CG_YAML)
+@TargetModule(HarnessModule._955_CG_YAML)
 public class StepYamlHandlerTest extends YamlHandlerTestBase {
   @InjectMocks @Inject private StepYamlHandler stepYamlHandler;
   @Mock private FeatureFlagService featureFlagService;

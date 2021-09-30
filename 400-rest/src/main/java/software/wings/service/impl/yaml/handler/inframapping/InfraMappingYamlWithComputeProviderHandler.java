@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
-import static io.harness.annotations.dev.HarnessModule._870_CG_YAML;
+import static io.harness.annotations.dev.HarnessModule._955_CG_YAML;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -14,7 +14,7 @@ import software.wings.beans.yaml.ChangeContext;
  * @author rktummala on 10/15/17
  */
 @OwnedBy(CDP)
-@TargetModule(_870_CG_YAML)
+@TargetModule(_955_CG_YAML)
 public abstract class InfraMappingYamlWithComputeProviderHandler<Y extends YamlWithComputeProvider, B
                                                                      extends InfrastructureMapping>
     extends InfraMappingYamlHandler<Y, B> {
