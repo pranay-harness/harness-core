@@ -31,7 +31,6 @@ public class FullSyncMessageListener implements MessageListener {
   private final AccountClient accountClient;
   @Override
   public boolean handleMessage(Message message) {
-    // todo(abhinav): make idempotent
     final String messageId = message.getId();
     log.info("Processing the Full Sync event with the id {}", messageId);
     try (AutoLogContext ignore1 = new NgEventLogContext(messageId, OVERRIDE_ERROR)) {

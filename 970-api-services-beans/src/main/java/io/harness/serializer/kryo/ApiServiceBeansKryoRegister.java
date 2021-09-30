@@ -71,6 +71,7 @@ import io.harness.k8s.model.IstioDestinationWeight;
 import io.harness.k8s.model.K8sContainer;
 import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesClusterAuthType;
+import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.OidcGrantType;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
@@ -104,6 +105,9 @@ import io.harness.spotinst.model.ElastiGroupCapacity;
 import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.beans.AzureImageDefinition;
 import software.wings.beans.AzureImageGallery;
+import software.wings.beans.ExecutionCredential;
+import software.wings.helpers.ext.azure.devops.AzureArtifactsPackage;
+import software.wings.helpers.ext.azure.devops.AzureDevopsProject;
 import software.wings.helpers.ext.gcb.models.BuildOptions;
 import software.wings.helpers.ext.gcb.models.BuiltImage;
 import software.wings.helpers.ext.gcb.models.GcbArtifactObjects;
@@ -118,6 +122,7 @@ import software.wings.helpers.ext.gcb.models.StorageSource;
 import software.wings.helpers.ext.gcb.models.SubstitutionOption;
 import software.wings.helpers.ext.gcb.models.TimeSpan;
 import software.wings.helpers.ext.gcb.models.VerifyOption;
+import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.utils.RepositoryFormat;
 import software.wings.utils.RepositoryType;
@@ -341,6 +346,7 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(HelmClientException.class, 97032);
     kryo.register(HelmCliCommandType.class, 97033);
     kryo.register(EnclaveOptions.class, 97034);
+    kryo.register(KubernetesResource.class, 97035);
 
     kryo.register(BuildOptions.class, 7414);
     kryo.register(BuiltImage.class, 7426);
@@ -358,5 +364,10 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(TimeSpan.class, 7425);
     kryo.register(AzureImageGallery.class, 40017);
     kryo.register(AzureImageDefinition.class, 40018);
+    kryo.register(ExecutionCredential.ExecutionType.class, 5023);
+    kryo.register(JobDetails.JobParameter.class, 5241);
+    kryo.register(JobDetails.class, 5121);
+    kryo.register(AzureDevopsProject.class, 7285);
+    kryo.register(AzureArtifactsPackage.class, 7287);
   }
 }

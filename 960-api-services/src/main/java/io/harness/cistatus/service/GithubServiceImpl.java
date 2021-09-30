@@ -135,12 +135,16 @@ public class GithubServiceImpl implements GithubService {
   }
 
   private String generateTokenFromPrivateKey(GithubAppConfig githubAppConfig) throws Exception {
-    Algorithm algorithm = Algorithm.RSA256(getPrivateKeyFromString(githubAppConfig.getPrivateKey()));
-    return JWT.create()
-        .withIssuer(githubAppConfig.getAppId())
-        .withIssuedAt(new Date())
-        .withExpiresAt(new Date(System.currentTimeMillis() + EXP_TIME))
-        .sign(algorithm);
+    try {
+      Algorithm algorithm = Algorithm.RSA256(getPrivateKeyFromString(githubAppConfig.getPrivateKey()));
+      return JWT.create()
+          .withIssuer(githubAppConfig.getAppId())
+          .withIssuedAt(new Date())
+          .withExpiresAt(new Date(System.currentTimeMillis() + EXP_TIME))
+          .sign(algorithm);
+    } catch (Exception ex) {
+      throw new InvalidRequestException("Invalid Github App key, Validate key is copied properly by trimming end line");
+    }
   }
 
   private String getAuthToken(String authToken) {

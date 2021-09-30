@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.FeatureName.AWS_OVERRIDE_REGION;
 import static io.harness.beans.FeatureName.AZURE_CLOUD_PROVIDER_VALIDATION_ON_DELEGATE;
+import static io.harness.beans.FeatureName.USE_LATEST_CHARTMUSEUM_VERSION;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
@@ -577,13 +578,16 @@ public class SettingValidationService {
 
   private HelmRepoConfigValidationTaskParams getHelmRepoConfigValidationTaskParams(
       SettingAttribute settingAttribute, List<EncryptedDataDetail> encryptedDataDetails) {
-    HelmRepoConfigValidationTaskParams taskParams = HelmRepoConfigValidationTaskParams.builder()
-                                                        .accountId(settingAttribute.getAccountId())
-                                                        .appId(settingAttribute.getAppId())
-                                                        .encryptedDataDetails(encryptedDataDetails)
-                                                        .helmRepoConfig((HelmRepoConfig) settingAttribute.getValue())
-                                                        .repoDisplayName(settingAttribute.getName())
-                                                        .build();
+    HelmRepoConfigValidationTaskParams taskParams =
+        HelmRepoConfigValidationTaskParams.builder()
+            .accountId(settingAttribute.getAccountId())
+            .appId(settingAttribute.getAppId())
+            .encryptedDataDetails(encryptedDataDetails)
+            .helmRepoConfig((HelmRepoConfig) settingAttribute.getValue())
+            .repoDisplayName(settingAttribute.getName())
+            .useLatestChartMuseumVersion(
+                featureFlagService.isEnabled(USE_LATEST_CHARTMUSEUM_VERSION, settingAttribute.getAccountId()))
+            .build();
 
     String connectorId = ((HelmRepoConfig) settingAttribute.getValue()).getConnectorId();
     if (isNotBlank(connectorId)) {

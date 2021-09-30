@@ -1,5 +1,6 @@
 package io.harness.batch.processing.config;
 
+import io.harness.batch.processing.billing.tasklet.BillingDataGeneratedMailTasklet;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.tasklet.ClusterDataToBigQueryTasklet;
 
@@ -21,6 +22,18 @@ public class ClusterDataToBigQueryConfiguration {
   @Bean
   public Tasklet clusterDataToBigQueryTasklet() {
     return new ClusterDataToBigQueryTasklet();
+  }
+
+  @Bean
+  public Tasklet billingDataGeneratedMailTasklet() {
+    return new BillingDataGeneratedMailTasklet();
+  }
+
+  @Bean
+  public Step billingDataGeneratedNotificationStep(StepBuilderFactory stepBuilderFactory) {
+    return stepBuilderFactory.get("billingDataGeneratedNotificationStep")
+        .tasklet(billingDataGeneratedMailTasklet())
+        .build();
   }
 
   @Bean
@@ -48,10 +61,12 @@ public class ClusterDataToBigQueryConfiguration {
   @Bean
   @Autowired
   @Qualifier(value = "clusterDataHourlyToBigQueryJob")
-  public Job clusterDataHourlyToBigQueryJob(JobBuilderFactory jobBuilderFactory, Step clusterDataHourlyToBigQueryStep) {
+  public Job clusterDataHourlyToBigQueryJob(JobBuilderFactory jobBuilderFactory, Step clusterDataHourlyToBigQueryStep,
+      Step billingDataGeneratedNotificationStep) {
     return jobBuilderFactory.get(BatchJobType.CLUSTER_DATA_HOURLY_TO_BIG_QUERY.name())
         .incrementer(new RunIdIncrementer())
         .start(clusterDataHourlyToBigQueryStep)
+        .next(billingDataGeneratedNotificationStep)
         .build();
   }
 

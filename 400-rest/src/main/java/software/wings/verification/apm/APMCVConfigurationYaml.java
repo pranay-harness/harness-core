@@ -16,7 +16,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-@TargetModule(HarnessModule._870_CG_YAML)
+@TargetModule(HarnessModule._955_CG_YAML)
 @OwnedBy(CV)
 @Data
 @Builder

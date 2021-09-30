@@ -60,7 +60,7 @@ public class NodeExecutionAncestorFunctor extends LateBindingMap {
 
     for (NodeExecution currNodeExecution = nodeExecutionsCache.fetch(nodeExecutionId); currNodeExecution != null;
          currNodeExecution = nodeExecutionsCache.fetch(currNodeExecution.getParentId())) {
-      if (!currNodeExecution.getNode().getSkipExpressionChain()
+      if (!currNodeExecution.getNode().isSkipExpressionChain()
           && key.equals(currNodeExecution.getNode().getIdentifier())) {
         return currNodeExecution;
       }

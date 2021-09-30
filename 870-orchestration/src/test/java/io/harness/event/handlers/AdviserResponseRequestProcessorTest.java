@@ -1,6 +1,5 @@
 package io.harness.event.handlers;
 
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.SAHIL;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -14,6 +13,7 @@ import io.harness.engine.OrchestrationEngine;
 import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.EndPlanAdvise;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.events.AdviserResponseRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
 import io.harness.pms.contracts.execution.events.SdkResponseEventType;
@@ -48,10 +48,8 @@ public class AdviserResponseRequestProcessorTest extends CategoryTest {
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
   public void testHandleAdviseEvent() {
-    String nodeExecutionId = generateUuid();
-    AdviserResponseRequest request = AdviserResponseRequest
-                                         .newBuilder()
-
+    Ambiance ambiance = Ambiance.newBuilder().build();
+    AdviserResponseRequest request = AdviserResponseRequest.newBuilder()
                                          .setAdviserResponse(AdviserResponse.newBuilder()
                                                                  .setType(AdviseType.END_PLAN)
                                                                  .setEndPlanAdvise(EndPlanAdvise.newBuilder().build())
@@ -59,17 +57,17 @@ public class AdviserResponseRequestProcessorTest extends CategoryTest {
                                          .build();
     SdkResponseEventProto sdkResponseEventProto =
         SdkResponseEventProto.newBuilder()
-            .setNodeExecutionId(nodeExecutionId)
+            .setAmbiance(ambiance)
             .setSdkResponseEventType(SdkResponseEventType.HANDLE_ADVISER_RESPONSE)
             .setAdviserResponseRequest(request)
             .build();
     adviserEventResponseHandler.handleEvent(sdkResponseEventProto);
 
-    ArgumentCaptor<String> idCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<Ambiance> ambianceCaptor = ArgumentCaptor.forClass(Ambiance.class);
     ArgumentCaptor<AdviserResponse> responseCaptor = ArgumentCaptor.forClass(AdviserResponse.class);
-    verify(orchestrationEngine).handleAdvise(idCaptor.capture(), responseCaptor.capture());
+    verify(orchestrationEngine).processAdviserResponse(ambianceCaptor.capture(), responseCaptor.capture());
 
-    assertThat(idCaptor.getValue()).isEqualTo(nodeExecutionId);
+    assertThat(ambianceCaptor.getValue()).isEqualTo(ambiance);
     assertThat(responseCaptor.getValue().getType()).isEqualTo(AdviseType.END_PLAN);
   }
 }

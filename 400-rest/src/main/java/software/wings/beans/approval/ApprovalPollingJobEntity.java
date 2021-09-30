@@ -5,7 +5,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static software.wings.beans.approval.ServiceNowApprovalParams.validateTimeWindow;
 
 import io.harness.annotation.HarnessEntity;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.index.FdIndex;
 import io.harness.persistence.AccountAccess;
@@ -13,6 +15,7 @@ import io.harness.persistence.AccountAccess;
 import software.wings.service.impl.servicenow.ServiceNowServiceImpl.ServiceNowTicketType;
 import software.wings.sm.states.ApprovalState.ApprovalStateType;
 
+import java.util.List;
 import java.util.Map;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -32,6 +35,7 @@ import org.mongodb.morphia.annotations.Id;
 @ToString(exclude = "scriptString")
 @Entity(value = "approvalPollingJob")
 @HarnessEntity(exportable = false)
+@TargetModule(HarnessModule._957_CG_BEANS)
 @Slf4j
 public class ApprovalPollingJobEntity implements PersistentRegularIterable, AccountAccess {
   String appId;
@@ -62,6 +66,7 @@ public class ApprovalPollingJobEntity implements PersistentRegularIterable, Acco
   String scriptString;
   String activityId;
   long retryInterval;
+  List<String> delegateSelectors;
 
   ApprovalStateType approvalType;
 

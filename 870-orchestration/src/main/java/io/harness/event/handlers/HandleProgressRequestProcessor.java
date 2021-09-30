@@ -8,6 +8,7 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.pms.contracts.execution.events.HandleProgressRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
+import io.harness.pms.execution.utils.SdkResponseEventUtils;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.google.inject.Inject;
@@ -23,7 +24,7 @@ public class HandleProgressRequestProcessor implements SdkResponseProcessor {
   public void handleEvent(SdkResponseEventProto event) {
     HandleProgressRequest progressRequest = event.getProgressRequest();
     Map<String, Object> progressDoc = RecastOrchestrationUtils.fromJson(progressRequest.getProgressJson());
-    nodeExecutionService.update(
-        event.getNodeExecutionId(), ops -> setUnset(ops, NodeExecutionKeys.progressData, progressDoc));
+    nodeExecutionService.update(SdkResponseEventUtils.getNodeExecutionId(event),
+        ops -> setUnset(ops, NodeExecutionKeys.progressData, progressDoc));
   }
 }

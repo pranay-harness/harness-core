@@ -106,7 +106,7 @@ public class GraphStatusUpdateHelper {
         .executableResponses(CollectionUtils.emptyIfNull(nodeExecution.getExecutableResponses()))
         .interruptHistories(nodeExecution.getInterruptHistories())
         .retryIds(nodeExecution.getRetryIds())
-        .skipType(nodeExecution.getNode().getSkipType())
+        .skipType(nodeExecution.getNode().getSkipGraphType())
         .unitProgresses(nodeExecution.getUnitProgresses())
         .progressData(nodeExecution.getPmsProgressData())
         .build();

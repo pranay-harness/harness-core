@@ -11,6 +11,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.pms.commons.events.PmsEventSender;
 import io.harness.execution.NodeExecution;
+import io.harness.plan.PlanNode;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
@@ -76,12 +77,12 @@ public class RedisNodeResumeEventPublisherTest extends OrchestrationTestBase {
             .startTs(System.currentTimeMillis())
             .build();
     resumeEventPublisher.publishEvent(nodeExecution, new HashMap<>(), false);
-
+    PlanNode planNode = nodeExecution.getNode();
     NodeResumeEvent nodeResumeEvent = NodeResumeEvent.newBuilder()
                                           .setAmbiance(nodeExecution.getAmbiance())
                                           .setExecutionMode(nodeExecution.getMode())
                                           .setStepParameters(nodeExecution.getResolvedStepParametersBytes())
-                                          .addAllRefObjects(nodeExecution.getNode().getRebObjectsList())
+                                          .addAllRefObjects(planNode.getRefObjects())
                                           .setAsyncError(false)
                                           .putAllResponse(new HashMap<>())
                                           .build();

@@ -24,7 +24,7 @@ import io.harness.cvng.beans.MonitoredServiceDataSourceType;
 import io.harness.cvng.beans.MonitoredServiceType;
 import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.client.NextGenService;
-import io.harness.cvng.core.beans.ChangeSummaryDTO;
+import io.harness.cvng.core.beans.change.ChangeSummaryDTO;
 import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.MetricPackDTO;

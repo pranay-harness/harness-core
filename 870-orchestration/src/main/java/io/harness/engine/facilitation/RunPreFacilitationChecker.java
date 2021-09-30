@@ -60,7 +60,7 @@ public class RunPreFacilitationChecker extends ExpressionEvalPreFacilitationChec
                   .setNodeRunInfo(
                       NodeRunInfo.newBuilder().setWhenCondition(whenCondition).setEvaluatedCondition(false).build())
                   .build();
-          orchestrationEngine.handleStepResponse(nodeExecution.getUuid(), response);
+          orchestrationEngine.processStepResponse(nodeExecution.getAmbiance(), response);
           return ExecutionCheck.builder().proceed(false).reason("When Condition Evaluated to false").build();
         }
         return ExecutionCheck.builder().proceed(true).reason("When Condition Evaluated to true").build();

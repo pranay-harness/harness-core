@@ -52,10 +52,10 @@ public class ChartMuseumClientImplTest extends WingsBaseTest {
     AmazonS3HelmRepoConfig s3HelmRepoConfig =
         AmazonS3HelmRepoConfig.builder().bucketName(bucketName).region(region).build();
 
-    chartMuseumClient.startChartMuseumServer(s3HelmRepoConfig, awsConfig, "resource-directory", basePath);
+    chartMuseumClient.startChartMuseumServer(s3HelmRepoConfig, awsConfig, "resource-directory", basePath, false);
 
     verify(clientHelper, times(1))
-        .startS3ChartMuseumServer(bucketName, basePath, region, true, accessKey, secretKey, true);
+        .startS3ChartMuseumServer(bucketName, basePath, region, true, accessKey, secretKey, true, false);
   }
 
   @Test
@@ -69,9 +69,9 @@ public class ChartMuseumClientImplTest extends WingsBaseTest {
     GcpConfig gcpConfig = GcpConfig.builder().serviceAccountKeyFileContent(serviceAccountKey).build();
     GCSHelmRepoConfig helmRepoConfig = GCSHelmRepoConfig.builder().bucketName(bucketName).build();
 
-    chartMuseumClient.startChartMuseumServer(helmRepoConfig, gcpConfig, resourceDirectory, basePath);
+    chartMuseumClient.startChartMuseumServer(helmRepoConfig, gcpConfig, resourceDirectory, basePath, false);
     verify(clientHelper, times(1))
-        .startGCSChartMuseumServer(bucketName, basePath, serviceAccountKey, resourceDirectory);
+        .startGCSChartMuseumServer(bucketName, basePath, serviceAccountKey, resourceDirectory, false);
   }
 
   @Test
@@ -85,8 +85,9 @@ public class ChartMuseumClientImplTest extends WingsBaseTest {
     AmazonS3HelmRepoConfig s3HelmRepoConfig =
         AmazonS3HelmRepoConfig.builder().bucketName(bucketName).region(region).build();
 
-    chartMuseumClient.startChartMuseumServer(s3HelmRepoConfig, awsConfig, "resource-directory", basePath);
+    chartMuseumClient.startChartMuseumServer(s3HelmRepoConfig, awsConfig, "resource-directory", basePath, false);
 
-    verify(clientHelper, times(1)).startS3ChartMuseumServer(bucketName, basePath, region, false, null, null, true);
+    verify(clientHelper, times(1))
+        .startS3ChartMuseumServer(bucketName, basePath, region, false, null, null, true, false);
   }
 }

@@ -3,7 +3,7 @@ package io.harness.cvng.cdng.services.impl;
 import io.harness.common.NGExpressionUtils;
 import io.harness.cvng.cdng.beans.CVNGStepType;
 import io.harness.cvng.cdng.services.api.CVNGStepService;
-import io.harness.pms.merger.helpers.YamlTemplateHelper;
+import io.harness.pms.merger.helpers.InputSetTemplateHelper;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
@@ -22,7 +22,7 @@ public class CVNGStepServiceImpl implements CVNGStepService {
         updateStageYamlWithDummyInputParam(stage.getField("stage").getNode());
       }
       String updatedPipelineYaml = YamlUtils.writeYamlString(pipeline);
-      String updatedTemplate = YamlTemplateHelper.createTemplateFromPipeline(updatedPipelineYaml);
+      String updatedTemplate = InputSetTemplateHelper.createTemplateFromPipeline(updatedPipelineYaml);
       if (updatedTemplate != null) {
         YamlField updatedTemplateField = YamlUtils.readTree(updatedTemplate);
         removeDummyFieldFromTemplate(updatedTemplateField);

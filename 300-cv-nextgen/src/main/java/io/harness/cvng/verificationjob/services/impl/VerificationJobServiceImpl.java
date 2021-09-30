@@ -292,13 +292,6 @@ public class VerificationJobServiceImpl implements VerificationJobService {
   }
 
   @Override
-  public VerificationJobDTO getDefaultHealthVerificationJobDTO(
-      String accountId, String orgIdentifier, String projectIdentifier) {
-    VerificationJob defaultJob = getDefaultHealthVerificationJob(accountId, orgIdentifier, projectIdentifier);
-    return defaultJob.getVerificationJobDTO();
-  }
-
-  @Override
   public VerificationJob fromDto(VerificationJobDTO verificationJobDTO) {
     Preconditions.checkNotNull(verificationJobDTO);
     VerificationJob job;

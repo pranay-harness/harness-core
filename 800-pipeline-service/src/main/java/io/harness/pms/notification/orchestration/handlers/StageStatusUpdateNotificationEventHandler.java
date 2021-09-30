@@ -42,7 +42,7 @@ public class StageStatusUpdateNotificationEventHandler implements AsyncInformObs
         || nodeExecution.getNode().getIdentifier().endsWith(OrchestrationConstants.ROLLBACK_NODE_NAME)) {
       return;
     }
-    if (!Objects.equals(nodeExecution.getNode().getSkipType(), SkipType.SKIP_NODE)
+    if (!Objects.equals(nodeExecution.getNode().getSkipGraphType(), SkipType.SKIP_NODE)
         && StatusUtils.brokeStatuses().contains(nodeExecution.getStatus())) {
       notificationHelper.sendNotification(
           nodeExecution.getAmbiance(), PipelineEventType.STEP_FAILED, nodeExecution, nodeUpdateInfo.getUpdatedTs());

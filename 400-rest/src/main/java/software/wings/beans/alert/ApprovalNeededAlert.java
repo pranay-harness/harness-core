@@ -1,6 +1,8 @@
 package software.wings.beans.alert;
 
 import io.harness.alert.AlertData;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.WorkflowType;
 
 import lombok.Builder;
@@ -11,6 +13,7 @@ import lombok.Data;
  */
 @Data
 @Builder
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class ApprovalNeededAlert implements AlertData {
   private String executionId;
   private String approvalId;

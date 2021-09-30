@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.data.OrchestrationMap;
+import io.harness.pms.data.stepparameters.PmsSecretSanitizer;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -16,6 +17,6 @@ public class OrchestrationMapSerializer extends JsonSerializer<OrchestrationMap>
   @Override
   public void serialize(OrchestrationMap orchestrationMap, JsonGenerator jsonGenerator,
       SerializerProvider serializerProvider) throws IOException {
-    jsonGenerator.writeRawValue(RecastOrchestrationUtils.toSimpleJson(orchestrationMap));
+    jsonGenerator.writeRawValue(PmsSecretSanitizer.sanitize(RecastOrchestrationUtils.toSimpleJson(orchestrationMap)));
   }
 }

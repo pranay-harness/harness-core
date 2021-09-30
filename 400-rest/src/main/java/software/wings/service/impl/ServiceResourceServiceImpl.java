@@ -41,6 +41,7 @@ import static software.wings.beans.command.CommandUnitType.COMMAND;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.beans.yaml.YamlConstants.APP_SETTINGS_FILE;
 import static software.wings.beans.yaml.YamlConstants.CONN_STRINGS_FILE;
+import static software.wings.beans.yaml.YamlConstants.EMPTY_SETTINGS_CONTENT;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.yaml.YamlHelper.trimYaml;
 
@@ -53,7 +54,6 @@ import static java.util.Comparator.comparingDouble;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
-import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -2860,8 +2860,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     createLocalApplicationManifest(service, AppManifestKind.AZURE_APP_SERVICE_MANIFEST);
 
-    createManifestFile(service, APP_SETTINGS_FILE, EMPTY, AppManifestKind.AZURE_APP_SERVICE_MANIFEST);
-    createManifestFile(service, CONN_STRINGS_FILE, EMPTY, AppManifestKind.AZURE_APP_SERVICE_MANIFEST);
+    createManifestFile(service, APP_SETTINGS_FILE, EMPTY_SETTINGS_CONTENT, AppManifestKind.AZURE_APP_SERVICE_MANIFEST);
+    createManifestFile(service, CONN_STRINGS_FILE, EMPTY_SETTINGS_CONTENT, AppManifestKind.AZURE_APP_SERVICE_MANIFEST);
   }
 
   private void createLocalApplicationManifest(Service service, AppManifestKind kind) {

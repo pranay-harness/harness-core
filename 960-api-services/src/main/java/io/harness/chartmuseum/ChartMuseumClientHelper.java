@@ -57,22 +57,23 @@ public class ChartMuseumClientHelper {
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
 
   public ChartMuseumServer startS3ChartMuseumServer(String bucket, String basePath, String region,
-      boolean useEc2IamCredentials, char[] accessKey, char[] secretKey, boolean useIRSA) throws Exception {
+      boolean useEc2IamCredentials, char[] accessKey, char[] secretKey, boolean useIRSA,
+      boolean useLatestChartMuseumVersion) throws Exception {
     Map<String, String> environment = getEnvForAwsConfig(accessKey, secretKey, useEc2IamCredentials, useIRSA);
     String evaluatedTemplate = AMAZON_S3_COMMAND_TEMPLATE.replace("${BUCKET_NAME}", bucket)
                                    .replace("${FOLDER_PATH}", basePath == null ? "" : basePath)
                                    .replace("${REGION}", region);
 
     StringBuilder builder = new StringBuilder(128);
-    builder.append(encloseWithQuotesIfNeeded(k8sGlobalConfigService.getChartMuseumPath()))
+    builder.append(encloseWithQuotesIfNeeded(k8sGlobalConfigService.getChartMuseumPath(useLatestChartMuseumVersion)))
         .append(' ')
         .append(evaluatedTemplate);
 
     return startServer(builder.toString(), environment);
   }
 
-  public ChartMuseumServer startGCSChartMuseumServer(
-      String bucket, String basePath, char[] serviceAccountKey, String resourceDirectory) throws Exception {
+  public ChartMuseumServer startGCSChartMuseumServer(String bucket, String basePath, char[] serviceAccountKey,
+      String resourceDirectory, boolean useLatestChartMuseumVersion) throws Exception {
     Map<String, String> environment = new HashMap<>();
     if (serviceAccountKey != null) {
       String credentialFilePath = writeGCSCredentialsFile(resourceDirectory, serviceAccountKey);
@@ -83,7 +84,7 @@ public class ChartMuseumClientHelper {
                                    .replace("${FOLDER_PATH}", basePath == null ? "" : basePath);
 
     StringBuilder builder = new StringBuilder(128);
-    builder.append(encloseWithQuotesIfNeeded(k8sGlobalConfigService.getChartMuseumPath()))
+    builder.append(encloseWithQuotesIfNeeded(k8sGlobalConfigService.getChartMuseumPath(useLatestChartMuseumVersion)))
         .append(' ')
         .append(evaluatedTemplate);
 

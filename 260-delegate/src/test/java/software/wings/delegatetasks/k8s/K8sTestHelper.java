@@ -33,6 +33,7 @@ public class K8sTestHelper {
   private static String primaryServiceYaml = "primaryService.yaml";
   private static String stageServiceYaml = "stageService.yaml";
   private static String namespaceYaml = "namespace.yaml";
+  private static String configMapPrunedYaml = "configMapPruned.yaml";
 
   public static KubernetesResource configMap() throws IOException {
     String yamlString = readFileContent(configMapYaml, resourcePath);
@@ -63,6 +64,11 @@ public class K8sTestHelper {
 
   public static KubernetesResource deployment() throws IOException {
     String yamlString = readFileContent(deploymentYaml, resourcePath);
+    return getKubernetesResourceFromSpec(yamlString);
+  }
+
+  public static KubernetesResource configMapPruned() throws IOException {
+    String yamlString = readFileContent(configMapPrunedYaml, resourcePath);
     return getKubernetesResourceFromSpec(yamlString);
   }
 

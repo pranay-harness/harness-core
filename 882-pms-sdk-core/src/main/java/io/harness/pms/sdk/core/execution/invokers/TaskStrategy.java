@@ -59,14 +59,13 @@ public class TaskStrategy extends ProgressableStrategy {
       log.error("Exception occurred while calling handleTaskResult", e);
       stepResponse = strategyHelper.handleException(e);
     }
-    sdkNodeExecutionService.handleStepResponse(ambiance.getPlanExecutionId(),
-        AmbianceUtils.obtainCurrentRuntimeId(ambiance), StepResponseMapper.toStepResponseProto(stepResponse));
+    sdkNodeExecutionService.handleStepResponse(ambiance, StepResponseMapper.toStepResponseProto(stepResponse));
   }
 
   private void handleResponse(@NonNull Ambiance ambiance, TaskRequest taskRequest) {
     String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
     if (RequestCase.SKIPTASKREQUEST == taskRequest.getRequestCase()) {
-      sdkNodeExecutionService.handleStepResponse(ambiance.getPlanExecutionId(), nodeExecutionId,
+      sdkNodeExecutionService.handleStepResponse(ambiance,
           StepResponseMapper.toStepResponseProto(
               StepResponse.builder()
                   .status(SKIPPED)
@@ -102,7 +101,7 @@ public class TaskStrategy extends ProgressableStrategy {
                                             .setExecutableResponse(executableResponse)
                                             .setStatus(TASK_WAITING)
                                             .build();
-    sdkNodeExecutionService.queueTaskRequest(ambiance.getPlanExecutionId(), nodeExecutionId, queueTaskRequest);
+    sdkNodeExecutionService.queueTaskRequest(ambiance, queueTaskRequest);
   }
 
   @Override

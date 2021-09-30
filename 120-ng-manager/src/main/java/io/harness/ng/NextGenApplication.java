@@ -37,6 +37,12 @@ import io.harness.connector.ConnectorDTO;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.gitsync.ConnectorGitSyncHelper;
 import io.harness.controller.PrimaryVersionChangeScheduler;
+import io.harness.enforcement.client.RestrictionUsageRegisterConfiguration;
+import io.harness.enforcement.client.example.ExampleUsageImpl;
+import io.harness.enforcement.client.services.EnforcementSdkRegisterService;
+import io.harness.enforcement.client.usage.RestrictionUsageInterface;
+import io.harness.enforcement.constants.FeatureRestrictionName;
+import io.harness.enforcement.services.FeatureRestrictionLoader;
 import io.harness.ff.FeatureFlagConfig;
 import io.harness.gitsync.AbstractGitSyncModule;
 import io.harness.gitsync.AbstractGitSyncSdkModule;
@@ -84,9 +90,9 @@ import io.harness.ng.migration.UserMetadataMigrationProvider;
 import io.harness.ng.webhook.services.api.WebhookEventProcessingService;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.persistence.HPersistence;
-import io.harness.pms.cdng.execution.expression.DummyFunctor;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.events.base.PipelineEventConsumerController;
+import io.harness.pms.expressions.functors.ImagePullSecretFunctor;
 import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
@@ -141,6 +147,7 @@ import software.wings.jersey.KryoFeature;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
@@ -335,6 +342,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerObservers(injector);
     registerOasResource(appConfig, environment, injector);
     registerManagedBeans(environment, injector);
+    initializeEnforcementService(injector, appConfig);
+    initializeEnforcementSdk(injector);
 
     registerMigrations(injector);
     MaintenanceController.forceMaintenance(false);
@@ -482,7 +491,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
       try {
         PmsSdkInitHelper.initializeSDKInstance(injector, sdkConfig);
       } catch (Exception e) {
-        log.error("Failed To register pipeline sdk");
+        log.error("Failed To register pipeline sdk", e);
         System.exit(1);
       }
     }
@@ -526,8 +535,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
 
   private Map<String, Class<? extends SdkFunctor>> getSdkFunctors() {
     Map<String, Class<? extends SdkFunctor>> sdkFunctorMap = new HashMap<>();
-    // For testing. Do not remove.
-    sdkFunctorMap.put("dummy", DummyFunctor.class);
+    sdkFunctorMap.put(ImagePullSecretFunctor.IMAGE_PULL_SECRET, ImagePullSecretFunctor.class);
     return sdkFunctorMap;
   }
 
@@ -723,5 +731,21 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
                && resourceInfoAndRequest.getKey().getResourceMethod().getAnnotation(annotation) != null)
         || (resourceInfoAndRequest.getKey().getResourceClass() != null
             && resourceInfoAndRequest.getKey().getResourceClass().getAnnotation(annotation) != null);
+  }
+
+  private void initializeEnforcementService(Injector injector, NextGenConfiguration configuration) {
+    injector.getInstance(FeatureRestrictionLoader.class).run(configuration);
+  }
+
+  private void initializeEnforcementSdk(Injector injector) {
+    RestrictionUsageRegisterConfiguration restrictionUsageRegisterConfiguration =
+        RestrictionUsageRegisterConfiguration.builder()
+            .restrictionNameClassMap(
+                ImmutableMap.<FeatureRestrictionName, Class<? extends RestrictionUsageInterface>>builder()
+                    .put(FeatureRestrictionName.TEST2, ExampleUsageImpl.class)
+                    .put(FeatureRestrictionName.TEST3, ExampleUsageImpl.class)
+                    .build())
+            .build();
+    injector.getInstance(EnforcementSdkRegisterService.class).initialize(restrictionUsageRegisterConfiguration);
   }
 }

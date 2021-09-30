@@ -7,7 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 @OwnedBy(DX)
-@TargetModule(HarnessModule._870_CG_YAML)
+@TargetModule(HarnessModule._955_CG_YAML)
 public class YamlConstants {
   public static final String PATH_DELIMITER = "/";
   public static final String YAML_EXTENSION = "yaml";

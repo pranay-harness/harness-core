@@ -168,4 +168,5 @@ enum DataFetcherEnum {
   deploymentFreezeWindow
   deploymentFreezeWindowConnection
   toggleDeploymentFreezeWindow
+  templateList
 }

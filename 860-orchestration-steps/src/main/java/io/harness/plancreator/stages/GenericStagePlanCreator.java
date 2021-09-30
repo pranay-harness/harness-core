@@ -89,9 +89,13 @@ public abstract class GenericStagePlanCreator extends ChildrenPlanCreator<StageE
         .build();
   }
 
+  /**
+   * Adds the nextStepAdviser to the given node if it is not the end stage
+   */
   private List<AdviserObtainment> getAdviserObtainmentFromMetaData(YamlField stageField) {
     List<AdviserObtainment> adviserObtainments = new ArrayList<>();
     if (stageField != null && stageField.getNode() != null) {
+      // if parent is parallel, then we need not add nextStepAdvise as all the executions will happen in parallel
       if (stageField.checkIfParentIsParallel(STAGES)) {
         return adviserObtainments;
       }
