@@ -1056,3 +1056,9 @@ clusterDataAggregatedFields = [{'mode': 'REQUIRED', 'name': 'starttime', 'type':
                                    "name": "labels",
                                    "type": "RECORD"
                                }] # Added manually
+
+costAggregatedSchema = [{'mode': 'REQUIRED', 'name': 'accountId', 'type': 'STRING'},
+                  {'mode': 'REQUIRED', 'name': 'cloudProvider', 'type': 'STRING'},
+                  {'mode': 'REQUIRED', 'name': 'cost', 'type': 'FLOAT'},
+                  {'mode': 'REQUIRED', 'name': 'day', 'type': 'TIMESTAMP'}
+                  ]
