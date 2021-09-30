@@ -1,5 +1,8 @@
 package software.wings.service.intfc.stackdriver;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
+
 import software.wings.beans.GcpConfig;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateTaskType;
@@ -20,6 +23,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by Pranjal on 11/27/2018
  */
+@TargetModule(HarnessModule._910_DELEGATE_SERVICE_DRIVER)
 public interface StackDriverDelegateService {
   @DelegateTaskType(TaskType.STACKDRIVER_METRIC_DATA_FOR_NODE)
   VerificationNodeDataSetupResponse getMetricsWithDataForNode(@NotNull StackdriverGcpConfigTaskParams taskParams,

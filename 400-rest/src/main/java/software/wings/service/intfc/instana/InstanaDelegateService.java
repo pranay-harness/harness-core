@@ -1,5 +1,7 @@
 package software.wings.service.intfc.instana;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.InstanaConfig;
@@ -14,6 +16,7 @@ import software.wings.service.impl.instana.InstanaInfraMetrics;
 
 import java.util.List;
 
+@TargetModule(HarnessModule._910_DELEGATE_SERVICE_DRIVER)
 public interface InstanaDelegateService {
   @DelegateTaskType(TaskType.INSTANA_GET_INFRA_METRICS)
   InstanaInfraMetrics getInfraMetrics(InstanaConfig instanaConfig, List<EncryptedDataDetail> encryptionDetails,

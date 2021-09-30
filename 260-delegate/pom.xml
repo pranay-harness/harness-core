@@ -71,10 +71,6 @@
             <artifactId>client-java-extended</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.atmosphere</groupId>
-            <artifactId>wasync</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.powermock</groupId>
             <artifactId>powermock-api-mockito</artifactId>
         </dependency>

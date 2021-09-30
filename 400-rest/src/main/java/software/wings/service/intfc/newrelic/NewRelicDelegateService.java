@@ -1,5 +1,7 @@
 package software.wings.service.intfc.newrelic;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.NewRelicConfig;
@@ -23,6 +25,7 @@ import javax.validation.constraints.NotNull;
 /**
  * Created by rsingh on 8/28/17.
  */
+@TargetModule(HarnessModule._910_DELEGATE_SERVICE_DRIVER)
 public interface NewRelicDelegateService {
   @DelegateTaskType(TaskType.NEWRELIC_VALIDATE_CONFIGURATION_TASK)
   boolean validateConfig(@NotNull NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails);

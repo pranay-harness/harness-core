@@ -23,6 +23,7 @@ java_library(
         "//959-file-service-commons:module",
         "//960-api-services:module",
         "//960-expression-service:module",
+        "//960-persistence:module",
         "//970-api-services-beans:module",
         "//970-grpc:module",
         "//970-ng-commons:module",
@@ -37,6 +38,7 @@ java_library(
         "@maven//:com_squareup_okhttp3_okhttp",
         "@maven//:com_squareup_retrofit2_converter_jackson",
         "@maven//:com_squareup_retrofit2_retrofit",
+        "@maven//:org_eclipse_jetty_websocket_websocket_client",
     ],
 )
 

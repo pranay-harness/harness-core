@@ -1,5 +1,7 @@
 package software.wings.service.intfc.sumo;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.SumoConfig;
@@ -17,6 +19,7 @@ import javax.validation.constraints.NotNull;
  *
  * Created by sriram_parthasarathy on 9/11/17.
  */
+@TargetModule(HarnessModule._910_DELEGATE_SERVICE_DRIVER)
 public interface SumoDelegateService {
   /**
    * Method to validate sumo Logic configuration.
