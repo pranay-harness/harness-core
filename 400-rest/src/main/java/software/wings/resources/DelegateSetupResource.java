@@ -141,8 +141,8 @@ public class DelegateSetupResource {
   @Path("status")
   @Timed
   @ExceptionMetered
-  @Deprecated
   @AuthRule(permissionType = LOGGED_IN)
+  @Deprecated
   public RestResponse<DelegateStatus> listDelegateStatus(@QueryParam("accountId") @NotEmpty String accountId) {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       return new RestResponse<>(delegateService.getDelegateStatus(accountId));
