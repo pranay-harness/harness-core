@@ -306,7 +306,7 @@ public class PipelineResource implements YamlSchemaResource {
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("10") int size,
       @QueryParam("sort") List<String> sort, @QueryParam("filterIdentifier") String filterIdentifier,
       @QueryParam("module") String moduleName, FilterPropertiesDTO filterProperties,
-      @QueryParam("status") ExecutionStatus status, @QueryParam("myDeployments") boolean myDeployments,
+      @QueryParam("status") List<ExecutionStatus> statusesList, @QueryParam("myDeployments") boolean myDeployments,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     log.info("Get List of executions");
     ByteString gitSyncBranchContext = pmsGitSyncHelper.getGitSyncBranchContextBytesThreadLocal();
@@ -315,7 +315,7 @@ public class PipelineResource implements YamlSchemaResource {
       gitSyncBranchContext = null;
     }
     Criteria criteria = pmsExecutionService.formCriteria(accountId, orgId, projectId, pipelineIdentifier,
-        filterIdentifier, (PipelineExecutionFilterPropertiesDTO) filterProperties, moduleName, searchTerm, status,
+        filterIdentifier, (PipelineExecutionFilterPropertiesDTO) filterProperties, moduleName, searchTerm, statusesList,
         myDeployments, false, gitSyncBranchContext);
     Pageable pageRequest;
     if (EmptyPredicate.isEmpty(sort)) {

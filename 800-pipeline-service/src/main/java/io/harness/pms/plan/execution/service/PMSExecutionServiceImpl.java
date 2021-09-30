@@ -49,6 +49,7 @@ import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
 import com.mongodb.client.result.UpdateResult;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
@@ -78,7 +79,7 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
   @Override
   public Criteria formCriteria(String accountId, String orgId, String projectId, String pipelineIdentifier,
       String filterIdentifier, PipelineExecutionFilterPropertiesDTO filterProperties, String moduleName,
-      String searchTerm, ExecutionStatus status, boolean myDeployments, boolean pipelineDeleted,
+      String searchTerm, List<ExecutionStatus> statusList, boolean myDeployments, boolean pipelineDeleted,
       ByteString gitSyncBranchContext) {
     Criteria criteria = new Criteria();
     if (EmptyPredicate.isNotEmpty(accountId)) {
@@ -93,8 +94,8 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
     if (EmptyPredicate.isNotEmpty(pipelineIdentifier)) {
       criteria.and(PlanExecutionSummaryKeys.pipelineIdentifier).is(pipelineIdentifier);
     }
-    if (status != null) {
-      criteria.and(PlanExecutionSummaryKeys.status).is(status);
+    if (EmptyPredicate.isNotEmpty(statusList)) {
+      criteria.and(PlanExecutionSummaryKeys.status).in(statusList);
     }
     criteria.and(PlanExecutionSummaryKeys.pipelineDeleted).ne(!pipelineDeleted);
 
