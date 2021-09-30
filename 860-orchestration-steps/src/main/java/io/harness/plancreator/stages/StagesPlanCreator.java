@@ -17,7 +17,7 @@ import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
-import io.harness.steps.common.NGSectionStep;
+import io.harness.steps.StagesStep;
 import io.harness.steps.common.NGSectionStepParameters;
 
 import java.util.ArrayList;
@@ -86,7 +86,7 @@ public class StagesPlanCreator extends ChildrenPlanCreator<StagesConfig> {
     return PlanNode.builder()
         .uuid(ctx.getCurrentField().getNode().getUuid())
         .identifier(YAMLFieldNameConstants.STAGES)
-        .stepType(NGSectionStep.STEP_TYPE)
+        .stepType(StagesStep.STEP_TYPE)
         .group(StepOutcomeGroup.STAGES.name())
         .name(YAMLFieldNameConstants.STAGES)
         .stepParameters(stepParameters)

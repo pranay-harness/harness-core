@@ -11,10 +11,11 @@ trigger:
     type: Artifact
     spec:
         stageIdentifier: dev
-        artifactRef: primaryArtifactref
-        type: GCR
+        artifactRef: primary
+        type: Gcr
         spec:
           connectorRef: "gcpConnector"
+          iamgePath: image
           registryHostname: "us.gcr.io"
           eventConditions:
             - key: build

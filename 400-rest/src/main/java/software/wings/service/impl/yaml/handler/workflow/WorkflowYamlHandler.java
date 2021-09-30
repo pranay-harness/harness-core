@@ -75,7 +75,7 @@ import lombok.Data;
  * @author rktummala on 10/27/17
  */
 @OwnedBy(CDC)
-@TargetModule(HarnessModule._870_CG_YAML)
+@TargetModule(HarnessModule._955_CG_YAML)
 public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYamlHandler<Y, Workflow> {
   @Inject WorkflowService workflowService;
   @Inject YamlHelper yamlHelper;

@@ -3,7 +3,7 @@
  */
 package io.harness.timescaledb.tables;
 
-import io.harness.timescaledb.Keys;
+import io.harness.timescaledb.Indexes;
 import io.harness.timescaledb.Public;
 import io.harness.timescaledb.tables.records.PodInfoRecord;
 
@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
+import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Row13;
@@ -19,7 +20,6 @@ import org.jooq.Schema;
 import org.jooq.Table;
 import org.jooq.TableField;
 import org.jooq.TableOptions;
-import org.jooq.UniqueKey;
 import org.jooq.impl.DSL;
 import org.jooq.impl.SQLDataType;
 import org.jooq.impl.TableImpl;
@@ -162,8 +162,8 @@ public class PodInfo extends TableImpl<PodInfoRecord> {
   }
 
   @Override
-  public List<UniqueKey<PodInfoRecord>> getKeys() {
-    return Arrays.<UniqueKey<PodInfoRecord>>asList(Keys.POD_INFO_UNIQUE_RECORD_INDEX);
+  public List<Index> getIndexes() {
+    return Arrays.<Index>asList(Indexes.POD_INFO_STARTTIME_IDX, Indexes.POD_INFO_STARTTIME_UNIQUE_RECORD_INDEX);
   }
 
   @Override

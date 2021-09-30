@@ -1,5 +1,7 @@
 package io.harness.cvng.core.entities;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.mongo.index.CompoundMongoIndex;
@@ -19,6 +21,7 @@ import com.google.common.collect.ImmutableList;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import lombok.Builder;
@@ -61,4 +64,12 @@ public final class HostRecord implements PersistentEntity, UuidAware, CreatedAtA
   @Builder.Default
   @FdTtlIndex
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
+
+  public Set<String> getHosts() {
+    if (isNotEmpty(hosts)) {
+      return hosts;
+    } else {
+      return new HashSet<>();
+    }
+  }
 }

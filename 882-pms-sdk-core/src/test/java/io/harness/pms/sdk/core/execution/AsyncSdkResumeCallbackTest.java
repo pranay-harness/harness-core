@@ -7,6 +7,8 @@ import static org.mockito.Mockito.verify;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.sdk.core.PmsSdkCoreTestBase;
 import io.harness.rule.Owner;
 
@@ -23,13 +25,17 @@ public class AsyncSdkResumeCallbackTest extends PmsSdkCoreTestBase {
 
   @Mock SdkNodeExecutionService sdkNodeExecutionService;
   AsyncSdkResumeCallback asyncSdkResumeCallback;
+  Ambiance ambiance;
 
   @Before
   public void setup() {
+    ambiance = Ambiance.newBuilder()
+                   .setPlanExecutionId(PLAN_EXECUTION_ID)
+                   .addLevels(Level.newBuilder().setRuntimeId(NODE_EXECUTION_ID).build())
+                   .build();
     asyncSdkResumeCallback = AsyncSdkResumeCallback.builder()
                                  .sdkNodeExecutionService(sdkNodeExecutionService)
-                                 .nodeExecutionId(NODE_EXECUTION_ID)
-                                 .planExecutionId(PLAN_EXECUTION_ID)
+                                 .ambianceBytes(ambiance.toByteArray())
                                  .build();
   }
 
@@ -38,7 +44,7 @@ public class AsyncSdkResumeCallbackTest extends PmsSdkCoreTestBase {
   @Category(UnitTests.class)
   public void testNotify() {
     asyncSdkResumeCallback.notify(new HashMap<>());
-    verify(sdkNodeExecutionService).resumeNodeExecution(PLAN_EXECUTION_ID, NODE_EXECUTION_ID, new HashMap<>(), false);
+    verify(sdkNodeExecutionService).resumeNodeExecution(ambiance, new HashMap<>(), false);
   }
 
   @Test
@@ -46,6 +52,6 @@ public class AsyncSdkResumeCallbackTest extends PmsSdkCoreTestBase {
   @Category(UnitTests.class)
   public void testNotifyError() {
     asyncSdkResumeCallback.notifyError(new HashMap<>());
-    verify(sdkNodeExecutionService).resumeNodeExecution(PLAN_EXECUTION_ID, NODE_EXECUTION_ID, new HashMap<>(), true);
+    verify(sdkNodeExecutionService).resumeNodeExecution(ambiance, new HashMap<>(), true);
   }
 }

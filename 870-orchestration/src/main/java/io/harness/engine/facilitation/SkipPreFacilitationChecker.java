@@ -44,7 +44,7 @@ public class SkipPreFacilitationChecker extends ExpressionEvalPreFacilitationChe
                   .setSkipInfo(
                       SkipInfo.newBuilder().setSkipCondition(skipCondition).setEvaluatedCondition(true).build())
                   .build();
-          orchestrationEngine.handleStepResponse(nodeExecution.getUuid(), response);
+          orchestrationEngine.processStepResponse(nodeExecution.getAmbiance(), response);
           return ExecutionCheck.builder().proceed(false).reason("Skip Condition Evaluated to true").build();
         }
         return ExecutionCheck.builder().proceed(true).reason("Skip Condition Evaluated to false").build();

@@ -22,7 +22,7 @@ public class K8sGlobalConfigServiceUnsupported implements K8sGlobalConfigService
   }
 
   @Override
-  public String getChartMuseumPath() {
+  public String getChartMuseumPath(boolean useLatestVersion) {
     throw new UnsupportedOperationException(UNSUPPORTED_OPERATION_MSG);
   }
 

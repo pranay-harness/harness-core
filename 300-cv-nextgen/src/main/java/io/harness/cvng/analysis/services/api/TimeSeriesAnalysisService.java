@@ -39,5 +39,8 @@ public interface TimeSeriesAnalysisService {
   List<TransactionMetricRisk> getTopTimeSeriesTransactionMetricRisk(
       List<String> verificationTaskIds, Instant startTime, Instant endTime);
 
+  List<TimeSeriesRiskSummary> getRiskSummariesByTimeRange(
+      String verificationTaskId, Instant startTime, Instant endTime);
+
   void saveShortTermHistory(TimeSeriesShortTermHistory shortTermHistory);
 }

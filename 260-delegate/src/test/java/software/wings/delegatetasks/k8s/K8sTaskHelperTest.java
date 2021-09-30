@@ -41,6 +41,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
@@ -56,6 +57,7 @@ import io.harness.beans.FileContentBatchResponse;
 import io.harness.beans.FileData;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.k8s.beans.K8sHandlerConfig;
 import io.harness.delegate.k8s.kustomize.KustomizeTaskHelper;
 import io.harness.delegate.k8s.openshift.OpenShiftDelegateService;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
@@ -66,6 +68,7 @@ import io.harness.delegate.task.scm.ScmDelegateClient;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.HelmClientException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
 import io.harness.git.model.GitFile;
@@ -100,9 +103,11 @@ import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.delegatetasks.ScmFetchFilesHelper;
 import software.wings.delegatetasks.helm.HelmTaskHelper;
 import software.wings.exception.ShellScriptException;
+import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.helm.HelmHelper;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.k8s.request.K8sApplyTaskParameters;
+import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sDeleteTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sRollingDeployRollbackTaskParameters;
@@ -161,6 +166,7 @@ public class K8sTaskHelperTest extends CategoryTest {
   @Mock private ScmFetchFilesHelper scmFetchFilesHelper;
   @Mock private ScmDelegateClient scmDelegateClient;
   @Mock private ScmServiceClient scmServiceClient;
+  @Mock private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
 
   private static final String REPO_URL = "helm-url";
   private String resourcePath = "k8s";
@@ -276,13 +282,14 @@ public class K8sTaskHelperTest extends CategoryTest {
         .isTrue();
 
     verify(mockGitService, times(1))
-        .downloadFiles(eq(GitConfig.builder().repoUrl(REPO_URL).build()), any(GitFileConfig.class), eq("./dir"));
+        .downloadFiles(
+            eq(GitConfig.builder().repoUrl(REPO_URL).build()), any(GitFileConfig.class), eq("./dir"), eq(false));
     verify(mockEncryptionService, times(1)).decrypt(any(), anyList(), eq(false));
 
     // handle exception
     doThrow(new RuntimeException())
         .when(mockGitService)
-        .downloadFiles(any(GitConfig.class), any(GitFileConfig.class), anyString());
+        .downloadFiles(any(GitConfig.class), any(GitFileConfig.class), anyString(), eq(false));
     assertThat(
         spyHelper.fetchManifestFilesAndWriteToDirectory(
             K8sDelegateManifestConfig.builder()
@@ -333,7 +340,8 @@ public class K8sTaskHelperTest extends CategoryTest {
 
     verify(scmDelegateClient, times(1)).processScmRequest(any());
     verify(mockGitService, times(0))
-        .downloadFiles(eq(GitConfig.builder().repoUrl(REPO_URL).build()), any(GitFileConfig.class), eq("./dir"));
+        .downloadFiles(
+            eq(GitConfig.builder().repoUrl(REPO_URL).build()), any(GitFileConfig.class), eq("./dir"), eq(false));
     verify(mockEncryptionService, times(1)).decrypt(any(), anyList(), eq(false));
 
     // handle exception
@@ -402,7 +410,8 @@ public class K8sTaskHelperTest extends CategoryTest {
 
     verify(scmDelegateClient, times(1)).processScmRequest(any());
     verify(mockGitService, times(0))
-        .downloadFiles(eq(GitConfig.builder().repoUrl(REPO_URL).build()), any(GitFileConfig.class), eq("./dir"));
+        .downloadFiles(
+            eq(GitConfig.builder().repoUrl(REPO_URL).build()), any(GitFileConfig.class), eq("./dir"), eq(false));
     verify(mockEncryptionService, times(1)).decrypt(any(), anyList(), eq(false));
 
     reset(mockGitService);
@@ -455,7 +464,8 @@ public class K8sTaskHelperTest extends CategoryTest {
 
     verify(scmDelegateClient, times(2)).processScmRequest(any());
     verify(mockGitService, times(0))
-        .downloadFiles(eq(GitConfig.builder().repoUrl(REPO_URL).build()), any(GitFileConfig.class), eq("./dir"));
+        .downloadFiles(
+            eq(GitConfig.builder().repoUrl(REPO_URL).build()), any(GitFileConfig.class), eq("./dir "), eq(false));
     verify(mockEncryptionService, times(1)).decrypt(any(), anyList(), eq(false));
 
     reset(mockGitService);
@@ -1122,5 +1132,41 @@ public class K8sTaskHelperTest extends CategoryTest {
         helper.getResourcesFromManifests(params, config, "manifestDir", singletonList("file.yaml"),
             singletonList("values.yaml"), "release", "default", new ExecutionLogCallback(), k8sTaskParameters, false);
     assertThat(resources).isNotEmpty();
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testRestore() {
+    KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
+    List<KubernetesResource> kubernetesResources = new ArrayList<>();
+    K8sClusterConfig clusterConfig = K8sClusterConfig.builder().build();
+    K8sDelegateTaskParams k8sDelegateTaskParams = K8sDelegateTaskParams.builder().build();
+    K8sHandlerConfig k8sHandlerConfig = new K8sHandlerConfig();
+    ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
+    doReturn(kubernetesConfig).when(containerDeploymentDelegateHelper).getKubernetesConfig(any(), anyBoolean());
+    boolean result = helper.restore(
+        kubernetesResources, clusterConfig, k8sDelegateTaskParams, k8sHandlerConfig, executionLogCallback);
+    assertThat(result).isTrue();
+    assertThat(k8sHandlerConfig.getResources()).isEqualTo(kubernetesResources);
+    assertThat(k8sHandlerConfig.getKubernetesConfig()).isEqualTo(kubernetesConfig);
+    assertThat(k8sHandlerConfig.getClient()).isNotNull();
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testRestoreFails() {
+    List<KubernetesResource> kubernetesResources = new ArrayList<>();
+    K8sClusterConfig clusterConfig = K8sClusterConfig.builder().build();
+    K8sDelegateTaskParams k8sDelegateTaskParams = K8sDelegateTaskParams.builder().build();
+    K8sHandlerConfig k8sHandlerConfig = new K8sHandlerConfig();
+    ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
+    doThrow(new InvalidRequestException(""))
+        .when(containerDeploymentDelegateHelper)
+        .getKubernetesConfig(any(), anyBoolean());
+    boolean result = helper.restore(
+        kubernetesResources, clusterConfig, k8sDelegateTaskParams, k8sHandlerConfig, executionLogCallback);
+    assertThat(result).isFalse();
   }
 }

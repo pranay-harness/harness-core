@@ -33,6 +33,7 @@ public class DelegateDetailsServiceGrpcImpl extends DelegateDetailsServiceImplBa
       final long delegateGroupCount = delegateSetupService.getDelegateGroupCount(accountId, orgId, projectId);
 
       responseObserver.onNext(DelegateCountResponse.newBuilder().setDelegateCount(delegateGroupCount).build());
+      responseObserver.onCompleted();
     } catch (final Exception e) {
       log.error("Unexpected error occurred while getting the number of delegates.", e);
       responseObserver.onError(Status.fromThrowable(e).asRuntimeException());

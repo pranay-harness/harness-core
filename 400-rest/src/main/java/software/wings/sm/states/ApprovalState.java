@@ -46,6 +46,7 @@ import io.harness.beans.SweepingOutputInstance.Scope;
 import io.harness.beans.TriggeredBy;
 import io.harness.beans.WorkflowType;
 import io.harness.context.ContextElementType;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.ExceptionUtils;
@@ -136,6 +137,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldNameConstants;
@@ -462,6 +464,8 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
   private ExecutionResponse executeShellScriptApproval(ExecutionContext context, String accountId, String appId,
       String approvalId, ShellScriptApprovalParams parameters, ApprovalStateExecutionData executionData) {
     parameters.setScriptString(context.renderExpression(parameters.getScriptString()));
+    parameters.setDelegateSelectors(getDelegateSelectors(context, parameters.fetchDelegateSelectors()));
+
     String activityId = createActivity(context);
     executionData.setActivityId(activityId);
 
@@ -476,6 +480,7 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
             .workflowExecutionId(context.getWorkflowExecutionId())
             .activityId(activityId)
             .scriptString(parameters.getScriptString())
+            .delegateSelectors(parameters.fetchDelegateSelectors())
             .approvalType(approvalStateType)
             .retryInterval(parameters.getRetryInterval())
             .build();
@@ -603,6 +608,18 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
               .errorMessage("Failed to schedule Approval" + e.getMessage())
               .stateExecutionData(executionData));
     }
+  }
+
+  @NotNull
+  private List<String> getDelegateSelectors(ExecutionContext context, List<String> delegateSelectors) {
+    List<String> renderedSelectorsSet = new ArrayList<>();
+
+    if (EmptyPredicate.isNotEmpty(delegateSelectors)) {
+      for (String selector : delegateSelectors) {
+        renderedSelectorsSet.add(context.renderExpression(selector));
+      }
+    }
+    return renderedSelectorsSet;
   }
 
   private void validateRequiredFields(ExecutionContext context, JiraApprovalParams jiraApprovalParams) {
@@ -1382,5 +1399,13 @@ public class ApprovalState extends State implements SweepingOutputStateMixin {
       default:
         unhandled(workflowType);
     }
+  }
+
+  @Override
+  public boolean isSelectionLogsTrackingForTasksEnabled() {
+    if (approvalStateType == ApprovalStateType.SHELL_SCRIPT) {
+      return true;
+    }
+    return false;
   }
 }

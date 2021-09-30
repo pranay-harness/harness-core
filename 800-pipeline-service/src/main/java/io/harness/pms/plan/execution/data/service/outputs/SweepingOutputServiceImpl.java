@@ -1,20 +1,27 @@
 package io.harness.pms.plan.execution.data.service.outputs;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.pms.data.PmsSweepingOutputService;
 import io.harness.engine.pms.data.RawOptionalSweepingOutput;
 import io.harness.pms.contracts.service.OptionalSweepingOutputResolveBlobResponse;
 import io.harness.pms.contracts.service.OptionalSweepingOutputResolveBlobResponse.Builder;
 import io.harness.pms.contracts.service.SweepingOutputConsumeBlobRequest;
 import io.harness.pms.contracts.service.SweepingOutputConsumeBlobResponse;
+import io.harness.pms.contracts.service.SweepingOutputListRequest;
+import io.harness.pms.contracts.service.SweepingOutputListResponse;
 import io.harness.pms.contracts.service.SweepingOutputResolveBlobRequest;
 import io.harness.pms.contracts.service.SweepingOutputResolveBlobResponse;
 import io.harness.pms.contracts.service.SweepingOutputServiceGrpc.SweepingOutputServiceImplBase;
 
 import com.google.inject.Inject;
 import io.grpc.stub.StreamObserver;
+import java.util.ArrayList;
+import java.util.List;
 
 // TODO (prashant) : Right now this is acting just as a wrapper for #PmsSweepingOutputService. It also mark the module
 // for understanding. Merge the two later
+@OwnedBy(HarnessTeam.PIPELINE)
 public class SweepingOutputServiceImpl extends SweepingOutputServiceImplBase {
   private final PmsSweepingOutputService pmsSweepingOutputService;
 
@@ -35,6 +42,28 @@ public class SweepingOutputServiceImpl extends SweepingOutputServiceImplBase {
     }
 
     responseObserver.onNext(builder.build());
+    responseObserver.onCompleted();
+  }
+
+  @Override
+  public void listOutputsUsingNodeIds(
+      SweepingOutputListRequest request, StreamObserver<SweepingOutputListResponse> responseObserver) {
+    List<RawOptionalSweepingOutput> resolve = pmsSweepingOutputService.findOutputsUsingNodeId(
+        request.getAmbiance(), request.getName(), request.getNodeIdsList());
+
+    List<OptionalSweepingOutputResolveBlobResponse> optionalSweepingOutputResolveBlobResponses = new ArrayList<>();
+    for (RawOptionalSweepingOutput rawOptionalSweepingOutput : resolve) {
+      Builder builder =
+          OptionalSweepingOutputResolveBlobResponse.newBuilder().setFound(rawOptionalSweepingOutput.isFound());
+      if (rawOptionalSweepingOutput.isFound()) {
+        builder.setStepTransput(rawOptionalSweepingOutput.getOutput());
+      }
+      optionalSweepingOutputResolveBlobResponses.add(builder.build());
+    }
+
+    responseObserver.onNext(SweepingOutputListResponse.newBuilder()
+                                .addAllSweepingOutputResolveBlobResponses(optionalSweepingOutputResolveBlobResponses)
+                                .build());
     responseObserver.onCompleted();
   }
 

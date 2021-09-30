@@ -30,6 +30,7 @@ public interface LogAnalysisService {
   List<LogAnalysisCluster> getAnalysisClusters(String verificationTaskId, Set<Long> labels);
   List<LogAnalysisResult> getAnalysisResults(
       String verificationTaskId, List<LogAnalysisTag> tags, Instant startTime, Instant endTime);
+  List<LogAnalysisResult> getAnalysisResults(String verificationTaskId, Instant startTime, Instant endTime);
   void saveAnalysis(String learningEngineTaskId, DeploymentLogAnalysisDTO deploymentLogAnalysisDTO);
   void logDeploymentVerificationProgress(AnalysisInput inputs, AnalysisStatus finalStatus);
 

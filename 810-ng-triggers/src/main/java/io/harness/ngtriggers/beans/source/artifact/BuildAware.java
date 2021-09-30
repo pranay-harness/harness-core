@@ -8,4 +8,5 @@ import io.harness.annotations.dev.OwnedBy;
 public interface BuildAware {
   String fetchStageRef();
   String fetchbuildRef();
+  String fetchBuildType();
 }

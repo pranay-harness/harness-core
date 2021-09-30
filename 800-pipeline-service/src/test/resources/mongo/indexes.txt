@@ -78,6 +78,7 @@ interrupts {"name": "planExecutionId_createdAt_idx", "background": true} {"planE
 interrupts {"name": "planExecutionId_nodeExecutionId_createdAt_idx", "background": true} {"planExecutionId": 1, "nodeExecutionId": 1, "createdAt": -1}
 interrupts {"name": "planExecutionId_state_type_createdAt_idx", "background": true} {"planExecutionId": 1, "state": 1, "type": 1, "createdAt": -1}
 interrupts {"name": "state_type_monitoring_createdAt_idx", "background": true} {"state": 1, "type": 1, "createdAt": -1}
+interrupts {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 kmsTransitionEvent2 {"name": "earliestGet_1", "background": true, "expireAfterSeconds": 86400} {"earliestGet": 1}
 kmsTransitionEvent2 {"name": "next4", "background": true} {"topic": 1, "earliestGet": 1}
 nodeExecutions {"name": "createdAt_1", "background": true} {"createdAt": 1}
@@ -86,8 +87,8 @@ nodeExecutions {"name": "planExecutionId_mode_status_oldRetry_idx", "background"
 nodeExecutions {"name": "planExecutionId_notifyId_idx", "background": true} {"ambiance.planExecutionId": 1, "notifyId": 1}
 nodeExecutions {"name": "planExecutionId_oldRetry_idx", "background": true} {"ambiance.planExecutionId": 1, "oldRetry": 1}
 nodeExecutions {"name": "planExecutionId_parentId_status_idx", "background": true} {"ambiance.planExecutionId": 1, "parentId": 1, "status": 1}
-nodeExecutions {"name": "planExecutionId_planNodeId_idx", "background": true} {"ambiance.planExecutionId": 1, "node.uuid": 1}
-nodeExecutions {"name": "planExecutionId_planNodeIdentifier_idx", "background": true} {"ambiance.planExecutionId": 1, "node.identifier": 1}
+nodeExecutions {"name": "planExecutionId_planNodeId_idx", "background": true} {"ambiance.planExecutionId": 1, "planNode.uuid": 1}
+nodeExecutions {"name": "planExecutionId_planNodeIdentifier_idx", "background": true} {"ambiance.planExecutionId": 1, "planNode.identifier": 1}
 nodeExecutions {"name": "planExecutionId_status_idx", "background": true} {"ambiance.planExecutionId": 1, "status": 1}
 nodeExecutions {"name": "planExecutionId_step_category_idx", "background": true} {"ambiance.planExecutionId": 1, "node.stepType.stepCategory": 1}
 nodeExecutions {"name": "previous_id_idx", "background": true} {"previousId": 1}

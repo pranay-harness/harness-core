@@ -15,7 +15,6 @@ import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.events.SpawnChildRequest;
 import io.harness.pms.contracts.execution.events.SuspendChainRequest;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
-import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.plan.execution.SetupAbstractionKeys;
 import io.harness.pms.sdk.core.PmsSdkCoreTestBase;
 import io.harness.pms.sdk.core.execution.ChainDetails;
@@ -75,17 +74,14 @@ public class ChildChainStrategyTest extends PmsSdkCoreTestBase {
             .stepParameters(TestChildrenStepParameters.builder().parallelNodeId(childNodeId).build())
             .build();
 
-    ArgumentCaptor<String> planExecutionIdCaptor = ArgumentCaptor.forClass(String.class);
-    ArgumentCaptor<String> nodeExecutionIdCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<Ambiance> ambianceCaptor = ArgumentCaptor.forClass(Ambiance.class);
     ArgumentCaptor<SpawnChildRequest> spawnChildrenRequestArgumentCaptor =
         ArgumentCaptor.forClass(SpawnChildRequest.class);
 
     childrenStrategy.start(invokerPackage);
     Mockito.verify(sdkNodeExecutionService, Mockito.times(1))
-        .spawnChild(planExecutionIdCaptor.capture(), nodeExecutionIdCaptor.capture(),
-            spawnChildrenRequestArgumentCaptor.capture());
-    assertThat(planExecutionIdCaptor.getValue()).isEqualTo(ambiance.getPlanExecutionId());
-    assertThat(nodeExecutionIdCaptor.getValue()).isEqualTo(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
+        .spawnChild(ambianceCaptor.capture(), spawnChildrenRequestArgumentCaptor.capture());
+    assertThat(ambianceCaptor.getValue()).isEqualTo(ambiance);
     SpawnChildRequest spawnChildrenRequest = spawnChildrenRequestArgumentCaptor.getValue();
 
     ChildChainExecutableResponse children = spawnChildrenRequest.getChildChain();
@@ -115,16 +111,13 @@ public class ChildChainStrategyTest extends PmsSdkCoreTestBase {
                                       .chainDetails(ChainDetails.builder().shouldEnd(true).build())
                                       .build();
 
-    ArgumentCaptor<String> planExecutionIdCaptor = ArgumentCaptor.forClass(String.class);
-    ArgumentCaptor<String> nodeExecutionIdCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<Ambiance> ambianceCaptor = ArgumentCaptor.forClass(Ambiance.class);
     ArgumentCaptor<StepResponseProto> stepResponseCaptor = ArgumentCaptor.forClass(StepResponseProto.class);
     childrenStrategy.resume(resumePackage);
     Mockito.verify(sdkNodeExecutionService, Mockito.times(1))
-        .handleStepResponse(
-            planExecutionIdCaptor.capture(), nodeExecutionIdCaptor.capture(), stepResponseCaptor.capture());
+        .handleStepResponse(ambianceCaptor.capture(), stepResponseCaptor.capture());
 
-    assertThat(nodeExecutionIdCaptor.getValue()).isEqualTo(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
-    assertThat(planExecutionIdCaptor.getValue()).isEqualTo(ambiance.getPlanExecutionId());
+    assertThat(ambianceCaptor.getValue()).isEqualTo(ambiance);
   }
 
   @Test
@@ -150,16 +143,13 @@ public class ChildChainStrategyTest extends PmsSdkCoreTestBase {
                                       .chainDetails(ChainDetails.builder().shouldEnd(false).build())
                                       .build();
 
-    ArgumentCaptor<String> planExecutionIdCaptor = ArgumentCaptor.forClass(String.class);
-    ArgumentCaptor<String> nodeExecutionIdCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<Ambiance> ambianceCaptor = ArgumentCaptor.forClass(Ambiance.class);
     ArgumentCaptor<SuspendChainRequest> suspendChainRequest = ArgumentCaptor.forClass(SuspendChainRequest.class);
     childrenStrategy.resume(resumePackage);
     Mockito.verify(sdkNodeExecutionService, Mockito.times(1))
-        .suspendChainExecution(
-            planExecutionIdCaptor.capture(), nodeExecutionIdCaptor.capture(), suspendChainRequest.capture());
+        .suspendChainExecution(ambianceCaptor.capture(), suspendChainRequest.capture());
 
-    assertThat(nodeExecutionIdCaptor.getValue()).isEqualTo(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
-    assertThat(planExecutionIdCaptor.getValue()).isEqualTo(ambiance.getPlanExecutionId());
+    assertThat(ambianceCaptor.getValue()).isEqualTo(ambiance);
     assertThat(suspendChainRequest.getValue().getExecutableResponse().getChildChain().getSuspend()).isEqualTo(true);
   }
 

@@ -3,8 +3,8 @@ package io.harness.engine.executions.plan;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.plan.Node;
 import io.harness.plan.Plan;
-import io.harness.pms.contracts.plan.PlanNodeProto;
 
 import java.util.Optional;
 
@@ -12,7 +12,7 @@ import java.util.Optional;
 public interface PlanService {
   Plan save(Plan plan);
 
-  PlanNodeProto fetchNode(String planId, String nodeId);
+  <T extends Node> T fetchNode(String planId, String nodeId);
 
   Plan fetchPlan(String planId);
 

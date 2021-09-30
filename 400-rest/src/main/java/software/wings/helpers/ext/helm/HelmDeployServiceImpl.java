@@ -441,7 +441,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     String workingDirectory = Paths.get(getWorkingDirectory(commandRequest), gitFileConfig.getFilePath()).toString();
 
     encryptionService.decrypt(gitConfig, sourceRepoConfig.getEncryptedDataDetails(), false);
-    gitService.downloadFiles(gitConfig, gitFileConfig, workingDirectory);
+    gitService.downloadFiles(gitConfig, gitFileConfig, workingDirectory, false);
 
     commandRequest.setWorkingDir(workingDirectory);
     commandRequest.getExecutionLogCallback().saveExecutionLog("Repo checked-out locally");
@@ -890,7 +890,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
       GitFetchFilesResult gitFetchFilesResult = gitService.fetchFilesByPath(gitConfig, gitFileConfig.getConnectorId(),
           gitFileConfig.getCommitId(), gitFileConfig.getBranch(),
-          Collections.singletonList(gitFileConfig.getFilePath()), gitFileConfig.isUseBranch());
+          Collections.singletonList(gitFileConfig.getFilePath()), gitFileConfig.isUseBranch(), false);
 
       if (isNotEmpty(gitFetchFilesResult.getFiles())) {
         executionLogCallback.saveExecutionLog(

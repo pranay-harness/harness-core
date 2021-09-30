@@ -93,6 +93,7 @@ TMP_FILE=$(mktemp)
 
 git diff --diff-filter=ACM --name-status ${BASE_SHA}..HEAD | grep ".java$" | awk '{ print $2}' > $TMP_FILE
 TRACK_FILES=`while read file; do echo $(git log --pretty=format:%ad -n 1 --date=format:'%Y%m%d%H%M%S' -- $file) $file; done < $TMP_FILE | sort | head -n 5 | awk '{ print "--location-class-filter "$2}'`
+TRACK_MODULES=`cat $TMP_FILE | awk -F / '{ print $1 }' | sort | uniq | awk '{ print "--root-filter //" $1 }'`
 
 scripts/bazel/prepare_aeriform.sh
 
@@ -123,3 +124,21 @@ then
     --exit-code
 fi
 
+if [ ! -z "$TRACK_MODULES" ]
+then
+  RENAMED_FILES=$(git diff --diff-filter=R --name-status ${BASE_SHA}..HEAD | wc -l)
+
+  if [ $RENAMED_FILES -eq 0 ]
+  then
+    OWNED_BY_FIXES=$(git diff ${BASE_SHA}..HEAD | grep '+@OwnedBy' | wc -l)
+    if [ $OWNED_BY_FIXES -lt 5 ]
+    then
+      scripts/bazel/aeriform.sh analyze \
+        ${TRACK_MODULES} \
+        --team-filter ${HARNESS_TEAM} \
+        --kind-filter AutoAction \
+        --auto-actionable-command \
+        --exit-code
+    fi
+  fi
+fi

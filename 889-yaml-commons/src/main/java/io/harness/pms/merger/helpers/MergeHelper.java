@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,58 +25,45 @@ import lombok.extern.slf4j.Slf4j;
 @UtilityClass
 @Slf4j
 public class MergeHelper {
-  public String mergeInputSetIntoPipeline(
-      String pipelineYaml, String inputSetPipelineCompYaml, boolean appendInputSetValidator) {
-    return mergeInputSetIntoOriginYaml(pipelineYaml, inputSetPipelineCompYaml, true, appendInputSetValidator);
+  public String mergeInputSetFormatYamlToOriginYaml(String originYaml, String inputSetFormatYaml) {
+    return mergeRuntimeInputValuesIntoOriginalYaml(originYaml, inputSetFormatYaml, false);
   }
 
-  private String mergeInputSetIntoOriginYaml(
-      String originYaml, String inputSetPipelineCompYaml, boolean convertToTemplate, boolean appendInputSetValidator) {
-    YamlConfig originYamlConfig = new YamlConfig(originYaml);
-    String templateYaml = YamlTemplateHelper.createTemplateFromPipeline(originYaml);
-    if (!convertToTemplate) {
-      templateYaml = originYaml;
-    }
+  public String mergeRuntimeInputValuesIntoOriginalYaml(
+      String originalYaml, String inputSetPipelineCompYaml, boolean appendInputSetValidator) {
     YamlConfig inputSetConfig = new YamlConfig(inputSetPipelineCompYaml);
-    YamlConfig templateConfig = new YamlConfig(templateYaml);
+    Map<FQN, Object> inputSetFQNMap = inputSetConfig.getFqnToValueMap();
 
-    Map<FQN, Object> res = new LinkedHashMap<>(originYamlConfig.getFqnToValueMap());
-    templateConfig.getFqnToValueMap().keySet().forEach(key -> {
-      if (inputSetConfig.getFqnToValueMap().containsKey(key)) {
-        Object value = inputSetConfig.getFqnToValueMap().get(key);
-        Object templateValue = templateConfig.getFqnToValueMap().get(key);
+    YamlConfig originalYamlConfig = new YamlConfig(originalYaml);
+
+    Map<FQN, Object> mergedYamlFQNMap = new LinkedHashMap<>(originalYamlConfig.getFqnToValueMap());
+    originalYamlConfig.getFqnToValueMap().keySet().forEach(key -> {
+      if (inputSetFQNMap.containsKey(key)) {
+        Object value = inputSetFQNMap.get(key);
+        Object templateValue = originalYamlConfig.getFqnToValueMap().get(key);
         if (key.isType() || key.isIdentifierOrVariableName()) {
           if (!value.toString().equals(templateValue.toString())) {
             throwUpdatedKeyException(key, templateValue, value);
           }
         }
         if (appendInputSetValidator) {
-          value = checkForRuntimeInputExpressions(value, templateConfig.getFqnToValueMap().get(key));
+          value = checkForRuntimeInputExpressions(value, originalYamlConfig.getFqnToValueMap().get(key));
         }
-        res.put(key, value);
+        mergedYamlFQNMap.put(key, value);
       } else {
-        Map<FQN, Object> subMap = YamlSubMapExtractor.getFQNToObjectSubMap(inputSetConfig.getFqnToValueMap(), key);
+        Map<FQN, Object> subMap = YamlSubMapExtractor.getFQNToObjectSubMap(inputSetFQNMap, key);
         if (!subMap.isEmpty()) {
-          res.put(key, YamlSubMapExtractor.getNodeForFQN(inputSetConfig, key));
+          mergedYamlFQNMap.put(key, YamlSubMapExtractor.getNodeForFQN(inputSetConfig, key));
         }
       }
     });
-    return (new YamlConfig(res, originYamlConfig.getYamlMap())).getYaml();
+
+    return (new YamlConfig(mergedYamlFQNMap, originalYamlConfig.getYamlMap())).getYaml();
   }
 
   private void throwUpdatedKeyException(FQN key, Object templateValue, Object value) {
     throw new InvalidRequestException("The value for " + key.getExpressionFqn() + " is " + templateValue.toString()
         + "in the pipeline yaml, but the input set has it as " + value.toString());
-  }
-
-  public String mergeInputSets(String template, List<String> inputSetYamlList, boolean appendInputSetValidator) {
-    List<String> inputSetPipelineCompYamlList =
-        inputSetYamlList.stream().map(InputSetYamlHelper::getPipelineComponent).collect(Collectors.toList());
-    String res = template;
-    for (String yaml : inputSetPipelineCompYamlList) {
-      res = mergeInputSetIntoOriginYaml(res, yaml, false, appendInputSetValidator);
-    }
-    return res;
   }
 
   private Object checkForRuntimeInputExpressions(Object inputSetValue, Object pipelineValue) {

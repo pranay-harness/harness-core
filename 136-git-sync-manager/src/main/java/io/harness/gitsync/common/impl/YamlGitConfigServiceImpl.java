@@ -306,7 +306,8 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   private void sendEventForGitSyncConfigChange(YamlGitConfigDTO yamlGitConfigDTO,
       GitSyncConfigChangeEventType eventType, GitSyncConfigSwitchType configSwitchType) {
     String accountId = yamlGitConfigDTO.getAccountIdentifier();
-    final EntityScopeInfo.Builder entityScopeInfoBuilder = EntityScopeInfo.newBuilder().setAccountId(accountId);
+    final EntityScopeInfo.Builder entityScopeInfoBuilder =
+        EntityScopeInfo.newBuilder().setAccountId(accountId).setIdentifier(yamlGitConfigDTO.getIdentifier());
     if (isNotEmpty(yamlGitConfigDTO.getOrganizationIdentifier())) {
       entityScopeInfoBuilder.setOrgId(StringValue.of(yamlGitConfigDTO.getOrganizationIdentifier()));
     }

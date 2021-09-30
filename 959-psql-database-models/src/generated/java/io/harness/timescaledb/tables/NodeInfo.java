@@ -3,6 +3,7 @@
  */
 package io.harness.timescaledb.tables;
 
+import io.harness.timescaledb.Indexes;
 import io.harness.timescaledb.Keys;
 import io.harness.timescaledb.Public;
 import io.harness.timescaledb.tables.records.NodeInfoRecord;
@@ -12,6 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 import org.jooq.Field;
 import org.jooq.ForeignKey;
+import org.jooq.Index;
 import org.jooq.Name;
 import org.jooq.Record;
 import org.jooq.Row8;
@@ -130,6 +132,11 @@ public class NodeInfo extends TableImpl<NodeInfoRecord> {
   @Override
   public Schema getSchema() {
     return Public.PUBLIC;
+  }
+
+  @Override
+  public List<Index> getIndexes() {
+    return Arrays.<Index>asList(Indexes.NODE_INFO_ACCID_CLUSTERID_POOLNAME);
   }
 
   @Override

@@ -8,15 +8,14 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.HarnessStringUtils;
-import io.harness.engine.ExecutionCheck;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionTimeoutCallback;
 import io.harness.engine.executions.node.NodeExecutionUpdateFailedException;
-import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.pms.commons.events.PmsEventSender;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.expression.EngineExpressionEvaluator;
+import io.harness.plan.PlanNode;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
@@ -48,20 +47,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class NodeStartHelper {
   @Inject private PmsEventSender eventSender;
-  @Inject private InterruptService interruptService;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private TimeoutEngine timeoutEngine;
   @Inject private PmsEngineExpressionService pmsEngineExpressionService;
 
   public void startNode(Ambiance ambiance, FacilitatorResponseProto facilitatorResponse) {
-    ExecutionCheck check = interruptService.checkInterruptsPreInvocation(
-        ambiance.getPlanExecutionId(), AmbianceUtils.obtainCurrentRuntimeId(ambiance));
-    if (!check.isProceed()) {
-      log.info("Not Proceeding with Execution : {}", check.getReason());
-      return;
-    }
-
     String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
     Status targetStatus = calculateStatusFromMode(facilitatorResponse.getExecutionMode());
     NodeExecution nodeExecution = prepareNodeExecutionForInvocation(nodeExecutionId, targetStatus);
@@ -77,11 +68,12 @@ public class NodeStartHelper {
   }
 
   private void sendEvent(NodeExecution nodeExecution, ByteString passThroughData) {
-    String serviceName = nodeExecution.getNode().getServiceName();
+    PlanNode planNode = nodeExecution.getNode();
+    String serviceName = planNode.getServiceName();
     NodeStartEvent nodeStartEvent =
         NodeStartEvent.newBuilder()
             .setAmbiance(nodeExecution.getAmbiance())
-            .addAllRefObjects(nodeExecution.getNode().getRebObjectsList())
+            .addAllRefObjects(planNode.getRefObjects())
             .setFacilitatorPassThoroughData(passThroughData)
             .setStepParameters(ByteString.copyFromUtf8(HarnessStringUtils.emptyIfNull(
                 RecastOrchestrationUtils.toJson(nodeExecution.getResolvedStepParameters()))))
@@ -98,8 +90,8 @@ public class NodeStartHelper {
       log.warn("NodeExecution Status update failed while preparing for invocation Target Status : {}", targetStatus);
       return null;
     }
-    List<String> timeoutInstanceIds =
-        registerTimeouts(nodeExecution.getAmbiance(), nodeExecution.getNode().getTimeoutObtainmentsList());
+    PlanNode planNode = nodeExecution.getNode();
+    List<String> timeoutInstanceIds = registerTimeouts(nodeExecution.getAmbiance(), planNode.getTimeoutObtainments());
     return nodeExecutionService.update(
         nodeExecution.getUuid(), ops -> setUnset(ops, NodeExecutionKeys.timeoutInstanceIds, timeoutInstanceIds));
   }

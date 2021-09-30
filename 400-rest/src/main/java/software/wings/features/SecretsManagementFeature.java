@@ -2,7 +2,9 @@ package software.wings.features;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 
@@ -25,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(PL)
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._890_SM_CORE)
 public class SecretsManagementFeature extends AbstractPremiumFeature implements ComplianceByRemovingUsage {
   public static final String FEATURE_NAME = "SECRET_MANAGEMENT";
 

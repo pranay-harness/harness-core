@@ -342,7 +342,7 @@ public class CVNGStepTest extends CvNextGenTestBase {
     StepResponse stepResponse = cvngStep.handleAsyncResponse(ambiance, cvngStepParameter,
         Collections.singletonMap(activityId,
             CVNGStep.CVNGResponseData.builder().activityId(activityId).activityStatusDTO(activityStatusDTO).build()));
-    assertThat(stepResponse.getStatus()).isEqualTo(Status.ERRORED);
+    assertThat(stepResponse.getStatus()).isEqualTo(Status.FAILED);
     assertThat(stepResponse.getFailureInfo())
         .isEqualTo(FailureInfo.newBuilder()
                        .addFailureData(FailureData.newBuilder()

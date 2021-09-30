@@ -9,7 +9,6 @@ import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;
 import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
 
 @OwnedBy(CE)
 public class CEGcpServiceAccountDao {
@@ -20,11 +19,8 @@ public class CEGcpServiceAccountDao {
   }
 
   public CEGcpServiceAccount getUnassignedServiceAccountByAccountId(String accountId) {
-    Query<CEGcpServiceAccount> query = persistence.createQuery(CEGcpServiceAccount.class)
-                                           .field(CEGcpServiceAccountKeys.accountId)
-                                           .equal(accountId)
-                                           .field(CEGcpServiceAccountKeys.gcpProjectId)
-                                           .doesNotExist();
+    Query<CEGcpServiceAccount> query =
+        persistence.createQuery(CEGcpServiceAccount.class).field(CEGcpServiceAccountKeys.accountId).equal(accountId);
     return query.get();
   }
 
@@ -33,18 +29,5 @@ public class CEGcpServiceAccountDao {
                                            .field(CEGcpServiceAccountKeys.email)
                                            .equal(serviceAccountEmail);
     return query.get();
-  }
-
-  public void setProjectId(String serviceAccountEmail, String projectId, String accountId) {
-    Query<CEGcpServiceAccount> query = persistence.createQuery(CEGcpServiceAccount.class)
-                                           .field(CEGcpServiceAccountKeys.accountId)
-                                           .equal(accountId)
-                                           .field(CEGcpServiceAccountKeys.email)
-                                           .equal(serviceAccountEmail);
-
-    UpdateOperations<CEGcpServiceAccount> updateOperations =
-        persistence.createUpdateOperations(CEGcpServiceAccount.class)
-            .set(CEGcpServiceAccountKeys.gcpProjectId, projectId);
-    persistence.update(query, updateOperations);
   }
 }

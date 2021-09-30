@@ -7,11 +7,11 @@ option java_multiple_files = true;
 import "io/harness/pms/contracts/plan/plan_creation_service.proto";
 
 message CreatePartialPlanEvent {
-  map<string, YamlFieldBlob> dependencies = 1;
   map<string, PlanCreationContextValue> context = 2;
   AsyncCreatorType type = 3;
   string notifyId = 4;
   string planCreationId = 5;
+  Dependencies deps = 6;
 }
 
 enum AsyncCreatorType {

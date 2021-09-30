@@ -6,6 +6,7 @@ import static io.harness.validation.Validator.notNullCheck;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 
 import software.wings.beans.SettingAttribute;
@@ -40,7 +41,7 @@ public class ShellScriptStepYamlBuilder extends StepYamlBuilder {
   public void convertIdToNameForKnownTypes(String name, Object objectValue, Map<String, Object> outputProperties,
       String appId, Map<String, Object> inputProperties) {
     if (SSH_KEY_REF.equals(name)) {
-      if (objectValue != null) {
+      if (EmptyPredicate.isNotEmpty((String) objectValue)) {
         SettingAttribute sshConnectionAttribute = settingsService.get((String) objectValue);
         notNullCheck("Ssh Key does not exist.", sshConnectionAttribute);
         outputProperties.put(SSH_KEY_REF_NAME, sshConnectionAttribute.getName());
@@ -50,7 +51,7 @@ public class ShellScriptStepYamlBuilder extends StepYamlBuilder {
       return;
     }
     if (CONNECTION_ATTRIBUTES.equals(name)) {
-      if (objectValue != null) {
+      if (EmptyPredicate.isNotEmpty((String) objectValue)) {
         SettingAttribute winrmConnectionAttribute = settingsService.get((String) objectValue);
         notNullCheck("Winrm Connection Attribute does not exist.", winrmConnectionAttribute);
         outputProperties.put(CONNECTION_ATTRIBUTE_NAME, winrmConnectionAttribute.getName());

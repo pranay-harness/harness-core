@@ -6,7 +6,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ResourceConstraint;
 import io.harness.beans.ShellScriptProvisionOutputVariables;
-import io.harness.beans.SweepingOutput;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
@@ -24,7 +23,6 @@ public class CgOrchestrationMorphiaRegistrar implements MorphiaRegistrar {
     set.add(DelegateTask.class);
     set.add(StateInspection.class);
     set.add(SweepingOutputInstance.class);
-    set.add(SweepingOutput.class);
     set.add(ResourceConstraint.class);
   }
 

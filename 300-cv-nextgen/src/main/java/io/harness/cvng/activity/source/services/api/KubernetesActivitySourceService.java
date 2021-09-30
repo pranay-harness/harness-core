@@ -12,8 +12,6 @@ import javax.annotation.Nullable;
 
 public interface KubernetesActivitySourceService extends DataSourceConnectivityChecker {
   boolean saveKubernetesActivities(String accountId, String activitySourceId, List<KubernetesActivityDTO> activities);
-  void enqueueDataCollectionTask(KubernetesActivitySource activitySource);
-  boolean doesAActivitySourceExistsForThisProject(String accountId, String orgIdentifier, String projectIdentifier);
   int getNumberOfKubernetesServicesSetup(String accountId, String orgIdentifier, String projectIdentifier);
   PageResponse<String> getKubernetesNamespaces(String accountId, String orgIdentifier, String projectIdentifier,
       String connectorIdentifier, int offset, int pageSize, String filter);

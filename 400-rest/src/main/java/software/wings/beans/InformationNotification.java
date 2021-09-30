@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.event.model.EventType;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -14,6 +16,7 @@ import lombok.EqualsAndHashCode;
 @JsonTypeName("INFORMATION")
 @Data
 @EqualsAndHashCode(callSuper = true)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class InformationNotification extends Notification {
   private String displayText;
 
