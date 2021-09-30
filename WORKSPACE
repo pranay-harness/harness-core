@@ -5045,7 +5045,7 @@ maven_install(
         maven_test_artifact("de.flapdoodle.embed:de.flapdoodle.embed.mongo:2.0.3"),
         maven_test_artifact("de.flapdoodle.embed:de.flapdoodle.embed.process:2.0.3"),
         maven_test_artifact("io.dropwizard:dropwizard-testing:1.3.24"),
-        maven_test_artifact("io.fabric8:kubernetes-server-mock:3.1.12"),
+        maven_test_artifact("io.fabric8:kubernetes-server-mock:4.9.0"),
         maven_test_artifact("io.fabric8:mockwebxxxxxxxx0.1.0"),
         maven_test_artifact("io.grpc:grpc-testing:1.33.1"),
         maven_test_artifact("junit:junit:4.12"),

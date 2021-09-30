@@ -314,7 +314,7 @@ io.fabric8:fabric8-utils:jar:3.0.11
 io.fabric8:kubernetes-api:jar:3.0.11
 io.fabric8:kubernetes-client:jar:4.9.0
 io.fabric8:kubernetes-model:jar:4.9.0
-io.fabric8:kubernetes-server-mock:jar:3.1.12:test
+io.fabric8:kubernetes-server-mock:jar:4.9.0:test
 io.fabric8:mockwebxxxxxxxxjar:0.1.0:test
 io.fabric8:openshift-client:jar:3.0.3
 io.fabric8:zjsonpatch:jar:0.3.0
