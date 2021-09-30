@@ -6,6 +6,8 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.pms.contracts.execution.Status.RUNNING;
 import static io.harness.springdata.SpringDataMongoUtils.setUnset;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.ExecutionCheck;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -62,6 +64,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(HarnessTeam.PIPELINE)
 public class PlanNodeExecutionStrategy implements NodeExecutionStrategy<PlanNode> {
   @Inject private Injector injector;
   @Inject private NodeExecutionService nodeExecutionService;
@@ -87,7 +90,7 @@ public class PlanNodeExecutionStrategy implements NodeExecutionStrategy<PlanNode
       previousNodeExecution = nodeExecutionService.update(AmbianceUtils.obtainCurrentRuntimeId(ambiance),
           ops -> ops.set(NodeExecutionKeys.nextId, uuid).set(NodeExecutionKeys.endTs, System.currentTimeMillis()));
     }
-    Ambiance cloned = AmbianceUtils.cloneForFinish(ambiance, PmsLevelUtils.buildLevelFromPlanNode(uuid, node));
+    Ambiance cloned = AmbianceUtils.cloneForFinish(ambiance, PmsLevelUtils.buildLevelFromNode(uuid, node));
     NodeExecution nodeExecution =
         NodeExecution.builder()
             .uuid(uuid)

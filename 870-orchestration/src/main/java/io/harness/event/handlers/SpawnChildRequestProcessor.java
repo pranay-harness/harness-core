@@ -15,7 +15,7 @@ import io.harness.engine.utils.PmsLevelUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
-import io.harness.plan.PlanNode;
+import io.harness.plan.Node;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
@@ -70,11 +70,11 @@ public class SpawnChildRequestProcessor implements SdkResponseProcessor {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
 
     String childNodeId = extractChildNodeId(spawnChildRequest);
-    PlanNode node = planService.fetchNode(nodeExecution.getAmbiance().getPlanId(), childNodeId);
+    Node node = planService.fetchNode(nodeExecution.getAmbiance().getPlanId(), childNodeId);
 
     String childInstanceId = generateUuid();
     Ambiance clonedAmbiance = AmbianceUtils.cloneForChild(
-        nodeExecution.getAmbiance(), PmsLevelUtils.buildLevelFromPlanNode(childInstanceId, node));
+        nodeExecution.getAmbiance(), PmsLevelUtils.buildLevelFromNode(childInstanceId, node));
     return nodeExecutionService.save(NodeExecution.builder()
                                          .uuid(childInstanceId)
                                          .planNode(node)

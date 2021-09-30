@@ -3,6 +3,7 @@ package io.harness.plan;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import io.harness.ModuleType;
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
@@ -13,6 +14,9 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.pms.contracts.plan.ErrorResponse;
 import io.harness.pms.contracts.plan.GraphLayoutInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.pms.contracts.steps.SkipType;
+import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.data.stepparameters.PmsStepParameters;
 
 import java.time.OffsetDateTime;
 import java.util.Date;
@@ -105,5 +109,55 @@ public class Plan implements PersistentEntity, Node {
   @Override
   public NodeType getNodeType() {
     return NodeType.PLAN;
+  }
+
+  @Override
+  public String getIdentifier() {
+    return getUuid();
+  }
+
+  @Override
+  public String getName() {
+    return getIdentifier();
+  }
+
+  @Override
+  public StepType getStepType() {
+    return StepType.newBuilder().setType("PLAN").build();
+  }
+
+  @Override
+  public String getGroup() {
+    return "PLAN";
+  }
+
+  @Override
+  public boolean isSkipExpressionChain() {
+    return false;
+  }
+
+  @Override
+  public String getWhenCondition() {
+    return null;
+  }
+
+  @Override
+  public String getSkipCondition() {
+    return null;
+  }
+
+  @Override
+  public PmsStepParameters getStepParameters() {
+    return null;
+  }
+
+  @Override
+  public String getServiceName() {
+    return ModuleType.PMS.name();
+  }
+
+  @Override
+  public SkipType getSkipGraphType() {
+    return SkipType.NOOP;
   }
 }

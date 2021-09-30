@@ -17,6 +17,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.OrchestrationTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.ExecutionCheck;
 import io.harness.engine.ExecutionEngineDispatcher;
@@ -64,6 +66,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.springframework.transaction.CannotCreateTransactionException;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class PlanNodeExecutionStrategyTest extends OrchestrationTestBase {
   @Mock @Named("EngineExecutorService") ExecutorService executorService;
   @Mock private NodeExecutionService nodeExecutionService;
