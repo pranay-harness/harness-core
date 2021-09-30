@@ -9,7 +9,6 @@ import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.YamlSchemaTypes;
 import io.harness.yaml.extended.ci.validator.ResourceValidatorConstants;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.Optional;
@@ -27,7 +26,6 @@ public class ContainerResource {
   @NotNull Limits limits;
 
   @Builder
-  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
   public ContainerResource(@JsonProperty("limits") Limits limits) {
     this.limits = Optional.ofNullable(limits).orElse(Limits.builder().build());
   }

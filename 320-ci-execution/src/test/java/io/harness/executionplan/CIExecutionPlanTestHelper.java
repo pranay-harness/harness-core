@@ -145,10 +145,10 @@ public class CIExecutionPlanTestHelper {
   private static final String PLUGIN_STEP_ID = "step-3";
   private static final String PLUGIN_STEP_NAME = "plugin step";
 
-  private static final Integer PLUGIN_STEP_LIMIT_MEM = 50;
-  private static final Integer PLUGIN_STEP_LIMIT_CPU = 100;
-  private static final String PLUGIN_STEP_LIMIT_MEM_STRING = "50Mi";
-  private static final String PLUGIN_STEP_LIMIT_CPU_STRING = "100m";
+  private static final Integer PLUGIN_STEP_LIMIT_MEM = 200;
+  private static final Integer PLUGIN_STEP_LIMIT_CPU = 200;
+  private static final String PLUGIN_STEP_LIMIT_MEM_STRING = "200Mi";
+  private static final String PLUGIN_STEP_LIMIT_CPU_STRING = "200m";
   private static final String PLUGIN_ENV_VAR = "foo";
   private static final String PLUGIN_ENV_VAL = "bar";
 
@@ -344,8 +344,8 @@ public class CIExecutionPlanTestHelper {
                          .containerDefinitionInfos(asList(getServiceContainer(), getGitPluginStepContainer(index),
                              getRunStepContainer(index + 1), getPluginStepContainer(index + 2)))
                          .build())
-                 .stageMemoryRequest(250)
-                 .stageCpuRequest(300)
+                 .stageMemoryRequest(400)
+                 .stageCpuRequest(400)
                  .serviceIdList(Collections.singletonList(SERVICE_ID))
                  .serviceGrpcPortList(Collections.singletonList(PORT_STARTING_RANGE))
                  .volumeToMountPath(volumeToMountPath)
@@ -391,8 +391,8 @@ public class CIExecutionPlanTestHelper {
                          .containerDefinitionInfos(asList(getServiceContainer(), getGitPluginStepContainer(index),
                              getRunStepContainer(index + 1), getPluginStepContainer(index + 2)))
                          .build())
-                 .stageMemoryRequest(250)
-                 .stageCpuRequest(300)
+                 .stageMemoryRequest(400)
+                 .stageCpuRequest(400)
                  .serviceIdList(serviceIds)
                  .serviceGrpcPortList(serviceGrpcPortList)
                  .serviceIdList(Collections.singletonList(SERVICE_ID))
