@@ -430,7 +430,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       DelegateStackdriverLogAppender.setManagerClient(delegateAgentManagerClient);
 
       logProxyConfiguration();
-
+      if (hasAccountPrimaryVersion) {
+        DelegateAgentManagerClientFactory.setSendVersionHeader(false);
+      }
       connectionHeartbeat = DelegateConnectionHeartbeat.builder()
                                 .delegateConnectionId(delegateConnectionId)
                                 .version(getVersion())
@@ -1242,10 +1244,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             resume();
           } else if (DELEGATE_SEND_VERSION_HEADER.equals(message.getMessage())) {
             if (!hasAccountPrimaryVersion) {
-              log.info("Sending VERSION_INFO as part of header");
               DelegateAgentManagerClientFactory.setSendVersionHeader(Boolean.parseBoolean(message.getParams().get(0)));
-            } else {
-              log.info("No VERSION_INFO in header");
             }
             delegateAgentManagerClient = injector.getInstance(DelegateAgentManagerClient.class);
           } else if (DELEGATE_START_GRPC.equals(message.getMessage())) {
