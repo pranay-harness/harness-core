@@ -140,7 +140,7 @@ public class ResourceGroupServiceModule extends AbstractModule {
   @Named("lock")
   @Singleton
   RedisConfig redisLockConfig() {
-    return appConfig.getResoureGroupServiceConfig().getRedisConfig();
+    return appConfig.getResoureGroupServiceConfig().getRedisLockConfig();
   }
 
   @Provides

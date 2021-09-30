@@ -16,14 +16,12 @@ import io.harness.ng.core.ResourceScope;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.Map;
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.FieldNameConstants;
-import org.hibernate.validator.constraints.NotBlank;
 
 @OwnedBy(PL)
 @Data
@@ -32,7 +30,7 @@ import org.hibernate.validator.constraints.NotBlank;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "ResourceScopeKeys")
 public class ResourceScopeDTO {
-  @NotNull @NotBlank String accountIdentifier;
+  String accountIdentifier;
   String orgIdentifier;
   String projectIdentifier;
   @Size(max = 2) Map<String, String> labels;
