@@ -7,6 +7,7 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 
 import static com.google.common.collect.ImmutableMap.of;
 
+import io.harness.accesscontrol.NGAccessDeniedExceptionMapper;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cache.CacheModule;
 import io.harness.controller.PrimaryVersionChangeScheduler;
@@ -249,6 +250,7 @@ public class TemplateServiceApplication extends Application<TemplateServiceConfi
     environment.jersey().register(EarlyEofExceptionMapper.class);
     environment.jersey().register(WingsExceptionMapperV2.class);
     environment.jersey().register(MultiPartFeature.class);
+    environment.jersey().register(NGAccessDeniedExceptionMapper.class);
   }
 
   private void registerHealthCheck(Environment environment, Injector injector) {
