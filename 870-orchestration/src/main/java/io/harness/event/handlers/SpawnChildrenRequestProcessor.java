@@ -23,7 +23,6 @@ import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
 import io.harness.pms.contracts.execution.events.SpawnChildrenRequest;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.SdkResponseEventUtils;
-import io.harness.waiter.OldNotifyCallback;
 import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.inject.Inject;
@@ -74,8 +73,10 @@ public class SpawnChildrenRequestProcessor implements SdkResponseProcessor {
       }
 
       // Attach a Callback to the parent for the child
-      OldNotifyCallback callback =
-          EngineResumeCallback.builder().nodeExecutionId(SdkResponseEventUtils.getNodeExecutionId(event)).build();
+      EngineResumeCallback callback = EngineResumeCallback.builder()
+                                          .nodeExecutionId(SdkResponseEventUtils.getNodeExecutionId(event))
+                                          .ambiance(ambiance)
+                                          .build();
       waitNotifyEngine.waitForAllOn(publisherName, callback, callbackIds.toArray(new String[0]));
 
       // Update the parent with executable response

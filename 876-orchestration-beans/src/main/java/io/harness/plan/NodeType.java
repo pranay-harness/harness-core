@@ -10,4 +10,4 @@ package io.harness.plan;
  *  RESUMEABLE_PLAN_NODE
  *
  */
-public enum NodeType { PLAN, PLAN_NODE }
+public enum NodeType { PLAN, PLAN_NODE, IDENTITY_PLAN_NODE }

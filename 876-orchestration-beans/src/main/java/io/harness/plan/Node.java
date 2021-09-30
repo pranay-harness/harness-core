@@ -16,15 +16,23 @@ public interface Node extends UuidAccess {
 
   String getGroup();
 
-  boolean isSkipExpressionChain();
+  default boolean isSkipExpressionChain() {
+    return false;
+  }
 
   String getServiceName();
 
   PmsStepParameters getStepParameters();
 
-  String getWhenCondition();
+  default String getWhenCondition() {
+    return null;
+  }
 
-  String getSkipCondition();
+  default String getSkipCondition() {
+    return null;
+  }
 
-  SkipType getSkipGraphType();
+  default SkipType getSkipGraphType() {
+    return SkipType.NOOP;
+  }
 }

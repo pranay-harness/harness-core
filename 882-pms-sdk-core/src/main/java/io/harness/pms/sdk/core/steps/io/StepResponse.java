@@ -36,15 +36,4 @@ public class StepResponse {
     @NonNull String name;
     Outcome outcome;
   }
-
-  public Map<String, StepOutcome> stepOutcomeMap() {
-    Map<String, StepOutcome> stepOutcomeMap = new HashMap<>();
-    if (isEmpty(stepOutcomes)) {
-      return stepOutcomeMap;
-    }
-    for (StepOutcome stepOutcome : stepOutcomes) {
-      stepOutcomeMap.put(stepOutcome.getName(), stepOutcome);
-    }
-    return stepOutcomeMap;
-  }
 }

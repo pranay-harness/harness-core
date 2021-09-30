@@ -14,8 +14,8 @@ import io.harness.persistence.PersistentEntity;
 import io.harness.pms.contracts.plan.ErrorResponse;
 import io.harness.pms.contracts.plan.GraphLayoutInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
-import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.data.OrchestrationMap;
 import io.harness.pms.data.stepparameters.PmsStepParameters;
 
 import java.time.OffsetDateTime;
@@ -132,21 +132,6 @@ public class Plan implements PersistentEntity, Node {
   }
 
   @Override
-  public boolean isSkipExpressionChain() {
-    return false;
-  }
-
-  @Override
-  public String getWhenCondition() {
-    return null;
-  }
-
-  @Override
-  public String getSkipCondition() {
-    return null;
-  }
-
-  @Override
   public PmsStepParameters getStepParameters() {
     return null;
   }
@@ -154,10 +139,5 @@ public class Plan implements PersistentEntity, Node {
   @Override
   public String getServiceName() {
     return ModuleType.PMS.name();
-  }
-
-  @Override
-  public SkipType getSkipGraphType() {
-    return SkipType.NOOP;
   }
 }
