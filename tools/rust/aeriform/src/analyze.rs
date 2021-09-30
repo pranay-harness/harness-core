@@ -3,6 +3,7 @@ use enumset::{EnumSet, EnumSetType};
 use multimap::MultiMap;
 use rayon::iter::IntoParallelRefIterator;
 use rayon::iter::ParallelIterator;
+use std::cmp::Ordering;
 use std::cmp::Ordering::Equal;
 use std::collections::{HashMap, HashSet};
 use std::process::exit;
@@ -13,9 +14,9 @@ use strum_macros::EnumString;
 use crate::java_class::{JavaClass, JavaClassTraits, UNKNOWN_LOCATION};
 use crate::java_module::{modules, JavaModule, JavaModuleTraits};
 use crate::team::UNKNOWN_TEAM;
-use std::cmp::Ordering;
 
-const DEPENDENCY_WARNING_LEVEL: u32 = 10;
+const DEPENDENCY_WARNING_DEPTH: usize = 12;
+const CIRCULAR_DEPENDENCY_WARNING_DEPTH: usize = 5;
 
 #[derive(PartialEq, Eq, Debug, Copy, Clone, EnumIter, EnumString)]
 enum Kind {
@@ -1191,12 +1192,17 @@ fn check_for_circular_dependency(
 
     let mut results: Vec<Report> = Vec::new();
 
-    let max_level = paths[paths.len() - 1].2;
-    if max_level > DEPENDENCY_WARNING_LEVEL {
+    let (max_path, max_target_modules) = calculate_path(paths.len() - 1, &paths, classes);
+    if max_target_modules.len() == 1 && max_path.len() > DEPENDENCY_WARNING_DEPTH {
         results.push(Report {
             kind: Kind::Warning,
             explanation: Explanation::Empty,
-            message: format!("{} dependency level {} is too deep", class.name, max_level),
+            message: format!(
+                "{} dependency level {} is too deep: {}",
+                class.name,
+                max_path.len(),
+                max_path.join(", ")
+            ),
             action: Default::default(),
             for_class: class.name.clone(),
             for_team: class.simple_team(),
@@ -1209,38 +1215,7 @@ fn check_for_circular_dependency(
         return results;
     }
 
-    let mut path: Vec<String> = Vec::new();
-    circle = paths[circle - 1].1;
-    while circle != 0 {
-        path.push(paths[circle - 1].0.clone());
-        circle = paths[circle - 1].1;
-    }
-
-    path.reverse();
-
-    results.push(Report {
-        kind: Kind::Warning,
-        explanation: Explanation::Empty,
-        message: format!(
-            "{} has circular dependency to it-self after {} levels",
-            class.name,
-            path.len(),
-        ),
-        action: Default::default(),
-        for_class: class.name.clone(),
-        for_team: class.simple_team(),
-        indirect_classes: Default::default(),
-        for_modules: [module.name.clone()].iter().cloned().collect(),
-    });
-
-    let empty = &String::new();
-    let target_modules: HashSet<&String> = path
-        .iter()
-        .map(|name| match &classes.get(name).unwrap().target_module {
-            None => empty,
-            Some(mdl) => mdl,
-        })
-        .collect();
+    let (path, target_modules) = calculate_path(paths[circle - 1].1, &paths, classes);
 
     if target_modules.len() > 1 {
         results.push(Report {
@@ -1258,8 +1233,24 @@ fn check_for_circular_dependency(
             for_modules: [module.name.clone()].iter().cloned().collect(),
         });
     } else {
-        let target_module = *target_modules.iter().next().unwrap();
+        if path.len() > CIRCULAR_DEPENDENCY_WARNING_DEPTH {
+            results.push(Report {
+                kind: Kind::Warning,
+                explanation: Explanation::Empty,
+                message: format!(
+                    "{} has circular dependency to it-self with depth {}",
+                    class.name,
+                    path.len(),
+                ),
+                action: Default::default(),
+                for_class: class.name.clone(),
+                for_team: class.simple_team(),
+                indirect_classes: Default::default(),
+                for_modules: [module.name.clone()].iter().cloned().collect(),
+            });
+        }
 
+        let target_module = target_modules.iter().next().unwrap();
         if !target_module.is_empty() {
             results.push(Report {
                 kind: Kind::DevAction,
@@ -1279,6 +1270,34 @@ fn check_for_circular_dependency(
     }
 
     return results;
+}
+
+fn calculate_path(
+    start: usize,
+    paths: &Vec<(&String, usize, u32)>,
+    classes: &HashMap<String, &JavaClass>,
+) -> (Vec<String>, HashSet<String>) {
+    let mut path: Vec<String> = Vec::new();
+    let mut curr = start;
+    while curr != 0 {
+        path.push(paths[curr - 1].0.clone());
+        curr = paths[curr - 1].1;
+    }
+
+    path.reverse();
+
+    let empty = &String::new();
+    let target_modules: HashSet<String> = path
+        .iter()
+        .map(|name| *classes.get(name).unwrap())
+        .filter(|&class| !class.deprecated)
+        .map(|class| match &class.target_module {
+            None => empty.clone(),
+            Some(mdl) => mdl.clone(),
+        })
+        .collect();
+
+    (path, target_modules)
 }
 
 fn check_for_package(class: &JavaClass, module: &JavaModule, target_module_team: &Option<String>) -> Vec<Report> {
