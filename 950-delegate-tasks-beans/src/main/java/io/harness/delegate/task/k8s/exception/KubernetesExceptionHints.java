@@ -50,4 +50,5 @@ public class KubernetesExceptionHints {
   public final String BG_CONFLICTING_SERVICE = "Delete existing service [%s] to proceed";
 
   public final String SCALE_CLI_FAILED = "Check if resource %s exists";
+  public final String ROLLBACK_CLI_FAILED = "Check if resource %s exists";
 }

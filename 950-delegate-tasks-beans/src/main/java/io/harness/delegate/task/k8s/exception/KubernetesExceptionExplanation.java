@@ -45,4 +45,9 @@ public class KubernetesExceptionExplanation {
 
   public final String SCALE_CLI_FAILED = "%s failed with exit code: %d";
   public final String SCALE_CLI_FAILED_OUTPUT = "%s failed with exit code: %d and output: %s";
+
+  public final String ROLLBACK_CR_APPLY_FAILED =
+      "Failed while rolling back custom resource by applying previous release manifests";
+  public final String ROLLBACK_CLI_FAILED = "%s failed with exit code: %d";
+  public final String ROLLBACK_CLI_FAILED_OUTPUT = "%s failed with exit code: %d and output: %s";
 }
