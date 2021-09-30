@@ -15,6 +15,7 @@ message TriggerPayload {
     ArtifactData artifactData = 6;
     ManifestData manifestData = 7;
   }
+  int64 version = 8;
 }
 
 message ArtifactData {
