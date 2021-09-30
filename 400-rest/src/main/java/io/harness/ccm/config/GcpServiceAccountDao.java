@@ -23,4 +23,10 @@ public class GcpServiceAccountDao {
                                          .equal(serviceAccountId);
     return query.get();
   }
+
+  public GcpServiceAccount getByAccountId(String accountId) {
+    Query<GcpServiceAccount> query =
+        persistence.createQuery(GcpServiceAccount.class).field(GcpServiceAccountKeys.accountId).equal(accountId);
+    return query.get();
+  }
 }

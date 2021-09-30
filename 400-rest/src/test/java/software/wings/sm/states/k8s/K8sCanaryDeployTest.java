@@ -47,6 +47,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.VariableResolverTracker;
+import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.rule.Owner;
@@ -101,6 +102,7 @@ public class K8sCanaryDeployTest extends CategoryTest {
   @Mock private ManagerExpressionEvaluator evaluator;
   @Mock private ActivityService activityService;
   @Mock private K8sStateHelper k8sStateHelper;
+  @Mock private FeatureFlagService mockFeatureFlagService;
   @InjectMocks K8sCanaryDeploy k8sCanaryDeploy = spy(new K8sCanaryDeploy(K8S_CANARY_DEPLOY.name()));
 
   private StateExecutionInstance stateExecutionInstance = aStateExecutionInstance().displayName(STATE_NAME).build();
@@ -293,10 +295,12 @@ public class K8sCanaryDeployTest extends CategoryTest {
     doReturn(InstanceElementListParam.builder().build())
         .when(k8sCanaryDeploy)
         .fetchInstanceElementListParam(anyListOf(K8sPod.class));
+    doReturn(false).when(k8sCanaryDeploy).shouldSaveManifest(any());
     doReturn(emptyList()).when(k8sCanaryDeploy).fetchInstanceStatusSummaries(any(), any());
     doNothing().when(k8sCanaryDeploy).saveK8sElement(any(), any());
     doNothing().when(k8sCanaryDeploy).saveInstanceInfoToSweepingOutput(any(), any(), any());
     doReturn(APP_ID).when(k8sCanaryDeploy).fetchAppId(context);
+    doReturn(false).when(k8sCanaryDeploy).shouldInheritManifest(context);
     doReturn(application).when(standardContextElement).getApp();
     doReturn(ImmutableMap.of()).when(standardContextElement).paramMap(context);
     ExecutionResponse executionResponse =

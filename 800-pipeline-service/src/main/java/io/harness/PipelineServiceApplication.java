@@ -15,9 +15,6 @@ import io.harness.cache.CacheModule;
 import io.harness.consumers.GraphUpdateRedisConsumer;
 import io.harness.controller.PrimaryVersionChangeScheduler;
 import io.harness.delay.DelayEventListener;
-import io.harness.engine.OrchestrationEngine;
-import io.harness.engine.OrchestrationService;
-import io.harness.engine.OrchestrationServiceImpl;
 import io.harness.engine.events.NodeExecutionStatusUpdateEventHandler;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionServiceImpl;
@@ -26,6 +23,7 @@ import io.harness.engine.executions.plan.PlanExecutionServiceImpl;
 import io.harness.engine.expressions.OrchestrationConstants;
 import io.harness.engine.interrupts.InterruptMonitor;
 import io.harness.engine.interrupts.OrchestrationEndInterruptHandler;
+import io.harness.engine.pms.execution.strategy.plan.PlanExecutionStrategy;
 import io.harness.engine.timeouts.TimeoutInstanceRemover;
 import io.harness.event.OrchestrationEndGraphHandler;
 import io.harness.event.OrchestrationLogPublisher;
@@ -394,28 +392,27 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     planExecutionService.getPlanStatusUpdateSubject().register(
         injector.getInstance(Key.get(OrchestrationLogPublisher.class)));
 
-    OrchestrationServiceImpl orchestrationService =
-        (OrchestrationServiceImpl) injector.getInstance(Key.get(OrchestrationService.class));
-    orchestrationService.getOrchestrationStartSubject().register(
+    PlanExecutionStrategy planExecutionStrategy = injector.getInstance(Key.get(PlanExecutionStrategy.class));
+    // StartObservers
+    planExecutionStrategy.getOrchestrationStartSubject().register(
         injector.getInstance(Key.get(PipelineStartNotificationHandler.class)));
-    orchestrationService.getOrchestrationStartSubject().register(
+    planExecutionStrategy.getOrchestrationStartSubject().register(
         injector.getInstance(Key.get(BarrierInitializer.class)));
-    orchestrationService.getOrchestrationStartSubject().register(
+    planExecutionStrategy.getOrchestrationStartSubject().register(
         injector.getInstance(Key.get(ResourceRestraintInitializer.class)));
-    orchestrationService.getOrchestrationStartSubject().register(
+    planExecutionStrategy.getOrchestrationStartSubject().register(
         injector.getInstance(Key.get(OrchestrationStartEventHandler.class)));
-    orchestrationService.getOrchestrationStartSubject().register(
+    planExecutionStrategy.getOrchestrationStartSubject().register(
         injector.getInstance(Key.get(ExecutionSummaryCreateEventHandler.class)));
-
-    OrchestrationEngine orchestrationEngine = injector.getInstance(Key.get(OrchestrationEngine.class));
-    orchestrationEngine.getOrchestrationEndSubject().register(
+    // End Observers
+    planExecutionStrategy.getOrchestrationEndSubject().register(
         injector.getInstance(Key.get(OrchestrationEndGraphHandler.class)));
-    orchestrationEngine.getOrchestrationEndSubject().register(
+    planExecutionStrategy.getOrchestrationEndSubject().register(
         injector.getInstance(Key.get(OrchestrationEndInterruptHandler.class)));
-    orchestrationEngine.getOrchestrationEndSubject().register(
+    planExecutionStrategy.getOrchestrationEndSubject().register(
         injector.getInstance(Key.get(NotificationInformHandler.class)));
-    GraphGenerationServiceImpl graphGenerationService =
-        (GraphGenerationServiceImpl) injector.getInstance(Key.get(GraphGenerationServiceImpl.class));
+
+    GraphGenerationServiceImpl graphGenerationService = injector.getInstance(Key.get(GraphGenerationServiceImpl.class));
     graphGenerationService.getGraphNodeUpdateObserverSubject().register(
         injector.getInstance(Key.get(ExecutionSummaryStatusUpdateEventHandler.class)));
 

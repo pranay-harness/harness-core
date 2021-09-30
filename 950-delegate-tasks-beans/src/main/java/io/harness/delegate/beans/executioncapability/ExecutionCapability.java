@@ -1,11 +1,14 @@
 package io.harness.delegate.beans.executioncapability;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
 import java.time.Duration;
 
-@TargetModule(HarnessModule._957_CG_BEANS)
+@OwnedBy(HarnessTeam.DEL)
+@TargetModule(HarnessModule._955_DELEGATE_BEANS)
 public interface ExecutionCapability {
   enum EvaluationMode { MANAGER, AGENT }
 

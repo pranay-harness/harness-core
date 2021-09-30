@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 /**
  * The type Yaml.
  */
-@TargetModule(HarnessModule._870_CG_YAML)
+@TargetModule(HarnessModule._955_CG_YAML)
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)

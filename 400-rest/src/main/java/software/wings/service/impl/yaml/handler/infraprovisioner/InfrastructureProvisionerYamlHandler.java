@@ -41,7 +41,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._870_CG_YAML)
+@TargetModule(HarnessModule._955_CG_YAML)
 public abstract class InfrastructureProvisionerYamlHandler<Y extends InfraProvisionerYaml, B
                                                                extends InfrastructureProvisioner>
     extends BaseYamlHandler<Y, B> {

@@ -1,6 +1,7 @@
 package io.harness.delegate.task.gcp.helpers;
 
 import static io.harness.delegate.task.gcp.helpers.GcpHelperService.LOCATION_DELIMITER;
+import static io.harness.rule.OwnerRule.ABHINAV2;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.SATYAM;
@@ -322,5 +323,20 @@ public class GkeClusterHelperTest extends CategoryTest {
         .isInstanceOf(GcpServerException.class);
 
     verify(clusters).list(anyString());
+  }
+
+  @Test
+  @Owner(developers = ABHINAV2)
+  @Category(UnitTests.class)
+  public void shouldNotListClustersIfResponseException() throws IOException {
+    GoogleJsonError googleJsonError = new GoogleJsonError();
+    googleJsonError.setMessage("Simulated Google Json Error");
+
+    GoogleJsonResponseException responseException = new GoogleJsonResponseException(
+        new HttpResponseException.Builder(HttpStatusCodes.STATUS_CODE_BAD_REQUEST, "Forbidden", httpHeaders),
+        googleJsonError);
+    when(clustersList.execute()).thenThrow(responseException);
+    assertThatThrownBy(() -> gkeClusterHelper.listClusters(serviceAccountKey, false))
+        .isInstanceOf(GcpServerException.class);
   }
 }

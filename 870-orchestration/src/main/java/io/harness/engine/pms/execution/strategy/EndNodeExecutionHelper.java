@@ -1,4 +1,4 @@
-package io.harness.engine;
+package io.harness.engine.pms.execution.strategy;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -8,6 +8,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.pms.data.PmsOutcomeService;
+import io.harness.engine.pms.execution.strategy.plannode.PlanNodeExecutionStrategy;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -28,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 public class EndNodeExecutionHelper {
   @Inject private PmsOutcomeService pmsOutcomeService;
   @Inject private NodeExecutionService nodeExecutionService;
-  @Inject private OrchestrationEngine orchestrationEngine;
+  @Inject private PlanNodeExecutionStrategy executionStrategy;
 
   public void endNodeExecutionWithNoAdvisers(
       @NonNull NodeExecution nodeExecution, @NonNull StepResponseProto stepResponse) {
@@ -37,7 +38,7 @@ public class EndNodeExecutionHelper {
       log.warn("Cannot process step response for nodeExecution {}", nodeExecution.getUuid());
       return;
     }
-    orchestrationEngine.endTransition(updatedNodeExecution);
+    executionStrategy.endNodeExecution(updatedNodeExecution.getAmbiance());
   }
 
   private NodeExecution processStepResponseWithNoAdvisers(NodeExecution nodeExecution, StepResponseProto stepResponse) {
@@ -91,9 +92,5 @@ public class EndNodeExecutionHelper {
       setUnset(ops, NodeExecutionKeys.outcomeRefs, outcomeRefs);
       setUnset(ops, NodeExecutionKeys.unitProgresses, stepResponse.getUnitProgressList());
     }, EnumSet.noneOf(Status.class));
-  }
-
-  public void endNodeForNullAdvise(NodeExecution nodeExecution) {
-    orchestrationEngine.endTransition(nodeExecution);
   }
 }

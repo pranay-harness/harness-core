@@ -8,11 +8,9 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.HarnessStringUtils;
-import io.harness.engine.ExecutionCheck;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.node.NodeExecutionTimeoutCallback;
 import io.harness.engine.executions.node.NodeExecutionUpdateFailedException;
-import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.pms.commons.events.PmsEventSender;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
@@ -49,20 +47,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class NodeStartHelper {
   @Inject private PmsEventSender eventSender;
-  @Inject private InterruptService interruptService;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private TimeoutEngine timeoutEngine;
   @Inject private PmsEngineExpressionService pmsEngineExpressionService;
 
   public void startNode(Ambiance ambiance, FacilitatorResponseProto facilitatorResponse) {
-    ExecutionCheck check = interruptService.checkInterruptsPreInvocation(
-        ambiance.getPlanExecutionId(), AmbianceUtils.obtainCurrentRuntimeId(ambiance));
-    if (!check.isProceed()) {
-      log.info("Not Proceeding with Execution : {}", check.getReason());
-      return;
-    }
-
     String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
     Status targetStatus = calculateStatusFromMode(facilitatorResponse.getExecutionMode());
     NodeExecution nodeExecution = prepareNodeExecutionForInvocation(nodeExecutionId, targetStatus);

@@ -90,7 +90,7 @@ public class DelegateTaskServiceImpl implements DelegateTaskService {
       throw new InvalidArgumentsException(Pair.of("args", "response cannot be null"));
     }
 
-    log.info("Response received for task with responseCode [{}]", response.getResponseCode());
+    log.debug("Response received for task with responseCode [{}]", response.getResponseCode());
 
     Query<DelegateTask> taskQuery = persistence.createQuery(DelegateTask.class)
                                         .filter(DelegateTaskKeys.accountId, response.getAccountId())

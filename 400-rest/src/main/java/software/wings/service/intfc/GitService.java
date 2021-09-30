@@ -21,7 +21,7 @@ public interface GitService {
   void ensureRepoLocallyClonedAndUpdated(GitOperationContext gitOperationContext);
 
   GitFetchFilesResult fetchFilesByPath(GitConfig gitConfig, String connectorId, String commitId, String branch,
-      List<String> filePaths, boolean useBranch);
+      List<String> filePaths, boolean useBranch, boolean shouldExportCommitSha);
 
   GitFetchFilesResult fetchFilesBetweenCommits(
       GitConfig gitConfig, String newCommitId, String oldCommitId, String connectorId);
@@ -29,7 +29,8 @@ public interface GitService {
   GitFetchFilesResult fetchFilesByPath(GitConfig gitConfig, String connectorId, String commitId, String branch,
       List<String> filePaths, boolean useBranch, List<String> fileExtensions, boolean isRecursive);
 
-  void downloadFiles(GitConfig gitConfig, GitFileConfig gitFileConfig, String destinationDirectory);
+  String downloadFiles(
+      GitConfig gitConfig, GitFileConfig gitFileConfig, String destinationDirectory, boolean shouldExportCommitSha);
 
   GitCommitAndPushResult commitAndPush(GitOperationContext gitOperationContext);
 }

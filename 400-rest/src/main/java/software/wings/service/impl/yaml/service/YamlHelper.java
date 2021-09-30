@@ -7,16 +7,20 @@ import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
 import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
+import static software.wings.beans.yaml.YamlConstants.ANY;
 import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.AZURE_APP_SETTINGS_OVERRIDES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.AZURE_CONN_STRINGS_OVERRIDES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.HELM_CHART_OVERRIDE_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.INDEX;
+import static software.wings.beans.yaml.YamlConstants.MANIFEST_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.OC_PARAMS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlConstants.PCF_OVERRIDES_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.SERVICES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.YAML_EXPRESSION;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_PCF_ENV_SERVICE_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_VALUES_ENV_SERVICE_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.ARTIFACT_SERVER;
@@ -30,11 +34,14 @@ import static software.wings.beans.yaml.YamlType.COLLABORATION_PROVIDER;
 import static software.wings.beans.yaml.YamlType.GLOBAL_TEMPLATE_LIBRARY;
 import static software.wings.beans.yaml.YamlType.LOADBALANCER_PROVIDER;
 import static software.wings.beans.yaml.YamlType.VERIFICATION_PROVIDER;
+import static software.wings.utils.Utils.generatePath;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
@@ -97,12 +104,10 @@ import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
-/**
- * @author rktummala on 10/17/17
- */
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
+@TargetModule(HarnessModule._955_CG_YAML)
 public class YamlHelper {
   @Inject ServiceResourceService serviceResourceService;
   @Inject AppService appService;
@@ -330,7 +335,10 @@ public class YamlHelper {
 
     if (featureFlagService.isEnabled(FeatureName.HELM_CHART_AS_ARTIFACT, accountId)) {
       String appManifestName = getNameFromYamlFilePath(yamlFilePath);
-      if (isNotBlank(appManifestName) && !INDEX.equals(appManifestName) && K8S_MANIFEST.equals(kind)) {
+      String MANIFESTS_FOLDER = generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY,
+          SERVICES_FOLDER, ANY, MANIFEST_FOLDER, YAML_EXPRESSION);
+      if (isNotBlank(appManifestName) && !INDEX.equals(appManifestName) && K8S_MANIFEST.equals(kind)
+          && Pattern.matches(MANIFESTS_FOLDER, yamlFilePath)) {
         return applicationManifestService.getAppManifestByName(appId, envId, serviceId, appManifestName);
       }
     }

@@ -48,6 +48,7 @@ public class CEGcpServiceAccountServiceImplTest extends CategoryTest {
     when(accountService.get(eq(accountId))).thenReturn(account);
 
     gcpServiceAccount = GcpServiceAccount.builder().build();
+    when(gcpServiceAccountDao.getByAccountId(eq(accountId))).thenReturn(gcpServiceAccount);
     when(gcpServiceAccountDao.getByServiceAccountId(eq(serviceAccountId))).thenReturn(gcpServiceAccount);
   }
 
@@ -63,9 +64,7 @@ public class CEGcpServiceAccountServiceImplTest extends CategoryTest {
   @Owner(developers = HANTANG)
   @Category(UnitTests.class)
   public void shouldGetDefaultServiceAccountIfNotYetCreated() throws IOException {
-    when(gcpServiceAccountDao.getByServiceAccountId(eq(serviceAccountId)))
-        .thenReturn(null)
-        .thenReturn(gcpServiceAccount);
+    when(gcpServiceAccountDao.getByAccountId(eq(accountId))).thenReturn(null).thenReturn(gcpServiceAccount);
     GcpServiceAccount gcpServiceAccount = ceGcpServiceAccountService.getDefaultServiceAccount(accountId);
     assertThat(gcpServiceAccount).isEqualToComparingFieldByField(this.gcpServiceAccount);
   }

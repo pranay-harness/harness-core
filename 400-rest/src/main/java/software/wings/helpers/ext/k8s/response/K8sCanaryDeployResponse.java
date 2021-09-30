@@ -10,6 +10,8 @@ import io.harness.delegate.task.helm.HelmChartInfo;
 import io.harness.k8s.model.K8sPod;
 import io.harness.k8s.model.KubernetesResource;
 
+import software.wings.beans.GitFetchFilesConfig;
+
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
@@ -25,4 +27,5 @@ public class K8sCanaryDeployResponse implements K8sTaskResponse {
   String canaryWorkload;
   HelmChartInfo helmChartInfo;
   List<KubernetesResource> resources;
+  GitFetchFilesConfig gitFetchFilesConfig;
 }

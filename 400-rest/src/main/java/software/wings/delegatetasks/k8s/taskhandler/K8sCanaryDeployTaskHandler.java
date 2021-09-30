@@ -41,6 +41,7 @@ import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.ReleaseHistory;
 import io.harness.logging.CommandExecutionStatus;
 
+import software.wings.beans.GitFetchFilesConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.k8s.K8sTaskHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
@@ -86,6 +87,7 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
         Paths.get(k8sDelegateTaskParams.getWorkingDirectory(), MANIFEST_FILES_DIR).toString());
     final long timeoutInMillis = getTimeoutMillisFromMinutes(k8sTaskParameters.getTimeoutIntervalInMin());
 
+    GitFetchFilesConfig gitFetchFilesConfig = null;
     boolean success;
     if (k8sCanaryDeployTaskParameters.isInheritManifests()) {
       success = k8sTaskHelper.restore(k8sCanaryDeployTaskParameters.getKubernetesResources(),
@@ -100,6 +102,14 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
           getLogCallBack(k8sCanaryDeployTaskParameters, FetchFiles), timeoutInMillis);
       if (!success) {
         return getFailureResponse();
+      }
+
+      if (k8sCanaryDeployTaskParameters.getK8sDelegateManifestConfig().getGitFileConfig() != null
+          && k8sCanaryDeployTaskParameters.getK8sDelegateManifestConfig().isShouldSaveManifest()) {
+        gitFetchFilesConfig =
+            GitFetchFilesConfig.builder()
+                .gitFileConfig(k8sCanaryDeployTaskParameters.getK8sDelegateManifestConfig().getGitFileConfig())
+                .build();
       }
 
       success = init(
@@ -163,6 +173,7 @@ public class K8sCanaryDeployTaskHandler extends K8sTaskHandler {
               .k8sPodList(allPods)
               .currentInstances(canaryHandlerConfig.getTargetInstances())
               .canaryWorkload(canaryWorkload.getResourceId().namespaceKindNameRef())
+              .gitFetchFilesConfig(gitFetchFilesConfig)
               .helmChartInfo(helmChartInfo)
               .build();
       wrapUpLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);

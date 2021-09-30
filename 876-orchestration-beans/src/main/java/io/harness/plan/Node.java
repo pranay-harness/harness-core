@@ -1,5 +1,7 @@
 package io.harness.plan;
 
-public interface Node {
+import io.harness.persistence.UuidAccess;
+
+public interface Node extends UuidAccess {
   NodeType getNodeType();
 }

@@ -229,7 +229,9 @@ public class AccountExportImportResource {
       @QueryParam("collectionName") String collectionNameToBeExported,
       @QueryParam("exportConfigs") boolean exportConfigs, @QueryParam("batchNumber") int batchNumber,
       @QueryParam("batchSize") int batchSize, @QueryParam("mongoBatchSize") int mongoBatchSize,
-      @QueryParam("exportRecordsUpdatedAfter") long exportRecordsUpdatedAfter) throws Exception {
+      @QueryParam("exportRecordsUpdatedAfter") long exportRecordsUpdatedAfter,
+      @QueryParam("exportRecordsCreatedAfter") long exportRecordsCreatedAfter,
+      @QueryParam("identifiers") List<String> identifiers) throws Exception {
     // Only if the user the account administrator or in the Harness user group can perform the export operation.
     if (!userService.isAccountAdmin(accountId)) {
       String errorMessage = "User is not account administrator and can't perform the export operation.";
@@ -341,7 +343,8 @@ public class AccountExportImportResource {
             }
             String collectionName = getCollectionName(entityClazz);
             mongoExportImport.exportRecords(zipOutputStream, fileOutputStream, exportFilter, collectionName,
-                batchNumber, batchSize, mongoBatchSize, exportRecordsUpdatedAfter);
+                batchNumber, batchSize, mongoBatchSize, identifiers, exportRecordsUpdatedAfter,
+                exportRecordsCreatedAfter);
           }
         }
       }
@@ -382,7 +385,9 @@ public class AccountExportImportResource {
       @QueryParam("collectionName") String collectionNameToBeExported,
       @QueryParam("exportConfigs") boolean exportConfigs, @QueryParam("batchSize") int batchSize,
       @QueryParam("mongoBatchSize") int mongoBatchSize,
-      @QueryParam("exportRecordsUpdatedAfter") long exportRecordsUpdatedAfter) throws Exception {
+      @QueryParam("exportRecordsUpdatedAfter") long exportRecordsUpdatedAfter,
+      @QueryParam("exportRecordsCreatedAfter") long exportRecordsCreatedAfter,
+      @QueryParam("identifiers") List<String> identifiers) throws Exception {
     // Only if the user the account administrator or in the Harness user group can perform the export operation.
     if (!userService.isAccountAdmin(accountId)) {
       String errorMessage = "User is not account administrator and can't perform the export operation.";
@@ -494,7 +499,7 @@ public class AccountExportImportResource {
             }
             String collectionName = getCollectionName(entityClazz);
             mongoExportImport.exportRecords(zipOutputStream, fileOutputStream, exportFilter, collectionName, batchSize,
-                mongoBatchSize, exportRecordsUpdatedAfter);
+                mongoBatchSize, identifiers, exportRecordsUpdatedAfter, exportRecordsCreatedAfter);
           }
         }
       }

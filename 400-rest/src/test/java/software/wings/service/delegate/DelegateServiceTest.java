@@ -1074,19 +1074,9 @@ public class DelegateServiceTest extends WingsBaseTest {
         DelegateGroup.builder().accountId(accountId).name(generateUuid()).status(DelegateGroupStatus.ENABLED).build();
     persistence.save(delegateGroup);
 
-    DelegateSizeDetails sizeDetails = DelegateSizeDetails.builder()
-                                          .size(DelegateSize.LAPTOP)
-                                          .label("Laptop")
-                                          .replicas(1)
-                                          .taskLimit(50)
-                                          .cpu(0.5)
-                                          .ram(2560)
-                                          .build();
-
     DelegateParams params = DelegateParams.builder()
                                 .accountId(accountId)
                                 .sessionIdentifier("sessionId")
-                                .delegateSize(DelegateSize.LAPTOP.name())
                                 .hostName(HOST_NAME)
                                 .description(DESCRIPTION)
                                 .delegateType(DOCKER_DELEGATE)
@@ -1098,6 +1088,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                 .proxy(true)
                                 .pollingModeEnabled(true)
                                 .sampleDelegate(true)
+                                .tags(ImmutableList.of("tag1", "tag2"))
                                 .build();
 
     DelegateProfile profile = createDelegateProfileBuilder().accountId(accountId).primary(true).build();
@@ -1106,11 +1097,11 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     DelegateRegisterResponse registerResponse = delegateService.register(params);
     Delegate delegateFromDb = delegateCache.get(accountId, registerResponse.getDelegateId(), true);
+    DelegateGroup delegateGroupFromDb = delegateCache.getDelegateGroup(accountId, delegateGroup.getUuid());
 
     assertThat(delegateFromDb.getAccountId()).isEqualTo(params.getAccountId());
     assertThat(delegateFromDb.getSessionIdentifier()).isEqualTo(params.getSessionIdentifier());
     assertThat(delegateFromDb.isNg()).isTrue();
-    assertThat(delegateFromDb.getSizeDetails()).isEqualTo(sizeDetails);
     assertThat(delegateFromDb.getHostName()).isEqualTo(params.getHostName());
     assertThat(delegateFromDb.getDescription()).isEqualTo(params.getDescription());
     assertThat(delegateFromDb.getDelegateType()).isEqualTo(params.getDelegateType());
@@ -1121,6 +1112,8 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(delegateFromDb.isProxy()).isEqualTo(params.isProxy());
     assertThat(delegateFromDb.isPolllingModeEnabled()).isEqualTo(params.isPollingModeEnabled());
     assertThat(delegateFromDb.isSampleDelegate()).isEqualTo(params.isSampleDelegate());
+    assertThat(delegateFromDb.getTags()).containsExactly("tag1", "tag2");
+    assertThat(delegateGroupFromDb.getTags()).containsExactlyInAnyOrder("tag1", "tag2");
   }
 
   @Test
