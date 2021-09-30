@@ -468,8 +468,10 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   public List<RetryStageInfo> getStageDetailFromPlanExecutionId(String planExecutionId) {
     Criteria criteria = Criteria.where(NodeExecutionKeys.planExecutionId)
                             .is(planExecutionId)
-                            .and(NodeExecutionKeys.stepCategory)
-                            .is(StepCategory.STAGE);
+                            .and(NodeExecutionKeys.status)
+                            .ne(Status.SKIPPED.name())
+                            .orOperator(Criteria.where(NodeExecutionKeys.stepCategory).is(StepCategory.STAGE),
+                                Criteria.where(NodeExecutionKeys.planNodeStepCategory).is(StepCategory.STAGE));
 
     Query query = new Query().addCriteria(criteria);
     query.with(by(NodeExecutionKeys.createdAt));
