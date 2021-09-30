@@ -51,7 +51,7 @@ public class VaultConfig extends BaseVaultConfig {
   @Attributes(title = "Base Path") private String basePath;
 
   // This field is deprecated and is not used anymore, will be removed in future. Please use renewalInterval
-  @Deprecated @Attributes(title = "Renew token interval", required = true) private int renewIntervalHours;
+  @Attributes(title = "Renew token interval", required = true) @Deprecated private int renewIntervalHours;
 
   @Attributes(title = "Is Vault Read Only") private boolean isReadOnly;
 

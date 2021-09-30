@@ -29,9 +29,9 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import java.util.List;
 
-@Deprecated
 @Singleton
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@Deprecated
 public class EcsServiceDeployCommandHandler extends EcsCommandTaskHandler {
   @Inject private Injector injector;
 

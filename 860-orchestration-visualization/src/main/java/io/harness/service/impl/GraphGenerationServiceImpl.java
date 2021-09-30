@@ -113,8 +113,8 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
     mongoStore.upsert(orchestrationGraph, SpringCacheEntity.TTL, entityUpdatedAt);
   }
 
-  @Deprecated
   @Override
+  @Deprecated
   public OrchestrationGraphDTO generateOrchestrationGraph(String planExecutionId) {
     PlanExecution planExecution = planExecutionService.get(planExecutionId);
     List<NodeExecution> nodeExecutions = nodeExecutionService.fetchNodeExecutionsWithoutOldRetries(planExecutionId);

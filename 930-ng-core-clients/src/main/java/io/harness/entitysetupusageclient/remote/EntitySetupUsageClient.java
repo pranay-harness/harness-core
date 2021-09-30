@@ -63,13 +63,13 @@ public interface EntitySetupUsageClient {
       @NotNull @Query(REFERRED_BY_ENTITY_TYPE) EntityType referredByEntityType,
       @NotNull @Query(REFERRED_ENTITY_TYPE) EntityType referredEntityType);
 
-  @Deprecated
   @POST(INTERNAL_ENTITY_REFERENCE_API)
+  @Deprecated
   Call<ResponseDTO<EntitySetupUsageDTO>> save(@Body EntitySetupUsageDTO entitySetupUsageDTO);
 
   // This is depreceated, please use this event framework, we no longer support
-  @Deprecated
   @DELETE(INTERNAL_ENTITY_REFERENCE_API)
+  @Deprecated
   Call<ResponseDTO<Boolean>> delete(@NotEmpty @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Query(REFERRED_ENTITY_FQN) String referredEntityFQN, @Query(REFERRED_ENTITY_TYPE) EntityType referredEntityType,
       @Query(REFERRED_BY_ENTITY_FQN) String referredByEntityFQN,
