@@ -1394,19 +1394,4 @@ public class AccountServiceTest extends WingsBaseTest {
     assertThat(updated).isFalse();
   }
 
-  @Test
-  @Owner(developers = JENNY)
-  @Category(UnitTests.class)
-  public void getAccountPrimaryDelegateVersion() {
-    wingsPersistence.save(anAccount()
-                              .withCompanyName(HARNESS_NAME)
-                              .withDelegateConfiguration(
-                                  DelegateConfiguration.builder().delegateVersions(asList("accountVersion1.2")).build())
-                              .build());
-
-    String accountId = wingsPersistence.save(anAccount().withCompanyName(HARNESS_NAME).build());
-
-    assertThat(accountService.getDelegateConfiguration(accountId))
-        .hasFieldOrPropertyWithValue("delegateVersions", asList("accountVersion1.2"));
-  }
 }
