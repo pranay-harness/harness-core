@@ -634,6 +634,9 @@ public class NGTriggerServiceImpl implements NGTriggerService {
       ValidationResult validationResult = triggerValidationHandler.applyValidations(
           ngTriggerElementMapper.toTriggerDetails(ngTriggerEntity.getAccountId(), ngTriggerEntity.getOrgIdentifier(),
               ngTriggerEntity.getProjectIdentifier(), ngTriggerEntity.getYaml()));
+      if (!validationResult.isSuccess()) {
+        ngTriggerEntity.setEnabled(false);
+      }
       return updateTriggerWithValidationStatus(ngTriggerEntity, validationResult);
     } catch (Exception e) {
       log.error(String.format("Failed in trigger validation for Trigger: {}", ngTriggerEntity.getIdentifier()), e);
@@ -674,6 +677,10 @@ public class NGTriggerServiceImpl implements NGTriggerService {
     }
 
     if (needsUpdate) {
+      // enabled filed is part of yml as well as extracted at the entity level.
+      // if we are setting it to false, we need to update yml content as well.
+      // With gitsync, we need to brainstorm
+      ngTriggerElementMapper.updateEntityYmlWithEnabledValue(ngTriggerEntity);
       ngTriggerEntity = ngTriggerRepository.updateValidationStatus(criteria, ngTriggerEntity);
       if (ngTriggerEntity == null) {
         throw new InvalidRequestException(
