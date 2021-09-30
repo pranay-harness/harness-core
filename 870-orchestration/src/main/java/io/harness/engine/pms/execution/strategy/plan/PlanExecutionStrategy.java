@@ -1,5 +1,7 @@
 package io.harness.engine.pms.execution.strategy.plan;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.plan.PlanExecutionMetadataService;
@@ -30,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
+@OwnedBy(HarnessTeam.PIPELINE)
 public class PlanExecutionStrategy implements NodeExecutionStrategy<Plan> {
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
   @Inject private OrchestrationEngine orchestrationEngine;
