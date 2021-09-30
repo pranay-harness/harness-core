@@ -104,8 +104,8 @@ public class ScmGitRefTask extends AbstractDelegateRunnableTask {
       }
       case LATEST_COMMIT_ID: {
         final GetLatestCommitResponse latestCommitResponse = scmDelegateClient.processScmRequest(c
-            -> scmServiceClient.getLatestCommit(
-                scmGitRefTaskParams.getScmConnector(), scmGitRefTaskParams.getBranch(), SCMGrpc.newBlockingStub(c)));
+            -> scmServiceClient.getLatestCommit(scmGitRefTaskParams.getScmConnector(), scmGitRefTaskParams.getBranch(),
+                scmGitRefTaskParams.getRef(), SCMGrpc.newBlockingStub(c)));
         ScmResponseStatusUtils.checkScmResponseStatusAndThrowException(
             latestCommitResponse.getStatus(), latestCommitResponse.getError());
         return ScmGitRefTaskResponseData.builder()
