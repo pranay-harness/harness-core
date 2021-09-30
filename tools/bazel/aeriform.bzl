@@ -38,7 +38,7 @@ def aeriformAnnotations(**kwargs):
     name = kwargs.get("name")
     srcs = kwargs.get("srcs", [])
 
-    cmd = "grep \"^@OwnedBy\\|^@BreakDependencyOn\\|^@TargetModule\\|^@Deprecated\" "
+    cmd = "grep -A 1 \"^@OwnedBy\\|^@BreakDependencyOn\\|^@TargetModule\\|^@Deprecated\" "
     for src in srcs:
         cmd += "\"$(location %s)\" " % src
     cmd += "> \"$@\" || true"

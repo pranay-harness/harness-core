@@ -535,8 +535,7 @@ fn filter_by_class(opts: &Analyze, report: &Report, class_locations: &HashMap<St
 }
 
 fn filter_by_module(opts: &Analyze, report: &Report) -> bool {
-    report.for_modules.is_empty()
-        && (opts.module_filter.is_none() || report.for_modules.contains(opts.module_filter.as_ref().unwrap()))
+    opts.module_filter.is_none() || report.for_modules.contains(opts.module_filter.as_ref().unwrap())
 }
 
 fn filter_by_kind(opts: &Analyze, report: &Report) -> bool {
