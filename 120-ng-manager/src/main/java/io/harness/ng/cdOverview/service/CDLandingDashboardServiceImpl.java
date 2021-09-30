@@ -1,10 +1,23 @@
 package io.harness.ng.cdOverview.service;
 
-import static io.harness.timescaledb.Tables.*;
-
+import static io.harness.timescaledb.Tables.ENVIRONMENTS;
+import static io.harness.timescaledb.Tables.PIPELINE_EXECUTION_SUMMARY_CD;
+import static io.harness.timescaledb.Tables.SERVICES;
+import static io.harness.timescaledb.Tables.SERVICE_INFRA_INFO;
 import static org.jooq.impl.DSL.row;
 
-import io.harness.dashboards.*;
+import io.harness.dashboards.DeploymentStatsSummary;
+import io.harness.dashboards.EnvCount;
+import io.harness.dashboards.GroupBy;
+import io.harness.dashboards.PipelineExecutionDashboardInfo;
+import io.harness.dashboards.PipelinesExecutionDashboardInfo;
+import io.harness.dashboards.ProjectDashBoardInfo;
+import io.harness.dashboards.ProjectsDashboardInfo;
+import io.harness.dashboards.ServiceDashboardInfo;
+import io.harness.dashboards.ServicesCount;
+import io.harness.dashboards.ServicesDashboardInfo;
+import io.harness.dashboards.SortBy;
+import io.harness.dashboards.TimeBasedDeploymentInfo;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.ng.core.OrgProjectIdentifier;
 import io.harness.ng.core.service.services.ServiceEntityService;
@@ -15,11 +28,14 @@ import io.harness.timescaledb.tables.pojos.Services;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
+
+import io.harness.timescaledb.tables.records.PipelineExecutionSummaryCdRecord;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import org.jooq.DSLContext;
@@ -29,10 +45,12 @@ import org.jooq.Record3;
 import org.jooq.Row2;
 import org.jooq.Row3;
 import org.jooq.Table;
+import org.jooq.TableField;
 import org.jooq.impl.DSL;
 
 public class CDLandingDashboardServiceImpl implements CDLandingDashboardService {
   public static final int RECORDS_LIMIT = 100;
+  public static final long DAY_IN_MS = 86400000; // 24*60*60*1000
 
   @Inject private DSLContext dsl;
   @Inject private ServiceEntityService serviceEntityService;
@@ -295,6 +313,13 @@ public class CDLandingDashboardServiceImpl implements CDLandingDashboardService 
   @EqualsAndHashCode(callSuper = true)
   public static class AggregateProjectInfo extends PipelineExecutionSummaryCd {
     private final long count;
+    private long epoch;
+
+    public AggregateProjectInfo(long epoch, String status, long count) {
+      this.count = count;
+      this.epoch = epoch;
+      this.setStatus(status);
+    }
 
     public AggregateProjectInfo(String orgIdentifier, String projectId, long count) {
       this.count = count;
@@ -378,6 +403,210 @@ public class CDLandingDashboardServiceImpl implements CDLandingDashboardService 
     Integer newCount = getEnvCount(accountIdentifier, startInterval, endInterval, orgProjectTable);
 
     return EnvCount.builder().totalCount(totalCount).newCount(newCount).build();
+  }
+
+  @Override
+  public PipelinesExecutionDashboardInfo getActiveDeploymentStats(
+      String accountIdentifier, List<OrgProjectIdentifier> orgProjectIdentifiers) {
+    Table<Record2<String, String>> orgProjectTable = getOrgProjectTable(orgProjectIdentifiers);
+
+    List<String> requiredStatuses =
+        new ArrayList<>(Arrays.asList(ExecutionStatus.APPROVAL_WAITING.name(), ExecutionStatus.APPROVALWAITING.name(),
+            ExecutionStatus.INTERVENTION_WAITING.name(), ExecutionStatus.INTERVENTIONWAITING.name()));
+    requiredStatuses.addAll(CDOverviewDashboardServiceImpl.activeStatusList);
+
+    List<PipelineExecutionSummaryCd> executionsList =
+        dsl.select(PIPELINE_EXECUTION_SUMMARY_CD.ORGIDENTIFIER, PIPELINE_EXECUTION_SUMMARY_CD.PROJECTIDENTIFIER,
+               PIPELINE_EXECUTION_SUMMARY_CD.PIPELINEIDENTIFIER, PIPELINE_EXECUTION_SUMMARY_CD.NAME,
+               PIPELINE_EXECUTION_SUMMARY_CD.STARTTS, PIPELINE_EXECUTION_SUMMARY_CD.STATUS,
+               PIPELINE_EXECUTION_SUMMARY_CD.PLANEXECUTIONID)
+            .from(PIPELINE_EXECUTION_SUMMARY_CD)
+            .where(PIPELINE_EXECUTION_SUMMARY_CD.ACCOUNTID.eq(accountIdentifier)
+                       .and(PIPELINE_EXECUTION_SUMMARY_CD.STATUS.in(requiredStatuses)))
+            .andExists(dsl.selectOne()
+                           .from(orgProjectTable)
+                           .where(PIPELINE_EXECUTION_SUMMARY_CD.ORGIDENTIFIER
+                                      .eq((Field<String>) orgProjectTable.field("orgId"))
+                                      .and(PIPELINE_EXECUTION_SUMMARY_CD.PROJECTIDENTIFIER.eq(
+                                          (Field<String>) orgProjectTable.field("projectId")))))
+            .fetchInto(PipelineExecutionSummaryCd.class);
+
+    PipelinesExecutionDashboardInfo pipelinesExecutionDashboardInfo =
+        filterByStatuses(accountIdentifier, executionsList);
+
+    pipelinesExecutionDashboardInfo.setFailed24HrsExecutions(
+        getLast24HrsFailedExecutions(accountIdentifier, orgProjectTable));
+    return pipelinesExecutionDashboardInfo;
+  }
+
+  @Override
+  public DeploymentStatsSummary getDeploymentStatsSummary(String accountIdentifier,
+      List<OrgProjectIdentifier> orgProjectIdentifiers, long startInterval, long endInterval, GroupBy groupBy) {
+    DeploymentStatsSummary deploymentStatsSummary1 = getDeploymentStatsSummaryWithoutChangeRate(
+        accountIdentifier, orgProjectIdentifiers, startInterval, endInterval, groupBy);
+
+    long duration = endInterval - startInterval;
+    startInterval -= duration;
+    endInterval -= duration;
+
+    DeploymentStatsSummary previousDeploymentStatsSummary = getDeploymentStatsSummaryWithoutChangeRate(
+        accountIdentifier, orgProjectIdentifiers, startInterval, endInterval, groupBy);
+
+    double totalCountChangeRate =
+        getChangeRate(previousDeploymentStatsSummary.getTotalCount(), deploymentStatsSummary1.getTotalCount());
+    double failureRateChangeRate =
+        getChangeRate(previousDeploymentStatsSummary.getFailureRate(), deploymentStatsSummary1.getFailureRate());
+    double deploymentRateChangeRate =
+        getChangeRate(previousDeploymentStatsSummary.getDeploymentRate(), deploymentStatsSummary1.getDeploymentRate());
+
+    deploymentStatsSummary1.setTotalCountChangeRate(totalCountChangeRate);
+    deploymentStatsSummary1.setFailureRateChangeRate(failureRateChangeRate);
+    deploymentStatsSummary1.setDeploymentRateChangeRate(deploymentRateChangeRate);
+
+    return deploymentStatsSummary1;
+  }
+
+  private DeploymentStatsSummary getDeploymentStatsSummaryWithoutChangeRate(String accountIdentifier,
+      List<OrgProjectIdentifier> orgProjectIdentifiers, long startInterval, long endInterval, GroupBy groupBy) {
+    Table<Record2<String, String>> orgProjectTable = getOrgProjectTable(orgProjectIdentifiers);
+
+    Field<Long> epoch =
+        DSL.field("extract(epoch from date_trunc('" + groupBy.getDatePart() + "', to_timestamp({0}/1000)))*1000",
+            Long.class, PIPELINE_EXECUTION_SUMMARY_CD.STARTTS);
+
+    List<AggregateProjectInfo> timeWiseDeploymentStatsList =
+        dsl.select(epoch, PIPELINE_EXECUTION_SUMMARY_CD.STATUS, DSL.count().as("count"))
+            .from(PIPELINE_EXECUTION_SUMMARY_CD)
+            .where(PIPELINE_EXECUTION_SUMMARY_CD.ACCOUNTID.eq(accountIdentifier)
+                       .and(PIPELINE_EXECUTION_SUMMARY_CD.STARTTS.greaterOrEqual(startInterval))
+                       .and(PIPELINE_EXECUTION_SUMMARY_CD.STARTTS.lessThan(endInterval)))
+            .andExists(dsl.selectOne()
+                           .from(orgProjectTable)
+                           .where(PIPELINE_EXECUTION_SUMMARY_CD.ORGIDENTIFIER
+                                      .eq((Field<String>) orgProjectTable.field("orgId"))
+                                      .and(PIPELINE_EXECUTION_SUMMARY_CD.PROJECTIDENTIFIER.eq(
+                                          (Field<String>) orgProjectTable.field("projectId")))))
+            .groupBy(DSL.one(), PIPELINE_EXECUTION_SUMMARY_CD.STATUS)
+            .orderBy(DSL.one())
+            .fetchInto(AggregateProjectInfo.class);
+
+    List<TimeBasedDeploymentInfo> timeWiseDeploymentInfoList = new ArrayList<>();
+    long totalDeploymentsCount = 0;
+    long failedDeploymentsCount = 0;
+
+    long prevEpoch = 0;
+    TimeBasedDeploymentInfo prevTimeDeploymentInfo = null;
+    for (AggregateProjectInfo deploymentStats : timeWiseDeploymentStatsList) {
+      long count = deploymentStats.getCount();
+      String status = deploymentStats.getStatus();
+
+      if (deploymentStats.getEpoch() != prevEpoch || prevTimeDeploymentInfo == null) {
+        TimeBasedDeploymentInfo timeBasedDeploymentInfo =
+            TimeBasedDeploymentInfo.builder().epochTime(deploymentStats.getEpoch()).build();
+
+        prevEpoch = deploymentStats.getEpoch();
+        prevTimeDeploymentInfo = timeBasedDeploymentInfo;
+        timeWiseDeploymentInfoList.add(timeBasedDeploymentInfo);
+      }
+      prevTimeDeploymentInfo.setTotalCount(prevTimeDeploymentInfo.getTotalCount() + count);
+      totalDeploymentsCount += count;
+      if (status.equals(ExecutionStatus.SUCCESS.name())) {
+        prevTimeDeploymentInfo.setSuccessCount(prevTimeDeploymentInfo.getSuccessCount() + count);
+      } else if (CDDashboardServiceHelper.failedStatusList.contains(status)) {
+        prevTimeDeploymentInfo.setFailedCount(prevTimeDeploymentInfo.getFailedCount() + count);
+        failedDeploymentsCount += count;
+      }
+    }
+
+    double failureRate = totalDeploymentsCount == 0 ? 0 : ((failedDeploymentsCount * 100.0) / totalDeploymentsCount);
+    double noOfBuckets = Math.ceil(((endInterval - startInterval) * 1.0) / groupBy.getNoOfMilliseconds());
+    double deploymentRate = totalDeploymentsCount / noOfBuckets;
+
+    return DeploymentStatsSummary.builder()
+        .totalCount(totalDeploymentsCount)
+        .failureRate(failureRate)
+        .deploymentRate(deploymentRate)
+        .timeBasedDeploymentInfoList(timeWiseDeploymentInfoList)
+        .build();
+  }
+
+  public static Field<Integer> extractEpochFrom(TableField<PipelineExecutionSummaryCdRecord, Long> field) {
+    return DSL.field("", Integer.class, field);
+  }
+
+  private PipelinesExecutionDashboardInfo filterByStatuses(
+      String accountIdentifier, List<PipelineExecutionSummaryCd> executionsList) {
+    List<PipelineExecutionDashboardInfo> runningExecutions = new ArrayList<>();
+    List<PipelineExecutionDashboardInfo> pendingApprovalExecutions = new ArrayList<>();
+    List<PipelineExecutionDashboardInfo> pendingManualInterventionExecutions = new ArrayList<>();
+
+    for (PipelineExecutionSummaryCd execution : executionsList) {
+      String status = execution.getStatus();
+
+      PipelineExecutionDashboardInfo pipelineExecutionDashboardInfo =
+          PipelineExecutionDashboardInfo.builder()
+              .accountIdentifier(accountIdentifier)
+              .orgIdentifier(execution.getOrgidentifier())
+              .projectIdentifier(execution.getProjectidentifier())
+              .identifier(execution.getPipelineidentifier())
+              .name(execution.getName())
+              .planExecutionId(execution.getPlanexecutionid())
+              .startTs(execution.getStartts())
+              .build();
+
+      if (ExecutionStatus.APPROVAL_WAITING.name().equals(status)
+          || ExecutionStatus.APPROVALWAITING.name().equals(status)) {
+        pendingApprovalExecutions.add(pipelineExecutionDashboardInfo);
+      } else if (ExecutionStatus.INTERVENTION_WAITING.name().equals(status)
+          || ExecutionStatus.INTERVENTIONWAITING.name().equals(status)) {
+        pendingManualInterventionExecutions.add(pipelineExecutionDashboardInfo);
+      } else if (CDOverviewDashboardServiceImpl.activeStatusList.contains(status)) {
+        runningExecutions.add(pipelineExecutionDashboardInfo);
+      }
+    }
+
+    return PipelinesExecutionDashboardInfo.builder()
+        .pendingApprovalExecutions(pendingApprovalExecutions)
+        .pendingManualInterventionExecutions(pendingManualInterventionExecutions)
+        .runningExecutions(runningExecutions)
+        .build();
+  }
+
+  private List<PipelineExecutionDashboardInfo> getLast24HrsFailedExecutions(
+      String accountIdentifier, Table<Record2<String, String>> orgProjectTable) {
+    long endTime = System.currentTimeMillis();
+    long startTime = System.currentTimeMillis() - DAY_IN_MS;
+
+    List<PipelineExecutionSummaryCd> executionsList =
+        dsl.select(PIPELINE_EXECUTION_SUMMARY_CD.ORGIDENTIFIER, PIPELINE_EXECUTION_SUMMARY_CD.PROJECTIDENTIFIER,
+               PIPELINE_EXECUTION_SUMMARY_CD.PIPELINEIDENTIFIER, PIPELINE_EXECUTION_SUMMARY_CD.NAME,
+               PIPELINE_EXECUTION_SUMMARY_CD.STARTTS, PIPELINE_EXECUTION_SUMMARY_CD.STATUS,
+               PIPELINE_EXECUTION_SUMMARY_CD.PLANEXECUTIONID)
+            .from(PIPELINE_EXECUTION_SUMMARY_CD)
+            .where(PIPELINE_EXECUTION_SUMMARY_CD.ACCOUNTID.eq(accountIdentifier)
+                       .and(PIPELINE_EXECUTION_SUMMARY_CD.STATUS.in(CDDashboardServiceHelper.failedStatusList))
+                       .and(PIPELINE_EXECUTION_SUMMARY_CD.STARTTS.greaterOrEqual(startTime))
+                       .and(PIPELINE_EXECUTION_SUMMARY_CD.STARTTS.lessThan(endTime)))
+            .andExists(dsl.selectOne()
+                           .from(orgProjectTable)
+                           .where(PIPELINE_EXECUTION_SUMMARY_CD.ORGIDENTIFIER
+                                      .eq((Field<String>) orgProjectTable.field("orgId"))
+                                      .and(PIPELINE_EXECUTION_SUMMARY_CD.PROJECTIDENTIFIER.eq(
+                                          (Field<String>) orgProjectTable.field("projectId")))))
+            .fetchInto(PipelineExecutionSummaryCd.class);
+
+    return executionsList.stream()
+        .map(execution
+            -> PipelineExecutionDashboardInfo.builder()
+                   .accountIdentifier(accountIdentifier)
+                   .orgIdentifier(execution.getOrgidentifier())
+                   .projectIdentifier(execution.getProjectidentifier())
+                   .identifier(execution.getPipelineidentifier())
+                   .name(execution.getName())
+                   .planExecutionId(execution.getPlanexecutionid())
+                   .startTs(execution.getStartts())
+                   .build())
+        .collect(Collectors.toList());
   }
 
   private Integer getTotalEnvCount(String accountIdentifier, Table<Record2<String, String>> orgProjectTable) {
@@ -516,8 +745,8 @@ public class CDLandingDashboardServiceImpl implements CDLandingDashboardService 
     }
   }
 
-  private double getChangeRate(long previousValue, long newValue) {
-    long change = newValue - previousValue;
+  private double getChangeRate(double previousValue, double newValue) {
+    double change = newValue - previousValue;
     return previousValue != 0 ? (change * 100.0) / previousValue : 0;
   }
 

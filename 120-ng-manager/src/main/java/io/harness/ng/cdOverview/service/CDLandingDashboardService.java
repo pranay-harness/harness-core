@@ -3,7 +3,10 @@ package io.harness.ng.cdOverview.service;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.dashboards.DeploymentStatsSummary;
 import io.harness.dashboards.EnvCount;
+import io.harness.dashboards.GroupBy;
+import io.harness.dashboards.PipelinesExecutionDashboardInfo;
 import io.harness.dashboards.ProjectsDashboardInfo;
 import io.harness.dashboards.ServicesCount;
 import io.harness.dashboards.ServicesDashboardInfo;
@@ -27,4 +30,10 @@ public interface CDLandingDashboardService {
 
   EnvCount getEnvCount(
       String accountIdentifier, List<OrgProjectIdentifier> orgProjectIdentifiers, long startInterval, long endInterval);
+
+  PipelinesExecutionDashboardInfo getActiveDeploymentStats(
+      String accountIdentifier, List<OrgProjectIdentifier> orgProjectIdentifiers);
+
+  DeploymentStatsSummary getDeploymentStatsSummary(String accountIdentifier,
+      List<OrgProjectIdentifier> orgProjectIdentifiers, long startInterval, long endInterval, GroupBy groupBy);
 }
