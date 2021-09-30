@@ -1,5 +1,6 @@
 package io.harness.ng.core.environment.beans;
 
+import io.harness.annotations.ChangeDataCapture;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.data.validator.Trimmed;
