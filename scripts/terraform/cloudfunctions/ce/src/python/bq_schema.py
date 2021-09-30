@@ -981,6 +981,8 @@ clusterDataTableFields = [{'mode': 'REQUIRED', 'name': 'starttime', 'type': 'INT
                           {'mode': 'NULLABLE', 'name': 'storagerequest', 'type': 'FLOAT'},
                           {'mode': 'NULLABLE', 'name': 'storagembseconds', 'type': 'FLOAT'},
                           {'mode': 'NULLABLE', 'name': 'storagecost', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'maxstorageutilizationvalue', 'type': 'FLOAT'},
+                          {'mode': 'NULLABLE', 'name': 'maxstoragerequest', 'type': 'FLOAT'},
                           {
                               "fields": [
                                   {
@@ -1037,6 +1039,8 @@ clusterDataAggregatedFields = [{'mode': 'REQUIRED', 'name': 'starttime', 'type':
                                {'mode': 'NULLABLE', 'name': 'servicename', 'type': 'STRING'},
                                {'mode': 'NULLABLE', 'name': 'envname', 'type': 'STRING'},
                                {'mode': 'NULLABLE', 'name': 'cloudprovider', 'type': 'STRING'},
+                               {'mode': 'NULLABLE', 'name': 'maxstorageutilizationvalue', 'type': 'FLOAT'},
+                               {'mode': 'NULLABLE', 'name': 'maxstoragerequest', 'type': 'FLOAT'},
                                {
                                    "fields": [
                                        {
@@ -1052,3 +1056,9 @@ clusterDataAggregatedFields = [{'mode': 'REQUIRED', 'name': 'starttime', 'type':
                                    "name": "labels",
                                    "type": "RECORD"
                                }] # Added manually
+
+costAggregatedSchema = [{'mode': 'REQUIRED', 'name': 'accountId', 'type': 'STRING'},
+                  {'mode': 'REQUIRED', 'name': 'cloudProvider', 'type': 'STRING'},
+                  {'mode': 'REQUIRED', 'name': 'cost', 'type': 'FLOAT'},
+                  {'mode': 'REQUIRED', 'name': 'day', 'type': 'TIMESTAMP'}
+                  ]

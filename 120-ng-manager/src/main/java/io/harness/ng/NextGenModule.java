@@ -62,6 +62,8 @@ import io.harness.encryptors.VaultEncryptor;
 import io.harness.encryptors.clients.AwsKmsEncryptor;
 import io.harness.encryptors.clients.GcpKmsEncryptor;
 import io.harness.encryptors.clients.LocalEncryptor;
+import io.harness.enforcement.EnforcementModule;
+import io.harness.enforcement.client.EnforcementClientModule;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.EventsFrameworkMetadataConstants;
@@ -87,7 +89,6 @@ import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.accesscontrol.migrations.AccessControlMigrationModule;
-import io.harness.ng.accesscontrol.mockserver.MockRoleAssignmentModule;
 import io.harness.ng.accesscontrol.user.AggregateUserService;
 import io.harness.ng.accesscontrol.user.AggregateUserServiceImpl;
 import io.harness.ng.authenticationsettings.AuthenticationSettingsModule;
@@ -435,6 +436,7 @@ public class NextGenModule extends AbstractModule {
     install(new DefaultOrganizationModule());
     install(new NGAggregateModule());
     install(new DelegateServiceModule());
+    install(new io.harness.service.DelegateServiceModule());
     install(NGModule.getInstance());
     install(ExceptionModule.getInstance());
     install(new EventsFrameworkModule(this.appConfig.getEventsFrameworkConfiguration()));
@@ -462,6 +464,10 @@ public class NextGenModule extends AbstractModule {
     install(new InstanceModule());
     install(new TokenClientModule(this.appConfig.getNgManagerClientConfig(),
         this.appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId()));
+    install(EnforcementModule.getInstance());
+    install(EnforcementClientModule.getInstance(appConfig.getNgManagerClientConfig(),
+        appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId(),
+        appConfig.getEnforcementClientConfiguration()));
 
     install(new ProviderModule() {
       @Provides
@@ -526,7 +532,6 @@ public class NextGenModule extends AbstractModule {
       install(new AccessControlAdminClientModule(
           appConfig.getAccessControlAdminClientConfiguration(), NG_MANAGER.getServiceId()));
     }
-    install(new MockRoleAssignmentModule());
     install(new AbstractTelemetryModule() {
       @Override
       public TelemetryConfiguration telemetryConfiguration() {

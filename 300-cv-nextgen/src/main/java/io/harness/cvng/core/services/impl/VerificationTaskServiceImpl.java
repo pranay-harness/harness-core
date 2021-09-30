@@ -89,9 +89,13 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
 
   @Override
   public VerificationTask get(String verificationTaskId) {
-    VerificationTask verificationTask = hPersistence.get(VerificationTask.class, verificationTaskId);
-    Preconditions.checkNotNull(verificationTask, "Invalid verificationTaskId. Verification mapping does not exist.");
-    return verificationTask;
+    return maybeGet(verificationTaskId)
+        .orElseThrow(
+            () -> new IllegalStateException("Invalid verificationTaskId. Verification mapping does not exist."));
+  }
+  @Override
+  public Optional<VerificationTask> maybeGet(String verificationTaskId) {
+    return Optional.ofNullable(hPersistence.get(VerificationTask.class, verificationTaskId));
   }
 
   @Override

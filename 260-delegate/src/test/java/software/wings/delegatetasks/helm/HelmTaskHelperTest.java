@@ -258,7 +258,7 @@ public class HelmTaskHelperTest extends WingsBaseTest {
 
     doReturn(chartMuseumServer)
         .when(chartMuseumClient)
-        .startChartMuseumServer(eq(gcsHelmRepoConfig), any(SettingValue.class), anyString(), anyString());
+        .startChartMuseumServer(eq(gcsHelmRepoConfig), any(SettingValue.class), anyString(), anyString(), eq(false));
     doReturn(successfulResult).when(processExecutor).execute();
     helmTaskHelper.downloadChartFiles(gcsConfigParams, outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL, null);
     verifyFetchChartFilesProcessExecutor(outputTemporaryDir.toString());
@@ -280,7 +280,7 @@ public class HelmTaskHelperTest extends WingsBaseTest {
 
     doReturn(chartMuseumServer)
         .when(chartMuseumClient)
-        .startChartMuseumServer(eq(s3HelmRepoConfig), any(SettingValue.class), anyString(), anyString());
+        .startChartMuseumServer(eq(s3HelmRepoConfig), any(SettingValue.class), anyString(), anyString(), eq(false));
     doReturn(successfulResult).when(processExecutor).execute();
     helmTaskHelper.downloadChartFiles(awsConfigParams, outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL, null);
     verifyFetchChartFilesProcessExecutor(outputTemporaryDir.toString());
@@ -313,7 +313,7 @@ public class HelmTaskHelperTest extends WingsBaseTest {
 
     doReturn(chartMuseumServer)
         .when(chartMuseumClient)
-        .startChartMuseumServer(eq(httpHelmRepoConfig), any(SettingValue.class), anyString(), anyString());
+        .startChartMuseumServer(eq(httpHelmRepoConfig), any(SettingValue.class), anyString(), anyString(), eq(false));
     doReturn(successfulResult).when(processExecutor).execute();
     helmTaskHelper.downloadChartFiles(httpHelmChartConfig, outputTemporaryDir.toString(), LONG_TIMEOUT_INTERVAL, null);
     verify(helmTaskHelperBase, times(1))
@@ -864,14 +864,14 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     if (museumServer != null) {
       doReturn(museumServer)
           .when(chartMuseumClient)
-          .startChartMuseumServer(helmRepoConfig, connector, workingDir, basePath);
+          .startChartMuseumServer(helmRepoConfig, connector, workingDir, basePath, false);
     } else {
       doThrow(new InvalidRequestException("Something went wrong"))
           .when(chartMuseumClient)
-          .startChartMuseumServer(helmRepoConfig, connector, workingDir, basePath);
+          .startChartMuseumServer(helmRepoConfig, connector, workingDir, basePath, false);
     }
 
-    helmTaskHelper.addHelmRepo(helmRepoConfig, connector, repo, repo, workingDir, basePath, V2);
+    helmTaskHelper.addHelmRepo(helmRepoConfig, connector, repo, repo, workingDir, basePath, V2, false);
     if (museumServer != null) {
       verify(chartMuseumClient, times(1)).stopChartMuseumServer(chartMuseumProcess);
     }
@@ -1008,7 +1008,7 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     doReturn(chartMuseumServer)
         .when(chartMuseumClient)
         .startChartMuseumServer(gcsHelmRepoConfig, helmChartConfigParams.getConnectorConfig(), RESOURCE_DIR_BASE,
-            helmChartConfigParams.getBasePath());
+            helmChartConfigParams.getBasePath(), false);
     doReturn(new ProcessResult(0, null)).when(processExecutor).execute();
     doAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class))
         .when(helmTaskHelper)
@@ -1028,7 +1028,7 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     verify(processExecutor, times(1)).execute();
     verify(chartMuseumClient, times(1))
         .startChartMuseumServer(gcsHelmRepoConfig, helmChartConfigParams.getConnectorConfig(), RESOURCE_DIR_BASE,
-            helmChartConfigParams.getBasePath());
+            helmChartConfigParams.getBasePath(), false);
   }
 
   @NotNull
@@ -1097,7 +1097,7 @@ public class HelmTaskHelperTest extends WingsBaseTest {
     doReturn(chartMuseumServer)
         .when(chartMuseumClient)
         .startChartMuseumServer(gcsHelmRepoConfig, helmChartConfigParams.getConnectorConfig(), RESOURCE_DIR_BASE,
-            helmChartConfigParams.getBasePath());
+            helmChartConfigParams.getBasePath(), false);
     doAnswer(invocationOnMock -> invocationOnMock.getArgumentAt(0, String.class))
         .when(helmTaskHelper)
         .createNewDirectoryAtPath(RESOURCE_DIR_BASE);

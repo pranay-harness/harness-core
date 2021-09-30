@@ -7,8 +7,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.pms.contracts.steps.StepCategory;
-import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
@@ -16,6 +14,7 @@ import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.rule.Owner;
+import io.harness.steps.common.NGExecutionStep;
 import io.harness.steps.common.NGSectionStepParameters;
 
 import com.google.common.base.Charsets;
@@ -109,8 +108,7 @@ public class ExecutionPmsPlanCreatorTest {
     PlanNode planForParentNode = executionPmsPlanCreator.createPlanForParentNode(context, executionElementConfig, null);
     assertThat(planForParentNode.getUuid()).isEqualTo(executionYamlField.getNode().getUuid());
     assertThat(planForParentNode.getIdentifier()).isEqualTo("execution");
-    assertThat(planForParentNode.getStepType())
-        .isEqualTo(StepType.newBuilder().setType("NG_SECTION").setStepCategory(StepCategory.STEP).build());
+    assertThat(planForParentNode.getStepType()).isEqualTo(NGExecutionStep.STEP_TYPE);
     assertThat(planForParentNode.getGroup()).isEqualTo("EXECUTION");
     assertThat(planForParentNode.getName()).isEqualTo("Execution");
     assertThat(planForParentNode.getFacilitatorObtainments()).hasSize(1);

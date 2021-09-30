@@ -1,6 +1,6 @@
 package software.wings.infra;
 
-import static io.harness.annotations.dev.HarnessModule._870_CG_YAML;
+import static io.harness.annotations.dev.HarnessModule._955_CG_YAML;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -26,7 +26,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @OwnedBy(CDC)
-@TargetModule(_870_CG_YAML)
+@TargetModule(_955_CG_YAML)
 public final class InfrastructureDefinitionYaml extends BaseEntityYaml {
   private String name;
   private CloudProviderType cloudProviderType;

@@ -3,13 +3,11 @@ package io.harness.cdng.creator.plan.execution;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cdng.advisers.RollbackCustomAdviser;
+import io.harness.cdng.creator.plan.CDPlanCreatorUtils;
 import io.harness.cdng.creator.plan.rollback.RollbackPlanCreator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.plancreator.beans.OrchestrationConstants;
-import io.harness.plancreator.utils.CommonPlanCreatorUtils;
-import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
@@ -22,8 +20,8 @@ import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
-import io.harness.steps.common.NGSectionStep;
 import io.harness.steps.common.NGSectionStepParameters;
+import io.harness.steps.common.NGSectionStepWithRollbackInfo;
 
 import com.google.common.base.Preconditions;
 import java.util.Collections;
@@ -51,7 +49,7 @@ public class CDExecutionPMSPlanCreator {
         PlanNode.builder()
             .uuid(executionField.getNode().getUuid())
             .identifier(OrchestrationConstants.EXECUTION_NODE_IDENTIFIER)
-            .stepType(NGSectionStep.STEP_TYPE)
+            .stepType(NGSectionStepWithRollbackInfo.STEP_TYPE)
             .group(StepOutcomeGroup.EXECUTION.name())
             .name(OrchestrationConstants.EXECUTION_NODE_NAME)
             .stepParameters(stepParameters)
@@ -59,7 +57,6 @@ public class CDExecutionPMSPlanCreator {
                 FacilitatorObtainment.newBuilder()
                     .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
                     .build())
-            .adviserObtainment(AdviserObtainment.newBuilder().setType(RollbackCustomAdviser.ADVISER_TYPE).build())
             .skipExpressionChain(false)
             .build();
 
@@ -85,7 +82,7 @@ public class CDExecutionPMSPlanCreator {
     if (EmptyPredicate.isNotEmpty(stepYamlFields)) {
       YamlField stepsField =
           Preconditions.checkNotNull(executionField.getNode().getField(YAMLFieldNameConstants.STEPS));
-      PlanNode stepsNode = CommonPlanCreatorUtils.getStepsPlanNode(
+      PlanNode stepsNode = CDPlanCreatorUtils.getCdStepsNode(
           stepsField.getNode().getUuid(), stepYamlFields.get(0).getNode().getUuid(), "Steps Element");
       responseMap.put(stepsNode.getUuid(), PlanCreationResponse.builder().node(stepsNode.getUuid(), stepsNode).build());
     }

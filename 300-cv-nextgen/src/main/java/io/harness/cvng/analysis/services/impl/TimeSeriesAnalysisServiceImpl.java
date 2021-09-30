@@ -412,6 +412,18 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   @Override
+  public List<TimeSeriesRiskSummary> getRiskSummariesByTimeRange(
+      String verificationTaskId, Instant startTime, Instant endTime) {
+    return hPersistence.createQuery(TimeSeriesRiskSummary.class, excludeAuthority)
+        .filter(TimeSeriesRiskSummaryKeys.verificationTaskId, verificationTaskId)
+        .field(TimeSeriesRiskSummaryKeys.analysisStartTime)
+        .greaterThanOrEq(startTime)
+        .field(TimeSeriesRiskSummaryKeys.analysisEndTime)
+        .lessThanOrEq(endTime)
+        .asList();
+  }
+
+  @Override
   public void saveAnalysis(String taskId, ServiceGuardTimeSeriesAnalysisDTO analysis) {
     LearningEngineTask learningEngineTask = learningEngineTaskService.get(taskId);
     Preconditions.checkNotNull(learningEngineTask, "Needs to be a valid LE task.");

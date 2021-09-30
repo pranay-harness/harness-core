@@ -58,7 +58,7 @@ public class ExpiryHelper {
                                   .build())
               .addAllUnitProgress(unitProgressList)
               .build();
-      engine.handleStepResponse(nodeExecution.getUuid(), expiredStepResponse);
+      engine.processStepResponse(nodeExecution.getAmbiance(), expiredStepResponse);
     } catch (NodeExecutionUpdateFailedException ex) {
       throw new InterruptProcessingFailedException(
           InterruptType.MARK_EXPIRED, "Expiry failed for NodeExecutionId: " + nodeExecution.getUuid(), ex);

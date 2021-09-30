@@ -7,6 +7,7 @@ import io.harness.annotations.dev.OwnedBy;
 @OwnedBy(CDC)
 public interface TemplateEntityConstants {
   String STEP = "Step";
+  String STAGE = "Stage";
   String STABLE_TEMPLATE = "Stable";
   String LAST_UPDATES_TEMPLATE = "LastUpdated";
   String ALL = "All";

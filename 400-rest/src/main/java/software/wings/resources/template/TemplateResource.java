@@ -1,6 +1,7 @@
 package software.wings.resources.template;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.security.PermissionAttribute.PermissionType.APP_TEMPLATE;
@@ -195,10 +196,13 @@ public class TemplateResource {
     return new RestResponse<>(templateService.getYamlOfTemplate(templateId, version));
   }
 
-  @GET
+  @POST
   @Path("/metadata")
-  public RestResponse<List<TemplateMetaData>> getTemplateMetadata(@QueryParam("accountId") String accountId,
-      @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") List<String> appIds) {
-    return new RestResponse<>(templateService.listTemplatesWithMetadata(new HashSet<>(appIds), accountId));
+  public RestResponse<List<TemplateMetaData>> getTemplateMetadata(
+      @QueryParam("accountId") String accountId, List<String> appIds) {
+    if (isNotEmpty(appIds)) {
+      return new RestResponse<>(templateService.listTemplatesWithMetadata(new HashSet<>(appIds), accountId));
+    }
+    return new RestResponse();
   }
 }

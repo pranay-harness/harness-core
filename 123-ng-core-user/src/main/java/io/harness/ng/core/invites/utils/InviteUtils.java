@@ -34,7 +34,7 @@ public class InviteUtils {
       resourceUrl = String.format(
           "/account/%s/home/orgs/%s/projects/%s/details", accountIdentifier, orgIdentifier, projectIdentifier);
     } else if (isNotEmpty(orgIdentifier)) {
-      resourceUrl = String.format("/account/%s/home/organizations/%s/details", accountIdentifier, orgIdentifier);
+      resourceUrl = String.format("/account/%s/settings/organizations/%s/details", accountIdentifier, orgIdentifier);
     }
 
     uriBuilder.setFragment(resourceUrl);

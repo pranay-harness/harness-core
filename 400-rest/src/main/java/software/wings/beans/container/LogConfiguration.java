@@ -1,6 +1,6 @@
 package software.wings.beans.container;
 
-import static io.harness.annotations.dev.HarnessModule._870_CG_YAML;
+import static io.harness.annotations.dev.HarnessModule._955_CG_YAML;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
 @OwnedBy(PL)
 @Data
 @Builder
-@TargetModule(_870_CG_YAML)
+@TargetModule(_955_CG_YAML)
 public class LogConfiguration {
   @Attributes(title = "Log Driver") private String logDriver;
   @Attributes(title = "Options") private List<LogOption> options;

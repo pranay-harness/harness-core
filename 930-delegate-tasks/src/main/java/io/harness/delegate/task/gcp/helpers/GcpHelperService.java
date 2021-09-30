@@ -58,6 +58,9 @@ public class GcpHelperService {
   private static final String GOOGLE_INTERNAL_COMPUTE_METADATA_DEFAULT_TOKEN_URL =
       "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token?scopes=";
   private static final String GOOGLE_META_BASE_URL = "http://metadata.google.internal/computeMetadata";
+  private static final Long REQUEST_TIMEOUT_IN_SECONDS = 10L;
+  private static final String HEADER_NAME = "Metadata-Flavor";
+  private static final String HEADER_VALUE = "Google";
 
   @Inject private GcpHttpTransportHelperService gcpHttpTransportHelperService;
   @Inject private GcpCredentialsHelperService gcpCredentialsHelperService;
@@ -198,23 +201,10 @@ public class GcpHelperService {
 
   @SuppressWarnings("PMD")
   public String getDefaultCredentialsAccessToken(String taskTypeName) {
-    OkHttpClient client = Http.getOkHttpClientBuilder()
-                              .connectTimeout(10, TimeUnit.SECONDS)
-                              .proxy(Http.checkAndGetNonProxyIfApplicable(GOOGLE_META_BASE_URL))
-                              .build();
-    Request request = new Request.Builder()
-                          .header("Metadata-Flavor", "Google")
-                          .url(GOOGLE_INTERNAL_COMPUTE_METADATA_DEFAULT_TOKEN_URL + ContainerScopes.CLOUD_PLATFORM)
-                          .build();
     try {
-      okhttp3.Response response = client.newCall(request).execute();
-      if (response.isSuccessful()) {
-        log.info(taskTypeName + " - Fetched OAuth2 access token from metadata server");
-        return String.join(
-            " ", "Bearer", (String) JsonUtils.asObject(response.body().string(), HashMap.class).get("access_token"));
-      }
-      log.error(taskTypeName + " - Failed to fetch access token from metadata xxxxxxxx " + response);
-      throw new GcbClientException("Failed to fetch access token from metadata server");
+      String accessToken = getIdentifierFromUrl(
+          taskTypeName, GOOGLE_INTERNAL_COMPUTE_METADATA_DEFAULT_TOKEN_URL + ContainerScopes.CLOUD_PLATFORM);
+      return String.join(" ", "Bearer", (String) JsonUtils.asObject(accessToken, HashMap.class).get("access_token"));
     } catch (IOException | NullPointerException e) {
       log.error(taskTypeName + " - Failed to get accessToken due to: ", e);
       throw new InvalidRequestException("Can not retrieve accessToken from from cluster meta");
@@ -223,22 +213,32 @@ public class GcpHelperService {
 
   @SuppressWarnings("PMD")
   public String getClusterProjectId(String taskTypeName) {
-    OkHttpClient client = Http.getOkHttpClientBuilder()
-                              .connectTimeout(10, TimeUnit.SECONDS)
-                              .proxy(Http.checkAndGetNonProxyIfApplicable(GOOGLE_META_BASE_URL))
-                              .build();
-    Request request = new Request.Builder()
-                          .header("Metadata-Flavor", "Google")
-                          .url("http://metadata.google.internal/computeMetadata/v1/project/project-id")
-                          .build();
     try {
-      okhttp3.Response response = client.newCall(request).execute();
-      String projectId = response.body().string();
+      String projectId =
+          getIdentifierFromUrl(taskTypeName, "http://metadata.google.internal/computeMetadata/v1/project/project-id");
       log.info(taskTypeName + " - Fetched projectId from metadata xxxxxxxx " + projectId);
       return projectId;
     } catch (IOException | NullPointerException e) {
       throw new InvalidRequestException("Can not retrieve project-id from from cluster meta");
     }
+  }
+
+  public String getIdentifierFromUrl(String taskTypeName, String requestUrl) throws IOException {
+    OkHttpClient client = getHttpClient(REQUEST_TIMEOUT_IN_SECONDS, GOOGLE_META_BASE_URL);
+    Request request = getHttpRequest(HEADER_NAME, HEADER_VALUE, requestUrl);
+    return extractBodyFromClientAndRequest(taskTypeName, client, request);
+  }
+
+  public String extractBodyFromClientAndRequest(String taskTypeName, OkHttpClient httpClient, Request request)
+      throws IOException {
+    okhttp3.Response response = httpClient.newCall(request).execute();
+    if (response.isSuccessful()) {
+      log.info(taskTypeName + " - Successfully fetched identifier from metadata server");
+      return response.body().string();
+    }
+
+    log.error(taskTypeName + " - Failed to fetch data from metadata xxxxxxxx " + response);
+    throw new GcbClientException("Failed to fetch data from metadata server");
   }
 
   public String getBasicAuthHeader(char[] serviceAccountKeyFileContent, boolean isUseDelegate) throws IOException {
@@ -270,6 +270,17 @@ public class GcpHelperService {
     } else {
       return (String) (JsonUtils.asObject(new String(serviceAccountKeyFileContent), HashMap.class)).get("project_id");
     }
+  }
+
+  public OkHttpClient getHttpClient(long timeoutInSeconds, String url) {
+    return Http.getOkHttpClientBuilder()
+        .connectTimeout(timeoutInSeconds, TimeUnit.SECONDS)
+        .proxy(Http.checkAndGetNonProxyIfApplicable(url))
+        .build();
+  }
+
+  public Request getHttpRequest(String headerName, String headerValue, String url) {
+    return new Request.Builder().header(headerName, headerValue).url(url).build();
   }
 
   /**

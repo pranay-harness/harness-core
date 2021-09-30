@@ -52,8 +52,16 @@ public class InstallUtils {
 
   private static final String helmBaseDir = "./client-tools/helm/";
 
-  private static final String chartMuseumVersion = "v0.13.0"; // updated version from v0.8.2 to v0.13.0
+  private static final String chartMuseumVersionOld = "v0.8.2";
+  private static final String chartMuseumVersionNew = "v0.13.0"; // updated version from v0.8.2 to v0.13.0
   // to enable IRSA for chartmuseum
+  private static final List<String> chartMuseumVersions = Arrays.asList(chartMuseumVersionOld, chartMuseumVersionNew);
+  private static final Map<String, String> chartMuseumPaths = new HashMap<>();
+  static {
+    chartMuseumPaths.put(chartMuseumVersionOld, "chartMuseum");
+    chartMuseumPaths.put(chartMuseumVersionNew, "chartMuseum");
+  }
+
   private static final String chartMuseumBaseDir = "./client-tools/chartmuseum/";
 
   private static final String ocVersion = "v4.2.16";
@@ -88,7 +96,7 @@ public class InstallUtils {
 
   private static final String scmBaseDir = "./client-tools/scm/";
   private static final String scmBinary = "scm";
-  private static final String defaultScmVersion = "b276dd03";
+  private static final String defaultScmVersion = "802ac188";
 
   private static final String KUBECTL_CDN_PATH = "public/shared/tools/kubectl/release/%s/bin/%s/amd64/kubectl";
   private static final String CHART_MUSEUM_CDN_PATH =
@@ -151,8 +159,11 @@ public class InstallUtils {
     return helmPaths.get(helm3Version);
   }
 
-  public static String getChartMuseumPath() {
-    return chartMuseumPath;
+  public static String getChartMuseumPath(boolean useLastestVersion) {
+    if (useLastestVersion) {
+      return chartMuseumPaths.get(chartMuseumVersionNew);
+    }
+    return chartMuseumPaths.get(chartMuseumVersionOld);
   }
 
   public static String getOcPath() {
@@ -668,25 +679,32 @@ public class InstallUtils {
         + "storage/harness-download/harness-chartmuseum/release/" + version + "/bin/" + getOsPath()
         + "/amd64/chartmuseum";
   }
-
   public static boolean installChartMuseum(DelegateConfiguration configuration) {
+    boolean chartMuseumVersionsInstalled = true;
+    for (String version : chartMuseumVersions) {
+      chartMuseumVersionsInstalled = chartMuseumVersionsInstalled && installChartMuseum(configuration, version);
+    }
+    return chartMuseumVersionsInstalled;
+  }
+  public static boolean installChartMuseum(DelegateConfiguration configuration, String version) {
     try {
       if (SystemUtils.IS_OS_WINDOWS) {
         log.info("Skipping chart museum install on Windows");
         return true;
       }
 
-      String chartMuseumDirectory = chartMuseumBaseDir + chartMuseumVersion;
+      String chartMuseumDirectory = chartMuseumBaseDir + version;
       if (validateChartMuseumExists(chartMuseumDirectory)) {
         chartMuseumPath = Paths.get(chartMuseumDirectory + "/chartmuseum").toAbsolutePath().normalize().toString();
-        log.info("chartmuseum version %s already installed", chartMuseumVersion);
+        chartMuseumPaths.put(version, chartMuseumPath);
+        log.info("chartmuseum version %s already installed", version);
         return true;
       }
 
       log.info("Installing chartmuseum");
       createDirectoryIfDoesNotExist(chartMuseumDirectory);
 
-      String downloadUrl = getChartMuseumDownloadUrl(configuration, chartMuseumVersion);
+      String downloadUrl = getChartMuseumDownloadUrl(configuration, version);
       log.info("Download Url is " + downloadUrl);
 
       String script = "curl $MANAGER_PROXY_CURL -kLO " + downloadUrl + "\n"
@@ -702,6 +720,7 @@ public class InstallUtils {
       ProcessResult result = processExecutor.execute();
       if (result.getExitValue() == 0) {
         chartMuseumPath = Paths.get(chartMuseumDirectory + "/chartmuseum").toAbsolutePath().normalize().toString();
+        chartMuseumPaths.put(version, chartMuseumPath);
         log.info(result.outputUTF8());
 
         if (validateChartMuseumExists(chartMuseumDirectory)) {

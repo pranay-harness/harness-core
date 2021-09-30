@@ -49,4 +49,6 @@ public interface PMSPipelineService {
 
   Criteria formCriteria(String accountId, String orgId, String projectId, String filterIdentifier,
       PipelineFilterPropertiesDto filterProperties, boolean deleted, String module, String searchTerm);
+
+  boolean deleteAllPipelinesInAProject(String accountId, String orgId, String projectId);
 }

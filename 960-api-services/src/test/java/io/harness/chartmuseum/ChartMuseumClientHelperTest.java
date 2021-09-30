@@ -54,7 +54,7 @@ public class ChartMuseumClientHelperTest extends CategoryTest {
   public void setup() throws Exception {
     MockitoAnnotations.initMocks(this);
 
-    doReturn(CHARTMUSEUM_BIN_PATH).when(k8sGlobalConfigService).getChartMuseumPath();
+    doReturn(CHARTMUSEUM_BIN_PATH).when(k8sGlobalConfigService).getChartMuseumPath(false);
     doReturn(startedProcess)
         .when(clientHelper)
         .startProcess(anyString(), anyMapOf(String.class, String.class), any(StringBuffer.class));
@@ -71,7 +71,7 @@ public class ChartMuseumClientHelperTest extends CategoryTest {
     final String region = "us-west1";
 
     ChartMuseumServer startedServer =
-        clientHelper.startS3ChartMuseumServer(bucketName, basePath, region, true, null, null, false);
+        clientHelper.startS3ChartMuseumServer(bucketName, basePath, region, true, null, null, false, false);
     assertThat(startedServer.getStartedProcess()).isEqualTo(startedProcess);
     ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
 
@@ -94,7 +94,7 @@ public class ChartMuseumClientHelperTest extends CategoryTest {
     final String region = "us-west1";
 
     ChartMuseumServer startedServer =
-        clientHelper.startS3ChartMuseumServer(bucketName, basePath, region, true, null, null, false);
+        clientHelper.startS3ChartMuseumServer(bucketName, basePath, region, true, null, null, false, false);
     assertThat(startedServer.getStartedProcess()).isEqualTo(startedProcess);
     ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<Map> envCaptor = ArgumentCaptor.forClass(Map.class);
@@ -119,7 +119,7 @@ public class ChartMuseumClientHelperTest extends CategoryTest {
     final String region = "us-west1";
 
     ChartMuseumServer startedServer =
-        clientHelper.startS3ChartMuseumServer(bucketName, basePath, region, false, null, null, true);
+        clientHelper.startS3ChartMuseumServer(bucketName, basePath, region, false, null, null, true, false);
     assertThat(startedServer.getStartedProcess()).isEqualTo(startedProcess);
     ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
     verify(clientHelper, times(1)).startProcess(commandCaptor.capture(), any(Map.class), any(StringBuffer.class));
@@ -145,7 +145,7 @@ public class ChartMuseumClientHelperTest extends CategoryTest {
     doReturn(credentialsFilePath).when(clientHelper).writeGCSCredentialsFile(resourceDirectory, serviceAccountKey);
 
     ChartMuseumServer startedServer =
-        clientHelper.startGCSChartMuseumServer(bucketName, basePath, serviceAccountKey, resourceDirectory);
+        clientHelper.startGCSChartMuseumServer(bucketName, basePath, serviceAccountKey, resourceDirectory, false);
     assertThat(startedServer.getStartedProcess()).isEqualTo(startedProcess);
     ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
 

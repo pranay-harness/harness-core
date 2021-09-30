@@ -18,7 +18,6 @@ import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse.PlanCreationResponseBuilder;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
-import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
 
 import java.util.List;
@@ -31,8 +30,6 @@ public class ParallelStepGroupRollbackPMSPlanCreator {
       return PlanCreationResponse.builder().build();
     }
 
-    YamlNode stageNode =
-        YamlUtils.getGivenYamlNodeFromParentPath(parallelStepGroup.getNode(), YAMLFieldNameConstants.STAGE);
     RollbackOptionalChildrenParametersBuilder rollbackOptionalChildrenParametersBuilder =
         RollbackOptionalChildrenParameters.builder();
 

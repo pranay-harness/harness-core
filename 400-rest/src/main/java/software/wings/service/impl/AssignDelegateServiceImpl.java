@@ -102,7 +102,6 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
   public static final String SCOPE_WILDCARD = "*";
   private static final SecureRandom random = new SecureRandom();
   public static final long MAX_DELEGATE_LAST_HEARTBEAT = (5 * 60 * 1000L) + (15 * 1000L); // 5 minutes 15 seconds
-  private static final long MAX_DELEGATE_LAST_HEARTBEAT_FOR_INACTIVITY = 300 * 1000L;
 
   public static final String ERROR_MESSAGE =
       "Delegate selection log: Delegate id: %s, Name: %s, Host name: %s, Profile name: %s, %s with note: %s at: %s";
@@ -152,7 +151,6 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
                   .project(DelegateKeys.delegateGroupName, true)
                   .project(DelegateKeys.delegateGroupId, true)
                   .project(DelegateKeys.ng, true)
-                  .project(DelegateKeys.profileExecutedAt, true)
                   .asList();
             }
           });
@@ -753,19 +751,6 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
   }
 
   @Override
-  public void clearConnectionResults(String accountId) {
-    persistence.delete(persistence.createQuery(DelegateConnectionResult.class)
-                           .filter(DelegateConnectionResultKeys.accountId, accountId));
-  }
-
-  @Override
-  public void clearConnectionResults(String accountId, String delegateId) {
-    persistence.delete(persistence.createQuery(DelegateConnectionResult.class)
-                           .filter(DelegateConnectionResultKeys.accountId, accountId)
-                           .filter(DelegateConnectionResultKeys.delegateId, delegateId));
-  }
-
-  @Override
   public String getActiveDelegateAssignmentErrorMessage(TaskFailureReason reason, DelegateTask delegateTask) {
     log.info("Delegate task is terminated");
 
@@ -885,14 +870,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
     Map<DelegateActivity, List<Delegate>> delegatesMap =
         accountDelegates.stream().collect(Collectors.groupingBy(delegate -> {
           if (DelegateInstanceStatus.ENABLED == delegate.getStatus()) {
-            if (delegate.getProfileExecutedAt() > 0) {
-              if (delegate.getLastHeartBeat() > oldestAcceptableHeartBeat) {
-                return DelegateActivity.ACTIVE;
-              } else {
-                return DelegateActivity.DISCONNECTED;
-              }
-            } else if (delegate.getLastHeartBeat() > currentTimeMillis() - MAX_DELEGATE_LAST_HEARTBEAT_FOR_INACTIVITY) {
-              return DelegateActivity.INACTIVE;
+            if (delegate.getLastHeartBeat() > oldestAcceptableHeartBeat) {
+              return DelegateActivity.ACTIVE;
             } else {
               return DelegateActivity.DISCONNECTED;
             }
@@ -957,12 +936,6 @@ public class AssignDelegateServiceImpl implements AssignDelegateService, Delegat
                                          .map(Delegate::getUuid)
                                          .collect(Collectors.toSet());
       delegateSelectionLogsService.logWaitingForApprovalDelegate(batch, accountId, wapprDelegateIds);
-    }
-
-    if (delegatesMap.get(DelegateActivity.INACTIVE) != null) {
-      Set<String> inactiveDelegateIds =
-          delegatesMap.get(DelegateActivity.INACTIVE).stream().map(Delegate::getUuid).collect(Collectors.toSet());
-      delegateSelectionLogsService.logInactiveDelegate(batch, accountId, inactiveDelegateIds);
     }
   }
 

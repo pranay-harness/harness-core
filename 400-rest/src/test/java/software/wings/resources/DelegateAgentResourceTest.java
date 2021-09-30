@@ -49,7 +49,6 @@ import io.harness.delegate.beans.DelegateProfileParams;
 import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateScripts;
-import io.harness.delegate.beans.DelegateSize;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -221,22 +220,6 @@ public class DelegateAgentResourceTest extends CategoryTest {
             new GenericType<RestResponse<String>>() {});
     verify(delegateService, atLeastOnce())
         .registerHeartbeat(ACCOUNT_ID, DELEGATE_ID, delegateConnectionHeartbeat, ConnectionMode.POLLING);
-  }
-
-  @Test
-  @Owner(developers = ROHITKARELIA)
-  @Category(UnitTests.class)
-  public void shouldClearCache() {
-    Delegate delegate = Delegate.builder().build();
-    when(delegateService.update(any(Delegate.class)))
-        .thenAnswer(invocation -> invocation.getArgumentAt(0, Delegate.class));
-
-    RESOURCES.client()
-        .target(
-            "/agent/delegates/" + DELEGATE_ID + "/clear-cache?delegateId=" + DELEGATE_ID + "&accountId=" + ACCOUNT_ID)
-        .request()
-        .put(entity(delegate, MediaType.APPLICATION_JSON), new GenericType<RestResponse<Delegate>>() {});
-    verify(delegateService, atLeastOnce()).clearCache(ACCOUNT_ID, DELEGATE_ID);
   }
 
   @Test
@@ -429,7 +412,7 @@ public class DelegateAgentResourceTest extends CategoryTest {
                                           .stopScript("stopScript")
                                           .build();
     when(delegateService.getDelegateScriptsNg(ACCOUNT_ID, delegateVersion,
-             subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl, DelegateSize.LAPTOP))
+             subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl))
         .thenReturn(delegateScripts);
 
     RestResponse<DelegateScripts> restResponse =
@@ -441,7 +424,7 @@ public class DelegateAgentResourceTest extends CategoryTest {
 
     verify(delegateService, atLeastOnce())
         .getDelegateScriptsNg(ACCOUNT_ID, delegateVersion,
-            subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl, DelegateSize.LAPTOP);
+            subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl);
     assertThat(restResponse.getResource()).isInstanceOf(DelegateScripts.class).isNotNull().isEqualTo(delegateScripts);
   }
 

@@ -21,7 +21,7 @@ public class ChartMuseumCapabilityCheck implements CapabilityCheck, ProtoCapabil
   @Override
   public CapabilityResponse performCapabilityCheck(ExecutionCapability delegateCapability) {
     ChartMuseumCapability capability = (ChartMuseumCapability) delegateCapability;
-    String chartMuseumPath = InstallUtils.getChartMuseumPath();
+    String chartMuseumPath = InstallUtils.getChartMuseumPath(capability.isUseLatestChartMuseumVersion());
     if (isBlank(chartMuseumPath)) {
       return CapabilityResponse.builder().delegateCapability(capability).validated(false).build();
     }
@@ -39,7 +39,7 @@ public class ChartMuseumCapabilityCheck implements CapabilityCheck, ProtoCapabil
     if (parameters.getCapabilityCase() != CapabilityParameters.CapabilityCase.CHART_MUSEUM_PARAMETERS) {
       return builder.permissionResult(PermissionResult.DENIED).build();
     }
-    String chartMuseumPath = InstallUtils.getChartMuseumPath();
+    String chartMuseumPath = InstallUtils.getChartMuseumPath(false);
     if (isBlank(chartMuseumPath)) {
       return builder.permissionResult(PermissionResult.DENIED).build();
     }

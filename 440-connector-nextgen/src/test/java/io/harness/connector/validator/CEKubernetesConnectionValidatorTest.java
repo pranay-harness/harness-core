@@ -25,8 +25,8 @@ import io.harness.connector.helper.EncryptionHelper;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.connector.CEFeatures;
 import io.harness.delegate.beans.connector.cek8s.CEKubernetesClusterConfigDTO;
+import io.harness.delegate.beans.connector.k8Connector.CEKubernetesConnectionTaskParams;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
-import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskParams;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskResponse;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesDelegateDetailsDTO;
@@ -166,23 +166,21 @@ public class CEKubernetesConnectionValidatorTest extends CategoryTest {
   private void assertDelegateTaskRequest(DelegateTaskRequest delegateTaskRequest) {
     assertThat(delegateTaskRequest).isNotNull();
     assertThat(delegateTaskRequest.getTaskType()).isEqualTo(TaskType.CE_VALIDATE_KUBERNETES_CONFIG.name());
+    assertThat(delegateTaskRequest.getTaskParameters()).isExactlyInstanceOf(CEKubernetesConnectionTaskParams.class);
 
-    assertThat(delegateTaskRequest.getTaskParameters()).isExactlyInstanceOf(KubernetesConnectionTaskParams.class);
-    final KubernetesConnectionTaskParams kubernetesConnectionTaskParams =
-        (KubernetesConnectionTaskParams) delegateTaskRequest.getTaskParameters();
-    assertThat(kubernetesConnectionTaskParams.getKubernetesClusterConfig()).isNotNull();
-    assertThat(kubernetesConnectionTaskParams.getKubernetesClusterConfig().getCredential()).isNotNull();
+    final CEKubernetesConnectionTaskParams ceKubernetesConnectionTaskParams =
+        (CEKubernetesConnectionTaskParams) delegateTaskRequest.getTaskParameters();
+
+    assertThat(ceKubernetesConnectionTaskParams.getKubernetesClusterConfig()).isNotNull();
+    assertThat(ceKubernetesConnectionTaskParams.getKubernetesClusterConfig().getCredential()).isNotNull();
+    assertThat(ceKubernetesConnectionTaskParams.getFeaturesEnabled()).isNotEmpty().contains(CEFeatures.VISIBILITY);
     assertThat(
-        kubernetesConnectionTaskParams.getKubernetesClusterConfig().getCredential().getKubernetesCredentialType())
+        ceKubernetesConnectionTaskParams.getKubernetesClusterConfig().getCredential().getKubernetesCredentialType())
         .isEqualTo(INHERIT_FROM_DELEGATE);
-
-    assertThat(kubernetesConnectionTaskParams.getKubernetesClusterConfig().getCredential().getConfig())
+    assertThat(ceKubernetesConnectionTaskParams.getKubernetesClusterConfig().getCredential().getConfig())
         .isExactlyInstanceOf(KubernetesDelegateDetailsDTO.class);
-    final KubernetesDelegateDetailsDTO kubernetesDelegateDetailsDTO =
-        (KubernetesDelegateDetailsDTO) kubernetesConnectionTaskParams.getKubernetesClusterConfig()
-            .getCredential()
-            .getConfig();
-    assertThat(kubernetesConnectionTaskParams.getKubernetesClusterConfig().getDelegateSelectors())
+
+    assertThat(ceKubernetesConnectionTaskParams.getKubernetesClusterConfig().getDelegateSelectors())
         .contains(DELEGATE_NAME);
   }
 

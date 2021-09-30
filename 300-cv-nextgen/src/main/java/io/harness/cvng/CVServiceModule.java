@@ -16,8 +16,8 @@ import io.harness.cvng.activity.entities.CustomActivity.CustomActivityUpdatableE
 import io.harness.cvng.activity.entities.DeploymentActivity.DeploymentActivityUpdatableEntity;
 import io.harness.cvng.activity.entities.HarnessCDActivity.HarnessCDActivityUpdatableEntity;
 import io.harness.cvng.activity.entities.InfrastructureActivity.InfrastructureActivityUpdatableEntity;
-import io.harness.cvng.activity.entities.KubernetesActivity.KubernetesActivityUpdatableEntity;
 import io.harness.cvng.activity.entities.KubernetesActivitySource.KubernetesActivitySourceUpdatableEntity;
+import io.harness.cvng.activity.entities.KubernetesClusterActivity.KubernetesClusterActivityUpdatableEntity;
 import io.harness.cvng.activity.entities.PagerDutyActivity.PagerDutyActivityUpdatableEntity;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.services.impl.ActivityServiceImpl;
@@ -33,6 +33,7 @@ import io.harness.cvng.analysis.services.api.AnalysisService;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
 import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
 import io.harness.cvng.analysis.services.api.HealthVerificationService;
+import io.harness.cvng.analysis.services.api.LearningEngineDevService;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.cvng.analysis.services.api.LogAnalysisService;
 import io.harness.cvng.analysis.services.api.LogClusterService;
@@ -44,6 +45,7 @@ import io.harness.cvng.analysis.services.impl.AnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.DeploymentLogAnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.DeploymentTimeSeriesAnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.HealthVerificationServiceImpl;
+import io.harness.cvng.analysis.services.impl.LearningEngineDevServiceImpl;
 import io.harness.cvng.analysis.services.impl.LearningEngineTaskServiceImpl;
 import io.harness.cvng.analysis.services.impl.LogAnalysisServiceImpl;
 import io.harness.cvng.analysis.services.impl.LogClusterServiceImpl;
@@ -132,6 +134,7 @@ import io.harness.cvng.core.services.impl.DefaultDeleteEntityByHandler;
 import io.harness.cvng.core.services.impl.DeletedCVConfigServiceImpl;
 import io.harness.cvng.core.services.impl.FeatureFlagServiceImpl;
 import io.harness.cvng.core.services.impl.HostRecordServiceImpl;
+import io.harness.cvng.core.services.impl.KubernetesChangeSourceUpdateHandler;
 import io.harness.cvng.core.services.impl.LogRecordServiceImpl;
 import io.harness.cvng.core.services.impl.MetricPackServiceImpl;
 import io.harness.cvng.core.services.impl.MonitoringSourcePerpetualTaskServiceImpl;
@@ -237,6 +240,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
@@ -510,7 +514,7 @@ public class CVServiceModule extends AbstractModule {
     activityTypeActivityUpdatableEntityMapBinder.addBinding(ActivityType.INFRASTRUCTURE)
         .to(InfrastructureActivityUpdatableEntity.class);
     activityTypeActivityUpdatableEntityMapBinder.addBinding(ActivityType.KUBERNETES)
-        .to(KubernetesActivityUpdatableEntity.class);
+        .to(KubernetesClusterActivityUpdatableEntity.class);
     activityTypeActivityUpdatableEntityMapBinder.addBinding(ActivityType.CUSTOM)
         .to(CustomActivityUpdatableEntity.class);
 
@@ -518,18 +522,24 @@ public class CVServiceModule extends AbstractModule {
         MapBinder.newMapBinder(binder(), ChangeSourceType.class, ChangeSourceUpdateHandler.class);
     changeSourceUpdateHandlerMapBinder.addBinding(ChangeSourceType.PAGER_DUTY)
         .to(PagerdutyChangeSourceUpdateHandler.class);
+    changeSourceUpdateHandlerMapBinder.addBinding(ChangeSourceType.KUBERNETES)
+        .to(KubernetesChangeSourceUpdateHandler.class);
 
     bind(ChangeEventService.class).to(ChangeEventServiceImpl.class);
     bind(ChangeEventEntityAndDTOTransformer.class);
-    bind(ChangeEventMetaDataTransformer.class)
-        .annotatedWith(Names.named(ChangeSourceType.HARNESS_CD.name()))
-        .to(HarnessCDChangeEventTransformer.class);
-    bind(ChangeEventMetaDataTransformer.class)
-        .annotatedWith(Names.named(ChangeSourceType.KUBERNETES.name()))
-        .to(KubernetesClusterChangeEventMetadataTransformer.class);
-    bind(ChangeEventMetaDataTransformer.class)
-        .annotatedWith(Names.named(ChangeSourceType.PAGER_DUTY.name()))
-        .to(PagerDutyChangeEventTransformer.class);
+
+    bind(LearningEngineDevService.class).to(LearningEngineDevServiceImpl.class);
+    MapBinder<ChangeSourceType, ChangeEventMetaDataTransformer> changeTypeMetaDataTransformerMapBinder =
+        MapBinder.newMapBinder(binder(), ChangeSourceType.class, ChangeEventMetaDataTransformer.class);
+    changeTypeMetaDataTransformerMapBinder.addBinding(ChangeSourceType.HARNESS_CD)
+        .to(HarnessCDChangeEventTransformer.class)
+        .in(Scopes.SINGLETON);
+    changeTypeMetaDataTransformerMapBinder.addBinding(ChangeSourceType.KUBERNETES)
+        .to(KubernetesClusterChangeEventMetadataTransformer.class)
+        .in(Scopes.SINGLETON);
+    changeTypeMetaDataTransformerMapBinder.addBinding(ChangeSourceType.PAGER_DUTY)
+        .to(PagerDutyChangeEventTransformer.class)
+        .in(Scopes.SINGLETON);
   }
 
   private void bindTheMonitoringSourceImportStatusCreators() {

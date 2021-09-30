@@ -392,7 +392,7 @@ fn populate_from_bazel(name: &String, rule: &String, modules: &HashSet<String>) 
             .take(3)
             .collect::<String>()
             .parse::<f32>()
-            .expect("the model index was ot resolved")
+            .expect("the model index was not resolved")
             + index_fraction(name),
         directory: directory,
         jar: jar,

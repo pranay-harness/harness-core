@@ -9,29 +9,21 @@ import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.executions.plan.PlanService;
 import io.harness.engine.interrupts.InterruptManager;
 import io.harness.engine.interrupts.InterruptPackage;
-import io.harness.engine.observers.OrchestrationStartObserver;
-import io.harness.engine.observers.beans.OrchestrationStartInfo;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecutionMetadata;
 import io.harness.interrupts.Interrupt;
-import io.harness.observer.Subject;
 import io.harness.plan.Plan;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.OrchestrationEvent;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
-import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.springdata.TransactionHelper;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
 import javax.validation.Valid;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.PIPELINE)
@@ -44,9 +36,6 @@ public class OrchestrationServiceImpl implements OrchestrationService {
   @Inject private PlanService planService;
   @Inject private PlanExecutionMetadataService planExecutionMetadataService;
   @Inject private TransactionHelper transactionHelper;
-  @Inject @Named("EngineExecutorService") private ExecutorService executorService;
-
-  @Getter private final Subject<OrchestrationStartObserver> orchestrationStartSubject = new Subject<>();
 
   @Override
   public PlanExecution startExecution(@Valid Plan plan, Map<String, String> setupAbstractions,
@@ -87,21 +76,9 @@ public class OrchestrationServiceImpl implements OrchestrationService {
                                        ? planExecutionMetadata.getTriggerPayload()
                                        : TriggerPayload.newBuilder().build())
                                .build());
-    orchestrationStartSubject.fireInform(OrchestrationStartObxxxxxxxx:onStart,
-        OrchestrationStartInfo.builder().ambiance(ambiance).planExecutionMetadata(planExecutionMetadata).build());
 
-    PlanNodeProto planNode = plan.fetchStartingNode();
-    if (planNode == null) {
-      log.error("Cannot Start Execution for empty plan");
-      return null;
-    }
-    submitToEngine(ambiance, planNode);
+    orchestrationEngine.triggerNode(ambiance, plan);
     return savedPlanExecution;
-  }
-
-  @VisibleForTesting
-  void submitToEngine(Ambiance ambiance, PlanNodeProto planNode) {
-    executorService.submit(() -> orchestrationEngine.triggerExecution(ambiance, planNode));
   }
 
   private PlanExecution createPlanExecution(@Valid Plan plan, Map<String, String> setupAbstractions,

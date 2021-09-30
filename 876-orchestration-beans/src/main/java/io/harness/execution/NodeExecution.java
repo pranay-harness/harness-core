@@ -13,7 +13,10 @@ import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
-import io.harness.persistence.UuidAware;
+import io.harness.persistence.UuidAccess;
+import io.harness.plan.Node;
+import io.harness.plan.NodeType;
+import io.harness.plan.PlanNode;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.data.StepOutcomeRef;
@@ -39,9 +42,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
+import lombok.AccessLevel;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.Singular;
+import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.UtilityClass;
 import lombok.experimental.Wither;
@@ -54,20 +60,21 @@ import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @OwnedBy(CDC)
-@Data
+@Value
 @Builder
 @FieldNameConstants(innerTypeName = "NodeExecutionKeys")
 @Entity(value = "nodeExecutions", noClassnameStored = true)
 @Document("nodeExecutions")
 @TypeAlias("nodeExecution")
 @StoreIn(DbAliases.PMS)
-public final class NodeExecution implements PersistentEntity, UuidAware {
+public class NodeExecution implements PersistentEntity, UuidAccess, PmsNodeExecution {
   public static final long TTL_MONTHS = 6;
 
   // Immutable
-  @Id @org.mongodb.morphia.annotations.Id String uuid;
+  @Wither @Id @org.mongodb.morphia.annotations.Id String uuid;
   @NotNull Ambiance ambiance;
-  @NotNull PlanNodeProto node;
+  @Deprecated @Getter(AccessLevel.NONE) @Setter(AccessLevel.NONE) @NotNull PlanNodeProto node;
+  @Getter(AccessLevel.NONE) @Setter(AccessLevel.NONE) Node planNode;
   @NotNull ExecutionMode mode;
   @Wither @FdIndex @CreatedDate Long createdAt;
   private Long startTs;
@@ -79,6 +86,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
   // Resolved StepParameters stored just before invoking step.
   Map<String, Object> resolvedStepParameters;
   Map<String, Object> resolvedStepInputs;
+  PmsStepParameters resolvedInputs;
 
   // For Wait Notify
   String notifyId;
@@ -91,7 +99,7 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
   // Mutable
   @Wither @LastModifiedDate Long lastUpdatedAt;
   Status status;
-  @Version Long version;
+  @Wither @Version Long version;
 
   @Singular List<ExecutableResponse> executableResponses;
   @Singular private List<InterruptEffect> interruptHistories;
@@ -125,6 +133,16 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
     return executableResponses.get(executableResponses.size() - 1);
   }
 
+  @Override
+  public String getNodeId() {
+    return getNode().getUuid();
+  }
+
+  @Override
+  public NodeType getNodeType() {
+    return getNode().getNodeType();
+  }
+
   @UtilityClass
   public static class NodeExecutionKeys {
     public static final String id = "_id";
@@ -135,9 +153,13 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
         + "stepType"
         + "."
         + "stepCategory";
-    public static final String planNodeId = NodeExecutionKeys.node + "."
+
+    public static final String planNodeId = NodeExecutionKeys.planNode + "."
         + "uuid";
-    public static final String planNodeIdentifier = NodeExecutionKeys.node + "."
+    public static final String planNodeIdentifier = NodeExecutionKeys.planNode + "."
+        + "identifier";
+
+    public static final String nodeIdentifier = NodeExecutionKeys.node + "."
         + "identifier";
   }
 
@@ -154,6 +176,11 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
 
     public NodeExecutionBuilder resolvedStepInputs(String jsonString) {
       this.resolvedStepInputs = RecastOrchestrationUtils.fromJson(jsonString);
+      return this;
+    }
+
+    public NodeExecutionBuilder node(PlanNodeProto planNodeProto) {
+      this.planNode = PlanNode.fromPlanNodeProto(planNodeProto);
       return this;
     }
   }
@@ -219,11 +246,21 @@ public final class NodeExecution implements PersistentEntity, UuidAware {
   }
 
   public PmsStepParameters getPmsStepParameters() {
-    return PmsStepParameters.parse(
-        OrchestrationMapBackwardCompatibilityUtils.extractToOrchestrationMap(resolvedStepInputs));
+    if (resolvedStepInputs != null) {
+      return PmsStepParameters.parse(
+          OrchestrationMapBackwardCompatibilityUtils.extractToOrchestrationMap(resolvedStepInputs));
+    }
+    return PmsStepParameters.parse(resolvedInputs);
   }
 
   public OrchestrationMap getPmsProgressData() {
     return OrchestrationMapBackwardCompatibilityUtils.extractToOrchestrationMap(progressData);
+  }
+
+  public <T extends Node> T getNode() {
+    if (planNode != null) {
+      return (T) planNode;
+    }
+    return (T) PlanNode.fromPlanNodeProto(node);
   }
 }

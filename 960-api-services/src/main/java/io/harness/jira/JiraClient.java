@@ -35,8 +35,8 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 @OwnedBy(CDC)
 @Slf4j
 public class JiraClient {
-  private static final int CONNECT_TIMEOUT = 5;
-  private static final int READ_TIMEOUT = 15;
+  private static final int CONNECT_TIMEOUT = 60;
+  private static final int READ_TIMEOUT = 60;
 
   // Comment fields are added to create and update metadata by jira client so that users can add comment as if it was
   // any other jira field. When jira issue is actually created/updated these fields are handled in s special way.
@@ -401,7 +401,7 @@ public class JiraClient {
     OkHttpClient okHttpClient =
         getOkHttpClientBuilder()
             .connectTimeout(CONNECT_TIMEOUT, TimeUnit.SECONDS)
-            .connectTimeout(READ_TIMEOUT, TimeUnit.SECONDS)
+            .readTimeout(READ_TIMEOUT, TimeUnit.SECONDS)
             .proxy(Http.checkAndGetNonProxyIfApplicable(url))
             .addInterceptor(chain -> {
               Request newRequest =

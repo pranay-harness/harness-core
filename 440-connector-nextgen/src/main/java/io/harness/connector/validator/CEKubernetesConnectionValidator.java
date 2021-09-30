@@ -2,14 +2,23 @@ package io.harness.connector.validator;
 
 import static software.wings.beans.TaskType.CE_VALIDATE_KUBERNETES_CONFIG;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.services.ConnectorService;
+import io.harness.connector.validator.scmValidators.AbstractKubernetesConnectorValidator;
+import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.connector.CEFeatures;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.delegate.beans.connector.cek8s.CEKubernetesClusterConfigDTO;
+import io.harness.delegate.beans.connector.k8Connector.CEKubernetesConnectionTaskParams;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
+import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskResponse;
+import io.harness.delegate.task.TaskParameters;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.utils.IdentifierRefHelper;
 
 import com.google.inject.Inject;
@@ -18,12 +27,12 @@ import com.google.inject.name.Named;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
-import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Singleton
-public class CEKubernetesConnectionValidator extends KubernetesConnectionValidator {
+@OwnedBy(HarnessTeam.CE)
+public class CEKubernetesConnectionValidator extends AbstractKubernetesConnectorValidator {
   @Inject @Named("defaultConnectorService") ConnectorService connectorService;
 
   public static final String CONNECTOR_REF_NOT_EXIST =
@@ -35,51 +44,61 @@ public class CEKubernetesConnectionValidator extends KubernetesConnectionValidat
   }
 
   @Override
-  public ConnectorValidationResult validate(ConnectorConfigDTO connectorDTO, String accountIdentifier,
+  public ConnectorValidationResult validate(ConnectorConfigDTO kubernetesClusterConfig, String accountIdentifier,
       String orgIdentifier, String projectIdentifier, String identifier) {
-    CEKubernetesClusterConfigDTO ceKubernetesClusterConfigDTO = (CEKubernetesClusterConfigDTO) connectorDTO;
+    DelegateResponseData responseData;
+
+    try {
+      responseData = super.validateConnector(
+          kubernetesClusterConfig, accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+
+      KubernetesConnectionTaskResponse taskResponse = (KubernetesConnectionTaskResponse) responseData;
+      return taskResponse.getConnectorValidationResult();
+    } catch (IllegalArgumentException ex) {
+      return ConnectorValidationResult.builder()
+          .status(ConnectivityStatus.FAILURE)
+          .errorSummary(ex.getMessage())
+          .testedAt(Instant.now().toEpochMilli())
+          .build();
+    } catch (Exception ex) {
+      log.error("Unknown error found while validating ccm k8s connector", ex);
+
+      return ConnectorValidationResult.builder()
+          .status(ConnectivityStatus.FAILURE)
+          .errorSummary(ex.getMessage())
+          .testedAt(Instant.now().toEpochMilli())
+          .build();
+    }
+  }
+
+  @Override
+  public <T extends ConnectorConfigDTO> TaskParameters getTaskParameters(
+      T connectorConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    CEKubernetesClusterConfigDTO ceKubernetesClusterConfigDTO = (CEKubernetesClusterConfigDTO) connectorConfig;
+
+    final IdentifierRef connectorRef = IdentifierRefHelper.getIdentifierRef(
+        ceKubernetesClusterConfigDTO.getConnectorRef(), accountIdentifier, orgIdentifier, projectIdentifier);
+
+    Optional<ConnectorConfigDTO> kubernetesConnectorConfigDTO = getReferencedConnectorConfig(connectorRef);
+    if (!kubernetesConnectorConfigDTO.isPresent()) {
+      throw new IllegalArgumentException(
+          String.format(CONNECTOR_REF_NOT_EXIST, ceKubernetesClusterConfigDTO.getConnectorRef()));
+    }
+    KubernetesClusterConfigDTO kubernetesClusterConfig =
+        (KubernetesClusterConfigDTO) kubernetesConnectorConfigDTO.get();
+
+    List<EncryptedDataDetail> encryptedDataDetailList = super.fetchEncryptionDetailsList(kubernetesClusterConfig,
+        accountIdentifier, connectorRef.getOrgIdentifier(), connectorRef.getProjectIdentifier());
 
     final List<CEFeatures> featuresEnabled = ceKubernetesClusterConfigDTO.getFeaturesEnabled();
-
-    if (featuresEnabled.contains(CEFeatures.VISIBILITY)) {
-      Optional<ConnectorConfigDTO> kubernetesConnectorConfigDTO = Optional.empty();
-      try {
-        kubernetesConnectorConfigDTO = getReferencedConnectorConfig(
-            ceKubernetesClusterConfigDTO.getConnectorRef(), accountIdentifier, orgIdentifier, projectIdentifier);
-      } catch (IllegalArgumentException ex) {
-        if (ex.getMessage().contains("No scope found for string")) {
-          return ConnectorValidationResult.builder()
-              .status(ConnectivityStatus.FAILURE)
-              .errorSummary(ex.getMessage())
-              .testedAt(Instant.now().toEpochMilli())
-              .build();
-        }
-        throw ex;
-      }
-
-      if (!kubernetesConnectorConfigDTO.isPresent()) {
-        return ConnectorValidationResult.builder()
-            .status(ConnectivityStatus.FAILURE)
-            .errorSummary(String.format(CONNECTOR_REF_NOT_EXIST, ceKubernetesClusterConfigDTO.getConnectorRef()))
-            .testedAt(Instant.now().toEpochMilli())
-            .build();
-      }
-      // should we pass down the orgIdentifier, projectIdentifier of the referenced (Cloud_Provider connector) or
-      // referencing (cloud_Cost connector) connector?
-      return super.validate(
-          kubernetesConnectorConfigDTO.get(), accountIdentifier, orgIdentifier, projectIdentifier, identifier);
-    }
-
-    return ConnectorValidationResult.builder()
-        .status(ConnectivityStatus.SUCCESS)
-        .testedAt(Instant.now().toEpochMilli())
+    return CEKubernetesConnectionTaskParams.builder()
+        .kubernetesClusterConfig(kubernetesClusterConfig)
+        .encryptionDetails(encryptedDataDetailList)
+        .featuresEnabled(featuresEnabled)
         .build();
   }
 
-  private Optional<ConnectorConfigDTO> getReferencedConnectorConfig(@NotNull String scopedConnectorIdentifier,
-      String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    IdentifierRef connectorRef = IdentifierRefHelper.getIdentifierRef(
-        scopedConnectorIdentifier, accountIdentifier, orgIdentifier, projectIdentifier);
+  private Optional<ConnectorConfigDTO> getReferencedConnectorConfig(final IdentifierRef connectorRef) {
     Optional<ConnectorResponseDTO> connectorResponseDTO = connectorService.get(connectorRef.getAccountIdentifier(),
         connectorRef.getOrgIdentifier(), connectorRef.getProjectIdentifier(), connectorRef.getIdentifier());
     return connectorResponseDTO.map(responseDTO -> responseDTO.getConnector().getConnectorConfig());

@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.k8s.beans.K8sBlueGreenHandlerConfig;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.kubectl.Kubectl;
@@ -48,6 +49,7 @@ import io.kubernetes.client.openapi.models.V1ServiceSpecBuilder;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -291,8 +293,11 @@ public class K8sBGBaseHandlerTest extends CategoryTest {
              any(Kubectl.class), any(K8sDelegateTaskParams.class), anyList(), any(LogCallback.class), anyBoolean()))
         .thenAnswer(i -> i.getArguments()[2]);
 
-    List<KubernetesResourceId> resourcesPruned = k8sBGBaseHandler.pruneForBg(delegateTaskParams, prePruningInfo,
-        logCallback, primaryColor, stageColor, releaseHistory.getRelease(3), kubectl);
+    K8sBlueGreenHandlerConfig k8sBlueGreenHandlerConfig =
+        getK8sBlueGreenHandlerConfig(primaryColor, stageColor, releaseHistory.getRelease(3), prePruningInfo);
+
+    List<KubernetesResourceId> resourcesPruned =
+        k8sBGBaseHandler.pruneForBg(delegateTaskParams, logCallback, k8sBlueGreenHandlerConfig);
     assertThat(resourcesPruned).hasSize(3);
     assertThat(resourcesPruned.stream().map(KubernetesResourceId::getName).collect(toList()))
         .containsExactlyInAnyOrder(
@@ -309,8 +314,10 @@ public class K8sBGBaseHandlerTest extends CategoryTest {
     ReleaseHistory releaseHistory = mock(ReleaseHistory.class);
     PrePruningInfo prePruningInfo = PrePruningInfo.builder().releaseHistoryBeforeStageCleanUp(releaseHistory).build();
 
-    List<KubernetesResourceId> resourcesPruned = k8sBGBaseHandler.pruneForBg(K8sDelegateTaskParams.builder().build(),
-        prePruningInfo, logCallback, "blue", "blue", Release.builder().build(), kubectl);
+    K8sBlueGreenHandlerConfig k8sBlueGreenHandlerConfig =
+        getK8sBlueGreenHandlerConfig("blue", "blue", Release.builder().build(), prePruningInfo);
+    List<KubernetesResourceId> resourcesPruned =
+        k8sBGBaseHandler.pruneForBg(K8sDelegateTaskParams.builder().build(), logCallback, k8sBlueGreenHandlerConfig);
 
     // Do nothing if colors are the same
     verifyNoMoreInteractions(releaseHistory);
@@ -322,9 +329,10 @@ public class K8sBGBaseHandlerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testPruneForNoPreviousReleases() throws Exception {
     PrePruningInfo prePruningInfo1 = PrePruningInfo.builder().build();
-
-    List<KubernetesResourceId> resourcesPruned = k8sBGBaseHandler.pruneForBg(K8sDelegateTaskParams.builder().build(),
-        prePruningInfo1, logCallback, "blue", "green", Release.builder().build(), kubectl);
+    K8sBlueGreenHandlerConfig k8sBlueGreenHandlerConfig =
+        getK8sBlueGreenHandlerConfig("blue", "green", Release.builder().build(), prePruningInfo1);
+    List<KubernetesResourceId> resourcesPruned =
+        k8sBGBaseHandler.pruneForBg(K8sDelegateTaskParams.builder().build(), logCallback, k8sBlueGreenHandlerConfig);
 
     // Do nothing if colors are the same
     ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
@@ -337,5 +345,18 @@ public class K8sBGBaseHandlerTest extends CategoryTest {
     return resourceIds.stream()
         .map(resourceId -> KubernetesResource.builder().resourceId(resourceId).build())
         .collect(toList());
+  }
+
+  @NotNull
+  private K8sBlueGreenHandlerConfig getK8sBlueGreenHandlerConfig(
+      String primaryColor, String stageColor, Release currentRelease, PrePruningInfo prePruningInfo) {
+    K8sBlueGreenHandlerConfig k8sBlueGreenHandlerConfig = new K8sBlueGreenHandlerConfig();
+    k8sBlueGreenHandlerConfig.setPrePruningInfo(prePruningInfo);
+    k8sBlueGreenHandlerConfig.setPrimaryColor(primaryColor);
+    k8sBlueGreenHandlerConfig.setPrimaryColor(primaryColor);
+    k8sBlueGreenHandlerConfig.setStageColor(stageColor);
+    k8sBlueGreenHandlerConfig.setCurrentRelease(currentRelease);
+    k8sBlueGreenHandlerConfig.setClient(kubectl);
+    return k8sBlueGreenHandlerConfig;
   }
 }

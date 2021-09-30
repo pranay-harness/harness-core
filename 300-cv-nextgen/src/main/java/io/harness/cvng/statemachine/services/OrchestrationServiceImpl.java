@@ -141,37 +141,39 @@ public class OrchestrationServiceImpl implements OrchestrationService {
 
     AnalysisStateMachine currentlyExecutingStateMachine =
         stateMachineService.getExecutingStateMachine(orchestrator.getVerificationTaskId());
-    if (orchestrator.getStatus() == AnalysisStatus.CREATED) {
+    if (currentlyExecutingStateMachine == null && isNotEmpty(orchestrator.getAnalysisStateMachineQueue())) {
       currentlyExecutingStateMachine = orchestrator.getAnalysisStateMachineQueue().get(0);
     }
 
-    AnalysisStatus stateMachineStatus = null;
+    if (currentlyExecutingStateMachine != null) {
+      AnalysisStatus stateMachineStatus = null;
 
-    switch (currentlyExecutingStateMachine.getStatus()) {
-      case CREATED:
-      case SUCCESS:
-      case IGNORED:
+      switch (currentlyExecutingStateMachine.getStatus()) {
+        case CREATED:
+        case SUCCESS:
+        case IGNORED:
+          orchestrateNewAnalysisStateMachine(orchestrator.getVerificationTaskId());
+          break;
+        case RUNNING:
+          log.info("For {}, state machine is currently RUNNING. "
+                  + "We will call executeStateMachine() to handover execution to state machine.",
+              orchestrator.getVerificationTaskId());
+          stateMachineStatus = stateMachineService.executeStateMachine(currentlyExecutingStateMachine);
+          break;
+        case FAILED:
+        case TIMEOUT:
+          orchestrateFailedStateMachine(currentlyExecutingStateMachine);
+          break;
+        case COMPLETED:
+          log.info("Analysis for the entire duration is done. Time to close down");
+          markCompleted(orchestrator.getVerificationTaskId());
+          break;
+        default:
+          log.info("Unknown analysis status of the state machine under execution");
+      }
+      if (AnalysisStatus.SUCCESS == stateMachineStatus || AnalysisStatus.COMPLETED == stateMachineStatus) {
         orchestrateNewAnalysisStateMachine(orchestrator.getVerificationTaskId());
-        break;
-      case RUNNING:
-        log.info("For {}, state machine is currently RUNNING. "
-                + "We will call executeStateMachine() to handover execution to state machine.",
-            orchestrator.getVerificationTaskId());
-        stateMachineStatus = stateMachineService.executeStateMachine(currentlyExecutingStateMachine);
-        break;
-      case FAILED:
-      case TIMEOUT:
-        orchestrateFailedStateMachine(currentlyExecutingStateMachine);
-        break;
-      case COMPLETED:
-        log.info("Analysis for the entire duration is done. Time to close down");
-        markCompleted(orchestrator.getVerificationTaskId());
-        break;
-      default:
-        log.info("Unknown analysis status of the state machine under execution");
-    }
-    if (AnalysisStatus.SUCCESS == stateMachineStatus || AnalysisStatus.COMPLETED == stateMachineStatus) {
-      orchestrateNewAnalysisStateMachine(orchestrator.getVerificationTaskId());
+      }
     }
   }
 

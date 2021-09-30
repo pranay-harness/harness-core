@@ -37,6 +37,8 @@ import io.harness.steps.cf.PatchInstruction.Type;
 import io.harness.steps.cf.RemoveSegmentToVariationTargetMapYaml.RemoveSegmentToVariationTargetMapYamlSpec;
 import io.harness.steps.cf.RemoveTargetsToVariationTargetMapYaml.RemoveTargetsToVariationTargetMapYamlSpec;
 import io.harness.steps.cf.SetFeatureFlagStateYaml.SetFeatureFlagStateYamlSpec;
+import io.harness.steps.cf.SetOffVariationYaml.SetOffVariationYamlSpec;
+import io.harness.steps.cf.SetOnVariationYaml.SetOnVariationYamlSpec;
 import io.harness.steps.cf.UpdateRuleYaml.UpdateRuleYamlSpec;
 
 import com.google.common.collect.ImmutableMap;
@@ -45,6 +47,7 @@ import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.CF)
@@ -80,9 +83,16 @@ public class FlagConfigurationStep implements SyncExecutable<StepElementParamete
     try {
       ngManagerLogCallback.saveExecutionLog("Starting Flag Update", LogLevel.INFO);
 
+      // Get Org, Account and Project Data
+      String accountID = ambiance.getSetupAbstractionsMap().get("accountId");
+      String orgID = ambiance.getSetupAbstractionsMap().get("orgIdentifier");
+      String projectID = ambiance.getSetupAbstractionsMap().get("projectIdentifier");
+
       FlagConfigurationStepParameters flagConfigurationStepParameters =
           (FlagConfigurationStepParameters) stepParameters.getSpec();
       String featureIdentifier = flagConfigurationStepParameters.getFeature().getValue();
+      String environment = flagConfigurationStepParameters.getEnvironment().getValue();
+
       ngManagerLogCallback.saveExecutionLog(format("updating Feature flag %s", featureIdentifier), LogLevel.INFO);
 
       List<PatchInstruction> instructions = new ArrayList<>();
@@ -97,10 +107,26 @@ public class FlagConfigurationStep implements SyncExecutable<StepElementParamete
               format("setting flag state to %s", spec.getState().getValue()), LogLevel.INFO);
         }
 
+        if (patchInstruction.getType().equals(Type.SET_ON_VARIATION)) {
+          SetOnVariationYamlSpec spec = ((SetOnVariationYaml) patchInstruction).getSpec();
+          instructions.add(cfApi.setOnVariation(spec.getVariation().getValue()));
+          ngManagerLogCallback.saveExecutionLog(
+              format("setting On variation for flag to %s", spec.getVariation().getValue()), LogLevel.INFO);
+        }
+
+        if (patchInstruction.getType().equals(Type.SET_OFF_VARIATION)) {
+          SetOffVariationYamlSpec spec = ((SetOffVariationYaml) patchInstruction).getSpec();
+          instructions.add(cfApi.setOffVariation(spec.getVariation().getValue()));
+          ngManagerLogCallback.saveExecutionLog(
+              format("setting Off variation for flag to %s", spec.getVariation().getValue()), LogLevel.INFO);
+        }
+
         if (patchInstruction.getType().equals(Type.ADD_RULE)) {
           AddRuleYamlSpec spec = ((AddRuleYaml) patchInstruction).getSpec();
-          instructions.add(addRule(spec));
-          ngManagerLogCallback.saveExecutionLog(format("adding rule to flag"), LogLevel.INFO);
+          String identifier = ((AddRuleYaml) patchInstruction).getIdentifier();
+          instructions.add(addRule(spec, accountID, orgID, projectID, featureIdentifier, environment, identifier));
+          ngManagerLogCallback.saveExecutionLog(
+              format("adding rule %s to flag", ((AddRuleYaml) patchInstruction).getIdentifier()), LogLevel.INFO);
         }
 
         if (patchInstruction.getType().equals(Type.UPDATE_RULE)) {
@@ -155,9 +181,9 @@ public class FlagConfigurationStep implements SyncExecutable<StepElementParamete
 
       addApiKeyHeader(cfApi);
 
-      cfApi.patchFeature(featureIdentifier, ambiance.getSetupAbstractionsMap().get("accountId"),
-          ambiance.getSetupAbstractionsMap().get("orgIdentifier"),
-          ambiance.getSetupAbstractionsMap().get("projectIdentifier"),
+      // cfApi.
+
+      cfApi.patchFeature(featureIdentifier, accountID, orgID, projectID,
           flagConfigurationStepParameters.getEnvironment().getValue(), patchOperation);
 
       ngManagerLogCallback.saveExecutionLog(format("Update of Feature flag %s completed", featureIdentifier),
@@ -222,12 +248,24 @@ public class FlagConfigurationStep implements SyncExecutable<StepElementParamete
     return (state != null) && state.equalsIgnoreCase("on");
   }
 
-  private PatchInstruction addRule(AddRuleYamlSpec rule) {
+  private String generateRuleUUID(
+      String accountID, String orgID, String projectID, String featureID, String environmentID, String ruleID) {
+    String aString = String.join(accountID, orgID, projectID, featureID, environmentID, ruleID);
+    return UUID.nameUUIDFromBytes(aString.getBytes()).toString();
+  }
+
+  private PatchInstruction addRule(AddRuleYamlSpec rule, String accountID, String orgID, String projectID,
+      String featureID, String environmentID, String ruleID) {
     Integer priority = 0;
     if (ParameterField.isNull(rule.getPriority()) != true) {
       priority = rule.getPriority().getValue();
     }
 
-    return cfApi.addPercentageRollout(rule.getUuid().getValue(), priority, rule.getServe(), rule.getClauses());
+    // Generate a UUID
+    log.info(format("Creating UUID From Account:%s\nOrgID:%s\nProjectID:%s\nFeatureID:%s\nEnvironmentID:%s\nRuleID:%s",
+        accountID, orgID, projectID, featureID, environmentID, ruleID));
+    String uuid = generateRuleUUID(accountID, orgID, projectID, featureID, environmentID, ruleID);
+
+    return cfApi.addPercentageRollout(uuid, priority, rule.getServe(), rule.getClauses());
   }
 }

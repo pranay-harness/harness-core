@@ -24,6 +24,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.engine.executions.plan.PlanExecutionMetadataService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.execution.NodeExecution;
+import io.harness.execution.NodeExecution.NodeExecutionBuilder;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecutionMetadata;
 import io.harness.notification.PipelineEventType;
@@ -31,10 +32,10 @@ import io.harness.notification.channeldetails.EmailChannel;
 import io.harness.notification.channeldetails.NotificationChannel;
 import io.harness.notification.notificationclient.NotificationClient;
 import io.harness.notification.notificationclient.NotificationClientImpl;
+import io.harness.plan.PlanNode;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
-import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.rule.Owner;
@@ -73,7 +74,6 @@ public class NotificationHelperTest extends CategoryTest {
                   .build())
           .setPlanExecutionId("dummyPlanExecutionId")
           .build();
-  NodeExecution nodeExecution;
   PipelineEventType pipelineEventType = PipelineEventType.PIPELINE_END;
   Long updatedAt = 0L;
   String yaml = "pipeline:\n"
@@ -152,10 +152,10 @@ public class NotificationHelperTest extends CategoryTest {
   @Owner(developers = BRIJESH)
   @Category(UnitTests.class)
   public void testSendNotification() {
-    PlanNodeProto planNodeProto = PlanNodeProto.newBuilder().setIdentifier("dummyIdentifier").build();
+    PlanNode planNode = PlanNode.builder().identifier("dummyIdentifier").build();
     PlanExecutionMetadata planExecutionMetadata = PlanExecutionMetadata.builder().yaml(yaml).build();
-    nodeExecution =
-        NodeExecution.builder().node(planNodeProto).status(Status.SUCCEEDED).startTs(0L).ambiance(ambiance).build();
+    NodeExecution nodeExecution =
+        NodeExecution.builder().planNode(planNode).status(Status.SUCCEEDED).startTs(0L).ambiance(ambiance).build();
     when(planExecutionMetadataService.findByPlanExecutionId(any()))
         .thenReturn(java.util.Optional.ofNullable(planExecutionMetadata));
     doReturn(null).when(notificationClient).sendNotificationAsync(any());
@@ -176,33 +176,32 @@ public class NotificationHelperTest extends CategoryTest {
   @Owner(developers = BRIJESH)
   @Category(UnitTests.class)
   public void testGetEventTypeForStage() {
-    PlanNodeProto pipelinePlanNodeProto =
-        PlanNodeProto.newBuilder()
-            .setStepType(StepType.newBuilder().setStepCategory(StepCategory.PIPELINE).build())
-            .setIdentifier("dummyIdentifier")
-            .build();
-    PlanNodeProto stagePlanNodeProto =
-        PlanNodeProto.newBuilder()
-            .setStepType(StepType.newBuilder().setStepCategory(StepCategory.STAGE).build())
-            .setIdentifier("dummyIdentifier")
-            .build();
-    nodeExecution = NodeExecution.builder().node(pipelinePlanNodeProto).status(Status.SUCCEEDED).build();
-    assertEquals(notificationHelper.getEventTypeForStage(nodeExecution), Optional.empty());
-    nodeExecution.setNode(stagePlanNodeProto);
-    assertEquals(notificationHelper.getEventTypeForStage(nodeExecution), Optional.of(STAGE_SUCCESS));
-    nodeExecution.setStatus(Status.FAILED);
-    assertEquals(notificationHelper.getEventTypeForStage(nodeExecution), Optional.of(STAGE_FAILED));
-    nodeExecution.setStatus(Status.ABORTED);
-    assertEquals(notificationHelper.getEventTypeForStage(nodeExecution), Optional.empty());
+    PlanNode pipelinePlanNode = PlanNode.builder()
+                                    .stepType(StepType.newBuilder().setStepCategory(StepCategory.PIPELINE).build())
+                                    .identifier("dummyIdentifier")
+                                    .build();
+    PlanNode stagePlanNode = PlanNode.builder()
+                                 .stepType(StepType.newBuilder().setStepCategory(StepCategory.STAGE).build())
+                                 .identifier("dummyIdentifier")
+                                 .build();
+    NodeExecutionBuilder nodeExecutionBuilder =
+        NodeExecution.builder().planNode(pipelinePlanNode).status(Status.SUCCEEDED);
+    assertEquals(notificationHelper.getEventTypeForStage(nodeExecutionBuilder.build()), Optional.empty());
+    nodeExecutionBuilder.planNode(stagePlanNode);
+    assertEquals(notificationHelper.getEventTypeForStage(nodeExecutionBuilder.build()), Optional.of(STAGE_SUCCESS));
+    nodeExecutionBuilder.status(Status.FAILED);
+    assertEquals(notificationHelper.getEventTypeForStage(nodeExecutionBuilder.build()), Optional.of(STAGE_FAILED));
+    nodeExecutionBuilder.status(Status.ABORTED);
+    assertEquals(notificationHelper.getEventTypeForStage(nodeExecutionBuilder.build()), Optional.empty());
   }
 
   @Test
   @Owner(developers = BRIJESH)
   @Category(UnitTests.class)
   public void testEmailNotificationIsSentToAllRecipients() {
-    PlanNodeProto planNodeProto = PlanNodeProto.newBuilder().setIdentifier("dummyIdentifier").build();
-    nodeExecution =
-        NodeExecution.builder().node(planNodeProto).status(Status.SUCCEEDED).startTs(0L).ambiance(ambiance).build();
+    PlanNode planNode = PlanNode.builder().identifier("dummyIdentifier").build();
+    NodeExecution nodeExecution =
+        NodeExecution.builder().planNode(planNode).status(Status.SUCCEEDED).startTs(0L).ambiance(ambiance).build();
     when(planExecutionService.get(anyString()))
         .thenReturn(PlanExecution.builder().status(Status.SUCCEEDED).startTs(0L).endTs(0L).build());
     when(planExecutionMetadataService.findByPlanExecutionId(anyString()))
@@ -232,9 +231,9 @@ public class NotificationHelperTest extends CategoryTest {
     pipelineEventTypeList.add(STAGE_SUCCESS);
     pipelineEventTypeList.add(PipelineEventType.STEP_FAILED);
 
-    PlanNodeProto planNodeProto = PlanNodeProto.newBuilder().setIdentifier("dummyIdentifier").build();
-    nodeExecution =
-        NodeExecution.builder().node(planNodeProto).status(Status.SUCCEEDED).startTs(0L).ambiance(ambiance).build();
+    PlanNode planNode = PlanNode.builder().identifier("dummyIdentifier").build();
+    NodeExecution nodeExecution =
+        NodeExecution.builder().planNode(planNode).status(Status.SUCCEEDED).startTs(0L).ambiance(ambiance).build();
     when(planExecutionService.get(anyString()))
         .thenReturn(PlanExecution.builder().status(Status.SUCCEEDED).startTs(0L).endTs(0L).build());
     when(planExecutionMetadataService.findByPlanExecutionId(anyString()))

@@ -3,6 +3,7 @@ package io.harness.pms.merger.helpers;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
@@ -54,5 +55,22 @@ public class FQNHelper {
       }
     }
     return "";
+  }
+
+  public void removeNonRequiredStages(Map<FQN, Object> templateMap, List<String> stageIdentifiers) {
+    if (EmptyPredicate.isEmpty(stageIdentifiers)) {
+      return;
+    }
+    Set<FQN> toBeRemovedFQNs = new HashSet<>();
+    templateMap.keySet().forEach(key -> {
+      String stageIdentifier = key.getStageIdentifier();
+      if (EmptyPredicate.isEmpty(stageIdentifier)) {
+        return;
+      }
+      if (!stageIdentifiers.contains(stageIdentifier)) {
+        toBeRemovedFQNs.add(key);
+      }
+    });
+    toBeRemovedFQNs.forEach(templateMap::remove);
   }
 }

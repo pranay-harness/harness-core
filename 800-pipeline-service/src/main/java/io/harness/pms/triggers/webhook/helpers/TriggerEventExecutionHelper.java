@@ -2,8 +2,6 @@ package io.harness.pms.triggers.webhook.helpers;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.ngtriggers.Constants.ARTIFACT_VERSION;
-import static io.harness.ngtriggers.Constants.MANIFEST_VERSION;
 import static io.harness.ngtriggers.beans.response.TriggerEventResponse.FinalStatus.INVALID_RUNTIME_INPUT_YAML;
 import static io.harness.ngtriggers.beans.response.TriggerEventResponse.FinalStatus.TARGET_EXECUTION_REQUESTED;
 import static io.harness.ngtriggers.beans.source.WebhookTriggerType.AWS_CODECOMMIT;
@@ -28,6 +26,8 @@ import io.harness.ngtriggers.beans.source.NGTriggerType;
 import io.harness.ngtriggers.helpers.TriggerEventResponseHelper;
 import io.harness.ngtriggers.helpers.TriggerHelper;
 import io.harness.ngtriggers.helpers.WebhookEventMapperHelper;
+import io.harness.pms.contracts.triggers.ArtifactData;
+import io.harness.pms.contracts.triggers.ManifestData;
 import io.harness.pms.contracts.triggers.ParsedPayload;
 import io.harness.pms.contracts.triggers.SourceType;
 import io.harness.pms.contracts.triggers.TriggerPayload;
@@ -142,8 +142,7 @@ public class TriggerEventExecutionHelper {
     List<TriggerEventResponse> responses = new ArrayList<>();
     for (TriggerDetails triggerDetails : mappedTriggers) {
       try {
-        replaceBuildFromEvent(triggerDetails.getNgTriggerEntity(), pollingResponse.getBuildInfo().getVersions(0));
-        responses.add(triggerEventPipelineExecution(triggerDetails));
+        responses.add(triggerEventPipelineExecution(triggerDetails, pollingResponse));
       } catch (Exception e) {
         log.error("Error while requesting pipeline execution for Build Trigger: "
             + TriggerHelper.getTriggerRef(triggerDetails.getNgTriggerEntity()));
@@ -153,11 +152,8 @@ public class TriggerEventExecutionHelper {
     return responses;
   }
 
-  private void replaceBuildFromEvent(NGTriggerEntity trigger, String version) {
-    trigger.setYaml(trigger.getYaml().replace(MANIFEST_VERSION, version).replace(ARTIFACT_VERSION, version));
-  }
-
-  public TriggerEventResponse triggerEventPipelineExecution(TriggerDetails triggerDetails) {
+  public TriggerEventResponse triggerEventPipelineExecution(
+      TriggerDetails triggerDetails, PollingResponse pollingResponse) {
     String runtimeInputYaml = null;
     NGTriggerEntity ngTriggerEntity = triggerDetails.getNgTriggerEntity();
     TriggerWebhookEvent pseudoEvent = TriggerWebhookEvent.builder()
@@ -166,12 +162,18 @@ public class TriggerEventExecutionHelper {
                                           .build();
     try {
       runtimeInputYaml = triggerDetails.getNgTriggerConfigV2().getInputYaml();
-      TriggerPayload triggerPayload =
-          TriggerPayload.newBuilder()
-              .setType(ngTriggerEntity.getType() == NGTriggerType.ARTIFACT ? Type.ARTIFACT : Type.MANIFEST)
-              .build();
-      PlanExecution response =
-          triggerExecutionHelper.resolveRuntimeInputAndSubmitExecutionReques(triggerDetails, triggerPayload);
+      Type buildType = ngTriggerEntity.getType() == NGTriggerType.ARTIFACT ? Type.ARTIFACT : Type.MANIFEST;
+      Builder triggerPayloadBuilder = TriggerPayload.newBuilder().setType(buildType);
+
+      String build = pollingResponse.getBuildInfo().getVersions(0);
+      if (buildType == Type.ARTIFACT) {
+        triggerPayloadBuilder.setArtifactData(ArtifactData.newBuilder().setBuild(build).build());
+      } else if (buildType == Type.MANIFEST) {
+        triggerPayloadBuilder.setManifestData(ManifestData.newBuilder().setVersion(build).build());
+      }
+
+      PlanExecution response = triggerExecutionHelper.resolveRuntimeInputAndSubmitExecutionReques(
+          triggerDetails, triggerPayloadBuilder.build());
       return generateEventHistoryForSuccess(triggerDetails, runtimeInputYaml, ngTriggerEntity, pseudoEvent, response);
     } catch (Exception e) {
       return generateEventHistoryForError(pseudoEvent, triggerDetails, runtimeInputYaml, ngTriggerEntity, e);

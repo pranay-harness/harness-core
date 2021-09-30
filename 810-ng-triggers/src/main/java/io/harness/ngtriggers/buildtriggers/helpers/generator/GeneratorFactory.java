@@ -4,6 +4,9 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.ngtriggers.beans.source.ManifestType.HELM_MANIFEST;
 import static io.harness.ngtriggers.beans.source.NGTriggerType.ARTIFACT;
 import static io.harness.ngtriggers.beans.source.NGTriggerType.MANIFEST;
+import static io.harness.ngtriggers.beans.source.artifact.ArtifactType.DOCKER_REGISTRY;
+import static io.harness.ngtriggers.beans.source.artifact.ArtifactType.ECR;
+import static io.harness.ngtriggers.beans.source.artifact.ArtifactType.GCR;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ngtriggers.beans.entity.NGTriggerEntity;
@@ -23,6 +26,9 @@ public class GeneratorFactory {
   private final HttpHelmPollingItemGenerator httpHelmPollingItemGenerator;
   private final S3HelmPollingItemGenerator s3HelmPollingItemGenerator;
   private final GCSHelmPollingItemGenerator gcsHelmPollingItemGenerator;
+  private final GcrPollingItemGenerator gcrPollingItemGenerator;
+  private final EcrPollingItemGenerator ecrPollingItemGenerator;
+  private final DockerRegistryPollingItemGenerator dockerRegistryPollingItemGenerator;
 
   public PollingItemGenerator retrievePollingItemGenerator(BuildTriggerOpsData buildTriggerOpsData) {
     NGTriggerEntity ngTriggerEntity = buildTriggerOpsData.getTriggerDetails().getNgTriggerEntity();
@@ -36,6 +42,15 @@ public class GeneratorFactory {
   }
 
   private PollingItemGenerator retrievePollingItemGeneratorForArtifact(BuildTriggerOpsData buildTriggerOpsData) {
+    String buildType = buildTriggerHelper.fetchBuildType(buildTriggerOpsData.getTriggerSpecMap());
+    if (GCR.getValue().equals(buildType)) {
+      return gcrPollingItemGenerator;
+    } else if (ECR.getValue().equals(buildType)) {
+      return ecrPollingItemGenerator;
+    } else if (DOCKER_REGISTRY.getValue().equals(buildType)) {
+      return dockerRegistryPollingItemGenerator;
+    }
+
     return null;
   }
 

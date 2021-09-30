@@ -1,5 +1,6 @@
 package software.wings.beans.security;
 
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -8,6 +9,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.mongo.index.CompoundMongoIndex;
@@ -55,6 +57,7 @@ import org.mongodb.morphia.annotations.Transient;
 @FieldNameConstants(innerTypeName = "UserGroupKeys")
 @Entity(value = "userGroups", noClassnameStored = true)
 @HarnessEntity(exportable = true)
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
 public class UserGroup extends Base implements NotificationReceiverInfo, AccountAccess, NameAccess {
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

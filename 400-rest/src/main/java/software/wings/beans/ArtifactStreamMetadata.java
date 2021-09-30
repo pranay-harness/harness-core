@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class ArtifactStreamMetadata {
   private String artifactStreamId;
   private Map<String, Object> runtimeValues;

@@ -23,7 +23,6 @@ import io.harness.pms.contracts.plan.PlanCreationBlobRequest;
 import io.harness.pms.contracts.plan.PlanCreationBlobResponse;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.contracts.plan.PlanCreationResponse;
-import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.events.base.PmsEventCategory;
 import io.harness.pms.exception.PmsExceptionUtils;
@@ -77,11 +76,14 @@ public class PlanCreatorMergeService {
       ExecutionMetadata metadata, PlanExecutionMetadata planExecutionMetadata) throws IOException {
     log.info("Starting plan creation");
     YamlField pipelineField = YamlUtils.extractPipelineField(planExecutionMetadata.getProcessedYaml());
-    Map<String, YamlFieldBlob> dependencies = new HashMap<>();
-    dependencies.put(pipelineField.getNode().getUuid(), pipelineField.toFieldBlob());
     String notifyId = generateUuid();
+    Dependencies dependencies =
+        Dependencies.newBuilder()
+            .setYaml(planExecutionMetadata.getProcessedYaml())
+            .putDependencies(pipelineField.getNode().getUuid(), pipelineField.getNode().getYamlPath())
+            .build();
     pmsEventSender.sendEvent(CreatePartialPlanEvent.newBuilder()
-                                 .putAllDependencies(dependencies)
+                                 .setDeps(dependencies)
                                  .putAllContext(createInitialPlanCreationContext(accountId, orgIdentifier,
                                      projectIdentifier, metadata, planExecutionMetadata.getTriggerPayload()))
                                  .setNotifyId(notifyId)
@@ -92,10 +94,9 @@ public class PlanCreatorMergeService {
         PartialPlanResponseCallback.builder()
             .planUuid(planUuid)
             .depth(0)
-            .finalResponse(
-                PartialPlanResponse.newBuilder()
-                    .setBlobResponse(PlanCreationBlobResponse.newBuilder().putAllDependencies(dependencies).build())
-                    .build())
+            .finalResponse(PartialPlanResponse.newBuilder()
+                               .setBlobResponse(PlanCreationBlobResponse.newBuilder().setDeps(dependencies).build())
+                               .build())
             .build(),
         Collections.singletonList(notifyId), Duration.ofMinutes(2));
   }

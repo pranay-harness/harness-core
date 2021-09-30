@@ -1,10 +1,12 @@
 package software.wings.security.authentication;
 
+import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 
@@ -25,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @NoArgsConstructor
 @Slf4j
+@TargetModule(_950_NG_AUTHENTICATION_SERVICE)
 public class DomainWhitelistCheckerService {
   @Inject private AuthenticationUtils authenticationUtils;
 

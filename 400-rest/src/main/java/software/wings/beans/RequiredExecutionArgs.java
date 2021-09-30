@@ -6,7 +6,9 @@ package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -17,6 +19,7 @@ import java.util.Set;
  * @author Rishi
  */
 @OwnedBy(CDC)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public class RequiredExecutionArgs {
   private Set<EntityType> entityTypes = new HashSet<>();
   private ExecutionArgs defaultExecutionArgs = new ExecutionArgs();

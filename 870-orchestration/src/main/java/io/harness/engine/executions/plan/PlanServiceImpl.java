@@ -1,10 +1,13 @@
 package io.harness.engine.executions.plan;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
+import io.harness.plan.Node;
 import io.harness.plan.Plan;
-import io.harness.pms.contracts.plan.PlanNodeProto;
+import io.harness.plan.PlanNode;
 import io.harness.repositories.PlanRepository;
 
 import com.google.inject.Inject;
@@ -27,13 +30,18 @@ public class PlanServiceImpl implements PlanService {
   public Optional<Plan> fetchPlanOptional(String planId) {
     return planRepository.findById(planId);
   }
+
   @Override
   public Plan save(Plan plan) {
     return planRepository.save(plan);
   }
 
   @Override
-  public PlanNodeProto fetchNode(String planId, String nodeId) {
-    return fetchPlan(planId).fetchNode(nodeId);
+  public Node fetchNode(String planId, String nodeId) {
+    Plan plan = fetchPlan(planId);
+    if (isNotEmpty(plan.getPlanNodes())) {
+      return plan.fetchPlanNode(nodeId);
+    }
+    return PlanNode.fromPlanNodeProto(fetchPlan(planId).fetchNode(nodeId));
   }
 }
