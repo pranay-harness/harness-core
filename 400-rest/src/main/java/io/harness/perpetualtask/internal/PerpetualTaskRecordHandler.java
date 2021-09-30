@@ -23,6 +23,7 @@ import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.NoAvailableDelegatesException;
 import io.harness.delegate.beans.NoInstalledDelegatesException;
+import io.harness.delegate.beans.PerpetualTaskCapabilityCheckTaskParameters;
 import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -254,14 +255,15 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
                                             capability.getKryoCapability().toByteArray()))
                                     .collect(toList());
     }
-
+    PerpetualTaskCapabilityCheckTaskParameters parameters =
+        PerpetualTaskCapabilityCheckTaskParameters.builder().executionCapabilityList(executionCapabilityList).build();
     return DelegateTask.builder()
         .executionCapabilities(executionCapabilityList)
         .accountId(taskRecord.getAccountId())
         .data(TaskData.builder()
                   .async(false)
                   .taskType(TaskType.CAPABILITY_VALIDATION.name())
-                  .parameters(executionCapabilityList.toArray())
+                  .parameters(new Object[] {parameters})
                   .timeout(TimeUnit.MINUTES.toMillis(InstanceSyncConstants.VALIDATION_TIMEOUT_MINUTES))
                   .build())
         .setupAbstractions(perpetualTaskExecutionBundle.getSetupAbstractionsMap())

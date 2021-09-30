@@ -3,12 +3,13 @@ package software.wings.delegatetasks;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import static java.util.stream.Collectors.toList;
-
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.PerpetualTaskCapabilityCheckTaskParameters;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
@@ -22,7 +23,6 @@ import software.wings.service.impl.PerpetualTaskCapabilityCheckResponse;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
@@ -31,6 +31,7 @@ import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
+@OwnedBy(HarnessTeam.DEL)
 public class PerpetualTaskCapabilityCheckTask extends AbstractDelegateRunnableTask {
   @Inject CapabilityCheckFactory capabilityCheckFactory;
 
@@ -42,15 +43,12 @@ public class PerpetualTaskCapabilityCheckTask extends AbstractDelegateRunnableTa
 
   @Override
   public CapabilityCheckResponse run(TaskParameters parameters) {
-    throw new NotImplementedException("not implemented");
-  }
-
-  @Override
-  public CapabilityCheckResponse run(Object[] parameters) {
+    PerpetualTaskCapabilityCheckTaskParameters perpetualTaskCapabilityCheckTaskParameters =
+        (PerpetualTaskCapabilityCheckTaskParameters) parameters;
     List<CapabilityResponse> checkResponses = new ArrayList<>();
 
     List<ExecutionCapability> executionCapabilities =
-        Arrays.stream(parameters).map(param -> (ExecutionCapability) param).collect(toList());
+        perpetualTaskCapabilityCheckTaskParameters.getExecutionCapabilityList();
 
     if (isEmpty(executionCapabilities)) {
       return PerpetualTaskCapabilityCheckResponse.builder().ableToExecutePerpetualTask(true).build();
@@ -73,5 +71,10 @@ public class PerpetualTaskCapabilityCheckTask extends AbstractDelegateRunnableTa
       validated = checkResponses.stream().allMatch(CapabilityResponse::isValidated);
     }
     return PerpetualTaskCapabilityCheckResponse.builder().ableToExecutePerpetualTask(validated).build();
+  }
+
+  @Override
+  public CapabilityCheckResponse run(Object[] parameters) {
+    throw new NotImplementedException("not implemented");
   }
 }

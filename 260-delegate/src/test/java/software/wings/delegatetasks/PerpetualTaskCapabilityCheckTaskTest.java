@@ -14,6 +14,7 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.DelegateTaskPackage;
+import io.harness.delegate.beans.PerpetualTaskCapabilityCheckTaskParameters;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.executioncapability.CapabilityResponse;
 import io.harness.delegate.beans.executioncapability.CapabilityType;
@@ -27,12 +28,13 @@ import software.wings.WingsBaseTest;
 import software.wings.delegatetasks.delegatecapability.CapabilityCheckFactory;
 import software.wings.service.impl.PerpetualTaskCapabilityCheckResponse;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.commons.lang3.NotImplementedException;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public class PerpetualTaskCapabilityCheckTaskTest extends WingsBaseTest {
@@ -56,15 +58,17 @@ public class PerpetualTaskCapabilityCheckTaskTest extends WingsBaseTest {
   @Owner(developers = VUK)
   @Category(UnitTests.class)
   public void shouldThrowNotImplementedException() {
-    assertThatThrownBy(() -> task.run(Mockito.mock(TaskParameters.class))).isInstanceOf(NotImplementedException.class);
+    assertThatThrownBy(() -> task.run(new Object[] {TaskParameters.class})).isInstanceOf(NotImplementedException.class);
   }
 
   @Test
   @Owner(developers = VUK)
   @Category(UnitTests.class)
   public void shouldRunPerpetualTaskCapabilityCheckTask() {
-    Object[] params = new Object[1];
-    params[0] = executionCapability;
+    List<ExecutionCapability> executionCapabilityList = new ArrayList<>();
+    executionCapabilityList.add(executionCapability);
+    PerpetualTaskCapabilityCheckTaskParameters perpetualTaskCapabilityCheckTaskParameters =
+        PerpetualTaskCapabilityCheckTaskParameters.builder().executionCapabilityList(executionCapabilityList).build();
 
     CapabilityResponse capabilityResponse = CapabilityResponse.builder().validated(true).build();
 
@@ -73,7 +77,7 @@ public class PerpetualTaskCapabilityCheckTaskTest extends WingsBaseTest {
     when(capabilityCheck.performCapabilityCheck(executionCapability)).thenReturn(capabilityResponse);
 
     PerpetualTaskCapabilityCheckResponse perpetualTaskCapabilityCheckResponse =
-        (PerpetualTaskCapabilityCheckResponse) task.run(params);
+        (PerpetualTaskCapabilityCheckResponse) task.run(perpetualTaskCapabilityCheckTaskParameters);
 
     assertThat(perpetualTaskCapabilityCheckResponse.isAbleToExecutePerpetualTask()).isTrue();
   }
@@ -82,14 +86,16 @@ public class PerpetualTaskCapabilityCheckTaskTest extends WingsBaseTest {
   @Owner(developers = VUK)
   @Category(UnitTests.class)
   public void shouldNotRunPerpetualTaskCapabilityCheckTask() {
-    Object[] params = new Object[1];
-    params[0] = executionCapability;
+    List<ExecutionCapability> executionCapabilityList = new ArrayList<>();
+    executionCapabilityList.add(executionCapability);
+    PerpetualTaskCapabilityCheckTaskParameters perpetualTaskCapabilityCheckTaskParameters =
+        PerpetualTaskCapabilityCheckTaskParameters.builder().executionCapabilityList(executionCapabilityList).build();
 
     when(executionCapability.getCapabilityType()).thenReturn(CapabilityType.ALWAYS_TRUE);
     when(capabilityCheckFactory.obtainCapabilityCheck(CapabilityType.ALWAYS_TRUE)).thenReturn(null);
 
     PerpetualTaskCapabilityCheckResponse perpetualTaskCapabilityCheckResponse =
-        (PerpetualTaskCapabilityCheckResponse) task.run(params);
+        (PerpetualTaskCapabilityCheckResponse) task.run(perpetualTaskCapabilityCheckTaskParameters);
 
     assertThat(perpetualTaskCapabilityCheckResponse.isAbleToExecutePerpetualTask()).isFalse();
   }

@@ -16,6 +16,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.connector.ConnectorResourceClient;
+import io.harness.delegate.beans.PerpetualTaskCapabilityCheckTaskParameters;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -93,6 +94,10 @@ public class ConnectorHeartbeatPerpetualTaskClient implements PerpetualTaskServi
         executionCapabilities.stream()
             .filter(executionCapability -> !(executionCapability instanceof SelectorCapability))
             .collect(Collectors.toList());
+    PerpetualTaskCapabilityCheckTaskParameters parameters =
+        PerpetualTaskCapabilityCheckTaskParameters.builder()
+            .executionCapabilityList(nonSelectorExecutionCapabilities)
+            .build();
     return DelegateTask.builder()
         .accountId(accountId)
         .executionCapabilities(executionCapabilities)
@@ -100,7 +105,7 @@ public class ConnectorHeartbeatPerpetualTaskClient implements PerpetualTaskServi
         .data(TaskData.builder()
                   .async(false)
                   .taskType(TaskType.CAPABILITY_VALIDATION.name())
-                  .parameters(nonSelectorExecutionCapabilities.toArray())
+                  .parameters(new Object[] {parameters})
                   .timeout(TimeUnit.MINUTES.toMillis(1))
                   .build())
         .build();
