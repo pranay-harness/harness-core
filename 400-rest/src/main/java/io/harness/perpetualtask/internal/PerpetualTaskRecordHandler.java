@@ -87,6 +87,7 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
 
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   @Inject private DelegateService delegateService;
+  @Inject private DelegateTaskServiceClassic delegateTaskServiceClassic;
   @Inject private PerpetualTaskService perpetualTaskService;
   @Inject private PerpetualTaskServiceClientRegistry clientRegistry;
   @Inject private MorphiaPersistenceProvider<PerpetualTaskRecord> persistenceProvider;
