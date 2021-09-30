@@ -69,8 +69,12 @@ import io.harness.ngtriggers.beans.source.scheduled.ScheduledTriggerConfig;
 import io.harness.ngtriggers.beans.source.webhook.v2.WebhookTriggerConfigV2;
 import io.harness.ngtriggers.beans.source.webhook.v2.git.GitAware;
 import io.harness.ngtriggers.beans.target.TargetType;
+import io.harness.ngtriggers.helpers.TriggerHelper;
 import io.harness.ngtriggers.helpers.WebhookConfigHelper;
 import io.harness.ngtriggers.utils.WebhookEventPayloadParser;
+import io.harness.pms.yaml.YamlField;
+import io.harness.pms.yaml.YamlNode;
+import io.harness.pms.yaml.YamlUtils;
 import io.harness.repositories.spring.TriggerEventHistoryRepository;
 import io.harness.utils.YamlPipelineUtils;
 import io.harness.webhook.WebhookConfigProvider;
@@ -78,6 +82,7 @@ import io.harness.webhook.WebhookHelper;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.google.common.annotations.VisibleForTesting;
@@ -497,5 +502,21 @@ public class NGTriggerElementMapper {
       return Optional.of(triggerEventHistoryList.get(0));
     }
     return Optional.empty();
+  }
+
+  public void updateEntityYmlWithEnabledValue(NGTriggerEntity ngTriggerEntity) {
+    try {
+      YamlField yamlField = YamlUtils.readTree(ngTriggerEntity.getYaml());
+      YamlNode triggerNode = yamlField.getNode().getField("trigger").getNode();
+      ((ObjectNode) triggerNode.getCurrJsonNode()).put("enabled", ngTriggerEntity.getEnabled());
+      String updateYml = YamlUtils.writeYamlString(yamlField);
+      ngTriggerEntity.setYaml(updateYml);
+    } catch (Exception e) {
+      log.error(new StringBuilder("Failed to update enable attribute to ")
+                    .append(ngTriggerEntity.getEnabled())
+                    .append("in trigger yml for Trigger: ")
+                    .append(TriggerHelper.getTriggerRef(ngTriggerEntity))
+                    .toString());
+    }
   }
 }

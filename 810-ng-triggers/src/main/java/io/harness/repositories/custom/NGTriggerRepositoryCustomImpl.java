@@ -60,6 +60,7 @@ public class NGTriggerRepositoryCustomImpl implements NGTriggerRepositoryCustom 
     Query query = new Query(criteria);
     Update update = new Update();
     update.set(NGTriggerEntityKeys.triggerStatus, ngTriggerEntity.getTriggerStatus());
+    update.set(NGTriggerEntityKeys.enabled, ngTriggerEntity.getEnabled());
     RetryPolicy<Object> retryPolicy = getRetryPolicy(
         "[Retrying]: Failed updating Trigger; attempt: {}", "[Failed]: Failed updating Trigger; attempt: {}");
     return Failsafe.with(retryPolicy)
