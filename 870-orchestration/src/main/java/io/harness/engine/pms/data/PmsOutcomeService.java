@@ -1,5 +1,8 @@
 package io.harness.engine.pms.data;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.OutcomeInstance;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
@@ -12,6 +15,7 @@ import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.NonNull;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public interface PmsOutcomeService {
   String resolve(Ambiance ambiance, RefObject refObject);
 
@@ -49,4 +53,8 @@ public interface PmsOutcomeService {
   String fetchOutcome(@NonNull String outcomeInstanceId);
 
   OptionalOutcome resolveOptional(Ambiance ambiance, RefObject refObject);
+
+  List<OutcomeInstance> fetchOutcomeInstanceByRuntimeId(String runtimeId);
+
+  List<String> cloneForRetryExecution(Ambiance ambiance, String originalNodeExecutionId);
 }
