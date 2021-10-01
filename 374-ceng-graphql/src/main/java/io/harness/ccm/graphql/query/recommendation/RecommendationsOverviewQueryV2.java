@@ -206,7 +206,7 @@ public class RecommendationsOverviewQueryV2 {
 
   private static Condition constructViewFilterCondition(ViewIdCondition viewIdCondition) {
     final Table<?> table = CE_RECOMMENDATIONS;
-    final String fieldId = viewIdCondition.getViewField().getFieldId();
+    final String fieldId = normalizeField(viewIdCondition.getViewField().getFieldId());
 
     switch (viewIdCondition.getViewOperator()) {
       case IN:
@@ -220,6 +220,15 @@ public class RecommendationsOverviewQueryV2 {
       default:
         throw new InvalidRequestException(String.format("%s not implemented", viewIdCondition.getViewOperator()));
     }
+  }
+
+  @NotNull
+  private static String normalizeField(final String fieldId) {
+    if ("workloadName".equalsIgnoreCase(fieldId)) {
+      return CE_RECOMMENDATIONS.NAME.getName();
+    }
+
+    return fieldId;
   }
 
   @NotNull
