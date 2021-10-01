@@ -59,6 +59,7 @@ public class HarnessCDChangeEventTransformerTest {
     verifyEqual(harnessCDActivity, changeEventDTO);
     assertThat(changeEventDTO.getServiceName()).isEqualTo(serviceName);
     assertThat(changeEventDTO.getEnvironmentName()).isEqualTo(environmentName);
+    assertThat(harnessCDActivity.getUuid()).isEqualTo(changeEventDTO.getId());
   }
 
   private void verifyEqual(HarnessCDActivity harnessCDActivity, ChangeEventDTO changeEventDTO) {

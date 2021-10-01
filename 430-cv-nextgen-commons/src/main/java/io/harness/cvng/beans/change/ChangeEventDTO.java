@@ -16,6 +16,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @SuperBuilder
 public class ChangeEventDTO {
+  String id;
   @NotNull String accountId;
   @NotNull String orgIdentifier;
   @NotNull String projectIdentifier;
