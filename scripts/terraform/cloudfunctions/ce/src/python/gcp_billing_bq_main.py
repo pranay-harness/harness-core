@@ -4,7 +4,6 @@ import json
 import os
 import util
 import re
-import time
 from util import create_dataset, print_, if_tbl_exists, createTable, run_batch_query, COSTAGGREGATED, UNIFIED, CEINTERNALDATASET
 from google.cloud import bigquery
 from google.cloud import secretmanager

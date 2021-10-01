@@ -5,7 +5,6 @@ import json
 import base64
 import os
 import re
-import time
 from google.cloud import bigquery
 from google.cloud import storage
 import datetime
