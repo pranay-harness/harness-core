@@ -38,14 +38,14 @@ features:
         enabled: true
 
   - name: SECRET_MANAGERS
-      description: Allow creating secret managers
-      restrictions:
-        FREE:
-          restrictionType: AVAILABILITY
-          enabled: false
-        TEAM:
-          restrictionType: AVAILABILITY
-          enabled: true
-        ENTERPRISE:
-          restrictionType: AVAILABILITY
-          enabled: true
+    description: Allow creating secret managers
+    restrictions:
+      FREE:
+        restrictionType: AVAILABILITY
+        enabled: false
+      TEAM:
+        restrictionType: AVAILABILITY
+        enabled: true
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
