@@ -519,7 +519,7 @@ public class WorkflowExecutionServiceHelper {
           } else if (stateExecutionMap.containsKey(stateExecutionInstance.getDisplayName())) {
             errorMessage = stateExecutionMap.get(stateExecutionInstance.getDisplayName()).getErrorMsg();
           } else {
-            // error message=""
+            errorMessage = "";
           }
         }
         if (isNotEmpty(errorMessage)) {
