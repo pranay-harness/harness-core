@@ -48,8 +48,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
   public PlanExecution retryExecution(@Valid Plan plan, Map<String, String> setupAbstractions,
       ExecutionMetadata metadata, PlanExecutionMetadata planExecutionMetadata) {
     Plan savedPlan = planService.save(plan);
-    log.info("Need to execute the plan for retry stages");
-    return null;
+    return executePlan(savedPlan, setupAbstractions, metadata, planExecutionMetadata);
   }
 
   public PlanExecution startExecutionV2(String planId, Map<String, String> setupAbstractions,

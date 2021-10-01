@@ -238,8 +238,8 @@ public class ExecutionHelper {
     log.info("Time taken to complete plan: {}", endTs - startTs);
 
     if (isRetry) {
-      retryExecutionHelper.transformPlan(plan, uuidForSkipNode, previousExecutionId);
-      return orchestrationService.retryExecution(plan, abstractions, executionMetadata, planExecutionMetadata);
+      Plan newPlan = retryExecutionHelper.transformPlan(plan, uuidForSkipNode, previousExecutionId);
+      return orchestrationService.retryExecution(newPlan, abstractions, executionMetadata, planExecutionMetadata);
     }
     return orchestrationService.startExecution(plan, abstractions, executionMetadata, planExecutionMetadata);
   }
