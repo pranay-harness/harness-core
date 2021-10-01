@@ -13,6 +13,7 @@ import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
+import io.harness.delegate.beans.RemoteMethodReturnValueData;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.jira.JiraConnectorDTO;
 import io.harness.delegate.task.jira.JiraTaskNGParameters;
@@ -117,6 +118,15 @@ public class JiraResourceServiceImpl implements JiraResourceService {
     if (responseData instanceof ErrorNotifyResponseData) {
       ErrorNotifyResponseData errorNotifyResponseData = (ErrorNotifyResponseData) responseData;
       throw new HarnessJiraException(errorNotifyResponseData.getErrorMessage(), WingsException.USER);
+    } else if (responseData instanceof RemoteMethodReturnValueData) {
+      RemoteMethodReturnValueData remoteMethodReturnValueData = (RemoteMethodReturnValueData) responseData;
+      if (remoteMethodReturnValueData.getException() instanceof InvalidRequestException) {
+        throw(InvalidRequestException)(remoteMethodReturnValueData.getException());
+      } else {
+        throw new HarnessJiraException(
+            "Unexpected error during authentication to JIRA server " + remoteMethodReturnValueData.getReturnValue(),
+            WingsException.USER);
+      }
     }
 
     return (JiraTaskNGResponse) responseData;
