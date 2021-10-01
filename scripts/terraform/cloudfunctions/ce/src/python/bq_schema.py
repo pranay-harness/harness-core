@@ -1199,3 +1199,211 @@ gcpInstanceInventorySchema = [
         "type": "INTEGER"
     }
 ]
+
+gcpDiskInventorySchema = [
+    {
+        "mode": "REQUIRED",
+        "name": "id",
+        "type": "STRING"
+    },
+    {
+        "mode": "REQUIRED",
+        "name": "name",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "creationTime",
+        "type": "TIMESTAMP"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "zone",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "region",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "projectId",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "projectNumber",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "sizeGb",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "status",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "sourceSnapshot",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "sourceSnapshotId",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "sourceStorageObject",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "options",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "sourceImage",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "sourceImageId",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "selfLink",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "type",
+        "type": "STRING"
+    },
+    {
+        "fields": [
+            {
+                "name": "key",
+                "type": "STRING"
+            },
+            {
+                "name": "value",
+                "type": "STRING"
+            }
+        ],
+        "mode": "REPEATED",
+        "name": "labels",
+        "type": "RECORD"
+    },
+    {
+        "mode": "REPEATED",
+        "name": "users",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "physicalBlockSizeBytes",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "sourceDisk",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "sourceDiskId",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "provisionedIops",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "satisfiesPzs",
+        "type": "BOOLEAN"
+    },
+    {
+        "fields": [
+            {
+                "name": "id",
+                "type": "STRING"
+            },
+            {
+                "name": "name",
+                "type": "STRING"
+            },
+            {
+                "name": "creationTime",
+                "type": "TIMESTAMP"
+            },
+            {
+                "name": "diskSizeGb",
+                "type": "STRING"
+            },
+            {
+                "name": "status",
+                "type": "STRING"
+            },
+            {
+                "name": "storageBytes",
+                "type": "STRING"
+            },
+            {
+                "name": "storageBytesStatus",
+                "type": "STRING"
+            },
+            {
+                "name": "sourceStorageObject",
+                "type": "STRING"
+            },
+            {
+                "name": "autoCreated",
+                "type": "BOOLEAN"
+            },
+            {
+                "name": "downloadBytes",
+                "type": "STRING"
+            },
+            {
+                "name": "chainName",
+                "type": "STRING"
+            },
+            {
+                "name": "satisfiesPzs",
+                "type": "BOOLEAN"
+            }
+        ],
+        "mode": "REPEATED",
+        "name": "snapshots",
+        "type": "RECORD"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "lastAttachTimestamp",
+        "type": "TIMESTAMP"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "lastDetachTimestamp",
+        "type": "TIMESTAMP"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "lastUpdatedAt",
+        "type": "TIMESTAMP"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "projectNumberPartition",
+        "type": "INTEGER"
+    }
+]
