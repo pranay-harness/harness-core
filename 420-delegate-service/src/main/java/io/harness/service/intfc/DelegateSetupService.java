@@ -2,7 +2,6 @@ package io.harness.service.intfc;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.PageRequest;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateGroup;
 import io.harness.delegate.beans.DelegateGroupDetails;
@@ -44,6 +43,5 @@ public interface DelegateSetupService {
       String accountId, String orgId, String projectId, String identifier, DelegateGroupDetails delegateGroupDetails);
 
   DelegateGroupListing listDelegateGroupDetailsV2(String accountId, String orgId, String projectId,
-      String filterIdentifier, String searchTerm, DelegateFilterPropertiesDTO delegateFilterPropertiesDTO,
-      PageRequest<DelegateGroupDetails> pageRequest);
+      String filterIdentifier, String searchTerm, DelegateFilterPropertiesDTO delegateFilterPropertiesDTO);
 }

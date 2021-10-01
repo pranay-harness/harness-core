@@ -1,29 +1,18 @@
 package io.harness.service.impl;
 
-import static io.harness.beans.SearchFilter.Operator.CONTAINS;
-import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.beans.SearchFilter.Operator.IN;
-import static io.harness.beans.SearchFilter.Operator.NOT_EQ;
-import static io.harness.beans.SearchFilter.Operator.NOT_EXISTS;
-import static io.harness.beans.SearchFilter.Operator.OR;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.DelegateType.KUBERNETES;
 import static io.harness.filter.FilterType.DELEGATEPROFILE;
-import static io.harness.filter.FilterUtils.getFiltersForSearchTerm;
 import static io.harness.mongo.MongoUtils.setUnset;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.PageRequest;
-import io.harness.beans.PageRequest.PageRequestBuilder;
-import io.harness.beans.SearchFilter;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.delegate.beans.DelegateConnectionDetails;
@@ -61,10 +50,10 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Criteria;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
@@ -164,7 +153,7 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
   public Map<String, SelectorType> retrieveDelegateImplicitSelectors(Delegate delegate) {
     SortedMap<String, SelectorType> selectorTypeMap = new TreeMap<>();
 
-    if (isNotBlank(delegate.getDelegateGroupId())) {
+    if (isNotEmpty(delegate.getDelegateGroupId())) {
       DelegateGroup delegateGroup =
           delegateCache.getDelegateGroup(delegate.getAccountId(), delegate.getDelegateGroupId());
 
@@ -177,18 +166,18 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
           }
         }
       }
-    } else if (isNotBlank(delegate.getHostName())) {
+    } else if (isNotEmpty(delegate.getHostName())) {
       selectorTypeMap.put(delegate.getHostName().toLowerCase(), SelectorType.HOST_NAME);
     }
 
-    if (isNotBlank(delegate.getDelegateName())) {
+    if (isNotEmpty(delegate.getDelegateName())) {
       selectorTypeMap.put(delegate.getDelegateName().toLowerCase(), SelectorType.DELEGATE_NAME);
     }
 
     DelegateProfile delegateProfile =
         delegateCache.getDelegateProfile(delegate.getAccountId(), delegate.getDelegateProfileId());
 
-    if (delegateProfile != null && isNotBlank(delegateProfile.getName())) {
+    if (delegateProfile != null && isNotEmpty(delegateProfile.getName())) {
       selectorTypeMap.put(delegateProfile.getName().toLowerCase(), SelectorType.PROFILE_NAME);
     }
 
@@ -214,7 +203,7 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
     final DelegateProfile delegateProfile =
         delegateCache.getDelegateProfile(delegateGroup.getAccountId(), delegateGroup.getDelegateConfigurationId());
 
-    if (delegateProfile != null && isNotBlank(delegateProfile.getName())) {
+    if (delegateProfile != null && isNotEmpty(delegateProfile.getName())) {
       result.put(delegateProfile.getName().toLowerCase(), SelectorType.PROFILE_NAME);
     }
 
@@ -434,23 +423,28 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
 
   @Override
   public DelegateGroupListing listDelegateGroupDetailsV2(String accountId, String orgId, String projectId,
-      String filterIdentifier, String searchTerm, DelegateFilterPropertiesDTO filterProperties,
-      PageRequest<DelegateGroupDetails> delegateGroupDetailsPageRequest) {
-    PageRequest<Delegate> pageRequest = convert(delegateGroupDetailsPageRequest);
-
-    if (isNotBlank(filterIdentifier) && filterProperties != null) {
+      String filterIdentifier, String searchTerm, DelegateFilterPropertiesDTO filterProperties) {
+    if (isNotEmpty(filterIdentifier) && filterProperties != null) {
       throw new InvalidRequestException("Can not apply both filter properties and saved filter together");
     }
 
-    addFiltersToPageRequest(accountId, orgId, projectId, filterIdentifier, searchTerm, filterProperties, pageRequest);
+    if (isNotEmpty(filterIdentifier)) {
+      FilterDTO filterDTO = filterService.get(accountId, orgId, projectId, filterIdentifier, DELEGATEPROFILE);
+      filterProperties = (DelegateFilterPropertiesDTO) filterDTO.getFilterProperties();
+    }
 
-    Map<String, List<Delegate>> delegatesByGroup =
-        persistence.query(Delegate.class, pageRequest).stream().collect(groupingBy(Delegate::getDelegateGroupId));
+    List<String> delegateGroupIds = getDelegateGroupIds(accountId, orgId, projectId, filterProperties, searchTerm);
 
-    String groupIdentifier = filterProperties != null ? filterProperties.getDelegateGroupIdentifier() : null;
+    final Map<String, List<Delegate>> delegatesByGroup = persistence.createQuery(Delegate.class)
+                                                             .filter(DelegateKeys.accountId, accountId)
+                                                             .field(DelegateKeys.delegateGroupId)
+                                                             .in(delegateGroupIds)
+                                                             .asList()
+                                                             .stream()
+                                                             .collect(groupingBy(Delegate::getDelegateGroupId));
+
     List<DelegateGroupDetails> delegateGroupDetails =
-        getDelegateGroupIds(accountId, orgId, projectId, groupIdentifier)
-            .stream()
+        delegateGroupIds.stream()
             .map(delegateGroupId -> {
               DelegateGroup delegateGroup = delegateCache.getDelegateGroup(accountId, delegateGroupId);
               return buildDelegateGroupDetails(
@@ -461,80 +455,8 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
     return DelegateGroupListing.builder().delegateGroupDetails(delegateGroupDetails).build();
   }
 
-  private void addFiltersToPageRequest(String accountId, String orgId, String projectId, String filterIdentifier,
-      String searchTerm, DelegateFilterPropertiesDTO filterProperties, PageRequest<Delegate> pageRequest) {
-    if (isNotBlank(filterIdentifier)) {
-      FilterDTO filterDTO = filterService.get(accountId, orgId, projectId, filterIdentifier, DELEGATEPROFILE);
-      filterProperties = (DelegateFilterPropertiesDTO) filterDTO.getFilterProperties();
-    }
-
-    pageRequest.addFilter(DelegateKeys.accountId, EQ, accountId);
-    pageRequest.addFilter(DelegateKeys.ng, EQ, true);
-    pageRequest.addFilter(DelegateKeys.status, NOT_EQ, DelegateInstanceStatus.DELETED);
-
-    DelegateEntityOwner owner = DelegateEntityOwnerHelper.buildOwner(orgId, projectId);
-
-    if (owner != null) {
-      pageRequest.addFilter(DelegateKeys.owner, EQ, owner);
-    } else {
-      // Account level delegates
-      log.info("Owner doesn't exist, assume account level delegate");
-      pageRequest.addFilter(DelegateKeys.owner, NOT_EXISTS);
-    }
-
-    if (isNotBlank(searchTerm)) {
-      Object[] filtersForSearchTerm = getFiltersForSearchTerm(searchTerm, CONTAINS, DelegateKeys.delegateName,
-          DelegateKeys.delegateGroupName, DelegateKeys.description, DelegateKeys.hostName, DelegateKeys.tags);
-      pageRequest.addFilter(DelegateKeys.searchTermFilter, OR, filtersForSearchTerm);
-    }
-
-    if (filterProperties != null) {
-      populatePageRequestWithFilterProperties(pageRequest, filterProperties);
-    }
-  }
-
-  private PageRequest<Delegate> convert(PageRequest<DelegateGroupDetails> delegateGroupDetailsPageRequest) {
-    PageRequestBuilder requestBuilder = PageRequestBuilder.aPageRequest();
-
-    String[] fieldsExcluded = new String[delegateGroupDetailsPageRequest.getFieldsExcluded().size()];
-    Stream<String> fieldsExcludedStream = delegateGroupDetailsPageRequest.getFieldsExcluded().stream();
-    fieldsExcluded = fieldsExcludedStream.collect(Collectors.toList()).toArray(fieldsExcluded);
-    requestBuilder.addFieldsExcluded(fieldsExcluded);
-
-    String[] fieldsIncluded = new String[delegateGroupDetailsPageRequest.getFieldsIncluded().size()];
-    Stream<String> fieldsIncludedStream = delegateGroupDetailsPageRequest.getFieldsIncluded().stream();
-    fieldsIncluded = fieldsIncludedStream.collect(Collectors.toList()).toArray(fieldsIncluded);
-    requestBuilder.addFieldsIncluded(fieldsIncluded);
-
-    requestBuilder.withLimit(delegateGroupDetailsPageRequest.getLimit());
-    requestBuilder.withOffset(delegateGroupDetailsPageRequest.getOffset());
-
-    return requestBuilder.build();
-  }
-
-  private void populatePageRequestWithFilterProperties(
-      PageRequest<Delegate> pageRequest, DelegateFilterPropertiesDTO filterProperties) {
-    if (isNotEmpty(filterProperties.getDelegateName())) {
-      pageRequest.addFilter(DelegateKeys.delegateName, CONTAINS, filterProperties.getDelegateName());
-    }
-    if (isNotEmpty(filterProperties.getDelegateType())) {
-      pageRequest.addFilter(DelegateKeys.delegateType, SearchFilter.Operator.EQ, filterProperties.getDelegateType());
-    }
-    if (isNotEmpty(filterProperties.getDescription())) {
-      pageRequest.addFilter(DelegateKeys.description, CONTAINS, filterProperties.getDescription());
-    }
-    if (isNotEmpty(filterProperties.getTags())) {
-      pageRequest.addFilter(DelegateKeys.tags, IN, filterProperties.getTags());
-    }
-    if (isNotEmpty(filterProperties.getHostName())) {
-      pageRequest.addFilter(DelegateKeys.hostName, CONTAINS, filterProperties.getHostName());
-    }
-    if (filterProperties.getStatus() != null) {
-      pageRequest.addFilter(DelegateKeys.status, SearchFilter.Operator.EQ, filterProperties.getStatus());
-    }
-  }
-
-  private List<String> getDelegateGroupIds(String accountId, String orgId, String projectId, String groupIdentifier) {
+  private List<String> getDelegateGroupIds(String accountId, String orgId, String projectId,
+      DelegateFilterPropertiesDTO filterProperties, String searchTerm) {
     Query<DelegateGroup> delegateGroupQuery = persistence.createQuery(DelegateGroup.class)
                                                   .filter(DelegateGroupKeys.accountId, accountId)
                                                   .filter(DelegateGroupKeys.ng, true);
@@ -546,10 +468,32 @@ public class DelegateSetupServiceImpl implements DelegateSetupService {
       delegateGroupQuery.field(DelegateGroupKeys.owner).doesNotExist();
     }
 
-    if (isNotEmpty(groupIdentifier)) {
-      delegateGroupQuery.field(DelegateGroupKeys.identifier).contains(groupIdentifier);
+    if (isNotEmpty(searchTerm)) {
+      Criteria criteria =
+          delegateGroupQuery.or(delegateGroupQuery.criteria(DelegateGroupKeys.name).contains(searchTerm),
+              delegateGroupQuery.criteria(DelegateGroupKeys.description).contains(searchTerm),
+              delegateGroupQuery.criteria(DelegateGroupKeys.identifier).contains(searchTerm),
+              delegateGroupQuery.criteria(DelegateGroupKeys.tags).hasThisOne(searchTerm));
+      delegateGroupQuery.and(criteria);
     }
 
+    if (filterProperties != null) {
+      if (isNotEmpty(filterProperties.getDelegateGroupIdentifier())) {
+        delegateGroupQuery.field(DelegateGroupKeys.identifier).contains(filterProperties.getDelegateGroupIdentifier());
+      }
+
+      if (isNotEmpty(filterProperties.getDelegateName())) {
+        delegateGroupQuery.field(DelegateGroupKeys.name).contains(filterProperties.getDelegateName());
+      }
+
+      if (isNotEmpty(filterProperties.getDelegateType())) {
+        delegateGroupQuery.field(DelegateGroupKeys.delegateType).contains(filterProperties.getDelegateType());
+      }
+
+      if (isNotEmpty(filterProperties.getDescription())) {
+        delegateGroupQuery.field(DelegateGroupKeys.description).contains(filterProperties.getDescription());
+      }
+    }
     return delegateGroupQuery.field(DelegateGroupKeys.status)
         .notEqual(DelegateGroupStatus.DELETED)
         .asKeyList()
