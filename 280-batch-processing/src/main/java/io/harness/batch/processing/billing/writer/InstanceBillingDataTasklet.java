@@ -34,6 +34,7 @@ import io.harness.batch.processing.service.intfc.InstanceDataService;
 import io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils;
 import io.harness.batch.processing.writer.constants.K8sCCMConstants;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
+import io.harness.ccm.commons.beans.HarnessServiceInfoNG;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.Resource;
 import io.harness.ccm.commons.constants.CloudProvider;
@@ -301,8 +302,15 @@ public class InstanceBillingDataTasklet implements Tasklet {
     log.trace("Instance detail {} :: {} ", instanceData.getInstanceId(), billingData.getBillingAmountBreakup());
 
     HarnessServiceInfo harnessServiceInfo = getHarnessServiceInfo(instanceData);
+    HarnessServiceInfoNG harnessServiceInfoNG = getHarnessServiceInfoNG(instanceData);
     String settingId = instanceData.getSettingId();
     String clusterId = instanceData.getClusterId();
+    String serviceId = ((harnessServiceInfo.getServiceId() == null) ? harnessServiceInfoNG.getServiceId()
+                                                                    : harnessServiceInfo.getServiceId());
+    String envId =
+        ((harnessServiceInfo.getEnvId() == null) ? harnessServiceInfoNG.getEnvId() : harnessServiceInfo.getEnvId());
+    String projectIdentifier = harnessServiceInfoNG.getProjectIdentifier();
+    String orgIdentifier = harnessServiceInfoNG.getOrgIdentifier();
     if (instanceType == InstanceType.EC2_INSTANCE) {
       settingId = null;
       clusterId = null;
@@ -396,9 +404,11 @@ public class InstanceBillingDataTasklet implements Tasklet {
         .instanceName(instanceName)
         .clusterName(instanceData.getClusterName())
         .appId(harnessServiceInfo.getAppId())
-        .serviceId(harnessServiceInfo.getServiceId())
+        .serviceId(serviceId)
         .cloudProviderId(harnessServiceInfo.getCloudProviderId())
-        .envId(harnessServiceInfo.getEnvId())
+        .envId(envId)
+        .projectIdentifier(projectIdentifier)
+        .orgIdentifier(orgIdentifier)
         .cpuUnitSeconds(billingData.getCpuUnitSeconds())
         .memoryMbSeconds(billingData.getMemoryMbSeconds())
         .parentInstanceId(getParentInstanceId(instanceData))
@@ -499,6 +509,13 @@ public class InstanceBillingDataTasklet implements Tasklet {
       return instanceData.getHarnessServiceInfo();
     }
     return new HarnessServiceInfo(null, null, null, null, null, null);
+  }
+
+  HarnessServiceInfoNG getHarnessServiceInfoNG(InstanceData instanceData) {
+    if (null != instanceData.getHarnessServiceInfoNG()) {
+      return instanceData.getHarnessServiceInfoNG();
+    }
+    return new HarnessServiceInfoNG(null, null, null, null, null);
   }
 
   private Instant getFieldValueFromJobParams(String fieldName) {

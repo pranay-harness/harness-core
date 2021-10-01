@@ -16,6 +16,7 @@ import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
@@ -123,4 +124,10 @@ public class Instance {
   private long deletedAt;
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
+
+  @UtilityClass
+  public static class InstanceKeysAdditional {
+    public static final String instanceInfoPodName = "instanceInfo.podName";
+    public static final String instanceInfoNamespace = "instanceInfo.namespace";
+  }
 }

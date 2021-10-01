@@ -9,4 +9,5 @@ import java.util.Optional;
 @OwnedBy(HarnessTeam.DX)
 public interface DeploymentSummaryCustom {
   Optional<DeploymentSummary> fetchNthRecordFromNow(int N, String instanceSyncKey);
+  Optional<DeploymentSummary> getWithInfraMappingId(String infraMappingId);
 }

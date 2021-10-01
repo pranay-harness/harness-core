@@ -12,6 +12,8 @@ public interface DeploymentSummaryService {
 
   Optional<DeploymentSummaryDTO> getByDeploymentSummaryId(String deploymentSummaryId);
 
+  Optional<DeploymentSummaryDTO> getByInfraMappingId(String infraMappingId);
+
   Optional<DeploymentSummaryDTO> getNthDeploymentSummaryFromNow(int N, String instanceSyncKey);
 
   Optional<DeploymentSummaryDTO> getLatestByInstanceKey(String instanceSyncKey);

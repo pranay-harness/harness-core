@@ -1,5 +1,7 @@
 package io.harness.service.instance;
 
+import static io.harness.persistence.HQuery.excludeValidate;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.dtos.InstanceDTO;
@@ -148,6 +150,13 @@ public class InstanceServiceImpl implements InstanceService {
       String projectIdentifier, String infrastructureMappingId, long timestampInMs) {
     return InstanceMapper.toDTO(instanceRepository.getActiveInstancesByInfrastructureMappingId(
         accountIdentifier, orgIdentifier, projectIdentifier, infrastructureMappingId, timestampInMs));
+  }
+
+  @Override
+  public List<InstanceDTO> getActiveInstancesByInstanceInfo(
+      String accountIdentifier, String instanceInfoNamespace, String instanceInfoPodName) {
+    return InstanceMapper.toDTO(instanceRepository.getActiveInstancesByInstanceInfo(
+        accountIdentifier, instanceInfoNamespace, instanceInfoPodName));
   }
 
   /*

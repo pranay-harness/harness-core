@@ -32,6 +32,13 @@ public class DeploymentSummaryServiceImpl implements DeploymentSummaryService {
   }
 
   @Override
+  public Optional<DeploymentSummaryDTO> getByInfraMappingId(String infraMappingId) {
+    Optional<DeploymentSummary> deploymentSummaryOptional =
+        deploymentSummaryRepository.getWithInfraMappingId(infraMappingId);
+    return deploymentSummaryOptional.map(DeploymentSummaryMapper::toDTO);
+  }
+
+  @Override
   public Optional<DeploymentSummaryDTO> getNthDeploymentSummaryFromNow(int N, String instanceSyncKey) {
     Optional<DeploymentSummary> deploymentSummaryOptional =
         deploymentSummaryRepository.fetchNthRecordFromNow(N, instanceSyncKey);

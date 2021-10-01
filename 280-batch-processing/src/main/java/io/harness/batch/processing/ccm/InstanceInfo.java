@@ -2,6 +2,7 @@ package io.harness.batch.processing.ccm;
 
 import io.harness.ccm.commons.beans.Container;
 import io.harness.ccm.commons.beans.HarnessServiceInfo;
+import io.harness.ccm.commons.beans.HarnessServiceInfoNG;
 import io.harness.ccm.commons.beans.InstanceState;
 import io.harness.ccm.commons.beans.InstanceType;
 import io.harness.ccm.commons.beans.Resource;
@@ -41,6 +42,7 @@ public class InstanceInfo {
   Map<String, String> metadataAnnotations;
   List<String> pvcClaimNames;
   HarnessServiceInfo harnessServiceInfo;
+  HarnessServiceInfoNG harnessServiceInfoNg;
 
   private static final MongoMapSanitizer SANITIZER = new MongoMapSanitizer('~');
 
