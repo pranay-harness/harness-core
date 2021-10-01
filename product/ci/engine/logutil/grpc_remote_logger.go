@@ -13,7 +13,11 @@ func GetGrpcRemoteLogger(key string) (*logs.RemoteLogger, error) {
 	if err != nil {
 		return nil, err
 	}
-	rw, err := plogs.NewRemoteWriter(grpcClient, key, external.GetNudges())
+	indirectUpload, err := external.GetLogUploadFF()
+	if err != nil {
+		return nil, err
+	}
+	rw, err := plogs.NewRemoteWriter(grpcClient, key, external.GetNudges(), indirectUpload)
 	if err != nil {
 		return nil, err
 	}
