@@ -19,6 +19,7 @@ import io.harness.exception.UnresolvedExpressionsException;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.data.StepOutcomeRef;
 import io.harness.pms.contracts.refobjects.RefObject;
 import io.harness.pms.data.PmsOutcome;
 import io.harness.pms.execution.utils.AmbianceUtils;
@@ -36,6 +37,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.NonNull;
 import org.apache.commons.jexl3.JexlException;
@@ -173,6 +175,17 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
       throw new OutcomeException(format("Could not resolve outcome with name '%s'", name));
     }
     return instances.get(0).getOutcomeJsonValue();
+  }
+
+  @Override
+  public List<StepOutcomeRef> fetchOutcomeRefs(String nodeExecutionId) {
+    List<OutcomeInstance> instances = fetchOutcomeInstanceByRuntimeId(nodeExecutionId);
+    if (isEmpty(instances)) {
+      return new ArrayList<>();
+    }
+    return instances.stream()
+        .map(oi -> StepOutcomeRef.newBuilder().setName(oi.getName()).setInstanceId(oi.getUuid()).build())
+        .collect(Collectors.toList());
   }
 
   @Override

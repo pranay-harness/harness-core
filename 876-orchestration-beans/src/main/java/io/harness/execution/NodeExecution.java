@@ -19,7 +19,6 @@ import io.harness.plan.NodeType;
 import io.harness.plan.PlanNode;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.contracts.data.StepOutcomeRef;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
@@ -114,8 +113,6 @@ public class NodeExecution implements PersistentEntity, UuidAccess, PmsNodeExecu
   // Timeout
   List<String> timeoutInstanceIds;
   TimeoutDetails timeoutDetails;
-
-  List<StepOutcomeRef> outcomeRefs;
 
   @Singular List<UnitProgress> unitProgresses;
 

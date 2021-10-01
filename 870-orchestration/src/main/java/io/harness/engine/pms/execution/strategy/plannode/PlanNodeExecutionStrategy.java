@@ -19,6 +19,7 @@ import io.harness.engine.interrupts.InterruptService;
 import io.harness.engine.pms.advise.AdviseHandlerFactory;
 import io.harness.engine.pms.advise.AdviserResponseHandler;
 import io.harness.engine.pms.advise.NodeAdviseHelper;
+import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.engine.pms.execution.strategy.EndNodeExecutionHelper;
 import io.harness.engine.pms.execution.strategy.NodeExecutionStrategy;
 import io.harness.engine.pms.resume.NodeResumeHelper;
@@ -80,6 +81,7 @@ public class PlanNodeExecutionStrategy implements NodeExecutionStrategy<PlanNode
   @Inject private NodeResumeHelper resumeHelper;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private OrchestrationEngine orchestrationEngine;
+  @Inject private PmsOutcomeService outcomeService;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
 
   @Override
@@ -243,7 +245,7 @@ public class PlanNodeExecutionStrategy implements NodeExecutionStrategy<PlanNode
       PlanNode planNode = nodeExecution.getNode();
       StepResponseNotifyData responseData = StepResponseNotifyData.builder()
                                                 .nodeUuid(planNode.getUuid())
-                                                .stepOutcomeRefs(nodeExecution.getOutcomeRefs())
+                                                .stepOutcomeRefs(outcomeService.fetchOutcomeRefs(nodeExecutionId))
                                                 .failureInfo(nodeExecution.getFailureInfo())
                                                 .identifier(planNode.getIdentifier())
                                                 .group(planNode.getGroup())

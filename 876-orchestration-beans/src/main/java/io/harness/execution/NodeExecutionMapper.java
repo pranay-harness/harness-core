@@ -39,7 +39,6 @@ public class NodeExecutionMapper {
         .oldRetry(false)
         .timeoutInstanceIds(Collections.emptyList())
         .timeoutDetails(null)
-        .outcomeRefs(CollectionUtils.emptyIfNull(proto.getOutcomeRefsList()))
         .retryIds(proto.getRetryIdsList())
         .oldRetry(proto.getOldRetry())
         .interruptHistories(proto.getInterruptHistoriesList()

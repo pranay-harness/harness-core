@@ -6,6 +6,7 @@ import io.harness.data.OutcomeInstance;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.data.StepOutcomeRef;
 import io.harness.pms.contracts.refobjects.RefObject;
 import io.harness.pms.sdk.core.resolver.GroupNotFoundException;
 import io.harness.pms.sdk.core.resolver.ResolverUtils;
@@ -57,4 +58,6 @@ public interface PmsOutcomeService {
   List<OutcomeInstance> fetchOutcomeInstanceByRuntimeId(String runtimeId);
 
   List<String> cloneForRetryExecution(Ambiance ambiance, String originalNodeExecutionId);
+
+  List<StepOutcomeRef> fetchOutcomeRefs(String nodeExecutionId);
 }
