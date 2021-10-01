@@ -774,15 +774,16 @@ import com.google.api.services.logging.v2.model.LogEntryOperation;
 import com.google.api.services.logging.v2.model.LogEntrySourceLocation;
 import com.google.api.services.logging.v2.model.MonitoredResource;
 import com.google.api.services.logging.v2.model.MonitoredResourceMetadata;
+import com.google.gson.internal.LinkedTreeMap;
 import com.splunk.HttpException;
 import com.sumologic.client.SumoClientException;
 import com.sumologic.client.SumoException;
 import io.kubernetes.client.openapi.ApiException;
 import java.time.Instant;
 
-@Deprecated
 @OwnedBy(PL)
 @TargetModule(_360_CG_MANAGER)
+@Deprecated
 public class ManagerKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
@@ -1642,5 +1643,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(ProviderType.class, 40022);
     kryo.register(K8sGitConfigMapInfo.class, 40023);
     kryo.register(K8sApplicationManifestSourceInfo.class, 40024);
+    kryo.register(LinkedTreeMap.class, 40025);
   }
 }

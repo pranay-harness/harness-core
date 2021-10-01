@@ -23,7 +23,6 @@ import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
 import io.harness.pms.contracts.interrupts.InterruptConfig;
 import io.harness.pms.contracts.interrupts.IssuedBy;
 import io.harness.pms.contracts.interrupts.ManualIssuer;
-import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.filter.utils.ModuleInfoFilterUtils;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
@@ -49,6 +48,7 @@ import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
 import com.mongodb.client.result.UpdateResult;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
@@ -78,7 +78,7 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
   @Override
   public Criteria formCriteria(String accountId, String orgId, String projectId, String pipelineIdentifier,
       String filterIdentifier, PipelineExecutionFilterPropertiesDTO filterProperties, String moduleName,
-      String searchTerm, ExecutionStatus status, boolean myDeployments, boolean pipelineDeleted,
+      String searchTerm, List<ExecutionStatus> statusList, boolean myDeployments, boolean pipelineDeleted,
       ByteString gitSyncBranchContext) {
     Criteria criteria = new Criteria();
     if (EmptyPredicate.isNotEmpty(accountId)) {
@@ -93,8 +93,8 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
     if (EmptyPredicate.isNotEmpty(pipelineIdentifier)) {
       criteria.and(PlanExecutionSummaryKeys.pipelineIdentifier).is(pipelineIdentifier);
     }
-    if (status != null) {
-      criteria.and(PlanExecutionSummaryKeys.status).is(status);
+    if (EmptyPredicate.isNotEmpty(statusList)) {
+      criteria.and(PlanExecutionSummaryKeys.status).in(statusList);
     }
     criteria.and(PlanExecutionSummaryKeys.pipelineDeleted).ne(!pipelineDeleted);
 
@@ -108,11 +108,10 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
     }
 
     if (myDeployments) {
-      criteria.and(PlanExecutionSummaryKeys.executionTriggerInfo)
-          .is(ExecutionTriggerInfo.newBuilder()
-                  .setTriggerType(MANUAL)
-                  .setTriggeredBy(triggeredByHelper.getFromSecurityContext())
-                  .build());
+      criteria.and(PlanExecutionSummaryKeys.triggerType)
+          .is(MANUAL)
+          .and(PlanExecutionSummaryKeys.triggeredBy)
+          .is(triggeredByHelper.getFromSecurityContext());
     }
 
     Criteria moduleCriteria = new Criteria();

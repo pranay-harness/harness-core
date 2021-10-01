@@ -56,7 +56,7 @@ public class ExecutionArgs {
   private String stageName;
   private Map<String, String> workflowVariables;
   private String notes;
-  @Deprecated @JsonIgnore private EmbeddedUser triggeredBy;
+  @JsonIgnore @Deprecated private EmbeddedUser triggeredBy;
   private CreatedByType createdByType;
   private String triggeringApiKeyId;
   private boolean excludeHostsWithSameArtifact;

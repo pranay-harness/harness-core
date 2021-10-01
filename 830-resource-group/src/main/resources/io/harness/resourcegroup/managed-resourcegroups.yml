@@ -1,0 +1,12 @@
+# Any edit in this file should accompany an increment in version.
+name: resourceGroupsConfiguration
+version: 1
+resourceGroups:
+  - identifier: _all_resources
+    name: All Resources
+    fullScopeSelected: true
+    description: All the resources in this scope are included in this resource group.
+    allowedScopeLevels:
+      - account
+      - organization
+      - project

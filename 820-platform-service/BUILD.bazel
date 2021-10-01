@@ -10,11 +10,13 @@ java_binary(
     resources = [
         "//820-platform-service/src/main/resources:resource",
         "//830-notification-service/src/main/resources:resource",
+        "//830-resource-group/src/main/resources:resource",
     ],
     visibility = ["//visibility:public"],
     runtime_deps = [
         "//820-platform-service/src/main/resources",
         "//830-notification-service/src/main/resources",
+        "//830-resource-group/src/main/resources",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
     ],
     deps = [
@@ -383,11 +385,13 @@ java_library(
         "//:resource",
         "//820-platform-service/src/main/resources:resource",
         "//830-notification-service/src/main/resources:resource",
+        "//830-resource-group/src/main/resources:resource",
     ],
     visibility = ["//visibility:public"],
     runtime_deps = [
         "//820-platform-service/src/main/resources",
         "//830-notification-service/src/main/resources",
+        "//830-resource-group/src/main/resources",
         "//980-commons/src/test/resources",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
     ],

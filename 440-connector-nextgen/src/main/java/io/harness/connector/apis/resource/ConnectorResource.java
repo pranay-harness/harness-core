@@ -144,8 +144,8 @@ public class ConnectorResource {
   }
 
   @GET
-  @Deprecated
   @ApiOperation(value = "Gets Connector list", nickname = "getConnectorList")
+  @Deprecated
   public ResponseDTO<PageResponse<ConnectorResponseDTO>> list(
       @QueryParam(NGResourceFilterConstants.PAGE_KEY) @DefaultValue("0") int page,
       @QueryParam(NGResourceFilterConstants.SIZE_KEY) @DefaultValue("100") int size,

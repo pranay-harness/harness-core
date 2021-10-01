@@ -108,10 +108,10 @@ public class EnvState extends State implements WorkflowState {
   public static final Integer ENV_STATE_TIMEOUT_MILLIS = 7 * 24 * 60 * 60 * 1000;
 
   // NOTE: This field should no longer be used. It contains incorrect/stale values.
-  @Deprecated
   @Expand(dataProvider = EnvironmentServiceImpl.class)
   @Attributes(required = true, title = "Environment")
   @Setter
+  @Deprecated
   private String envId;
 
   @Attributes(required = true, title = "Workflow") @Setter private String workflowId;
