@@ -10,8 +10,8 @@ import io.harness.TemplateServiceTestBase;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.core.template.TemplateMergeResponse;
 import io.harness.rule.Owner;
-import io.harness.template.beans.TemplateMergeResponse;
 import io.harness.template.entity.TemplateEntity;
 import io.harness.template.services.NGTemplateService;
 

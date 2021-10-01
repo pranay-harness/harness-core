@@ -22,9 +22,10 @@ import io.harness.template.beans.TemplateEntityType;
 import io.harness.template.beans.TemplateListType;
 import io.harness.template.beans.TemplateResponseDTO;
 import io.harness.template.beans.TemplateSummaryResponseDTO;
+import io.harness.template.beans.TemplateWrapperResponseDTO;
 import io.harness.template.entity.TemplateEntity;
 import io.harness.template.entity.TemplateEntity.TemplateEntityKeys;
-import io.harness.template.helpers.TemplateCRUDHelper;
+import io.harness.template.helpers.TemplateMergeHelper;
 import io.harness.template.services.NGTemplateService;
 import io.harness.template.services.NGTemplateServiceHelper;
 
@@ -53,7 +54,7 @@ public class NGTemplateResourceTest extends CategoryTest {
   NGTemplateResource templateResource;
   @Mock NGTemplateService templateService;
   @Mock NGTemplateServiceHelper templateServiceHelper;
-  @Mock TemplateCRUDHelper templateCRUDHelper;
+  @Mock TemplateMergeHelper templateMergeHelper;
 
   private final String ACCOUNT_ID = "account_id";
   private final String ORG_IDENTIFIER = "orgId";
@@ -69,7 +70,7 @@ public class NGTemplateResourceTest extends CategoryTest {
   @Before
   public void setUp() throws IOException {
     MockitoAnnotations.initMocks(this);
-    templateResource = new NGTemplateResource(templateService, templateServiceHelper, templateCRUDHelper);
+    templateResource = new NGTemplateResource(templateService, templateServiceHelper, templateMergeHelper);
     ClassLoader classLoader = this.getClass().getClassLoader();
     String filename = "template.yaml";
     yaml = Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
@@ -109,12 +110,13 @@ public class NGTemplateResourceTest extends CategoryTest {
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
   public void testCreateTemplate() throws IOException {
-    doReturn(entityWithMongoVersion).when(templateCRUDHelper).create(entity, false, "");
-    ResponseDTO<TemplateResponseDTO> responseDTO =
+    doReturn(entityWithMongoVersion).when(templateService).create(entity, false, "");
+    ResponseDTO<TemplateWrapperResponseDTO> responseDTO =
         templateResource.create(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, null, yaml, false, "");
     assertThat(responseDTO.getData()).isNotNull();
-    assertThat(responseDTO.getData().getVersion()).isEqualTo(1L);
-    assertThat(responseDTO.getData().getIdentifier()).isEqualTo(TEMPLATE_IDENTIFIER);
+    assertThat(responseDTO.getData().isValid()).isTrue();
+    assertThat(responseDTO.getData().getTemplateResponseDTO().getVersion()).isEqualTo(1L);
+    assertThat(responseDTO.getData().getTemplateResponseDTO().getIdentifier()).isEqualTo(TEMPLATE_IDENTIFIER);
   }
 
   @Test
@@ -149,13 +151,12 @@ public class NGTemplateResourceTest extends CategoryTest {
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
   public void testUpdateTemplate() {
-    doReturn(entityWithMongoVersion)
-        .when(templateCRUDHelper)
-        .updateTemplateEntity(entity, ChangeType.MODIFY, false, "");
-    ResponseDTO<TemplateResponseDTO> responseDTO = templateResource.updateExistingTemplateLabel("", ACCOUNT_ID,
+    doReturn(entityWithMongoVersion).when(templateService).updateTemplateEntity(entity, ChangeType.MODIFY, false, "");
+    ResponseDTO<TemplateWrapperResponseDTO> responseDTO = templateResource.updateExistingTemplateLabel("", ACCOUNT_ID,
         ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, TEMPLATE_VERSION_LABEL, null, yaml, false, "");
     assertThat(responseDTO.getData()).isNotNull();
-    assertThat(responseDTO.getData().getIdentifier()).isEqualTo(TEMPLATE_IDENTIFIER);
+    assertThat(responseDTO.getData().isValid()).isTrue();
+    assertThat(responseDTO.getData().getTemplateResponseDTO().getIdentifier()).isEqualTo(TEMPLATE_IDENTIFIER);
   }
 
   @Test
