@@ -28,6 +28,7 @@ import software.wings.beans.EntityType;
 import software.wings.beans.GraphNode;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.PhaseStep;
+import software.wings.beans.PhaseStepType;
 import software.wings.beans.Service;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.Variable;
@@ -126,6 +127,11 @@ public class WorkflowServiceTemplateHelper {
   private void populatePropertiesFromWorkflow(PhaseStep phaseStep) {
     if (phaseStep != null && phaseStep.getSteps() != null) {
       for (GraphNode step : phaseStep.getSteps()) {
+        if (phaseStep.getPhaseStepType().equals(PhaseStepType.K8S_PHASE_STEP)) {
+          if (isInvalidExportK8sManifestsSetup(step)) {
+            throw new InvalidRequestException("Step cannot export and inherit manifests at the same time");
+          }
+        }
         if (step.getTemplateUuid() != null) {
           Template template = templateService.get(step.getTemplateUuid(), step.getTemplateVersion());
           notNullCheck("Template does not exist", template, USER);
@@ -147,6 +153,14 @@ public class WorkflowServiceTemplateHelper {
         }
       }
     }
+  }
+
+  private boolean isInvalidExportK8sManifestsSetup(GraphNode step) {
+    Object exportManifests = step.getProperties().get("exportManifests");
+    Object inheritManifests = step.getProperties().get("inheritManifests");
+
+    return exportManifests instanceof Boolean && inheritManifests instanceof Boolean && exportManifests.equals(true)
+        && inheritManifests.equals(true);
   }
 
   public void updateLinkedPhaseStepTemplate(PhaseStep phaseStep, PhaseStep oldPhaseStep, boolean fromYaml) {
