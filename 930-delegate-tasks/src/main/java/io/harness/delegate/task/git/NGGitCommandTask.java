@@ -1,10 +1,9 @@
 package io.harness.delegate.task.git;
 
-import static io.harness.eraro.ErrorCode.GIT_CONNECTION_ERROR;
-import static io.harness.eraro.ErrorCode.GIT_DIFF_COMMIT_NOT_IN_ORDER;
-import static io.harness.eraro.ErrorCode.GIT_UNSEEN_REMOTE_HEAD_COMMIT;
 import static io.harness.git.Constants.GIT_YAML_LOG_PREFIX;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.DelegateMetaInfo;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
@@ -20,8 +19,6 @@ import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.git.NGGitService;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.WingsException;
 import io.harness.git.model.CommitAndPushRequest;
 import io.harness.git.model.CommitAndPushResult;
 import io.harness.git.model.GitBaseRequest;
@@ -34,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
+@OwnedBy(HarnessTeam.CDP)
 public class NGGitCommandTask extends AbstractDelegateRunnableTask {
   @Inject private NGGitService gitService;
   @Inject private GitCommandTaskHandler gitCommandTaskHandler;
@@ -91,23 +89,6 @@ public class NGGitCommandTask extends AbstractDelegateRunnableTask {
         .gitCommandResult(gitCommitAndPushResult)
         .gitCommandStatus(GitCommandStatus.SUCCESS)
         .build();
-  }
-
-  private ErrorCode getErrorCode(Exception ex) {
-    if (ex instanceof WingsException) {
-      final WingsException we = (WingsException) ex;
-      switch (we.getCode()) {
-        case GIT_CONNECTION_ERROR:
-          return GIT_CONNECTION_ERROR;
-        case GIT_DIFF_COMMIT_NOT_IN_ORDER:
-          return GIT_DIFF_COMMIT_NOT_IN_ORDER;
-        case GIT_UNSEEN_REMOTE_HEAD_COMMIT:
-          return GIT_UNSEEN_REMOTE_HEAD_COMMIT;
-        default:
-          return null;
-      }
-    }
-    return null;
   }
 
   @Override
