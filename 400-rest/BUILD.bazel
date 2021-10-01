@@ -44,6 +44,7 @@ java_library(
         "//940-feature-flag:module",
         "//940-notification-client:module",
         "//940-secret-manager-client:module",
+        "//940-enforcement-sdk:module",
         "//945-ng-audit-client:module",
         "//948-access-control-admin-client:module",
         "//948-access-control-sdk:module",

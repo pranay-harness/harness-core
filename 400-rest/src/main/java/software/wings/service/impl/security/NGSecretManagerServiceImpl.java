@@ -3,6 +3,7 @@ package software.wings.service.impl.security;
 import static io.harness.annotations.dev.HarnessModule._890_SM_CORE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.enforcement.constants.FeatureRestrictionName.SECRET_MANAGERS;
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.security.encryption.EncryptionType.AZURE_VAULT;
@@ -17,6 +18,7 @@ import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
+import io.harness.enforcement.client.annotation.FeatureRestrictionCheck;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
@@ -93,6 +95,7 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
       SecretManagerConfigKeys.ngMetadata + "." + NGSecretManagerMetadataKeys.deleted;
 
   @Override
+  @FeatureRestrictionCheck(SECRET_MANAGERS)
   public SecretManagerConfig create(SecretManagerConfig secretManagerConfig) {
     NGSecretManagerMetadata ngMetadata = secretManagerConfig.getNgMetadata();
     if (Optional.ofNullable(ngMetadata).isPresent()) {
