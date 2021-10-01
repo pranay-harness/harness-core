@@ -288,10 +288,10 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     DelegateGroupListing delegateGroupListing = delegateSetupService.listDelegateGroupDetailsV2(
         TEST_ACCOUNT_ID, null, null, "", "grp1", DelegateFilterPropertiesDTO.builder().build(), new PageRequest<>());
 
-    assertThat(delegateGroupListing.getDelegateGroupDetails()).hasSize(1);
+    assertThat(delegateGroupListing.getDelegateGroupDetails()).hasSize(2);
     assertThat(delegateGroupListing.getDelegateGroupDetails())
         .extracting(DelegateGroupDetails::getGroupName)
-        .containsOnly("grp1");
+        .containsOnly("grp1", "grp2");
   }
 
   @Test
@@ -303,10 +303,10 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     DelegateGroupListing delegateGroupListing = delegateSetupService.listDelegateGroupDetailsV2(
         TEST_ACCOUNT_ID, null, null, "", "tag1", DelegateFilterPropertiesDTO.builder().build(), new PageRequest<>());
 
-    assertThat(delegateGroupListing.getDelegateGroupDetails()).hasSize(1);
+    assertThat(delegateGroupListing.getDelegateGroupDetails()).hasSize(2);
     assertThat(delegateGroupListing.getDelegateGroupDetails())
         .extracting(DelegateGroupDetails::getGroupName)
-        .containsOnly("grp1");
+        .containsOnly("grp1", "grp2");
   }
 
   @Test
@@ -335,7 +335,7 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     DelegateGroupListing delegateGroupListing = delegateSetupService.listDelegateGroupDetailsV2(
         TEST_ACCOUNT_ID, null, null, "", "tag45", DelegateFilterPropertiesDTO.builder().build(), new PageRequest<>());
 
-    assertThat(delegateGroupListing.getDelegateGroupDetails()).hasSize(1);
+    assertThat(delegateGroupListing.getDelegateGroupDetails()).hasSize(2);
     assertThat(delegateGroupListing.getDelegateGroupDetails().get(0).getDelegateInstanceDetails()).hasSize(2);
   }
 
@@ -348,10 +348,10 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     DelegateGroupListing delegateGroupListing = delegateSetupService.listDelegateGroupDetailsV2(
         TEST_ACCOUNT_ID, null, null, "", "kube-0", DelegateFilterPropertiesDTO.builder().build(), new PageRequest<>());
 
-    assertThat(delegateGroupListing.getDelegateGroupDetails()).hasSize(1);
+    assertThat(delegateGroupListing.getDelegateGroupDetails()).hasSize(2);
     assertThat(delegateGroupListing.getDelegateGroupDetails())
         .extracting(DelegateGroupDetails::getGroupName)
-        .containsOnly("grp1");
+        .containsOnly("grp1", "grp2");
   }
 
   @Test
