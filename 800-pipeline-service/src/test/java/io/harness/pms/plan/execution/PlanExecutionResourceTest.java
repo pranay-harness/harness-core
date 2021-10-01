@@ -33,7 +33,7 @@ import org.mockito.MockitoAnnotations;
 public class PlanExecutionResourceTest extends CategoryTest {
   @InjectMocks PlanExecutionResource planExecutionResource;
   @Mock PMSPipelineService pmsPipelineService;
-  @Mock PipelineExecuteHelper pipelineExecuteHelper;
+  @Mock PipelineExecutor pipelineExecutor;
 
   private final String ACCOUNT_ID = "account_id";
   private final String ORG_IDENTIFIER = "orgId";
@@ -93,17 +93,17 @@ public class PlanExecutionResourceTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testRunStagesWithRuntimeInputYaml() throws IOException {
+  public void testRunStagesWithRuntimeInputYaml() {
     PlanExecutionResponseDto planExecutionResponseDto =
         PlanExecutionResponseDto.builder().planExecution(PlanExecution.builder().planId("someId").build()).build();
     doReturn(planExecutionResponseDto)
-        .when(pipelineExecuteHelper)
+        .when(pipelineExecutor)
         .runStagesWithRuntimeInputYaml(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, "cd",
             RunStageRequestDTO.builder().build(), false);
     ResponseDTO<PlanExecutionResponseDto> dto = planExecutionResource.runStagesWithRuntimeInputYaml(ACCOUNT_ID,
         ORG_IDENTIFIER, PROJ_IDENTIFIER, "cd", PIPELINE_IDENTIFIER, null, false, RunStageRequestDTO.builder().build());
     assertThat(dto.getData()).isEqualTo(planExecutionResponseDto);
-    verify(pipelineExecuteHelper, times(1))
+    verify(pipelineExecutor, times(1))
         .runStagesWithRuntimeInputYaml(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, "cd",
             RunStageRequestDTO.builder().build(), false);
   }

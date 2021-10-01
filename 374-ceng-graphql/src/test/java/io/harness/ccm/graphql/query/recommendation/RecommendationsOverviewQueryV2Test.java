@@ -162,7 +162,7 @@ public class RecommendationsOverviewQueryV2Test extends CategoryTest {
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void testListQueryWithPerspectiveRuleFilters() {
-    final QLCEViewFilter viewFilter = createViewFilter("name", QLCEViewFilterOperator.IN);
+    final QLCEViewFilter viewFilter = createViewFilter("name", QLCEViewFilterOperator.IN, NAME);
 
     final K8sRecommendationFilterDTO filter = createPerspectiveViewFilter(viewFilter);
 
@@ -200,8 +200,42 @@ public class RecommendationsOverviewQueryV2Test extends CategoryTest {
 
     final Condition condition = conditionCaptor.getValue();
 
+    final String expectedCondition = "\"public\".\"ce_recommendations\".\"name\" not in ('name')";
+
     assertThat(condition).isNotNull();
-    assertThat(condition.toString()).contains("not in").contains(NAME);
+    assertThat(condition.toString()).contains(expectedCondition);
+  }
+
+  @Test
+  @Owner(developers = UTSAV)
+  @Category(UnitTests.class)
+  public void testListQueryWithPerspectiveFiltersAllFields() {
+    final K8sRecommendationFilterDTO filter = createPerspectiveExhaustiveFilter();
+
+    when(recommendationService.listAll(eq(ACCOUNT_ID), conditionCaptor.capture(), any(), any()))
+        .thenReturn(ImmutableList.of(createRecommendationItem("id0"), createRecommendationItem("id1")));
+
+    when(viewService.get(eq(PERSPECTIVE_ID))).thenReturn(createCEView(NAME, ViewIdOperator.NOT_NULL));
+
+    final RecommendationsDTO recommendationsDTO = overviewQuery.recommendations(filter, null);
+
+    assertRecommendationOverviewListResponse(recommendationsDTO);
+    assertThat(recommendationsDTO.getItems())
+        .containsExactlyInAnyOrder(createRecommendationItem("id0"), createRecommendationItem("id1"));
+
+    final Condition condition = conditionCaptor.getValue();
+
+    final String expectedCondition = " (\n"
+        + "    (\n"
+        + "      \"public\".\"ce_recommendations\".\"clustername\" in ('clusterName')\n"
+        + "      and \"public\".\"ce_recommendations\".\"namespace\" in ('namespace')\n"
+        + "      and \"public\".\"ce_recommendations\".\"name\" not in ('name')\n"
+        + "    )\n"
+        + "    or \"public\".\"ce_recommendations\".\"name\" is not null\n"
+        + "  )";
+
+    assertThat(condition).isNotNull();
+    assertThat(condition.toString()).contains(expectedCondition);
   }
 
   @Test
@@ -221,7 +255,7 @@ public class RecommendationsOverviewQueryV2Test extends CategoryTest {
   @Owner(developers = UTSAV)
   @Category(UnitTests.class)
   public void testGetRecommendationsOverviewListQueryWithPerspectiveFiltersThrowsError() {
-    final QLCEViewFilter viewFilter = createViewFilter("randomField", QLCEViewFilterOperator.IN);
+    final QLCEViewFilter viewFilter = createViewFilter("randomField", QLCEViewFilterOperator.IN, NAME);
 
     final K8sRecommendationFilterDTO filter = createPerspectiveViewFilter(viewFilter);
 
@@ -251,6 +285,23 @@ public class RecommendationsOverviewQueryV2Test extends CategoryTest {
     return buildFilter(perspectiveFilters);
   }
 
+  private static K8sRecommendationFilterDTO createPerspectiveExhaustiveFilter() {
+    final List<QLCEViewFilter> conditions =
+        ImmutableList.of(createViewFilter("clusterName", QLCEViewFilterOperator.IN, CLUSTER_NAME),
+            createViewFilter("namespace", QLCEViewFilterOperator.IN, NAMESPACE),
+            createViewFilter("workloadName", QLCEViewFilterOperator.NOT_IN, NAME)
+
+        );
+
+    final List<QLCEViewFilterWrapper> perspectiveFilters =
+        ImmutableList.of(QLCEViewFilterWrapper.builder()
+                             .viewMetadataFilter(QLCEViewMetadataFilter.builder().viewId(PERSPECTIVE_ID).build())
+                             .ruleFilter(QLCEViewRule.builder().conditions(conditions).build())
+                             .build());
+
+    return buildFilter(perspectiveFilters);
+  }
+
   private static K8sRecommendationFilterDTO buildFilter(List<QLCEViewFilterWrapper> perspectiveFilters) {
     return K8sRecommendationFilterDTO.builder()
         .perspectiveFilters(perspectiveFilters)
@@ -260,7 +311,7 @@ public class RecommendationsOverviewQueryV2Test extends CategoryTest {
         .build();
   }
 
-  private static QLCEViewFilter createViewFilter(String fieldId, QLCEViewFilterOperator operator) {
+  private static QLCEViewFilter createViewFilter(String fieldId, QLCEViewFilterOperator operator, String... values) {
     return QLCEViewFilter.builder()
         .field(QLCEViewFieldInput.builder()
                    .fieldId(fieldId)
@@ -268,7 +319,7 @@ public class RecommendationsOverviewQueryV2Test extends CategoryTest {
                    .identifierName(fieldId)
                    .identifier(ViewFieldIdentifier.CLUSTER)
                    .build())
-        .values(new String[] {NAME})
+        .values(values)
         .operator(operator)
         .build();
   }

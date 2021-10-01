@@ -7,10 +7,13 @@ HarnessTeam = "PL"
 java_library(
     name = "module",
     srcs = glob(["src/main/java/**/*.java"]),
-    data = [],
-    resources = [],
+    data = ["//:resource"],
+    resources = [
+        "//830-resource-group/src/main/resources:resource",
+    ],
     visibility = ["//visibility:public"],
     runtime_deps = [
+        "//830-resource-group/src/main/resources",
         "@maven//:javax_ws_rs_javax_ws_rs_api",
     ],
     deps = [
@@ -58,7 +61,17 @@ java_library(
     name = "tests",
     testonly = True,
     srcs = glob(["src/test/**/*.java"]),
+    data = ["//830-resource-group/src/main/resources:resource"],
+    resources = [
+        "//:resource",
+        "//830-resource-group/src/main/resources:resource",
+    ],
     visibility = ["//visibility:public"],
+    runtime_deps = [
+        "//830-resource-group/src/main/resources",
+        "//980-commons/src/test/resources",
+        "@maven//:javax_ws_rs_javax_ws_rs_api",
+    ],
     deps = [
         ":module",
         "//:lombok",

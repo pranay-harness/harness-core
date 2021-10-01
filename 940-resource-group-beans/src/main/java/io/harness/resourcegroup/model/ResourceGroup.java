@@ -2,10 +2,13 @@ package io.harness.resourcegroup.model;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import static java.util.Collections.singleton;
+
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.Scope;
+import io.harness.beans.ScopeLevel;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.mongo.CollationLocale;
 import io.harness.mongo.CollationStrength;
@@ -22,6 +25,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import lombok.Builder;
@@ -75,7 +79,7 @@ public class ResourceGroup implements PersistentRegularIterable, PersistentEntit
   }
 
   @Id @org.mongodb.morphia.annotations.Id String id;
-  @NotEmpty String accountIdentifier;
+  String accountIdentifier;
   String orgIdentifier;
   String projectIdentifier;
   @NotEmpty @Size(max = 128) String identifier;
@@ -83,9 +87,10 @@ public class ResourceGroup implements PersistentRegularIterable, PersistentEntit
   @Size(max = 1024) String description;
   @NotEmpty @Size(min = 7, max = 7) String color;
   @Size(max = 128) @Singular List<NGTag> tags;
-  @NotNull @Builder.Default Boolean harnessManaged = Boolean.FALSE;
+  @FdIndex @NotNull @Builder.Default Boolean harnessManaged = Boolean.FALSE;
   @NotNull @Size(max = 256) @Singular List<ResourceSelector> resourceSelectors;
   @Builder.Default Boolean fullScopeSelected = Boolean.FALSE;
+  Set<String> allowedScopeLevels;
 
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
@@ -122,6 +127,7 @@ public class ResourceGroup implements PersistentRegularIterable, PersistentEntit
         .description(String.format("All the resources in this %s are included in this resource group.",
             ScopeUtils.getMostSignificantScope(scope).toString().toLowerCase()))
         .resourceSelectors(Collections.emptyList())
+        .allowedScopeLevels(singleton(ScopeLevel.of(scope).toString().toLowerCase()))
         .fullScopeSelected(true)
         .harnessManaged(true)
         .build();

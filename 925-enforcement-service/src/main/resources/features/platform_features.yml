@@ -1,0 +1,39 @@
+moduleType: CORE
+clients:
+  - name: ngmanager
+    clientConfig: ngManagerClientConfig
+    secretConfig: nextGenConfig.ngManagerServiceSecret
+features:
+  # Feature availability example
+  # TEST1 feature
+  # FREE is disabled, TEAM and ENTERPRISE are enabled
+  - name: MULTIPLE_ORGANIZATIONS
+    description: Allow creating multiple organizations within a account
+    restrictions:
+      FREE:
+        restrictionType: STATIC_LIMIT
+        limit: 1
+        clientName: ngmanager
+      TEAM:
+        restrictionType: STATIC_LIMIT
+        limit: 1
+        clientName: ngmanager
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
+  # Static limit example
+  # Test2 feature
+  # Free is disabled, TEAM have a 10 limit, ENTERPRISE is unlimited.
+  - name: MULTIPLE_PROJECTS
+    description: Allow creating multiple projects within a organization
+    restrictions:
+      FREE:
+        restrictionType: AVAILABILITY
+        enabled: true
+      TEAM:
+        restrictionType: AVAILABILITY
+        enabled: true
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
+

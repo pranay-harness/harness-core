@@ -58,10 +58,10 @@ public class LicenseResource {
   }
 
   @GET
-  @Deprecated
   @ApiOperation(
       value = "Gets Module License By Account And ModuleType", nickname = "getModuleLicenseByAccountAndModuleType")
   @NGAccessControlCheck(resourceType = ResourceTypes.LICENSE, permission = VIEW_LICENSE_PERMISSION)
+  @Deprecated
   public ResponseDTO<ModuleLicenseDTO>
   getModuleLicense(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier,

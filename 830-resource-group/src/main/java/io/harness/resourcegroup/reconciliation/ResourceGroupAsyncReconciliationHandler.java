@@ -21,6 +21,7 @@ import com.google.inject.Inject;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
 
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
@@ -37,7 +38,8 @@ public class ResourceGroupAsyncReconciliationHandler implements MongoPersistence
   public void handle(ResourceGroup resourceGroup) {
     boolean updated = resourceGroupValidatorService.sanitizeResourceSelectors(resourceGroup);
     if (updated) {
-      resourceGroupService.update(ResourceGroupMapper.toDTO(resourceGroup), false);
+      resourceGroupService.update(
+          ResourceGroupMapper.toDTO(resourceGroup), false, Boolean.TRUE.equals(resourceGroup.getHarnessManaged()));
     }
   }
 
@@ -54,9 +56,17 @@ public class ResourceGroupAsyncReconciliationHandler implements MongoPersistence
             .fieldName(ResourceGroupKeys.nextIteration)
             .targetInterval(ofHours(1))
             .acceptableNoAlertDelay(ofHours(1))
+            .filterExpander(getFilterExpander())
             .handler(this)
             .schedulingType(REGULAR)
             .persistenceProvider(new SpringPersistenceProvider<>(mongoTemplate))
             .redistribute(true));
+  }
+
+  private SpringFilterExpander getFilterExpander() {
+    return query -> {
+      Criteria criteria = Criteria.where(ResourceGroupKeys.harnessManaged).ne(true);
+      query.addCriteria(criteria);
+    };
   }
 }

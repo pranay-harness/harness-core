@@ -27,8 +27,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-@OwnedBy(HarnessTeam.CE)
 @RunWith(MockitoJUnitRunner.class)
+@OwnedBy(HarnessTeam.CE)
 public class K8sControllerFetcherTest extends CategoryTest {
   @Mock private Store<V1Deployment> deploymentStore;
   @Mock private Store<V1ReplicaSet> replicaSetStore;

@@ -82,7 +82,7 @@ public class Command extends Base implements CommandUnit, NestedAnnotationResolv
   @SchemaIgnore private CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.QUEUED;
 
   @SchemaIgnore private boolean artifactNeeded;
-  @Deprecated @SchemaIgnore private String deploymentType;
+  @SchemaIgnore @Deprecated private String deploymentType;
 
   @NotEmpty @SchemaIgnore private String originEntityId;
 

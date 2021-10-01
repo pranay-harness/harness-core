@@ -92,8 +92,8 @@ public class ScmOrchestratorServiceImpl implements ScmOrchestratorService {
   }
 
   @Override
-  public GetLatestCommitResponse getLatestCommit(ScmConnector scmConnector, String branchName) {
-    return scmServiceGitClient.getLatestCommit(scmConnector, branchName);
+  public GetLatestCommitResponse getLatestCommit(ScmConnector scmConnector, String branchName, String ref) {
+    return scmServiceGitClient.getLatestCommit(scmConnector, branchName, ref);
   }
 
   @Override

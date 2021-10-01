@@ -69,7 +69,7 @@ public class BuildStatusPushParametersTest extends CIExecutionTestBase {
 
     CIBuildStatusPushParameters pushParameters = gitBuildStatusUtility.getCIBuildStatusPushParams(
         Ambiance.newBuilder(ambiance).setMetadata(executionMetadata).build(), buildStatusUpdateParameter,
-        Status.SUCCEEDED);
+        Status.SUCCEEDED, "sha");
 
     assertThat(pushParameters.getDesc())
         .isEqualTo("Execution status of Pipeline - shortPipelineId (executionuuid) Stage - shortname was SUCCEEDED");
@@ -93,7 +93,7 @@ public class BuildStatusPushParametersTest extends CIExecutionTestBase {
 
     CIBuildStatusPushParameters pushParameters = gitBuildStatusUtility.getCIBuildStatusPushParams(
         Ambiance.newBuilder(ambiance).setMetadata(executionMetadata).build(), buildStatusUpdateParameter,
-        Status.SUCCEEDED);
+        Status.SUCCEEDED, "sha");
 
     assertThat(pushParameters.getDesc())
         .isEqualTo(

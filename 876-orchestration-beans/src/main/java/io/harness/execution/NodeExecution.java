@@ -73,7 +73,7 @@ public class NodeExecution implements PersistentEntity, UuidAccess, PmsNodeExecu
   // Immutable
   @Wither @Id @org.mongodb.morphia.annotations.Id String uuid;
   @NotNull Ambiance ambiance;
-  @Deprecated @Getter(AccessLevel.NONE) @Setter(AccessLevel.NONE) @NotNull PlanNodeProto node;
+  @Getter(AccessLevel.NONE) @Setter(AccessLevel.NONE) @NotNull @Deprecated PlanNodeProto node;
   @Getter(AccessLevel.NONE) @Setter(AccessLevel.NONE) Node planNode;
   @NotNull ExecutionMode mode;
   @Wither @FdIndex @CreatedDate Long createdAt;
@@ -157,6 +157,13 @@ public class NodeExecution implements PersistentEntity, UuidAccess, PmsNodeExecu
     public static final String planNodeId = NodeExecutionKeys.planNode + "."
         + "uuid";
     public static final String planNodeIdentifier = NodeExecutionKeys.planNode + "."
+        + "identifier";
+    public static final String planNodeStepCategory = NodeExecutionKeys.planNode + "."
+        + "stepType"
+        + "."
+        + "stepCategory";
+
+    public static final String nodeIdentifier = NodeExecutionKeys.node + "."
         + "identifier";
   }
 
