@@ -6,7 +6,6 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.Delegate;
-import io.harness.delegate.beans.perpetualtask.PerpetualTaskScheduleConfig;
 import io.harness.grpc.auth.DelegateAuthServerInterceptor;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.logging.AccountLogContext;
@@ -21,7 +20,6 @@ import software.wings.service.impl.DelegateObserver;
 import software.wings.service.impl.DelegateTaskBroadcastHelper;
 import software.wings.service.intfc.perpetualtask.PerpetualTaskCrudObserver;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.Any;
@@ -49,16 +47,13 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
   private PerpetualTaskRecordDao perpetualTaskRecordDao;
   private PerpetualTaskServiceClientRegistry clientRegistry;
   private final BroadcasterFactory broadcasterFactory;
-  private final PerpetualTaskScheduleService perpetualTaskScheduleService;
 
   @Inject
   public PerpetualTaskServiceImpl(PerpetualTaskRecordDao perpetualTaskRecordDao,
-      PerpetualTaskServiceClientRegistry clientRegistry, BroadcasterFactory broadcasterFactory,
-      PerpetualTaskScheduleService perpetualTaskScheduleService) {
+      PerpetualTaskServiceClientRegistry clientRegistry, BroadcasterFactory broadcasterFactory) {
     this.perpetualTaskRecordDao = perpetualTaskRecordDao;
     this.clientRegistry = clientRegistry;
     this.broadcasterFactory = broadcasterFactory;
-    this.perpetualTaskScheduleService = perpetualTaskScheduleService;
   }
 
   @Getter private Subject<PerpetualTaskCrudObserver> perpetualTaskCrudSubject = new Subject<>();
@@ -107,7 +102,7 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
                                        .perpetualTaskType(perpetualTaskType)
                                        .clientContext(clientContext)
                                        .timeoutMillis(Durations.toMillis(schedule.getTimeout()))
-                                       .intervalSeconds(getTaskTimeInterval(schedule, accountId, perpetualTaskType))
+                                       .intervalSeconds(schedule.getInterval().getSeconds())
                                        .delegateId("")
                                        .state(PerpetualTaskState.TASK_UNASSIGNED)
                                        .taskDescription(taskDescription)
@@ -269,20 +264,5 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
   @Override
   public void onReconnected(String accountId, String delegateId) {
     // do nothing
-  }
-
-  @VisibleForTesting
-  long getTaskTimeInterval(PerpetualTaskSchedule schedule, String accountId, String perpetualTaskType) {
-    long intervalSeconds = schedule.getInterval().getSeconds();
-
-    PerpetualTaskScheduleConfig perpetualTaskScheduleConfig =
-        perpetualTaskScheduleService.getByAccountIdAndPerpetualTaskType(accountId, perpetualTaskType);
-    if (perpetualTaskScheduleConfig != null) {
-      intervalSeconds = perpetualTaskScheduleConfig.getTimeIntervalInMillis() / 1000;
-      log.info("Creating new perpetual task with custom time interval : {} for task type : {}",
-          perpetualTaskScheduleConfig.getTimeIntervalInMillis(), perpetualTaskScheduleConfig.getPerpetualTaskType());
-    }
-
-    return intervalSeconds;
   }
 }

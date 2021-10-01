@@ -16,6 +16,8 @@ import io.harness.beans.execution.WebhookExecutionSource;
 import io.harness.beans.sweepingoutputs.CodebaseSweepingOutput;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
+import io.harness.delegate.beans.connector.ConnectorType;
+import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.delegate.task.scm.GitRefType;
 import io.harness.delegate.task.scm.ScmGitRefTaskParams;
@@ -55,10 +57,13 @@ public class CodeBaseTaskStepTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldObtainTaskForBranchBuilds() {
     ManualExecutionSource executionSource = ManualExecutionSource.builder().branch("main").build();
-    ConnectorDetails connectorDetails =
-        ConnectorDetails.builder()
-            .connectorConfig(GithubConnectorDTO.builder().url("http://github.com/octocat/").build())
-            .build();
+    ConnectorDetails connectorDetails = ConnectorDetails.builder()
+                                            .connectorType(ConnectorType.GITHUB)
+                                            .connectorConfig(GithubConnectorDTO.builder()
+                                                                 .url("http://github.com/octocat/")
+                                                                 .connectionType(GitConnectionType.ACCOUNT)
+                                                                 .build())
+                                            .build();
 
     ScmGitRefTaskParams taskParams =
         codeBaseTaskStep.obtainTaskParameters(executionSource, connectorDetails, "hello-world");
@@ -73,10 +78,13 @@ public class CodeBaseTaskStepTest extends CategoryTest {
   @Category(UnitTests.class)
   public void shouldObtainTaskForPRBuilds() {
     ManualExecutionSource executionSource = ManualExecutionSource.builder().prNumber("1").build();
-    ConnectorDetails connectorDetails =
-        ConnectorDetails.builder()
-            .connectorConfig(GithubConnectorDTO.builder().url("http://github.com/octocat/hello-world").build())
-            .build();
+    ConnectorDetails connectorDetails = ConnectorDetails.builder()
+                                            .connectorType(ConnectorType.GITHUB)
+                                            .connectorConfig(GithubConnectorDTO.builder()
+                                                                 .connectionType(GitConnectionType.ACCOUNT)
+                                                                 .url("http://github.com/octocat/hello-world")
+                                                                 .build())
+                                            .build();
 
     ScmGitRefTaskParams taskParams = codeBaseTaskStep.obtainTaskParameters(executionSource, connectorDetails, null);
     assertThat(taskParams).isNotNull();
@@ -93,10 +101,14 @@ public class CodeBaseTaskStepTest extends CategoryTest {
         ScmGitRefTaskResponseData.builder()
             .branch("main")
             .repoUrl("http://github.com/octocat/hello-world")
-            .getLatestCommitResponse(GetLatestCommitResponse.newBuilder().setCommitId("commitId").build().toByteArray())
+            .getLatestCommitResponse(GetLatestCommitResponse.newBuilder()
+                                         .setCommit(Commit.newBuilder().setSha("commitId").build())
+                                         .setCommitId("commitId")
+                                         .build()
+                                         .toByteArray())
             .build();
     CodebaseSweepingOutput codebaseSweepingOutput =
-        codeBaseTaskStep.buildCommitShaCodebaseSweepingOutput(scmGitRefTaskResponseData);
+        codeBaseTaskStep.buildCommitShaCodebaseSweepingOutput(scmGitRefTaskResponseData, "tag");
     assertThat(codebaseSweepingOutput.getCommitSha()).isEqualTo("commitId");
     assertThat(codebaseSweepingOutput.getBranch()).isEqualTo("main");
     assertThat(codebaseSweepingOutput.getRepoUrl()).isEqualTo("http://github.com/octocat/hello-world");

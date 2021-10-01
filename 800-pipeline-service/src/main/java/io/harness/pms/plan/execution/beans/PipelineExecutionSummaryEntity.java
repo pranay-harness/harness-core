@@ -39,6 +39,7 @@ import lombok.Singular;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.NonFinal;
+import lombok.experimental.UtilityClass;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.springframework.data.annotation.CreatedDate;
@@ -147,5 +148,13 @@ public class PipelineExecutionSummaryEntity implements PersistentEntity, UuidAwa
                  .build())
 
         .build();
+  }
+
+  @UtilityClass
+  public static class PlanExecutionSummaryKeys {
+    public String triggerType = PlanExecutionSummaryKeys.executionTriggerInfo + "."
+        + "triggerType";
+    public String triggeredBy = PlanExecutionSummaryKeys.executionTriggerInfo + "."
+        + "triggeredBy";
   }
 }

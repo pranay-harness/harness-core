@@ -446,7 +446,10 @@ message CreateBranchResponse {
 
 message GetLatestCommitRequest {
   string slug = 1;
-  string branch = 2;
+  oneof type {
+    string branch = 2;
+    string ref = 4;
+  }
   Provider provider = 3;
 }
 
@@ -454,6 +457,7 @@ message GetLatestCommitResponse {
   string commit_id = 1;
   int32 status = 2;
   string error = 3;
+  Commit commit = 4;
 }
 
 message ListBranchesRequest {

@@ -23,6 +23,7 @@ public abstract class ChangeEventMetaDataTransformer<E extends Activity, M exten
     String serviceName = serviceResponseDTO != null ? serviceResponseDTO.getName() : null;
     String environmentName = environmentResponseDTO != null ? environmentResponseDTO.getName() : null;
     return ChangeEventDTO.builder()
+        .id(activity.getUuid())
         .accountId(activity.getAccountId())
         .orgIdentifier(activity.getOrgIdentifier())
         .projectIdentifier(activity.getProjectIdentifier())

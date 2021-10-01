@@ -6,6 +6,7 @@ import static io.harness.common.CIExecutionConstants.GIT_URL_SUFFIX;
 import static io.harness.common.CIExecutionConstants.IMAGE_PATH_SPLIT_REGEX;
 import static io.harness.common.CIExecutionConstants.PATH_SEPARATOR;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.connector.ConnectorType.BITBUCKET;
 import static io.harness.delegate.beans.connector.ConnectorType.CODECOMMIT;
 import static io.harness.delegate.beans.connector.ConnectorType.DOCKER;
@@ -74,7 +75,7 @@ import lombok.experimental.UtilityClass;
 public class IntegrationStageUtils {
   private static final String TAG_EXPRESSION = "<+trigger.tag>";
   private static final String BRANCH_EXPRESSION = "<+trigger.branch>";
-  private static final String PR_EXPRESSION = "<+trigger.prNumber>";
+  public static final String PR_EXPRESSION = "<+trigger.prNumber>";
 
   public IntegrationStageConfig getIntegrationStageConfig(StageElementConfig stageElementConfig) {
     if (stageElementConfig.getType().equals("CI")) {
@@ -117,8 +118,8 @@ public class IntegrationStageUtils {
         return handleManualExecution(parameterFieldBuild, identifier);
       } else if (executionTriggerInfo.getTriggerType() == TriggerType.WEBHOOK) {
         ParsedPayload parsedPayload = triggerPayload.getParsedPayload();
-        if (treatWebhookAsManualExecution(
-                connectorIdentifier, connectorUtils, planCreationContextValue, parsedPayload, codeBase)) {
+        if (treatWebhookAsManualExecutionWithContext(connectorIdentifier, connectorUtils, planCreationContextValue,
+                parsedPayload, codeBase, triggerPayload.getVersion())) {
           return handleManualExecution(parameterFieldBuild, identifier);
         }
 
@@ -132,8 +133,8 @@ public class IntegrationStageUtils {
         return handleManualExecution(parameterFieldBuild, identifier);
       } else if (executionTriggerInfo.getRerunInfo().getRootTriggerType() == TriggerType.WEBHOOK) {
         ParsedPayload parsedPayload = triggerPayload.getParsedPayload();
-        if (treatWebhookAsManualExecution(
-                connectorIdentifier, connectorUtils, planCreationContextValue, parsedPayload, codeBase)) {
+        if (treatWebhookAsManualExecutionWithContext(connectorIdentifier, connectorUtils, planCreationContextValue,
+                parsedPayload, codeBase, triggerPayload.getVersion())) {
           return handleManualExecution(parameterFieldBuild, identifier);
         }
         return WebhookTriggerProcessorUtils.convertWebhookResponse(parsedPayload);
@@ -148,15 +149,10 @@ public class IntegrationStageUtils {
   /* In case codebase and trigger connectors are different then treat it as manual execution
    */
 
-  private boolean treatWebhookAsManualExecution(String connectorIdentifier, ConnectorUtils connectorUtils,
-      PlanCreationContextValue planCreationContextValue, ParsedPayload parsedPayload, CodeBase codeBase) {
-    BaseNGAccess baseNGAccess = IntegrationStageUtils.getBaseNGAccess(planCreationContextValue.getAccountIdentifier(),
-        planCreationContextValue.getOrgIdentifier(), planCreationContextValue.getProjectIdentifier());
-
-    WebhookExecutionSource webhookExecutionSource = WebhookTriggerProcessorUtils.convertWebhookResponse(parsedPayload);
-    ConnectorDetails connectorDetails = connectorUtils.getConnectorDetails(baseNGAccess, connectorIdentifier);
+  public boolean treatWebhookAsManualExecution(
+      ConnectorDetails connectorDetails, CodeBase codeBase, ParsedPayload parsedPayload, long version) {
     String url = getGitURLFromConnector(connectorDetails, codeBase);
-
+    WebhookExecutionSource webhookExecutionSource = WebhookTriggerProcessorUtils.convertWebhookResponse(parsedPayload);
     Build build = RunTimeInputHandler.resolveBuild(codeBase.getBuild());
     if (build != null) {
       if (build.getType() == BuildType.PR) {
@@ -165,6 +161,11 @@ public class IntegrationStageUtils {
             RunTimeInputHandler.resolveStringParameter("number", "Git Clone", "identifier", number, false);
         if (!numberString.equals(PR_EXPRESSION)) {
           return true;
+        } else {
+          if (webhookExecutionSource.getWebhookEvent().getType() == BRANCH) {
+            throw new CIStageExecutionException(
+                "Building PR with expression <+trigger.prNumber> for push event is not supported");
+          }
         }
       }
 
@@ -172,37 +173,70 @@ public class IntegrationStageUtils {
         ParameterField<String> branch = ((BranchBuildSpec) build.getSpec()).getBranch();
         String branchString =
             RunTimeInputHandler.resolveStringParameter("branch", "Git Clone", "identifier", branch, false);
-        if (!branchString.equals(BRANCH_EXPRESSION)) {
-          return true;
+        if (isNotEmpty(branchString)) {
+          if (version >= 3l) {
+            return true;
+          } else {
+            return false;
+          }
+        } else {
+          throw new CIStageExecutionException("Branch should not be empty for branch build type");
         }
       }
 
       if (build.getType() == BuildType.TAG) {
         ParameterField<String> tag = ((TagBuildSpec) build.getSpec()).getTag();
         String tagString = RunTimeInputHandler.resolveStringParameter("tag", "Git Clone", "identifier", tag, false);
-        if (!tagString.equals(TAG_EXPRESSION)) {
+        if (isNotEmpty(tagString)) {
           return true;
+        } else {
+          throw new CIStageExecutionException("Tag should not be empty for tag build type");
         }
       }
     }
 
+    if (isURLSame(webhookExecutionSource, url)) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+
+  public boolean isURLSame(WebhookExecutionSource webhookExecutionSource, String url) {
     if (webhookExecutionSource.getWebhookEvent().getType() == PR) {
       PRWebhookEvent prWebhookEvent = (PRWebhookEvent) webhookExecutionSource.getWebhookEvent();
 
+      if (prWebhookEvent == null || prWebhookEvent.getRepository() == null
+          || prWebhookEvent.getRepository().getHttpURL() == null) {
+        return false;
+      }
       if (prWebhookEvent.getRepository().getHttpURL().equals(url)
           || prWebhookEvent.getRepository().getSshURL().equals(url)) {
-        return false;
+        return true;
       }
     } else if (webhookExecutionSource.getWebhookEvent().getType() == BRANCH) {
       BranchWebhookEvent branchWebhookEvent = (BranchWebhookEvent) webhookExecutionSource.getWebhookEvent();
 
+      if (branchWebhookEvent == null || branchWebhookEvent.getRepository() == null
+          || branchWebhookEvent.getRepository().getHttpURL() == null) {
+        return false;
+      }
       if (branchWebhookEvent.getRepository().getHttpURL().equals(url)
           || branchWebhookEvent.getRepository().getSshURL().equals(url)) {
-        return false;
+        return true;
       }
     }
 
-    return true;
+    return false;
+  }
+
+  private boolean treatWebhookAsManualExecutionWithContext(String connectorIdentifier, ConnectorUtils connectorUtils,
+      PlanCreationContextValue planCreationContextValue, ParsedPayload parsedPayload, CodeBase codeBase, long version) {
+    BaseNGAccess baseNGAccess = IntegrationStageUtils.getBaseNGAccess(planCreationContextValue.getAccountIdentifier(),
+        planCreationContextValue.getOrgIdentifier(), planCreationContextValue.getProjectIdentifier());
+
+    ConnectorDetails connectorDetails = connectorUtils.getConnectorDetails(baseNGAccess, connectorIdentifier);
+    return treatWebhookAsManualExecution(connectorDetails, codeBase, parsedPayload, version);
   }
 
   private BaseNGAccess getBaseNGAccess(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
@@ -249,7 +283,7 @@ public class IntegrationStageUtils {
     return gitUrl;
   }
 
-  private String getGitURLFromConnector(ConnectorDetails gitConnector, CodeBase ciCodebase) {
+  public String getGitURLFromConnector(ConnectorDetails gitConnector, CodeBase ciCodebase) {
     if (gitConnector == null) {
       return null;
     }

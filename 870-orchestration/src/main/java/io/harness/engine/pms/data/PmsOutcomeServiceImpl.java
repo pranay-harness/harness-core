@@ -199,6 +199,24 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
     }
   }
 
+  @Override
+  public List<OutcomeInstance> fetchOutcomeInstanceByRuntimeId(String runtimeId) {
+    Query query = query(where(OutcomeInstanceKeys.producedByRuntimeId).is(runtimeId));
+    return mongoTemplate.find(query, OutcomeInstance.class);
+  }
+
+  @Override
+  public List<String> cloneForRetryExecution(Ambiance ambiance, String originalNodeExecutionUuid) {
+    List<String> outcomeUuids = new ArrayList<>();
+    List<OutcomeInstance> outcomeInstances = fetchOutcomeInstanceByRuntimeId(originalNodeExecutionUuid);
+    for (OutcomeInstance outcomeInstance : outcomeInstances) {
+      String uuid = consume(ambiance, outcomeInstance.getName(), outcomeInstance.getOutcomeValue().toJson(),
+          outcomeInstance.getGroupName());
+      outcomeUuids.add(uuid);
+    }
+    return outcomeUuids;
+  }
+
   private OptionalOutcome resolveOptionalUsingProducerSetupId(Ambiance ambiance, RefObject refObject) {
     String outcome;
     boolean isResolvable;

@@ -73,8 +73,10 @@ func TestGetLatestCommitGitlab(t *testing.T) {
 		t.Skip("Skipping, Acceptance test")
 	}
 	in := &pb.GetLatestCommitRequest{
-		Slug:   "tphoney/test_repo",
-		Branch: "master",
+		Slug: "tphoney/test_repo",
+		Type: &pb.GetLatestCommitRequest_Branch{
+			Branch: "main",
+		},
 		Provider: &pb.Provider{
 			Hook: &pb.Provider_Gitlab{
 				Gitlab: &pb.GitlabProvider{
@@ -91,7 +93,7 @@ func TestGetLatestCommitGitlab(t *testing.T) {
 	got, err := GetLatestCommit(context.Background(), in, log.Sugar())
 
 	assert.Nil(t, err, "no errors")
-	assert.NotNil(t, got.CommitId, "There is a commit id")
+	assert.NotNil(t, got.Commit.Sha, "There is a commit id")
 }
 
 func TestListCommitsGitlab(t *testing.T) {

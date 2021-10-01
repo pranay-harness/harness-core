@@ -34,6 +34,7 @@ import io.harness.template.beans.TemplateSummaryResponseDTO;
 import io.harness.template.beans.yaml.NGTemplateConfig;
 import io.harness.template.entity.TemplateEntity;
 import io.harness.template.entity.TemplateEntity.TemplateEntityKeys;
+import io.harness.template.helpers.TemplateCRUDHelper;
 import io.harness.template.mappers.NGTemplateDtoMapper;
 import io.harness.template.services.NGTemplateService;
 import io.harness.template.services.NGTemplateServiceHelper;
@@ -87,6 +88,7 @@ public class NGTemplateResource {
   private static final String INCLUDE_ALL_TEMPLATES_ACCESSIBLE = "includeAllTemplatesAvailableAtScope";
   private final NGTemplateService templateService;
   private final NGTemplateServiceHelper templateServiceHelper;
+  private final TemplateCRUDHelper templateCRUDHelper;
 
   @GET
   @Path("{templateIdentifier}")
@@ -133,7 +135,7 @@ public class NGTemplateResource {
         templateEntity.getIdentifier(), templateEntity.getVersionLabel(), projectId, orgId, accountId));
 
     // TODO(archit): Add schema validations
-    TemplateEntity createdTemplate = templateService.create(templateEntity, setDefaultTemplate, comments);
+    TemplateEntity createdTemplate = templateCRUDHelper.create(templateEntity, setDefaultTemplate, comments);
     return ResponseDTO.newResponse(
         createdTemplate.getVersion().toString(), NGTemplateDtoMapper.writeTemplateResponseDto(createdTemplate));
   }
@@ -178,7 +180,7 @@ public class NGTemplateResource {
 
     // TODO(archit): Add schema validations
     TemplateEntity createdTemplate =
-        templateService.updateTemplateEntity(templateEntity, ChangeType.MODIFY, setDefaultTemplate, comments);
+        templateCRUDHelper.updateTemplateEntity(templateEntity, ChangeType.MODIFY, setDefaultTemplate, comments);
     return ResponseDTO.newResponse(
         createdTemplate.getVersion().toString(), NGTemplateDtoMapper.writeTemplateResponseDto(createdTemplate));
   }

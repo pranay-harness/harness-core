@@ -26,9 +26,9 @@ import org.hibernate.validator.constraints.NotEmpty;
  * Created by anubhaw on 12/14/16.
  */
 @OwnedBy(CDC)
-@Deprecated
 @JsonTypeName("SLACK")
 @ToString
+@Deprecated
 public class SlackConfig extends SettingValue implements SlackNotificationConfiguration {
   private static final String SLACK_HOOK_YRL = "https://hooks.slack.com";
   @Attributes(title = "Slack Webhook URL", required = true) @NotEmpty private String outgoingWebhookUrl;

@@ -12,7 +12,10 @@ import org.jetbrains.annotations.NotNull;
 public class RiskData implements Comparable<RiskData> {
   Integer healthScore;
   Risk riskStatus;
-  TimeRangeParams timeRangeParams;
+  long startTime;
+  long endTime;
+
+  @Deprecated TimeRangeParams timeRangeParams;
 
   @Override
   public int compareTo(@NotNull RiskData o) {
