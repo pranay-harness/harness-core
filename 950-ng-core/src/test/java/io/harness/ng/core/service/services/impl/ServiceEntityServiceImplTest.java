@@ -226,8 +226,10 @@ public class ServiceEntityServiceImplTest extends NGCoreTestBase {
         + "index: unique_accountId_organizationIdentifier_projectIdentifier_serviceIdentifier "
         + "dup key: { accountId: \"kmpySmUISimoRrJL6NL73w\", orgIdentifier: \"default\", "
         + "projectIdentifier: \"Nofar\", identifier: \"service_5\" }'";
-    String errorMessageToBeShownToUser = serviceEntityService.getDuplicateServiceExistsErrorMessage(errorMessage);
+    String errorMessageToBeShownToUser =
+        serviceEntityService.getDuplicateServiceExistsErrorMessage("kmpySmUISimoRrJL6NL73w", errorMessage);
     assertThat(errorMessageToBeShownToUser)
-        .isEqualTo("Service [service_5] under Project[default], Organization [Nofar] already exists");
+        .isEqualTo(
+            "Service [service_5] under Project[Nofar], Organization [default] in Account [kmpySmUISimoRrJL6NL73w] already exists");
   }
 }

@@ -9,7 +9,7 @@ public enum ArchiveFormat {
   @JsonProperty("Gzip") GZIP("gzip");
   private final String yamlName;
 
-  @JsonCreator
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
   public static ArchiveFormat getArchiveFormat(@JsonProperty("archiveFormat") String yamlName) {
     for (ArchiveFormat archiveFormat : ArchiveFormat.values()) {
       if (archiveFormat.yamlName.equalsIgnoreCase(yamlName)) {

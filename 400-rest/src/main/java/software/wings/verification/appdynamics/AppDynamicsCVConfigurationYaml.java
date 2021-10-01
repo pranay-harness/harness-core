@@ -17,7 +17,7 @@ import lombok.EqualsAndHashCode;
 /**
  * The type Yaml.
  */
-@TargetModule(HarnessModule._870_CG_YAML)
+@TargetModule(HarnessModule._955_CG_YAML)
 @Data
 @JsonPropertyOrder({"type", "harnessApiVersion"})
 @Builder

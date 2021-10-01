@@ -63,7 +63,7 @@ def main(event, context):
     folders_to_ingest = get_csv_paths(jsonData)
     if len(folders_to_ingest) > 0:
         send_event_for_processing(folders_to_ingest, jsonData)
-        
+    print("Completed")
 
 def get_csv_paths(jsonData):
     """

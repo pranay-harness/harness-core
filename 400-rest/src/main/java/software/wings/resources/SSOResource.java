@@ -1,11 +1,14 @@
 package software.wings.resources;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_AUTHENTICATION_SETTINGS;
 
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
@@ -34,6 +37,7 @@ import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
@@ -52,6 +56,7 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotBlank;
 
+@OwnedBy(PL)
 @Api("sso")
 @Path("/sso")
 @Consumes(MediaType.APPLICATION_JSON)
@@ -243,6 +248,13 @@ public class SSOResource {
     return new RestResponse<>(ssoService.getLdapSettings(accountId));
   }
 
+  @POST
+  @Path("ldap/iterations")
+  public RestResponse<List<Long>> getIterationsFromCron(
+      @QueryParam("accountId") @NotBlank String accountId, CronExpressionRequest cronExpressionRequest) {
+    return new RestResponse<>(ssoService.getIterationsFromCron(accountId, cronExpressionRequest.getCronExpression()));
+  }
+
   @DELETE
   @Path("ldap/settings")
   @Timed
@@ -307,6 +319,11 @@ public class SSOResource {
   public static class LDAPTestAuthenticationRequest {
     @NotBlank String email;
     @NotBlank String password;
+  }
+
+  @Data
+  public static class CronExpressionRequest {
+    @NotBlank String cronExpression;
   }
 
   /**

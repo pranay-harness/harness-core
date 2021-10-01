@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.SortedSet;
 
 public interface LogDashboardService {
+  @Deprecated
   PageResponse<AnalyzedLogDataDTO> getAnomalousLogs(String accountId, String projectIdentifier, String orgIdentifier,
       String serviceIdentifier, String environmentIdentifer, CVMonitoringCategory category, long startTimeMillis,
       long endTimeMillis, int page, int size);
@@ -24,13 +25,16 @@ public interface LogDashboardService {
       String serviceIdentifier, String environmentIdentifer, CVMonitoringCategory category, long startTimeMillis,
       long endTimeMillis, int page, int size);
 
+  @Deprecated
   SortedSet<LogDataByTag> getLogCountByTag(String accountId, String projectIdentifier, String orgIdentifier,
       String serviceIdentifier, String environmentIdentifer, CVMonitoringCategory category, long startTimeMillis,
       long endTimeMillis);
 
+  @Deprecated
   SortedSet<LogDataByTag> getLogCountByTagForActivity(String accountId, String projectIdentifier, String orgIdentifier,
       String activityId, Instant startTimeMillis, Instant endTimeMillis);
 
+  @Deprecated
   PageResponse<AnalyzedLogDataDTO> getActivityLogs(String activityId, String accountId, String projectIdentifier,
       String orgIdentifier, String environmentIdentifier, String serviceIdentifier, Long startTimeMillis,
       Long endTimeMillis, boolean anomalousOnly, int page, int size);

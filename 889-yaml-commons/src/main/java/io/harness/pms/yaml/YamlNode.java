@@ -47,10 +47,6 @@ public class YamlNode implements Visitable {
     this(null, currJsonNode, null);
   }
 
-  public YamlNode(String name, JsonNode currJsonNode) {
-    this(name, currJsonNode, null);
-  }
-
   @JsonCreator
   public YamlNode(@JsonProperty("fieldName") String fieldName, @JsonProperty("currJsonNode") JsonNode currJsonNode,
       @JsonProperty("parentNode") YamlNode parentNode) {
@@ -185,6 +181,10 @@ public class YamlNode implements Visitable {
     return currJsonNode.asText();
   }
 
+  /**
+   * Returns the sibling with the types mentioned in possibleSiblingFieldNames.
+   * For example: if we have are on one stage and we want the next stage in the yaml, we can use this function
+   */
   public YamlField nextSiblingFromParentArray(String currentFieldName, List<String> possibleSiblingFieldNames) {
     if (parentNode == null || parentNode.parentNode == null || parentNode.parentNode.isObject()) {
       return null;

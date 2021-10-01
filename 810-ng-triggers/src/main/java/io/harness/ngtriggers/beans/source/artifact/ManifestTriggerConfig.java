@@ -40,4 +40,9 @@ public class ManifestTriggerConfig implements NGTriggerSpecV2, BuildAware {
   public String fetchbuildRef() {
     return manifestRef;
   }
+
+  @Override
+  public String fetchBuildType() {
+    return spec.fetchBuildType();
+  }
 }

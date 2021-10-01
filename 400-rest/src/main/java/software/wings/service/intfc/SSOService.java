@@ -16,6 +16,7 @@ import software.wings.security.authentication.SSOConfig;
 
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.NotBlank;
@@ -63,4 +64,6 @@ public interface SSOService {
   OauthSettings updateOauthSettings(String accountId, String filter, Set<OauthProviderType> allowedProviders);
 
   SSOConfig deleteOauthConfiguration(String accountId);
+
+  List<Long> getIterationsFromCron(String accountId, String cron);
 }

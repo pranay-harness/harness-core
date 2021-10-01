@@ -2,7 +2,9 @@ package software.wings.api.jira;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.jira.JiraAction;
@@ -22,6 +24,7 @@ import net.sf.json.JSONObject;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class JiraExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData {
   private String activityId;
   private ExecutionStatus executionStatus;

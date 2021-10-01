@@ -2,9 +2,11 @@ package software.wings.service.impl.yaml;
 
 import static io.harness.annotations.dev.HarnessModule._951_CG_GIT_SYNC;
 import static io.harness.annotations.dev.HarnessTeam.DX;
+import static io.harness.beans.PageRequest.PageRequestBuilder;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
@@ -119,6 +121,7 @@ import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.defaults.Defaults;
 import software.wings.beans.governance.GovernanceConfig;
 import software.wings.beans.template.Template;
+import software.wings.beans.template.Template.TemplateKeys;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.yaml.GitFileChange;
@@ -584,7 +587,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     futureList.add(executorService.submit(() -> {
       try (UserThreadLocal.Guard guard = userGuard(user)) {
         return doTemplateLibrary(accountId, directoryPath.clone(), GLOBAL_APP_ID, GLOBAL_TEMPLATE_LIBRARY_FOLDER,
-            Type.GLOBAL_TEMPLATE_LIBRARY);
+            Type.GLOBAL_TEMPLATE_LIBRARY, false, Collections.EMPTY_SET);
       }
     }));
 
@@ -822,6 +825,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     Set<String> envSet = null;
     Set<String> workflowSet = null;
     Set<String> pipelineSet = null;
+    Set<String> templateSet = null;
 
     if (applyPermissions && appPermissionSummary != null) {
       Map<Action, Set<String>> servicePermissions = appPermissionSummary.getServicePermissions();
@@ -854,13 +858,19 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       if (pipelinePermissions != null) {
         pipelineSet = pipelinePermissions.get(Action.READ);
       }
+
+      Map<Action, Set<String>> templatePermissions = appPermissionSummary.getTemplatePermissions();
+      if (templatePermissions != null) {
+        templateSet = templatePermissions.get(Action.READ);
+      }
     }
 
     Set<String> allowedServices = serviceSet;
+    Set<String> allowedPipelines = pipelineSet;
     Set<String> allowedProvisioners = provisionerSet;
     Set<String> allowedEnvs = envSet;
     Set<String> allowedWorkflows = workflowSet;
-    Set<String> allowedPipelines = pipelineSet;
+    Set<String> allowedTemplates = templateSet;
 
     //--------------------------------------
     // parallelization using CompletionService (part 2)
@@ -880,7 +890,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     futureResponseList.add(
         executorService.submit(() -> doProvisioners(app, appPath.clone(), applyPermissions, allowedProvisioners)));
 
-    futureResponseList.add(executorService.submit(() -> doTemplateLibraryForApp(app, appPath.clone())));
+    futureResponseList.add(executorService.submit(
+        () -> doTemplateLibraryForApp(app, appPath.clone(), applyPermissions, allowedTemplates)));
 
     if (isTriggerYamlEnabled(accountId)) {
       futureResponseList.add(executorService.submit(() -> doTriggers(app, appPath.clone())));
@@ -925,9 +936,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   }
 
   @Override
-  public FolderNode doTemplateLibraryForApp(Application app, DirectoryPath directoryPath) {
+  public FolderNode doTemplateLibraryForApp(
+      Application app, DirectoryPath directoryPath, boolean applyPermissions, Set<String> allowedTemplates) {
     return doTemplateLibrary(app.getAccountId(), directoryPath, app.getAppId(), APPLICATION_TEMPLATE_LIBRARY_FOLDER,
-        Type.APPLICATION_TEMPLATE_LIBRARY);
+        Type.APPLICATION_TEMPLATE_LIBRARY, applyPermissions, allowedTemplates);
   }
 
   private boolean isTriggerYamlEnabled(String accountId) {
@@ -2376,8 +2388,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   }
 
   @Override
-  public FolderNode doTemplateLibrary(
-      String accountId, DirectoryPath directoryPath, String appId, String templateLibraryFolderName, Type type) {
+  public FolderNode doTemplateLibrary(String accountId, DirectoryPath directoryPath, String appId,
+      String templateLibraryFolderName, Type type, boolean applyPermissions, Set<String> allowedTemplates) {
     final FolderNode templateLibraryFolder = new FolderNode(
         accountId, templateLibraryFolderName, SettingAttribute.class, directoryPath.add(templateLibraryFolderName));
 
@@ -2385,13 +2397,16 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     final TemplateFolder templateTree =
         templateService.getTemplateTree(accountId, appId, null, TEMPLATE_TYPES_WITH_YAML_SUPPORT);
     // get all the templates and group them by folderId
+    final PageRequestBuilder pageRequestBuilder = aPageRequest()
+                                                      .addFilter(Template.APP_ID_KEY, EQ, appId)
+                                                      .addFilter(Template.ACCOUNT_ID_KEY2, EQ, accountId)
+                                                      .withLimit(UNLIMITED);
+    if (applyPermissions) {
+      pageRequestBuilder.addFilter(TemplateKeys.uuid, IN, allowedTemplates.toArray());
+    }
     final List<Template> templates = ListUtils.emptyIfNull(
         templateService
-            .list(aPageRequest()
-                      .addFilter(Template.APP_ID_KEY, Operator.EQ, appId)
-                      .addFilter(Template.ACCOUNT_ID_KEY2, Operator.EQ, accountId)
-                      .withLimit(UNLIMITED)
-                      .build(),
+            .list(pageRequestBuilder.build(),
                 Collections.singletonList(templateGalleryService.getAccountGalleryKey().name()), accountId, false)
             .getResponse());
 
@@ -2528,6 +2543,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         return VALUES_FOLDER;
       case OC_PARAMS:
         return OC_PARAMS_FOLDER;
+      case AZURE_APP_SERVICE_MANIFEST:
+        return MANIFEST_FOLDER_APP_SERVICE;
       default:
         return MANIFEST_FOLDER;
     }

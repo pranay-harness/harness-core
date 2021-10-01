@@ -29,9 +29,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.FeatureName;
 import io.harness.cache.HarnessCacheManager;
@@ -133,7 +131,6 @@ import org.mongodb.morphia.Key;
 @Singleton
 @Slf4j
 @OwnedBy(PL)
-@TargetModule(HarnessModule._360_CG_MANAGER)
 public class AuthServiceImpl implements AuthService {
   private GenericDbCache dbCache;
   private HPersistence persistence;
@@ -780,6 +777,8 @@ public class AuthServiceImpl implements AuthService {
         return appPermissionSummary.isCanCreateWorkflow();
       } else if (requiredPermissionType == PermissionType.PIPELINE) {
         return appPermissionSummary.isCanCreatePipeline();
+      } else if (requiredPermissionType == PermissionType.APP_TEMPLATE) {
+        return appPermissionSummary.isCanCreateTemplate();
       } else {
         String msg = "Unsupported app permission entity type: " + requiredPermissionType;
         log.error(msg);
@@ -813,6 +812,8 @@ public class AuthServiceImpl implements AuthService {
       actionEntityIdMap = appPermissionSummary.getPipelinePermissions();
     } else if (requiredPermissionType == PermissionType.DEPLOYMENT) {
       actionEntityIdMap = appPermissionSummary.getDeploymentPermissions();
+    } else if (requiredPermissionType == PermissionType.APP_TEMPLATE) {
+      actionEntityIdMap = appPermissionSummary.getTemplatePermissions();
     } else {
       String msg = "Unsupported app permission entity type: " + requiredPermissionType;
       log.error(msg);

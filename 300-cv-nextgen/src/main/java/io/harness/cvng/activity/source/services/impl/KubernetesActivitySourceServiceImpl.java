@@ -40,7 +40,6 @@ import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
 public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySourceService {
@@ -98,41 +97,6 @@ public class KubernetesActivitySourceServiceImpl implements KubernetesActivitySo
       }
     });
     return true;
-  }
-
-  @Override
-  public void enqueueDataCollectionTask(KubernetesActivitySource activitySource) {
-    log.info("Enqueuing activitySourceId for the first time: {}", activitySource.getUuid());
-
-    DataCollectionConnectorBundle dataCollectionConnectorBundle =
-        DataCollectionConnectorBundle.builder()
-            .dataCollectionType(DataCollectionType.KUBERNETES)
-            .connectorIdentifier(activitySource.getConnectorIdentifier())
-            .sourceIdentifier(activitySource.getIdentifier())
-            .dataCollectionWorkerId(activitySource.getUuid())
-            .build();
-    String dataCollectionTaskId = verificationManagerService.createDataCollectionTask(activitySource.getAccountId(),
-        activitySource.getOrgIdentifier(), activitySource.getProjectIdentifier(), dataCollectionConnectorBundle);
-
-    UpdateOperations<KubernetesActivitySource> updateOperations =
-        hPersistence.createUpdateOperations(KubernetesActivitySource.class)
-            .set(ActivitySourceKeys.dataCollectionTaskId, dataCollectionTaskId);
-    Query<KubernetesActivitySource> query = hPersistence.createQuery(KubernetesActivitySource.class)
-                                                .filter(ActivitySourceKeys.uuid, activitySource.getUuid());
-    hPersistence.update(query, updateOperations);
-
-    log.info("Enqueued activity source successfully: {}", activitySource.getUuid());
-  }
-
-  @Override
-  public boolean doesAActivitySourceExistsForThisProject(
-      String accountId, String orgIdentifier, String projectIdentifier) {
-    long numberOfActivitySources = hPersistence.createQuery(KubernetesActivitySource.class)
-                                       .filter(ActivitySourceKeys.accountId, accountId)
-                                       .filter(ActivitySourceKeys.orgIdentifier, orgIdentifier)
-                                       .filter(ActivitySourceKeys.projectIdentifier, projectIdentifier)
-                                       .count();
-    return numberOfActivitySources > 0;
   }
 
   @Override

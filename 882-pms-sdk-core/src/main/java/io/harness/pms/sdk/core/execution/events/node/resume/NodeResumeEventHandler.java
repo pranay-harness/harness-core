@@ -94,16 +94,14 @@ public class NodeResumeEventHandler extends PmsBaseEventHandler<NodeResumeEvent>
                                     .setErrorMessage(errorResponseData.getErrorMessage())
                                     .build())
                 .build();
-        sdkNodeExecutionService.handleStepResponse(
-            event.getAmbiance().getPlanExecutionId(), nodeExecutionId, stepResponse);
+        sdkNodeExecutionService.handleStepResponse(event.getAmbiance(), stepResponse);
         return;
       }
 
       processor.handleResume(buildResumePackage(event, response));
     } catch (Exception ex) {
       log.error("Error while resuming execution", ex);
-      sdkNodeExecutionService.handleStepResponse(
-          event.getAmbiance().getPlanExecutionId(), nodeExecutionId, NodeExecutionUtils.constructStepResponse(ex));
+      sdkNodeExecutionService.handleStepResponse(event.getAmbiance(), NodeExecutionUtils.constructStepResponse(ex));
     }
   }
 

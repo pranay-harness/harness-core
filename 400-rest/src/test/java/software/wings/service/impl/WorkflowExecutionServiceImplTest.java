@@ -2918,15 +2918,16 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
                     .build()))
             .build();
     when(featureFlagService.isEnabled(FeatureName.NEW_DEPLOYMENT_FREEZE, account.getUuid())).thenReturn(true);
-    GovernanceConfig governanceConfig = GovernanceConfig.builder()
-                                            .accountId(account.getUuid())
-                                            .timeRangeBasedFreezeConfigs(Collections.singletonList(
-                                                TimeRangeBasedFreezeConfig.builder()
-                                                    .name("freeze1")
-                                                    .uuid(FREEZE_WINDOW_ID)
-                                                    .timeRange(new TimeRange(0, 1, "", false, null, null, null, false))
-                                                    .build()))
-                                            .build();
+    GovernanceConfig governanceConfig =
+        GovernanceConfig.builder()
+            .accountId(account.getUuid())
+            .timeRangeBasedFreezeConfigs(
+                Collections.singletonList(TimeRangeBasedFreezeConfig.builder()
+                                              .name("freeze1")
+                                              .uuid(FREEZE_WINDOW_ID)
+                                              .timeRange(new TimeRange(null, 0, 1, "", false, null, null, null, false))
+                                              .build()))
+            .build();
     when(governanceConfigService.get(account.getUuid())).thenReturn(governanceConfig);
     when(governanceConfigService.getFrozenEnvIdsForApp(account.getUuid(), app.getUuid(), governanceConfig))
         .thenReturn(Collections.singletonMap(FREEZE_WINDOW_ID, Collections.singleton(ENV_ID)));

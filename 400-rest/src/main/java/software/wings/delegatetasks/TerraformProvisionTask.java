@@ -307,8 +307,8 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
                 format("echo \"no\" | %s", command), scriptDirectory, parameters, envVars, activityLogOutputStream);
 
             if (isNotEmpty(parameters.getWorkspace())) {
-              WorkspaceCommand workspaceCommand =
-                  getWorkspaceCommand(scriptDirectory, parameters.getWorkspace(), parameters.getTimeoutInMillis());
+              WorkspaceCommand workspaceCommand = getWorkspaceCommand(scriptDirectory, parameters.getWorkspace(),
+                  envVars, parameters.getTimeoutInMillis(), activityLogOutputStream, logCallback);
               command = format("terraform workspace %s %s", workspaceCommand.command, parameters.getWorkspace());
               commandToLog = command;
               saveExecutionLog(commandToLog, CommandExecutionStatus.RUNNING, INFO, logCallback);
@@ -365,8 +365,8 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
             code = executeShellCommand(command, scriptDirectory, parameters, envVars, activityLogOutputStream);
 
             if (isNotEmpty(parameters.getWorkspace())) {
-              WorkspaceCommand workspaceCommand =
-                  getWorkspaceCommand(scriptDirectory, parameters.getWorkspace(), parameters.getTimeoutInMillis());
+              WorkspaceCommand workspaceCommand = getWorkspaceCommand(scriptDirectory, parameters.getWorkspace(),
+                  envVars, parameters.getTimeoutInMillis(), activityLogOutputStream, logCallback);
               command = format("terraform workspace %s %s", workspaceCommand.command, parameters.getWorkspace());
               commandToLog = command;
               saveExecutionLog(commandToLog, CommandExecutionStatus.RUNNING, INFO, logCallback);
@@ -592,7 +592,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
               .gitConnectorId(tfVarGitSource.getGitFileConfig().getConnectorId())
               .recursive(true)
               .build(),
-          tfVarDirectory);
+          tfVarDirectory, false);
 
       saveExecutionLog(
           format("TfVar Git directory: [%s]", tfVarDirectory), CommandExecutionStatus.RUNNING, INFO, logCallback);
@@ -709,20 +709,25 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
         parameters.getWorkspace(), parameters.getAccountId(), parameters.getCurrentStateFileId(), scriptDirectory);
   }
 
-  private WorkspaceCommand getWorkspaceCommand(String scriptDir, String workspace, long timeoutInMillis)
+  private WorkspaceCommand getWorkspaceCommand(String scriptDir, String workspace, Map<String, String> envVars,
+      long timeoutInMillis, LogOutputStream logOutputStream, LogCallback logCallback)
       throws InterruptedException, IOException, TimeoutException {
-    List<String> workspaces = getWorkspacesList(scriptDir, timeoutInMillis);
+    List<String> workspaces = getWorkspacesList(scriptDir, envVars, timeoutInMillis, logOutputStream, logCallback);
     return workspaces.contains(workspace) ? WorkspaceCommand.SELECT : WorkspaceCommand.NEW;
   }
 
-  public List<String> getWorkspacesList(String scriptDir, long timeout)
+  public List<String> getWorkspacesList(String scriptDir, Map<String, String> envVars, long timeout,
+      LogOutputStream logOutputStream, LogCallback logCallback)
       throws InterruptedException, TimeoutException, IOException {
     String command = "terraform workspace list";
+    saveExecutionLog(command, CommandExecutionStatus.RUNNING, INFO, logCallback);
     ProcessExecutor processExecutor = new ProcessExecutor()
                                           .command("/bin/sh", "-c", command)
                                           .readOutput(true)
+                                          .environment(envVars)
                                           .timeout(timeout, TimeUnit.MILLISECONDS)
-                                          .directory(Paths.get(scriptDir).toFile());
+                                          .directory(Paths.get(scriptDir).toFile())
+                                          .redirectOutput(logOutputStream);
 
     ProcessResult processResult = processExecutor.execute();
     String output = processResult.outputUTF8();

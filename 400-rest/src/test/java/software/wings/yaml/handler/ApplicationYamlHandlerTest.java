@@ -1,6 +1,6 @@
 package software.wings.yaml.handler;
 
-import static io.harness.annotations.dev.HarnessModule._870_CG_YAML;
+import static io.harness.annotations.dev.HarnessModule._955_CG_YAML;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.beans.FeatureName.WEBHOOK_TRIGGER_AUTHORIZATION;
 import static io.harness.rule.OwnerRule.INDER;
@@ -51,7 +51,7 @@ import org.mockito.Mockito;
  */
 @SetupScheduler
 @OwnedBy(CDC)
-@TargetModule(_870_CG_YAML)
+@TargetModule(_955_CG_YAML)
 public class ApplicationYamlHandlerTest extends YamlHandlerTestBase {
   @InjectMocks @Inject YamlHelper yamlHelper;
   @InjectMocks @Inject AppService appService;

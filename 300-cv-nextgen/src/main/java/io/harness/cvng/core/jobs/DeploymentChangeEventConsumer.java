@@ -66,7 +66,7 @@ public class DeploymentChangeEventConsumer extends AbstractStreamConsumer {
                                         .envIdentifier(deploymentEventDTO.getEnvironmentIdentifier())
                                         .eventTime(deploymentEventDTO.getDeploymentEndTime())
                                         .type(ChangeSourceType.HARNESS_CD)
-                                        .changeEventMetaData(harnessCDEventMetaDataBuilder.build())
+                                        .metadata(harnessCDEventMetaDataBuilder.build())
                                         .build();
     changeEventService.register(changeEventDTO);
   }

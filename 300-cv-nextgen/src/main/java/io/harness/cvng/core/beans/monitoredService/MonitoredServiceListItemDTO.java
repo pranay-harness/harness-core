@@ -1,7 +1,7 @@
 package io.harness.cvng.core.beans.monitoredService;
 
 import io.harness.cvng.beans.MonitoredServiceType;
-import io.harness.cvng.core.beans.ChangeSummaryDTO;
+import io.harness.cvng.core.beans.change.ChangeSummaryDTO;
 
 import java.util.Map;
 import lombok.AccessLevel;

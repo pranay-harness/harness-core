@@ -1,7 +1,5 @@
 package io.harness.cvng.migration.list;
 
-import io.harness.cvng.activity.entities.ActivitySource;
-import io.harness.cvng.activity.source.services.api.ActivitySourceService;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
@@ -18,11 +16,12 @@ import org.mongodb.morphia.query.Query;
 @Slf4j
 public class CleanupDeprecatedDocuments implements CVNGMigration {
   @Inject private HPersistence hPersistence;
-  @Inject private ActivitySourceService activitySourceService;
   @Inject private CVConfigService cvConfigService;
   @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
   @Override
   public void migrate() {
+    /*
+    Commenting out old migration to remove dependency with activity source
     List<ActivitySource> activitySources = hPersistence.createQuery(ActivitySource.class).asList();
     for (ActivitySource activitySource : activitySources) {
       log.info("Deleting activity source: {}", activitySource);
@@ -30,6 +29,7 @@ public class CleanupDeprecatedDocuments implements CVNGMigration {
           activitySource.getProjectIdentifier(), activitySource.getIdentifier());
       log.info("Deleted activity source: {}", activitySource);
     }
+    */
 
     Query<VerificationJob> verificationJobs = hPersistence.createQuery(VerificationJob.class);
     log.info("Deleting VerificationJob source: {}", verificationJobs.count());

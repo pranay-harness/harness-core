@@ -159,7 +159,6 @@ public class UserGroupServiceImpl implements UserGroupService {
     AccountPermissions accountPermissions =
         Optional.ofNullable(userGroup.getAccountPermissions()).orElse(AccountPermissions.builder().build());
     userGroup.setAccountPermissions(addDefaultCePermissions(accountPermissions));
-    maintainTemplatePermissions(userGroup);
     UserGroup savedUserGroup = wingsPersistence.saveAndGet(UserGroup.class, userGroup);
     Account account = accountService.get(userGroup.getAccountId());
     notNullCheck("account", account);
@@ -169,7 +168,6 @@ public class UserGroupServiceImpl implements UserGroupService {
     if (!ccmSettingService.isCloudCostEnabled(savedUserGroup.getAccountId())) {
       maskCePermissions(savedUserGroup);
     }
-    maskAppTemplatePermissions(savedUserGroup);
 
     auditServiceHelper.reportForAuditingUsingAccountId(account.getUuid(), null, userGroup, Type.CREATE);
     log.info("Auditing creation of new userGroup={} and account={}", userGroup.getName(), account.getAccountName());
@@ -234,7 +232,6 @@ public class UserGroupServiceImpl implements UserGroupService {
     if (!ccmSettingService.isCloudCostEnabled(accountId)) {
       res.getResponse().forEach(this::maskCePermissions);
     }
-    res.getResponse().forEach(this::maskAppTemplatePermissions);
 
     return res;
   }
@@ -310,7 +307,6 @@ public class UserGroupServiceImpl implements UserGroupService {
     if (userGroup != null && !ccmSettingService.isCloudCostEnabled(userGroup.getAccountId())) {
       maskCePermissions(userGroup);
     }
-    maskAppTemplatePermissions(userGroup);
     return userGroup;
   }
 
@@ -334,7 +330,6 @@ public class UserGroupServiceImpl implements UserGroupService {
     if (!ccmSettingService.isCloudCostEnabled(accountId)) {
       userGroups.forEach(this::maskCePermissions);
     }
-    userGroups.forEach(this::maskAppTemplatePermissions);
     return userGroups;
   }
 
@@ -356,7 +351,6 @@ public class UserGroupServiceImpl implements UserGroupService {
     if (!ccmSettingService.isCloudCostEnabled(userGroup.getAccountId())) {
       maskCePermissions(userGroup);
     }
-    maskAppTemplatePermissions(userGroup);
     return userGroup;
   }
 
@@ -518,7 +512,6 @@ public class UserGroupServiceImpl implements UserGroupService {
     UserGroup userGroup = get(accountId, userGroupId);
     checkImplicitPermissions(accountPermissions, accountId, userGroup.getName());
     checkDeploymentPermissions(userGroup);
-    maintainTemplatePermissions(userGroup);
     UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
     setUnset(operations, UserGroupKeys.appPermissions, appPermissions);
     setUnset(operations, UserGroupKeys.accountPermissions,
@@ -528,7 +521,6 @@ public class UserGroupServiceImpl implements UserGroupService {
     if (!ccmSettingService.isCloudCostEnabled(updatedUserGroup.getAccountId())) {
       maskCePermissions(updatedUserGroup);
     }
-    maskAppTemplatePermissions(userGroup);
     return updatedUserGroup;
   }
 
@@ -559,10 +551,10 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
   }
 
-  private void maintainTemplatePermissions(UserGroup userGroup) {
+  public void maintainTemplatePermissions(UserGroup userGroup) {
     boolean hasAccountLevelTemplateManagementPermission = false;
     final AccountPermissions accountPermissions = userGroup.getAccountPermissions();
-    if (accountPermissions != null) {
+    if (accountPermissions != null && accountPermissions.getPermissions() != null) {
       final Set<PermissionType> accountPermissionSet = accountPermissions.getPermissions();
       if (!accountPermissionSet.isEmpty()) {
         hasAccountLevelTemplateManagementPermission = accountPermissionSet.contains(PermissionType.TEMPLATE_MANAGEMENT);
@@ -620,25 +612,9 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
-  public void maskAppTemplatePermissions(UserGroup userGroup) {
-    if (userGroup == null) {
-      return;
-    }
-    Set<AppPermission> appPermissions = userGroup.getAppPermissions();
-    if (isNotEmpty(appPermissions)) {
-      userGroup.setAppPermissions(appPermissions.stream()
-                                      .filter(appPermission
-                                          -> appPermission.getPermissionType() == null
-                                              || !appPermission.getPermissionType().equals(APP_TEMPLATE))
-                                      .collect(toSet()));
-    }
-  }
-
-  @Override
   public UserGroup updatePermissions(UserGroup userGroup) {
     checkImplicitPermissions(userGroup.getAccountPermissions(), userGroup.getAccountId(), userGroup.getName());
     checkDeploymentPermissions(userGroup);
-    maintainTemplatePermissions(userGroup);
     AccountPermissions accountPermissions =
         Optional.ofNullable(userGroup.getAccountPermissions()).orElse(AccountPermissions.builder().build());
     userGroup.setAccountPermissions(addDefaultCePermissions(accountPermissions));

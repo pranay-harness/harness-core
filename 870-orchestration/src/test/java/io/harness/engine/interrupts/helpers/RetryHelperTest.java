@@ -32,7 +32,6 @@ import io.harness.pms.contracts.steps.StepType;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import org.junit.After;
@@ -48,7 +47,7 @@ import org.mockito.MockitoAnnotations;
 public class RetryHelperTest extends OrchestrationTestBase {
   @Mock OrchestrationEngine engine;
   @Inject NodeExecutionService nodeExecutionService;
-  @Mock @Named("EngineExecutorService") ExecutorService executorService;
+  @Mock ExecutorService executorService;
   @Inject @InjectMocks RetryHelper retryHelper;
 
   @Before
@@ -124,7 +123,7 @@ public class RetryHelperTest extends OrchestrationTestBase {
                              .build())
             .build();
     NodeExecution clonedNodeExecution = retryHelper.cloneForRetry(
-        nodeExecution, null, newNodeUuid, nodeExecution.getAmbiance(), interruptConfig, generateUuid());
+        nodeExecution, newNodeUuid, nodeExecution.getAmbiance(), interruptConfig, generateUuid());
 
     assertThat(clonedNodeExecution).isNotNull();
     assertThat(clonedNodeExecution.getUuid()).isEqualTo(newNodeUuid);

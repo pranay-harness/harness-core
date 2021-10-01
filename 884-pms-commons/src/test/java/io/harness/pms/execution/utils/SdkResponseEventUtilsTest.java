@@ -9,6 +9,8 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.logging.AutoLogContext;
+import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
 import io.harness.pms.contracts.execution.events.SdkResponseEventType;
 import io.harness.rule.Owner;
@@ -26,10 +28,10 @@ public class SdkResponseEventUtilsTest extends CategoryTest {
     try (AutoLogContext ignored = SdkResponseEventUtils.obtainLogContext(
              SdkResponseEventProto.newBuilder()
                  .setSdkResponseEventType(SdkResponseEventType.ADD_EXECUTABLE_RESPONSE)
-                 .setNodeExecutionId("nid")
+                 .setAmbiance(Ambiance.newBuilder().addLevels(Level.newBuilder().setRuntimeId("nid").build()).build())
                  .build())) {
       assertThat(MDC.get("sdkResponseEventType")).isEqualTo("ADD_EXECUTABLE_RESPONSE");
-      assertThat(MDC.get("nodeExecutionId")).isEqualTo("nid");
+      assertThat(MDC.get("runtimeId")).isEqualTo("nid");
     }
   }
 }

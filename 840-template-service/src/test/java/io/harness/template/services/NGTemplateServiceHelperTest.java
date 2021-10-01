@@ -10,6 +10,7 @@ import static org.mockito.Mockito.doReturn;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.encryption.Scope;
 import io.harness.filter.FilterType;
 import io.harness.filter.dto.FilterDTO;
 import io.harness.filter.service.FilterService;
@@ -17,6 +18,7 @@ import io.harness.gitsync.helpers.GitContextHelper;
 import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.rule.Owner;
 import io.harness.template.beans.TemplateFilterPropertiesDTO;
+import io.harness.template.beans.TemplateListType;
 import io.harness.template.entity.TemplateEntity;
 import io.harness.template.entity.TemplateEntity.TemplateEntityKeys;
 import io.harness.template.gitsync.TemplateGitSyncBranchContextGuard;
@@ -97,7 +99,7 @@ public class NGTemplateServiceHelperTest extends CategoryTest {
         .get(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, filterIdentifier, FilterType.TEMPLATE);
 
     Criteria criteria = templateServiceHelper.formCriteria(
-        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, filterIdentifier, null, false, "");
+        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, filterIdentifier, null, false, "", false);
     Document criteriaObject = criteria.getCriteriaObject();
     assertThat(criteriaObject.get(TemplateEntityKeys.accountId)).isEqualTo(ACCOUNT_ID);
     assertThat(criteriaObject.get(TemplateEntityKeys.orgIdentifier)).isEqualTo(ORG_IDENTIFIER);
@@ -118,13 +120,45 @@ public class NGTemplateServiceHelperTest extends CategoryTest {
   @Test
   @Owner(developers = ARCHIT)
   @Category(UnitTests.class)
+  public void testFormCriteriaUsingTemplateListType() {
+    Criteria criteria = templateServiceHelper.formCriteria(
+        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, "", null, false, TEMPLATE_IDENTIFIER, false);
+    templateServiceHelper.formCriteria(criteria, TemplateListType.LAST_UPDATED_TEMPLATE_TYPE);
+    Document criteriaObject = criteria.getCriteriaObject();
+    assertThat(criteriaObject.get(TemplateEntityKeys.projectIdentifier)).isEqualTo(PROJ_IDENTIFIER);
+    assertThat(criteriaObject.get(TemplateEntityKeys.isLastUpdatedTemplate)).isEqualTo(true);
+
+    criteria = templateServiceHelper.formCriteria(
+        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, "", null, false, TEMPLATE_IDENTIFIER, false);
+    templateServiceHelper.formCriteria(criteria, TemplateListType.STABLE_TEMPLATE_TYPE);
+    criteriaObject = criteria.getCriteriaObject();
+    assertThat(criteriaObject.get(TemplateEntityKeys.projectIdentifier)).isEqualTo(PROJ_IDENTIFIER);
+    assertThat(criteriaObject.get(TemplateEntityKeys.isStableTemplate)).isEqualTo(true);
+
+    criteria = templateServiceHelper.formCriteria(
+        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, "", null, false, TEMPLATE_IDENTIFIER, true);
+    criteriaObject = criteria.getCriteriaObject();
+    assertThat(((Document) ((List<?>) ((Document) ((List<?>) criteriaObject.get("$and")).get(0)).get("$or")).get(2))
+                   .get("templateScope"))
+        .isEqualTo(Scope.ACCOUNT);
+    assertThat(((Document) ((List<?>) ((Document) ((List<?>) criteriaObject.get("$and")).get(0)).get("$or")).get(1))
+                   .get("templateScope"))
+        .isEqualTo(Scope.ORG);
+    assertThat(((Document) ((List<?>) ((Document) ((List<?>) criteriaObject.get("$and")).get(0)).get("$or")).get(0))
+                   .get("templateScope"))
+        .isEqualTo(Scope.PROJECT);
+  }
+
+  @Test
+  @Owner(developers = ARCHIT)
+  @Category(UnitTests.class)
   public void testFormCriteriaUsingFilterDto() {
     TemplateFilterPropertiesDTO propertiesDTO = TemplateFilterPropertiesDTO.builder()
                                                     .templateNames(Collections.singletonList(TEMPLATE_IDENTIFIER))
                                                     .description("random")
                                                     .build();
     Criteria criteria = templateServiceHelper.formCriteria(
-        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, "", propertiesDTO, false, TEMPLATE_IDENTIFIER);
+        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, "", propertiesDTO, false, TEMPLATE_IDENTIFIER, false);
     Document criteriaObject = criteria.getCriteriaObject();
     assertThat(criteriaObject.get(TemplateEntityKeys.accountId)).isEqualTo(ACCOUNT_ID);
     assertThat(criteriaObject.get(TemplateEntityKeys.orgIdentifier)).isEqualTo(ORG_IDENTIFIER);

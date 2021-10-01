@@ -1,6 +1,7 @@
 package io.harness.template.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.template.beans.TemplateEntityConstants.STAGE;
 import static io.harness.template.beans.TemplateEntityConstants.STEP;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -12,7 +13,8 @@ import java.util.Arrays;
 
 @OwnedBy(CDC)
 public enum TemplateEntityType {
-  @JsonProperty(STEP) STEP_TEMPLATE(STEP);
+  @JsonProperty(STEP) STEP_TEMPLATE(STEP),
+  @JsonProperty(STAGE) STAGE_TEMPLATE(STAGE);
 
   private final String yamlType;
 
@@ -20,7 +22,7 @@ public enum TemplateEntityType {
     this.yamlType = yamlType;
   }
 
-  @JsonCreator
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
   public static TemplateEntityType getTemplateType(@JsonProperty("type") String yamlType) {
     for (TemplateEntityType value : TemplateEntityType.values()) {
       if (value.yamlType.equalsIgnoreCase(yamlType)) {

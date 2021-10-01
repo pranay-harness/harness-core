@@ -42,12 +42,12 @@ import io.harness.pms.contracts.triggers.ParsedPayload;
 import io.harness.pms.contracts.triggers.SourceType;
 import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.contracts.triggers.Type;
-import io.harness.pms.merger.helpers.MergeHelper;
+import io.harness.pms.merger.helpers.InputSetMergeHelper;
 import io.harness.pms.ngpipeline.inputset.helpers.InputSetSanitizer;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSYamlSchemaService;
-import io.harness.pms.plan.execution.PipelineExecuteHelper;
+import io.harness.pms.plan.execution.ExecutionHelper;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.product.ci.scm.proto.PullRequest;
@@ -70,10 +70,10 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.PIPELINE)
 public class TriggerExecutionHelper {
   private final PMSPipelineService pmsPipelineService;
-  private final PipelineExecuteHelper pipelineExecuteHelper;
   private final PlanExecutionService planExecutionService;
   private final PMSExecutionService pmsExecutionService;
   private final PMSYamlSchemaService pmsYamlSchemaService;
+  private final ExecutionHelper executionHelper;
 
   public PlanExecution resolveRuntimeInputAndSubmitExecutionReques(
       TriggerDetails triggerDetails, TriggerPayload triggerPayload) {
@@ -141,7 +141,7 @@ public class TriggerExecutionHelper {
         } else {
           planExecutionMetadataBuilder.inputSetYaml(sanitizedRuntimeInputYaml);
           pipelineYaml =
-              MergeHelper.mergeInputSetIntoPipeline(pipelineYamlBeforeMerge, sanitizedRuntimeInputYaml, true);
+              InputSetMergeHelper.mergeInputSetIntoPipeline(pipelineYamlBeforeMerge, sanitizedRuntimeInputYaml, true);
         }
       }
       planExecutionMetadataBuilder.yaml(pipelineYaml);
@@ -156,9 +156,9 @@ public class TriggerExecutionHelper {
       executionMetaDataBuilder.setPrincipalInfo(
           ExecutionPrincipalInfo.newBuilder().setShouldValidateRbac(false).build());
 
-      PlanExecution planExecution = pipelineExecuteHelper.startExecution(ngTriggerEntity.getAccountId(),
+      PlanExecution planExecution = executionHelper.startExecution(ngTriggerEntity.getAccountId(),
           ngTriggerEntity.getOrgIdentifier(), ngTriggerEntity.getProjectIdentifier(), executionMetaDataBuilder.build(),
-          planExecutionMetadataBuilder.build());
+          planExecutionMetadataBuilder.build(), false);
       // check if abort prev execution needed.
       requestPipelineExecutionAbortForSameExecTagIfNeeded(triggerDetails, planExecution, executionTagForGitEvent);
       return planExecution;
@@ -171,7 +171,8 @@ public class TriggerExecutionHelper {
   @VisibleForTesting
   TriggeredBy generateTriggerdBy(
       String executionTagForGitEvent, NGTriggerEntity ngTriggerEntity, TriggerPayload triggerPayload, String eventId) {
-    TriggeredBy.Builder builder = TriggeredBy.newBuilder().setIdentifier("trigger").setUuid("systemUser");
+    TriggeredBy.Builder builder =
+        TriggeredBy.newBuilder().setIdentifier(ngTriggerEntity.getIdentifier()).setUuid("systemUser");
     if (isNotBlank(executionTagForGitEvent)) {
       builder.putExtraInfo(PlanExecution.EXEC_TAG_SET_BY_TRIGGER, executionTagForGitEvent);
       builder.putExtraInfo(TRIGGER_REF, generateTriggerRef(ngTriggerEntity));

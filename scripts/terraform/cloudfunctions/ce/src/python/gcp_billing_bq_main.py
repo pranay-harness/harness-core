@@ -4,7 +4,8 @@ import json
 import os
 import util
 import re
-from util import create_dataset, print_, if_tbl_exists, createTable
+import time
+from util import create_dataset, print_, if_tbl_exists, createTable, run_batch_query, COSTAGGREGATED, UNIFIED, CEINTERNALDATASET
 from google.cloud import bigquery
 from google.cloud import secretmanager
 from google.oauth2 import service_account
@@ -72,8 +73,13 @@ def main(event, context):
         get_source_table_name(jsonData)
         get_unique_billingaccount_id(jsonData)
         jsonData["isFreshSync"] = isFreshSync(jsonData)
+        if jsonData.get("isFreshSync"):
+            jsonData["interval"] = '45'
+        else:
+            jsonData["interval"] = '3'
         ingest_into_preaggregated(jsonData)
         ingest_into_unified(jsonData)
+        ingest_data_to_costagg(jsonData)
         return
     # Set the accountId for GCP logging
     util.ACCOUNTID_LOG = jsonData.get("accountId")
@@ -86,6 +92,8 @@ def main(event, context):
     preAggregatedTableTableName = "%s.%s.%s" % (PROJECTID, jsonData["datasetName"], "preAggregated")
     unifiedTableRef = dataset.table("unifiedTable")
     unifiedTableTableName = "%s.%s.%s" % (PROJECTID, jsonData["datasetName"], "unifiedTable")
+    cost_aggregated_table_ref = client.dataset(CEINTERNALDATASET).table(COSTAGGREGATED)
+    cost_aggregated_table_name = "%s.%s.%s" % (PROJECTID, CEINTERNALDATASET, COSTAGGREGATED)
 
     if not if_tbl_exists(client, unifiedTableRef):
         print_("%s table does not exists, creating table..." % unifiedTableRef)
@@ -99,11 +107,18 @@ def main(event, context):
     else:
         print_("%s table exists" % preAggregatedTableTableName)
 
+    if not if_tbl_exists(client, cost_aggregated_table_ref):
+        print_("%s table does not exists, creating table..." % cost_aggregated_table_ref)
+        createTable(client, cost_aggregated_table_ref)
+    else:
+        print_("%s table exists" % cost_aggregated_table_name)
+
     get_impersonated_credentials(jsonData)
 
     # Sync dataset
     jsonData["isFreshSync"] = isFreshSync(jsonData)
     syncDataset(jsonData)
+    print_("Completed")
     return
 
 
@@ -234,9 +249,14 @@ def syncDataset(jsonData):
         raise e
     print_("  Loaded in %s" % jsonData["tableName"])
 
+    if jsonData.get("isFreshSync"):
+        jsonData["interval"] = '45'
+    else:
+        jsonData["interval"] = '3'
     get_unique_billingaccount_id(jsonData)
     ingest_into_preaggregated(jsonData)
     ingest_into_unified(jsonData)
+    ingest_data_to_costagg(jsonData)
 
 
 def doBQTransfer(jsonData):
@@ -290,11 +310,6 @@ def doBQTransfer(jsonData):
 
 def ingest_into_unified(jsonData):
     print_("Loading into unifiedTable table...")
-    if jsonData.get("isFreshSync"):
-        INTERVAL = '45'
-    else:
-        INTERVAL = '3'
-
     query = """  DELETE FROM `%s.unifiedTable` WHERE DATE(startTime) >= DATE_SUB(@run_date , INTERVAL %s DAY) AND cloudProvider = "GCP" 
                 AND gcpBillingAccountId IN (%s);
            INSERT INTO `%s.unifiedTable` (product, cost, gcpProduct,gcpSkuId,gcpSkuDescription, startTime, gcpProjectId,
@@ -305,8 +320,8 @@ def ingest_into_unified(jsonData):
                 FROM `%s.%s` LEFT JOIN UNNEST(credits) as credits
                 WHERE DATE(usage_start_time) <= DATE_SUB(CAST(FORMAT_DATE('%%Y-%%m-%%d', @run_date) AS DATE), INTERVAL 1 DAY) AND
                      DATE(usage_start_time) >= DATE_SUB(CAST(FORMAT_DATE('%%Y-%%m-%%d', @run_date) AS DATE), INTERVAL %s DAY) ;
-        """ % ( jsonData["datasetName"], INTERVAL, jsonData["billingAccountIds"], jsonData["datasetName"], jsonData["datasetName"],
-                jsonData["tableName"], INTERVAL)
+        """ % ( jsonData["datasetName"], jsonData["interval"], jsonData["billingAccountIds"], jsonData["datasetName"], jsonData["datasetName"],
+                jsonData["tableName"], jsonData["interval"])
 
     job_config = bigquery.QueryJobConfig(
         query_parameters=[
@@ -330,10 +345,6 @@ def ingest_into_unified(jsonData):
 
 def ingest_into_preaggregated(jsonData):
     print_("Loading into preaggregated table...")
-    if jsonData.get("isFreshSync"):
-        INTERVAL = '45'
-    else:
-        INTERVAL = '3'
     query = """  DELETE FROM `%s.preAggregated` WHERE DATE(startTime) >= DATE_SUB(@run_date , INTERVAL %s DAY) AND cloudProvider = "GCP"
                 AND gcpBillingAccountId IN (%s);
            INSERT INTO `%s.preAggregated` (cost, gcpProduct,gcpSkuId,gcpSkuDescription,
@@ -345,8 +356,8 @@ def ingest_into_preaggregated(jsonData):
            WHERE DATE(usage_start_time) <= DATE_SUB(CAST(FORMAT_DATE('%%Y-%%m-%%d', @run_date) AS DATE), INTERVAL 1 DAY) AND
              DATE(usage_start_time) >= DATE_SUB(CAST(FORMAT_DATE('%%Y-%%m-%%d', @run_date) AS DATE), INTERVAL %s DAY)
            GROUP BY service.description, sku.id, sku.description, startTime, project.id, location.region, location.zone, billing_account_id;
-        """ % (jsonData["datasetName"], INTERVAL, jsonData["billingAccountIds"], jsonData["datasetName"], jsonData["datasetName"],
-        jsonData["tableName"], INTERVAL)
+        """ % (jsonData["datasetName"], jsonData["interval"], jsonData["billingAccountIds"], jsonData["datasetName"], jsonData["datasetName"],
+        jsonData["tableName"], jsonData["interval"])
 
     job_config = bigquery.QueryJobConfig(
         query_parameters=[
@@ -398,3 +409,29 @@ def get_unique_billingaccount_id(jsonData):
         jsonData["billingAccountIds"] = ""
         raise e
     print_("  Found unique billingAccountIds %s" % billingAccountIds)
+
+def ingest_data_to_costagg(jsonData):
+    ds = "%s.%s" % (PROJECTID, jsonData["datasetName"])
+    table_name = "%s.%s.%s" % (PROJECTID, CEINTERNALDATASET, COSTAGGREGATED)
+    source_table = "%s.%s" % (ds, UNIFIED)
+    print_("Loading into %s table..." % table_name)
+    query = """DELETE FROM `%s` WHERE DATE(day) >= DATE_SUB(@run_date , INTERVAL %s DAY) AND cloudProvider = 'GCP' AND accountId = '%s';
+               INSERT INTO `%s` (day, cost, cloudProvider, accountId)
+                SELECT TIMESTAMP_TRUNC(startTime, DAY) AS day, SUM(cost) AS cost, "GCP" AS cloudProvider, '%s' as accountId
+                FROM `%s`  
+                WHERE DATE(startTime) >= DATE_SUB(CAST(FORMAT_DATE('%%Y-%%m-%%d', @run_date) AS DATE), INTERVAL %s DAY) and cloudProvider = "GCP" 
+                GROUP BY day;
+     """ % (table_name, jsonData["interval"], jsonData.get("accountId"), table_name, jsonData.get("accountId"), source_table, jsonData["interval"])
+
+    job_config = bigquery.QueryJobConfig(
+        priority=bigquery.QueryPriority.BATCH,
+        query_parameters=[
+            bigquery.ScalarQueryParameter(
+                "run_date",
+                "DATE",
+                datetime.datetime.utcnow().date(),
+            )
+        ]
+    )
+
+    run_batch_query(client, query, job_config, timeout=120)

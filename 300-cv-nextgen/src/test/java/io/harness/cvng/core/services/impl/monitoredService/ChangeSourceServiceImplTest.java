@@ -6,18 +6,17 @@ import static io.harness.rule.OwnerRule.ANJAN;
 import static org.apache.commons.lang3.RandomStringUtils.randomAlphanumeric;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
-import io.harness.cvng.beans.DataCollectionConnectorBundle;
-import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.beans.change.ChangeSourceType;
 import io.harness.cvng.client.VerificationManagerService;
-import io.harness.cvng.core.beans.ChangeSummaryDTO;
+import io.harness.cvng.core.beans.change.ChangeSummaryDTO;
 import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
 import io.harness.cvng.core.beans.monitoredService.changeSourceSpec.KubernetesChangeSourceSpec;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
@@ -28,7 +27,7 @@ import io.harness.cvng.core.services.api.ChangeEventService;
 import io.harness.cvng.core.services.api.monitoredService.ChangeSourceService;
 import io.harness.cvng.core.transformer.changeSource.ChangeSourceEntityAndDTOTransformer;
 import io.harness.data.structure.UUIDGenerator;
-import io.harness.exception.DuplicateFieldException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
@@ -94,7 +93,7 @@ public class ChangeSourceServiceImplTest extends CvNextGenTestBase {
         builderFactory.getHarnessCDChangeSourceDTOBuilder().identifier(changeSourceDto1.getIdentifier()).build();
     Set<ChangeSourceDTO> changeSourceDTOToBeCreated = new HashSet<>(Arrays.asList(changeSourceDto1, changeSourceDto2));
     assertThatThrownBy(() -> changeSourceService.create(environmentParams, changeSourceDTOToBeCreated))
-        .isInstanceOf(DuplicateFieldException.class);
+        .isInstanceOf(InvalidRequestException.class);
   }
 
   @Test
@@ -102,19 +101,22 @@ public class ChangeSourceServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testUpdate() {
     ChangeSourceDTO changeSourceDto = builderFactory.getHarnessCDChangeSourceDTOBuilder().build();
-    Set<ChangeSourceDTO> updateDtos = new HashSet<>(Arrays.asList(changeSourceDto));
+    ChangeSourceDTO kubeChangeSourceDto = builderFactory.getKubernetesChangeSourceDTOBuilder().build();
+    Set<ChangeSourceDTO> updateDtos = new HashSet<>(Arrays.asList(changeSourceDto, kubeChangeSourceDto));
     String updatedName = "UPDATED_NAME";
 
     changeSourceService.create(environmentParams, updateDtos);
     ChangeSource initialChangeSource = getChangeSourceFromDb(changeSourceDto.getIdentifier());
-
     changeSourceDto.setName(updatedName);
+    updateDtos.remove(kubeChangeSourceDto);
     changeSourceService.update(environmentParams, updateDtos);
+
     ChangeSource updatedChangeSource = getChangeSourceFromDb(changeSourceDto.getIdentifier());
 
     assertThat(updatedChangeSource.getUuid()).isEqualTo(initialChangeSource.getUuid());
     assertThat(updatedChangeSource.getCreatedAt()).isEqualTo(initialChangeSource.getCreatedAt());
     assertThat(updatedChangeSource.getName()).isEqualTo(updatedName);
+    assertThat(getChangeSourceFromDb(kubeChangeSourceDto.getIdentifier())).isNull();
   }
 
   @Test
@@ -197,12 +199,7 @@ public class ChangeSourceServiceImplTest extends CvNextGenTestBase {
 
     when(verificationManagerService.createDataCollectionTask(eq(builderFactory.getContext().getAccountId()),
              eq(builderFactory.getContext().getOrgIdentifier()), eq(builderFactory.getContext().getProjectIdentifier()),
-             eq(DataCollectionConnectorBundle.builder()
-                     .dataCollectionType(DataCollectionType.KUBERNETES)
-                     .connectorIdentifier(kubeChangeSource.getConnectorIdentifier())
-                     .sourceIdentifier(kubeChangeSource.getIdentifier())
-                     .dataCollectionWorkerId(kubeChangeSource.getUuid())
-                     .build())))
+             any()))
         .thenReturn(datacollectionTaskId);
     changeSourceService.enqueueDataCollectionTask(kubeChangeSource);
 

@@ -8,6 +8,7 @@ import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.advisers.NextStepAdvise;
+import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.adviser.AdvisingEvent;
@@ -16,8 +17,11 @@ import io.harness.pms.sdk.core.resolver.RefObjectUtils;
 import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.serializer.KryoSerializer;
+import io.harness.steps.SectionStepSweepingOutput;
 
 import com.google.inject.Inject;
+import java.util.List;
+import java.util.Optional;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class RollbackCustomAdviser implements Adviser {
@@ -30,7 +34,7 @@ public class RollbackCustomAdviser implements Adviser {
 
   @Override
   public AdviserResponse onAdviseEvent(AdvisingEvent advisingEvent) {
-    OnFailRollbackOutput rollbackOutcome = getRollbackOutput(advisingEvent);
+    OnFailRollbackOutput rollbackOutcome = getRollbackOutputV2(advisingEvent);
     if (rollbackOutcome == null) {
       return null;
     }
@@ -44,11 +48,34 @@ public class RollbackCustomAdviser implements Adviser {
 
   @Override
   public boolean canAdvise(AdvisingEvent advisingEvent) {
-    OnFailRollbackOutput rollbackOutcome = getRollbackOutput(advisingEvent);
+    OnFailRollbackOutput rollbackOutcome = getRollbackOutputV2(advisingEvent);
     if (rollbackOutcome == null) {
       return false;
     }
     return StatusUtils.brokeStatuses().contains(advisingEvent.getToStatus());
+  }
+
+  private OnFailRollbackOutput getRollbackOutputV2(AdvisingEvent advisingEvent) {
+    OptionalSweepingOutput failedNodeSweepingOutput =
+        executionSweepingOutputService.resolveOptional(advisingEvent.getAmbiance(),
+            RefObjectUtils.getSweepingOutputRefObject(YAMLFieldNameConstants.FAILED_CHILDREN_OUTPUT));
+    if (!failedNodeSweepingOutput.isFound()) {
+      return getRollbackOutput(advisingEvent);
+    }
+    SectionStepSweepingOutput sectionStepSweepingOutput =
+        (SectionStepSweepingOutput) failedNodeSweepingOutput.getOutput();
+    return getOnFailRollbackOutput(advisingEvent.getAmbiance(), sectionStepSweepingOutput.getFailedNodeIds());
+  }
+
+  public OnFailRollbackOutput getOnFailRollbackOutput(Ambiance ambiance, List<String> failedNodeIds) {
+    List<OptionalSweepingOutput> onFailRollbackOptionalOutput =
+        executionSweepingOutputService.listOutputsWithGivenNameAndSetupIds(
+            ambiance, YAMLFieldNameConstants.USE_ROLLBACK_STRATEGY, failedNodeIds);
+    Optional<OptionalSweepingOutput> optionalOnFailOutput =
+        onFailRollbackOptionalOutput.stream().filter(OptionalSweepingOutput::isFound).findFirst();
+    return optionalOnFailOutput
+        .map(optionalSweepingOutput -> (OnFailRollbackOutput) (optionalSweepingOutput.getOutput()))
+        .orElse(null);
   }
 
   private OnFailRollbackOutput getRollbackOutput(AdvisingEvent advisingEvent) {

@@ -1,8 +1,8 @@
 package io.harness.pms.ngpipeline.inputset.helpers;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
-import static io.harness.pms.merger.helpers.MergeHelper.mergeInputSetIntoPipeline;
-import static io.harness.pms.merger.helpers.YamlTemplateHelper.createTemplateFromPipeline;
+import static io.harness.pms.merger.helpers.InputSetMergeHelper.mergeInputSetIntoPipeline;
+import static io.harness.pms.merger.helpers.InputSetTemplateHelper.createTemplateFromPipeline;
 import static io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntityType.INPUT_SET;
 import static io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntityType.OVERLAY_INPUT_SET;
 import static io.harness.pms.ngpipeline.inputset.helpers.InputSetErrorsHelper.getInvalidFQNsInInputSet;

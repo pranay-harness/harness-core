@@ -1,8 +1,10 @@
 package io.harness.ng.core.service.mappers;
 
+import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.ng.core.mapper.TagMapper.convertToList;
 import static io.harness.ng.core.mapper.TagMapper.convertToMap;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.service.dto.ServiceRequestDTO;
 import io.harness.ng.core.service.dto.ServiceResponse;
 import io.harness.ng.core.service.dto.ServiceResponseDTO;
@@ -10,6 +12,7 @@ import io.harness.ng.core.service.entity.ServiceEntity;
 
 import lombok.experimental.UtilityClass;
 
+@OwnedBy(PIPELINE)
 @UtilityClass
 public class ServiceElementMapper {
   public ServiceEntity toServiceEntity(String accountId, ServiceRequestDTO serviceRequestDTO) {

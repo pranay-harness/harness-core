@@ -1,5 +1,6 @@
 package io.harness.delegate.task.citasks.cik8handler.helper;
 
+import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.delegate.beans.ci.pod.SecretParams.Type.FILE;
 import static io.harness.delegate.beans.ci.pod.SecretParams.Type.TEXT;
@@ -7,6 +8,7 @@ import static io.harness.delegate.beans.ci.pod.SecretParams.Type.TEXT;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.pod.EnvVariableEnum;
 import io.harness.delegate.beans.ci.pod.SecretParams;
@@ -26,6 +28,7 @@ import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.SecretDecryptionService;
+import io.harness.utils.FieldWithPlainTextOrSecretValueHelper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -38,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
  * a K8 cluster.
  */
 
+@OwnedBy(CI)
 @Slf4j
 @Singleton
 public class ConnectorEnvVariablesHelper {
@@ -137,17 +141,19 @@ public class ConnectorEnvVariablesHelper {
             WingsException.USER);
       }
 
-      if (manualConfig == null || manualConfig.getAccessKey() == null) {
+      if (manualConfig == null || (manualConfig.getAccessKey() == null && manualConfig.getAccessKeyRef() == null)) {
         throw new InvalidArgumentsException(
             format("AWS connector access key does not exist for connector with identifier %s",
                 connectorDetails.getIdentifier()),
             WingsException.USER);
       }
 
+      String awsAccessKey = FieldWithPlainTextOrSecretValueHelper.getSecretAsStringFromPlainTextOrSecretRef(
+          manualConfig.getAccessKey(), manualConfig.getAccessKeyRef());
+
       if (isNotBlank(accessKeyEnvVarName)) {
         secretData.put(accessKeyEnvVarName,
-            getVariableSecret(
-                accessKeyEnvVarName + connectorDetails.getIdentifier(), encodeBase64(manualConfig.getAccessKey())));
+            getVariableSecret(accessKeyEnvVarName + connectorDetails.getIdentifier(), encodeBase64(awsAccessKey)));
       }
       if (isNotBlank(secretKeyEnvVarName)) {
         secretData.put(secretKeyEnvVarName,

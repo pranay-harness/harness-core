@@ -23,6 +23,7 @@ import io.harness.rule.Owner;
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.UserInvite;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.SignupService;
 import software.wings.service.intfc.UserService;
 
@@ -49,6 +50,7 @@ public class OnpremSignupHandlerTest extends WingsBaseTest {
   @Mock private UserService userService;
   @Mock private EventPublishHelper eventPublishHelper;
   @Mock private MainConfiguration configuration;
+  @Mock private AccountService accountService;
 
   @InjectMocks @Inject OnpremSignupHandler onpremSignupHandler;
 
@@ -82,10 +84,12 @@ public class OnpremSignupHandlerTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testNewUserInviteHandleShouldSucceed() {
     when(signupService.getUserInviteByEmail(EMAIL)).thenReturn(null);
+    doNothing().when(accountService).updateFeatureFlagsForOnPremAccount();
 
     // Assertion
     assertThat(onpremSignupHandler.handle(createUserInvite())).isTrue();
     verify(userService, Mockito.times(1)).saveUserInvite(Mockito.any(UserInvite.class));
+    verify(accountService, Mockito.times(1)).updateFeatureFlagsForOnPremAccount();
   }
 
   @Test

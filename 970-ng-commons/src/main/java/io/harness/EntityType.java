@@ -90,7 +90,7 @@ public enum EntityType {
   List<String> yamlRootElementString;
   Class<? extends EntityReference> entityReferenceClass;
 
-  @JsonCreator
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
   public static EntityType fromString(@JsonProperty("type") String entityType) {
     for (EntityType entityTypeEnum : EntityType.values()) {
       if (entityTypeEnum.getYamlName().equalsIgnoreCase(entityType)) {

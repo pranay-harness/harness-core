@@ -10,7 +10,7 @@ public class PagerDutyChangeEventTransformer
     extends ChangeEventMetaDataTransformer<PagerDutyActivity, PagerDutyEventMetaData> {
   @Override
   public PagerDutyActivity getEntity(ChangeEventDTO changeEventDTO) {
-    PagerDutyEventMetaData pagerDutyEventMetaData = (PagerDutyEventMetaData) changeEventDTO.getChangeEventMetaData();
+    PagerDutyEventMetaData pagerDutyEventMetaData = (PagerDutyEventMetaData) changeEventDTO.getMetadata();
     return PagerDutyActivity.builder()
         .accountId(changeEventDTO.getAccountId())
         .activityName(pagerDutyEventMetaData.getTitle())
@@ -24,6 +24,15 @@ public class PagerDutyChangeEventTransformer
         .type(changeEventDTO.getType().getActivityType())
         .pagerDutyUrl(pagerDutyEventMetaData.getPagerDutyUrl())
         .eventId(pagerDutyEventMetaData.getEventId())
+        .status(pagerDutyEventMetaData.getStatus())
+        .triggeredAt(pagerDutyEventMetaData.getTriggeredAt())
+        .urgency(pagerDutyEventMetaData.getUrgency())
+        .htmlUrl(pagerDutyEventMetaData.getHtmlUrl())
+        .priority(pagerDutyEventMetaData.getPriority())
+        .assignment(pagerDutyEventMetaData.getAssignment())
+        .assignmentUrl(pagerDutyEventMetaData.getAssignmentUrl())
+        .escalationPolicy(pagerDutyEventMetaData.getEscalationPolicy())
+        .escalationPolicyUrl(pagerDutyEventMetaData.getEscalationPolicyUrl())
         .build();
   }
 
@@ -33,6 +42,15 @@ public class PagerDutyChangeEventTransformer
         .pagerDutyUrl(activity.getPagerDutyUrl())
         .eventId(activity.getEventId())
         .title(activity.getActivityName())
+        .status(activity.getStatus())
+        .triggeredAt(activity.getTriggeredAt())
+        .urgency(activity.getUrgency())
+        .htmlUrl(activity.getHtmlUrl())
+        .priority(activity.getPriority())
+        .assignment(activity.getAssignment())
+        .assignmentUrl(activity.getAssignmentUrl())
+        .escalationPolicy(activity.getEscalationPolicy())
+        .escalationPolicyUrl(activity.getEscalationPolicyUrl())
         .build();
   }
 }

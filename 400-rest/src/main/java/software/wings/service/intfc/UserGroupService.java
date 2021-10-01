@@ -200,5 +200,5 @@ public interface UserGroupService extends OwnedByAccount, OwnedByApplication {
 
   void maskCePermissions(UserGroup userGroup);
 
-  void maskAppTemplatePermissions(UserGroup userGroup);
+  void maintainTemplatePermissions(UserGroup userGroup);
 }

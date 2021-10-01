@@ -6,6 +6,7 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.pms.contracts.execution.events.AddExecutableResponseRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
+import io.harness.pms.execution.utils.SdkResponseEventUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -20,7 +21,7 @@ public class AddExecutableResponseRequestProcessor implements SdkResponseProcess
   @Override
   public void handleEvent(SdkResponseEventProto event) {
     AddExecutableResponseRequest request = event.getAddExecutableResponseRequest();
-    nodeExecutionService.update(event.getNodeExecutionId(),
+    nodeExecutionService.update(SdkResponseEventUtils.getNodeExecutionId(event),
         ops -> ops.addToSet(NodeExecutionKeys.executableResponses, request.getExecutableResponse()));
   }
 }

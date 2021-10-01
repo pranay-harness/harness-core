@@ -3,9 +3,9 @@ package io.harness.engine.pms.resume;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.pms.resume.publisher.NodeResumeEventPublisher;
 import io.harness.execution.NodeExecution;
+import io.harness.plan.PlanNode;
 import io.harness.pms.contracts.execution.ChildChainExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
-import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
 import io.harness.serializer.KryoSerializer;
 
@@ -32,7 +32,7 @@ public class NodeResumeHelper {
       List<NodeExecution> childExecutions =
           nodeExecutionService.fetchNodeExecutionsByParentId(nodeExecution.getUuid(), false);
       for (NodeExecution childExecution : childExecutions) {
-        PlanNodeProto node = childExecution.getNode();
+        PlanNode node = childExecution.getNode();
         StepResponseNotifyData notifyData = StepResponseNotifyData.builder()
                                                 .nodeUuid(node.getUuid())
                                                 .identifier(node.getIdentifier())

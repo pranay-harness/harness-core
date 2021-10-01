@@ -57,7 +57,7 @@ public enum PlanExecutionInterruptType {
     this.displayName = displayName;
   }
 
-  @JsonCreator
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
   public static PlanExecutionInterruptType getPipelineExecutionInterrupt(@JsonProperty("type") String displayName) {
     for (PlanExecutionInterruptType PlanExecutionInterruptType : PlanExecutionInterruptType.values()) {
       if (PlanExecutionInterruptType.displayName.equalsIgnoreCase(displayName)) {

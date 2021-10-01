@@ -27,7 +27,6 @@ import io.harness.delegate.beans.DelegateProfileParams;
 import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateScripts;
-import io.harness.delegate.beans.DelegateSize;
 import io.harness.delegate.beans.DelegateTaskEvent;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.connector.ConnectorHeartbeatDelegateResponse;
@@ -346,19 +345,6 @@ public class DelegateAgentResource {
   }
 
   @DelegateAuth
-  @PUT
-  @Path("{delegateId}/clear-cache")
-  @Timed
-  @ExceptionMetered
-  public void clearCache(
-      @PathParam("delegateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
-    try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
-         AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
-      delegateService.clearCache(accountId, delegateId);
-    }
-  }
-
-  @DelegateAuth
   @GET
   @Path("{delegateId}/upgrade")
   @Timed
@@ -381,13 +367,12 @@ public class DelegateAgentResource {
   @ExceptionMetered
   public RestResponse<DelegateScripts> getDelegateScriptsNg(@Context HttpServletRequest request,
       @QueryParam("accountId") @NotEmpty String accountId,
-      @QueryParam("delegateVersion") @NotEmpty String delegateVersion,
-      @QueryParam("delegateSize") @javax.validation.constraints.NotNull DelegateSize delegateSize,
-      @QueryParam("patchVersion") String patchVersion) throws IOException {
+      @QueryParam("delegateVersion") @NotEmpty String delegateVersion, @QueryParam("patchVersion") String patchVersion)
+      throws IOException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       String fullVersion = isNotEmpty(patchVersion) ? delegateVersion + "-" + patchVersion : delegateVersion;
-      return new RestResponse<>(delegateService.getDelegateScriptsNg(accountId, fullVersion,
-          subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request), delegateSize));
+      return new RestResponse<>(delegateService.getDelegateScriptsNg(
+          accountId, fullVersion, subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request)));
     }
   }
 

@@ -1,12 +1,9 @@
 package io.harness.beans.rollback;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 
 @OwnedBy(HarnessTeam.PIPELINE)
-@TargetModule(HarnessModule._870_YAML_BEANS)
 public interface NGFailureActionTypeConstants {
   String IGNORE = "Ignore";
   String RETRY = "Retry";

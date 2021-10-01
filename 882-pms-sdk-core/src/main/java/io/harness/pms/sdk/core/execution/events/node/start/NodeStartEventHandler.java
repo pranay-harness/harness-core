@@ -6,7 +6,6 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.start.NodeStartEvent;
 import io.harness.pms.contracts.plan.NodeExecutionEventType;
 import io.harness.pms.events.base.PmsBaseEventHandler;
-import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.execution.EngineObtainmentHelper;
 import io.harness.pms.sdk.core.execution.ExecutableProcessor;
 import io.harness.pms.sdk.core.execution.ExecutableProcessorFactory;
@@ -67,9 +66,8 @@ public class NodeStartEventHandler extends PmsBaseEventHandler<NodeStartEvent> {
                                 .build());
     } catch (Exception ex) {
       log.error("Error while handle NodeStart event", ex);
-      sdkNodeExecutionService.handleStepResponse(nodeStartEvent.getAmbiance().getPlanExecutionId(),
-          AmbianceUtils.obtainCurrentRuntimeId(nodeStartEvent.getAmbiance()),
-          NodeExecutionUtils.constructStepResponse(ex));
+      sdkNodeExecutionService.handleStepResponse(
+          nodeStartEvent.getAmbiance(), NodeExecutionUtils.constructStepResponse(ex));
     }
   }
 }

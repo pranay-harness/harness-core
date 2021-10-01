@@ -27,7 +27,6 @@ import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.MetricPack.MetricDefinition;
 import io.harness.cvng.core.entities.TimeSeriesThreshold;
 import io.harness.cvng.core.services.api.MetricPackService;
-import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.Lists;
@@ -43,7 +42,6 @@ import org.junit.experimental.categories.Category;
 
 public class MetricPackServiceImplTest extends CvNextGenTestBase {
   @Inject private MetricPackService metricPackService;
-  @Inject private HPersistence hPersistence;
   private String accountId;
   private String projectIdentifier;
   private String orgIdentifier;

@@ -1,5 +1,10 @@
 package software.wings.dl.exportimport;
 
+import static io.harness.annotations.dev.HarnessModule._955_ACCOUNT_MGMT;
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.PersistentEntity;
@@ -35,6 +40,8 @@ import org.mongodb.morphia.annotations.Entity;
  */
 @Slf4j
 @Singleton
+@OwnedBy(PL)
+@TargetModule(_955_ACCOUNT_MGMT)
 public class WingsMongoExportImport {
   private static final int BATCH_SIZE = 1000;
   private static final String JSON_FILE_SUFFIX = ".json";
@@ -62,12 +69,15 @@ public class WingsMongoExportImport {
   }
 
   public boolean exportRecords(ZipOutputStream zipOutputStream, FileOutputStream fileOutputStream, DBObject filter,
-      String collectionName, int batchSize, int mongoBatchSize) throws Exception {
+      String collectionName, int batchSize, int mongoBatchSize, List<String> identifiers,
+      long exportRecordsUpdatedAfter, long exportRecordsCreatedAfter) throws Exception {
     if (mongoBatchSize == 0) {
       mongoBatchSize = BATCH_SIZE;
     }
     DBCollection collection =
         wingsPersistence.getDatastore(HPersistence.DEFAULT_STORE).getDB().getCollection(collectionName);
+
+    getUpdatedFilter(collection, filter, identifiers, exportRecordsUpdatedAfter, exportRecordsCreatedAfter);
 
     DBCursor cursor = collection.find(filter, new DBCollectionFindOptions().batchSize(mongoBatchSize));
     int i = 0;
@@ -118,13 +128,47 @@ public class WingsMongoExportImport {
     fileOutputStream.flush();
   }
 
+  private void getUpdatedFilter(DBCollection collection, DBObject filter, List<String> identifiers,
+      long exportRecordsUpdatedAfter, long exportRecordsCreatedAfter) {
+    if (EmptyPredicate.isNotEmpty(identifiers)) {
+      filter.put("_id", new BasicDBObject("$in", identifiers));
+    } else {
+      if (exportRecordsUpdatedAfter > 0) {
+        boolean lastUpdatedAtFieldExists = false;
+        DBObject query = new BasicDBObject("lastUpdatedAt", new BasicDBObject("$exists", true));
+        try (DBCursor existsCursor = collection.find(query)) {
+          if (existsCursor.hasNext()) {
+            lastUpdatedAtFieldExists = true;
+          }
+        }
+        if (lastUpdatedAtFieldExists) {
+          filter.put("lastUpdatedAt", new BasicDBObject("$gte", exportRecordsUpdatedAfter));
+        }
+      } else if (exportRecordsCreatedAfter > 0) {
+        boolean createdAtFieldExists = false;
+        DBObject query = new BasicDBObject("createdAt", new BasicDBObject("$exists", true));
+        try (DBCursor existsCursor = collection.find(query)) {
+          if (existsCursor.hasNext()) {
+            createdAtFieldExists = true;
+          }
+        }
+        if (createdAtFieldExists) {
+          filter.put("createdAt", new BasicDBObject("$gte", exportRecordsUpdatedAfter));
+        }
+      }
+    }
+  }
+
   public boolean exportRecords(ZipOutputStream zipOutputStream, FileOutputStream fileOutputStream, DBObject filter,
-      String collectionName, int batchNumber, int batchSize, int mongoBatchSize) throws Exception {
+      String collectionName, int batchNumber, int batchSize, int mongoBatchSize, List<String> identifiers,
+      long exportRecordsUpdatedAfter, long exportRecordsCreatedAfter) throws Exception {
     if (mongoBatchSize == 0) {
       mongoBatchSize = BATCH_SIZE;
     }
     DBCollection collection =
         wingsPersistence.getDatastore(HPersistence.DEFAULT_STORE).getDB().getCollection(collectionName);
+
+    getUpdatedFilter(collection, filter, identifiers, exportRecordsUpdatedAfter, exportRecordsCreatedAfter);
 
     DBCursor cursor = collection.find(filter, new DBCollectionFindOptions().batchSize(mongoBatchSize));
     int i = 0;

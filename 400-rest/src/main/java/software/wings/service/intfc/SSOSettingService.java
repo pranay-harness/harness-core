@@ -102,4 +102,12 @@ public interface SSOSettingService extends OwnedByAccount {
    * @return
    */
   List<SSOSettings> getAllSsoSettings(String accountId);
+
+  /**
+   * Get set of next iterations for a given Cron expressions
+   * @param accountId
+   * @param cron
+   * @return
+   */
+  List<Long> getIterationsFromCron(String accountId, String cron);
 }

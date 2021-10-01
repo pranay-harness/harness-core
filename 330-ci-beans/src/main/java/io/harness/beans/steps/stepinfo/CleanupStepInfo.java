@@ -18,6 +18,7 @@ import io.harness.yaml.schema.YamlSchemaIgnoreSubtype;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModelProperty;
 import java.beans.ConstructorProperties;
@@ -47,7 +48,9 @@ public class CleanupStepInfo implements CIStepInfo {
   @NotNull Infrastructure infrastructure;
   @NotNull private String podName;
   private String name;
-  @JsonIgnore @ApiModelProperty(dataType = INTEGER_CLASSPATH) private ParameterField<Integer> runAsUser;
+  @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+  @ApiModelProperty(dataType = INTEGER_CLASSPATH)
+  private ParameterField<Integer> runAsUser;
 
   @Builder
   @ConstructorProperties({"identifier", "name", "infrastructure", "podName", "runAsUser"})

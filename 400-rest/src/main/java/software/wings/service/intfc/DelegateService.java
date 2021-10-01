@@ -9,7 +9,6 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.delegate.DelegateProfileExecutedAtResponse;
 import io.harness.delegate.beans.ConnectionMode;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateApproval;
@@ -22,7 +21,6 @@ import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateSetupDetails;
-import io.harness.delegate.beans.DelegateSize;
 import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.delegate.beans.FileBucket;
 import io.harness.exception.InvalidRequestException;
@@ -42,7 +40,7 @@ import javax.ws.rs.core.MediaType;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @OwnedBy(DEL)
 @BreakDependencyOn("software.wings.service.intfc.ownership.OwnedByAccount")
 public interface DelegateService extends OwnedByAccount {
@@ -80,8 +78,8 @@ public interface DelegateService extends OwnedByAccount {
 
   Delegate updateScopes(@Valid Delegate delegate);
 
-  DelegateScripts getDelegateScriptsNg(String accountId, String version, String managerHost, String verificationHost,
-      DelegateSize delegateSize) throws IOException;
+  DelegateScripts getDelegateScriptsNg(String accountId, String version, String managerHost, String verificationHost)
+      throws IOException;
 
   DelegateScripts getDelegateScripts(String accountId, String version, String managerHost, String verificationHost,
       String delegateName) throws IOException;
@@ -142,8 +140,6 @@ public interface DelegateService extends OwnedByAccount {
 
   void saveDelegateTask(DelegateTask task, DelegateTask.Status status);
 
-  void clearCache(String accountId, String delegateId);
-
   boolean filter(String accountId, String delegateId);
 
   Delegate updateHeartbeatForDelegateWithPollingEnabled(Delegate delegate);
@@ -172,8 +168,4 @@ public interface DelegateService extends OwnedByAccount {
   void regenerateCapabilityPermissions(String accountId, String delegateId);
 
   DelegateGroup upsertDelegateGroup(String name, String accountId, DelegateSetupDetails delegateSetupDetails);
-
-  Delegate clearProfileExecutedAt(String accountId, String delegateId);
-
-  DelegateProfileExecutedAtResponse fetchProfileExecutedAt(String accountId, String delegateId);
 }

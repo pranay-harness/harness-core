@@ -9,6 +9,7 @@ import io.harness.cvng.activity.entities.HarnessCDActivity;
 import io.harness.cvng.activity.entities.HarnessCDActivity.HarnessCDActivityBuilder;
 import io.harness.cvng.activity.entities.KubernetesClusterActivity;
 import io.harness.cvng.activity.entities.KubernetesClusterActivity.KubernetesClusterActivityBuilder;
+import io.harness.cvng.activity.entities.KubernetesClusterActivity.ServiceEnvironment;
 import io.harness.cvng.activity.entities.PagerDutyActivity;
 import io.harness.cvng.activity.entities.PagerDutyActivity.PagerDutyActivityBuilder;
 import io.harness.cvng.beans.CVMonitoringCategory;
@@ -431,47 +432,66 @@ public class BuilderFactory {
         .activityStartTime(clock.instant());
   }
 
+  public KubernetesClusterActivityBuilder getKubernetesClusterActivityForAppServiceBuilder() {
+    return KubernetesClusterActivity.builder()
+        .accountId(context.getAccountId())
+        .orgIdentifier(context.getOrgIdentifier())
+        .projectIdentifier(context.getProjectIdentifier())
+        .serviceIdentifier(context.getServiceIdentifier() + "-infra")
+        .environmentIdentifier(context.getEnvIdentifier() + "-infra")
+        .eventTime(clock.instant())
+        .changeSourceIdentifier("changeSourceID")
+        .type(ChangeSourceType.KUBERNETES.getActivityType())
+        .activityStartTime(clock.instant())
+        .activityName("K8 Activity")
+        .resourceVersion("resource-version")
+        .relatedAppServices(Arrays.asList(ServiceEnvironment.builder()
+                                              .environmentIdentifier(context.getEnvIdentifier())
+                                              .serviceIdentifier(context.getServiceIdentifier())
+                                              .build()));
+  }
+
   public ChangeEventDTOBuilder getHarnessCDChangeEventDTOBuilder() {
     return getChangeEventDTOBuilder()
         .type(ChangeSourceType.HARNESS_CD)
-        .changeEventMetaData(HarnessCDEventMetadata.builder()
-                                 .stageStepId("stage")
-                                 .planExecutionId("executionId")
-                                 .deploymentEndTime(Instant.now().toEpochMilli())
-                                 .deploymentStartTime(Instant.now().toEpochMilli())
-                                 .stageStepId("stageStepId")
-                                 .stageId("stageId")
-                                 .pipelineId("pipelineId")
-                                 .planExecutionId("executionId")
-                                 .artifactType("artifactType")
-                                 .artifactTag("artifactTag")
-                                 .status("status")
-                                 .build());
+        .metadata(HarnessCDEventMetadata.builder()
+                      .stageStepId("stage")
+                      .planExecutionId("executionId")
+                      .deploymentEndTime(Instant.now().toEpochMilli())
+                      .deploymentStartTime(Instant.now().toEpochMilli())
+                      .stageStepId("stageStepId")
+                      .stageId("stageId")
+                      .pipelineId("pipelineId")
+                      .planExecutionId("executionId")
+                      .artifactType("artifactType")
+                      .artifactTag("artifactTag")
+                      .status("status")
+                      .build());
   }
 
   public ChangeEventDTOBuilder getKubernetesClusterChangeEventDTOBuilder() {
     return getChangeEventDTOBuilder()
         .type(ChangeSourceType.KUBERNETES)
-        .changeEventMetaData(KubernetesChangeEventMetadata.builder()
-                                 .oldYaml("oldYaml")
-                                 .newYaml("newYaml")
-                                 .resourceType(KubernetesResourceType.ReplicaSet)
-                                 .action(Action.Update)
-                                 .reason("replica set update")
-                                 .namespace("cv")
-                                 .workload("workload")
-                                 .timestamp(Instant.now())
-                                 .build());
+        .metadata(KubernetesChangeEventMetadata.builder()
+                      .oldYaml("oldYaml")
+                      .newYaml("newYaml")
+                      .resourceType(KubernetesResourceType.ReplicaSet)
+                      .action(Action.Update)
+                      .reason("replica set update")
+                      .namespace("cv")
+                      .workload("workload")
+                      .timestamp(Instant.now())
+                      .build());
   }
 
   public ChangeEventDTOBuilder getPagerDutyChangeEventDTOBuilder() {
     return getChangeEventDTOBuilder()
         .type(ChangeSourceType.PAGER_DUTY)
-        .changeEventMetaData(PagerDutyEventMetaData.builder()
-                                 .eventId("eventId")
-                                 .pagerDutyUrl("https://myurl.com/pagerduty/token")
-                                 .title("New pager duty incident")
-                                 .build());
+        .metadata(PagerDutyEventMetaData.builder()
+                      .eventId("eventId")
+                      .pagerDutyUrl("https://myurl.com/pagerduty/token")
+                      .title("New pager duty incident")
+                      .build());
   }
 
   public ChangeEventDTOBuilder getChangeEventDTOBuilder() {

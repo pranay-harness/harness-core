@@ -23,6 +23,8 @@ import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.beans.AwsConfig;
 import software.wings.beans.GcpConfig;
+import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
+import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfigValidationResponse;
 import software.wings.beans.settings.helm.HelmRepoConfigValidationTaskParams;
@@ -94,6 +96,14 @@ public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
     helmTaskHelper.initHelm(workingDirectory, defaultHelmVersion, DEFAULT_TIMEOUT_IN_MILLIS);
     String repoName = convertBase64UuidToCanonicalForm(generateUuid());
 
+    if (helmRepoConfig instanceof AmazonS3HelmRepoConfig) {
+      ((AmazonS3HelmRepoConfig) helmRepoConfig)
+          .setUseLatestChartMuseumVersion(taskParams.isUseLatestChartMuseumVersion());
+
+    } else if (helmRepoConfig instanceof GCSHelmRepoConfig) {
+      ((GCSHelmRepoConfig) helmRepoConfig).setUseLatestChartMuseumVersion(taskParams.isUseLatestChartMuseumVersion());
+    }
+
     switch (helmRepoConfig.getSettingType()) {
       case HTTP_HELM_REPO:
         tryAddingHttpHelmRepo(helmRepoConfig, repoName, taskParams.getRepoDisplayName(), workingDirectory);
@@ -123,7 +133,7 @@ public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
     encryptionService.decrypt(gcpConfig, connectorEncryptedDataDetails, false);
 
     helmTaskHelper.addHelmRepo(helmRepoConfig, gcpConfig, repoName, taskParams.getRepoDisplayName(), workingDirectory,
-        DUMMY_BASE_PATH, defaultHelmVersion);
+        DUMMY_BASE_PATH, defaultHelmVersion, ((GCSHelmRepoConfig) helmRepoConfig).isUseLatestChartMuseumVersion());
   }
 
   private void tryAddingHttpHelmRepo(HelmRepoConfig helmRepoConfig, String repoName, String repoDisplayName,
@@ -142,6 +152,6 @@ public class HelmRepoConfigValidationTask extends AbstractDelegateRunnableTask {
     encryptionService.decrypt(awsConfig, connectorEncryptedDataDetails, false);
 
     helmTaskHelper.addHelmRepo(helmRepoConfig, awsConfig, repoName, taskParams.getRepoDisplayName(), workingDirectory,
-        DUMMY_BASE_PATH, defaultHelmVersion);
+        DUMMY_BASE_PATH, defaultHelmVersion, ((AmazonS3HelmRepoConfig) helmRepoConfig).isUseLatestChartMuseumVersion());
   }
 }

@@ -1019,7 +1019,6 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .uuid("DELEGATE_ID")
                             .status(ENABLED)
                             .lastHeartBeat(clock.millis())
-                            .profileExecutedAt(clock.millis())
                             .build();
 
     when(accountDelegatesCache.get("ACCOUNT_ID")).thenReturn(asList(delegate));
@@ -1125,7 +1124,6 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .uuid("DELEGATE_ID")
                             .status(ENABLED)
                             .lastHeartBeat(clock.millis())
-                            .profileExecutedAt(clock.millis())
                             .build();
     when(accountDelegatesCache.get("ACCOUNT_ID")).thenReturn(asList(delegate));
     when(delegateCache.get("ACCOUNT_ID", "DELEGATE_ID", false)).thenReturn(delegate);
@@ -1404,11 +1402,9 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     String accountId = generateUuid();
     String activeDelegate1Id = generateUuid();
     String activeDelegate2Id = generateUuid();
-    Delegate activeDelegate1 =
-        createDelegateBuilder().accountId(accountId).profileExecutedAt(clock.millis()).uuid(activeDelegate1Id).build();
+    Delegate activeDelegate1 = createDelegateBuilder().accountId(accountId).uuid(activeDelegate1Id).build();
 
-    Delegate activeDelegate2 =
-        createDelegateBuilder().accountId(accountId).profileExecutedAt(clock.millis()).uuid(activeDelegate2Id).build();
+    Delegate activeDelegate2 = createDelegateBuilder().accountId(accountId).uuid(activeDelegate2Id).build();
 
     Delegate disconnectedDelegate = createDelegateBuilder()
                                         .accountId(accountId)
@@ -1893,12 +1889,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     connectionResult.setValidated(true);
     connectionResult.setLastUpdatedAt(clock.millis());
 
-    Delegate delegate2 = Delegate.builder()
-                             .uuid(generateUuid())
-                             .status(ENABLED)
-                             .lastHeartBeat(clock.millis())
-                             .profileExecutedAt(clock.millis())
-                             .build();
+    Delegate delegate2 = Delegate.builder().uuid(generateUuid()).status(ENABLED).lastHeartBeat(clock.millis()).build();
 
     DelegateConnectionResult connectionResult2 = connectionResultBuilder.build();
     connectionResult2.setDelegateId(delegate2.getUuid());
@@ -1913,7 +1904,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     when(accountDelegatesCache.get(accountId)).thenReturn(Collections.emptyList()).thenReturn(Arrays.asList(delegate2));
     when(delegateCache.get(task.getAccountId(), delegate2.getUuid(), false))
-        .thenReturn(Delegate.builder().uuid(delegateId).profileExecutedAt(clock.millis()).build());
+        .thenReturn(Delegate.builder().uuid(delegateId).build());
     assertThat(assignDelegateService.shouldValidate(task, delegateId)).isFalse();
 
     // test case: connection result present, validated, not expired, delegate connected
@@ -1925,12 +1916,8 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     when(delegateConnectionResultCache.get(ImmutablePair.of(delegateId, connectionResult.getCriteria())))
         .thenReturn(of(connectionResult));
     when(accountDelegatesCache.get(accountId))
-        .thenReturn(Arrays.asList(Delegate.builder()
-                                      .uuid(delegateId)
-                                      .status(ENABLED)
-                                      .lastHeartBeat(clock.millis())
-                                      .profileExecutedAt(clock.millis())
-                                      .build()));
+        .thenReturn(
+            Arrays.asList(Delegate.builder().uuid(delegateId).status(ENABLED).lastHeartBeat(clock.millis()).build()));
     assertThat(assignDelegateService.shouldValidate(task, delegateId)).isFalse();
   }
 
@@ -2118,7 +2105,6 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .uuid("DELEGATE_ID")
                             .status(ENABLED)
                             .lastHeartBeat(clock.millis())
-                            .profileExecutedAt(clock.millis())
                             .build();
 
     Optional<DelegateConnectionResult> trueResult =

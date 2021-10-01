@@ -1,6 +1,7 @@
 package io.harness.ngtriggers.beans.source.artifact;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.ngtriggers.Constants.HELM_CHART;
 
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
@@ -37,5 +38,10 @@ public class HelmManifestSpec implements ManifestTypeSpec {
   @Override
   public List<TriggerEventDataCondition> fetchEventDataConditions() {
     return eventConditions;
+  }
+
+  @Override
+  public String fetchBuildType() {
+    return HELM_CHART;
   }
 }

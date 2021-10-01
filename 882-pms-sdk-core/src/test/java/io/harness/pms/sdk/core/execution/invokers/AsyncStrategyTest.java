@@ -5,6 +5,8 @@ import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
@@ -13,7 +15,6 @@ import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutableResponse.ResponseCase;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
-import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.plan.execution.SetupAbstractionKeys;
 import io.harness.pms.sdk.core.PmsSdkCoreTestBase;
 import io.harness.pms.sdk.core.execution.AsyncSdkProgressCallback;
@@ -41,6 +42,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class AsyncStrategyTest extends PmsSdkCoreTestBase {
   @Mock private SdkNodeExecutionService sdkNodeExecutionService;
   @Mock private AsyncWaitEngine asyncWaitEngine;
@@ -74,14 +76,12 @@ public class AsyncStrategyTest extends PmsSdkCoreTestBase {
                                         .stepParameters(TestStepParameters.builder().param("TEST_PARAM").build())
                                         .build();
 
-    ArgumentCaptor<String> planExecutionIdCaptor = ArgumentCaptor.forClass(String.class);
-    ArgumentCaptor<String> nodeExecutionIdCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<Ambiance> ambianceCaptor = ArgumentCaptor.forClass(Ambiance.class);
     ArgumentCaptor<ExecutableResponse> responseArgumentCaptor = ArgumentCaptor.forClass(ExecutableResponse.class);
 
     asyncStrategy.start(invokerPackage);
     Mockito.verify(sdkNodeExecutionService, Mockito.times(1))
-        .addExecutableResponse(
-            planExecutionIdCaptor.capture(), nodeExecutionIdCaptor.capture(), responseArgumentCaptor.capture());
+        .addExecutableResponse(ambianceCaptor.capture(), responseArgumentCaptor.capture());
 
     ArgumentCaptor<AsyncSdkResumeCallback> notifyCallbackArgumentCaptor =
         ArgumentCaptor.forClass(AsyncSdkResumeCallback.class);
@@ -94,7 +94,7 @@ public class AsyncStrategyTest extends PmsSdkCoreTestBase {
             correlationIdsCaptor.capture());
     // Wait Engine Mock verify interactions
     AsyncSdkResumeCallback resumeCallback = notifyCallbackArgumentCaptor.getValue();
-    assertThat(resumeCallback.getNodeExecutionId()).isEqualTo(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
+    assertThat(resumeCallback.getAmbianceBytes()).isEqualTo(ambiance.toByteArray());
 
     AsyncSdkProgressCallback progressCallback = progressCallbackArgumentCaptor.getValue();
     assertThat(progressCallback.getAmbianceBytes()).isEqualTo(ambiance.toByteArray());
@@ -102,7 +102,7 @@ public class AsyncStrategyTest extends PmsSdkCoreTestBase {
         .isEqualTo(
             ByteString.copyFromUtf8(RecastOrchestrationUtils.toJson(invokerPackage.getStepParameters())).toByteArray());
 
-    assertThat(nodeExecutionIdCaptor.getValue()).isEqualTo(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
+    assertThat(ambianceCaptor.getValue()).isEqualTo(ambiance);
 
     ExecutableResponse executableResponse = responseArgumentCaptor.getValue();
     assertThat(executableResponse.getResponseCase()).isEqualTo(ResponseCase.ASYNC);
@@ -136,16 +136,13 @@ public class AsyncStrategyTest extends PmsSdkCoreTestBase {
                                           StringNotifyResponseData.builder().data("someString").build()))
                                       .build();
 
-    ArgumentCaptor<String> planExecutionIdCaptor = ArgumentCaptor.forClass(String.class);
-    ArgumentCaptor<String> nodeExecutionIdCaptor = ArgumentCaptor.forClass(String.class);
+    ArgumentCaptor<Ambiance> ambianceCaptor = ArgumentCaptor.forClass(Ambiance.class);
     ArgumentCaptor<StepResponseProto> stepResponseCaptor = ArgumentCaptor.forClass(StepResponseProto.class);
     asyncStrategy.resume(resumePackage);
     Mockito.verify(sdkNodeExecutionService, Mockito.times(1))
-        .handleStepResponse(
-            planExecutionIdCaptor.capture(), nodeExecutionIdCaptor.capture(), stepResponseCaptor.capture());
+        .handleStepResponse(ambianceCaptor.capture(), stepResponseCaptor.capture());
 
-    assertThat(nodeExecutionIdCaptor.getValue()).isEqualTo(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
-    assertThat(planExecutionIdCaptor.getValue()).isEqualTo(ambiance.getPlanExecutionId());
+    assertThat(ambianceCaptor.getValue()).isEqualTo(ambiance);
   }
   private Map<String, String> setupAbstractions() {
     return ImmutableMap.<String, String>builder()

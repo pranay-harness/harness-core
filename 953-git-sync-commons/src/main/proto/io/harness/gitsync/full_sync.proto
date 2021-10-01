@@ -28,12 +28,15 @@ message ScopeDetails {
 
 message FullSyncResponse {
   bool success = 1;
+  string error_msg = 2;
 }
 
 message FullSyncChangeSet {
   io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO entity_detail = 1;
   string file_path = 2;
-  string yaml_git_config_identifier = 3;
-  string branch_name = 4;
-  map<string, string> log_context = 5;
+  string folder_path = 3;
+  string yaml_git_config_identifier = 4;
+  string branch_name = 5;
+  map<string, string> log_context = 6;
+  string account_identifier = 7;
 }

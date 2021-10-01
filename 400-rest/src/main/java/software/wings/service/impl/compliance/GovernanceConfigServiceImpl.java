@@ -400,7 +400,7 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
 
         // if no timezone(update from YAML) then fetch from db
         if (isEmpty(entry.getTimeRange().getTimeZone())) {
-          new TimeRange(entry.getTimeRange().getFrom(), entry.getTimeRange().getTo(),
+          new TimeRange(null, entry.getTimeRange().getFrom(), entry.getTimeRange().getTo(),
               oldWindow.getTimeRange().getTimeZone(), entry.getTimeRange().isDurationBased(),
               entry.getTimeRange().getDuration(), entry.getTimeRange().getEndTime(),
               entry.getTimeRange().getFreezeOccurrence(), false);

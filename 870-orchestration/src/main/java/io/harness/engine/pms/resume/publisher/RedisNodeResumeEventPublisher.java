@@ -2,8 +2,10 @@ package io.harness.engine.pms.resume.publisher;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.pms.commons.events.PmsEventSender;
 import io.harness.execution.NodeExecution;
+import io.harness.plan.PlanNode;
 import io.harness.pms.contracts.execution.ChildChainExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.TaskChainExecutableResponse;
@@ -24,15 +26,17 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class RedisNodeResumeEventPublisher implements NodeResumeEventPublisher {
   @Inject private PmsEventSender eventSender;
+  @Inject private NodeExecutionService nodeExecutionService;
 
   @Override
   public void publishEvent(NodeExecution nodeExecution, Map<String, ByteString> responseMap, boolean isError) {
-    String serviceName = nodeExecution.getNode().getServiceName();
+    PlanNode planNode = nodeExecution.getNode();
+    String serviceName = planNode.getServiceName();
     NodeResumeEvent.Builder resumeEventBuilder = NodeResumeEvent.newBuilder()
                                                      .setAmbiance(nodeExecution.getAmbiance())
                                                      .setExecutionMode(nodeExecution.getMode())
                                                      .setStepParameters(nodeExecution.getResolvedStepParametersBytes())
-                                                     .addAllRefObjects(nodeExecution.getNode().getRebObjectsList())
+                                                     .addAllRefObjects(planNode.getRefObjects())
                                                      .setAsyncError(isError)
                                                      .putAllResponse(responseMap);
 

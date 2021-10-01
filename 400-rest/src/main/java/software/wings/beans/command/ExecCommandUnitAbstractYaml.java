@@ -10,7 +10,7 @@ import java.util.List;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-@TargetModule(HarnessModule._870_CG_YAML)
+@TargetModule(HarnessModule._955_CG_YAML)
 @Data
 @EqualsAndHashCode(callSuper = true)
 @OwnedBy(CDC)
