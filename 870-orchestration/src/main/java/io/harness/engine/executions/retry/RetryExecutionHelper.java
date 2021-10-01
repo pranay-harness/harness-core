@@ -7,6 +7,10 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionMetadataService;
 import io.harness.exception.InvalidRequestException;
+import io.harness.plan.IdentityPlanNode;
+import io.harness.plan.Node;
+import io.harness.plan.Plan;
+import io.harness.plan.PlanNode;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.merger.YamlConfig;
 import io.harness.pms.merger.fqn.FQN;
@@ -252,5 +256,30 @@ public class RetryExecutionHelper {
       Map.Entry<String, JsonNode> field = it.next();
       traverseUuid(field.getValue(), uuidForSkipNode);
     }
+  }
+
+  public void transformPlan(Plan plan, List<String> uuidForSkipNode, String previousExecutionId) {
+    List<Node> planNodes = plan.getPlanNodes();
+    for (String uuidOfSkipNode : uuidForSkipNode) {
+      for (int i = 0; i < planNodes.size(); i++) {
+        PlanNode node = (PlanNode) planNodes.get(i);
+        if (node.getUuid().equals(uuidOfSkipNode)) {
+          String originalNodeExecutionId =
+              nodeExecutionService.getByPlanNodeUuid(node.getUuid(), previousExecutionId).getUuid();
+          IdentityPlanNode identityPlanNode = mapPlanNodeToIdentityNode(node, originalNodeExecutionId);
+          planNodes.set(i, identityPlanNode);
+        }
+      }
+    }
+  }
+
+  private IdentityPlanNode mapPlanNodeToIdentityNode(PlanNode node, String originalNodeExecutionUuid) {
+    return IdentityPlanNode.builder()
+        .uuid(node.getUuid())
+        .name(node.getName())
+        .identifier(node.getIdentifier())
+        .group(node.getGroup())
+        .originalNodeExecutionId(originalNodeExecutionUuid)
+        .build();
   }
 }

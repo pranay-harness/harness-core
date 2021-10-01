@@ -89,7 +89,7 @@ public class PipelineExecutor {
           execArgs.getMetadata(), execArgs.getPlanExecutionMetadata(), false, null);
     } else {
       planExecution = executionHelper.startExecution(accountId, orgIdentifier, projectIdentifier,
-          execArgs.getMetadata(), execArgs.getPlanExecutionMetadata(), false, null);
+          execArgs.getMetadata(), execArgs.getPlanExecutionMetadata(), false, null, null);
     }
     return PlanExecutionResponseDto.builder()
         .planExecution(planExecution)
@@ -126,7 +126,7 @@ public class PipelineExecutor {
           execArgs.getMetadata(), execArgs.getPlanExecutionMetadata(), true, uuidForSkipNode);
     } else {
       planExecution = executionHelper.startExecution(accountId, orgIdentifier, projectIdentifier,
-          execArgs.getMetadata(), execArgs.getPlanExecutionMetadata(), true, uuidForSkipNode);
+          execArgs.getMetadata(), execArgs.getPlanExecutionMetadata(), true, uuidForSkipNode, previousExecutionId);
     }
     return PlanExecutionResponseDto.builder()
         .planExecution(planExecution)

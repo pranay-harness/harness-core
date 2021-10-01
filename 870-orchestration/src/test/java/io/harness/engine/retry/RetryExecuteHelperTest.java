@@ -13,6 +13,12 @@ import io.harness.engine.executions.retry.RetryGroup;
 import io.harness.engine.executions.retry.RetryInfo;
 import io.harness.engine.executions.retry.RetryStageInfo;
 import io.harness.exception.InvalidRequestException;
+import io.harness.plan.Plan;
+import io.harness.plan.PlanNode;
+import io.harness.pms.contracts.advisers.AdviserObtainment;
+import io.harness.pms.contracts.advisers.AdviserType;
+import io.harness.pms.contracts.steps.StepCategory;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.rule.Owner;
 
@@ -657,5 +663,25 @@ public class RetryExecuteHelperTest {
     assertThat(uuidOfSkipNode.size()).isEqualTo(2);
     assertThat(uuidOfSkipNode.get(0)).isEqualTo("oldUuid1");
     assertThat(uuidOfSkipNode.get(1)).isEqualTo("oldUuid2");
+  }
+
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testTransformPlan() {
+    StepType TEST_STEP_TYPE =
+        StepType.newBuilder().setType("TEST_STEP_PLAN").setStepCategory(StepCategory.STEP).build();
+    String uuid = "uuid1";
+    PlanNode planNode =
+        PlanNode.builder()
+            .name("Test Node")
+            .uuid(uuid)
+            .identifier("test")
+            .stepType(TEST_STEP_TYPE)
+            .adviserObtainment(
+                AdviserObtainment.newBuilder().setType(AdviserType.newBuilder().setType("NEXT_STEP").build()).build())
+            .build();
+    retryExecuteHelper.transformPlan(
+        Plan.builder().planNodes(Collections.singleton(planNode)).build(), Collections.singletonList(uuid), "abc");
   }
 }

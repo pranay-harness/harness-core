@@ -17,6 +17,8 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.InvalidYamlException;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecutionMetadata;
+import io.harness.plan.IdentityPlanNode;
+import io.harness.plan.Node;
 import io.harness.plan.Plan;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
@@ -216,7 +218,7 @@ public class ExecutionHelper {
 
   public PlanExecution startExecution(String accountId, String orgIdentifier, String projectIdentifier,
       ExecutionMetadata executionMetadata, PlanExecutionMetadata planExecutionMetadata, boolean isRetry,
-      List<String> uuidForSkipNode) {
+      List<String> uuidForSkipNode, String previousExecutionId) {
     long startTs = System.currentTimeMillis();
     PlanCreationBlobResponse resp;
     try {
@@ -236,16 +238,10 @@ public class ExecutionHelper {
     log.info("Time taken to complete plan: {}", endTs - startTs);
 
     if (isRetry) {
-      transformPlan(plan, uuidForSkipNode);
+      retryExecutionHelper.transformPlan(plan, uuidForSkipNode, previousExecutionId);
       return orchestrationService.retryExecution(plan, abstractions, executionMetadata, planExecutionMetadata);
     }
     return orchestrationService.startExecution(plan, abstractions, executionMetadata, planExecutionMetadata);
-  }
-
-  private void transformPlan(Plan plan, List<String> uuidForSkipNode) {
-    /*
-    Update the plan for retry execution
-     */
   }
 
   public PlanExecution startExecutionV2(String accountId, String orgIdentifier, String projectIdentifier,
