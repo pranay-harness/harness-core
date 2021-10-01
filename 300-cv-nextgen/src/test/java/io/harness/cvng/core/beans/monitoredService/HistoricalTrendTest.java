@@ -5,7 +5,7 @@ import static io.harness.rule.OwnerRule.KANHAIYA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.harness.CvNextGenTestBase;
+import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.analysis.beans.Risk;
 import io.harness.rule.Owner;
@@ -23,7 +23,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class HistoricalTrendTest extends CvNextGenTestBase {
+public class HistoricalTrendTest extends CategoryTest {
   private Clock clock;
 
   @Before
