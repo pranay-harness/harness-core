@@ -1,5 +1,7 @@
 package io.harness.engine.pms.steps;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -14,6 +16,7 @@ import io.harness.tasks.ResponseData;
 import com.google.inject.Inject;
 import java.util.Map;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class IdentityStep
     implements ChildExecutable<IdentityStepParameters>, ChildrenExecutable<IdentityStepParameters> {
   @Inject private NodeExecutionService nodeExecutionService;

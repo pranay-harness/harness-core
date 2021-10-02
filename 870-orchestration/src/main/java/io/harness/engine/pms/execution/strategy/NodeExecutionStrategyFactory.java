@@ -1,5 +1,7 @@
 package io.harness.engine.pms.execution.strategy;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.pms.execution.strategy.identity.IdentityNodeExecutionStrategy;
 import io.harness.engine.pms.execution.strategy.plan.PlanExecutionStrategy;
 import io.harness.engine.pms.execution.strategy.plannode.PlanNodeExecutionStrategy;
@@ -7,6 +9,7 @@ import io.harness.plan.NodeType;
 
 import com.google.inject.Inject;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class NodeExecutionStrategyFactory {
   @Inject private PlanNodeExecutionStrategy planNodeExecutionStrategy;
   @Inject private PlanExecutionStrategy planExecutionStrategy;
