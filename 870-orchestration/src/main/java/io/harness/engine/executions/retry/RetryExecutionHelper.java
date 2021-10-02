@@ -262,6 +262,7 @@ public class RetryExecutionHelper {
     List<Node> planNodes = plan.getPlanNodes();
     /*
     Mapping planNode.uuid with uuid in NodeExecution
+    planNode.uuid -> nodeExecution.uuid
      */
     List<Node> updatedPlanNodes = new ArrayList<>();
     Map<String, String> nodeUuidToNodeExecutionUuid =
@@ -270,6 +271,7 @@ public class RetryExecutionHelper {
 
     /*
     IdentityNode
+    Convert the planNode to Identity Node whose uuids are there in map uuidForSkipNode
      */
     planNodes.stream()
         .filter(node -> nodeUuidToNodeExecutionUuid.containsKey(node.getUuid()))
