@@ -158,7 +158,6 @@ public class IdentityNodeExecutionStrategy implements NodeExecutionStrategy<Iden
       PlanNode planNode = nodeExecution.getNode();
       StepResponseNotifyData responseData = StepResponseNotifyData.builder()
                                                 .nodeUuid(planNode.getUuid())
-                                                .stepOutcomeRefs(nodeExecution.getOutcomeRefs())
                                                 .failureInfo(nodeExecution.getFailureInfo())
                                                 .identifier(planNode.getIdentifier())
                                                 .group(planNode.getGroup())
