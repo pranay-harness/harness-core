@@ -1,6 +1,8 @@
 package io.harness.plan;
 
 import io.harness.ModuleType;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.data.stepparameters.PmsStepParameters;
 
@@ -9,6 +11,7 @@ import lombok.Builder;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 @Value
 @Builder
 @FieldNameConstants(innerTypeName = "IdentityPlanNodeKeys")
