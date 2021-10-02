@@ -10,7 +10,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.plan.IdentityPlanNode;
 import io.harness.plan.Node;
 import io.harness.plan.Plan;
-import io.harness.plan.PlanNode;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.merger.YamlConfig;
 import io.harness.pms.merger.fqn.FQN;
@@ -266,8 +265,7 @@ public class RetryExecutionHelper {
      */
     List<Node> updatedPlanNodes = new ArrayList<>();
     Map<String, String> nodeUuidToNodeExecutionUuid =
-        nodeExecutionService.fetchNodeExecutionUuidFromNodeUuidsAndPlanExecutionId(
-            uuidForSkipNode, previousExecutionId);
+        nodeExecutionService.fetchNodeExecutionFromNodeUuidsAndPlanExecutionId(uuidForSkipNode, previousExecutionId);
 
     /*
     IdentityNode

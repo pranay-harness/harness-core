@@ -17,8 +17,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.InvalidYamlException;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecutionMetadata;
-import io.harness.plan.IdentityPlanNode;
-import io.harness.plan.Node;
 import io.harness.plan.Plan;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
@@ -239,14 +237,14 @@ public class ExecutionHelper {
 
     if (isRetry) {
       Plan newPlan = retryExecutionHelper.transformPlan(plan, uuidForSkipNode, previousExecutionId);
-      return orchestrationService.retryExecution(newPlan, abstractions, executionMetadata, planExecutionMetadata);
+      return orchestrationService.executePlan(newPlan, abstractions, executionMetadata, planExecutionMetadata);
     }
     return orchestrationService.startExecution(plan, abstractions, executionMetadata, planExecutionMetadata);
   }
 
   public PlanExecution startExecutionV2(String accountId, String orgIdentifier, String projectIdentifier,
       ExecutionMetadata executionMetadata, PlanExecutionMetadata planExecutionMetadata, boolean isRetry,
-      List<String> uuidForSkipNode) {
+      List<String> uuidForSkipNode, String previousExecutionId) {
     long startTs = System.currentTimeMillis();
     String planCreationId = generateUuid();
     try {
@@ -274,7 +272,8 @@ public class ExecutionHelper {
       return PlanExecution.builder().build();
     }
     if (isRetry) {
-      return orchestrationService.retryExecution(plan, abstractions, executionMetadata, planExecutionMetadata);
+      Plan newPlan = retryExecutionHelper.transformPlan(plan, uuidForSkipNode, previousExecutionId);
+      return orchestrationService.executePlan(plan, abstractions, executionMetadata, planExecutionMetadata);
     }
     return orchestrationService.startExecutionV2(
         planCreationId, abstractions, executionMetadata, planExecutionMetadata);

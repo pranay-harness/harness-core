@@ -197,6 +197,6 @@ public class PipelineExecutorTest extends CategoryTest {
     verify(executionHelper, times(1))
         .startExecution(accountId, orgId, projectId, metadata, planExecutionMetadata, false, null, null);
     verify(executionHelper, times(0))
-        .startExecutionV2(anyString(), anyString(), anyString(), any(), any(), anyBoolean(), any());
+        .startExecutionV2(anyString(), anyString(), anyString(), any(), any(), anyBoolean(), any(), any());
   }
 }

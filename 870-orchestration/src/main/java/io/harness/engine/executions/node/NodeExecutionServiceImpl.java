@@ -481,7 +481,7 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   }
 
   @Override
-  public Map<String, String> fetchNodeExecutionUuidFromNodeUuidsAndPlanExecutionId(
+  public Map<String, String> fetchNodeExecutionFromNodeUuidsAndPlanExecutionId(
       List<String> uuidForSkipNode, String planExecutionId) {
     Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
                       .addCriteria(where(NodeExecutionKeys.planNodeId).in(uuidForSkipNode));

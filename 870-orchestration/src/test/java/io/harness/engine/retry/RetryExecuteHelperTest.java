@@ -685,7 +685,7 @@ public class RetryExecuteHelperTest {
 
     Map<String, String> mapper = new HashMap<>();
     mapper.put(uuid, "nodeUuid1");
-    when(nodeExecutionService.fetchNodeExecutionUuidFromNodeUuidsAndPlanExecutionId(any(), any())).thenReturn(mapper);
+    when(nodeExecutionService.fetchNodeExecutionFromNodeUuidsAndPlanExecutionId(any(), any())).thenReturn(mapper);
 
     PlanNode planNode1 =
         PlanNode.builder()

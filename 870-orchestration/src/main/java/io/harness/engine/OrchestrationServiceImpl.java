@@ -44,19 +44,13 @@ public class OrchestrationServiceImpl implements OrchestrationService {
     return executePlan(savedPlan, setupAbstractions, metadata, planExecutionMetadata);
   }
 
-  @Override
-  public PlanExecution retryExecution(@Valid Plan plan, Map<String, String> setupAbstractions,
-      ExecutionMetadata metadata, PlanExecutionMetadata planExecutionMetadata) {
-    Plan savedPlan = planService.save(plan);
-    return executePlan(savedPlan, setupAbstractions, metadata, planExecutionMetadata);
-  }
-
   public PlanExecution startExecutionV2(String planId, Map<String, String> setupAbstractions,
       ExecutionMetadata metadata, PlanExecutionMetadata planExecutionMetadata) {
     return executePlan(planService.fetchPlan(planId), setupAbstractions, metadata, planExecutionMetadata);
   }
 
-  private PlanExecution executePlan(@Valid Plan plan, Map<String, String> setupAbstractions, ExecutionMetadata metadata,
+  @Override
+  public PlanExecution executePlan(@Valid Plan plan, Map<String, String> setupAbstractions, ExecutionMetadata metadata,
       PlanExecutionMetadata planExecutionMetadata) {
     PlanExecution savedPlanExecution = createPlanExecution(plan, setupAbstractions, metadata, planExecutionMetadata);
 
