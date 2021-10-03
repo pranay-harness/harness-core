@@ -4,7 +4,6 @@ import os
 import re
 import datetime
 import util
-import time
 
 from util import create_dataset, if_tbl_exists, createTable, print_, run_batch_query, COSTAGGREGATED, UNIFIED, PREAGGREGATED, CEINTERNALDATASET
 from calendar import monthrange

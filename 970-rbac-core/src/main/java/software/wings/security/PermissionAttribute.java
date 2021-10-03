@@ -518,6 +518,11 @@ public class PermissionAttribute {
     MANAGE_TAGS,
 
     /**
+     * Manage Account Defaults
+     */
+    MANAGE_ACCOUNT_DEFAULTS,
+
+    /**
      * Manage custom dashboard
      */
     MANAGE_CUSTOM_DASHBOARDS,

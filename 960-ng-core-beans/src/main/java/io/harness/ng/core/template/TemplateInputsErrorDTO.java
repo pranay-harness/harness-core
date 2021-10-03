@@ -1,4 +1,4 @@
-package io.harness.template.beans;
+package io.harness.ng.core.template;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;

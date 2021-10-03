@@ -9,6 +9,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.NGTemplateException;
+import io.harness.ng.core.template.TemplateInputsErrorDTO;
+import io.harness.ng.core.template.TemplateInputsErrorResponseDTO;
+import io.harness.ng.core.template.TemplateMergeResponse;
 import io.harness.pms.merger.YamlConfig;
 import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.merger.helpers.RuntimeInputFormHelper;
@@ -16,9 +19,6 @@ import io.harness.pms.merger.helpers.YamlSubMapExtractor;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.serializer.JsonUtils;
-import io.harness.template.beans.TemplateInputsErrorDTO;
-import io.harness.template.beans.TemplateInputsErrorResponseDTO;
-import io.harness.template.beans.TemplateMergeResponse;
 import io.harness.template.beans.yaml.NGTemplateConfig;
 import io.harness.template.entity.TemplateEntity;
 import io.harness.template.services.NGTemplateService;
@@ -206,6 +206,9 @@ public class TemplateMergeHelper {
    */
   public TemplateMergeResponse mergeTemplateSpecToPipelineYaml(
       String accountId, String orgId, String projectId, String pipelineYaml) {
+    if (isEmpty(pipelineYaml)) {
+      throw new NGTemplateException("Pipeline yaml cannot be empty.");
+    }
     JsonNode pipelineJsonNode;
     try {
       pipelineJsonNode = YamlUtils.readTree(pipelineYaml).getNode().getCurrJsonNode();
