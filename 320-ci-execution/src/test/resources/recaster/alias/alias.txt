@@ -104,3 +104,4 @@ io.harness.yaml.core.failurestrategy.FailureStrategyConfig
 io.harness.yaml.core.failurestrategy.marksuccess.MarkAsSuccessFailureActionConfig
 io.harness.yaml.core.failurestrategy.rollback.StageRollbackFailureActionConfig
 io.harness.ngpipeline.pipeline.executions.beans.DockerArtifactSummary
+io.harness.advisers.rollback.RollbackTriggeredOutput

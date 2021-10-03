@@ -206,3 +206,4 @@ io.harness.cdng.service.beans.ServiceDefinition
 io.harness.cdng.service.beans.ServiceConfig
 io.harness.ngpipeline.pipeline.executions.beans.DockerArtifactSummary
 io.harness.cdng.manifest.yaml.ManifestConfigWrapper
+io.harness.advisers.rollback.RollbackTriggeredOutput
