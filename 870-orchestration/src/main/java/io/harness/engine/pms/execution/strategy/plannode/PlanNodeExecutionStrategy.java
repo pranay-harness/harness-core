@@ -115,13 +115,13 @@ public class PlanNodeExecutionStrategy implements NodeExecutionStrategy<PlanNode
   public void startExecution(Ambiance ambiance) {
     NodeExecution nodeExecution = nodeExecutionService.get(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
     try (AutoLogContext ignore = AmbianceUtils.autoLogContext(ambiance)) {
+      NodeExecution updatedNodeExecution = resolveParameters(ambiance, nodeExecution);
       ExecutionCheck check = performPreFacilitationChecks(nodeExecution);
       if (!check.isProceed()) {
         log.info("Not Proceeding with  Execution. Reason : {}", check.getReason());
         return;
       }
       log.info("Proceeding with  Execution. Reason : {}", check.getReason());
-      NodeExecution updatedNodeExecution = resolveParameters(ambiance, nodeExecution);
 
       if (facilitationHelper.customFacilitatorPresent(updatedNodeExecution.getNode())) {
         facilitateEventPublisher.publishEvent(nodeExecution.getUuid());
