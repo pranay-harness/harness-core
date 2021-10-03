@@ -11,6 +11,8 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.pms.advise.AdviseHandlerFactory;
 import io.harness.engine.pms.advise.AdviserResponseHandler;
 import io.harness.engine.pms.commons.events.PmsEventSender;
+import io.harness.engine.pms.data.PmsOutcomeService;
+import io.harness.engine.pms.data.PmsSweepingOutputService;
 import io.harness.engine.pms.execution.strategy.NodeExecutionStrategy;
 import io.harness.engine.utils.PmsLevelUtils;
 import io.harness.execution.ExecutionModeUtils;
@@ -48,6 +50,8 @@ public class IdentityNodeExecutionStrategy implements NodeExecutionStrategy<Iden
   @Inject private AdviseHandlerFactory adviseHandlerFactory;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private OrchestrationEngine orchestrationEngine;
+  @Inject private PmsOutcomeService pmsOutcomeService;
+  @Inject private PmsSweepingOutputService pmsSweepingOutputService;
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
 
   @Override
@@ -109,9 +113,28 @@ public class IdentityNodeExecutionStrategy implements NodeExecutionStrategy<Iden
         return;
       }
 
+      // TODO: DO WE NEED TO SAVE NODE-EXECUTION HERE
+      newNodeExecution = nodeExecutionService.update(newNodeExecutionId, ops1 -> {
+        setUnset(ops1, NodeExecutionKeys.resolvedStepParameters, originalExecution.getResolvedStepParameters());
+        setUnset(ops1, NodeExecutionKeys.resolvedInputs, originalExecution.getResolvedInputs());
+        setUnset(ops1, NodeExecutionKeys.mode, originalExecution.getMode());
+        setUnset(ops1, NodeExecutionKeys.nodeRunInfo, originalExecution.getNodeRunInfo());
+        setUnset(ops1, NodeExecutionKeys.skipInfo, originalExecution.getSkipInfo());
+        setUnset(ops1, NodeExecutionKeys.failureInfo, originalExecution.getFailureInfo());
+        setUnset(ops1, NodeExecutionKeys.progressData, originalExecution.getProgressData());
+        setUnset(ops1, NodeExecutionKeys.adviserResponse, originalExecution.getAdviserResponse());
+        setUnset(ops1, NodeExecutionKeys.timeoutInstanceIds, originalExecution.getTimeoutInstanceIds());
+        setUnset(ops1, NodeExecutionKeys.timeoutDetails, originalExecution.getTimeoutDetails());
+        setUnset(ops1, NodeExecutionKeys.adviserTimeoutInstanceIds, originalExecution.getAdviserTimeoutInstanceIds());
+        setUnset(ops1, NodeExecutionKeys.adviserTimeoutDetails, originalExecution.getAdviserTimeoutDetails());
+        setUnset(ops1, NodeExecutionKeys.interruptHistories, originalExecution.getInterruptHistories());
+      });
+
       // If this is one of the leaf modes then just clone and copy everything and we should be good
       // This is an optimization/hack to not do any actual work
       if (ExecutionModeUtils.isLeafMode(newNodeExecution.getMode())) {
+        pmsOutcomeService.cloneForRetryExecution(ambiance, originalExecution.getUuid());
+        pmsSweepingOutputService.cloneForRetryExecution(ambiance, originalExecution.getUuid());
         // TODO: Copy outputs
         // TODO: Copy outcomes
         // TODO: Update outcome refs

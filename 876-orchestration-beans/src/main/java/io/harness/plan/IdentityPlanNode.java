@@ -35,7 +35,7 @@ public class IdentityPlanNode implements Node {
 
   @Override
   public String getServiceName() {
-    return ModuleType.PMS.name();
+    return "pms";
   }
 
   @Override
