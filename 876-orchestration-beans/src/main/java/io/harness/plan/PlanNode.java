@@ -19,6 +19,7 @@ import lombok.Builder;
 import lombok.Singular;
 import lombok.Value;
 import lombok.experimental.FieldNameConstants;
+import lombok.experimental.NonFinal;
 import org.springframework.data.annotation.TypeAlias;
 
 @Value
@@ -51,7 +52,7 @@ public class PlanNode implements Node {
   String whenCondition;
 
   // stage fqn
-  @lombok.Setter @NotNull String stageFqn;
+  @lombok.Setter @NonFinal String stageFqn;
 
   // Config
   boolean skipExpressionChain;
