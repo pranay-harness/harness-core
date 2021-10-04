@@ -37,6 +37,7 @@ import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.TemplateServiceModuleRegistrars;
 import io.harness.service.DelegateServiceDriverModule;
 import io.harness.template.events.TemplateOutboxEventHandler;
+import io.harness.template.eventsframework.TemplateEventsFrameworkModule;
 import io.harness.template.mappers.TemplateFilterPropertiesMapper;
 import io.harness.template.services.NGTemplateService;
 import io.harness.template.services.NGTemplateServiceImpl;
@@ -112,6 +113,9 @@ public class TemplateServiceModule extends AbstractModule {
     install(new TransactionOutboxModule(DEFAULT_OUTBOX_POLL_CONFIGURATION, TEMPLATE_SERVICE.getServiceId(), false));
     install(new TokenClientModule(this.templateServiceConfiguration.getNgManagerServiceHttpClientConfig(),
         this.templateServiceConfiguration.getNgManagerServiceSecret(), TEMPLATE_SERVICE.getServiceId()));
+    install(AccessControlClientModule.getInstance(
+        this.templateServiceConfiguration.getAccessControlClientConfiguration(), TEMPLATE_SERVICE.getServiceId()));
+    install(new TemplateEventsFrameworkModule(this.templateServiceConfiguration.getEventsFrameworkConfiguration()));
 
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("taskPollExecutor"))

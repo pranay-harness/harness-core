@@ -1,8 +1,8 @@
-package io.harness.template.beans;
+package io.harness.ng.core.template;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.template.beans.TemplateEntityConstants.STAGE;
-import static io.harness.template.beans.TemplateEntityConstants.STEP;
+import static io.harness.ng.core.template.TemplateEntityConstants.STAGE;
+import static io.harness.ng.core.template.TemplateEntityConstants.STEP;
 
 import io.harness.annotations.dev.OwnedBy;
 

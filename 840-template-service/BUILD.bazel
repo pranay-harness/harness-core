@@ -12,6 +12,7 @@ shared_dependencies = [
     "//940-primary-version-manager:module",
     "//945-ng-audit-client:module",
     "//948-access-control-sdk:module",
+    "//950-ng-core:module",
     "//953-events-api:module",
     "//955-filters-sdk:module",
     "//955-outbox-sdk:module",

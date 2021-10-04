@@ -6,6 +6,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityName;
 import io.harness.encryption.Scope;
 import io.harness.gitsync.sdk.EntityGitDetails;
+import io.harness.ng.core.template.TemplateEntityType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
