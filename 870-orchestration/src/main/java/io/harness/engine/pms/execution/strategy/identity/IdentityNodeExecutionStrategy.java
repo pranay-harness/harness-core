@@ -14,6 +14,7 @@ import io.harness.engine.pms.commons.events.PmsEventSender;
 import io.harness.engine.pms.data.PmsOutcomeService;
 import io.harness.engine.pms.data.PmsSweepingOutputService;
 import io.harness.engine.pms.execution.strategy.NodeExecutionStrategy;
+import io.harness.engine.pms.steps.IdentityStepParameters;
 import io.harness.engine.utils.PmsLevelUtils;
 import io.harness.execution.ExecutionModeUtils;
 import io.harness.execution.NodeExecution;
@@ -29,6 +30,7 @@ import io.harness.pms.contracts.execution.start.NodeStartEvent;
 import io.harness.pms.events.base.PmsEventCategory;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.waiter.WaitNotifyEngine;
 
 import com.google.inject.Inject;
@@ -143,11 +145,12 @@ public class IdentityNodeExecutionStrategy implements NodeExecutionStrategy<Iden
       }
 
       // If not leaf node then we need to call the identity step
-      NodeStartEvent nodeStartEvent = NodeStartEvent.newBuilder()
-                                          .setAmbiance(newNodeExecution.getAmbiance())
-                                          .setStepParameters(ByteString.copyFromUtf8(node.getStepParameters().toJson()))
-                                          .setMode(newNodeExecution.getMode())
-                                          .build();
+      NodeStartEvent nodeStartEvent =
+          NodeStartEvent.newBuilder()
+              .setAmbiance(newNodeExecution.getAmbiance())
+              .setStepParameters(ByteString.copyFromUtf8(RecastOrchestrationUtils.toJson(originalExecution.getUuid())))
+              .setMode(newNodeExecution.getMode())
+              .build();
       eventSender.sendEvent(newNodeExecution.getAmbiance(), nodeStartEvent.toByteString(), PmsEventCategory.NODE_START,
           node.getServiceName(), true);
     } catch (Exception exception) {
@@ -155,6 +158,10 @@ public class IdentityNodeExecutionStrategy implements NodeExecutionStrategy<Iden
           AmbianceUtils.obtainCurrentRuntimeId(ambiance), ambiance.getPlanExecutionId(), exception);
       handleError(ambiance, exception);
     }
+  }
+
+  public IdentityStepParameters getIdentityStepParameters(String originalNodeExecutionId) {
+    return IdentityStepParameters.builder().originalNodeExecutionId(originalNodeExecutionId).build();
   }
 
   @Override
