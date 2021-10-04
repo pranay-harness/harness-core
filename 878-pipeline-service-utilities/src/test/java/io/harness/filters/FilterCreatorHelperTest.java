@@ -13,10 +13,14 @@ import io.harness.category.element.UnitTests;
 import io.harness.encryption.SecretRefData;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
+import io.harness.pms.exception.runtime.InvalidYamlRuntimeException;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.pms.yaml.YamlField;
+import io.harness.pms.yaml.YamlUtils;
 import io.harness.preflight.PreFlightCheckMetadata;
 import io.harness.rule.Owner;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,6 +48,13 @@ public class FilterCreatorHelperTest extends CategoryTest {
     assertThat(entityDetailProtoDTO.getIdentifierRef().getOrgIdentifier().getValue()).isEqualTo(ORG_IDENTIFIER);
     assertThat(entityDetailProtoDTO.getIdentifierRef().getProjectIdentifier().getValue()).isEqualTo(PROJECT_IDENTIFIER);
     assertThat(entityDetailProtoDTO.getIdentifierRef().getIdentifier().getValue()).isEqualTo("connectorId");
+
+    assertThatThrownBy(
+        ()
+            -> FilterCreatorHelper.convertToEntityDetailProtoDTO(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER,
+                FQN, ParameterField.createValueField(""), EntityTypeProtoEnum.CONNECTORS))
+        .isInstanceOf(InvalidYamlRuntimeException.class)
+        .hasMessage("Connector ref is not present for property: first.last");
   }
 
   @Test
@@ -62,6 +73,13 @@ public class FilterCreatorHelperTest extends CategoryTest {
     assertThat(entityDetailProtoDTO.getIdentifierRef().getOrgIdentifier().getValue()).isEqualTo(ORG_IDENTIFIER);
     assertThat(entityDetailProtoDTO.getIdentifierRef().getProjectIdentifier().getValue()).isEqualTo(PROJECT_IDENTIFIER);
     assertThat(entityDetailProtoDTO.getIdentifierRef().getIdentifier().getValue()).isEqualTo("connectorId");
+
+    assertThatThrownBy(
+        ()
+            -> FilterCreatorHelper.convertToEntityDetailProtoDTO(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER, PROJECT_IDENTIFIER,
+                FQN, ParameterField.createExpressionField(true, "", null, true), EntityTypeProtoEnum.CONNECTORS))
+        .isInstanceOf(InvalidYamlRuntimeException.class)
+        .hasMessage("Connector ref is not present for property: first.last");
   }
 
   @Test
@@ -74,5 +92,41 @@ public class FilterCreatorHelperTest extends CategoryTest {
             -> FilterCreatorHelper.convertSecretToEntityDetailProtoDTO(ACCOUNT_IDENTIFIER, ORG_IDENTIFIER,
                 PROJECT_IDENTIFIER, FQN, ParameterField.<SecretRefData>builder().value(secretRefData).build()))
         .hasMessage("No value for secret provided at first.last");
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testCheckIfNameIsJexlKeyword() throws IOException {
+    String notJexl = "name: notJexl\n"
+        + "type: String\n"
+        + "value: notJexl";
+    String jexl = "name: or\n"
+        + "type: String\n"
+        + "value: notJexl";
+
+    YamlField notJexlYamlField = YamlUtils.readTree(notJexl);
+    FilterCreatorHelper.checkIfNameIsJexlKeyword(notJexlYamlField.getNode());
+
+    YamlField jexlYamlField = YamlUtils.readTree(jexl);
+    assertThatThrownBy(() -> FilterCreatorHelper.checkIfNameIsJexlKeyword(jexlYamlField.getNode()))
+        .isInstanceOf(InvalidYamlRuntimeException.class)
+        .hasMessage("Variable name or is a jexl reserved keyword");
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testCheckIfVariableNamesAreValid() throws IOException {
+    String variables = "- name: notJexl\n"
+        + "  type: String\n"
+        + "  value: notJexl\n"
+        + "- name: or\n"
+        + "  type: String\n"
+        + "  value: notJexl\n";
+    YamlField variablesYamlField = YamlUtils.readTree(variables);
+    assertThatThrownBy(() -> FilterCreatorHelper.checkIfVariableNamesAreValid(variablesYamlField))
+        .isInstanceOf(InvalidYamlRuntimeException.class)
+        .hasMessage("Variable name or is a jexl reserved keyword");
   }
 }
