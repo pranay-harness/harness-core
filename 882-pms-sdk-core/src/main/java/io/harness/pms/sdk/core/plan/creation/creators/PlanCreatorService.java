@@ -203,9 +203,13 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
         try {
           PlanCreationResponse planForField =
               planCreator.createPlanForField(PlanCreationContext.cloneWithCurrentField(ctx, field), obj);
-          String stageFqn = YamlUtils.getQualifiedNameTillGivenField(field.getNode(), "pipeline");
+          String stageFqn = YamlUtils.getQualifiedNameTillGivenField(field.getNode(), "stage");
           if (!isEmpty(stageFqn)) {
-            planForField.getNodes().entrySet().stream().forEach(planNode -> planNode.getValue().setStageFqn(stageFqn));
+            if (stageFqn.contains(".")) {
+              String onlyStageIdentifier = stageFqn.substring(0, stageFqn.indexOf('.'));
+              planForField.getNodes().entrySet().stream().forEach(
+                  planNode -> planNode.getValue().setStageFqn(onlyStageIdentifier));
+            }
           }
           return planForField;
         } catch (Exception ex) {
