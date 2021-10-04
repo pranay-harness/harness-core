@@ -44,4 +44,5 @@ public final class EventsFrameworkMetadataConstants {
   public static final String SERVICE_ACCOUNT_ENTITY = "serviceaccount";
   public static final String API_KEY_ENTITY = "apiKey";
   public static final String TOKEN_ENTITY = "token";
+  public static final String TEMPLATE_ENTITY = "template";
 }

@@ -1,9 +1,9 @@
 package io.harness.template.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.template.beans.TemplateEntityConstants.ALL;
-import static io.harness.template.beans.TemplateEntityConstants.LAST_UPDATES_TEMPLATE;
-import static io.harness.template.beans.TemplateEntityConstants.STABLE_TEMPLATE;
+import static io.harness.ng.core.template.TemplateEntityConstants.ALL;
+import static io.harness.ng.core.template.TemplateEntityConstants.LAST_UPDATES_TEMPLATE;
+import static io.harness.ng.core.template.TemplateEntityConstants.STABLE_TEMPLATE;
 
 import io.harness.annotations.dev.OwnedBy;
 

@@ -5,8 +5,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SwaggerConstants;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
+import io.harness.ng.core.template.TemplateEntityType;
 import io.harness.pms.yaml.ParameterField;
-import io.harness.template.beans.TemplateEntityType;
 import io.harness.validator.NGRegexValidatorConstants;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
