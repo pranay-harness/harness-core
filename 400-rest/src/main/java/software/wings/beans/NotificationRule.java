@@ -33,7 +33,7 @@ public class NotificationRule {
   @Getter @Setter private boolean notificationGroupAsExpression;
   @Getter @Setter private boolean userGroupAsExpression;
 
-  @Deprecated @NotNull @Size(min = 1) private List<NotificationGroup> notificationGroups = new ArrayList<>();
+  @NotNull @Size(min = 1) @Deprecated private List<NotificationGroup> notificationGroups = new ArrayList<>();
 
   @NotNull @Setter private List<String> userGroupIds = new ArrayList<>();
 

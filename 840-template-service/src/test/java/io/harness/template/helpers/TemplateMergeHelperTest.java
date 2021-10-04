@@ -1,16 +1,16 @@
-package io.harness.template.merger.helpers;
+package io.harness.template.helpers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.INDER;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 
 import io.harness.TemplateServiceTestBase;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.core.template.TemplateMergeResponse;
 import io.harness.rule.Owner;
 import io.harness.template.entity.TemplateEntity;
 import io.harness.template.services.NGTemplateService;
@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Optional;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -34,11 +33,6 @@ public class TemplateMergeHelperTest extends TemplateServiceTestBase {
   private static final String ACCOUNT_ID = "accountId";
   private static final String ORG_ID = "orgId";
   private static final String PROJECT_ID = "projectId";
-
-  @Before
-  public void setup() {
-    initMocks(this);
-  }
 
   private String readFile(String filename) {
     ClassLoader classLoader = getClass().getClassLoader();
@@ -55,7 +49,7 @@ public class TemplateMergeHelperTest extends TemplateServiceTestBase {
   public void testCreateTemplateInputsFromStepTemplateWithRuntimeInputs() {
     String filename = "template-step.yaml";
     String yaml = readFile(filename);
-    String templateYaml = templateMergeHelper.createTemplateInputs(yaml);
+    String templateYaml = templateMergeHelper.createTemplateInputs(ACCOUNT_ID, ORG_ID, PROJECT_ID, yaml);
     assertThat(templateYaml).isNotNull();
 
     String resFile = "template-step-templateInputs.yaml";
@@ -69,7 +63,7 @@ public class TemplateMergeHelperTest extends TemplateServiceTestBase {
   public void testCreateTemplateInputsFromStepTemplateWithoutRuntimeInputs() {
     String filename = "step-template-without-runtime-inputs.yaml";
     String yaml = readFile(filename);
-    String templateYaml = templateMergeHelper.createTemplateInputs(yaml);
+    String templateYaml = templateMergeHelper.createTemplateInputs(ACCOUNT_ID, ORG_ID, PROJECT_ID, yaml);
     assertThat(templateYaml).isNullOrEmpty();
   }
 
@@ -103,8 +97,9 @@ public class TemplateMergeHelperTest extends TemplateServiceTestBase {
 
     String pipelineYamlFile = "pipeline-with-template-step-diff-scope.yaml";
     String pipelineYaml = readFile(pipelineYamlFile);
-    String finalPipelineYaml =
+    TemplateMergeResponse pipelineMergeResponse =
         templateMergeHelper.mergeTemplateSpecToPipelineYaml(ACCOUNT_ID, ORG_ID, PROJECT_ID, pipelineYaml);
+    String finalPipelineYaml = pipelineMergeResponse.getMergedPipelineYaml();
     assertThat(finalPipelineYaml).isNotNull();
 
     String resFile = "pipeline-with-template-step-replaced.yaml";
@@ -142,8 +137,9 @@ public class TemplateMergeHelperTest extends TemplateServiceTestBase {
 
     String pipelineYamlFile = "pipeline-with-template-step.yaml";
     String pipelineYaml = readFile(pipelineYamlFile);
-    String finalPipelineYaml =
+    TemplateMergeResponse pipelineMergeResponse =
         templateMergeHelper.mergeTemplateSpecToPipelineYaml(ACCOUNT_ID, ORG_ID, PROJECT_ID, pipelineYaml);
+    String finalPipelineYaml = pipelineMergeResponse.getMergedPipelineYaml();
     assertThat(finalPipelineYaml).isNotNull();
 
     String resFile = "pipeline-with-template-step-replaced.yaml";
@@ -194,8 +190,9 @@ public class TemplateMergeHelperTest extends TemplateServiceTestBase {
 
     String pipelineYamlFile = "pipeline-with-stage-template.yaml";
     String pipelineYaml = readFile(pipelineYamlFile);
-    String finalPipelineYaml =
+    TemplateMergeResponse pipelineMergeResponse =
         templateMergeHelper.mergeTemplateSpecToPipelineYaml(ACCOUNT_ID, ORG_ID, PROJECT_ID, pipelineYaml);
+    String finalPipelineYaml = pipelineMergeResponse.getMergedPipelineYaml();
     assertThat(finalPipelineYaml).isNotNull();
 
     String resFile = "pipeline-with-stage-template-replaced.yaml";

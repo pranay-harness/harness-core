@@ -15,18 +15,21 @@ import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
+import io.harness.beans.ScopeLevel;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.resourcegroup.framework.service.ResourceGroupService;
+import io.harness.resourcegroup.remote.dto.ManagedFilter;
 import io.harness.resourcegroup.remote.dto.ResourceGroupFilterDTO;
 import io.harness.resourcegroup.remote.dto.ResourceGroupRequest;
 import io.harness.resourcegroupclient.ResourceGroupResponse;
 import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.NextGenManagerAuth;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -75,8 +78,8 @@ public class HarnessResourceGroupResource {
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(RESOURCE_GROUP, identifier), VIEW_RESOURCEGROUP_PERMISSION);
-    Optional<ResourceGroupResponse> resourceGroupResponseOpt =
-        resourceGroupService.get(Scope.of(accountIdentifier, orgIdentifier, projectIdentifier), identifier);
+    Optional<ResourceGroupResponse> resourceGroupResponseOpt = resourceGroupService.get(
+        Scope.of(accountIdentifier, orgIdentifier, projectIdentifier), identifier, ManagedFilter.NO_FILTER);
     return ResponseDTO.newResponse(resourceGroupResponseOpt.orElse(null));
   }
 
@@ -114,7 +117,10 @@ public class HarnessResourceGroupResource {
       @Valid ResourceGroupRequest resourceGroupRequest) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(RESOURCE_GROUP, null), EDIT_RESOURCEGROUP_PERMISSION);
-    ResourceGroupResponse resourceGroupResponse = resourceGroupService.create(resourceGroupRequest.getResourceGroup());
+    resourceGroupRequest.getResourceGroup().setAllowedScopeLevels(
+        Sets.newHashSet(ScopeLevel.of(accountIdentifier, orgIdentifier, projectIdentifier).toString().toLowerCase()));
+    ResourceGroupResponse resourceGroupResponse =
+        resourceGroupService.create(resourceGroupRequest.getResourceGroup(), false);
     return ResponseDTO.newResponse(resourceGroupResponse);
   }
 
@@ -142,8 +148,10 @@ public class HarnessResourceGroupResource {
       @Valid ResourceGroupRequest resourceGroupRequest) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountIdentifier, orgIdentifier, projectIdentifier),
         Resource.of(RESOURCE_GROUP, identifier), EDIT_RESOURCEGROUP_PERMISSION);
+    resourceGroupRequest.getResourceGroup().setAllowedScopeLevels(
+        Sets.newHashSet(ScopeLevel.of(accountIdentifier, orgIdentifier, projectIdentifier).toString().toLowerCase()));
     Optional<ResourceGroupResponse> resourceGroupResponseOpt =
-        resourceGroupService.update(resourceGroupRequest.getResourceGroup(), true);
+        resourceGroupService.update(resourceGroupRequest.getResourceGroup(), true, false);
     return ResponseDTO.newResponse(resourceGroupResponseOpt.orElse(null));
   }
 

@@ -12,6 +12,7 @@ import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.delegate.DelegateServiceResourceClient;
 import io.harness.delegate.DelegateServiceResourceClientModule;
 import io.harness.environment.EnvironmentResourceClientModule;
+import io.harness.migration.NGMigrationSdkModule;
 import io.harness.organization.OrganizationClientModule;
 import io.harness.organization.remote.OrganizationClient;
 import io.harness.outbox.api.OutboxEventHandler;
@@ -66,6 +67,7 @@ public class ResourceGroupModule extends AbstractModule {
     bind(ResourceTypeService.class).to(ResourceTypeServiceImpl.class);
     bind(String.class).annotatedWith(Names.named("serviceId")).toInstance(RESOUCE_GROUP_SERVICE.toString());
     bind(OutboxEventHandler.class).to(ResourceGroupEventHandler.class);
+    install(NGMigrationSdkModule.getInstance());
     requireBinding(OutboxService.class);
     installResourceValidators();
     addResourceValidatorConstraints();

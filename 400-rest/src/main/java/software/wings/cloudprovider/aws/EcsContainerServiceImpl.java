@@ -1419,8 +1419,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
    *
    * Deprecated Note: Please use {@link #isServiceStable(int, Service)}
    */
-  @Deprecated
   @VisibleForTesting
+  @Deprecated
   boolean hasServiceReachedSteadyState(Service service) {
     List<Deployment> deployments = service.getDeployments();
     if (deployments.size() != 1) {

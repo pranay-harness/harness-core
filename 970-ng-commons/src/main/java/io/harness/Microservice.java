@@ -12,7 +12,8 @@ public enum Microservice {
   @JsonProperty("CE") CE,
   @JsonProperty("PMS") PMS,
   @JsonProperty("ACCESSCONTROL") ACCESSCONTROL,
-  @JsonProperty("TEMPLATESERVICE") TEMPLATESERVICE;
+  @JsonProperty("TEMPLATESERVICE") TEMPLATESERVICE,
+  @JsonProperty("RESOURCEGROUP") RESOURCEGROUP;
 
   @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
   public static Microservice fromString(String microservice) {

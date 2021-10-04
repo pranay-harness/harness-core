@@ -18,9 +18,9 @@ import java.util.List;
 @OwnedBy(CDC)
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 public interface SftpBuildService extends BuildService<SftpConfig> {
-  @Deprecated
   @Override
   @DelegateTaskType(TaskType.SFTP_GET_BUILDS)
+  @Deprecated
   List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes, SftpConfig sftpConfig,
       List<EncryptedDataDetail> encryptionDetails);
 

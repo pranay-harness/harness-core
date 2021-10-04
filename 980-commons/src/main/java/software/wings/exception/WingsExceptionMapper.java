@@ -8,9 +8,7 @@ import static io.harness.rest.RestResponse.Builder.aRestResponse;
 
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.WingsException;
@@ -24,7 +22,6 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @OwnedBy(PL)
-@TargetModule(HarnessModule._980_COMMONS)
 public class WingsExceptionMapper implements ExceptionMapper<WingsException> {
   @Override
   public Response toResponse(WingsException exception) {

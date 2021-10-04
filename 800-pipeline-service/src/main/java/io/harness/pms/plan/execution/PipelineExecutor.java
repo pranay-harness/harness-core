@@ -17,6 +17,7 @@ import io.harness.pms.plan.execution.beans.dto.RunStageRequestDTO;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -80,15 +81,15 @@ public class PipelineExecutor {
     PipelineEntity pipelineEntity =
         executionHelper.fetchPipelineEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier);
     ExecutionTriggerInfo triggerInfo = executionHelper.buildTriggerInfo(originalExecutionId);
-    ExecArgs execArgs = executionHelper.buildExecutionArgs(
-        pipelineEntity, moduleType, runtimeInputYaml, stagesToRun, triggerInfo, originalExecutionId, false, null, null);
+    ExecArgs execArgs = executionHelper.buildExecutionArgs(pipelineEntity, moduleType, runtimeInputYaml, stagesToRun,
+        triggerInfo, originalExecutionId, false, null, null, null);
     PlanExecution planExecution;
     if (useV2) {
       planExecution = executionHelper.startExecutionV2(accountId, orgIdentifier, projectIdentifier,
-          execArgs.getMetadata(), execArgs.getPlanExecutionMetadata(), false);
+          execArgs.getMetadata(), execArgs.getPlanExecutionMetadata(), false, null);
     } else {
       planExecution = executionHelper.startExecution(accountId, orgIdentifier, projectIdentifier,
-          execArgs.getMetadata(), execArgs.getPlanExecutionMetadata(), false);
+          execArgs.getMetadata(), execArgs.getPlanExecutionMetadata(), false, null);
     }
     return PlanExecutionResponseDto.builder()
         .planExecution(planExecution)
@@ -116,16 +117,16 @@ public class PipelineExecutor {
       throw new InvalidRequestException(String.format("No plan exist for %s planExecutionId", previousExecutionId));
     }
     String previousProcessedYaml = optionalPlanExecutionMetadata.get().getProcessedYaml();
-
+    List<String> uuidForSkipNode = new ArrayList<>();
     ExecArgs execArgs = executionHelper.buildExecutionArgs(pipelineEntity, moduleType, inputSetPipelineYaml, null,
-        triggerInfo, null, true, previousProcessedYaml, retryStagesIdentifier);
+        triggerInfo, null, true, previousProcessedYaml, retryStagesIdentifier, uuidForSkipNode);
     PlanExecution planExecution;
     if (useV2) {
       planExecution = executionHelper.startExecutionV2(accountId, orgIdentifier, projectIdentifier,
-          execArgs.getMetadata(), execArgs.getPlanExecutionMetadata(), true);
+          execArgs.getMetadata(), execArgs.getPlanExecutionMetadata(), true, uuidForSkipNode);
     } else {
       planExecution = executionHelper.startExecution(accountId, orgIdentifier, projectIdentifier,
-          execArgs.getMetadata(), execArgs.getPlanExecutionMetadata(), true);
+          execArgs.getMetadata(), execArgs.getPlanExecutionMetadata(), true, uuidForSkipNode);
     }
     return PlanExecutionResponseDto.builder()
         .planExecution(planExecution)

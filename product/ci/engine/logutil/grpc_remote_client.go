@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	uploadBatch = 1000 // upload final logs to RPC server in chunks
+	uploadBatch = 50 // upload final logs to RPC server in chunks
 )
 
 var (
@@ -141,9 +141,47 @@ func (gw *GrpcRemoteClient) Write(ctx context.Context, key string, lines []*stre
 	return nil
 }
 
-// Upload is not implemented.
+// Upload uploads the log to log service.
 func (gw *GrpcRemoteClient) Upload(ctx context.Context, key string, r io.Reader) error {
-	return errors.New("not implemented")
+	var lines []string
+	reader := bufio.NewReader(r)
+	stream, err := gw.grpcClient.Client().Upload(ctx, grpc_retry.Disable())
+	if err != nil {
+		return err
+	}
+	for {
+		line, err := reader.ReadString('\n')
+		if err != nil && err != io.EOF {
+			gw.log.Errorw("could not parse line while trying to upload logs using UploadRPC", zap.Error(err))
+			break
+		}
+
+		lines = append(lines, line)
+		if err != nil {
+			break
+		}
+		if len(lines)%uploadBatch == 0 {
+			in := &pb.UploadRequest{Key: key, Lines: lines}
+			if serr := stream.Send(in); serr != nil {
+				gw.log.Errorw("upload RPC failed", zap.Error(serr))
+			}
+			lines = []string{}
+		}
+	}
+	if len(lines) > 0 {
+		in := &pb.UploadRequest{Key: key, Lines: lines}
+		if serr := stream.Send(in); serr != nil {
+			gw.log.Errorw("unable to send some lines via RPC for UploadRPC: ", zap.Error(serr))
+		}
+		lines = []string{}
+	}
+
+	// Close the stream and receive result
+	_, err = stream.CloseAndRecv()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Download is not implemented.

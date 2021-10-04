@@ -5,6 +5,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
 import static io.harness.git.model.ChangeType.NONE;
 
+import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorCatalogueResponseDTO;
 import io.harness.connector.ConnectorCategory;
@@ -26,6 +27,8 @@ import io.harness.delegate.beans.connector.azurekeyvaultconnector.AzureKeyVaultC
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
 import io.harness.delegate.beans.connector.localconnector.LocalConnectorDTO;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
+import io.harness.enforcement.client.annotation.FeatureRestrictionCheck;
+import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
@@ -84,12 +87,15 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   }
 
   @Override
-  public ConnectorResponseDTO create(@Valid ConnectorDTO connector, String accountIdentifier) {
+  @FeatureRestrictionCheck(FeatureRestrictionName.SECRET_MANAGERS)
+  public ConnectorResponseDTO create(@Valid ConnectorDTO connector, @AccountIdentifier String accountIdentifier) {
     return createSecretManagerConnector(connector, accountIdentifier, ChangeType.ADD);
   }
 
   @Override
-  public ConnectorResponseDTO create(ConnectorDTO connector, String accountIdentifier, ChangeType gitChangeType) {
+  @FeatureRestrictionCheck(FeatureRestrictionName.SECRET_MANAGERS)
+  public ConnectorResponseDTO create(
+      ConnectorDTO connector, @AccountIdentifier String accountIdentifier, ChangeType gitChangeType) {
     return createSecretManagerConnector(connector, accountIdentifier, ChangeType.ADD);
   }
 

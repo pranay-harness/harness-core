@@ -41,6 +41,7 @@ import java.net.URL;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import lombok.experimental.UtilityClass;
@@ -409,6 +410,10 @@ public class JsonUtils {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+  }
+
+  public static Map<String, Object> jsonNodeToMap(JsonNode node) {
+    return mapper.convertValue(node, new TypeReference<LinkedHashMap<String, Object>>() {});
   }
 
   /**

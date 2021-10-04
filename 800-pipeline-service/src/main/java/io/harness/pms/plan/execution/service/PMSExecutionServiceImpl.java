@@ -23,7 +23,6 @@ import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
 import io.harness.pms.contracts.interrupts.InterruptConfig;
 import io.harness.pms.contracts.interrupts.IssuedBy;
 import io.harness.pms.contracts.interrupts.ManualIssuer;
-import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.filter.utils.ModuleInfoFilterUtils;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
@@ -109,11 +108,10 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
     }
 
     if (myDeployments) {
-      criteria.and(PlanExecutionSummaryKeys.executionTriggerInfo)
-          .is(ExecutionTriggerInfo.newBuilder()
-                  .setTriggerType(MANUAL)
-                  .setTriggeredBy(triggeredByHelper.getFromSecurityContext())
-                  .build());
+      criteria.and(PlanExecutionSummaryKeys.triggerType)
+          .is(MANUAL)
+          .and(PlanExecutionSummaryKeys.triggeredBy)
+          .is(triggeredByHelper.getFromSecurityContext());
     }
 
     Criteria moduleCriteria = new Criteria();

@@ -19,6 +19,7 @@ import io.harness.exception.UnresolvedExpressionsException;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.data.StepOutcomeRef;
 import io.harness.pms.contracts.refobjects.RefObject;
 import io.harness.pms.data.PmsOutcome;
 import io.harness.pms.execution.utils.AmbianceUtils;
@@ -36,6 +37,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.NonNull;
 import org.apache.commons.jexl3.JexlException;
@@ -176,6 +178,17 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
   }
 
   @Override
+  public List<StepOutcomeRef> fetchOutcomeRefs(String nodeExecutionId) {
+    List<OutcomeInstance> instances = fetchOutcomeInstanceByRuntimeId(nodeExecutionId);
+    if (isEmpty(instances)) {
+      return new ArrayList<>();
+    }
+    return instances.stream()
+        .map(oi -> StepOutcomeRef.newBuilder().setName(oi.getName()).setInstanceId(oi.getUuid()).build())
+        .collect(Collectors.toList());
+  }
+
+  @Override
   public OptionalOutcome resolveOptional(Ambiance ambiance, RefObject refObject) {
     if (EmptyPredicate.isNotEmpty(refObject.getProducerId())) {
       return resolveOptionalUsingProducerSetupId(ambiance, refObject);
@@ -197,6 +210,24 @@ public class PmsOutcomeServiceImpl implements PmsOutcomeService {
     } catch (UnresolvedExpressionsException | JexlException ignore) {
       return OptionalOutcome.builder().found(false).build();
     }
+  }
+
+  @Override
+  public List<OutcomeInstance> fetchOutcomeInstanceByRuntimeId(String runtimeId) {
+    Query query = query(where(OutcomeInstanceKeys.producedByRuntimeId).is(runtimeId));
+    return mongoTemplate.find(query, OutcomeInstance.class);
+  }
+
+  @Override
+  public List<String> cloneForRetryExecution(Ambiance ambiance, String originalNodeExecutionUuid) {
+    List<String> outcomeUuids = new ArrayList<>();
+    List<OutcomeInstance> outcomeInstances = fetchOutcomeInstanceByRuntimeId(originalNodeExecutionUuid);
+    for (OutcomeInstance outcomeInstance : outcomeInstances) {
+      String uuid = consume(ambiance, outcomeInstance.getName(), outcomeInstance.getOutcomeValue().toJson(),
+          outcomeInstance.getGroupName());
+      outcomeUuids.add(uuid);
+    }
+    return outcomeUuids;
   }
 
   private OptionalOutcome resolveOptionalUsingProducerSetupId(Ambiance ambiance, RefObject refObject) {

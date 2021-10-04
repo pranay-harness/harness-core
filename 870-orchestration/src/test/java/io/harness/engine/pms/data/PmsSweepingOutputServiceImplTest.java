@@ -2,12 +2,16 @@ package io.harness.engine.pms.data;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRASHANT;
+import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.OrchestrationTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.data.ExecutionSweepingOutputInstance;
 import io.harness.engine.outputs.SweepingOutputException;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
@@ -23,10 +27,12 @@ import io.harness.utils.AmbianceTestUtils;
 import io.harness.utils.DummySweepingOutput;
 
 import com.google.inject.Inject;
+import java.util.List;
 import org.bson.Document;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class PmsSweepingOutputServiceImplTest extends OrchestrationTestBase {
   private static final String STEP_RUNTIME_ID = generateUuid();
   private static final String STEP_SETUP_ID = generateUuid();
@@ -140,6 +146,14 @@ public class PmsSweepingOutputServiceImplTest extends OrchestrationTestBase {
 
     Document output = resolve(ambiance, outputName);
     assertThat(output).isNull();
+  }
+
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testFetchOutcomeInstanceByRuntimeId() {
+    List<ExecutionSweepingOutputInstance> result = pmsSweepingOutputService.fetchOutcomeInstanceByRuntimeId("abc");
+    assertThat(result.size()).isEqualTo(0);
   }
 
   private Document resolve(Ambiance ambiance, String outputName) {

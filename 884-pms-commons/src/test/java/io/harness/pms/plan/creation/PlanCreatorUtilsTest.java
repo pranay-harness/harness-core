@@ -46,6 +46,10 @@ public class PlanCreatorUtilsTest extends CategoryTest {
 
     YamlField actualStage1Field = PlanCreatorUtils.getStageConfig(serviceNode, stage1Field.getNode().getIdentifier());
     assertThat(actualStage1Field).isEqualTo(stage1Field);
+
+    assertThat(PlanCreatorUtils.getStageConfig(serviceNode, "")).isNull();
+    assertThat(PlanCreatorUtils.getStageConfig(stagesNode, "any")).isNull();
+    assertThat(PlanCreatorUtils.getStageConfig(serviceNode, "defNotExistingStageId")).isNull();
   }
 
   @Test
@@ -90,6 +94,7 @@ public class PlanCreatorUtilsTest extends CategoryTest {
   private YamlNode getPipelineNode() throws IOException {
     ClassLoader classLoader = this.getClass().getClassLoader();
     final URL testFile = classLoader.getResource("pipeline.yaml");
+    assertThat(testFile).isNotNull();
     String yamlContent = Resources.toString(testFile, Charsets.UTF_8);
     YamlField yamlField = YamlUtils.readTree(YamlUtils.injectUuid(yamlContent));
     return yamlField.getNode().getField("pipeline").getNode();
