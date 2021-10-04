@@ -68,4 +68,8 @@ public interface NodeExecutionService {
   boolean removeTimeoutInstances(String nodeExecutionId);
 
   List<RetryStageInfo> getStageDetailFromPlanExecutionId(String planExecutionId);
+
+  List<NodeExecution> getStageNodesFromPlanExecutionId(String planExecutionId);
+
+  NodeExecution getPipelineNodeFromPlanExecutionId(String planExecutionId);
 }
