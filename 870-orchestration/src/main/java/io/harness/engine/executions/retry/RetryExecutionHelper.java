@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -268,21 +269,19 @@ public class RetryExecutionHelper {
         nodeExecutionService.fetchNodeExecutionFromNodeUuidsAndPlanExecutionId(uuidForSkipNode, previousExecutionId);
 
     /*
-    IdentityNode
     Convert the planNode to Identity Node whose uuids are there in map uuidForSkipNode
-     */
-    planNodes.stream()
-        .filter(node -> nodeUuidToNodeExecutionUuid.containsKey(node.getUuid()))
-        .forEach(node1
-            -> updatedPlanNodes.add(
-                mapPlanNodeToIdentityNode(node1, nodeUuidToNodeExecutionUuid.get(node1.getUuid()))));
-
-    /*
     Copy of Node whose uuid is not in uuidForSkipNode
      */
-    planNodes.stream()
-        .filter(node -> !nodeUuidToNodeExecutionUuid.containsKey(node.getUuid()))
-        .forEach(node1 -> updatedPlanNodes.add(node1));
+    updatedPlanNodes = planNodes.stream()
+                           .map(node -> {
+                             if (nodeUuidToNodeExecutionUuid.containsKey(node.getUuid())) {
+                               return IdentityPlanNode.mapPlanNodeToIdentityNode(
+                                   node, nodeUuidToNodeExecutionUuid.get(node.getUuid()));
+                             } else {
+                               return node;
+                             }
+                           })
+                           .collect(Collectors.toList());
 
     return Plan.builder()
         .uuid(plan.getUuid())
@@ -291,20 +290,8 @@ public class RetryExecutionHelper {
         .setupAbstractions(plan.getSetupAbstractions())
         .graphLayoutInfo(plan.getGraphLayoutInfo())
         .validUntil(plan.getValidUntil())
-        .createdAt(plan.getCreatedAt())
-        .version(plan.getVersion())
         .valid(plan.isValid())
         .errorResponse(plan.getErrorResponse())
-        .build();
-  }
-
-  private IdentityPlanNode mapPlanNodeToIdentityNode(Node node, String originalNodeExecutionUuid) {
-    return IdentityPlanNode.builder()
-        .uuid(node.getUuid())
-        .name(node.getName())
-        .identifier(node.getIdentifier())
-        .group(node.getGroup())
-        .originalNodeExecutionId(originalNodeExecutionUuid)
         .build();
   }
 }

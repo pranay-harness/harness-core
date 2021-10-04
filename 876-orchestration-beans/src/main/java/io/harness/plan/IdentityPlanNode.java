@@ -35,7 +35,7 @@ public class IdentityPlanNode implements Node {
 
   @Override
   public String getServiceName() {
-    return ModuleType.PMS.name();
+    return ModuleType.PMS.name().toLowerCase();
   }
 
   @Override
@@ -43,5 +43,15 @@ public class IdentityPlanNode implements Node {
     PmsStepParameters stepParameters = new PmsStepParameters();
     stepParameters.put(IdentityPlanNodeKeys.originalNodeExecutionId, originalNodeExecutionId);
     return stepParameters;
+  }
+
+  public static IdentityPlanNode mapPlanNodeToIdentityNode(Node node, String originalNodeExecutionUuid) {
+    return IdentityPlanNode.builder()
+        .uuid(node.getUuid())
+        .name(node.getName())
+        .identifier(node.getIdentifier())
+        .group(node.getGroup())
+        .originalNodeExecutionId(originalNodeExecutionUuid)
+        .build();
   }
 }

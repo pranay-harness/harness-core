@@ -237,7 +237,7 @@ public class ExecutionHelper {
 
     if (isRetry) {
       Plan newPlan = retryExecutionHelper.transformPlan(plan, uuidForSkipNode, previousExecutionId);
-      return orchestrationService.executePlan(newPlan, abstractions, executionMetadata, planExecutionMetadata);
+      return orchestrationService.startExecution(newPlan, abstractions, executionMetadata, planExecutionMetadata);
     }
     return orchestrationService.startExecution(plan, abstractions, executionMetadata, planExecutionMetadata);
   }
@@ -273,7 +273,8 @@ public class ExecutionHelper {
     }
     if (isRetry) {
       Plan newPlan = retryExecutionHelper.transformPlan(plan, uuidForSkipNode, previousExecutionId);
-      return orchestrationService.executePlan(plan, abstractions, executionMetadata, planExecutionMetadata);
+      return orchestrationService.startExecutionV2(
+          planCreationId, abstractions, executionMetadata, planExecutionMetadata);
     }
     return orchestrationService.startExecutionV2(
         planCreationId, abstractions, executionMetadata, planExecutionMetadata);
