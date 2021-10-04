@@ -1,5 +1,7 @@
 package io.harness.pms.sdk.core.plan.creation.creators;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -113,7 +115,7 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
       Dependencies initialDependencies, Map<String, PlanCreationContextValue> context) {
     // TODO: Add patch version before sending the response back
     PlanCreationResponse finalResponse = PlanCreationResponse.builder().build();
-    if (EmptyPredicate.isEmpty(planCreators) || EmptyPredicate.isEmpty(initialDependencies.getDependenciesMap())) {
+    if (isEmpty(planCreators) || isEmpty(initialDependencies.getDependenciesMap())) {
       return finalResponse;
     }
 
@@ -142,10 +144,10 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
   }
 
   private Dependencies removeInitialDependencies(Dependencies dependencies, Dependencies initialDependencies) {
-    if (initialDependencies == null || EmptyPredicate.isEmpty(initialDependencies.getDependenciesMap())) {
+    if (initialDependencies == null || isEmpty(initialDependencies.getDependenciesMap())) {
       return dependencies;
     }
-    if (dependencies == null || EmptyPredicate.isEmpty(dependencies.getDependenciesMap())) {
+    if (dependencies == null || isEmpty(dependencies.getDependenciesMap())) {
       return dependencies;
     }
 
@@ -156,7 +158,7 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
 
   public Dependencies createPlanForDependencies(
       PlanCreationContext ctx, PlanCreationResponse finalResponse, Dependencies dependencies) {
-    if (EmptyPredicate.isEmpty(dependencies.getDependenciesMap())) {
+    if (isEmpty(dependencies.getDependenciesMap())) {
       return dependencies;
     }
 
@@ -199,7 +201,13 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
         }
 
         try {
-          return planCreator.createPlanForField(PlanCreationContext.cloneWithCurrentField(ctx, field), obj);
+          PlanCreationResponse planForField =
+              planCreator.createPlanForField(PlanCreationContext.cloneWithCurrentField(ctx, field), obj);
+          String stageFqn = YamlUtils.getQualifiedNameTillGivenField(field.getNode(), "pipeline");
+          if (!isEmpty(stageFqn)) {
+            planForField.getNodes().entrySet().stream().forEach(planNode -> planNode.getValue().setStageFqn(stageFqn));
+          }
+          return planForField;
         } catch (Exception ex) {
           log.error(format("Error creating plan for node: %s", YamlUtils.getFullyQualifiedName(field.getNode())), ex);
           return PlanCreationResponse.builder()

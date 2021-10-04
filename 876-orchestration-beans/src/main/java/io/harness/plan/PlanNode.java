@@ -50,6 +50,9 @@ public class PlanNode implements Node {
   String skipCondition;
   String whenCondition;
 
+  // stage fqn
+  @lombok.Setter @NotNull String stageFqn;
+
   // Config
   boolean skipExpressionChain;
   @Builder.Default SkipType skipGraphType = SkipType.NOOP;
@@ -62,6 +65,7 @@ public class PlanNode implements Node {
     return PlanNode.builder()
         .uuid(planNodeProto.getUuid())
         .name(planNodeProto.getName())
+        .stageFqn(planNodeProto.getStageFqn())
         .stepType(planNodeProto.getStepType())
         .identifier(planNodeProto.getIdentifier())
         .group(planNodeProto.getGroup())
