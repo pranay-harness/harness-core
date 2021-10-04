@@ -2,6 +2,8 @@ package io.harness.plan;
 
 import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
@@ -31,6 +33,14 @@ public class IdentityPlanNodeTest {
             .adviserObtainment(
                 AdviserObtainment.newBuilder().setType(AdviserType.newBuilder().setType("NEXT_STEP").build()).build())
             .build();
-    IdentityPlanNode.mapPlanNodeToIdentityNode(planNode, "abc");
+    IdentityPlanNode identityPlanNodeExpected = IdentityPlanNode.builder()
+                                                    .uuid("uuid")
+                                                    .originalNodeExecutionId("originalNodeExecutionId")
+                                                    .identifier("test")
+                                                    .name("Test Node")
+                                                    .build();
+    IdentityPlanNode identityPlanNodeActual =
+        IdentityPlanNode.mapPlanNodeToIdentityNode(planNode, "originalNodeExecutionId");
+    assertThat(identityPlanNodeExpected).isEqualTo(identityPlanNodeActual);
   }
 }
