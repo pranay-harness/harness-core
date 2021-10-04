@@ -202,6 +202,9 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
                               .build();
       logMessage(podEvent);
       eventPublisher.publishMessage(podEvent, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId, UID, uid));
+      if (RELATIVITY_CLUSTER_IDS.contains(clusterId)) {
+        log.info("published PodEvent UID:[{}], Name:[{}]", uid, pod.getMetadata().getName());
+      }
       publishedPods.remove(uid);
     }
   }

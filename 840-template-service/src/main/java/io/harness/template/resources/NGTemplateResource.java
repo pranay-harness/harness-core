@@ -24,6 +24,7 @@ import io.harness.gitsync.interceptor.GitEntityUpdateInfoDTO;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.ng.core.template.TemplateMergeResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.template.beans.TemplateApplyRequestDTO;
 import io.harness.template.beans.TemplateDeleteListRequestDTO;
@@ -31,9 +32,11 @@ import io.harness.template.beans.TemplateFilterPropertiesDTO;
 import io.harness.template.beans.TemplateListType;
 import io.harness.template.beans.TemplateResponseDTO;
 import io.harness.template.beans.TemplateSummaryResponseDTO;
+import io.harness.template.beans.TemplateWrapperResponseDTO;
 import io.harness.template.beans.yaml.NGTemplateConfig;
 import io.harness.template.entity.TemplateEntity;
 import io.harness.template.entity.TemplateEntity.TemplateEntityKeys;
+import io.harness.template.helpers.TemplateMergeHelper;
 import io.harness.template.mappers.NGTemplateDtoMapper;
 import io.harness.template.services.NGTemplateService;
 import io.harness.template.services.NGTemplateServiceHelper;
@@ -87,6 +90,7 @@ public class NGTemplateResource {
   private static final String INCLUDE_ALL_TEMPLATES_ACCESSIBLE = "includeAllTemplatesAvailableAtScope";
   private final NGTemplateService templateService;
   private final NGTemplateServiceHelper templateServiceHelper;
+  private final TemplateMergeHelper templateMergeHelper;
 
   @GET
   @Path("{templateIdentifier}")
@@ -121,7 +125,7 @@ public class NGTemplateResource {
 
   @POST
   @ApiOperation(value = "Creates a Template", nickname = "createTemplate")
-  public ResponseDTO<TemplateResponseDTO> create(
+  public ResponseDTO<TemplateWrapperResponseDTO> create(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
@@ -134,8 +138,12 @@ public class NGTemplateResource {
 
     // TODO(archit): Add schema validations
     TemplateEntity createdTemplate = templateService.create(templateEntity, setDefaultTemplate, comments);
-    return ResponseDTO.newResponse(
-        createdTemplate.getVersion().toString(), NGTemplateDtoMapper.writeTemplateResponseDto(createdTemplate));
+    TemplateWrapperResponseDTO templateWrapperResponseDTO =
+        TemplateWrapperResponseDTO.builder()
+            .isValid(true)
+            .templateResponseDTO(NGTemplateDtoMapper.writeTemplateResponseDto(createdTemplate))
+            .build();
+    return ResponseDTO.newResponse(createdTemplate.getVersion().toString(), templateWrapperResponseDTO);
   }
 
   @PUT
@@ -160,7 +168,7 @@ public class NGTemplateResource {
   @PUT
   @Path("/update/{templateIdentifier}/{versionLabel}")
   @ApiOperation(value = "Updating existing template label", nickname = "updateExistingTemplateLabel")
-  public ResponseDTO<TemplateResponseDTO> updateExistingTemplateLabel(@HeaderParam(IF_MATCH) String ifMatch,
+  public ResponseDTO<TemplateWrapperResponseDTO> updateExistingTemplateLabel(@HeaderParam(IF_MATCH) String ifMatch,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
@@ -179,8 +187,12 @@ public class NGTemplateResource {
     // TODO(archit): Add schema validations
     TemplateEntity createdTemplate =
         templateService.updateTemplateEntity(templateEntity, ChangeType.MODIFY, setDefaultTemplate, comments);
-    return ResponseDTO.newResponse(
-        createdTemplate.getVersion().toString(), NGTemplateDtoMapper.writeTemplateResponseDto(createdTemplate));
+    TemplateWrapperResponseDTO templateWrapperResponseDTO =
+        TemplateWrapperResponseDTO.builder()
+            .isValid(true)
+            .templateResponseDTO(NGTemplateDtoMapper.writeTemplateResponseDto(createdTemplate))
+            .build();
+    return ResponseDTO.newResponse(createdTemplate.getVersion().toString(), templateWrapperResponseDTO);
   }
 
   @DELETE
@@ -286,18 +298,22 @@ public class NGTemplateResource {
       @NotNull @QueryParam(NGCommonEntityConstants.VERSION_LABEL_KEY) String templateLabel) {
     // if label not given, then consider stable template label
     // returns templateInputs yaml
-    return null;
+    log.info(String.format("Get Template inputs for template with identifier %s in project %s, org %s, account %s",
+        templateIdentifier, projectId, orgId, accountId));
+    return ResponseDTO.newResponse(
+        templateMergeHelper.getTemplateInputs(accountId, orgId, projectId, templateIdentifier, templateLabel));
   }
 
   @POST
   @Path("/applyTemplates")
   @ApiOperation(value = "Gets complete yaml with templateRefs resolved", nickname = "getYamlWithTemplateRefsResolved")
-  public ResponseDTO<String> applyTemplates(
+  public ResponseDTO<TemplateMergeResponse> applyTemplates(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
       TemplateApplyRequestDTO templateApplyRequestDTO) {
-    return null;
+    return ResponseDTO.newResponse(templateMergeHelper.mergeTemplateSpecToPipelineYaml(
+        accountId, orgId, projectId, templateApplyRequestDTO.getOriginalEntityYaml()));
   }
 
   @GET

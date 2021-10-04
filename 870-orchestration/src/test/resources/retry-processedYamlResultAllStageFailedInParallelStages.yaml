@@ -14,15 +14,15 @@ pipeline:
         - stage:
             identifier: stage3
             name: stage3
-            "__uuid": "newUuid3"
+            "__uuid": "oldUuid3"
         - stage:
             identifier: stage4
             name: stage4
-            "__uuid": "newUuid4"
+            "__uuid": "oldUuid4"
         - stage:
             identifier: stage5
             name: stage5
-            "__uuid": "newUuid5"
+            "__uuid": "oldUuid5"
     - stage:
         identifier: stage6
         name: stage6

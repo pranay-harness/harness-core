@@ -70,8 +70,10 @@ func TestGetLatestCommitBitbucketCloud(t *testing.T) {
 		t.Skip("Skipping, Acceptance test")
 	}
 	in := &pb.GetLatestCommitRequest{
-		Slug:   "tphoney/scm-test",
-		Branch: "master",
+		Slug: "tphoney/scm-test",
+		Type: &pb.GetLatestCommitRequest_Branch{
+			Branch: "main",
+		},
 		Provider: &pb.Provider{
 			Hook: &pb.Provider_BitbucketCloud{
 				BitbucketCloud: &pb.BitbucketCloudProvider{
@@ -87,7 +89,7 @@ func TestGetLatestCommitBitbucketCloud(t *testing.T) {
 	got, err := GetLatestCommit(context.Background(), in, log.Sugar())
 
 	assert.Nil(t, err, "no errors")
-	assert.NotNil(t, got.CommitId, "There is a commit id")
+	assert.NotNil(t, got.Commit.Sha, "There is a commit id")
 }
 
 func TestListCommitsBitbucketCloud(t *testing.T) {

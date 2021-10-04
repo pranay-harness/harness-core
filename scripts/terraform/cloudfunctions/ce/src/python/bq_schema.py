@@ -1062,3 +1062,140 @@ costAggregatedSchema = [{'mode': 'REQUIRED', 'name': 'accountId', 'type': 'STRIN
                   {'mode': 'REQUIRED', 'name': 'cost', 'type': 'FLOAT'},
                   {'mode': 'REQUIRED', 'name': 'day', 'type': 'TIMESTAMP'}
                   ]
+
+gcpInstanceInventorySchema = [
+    {
+        "mode": "REQUIRED",
+        "name": "instanceId",
+        "type": "STRING"
+    },
+    {
+        "mode": "REQUIRED",
+        "name": "name",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "creationTime",
+        "type": "TIMESTAMP"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "zone",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "region",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "machineType",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "projectId",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "projectNumber",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "status",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "canIpForward",
+        "type": "BOOLEAN"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "selfLink",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "startRestricted",
+        "type": "BOOLEAN"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "deletionProtection",
+        "type": "BOOLEAN"
+    },
+    {
+        "fields": [
+            {
+                "name": "networkIP",
+                "type": "STRING"
+            },
+            {
+                "name": "name",
+                "type": "STRING"
+            },
+            {
+                "mode": "REPEATED",
+                "name": "accessConfigs",
+                "type": "RECORD",
+                "fields": [
+                    {
+                        "name": "type",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "name",
+                        "type": "STRING"
+                    },
+                    {
+                        "name": "natIP",
+                        "type": "STRING"
+                    }
+                ]
+            },
+        ],
+        "mode": "REPEATED",
+        "name": "networkInterfaces",
+        "type": "RECORD"
+    },
+    {
+        "fields": [
+            {
+                "name": "key",
+                "type": "STRING"
+            },
+            {
+                "name": "value",
+                "type": "STRING"
+            }
+        ],
+        "mode": "REPEATED",
+        "name": "labels",
+        "type": "RECORD"
+    },
+    {
+        "mode": "REPEATED",
+        "name": "disks",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "lastStartTimestamp",
+        "type": "TIMESTAMP"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "lastUpdatedAt",
+        "type": "TIMESTAMP"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "projectNumberPartition",
+        "type": "INTEGER"
+    }
+]

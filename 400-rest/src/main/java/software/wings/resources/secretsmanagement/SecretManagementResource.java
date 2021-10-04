@@ -207,8 +207,8 @@ public class SecretManagementResource {
 
   @DELETE
   @Path("/delete-secret")
-  @Deprecated
   @AuthRule(permissionType = MANAGE_SECRETS)
+  @Deprecated
   public RestResponse<Boolean> deleteSecret(
       @QueryParam("accountId") final String accountId, @QueryParam("uuid") final String uuId) {
     try (AutoLogContext ignore = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
@@ -311,8 +311,8 @@ public class SecretManagementResource {
    */
   @DELETE
   @Path("/delete-file")
-  @Deprecated
   @AuthRule(permissionType = MANAGE_SECRETS)
+  @Deprecated
   public RestResponse<Boolean> deleteFile(
       @QueryParam("accountId") final String accountId, @QueryParam("uuid") final String existingRecordId) {
     return new RestResponse<>(secretManager.deleteSecret(accountId, existingRecordId, new HashMap<>(), true));

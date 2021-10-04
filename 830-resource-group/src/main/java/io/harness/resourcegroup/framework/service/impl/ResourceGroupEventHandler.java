@@ -35,6 +35,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.protobuf.ByteString;
 import java.io.IOException;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(PL)
@@ -135,13 +136,18 @@ public class ResourceGroupEventHandler implements OutboxEventHandler {
 
   private boolean publishEvent(ResourceGroupDTO resourceGroup, String action) {
     try {
+      Map<String, String> metadataMap;
+      if (isNotBlank(resourceGroup.getAccountIdentifier())) {
+        metadataMap = ImmutableMap.of("accountId", resourceGroup.getAccountIdentifier(),
+            EventsFrameworkMetadataConstants.ENTITY_TYPE, EventsFrameworkMetadataConstants.RESOURCE_GROUP,
+            EventsFrameworkMetadataConstants.ACTION, action);
+
+      } else {
+        metadataMap = ImmutableMap.of(EventsFrameworkMetadataConstants.ENTITY_TYPE,
+            EventsFrameworkMetadataConstants.RESOURCE_GROUP, EventsFrameworkMetadataConstants.ACTION, action);
+      }
       eventProducer.send(
-          Message.newBuilder()
-              .putAllMetadata(ImmutableMap.of("accountId", resourceGroup.getAccountIdentifier(),
-                  EventsFrameworkMetadataConstants.ENTITY_TYPE, EventsFrameworkMetadataConstants.RESOURCE_GROUP,
-                  EventsFrameworkMetadataConstants.ACTION, action))
-              .setData(getResourceGroupPayload(resourceGroup))
-              .build());
+          Message.newBuilder().putAllMetadata(metadataMap).setData(getResourceGroupPayload(resourceGroup)).build());
       return true;
     } catch (EventsFrameworkDownException e) {
       log.error(
@@ -152,9 +158,10 @@ public class ResourceGroupEventHandler implements OutboxEventHandler {
 
   private ByteString getResourceGroupPayload(ResourceGroupDTO resourceGroup) {
     ResourceGroupEntityChangeDTO.Builder resourceGroupEntityChangeDTOBuilder =
-        ResourceGroupEntityChangeDTO.newBuilder()
-            .setIdentifier(resourceGroup.getIdentifier())
-            .setAccountIdentifier(resourceGroup.getAccountIdentifier());
+        ResourceGroupEntityChangeDTO.newBuilder().setIdentifier(resourceGroup.getIdentifier());
+    if (isNotBlank(resourceGroup.getAccountIdentifier())) {
+      resourceGroupEntityChangeDTOBuilder.setAccountIdentifier(resourceGroup.getAccountIdentifier());
+    }
     if (isNotBlank(resourceGroup.getOrgIdentifier())) {
       resourceGroupEntityChangeDTOBuilder.setOrgIdentifier(resourceGroup.getOrgIdentifier());
     }

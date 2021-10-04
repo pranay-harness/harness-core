@@ -98,7 +98,7 @@ public interface CommandUnit {
    *
    * @return the deployment type
    */
-  @Deprecated @SchemaIgnore String getDeploymentType();
+  @SchemaIgnore @Deprecated String getDeploymentType();
 
   /**
    * Sets deployment type.

@@ -91,7 +91,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Slf4j
 @OwnedBy(PIPELINE)
 public class NGTriggerServiceImpl implements NGTriggerService {
-  public static final long TRIGGER_CURRENT_YML_VERSION = 2l;
+  public static final long TRIGGER_CURRENT_YML_VERSION = 3l;
   private final NGTriggerRepository ngTriggerRepository;
   private final TriggerWebhookEventRepository webhookEventQueueRepository;
   private final TriggerEventHistoryRepository triggerEventHistoryRepository;

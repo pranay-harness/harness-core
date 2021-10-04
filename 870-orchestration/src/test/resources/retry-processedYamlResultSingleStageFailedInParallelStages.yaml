@@ -39,7 +39,7 @@ pipeline:
         - stage:
             identifier: stage9
             name: stage9
-            "__uuid": "newUuid9"
+            "__uuid": "oldUuid9"
     - stage:
         identifier: stage10
         name: stage10

@@ -1,5 +1,7 @@
 package ci.pipeline.execution;
 
+import static io.harness.beans.sweepingoutputs.CISweepingOutputNames.CODEBASE;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.connector.ConnectorType.BITBUCKET;
 import static io.harness.delegate.beans.connector.ConnectorType.GITHUB;
 import static io.harness.delegate.beans.connector.ConnectorType.GITLAB;
@@ -13,6 +15,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
 import io.harness.beans.stages.IntegrationStageStepParametersPMS;
+import io.harness.beans.sweepingoutputs.CodebaseSweepingOutput;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.connector.scm.bitbucket.BitbucketConnectorDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
@@ -29,6 +32,9 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.sdk.core.data.OptionalSweepingOutput;
+import io.harness.pms.sdk.core.resolver.RefObjectUtils;
+import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.service.DelegateGrpcClientWrapper;
 import io.harness.stateutils.buildstate.ConnectorUtils;
@@ -65,6 +71,7 @@ public class GitBuildStatusUtility {
   @Inject private DelegateGrpcClientWrapper delegateGrpcClientWrapper;
   @Inject @Named("ngBaseUrl") private String ngBaseUrl;
   @Inject private PipelineUtils pipelineUtils;
+  @Inject private ExecutionSweepingOutputService executionSweepingOutputService;
 
   public boolean shouldSendStatus(StepCategory stepCategory) {
     return stepCategory == StepCategory.STAGE;
@@ -84,9 +91,20 @@ public class GitBuildStatusUtility {
     BuildStatusUpdateParameter buildStatusUpdateParameter =
         integrationStageStepParameters.getBuildStatusUpdateParameter();
 
-    if (buildStatusUpdateParameter != null) {
+    String commitSha = null;
+    OptionalSweepingOutput optionalSweepingOutput =
+        executionSweepingOutputService.resolveOptional(ambiance, RefObjectUtils.getOutcomeRefObject(CODEBASE));
+    CodebaseSweepingOutput codebaseSweepingOutput = null;
+    if (optionalSweepingOutput.isFound()) {
+      codebaseSweepingOutput = (CodebaseSweepingOutput) optionalSweepingOutput.getOutput();
+      if (codebaseSweepingOutput != null) {
+        commitSha = codebaseSweepingOutput.getCommitSha();
+      }
+    }
+
+    if (buildStatusUpdateParameter != null && optionalSweepingOutput.isFound() && isNotEmpty(commitSha)) {
       CIBuildStatusPushParameters ciBuildStatusPushParameters =
-          getCIBuildStatusPushParams(ambiance, buildStatusUpdateParameter, status);
+          getCIBuildStatusPushParams(ambiance, buildStatusUpdateParameter, status, commitSha);
 
       /* This check is require because delegate is not honouring the ordering and
          there are instances where we are overriding final status with prev state status i.e running specially in case
@@ -114,19 +132,18 @@ public class GitBuildStatusUtility {
 
         String taskId = delegateGrpcClientWrapper.submitAsyncTask(delegateTaskRequest, Duration.ZERO);
         log.info("Submitted git status update request for stage {}, planId {}, commitId {}, status {} with taskId {}",
-            buildStatusUpdateParameter.getIdentifier(), ambiance.getPlanExecutionId(),
-            buildStatusUpdateParameter.getSha(), ciBuildStatusPushParameters.getState(), taskId);
+            buildStatusUpdateParameter.getIdentifier(), ambiance.getPlanExecutionId(), commitSha,
+            ciBuildStatusPushParameters.getState(), taskId);
       } else {
         log.info("Skipping git status update request for stage {}, planId {}, commitId {}, status {}, scm type {}",
-            buildStatusUpdateParameter.getIdentifier(), ambiance.getPlanExecutionId(),
-            buildStatusUpdateParameter.getSha(), ciBuildStatusPushParameters.getState(),
-            ciBuildStatusPushParameters.getGitSCMType());
+            buildStatusUpdateParameter.getIdentifier(), ambiance.getPlanExecutionId(), commitSha,
+            ciBuildStatusPushParameters.getState(), ciBuildStatusPushParameters.getGitSCMType());
       }
     }
   }
 
   public CIBuildStatusPushParameters getCIBuildStatusPushParams(
-      Ambiance ambiance, BuildStatusUpdateParameter buildStatusUpdateParameter, Status status) {
+      Ambiance ambiance, BuildStatusUpdateParameter buildStatusUpdateParameter, Status status, String commitSha) {
     NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);
     ConnectorDetails gitConnector = getGitConnector(ngAccess, buildStatusUpdateParameter.getConnectorIdentifier());
 
@@ -143,7 +160,7 @@ public class GitBuildStatusUtility {
             ngAccess, ambiance.getMetadata().getPipelineIdentifier(), ambiance.getMetadata().getExecutionUuid()))
         .desc(generateDesc(ambiance.getMetadata().getPipelineIdentifier(), ambiance.getMetadata().getExecutionUuid(),
             buildStatusUpdateParameter.getName(), status.name()))
-        .sha(buildStatusUpdateParameter.getSha())
+        .sha(commitSha)
         .gitSCMType(gitSCMType)
         .connectorDetails(gitConnector)
         .userName(connectorUtils.fetchUserName(gitConnector))

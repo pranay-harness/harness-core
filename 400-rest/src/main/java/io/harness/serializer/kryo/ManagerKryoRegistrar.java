@@ -781,9 +781,9 @@ import com.sumologic.client.SumoException;
 import io.kubernetes.client.openapi.ApiException;
 import java.time.Instant;
 
-@Deprecated
 @OwnedBy(PL)
 @TargetModule(_360_CG_MANAGER)
+@Deprecated
 public class ManagerKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {

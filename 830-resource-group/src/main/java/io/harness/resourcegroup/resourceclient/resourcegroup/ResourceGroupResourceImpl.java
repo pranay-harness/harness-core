@@ -102,6 +102,10 @@ public class ResourceGroupResourceImpl implements Resource {
       return null;
     }
 
+    if (isEmpty(stripToNull(entityChangeDTO.getAccountIdentifier()))) {
+      return null;
+    }
+
     return ResourceInfo.builder()
         .accountIdentifier(stripToNull(entityChangeDTO.getAccountIdentifier()))
         .orgIdentifier(stripToNull(entityChangeDTO.getOrgIdentifier()))

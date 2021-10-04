@@ -4,8 +4,11 @@ import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.core.beans.params.TimeRangeParams;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
@@ -33,6 +36,8 @@ public class HistoricalTrend {
                                             .endTime(trendStartTime.plusMillis(windowInMillis))
                                             .build();
       riskData.setTimeRangeParams(timeRangeParams);
+      riskData.setStartTime(trendStartTime.toEpochMilli());
+      riskData.setEndTime(trendStartTime.plusMillis(windowInMillis).toEpochMilli());
       trendStartTime = trendStartTime.plusMillis(windowInMillis);
     }
   }
@@ -43,20 +48,24 @@ public class HistoricalTrend {
         String.format("cannot group historical trend with size %s to %s points", this.healthScores.size(), x));
 
     List<RiskData> reducedHealthScores = new ArrayList<>();
-    RiskData maxRiskData = RiskData.builder().riskStatus(Risk.NO_DATA).healthScore(null).build();
-    Instant startTime = healthScores.get(0).getTimeRangeParams().getStartTime();
-    for (int i = 0; i < healthScores.size(); i++) {
-      if (healthScores.get(i).compareTo(maxRiskData) == 1) {
-        maxRiskData.setHealthScore(healthScores.get(i).healthScore);
-        maxRiskData.setRiskStatus(healthScores.get(i).riskStatus);
+    final List<List<RiskData>> batch = Lists.partition(healthScores, x);
+
+    for (List<RiskData> list : batch) {
+      RiskData maxRiskData = RiskData.builder().riskStatus(Risk.NO_DATA).healthScore(null).build();
+      for (RiskData riskData : list) {
+        RiskData tempMaxRiskData = Collections.max(Arrays.asList(maxRiskData, riskData));
+        maxRiskData.setRiskStatus(tempMaxRiskData.getRiskStatus());
+        maxRiskData.setHealthScore(tempMaxRiskData.getHealthScore());
       }
-      if ((i + 1) % x == 0) {
-        Instant endTime = healthScores.get(i).getTimeRangeParams().getEndTime();
-        maxRiskData.setTimeRangeParams(TimeRangeParams.builder().startTime(startTime).endTime(endTime).build());
-        startTime = endTime;
-        reducedHealthScores.add(maxRiskData);
-        maxRiskData = RiskData.builder().riskStatus(Risk.NO_DATA).healthScore(null).build();
-      }
+      long startTime = list.get(0).getStartTime();
+      long endTime = list.get(list.size() - 1).getEndTime();
+      maxRiskData.setTimeRangeParams(TimeRangeParams.builder()
+                                         .startTime(Instant.ofEpochMilli(startTime))
+                                         .endTime(Instant.ofEpochMilli(endTime))
+                                         .build());
+      maxRiskData.setStartTime(startTime);
+      maxRiskData.setEndTime(endTime);
+      reducedHealthScores.add(maxRiskData);
     }
     this.setHealthScores(reducedHealthScores);
   }

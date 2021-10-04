@@ -19,7 +19,6 @@ import io.harness.plan.NodeType;
 import io.harness.plan.PlanNode;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.ambiance.Ambiance;
-import io.harness.pms.contracts.data.StepOutcomeRef;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
@@ -73,7 +72,7 @@ public class NodeExecution implements PersistentEntity, UuidAccess, PmsNodeExecu
   // Immutable
   @Wither @Id @org.mongodb.morphia.annotations.Id String uuid;
   @NotNull Ambiance ambiance;
-  @Deprecated @Getter(AccessLevel.NONE) @Setter(AccessLevel.NONE) @NotNull PlanNodeProto node;
+  @Getter(AccessLevel.NONE) @Setter(AccessLevel.NONE) @NotNull @Deprecated PlanNodeProto node;
   @Getter(AccessLevel.NONE) @Setter(AccessLevel.NONE) Node planNode;
   @NotNull ExecutionMode mode;
   @Wither @FdIndex @CreatedDate Long createdAt;
@@ -114,8 +113,6 @@ public class NodeExecution implements PersistentEntity, UuidAccess, PmsNodeExecu
   // Timeout
   List<String> timeoutInstanceIds;
   TimeoutDetails timeoutDetails;
-
-  List<StepOutcomeRef> outcomeRefs;
 
   @Singular List<UnitProgress> unitProgresses;
 
@@ -158,6 +155,10 @@ public class NodeExecution implements PersistentEntity, UuidAccess, PmsNodeExecu
         + "uuid";
     public static final String planNodeIdentifier = NodeExecutionKeys.planNode + "."
         + "identifier";
+    public static final String planNodeStepCategory = NodeExecutionKeys.planNode + "."
+        + "stepType"
+        + "."
+        + "stepCategory";
 
     public static final String nodeIdentifier = NodeExecutionKeys.node + "."
         + "identifier";
