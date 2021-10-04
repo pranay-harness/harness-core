@@ -38,7 +38,9 @@ public class CDLocalClient implements CDModuleLicenseClient {
       case TEAM:
         return builder.workloads(TEAM_TRIAL_WORKLOAD).licenseType(LicenseType.TRIAL).build();
       case FREE:
-        return builder.workloads(FREE_WORKLOAD).expiryTime(Long.valueOf(UNLIMITED)).build();
+        return builder.workloads(FREE_WORKLOAD).expiryTime(Long.MAX_VALUE).build();
+      case COMMUNITY:
+        return builder.workloads(Integer.valueOf(UNLIMITED)).expiryTime(Long.MAX_VALUE).build();
       default:
         throw new UnsupportedOperationException("Requested edition is not supported");
     }

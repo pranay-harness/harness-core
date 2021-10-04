@@ -180,6 +180,32 @@ public class DefaultLicenseServiceImpl implements LicenseService {
   }
 
   @Override
+  public ModuleLicenseDTO startCommunityLicense(String accountIdentifier, ModuleType moduleType) {
+    ModuleLicenseDTO trialLicenseDTO = licenseInterface.generateCommunityLicense(accountIdentifier, moduleType);
+
+    AccountDTO accountDTO = accountService.getAccount(accountIdentifier);
+    if (accountDTO == null) {
+      throw new InvalidRequestException(String.format("Account [%s] doesn't exists", accountIdentifier));
+    }
+
+    List<ModuleLicense> existing =
+        moduleLicenseRepository.findByAccountIdentifierAndModuleType(accountIdentifier, moduleType);
+    if (!existing.isEmpty()) {
+      String cause = format("Account [%s] already have licenses for moduleType [%s]", accountIdentifier, moduleType);
+      throw new InvalidRequestException(cause);
+    }
+
+    ModuleLicense trialLicense = licenseObjectConverter.toEntity(trialLicenseDTO);
+    trialLicense.setCreatedBy(EmbeddedUser.builder().email(getEmailFromPrincipal()).build());
+    ModuleLicense savedEntity = moduleLicenseRepository.save(trialLicense);
+
+    log.info("Free license for module [{}] is started in account [{}]", moduleType, accountIdentifier);
+
+    accountService.updateDefaultExperienceIfApplicable(accountIdentifier, DefaultExperience.NG);
+    return licenseObjectConverter.toDTO(savedEntity);
+  }
+
+  @Override
   public ModuleLicenseDTO startTrialLicense(String accountIdentifier, StartTrialDTO startTrialRequestDTO) {
     Edition edition = startTrialRequestDTO.getEdition();
     LicenseType licenseType = LicenseType.TRIAL;

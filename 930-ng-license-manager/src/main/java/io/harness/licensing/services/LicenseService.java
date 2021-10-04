@@ -9,6 +9,7 @@ import io.harness.licensing.beans.summary.LicensesWithSummaryDTO;
 
 public interface LicenseService extends LicenseCrudService {
   ModuleLicenseDTO startFreeLicense(String accountIdentifier, ModuleType moduleType);
+  ModuleLicenseDTO startCommunityLicense(String accountIdentifier, ModuleType moduleType);
   ModuleLicenseDTO startTrialLicense(String accountIdentifier, StartTrialDTO startTrialRequestDTO);
   ModuleLicenseDTO extendTrialLicense(String accountIdentifier, StartTrialDTO startTrialRequestDTO);
   CheckExpiryResultDTO checkExpiry(String accountIdentifier);
