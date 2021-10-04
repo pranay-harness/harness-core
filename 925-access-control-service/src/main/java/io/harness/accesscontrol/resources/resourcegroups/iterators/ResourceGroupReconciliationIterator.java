@@ -52,7 +52,7 @@ public class ResourceGroupReconciliationIterator implements Handler<ResourceGrou
       persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
           PersistenceIteratorFactory.PumpExecutorOptions.builder()
               .name("ResourceGroupReconciliationIterator")
-              .poolSize(5)
+              .poolSize(2)
               .interval(ofSeconds(5))
               .build(),
           ResourceGroupDBO.class,
