@@ -1,25 +1,56 @@
 package io.harness.overviewdashboard.dashboardaggregateservice.impl;
 
-import static io.harness.data.structure.CollectionUtils.emptyIfNull;
-import static io.harness.overviewdashboard.bean.OverviewDashboardRequestType.*;
+import static io.harness.overviewdashboard.bean.OverviewDashboardRequestType.GET_CD_TOP_PROJECT_LIST;
+import static io.harness.overviewdashboard.bean.OverviewDashboardRequestType.GET_DEPLOYMENTS_STATS_SUMMARY;
+import static io.harness.overviewdashboard.bean.OverviewDashboardRequestType.GET_ENV_COUNT;
+import static io.harness.overviewdashboard.bean.OverviewDashboardRequestType.GET_MOST_ACTIVE_SERVICES;
+import static io.harness.overviewdashboard.bean.OverviewDashboardRequestType.GET_PIPELINES_COUNT;
+import static io.harness.overviewdashboard.bean.OverviewDashboardRequestType.GET_SERVICES_COUNT;
+import static io.harness.overviewdashboard.bean.OverviewDashboardRequestType.GET_TIME_WISE_DEPLOYMENT_INFO;
 import static io.harness.rule.OwnerRule.MEET;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
-import static org.powermock.api.mockito.PowerMockito.mock;
 
 import io.harness.category.element.UnitTests;
-import io.harness.dashboards.*;
+import io.harness.dashboards.DeploymentStatsSummary;
+import io.harness.dashboards.EnvCount;
+import io.harness.dashboards.GroupBy;
+import io.harness.dashboards.ProjectDashBoardInfo;
+import io.harness.dashboards.ProjectsDashboardInfo;
+import io.harness.dashboards.ServiceDashboardInfo;
+import io.harness.dashboards.ServicesCount;
+import io.harness.dashboards.ServicesDashboardInfo;
+import io.harness.dashboards.SortBy;
+import io.harness.dashboards.TimeBasedDeploymentInfo;
 import io.harness.data.structure.UUIDGenerator;
-import io.harness.ng.core.OrgProjectIdentifier;
 import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ResponseDTO;
-import io.harness.overviewdashboard.bean.OverviewDashboardRequestType;
-import io.harness.overviewdashboard.bean.RestCallRequest;
 import io.harness.overviewdashboard.bean.RestCallResponse;
-import io.harness.overviewdashboard.dtos.*;
+import io.harness.overviewdashboard.dtos.AccountInfo;
+import io.harness.overviewdashboard.dtos.ActiveServiceInfo;
+import io.harness.overviewdashboard.dtos.CountChangeAndCountChangeRateInfo;
+import io.harness.overviewdashboard.dtos.CountChangeDetails;
+import io.harness.overviewdashboard.dtos.CountOverview;
+import io.harness.overviewdashboard.dtos.CountWithSuccessFailureDetails;
+import io.harness.overviewdashboard.dtos.DeploymentsOverview;
+import io.harness.overviewdashboard.dtos.DeploymentsStatsOverview;
+import io.harness.overviewdashboard.dtos.DeploymentsStatsSummary;
+import io.harness.overviewdashboard.dtos.ExecutionResponse;
+import io.harness.overviewdashboard.dtos.ExecutionStatus;
+import io.harness.overviewdashboard.dtos.MostActiveServicesList;
+import io.harness.overviewdashboard.dtos.OrgInfo;
+import io.harness.overviewdashboard.dtos.ProjectInfo;
+import io.harness.overviewdashboard.dtos.RateAndRateChangeInfo;
+import io.harness.overviewdashboard.dtos.ServiceInfo;
+import io.harness.overviewdashboard.dtos.TimeBasedStats;
+import io.harness.overviewdashboard.dtos.TopProjectsDashboardInfo;
+import io.harness.overviewdashboard.dtos.TopProjectsPanel;
 import io.harness.overviewdashboard.rbac.impl.DashboardRBACServiceImpl;
 import io.harness.overviewdashboard.remote.ParallelRestCallExecutor;
 import io.harness.pipeline.dashboards.PMSLandingDashboardResourceClient;
@@ -28,8 +59,9 @@ import io.harness.rule.Owner;
 import io.harness.userng.remote.UserNGClient;
 
 import dashboards.CDLandingDashboardResourceClient;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -38,7 +70,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import retrofit2.Call;
-import retrofit2.Response;
 
 public class OverviewDashboardServiceImplTest {
   String accountIdentifier = UUIDGenerator.generateUuid();
@@ -270,26 +301,34 @@ public class OverviewDashboardServiceImplTest {
                                                                                   .deploymentsCount(10L)
                                                                                   .deploymentsCountChangeRate(0.24)
                                                                                   .build()))
-                          .build()).requestType(GET_CD_TOP_PROJECT_LIST)
+                          .build())
+            .requestType(GET_CD_TOP_PROJECT_LIST)
             .build());
 
     when(parallelRestCallExecutor.executeRestCalls(anyList())).thenReturn(restCallResponseList);
 
-    TopProjectsPanel expectedResponse  =
+    TopProjectsPanel expectedResponse =
         TopProjectsPanel.builder()
-            .CDTopProjectsInfo(Collections.singletonList(
-                TopProjectsDashboardInfo.<CountWithSuccessFailureDetails>builder()
-                    .accountInfo(AccountInfo.builder().accountIdentifier(accountIdentifier).build())
-                    .orgInfo(OrgInfo.builder().orgIdentifier(orgIdentifier).build())
-                    .projectInfo(ProjectInfo.builder().projectIdentifier(projectIdentifier).build())
-                    .countDetails(CountWithSuccessFailureDetails.builder()
-                                      .count(10L)
-                                      .countChangeAndCountChangeRateInfo(
-                                          CountChangeAndCountChangeRateInfo.builder().countChangeRate(0.24).build())
-                                      .build())
-                    .build()))
+            .CDTopProjectsInfo(
+                ExecutionResponse.<List<TopProjectsDashboardInfo<CountWithSuccessFailureDetails>>>builder()
+                    .response(Collections.singletonList(
+                        TopProjectsDashboardInfo.<CountWithSuccessFailureDetails>builder()
+                            .accountInfo(AccountInfo.builder().accountIdentifier(accountIdentifier).build())
+                            .orgInfo(OrgInfo.builder().orgIdentifier(orgIdentifier).build())
+                            .projectInfo(ProjectInfo.builder().projectIdentifier(projectIdentifier).build())
+                            .countDetails(
+                                CountWithSuccessFailureDetails.builder()
+                                    .count(10L)
+                                    .countChangeAndCountChangeRateInfo(
+                                        CountChangeAndCountChangeRateInfo.builder().countChangeRate(0.24).build())
+                                    .build())
+                            .build()))
+                    .build())
             .build();
-    TopProjectsPanel  actualResponse= overviewDashboardService.getTopProjectsPanel(accountIdentifier,userId,1628899200000L, 1631491200000L);
-    assertThat(actualResponse.getCDTopProjectsInfo()).isEqualTo(expectedResponse.getCDTopProjectsInfo());
+    ExecutionResponse<TopProjectsPanel> actualResponse =
+        overviewDashboardService.getTopProjectsPanel(accountIdentifier, userId, 1628899200000L, 1631491200000L);
+    assertThat(actualResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(actualResponse.getResponse().getCDTopProjectsInfo().getResponse())
+        .isEqualTo(expectedResponse.getCDTopProjectsInfo().getResponse());
   }
 }
