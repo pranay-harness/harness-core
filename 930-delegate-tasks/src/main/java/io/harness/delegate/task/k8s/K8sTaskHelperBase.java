@@ -94,6 +94,8 @@ import io.harness.helm.HelmCliCommandType;
 import io.harness.helm.HelmCommandFlagsUtils;
 import io.harness.helm.HelmCommandTemplateFactory;
 import io.harness.helm.HelmSubCommandType;
+import io.harness.istio.api.networking.IstioApiNetworkingHandler;
+import io.harness.istio.api.networking.IstioNetworkingApiFactory;
 import io.harness.k8s.K8sConstants;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.KubernetesHelperService;
@@ -110,7 +112,6 @@ import io.harness.k8s.kubectl.ScaleCommand;
 import io.harness.k8s.kubectl.Utils;
 import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.HarnessAnnotations;
-import io.harness.k8s.model.HarnessLabelValues;
 import io.harness.k8s.model.HarnessLabels;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.k8s.model.IstioDestinationWeight;
@@ -131,7 +132,6 @@ import io.harness.logging.LogLevel;
 import io.harness.ng.core.dto.ErrorDetail;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
-import io.harness.serializer.YamlUtils;
 import io.harness.shell.SshSessionConfig;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -141,8 +141,7 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import io.fabric8.kubernetes.api.KubernetesHelper;
-import io.fabric8.kubernetes.api.model.KubernetesResourceList;
+import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.models.V1ConfigMap;
@@ -179,19 +178,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
-import me.snowdrop.istio.api.networking.v1alpha3.Destination;
-import me.snowdrop.istio.api.networking.v1alpha3.DestinationRule;
-import me.snowdrop.istio.api.networking.v1alpha3.DestinationRuleBuilder;
-import me.snowdrop.istio.api.networking.v1alpha3.DoneableDestinationRule;
-import me.snowdrop.istio.api.networking.v1alpha3.DoneableVirtualService;
-import me.snowdrop.istio.api.networking.v1alpha3.HTTPRoute;
-import me.snowdrop.istio.api.networking.v1alpha3.HTTPRouteDestination;
-import me.snowdrop.istio.api.networking.v1alpha3.PortSelector;
-import me.snowdrop.istio.api.networking.v1alpha3.Subset;
-import me.snowdrop.istio.api.networking.v1alpha3.TCPRoute;
-import me.snowdrop.istio.api.networking.v1alpha3.TLSRoute;
-import me.snowdrop.istio.api.networking.v1alpha3.VirtualService;
-import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceBuilder;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -220,11 +206,9 @@ public class K8sTaskHelperBase {
   @Inject private KustomizeTaskHelper kustomizeTaskHelper;
   @Inject private OpenShiftDelegateService openShiftDelegateService;
   @Inject private HelmTaskHelperBase helmTaskHelperBase;
+  @Inject private IstioNetworkingApiFactory istioNetworkingApiFactory;
 
   private DelegateExpressionEvaluator delegateExpressionEvaluator = new DelegateExpressionEvaluator();
-
-  public static final String ISTIO_DESTINATION_TEMPLATE = "host: $ISTIO_DESTINATION_HOST_NAME\n"
-      + "subset: $ISTIO_DESTINATION_SUBSET_NAME";
 
   public static LogOutputStream getExecutionLogOutputStream(LogCallback executionLogCallback, LogLevel logLevel) {
     return new LogOutputStream() {
@@ -495,125 +479,15 @@ public class K8sTaskHelperBase {
     return targetInstances;
   }
 
-  public List<Subset> generateSubsetsForDestinationRule(List<String> subsetNames) {
-    List<Subset> subsets = new ArrayList<>();
-
-    for (String subsetName : subsetNames) {
-      Subset subset = new Subset();
-      subset.setName(subsetName);
-
-      if (subsetName.equals(HarnessLabelValues.trackCanary)) {
-        Map<String, String> labels = new HashMap<>();
-        labels.put(HarnessLabels.track, HarnessLabelValues.trackCanary);
-        subset.setLabels(labels);
-      } else if (subsetName.equals(HarnessLabelValues.trackStable)) {
-        Map<String, String> labels = new HashMap<>();
-        labels.put(HarnessLabels.track, HarnessLabelValues.trackStable);
-        subset.setLabels(labels);
-      } else if (subsetName.equals(HarnessLabelValues.colorBlue)) {
-        Map<String, String> labels = new HashMap<>();
-        labels.put(HarnessLabels.color, HarnessLabelValues.colorBlue);
-        subset.setLabels(labels);
-      } else if (subsetName.equals(HarnessLabelValues.colorGreen)) {
-        Map<String, String> labels = new HashMap<>();
-        labels.put(HarnessLabels.color, HarnessLabelValues.colorGreen);
-        subset.setLabels(labels);
-      }
-
-      subsets.add(subset);
-    }
-
-    return subsets;
-  }
-
-  private String generateDestination(String host, String subset) {
-    return ISTIO_DESTINATION_TEMPLATE.replace("$ISTIO_DESTINATION_HOST_NAME", host)
-        .replace("$ISTIO_DESTINATION_SUBSET_NAME", subset);
-  }
-
-  private String getDestinationYaml(String destination, String host) {
-    if (canaryDestinationExpression.equals(destination)) {
-      return generateDestination(host, HarnessLabelValues.trackCanary);
-    } else if (stableDestinationExpression.equals(destination)) {
-      return generateDestination(host, HarnessLabelValues.trackStable);
-    } else {
-      return destination;
-    }
-  }
-
-  private List<HTTPRouteDestination> generateDestinationWeights(
-      List<IstioDestinationWeight> istioDestinationWeights, String host, PortSelector portSelector) throws IOException {
-    List<HTTPRouteDestination> httpRouteDestinations = new ArrayList<>();
-
-    for (IstioDestinationWeight istioDestinationWeight : istioDestinationWeights) {
-      String destinationYaml = getDestinationYaml(istioDestinationWeight.getDestination(), host);
-      Destination destination = new YamlUtils().read(destinationYaml, Destination.class);
-      destination.setPort(portSelector);
-
-      HTTPRouteDestination httpRouteDestination = new HTTPRouteDestination();
-      httpRouteDestination.setWeight(Integer.parseInt(istioDestinationWeight.getWeight()));
-      httpRouteDestination.setDestination(destination);
-
-      httpRouteDestinations.add(httpRouteDestination);
-    }
-
-    return httpRouteDestinations;
-  }
-
-  private String getHostFromRoute(List<HTTPRouteDestination> routes) {
-    if (isEmpty(routes)) {
-      throw new InvalidRequestException("No routes exist in VirtualService", USER);
-    }
-
-    if (null == routes.get(0).getDestination()) {
-      throw new InvalidRequestException("No destination exist in VirtualService", USER);
-    }
-
-    if (isBlank(routes.get(0).getDestination().getHost())) {
-      throw new InvalidRequestException("No host exist in VirtualService", USER);
-    }
-
-    return routes.get(0).getDestination().getHost();
-  }
-
-  private PortSelector getPortSelectorFromRoute(List<HTTPRouteDestination> routes) {
-    return routes.get(0).getDestination().getPort();
-  }
-
-  private void validateRoutesInVirtualService(VirtualService virtualService) {
-    List<HTTPRoute> http = virtualService.getSpec().getHttp();
-    List<TCPRoute> tcp = virtualService.getSpec().getTcp();
-    List<TLSRoute> tls = virtualService.getSpec().getTls();
-
-    if (isEmpty(http)) {
-      throw new InvalidRequestException(
-          "Http route is not present in VirtualService. Only Http routes are allowed", USER);
-    }
-
-    if (isNotEmpty(tcp) || isNotEmpty(tls)) {
-      throw new InvalidRequestException("Only Http routes are allowed in VirtualService for Traffic split", USER);
-    }
-
-    if (http.size() > 1) {
-      throw new InvalidRequestException("Only one route is allowed in VirtualService", USER);
-    }
-  }
-
   public void updateVirtualServiceWithDestinationWeights(List<IstioDestinationWeight> istioDestinationWeights,
-      VirtualService virtualService, LogCallback executionLogCallback) throws IOException {
-    validateRoutesInVirtualService(virtualService);
-
-    executionLogCallback.saveExecutionLog("\nUpdating VirtualService with destination weights");
-
-    List<HTTPRoute> http = virtualService.getSpec().getHttp();
-    if (isNotEmpty(http)) {
-      String host = getHostFromRoute(http.get(0).getRoute());
-      PortSelector portSelector = getPortSelectorFromRoute(http.get(0).getRoute());
-      http.get(0).setRoute(generateDestinationWeights(istioDestinationWeights, host, portSelector));
-    }
+      HasMetadata virtualService, LogCallback executionLogCallback) throws IOException {
+    IstioApiNetworkingHandler istioApiNetworkingHandler =
+        istioNetworkingApiFactory.obtainHandler(virtualService.getApiVersion());
+    istioApiNetworkingHandler.updateVirtualServiceWithDestinationWeights(
+        istioDestinationWeights, virtualService, executionLogCallback);
   }
 
-  private VirtualService updateVirtualServiceManifestFilesWithRoutes(List<KubernetesResource> resources,
+  private HasMetadata updateVirtualServiceManifestFilesWithRoutes(List<KubernetesResource> resources,
       KubernetesConfig kubernetesConfig, List<IstioDestinationWeight> istioDestinationWeights,
       LogCallback executionLogCallback) throws IOException {
     List<KubernetesResource> virtualServiceResources =
@@ -635,21 +509,17 @@ public class K8sTaskHelperBase {
     }
 
     KubernetesClient kubernetesClient = kubernetesHelperService.getKubernetesClient(kubernetesConfig);
-    kubernetesClient.customResources(
-        kubernetesContainerService.getCustomResourceDefinition(kubernetesClient, new VirtualServiceBuilder().build()),
-        VirtualService.class, KubernetesResourceList.class, DoneableVirtualService.class);
-
     KubernetesResource kubernetesResource = virtualServiceResources.get(0);
     InputStream inputStream = IOUtils.toInputStream(kubernetesResource.getSpec(), UTF_8);
-    VirtualService virtualService = (VirtualService) kubernetesClient.load(inputStream).get().get(0);
-    updateVirtualServiceWithDestinationWeights(istioDestinationWeights, virtualService, executionLogCallback);
+    HasMetadata virtualService = kubernetesClient.load(inputStream).get().get(0);
+    IstioApiNetworkingHandler istioApiNetworkingHandler =
+        istioNetworkingApiFactory.obtainHandler(virtualService.getApiVersion());
 
-    kubernetesResource.setSpec(KubernetesHelper.toYaml(virtualService));
-
-    return virtualService;
+    return istioApiNetworkingHandler.updateVirtualServiceManifestFilesWithRoutes(kubernetesResource, kubernetesConfig,
+        istioDestinationWeights, executionLogCallback, kubernetesClient, virtualService);
   }
 
-  public VirtualService updateVirtualServiceManifestFilesWithRoutesForCanary(List<KubernetesResource> resources,
+  public HasMetadata updateVirtualServiceManifestFilesWithRoutesForCanary(List<KubernetesResource> resources,
       KubernetesConfig kubernetesConfig, LogCallback executionLogCallback) throws IOException {
     List<IstioDestinationWeight> istioDestinationWeights = new ArrayList<>();
     istioDestinationWeights.add(
@@ -661,7 +531,7 @@ public class K8sTaskHelperBase {
         resources, kubernetesConfig, istioDestinationWeights, executionLogCallback);
   }
 
-  public DestinationRule updateDestinationRuleManifestFilesWithSubsets(List<KubernetesResource> resources,
+  public HasMetadata updateDestinationRuleManifestFilesWithSubsets(List<KubernetesResource> resources,
       List<String> subsets, KubernetesConfig kubernetesConfig, LogCallback executionLogCallback) throws IOException {
     List<KubernetesResource> destinationRuleResources =
         resources.stream()
@@ -680,20 +550,16 @@ public class K8sTaskHelperBase {
       executionLogCallback.saveExecutionLog(msg + "\n", ERROR, FAILURE);
       throw new InvalidRequestException(msg, USER);
     }
-
-    KubernetesClient kubernetesClient = kubernetesHelperService.getKubernetesClient(kubernetesConfig);
-    kubernetesClient.customResources(
-        kubernetesContainerService.getCustomResourceDefinition(kubernetesClient, new DestinationRuleBuilder().build()),
-        DestinationRule.class, KubernetesResourceList.class, DoneableDestinationRule.class);
-
     KubernetesResource kubernetesResource = destinationRuleResources.get(0);
     InputStream inputStream = IOUtils.toInputStream(kubernetesResource.getSpec(), UTF_8);
-    DestinationRule destinationRule = (DestinationRule) kubernetesClient.load(inputStream).get().get(0);
-    destinationRule.getSpec().setSubsets(generateSubsetsForDestinationRule(subsets));
+    KubernetesClient kubernetesClient = kubernetesHelperService.getKubernetesClient(kubernetesConfig);
 
-    kubernetesResource.setSpec(KubernetesHelper.toYaml(destinationRule));
+    HasMetadata destinationRule = kubernetesClient.load(inputStream).get().get(0);
+    IstioApiNetworkingHandler istioApiNetworkingHandler =
+        istioNetworkingApiFactory.obtainHandler(destinationRule.getApiVersion());
 
-    return destinationRule;
+    return istioApiNetworkingHandler.updateDestinationRuleManifestFilesWithSubsets(
+        subsets, kubernetesResource, kubernetesClient, destinationRule);
   }
 
   private String getPodContainerId(K8sPod pod) {

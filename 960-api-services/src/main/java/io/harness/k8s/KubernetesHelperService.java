@@ -6,7 +6,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.getHomeDir;
 import static io.harness.govern.Switch.noop;
-import static io.harness.k8s.KubernetesConvention.DASH;
 import static io.harness.network.Http.getOkHttpClientBuilder;
 import static io.harness.network.Http.joinHostPort;
 
@@ -16,7 +15,6 @@ import static io.fabric8.kubernetes.client.Config.KUBERNETES_KUBECONFIG_FILE;
 import static io.fabric8.kubernetes.client.Config.KUBERNETES_SERVICE_ACCOUNT_CA_CRT_PATH;
 import static io.fabric8.kubernetes.client.Config.KUBERNETES_SERVICE_ACCOUNT_TOKEN_PATH;
 import static io.fabric8.kubernetes.client.utils.Utils.isNotNullOrEmpty;
-import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static okhttp3.ConnectionSpec.CLEARTEXT;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -31,7 +29,6 @@ import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.k8s.model.KubernetesConfig.KubernetesConfigBuilder;
 import io.harness.k8s.oidc.OidcTokenRetriever;
-import io.harness.logging.LogCallback;
 import io.harness.network.Http;
 import io.harness.network.NoopHostnameVerifier;
 import io.harness.yaml.YamlRepresenter;
@@ -80,18 +77,12 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
-import java.util.Comparator;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import lombok.extern.slf4j.Slf4j;
-import me.snowdrop.istio.api.IstioResource;
-import me.snowdrop.istio.api.networking.v1alpha3.HTTPRouteDestination;
-import me.snowdrop.istio.api.networking.v1alpha3.VirtualService;
-import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceSpec;
 import me.snowdrop.istio.client.DefaultIstioClient;
 import me.snowdrop.istio.client.IstioClient;
 import okhttp3.Authenticator;
@@ -241,22 +232,6 @@ public class KubernetesHelperService {
     OkHttpClient okHttpClient = createHttpClientWithProxySetting(config);
     try (DefaultIstioClient client = new DefaultIstioClient(okHttpClient, config)) {
       return client.inNamespace(namespace);
-    }
-  }
-
-  public static void printVirtualServiceRouteWeights(
-      IstioResource virtualService, String controllerPrefix, LogCallback logCallback) {
-    VirtualServiceSpec virtualServiceSpec = ((VirtualService) virtualService).getSpec();
-    if (isNotEmpty(virtualServiceSpec.getHttp().get(0).getRoute())) {
-      List<HTTPRouteDestination> sorted = virtualServiceSpec.getHttp().get(0).getRoute();
-      sorted.sort(Comparator.comparing(a -> Integer.valueOf(a.getDestination().getSubset())));
-      for (HTTPRouteDestination httpRouteDestination : sorted) {
-        int weight = httpRouteDestination.getWeight();
-        String rev = httpRouteDestination.getDestination().getSubset();
-        logCallback.saveExecutionLog(format("   %s%s%s: %d%%", controllerPrefix, DASH, rev, weight));
-      }
-    } else {
-      logCallback.saveExecutionLog("   None specified");
     }
   }
 

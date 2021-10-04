@@ -26,7 +26,6 @@ import static io.harness.k8s.K8sConstants.OIDC_ID_TOKEN;
 import static io.harness.k8s.K8sConstants.OIDC_ISSUER_URL;
 import static io.harness.k8s.K8sConstants.OIDC_RERESH_TOKEN;
 import static io.harness.k8s.K8sConstants.REFRESH_TOKEN;
-import static io.harness.k8s.KubernetesConvention.DASH;
 import static io.harness.k8s.KubernetesConvention.ReleaseHistoryKeyName;
 import static io.harness.k8s.KubernetesConvention.getPrefixFromControllerName;
 import static io.harness.k8s.KubernetesConvention.getRevisionFromControllerName;
@@ -45,9 +44,7 @@ import static java.util.Collections.emptySet;
 import static java.util.Comparator.comparingInt;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
-import static me.snowdrop.istio.api.internal.IstioSpecRegistry.getCRDInfo;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -68,10 +65,12 @@ import io.harness.exception.UrlNotProvidedException;
 import io.harness.exception.UrlNotReachableException;
 import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
+import io.harness.istio.api.networking.IstioApiNetworkingService;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.model.Kind;
 import io.harness.k8s.model.KubernetesClusterAuthType;
 import io.harness.k8s.model.KubernetesConfig;
+import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.k8s.oidc.OidcTokenRetriever;
 import io.harness.logging.LogCallback;
@@ -100,7 +99,6 @@ import io.fabric8.kubernetes.api.model.DoneableReplicationController;
 import io.fabric8.kubernetes.api.model.Event;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
-import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -110,7 +108,6 @@ import io.fabric8.kubernetes.api.model.ReplicationController;
 import io.fabric8.kubernetes.api.model.ReplicationControllerList;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.Service;
-import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.apps.DaemonSet;
 import io.fabric8.kubernetes.api.model.apps.DaemonSetList;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
@@ -183,15 +180,6 @@ import javax.validation.constraints.NotNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import me.snowdrop.istio.api.IstioResource;
-import me.snowdrop.istio.api.internal.IstioSpecRegistry;
-import me.snowdrop.istio.api.networking.v1alpha3.DestinationRule;
-import me.snowdrop.istio.api.networking.v1alpha3.DestinationRuleBuilder;
-import me.snowdrop.istio.api.networking.v1alpha3.DoneableDestinationRule;
-import me.snowdrop.istio.api.networking.v1alpha3.DoneableVirtualService;
-import me.snowdrop.istio.api.networking.v1alpha3.HTTPRouteDestination;
-import me.snowdrop.istio.api.networking.v1alpha3.VirtualService;
-import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceBuilder;
-import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceSpec;
 import me.snowdrop.istio.client.IstioClient;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -219,6 +207,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Inject private K8sResourceValidatorImpl k8sResourceValidator;
   @Inject private OidcTokenRetriever oidcTokenRetriever;
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
+  @Inject private IstioApiNetworkingService istioApiNetworkingService;
 
   private final Retry retry = buildRetryAndRegisterListeners();
 
@@ -1296,143 +1285,35 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public IstioResource createOrReplaceIstioResource(KubernetesConfig kubernetesConfig, IstioResource definition) {
-    String name = definition.getMetadata().getName();
-    String kind = definition.getKind();
+  public HasMetadata createOrReplaceIstioResource(KubernetesConfig kubernetesConfig, HasMetadata definition) {
+    IstioResource istioResourceDefinition = (IstioResource) definition;
+    String name = istioResourceDefinition.getMetadata().getName();
+    String kind = istioResourceDefinition.getKind();
     log.info("Registering {} [{}]", kind, name);
     IstioClient istioClient = kubernetesHelperService.getIstioClient(kubernetesConfig);
-    return istioClient.registerOrUpdateCustomResource(definition);
+    return istioClient.registerOrUpdateCustomResource(istioResourceDefinition);
   }
 
   @Override
-  public VirtualService getIstioVirtualService(KubernetesConfig kubernetesConfig, String name) {
-    KubernetesClient kubernetesClient = kubernetesHelperService.getKubernetesClient(kubernetesConfig);
-    try {
-      VirtualService virtualService = new VirtualServiceBuilder().build();
-
-      return kubernetesClient
-          .customResources(getCustomResourceDefinition(kubernetesClient, virtualService), VirtualService.class,
-              KubernetesResourceList.class, DoneableVirtualService.class)
-          .inNamespace(kubernetesConfig.getNamespace())
-          .withName(name)
-          .get();
-    } catch (Exception e) {
-      log.error("Failed to get istio VirtualService/{}", name, e);
-      return null;
-    }
-  }
-
-  @Override
-  public DestinationRule getIstioDestinationRule(KubernetesConfig kubernetesConfig, String name) {
-    KubernetesClient kubernetesClient = kubernetesHelperService.getKubernetesClient(kubernetesConfig);
-    try {
-      DestinationRule destinationRule = new DestinationRuleBuilder().build();
-
-      return kubernetesClient
-          .customResources(getCustomResourceDefinition(kubernetesClient, destinationRule), DestinationRule.class,
-              KubernetesResourceList.class, DoneableDestinationRule.class)
-          .inNamespace(kubernetesConfig.getNamespace())
-          .withName(name)
-          .get();
-    } catch (Exception e) {
-      log.error("Failed to get istio DestinationRule/{}", name, e);
-      return null;
-    }
-  }
-
-  @Override
-  public CustomResourceDefinition getCustomResourceDefinition(KubernetesClient client, IstioResource resource) {
-    final String crdName = getCRDNameFor(resource.getKind(), resource.getApiVersion());
-    final CustomResourceDefinition customResourceDefinition =
-        client.customResourceDefinitions().withName(crdName).get();
-    if (customResourceDefinition == null) {
-      throw new IllegalArgumentException(
-          format("Custom Resource Definition %s is not found in cluster %s", crdName, client.getMasterUrl()));
-    }
-    return customResourceDefinition;
-  }
-
-  private static String getCRDNameFor(String kind, String version) {
-    IstioSpecRegistry.CRDInfo crdInfo =
-        getCRDInfo(kind, version.substring(version.lastIndexOf("/") + 1))
-            .orElseThrow(
-                () -> new IllegalArgumentException(format("%s/%s is not a known Istio resource.", kind, version)));
-
-    String crdNameSuffix = crdInfo.getAPIVersion().lastIndexOf("/") == -1
-        ? EMPTY
-        : crdInfo.getAPIVersion().substring(0, crdInfo.getAPIVersion().lastIndexOf("/"));
-    return isEmpty(crdNameSuffix) ? EMPTY : format("%s.%s", crdInfo.getPlural(), crdNameSuffix);
-  }
-
-  @Override
-  public void deleteIstioDestinationRule(KubernetesConfig kubernetesConfig, String name) {
-    IstioClient istioClient = kubernetesHelperService.getIstioClient(kubernetesConfig);
-    try {
-      istioClient.unregisterCustomResource(new DestinationRuleBuilder()
-                                               .withNewMetadata()
-                                               .withName(name)
-                                               .withNamespace(kubernetesConfig.getNamespace())
-                                               .endMetadata()
-                                               .build());
-    } catch (Exception e) {
-      log.info(e.getMessage());
-    }
-  }
-
-  @Override
-  public void deleteIstioVirtualService(KubernetesConfig kubernetesConfig, String name) {
-    IstioClient istioClient = kubernetesHelperService.getIstioClient(kubernetesConfig);
-    try {
-      istioClient.unregisterCustomResource(new VirtualServiceBuilder()
-                                               .withNewMetadata()
-                                               .withName(name)
-                                               .withNamespace(kubernetesConfig.getNamespace())
-                                               .endMetadata()
-                                               .build());
-    } catch (Exception e) {
-      log.info(e.getMessage());
-    }
+  public HasMetadata getIstioVirtualService(KubernetesConfig kubernetesConfig, String name) {
+    return istioApiNetworkingService.getIstioVirtualService(kubernetesConfig, name);
   }
 
   @Override
   public int getTrafficPercent(KubernetesConfig kubernetesConfig, String controllerName) {
     String serviceName = getServiceNameFromControllerName(controllerName);
-    IstioResource virtualService = getIstioVirtualService(kubernetesConfig, serviceName);
     Optional<Integer> revision = getRevisionFromControllerName(controllerName);
-    if (virtualService == null || !revision.isPresent()) {
-      return 0;
-    }
-    VirtualServiceSpec virtualServiceSpec = ((VirtualService) virtualService).getSpec();
-    if (isEmpty(virtualServiceSpec.getHttp()) || isEmpty(virtualServiceSpec.getHttp().get(0).getRoute())) {
-      return 0;
-    }
 
-    return virtualServiceSpec.getHttp()
-        .get(0)
-        .getRoute()
-        .stream()
-        .filter(dw -> Integer.toString(revision.get()).equals(dw.getDestination().getSubset()))
-        .map(HTTPRouteDestination::getWeight)
-        .findFirst()
-        .orElse(0);
+    return istioApiNetworkingService.getTrafficPercent(kubernetesConfig, serviceName, revision);
   }
 
   @Override
   public Map<String, Integer> getTrafficWeights(KubernetesConfig kubernetesConfig, String controllerName) {
     String serviceName = getServiceNameFromControllerName(controllerName);
     String controllerNamePrefix = getPrefixFromControllerName(controllerName);
-    IstioResource virtualService = getIstioVirtualService(kubernetesConfig, serviceName);
-    if (virtualService == null) {
-      return new HashMap<>();
-    }
 
-    VirtualServiceSpec virtualServiceSpec = ((VirtualService) virtualService).getSpec();
-    if (isEmpty(virtualServiceSpec.getHttp()) || isEmpty(virtualServiceSpec.getHttp().get(0).getRoute())) {
-      return new HashMap<>();
-    }
-    List<HTTPRouteDestination> httpRouteDestinations = virtualServiceSpec.getHttp().get(0).getRoute();
-    return httpRouteDestinations.stream().collect(
-        toMap(dw -> controllerNamePrefix + DASH + dw.getDestination().getSubset(), HTTPRouteDestination::getWeight));
+    return istioApiNetworkingService.getVirtualServiceTrafficWeights(
+        kubernetesConfig, serviceName, controllerNamePrefix);
   }
 
   @Override
@@ -2020,6 +1901,12 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
         .replace("${CLIENT_KEY_DATA}", clientKeyData)
         .replace("${PASSWORD}", password)
         .replace("${SERVICE_ACCOUNT_TOKEN_DATA}", serviceAccountTokenData);
+  }
+
+  @Override
+  public Map<String, String> getVirtualServiceResourcesAnnotations(
+      KubernetesResourceId resourceId, KubernetesConfig kubernetesConfig) {
+    return istioApiNetworkingService.getVirtualServiceResourcesAnnotations(resourceId, kubernetesConfig);
   }
 
   private void encodeCharsIfNeeded(KubernetesConfig config) {
