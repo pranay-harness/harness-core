@@ -10,7 +10,6 @@ import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BRETT;
-import static io.harness.rule.OwnerRule.TATHAGAT;
 import static io.harness.rule.OwnerRule.YOGESH;
 
 import static java.util.Arrays.asList;
@@ -137,7 +136,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
-import me.snowdrop.istio.api.networking.v1beta1.VirtualServiceBuilder;
 import okhttp3.Call;
 import org.joda.time.DateTime;
 import org.junit.Before;
@@ -1293,37 +1291,5 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
     kubernetesContainerService.deleteConfigMap(KUBERNETES_CONFIG, "release");
 
     verify(k8sApiClient, times(1)).execute(k8sApiCall, TypeToken.get(V1Status.class).getType());
-  }
-
-  @Test
-  @Owner(developers = TATHAGAT)
-  @Category(UnitTests.class)
-  public void testGetCustomResourceDefinition() {
-    when(kubernetesClient.customResourceDefinitions()).thenReturn(customResourceDefinitionOperation);
-    when(customResourceDefinitionOperation.withName("virtualservices.networking.istio.io"))
-        .thenReturn(customResourceDefinition);
-    when(customResourceDefinition.get()).thenReturn(virtualService);
-    //    assertThat(
-    //        kubernetesContainerService.getCustomResourceDefinition(kubernetesClient, new
-    //        VirtualServiceBuilder().build())) .isSameAs(virtualService);
-    verify(customResourceDefinitionOperation, times(1)).withName("virtualservices.networking.istio.io");
-  }
-
-  @Test
-  @Owner(developers = TATHAGAT)
-  @Category(UnitTests.class)
-  public void testGetCustomResourceDefinitionFail() {
-    when(kubernetesClient.customResourceDefinitions()).thenReturn(customResourceDefinitionOperation);
-    when(customResourceDefinitionOperation.withName("virtualservices.networking.istio.io"))
-        .thenReturn(customResourceDefinition);
-    when(customResourceDefinition.get()).thenReturn(null);
-    //    assertThatThrownBy(()
-    //                           -> kubernetesContainerService.getCustomResourceDefinition(
-    //                               kubernetesClient, new VirtualServiceBuilder().build()))
-    //        .isInstanceOf(IllegalArgumentException.class)
-    //        .hasMessageContaining("Custom Resource Definition virtualservices.networking.istio.io is not found in
-    //        cluster");
-
-    verify(customResourceDefinitionOperation, times(1)).withName("virtualservices.networking.istio.io");
   }
 }

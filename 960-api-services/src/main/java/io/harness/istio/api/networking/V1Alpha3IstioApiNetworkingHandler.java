@@ -3,11 +3,10 @@ package io.harness.istio.api.networking;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.istio.api.networking.IstioApiNetworkingHandlerHelper.HARNESS_KUBERNETES_MANAGED_LABEL_KEY;
 import static io.harness.istio.api.networking.IstioApiNetworkingHandlerHelper.getCustomResourceDefinition;
 import static io.harness.k8s.KubernetesConvention.DASH;
 import static io.harness.k8s.KubernetesConvention.getRevisionFromControllerName;
-
-import static software.wings.beans.command.KubernetesSetupCommandUnit.HARNESS_KUBERNETES_MANAGED_LABEL_KEY;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -25,7 +24,6 @@ import io.harness.logging.LogCallback;
 import io.harness.serializer.YamlUtils;
 
 import software.wings.api.ContainerServiceData;
-import software.wings.beans.command.ExecutionLogCallback;
 
 import com.google.inject.Inject;
 import io.fabric8.kubernetes.api.KubernetesHelper;
@@ -98,7 +96,7 @@ public class V1Alpha3IstioApiNetworkingHandler implements IstioApiNetworkingHand
 
   @Override
   public void deleteHarnessManagedVirtualService(KubernetesConfig kubernetesConfig, HasMetadata virtualService,
-      String virtualServiceName, ExecutionLogCallback executionLogCallback) {
+      String virtualServiceName, LogCallback executionLogCallback) {
     if (null != virtualService) {
       VirtualService alpha3VirtualService = (VirtualService) virtualService;
       if (alpha3VirtualService.getMetadata().getLabels().containsKey(HARNESS_KUBERNETES_MANAGED_LABEL_KEY)) {
@@ -110,7 +108,7 @@ public class V1Alpha3IstioApiNetworkingHandler implements IstioApiNetworkingHand
 
   @Override
   public void deleteHarnessManagedDestinationRule(KubernetesConfig kubernetesConfig, HasMetadata destinationRule,
-      String virtualServiceName, ExecutionLogCallback executionLogCallback) {
+      String virtualServiceName, LogCallback executionLogCallback) {
     if (destinationRule != null) {
       DestinationRule alpha3destinationRule = (DestinationRule) destinationRule;
 
@@ -228,7 +226,7 @@ public class V1Alpha3IstioApiNetworkingHandler implements IstioApiNetworkingHand
     return true;
   }
 
-  private List<Subset> generateSubsetsForDestinationRule(List<String> subsetNames) {
+  public List<Subset> generateSubsetsForDestinationRule(List<String> subsetNames) {
     List<Subset> subsets = new ArrayList<>();
 
     for (String subsetName : subsetNames) {

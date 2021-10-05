@@ -20,6 +20,7 @@ import static org.mockito.Mockito.doThrow;
 
 import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
+import io.harness.istio.api.networking.V1Alpha3IstioApiNetworkingHandler;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.rule.Owner;
 import io.harness.threading.CurrentThreadExecutor;

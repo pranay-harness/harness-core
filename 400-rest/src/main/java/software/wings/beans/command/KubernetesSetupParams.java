@@ -1,5 +1,7 @@
 package software.wings.beans.command;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.k8s.model.ImageDetails;
 
 import software.wings.beans.container.ContainerTask;
@@ -16,6 +18,7 @@ import lombok.EqualsAndHashCode;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @EqualsAndHashCode(callSuper = true)
+@OwnedBy(HarnessTeam.CDP)
 public class KubernetesSetupParams extends ContainerSetupParams {
   private KubernetesServiceType serviceType;
   private Integer port;

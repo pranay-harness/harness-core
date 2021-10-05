@@ -102,6 +102,7 @@ import io.harness.shell.ShellExecutionData;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
 
+import software.wings.api.ContainerServiceData;
 import software.wings.beans.AwsCrossAccountAttributes;
 import software.wings.beans.AzureImageDefinition;
 import software.wings.beans.AzureImageGallery;
@@ -369,5 +370,6 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(JobDetails.class, 5121);
     kryo.register(AzureDevopsProject.class, 7285);
     kryo.register(AzureArtifactsPackage.class, 7287);
+    kryo.register(ContainerServiceData.class, 5157);
   }
 }

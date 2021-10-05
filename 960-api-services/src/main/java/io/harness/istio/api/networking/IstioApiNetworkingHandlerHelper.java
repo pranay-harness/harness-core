@@ -23,6 +23,7 @@ import me.snowdrop.istio.api.internal.IstioSpecRegistry;
 public class IstioApiNetworkingHandlerHelper {
   public static final String ISTIO_DESTINATION_TEMPLATE = "host: $ISTIO_DESTINATION_HOST_NAME\n"
       + "subset: $ISTIO_DESTINATION_SUBSET_NAME";
+  public static final String HARNESS_KUBERNETES_MANAGED_LABEL_KEY = "harness.io/managed";
 
   public static String generateDestination(String host, String subset) {
     return ISTIO_DESTINATION_TEMPLATE.replace("$ISTIO_DESTINATION_HOST_NAME", host)

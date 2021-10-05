@@ -25,6 +25,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.KubernetesContainerService;
@@ -65,6 +67,7 @@ import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+@OwnedBy(HarnessTeam.CDP)
 public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
   @Mock private GkeClusterService gkeClusterService;
   @Mock private KubernetesContainerService kubernetesContainerService;
@@ -267,9 +270,8 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
     assertThat(horizontalPodAutoscaler.getMetadata().getLabels().get("app")).isEqualTo("appName");
     assertThat(horizontalPodAutoscaler.getMetadata().getLabels().get("version")).isEqualTo("9");
     assertThat(horizontalPodAutoscaler.getSpec().getAdditionalProperties()).isNotNull();
-    assertThat(horizontalPodAutoscaler.getSpec().getAdditionalProperties()).hasSize(1);
-    assertThat(horizontalPodAutoscaler.getSpec().getAdditionalProperties().keySet().iterator().next())
-        .isEqualTo("metrics");
+    assertThat(horizontalPodAutoscaler.getSpec().getMetrics()).hasSize(1);
+    assertThat(horizontalPodAutoscaler.getSpec().getMetrics().get(0).getType()).isEqualTo("Resource");
     assertThat(horizontalPodAutoscaler.getSpec().getMinReplicas()).isEqualTo(Integer.valueOf(3));
     assertThat(horizontalPodAutoscaler.getSpec().getMaxReplicas()).isEqualTo(Integer.valueOf(6));
   }
@@ -297,7 +299,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
         kubernetesSetupCommandUnit.createAutoscaler("abaris.hpanormal.prod.0", "Deployment", "extensions/v1beta1",
             "default", labels, setupParams, executionLogCallback);
 
-    assertThat(horizontalPodAutoscaler.getApiVersion()).isEqualTo("autoscaling/v1");
+    assertThat(horizontalPodAutoscaler.getApiVersion()).isEqualTo("autoscaling/v2beta2");
     assertThat(horizontalPodAutoscaler.getSpec()).isNotNull();
     assertThat(horizontalPodAutoscaler.getSpec().getScaleTargetRef().getName()).isEqualTo("abaris.hpanormal.prod.0");
     assertThat(horizontalPodAutoscaler.getSpec().getScaleTargetRef().getKind()).isEqualTo("Deployment");
@@ -323,7 +325,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
     horizontalPodAutoscaler = kubernetesSetupCommandUnit.createAutoscaler("abaris.hpanormal.prod-0", "Deployment",
         "extensions/v1beta1", "default", labels, setupParams, executionLogCallback);
 
-    assertThat(horizontalPodAutoscaler.getApiVersion()).isEqualTo("autoscaling/v1");
+    assertThat(horizontalPodAutoscaler.getApiVersion()).isEqualTo("autoscaling/v2beta2");
     assertThat(horizontalPodAutoscaler.getSpec()).isNotNull();
     assertThat(horizontalPodAutoscaler.getSpec().getScaleTargetRef().getName()).isEqualTo("abaris.hpanormal.prod-0");
     assertThat(horizontalPodAutoscaler.getSpec().getScaleTargetRef().getKind()).isEqualTo("Deployment");

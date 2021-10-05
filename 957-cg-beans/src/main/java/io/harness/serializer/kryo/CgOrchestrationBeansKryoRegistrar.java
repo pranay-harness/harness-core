@@ -8,7 +8,6 @@ import io.harness.beans.SweepingOutput;
 import io.harness.context.ContextElementType;
 import io.harness.serializer.KryoRegistrar;
 
-import software.wings.api.ContainerServiceData;
 import software.wings.api.ExecutionDataValue;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.EntityType;
@@ -36,7 +35,6 @@ public class CgOrchestrationBeansKryoRegistrar implements KryoRegistrar {
     // Put promoted classes here and do not change the id
     kryo.register(SweepingOutput.class, 3101);
     kryo.register(ExecutionInterruptType.class, 4000);
-    kryo.register(ContainerServiceData.class, 5157);
     kryo.register(ExecutionDataValue.class, 5368);
     kryo.register(CountsByStatuses.class, 4008);
     kryo.register(EntityType.class, 5360);

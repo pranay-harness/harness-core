@@ -8,7 +8,6 @@ import io.harness.k8s.model.KubernetesResource;
 import io.harness.logging.LogCallback;
 
 import software.wings.api.ContainerServiceData;
-import software.wings.beans.command.ExecutionLogCallback;
 
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -24,10 +23,10 @@ public interface IstioApiNetworkingHandler {
       HasMetadata virtualService, LogCallback executionLogCallback) throws IOException;
 
   void deleteHarnessManagedVirtualService(KubernetesConfig kubernetesConfig, HasMetadata virtualService,
-      String virtualServiceName, ExecutionLogCallback executionLogCallback);
+      String virtualServiceName, LogCallback executionLogCallback);
 
   void deleteHarnessManagedDestinationRule(KubernetesConfig kubernetesConfig, HasMetadata destinationRule,
-      String virtualServiceName, ExecutionLogCallback executionLogCallback);
+      String virtualServiceName, LogCallback executionLogCallback);
 
   HasMetadata updateDestinationRuleManifestFilesWithSubsets(List<String> subsets, KubernetesResource kubernetesResource,
       KubernetesClient kubernetesClient, HasMetadata destinationRule) throws IOException;

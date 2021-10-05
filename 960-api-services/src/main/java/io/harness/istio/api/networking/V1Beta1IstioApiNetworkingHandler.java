@@ -3,11 +3,10 @@ package io.harness.istio.api.networking;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.istio.api.networking.IstioApiNetworkingHandlerHelper.HARNESS_KUBERNETES_MANAGED_LABEL_KEY;
 import static io.harness.istio.api.networking.IstioApiNetworkingHandlerHelper.getCustomResourceDefinition;
 import static io.harness.k8s.KubernetesConvention.DASH;
 import static io.harness.k8s.KubernetesConvention.getRevisionFromControllerName;
-
-import static software.wings.beans.command.KubernetesSetupCommandUnit.HARNESS_KUBERNETES_MANAGED_LABEL_KEY;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -25,7 +24,6 @@ import io.harness.logging.LogCallback;
 import io.harness.serializer.YamlUtils;
 
 import software.wings.api.ContainerServiceData;
-import software.wings.beans.command.ExecutionLogCallback;
 
 import com.google.inject.Inject;
 import io.fabric8.kubernetes.api.KubernetesHelper;
@@ -62,7 +60,6 @@ import me.snowdrop.istio.client.IstioClient;
 @Slf4j
 @OwnedBy(HarnessTeam.CDP)
 public class V1Beta1IstioApiNetworkingHandler implements IstioApiNetworkingHandler {
-  @Inject IstioApiNetworkingHandlerHelper istioApiNetworkingHandlerHelper;
   @Inject KubernetesHelperService kubernetesHelperService;
 
   public void printVirtualServiceRouteWeights(
@@ -99,7 +96,7 @@ public class V1Beta1IstioApiNetworkingHandler implements IstioApiNetworkingHandl
 
   @Override
   public void deleteHarnessManagedVirtualService(KubernetesConfig kubernetesConfig, HasMetadata virtualService,
-      String virtualServiceName, ExecutionLogCallback executionLogCallback) {
+      String virtualServiceName, LogCallback executionLogCallback) {
     if (null != virtualService) {
       VirtualService beta1VirtualService = (VirtualService) virtualService;
       if (beta1VirtualService.getMetadata().getLabels().containsKey(HARNESS_KUBERNETES_MANAGED_LABEL_KEY)) {
@@ -111,7 +108,7 @@ public class V1Beta1IstioApiNetworkingHandler implements IstioApiNetworkingHandl
 
   @Override
   public void deleteHarnessManagedDestinationRule(KubernetesConfig kubernetesConfig, HasMetadata destinationRule,
-      String virtualServiceName, ExecutionLogCallback executionLogCallback) {
+      String virtualServiceName, LogCallback executionLogCallback) {
     if (destinationRule != null) {
       DestinationRule beta1DestinationRule = (DestinationRule) destinationRule;
 
@@ -143,14 +140,14 @@ public class V1Beta1IstioApiNetworkingHandler implements IstioApiNetworkingHandl
       KubernetesConfig kubernetesConfig, List<IstioDestinationWeight> istioDestinationWeights,
       LogCallback executionLogCallback, KubernetesClient kubernetesClient, HasMetadata virtualService)
       throws IOException {
-    VirtualService virtualServiceAlpha3 = (VirtualService) virtualService;
+    VirtualService virtualServiceBeta1 = (VirtualService) virtualService;
 
     kubernetesClient.customResources(getCustomResourceDefinition(kubernetesClient, new VirtualServiceBuilder().build()),
         VirtualService.class, KubernetesResourceList.class, DoneableVirtualService.class);
 
-    updateVirtualServiceWithDestinationWeights(istioDestinationWeights, virtualServiceAlpha3, executionLogCallback);
+    updateVirtualServiceWithDestinationWeights(istioDestinationWeights, virtualServiceBeta1, executionLogCallback);
 
-    kubernetesResource.setSpec(KubernetesHelper.toYaml(virtualServiceAlpha3));
+    kubernetesResource.setSpec(KubernetesHelper.toYaml(virtualServiceBeta1));
     return virtualService;
   }
 
@@ -243,7 +240,7 @@ public class V1Beta1IstioApiNetworkingHandler implements IstioApiNetworkingHandl
     return true;
   }
 
-  private List<Subset> generateSubsetsForDestinationRule(List<String> subsetNames) {
+  public List<Subset> generateSubsetsForDestinationRule(List<String> subsetNames) {
     List<Subset> subsets = new ArrayList<>();
 
     for (String subsetName : subsetNames) {

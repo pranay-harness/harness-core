@@ -1385,7 +1385,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
         mock(ParameterNamespaceListVisitFromServerGetDeleteRecreateWaitApplicable.class);
     doReturn(resource).when(mockClient).load(any());
     doReturn(asList(service1)).when(resource).get();
-    VirtualService result = k8sTaskHelperBase.updateVirtualServiceManifestFilesWithRoutesForCanary(
+    VirtualService result = (VirtualService) k8sTaskHelperBase.updateVirtualServiceManifestFilesWithRoutesForCanary(
         resources, KubernetesConfig.builder().build(), executionLogCallback);
     List<HTTPRouteDestination> routes = result.getSpec().getHttp().get(0).getRoute();
     assertThat(routes.stream().map(HTTPRouteDestination::getWeight)).containsExactly(100, 0);
@@ -1583,21 +1583,6 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
       assertThat(container.getName()).isEqualTo(expectedContainerId + "-name");
       assertThat(container.getImage()).isEqualTo("example:0.0.1");
     });
-  }
-
-  @Test
-  @Owner(developers = SAHIL)
-  @Category(UnitTests.class)
-  public void testGenerateSubsetsForDestinationRule() {
-    List<String> subsetNames = new ArrayList<>();
-    subsetNames.add(HarnessLabelValues.trackCanary);
-    subsetNames.add(HarnessLabelValues.trackStable);
-    subsetNames.add(HarnessLabelValues.colorBlue);
-    subsetNames.add(HarnessLabelValues.colorGreen);
-
-    final List<Subset> result = k8sTaskHelperBase.generateSubsetsForDestinationRule(subsetNames);
-
-    assertThat(result.size()).isEqualTo(4);
   }
 
   @Test
