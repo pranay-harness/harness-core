@@ -18,6 +18,7 @@ import io.harness.preflight.PreFlightCheckMetadata;
 import io.harness.utils.IdentifierRefHelper;
 import io.harness.utils.IdentifierRefProtoUtils;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -32,7 +33,8 @@ public class FilterCreatorHelper {
   private final List<String> jexlKeywords = ImmutableList.of("or", "and", "eq", "ne", "lt", "gt", "le", "ge", "div",
       "mod", "not", "null", "true", "false", "new", "var", "return");
 
-  private void checkIfNameIsJexlKeyword(YamlNode variable) {
+  @VisibleForTesting
+  void checkIfNameIsJexlKeyword(YamlNode variable) {
     String variableName = Objects.requireNonNull(variable.getField(YAMLFieldNameConstants.NAME)).getNode().asText();
     if (jexlKeywords.contains(variableName)) {
       String errorMsg = "Variable name " + variableName + " is a jexl reserved keyword";

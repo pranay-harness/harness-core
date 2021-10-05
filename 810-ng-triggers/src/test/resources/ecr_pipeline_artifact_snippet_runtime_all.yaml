@@ -1,0 +1,21 @@
+pipeline:
+  name: pipeline
+  identifier: pipeline
+  stages:
+    - stage:
+        name: dev
+        identifier: dev
+        type: Deployment
+        spec:
+          serviceConfig:
+            serviceDefinition:
+              type: Kubernetes
+              spec:
+                artifacts:
+                  primary:
+                    type: Ecr
+                    spec:
+                      connectorRef: <+input>
+                      imagePath: <+input>
+                      region: <+input>
+                      tag: <+input>

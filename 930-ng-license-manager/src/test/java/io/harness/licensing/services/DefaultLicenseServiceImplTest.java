@@ -34,6 +34,7 @@ import io.harness.licensing.Edition;
 import io.harness.licensing.LicenseStatus;
 import io.harness.licensing.LicenseType;
 import io.harness.licensing.beans.modules.AccountLicenseDTO;
+import io.harness.licensing.beans.modules.CDModuleLicenseDTO;
 import io.harness.licensing.beans.modules.CEModuleLicenseDTO;
 import io.harness.licensing.beans.modules.CIModuleLicenseDTO;
 import io.harness.licensing.beans.modules.ModuleLicenseDTO;
@@ -186,6 +187,48 @@ public class DefaultLicenseServiceImplTest extends CategoryTest {
     verify(telemetryReporter, times(1))
         .sendTrackEvent(eq(SUCCEED_START_FREE_OPERATION), any(), any(), eq(io.harness.telemetry.Category.SIGN_UP));
     assertThat(result).isEqualTo(ciModuleLicenseDTO);
+  }
+
+  @Test
+  @Owner(developers = NATHAN)
+  @Category(UnitTests.class)
+  public void testStartCommunityLicense() {
+    CDModuleLicense cdModuleLicense = CDModuleLicense.builder().workloads(Integer.valueOf(UNLIMITED)).build();
+    cdModuleLicense.setId("id");
+    cdModuleLicense.setAccountIdentifier(ACCOUNT_IDENTIFIER);
+    cdModuleLicense.setModuleType(DEFAULT_MODULE_TYPE);
+    cdModuleLicense.setEdition(Edition.FREE);
+    cdModuleLicense.setStatus(LicenseStatus.ACTIVE);
+    cdModuleLicense.setStartTime(1);
+    cdModuleLicense.setExpiryTime(Long.valueOf(UNLIMITED));
+    cdModuleLicense.setCreatedAt(0L);
+    cdModuleLicense.setLastUpdatedAt(0L);
+
+    CDModuleLicenseDTO cdModuleLicenseDTO = CDModuleLicenseDTO.builder()
+                                                .id("id")
+                                                .workloads(Integer.valueOf(UNLIMITED))
+                                                .accountIdentifier(ACCOUNT_IDENTIFIER)
+                                                .moduleType(DEFAULT_MODULE_TYPE)
+                                                .edition(Edition.FREE)
+                                                .status(LicenseStatus.ACTIVE)
+                                                .startTime(1)
+                                                .expiryTime(Long.valueOf(UNLIMITED))
+                                                .createdAt(0L)
+                                                .lastModifiedAt(0L)
+                                                .build();
+
+    when(licenseObjectConverter.toDTO(cdModuleLicense)).thenReturn(cdModuleLicenseDTO);
+    when(licenseObjectConverter.toEntity(cdModuleLicenseDTO)).thenReturn(cdModuleLicense);
+    when(moduleLicenseRepository.save(cdModuleLicense)).thenReturn(cdModuleLicense);
+    when(moduleLicenseInterface.generateFreeLicense(eq(ACCOUNT_IDENTIFIER), eq(DEFAULT_MODULE_TYPE)))
+        .thenReturn(cdModuleLicenseDTO);
+    when(accountService.getAccount(ACCOUNT_IDENTIFIER)).thenReturn(AccountDTO.builder().build());
+    ModuleLicenseDTO result = licenseService.startFreeLicense(ACCOUNT_IDENTIFIER, CI);
+    verify(accountService, times(1)).updateDefaultExperienceIfApplicable(ACCOUNT_IDENTIFIER, DefaultExperience.NG);
+    verify(telemetryReporter, times(1)).sendGroupEvent(eq(ACCOUNT_IDENTIFIER), any(), any());
+    verify(telemetryReporter, times(1))
+        .sendTrackEvent(eq(SUCCEED_START_FREE_OPERATION), any(), any(), eq(io.harness.telemetry.Category.SIGN_UP));
+    assertThat(result).isEqualTo(cdModuleLicenseDTO);
   }
 
   @Test

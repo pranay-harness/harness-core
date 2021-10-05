@@ -33,7 +33,7 @@ public class CILocalClient implements CIModuleLicenseClient {
       case TEAM:
         return builder.numberOfCommitters(TEAM_TRIAL_DEVELOPERS).licenseType(LicenseType.TRIAL).build();
       case FREE:
-        return builder.numberOfCommitters(Integer.valueOf(UNLIMITED)).expiryTime(Long.valueOf(UNLIMITED)).build();
+        return builder.numberOfCommitters(Integer.valueOf(UNLIMITED)).expiryTime(Long.MAX_VALUE).build();
       default:
         throw new UnsupportedOperationException("Requested edition is not supported");
     }

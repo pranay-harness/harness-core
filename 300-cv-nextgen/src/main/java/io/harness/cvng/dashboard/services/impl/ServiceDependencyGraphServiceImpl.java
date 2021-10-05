@@ -42,10 +42,10 @@ public class ServiceDependencyGraphServiceImpl implements ServiceDependencyGraph
   @Inject private Clock clock;
 
   @Override
-  public ServiceDependencyGraphDTO getDependencyGraph(
-      @NonNull ProjectParams projectParams, @Nullable String serviceIdentifier, @Nullable String envIdentifier) {
+  public ServiceDependencyGraphDTO getDependencyGraph(@NonNull ProjectParams projectParams,
+      @Nullable String serviceIdentifier, @Nullable String environmentIdentifier) {
     List<MonitoredService> monitoredServices =
-        monitoredServiceService.list(projectParams, serviceIdentifier, envIdentifier);
+        monitoredServiceService.list(projectParams, serviceIdentifier, environmentIdentifier);
     Set<String> identifiers =
         monitoredServices.stream().map(MonitoredService::getIdentifier).collect(Collectors.toSet());
     List<ServiceDependency> serviceDependencies =
@@ -56,9 +56,9 @@ public class ServiceDependencyGraphServiceImpl implements ServiceDependencyGraph
         serviceDependency -> identifiers.add(serviceDependency.getFromMonitoredServiceIdentifier()));
     monitoredServices = monitoredServiceService.list(projectParams, new ArrayList<>(identifiers));
 
-    List<HeatMap> heatMaps = heatMapService.getLatestHeatMaps(projectParams, serviceIdentifier, envIdentifier);
-    List<ActivityDashboardDTO> changes = activityService.listActivitiesInTimeRange(
-        projectParams, serviceIdentifier, envIdentifier, clock.instant().minus(1, ChronoUnit.DAYS), clock.instant());
+    List<HeatMap> heatMaps = heatMapService.getLatestHeatMaps(projectParams, serviceIdentifier, environmentIdentifier);
+    List<ActivityDashboardDTO> changes = activityService.listActivitiesInTimeRange(projectParams, serviceIdentifier,
+        environmentIdentifier, clock.instant().minus(1, ChronoUnit.DAYS), clock.instant());
 
     return constructGraph(monitoredServices, serviceDependencies, heatMaps, changes);
   }

@@ -19,6 +19,7 @@ public class ResourceClientConfigs {
   @JsonProperty("manager") ServiceConfig manager;
   @JsonProperty("pipeline-service") ServiceConfig pipelineService;
   @JsonProperty("resourceGroup") ServiceConfig resourceGroupService;
+  @JsonProperty("template-service") ServiceConfig templateService;
 
   @Value
   @Builder

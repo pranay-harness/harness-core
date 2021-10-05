@@ -34,6 +34,7 @@ public class TemplateServiceModuleRegistrars {
           .addAll(SMCoreRegistrars.kryoRegistrars)
           .addAll(YamlBeansModuleRegistrars.kryoRegistrars)
           .add(NGTemplateKryoRegistrar.class)
+          .addAll(NGCoreRegistrars.kryoRegistrars)
           .build();
 
   public final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =
@@ -50,6 +51,7 @@ public class TemplateServiceModuleRegistrars {
           .addAll(OutboxEventRegistrars.morphiaRegistrars)
           .addAll(SMCoreRegistrars.morphiaRegistrars)
           .addAll(YamlBeansModuleRegistrars.morphiaRegistrars)
+          .addAll(NGCoreRegistrars.morphiaRegistrars)
           .add(NGTemplateMorphiaRegistrar.class)
           .build();
 

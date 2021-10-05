@@ -842,8 +842,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return approvalStateExecutionsData;
   }
 
-  @VisibleForTesting
-  void refreshPipelineExecution(WorkflowExecution workflowExecution) {
+  @Override
+  public void refreshPipelineExecution(WorkflowExecution workflowExecution) {
     if (workflowExecution == null || workflowExecution.getPipelineExecution() == null) {
       return;
     }

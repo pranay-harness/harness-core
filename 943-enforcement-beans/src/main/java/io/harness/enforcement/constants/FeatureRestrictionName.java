@@ -11,5 +11,6 @@ public enum FeatureRestrictionName {
 
   // All Features
   MULTIPLE_ORGANIZATIONS,
-  MULTIPLE_PROJECTS
+  MULTIPLE_PROJECTS,
+  SECRET_MANAGERS
 }
