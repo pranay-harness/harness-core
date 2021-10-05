@@ -1,6 +1,6 @@
 package io.harness.serializer;
 
-import io.harness.ccm.businessMapping.entities.BusinessMapping;
+import io.harness.ccm.views.businessMapping.entities.BusinessMapping;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 

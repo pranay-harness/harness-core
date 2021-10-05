@@ -1,11 +1,11 @@
-package io.harness.ccm.businessMapping.dao;
+package io.harness.ccm.views.businessMapping.dao;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.persistence.HQuery.excludeValidate;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.ccm.businessMapping.entities.BusinessMapping;
-import io.harness.ccm.businessMapping.entities.BusinessMapping.BusinessMappingKeys;
+import io.harness.ccm.views.businessMapping.entities.BusinessMapping;
+import io.harness.ccm.views.businessMapping.entities.BusinessMapping.BusinessMappingKeys;
 import io.harness.persistence.HPersistence;
 
 import com.google.inject.Inject;
