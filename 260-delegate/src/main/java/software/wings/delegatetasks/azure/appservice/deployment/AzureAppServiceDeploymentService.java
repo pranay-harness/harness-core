@@ -97,7 +97,7 @@ public class AzureAppServiceDeploymentService {
 
     stopSlotAsyncWithSteadyCheck(deploymentContext, preDeploymentData);
     updateDeploymentSlotConfigurationSettings(deploymentContext, preDeploymentData);
-    deployArtifactFile(deploymentContext, preDeploymentData);
+    deployArtifactFile(deploymentContext);
     startSlotAsyncWithSteadyCheck(deploymentContext, preDeploymentData);
   }
 
@@ -332,8 +332,7 @@ public class AzureAppServiceDeploymentService {
     slotSwapLogCallback.saveExecutionLog("Swapping slots done successfully", INFO, SUCCESS);
   }
 
-  private void deployArtifactFile(
-      AzureAppServicePackageDeploymentContext context, AzureAppServicePreDeploymentData preDeploymentData) {
+  private void deployArtifactFile(AzureAppServicePackageDeploymentContext context) {
     String slotName = context.getSlotName();
     ILogStreamingTaskClient logStreamingTaskClient = context.getLogStreamingTaskClient();
     LogCallback logCallback = logStreamingTaskClient.obtainLogCallback("DEPLOY_ARTIFACT_FILE");
