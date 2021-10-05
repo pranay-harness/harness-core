@@ -3,6 +3,8 @@ package io.harness.batch.processing.schedule;
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.metrics.CeProductMetricsTasklet;
 import io.harness.batch.processing.metrics.ProductMetricsService;
+import io.harness.batch.processing.svcmetrics.BatchJobExecutionListener;
+import io.harness.metrics.service.api.MetricService;
 
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
@@ -21,6 +23,7 @@ import org.springframework.context.annotation.Configuration;
 public class SegmentJobConfiguration {
   @Autowired private CloudToHarnessMappingService cloudToHarnessMappingService;
   @Autowired private ProductMetricsService productMetricsService;
+  @Autowired private MetricService metricService;
 
   @Bean
   public Tasklet ceProductMetricsTasklet() {
@@ -33,6 +36,7 @@ public class SegmentJobConfiguration {
   public Job ceProductMetricsJob(JobBuilderFactory jobBuilderFactory, Step ceProductMetricsStep) {
     return jobBuilderFactory.get(BatchJobType.CE_SEGMENT_CALL.name())
         .incrementer(new RunIdIncrementer())
+        .listener(new BatchJobExecutionListener(metricService))
         .start(ceProductMetricsStep)
         .build();
   }

@@ -2,7 +2,9 @@ package io.harness.batch.processing.config;
 
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.reader.SettingAttributeReader;
+import io.harness.batch.processing.svcmetrics.BatchJobExecutionListener;
 import io.harness.batch.processing.writer.S3SyncEventWriter;
+import io.harness.metrics.service.api.MetricService;
 
 import software.wings.beans.SettingAttribute;
 
@@ -25,12 +27,14 @@ public class S3SyncJobConfig {
 
   @Autowired private JobBuilderFactory jobBuilderFactory;
   @Autowired private StepBuilderFactory stepBuilderFactory;
+  @Autowired private MetricService metricService;
 
   @Bean
   @Qualifier(value = "s3SyncJob")
   public Job s3SyncJob(JobBuilderFactory jobBuilderFactory, Step s3SyncStep) {
     return jobBuilderFactory.get(BatchJobType.SYNC_BILLING_REPORT_S3.name())
         .incrementer(new RunIdIncrementer())
+        .listener(new BatchJobExecutionListener(metricService))
         .start(s3SyncStep)
         .build();
   }
