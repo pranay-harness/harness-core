@@ -1,6 +1,6 @@
 package io.harness.perpetualtask.ecs;
 
-import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
+import static io.harness.ccm.commons.constants.Constants.CLUSTER_ID_IDENTIFIER;
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_START;
 import static io.harness.event.payloads.Lifecycle.EventType.EVENT_TYPE_STOP;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
