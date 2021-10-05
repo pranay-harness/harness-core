@@ -124,6 +124,7 @@ import org.eclipse.jgit.transport.OpenSshConfig.Host;
 import org.eclipse.jgit.transport.SshSessionFactory;
 import org.eclipse.jgit.transport.SshTransport;
 import org.eclipse.jgit.transport.TagOpt;
+import org.eclipse.jgit.transport.TransportHttp;
 import org.eclipse.jgit.transport.http.HttpConnection;
 import org.eclipse.jgit.transport.http.HttpConnectionFactory;
 import org.eclipse.jgit.transport.http.apache.HttpClientConnectionFactory;
@@ -142,6 +143,12 @@ import org.eclipse.jgit.util.HttpSupport;
 @BreakDependencyOn("software.wings.beans.GitConfig")
 public class GitClientImpl implements GitClient {
   @Inject GitClientHelper gitClientHelper;
+  /**
+   * factory for creating HTTP connections. By default, JGit uses JDKHttpConnectionFactory which doesn't work well with
+   * proxy. See:
+   * https://stackoverflow.com/questions/67492788/eclipse-egit-tfs-git-connection-authentication-not-supported
+   */
+  public static final HttpConnectionFactory connectionFactory = new HttpClientConnectionFactory();
 
   private synchronized GitCloneResult clone(
       GitConfig gitConfig, String gitRepoDirectory, String branch, boolean noCheckout) {
@@ -1107,6 +1114,12 @@ public class GitClientImpl implements GitClient {
   private TransportCommand getAuthConfiguredCommand(TransportCommand gitCommand, GitConfig gitConfig) {
     if (gitConfig.getRepoUrl().toLowerCase().startsWith("http")) {
       configureHttpCredentialProvider(gitCommand, gitConfig);
+      gitCommand.setTransportConfigCallback(transport -> {
+        if (transport instanceof TransportHttp) {
+          TransportHttp http = (TransportHttp) transport;
+          http.setHttpConnectionFactory(connectionFactory);
+        }
+      });
     } else {
       gitCommand.setTransportConfigCallback(transport -> {
         SshTransport sshTransport = (SshTransport) transport;
