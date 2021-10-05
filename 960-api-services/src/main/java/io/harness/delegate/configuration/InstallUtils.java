@@ -70,8 +70,11 @@ public class InstallUtils {
   private static String kubectlPath = "kubectl";
 
   private static String kustomizeBaseDir = "./client-tools/kustomize/";
-  private static String kustomizeVersion = "v3.5.4";
+  private static String kustomizeVersionOld = "v3.5.4";
+  private static String kustomizeVersionNew = "v4.4.0";
   private static String kustomizePath = "kustomize";
+
+  private static final List<String> kustomizeVersions = Arrays.asList(kustomizeVersionOld, kustomizeVersionNew);
 
   private static String goTemplateToolPath = "go-template";
   private static String harnessPywinrmToolPath = "harness-pywinrm";
@@ -174,6 +177,13 @@ public class InstallUtils {
     return kustomizePath;
   }
 
+  public static String getKustomizePath(boolean useLatestVersion) {
+    if (useLatestVersion) {
+      return join("/", kustomizeBaseDir, kustomizeVersionNew, "kustomize");
+    } else {
+      return join("/", kustomizeBaseDir, kustomizeVersionOld, "kustomize");
+    }
+  }
   public static boolean installKubectl(DelegateConfiguration configuration) {
     try {
       if (StringUtils.isNotEmpty(configuration.getKubectlPath())) {
@@ -1027,6 +1037,14 @@ public class InstallUtils {
   }
 
   public static boolean installKustomize(DelegateConfiguration configuration) {
+    boolean kustomizeInstalled = true;
+    for (String version : kustomizeVersions) {
+      kustomizeInstalled = kustomizeInstalled && installKustomize(configuration, version);
+    }
+    return kustomizeInstalled;
+  }
+
+  public static boolean installKustomize(DelegateConfiguration configuration, String kustomizeVersion) {
     try {
       if (StringUtils.isNotEmpty(configuration.getKustomizePath())) {
         kustomizePath = configuration.getKustomizePath();
