@@ -50,6 +50,7 @@ if [ "${RUN_PMDS}" == "true" ]; then
 fi
 
 BAZEL_MODULES="\
+  //100-ng-migration:module \
   //270-verification:module \
   //280-batch-processing:module \
   //290-dashboard-service:module \

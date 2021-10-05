@@ -6,6 +6,7 @@ java_binary(
     main_class = "io.harness.MicroserviceInterfaceTool",
     visibility = ["//visibility:public"],
     deps = [
+        "//100-ng-migration:module",
         "//110-change-data-capture:module",
         "//120-ng-manager:module",
         "//122-ng-authentication-settings:module",
