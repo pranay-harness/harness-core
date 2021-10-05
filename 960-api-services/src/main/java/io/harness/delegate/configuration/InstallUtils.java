@@ -1095,7 +1095,7 @@ public class InstallUtils {
           return false;
         }
       } else {
-        log.error("kustomize install failed");
+        log.error("kustomize version {} install failed", kustomizeVersion);
         log.error(result.outputUTF8());
         return false;
       }
