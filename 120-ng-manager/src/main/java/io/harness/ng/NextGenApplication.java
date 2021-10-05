@@ -37,8 +37,12 @@ import io.harness.connector.ConnectorDTO;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.gitsync.ConnectorGitSyncHelper;
 import io.harness.controller.PrimaryVersionChangeScheduler;
+import io.harness.enforcement.client.CustomRestrictionRegisterConfiguration;
 import io.harness.enforcement.client.RestrictionUsageRegisterConfiguration;
-import io.harness.enforcement.client.example.ExampleUsageImpl;
+import io.harness.enforcement.client.custom.CustomRestrictionInterface;
+import io.harness.enforcement.client.example.ExampleCustomImpl;
+import io.harness.enforcement.client.example.ExampleRateLimitUsageImpl;
+import io.harness.enforcement.client.example.ExampleStaticLimitUsageImpl;
 import io.harness.enforcement.client.services.EnforcementSdkRegisterService;
 import io.harness.enforcement.client.usage.RestrictionUsageInterface;
 import io.harness.enforcement.constants.FeatureRestrictionName;
@@ -744,12 +748,20 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         RestrictionUsageRegisterConfiguration.builder()
             .restrictionNameClassMap(
                 ImmutableMap.<FeatureRestrictionName, Class<? extends RestrictionUsageInterface>>builder()
-                    .put(FeatureRestrictionName.TEST2, ExampleUsageImpl.class)
-                    .put(FeatureRestrictionName.TEST3, ExampleUsageImpl.class)
+                    .put(FeatureRestrictionName.TEST2, ExampleStaticLimitUsageImpl.class)
+                    .put(FeatureRestrictionName.TEST3, ExampleRateLimitUsageImpl.class)
                     .put(FeatureRestrictionName.MULTIPLE_PROJECTS, ProjectRestrictionsUsageImpl.class)
                     .put(FeatureRestrictionName.MULTIPLE_ORGANIZATIONS, OrgRestrictionsUsageImpl.class)
                     .build())
             .build();
-    injector.getInstance(EnforcementSdkRegisterService.class).initialize(restrictionUsageRegisterConfiguration);
+    CustomRestrictionRegisterConfiguration customConfig =
+        CustomRestrictionRegisterConfiguration.builder()
+            .customRestrictionMap(
+                ImmutableMap.<FeatureRestrictionName, Class<? extends CustomRestrictionInterface>>builder()
+                    .put(FeatureRestrictionName.TEST4, ExampleCustomImpl.class)
+                    .build())
+            .build();
+    injector.getInstance(EnforcementSdkRegisterService.class)
+        .initialize(restrictionUsageRegisterConfiguration, customConfig);
   }
 }
