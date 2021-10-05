@@ -96,9 +96,9 @@ public class GitSyncError
         .<MongoIndex>builder()
         // for gitToHarness errors
         .add(SortCompoundMongoIndex.builder()
-                 .name("accountId_errorType_repo_branch_sort_Index")
+                 .name("accountId_errorType_repo_branch_status_sort_Index")
                  .fields(Arrays.asList(GitSyncErrorKeys.accountIdentifier, GitSyncErrorKeys.errorType,
-                     GitSyncErrorKeys.repoUrl, GitSyncErrorKeys.branchName))
+                     GitSyncErrorKeys.repoUrl, GitSyncErrorKeys.branchName, GitSyncErrorKeys.status))
                  .descSortField(GitSyncErrorKeys.createdAt)
                  .build())
         .add(CompoundMongoIndex.builder()
