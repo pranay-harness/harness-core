@@ -18,6 +18,8 @@ import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
 import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.bigQuery.BigQueryServiceImpl;
+import io.harness.ccm.businessMapping.service.impl.BusinessMappingServiceImpl;
+import io.harness.ccm.businessMapping.service.intf.BusinessMappingService;
 import io.harness.ccm.commons.beans.config.GcpConfig;
 import io.harness.ccm.commons.service.impl.ClusterRecordServiceImpl;
 import io.harness.ccm.commons.service.impl.InstanceDataServiceImpl;
@@ -190,6 +192,7 @@ public class CENextGenModule extends AbstractModule {
     bind(AwsClient.class).to(AwsClientImpl.class);
     bind(GCPEntityChangeEventService.class).to(GCPEntityChangeEventServiceImpl.class);
     bind(AwsEntityChangeEventService.class).to(AwsEntityChangeEventServiceImpl.class);
+    bind(BusinessMappingService.class).to(BusinessMappingServiceImpl.class);
     bind(LicenseUsageInterface.class).to(LicenseUsageInterfaceImpl.class).in(Singleton.class);
 
     install(new CENextGenPersistenceModule());
