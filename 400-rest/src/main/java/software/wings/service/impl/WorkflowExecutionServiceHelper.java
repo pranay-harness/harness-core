@@ -49,6 +49,7 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateExecutionInstance.StateExecutionInstanceKeys;
 import software.wings.sm.StateMachine;
@@ -510,8 +511,17 @@ public class WorkflowExecutionServiceHelper {
     for (StateExecutionInstance stateExecutionInstance : allExecutionInstances) {
       String failureDetails = "";
       if (!parentInstances.contains(stateExecutionInstance.getUuid())) {
-        String errorMessage =
-            stateExecutionInstance.getStateExecutionMap().get(stateExecutionInstance.getStateName()).getErrorMsg();
+        String errorMessage = "";
+        Map<String, StateExecutionData> stateExecutionMap = stateExecutionInstance.getStateExecutionMap();
+        if (stateExecutionMap != null) {
+          if (stateExecutionMap.containsKey(stateExecutionInstance.getStateName())) {
+            errorMessage = stateExecutionMap.get(stateExecutionInstance.getStateName()).getErrorMsg();
+          } else if (stateExecutionMap.containsKey(stateExecutionInstance.getDisplayName())) {
+            errorMessage = stateExecutionMap.get(stateExecutionInstance.getDisplayName()).getErrorMsg();
+          } else {
+            errorMessage = "";
+          }
+        }
         if (isNotEmpty(errorMessage)) {
           failureDetails = String.format("%s failed - %s ", stateExecutionInstance.getDisplayName(), errorMessage);
         } else {

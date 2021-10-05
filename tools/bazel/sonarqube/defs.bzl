@@ -84,7 +84,7 @@ def _test_report_path(parent_path, test_target):
     return parent_path + "bazel-testlogs/" + test_target.package + "/" + test_target.name
 
 def _sonarqube_impl(ctx):
-    sq_properties_file = ctx.actions.declare_file("sonar-project.properties")
+    sq_properties_file = ctx.actions.declare_file(ctx.attr.sq_properties_filename)
 
     local_runfiles = _build_sonar_project_properties(ctx, sq_properties_file)
 
@@ -172,6 +172,9 @@ _sonarqube = rule(
             allow_files = True,
             doc = """Source code metadata, e.g. `filegroup(name = "git_info", srcs = glob([".git/**"], exclude = [".git/**/*[*"],  # gitk creates temp files with []))`""",
         ),
+        "sq_properties_filename": attr.string(
+            doc = """Properties file for sonar project.""",
+        ),
         "sonar_scanner": attr.label(
             executable = True,
             default = "//tools/bazel/sonarqube:sonar_scanner",
@@ -200,6 +203,7 @@ def sonarqube(
         modules = {},
         sonar_scanner = None,
         sq_properties_template = None,
+        sq_properties_filename = None,
         tags = [],
         visibility = [],
         checkstyle_report_path = ""):
@@ -218,7 +222,7 @@ def sonarqube(
         coverage_report = coverage_report,
         sonar_scanner = sonar_scanner,
         sq_properties_template = sq_properties_template,
-        sq_properties = "sonar-project.properties",
+        sq_properties_filename = sq_properties_filename,
         tags = tags,
         visibility = visibility,
         checkstyle_report_path = checkstyle_report_path,

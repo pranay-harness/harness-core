@@ -59,7 +59,7 @@ public class ParallelRestCallExecutor {
       response = NGRestUtils.getResponse(restCallRequest.getRequest());
     } catch (Exception ex) {
       log.error("Error occured while performing the rest request {}", restCallRequest.getRequestType(), ex);
-      return RestCallResponse.<T>builder().ex(ex).build();
+      return RestCallResponse.<T>builder().ex(ex).callFailed(true).build();
     }
     return RestCallResponse.<T>builder().requestType(restCallRequest.getRequestType()).response(response).build();
   }

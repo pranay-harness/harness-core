@@ -32,7 +32,7 @@ public class CELocalClient implements CEModuleLicenseClient {
       case TEAM:
         return builder.spendLimit(Long.valueOf(UNLIMITED)).licenseType(LicenseType.TRIAL).build();
       case FREE:
-        return builder.spendLimit(FREE_WORKLOAD).expiryTime(Long.valueOf(UNLIMITED)).build();
+        return builder.spendLimit(FREE_WORKLOAD).expiryTime(Long.MAX_VALUE).build();
       default:
         throw new UnsupportedOperationException("Requested edition is not supported");
     }

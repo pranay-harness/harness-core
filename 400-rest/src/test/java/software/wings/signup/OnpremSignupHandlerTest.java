@@ -3,25 +3,32 @@ package software.wings.signup;
 import static io.harness.annotations.dev.HarnessModule._950_NG_SIGNUP;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.AMAN;
+import static io.harness.rule.OwnerRule.NATHAN;
 
 import static software.wings.beans.UserInvite.UserInviteBuilder.anUserInvite;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.configuration.DeployMode;
+import io.harness.configuration.DeployVersion;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.SignupException;
+import io.harness.licensing.remote.NgLicenseHttpClient;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
+import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.SignupService;
@@ -51,6 +58,7 @@ public class OnpremSignupHandlerTest extends WingsBaseTest {
   @Mock private EventPublishHelper eventPublishHelper;
   @Mock private MainConfiguration configuration;
   @Mock private AccountService accountService;
+  @Mock private NgLicenseHttpClient ngLicenseHttpClient;
 
   @InjectMocks @Inject OnpremSignupHandler onpremSignupHandler;
 
@@ -69,10 +77,11 @@ public class OnpremSignupHandlerTest extends WingsBaseTest {
   public void setup() {
     doNothing().when(signupService).validateCluster();
     doNothing().when(signupService).validateEmail(EMAIL);
+    when(ngLicenseHttpClient.startCommunityLicense(anyString(), eq(ModuleType.CD))).thenReturn(null);
     when(signupService.getUserInviteByEmail(EMAIL)).thenReturn(null);
-    doNothing().when(userService).sendVerificationEmail(Mockito.any(UserInvite.class), anyString(), Mockito.anyMap());
+    doNothing().when(userService).sendVerificationEmail(any(UserInvite.class), anyString(), Mockito.anyMap());
 
-    when(userService.saveUserInvite(Mockito.any(UserInvite.class))).thenReturn(UUID);
+    when(userService.saveUserInvite(any(UserInvite.class))).thenReturn(UUID);
     when(configuration.getDeployMode()).thenReturn(DeployMode.ONPREM);
     doNothing()
         .when(eventPublishHelper)
@@ -88,7 +97,28 @@ public class OnpremSignupHandlerTest extends WingsBaseTest {
 
     // Assertion
     assertThat(onpremSignupHandler.handle(createUserInvite())).isTrue();
-    verify(userService, Mockito.times(1)).saveUserInvite(Mockito.any(UserInvite.class));
+    verify(userService, Mockito.times(1)).saveUserInvite(any(UserInvite.class));
+    verify(accountService, Mockito.times(1)).updateFeatureFlagsForOnPremAccount();
+  }
+
+  @Test
+  @Owner(developers = NATHAN)
+  @Category(UnitTests.class)
+  public void testNewUserInviteHandleShouldCreateCommunityLicense() {
+    when(configuration.getDeployVersion()).thenReturn(DeployVersion.COMMUNITY);
+    when(signupService.getUserInviteByEmail(EMAIL)).thenReturn(null);
+
+    UserInvite userInvite = createUserInvite();
+    String accountId = "123";
+
+    when(userService.completeTrialSignupAndSignIn(eq(userInvite)))
+        .thenReturn(User.Builder.anUser().defaultAccountId(accountId).build());
+    doNothing().when(accountService).updateFeatureFlagsForOnPremAccount();
+
+    // Assertion
+    assertThat(onpremSignupHandler.handle(createUserInvite())).isTrue();
+    verify(userService, Mockito.times(1)).saveUserInvite(any(UserInvite.class));
+    verify(ngLicenseHttpClient, Mockito.times(1)).startCommunityLicense(eq(accountId), eq(ModuleType.CD));
     verify(accountService, Mockito.times(1)).updateFeatureFlagsForOnPremAccount();
   }
 

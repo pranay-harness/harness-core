@@ -61,6 +61,10 @@ public class OutcomeInstance implements PersistentEntity, UuidAccess {
                  .field(OutcomeInstanceKeys.levelRuntimeIdIdx)
                  .field(OutcomeInstanceKeys.name)
                  .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("producedByRuntimeIdIdx")
+                 .field(OutcomeInstanceKeys.producedByRuntimeId)
+                 .build())
         .build();
   }
 

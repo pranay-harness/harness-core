@@ -93,7 +93,7 @@ public class ResourceGroupServiceImpl implements ResourceGroupService {
   public void createManagedResourceGroup(Scope scope) {
     try {
       create(ResourceGroup.getHarnessManagedResourceGroup(scope));
-    } catch (DuplicateKeyException ex) {
+    } catch (DuplicateFieldException ex) {
       // Ignore
     }
   }

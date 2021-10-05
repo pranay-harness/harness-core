@@ -35,6 +35,8 @@ import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.secrets.remote.SecretNGManagerClient;
 import io.harness.service.ServiceResourceClientModule;
 import io.harness.serviceaccount.ServiceAccountClientModule;
+import io.harness.template.TemplateResourceClientModule;
+import io.harness.template.remote.TemplateResourceClient;
 import io.harness.usergroups.UserGroupClient;
 import io.harness.usergroups.UserGroupClientModule;
 
@@ -95,6 +97,7 @@ public class ResourceGroupModule extends AbstractModule {
     requireBinding(ResourceGroupClient.class);
     requireBinding(AccountClient.class);
     requireBinding(DelegateServiceResourceClient.class);
+    requireBinding(TemplateResourceClient.class);
   }
 
   private void installResourceValidators() {
@@ -128,5 +131,7 @@ public class ResourceGroupModule extends AbstractModule {
         new ServiceResourceClientModule(ngManagerHttpClientConfig, ngManagerSecret, RESOUCE_GROUP_SERVICE.toString()));
     install(new EnvironmentResourceClientModule(
         ngManagerHttpClientConfig, ngManagerSecret, RESOUCE_GROUP_SERVICE.toString()));
+    install(
+        new TemplateResourceClientModule(ngManagerHttpClientConfig, ngManagerSecret, RESOUCE_GROUP_SERVICE.toString()));
   }
 }

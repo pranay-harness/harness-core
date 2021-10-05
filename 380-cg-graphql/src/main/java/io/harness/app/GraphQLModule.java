@@ -3,6 +3,9 @@ package io.harness.app;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.app.datafetcher.apiKey.CreateApiKeyDataFetcher;
+import io.harness.app.datafetcher.apiKey.DeleteApiKeyDataFetcher;
+import io.harness.app.datafetcher.apiKey.UpdateApiKeyDataFetcher;
 import io.harness.app.datafetcher.delegate.AddDelegateScopeDataFetcher;
 import io.harness.app.datafetcher.delegate.AttachScopeToDelegateDataFetcher;
 import io.harness.app.datafetcher.delegate.DelegateApprovalDataFetcher;
@@ -130,6 +133,9 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(DeploymentFreezeWindowDataFetcher.class);
     bindDataFetcherWithAnnotation(ToggleDeploymentFreezeWindowDataFetcher.class);
     bindDataFetcherWithAnnotation(TemplateListDataFetcher.class);
+    bindDataFetcherWithAnnotation(CreateApiKeyDataFetcher.class);
+    bindDataFetcherWithAnnotation(UpdateApiKeyDataFetcher.class);
+    bindDataFetcherWithAnnotation(DeleteApiKeyDataFetcher.class);
     binder()
         .bind(SecretManagerMutationDataFetcher.class)
         .annotatedWith(Names.named(SecretManagerDataFetchers.HASHICORP_VAULT_DATA_FETCHER.getName()))

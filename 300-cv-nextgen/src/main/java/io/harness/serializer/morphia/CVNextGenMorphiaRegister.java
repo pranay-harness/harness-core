@@ -4,9 +4,6 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.ActivitySource;
-import io.harness.cvng.activity.entities.CD10ActivitySource;
-import io.harness.cvng.activity.entities.CDNGActivitySource;
-import io.harness.cvng.activity.entities.CustomActivity;
 import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.activity.entities.HarnessCDActivity;
 import io.harness.cvng.activity.entities.InfrastructureActivity;
@@ -119,7 +116,6 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(ClusteredLog.class);
     set.add(BlueGreenVerificationJob.class);
     set.add(DeploymentDataCollectionTask.class);
-    set.add(CustomActivity.class);
     set.add(AppDynamicsCVConfig.class);
     set.add(DeploymentLogAnalysis.class);
     set.add(TestVerificationJob.class);
@@ -143,7 +139,6 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(LogAnalysisLearningEngineTask.class);
     set.add(LogAnalysisResult.class);
     set.add(KubernetesActivitySource.class);
-    set.add(CD10ActivitySource.class);
     set.add(LogAnalysisRecord.class);
     set.add(AlertRule.class);
     set.add(CanaryVerificationJob.class);
@@ -154,7 +149,6 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(CVNGLog.class);
     set.add(MonitoringSourcePerpetualTask.class);
     set.add(NewRelicCVConfig.class);
-    set.add(CDNGActivitySource.class);
     set.add(CVNGStepTask.class);
     set.add(Comparable.class);
     set.add(PrometheusCVConfig.class);

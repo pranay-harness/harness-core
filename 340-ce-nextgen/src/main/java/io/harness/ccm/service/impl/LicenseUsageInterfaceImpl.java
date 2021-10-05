@@ -40,7 +40,7 @@ public class LicenseUsageInterfaceImpl implements LicenseUsageInterface<CELicens
   public static final String DATA_SET_NAME = "CE_INTERNAL";
   public static final String TABLE_NAME = "costAggregated";
   public static final String QUERY_TEMPLATE =
-      "SELECT SUM(cost), TIMESTAMP_TRUNC(day, month) AS month, cloudProvider FROM `%s` "
+      "SELECT SUM(cost) AS cost, TIMESTAMP_TRUNC(day, month) AS month, cloudProvider FROM `%s` "
       + "WHERE day >= TIMESTAMP_MILLIS(%s) AND accountId = %s GROUP BY month, cloudProvider";
 
   private final Cache<CacheKey, CELicenseUsageDTO> licenseUsageCache =

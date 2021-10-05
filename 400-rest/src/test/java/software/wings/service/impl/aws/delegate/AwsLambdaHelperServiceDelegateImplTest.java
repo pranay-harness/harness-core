@@ -1,6 +1,7 @@
 package software.wings.service.impl.aws.delegate;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.RAGHVENDRA;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.SATYAM;
@@ -19,6 +20,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
@@ -31,13 +33,16 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.aws.AwsCallTracker;
 import io.harness.category.element.UnitTests;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.rule.Owner;
 
-import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact.ArtifactMetadataKeys;
@@ -62,6 +67,7 @@ import com.amazonaws.services.lambda.model.AliasConfiguration;
 import com.amazonaws.services.lambda.model.CreateAliasResult;
 import com.amazonaws.services.lambda.model.CreateFunctionResult;
 import com.amazonaws.services.lambda.model.FunctionConfiguration;
+import com.amazonaws.services.lambda.model.GetFunctionConfigurationResult;
 import com.amazonaws.services.lambda.model.GetFunctionRequest;
 import com.amazonaws.services.lambda.model.GetFunctionResult;
 import com.amazonaws.services.lambda.model.InvokeResult;
@@ -72,31 +78,134 @@ import com.amazonaws.services.lambda.model.ResourceNotFoundException;
 import com.amazonaws.services.lambda.model.UpdateFunctionCodeResult;
 import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationResult;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.util.concurrent.SimpleTimeLimiter;
+import com.google.common.util.concurrent.TimeLimiter;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Executors;
 import lombok.SneakyThrows;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
 @OwnedBy(CDP)
-public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
+@TargetModule(HarnessModule._930_DELEGATE_TASKS)
+public class AwsLambdaHelperServiceDelegateImplTest extends CategoryTest {
+  @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
+
   @Mock private EncryptionService mockEncryptionService;
   @Mock private AwsCallTracker mockTracker;
   @Mock private DelegateFileManager mockDelegateFileManager;
   @Mock private AwsEcrApiHelperServiceDelegateBase awsEcrApiHelperServiceDelegateBase;
+  private TimeLimiter timeLimiter = mock(TimeLimiter.class);
   @Spy @InjectMocks private AwsLambdaHelperServiceDelegateImpl awsLambdaHelperServiceDelegate;
   private SettingAttribute awsSetting =
       aSettingAttribute()
           .withUuid(SETTING_ID)
           .withValue(AwsConfig.builder().secretKey(SECRET_KEY).accessKey(ACCESS_KEY.toCharArray()).build())
           .build();
+
+  private static final String functionName = "function-name";
+
+  @Before
+  public void before() throws Exception {
+    FieldUtils.writeField(awsLambdaHelperServiceDelegate, "timeLimiter", timeLimiter, true);
+  }
+
+  private GetFunctionConfigurationResult getFuncResultWithState(String state) {
+    return new GetFunctionConfigurationResult().withState(state);
+  }
+
+  private GetFunctionConfigurationResult getFuncResultWithLastStatus(String status) {
+    return new GetFunctionConfigurationResult().withLastUpdateStatus(status);
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testWaitForFunctionToCreate() throws Exception {
+    AWSLambdaClient mockClient = mock(AWSLambdaClient.class);
+    ExecutionLogCallback mockCallBack = mock(ExecutionLogCallback.class);
+    FieldUtils.writeField(
+        awsLambdaHelperServiceDelegate, "timeLimiter", SimpleTimeLimiter.create(Executors.newCachedThreadPool()), true);
+    FieldUtils.writeField(awsLambdaHelperServiceDelegate, "WAIT_SLEEP_IN_SECONDS", 0, true);
+    assertThatThrownBy(
+        () -> awsLambdaHelperServiceDelegate.waitForFunctionToCreate(mockClient, functionName, mockCallBack))
+        .isInstanceOf(InvalidRequestException.class);
+    doReturn(getFuncResultWithState(awsLambdaHelperServiceDelegate.PENDING_FUNCTION_STATE))
+        .doReturn(getFuncResultWithState(awsLambdaHelperServiceDelegate.PENDING_FUNCTION_STATE))
+        .doReturn(getFuncResultWithState(awsLambdaHelperServiceDelegate.ACTIVE_FUNCTION_STATE))
+        .when(mockClient)
+        .getFunctionConfiguration(any());
+
+    awsLambdaHelperServiceDelegate.waitForFunctionToCreate(mockClient, functionName, mockCallBack);
+    verify(mockClient, times(4)).getFunctionConfiguration(any());
+
+    doReturn(getFuncResultWithState(awsLambdaHelperServiceDelegate.PENDING_FUNCTION_STATE))
+        .doReturn(getFuncResultWithState(awsLambdaHelperServiceDelegate.PENDING_FUNCTION_STATE))
+        .doReturn(getFuncResultWithState(awsLambdaHelperServiceDelegate.FAILED_FUNCTION_STATE))
+        .when(mockClient)
+        .getFunctionConfiguration(any());
+    assertThatThrownBy(
+        () -> awsLambdaHelperServiceDelegate.waitForFunctionToCreate(mockClient, functionName, mockCallBack))
+        .isInstanceOf(InvalidRequestException.class);
+    verify(mockClient, times(7)).getFunctionConfiguration(any());
+
+    doReturn(getFuncResultWithState(awsLambdaHelperServiceDelegate.ACTIVE_FUNCTION_STATE))
+        .when(mockClient)
+        .getFunctionConfiguration(any());
+    awsLambdaHelperServiceDelegate.waitForFunctionToCreate(mockClient, functionName, mockCallBack);
+    verify(mockClient, times(8)).getFunctionConfiguration(any());
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testWaitForFunctionToUpdate() throws Exception {
+    AWSLambdaClient mockClient = mock(AWSLambdaClient.class);
+    ExecutionLogCallback mockCallBack = mock(ExecutionLogCallback.class);
+    FieldUtils.writeField(
+        awsLambdaHelperServiceDelegate, "timeLimiter", SimpleTimeLimiter.create(Executors.newCachedThreadPool()), true);
+    FieldUtils.writeField(awsLambdaHelperServiceDelegate, "WAIT_SLEEP_IN_SECONDS", 0, true);
+    assertThatThrownBy(
+        () -> awsLambdaHelperServiceDelegate.waitForFunctionToUpdate(mockClient, functionName, mockCallBack))
+        .isInstanceOf(InvalidRequestException.class);
+    doReturn(getFuncResultWithLastStatus(awsLambdaHelperServiceDelegate.PENDING_LAST_UPDATE_STATUS))
+        .doReturn(getFuncResultWithLastStatus(awsLambdaHelperServiceDelegate.PENDING_LAST_UPDATE_STATUS))
+        .doReturn(getFuncResultWithLastStatus(awsLambdaHelperServiceDelegate.ACTIVE_LAST_UPDATE_STATUS))
+        .when(mockClient)
+        .getFunctionConfiguration(any());
+
+    awsLambdaHelperServiceDelegate.waitForFunctionToUpdate(mockClient, functionName, mockCallBack);
+    verify(mockClient, times(4)).getFunctionConfiguration(any());
+
+    doReturn(getFuncResultWithLastStatus(awsLambdaHelperServiceDelegate.PENDING_LAST_UPDATE_STATUS))
+        .doReturn(getFuncResultWithLastStatus(awsLambdaHelperServiceDelegate.PENDING_LAST_UPDATE_STATUS))
+        .doReturn(getFuncResultWithLastStatus(awsLambdaHelperServiceDelegate.FAILED_LAST_UPDATE_STATUS))
+        .when(mockClient)
+        .getFunctionConfiguration(any());
+    assertThatThrownBy(
+        () -> awsLambdaHelperServiceDelegate.waitForFunctionToUpdate(mockClient, functionName, mockCallBack))
+        .isInstanceOf(InvalidRequestException.class);
+    verify(mockClient, times(7)).getFunctionConfiguration(any());
+
+    doReturn(getFuncResultWithLastStatus(awsLambdaHelperServiceDelegate.ACTIVE_LAST_UPDATE_STATUS))
+        .when(mockClient)
+        .getFunctionConfiguration(any());
+    awsLambdaHelperServiceDelegate.waitForFunctionToUpdate(mockClient, functionName, mockCallBack);
+    verify(mockClient, times(8)).getFunctionConfiguration(any());
+  }
 
   @Test
   @Owner(developers = SATYAM)
@@ -247,6 +356,7 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
     doReturn(new CreateAliasResult().withName("aliasName").withAliasArn("aliasArn"))
         .when(mockClient)
         .createAlias(any());
+    doReturn(new GetFunctionConfigurationResult().withState("Active")).when(mockClient).getFunctionConfiguration(any());
 
     ArtifactStreamAttributes artifactStreamAttributesForS3 =
         ArtifactStreamAttributes.builder()
@@ -303,6 +413,7 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
     doReturn(new CreateAliasResult().withName("aliasName").withAliasArn("aliasArn"))
         .when(mockClient)
         .createAlias(any());
+    doReturn(new GetFunctionConfigurationResult().withState("Active")).when(mockClient).getFunctionConfiguration(any());
 
     ArtifactStreamAttributes artifactStreamAttributesForS3 =
         ArtifactStreamAttributes.builder()

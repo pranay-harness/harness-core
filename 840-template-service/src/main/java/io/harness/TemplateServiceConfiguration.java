@@ -58,6 +58,7 @@ public class TemplateServiceConfiguration extends Configuration {
   @JsonProperty("jwtAuthSecret") private String jwtAuthSecret;
   @JsonProperty("jwtIdentityServiceSecret") private String jwtIdentityServiceSecret;
   @JsonProperty("ngManagerServiceSecret") private String ngManagerServiceSecret;
+  @JsonProperty("accessControlClientConfig") private AccessControlClientConfiguration accessControlClientConfiguration;
 
   private boolean shouldDeployWithGitSync;
   private GitSdkConfiguration gitSdkConfiguration;
