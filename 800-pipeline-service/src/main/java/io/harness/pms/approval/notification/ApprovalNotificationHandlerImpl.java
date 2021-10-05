@@ -33,6 +33,8 @@ import io.harness.pms.notification.NotificationHelper;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.dto.GraphLayoutNodeDTO;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
+import io.harness.pms.plan.execution.service.PipelineExecutionSummaryService;
+import io.harness.pms.plan.execution.service.PipelineExecutionSummaryServiceImpl;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.steps.approval.ApprovalNotificationHandler;
 import io.harness.steps.approval.step.harness.entities.HarnessApprovalInstance;
@@ -67,15 +69,17 @@ public class ApprovalNotificationHandlerImpl implements ApprovalNotificationHand
   private final NotificationClient notificationClient;
   private final NotificationHelper notificationHelper;
   private final PMSExecutionService pmsExecutionService;
+  private final PipelineExecutionSummaryService pipelineExecutionSummaryService;
 
   @Inject
   public ApprovalNotificationHandlerImpl(@Named("PRIVILEGED") UserGroupClient userGroupClient,
       NotificationClient notificationClient, NotificationHelper notificationHelper,
-      PMSExecutionService pmsExecutionService) {
+      PMSExecutionService pmsExecutionService, PipelineExecutionSummaryService pipelineExecutionSummaryService) {
     this.userGroupClient = userGroupClient;
     this.notificationClient = notificationClient;
     this.notificationHelper = notificationHelper;
     this.pmsExecutionService = pmsExecutionService;
+    this.pipelineExecutionSummaryService = pipelineExecutionSummaryService;
   }
 
   @Override
@@ -279,7 +283,8 @@ public class ApprovalNotificationHandlerImpl implements ApprovalNotificationHand
     String orgId = AmbianceUtils.getOrgIdentifier(ambiance);
     String projectId = AmbianceUtils.getProjectIdentifier(ambiance);
 
-    return pmsExecutionService.getPipelineExecutionSummaryEntity(accountId, orgId, projectId, planExecutionId, false);
+    return pipelineExecutionSummaryService.getPipelineExecutionSummaryEntity(
+        accountId, orgId, projectId, planExecutionId, false);
   }
 
   private static String formatTime(long epochMillis) {

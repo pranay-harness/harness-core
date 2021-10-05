@@ -49,6 +49,8 @@ import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.expression.EngineExpressionService;
 import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.pms.helpers.PmsFeatureFlagHelper;
+import io.harness.pms.plan.execution.service.PipelineExecutionSummaryService;
+import io.harness.pms.plan.execution.service.PipelineExecutionSummaryServiceImpl;
 import io.harness.pms.sdk.core.waiter.AsyncWaitEngine;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.serializer.KryoSerializer;
@@ -113,6 +115,7 @@ public class OrchestrationModule extends AbstractModule implements ServersModule
           config.getAccountServiceHttpClientConfig(), config.getAccountServiceSecret(), config.getAccountClientId()));
       bind(PmsFeatureFlagService.class).to(PmsFeatureFlagHelper.class);
     }
+    bind(PipelineExecutionSummaryService.class).to(PipelineExecutionSummaryServiceImpl.class).in(Singleton.class);
     bind(NodeExecutionService.class).to(NodeExecutionServiceImpl.class).in(Singleton.class);
     bind(PlanExecutionService.class).to(PlanExecutionServiceImpl.class).in(Singleton.class);
     bind(PlanService.class).to(PlanServiceImpl.class).in(Singleton.class);

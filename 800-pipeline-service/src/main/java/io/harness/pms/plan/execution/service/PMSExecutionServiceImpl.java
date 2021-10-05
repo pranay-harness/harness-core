@@ -66,7 +66,7 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
   // This is here just for backward compatibility should be removed
   private static final String INTERNAL_SERVICE_NAME = "pmsInternal";
 
-  @Inject private PmsExecutionSummaryRespository pmsExecutionSummaryRespository;
+  @Inject PmsExecutionSummaryRespository pmsExecutionSummaryRespository;
   @Inject private GraphGenerationService graphGenerationService;
   @Inject private OrchestrationService orchestrationService;
   @Inject private FilterService filterService;
@@ -215,25 +215,6 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
     }
     throw new InvalidRequestException(
         "Invalid request : Input Set did not exist or pipeline execution has been deleted");
-  }
-
-  @Override
-  public PipelineExecutionSummaryEntity getPipelineExecutionSummaryEntity(
-      String accountId, String orgId, String projectId, String planExecutionId, boolean pipelineDeleted) {
-    Optional<PipelineExecutionSummaryEntity> pipelineExecutionSummaryEntityOptional =
-        pmsExecutionSummaryRespository
-            .findByAccountIdAndOrgIdentifierAndProjectIdentifierAndPlanExecutionIdAndPipelineDeletedNot(
-                accountId, orgId, projectId, planExecutionId, !pipelineDeleted);
-    if (pipelineExecutionSummaryEntityOptional.isPresent()) {
-      return pipelineExecutionSummaryEntityOptional.get();
-    }
-    throw new InvalidRequestException(
-        "Plan Execution Summary does not exist or has been deleted for given planExecutionId");
-  }
-
-  @Override
-  public Page<PipelineExecutionSummaryEntity> getPipelineExecutionSummaryEntity(Criteria criteria, Pageable pageable) {
-    return pmsExecutionSummaryRespository.findAll(criteria, pageable);
   }
 
   @Override

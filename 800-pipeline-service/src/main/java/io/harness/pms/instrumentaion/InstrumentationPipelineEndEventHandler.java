@@ -10,6 +10,7 @@ import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.pipeline.observer.OrchestrationObserverUtils;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
+import io.harness.pms.plan.execution.service.PipelineExecutionSummaryService;
 import io.harness.pms.security.PmsSecurityContextEventGuard;
 import io.harness.telemetry.Category;
 import io.harness.telemetry.TelemetryReporter;
@@ -26,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 public class InstrumentationPipelineEndEventHandler implements OrchestrationEndObserver {
   @Inject TelemetryReporter telemetryReporter;
-  @Inject PMSExecutionService pmsExecutionService;
+  @Inject PipelineExecutionSummaryService pipelineExecutionSummaryService;
 
   private static String STAGE_TYPE = "stage_type";
   private static String STATUS = "status";
@@ -39,7 +40,8 @@ public class InstrumentationPipelineEndEventHandler implements OrchestrationEndO
     String projectId = AmbianceUtils.getProjectIdentifier(ambiance);
     String orgId = AmbianceUtils.getOrgIdentifier(ambiance);
     PipelineExecutionSummaryEntity pipelineExecutionSummaryEntity =
-        pmsExecutionService.getPipelineExecutionSummaryEntity(accountId, orgId, projectId, planExecutionId, false);
+        pipelineExecutionSummaryService.getPipelineExecutionSummaryEntity(
+            accountId, orgId, projectId, planExecutionId, false);
 
     Set<String> executedModules =
         OrchestrationObserverUtils.getExecutedModulesInPipeline(pipelineExecutionSummaryEntity);

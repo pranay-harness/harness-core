@@ -24,11 +24,6 @@ public interface PMSExecutionService {
   InputSetYamlWithTemplateDTO getInputSetYamlWithTemplate(String accountId, String orgId, String projectId,
       String planExecutionId, boolean pipelineDeleted, boolean resolveExpressions);
 
-  Page<PipelineExecutionSummaryEntity> getPipelineExecutionSummaryEntity(Criteria criteria, Pageable pageable);
-
-  PipelineExecutionSummaryEntity getPipelineExecutionSummaryEntity(
-      String accountId, String orgId, String projectId, String planExecutionId, boolean pipelineDeleted);
-
   OrchestrationGraphDTO getOrchestrationGraph(String stageNodeId, String planExecutionId);
 
   InterruptDTO registerInterrupt(

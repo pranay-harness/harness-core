@@ -168,22 +168,6 @@ public class PMSExecutionServiceImplTest extends PipelineServiceTestBase {
   @Test
   @Owner(developers = SAMARTH)
   @Category(UnitTests.class)
-  public void testGetPipelineExecutionSummaryEntityWithInvalidExecutionId() {
-    doReturn(Optional.empty())
-        .when(pmsExecutionSummaryRepository)
-        .findByAccountIdAndOrgIdentifierAndProjectIdentifierAndPlanExecutionIdAndPipelineDeletedNot(
-            ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, INVALID_PLAN_EXECUTION_ID, !PIPELINE_DELETED);
-
-    assertThatThrownBy(()
-                           -> pmsExecutionService.getPipelineExecutionSummaryEntity(ACCOUNT_ID, ORG_IDENTIFIER,
-                               PROJ_IDENTIFIER, INVALID_PLAN_EXECUTION_ID, PIPELINE_DELETED))
-        .isInstanceOf(InvalidRequestException.class)
-        .hasMessage("Plan Execution Summary does not exist or has been deleted for given planExecutionId");
-  }
-
-  @Test
-  @Owner(developers = SAMARTH)
-  @Category(UnitTests.class)
   public void testDeleteExecutionsOnPipelineDeletion() {
     Criteria criteria = new Criteria();
     criteria.and("accountId")

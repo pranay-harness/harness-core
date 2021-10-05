@@ -49,6 +49,7 @@ import io.harness.pms.plan.execution.beans.dto.PipelineExecutionDetailDTO;
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionFilterPropertiesDTO;
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionSummaryDTO;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
+import io.harness.pms.plan.execution.service.PipelineExecutionSummaryService;
 import io.harness.pms.rbac.PipelineRbacPermissions;
 import io.harness.pms.variables.VariableMergeServiceResponse;
 import io.harness.utils.PageUtils;
@@ -102,6 +103,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public class PipelineResource implements YamlSchemaResource {
   private final PMSPipelineService pmsPipelineService;
   private final PMSExecutionService pmsExecutionService;
+  private final PipelineExecutionSummaryService pipelineExecutionSummaryService;
   private final PMSYamlSchemaService pmsYamlSchemaService;
   private final NodeExecutionService nodeExecutionService;
   private final AccessControlClient accessControlClient;
@@ -326,7 +328,7 @@ public class PipelineResource implements YamlSchemaResource {
     // to fetch them and each might have a different branch context so we cannot even batch them. The only data missing
     // because of this approach is objectId which UI doesn't use.
     Page<PipelineExecutionSummaryDTO> planExecutionSummaryDTOS =
-        pmsExecutionService.getPipelineExecutionSummaryEntity(criteria, pageRequest)
+        pipelineExecutionSummaryService.getPipelineExecutionSummaryEntity(criteria, pageRequest)
             .map(e
                 -> PipelineExecutionSummaryDtoMapper.toDto(e,
                     e.getEntityGitDetails() != null
@@ -346,7 +348,8 @@ public class PipelineResource implements YamlSchemaResource {
       @QueryParam("filter") String filter, @QueryParam("stageNodeId") String stageNodeId,
       @PathParam(NGCommonEntityConstants.PLAN_KEY) String planExecutionId) {
     PipelineExecutionSummaryEntity executionSummaryEntity =
-        pmsExecutionService.getPipelineExecutionSummaryEntity(accountId, orgId, projectId, planExecutionId, false);
+        pipelineExecutionSummaryService.getPipelineExecutionSummaryEntity(
+            accountId, orgId, projectId, planExecutionId, false);
 
     Optional<PipelineEntity> optionalPipelineEntity;
     if (executionSummaryEntity.getEntityGitDetails() == null) {

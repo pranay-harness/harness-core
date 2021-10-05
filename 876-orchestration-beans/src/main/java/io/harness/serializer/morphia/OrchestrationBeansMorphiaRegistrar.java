@@ -15,6 +15,7 @@ import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.plan.Node;
 import io.harness.plan.Plan;
+import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.sdk.PmsSdkInstance;
 
 import java.util.Set;
@@ -34,6 +35,7 @@ public class OrchestrationBeansMorphiaRegistrar implements MorphiaRegistrar {
     set.add(StepDetailInstance.class);
     set.add(Node.class);
     set.add(PmsNodeExecution.class);
+    set.add(PipelineExecutionSummaryEntity.class);
   }
 
   @Override

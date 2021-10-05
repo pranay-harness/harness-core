@@ -16,6 +16,7 @@ import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
+import io.harness.pms.plan.execution.service.PipelineExecutionSummaryService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -33,6 +34,7 @@ public class PMSOpaServiceImpl implements PMSOpaService {
   private final PMSPipelineService pmsPipelineService;
   private final PMSExecutionService pmsExecutionService;
   private final CurrentUserHelper currentUserHelper;
+  private final PipelineExecutionSummaryService pipelineExecutionSummaryService;
 
   @Override
   public PipelineOpaEvaluationContext getPipelineContext(@NotNull String accountId, @NotNull String orgIdentifier,
@@ -65,8 +67,9 @@ public class PMSOpaServiceImpl implements PMSOpaService {
   public PipelineOpaEvaluationContext getPipelineContextFromExecution(@NotNull String accountId,
       @NotNull String orgIdentifier, @NotNull String projectIdentifier, @NotNull String planExecutionId,
       @NotNull String action) throws IOException {
-    PipelineExecutionSummaryEntity executionSummaryEntity = pmsExecutionService.getPipelineExecutionSummaryEntity(
-        accountId, orgIdentifier, projectIdentifier, planExecutionId, false);
+    PipelineExecutionSummaryEntity executionSummaryEntity =
+        pipelineExecutionSummaryService.getPipelineExecutionSummaryEntity(
+            accountId, orgIdentifier, projectIdentifier, planExecutionId, false);
     return getPipelineContext(accountId, orgIdentifier, projectIdentifier,
         executionSummaryEntity.getPipelineIdentifier(), executionSummaryEntity.getInputSetYaml(), action);
   }

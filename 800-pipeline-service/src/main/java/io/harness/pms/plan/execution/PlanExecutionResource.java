@@ -27,6 +27,7 @@ import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.dto.InterruptDTO;
 import io.harness.pms.plan.execution.beans.dto.RunStageRequestDTO;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
+import io.harness.pms.plan.execution.service.PipelineExecutionSummaryService;
 import io.harness.pms.preflight.PreFlightDTO;
 import io.harness.pms.preflight.service.PreflightService;
 import io.harness.pms.rbac.PipelineRbacPermissions;
@@ -75,6 +76,7 @@ public class PlanExecutionResource {
   @Inject private final PreflightService preflightService;
   @Inject private final PMSPipelineService pmsPipelineService;
   @Inject private final RetryExecutionHelper retryExecutionHelper;
+  @Inject private final PipelineExecutionSummaryService pipelineExecutionSummaryService;
 
   @POST
   @Path("/{identifier}")
@@ -261,7 +263,8 @@ public class PlanExecutionResource {
       @NotNull @QueryParam("interruptType") PlanExecutionInterruptType executionInterruptType,
       @NotNull @PathParam("planExecutionId") String planExecutionId) {
     PipelineExecutionSummaryEntity executionSummaryEntity =
-        pmsExecutionService.getPipelineExecutionSummaryEntity(accountId, orgId, projectId, planExecutionId, false);
+        pipelineExecutionSummaryService.getPipelineExecutionSummaryEntity(
+            accountId, orgId, projectId, planExecutionId, false);
 
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of("PIPELINE", executionSummaryEntity.getPipelineIdentifier()),

@@ -18,7 +18,6 @@ public class PMSPipelineMorphiaRegistrar implements MorphiaRegistrar {
   public void registerClasses(Set<Class> set) {
     set.add(PipelineEntity.class);
     set.add(InputSetEntity.class);
-    set.add(PipelineExecutionSummaryEntity.class);
     set.add(PreFlightEntity.class);
   }
 
