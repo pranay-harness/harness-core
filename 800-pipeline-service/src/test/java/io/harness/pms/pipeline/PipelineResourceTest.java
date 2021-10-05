@@ -35,6 +35,7 @@ import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionDetailDTO;
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionSummaryDTO;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
+import io.harness.pms.plan.execution.service.PipelineExecutionSummaryService;
 import io.harness.rule.Owner;
 
 import com.google.common.io.Resources;
@@ -66,6 +67,7 @@ public class PipelineResourceTest extends CategoryTest {
   @Mock NodeExecutionToExecutioNodeMapper nodeExecutionToExecutioNodeMapper;
   @Mock AccessControlClient accessControlClient;
   @Mock PmsGitSyncHelper pmsGitSyncHelper;
+  @Mock PipelineExecutionSummaryService pipelineExecutionSummaryService;
 
   private final String ACCOUNT_ID = "account_id";
   private final String ORG_IDENTIFIER = "orgId";
@@ -84,8 +86,9 @@ public class PipelineResourceTest extends CategoryTest {
   @Before
   public void setUp() throws IOException {
     MockitoAnnotations.initMocks(this);
-    pipelineResource = new PipelineResource(pmsPipelineService, pmsExecutionService, pmsYamlSchemaService,
-        nodeExecutionService, accessControlClient, nodeExecutionToExecutioNodeMapper, pmsGitSyncHelper);
+    pipelineResource = new PipelineResource(pmsPipelineService, pmsExecutionService, pipelineExecutionSummaryService,
+        pmsYamlSchemaService, nodeExecutionService, accessControlClient, nodeExecutionToExecutioNodeMapper,
+        pmsGitSyncHelper);
     ClassLoader classLoader = this.getClass().getClassLoader();
     String filename = "failure-strategy.yaml";
     yaml = Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
@@ -309,7 +312,7 @@ public class PipelineResourceTest extends CategoryTest {
     Page<PipelineExecutionSummaryEntity> pipelineExecutionSummaryEntities =
         new PageImpl<>(Collections.singletonList(executionSummaryEntity), pageable, 1);
     doReturn(pipelineExecutionSummaryEntities)
-        .when(pmsExecutionService)
+        .when(pipelineExecutionSummaryService)
         .getPipelineExecutionSummaryEntity(any(), any());
     doReturn(Optional.of(PipelineEntity.builder().build()))
         .when(pmsPipelineService)
@@ -335,7 +338,7 @@ public class PipelineResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetExecutionDetail() {
     doReturn(executionSummaryEntity)
-        .when(pmsExecutionService)
+        .when(pipelineExecutionSummaryService)
         .getPipelineExecutionSummaryEntity(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PLAN_EXECUTION_ID, false);
     doReturn(orchestrationGraph).when(pmsExecutionService).getOrchestrationGraph(STAGE_NODE_ID, PLAN_EXECUTION_ID);
     doReturn(Optional.of(PipelineEntity.builder()
@@ -368,7 +371,7 @@ public class PipelineResourceTest extends CategoryTest {
   public void testGetExecutionDetailWithInvalidExecutionId() {
     String invalidPlanExecutionId = "invalidId";
     doThrow(InvalidRequestException.class)
-        .when(pmsExecutionService)
+        .when(pipelineExecutionSummaryService)
         .getPipelineExecutionSummaryEntity(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, invalidPlanExecutionId, false);
 
     assertThatThrownBy(()

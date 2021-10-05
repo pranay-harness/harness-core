@@ -42,6 +42,7 @@ public class PMSExecutionServiceImplTest extends PipelineServiceTestBase {
   @Mock private UpdateResult updateResult;
   @InjectMocks private PMSExecutionServiceImpl pmsExecutionService;
   @Mock private PmsGitSyncHelper pmsGitSyncHelper;
+  @Mock private PipelineExecutionSummaryService pipelineExecutionSummaryService;
   @Mock private ValidateAndMergeHelper validateAndMergeHelper;
 
   private final String ACCOUNT_ID = "account_id";
@@ -159,7 +160,7 @@ public class PMSExecutionServiceImplTest extends PipelineServiceTestBase {
             ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PLAN_EXECUTION_ID, !PIPELINE_DELETED);
 
     PipelineExecutionSummaryEntity pipelineExecutionSummaryEntity =
-        pmsExecutionService.getPipelineExecutionSummaryEntity(
+        pipelineExecutionSummaryService.getPipelineExecutionSummaryEntity(
             ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PLAN_EXECUTION_ID, PIPELINE_DELETED);
 
     assertThat(pipelineExecutionSummaryEntity).isEqualTo(executionSummaryEntity);

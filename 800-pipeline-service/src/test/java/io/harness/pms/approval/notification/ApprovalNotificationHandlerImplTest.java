@@ -23,6 +23,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.notification.NotificationHelper;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
+import io.harness.pms.plan.execution.service.PipelineExecutionSummaryService;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.rule.Owner;
 import io.harness.steps.approval.step.beans.ApprovalType;
@@ -51,6 +52,7 @@ public class ApprovalNotificationHandlerImplTest extends CategoryTest {
   @Mock private UserGroupClient userGroupClient;
   @Mock private NotificationClient notificationClient;
   @Mock private NotificationHelper notificationHelper;
+  @Mock private PipelineExecutionSummaryService pipelineExecutionSummaryService;
   @Mock private PMSExecutionService pmsExecutionService;
   @Mock private ApprovalInstance approvalInstance;
   @InjectMocks ApprovalNotificationHandlerImpl approvalNotificationHandler;
@@ -93,7 +95,7 @@ public class ApprovalNotificationHandlerImplTest extends CategoryTest {
                                                                         .pipelineIdentifier(pipelineIdentifier)
                                                                         .build();
     doReturn(pipelineExecutionSummaryEntity)
-        .when(pmsExecutionService)
+        .when(pipelineExecutionSummaryService)
         .getPipelineExecutionSummaryEntity(anyString(), anyString(), anyString(), anyString(), anyBoolean());
     List<NotificationSettingConfigDTO> notificationSettingConfigDTOS = new ArrayList<>();
     notificationSettingConfigDTOS.add(SlackConfigDTO.builder().build());
@@ -107,7 +109,7 @@ public class ApprovalNotificationHandlerImplTest extends CategoryTest {
     doReturn(url).when(notificationHelper).generateUrl(ambiance);
     approvalNotificationHandler.sendNotification(approvalInstance, ambiance);
     verify(notificationClient, times(2)).sendNotificationAsync(any());
-    verify(pmsExecutionService, times(1))
+    verify(pipelineExecutionSummaryService, times(1))
         .getPipelineExecutionSummaryEntity(anyString(), anyString(), anyString(), anyString(), anyBoolean());
     verify(userGroupClient, times(1)).getFilteredUserGroups(any());
   }
