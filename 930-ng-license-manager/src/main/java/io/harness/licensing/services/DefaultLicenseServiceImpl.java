@@ -344,7 +344,7 @@ public class DefaultLicenseServiceImpl implements LicenseService {
             });
 
     if (!highestEditionLicense.isPresent()) {
-      return null;
+      return Edition.FREE;
     }
     return highestEditionLicense.get().getEdition();
   }

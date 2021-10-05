@@ -8,6 +8,8 @@ public enum FeatureRestrictionName {
   TEST1,
   TEST2,
   TEST3,
+  TEST4,
+  TEST5,
 
   // All Features
   MULTIPLE_ORGANIZATIONS,
