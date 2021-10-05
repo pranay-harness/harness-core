@@ -16,9 +16,11 @@ import me.snowdrop.istio.api.networking.v1alpha3.Subset;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
 import org.mockito.MockitoAnnotations;
 
 public class V1Alpha3IstioApiNetworkingHandlerTest extends CategoryTest {
+  @InjectMocks
   V1Alpha3IstioApiNetworkingHandler v1Alpha3IstioApiNetworkingHandler = new V1Alpha3IstioApiNetworkingHandler();
 
   @Before

@@ -101,7 +101,6 @@ import io.harness.exception.WingsException;
 import io.harness.istio.api.networking.IstioNetworkingApiFactory;
 import io.harness.istio.api.networking.IstioNetworkingApiVersions;
 import io.harness.istio.api.networking.V1Alpha3IstioApiNetworkingHandler;
-import io.harness.istio.api.networking.V1Beta1IstioApiNetworkingHandler;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.KubernetesHelperService;
 import io.harness.k8s.kubectl.AbstractExecutable;
@@ -191,7 +190,6 @@ import me.snowdrop.istio.api.networking.v1alpha3.HTTPRoute;
 import me.snowdrop.istio.api.networking.v1alpha3.HTTPRouteBuilder;
 import me.snowdrop.istio.api.networking.v1alpha3.HTTPRouteDestination;
 import me.snowdrop.istio.api.networking.v1alpha3.PortSelector;
-import me.snowdrop.istio.api.networking.v1alpha3.Subset;
 import me.snowdrop.istio.api.networking.v1alpha3.TCPRoute;
 import me.snowdrop.istio.api.networking.v1alpha3.TLSRoute;
 import me.snowdrop.istio.api.networking.v1alpha3.VirtualService;
@@ -1418,11 +1416,6 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
     assertThat(captorValue).isInstanceOf(VirtualService.class);
     assertThat(captorValue.getApiVersion()).isEqualTo("networking.istio.io/v1alpha3");
     assertThat(captorValue.getKind()).isEqualTo("VirtualService");
-
-    //    List<HTTPRouteDestination> routes = result.getSpec().getHttp().get(0).getRoute();
-    //    assertThat(routes.stream().map(HTTPRouteDestination::getWeight)).containsExactly(100, 0);
-    //    assertThat(routes.stream().map(HTTPRouteDestination::getDestination).map(Destination::getSubset))
-    //        .containsExactly(HarnessLabelValues.trackStable, HarnessLabelValues.trackCanary);
   }
 
   private VirtualService virtualServiceWith(Map<String, Integer> destinations) {
