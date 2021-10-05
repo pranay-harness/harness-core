@@ -17,6 +17,7 @@ import io.harness.gitsync.Principal;
 import io.harness.gitsync.PushFileResponse;
 import io.harness.gitsync.UserPrincipal;
 import io.harness.gitsync.common.helper.ChangeTypeMapper;
+import io.harness.gitsync.common.helper.GitSyncGrpcClientUtils;
 import io.harness.gitsync.exceptions.GitSyncException;
 import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.persistance.GitSyncSdkService;
@@ -50,7 +51,8 @@ public class SCMGitSyncHelper {
 
     final FileInfo fileInfo = getFileInfo(gitBranchInfo, yaml, changeType, entityDetail);
 
-    final PushFileResponse pushFileResponse = harnessToGitPushInfoServiceBlockingStub.pushFile(fileInfo);
+    final PushFileResponse pushFileResponse =
+        GitSyncGrpcClientUtils.retryAndProcessException(harnessToGitPushInfoServiceBlockingStub::pushFile, fileInfo);
     try {
       checkForError(pushFileResponse);
     } catch (ScmException e) {

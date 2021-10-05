@@ -8,6 +8,7 @@ import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.gitsync.FullSyncChangeSet;
 import io.harness.gitsync.FullSyncResponse;
 import io.harness.gitsync.FullSyncServiceGrpc;
+import io.harness.gitsync.common.helper.GitSyncGrpcClientUtils;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.core.beans.GitFullSyncEntityInfo;
 import io.harness.ng.core.entitydetail.EntityDetailRestToProtoMapper;
@@ -54,7 +55,7 @@ public class GitFullSyncProcessorServiceImpl implements io.harness.gitsync.core.
     final YamlGitConfigDTO yamlGitConfigDTO = yamlGitConfigService.get(entityInfo.getProjectIdentifier(),
         entityInfo.getOrgIdentifier(), entityInfo.getAccountIdentifier(), entityInfo.getYamlGitConfigId());
     final FullSyncChangeSet changeSet = getFullSyncChangeSet(entityInfo, yamlGitConfigDTO, entityInfo.getMessageId());
-    return fullSyncServiceBlockingStub.performEntitySync(changeSet);
+    return GitSyncGrpcClientUtils.retryAndProcessException(fullSyncServiceBlockingStub::performEntitySync, changeSet);
   }
 
   private FullSyncChangeSet getFullSyncChangeSet(
