@@ -16,9 +16,11 @@ import com.google.common.collect.Sets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -89,5 +91,114 @@ public class TimeSeriesMLTransactionThresholds extends Base implements AccountAc
                         .customThresholds(new ArrayList<>())
                         .build())
         .build();
+  }
+
+  @Data
+  @NoArgsConstructor
+  @AllArgsConstructor
+  @Builder
+  public static class TimeSeriesMLTransactionThresholdsDTO {
+    @NotEmpty private String serviceId;
+
+    @NotEmpty private String workflowId;
+
+    @NotEmpty private StateType stateType;
+
+    @NotEmpty private String groupName;
+
+    @NotEmpty private String transactionName;
+
+    @NotEmpty private String metricName;
+
+    @NotEmpty private String cvConfigId;
+
+    private String accountId;
+
+    TimeSeriesMetricDefinition thresholds;
+
+    TimeSeriesCustomThresholdType thresholdType = TimeSeriesCustomThresholdType.ACCEPTABLE;
+
+    public TimeSeriesMLTransactionThresholds toEntity(String customThresholdRefId) {
+      return TimeSeriesMLTransactionThresholds.builder()
+          .serviceId(this.getServiceId())
+          .workflowId(this.getWorkflowId())
+          .stateType(this.getStateType())
+          .groupName(this.getGroupName())
+          .transactionName(this.getTransactionName())
+          .metricName(this.getMetricName())
+          .cvConfigId(this.getCvConfigId())
+          .accountId(this.getAccountId())
+          .thresholds(this.getThresholds())
+          .thresholdType(this.getThresholdType())
+          .customThresholdRefId(customThresholdRefId)
+          .build();
+    }
+
+    public boolean compareTo(TimeSeriesMLTransactionThresholds entity) {
+      if ((serviceId != null && !serviceId.equals(entity.getServiceId()))
+          || (entity.getServiceId() != null && serviceId == null)) {
+        return false;
+      }
+
+      if (workflowId != null && !workflowId.equals(entity.getWorkflowId())
+          || (entity.getWorkflowId() != null && workflowId == null)) {
+        return false;
+      }
+
+      if (groupName != null && !groupName.equals(entity.getGroupName())
+          || (entity.getGroupName() != null && groupName == null)) {
+        return false;
+      }
+
+      if (!stateType.name().equals(entity.getStateType().name())) {
+        return false;
+      }
+
+      if (transactionName != null && !transactionName.equals(entity.getTransactionName())
+          || (entity.getTransactionName() != null && transactionName == null)) {
+        return false;
+      }
+
+      if (metricName != null && !metricName.equals(entity.getMetricName())
+          || (entity.getMetricName() != null && metricName == null)) {
+        return false;
+      }
+
+      if (cvConfigId != null && !cvConfigId.equals(entity.getCvConfigId())
+          || (entity.getCvConfigId() != null && cvConfigId == null)) {
+        return false;
+      }
+
+      if (accountId != null && !accountId.equals(entity.getAccountId())
+          || (entity.getAccountId() != null && accountId == null)) {
+        return false;
+      }
+
+      if (thresholds != null && !thresholds.equals(entity.getThresholds())) {
+        return false;
+      }
+
+      if (thresholdType != null && !thresholdType.name().equals(entity.getThresholdType().name())) {
+        return false;
+      }
+
+      return true;
+    }
+
+    public static TimeSeriesMLTransactionThresholdsDTO fromTransactionThresholdsEntity(
+        TimeSeriesMLTransactionThresholds threshold) {
+      return TimeSeriesMLTransactionThresholdsDTO.builder()
+          .serviceId(threshold.getServiceId())
+          .workflowId(threshold.getWorkflowId())
+          .stateType(threshold.getStateType())
+          .groupName(threshold.getGroupName())
+          .transactionName(threshold.getTransactionName())
+          .metricName(threshold.getMetricName())
+          .cvConfigId(threshold.getCvConfigId())
+          .accountId(threshold.getAccountId())
+          .thresholds(threshold.getThresholds())
+          .thresholdType(threshold.getThresholdType())
+          .build();
+    }
   }
 }

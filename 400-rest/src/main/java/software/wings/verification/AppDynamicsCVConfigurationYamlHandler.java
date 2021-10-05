@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class AppDynamicsCVConfigurationYamlHandler
-    extends CVConfigurationYamlHandler<AppDynamicsCVConfigurationYaml, AppDynamicsCVServiceConfiguration> {
+    extends MetricCVConfigurationYamlHandler<AppDynamicsCVConfigurationYaml, AppDynamicsCVServiceConfiguration> {
   @Inject AppdynamicsService appdynamicsService;
 
   @Override

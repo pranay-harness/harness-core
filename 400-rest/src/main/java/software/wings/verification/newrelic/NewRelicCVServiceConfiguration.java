@@ -8,6 +8,7 @@ import software.wings.service.impl.analysis.DataCollectionInfoV2;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfoV2;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.CVConfigurationYaml;
+import software.wings.verification.MetricCVConfigurationYaml;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.github.reinert.jjschema.Attributes;
@@ -74,7 +75,7 @@ public class NewRelicCVServiceConfiguration extends CVConfiguration {
   @AllArgsConstructor
   @EqualsAndHashCode(callSuper = true)
   @JsonPropertyOrder({"type", "harnessApiVersion"})
-  public static final class NewRelicCVConfigurationYaml extends CVConfigurationYaml {
+  public static final class NewRelicCVConfigurationYaml extends MetricCVConfigurationYaml {
     private String newRelicApplicationName;
     private List<String> metrics;
   }
