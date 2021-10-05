@@ -2,6 +2,7 @@ package io.harness.pms.yaml;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.rule.OwnerRule.ARCHIT;
+import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 import static io.harness.rule.OwnerRule.SAHIL;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -226,5 +227,26 @@ public class YamlUtilsTest extends CategoryTest {
 
     fqn = "pipeline.variables";
     assertThat(YamlUtils.getPipelineVariableNameFromFqn(fqn)).isNull();
+  }
+
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testGetStageFqn() throws IOException {
+    ClassLoader classLoader = this.getClass().getClassLoader();
+    final URL testFile = classLoader.getResource("pipeline.yaml");
+    String yamlContent = Resources.toString(testFile, Charsets.UTF_8);
+    YamlField yamlField = YamlUtils.readTree(YamlUtils.injectUuid(yamlContent));
+    // Pipeline Node
+    YamlNode pipelineNode = yamlField.getNode().getField("pipeline").getNode();
+
+    // Stages Node
+    YamlField stagesNode = pipelineNode.getField("stages");
+    // step qualified name
+    YamlNode stage1Node = stagesNode.getNode().asArray().get(0).getField("stage").getNode();
+    YamlNode stepsNode =
+        stage1Node.getField("spec").getNode().getField("execution").getNode().getField("steps").getNode();
+    YamlNode step1Node = stepsNode.asArray().get(0).getField("step").getNode();
+    assertThat(YamlUtils.getStageFqnPath(step1Node)).isEqualTo("pipeline.stages.qaStage");
   }
 }
