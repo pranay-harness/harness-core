@@ -2,7 +2,10 @@ package software.wings.api;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 
 import software.wings.sm.StateExecutionData;
@@ -21,6 +24,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = false)
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@BreakDependencyOn("software.wings.sm.StateExecutionData")
 public class AwsLambdaExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData {
   private String functionName;
   private String functionArn;
