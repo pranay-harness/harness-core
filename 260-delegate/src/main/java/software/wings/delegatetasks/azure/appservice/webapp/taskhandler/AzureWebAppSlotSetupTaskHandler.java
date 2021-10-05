@@ -24,6 +24,7 @@ import io.harness.delegate.task.azure.appservice.webapp.response.AzureAppDeploym
 import io.harness.delegate.task.azure.appservice.webapp.response.AzureWebAppSlotSetupResponse;
 
 import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.delegatetasks.azure.appservice.deployment.context.AzureAppServiceDeploymentContext;
 import software.wings.delegatetasks.azure.appservice.deployment.context.AzureAppServiceDockerDeploymentContext;
 import software.wings.delegatetasks.azure.appservice.deployment.context.AzureAppServicePackageDeploymentContext;
 import software.wings.delegatetasks.azure.appservice.webapp.AbstractAzureWebAppTaskHandler;
@@ -115,11 +116,16 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
       AzureAppServicePackageDeploymentContext packageDeploymentContext =
           toAzureAppServicePackageDeploymentContext(azureWebAppSlotSetupParameters, azureWebClientContext, artifactFile,
               streamAttributes.getArtifactType(), logStreamingTaskClient);
+      AzureAppServicePreDeploymentData azureAppServicePreDeploymentData =
+          getAzureAppServicePreDeploymentData(packageDeploymentContext);
 
-      azureAppServiceDeploymentService.deployPackage(packageDeploymentContext, null);
+      azureAppServiceDeploymentService.deployPackage(packageDeploymentContext, azureAppServicePreDeploymentData);
 
       markDeploymentStatusAsSuccess(azureAppServiceTaskParameters, logStreamingTaskClient);
-      return AzureWebAppSlotSetupResponse.builder().azureAppDeploymentData(null).preDeploymentData(null).build();
+      return AzureWebAppSlotSetupResponse.builder()
+          .azureAppDeploymentData(null)
+          .preDeploymentData(azureAppServicePreDeploymentData)
+          .build();
     } catch (Exception ex) {
       String message = AzureResourceUtility.getAzureCloudExceptionMessage(ex);
       logErrorMsg(azureAppServiceTaskParameters, logStreamingTaskClient, ex, message);
@@ -180,14 +186,14 @@ public class AzureWebAppSlotSetupTaskHandler extends AbstractAzureWebAppTaskHand
   }
 
   private AzureAppServicePreDeploymentData getAzureAppServicePreDeploymentData(
-      AzureAppServiceDockerDeploymentContext dockerDeploymentContext) {
-    String slotName = dockerDeploymentContext.getSlotName();
-    String targetSlotName = dockerDeploymentContext.getTargetSlotName();
-    AzureWebClientContext azureWebClientContext = dockerDeploymentContext.getAzureWebClientContext();
-    Map<String, AzureAppServiceApplicationSetting> userAddedAppSettings = dockerDeploymentContext.getAppSettingsToAdd();
-    Map<String, AzureAppServiceConnectionString> userAddedConnSettings = dockerDeploymentContext.getConnSettingsToAdd();
+      AzureAppServiceDeploymentContext deploymentContext) {
+    String slotName = deploymentContext.getSlotName();
+    String targetSlotName = deploymentContext.getTargetSlotName();
+    AzureWebClientContext azureWebClientContext = deploymentContext.getAzureWebClientContext();
+    Map<String, AzureAppServiceApplicationSetting> userAddedAppSettings = deploymentContext.getAppSettingsToAdd();
+    Map<String, AzureAppServiceConnectionString> userAddedConnSettings = deploymentContext.getConnSettingsToAdd();
     return azureAppServiceService.getAzureAppServicePreDeploymentData(azureWebClientContext, slotName, targetSlotName,
-        userAddedAppSettings, userAddedConnSettings, dockerDeploymentContext.getLogStreamingTaskClient());
+        userAddedAppSettings, userAddedConnSettings, deploymentContext.getLogStreamingTaskClient());
   }
 
   private File getArtifactFile(AzureWebAppSlotSetupParameters azureWebAppSlotSetupParameters,

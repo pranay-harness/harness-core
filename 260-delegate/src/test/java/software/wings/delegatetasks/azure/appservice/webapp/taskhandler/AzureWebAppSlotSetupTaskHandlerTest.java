@@ -1,7 +1,6 @@
 package software.wings.delegatetasks.azure.appservice.webapp.taskhandler;
 
-import static io.harness.rule.OwnerRule.ANIL;
-import static io.harness.rule.OwnerRule.IVAN;
+import static io.harness.rule.OwnerRule.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -38,11 +37,13 @@ import io.harness.rule.Owner;
 import software.wings.WingsBaseTest;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.delegatetasks.azure.appservice.deployment.AzureAppServiceDeploymentService;
+import software.wings.delegatetasks.azure.common.ArtifactDownloaderServiceLogWrapper;
 import software.wings.delegatetasks.azure.common.AzureAppServiceService;
 import software.wings.delegatetasks.azure.common.AzureContainerRegistryService;
 
 import com.microsoft.azure.management.containerregistry.AccessKeyType;
 import com.microsoft.azure.management.containerregistry.RegistryCredentials;
+import java.io.File;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -61,6 +62,7 @@ public class AzureWebAppSlotSetupTaskHandlerTest extends WingsBaseTest {
   @Mock private AzureAppServiceDeploymentService azureAppServiceDeploymentService;
   @Mock private AzureAppServiceService azureAppServiceService;
   @Mock private AzureContainerRegistryService azureContainerRegistryService;
+  @Mock private ArtifactDownloaderServiceLogWrapper artifactDownloaderServiceLogWrapper;
 
   @Spy @InjectMocks AzureWebAppSlotSetupTaskHandler azureWebAppSlotSetupTaskHandler;
 
@@ -113,6 +115,42 @@ public class AzureWebAppSlotSetupTaskHandlerTest extends WingsBaseTest {
     assertThat(slotSetupResponse.getAzureAppDeploymentData().size()).isEqualTo(1);
     assertThat(slotSetupResponse.getAzureAppDeploymentData().get(0))
         .isEqualToComparingFieldByField(azureAppDeploymentData);
+    assertThat(slotSetupResponse.getPreDeploymentData()).isNotNull();
+    assertThat(slotSetupResponse.getPreDeploymentData()).isEqualToComparingFieldByField(appServicePreDeploymentData);
+  }
+
+  @Test
+  @Owner(developers = JELENA)
+  @Category(UnitTests.class)
+  public void testExecutePackageTaskInternal() {
+    AzureConfig azureConfig = buildAzureConfig();
+    AzureAppServiceTaskParameters setupParameters = buildAzureAppServiceTaskParameters(false);
+    ArtifactStreamAttributes artifactStreamAttributes = buildArtifactStreamAttributes(false);
+    AzureAppServicePreDeploymentData appServicePreDeploymentData = buildAzureAppServicePreDeploymentData();
+
+    doNothing().when(azureAppServiceDeploymentService).deployPackage(any(), any());
+    doReturn(appServicePreDeploymentData)
+        .when(azureAppServiceService)
+        .getAzureAppServicePreDeploymentData(any(), anyString(), any(), any(), any(), any());
+
+    doReturn(new File("file/path"))
+        .when(artifactDownloaderServiceLogWrapper)
+        .fetchArtifactFileForDeploymentAndLog(any(), any());
+
+    AzureTaskExecutionResponse azureTaskExecutionResponse = azureWebAppSlotSetupTaskHandler.executeTask(
+        setupParameters, azureConfig, mockLogStreamingTaskClient, artifactStreamAttributes);
+
+    assertThat(azureTaskExecutionResponse).isNotNull();
+    assertThat(azureTaskExecutionResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+
+    AzureAppServiceTaskResponse azureAppServiceTaskResponse =
+        (AzureAppServiceTaskResponse) azureTaskExecutionResponse.getAzureTaskResponse();
+
+    assertThat(azureAppServiceTaskResponse).isNotNull();
+    assertThat(azureAppServiceTaskResponse).isInstanceOf(AzureWebAppSlotSetupResponse.class);
+
+    AzureWebAppSlotSetupResponse slotSetupResponse = (AzureWebAppSlotSetupResponse) azureAppServiceTaskResponse;
+    assertThat(slotSetupResponse.getErrorMsg()).isNull();
     assertThat(slotSetupResponse.getPreDeploymentData()).isNotNull();
     assertThat(slotSetupResponse.getPreDeploymentData()).isEqualToComparingFieldByField(appServicePreDeploymentData);
   }
