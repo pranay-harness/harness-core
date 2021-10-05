@@ -511,7 +511,7 @@ function setupClientUtils() {
       cp images/scm/${platform}/$scmVersion/scm ${STORAGE_DIR_LOCATION}/harness-download/harness-scm/release/$scmVersion/bin/${platform}/amd64/
     done
 
-    for kustomizeVersion in v3.5.4; do
+    for kustomizeVersion in v3.5.4 v4.4.0; do
       mkdir -p ${STORAGE_DIR_LOCATION}/harness-download/harness-kustomize/release/$kustomizeVersion/bin/${platform}/amd64/
       cp images/kustomize/${platform}/$kustomizeVersion/kustomize ${STORAGE_DIR_LOCATION}/harness-download/harness-kustomize/release/$kustomizeVersion/bin/${platform}/amd64/
     done

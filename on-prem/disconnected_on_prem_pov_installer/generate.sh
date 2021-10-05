@@ -239,7 +239,7 @@ for tfConfigInspectVersion in v1.0 v1.1; do
 
 done
 
-for kustomizeVersion in v3.5.4; do
+for kustomizeVersion in v3.5.4 v4.4.0; do
   echo "Adding kustomize" $kustomizeVersion
 
   KUSTOMIZE_LINUX_DIR="${IMAGES_DIR}/kustomize/linux/$kustomizeVersion/"
