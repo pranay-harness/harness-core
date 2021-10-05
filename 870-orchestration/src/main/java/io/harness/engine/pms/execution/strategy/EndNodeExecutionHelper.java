@@ -49,7 +49,6 @@ public class EndNodeExecutionHelper {
     // End transaction here
     return nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), stepResponse.getStatus(), ops -> {
       setUnset(ops, NodeExecutionKeys.failureInfo, stepResponse.getFailureInfo());
-      setUnset(ops, NodeExecutionKeys.outcomeRefs, outcomeRefs);
       setUnset(ops, NodeExecutionKeys.unitProgresses, stepResponse.getUnitProgressList());
     }, EnumSet.noneOf(Status.class));
   }
@@ -89,7 +88,6 @@ public class EndNodeExecutionHelper {
         "Trying to update nodeExecution status from {} to {}", nodeExecution.getStatus(), stepResponse.getStatus());
     return nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), stepResponse.getStatus(), ops -> {
       setUnset(ops, NodeExecutionKeys.failureInfo, stepResponse.getFailureInfo());
-      setUnset(ops, NodeExecutionKeys.outcomeRefs, outcomeRefs);
       setUnset(ops, NodeExecutionKeys.unitProgresses, stepResponse.getUnitProgressList());
     }, EnumSet.noneOf(Status.class));
   }

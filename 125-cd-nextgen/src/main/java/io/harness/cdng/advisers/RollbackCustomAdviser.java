@@ -55,6 +55,14 @@ public class RollbackCustomAdviser implements Adviser {
     return StatusUtils.brokeStatuses().contains(advisingEvent.getToStatus());
   }
 
+  /**
+   * This checks if for a given node, there are any failed children. If yes, then check if any of the children published
+   * rollbackOutcome to check if rollback is required or not.
+   * See OnFailAdviser to get an idea of how rollbackOutcome is published.
+   *
+   * @param advisingEvent
+   * @return
+   */
   private OnFailRollbackOutput getRollbackOutputV2(AdvisingEvent advisingEvent) {
     OptionalSweepingOutput failedNodeSweepingOutput =
         executionSweepingOutputService.resolveOptional(advisingEvent.getAmbiance(),

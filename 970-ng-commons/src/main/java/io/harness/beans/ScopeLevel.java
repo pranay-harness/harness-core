@@ -27,4 +27,14 @@ public enum ScopeLevel {
     }
     return ScopeLevel.ACCOUNT;
   }
+
+  public static ScopeLevel of(Scope scope) {
+    if (!isBlank(scope.getProjectIdentifier())) {
+      return ScopeLevel.PROJECT;
+    }
+    if (!isBlank(scope.getOrgIdentifier())) {
+      return ScopeLevel.ORGANIZATION;
+    }
+    return ScopeLevel.ACCOUNT;
+  }
 }

@@ -88,21 +88,27 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
     K8sWatchTaskParams watchTaskParams = AnyUtils.unpack(params.getCustomizedParams(), K8sWatchTaskParams.class);
     try (AutoLogContext ignore1 = new PerpetualTaskLogContext(taskId.getId(), OVERRIDE_ERROR)) {
       try {
-        Instant now = Instant.now();
         KubernetesConfig kubernetesConfig = getKubernetesConfig(watchTaskParams);
 
         String watchId = k8sWatchServiceDelegate.create(watchTaskParams, kubernetesConfig);
         log.info("Ensured watch exists with id {}.", watchId);
+        taskWatchIdMap.putIfAbsent(taskId.getId(), watchId);
 
         DefaultK8sMetricsClient k8sMetricsClient =
             new DefaultK8sMetricsClient(apiClientFactory.getClient(kubernetesConfig));
 
-        taskWatchIdMap.putIfAbsent(taskId.getId(), watchId);
-        clusterSyncLastPublished.putIfAbsent(taskId.getId(), heartbeatTime);
+        final Instant now = Instant.now();
+
+        clusterSyncLastPublished.putIfAbsent(taskId.getId(), Instant.EPOCH);
         if (clusterSyncLastPublished.get(taskId.getId()).plus(Duration.ofHours(1)).isBefore(now)) {
+          log.info("Publishing k8SClusterSyncEvent for clusterId: {} at lastProcessedTimestamp: {}",
+              watchTaskParams.getClusterId(), now);
           publishClusterSyncEvent(k8sMetricsClient, eventPublisher, watchTaskParams, now);
+          log.info("Published k8SClusterSyncEvent for clusterId: {} at lastProcessedTimestamp: {}",
+              watchTaskParams.getClusterId(), now);
           clusterSyncLastPublished.put(taskId.getId(), now);
         }
+
         metricCollectors
             .computeIfAbsent(taskId.getId(),
                 key -> {

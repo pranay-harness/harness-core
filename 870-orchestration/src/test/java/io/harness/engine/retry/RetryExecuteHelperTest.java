@@ -486,14 +486,17 @@ public class RetryExecuteHelperTest {
     String currentYaml = readFile(currentYamlFile);
     String resultYamlFile = "retry-processedYamlResult1.yaml";
     String resultYaml = readFile(resultYamlFile);
-    String replacedProcessedYaml =
-        retryExecuteHelper.retryProcessedYaml(previousYaml, currentYaml, Collections.singletonList("stage2"));
+    List<String> uuidOfSkipNode = new ArrayList<>();
+    String replacedProcessedYaml = retryExecuteHelper.retryProcessedYaml(
+        previousYaml, currentYaml, Collections.singletonList("stage2"), uuidOfSkipNode);
     assertThat(replacedProcessedYaml).isEqualTo(resultYaml);
 
     // resuming from the first stage
-    replacedProcessedYaml =
-        retryExecuteHelper.retryProcessedYaml(previousYaml, currentYaml, Collections.singletonList("stage1"));
-    assertThat(replacedProcessedYaml).isEqualTo(currentYaml);
+    resultYamlFile = "retry-processedYamlResultFirstStageFailed1.yaml";
+    resultYaml = readFile(resultYamlFile);
+    replacedProcessedYaml = retryExecuteHelper.retryProcessedYaml(
+        previousYaml, currentYaml, Collections.singletonList("stage1"), new ArrayList<>());
+    assertThat(replacedProcessedYaml).isEqualTo(resultYaml);
 
     // failing a single stage which is ahead of some parallel stages
     String previousGoldenYamlFile = "retry-processedYamlPreviousGolden.yaml";
@@ -503,28 +506,28 @@ public class RetryExecuteHelperTest {
     String resultProcessedFile = "retry-processedYamlResultGolden1.yaml";
     String resultProcessedYaml = readFile(resultProcessedFile);
     replacedProcessedYaml = retryExecuteHelper.retryProcessedYaml(
-        previousGoldenYaml, currentGoldenYaml, Collections.singletonList("stage7"));
+        previousGoldenYaml, currentGoldenYaml, Collections.singletonList("stage7"), new ArrayList<>());
     assertThat(replacedProcessedYaml).isEqualTo(yamlToJsonString(resultProcessedYaml));
 
     // failing single stages from parallel groups
     resultProcessedFile = "retry-processedYamlResultSingleStageFailedInParallelStages.yaml";
     resultProcessedYaml = readFile(resultProcessedFile);
     replacedProcessedYaml = retryExecuteHelper.retryProcessedYaml(
-        previousGoldenYaml, currentGoldenYaml, Collections.singletonList("stage9"));
+        previousGoldenYaml, currentGoldenYaml, Collections.singletonList("stage9"), new ArrayList<>());
     assertThat(replacedProcessedYaml).isEqualTo(yamlToJsonString(resultProcessedYaml));
 
     // failing multiple stage failure in parallel group
     resultProcessedFile = "retry-processedYamlResultMultipleStageFailedInParallelStages.yaml";
     resultProcessedYaml = readFile(resultProcessedFile);
-    replacedProcessedYaml =
-        retryExecuteHelper.retryProcessedYaml(previousGoldenYaml, currentGoldenYaml, Arrays.asList("stage3", "stage5"));
+    replacedProcessedYaml = retryExecuteHelper.retryProcessedYaml(
+        previousGoldenYaml, currentGoldenYaml, Arrays.asList("stage3", "stage5"), new ArrayList<>());
     assertThat(replacedProcessedYaml).isEqualTo(yamlToJsonString(resultProcessedYaml));
 
     // selecting all stages in parallel group
     resultProcessedFile = "retry-processedYamlResultAllStageFailedInParallelStages.yaml";
     resultProcessedYaml = readFile(resultProcessedFile);
     replacedProcessedYaml = retryExecuteHelper.retryProcessedYaml(
-        previousGoldenYaml, currentGoldenYaml, Arrays.asList("stage3", "stage4", "stage5"));
+        previousGoldenYaml, currentGoldenYaml, Arrays.asList("stage3", "stage4", "stage5"), new ArrayList<>());
     assertThat(replacedProcessedYaml).isEqualTo(yamlToJsonString(resultProcessedYaml));
   }
 
@@ -588,5 +591,71 @@ public class RetryExecuteHelperTest {
     assertThat(onlyFailedStageIdentifier).contains("stage5");
     assertThat(onlyFailedStageIdentifier).contains("stage6");
     assertThat(onlyFailedStageIdentifier).contains("stage7");
+  }
+
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testFetchUuidOfNonRetryStages() throws IOException {
+    String previousYamlFile = "retry-processedYamlPrevious1.yaml";
+    String previousYaml = readFile(previousYamlFile);
+    String currentYamlFile = "retry-processedYamlCurrent1.yaml";
+    String currentYaml = readFile(currentYamlFile);
+    List<String> uuidOfSkipNode = new ArrayList<>();
+    retryExecuteHelper.retryProcessedYaml(
+        previousYaml, currentYaml, Collections.singletonList("stage2"), uuidOfSkipNode);
+
+    // resuming from the first stage
+    uuidOfSkipNode.clear();
+    retryExecuteHelper.retryProcessedYaml(
+        previousYaml, currentYaml, Collections.singletonList("stage1"), uuidOfSkipNode);
+    assertThat(uuidOfSkipNode.size()).isEqualTo(0);
+
+    // failing a single stage which is ahead of some parallel stages
+    uuidOfSkipNode.clear();
+    String previousGoldenYamlFile = "retry-processedYamlPreviousGolden.yaml";
+    String previousGoldenYaml = readFile(previousGoldenYamlFile);
+    String currentGoldenYamlFile = "retry-processedYamlCurrentGolden.yaml";
+    String currentGoldenYaml = readFile(currentGoldenYamlFile);
+    retryExecuteHelper.retryProcessedYaml(
+        previousGoldenYaml, currentGoldenYaml, Collections.singletonList("stage7"), uuidOfSkipNode);
+    assertThat(uuidOfSkipNode.size()).isEqualTo(6);
+    assertThat(uuidOfSkipNode.get(0)).isEqualTo("oldUuid1");
+    assertThat(uuidOfSkipNode.get(1)).isEqualTo("oldUuid2");
+    assertThat(uuidOfSkipNode.get(2)).isEqualTo("oldUuid3");
+    assertThat(uuidOfSkipNode.get(3)).isEqualTo("oldUuid4");
+    assertThat(uuidOfSkipNode.get(4)).isEqualTo("oldUuid5");
+    assertThat(uuidOfSkipNode.get(5)).isEqualTo("oldUuid6");
+
+    // failing single stages from parallel groups
+    uuidOfSkipNode.clear();
+    retryExecuteHelper.retryProcessedYaml(
+        previousGoldenYaml, currentGoldenYaml, Collections.singletonList("stage9"), uuidOfSkipNode);
+    assertThat(uuidOfSkipNode.size()).isEqualTo(8);
+    assertThat(uuidOfSkipNode.get(0)).isEqualTo("oldUuid1");
+    assertThat(uuidOfSkipNode.get(1)).isEqualTo("oldUuid2");
+    assertThat(uuidOfSkipNode.get(2)).isEqualTo("oldUuid3");
+    assertThat(uuidOfSkipNode.get(3)).isEqualTo("oldUuid4");
+    assertThat(uuidOfSkipNode.get(4)).isEqualTo("oldUuid5");
+    assertThat(uuidOfSkipNode.get(5)).isEqualTo("oldUuid6");
+    assertThat(uuidOfSkipNode.get(6)).isEqualTo("oldUuid7");
+    assertThat(uuidOfSkipNode.get(7)).isEqualTo("oldUuid8");
+
+    // failing multiple stage failure in parallel group
+    uuidOfSkipNode.clear();
+    retryExecuteHelper.retryProcessedYaml(
+        previousGoldenYaml, currentGoldenYaml, Arrays.asList("stage3", "stage5"), uuidOfSkipNode);
+    assertThat(uuidOfSkipNode.size()).isEqualTo(3);
+    assertThat(uuidOfSkipNode.get(0)).isEqualTo("oldUuid1");
+    assertThat(uuidOfSkipNode.get(1)).isEqualTo("oldUuid2");
+    assertThat(uuidOfSkipNode.get(2)).isEqualTo("oldUuid4");
+
+    // selecting all stages in parallel group
+    uuidOfSkipNode.clear();
+    retryExecuteHelper.retryProcessedYaml(
+        previousGoldenYaml, currentGoldenYaml, Arrays.asList("stage3", "stage4", "stage5"), uuidOfSkipNode);
+    assertThat(uuidOfSkipNode.size()).isEqualTo(2);
+    assertThat(uuidOfSkipNode.get(0)).isEqualTo("oldUuid1");
+    assertThat(uuidOfSkipNode.get(1)).isEqualTo("oldUuid2");
   }
 }

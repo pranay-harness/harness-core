@@ -50,7 +50,6 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
 
   @Inject private PerpetualTaskRecordDao perpetualTaskRecordDao;
   @Mock private Subject<PerpetualTaskStateObserver> perpetualTaskStateObserverSubject;
-  @Inject private PerpetualTaskScheduleService perpetualTaskScheduleService;
 
   @InjectMocks @Inject private PerpetualTaskServiceImpl perpetualTaskService;
 
@@ -89,32 +88,9 @@ public class PerpetualTaskServiceImplTest extends WingsBaseTest {
     String taskId = perpetualTaskService.createTask(
         PerpetualTaskType.ECS_CLUSTER, ACCOUNT_ID, clientContext, perpetualTaskSchedule(), false, TASK_DESCRIPTION);
     assertThat(taskId).isNotNull();
-
     String taskIdDuplicate = perpetualTaskService.createTask(
         PerpetualTaskType.ECS_CLUSTER, ACCOUNT_ID, clientContext, perpetualTaskSchedule(), false, TASK_DESCRIPTION);
     assertThat(taskIdDuplicate).isEqualTo(taskId);
-  }
-
-  @Test
-  @Owner(developers = MOHIT_GARG)
-  @Category(UnitTests.class)
-  public void testCustomTimeIntervalIfNotPresent() {
-    long finalTaskTimeInterval =
-        perpetualTaskService.getTaskTimeInterval(perpetualTaskSchedule(), ACCOUNT_ID, PerpetualTaskType.ECS_CLUSTER);
-
-    assertThat(finalTaskTimeInterval).isEqualTo(perpetualTaskSchedule().getInterval().getSeconds());
-  }
-
-  @Test
-  @Owner(developers = MOHIT_GARG)
-  @Category(UnitTests.class)
-  public void testCustomTimeIntervalIfPresent() {
-    long customTimeIntervalInMs = 100000;
-    perpetualTaskScheduleService.save(ACCOUNT_ID, PerpetualTaskType.ECS_CLUSTER, customTimeIntervalInMs);
-    long finalTaskTimeInterval =
-        perpetualTaskService.getTaskTimeInterval(perpetualTaskSchedule(), ACCOUNT_ID, PerpetualTaskType.ECS_CLUSTER);
-
-    assertThat(finalTaskTimeInterval).isEqualTo(customTimeIntervalInMs / 1000);
   }
 
   @Test

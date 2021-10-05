@@ -62,7 +62,7 @@ public class Plan implements PersistentEntity, Node {
   static final long TTL_MONTHS = 6;
 
   @Default @Wither @Id @org.mongodb.morphia.annotations.Id String uuid = generateUuid();
-  @Deprecated @Singular List<PlanNodeProto> nodes;
+  @Singular @Deprecated List<PlanNodeProto> nodes;
   @Singular List<Node> planNodes;
 
   @NotNull String startingNodeId;

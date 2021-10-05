@@ -163,5 +163,7 @@ replace_key_value eventsFramework.redis.sslConfig.CATrustStorePassword $EVENTS_F
 
 replace_key_value shouldDeployWithGitSync "$ENABLE_GIT_SYNC"
 
+replace_key_value enableAuth "$ENABLE_AUTH"
+
 replace_key_value enableAudit "$ENABLE_AUDIT"
 replace_key_value auditClientConfig.baseUrl "$AUDIT_SERVICE_BASE_URL"

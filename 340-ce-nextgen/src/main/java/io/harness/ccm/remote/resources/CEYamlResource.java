@@ -56,10 +56,11 @@ public class CEYamlResource {
   private static final String CONTENT_TRANSFER_ENCODING = "Content-Transfer-Encoding";
   private static final String BINARY = "binary";
 
+  // @deprecated - use 'io.harness.ccm.remote.resources.CEYamlResource.cloudCostK8sClusterSetup'
   @POST
   @Path("/generate-cost-optimisation-yaml")
   @ApiOperation(value = "Get Cost Optimisation Yaml", nickname = "getCostOptimisationYamlTemplate")
-  @Deprecated // use 'io.harness.ccm.remote.resources.CEYamlResource.cloudCostK8sClusterSetup'
+  @Deprecated
   public Response generateCostOptimisationYaml(@Context HttpServletRequest request,
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @QueryParam("connectorIdentifier") String connectorIdentifier) throws IOException {

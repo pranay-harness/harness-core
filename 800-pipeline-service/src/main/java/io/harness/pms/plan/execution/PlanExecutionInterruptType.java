@@ -10,8 +10,8 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.Arrays;
 
 // TODO: We need to adopt the interrupt type itself and remove this enum
-@Deprecated
 @OwnedBy(HarnessTeam.PIPELINE)
+@Deprecated
 public enum PlanExecutionInterruptType {
   /**
    * Abort all state event.

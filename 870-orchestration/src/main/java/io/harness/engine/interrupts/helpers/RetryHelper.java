@@ -132,7 +132,6 @@ public class RetryHelper {
         .status(Status.QUEUED)
         .timeoutInstanceIds(new ArrayList<>())
         .timeoutDetails(null)
-        .outcomeRefs(new ArrayList<>())
         .retryIds(retryIds)
         .oldRetry(false)
         .build();

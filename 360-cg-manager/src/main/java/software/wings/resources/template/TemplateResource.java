@@ -7,9 +7,7 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 import static software.wings.security.PermissionAttribute.PermissionType.APP_TEMPLATE;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
@@ -47,7 +45,6 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @AuthRule(permissionType = LOGGED_IN)
 @OwnedBy(PL)
-@TargetModule(HarnessModule._410_CG_REST)
 public class TemplateResource {
   @Inject TemplateService templateService;
   @Inject TemplateVersionService templateVersionService;
@@ -137,8 +134,9 @@ public class TemplateResource {
   public RestResponse<Template> getTemplate(@QueryParam("accountId") String accountId,
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @PathParam("templateId") String templateId,
       @QueryParam("version") String version) {
-    templateAuthHandler.authorizeRead(appId, templateId);
-    return new RestResponse<>(templateService.get(accountId, templateId, version));
+    final Template template = templateService.get(accountId, templateId, version);
+    templateAuthHandler.authorizeRead(template.getAppId(), templateId);
+    return new RestResponse<>(template);
   }
 
   /***
@@ -154,7 +152,8 @@ public class TemplateResource {
   public RestResponse<List<CommandCategory>> getCommandCategories(@QueryParam("accountId") String accountId,
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @PathParam("templateId") String templateId) {
     // TODO check is this needed
-    templateAuthHandler.authorizeRead(appId, templateId);
+    final Template template = templateService.get(templateId);
+    templateAuthHandler.authorizeRead(template.getAppId(), templateId);
     return new RestResponse<>(templateService.getCommandCategories(accountId, appId, templateId));
   }
 
@@ -192,7 +191,8 @@ public class TemplateResource {
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @PathParam("templateId") String templateId,
       @PathParam("version") String version) {
     // TODO check is this needed
-    templateAuthHandler.authorizeRead(appId, templateId);
+    final Template template = templateService.get(accountId, templateId, version);
+    templateAuthHandler.authorizeRead(template.getAppId(), templateId);
     return new RestResponse<>(templateService.getYamlOfTemplate(templateId, version));
   }
 

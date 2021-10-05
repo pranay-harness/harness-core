@@ -14,12 +14,14 @@ import io.harness.pms.merger.fqn.FQN;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -143,8 +145,8 @@ public class RetryExecutionHelper {
     return planExecutionMetadataService.getYamlFromPlanExecutionId(planExecutionId);
   }
 
-  public String retryProcessedYaml(String previousProcessedYaml, String currentProcessedYaml, List<String> retryStages)
-      throws IOException {
+  public String retryProcessedYaml(String previousProcessedYaml, String currentProcessedYaml, List<String> retryStages,
+      List<String> uuidForSkipNode) throws IOException {
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
     JsonNode previousRootJsonNode = mapper.readTree(previousProcessedYaml);
@@ -160,17 +162,24 @@ public class RetryExecutionHelper {
       if (stage.get("stage") != null) {
         // if the stage does not belongs to the retry stages and is to be skipped, copy the stage node from the
         // previous processed yaml
-        String stageIdentifier = stage.get("stage").get("identifier").textValue();
+        JsonNode previousExecutionStageNodeJson = stage.get("stage");
+        String stageIdentifier = previousExecutionStageNodeJson.get("identifier").textValue();
         if (!retryStages.contains(stageIdentifier)) {
+          traverseUuid(stage, uuidForSkipNode);
           ((ArrayNode) currentRootJsonNode.get("pipeline").get("stages")).set(stageCounter, stage);
           stageCounter = stageCounter + 1;
         } else {
+          // need to copy only the uuid of the stage to be retry.
+          JsonNode currentResumableStagejsonNode =
+              currentRootJsonNode.get("pipeline").get("stages").get(stageCounter).get("stage");
+          ((ObjectNode) currentResumableStagejsonNode).set("__uuid", previousExecutionStageNodeJson.get("__uuid"));
           // here onwards we need to retry the pipeline, no further copy of nodes required
           break;
         }
       } else {
         // parallel group
         if (!isRetryStagesInParallelStages(stage.get("parallel"), retryStages)) {
+          traverseUuid(stage, uuidForSkipNode);
           // if the parallel group does not contain the retry stages, copy the whole parallel node
           ((ArrayNode) currentRootJsonNode.get("pipeline").get("stages")).set(stageCounter, stage);
           stageCounter = stageCounter + 1;
@@ -179,7 +188,7 @@ public class RetryExecutionHelper {
           ((ArrayNode) currentRootJsonNode.get("pipeline").get("stages"))
               .set(stageCounter,
                   replaceStagesInParallelGroup(stage.get("parallel"), retryStages,
-                      currentRootJsonNode.get("pipeline").get("stages").get(stageCounter)));
+                      currentRootJsonNode.get("pipeline").get("stages").get(stageCounter), uuidForSkipNode));
           break;
         }
       }
@@ -187,13 +196,19 @@ public class RetryExecutionHelper {
     return currentRootJsonNode.toString();
   }
 
-  private JsonNode replaceStagesInParallelGroup(
-      JsonNode parallelStage, List<String> retryStages, JsonNode currentParallelStageNode) {
+  private JsonNode replaceStagesInParallelGroup(JsonNode parallelStage, List<String> retryStages,
+      JsonNode currentParallelStageNode, List<String> uuidForSkipNode) {
     int stageCounter = 0;
     for (JsonNode stageNode : parallelStage) {
       String stageIdentifier = stageNode.get("stage").get("identifier").textValue();
       if (!retryStages.contains(stageIdentifier)) {
+        traverseUuid(stageNode, uuidForSkipNode);
         ((ArrayNode) currentParallelStageNode.get("parallel")).set(stageCounter, stageNode);
+      } else {
+        // replace only the uuid of the retry parallel stage
+        JsonNode currentResumableStagejsonNode =
+            currentParallelStageNode.get("parallel").get(stageCounter).get("stage");
+        ((ObjectNode) currentResumableStagejsonNode).set("__uuid", stageNode.get("stage").get("__uuid"));
       }
       stageCounter++;
     }
@@ -208,5 +223,34 @@ public class RetryExecutionHelper {
       }
     }
     return false;
+  }
+
+  private void traverseUuid(JsonNode node, List<String> uuidForSkipNode) {
+    if (node == null) {
+      return;
+    }
+    if (node.isObject()) {
+      injectUuidInObject(node, uuidForSkipNode);
+    } else if (node.isArray()) {
+      injectUuidInArray(node, uuidForSkipNode);
+    }
+  }
+
+  private void injectUuidInArray(JsonNode node, List<String> uuidForSkipNode) {
+    ArrayNode arrayNode = (ArrayNode) node;
+    for (Iterator<JsonNode> it = arrayNode.elements(); it.hasNext();) {
+      traverseUuid(it.next(), uuidForSkipNode);
+    }
+  }
+
+  private void injectUuidInObject(JsonNode node, List<String> uuidForSkipNode) {
+    ObjectNode objectNode = (ObjectNode) node;
+    if (node.get("__uuid") != null) {
+      uuidForSkipNode.add(node.get("__uuid").textValue());
+    }
+    for (Iterator<Map.Entry<String, JsonNode>> it = objectNode.fields(); it.hasNext();) {
+      Map.Entry<String, JsonNode> field = it.next();
+      traverseUuid(field.getValue(), uuidForSkipNode);
+    }
   }
 }

@@ -1,6 +1,7 @@
 package io.harness.pms.quickFilters;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.filter.FilterType.PIPELINEEXECUTION;
 import static io.harness.rule.OwnerRule.NAMAN;
 import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 
@@ -38,6 +39,13 @@ public class QuickFilterTest extends CategoryTest {
 
   @InjectMocks private PMSExecutionServiceImpl pmsExecutionServiceImpl;
 
+  String accountId = "acc";
+  String orgId = "org";
+  String projId = "pro";
+  String pipelineId = "pip";
+  String moduleName = "mod";
+  String searchTerm = "sear";
+
   @Before
   public void init() {
     MockitoAnnotations.initMocks(this);
@@ -48,26 +56,28 @@ public class QuickFilterTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testFormCriteriaQuickFilters() {
     // testing pipelineIdentifier,status and myDeployments values
-    Criteria form = pmsExecutionServiceImpl.formCriteria("acc", "org", "pro", "pip", null, null, "mod", "sear",
-        Arrays.asList(ExecutionStatus.FAILED, ExecutionStatus.ABORTED), true, false, null);
+    Criteria form = pmsExecutionServiceImpl.formCriteria(accountId, orgId, projId, pipelineId, null, null, moduleName,
+        searchTerm, Arrays.asList(ExecutionStatus.FAILED, ExecutionStatus.ABORTED), true, false, null);
 
     // status
     assertThat(form.getCriteriaObject().get("status").toString()).isEqualTo("Document{{$in=[FAILED, ABORTED]}}");
 
     // myDeployments
-    assertThat(form.getCriteriaObject().containsKey("executionTriggerInfo")).isEqualTo(true);
+    assertThat(form.getCriteriaObject().containsKey("executionTriggerInfo.triggeredBy")).isEqualTo(true);
+    assertThat(form.getCriteriaObject().containsKey("executionTriggerInfo.triggerType")).isEqualTo(true);
 
     // pipelineIdentifier
-    assertThat(form.getCriteriaObject().get("pipelineIdentifier").toString().contentEquals("pip")).isEqualTo(true);
+    assertThat(form.getCriteriaObject().get("pipelineIdentifier").toString().contentEquals(pipelineId)).isEqualTo(true);
 
     // pipelineDeleted
     assertThat(form.getCriteriaObject().get("pipelineDeleted")).isNotEqualTo(true);
 
     // making myDeployments = false
-    Criteria allDeploymentsForm = pmsExecutionServiceImpl.formCriteria("acc", "org", "pro", "pip", null, null, "mod",
-        "sear", Collections.singletonList(ExecutionStatus.FAILED), false, false, null);
+    Criteria allDeploymentsForm = pmsExecutionServiceImpl.formCriteria(accountId, orgId, projId, pipelineId, null, null,
+        moduleName, searchTerm, Collections.singletonList(ExecutionStatus.FAILED), false, false, null);
     // allDeployment -> myDeployments = false
-    assertThat(allDeploymentsForm.getCriteriaObject().containsKey("executionTriggerInfo")).isEqualTo(false);
+    assertThat(allDeploymentsForm.getCriteriaObject().containsKey("executionTriggerInfo.triggeredBy")).isEqualTo(false);
+    assertThat(allDeploymentsForm.getCriteriaObject().containsKey("executionTriggerInfo.triggerType")).isEqualTo(false);
   }
 
   @Test
@@ -75,7 +85,7 @@ public class QuickFilterTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testFormCriteriaQuickFiltersWithBothStatusFilters() {
     // testing pipelineIdentifier,status and myDeployments values
-    Criteria form = pmsExecutionServiceImpl.formCriteria("acc", "org", "pro", "pip", null,
+    Criteria form = pmsExecutionServiceImpl.formCriteria(accountId, orgId, projId, pipelineId, null,
         PipelineExecutionFilterPropertiesDTO.builder()
             .status(Arrays.asList(ExecutionStatus.ABORTED, ExecutionStatus.PAUSED))
             .build(),
@@ -101,19 +111,21 @@ public class QuickFilterTest extends CategoryTest {
     assertThat(form.getCriteriaObject().get("$and").toString()).isEqualTo(documentString);
 
     // filterProperties and filterIdentifier as not null
-    assertThatThrownBy(()
-                           -> pmsExecutionServiceImpl.formCriteria("acc", "org", "pro", "pip", "filterIdentifierDummy",
-                               PipelineExecutionFilterPropertiesDTO.builder()
-                                   .status(Collections.singletonList(ExecutionStatus.ABORTED))
-                                   .build(),
-                               "mod", "sear", null, true, false, null))
+    assertThatThrownBy(
+        ()
+            -> pmsExecutionServiceImpl.formCriteria(accountId, orgId, projId, pipelineId, "filterIdentifierDummy",
+                PipelineExecutionFilterPropertiesDTO.builder()
+                    .status(Collections.singletonList(ExecutionStatus.ABORTED))
+                    .build(),
+                moduleName, searchTerm, null, true, false, null))
         .isInstanceOf(InvalidRequestException.class);
 
     // giving random name to filterIdentifier and filterProperties as null
     String randomFilterIdentifier = RandomStringUtils.randomAlphabetic(10);
+    when(filterService.get(accountId, orgId, projId, randomFilterIdentifier, PIPELINEEXECUTION)).thenReturn(null);
     assertThatThrownBy(()
-                           -> pmsExecutionServiceImpl.formCriteria("acc", "org", "pro", "pip", randomFilterIdentifier,
-                               null, "mod", "sear", null, true, false, null))
+                           -> pmsExecutionServiceImpl.formCriteria(accountId, orgId, projId, pipelineId,
+                               randomFilterIdentifier, null, moduleName, searchTerm, null, true, false, null))
         .isInstanceOf(InvalidRequestException.class);
   }
 }

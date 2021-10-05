@@ -103,13 +103,12 @@ public class StateExecutionInstance implements PersistentEntity, AccountDataRete
   private ExecutionInterruptType actionAfterManualInterventionTimeout;
   private boolean isRollbackProvisionerAfterPhases;
 
-  @Deprecated
   /**
    * @deprecated {@link software.wings.service.intfc.StateExecutionService#appendDelegateTaskDetails(String,
    *     DelegateTaskDetails)} should be used instead. Check {@link
    *     software.wings.sm.states.ShellScriptState#executeInternal(ExecutionContext, String)} for details. )
    * */
-  private String delegateTaskId;
+  @Deprecated private String delegateTaskId;
 
   List<DelegateTaskDetails> delegateTasksDetails;
   private boolean selectionLogsTrackingForTasksEnabled;
