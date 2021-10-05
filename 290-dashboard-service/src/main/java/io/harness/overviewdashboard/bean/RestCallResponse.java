@@ -14,4 +14,5 @@ public class RestCallResponse<T> {
   T response;
   OverviewDashboardRequestType requestType;
   Exception ex;
+  boolean callFailed;
 }
