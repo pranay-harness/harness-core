@@ -53,9 +53,10 @@ public class BusinessMappingDao {
     return hPersistence.delete(query);
   }
 
-  public BusinessMapping get(String uuid) {
+  public BusinessMapping get(String uuid, String accountId) {
     return hPersistence.createQuery(BusinessMapping.class, excludeValidate)
         .filter(BusinessMappingKeys.uuid, uuid)
+        .filter(BusinessMappingKeys.accountId, accountId)
         .get();
   }
 
