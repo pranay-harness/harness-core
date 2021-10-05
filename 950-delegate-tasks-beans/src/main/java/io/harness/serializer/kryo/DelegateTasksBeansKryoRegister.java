@@ -410,6 +410,7 @@ import io.harness.secretmanagerclient.SecretType;
 import io.harness.secretmanagerclient.ValueType;
 import io.harness.serializer.KryoRegistrar;
 
+import software.wings.beans.LambdaTestEvent;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.CodeDeployParams;
 import software.wings.beans.s3.S3FileRequest;
@@ -800,6 +801,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AwsCodeCommitDataObtainmentTaskResult.class, 543274);
     kryo.register(AwsCodeCommitRequestType.class, 543275);
     kryo.register(AwsLambdaVpcConfig.class, 5450);
+    kryo.register(LambdaTestEvent.class, 5604);
 
     kryo.register(CIK8ExecuteStepTaskParams.class, 543276);
     kryo.register(LiteEngineConnectionCapability.class, 543277);
