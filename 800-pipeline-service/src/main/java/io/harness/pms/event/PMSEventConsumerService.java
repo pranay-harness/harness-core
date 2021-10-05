@@ -51,14 +51,14 @@ public class PMSEventConsumerService implements Managed {
 
   @Override
   public void stop() throws InterruptedException {
-    entityCRUDConsumerService.shutdown();
+    entityCRUDConsumerService.shutdownNow();
     entityCRUDConsumerService.awaitTermination(ENTITY_CRUD_MAX_PROCESSING_TIME.getSeconds(), TimeUnit.SECONDS);
 
-    webhookEventConsumerService.shutdown();
+    webhookEventConsumerService.shutdownNow();
     webhookEventConsumerService.awaitTermination(
         WEBHOOK_EVENTS_STREAM_MAX_PROCESSING_TIME.getSeconds(), TimeUnit.SECONDS);
 
-    pollingEventConsumerService.shutdown();
+    pollingEventConsumerService.shutdownNow();
     pollingEventConsumerService.awaitTermination(
         EventsFrameworkConstants.POLLING_EVENTS_STREAM_MAX_PROCESSING_TIME.getSeconds(), TimeUnit.SECONDS);
   }

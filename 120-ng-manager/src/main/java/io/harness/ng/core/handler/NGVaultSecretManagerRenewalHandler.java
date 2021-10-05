@@ -52,7 +52,7 @@ public class NGVaultSecretManagerRenewalHandler implements Handler<VaultConnecto
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name(this.getClass().getName())
-            .poolSize(5)
+            .poolSize(2)
             .interval(ofSeconds(5))
             .build(),
         VaultConnector.class,

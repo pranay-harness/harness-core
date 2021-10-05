@@ -44,7 +44,7 @@ public class GitFullSyncEntityIterator implements Handler<GitFullSyncEntityInfo>
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name(this.getClass().getName())
-            .poolSize(5)
+            .poolSize(2)
             .interval(ofSeconds(5))
             .build(),
         GitFullSyncEntityInfo.class,
