@@ -2,6 +2,7 @@ package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.beans.FeatureName.USE_LATEST_CHARTMUSEUM_VERSION;
+import static io.harness.beans.FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE;
 import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_DIRECT;
 import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_GCP;
 import static io.harness.common.ParameterFieldHelper.getBooleanParameterFieldValue;
@@ -1281,5 +1282,9 @@ public class K8sStepHelper {
       sdkGraphVisualizationDataService.publishStepDetailInformation(
           ambiance, K8sReleaseDetailsInfo.builder().releaseName(releaseName).build(), RELEASE_NAME);
     }
+  }
+
+  public boolean isUseLatestKustomizeVersion(String accountId) {
+    return featureFlagService.isEnabled(VARIABLE_SUPPORT_FOR_KUSTOMIZE, accountId);
   }
 }

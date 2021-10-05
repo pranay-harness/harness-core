@@ -110,6 +110,7 @@ public class K8sBlueGreenStep extends TaskChainExecutableWithRollbackAndRbac imp
             .skipResourceVersioning(k8sStepHelper.getSkipResourceVersioning(k8sManifestOutcome))
             .shouldOpenFetchFilesLogStream(shouldOpenFetchFilesLogStream)
             .commandUnitsProgress(UnitProgressDataMapper.toCommandUnitsProgress(unitProgressData))
+            .useLatestKustomizeVersion(k8sStepHelper.isUseLatestKustomizeVersion(accountId))
             .build();
 
     k8sStepHelper.publishReleaseNameStepDetails(ambiance, releaseName);
