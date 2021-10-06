@@ -14,6 +14,7 @@ import io.harness.engine.pms.commons.events.PmsEventSender;
 import io.harness.engine.pms.execution.strategy.NodeExecutionStrategy;
 import io.harness.engine.utils.PmsLevelUtils;
 import io.harness.execution.ExecutionModeUtils;
+import io.harness.execution.IdentityNodeExecutionMetadata;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.logging.AutoLogContext;
@@ -42,7 +43,8 @@ import org.springframework.data.mongodb.core.query.Update;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Slf4j
-public class IdentityNodeExecutionStrategy implements NodeExecutionStrategy<IdentityPlanNode> {
+public class IdentityNodeExecutionStrategy
+    implements NodeExecutionStrategy<IdentityPlanNode, NodeExecution, IdentityNodeExecutionMetadata> {
   @Inject private PmsEventSender eventSender;
   @Inject private NodeExecutionService nodeExecutionService;
   @Inject private AdviseHandlerFactory adviseHandlerFactory;
@@ -51,7 +53,7 @@ public class IdentityNodeExecutionStrategy implements NodeExecutionStrategy<Iden
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
 
   @Override
-  public void triggerNode(Ambiance ambiance, IdentityPlanNode node) {
+  public NodeExecution triggerNode(Ambiance ambiance, IdentityPlanNode node, IdentityNodeExecutionMetadata metadata) {
     String uuid = generateUuid();
     NodeExecution previousNodeExecution = null;
     if (AmbianceUtils.obtainCurrentRuntimeId(ambiance) != null) {
@@ -72,9 +74,10 @@ public class IdentityNodeExecutionStrategy implements NodeExecutionStrategy<Iden
             .unitProgresses(new ArrayList<>())
             .startTs(AmbianceUtils.getCurrentLevelStartTs(cloned))
             .build();
-    nodeExecutionService.save(nodeExecution);
+    NodeExecution savedNodeExecution = nodeExecutionService.save(nodeExecution);
     // TODO: Should add to an execution queue rather than submitting straight to thread pool
     executorService.submit(() -> startExecution(cloned));
+    return savedNodeExecution;
   }
 
   @Override
