@@ -30,9 +30,17 @@ import lombok.extern.slf4j.Slf4j;
 public class PMSPipelineServiceStepHelper {
   @Inject private final PmsFeatureFlagHelper pmsFeatureFlagHelper;
   @Inject private final CommonStepInfo commonStepInfo;
+  @Inject private final PipelineServiceEnforcementService pipelineServiceEnforcementService;
+
   @VisibleForTesting public static String LIBRARY = "Library";
 
-  public List<StepInfo> filterStepsOnFeatureFlag(List<StepInfo> stepInfoList, String accountId) {
+  /**
+   * Filters the step to be shown in the UI based on a feature flag
+   * @param stepInfoList
+   * @param accountId
+   * @return
+   */
+  public List<StepInfo> filterStepsBasedOnFeatureFlag(List<StepInfo> stepInfoList, String accountId) {
     try {
       List<StepInfo> ffEnabledStepInfoList = new ArrayList<>();
       if (!stepInfoList.isEmpty()) {
@@ -50,10 +58,10 @@ public class PMSPipelineServiceStepHelper {
   }
 
   public StepCategory calculateStepsForCategory(String module, List<StepInfo> stepInfoList, String accountId) {
-    List<StepInfo> ffEnabledStepInfoList = filterStepsOnFeatureFlag(stepInfoList, accountId);
+    List<StepInfo> ffEnabledStepInfoList = filterStepsBasedOnFeatureFlag(stepInfoList, accountId);
     StepCategory stepCategory = StepCategory.builder().name(module).build();
     for (StepInfo stepType : ffEnabledStepInfoList) {
-      addToTopLevel(stepCategory, stepType);
+      addToTopLevel(stepCategory, stepType, accountId);
     }
     return stepCategory;
   }
@@ -87,15 +95,23 @@ public class PMSPipelineServiceStepHelper {
     return calculateStepsForCategory(module, filteredStepTypes, accountId);
   }
 
-  public void addToTopLevel(StepCategory stepCategory, StepInfo stepInfo) {
+  public void addToTopLevel(StepCategory stepCategory, StepInfo stepInfo, String accountId) {
     StepCategory currentStepCategory = stepCategory;
     if (stepInfo != null) {
-      String folderPath = stepInfo.getStepMetaData().getFolderPath();
-      String[] categoryArrayName = folderPath.split("/");
-      for (String categoryName : categoryArrayName) {
-        currentStepCategory = currentStepCategory.getOrCreateChildStepCategory(categoryName);
+      List<String> folderPaths = stepInfo.getStepMetaData().getFolderPathsList();
+      if (EmptyPredicate.isEmpty(folderPaths)) {
+        folderPaths.add(stepInfo.getStepMetaData().getFolderPath());
       }
-      currentStepCategory.addStepData(StepData.builder().name(stepInfo.getName()).type(stepInfo.getType()).build());
+      for (String folderPath : folderPaths) {
+        String[] categoryArrayName = folderPath.split("/");
+        for (String categoryName : categoryArrayName) {
+          currentStepCategory = currentStepCategory.getOrCreateChildStepCategory(categoryName);
+        }
+        boolean disabled = !stepInfo.getFeatureRestrictionName().isEmpty()
+            && pipelineServiceEnforcementService.isFeatureRestricted(accountId, stepInfo.getFeatureRestrictionName());
+        currentStepCategory.addStepData(
+            StepData.builder().name(stepInfo.getName()).type(stepInfo.getType()).disabled(disabled).build());
+      }
     }
   }
 

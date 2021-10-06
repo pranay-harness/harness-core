@@ -74,6 +74,8 @@ import io.harness.pms.pipeline.service.PMSYamlSchemaService;
 import io.harness.pms.pipeline.service.PMSYamlSchemaServiceImpl;
 import io.harness.pms.pipeline.service.PipelineDashboardService;
 import io.harness.pms.pipeline.service.PipelineDashboardServiceImpl;
+import io.harness.pms.pipeline.service.PipelineServiceEnforcementService;
+import io.harness.pms.pipeline.service.PipelineServiceEnforcementServiceImpl;
 import io.harness.pms.pipeline.service.yamlschema.approval.ApprovalYamlSchemaService;
 import io.harness.pms.pipeline.service.yamlschema.approval.ApprovalYamlSchemaServiceImpl;
 import io.harness.pms.pipeline.service.yamlschema.featureflag.FeatureFlagYamlService;
@@ -271,6 +273,7 @@ public class PipelineServiceModule extends AbstractModule {
     bind(PMSOpaService.class).to(PMSOpaServiceImpl.class);
     bind(ApprovalYamlSchemaService.class).to(ApprovalYamlSchemaServiceImpl.class).in(Singleton.class);
     bind(FeatureFlagYamlService.class).to(FeatureFlagYamlServiceImpl.class).in(Singleton.class);
+    bind(PipelineServiceEnforcementService.class).to(PipelineServiceEnforcementServiceImpl.class).in(Singleton.class);
 
     bind(NodeTypeLookupService.class).to(NodeTypeLookupServiceImpl.class);
 
