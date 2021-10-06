@@ -17,6 +17,7 @@ java_library(
         "@maven//:io_swagger_swagger_annotations",
         "@maven//:org_mongodb_mongo_java_driver",
         "@maven//:org_springframework_data_spring_data_commons",
+        "@maven//:org_jooq_jooq",
     ],
 )
 

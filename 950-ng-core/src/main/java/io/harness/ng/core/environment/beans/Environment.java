@@ -1,6 +1,6 @@
 package io.harness.ng.core.environment.beans;
 
-import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+< < < < < < < < < Temporary merge branch 1 == == == == = import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.ChangeDataCapture;
 import io.harness.annotations.dev.OwnedBy;
