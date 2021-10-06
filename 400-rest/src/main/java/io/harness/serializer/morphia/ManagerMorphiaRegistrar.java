@@ -479,7 +479,6 @@ import software.wings.helpers.ext.ecs.response.EcsBGRoute53ServiceSetupResponse;
 import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 import software.wings.helpers.ext.ecs.response.EcsListenerUpdateCommandResponse;
 import software.wings.helpers.ext.ecs.response.EcsRunTaskDeployResponse;
-import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceSetupResponse;
 import software.wings.helpers.ext.external.comm.CollaborationProviderResponse;
 import software.wings.helpers.ext.helm.HelmCommandExecutionResponse;
@@ -1352,7 +1351,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("helpers.ext.ecs.response.EcsBGRoute53ServiceSetupResponse", EcsBGRoute53ServiceSetupResponse.class);
     w.put("helpers.ext.ecs.response.EcsCommandExecutionResponse", EcsCommandExecutionResponse.class);
     w.put("helpers.ext.ecs.response.EcsListenerUpdateCommandResponse", EcsListenerUpdateCommandResponse.class);
-    w.put("helpers.ext.ecs.response.EcsServiceDeployResponse", EcsServiceDeployResponse.class);
     w.put("helpers.ext.ecs.response.EcsRunTaskDeployResponse", EcsRunTaskDeployResponse.class);
     w.put("helpers.ext.ecs.response.EcsRunTaskDeployRequest", EcsRunTaskDeployRequest.class);
     w.put("helpers.ext.ecs.response.EcsServiceSetupResponse", EcsServiceSetupResponse.class);
