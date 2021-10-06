@@ -2,9 +2,13 @@ package io.harness.ng.authenticationsettings.impl;
 
 import static io.harness.remote.client.RestClientUtils.getResponse;
 
+import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.enforcement.client.annotation.FeatureRestrictionCheck;
+import io.harness.enforcement.client.services.EnforcementClientService;
+import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.ng.authenticationsettings.dtos.AuthenticationSettingsResponse;
 import io.harness.ng.authenticationsettings.dtos.mechanisms.LDAPSettings;
 import io.harness.ng.authenticationsettings.dtos.mechanisms.NGAuthSettings;
@@ -42,6 +46,7 @@ import okhttp3.RequestBody;
 @OwnedBy(HarnessTeam.PL)
 public class AuthenticationSettingsServiceImpl implements AuthenticationSettingsService {
   private final AuthSettingsManagerClient managerClient;
+  private final EnforcementClientService enforcementClientService;
 
   @Override
   public AuthenticationSettingsResponse getAuthenticationSettings(String accountIdentifier) {
@@ -63,7 +68,8 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
   }
 
   @Override
-  public void updateOauthProviders(String accountId, OAuthSettings oAuthSettings) {
+  @FeatureRestrictionCheck(FeatureRestrictionName.OAUTH_SUPPORT)
+  public void updateOauthProviders(@AccountIdentifier String accountId, OAuthSettings oAuthSettings) {
     getResponse(managerClient.uploadOauthSettings(accountId,
         OauthSettings.builder()
             .allowedProviders(oAuthSettings.getAllowedProviders())
@@ -74,7 +80,24 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
 
   @Override
   public void updateAuthMechanism(String accountId, AuthenticationMechanism authenticationMechanism) {
+    checkLicenseEnforcement(accountId, authenticationMechanism);
     getResponse(managerClient.updateAuthMechanism(accountId, authenticationMechanism));
+  }
+
+  private void checkLicenseEnforcement(String accountId, AuthenticationMechanism authenticationMechanism) {
+    switch (authenticationMechanism) {
+      case OAUTH:
+        enforcementClientService.checkAvailability(FeatureRestrictionName.OAUTH_SUPPORT, accountId);
+        break;
+      case SAML:
+        enforcementClientService.checkAvailability(FeatureRestrictionName.SAML_SUPPORT, accountId);
+        break;
+      case LDAP:
+        enforcementClientService.checkAvailability(FeatureRestrictionName.LDAP_SUPPORT, accountId);
+        break;
+      default:
+        break;
+    }
   }
 
   @Override
@@ -149,9 +172,10 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
   }
 
   @Override
-  public SSOConfig uploadSAMLMetadata(@NotNull String accountId, @NotNull MultipartBody.Part inputStream,
-      @NotNull String displayName, String groupMembershipAttr, @NotNull Boolean authorizationEnabled,
-      String logoutUrl) {
+  @FeatureRestrictionCheck(FeatureRestrictionName.SAML_SUPPORT)
+  public SSOConfig uploadSAMLMetadata(@NotNull @AccountIdentifier String accountId,
+      @NotNull MultipartBody.Part inputStream, @NotNull String displayName, String groupMembershipAttr,
+      @NotNull Boolean authorizationEnabled, String logoutUrl) {
     RequestBody displayNamePart = createPartFromString(displayName);
     RequestBody groupMembershipAttrPart = createPartFromString(groupMembershipAttr);
     RequestBody authorizationEnabledPart = createPartFromString(String.valueOf(authorizationEnabled));
@@ -162,8 +186,9 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
   }
 
   @Override
-  public SSOConfig updateSAMLMetadata(@NotNull String accountId, MultipartBody.Part inputStream, String displayName,
-      String groupMembershipAttr, @NotNull Boolean authorizationEnabled, String logoutUrl) {
+  @FeatureRestrictionCheck(FeatureRestrictionName.SAML_SUPPORT)
+  public SSOConfig updateSAMLMetadata(@NotNull @AccountIdentifier String accountId, MultipartBody.Part inputStream,
+      String displayName, String groupMembershipAttr, @NotNull Boolean authorizationEnabled, String logoutUrl) {
     RequestBody displayNamePart = createPartFromString(displayName);
     RequestBody groupMembershipAttrPart = createPartFromString(groupMembershipAttr);
     RequestBody authorizationEnabledPart = createPartFromString(String.valueOf(authorizationEnabled));
@@ -174,18 +199,20 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
   }
 
   @Override
-  public SSOConfig deleteSAMLMetadata(@NotNull String accountIdentifier) {
+  public SSOConfig deleteSAMLMetadata(@NotNull @AccountIdentifier String accountIdentifier) {
     return getResponse(managerClient.deleteSAMLMetadata(accountIdentifier));
   }
 
   @Override
-  public LoginTypeResponse getSAMLLoginTest(@NotNull String accountIdentifier) {
+  @FeatureRestrictionCheck(FeatureRestrictionName.SAML_SUPPORT)
+  public LoginTypeResponse getSAMLLoginTest(@NotNull @AccountIdentifier String accountIdentifier) {
     return getResponse(managerClient.getSAMLLoginTest(accountIdentifier));
   }
 
   @Override
+  @FeatureRestrictionCheck(FeatureRestrictionName.TWO_FACTOR_AUTH_SUPPORT)
   public boolean setTwoFactorAuthAtAccountLevel(
-      String accountIdentifier, TwoFactorAdminOverrideSettings twoFactorAdminOverrideSettings) {
+      @AccountIdentifier String accountIdentifier, TwoFactorAdminOverrideSettings twoFactorAdminOverrideSettings) {
     return getResponse(managerClient.setTwoFactorAuthAtAccountLevel(accountIdentifier, twoFactorAdminOverrideSettings));
   }
 
