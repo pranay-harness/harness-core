@@ -19,7 +19,8 @@ import lombok.experimental.SuperBuilder;
 @JsonSubTypes({
   @JsonSubTypes.Type(value = HarnessCDChangeSourceSpec.class, name = "HarnessCDNextGen")
   , @JsonSubTypes.Type(value = PagerDutyChangeSourceSpec.class, name = "PagerDuty"),
-      @JsonSubTypes.Type(value = KubernetesChangeSourceSpec.class, name = "K8sCluster")
+      @JsonSubTypes.Type(value = KubernetesChangeSourceSpec.class, name = "K8sCluster"),
+      @JsonSubTypes.Type(value = HarnessCDCurrentGenChangeSourceSpec.class, name = "HarnessCD")
 })
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = DATA_SOURCE_TYPE, include = JsonTypeInfo.As.EXTERNAL_PROPERTY)
 public abstract class ChangeSourceSpec {
