@@ -201,7 +201,7 @@ public class ExecutionHelperTest extends CategoryTest {
     buildExecutionArgsMocks();
 
     ExecArgs execArgs = executionHelper.buildExecutionArgs(pipelineEntity, moduleType, runtimeInputYaml,
-        Collections.emptyList(), executionTriggerInfo, null, false, null, null);
+        Collections.emptyList(), executionTriggerInfo, null, false, null, null, null);
     executionMetadataAssertions(execArgs.getMetadata());
 
     PlanExecutionMetadata planExecutionMetadata = execArgs.getPlanExecutionMetadata();
@@ -221,7 +221,7 @@ public class ExecutionHelperTest extends CategoryTest {
     buildExecutionArgsMocks();
 
     ExecArgs execArgs = executionHelper.buildExecutionArgs(pipelineEntity, moduleType, runtimeInputYaml,
-        Collections.singletonList("s2"), executionTriggerInfo, null, false, null, null);
+        Collections.singletonList("s2"), executionTriggerInfo, null, false, null, null, null);
     executionMetadataAssertions(execArgs.getMetadata());
 
     PlanExecutionMetadata planExecutionMetadata = execArgs.getPlanExecutionMetadata();
@@ -297,8 +297,8 @@ public class ExecutionHelperTest extends CategoryTest {
     doReturn(planExecution)
         .when(orchestrationService)
         .startExecution(plan, abstractions, executionMetadata, planExecutionMetadata);
-    PlanExecution createdPlanExecution =
-        executionHelper.startExecution(accountId, orgId, projectId, executionMetadata, planExecutionMetadata, false);
+    PlanExecution createdPlanExecution = executionHelper.startExecution(
+        accountId, orgId, projectId, executionMetadata, planExecutionMetadata, false, null);
     assertThat(createdPlanExecution).isEqualTo(planExecution);
     verify(planCreatorMergeService, times(1))
         .createPlan(accountId, orgId, projectId, executionMetadata, planExecutionMetadata);

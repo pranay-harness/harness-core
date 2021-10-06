@@ -1,0 +1,22 @@
+moduleType: CD
+clients:
+  - name: pipelineService
+    clientConfig: pipelineServiceClientConfig
+    secretConfig: nextGenConfig.pipelineServiceSecret
+features:
+  - name: BUILDS
+    description: The restriction on number of builds
+    restrictions:
+      FREE:
+        restrictionType: RATE_LIMIT
+        limit: 100
+        timeUnit:
+          unit: MONTHS
+          numberOfUnits: 1
+        clientName: pipelineService
+      TEAM:
+        restrictionType: AVAILABILITY
+        enabled: true
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true

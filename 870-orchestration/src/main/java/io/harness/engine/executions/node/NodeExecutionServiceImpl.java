@@ -468,8 +468,10 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   public List<RetryStageInfo> getStageDetailFromPlanExecutionId(String planExecutionId) {
     Criteria criteria = Criteria.where(NodeExecutionKeys.planExecutionId)
                             .is(planExecutionId)
-                            .and(NodeExecutionKeys.stepCategory)
-                            .is(StepCategory.STAGE);
+                            .and(NodeExecutionKeys.status)
+                            .ne(Status.SKIPPED.name())
+                            .orOperator(Criteria.where(NodeExecutionKeys.stepCategory).is(StepCategory.STAGE),
+                                Criteria.where(NodeExecutionKeys.planNodeStepCategory).is(StepCategory.STAGE));
 
     Query query = new Query().addCriteria(criteria);
     query.with(by(NodeExecutionKeys.createdAt));
@@ -500,5 +502,33 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       stageDetails.add(stageDetail);
     }
     return stageDetails;
+  }
+
+  @Override
+  public List<NodeExecution> getStageNodesFromPlanExecutionId(String planExecutionId) {
+    Criteria criteria = Criteria.where(NodeExecutionKeys.planExecutionId)
+                            .is(planExecutionId)
+                            .and(NodeExecutionKeys.status)
+                            .ne(Status.SKIPPED.name())
+                            .orOperator(Criteria.where(NodeExecutionKeys.stepCategory).is(StepCategory.STAGE),
+                                Criteria.where(NodeExecutionKeys.planNodeStepCategory).is(StepCategory.STAGE));
+
+    Query query = new Query().addCriteria(criteria);
+    query.with(by(NodeExecutionKeys.createdAt));
+    return mongoTemplate.find(query, NodeExecution.class);
+  }
+
+  @Override
+  public NodeExecution getPipelineNodeFromPlanExecutionId(String planExecutionId) {
+    Criteria criteria = Criteria.where(NodeExecutionKeys.planExecutionId)
+                            .is(planExecutionId)
+                            .and(NodeExecutionKeys.status)
+                            .ne(Status.SKIPPED.name())
+                            .orOperator(Criteria.where(NodeExecutionKeys.stepCategory).is(StepCategory.PIPELINE),
+                                Criteria.where(NodeExecutionKeys.planNodeStepCategory).is(StepCategory.PIPELINE));
+
+    Query query = new Query().addCriteria(criteria);
+    query.with(by(NodeExecutionKeys.createdAt));
+    return mongoTemplate.find(query, NodeExecution.class).get(0);
   }
 }

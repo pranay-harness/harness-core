@@ -205,7 +205,6 @@ import software.wings.beans.JenkinsConfig;
 import software.wings.beans.JenkinsSubTaskType;
 import software.wings.beans.JiraConfig;
 import software.wings.beans.KubernetesClusterConfig;
-import software.wings.beans.LambdaTestEvent;
 import software.wings.beans.Log;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.NewRelicConfig;
@@ -424,7 +423,6 @@ import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 import software.wings.helpers.ext.ecs.response.EcsDeployRollbackDataFetchResponse;
 import software.wings.helpers.ext.ecs.response.EcsListenerUpdateCommandResponse;
 import software.wings.helpers.ext.ecs.response.EcsRunTaskDeployResponse;
-import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceSetupResponse;
 import software.wings.helpers.ext.external.comm.CollaborationProviderRequest;
 import software.wings.helpers.ext.external.comm.CollaborationProviderResponse;
@@ -781,9 +779,9 @@ import com.sumologic.client.SumoException;
 import io.kubernetes.client.openapi.ApiException;
 import java.time.Instant;
 
-@Deprecated
 @OwnedBy(PL)
 @TargetModule(_360_CG_MANAGER)
+@Deprecated
 public class ManagerKryoRegistrar implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
@@ -983,7 +981,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(JiraConfig.JiraSetupType.class, 5569);
     kryo.register(JiraConfig.class, 5581);
     kryo.register(KubernetesClusterConfig.class, 5244);
-    kryo.register(LambdaTestEvent.class, 5604);
     kryo.register(NameValuePair.class, 5226);
     kryo.register(NewRelicConfig.class, 5175);
     kryo.register(PcfConfig.class, 5296);
@@ -1306,7 +1303,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(K8sElement.class, 7144);
     kryo.register(K8sInstanceSyncTaskParameters.class, 7147);
     kryo.register(EcsServiceDeployRequest.class, 7148);
-    kryo.register(EcsServiceDeployResponse.class, 7149);
     kryo.register(EcsRunTaskDeployRequest.class, 7501);
     kryo.register(EcsRunTaskDeployResponse.class, 7502);
     kryo.register(ShellScriptProvisionParameters.class, 7151);

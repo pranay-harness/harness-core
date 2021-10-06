@@ -30,7 +30,7 @@ pipeline:
     - stage:
         identifier: stage7
         name: stage7
-        "__uuid": "newUuid7"
+        "__uuid": "oldUuid7"
     - parallel:
         - stage:
             identifier: stage8

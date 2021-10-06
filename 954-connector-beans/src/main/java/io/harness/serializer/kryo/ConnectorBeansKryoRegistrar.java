@@ -8,7 +8,6 @@ import io.harness.delegate.beans.connector.CEFeatures;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsAuthType;
 import io.harness.delegate.beans.connector.appdynamicsconnector.AppDynamicsConnectorDTO;
-import io.harness.delegate.beans.connector.argo.ArgoConnectorDTO;
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryAuthCredentialsDTO;
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryAuthType;
 import io.harness.delegate.beans.connector.artifactoryconnector.ArtifactoryAuthenticationDTO;
@@ -297,7 +296,6 @@ public class ConnectorBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(CEFeatures.class, 19671);
     kryo.register(SumoLogicConnectorDTO.class, 19672);
     kryo.register(DynatraceConnectorDTO.class, 19673);
-    kryo.register(ArgoConnectorDTO.class, 19674);
     kryo.register(PagerDutyConnectorDTO.class, 19675);
   }
 }

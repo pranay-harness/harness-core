@@ -108,7 +108,7 @@ public final class SweepingOutputInstance implements PersistentEntity, UuidAcces
   @NotNull @Trimmed String name;
 
   @Getter @NonFinal @Setter SweepingOutput value;
-  @Deprecated @Getter byte[] output;
+  @Getter @Deprecated byte[] output;
 
   @Getter @NonFinal @Setter byte[] valueOutput;
 

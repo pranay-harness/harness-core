@@ -15,6 +15,7 @@ import io.harness.resourcegroupclient.ResourceGroupResponse;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -35,6 +36,10 @@ public class ResourceGroupMapper {
             .color(isBlank(resourceGroupDTO.getColor()) ? DEFAULT_COLOR : resourceGroupDTO.getColor())
             .tags(convertToList(resourceGroupDTO.getTags()))
             .description(resourceGroupDTO.getDescription())
+            .allowedScopeLevels(resourceGroupDTO.getAllowedScopeLevels() == null
+                    ? new HashSet<>()
+                    : resourceGroupDTO.getAllowedScopeLevels())
+            .fullScopeSelected(resourceGroupDTO.isFullScopeSelected())
             .resourceSelectors(resourceGroupDTO.getResourceSelectors() == null
                     ? new ArrayList<>()
                     : resourceGroupDTO.getResourceSelectors());
@@ -50,18 +55,21 @@ public class ResourceGroupMapper {
     if (resourceGroup == null) {
       return null;
     }
-    return ResourceGroupDTO.builder()
-        .accountIdentifier(resourceGroup.getAccountIdentifier())
-        .orgIdentifier(resourceGroup.getOrgIdentifier())
-        .projectIdentifier(resourceGroup.getProjectIdentifier())
-        .identifier(resourceGroup.getIdentifier())
-        .name(resourceGroup.getName())
-        .color(resourceGroup.getColor())
-        .tags(convertToMap(resourceGroup.getTags()))
-        .fullScopeSelected(Boolean.TRUE.equals(resourceGroup.getFullScopeSelected()))
-        .description(resourceGroup.getDescription())
-        .resourceSelectors(resourceGroup.getResourceSelectors())
-        .build();
+    ResourceGroupDTO dto = ResourceGroupDTO.builder()
+                               .accountIdentifier(resourceGroup.getAccountIdentifier())
+                               .orgIdentifier(resourceGroup.getOrgIdentifier())
+                               .projectIdentifier(resourceGroup.getProjectIdentifier())
+                               .identifier(resourceGroup.getIdentifier())
+                               .name(resourceGroup.getName())
+                               .color(resourceGroup.getColor())
+                               .tags(convertToMap(resourceGroup.getTags()))
+                               .fullScopeSelected(Boolean.TRUE.equals(resourceGroup.getFullScopeSelected()))
+                               .description(resourceGroup.getDescription())
+                               .resourceSelectors(resourceGroup.getResourceSelectors())
+                               .build();
+    dto.setAllowedScopeLevels(
+        resourceGroup.getAllowedScopeLevels() == null ? new HashSet<>() : resourceGroup.getAllowedScopeLevels());
+    return dto;
   }
 
   public static ResourceGroupResponse toResponseWrapper(ResourceGroup resourceGroup) {

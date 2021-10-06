@@ -1,7 +1,7 @@
 package io.harness.perpetualtask.k8s.watch;
 
-import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
-import static io.harness.ccm.health.HealthStatusService.UID;
+import static io.harness.ccm.commons.constants.Constants.CLUSTER_ID_IDENTIFIER;
+import static io.harness.ccm.commons.constants.Constants.UID;
 import static io.harness.perpetualtask.k8s.utils.DebugConstants.RELATIVITY_CLUSTER_IDS;
 import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_TERMINATED;
 import static io.harness.perpetualtask.k8s.watch.Volume.VolumeType.VOLUME_TYPE_PVC;
@@ -202,6 +202,9 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
                               .build();
       logMessage(podEvent);
       eventPublisher.publishMessage(podEvent, timestamp, ImmutableMap.of(CLUSTER_ID_IDENTIFIER, clusterId, UID, uid));
+      if (RELATIVITY_CLUSTER_IDS.contains(clusterId)) {
+        log.info("published PodEvent UID:[{}], Name:[{}]", uid, pod.getMetadata().getName());
+      }
       publishedPods.remove(uid);
     }
   }

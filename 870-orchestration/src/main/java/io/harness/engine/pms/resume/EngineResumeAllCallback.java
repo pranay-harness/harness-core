@@ -18,7 +18,7 @@ import lombok.Getter;
 public class EngineResumeAllCallback implements OldNotifyCallback {
   @Inject OrchestrationEngine orchestrationEngine;
 
-  @Deprecated @Getter String nodeExecutionId;
+  @Getter @Deprecated String nodeExecutionId;
   @Getter Ambiance ambiance;
 
   @Builder

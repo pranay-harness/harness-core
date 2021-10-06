@@ -83,7 +83,7 @@ public class DelegateSetupResourceV2 {
 
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       return new RestResponse<>(delegateSetupService.listDelegateGroupDetailsV2(
-          accountId, orgId, projectId, filterIdentifier, searchTerm, delegateFilterPropertiesDTO, pageRequest));
+          accountId, orgId, projectId, filterIdentifier, searchTerm, delegateFilterPropertiesDTO));
     }
   }
 

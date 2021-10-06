@@ -207,6 +207,7 @@ import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.timescaledb.TimeScaleDBServiceImpl;
 import io.harness.timescaledb.metrics.HExecuteListener;
 import io.harness.token.TokenClientModule;
+import io.harness.tracing.AbstractPersistenceTracerModule;
 import io.harness.user.UserClientModule;
 import io.harness.version.VersionModule;
 import io.harness.yaml.YamlSdkModule;
@@ -375,6 +376,18 @@ public class NextGenModule extends AbstractModule {
   protected void configure() {
     install(VersionModule.getInstance());
     install(PrimaryVersionManagerModule.getInstance());
+    install(new AbstractPersistenceTracerModule() {
+      @Override
+      protected RedisConfig redisConfigProvider() {
+        return appConfig.getEventsFrameworkConfiguration().getRedisConfig();
+      }
+
+      @Override
+      protected String serviceIdProvider() {
+        return NG_MANAGER.getServiceId();
+      }
+    });
+
     install(DelegateServiceDriverModule.getInstance(false));
     install(TimeModule.getInstance());
     bind(NextGenConfiguration.class).toInstance(appConfig);
@@ -425,8 +438,6 @@ public class NextGenModule extends AbstractModule {
                         .build());
     bind(WebhookEventService.class).to(WebhookServiceImpl.class);
 
-    install(new AuthenticationSettingsModule(
-        this.appConfig.getManagerClientConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
     install(new ValidationModule(getValidatorFactory()));
     install(new AbstractMongoModule() {
       @Override
@@ -482,7 +493,8 @@ public class NextGenModule extends AbstractModule {
     install(EnforcementClientModule.getInstance(appConfig.getNgManagerClientConfig(),
         appConfig.getNextGenConfig().getNgManagerServiceSecret(), NG_MANAGER.getServiceId(),
         appConfig.getEnforcementClientConfiguration()));
-
+    install(new AuthenticationSettingsModule(
+        this.appConfig.getManagerClientConfig(), this.appConfig.getNextGenConfig().getManagerServiceSecret()));
     install(new ProviderModule() {
       @Provides
       @Singleton

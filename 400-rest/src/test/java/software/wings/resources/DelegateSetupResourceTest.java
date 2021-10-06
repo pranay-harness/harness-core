@@ -155,11 +155,9 @@ public class DelegateSetupResourceTest extends CategoryTest {
   @Owner(developers = BOJAN)
   @Category(UnitTests.class)
   public void listV2ShouldReturnDelegates() {
-    PageRequest<DelegateGroupDetails> pageRequest = new PageRequest<>();
-    pageRequest.setOffset("0");
     DelegateGroupDetails delegateGroupDetails = DelegateGroupDetails.builder().groupName("group name").build();
-    when(delegateSetupService.listDelegateGroupDetailsV2(eq(ACCOUNT_ID), eq("orgId"), eq("projectId"), any(), any(),
-             any(DelegateFilterPropertiesDTO.class), eq(pageRequest)))
+    when(delegateSetupService.listDelegateGroupDetailsV2(
+             eq(ACCOUNT_ID), eq("orgId"), eq("projectId"), any(), any(), any(DelegateFilterPropertiesDTO.class)))
         .thenReturn(DelegateGroupListing.builder().delegateGroupDetails(Lists.list(delegateGroupDetails)).build());
     RestResponse<DelegateGroupListing> restResponse =
         RESOURCES.client()
@@ -170,7 +168,7 @@ public class DelegateSetupResourceTest extends CategoryTest {
 
     verify(delegateSetupService, atLeastOnce())
         .listDelegateGroupDetailsV2(
-            ACCOUNT_ID, "orgId", "projectId", null, null, DelegateFilterPropertiesDTO.builder().build(), pageRequest);
+            ACCOUNT_ID, "orgId", "projectId", null, null, DelegateFilterPropertiesDTO.builder().build());
     assertThat(restResponse.getResource().getDelegateGroupDetails()).isNotEmpty();
     assertThat(restResponse.getResource().getDelegateGroupDetails().get(0).getGroupName()).isEqualTo("group name");
   }

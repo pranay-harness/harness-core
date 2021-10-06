@@ -1,7 +1,7 @@
 package io.harness.perpetualtask.k8s.watch;
 
-import static io.harness.ccm.health.HealthStatusService.CLUSTER_ID_IDENTIFIER;
-import static io.harness.ccm.health.HealthStatusService.UID;
+import static io.harness.ccm.commons.constants.Constants.CLUSTER_ID_IDENTIFIER;
+import static io.harness.ccm.commons.constants.Constants.UID;
 import static io.harness.perpetualtask.k8s.watch.NodeEvent.EventType.EVENT_TYPE_STOP;
 
 import static java.util.Optional.ofNullable;

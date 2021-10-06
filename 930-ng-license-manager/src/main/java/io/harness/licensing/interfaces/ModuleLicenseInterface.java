@@ -9,5 +9,6 @@ import io.harness.licensing.beans.modules.ModuleLicenseDTO;
 @OwnedBy(HarnessTeam.GTM)
 public interface ModuleLicenseInterface {
   ModuleLicenseDTO generateFreeLicense(String accountId, ModuleType moduleType);
+  ModuleLicenseDTO generateCommunityLicense(String accountId, ModuleType moduleType);
   ModuleLicenseDTO generateTrialLicense(Edition edition, String accountId, ModuleType moduleType);
 }

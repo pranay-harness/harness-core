@@ -19,7 +19,6 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import io.harness.DelegateServiceTestBase;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.PageRequest;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateBuilder;
@@ -55,6 +54,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import jersey.repackaged.com.google.common.collect.Sets;
 import org.apache.groovy.util.Maps;
 import org.junit.Before;
 import org.junit.Test;
@@ -71,6 +71,7 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
   private static final String TEST_DELEGATE_GROUP_ID_1 = "delegateGroupId1";
   private static final String TEST_DELEGATE_GROUP_ID_2 = "delegateGroupId2";
   private static final String TEST_DELEGATE_GROUP_ID_3 = "delegateGroupId3";
+  private static final String TEST_DELEGATE_GROUP_ID_4 = "delegateGroupId4";
   private static final String TEST_DELEGATE_ID_1 = "delegateId1";
   private static final String TEST_DELEGATE_ID_2 = "delegateId2";
 
@@ -246,20 +247,20 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     prepareInitialData();
 
     DelegateGroupListing delegateGroupListing = delegateSetupService.listDelegateGroupDetailsV2(
-        TEST_ACCOUNT_ID, null, null, "", "", DelegateFilterPropertiesDTO.builder().build(), new PageRequest<>());
+        TEST_ACCOUNT_ID, null, null, "", "", DelegateFilterPropertiesDTO.builder().build());
 
-    assertThat(delegateGroupListing.getDelegateGroupDetails()).hasSize(2);
+    assertThat(delegateGroupListing.getDelegateGroupDetails()).hasSize(3);
     assertThat(delegateGroupListing.getDelegateGroupDetails())
         .extracting(DelegateGroupDetails::getGroupName)
-        .containsOnly("grp1", "grp2");
+        .containsOnly("grp1", "grp2", "grp4");
   }
 
   @Test(expected = InvalidRequestException.class)
   @Owner(developers = BOJAN)
   @Category(UnitTests.class)
   public void listV2ShouldThrowException() {
-    delegateSetupService.listDelegateGroupDetailsV2(TEST_ACCOUNT_ID, null, null, "filterId", "",
-        DelegateFilterPropertiesDTO.builder().build(), new PageRequest<>());
+    delegateSetupService.listDelegateGroupDetailsV2(
+        TEST_ACCOUNT_ID, null, null, "filterId", "", DelegateFilterPropertiesDTO.builder().build());
   }
 
   @Test
@@ -270,8 +271,8 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
 
     DelegateFilterPropertiesDTO filterProperties =
         DelegateFilterPropertiesDTO.builder().delegateGroupIdentifier("ier1").build();
-    DelegateGroupListing delegateGroupListing = delegateSetupService.listDelegateGroupDetailsV2(
-        TEST_ACCOUNT_ID, null, null, "", "", filterProperties, new PageRequest<>());
+    DelegateGroupListing delegateGroupListing =
+        delegateSetupService.listDelegateGroupDetailsV2(TEST_ACCOUNT_ID, null, null, "", "", filterProperties);
 
     assertThat(delegateGroupListing.getDelegateGroupDetails()).hasSize(1);
     assertThat(delegateGroupListing.getDelegateGroupDetails())
@@ -286,7 +287,7 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     prepareInitialData();
 
     DelegateGroupListing delegateGroupListing = delegateSetupService.listDelegateGroupDetailsV2(
-        TEST_ACCOUNT_ID, null, null, "", "grp1", DelegateFilterPropertiesDTO.builder().build(), new PageRequest<>());
+        TEST_ACCOUNT_ID, null, null, "", "grp1", DelegateFilterPropertiesDTO.builder().build());
 
     assertThat(delegateGroupListing.getDelegateGroupDetails()).hasSize(1);
     assertThat(delegateGroupListing.getDelegateGroupDetails())
@@ -297,61 +298,52 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
   @Test
   @Owner(developers = BOJAN)
   @Category(UnitTests.class)
-  public void listV2ShouldReturnDelegateGroupsFilteredBySearchTerm_Tags() {
+  public void listV2ShouldReturnDelegateGroupsFilteredBySearchTerm_Tags1() {
     prepareInitialData();
 
     DelegateGroupListing delegateGroupListing = delegateSetupService.listDelegateGroupDetailsV2(
-        TEST_ACCOUNT_ID, null, null, "", "tag1", DelegateFilterPropertiesDTO.builder().build(), new PageRequest<>());
+        TEST_ACCOUNT_ID, null, null, "", "taggroup1", DelegateFilterPropertiesDTO.builder().build());
 
     assertThat(delegateGroupListing.getDelegateGroupDetails()).hasSize(1);
-    assertThat(delegateGroupListing.getDelegateGroupDetails())
-        .extracting(DelegateGroupDetails::getGroupName)
-        .containsOnly("grp1");
   }
 
   @Test
   @Owner(developers = BOJAN)
   @Category(UnitTests.class)
-  public void listV2ShouldReturnDelegateGroupsFilteredBySearchTerm_Tags2() {
+  public void listV2ShouldReturnDelegateGroupsFilteredBySearchTerm_Tags3() {
     prepareInitialData();
 
-    DelegateConnection delegateConnection1 = DelegateConnection.builder()
-                                                 .accountId(TEST_ACCOUNT_ID)
-                                                 .delegateId(TEST_DELEGATE_ID_1)
-                                                 .lastHeartbeat(System.currentTimeMillis())
-                                                 .disconnected(false)
-                                                 .version(VERSION)
-                                                 .build();
-    DelegateConnection delegateConnection2 = DelegateConnection.builder()
-                                                 .accountId(TEST_ACCOUNT_ID)
-                                                 .delegateId(TEST_DELEGATE_ID_2)
-                                                 .lastHeartbeat(System.currentTimeMillis())
-                                                 .disconnected(false)
-                                                 .version(VERSION)
-                                                 .build();
-    persistence.save(delegateConnection1);
-    persistence.save(delegateConnection2);
-
     DelegateGroupListing delegateGroupListing = delegateSetupService.listDelegateGroupDetailsV2(
-        TEST_ACCOUNT_ID, null, null, "", "tag45", DelegateFilterPropertiesDTO.builder().build(), new PageRequest<>());
+        TEST_ACCOUNT_ID, null, null, "", "taggroup3", DelegateFilterPropertiesDTO.builder().build());
 
-    assertThat(delegateGroupListing.getDelegateGroupDetails()).hasSize(1);
-    assertThat(delegateGroupListing.getDelegateGroupDetails().get(0).getDelegateInstanceDetails()).hasSize(2);
+    assertThat(delegateGroupListing.getDelegateGroupDetails()).hasSize(0);
   }
 
   @Test
   @Owner(developers = BOJAN)
   @Category(UnitTests.class)
-  public void listV2ShouldReturnDelegateGroupsFilteredBySearchTerm_Hostname() {
+  public void listV2ShouldReturnDelegateGroupsFilteredBySearchTerm_Tags4() {
     prepareInitialData();
 
     DelegateGroupListing delegateGroupListing = delegateSetupService.listDelegateGroupDetailsV2(
-        TEST_ACCOUNT_ID, null, null, "", "kube-0", DelegateFilterPropertiesDTO.builder().build(), new PageRequest<>());
+        TEST_ACCOUNT_ID, null, null, "", "taggroup4", DelegateFilterPropertiesDTO.builder().build());
+
+    assertThat(delegateGroupListing.getDelegateGroupDetails()).hasSize(1);
+  }
+
+  @Test
+  @Owner(developers = BOJAN)
+  @Category(UnitTests.class)
+  public void listV2ShouldReturnDelegateGroupsFilteredBySearchTerm_CommonTag() {
+    prepareInitialData();
+
+    DelegateGroupListing delegateGroupListing = delegateSetupService.listDelegateGroupDetailsV2(
+        TEST_ACCOUNT_ID, null, null, "", "commonTag", DelegateFilterPropertiesDTO.builder().build());
 
     assertThat(delegateGroupListing.getDelegateGroupDetails()).hasSize(1);
     assertThat(delegateGroupListing.getDelegateGroupDetails())
         .extracting(DelegateGroupDetails::getGroupName)
-        .containsOnly("grp1");
+        .containsOnly("grp2");
   }
 
   @Test
@@ -1158,6 +1150,7 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     when(delegateCache.getDelegateGroup(TEST_ACCOUNT_ID, TEST_DELEGATE_GROUP_ID_1)).thenReturn(delegateGroups.get(0));
     when(delegateCache.getDelegateGroup(TEST_ACCOUNT_ID, TEST_DELEGATE_GROUP_ID_2)).thenReturn(delegateGroups.get(1));
     when(delegateCache.getDelegateGroup(TEST_ACCOUNT_ID, TEST_DELEGATE_GROUP_ID_3)).thenReturn(delegateGroups.get(2));
+    when(delegateCache.getDelegateGroup(TEST_ACCOUNT_ID, TEST_DELEGATE_GROUP_ID_4)).thenReturn(delegateGroups.get(3));
   }
 
   private List<Delegate> prepareDelegates() {
@@ -1166,9 +1159,9 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
                              .uuid("delegateId1")
                              .accountId(TEST_ACCOUNT_ID)
                              .ng(true)
-                             .tags(Lists.newArrayList("tag123", "tag456"))
+                             .tags(Lists.newArrayList("tag123", "tag456", "commonTag"))
                              .delegateType(KUBERNETES)
-                             .delegateName("grp1")
+                             .delegateName("delegate1")
                              .delegateGroupName("grp1")
                              .description("description1")
                              .hostName("kube-0")
@@ -1180,9 +1173,9 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
                              .uuid("delegateId2")
                              .accountId(TEST_ACCOUNT_ID)
                              .ng(true)
-                             .tags(Lists.newArrayList("tag456"))
+                             .tags(Lists.newArrayList("tagdel2"))
                              .delegateType(KUBERNETES)
-                             .delegateName("grp1")
+                             .delegateName("delegate2")
                              .delegateGroupName("grp1")
                              .description("description")
                              .hostName("kube-1")
@@ -1195,9 +1188,11 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     Delegate delegate3 = createDelegateBuilder()
                              .accountId(TEST_ACCOUNT_ID)
                              .ng(true)
-                             .delegateName("grp2")
+                             .delegateName("delegate3")
                              .delegateGroupName("grp2")
+                             .tags(Lists.newArrayList("tagdel3"))
                              .sizeDetails(DelegateSizeDetails.builder().replicas(1).build())
+                             .hostName("kube-3")
                              .delegateGroupId(TEST_DELEGATE_GROUP_ID_2)
                              .build();
 
@@ -1227,7 +1222,7 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
                                        .description("description")
                                        .sizeDetails(DelegateSizeDetails.builder().size(DelegateSize.LARGE).build())
                                        .delegateConfigurationId("profileID")
-                                       .tags(ImmutableSet.of("custom-grp-tag"))
+                                       .tags(Sets.newHashSet("tag123", "tag456", "taggroup1"))
                                        .build();
 
     DelegateGroup delegateGroup2 = DelegateGroup.builder()
@@ -1237,6 +1232,7 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
                                        .accountId(TEST_ACCOUNT_ID)
                                        .ng(true)
                                        .sizeDetails(DelegateSizeDetails.builder().size(DelegateSize.LAPTOP).build())
+                                       .tags(Sets.newHashSet("tag45612", "commonTag"))
                                        .build();
     DelegateGroup delegateGroup3 = DelegateGroup.builder()
                                        .uuid(TEST_DELEGATE_GROUP_ID_3)
@@ -1247,6 +1243,18 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
                                        .sizeDetails(DelegateSizeDetails.builder().size(DelegateSize.LAPTOP).build())
                                        .status(DelegateGroupStatus.DELETED)
                                        .build();
-    return Lists.newArrayList(delegateGroup1, delegateGroup2, delegateGroup3);
+
+    // group without delegates, e.g. created during yaml generation
+    DelegateGroup delegateGroup4 = DelegateGroup.builder()
+                                       .uuid(TEST_DELEGATE_GROUP_ID_4)
+                                       .name("grp4")
+                                       .identifier("identifier4")
+                                       .accountId(TEST_ACCOUNT_ID)
+                                       .ng(true)
+                                       .sizeDetails(DelegateSizeDetails.builder().size(DelegateSize.LAPTOP).build())
+                                       .status(DelegateGroupStatus.ENABLED)
+                                       .tags(Sets.newHashSet("taggroup4"))
+                                       .build();
+    return Lists.newArrayList(delegateGroup1, delegateGroup2, delegateGroup3, delegateGroup4);
   }
 }

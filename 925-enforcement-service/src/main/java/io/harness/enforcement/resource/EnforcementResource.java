@@ -3,8 +3,10 @@ package io.harness.enforcement.resource;
 import io.harness.NGCommonEntityConstants;
 import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.NGAccessControlCheck;
-import io.harness.enforcement.beans.FeatureRestrictionDetailRequestDTO;
-import io.harness.enforcement.beans.FeatureRestrictionDetailsDTO;
+import io.harness.enforcement.beans.details.FeatureRestrictionDetailRequestDTO;
+import io.harness.enforcement.beans.details.FeatureRestrictionDetailsDTO;
+import io.harness.enforcement.beans.internal.RestrictionMetadataMapRequestDTO;
+import io.harness.enforcement.beans.internal.RestrictionMetadataMapResponseDTO;
 import io.harness.enforcement.beans.metadata.FeatureRestrictionMetadataDTO;
 import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.enforcement.services.EnforcementService;
@@ -68,6 +70,13 @@ public class EnforcementResource {
   }
 
   @GET
+  @Path("/metadata")
+  @ApiOperation(value = "Gets All Feature Restriction Metadata", nickname = "getAllFeatureRestrictionMetadata")
+  public ResponseDTO<List<FeatureRestrictionMetadataDTO>> getAllFeatureRestrictionMetadata() {
+    return ResponseDTO.newResponse(featureService.getAllFeatureRestrictionMetadata());
+  }
+
+  @GET
   @Path("/{featureRestrictionName}/metadata")
   @ApiOperation(value = "Get Feature Restriction Metadata", nickname = "getFeatureRestrictionMetadata", hidden = true)
   @InternalApi
@@ -75,5 +84,17 @@ public class EnforcementResource {
       @NotNull @PathParam(FEATURE_RESTRICTION_NAME) FeatureRestrictionName featureRestrictionName,
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
     return ResponseDTO.newResponse(featureService.getFeatureMetadata(featureRestrictionName, accountIdentifier));
+  }
+
+  @POST
+  @Path("/metadata")
+  @ApiOperation(value = "Get Map of Feature Restriction and its Metadata",
+      nickname = "getFeatureRestrictionMetadataMap", hidden = true)
+  @InternalApi
+  public ResponseDTO<RestrictionMetadataMapResponseDTO>
+  getFeatureRestrictionMetadataMap(@NotNull @Body RestrictionMetadataMapRequestDTO restrictionMetadataMapRequestDTO,
+      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
+    return ResponseDTO.newResponse(featureService.getFeatureRestrictionMetadataMap(
+        restrictionMetadataMapRequestDTO.getNames(), accountIdentifier));
   }
 }
