@@ -104,7 +104,7 @@ public class TimeoutEngine implements Handler<TimeoutInstance> {
   public void registerIterators() {
     PersistenceIteratorFactory.PumpExecutorOptions options = PersistenceIteratorFactory.PumpExecutorOptions.builder()
                                                                  .interval(Duration.ofSeconds(10))
-                                                                 .poolSize(5)
+                                                                 .poolSize(2)
                                                                  .name("TimeoutEngineHandler-%d")
                                                                  .build();
     iterator = persistenceIteratorFactory.createLoopIteratorWithDedicatedThreadPool(options, TimeoutInstance.class,

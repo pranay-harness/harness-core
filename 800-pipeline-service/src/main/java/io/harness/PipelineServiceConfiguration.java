@@ -16,6 +16,7 @@ import io.harness.mongo.MongoConfig;
 import io.harness.ngtriggers.TriggerConfiguration;
 import io.harness.notification.NotificationClientConfiguration;
 import io.harness.opaclient.OpaServiceConfiguration;
+import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.telemetry.segment.SegmentConfiguration;
 import io.harness.timescaledb.TimeScaleDBConfig;
@@ -66,6 +67,7 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("pipelineServiceSecret") private String pipelineServiceSecret;
   @JsonProperty("jwtAuthSecret") private String jwtAuthSecret;
   @JsonProperty("jwtIdentityServiceSecret") private String jwtIdentityServiceSecret;
+  @JsonProperty("redisLockConfig") private RedisConfig redisLockConfig;
   @Builder.Default @JsonProperty("allowedOrigins") private List<String> allowedOrigins = new ArrayList<>();
   @JsonProperty("notificationClient") private NotificationClientConfiguration notificationClientConfiguration;
   @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;

@@ -36,7 +36,7 @@ public class ResourceRestraintPersistenceMonitor implements Handler<ResourceRest
   public void registerIterators() {
     PumpExecutorOptions executorOptions = PumpExecutorOptions.builder()
                                               .name("ResourceRestraintInstance-Monitor")
-                                              .poolSize(5)
+                                              .poolSize(2)
                                               .interval(ofSeconds(60))
                                               .build();
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(executorOptions,
