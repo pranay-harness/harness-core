@@ -21,11 +21,12 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.OrchestrationEvent;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
+import io.harness.pms.contracts.triggers.TriggerPayload;
+import io.harness.springdata.TransactionHelper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -33,27 +34,53 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 @OwnedBy(HarnessTeam.PIPELINE)
-public class PlanExecutionStrategy implements NodeExecutionStrategy<Plan> {
+public class PlanExecutionStrategy implements NodeExecutionStrategy<Plan, PlanExecution, PlanExecutionMetadata> {
   @Inject @Named("EngineExecutorService") private ExecutorService executorService;
   @Inject private OrchestrationEngine orchestrationEngine;
   @Inject private PlanExecutionService planExecutionService;
   @Inject private PlanExecutionMetadataService planExecutionMetadataService;
   @Inject private OrchestrationEventEmitter eventEmitter;
+  @Inject private TransactionHelper transactionHelper;
 
   @Getter private final Subject<OrchestrationStartObserver> orchestrationStartSubject = new Subject<>();
   @Getter private final Subject<OrchestrationEndObserver> orchestrationEndSubject = new Subject<>();
 
   @Override
-  public void triggerNode(Ambiance ambiance, Plan plan) {
+  public PlanExecution triggerNode(Ambiance ambiance, Plan plan, PlanExecutionMetadata metadata) {
+    PlanExecution planExecution = createPlanExecution(ambiance, metadata);
+    eventEmitter.emitEvent(
+        OrchestrationEvent.newBuilder()
+            .setAmbiance(ambiance)
+            .setEventType(OrchestrationEventType.ORCHESTRATION_START)
+            .setTriggerPayload(metadata.getTriggerPayload() != null ? metadata.getTriggerPayload()
+                                                                    : TriggerPayload.newBuilder().build())
+            .build());
+
     Node planNode = plan.fetchStartingPlanNode();
     if (planNode == null) {
       throw new InvalidRequestException("Starting node for plan cannot be null");
     }
-    Optional<PlanExecutionMetadata> metadata =
-        planExecutionMetadataService.findByPlanExecutionId(ambiance.getPlanExecutionId());
+
     orchestrationStartSubject.fireInform(OrchestrationStartObxxxxxxxx:onStart,
-        OrchestrationStartInfo.builder().ambiance(ambiance).planExecutionMetadata(metadata.get()).build());
-    executorService.submit(() -> orchestrationEngine.triggerNode(ambiance, planNode));
+        OrchestrationStartInfo.builder().ambiance(ambiance).planExecutionMetadata(metadata).build());
+    executorService.submit(() -> orchestrationEngine.triggerNode(ambiance, planNode, null));
+    return planExecution;
+  }
+
+  private PlanExecution createPlanExecution(Ambiance ambiance, PlanExecutionMetadata planExecutionMetadata) {
+    PlanExecution planExecution = PlanExecution.builder()
+                                      .uuid(ambiance.getPlanExecutionId())
+                                      .planId(ambiance.getPlanId())
+                                      .setupAbstractions(ambiance.getSetupAbstractionsMap())
+                                      .status(Status.RUNNING)
+                                      .startTs(System.currentTimeMillis())
+                                      .metadata(ambiance.getMetadata())
+                                      .build();
+
+    return transactionHelper.performTransaction(() -> {
+      planExecutionMetadataService.save(planExecutionMetadata);
+      return planExecutionService.save(planExecution);
+    });
   }
 
   @Override
