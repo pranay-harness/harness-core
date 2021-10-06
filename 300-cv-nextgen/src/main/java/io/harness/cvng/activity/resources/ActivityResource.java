@@ -1,7 +1,6 @@
 package io.harness.cvng.activity.resources;
 
 import static io.harness.cvng.core.services.CVNextGenConstants.ACTIVITY_RESOURCE;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.activity.beans.ActivityDashboardDTO;
@@ -31,7 +30,6 @@ import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
