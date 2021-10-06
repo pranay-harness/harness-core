@@ -22,4 +22,6 @@ public class KubernetesExceptionMessages {
   public final String SCALE_CLI_FAILED = "Failed to scale resource: %s";
 
   public final String ROLLBACK_CLI_FAILED = "Failed to rollback resource %s in namespace %s to revision %s";
+
+  public final String FAILED_TO_READ_MANIFEST_FILE = "Failed to read file at path [%s]";
 }

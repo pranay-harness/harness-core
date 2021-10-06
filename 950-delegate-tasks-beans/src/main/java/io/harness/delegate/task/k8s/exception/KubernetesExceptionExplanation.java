@@ -50,4 +50,6 @@ public class KubernetesExceptionExplanation {
       "Failed while rolling back custom resource by applying previous release manifests";
   public final String ROLLBACK_CLI_FAILED = "%s failed with exit code: %d";
   public final String ROLLBACK_CLI_FAILED_OUTPUT = "%s failed with exit code: %d and output: %s";
+
+  public final String FAILED_TO_READ_FILE = "Could not read file at path [%s].";
 }

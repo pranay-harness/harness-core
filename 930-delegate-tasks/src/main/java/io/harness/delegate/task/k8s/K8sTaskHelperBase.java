@@ -30,6 +30,7 @@ import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static io.harness.threading.Morpheus.sleep;
 
 import static software.wings.beans.LogColor.Gray;
+import static software.wings.beans.LogColor.Red;
 import static software.wings.beans.LogColor.White;
 import static software.wings.beans.LogColor.Yellow;
 import static software.wings.beans.LogHelper.color;
@@ -165,6 +166,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
@@ -1810,10 +1812,22 @@ public class K8sTaskHelperBase {
 
         try {
           fileBytes = Files.readAllBytes(path);
-        } catch (Exception ex) {
-          log.info(ExceptionUtils.getMessage(ex));
+        } catch (NoSuchFileException nsfe) {
+          log.info(format("Failed to read file at path [%s].%nError: %s", filepath, ExceptionUtils.getMessage(nsfe)));
+          executionLogCallback.saveExecutionLog(format("Failed to read file at path [%s]", filepath), INFO);
+          executionLogCallback.saveExecutionLog(
+              color(format("%nPossible reasons: %n\t 1. File '%s' does not exist!", filepath), Red, Bold), ERROR);
+          throw new HintException(format(KubernetesExceptionHints.FAILED_TO_READ_FILE, filepath),
+              NestedExceptionUtils.hintWithExplanationException(
+                  format(KubernetesExceptionHints.CHECK_IF_FILE_EXIST, filepath),
+                  format(KubernetesExceptionExplanation.FAILED_TO_READ_FILE, filepath),
+                  new KubernetesTaskException(
+                      format(KubernetesExceptionMessages.FAILED_TO_READ_MANIFEST_FILE, filepath))));
+        } catch (IOException ioe) {
+          log.info(format("Failed to read file at path [%s].%nError: %s", filepath, ExceptionUtils.getMessage(ioe)));
+          executionLogCallback.saveExecutionLog(format("Failed to read file at path [%s]", filepath), INFO);
           throw new InvalidRequestException(
-              format("Failed to read file at path [%s].%nError: %s", filepath, ExceptionUtils.getMessage(ex)));
+              format("Failed to read file at path [%s].%nError: %s", filepath, ExceptionUtils.getMessage(ioe)));
         }
 
         manifestFiles.add(FileData.builder().fileName(filepath).fileContent(new String(fileBytes, UTF_8)).build());

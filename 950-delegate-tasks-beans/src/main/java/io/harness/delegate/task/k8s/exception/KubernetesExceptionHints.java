@@ -51,4 +51,7 @@ public class KubernetesExceptionHints {
 
   public final String SCALE_CLI_FAILED = "Check if resource %s exists";
   public final String ROLLBACK_CLI_FAILED = "Check if resource %s exists";
+
+  public final String FAILED_TO_READ_FILE = "Failed to read file at path [%s].";
+  public final String CHECK_IF_FILE_EXIST = "Check if file [%s] exists.";
 }
