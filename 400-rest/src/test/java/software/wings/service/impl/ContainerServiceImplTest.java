@@ -17,7 +17,9 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.KubernetesContainerService;
@@ -50,6 +52,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 @OwnedBy(CDP)
+@TargetModule(HarnessModule._960_API_SERVICES)
 public class ContainerServiceImplTest extends WingsBaseTest {
   @Mock private KubernetesContainerService kubernetesContainerService;
   @Mock private EncryptionService encryptionService;
