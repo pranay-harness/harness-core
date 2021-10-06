@@ -42,7 +42,7 @@ public class PMSExecutionServiceImplTest extends PipelineServiceTestBase {
   @Mock private UpdateResult updateResult;
   @InjectMocks private PMSExecutionServiceImpl pmsExecutionService;
   @Mock private PmsGitSyncHelper pmsGitSyncHelper;
-  @Mock private PipelineExecutionSummaryService pipelineExecutionSummaryService;
+  @Mock private PipelineExecutionSummaryServiceImpl pipelineExecutionSummaryService;
   @Mock private ValidateAndMergeHelper validateAndMergeHelper;
 
   private final String ACCOUNT_ID = "account_id";
@@ -148,22 +148,6 @@ public class PMSExecutionServiceImplTest extends PipelineServiceTestBase {
                                PROJ_IDENTIFIER, INVALID_PLAN_EXECUTION_ID, PIPELINE_DELETED, false))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Invalid request : Input Set did not exist or pipeline execution has been deleted");
-  }
-
-  @Test
-  @Owner(developers = SAMARTH)
-  @Category(UnitTests.class)
-  public void testGetPipelineExecutionSummaryEntity() {
-    doReturn(Optional.of(executionSummaryEntity))
-        .when(pmsExecutionSummaryRepository)
-        .findByAccountIdAndOrgIdentifierAndProjectIdentifierAndPlanExecutionIdAndPipelineDeletedNot(
-            ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PLAN_EXECUTION_ID, !PIPELINE_DELETED);
-
-    PipelineExecutionSummaryEntity pipelineExecutionSummaryEntity =
-        pipelineExecutionSummaryService.getPipelineExecutionSummaryEntity(
-            ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PLAN_EXECUTION_ID, PIPELINE_DELETED);
-
-    assertThat(pipelineExecutionSummaryEntity).isEqualTo(executionSummaryEntity);
   }
 
   @Test
