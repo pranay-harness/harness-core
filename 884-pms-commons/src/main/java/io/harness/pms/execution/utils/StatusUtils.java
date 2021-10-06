@@ -164,6 +164,9 @@ public class StatusUtils {
   }
 
   public boolean isFinalStatus(Status status) {
+    if (status == null) {
+      return false;
+    }
     return FINAL_STATUSES.contains(status);
   }
 

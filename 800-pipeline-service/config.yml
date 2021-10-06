@@ -223,3 +223,6 @@ segmentConfiguration:
   enabled: false
   url: https://api.segment.io/v1/
   apiKey: ""
+
+enforcementClientConfiguration:
+  enforcementCheckEnabled: false

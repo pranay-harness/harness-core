@@ -19,11 +19,14 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import io.harness.accesscontrol.AccessControlAdminClient;
+import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.principals.PrincipalDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentFilterDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
+import io.harness.enforcement.client.annotation.FeatureRestrictionCheck;
+import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -521,8 +524,9 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
-  public UserGroup linkToSsoGroup(@NotBlank String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      @NotBlank String userGroupIdentifier, @NotNull SSOType ssoType, @NotBlank String ssoId,
+  @FeatureRestrictionCheck(FeatureRestrictionName.SAML_SUPPORT)
+  public UserGroup linkToSsoGroup(@NotBlank @AccountIdentifier String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, @NotBlank String userGroupIdentifier, @NotNull SSOType ssoType, @NotBlank String ssoId,
       @NotBlank String ssoGroupId, @NotBlank String ssoGroupName) {
     UserGroup existingUserGroup = getOrThrow(accountIdentifier, orgIdentifier, projectIdentifier, userGroupIdentifier);
     UserGroupDTO oldUserGroup = (UserGroupDTO) NGObjectMapperHelper.clone(toDTO(existingUserGroup));
@@ -556,8 +560,9 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
-  public UserGroup unlinkSsoGroup(@NotBlank String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      @NotBlank String userGroupIdentifier, boolean retainMembers) {
+  @FeatureRestrictionCheck(FeatureRestrictionName.SAML_SUPPORT)
+  public UserGroup unlinkSsoGroup(@NotBlank @AccountIdentifier String accountIdentifier, String orgIdentifier,
+      String projectIdentifier, @NotBlank String userGroupIdentifier, boolean retainMembers) {
     UserGroup existingUserGroup = getOrThrow(accountIdentifier, orgIdentifier, projectIdentifier, userGroupIdentifier);
     UserGroupDTO oldUserGroup = (UserGroupDTO) NGObjectMapperHelper.clone(toDTO(existingUserGroup));
 

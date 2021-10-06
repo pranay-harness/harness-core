@@ -48,11 +48,12 @@ public class ResourceFileAnnotationsTest extends CategoryTest {
     for (Class<?> clazz : resourceClasses) {
       for (final Method method : clazz.getDeclaredMethods()) {
         supportedAnnotation.stream().filter(method::isAnnotationPresent).forEach(annotation -> {
-          assertThat(method.isAnnotationPresent(apiOperationClass)).isTrue();
-          ApiOperation apiOperationAnnotation = (ApiOperation) method.getAnnotation(apiOperationClass);
-          assertThat(apiOperationAnnotation.nickname()).isNotBlank();
-          assertThat(uniqueOperationName.contains(apiOperationAnnotation.nickname())).isFalse();
-          uniqueOperationName.add(apiOperationAnnotation.nickname());
+          if (method.isAnnotationPresent(apiOperationClass)) {
+            ApiOperation apiOperationAnnotation = (ApiOperation) method.getAnnotation(apiOperationClass);
+            assertThat(apiOperationAnnotation.nickname()).isNotBlank();
+            assertThat(uniqueOperationName.contains(apiOperationAnnotation.nickname())).isFalse();
+            uniqueOperationName.add(apiOperationAnnotation.nickname());
+          }
         });
       }
     }
