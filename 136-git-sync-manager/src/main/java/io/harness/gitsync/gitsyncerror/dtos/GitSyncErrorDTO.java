@@ -9,7 +9,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.EntityReference;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.gitsyncerror.GitSyncErrorStatus;
-import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorDetails;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -38,5 +37,5 @@ public class GitSyncErrorDTO {
   String failureReason;
   GitSyncErrorStatus status;
   GitSyncErrorType errorType;
-  GitSyncErrorDetails additionalErrorDetails;
+  GitSyncErrorDetailsDTO additionalErrorDetails;
 }

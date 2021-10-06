@@ -17,7 +17,6 @@ import org.springframework.data.annotation.TypeAlias;
 @OwnedBy(PL)
 public class GitToHarnessErrorDetails implements GitSyncErrorDetails {
   @NotEmpty private String gitCommitId;
-  private Long commitTime;
   private String yamlContent;
   private String commitMessage;
   private String resolvedByCommitId;
