@@ -66,4 +66,7 @@ service LogProxy {
 
   // RPC to close a stream
   rpc Close(CloseRequest) returns (CloseResponse);
+
+  // RPC to upload logs to log service
+  rpc Upload(stream UploadRequest) returns (UploadResponse) {};
 }

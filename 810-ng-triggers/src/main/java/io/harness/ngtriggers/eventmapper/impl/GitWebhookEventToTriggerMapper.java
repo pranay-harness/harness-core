@@ -54,6 +54,9 @@ public class GitWebhookEventToTriggerMapper implements WebhookEventToTriggerMapp
           mappingRequestData.getWebhookDTO().getParsedResponse(), triggerWebhookEvent);
     }
 
+    // this is how TI(Test Intelligence) receives its push and pr events today.
+    // this is pending to be changed, TI should start consuming events same way as Trigger or Gitsync does.
+    // So this can go away
     publishPushAndPrEvent(webhookPayloadData);
 
     // Generate list of all filters to be applied

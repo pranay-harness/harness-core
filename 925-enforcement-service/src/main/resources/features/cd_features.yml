@@ -1,0 +1,25 @@
+moduleType: CD
+clients:
+  - name: ngmanager
+    clientConfig: ngManagerClientConfig
+    secretConfig: nextGenConfig.ngManagerServiceSecret
+  - name: pipelineService
+    clientConfig: pipelineServiceClientConfig
+    secretConfig: nextGenConfig.pipelineServiceSecret
+features:
+  - name: DEPLOYMENTS
+    description: The restriction on number of deployments
+    restrictions:
+      FREE:
+        restrictionType: RATE_LIMIT
+        limit: 10
+        timeUnit:
+          unit: DAYS
+          numberOfUnits: 1
+        clientName: pipelineService
+      TEAM:
+        restrictionType: AVAILABILITY
+        enabled: true
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true

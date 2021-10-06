@@ -6,7 +6,6 @@ import io.harness.cvng.beans.job.VerificationJobDTO;
 import io.harness.cvng.verificationjob.entities.VerificationJob;
 import io.harness.ng.beans.PageResponse;
 
-import java.util.List;
 import javax.annotation.Nullable;
 @OwnedBy(HarnessTeam.CV)
 public interface VerificationJobService {
@@ -26,14 +25,9 @@ public interface VerificationJobService {
   VerificationJob getResolvedHealthVerificationJob(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String envIdentifier, String serviceIdentifier);
   VerificationJob getDefaultHealthVerificationJob(String accountId, String orgIdentifier, String projectIdentifier);
-  VerificationJobDTO getDefaultHealthVerificationJobDTO(
-      String accountId, String orgIdentifier, String projectIdentifier);
+
   VerificationJob getByUrl(String accountId, String verificationJobUrl);
   VerificationJobDTO getDTOByUrl(String accountId, String verificationJobUrl);
   VerificationJob fromDto(VerificationJobDTO verificationJobDTO);
-
-  List<VerificationJobDTO> eligibleCDNGVerificationJobs(
-      String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier, String envIdentifier);
-
   void createDefaultVerificationJobs(String accountId, String orgIdentifier, String projectIdentifier);
 }

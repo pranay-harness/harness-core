@@ -115,8 +115,7 @@ public class PipelineResource implements YamlSchemaResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
-      @BeanParam GitEntityCreateInfoDTO gitEntityCreateInfo, @NotNull @ApiParam(hidden = true) String yaml)
-      throws IOException {
+      @BeanParam GitEntityCreateInfoDTO gitEntityCreateInfo, @NotNull String yaml) throws IOException {
     PipelineEntity pipelineEntity = PMSPipelineDtoMapper.toPipelineEntity(accountId, orgId, projectId, yaml);
     log.info(String.format("Creating pipeline with identifier %s in project %s, org %s, account %s",
         pipelineEntity.getIdentifier(), projectId, orgId, accountId));
@@ -182,8 +181,7 @@ public class PipelineResource implements YamlSchemaResource {
       @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgId,
       @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectId,
       @PathParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier String pipelineId,
-      @BeanParam GitEntityUpdateInfoDTO gitEntityInfo, @NotNull @ApiParam(hidden = true) String yaml)
-      throws IOException {
+      @BeanParam GitEntityUpdateInfoDTO gitEntityInfo, @NotNull String yaml) throws IOException {
     log.info(String.format("Updating pipeline with identifier %s in project %s, org %s, account %s", pipelineId,
         projectId, orgId, accountId));
 
@@ -286,7 +284,7 @@ public class PipelineResource implements YamlSchemaResource {
   }
 
   @POST
-  @Path("/steps/v2")
+  @Path("/v2/steps")
   @ApiOperation(value = "Get Steps for given modules Version 2", nickname = "getStepsV2")
   public ResponseDTO<StepCategory> getStepsV2(
       @QueryParam("accountId") String accountId, StepPalleteFilterWrapper stepPalleteFilterWrapper) {
@@ -306,7 +304,7 @@ public class PipelineResource implements YamlSchemaResource {
       @QueryParam("page") @DefaultValue("0") int page, @QueryParam("size") @DefaultValue("10") int size,
       @QueryParam("sort") List<String> sort, @QueryParam("filterIdentifier") String filterIdentifier,
       @QueryParam("module") String moduleName, FilterPropertiesDTO filterProperties,
-      @QueryParam("status") ExecutionStatus status, @QueryParam("myDeployments") boolean myDeployments,
+      @QueryParam("status") List<ExecutionStatus> statusesList, @QueryParam("myDeployments") boolean myDeployments,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     log.info("Get List of executions");
     ByteString gitSyncBranchContext = pmsGitSyncHelper.getGitSyncBranchContextBytesThreadLocal();
@@ -315,7 +313,7 @@ public class PipelineResource implements YamlSchemaResource {
       gitSyncBranchContext = null;
     }
     Criteria criteria = pmsExecutionService.formCriteria(accountId, orgId, projectId, pipelineIdentifier,
-        filterIdentifier, (PipelineExecutionFilterPropertiesDTO) filterProperties, moduleName, searchTerm, status,
+        filterIdentifier, (PipelineExecutionFilterPropertiesDTO) filterProperties, moduleName, searchTerm, statusesList,
         myDeployments, false, gitSyncBranchContext);
     Pageable pageRequest;
     if (EmptyPredicate.isEmpty(sort)) {
@@ -351,12 +349,19 @@ public class PipelineResource implements YamlSchemaResource {
         pmsExecutionService.getPipelineExecutionSummaryEntity(accountId, orgId, projectId, planExecutionId, false);
 
     Optional<PipelineEntity> optionalPipelineEntity;
-    try (PmsGitSyncBranchContextGuard ignore = pmsGitSyncHelper.createGitSyncBranchContextGuardFromBytes(
-             executionSummaryEntity.getGitSyncBranchContext(), false)) {
-      optionalPipelineEntity =
-          pmsPipelineService.get(accountId, orgId, projectId, executionSummaryEntity.getPipelineIdentifier(), false);
+    if (executionSummaryEntity.getEntityGitDetails() == null) {
+      try (PmsGitSyncBranchContextGuard ignore = pmsGitSyncHelper.createGitSyncBranchContextGuardFromBytes(
+               executionSummaryEntity.getGitSyncBranchContext(), false)) {
+        optionalPipelineEntity =
+            pmsPipelineService.get(accountId, orgId, projectId, executionSummaryEntity.getPipelineIdentifier(), false);
+      }
+    } else {
+      try (PmsGitSyncBranchContextGuard ignore = new PmsGitSyncBranchContextGuard(
+               executionSummaryEntity.getEntityGitDetails().toGitSyncBranchContext(), false)) {
+        optionalPipelineEntity =
+            pmsPipelineService.get(accountId, orgId, projectId, executionSummaryEntity.getPipelineIdentifier(), false);
+      }
     }
-
     if (!optionalPipelineEntity.isPresent()) {
       throw new InvalidRequestException(
           "Pipeline with identifier " + executionSummaryEntity.getPipelineIdentifier() + " not found");

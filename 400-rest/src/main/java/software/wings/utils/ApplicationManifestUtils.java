@@ -167,7 +167,8 @@ public class ApplicationManifestUtils {
 
   public GitFetchFilesTaskParams createGitFetchFilesTaskParams(
       ExecutionContext context, Application app, Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
-    Map<String, GitFetchFilesConfig> gitFetchFileConfigMap = getGitFetchFileConfigMap(context, app, appManifestMap);
+    Map<String, GitFetchFilesConfig> gitFetchFileConfigMap =
+        getGitFetchFileConfigMap(context, app.getUuid(), appManifestMap);
 
     ContainerServiceParams containerServiceParams = null;
     String infrastructureMappingId = context == null ? null : context.fetchInfraMappingId();
@@ -195,8 +196,8 @@ public class ApplicationManifestUtils {
         .build();
   }
 
-  private Map<String, GitFetchFilesConfig> getGitFetchFileConfigMap(
-      ExecutionContext context, Application app, Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
+  public Map<String, GitFetchFilesConfig> getGitFetchFileConfigMap(
+      ExecutionContext context, String appId, Map<K8sValuesLocation, ApplicationManifest> appManifestMap) {
     Map<String, GitFetchFilesConfig> gitFetchFileConfigMap = new HashMap<>();
 
     for (Entry<K8sValuesLocation, ApplicationManifest> entry : appManifestMap.entrySet()) {
@@ -217,7 +218,7 @@ public class ApplicationManifestUtils {
         notNullCheck("Git config not found", gitConfig);
         gitConfigHelperService.convertToRepoGitConfig(gitConfig, gitFileConfig.getRepoName());
         List<EncryptedDataDetail> encryptionDetails =
-            secretManager.getEncryptionDetails(gitConfig, app.getUuid(), context.getWorkflowExecutionId());
+            secretManager.getEncryptionDetails(gitConfig, appId, context.getWorkflowExecutionId());
 
         GitFetchFilesConfig gitFetchFileConfig = GitFetchFilesConfig.builder()
                                                      .gitConfig(gitConfig)

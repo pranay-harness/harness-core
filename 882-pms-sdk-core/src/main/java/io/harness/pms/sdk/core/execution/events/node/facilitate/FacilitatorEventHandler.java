@@ -67,12 +67,12 @@ public class FacilitatorEventHandler extends PmsBaseEventHandler<FacilitatorEven
       }
       if (currFacilitatorResponse == null) {
         log.info("Calculated Facilitator response is null. Returning response Successful false");
-        sdkNodeExecutionService.handleFacilitationResponse(ambiance.getPlanExecutionId(), event.getNodeExecutionId(),
-            event.getNotifyId(), FacilitatorResponseProto.newBuilder().setIsSuccessful(false).build());
+        sdkNodeExecutionService.handleFacilitationResponse(
+            ambiance, event.getNotifyId(), FacilitatorResponseProto.newBuilder().setIsSuccessful(false).build());
         return;
       }
-      sdkNodeExecutionService.handleFacilitationResponse(ambiance.getPlanExecutionId(), event.getNodeExecutionId(),
-          event.getNotifyId(), FacilitatorResponseMapper.toFacilitatorResponseProto(currFacilitatorResponse));
+      sdkNodeExecutionService.handleFacilitationResponse(
+          ambiance, event.getNotifyId(), FacilitatorResponseMapper.toFacilitatorResponseProto(currFacilitatorResponse));
       log.info("Facilitation Event Handled Successfully");
     } catch (Exception ex) {
       log.error("Error while facilitating execution", ex);

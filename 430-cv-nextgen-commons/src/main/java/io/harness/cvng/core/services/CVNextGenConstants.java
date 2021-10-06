@@ -4,8 +4,6 @@ import java.time.Duration;
 
 public interface CVNextGenConstants {
   String CV_NEXTGEN_RESOURCE_PREFIX = "cv-nextgen";
-  String APPD_TIER_ID_PLACEHOLDER = "__tier_name__";
-  String APPD_METRIC_DATA_NOT_FOUND = "METRIC DATA NOT FOUND";
   String DELEGATE_DATA_COLLECTION = "delegate-data-collection";
   String CVNG_LOG_RESOURCE_PATH = "cvng-log";
   String LOG_RECORD_RESOURCE_PATH = "log-record";
@@ -24,8 +22,6 @@ public interface CVNextGenConstants {
   String SPLUNK_SAVED_SEARCH_PATH = "saved-searches";
   String SPLUNK_VALIDATION_RESPONSE_PATH = "validation";
   String ACTIVITY_RESOURCE = "activity";
-  String ACTIVITY_SOURCE_RESOURCE = "activity-source";
-  String INTERNAL_ACTIVITY_RESOURCE = "activity-internal-api";
   String KUBERNETES_RESOURCE = "kubernetes";
   String CHANGE_EVENT_RESOURCE = "change-event";
   int CVNG_MAX_PARALLEL_THREADS = 20;

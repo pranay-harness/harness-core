@@ -39,6 +39,10 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EnvironmentType;
 import io.harness.beans.PageRequest;
@@ -112,6 +116,8 @@ import org.mongodb.morphia.query.Query;
  * @author rktummala on 06/08/18
  */
 @RunWith(MockitoJUnitRunner.class)
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 public class UsageRestrictionsServiceImplTest extends CategoryTest {
   @Mock private WingsPersistence mockWingsPersistence;
   @Mock private AppService appService;

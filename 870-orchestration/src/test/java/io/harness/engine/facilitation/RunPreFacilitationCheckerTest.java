@@ -79,7 +79,7 @@ public class RunPreFacilitationCheckerTest extends OrchestrationTestBase {
     ExecutionCheck check = checker.performCheck(nodeExecution);
     assertThat(check).isNotNull();
     assertThat(check.isProceed()).isTrue();
-    verify(engine, times(0)).handleStepResponse(any(), any());
+    verify(engine, times(0)).processStepResponse(any(), any());
   }
 
   @Test
@@ -87,10 +87,11 @@ public class RunPreFacilitationCheckerTest extends OrchestrationTestBase {
   @Category(UnitTests.class)
   public void performCheckWhenConditionFalse() {
     String whenCondition = "<+pipeline.name>==\"name\"";
+    Ambiance ambiance = Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build();
     NodeExecution nodeExecution =
         NodeExecution.builder()
             .uuid(generateUuid())
-            .ambiance(Ambiance.newBuilder().setPlanExecutionId(generateUuid()).build())
+            .ambiance(ambiance)
             .status(Status.QUEUED)
             .mode(ExecutionMode.TASK)
             .node(PlanNodeProto.newBuilder()
@@ -111,7 +112,7 @@ public class RunPreFacilitationCheckerTest extends OrchestrationTestBase {
     assertThat(check).isNotNull();
     assertThat(check.isProceed()).isFalse();
     verify(engine, times(1))
-        .handleStepResponse(nodeExecution.getUuid(),
+        .processStepResponse(ambiance,
             StepResponseProto.newBuilder()
                 .setStatus(Status.SKIPPED)
                 .setNodeRunInfo(

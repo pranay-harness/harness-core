@@ -16,6 +16,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import lombok.AllArgsConstructor;
@@ -41,6 +42,7 @@ public final class LogAnalysisResult implements PersistentEntity, UuidAware, Cre
         .add(CompoundMongoIndex.builder()
                  .name("query_idx")
                  .field(LogAnalysisResultKeys.verificationTaskId)
+                 .field(LogAnalysisResultKeys.analysisStartTime)
                  .field(LogAnalysisResultKeys.analysisEndTime)
                  .build())
         .build();
@@ -56,6 +58,13 @@ public final class LogAnalysisResult implements PersistentEntity, UuidAware, Cre
 
   private double overallRisk;
   private List<AnalysisResult> logAnalysisResults;
+
+  public List<AnalysisResult> getLogAnalysisResults() {
+    if (logAnalysisResults == null) {
+      return new ArrayList<>();
+    }
+    return logAnalysisResults;
+  }
 
   @Data
   @Builder

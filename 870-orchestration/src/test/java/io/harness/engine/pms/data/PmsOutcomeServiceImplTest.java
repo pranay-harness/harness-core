@@ -2,6 +2,7 @@ package io.harness.engine.pms.data;
 
 import static io.harness.rule.OwnerRule.ALEXEI;
 import static io.harness.rule.OwnerRule.PRASHANT;
+import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -10,11 +11,15 @@ import static org.mockito.Matchers.anySet;
 import static org.mockito.Mockito.when;
 
 import io.harness.OrchestrationTestBase;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.data.OutcomeInstance;
 import io.harness.engine.expressions.ExpressionEvaluatorProvider;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.data.PmsOutcome;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.data.Outcome;
 import io.harness.pms.sdk.core.resolver.RefObjectUtils;
@@ -27,6 +32,7 @@ import io.harness.utils.DummyOrchestrationOutcome;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -36,6 +42,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public class PmsOutcomeServiceImplTest extends OrchestrationTestBase {
   @Mock private ExpressionEvaluatorProvider expressionEvaluatorProvider;
   @Inject @InjectMocks @Spy private PmsOutcomeServiceImpl pmsOutcomeService;
@@ -227,5 +234,32 @@ public class PmsOutcomeServiceImplTest extends OrchestrationTestBase {
 
   private static EngineExpressionEvaluator prepareEngineExpressionEvaluator(Map<String, Object> contextMap) {
     return new SampleEngineExpressionEvaluator(contextMap);
+  }
+
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testFetchOutcomeInstanceByRuntimeId() {
+    List<OutcomeInstance> result = pmsOutcomeService.fetchOutcomeInstanceByRuntimeId("abc");
+    assertThat(result.size()).isEqualTo(0);
+  }
+
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testCloneForRetryExecution() {
+    Ambiance ambiance = AmbianceTestUtils.buildAmbiance();
+    String outcomeName = "outcome.name";
+
+    String outcomeJson = RecastOrchestrationUtils.toJson(DummyOrchestrationOutcome.builder().test("test").build());
+    pmsOutcomeService.consume(ambiance, outcomeName, outcomeJson, null);
+
+    when(pmsOutcomeService.fetchOutcomeInstanceByRuntimeId(any()))
+        .thenReturn(Collections.singletonList(OutcomeInstance.builder()
+                                                  .planExecutionId("plan")
+                                                  .name(outcomeName)
+                                                  .outcomeValue(PmsOutcome.parse(outcomeJson))
+                                                  .build()));
+    assertThat(pmsOutcomeService.cloneForRetryExecution(ambiance, "node").size()).isEqualTo(1);
   }
 }

@@ -4,11 +4,9 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.cvng.CVNGRequestExecutor;
 import io.harness.cvng.beans.CVDataCollectionInfo;
 import io.harness.cvng.beans.K8ActivityDataCollectionInfo;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
-import io.harness.delegate.service.KubernetesActivitiesStoreService;
 import io.harness.grpc.utils.AnyUtils;
 import io.harness.k8s.apiclient.ApiClientFactory;
 import io.harness.k8s.model.KubernetesConfig;
@@ -21,9 +19,7 @@ import io.harness.perpetualtask.PerpetualTaskResponse;
 import io.harness.perpetualtask.datacollection.k8s.ChangeIntelSharedInformerFactory;
 import io.harness.perpetualtask.k8s.watch.K8sWatchServiceDelegate.WatcherGroup;
 import io.harness.serializer.KryoSerializer;
-import io.harness.verificationclient.CVNextGenServiceClient;
 
-import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.cvng.K8InfoDataService;
 
 import com.google.inject.Inject;
@@ -41,13 +37,9 @@ public class K8ActivityCollectionPerpetualTaskExecutor implements PerpetualTaskE
   private final Map<String, WatcherGroup> watchMap = new ConcurrentHashMap<>();
   @Inject private K8InfoDataService k8InfoDataService;
 
-  @Inject private DelegateLogService delegateLogService;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private ChangeIntelSharedInformerFactory changeIntelSharedInformerFactory;
   @Inject private ApiClientFactory apiClientFactory;
-  @Inject private KubernetesActivitiesStoreService kubernetesActivitiesStoreService;
-  @Inject private CVNGRequestExecutor cvngRequestExecutor;
-  @Inject private CVNextGenServiceClient cvNextGenServiceClient;
   @Inject private Injector injector;
 
   @Override

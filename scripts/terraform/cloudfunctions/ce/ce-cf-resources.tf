@@ -88,6 +88,18 @@ resource "google_pubsub_topic" "ce-gcpdata-topic" {
   project = "${var.projectId}"
 }
 
+# PubSub topic for GCP Instance Inventory data pipeline. scheduler pushes into this
+resource "google_pubsub_topic" "ce-gcp-instance-inventory-data-topic" {
+  name = "ce-gcp-instance-inventory-data-scheduler"
+  project = "${var.projectId}"
+}
+
+# PubSub topic for loading GCP Instance Inventory data into main bq table. scheduler pushes into this
+resource "google_pubsub_topic" "ce-gcp-instance-inventory-data-load-topic" {
+  name = "ce-gcp-instance-inventory-data-load-scheduler"
+  project = "${var.projectId}"
+}
+
 # Archive files keep the CF files and dependencies
 data "archive_file" "ce-clusterdata" {
   type        = "zip"
@@ -375,6 +387,56 @@ data "archive_file" "ce-awsdata-ebs-metrics" {
   }
 }
 
+data "archive_file" "ce-gcp-instance-inventory-data" {
+  type        = "zip"
+  output_path = "${path.module}/files/ce-gcp-instance-inventory-data.zip"
+  source {
+    content  = "${file("${path.module}/src/python/gcp_instance_inventory_data_main.py")}"
+    filename = "main.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/util.py")}"
+    filename = "util.py"
+  }
+  source {
+        content  = "${file("${path.module}/src/python/gcp_util.py")}"
+        filename = "gcp_util.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/bq_schema.py")}"
+    filename = "bq_schema.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/requirements.txt")}"
+    filename = "requirements.txt"
+  }
+}
+
+data "archive_file" "ce-gcp-instance-inventory-data-load" {
+  type        = "zip"
+  output_path = "${path.module}/files/ce-gcp-instance-inventory-data-load.zip"
+  source {
+    content  = "${file("${path.module}/src/python/gcp_instance_inventory_data_load.py")}"
+    filename = "main.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/util.py")}"
+    filename = "util.py"
+  }
+  source {
+      content  = "${file("${path.module}/src/python/gcp_util.py")}"
+      filename = "gcp_util.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/bq_schema.py")}"
+    filename = "bq_schema.py"
+  }
+  source {
+    content  = "${file("${path.module}/src/python/requirements.txt")}"
+    filename = "requirements.txt"
+  }
+}
+
 resource "google_storage_bucket_object" "ce-clusterdata-archive" {
   name   = "ce-clusterdata.${data.archive_file.ce-clusterdata.output_md5}.zip"
   bucket = "${google_storage_bucket.bucket1.name}"
@@ -471,6 +533,20 @@ resource "google_storage_bucket_object" "ce-aws-inventory-init-archive" {
   bucket = "${google_storage_bucket.bucket1.name}"
   source = "${path.module}/files/ce-aws-inventory-init.zip"
   depends_on = ["data.archive_file.ce-aws-inventory-init"]
+}
+
+resource "google_storage_bucket_object" "ce-gcp-instance-inventory-data-archive" {
+  name = "ce-gcpdata.${data.archive_file.ce-gcp-instance-inventory-data.output_md5}.zip"
+  bucket = "${google_storage_bucket.bucket1.name}"
+  source = "${path.module}/files/ce-gcp-instance-inventory-data.zip"
+  depends_on = ["data.archive_file.ce-gcp-instance-inventory-data"]
+}
+
+resource "google_storage_bucket_object" "ce-gcp-instance-inventory-data-load-archive" {
+  name = "ce-gcpdata.${data.archive_file.ce-gcp-instance-inventory-data-load.output_md5}.zip"
+  bucket = "${google_storage_bucket.bucket1.name}"
+  source = "${path.module}/files/ce-gcp-instance-inventory-data-load.zip"
+  depends_on = ["data.archive_file.ce-gcp-instance-inventory-data-load"]
 }
 
 resource "google_cloudfunctions_function" "ce-clusterdata-function" {
@@ -846,6 +922,60 @@ resource "google_cloudfunctions_function" "ce-aws-inventory-init-function" {
   event_trigger {
     event_type = "google.pubsub.topic.publish"
     resource   = "${google_pubsub_topic.ce-aws-connector-crud-topic.name}"
+    failure_policy {
+      retry = false
+    }
+  }
+}
+
+resource "google_cloudfunctions_function" "ce-gcp-instance-inventory-data-function" {
+  name                      = "ce-gcp-instance-inventory-data-terraform"
+  description               = "This cloudfunction gets triggered upon event in a pubsub topic"
+  entry_point               = "main"
+  available_memory_mb       = 256
+  timeout                   = 540
+  runtime                   = "python38"
+  project                   = "${var.projectId}"
+  region                    = "${var.region}"
+  source_archive_bucket     = "${google_storage_bucket.bucket1.name}"
+  source_archive_object     = "${google_storage_bucket_object.ce-gcp-instance-inventory-data-archive.name}"
+
+  environment_variables = {
+    disabled = "false"
+    enable_for_accounts = ""
+    GCP_PROJECT = "${var.projectId}"
+  }
+
+  event_trigger {
+    event_type = "google.pubsub.topic.publish"
+    resource   = "${google_pubsub_topic.ce-gcp-instance-inventory-data-topic.name}"
+    failure_policy {
+      retry = false
+    }
+  }
+}
+
+resource "google_cloudfunctions_function" "ce-gcp-instance-inventory-data-load-function" {
+  name                      = "ce-gcp-instance-inventory-data-load-terraform"
+  description               = "This cloudfunction gets triggered upon event in a pubsub topic"
+  entry_point               = "main"
+  available_memory_mb       = 256
+  timeout                   = 540
+  runtime                   = "python38"
+  project                   = "${var.projectId}"
+  region                    = "${var.region}"
+  source_archive_bucket     = "${google_storage_bucket.bucket1.name}"
+  source_archive_object     = "${google_storage_bucket_object.ce-gcp-instance-inventory-data-load-archive.name}"
+
+  environment_variables = {
+    disabled = "false"
+    enable_for_accounts = ""
+    GCP_PROJECT = "${var.projectId}"
+  }
+
+  event_trigger {
+    event_type = "google.pubsub.topic.publish"
+    resource   = "${google_pubsub_topic.ce-gcp-instance-inventory-data-load-topic.name}"
     failure_policy {
       retry = false
     }

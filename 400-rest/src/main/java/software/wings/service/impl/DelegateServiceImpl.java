@@ -100,7 +100,6 @@ import io.harness.delegate.beans.DelegateRegisterResponse;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateScripts;
 import io.harness.delegate.beans.DelegateSetupDetails;
-import io.harness.delegate.beans.DelegateSize;
 import io.harness.delegate.beans.DelegateSizeDetails;
 import io.harness.delegate.beans.DelegateType;
 import io.harness.delegate.beans.DuplicateDelegateException;
@@ -315,6 +314,7 @@ public class DelegateServiceImpl implements DelegateService {
     templateConfiguration.setTemplateLoader(new ClassTemplateLoader(DelegateServiceImpl.class, "/delegatetemplates"));
   }
 
+  private static final int DELEGATE_RAM_PER_REPLICA = 2560;
   private static final int WATCHER_RAM_IN_MB = 500;
   // Calculated as 30% of total RAM for delegate + watcher, in LAPTOP delegate which was 1250 (500 watcher + 250
   // base delegate memory + 250 to handle 50 tasks + 250 for ramp down for old version delegate during release)
@@ -625,6 +625,8 @@ public class DelegateServiceImpl implements DelegateService {
               .delegateRequestsRam(sizeDetails.getRam() / sizeDetails.getReplicas())
               .delegateRequestsCpu(sizeDetails.getCpu() / sizeDetails.getReplicas())
               .delegateGroupId(delegateGroup.getUuid())
+              .delegateTags(
+                  isNotEmpty(delegateSetupDetails.getTags()) ? String.join(",", delegateSetupDetails.getTags()) : "")
               .delegateNamespace(delegateSetupDetails.getK8sConfigDetails().getNamespace())
               .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
               .build());
@@ -1073,15 +1075,9 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  public DelegateScripts getDelegateScriptsNg(String accountId, String version, String managerHost,
-      String verificationHost, DelegateSize delegateSize) throws IOException {
-    DelegateSizeDetails sizeDetails =
-        fetchAvailableSizes().stream().filter(size -> size.getSize() == delegateSize).findFirst().orElse(null);
-    String delegateXmx = "-Xmx4096m";
-    if (sizeDetails != null) {
-      delegateXmx =
-          "-Xmx" + (sizeDetails.getRam() / sizeDetails.getReplicas() - WATCHER_RAM_IN_MB - POD_BASE_RAM_IN_MB) + "m";
-    }
+  public DelegateScripts getDelegateScriptsNg(
+      String accountId, String version, String managerHost, String verificationHost) throws IOException {
+    String delegateXmx = "-Xmx" + (DELEGATE_RAM_PER_REPLICA - WATCHER_RAM_IN_MB - POD_BASE_RAM_IN_MB) + "m";
 
     ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
         ScriptRuntimeParamMapInquiry.builder()
@@ -1212,6 +1208,7 @@ public class DelegateServiceImpl implements DelegateService {
     private double delegateRequestsCpu;
     private String delegateNamespace;
     private String delegateTokenName;
+    private String delegateTags;
   }
 
   private ImmutableMap<String, String> getJarAndScriptRunTimeParamMap(ScriptRuntimeParamMapInquiry inquiry) {
@@ -1385,6 +1382,12 @@ public class DelegateServiceImpl implements DelegateService {
         params.put("delegateOrgIdentifier", inquiry.getDelegateOrgIdentifier());
       } else {
         params.put("delegateOrgIdentifier", EMPTY);
+      }
+
+      if (isNotBlank(inquiry.getDelegateTags())) {
+        params.put("delegateTags", inquiry.getDelegateTags());
+      } else {
+        params.put("delegateTags", EMPTY);
       }
 
       if (isNotBlank(inquiry.getDelegateProjectIdentifier())) {
@@ -2029,6 +2032,9 @@ public class DelegateServiceImpl implements DelegateService {
                                     .get();
 
     if (existingDelegate != null) {
+      if (delegateConnectionDao.checkAnyDelegateIsConnected(accountId, Arrays.asList(delegateId))) {
+        throw new InvalidRequestException(format("Unable to delete delegate. Delegate %s is connected", delegateId));
+      }
       // before deleting delegate, check if any alert is open for delegate, if yes, close it.
       alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.DelegatesDown,
           DelegatesDownAlert.builder()
@@ -2057,6 +2063,10 @@ public class DelegateServiceImpl implements DelegateService {
   @Override
   public void retainOnlySelectedDelegatesAndDeleteRest(String accountId, List<String> delegatesToRetain) {
     if (EmptyPredicate.isNotEmpty(delegatesToRetain)) {
+      if (delegateConnectionDao.checkAnyDelegateIsConnected(accountId, delegatesToRetain)) {
+        throw new InvalidRequestException(
+            format("Unable to delete delegate[s]. Anyone delegate %s is connected", delegatesToRetain));
+      }
       persistence.delete(persistence.createQuery(Delegate.class)
                              .filter(DelegateKeys.accountId, accountId)
                              .field(DelegateKeys.uuid)
@@ -2331,20 +2341,17 @@ public class DelegateServiceImpl implements DelegateService {
 
     log.info("Registering delegate for Hostname: {} IP: {}", delegateParams.getHostName(), delegateParams.getIp());
 
-    DelegateSizeDetails sizeDetails = null;
-    if (isNotBlank(delegateParams.getDelegateSize())) {
-      sizeDetails = fetchAvailableSizes()
-                        .stream()
-                        .filter(size -> size.getSize().name().equals(delegateParams.getDelegateSize()))
-                        .findFirst()
-                        .orElse(null);
-    }
-
     String delegateGroupId = delegateParams.getDelegateGroupId();
     if (isBlank(delegateGroupId) && isNotBlank(delegateParams.getDelegateGroupName())) {
       DelegateGroup delegateGroup =
           upsertDelegateGroup(delegateParams.getDelegateGroupName(), delegateParams.getAccountId(), null);
       delegateGroupId = delegateGroup.getUuid();
+    }
+
+    if (isNotBlank(delegateGroupId) && isNotEmpty(delegateParams.getTags())) {
+      persistence.update(persistence.createQuery(DelegateGroup.class).filter(DelegateGroupKeys.uuid, delegateGroupId),
+          persistence.createUpdateOperations(DelegateGroup.class)
+              .set(DelegateGroupKeys.tags, new HashSet<>(delegateParams.getTags())));
     }
 
     DelegateEntityOwner owner =
@@ -2358,7 +2365,6 @@ public class DelegateServiceImpl implements DelegateService {
                 isNotBlank(delegateParams.getSessionIdentifier()) ? delegateParams.getSessionIdentifier() : null)
             .owner(owner)
             .ng(delegateParams.isNg())
-            .sizeDetails(sizeDetails)
             .description(delegateParams.getDescription())
             .ip(delegateParams.getIp())
             .hostName(delegateParams.getHostName())
@@ -2372,6 +2378,7 @@ public class DelegateServiceImpl implements DelegateService {
             .delegateType(delegateParams.getDelegateType())
             .delegateRandomToken(delegateParams.getDelegateRandomToken())
             .keepAlivePacket(delegateParams.isKeepAlivePacket())
+            .tags(delegateParams.getTags())
             .polllingModeEnabled(delegateParams.isPollingModeEnabled())
             .proxy(delegateParams.isProxy())
             .sampleDelegate(delegateParams.isSampleDelegate())
@@ -2860,10 +2867,6 @@ public class DelegateServiceImpl implements DelegateService {
     K8sConfigDetails k8sConfigDetails =
         delegateSetupDetails != null ? delegateSetupDetails.getK8sConfigDetails() : null;
 
-    Set<String> tags = delegateSetupDetails != null && isNotEmpty(delegateSetupDetails.getTags())
-        ? delegateSetupDetails.getTags()
-        : null;
-
     DelegateEntityOwner owner = DelegateEntityOwnerHelper.buildOwner(orgIdentifier, projectIdentifier);
 
     Query<DelegateGroup> query = this.persistence.createQuery(DelegateGroup.class)
@@ -2902,7 +2905,6 @@ public class DelegateServiceImpl implements DelegateService {
     setUnset(updateOperations, DelegateGroupKeys.description, description);
     setUnset(updateOperations, DelegateGroupKeys.delegateConfigurationId, delegateConfigurationId);
     setUnset(updateOperations, DelegateGroupKeys.sizeDetails, sizeDetails);
-    setUnset(updateOperations, DelegateGroupKeys.tags, tags);
 
     DelegateGroup delegateGroup = persistence.upsert(query, updateOperations, HPersistence.upsertReturnNewOptions);
     outboxService.save(

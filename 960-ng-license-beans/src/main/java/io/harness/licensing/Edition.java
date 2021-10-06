@@ -8,6 +8,7 @@ import java.util.List;
 
 @OwnedBy(HarnessTeam.GTM)
 public enum Edition {
+  COMMUNITY, // Community is exclusively on prem
   FREE,
   TEAM,
   ENTERPRISE;

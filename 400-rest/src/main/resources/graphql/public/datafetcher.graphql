@@ -169,4 +169,7 @@ enum DataFetcherEnum {
   deploymentFreezeWindowConnection
   toggleDeploymentFreezeWindow
   templateList
+  createApiKey
+  updateApiKey
+  deleteApiKey
 }

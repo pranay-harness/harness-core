@@ -1,0 +1,33 @@
+moduleType: CORE
+clients:
+  - name: ngmanager
+    clientConfig: ngManagerClientConfig
+    secretConfig: nextGenConfig.ngManagerServiceSecret
+  - name: pipelineService
+    clientConfig: pipelineServiceClientConfig
+    secretConfig: nextGenConfig.pipelineServiceSecret
+features:
+  - name: INTEGRATED_APPROVALS_WITH_HARNESS_UI
+    description: Support for Integrated approvals with Harness UI
+    restrictions:
+      FREE:
+        restrictionType: AVAILABILITY
+        enabled: false
+      TEAM:
+        restrictionType: AVAILABILITY
+        enabled: true
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
+  - name: INTEGRATED_APPROVALS_WITH_JIRA
+    description: Support for Integrated approvals with Harness JIRA
+    restrictions:
+      FREE:
+        restrictionType: AVAILABILITY
+        enabled: false
+      TEAM:
+        restrictionType: AVAILABILITY
+        enabled: true
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true

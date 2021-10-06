@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class AnnotationOrderCheck extends AbstractCheck {
+  private static final String COMMENT_MSG_KEY = "annotation.problem.comment";
   private static final String ORDER_MSG_KEY = "code.readability.annotation.order";
   private static final String MODIFIER_MSG_KEY = "code.readability.annotation.modifier";
   private static final String REQUIRED_MSG_KEY = "code.readability.annotation.required.missing";
@@ -32,27 +33,30 @@ public class AnnotationOrderCheck extends AbstractCheck {
     };
   }
 
+  // Negative values go over the unknown annotations
+  // Positive value go under the unknown annotations
   Map<String, Integer> annotationOrder = ImmutableMap.<String, Integer>builder()
-                                             .put("Value", 1)
-                                             .put("Data", 1)
-                                             .put("Getter", 2)
-                                             .put("Setter", 3)
-                                             .put("Builder", 11)
-                                             .put("NoArgsConstructor", 12)
-                                             .put("AllArgsConstructor", 13)
-                                             .put("ToString", 21)
-                                             .put("EqualsAndHashCode", 22)
-                                             .put("Test", 31)
-                                             .put("Owner", 32)
-                                             .put("Repeat", 33)
-                                             .put("Category", 34)
-                                             .put("Ignore", 35)
-                                             .put("JsonIgnore", 41)
-                                             .put("SchemaIgnore", 51)
-                                             .put("Entity", 61)
-                                             .put("HarnessEntity", 62)
-                                             .put("UtilityClass", 101)
-                                             .put("Slf4j", 102)
+                                             .put("Value", -99)
+                                             .put("Data", -99)
+                                             .put("Getter", -98)
+                                             .put("Setter", -97)
+                                             .put("Builder", -89)
+                                             .put("NoArgsConstructor", -88)
+                                             .put("AllArgsConstructor", -87)
+                                             .put("ToString", -79)
+                                             .put("EqualsAndHashCode", -78)
+                                             .put("Test", -69)
+                                             .put("Owner", -68)
+                                             .put("Repeat", -67)
+                                             .put("Category", -66)
+                                             .put("Ignore", -65)
+                                             .put("JsonIgnore", -59)
+                                             .put("SchemaIgnore", -49)
+                                             .put("Entity", -39)
+                                             .put("HarnessEntity", -38)
+                                             .put("UtilityClass", -9)
+                                             .put("Slf4j", -8)
+                                             .put("Deprecated", 1000)
                                              .build();
 
   Map<String, Map<String, String>> incompatible =
@@ -78,34 +82,38 @@ public class AnnotationOrderCheck extends AbstractCheck {
   @Override
   public void visitToken(DetailAST annotation) {
     final String name = AnnotationMixin.name(annotation);
-    final Integer order = annotationOrder.get(name);
+
+    // TODO: the following is not working to detect comments between the annotation - fix it.
+    DetailAST nextAST = annotation.getNextSibling();
+    if (nextAST != null && nextAST.getType() == TokenTypes.COMMENT_CONTENT) {
+      log(annotation, COMMENT_MSG_KEY, name);
+    }
+    final Integer order = annotationOrder.getOrDefault(name, 0);
 
     Map<String, String> incompatibleMap = incompatible.get(name);
     Set<String> requiredSet = new HashSet<>(required.getOrDefault(name, new HashSet<>()));
 
     DetailAST prevAnnotation = annotation.getPreviousSibling();
-    if (order != null) {
-      while (prevAnnotation != null && prevAnnotation.getType() == TokenTypes.ANNOTATION) {
-        final String prevName = AnnotationMixin.name(prevAnnotation);
-        requiredSet.remove(prevName);
+    while (prevAnnotation != null && prevAnnotation.getType() == TokenTypes.ANNOTATION) {
+      final String prevName = AnnotationMixin.name(prevAnnotation);
+      requiredSet.remove(prevName);
 
-        if (incompatibleMap != null) {
-          String msg = incompatibleMap.get(prevName);
-          if (msg != null) {
-            log(annotation, INCOMPATIBLE_MSG_KEY, name, prevName, msg);
-          }
+      if (incompatibleMap != null) {
+        String msg = incompatibleMap.get(prevName);
+        if (msg != null) {
+          log(annotation, INCOMPATIBLE_MSG_KEY, name, prevName, msg);
         }
+      }
 
-        prevAnnotation = prevAnnotation.getPreviousSibling();
+      prevAnnotation = prevAnnotation.getPreviousSibling();
 
-        final Integer prevOrder = annotationOrder.get(prevName);
-        if (prevOrder == null) {
-          continue;
-        }
+      final Integer prevOrder = annotationOrder.get(prevName);
+      if (prevOrder == null) {
+        continue;
+      }
 
-        if (prevOrder > order) {
-          log(annotation, ORDER_MSG_KEY, name, prevName);
-        }
+      if (prevOrder > order) {
+        log(annotation, ORDER_MSG_KEY, name, prevName);
       }
     }
 

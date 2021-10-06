@@ -20,6 +20,7 @@ import io.harness.pms.contracts.execution.events.QueueTaskRequest;
 import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
 import io.harness.pms.contracts.execution.tasks.TaskCategory;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
+import io.harness.pms.execution.utils.SdkResponseEventUtils;
 import io.harness.waiter.ProgressCallback;
 import io.harness.waiter.WaitNotifyEngine;
 
@@ -46,7 +47,7 @@ public class QueueTaskRequestProcessor implements SdkResponseProcessor {
   public void handleEvent(SdkResponseEventProto event) {
     // Queue Task
     QueueTaskRequest queueTaskRequest = event.getQueueTaskRequest();
-    String nodeExecutionId = event.getNodeExecutionId();
+    String nodeExecutionId = SdkResponseEventUtils.getNodeExecutionId(event);
     String taskId =
         queueTask(nodeExecutionId, queueTaskRequest.getTaskRequest(), queueTaskRequest.getSetupAbstractionsMap());
 

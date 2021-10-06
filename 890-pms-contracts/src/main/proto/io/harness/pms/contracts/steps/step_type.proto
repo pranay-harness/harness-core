@@ -20,11 +20,13 @@ message StepInfo {
   string type = 2;
   StepMetaData stepMetaData = 3;
   string featureFlag = 4;
+  string featureRestrictionName = 5;
 }
 
 message StepMetaData {
   repeated string category = 1;
   string folderPath = 2;
+  repeated string folderPaths = 3;
 }
 
 enum StepCategory {

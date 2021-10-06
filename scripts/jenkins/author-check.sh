@@ -12,6 +12,7 @@ git log -1000 --oneline --format='%aN <%aE>' | sort -u |\
     grep -iv "^Abhinav Hinger <abhinav.hinger@harness.io>$" |\
     grep -iv "^Abhinav Mittal <abhinav.mittal@harness.io>$" |\
     grep -iv "^Abhinav Singh <abhinav.singh@harness.io>$" |\
+    grep -iv "^Abhinav Singh <abhinav.singh2@harness.io>$" |\
     grep -iv "^Achyuth Prakash <achyuth.prakash@harness.io>$" |\
     grep -iv "^Adam Hancock <adam.hancock@harness.io>$" |\
     grep -iv "^Adarsh Agarwal <adarsh.agarwal@harness.io>$" |\
@@ -36,6 +37,7 @@ git log -1000 --oneline --format='%aN <%aE>' | sort -u |\
     grep -iv "^Archit Singla <archit.singla@harness.io>$" |\
     grep -iv "^Arpit Tiwari <arpit.tiwari@harness.io>$" |\
     grep -iv "^Arvind Choudhary <arvind.choudhary@harness.io>$" |\
+    grep -vi "^Bharat Goel <bharat.goel@harness.io>$" |\
     grep -iv "^Bogdan Azaric <bogdan.azaric@harness.io>$" |\
     grep -iv "^Bojan Micovic <bojan.micovic@harness.io>$" |\
     grep -iv "^bojanmicovic <bojan.micovic@harness.io>$" |\
@@ -198,6 +200,8 @@ git log -1000 --oneline --format='%aN <%aE>' | sort -u |\
     grep -iv "^Nana Xu <nana.xu@harness.io>$" |\
     grep -iv "^Marko Lukic <marko.lukic@harness.io>$" |\
     grep -iv "^markoharness <marko.lukic@harness.io>$" |\
+    grep -iv "^bharat bandhu goel <bharat.goel@harness.io>$" |\
+    grep -iv "^Bharat Goel <bharat.goel@harness.io>$" |\
     grep -iv "^Alexandru Ciofu <alexandru.ciofu@harness.io>$"` || :
 
 if [ ! -z "$UNKNOWN_USERS" ]
@@ -221,7 +225,7 @@ mv .mailmap.tmp .mailmap
 
 echo $EXECPTION_COMMITS exceptions
 
-if [ $EXECPTION_COMMITS -gt 246 ]
+if [ $EXECPTION_COMMITS -gt 250 ]
 then
     echo "You bringing commit with excepted author that is no longer allowed"
     git log --oneline --format='%aN <%aE>' | grep  "$EXCEPTIONS"

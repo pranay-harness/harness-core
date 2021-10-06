@@ -2,11 +2,15 @@ package software.wings.sm.states.k8s;
 
 import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.beans.FeatureName.KUBERNETES_EXPORT_MANIFESTS;
+import static io.harness.beans.FeatureName.PRUNE_KUBERNETES_RESOURCES;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.ListUtils.trimStrings;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
+
+import static software.wings.sm.states.k8s.K8sResourcesSweepingOutput.K8S_RESOURCES_SWEEPING_OUTPUT;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
@@ -31,7 +35,10 @@ import io.harness.exception.K8sPodSyncException;
 import io.harness.exception.UnexpectedException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.ff.FeatureFlagService;
+import io.harness.k8s.K8sCommandUnitConstants;
+import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.K8sPod;
+import io.harness.k8s.model.KubernetesResource;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.serializer.KryoSerializer;
 
@@ -46,6 +53,8 @@ import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.appmanifest.StoreType;
+import software.wings.beans.command.CommandUnit;
+import software.wings.beans.command.K8sDummyCommandUnit;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.k8s.request.K8sInstanceSyncTaskParameters;
@@ -77,6 +86,7 @@ import java.util.List;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.LineIterator;
+import org.jetbrains.annotations.NotNull;
 
 @Singleton
 @Slf4j
@@ -355,5 +365,67 @@ public class K8sStateHelper {
     List<String> renderedSelectors = delegateSelectors.stream().map(context::renderExpression).collect(toList());
     List<String> trimmedSelectors = trimStrings(renderedSelectors);
     return new HashSet<>(trimmedSelectors);
+  }
+
+  @NotNull
+  public List<CommandUnit> getCommandUnits(boolean remoteStoreType, String accountId, boolean inheritManifests,
+      boolean exportManifests, boolean isPruneSupported) {
+    List<CommandUnit> commandUnits = new ArrayList<>();
+
+    if (!(isExportManifestsEnabled(accountId) && inheritManifests)) {
+      if (remoteStoreType) {
+        commandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.FetchFiles));
+      }
+    }
+    commandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Init));
+
+    if (!(isExportManifestsEnabled(accountId) && exportManifests)) {
+      commandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Prepare));
+      commandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Apply));
+      commandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.WaitForSteadyState));
+      commandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.WrapUp));
+      if (isPruneSupported && featureFlagService.isEnabled(PRUNE_KUBERNETES_RESOURCES, accountId)) {
+        commandUnits.add(new K8sDummyCommandUnit(K8sCommandUnitConstants.Prune));
+      }
+    }
+    return commandUnits;
+  }
+
+  public boolean isExportManifestsEnabled(String accountId) {
+    return featureFlagService.isEnabled(KUBERNETES_EXPORT_MANIFESTS, accountId);
+  }
+
+  public void saveResourcesToSweepingOutput(
+      ExecutionContext context, List<KubernetesResource> resources, String stateType) {
+    SweepingOutputInstance sweepingOutputInstance = getK8sResourcesSweepingOutputInstance(context);
+    if (sweepingOutputInstance != null) {
+      sweepingOutputService.deleteById(context.getAppId(), sweepingOutputInstance.getUuid());
+    }
+
+    sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.PHASE)
+                                   .name(K8S_RESOURCES_SWEEPING_OUTPUT)
+                                   .value(K8sResourcesSweepingOutput.builder()
+                                              .resources(resources)
+                                              .manifests(ManifestHelper.toYaml(resources))
+                                              .stateType(stateType)
+                                              .build())
+                                   .build());
+  }
+
+  public List<KubernetesResource> getResourcesFromSweepingOutput(ExecutionContext context, String stateType) {
+    SweepingOutputInstance sweepingOutputInstance = getK8sResourcesSweepingOutputInstance(context);
+    K8sResourcesSweepingOutput k8sResourcesSweepingOutput = null;
+    if (sweepingOutputInstance != null) {
+      k8sResourcesSweepingOutput = (K8sResourcesSweepingOutput) sweepingOutputInstance.getValue();
+    }
+
+    return (k8sResourcesSweepingOutput != null && k8sResourcesSweepingOutput.getStateType().equals(stateType))
+        ? k8sResourcesSweepingOutput.getResources()
+        : null;
+  }
+
+  private SweepingOutputInstance getK8sResourcesSweepingOutputInstance(ExecutionContext context) {
+    return sweepingOutputService.find(
+        context.prepareSweepingOutputInquiryBuilder().name(K8S_RESOURCES_SWEEPING_OUTPUT).build());
   }
 }

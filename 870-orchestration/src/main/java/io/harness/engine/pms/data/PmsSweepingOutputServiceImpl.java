@@ -26,9 +26,11 @@ import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.mongodb.DuplicateKeyException;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.apache.commons.jexl3.JexlException;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
@@ -38,6 +40,7 @@ public class PmsSweepingOutputServiceImpl implements PmsSweepingOutputService {
   @Inject private ExpressionEvaluatorProvider expressionEvaluatorProvider;
   @Inject private Injector injector;
   @Inject private MongoTemplate mongoTemplate;
+  @Inject private PmsOutcomeService pmsOutcomeService;
 
   @Override
   public String resolve(Ambiance ambiance, RefObject refObject) {
@@ -61,6 +64,37 @@ public class PmsSweepingOutputServiceImpl implements PmsSweepingOutputService {
     }
 
     return instance.getOutputValueJson();
+  }
+
+  @Override
+  public List<RawOptionalSweepingOutput> findOutputsUsingNodeId(Ambiance ambiance, String name, List<String> nodeIds) {
+    Query query = query(where(ExecutionSweepingOutputKeys.planExecutionId).is(ambiance.getPlanExecutionId()))
+                      .addCriteria(where(ExecutionSweepingOutputKeys.name).is(name))
+                      .addCriteria(where(ExecutionSweepingOutputKeys.producedBy + ".setupId").in(nodeIds));
+    List<ExecutionSweepingOutputInstance> instances = mongoTemplate.find(query, ExecutionSweepingOutputInstance.class);
+    return instances.stream()
+        .map(instance -> RawOptionalSweepingOutput.builder().found(true).output(instance.getOutputValueJson()).build())
+        .collect(Collectors.toList());
+  }
+
+  @Override
+  public List<ExecutionSweepingOutputInstance> fetchOutcomeInstanceByRuntimeId(String runtimeId) {
+    Query query = query(where(ExecutionSweepingOutputKeys.producedBy + "."
+        + "runtimeId")
+                            .is(runtimeId));
+    return mongoTemplate.find(query, ExecutionSweepingOutputInstance.class);
+  }
+
+  @Override
+  public List<String> cloneForRetryExecution(Ambiance ambiance, String originalNodeExecutionUuid) {
+    List<String> outputUuids = new ArrayList<>();
+    List<ExecutionSweepingOutputInstance> outputInstances = fetchOutcomeInstanceByRuntimeId(originalNodeExecutionUuid);
+    for (ExecutionSweepingOutputInstance outputInstance : outputInstances) {
+      String uuid = consume(
+          ambiance, outputInstance.getName(), outputInstance.getValueOutput().toJson(), outputInstance.getGroupName());
+      outputUuids.add(uuid);
+    }
+    return outputUuids;
   }
 
   @Override

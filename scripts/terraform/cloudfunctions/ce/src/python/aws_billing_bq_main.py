@@ -5,7 +5,7 @@ import re
 import datetime
 import util
 
-from util import create_dataset, if_tbl_exists, createTable, print_, TABLE_NAME_FORMAT
+from util import create_dataset, if_tbl_exists, createTable, print_, run_batch_query, COSTAGGREGATED, UNIFIED, PREAGGREGATED, CEINTERNALDATASET
 from calendar import monthrange
 from google.cloud import bigquery
 from google.cloud import storage
@@ -76,6 +76,7 @@ def main(event, context):
     ingest_data_to_awscur(jsonData)
     ingest_data_to_preagg(jsonData)
     ingest_data_to_unified(jsonData)
+    ingest_data_to_costagg(jsonData)
     print_("Completed")
 
 
@@ -85,10 +86,11 @@ def create_dataset_and_tables(jsonData):
     create_table_from_manifest(jsonData)
 
     aws_cur_table_ref = dataset.table("awscur_%s" % (jsonData["awsCurTableSuffix"]))
-    pre_aggragated_table_ref = dataset.table("preAggregated")
-    unified_table_ref = dataset.table("unifiedTable")
+    pre_aggragated_table_ref = dataset.table(PREAGGREGATED)
+    unified_table_ref = dataset.table(UNIFIED)
+    cost_aggregated_table_ref = client.dataset(CEINTERNALDATASET).table(COSTAGGREGATED)
 
-    for table_ref in [aws_cur_table_ref, pre_aggragated_table_ref, unified_table_ref]:
+    for table_ref in [aws_cur_table_ref, pre_aggragated_table_ref, unified_table_ref, cost_aggregated_table_ref]:
         if not if_tbl_exists(client, table_ref):
             print_("%s table does not exists, creating table..." % table_ref)
             createTable(client, table_ref)
@@ -288,7 +290,8 @@ def ingest_data_to_preagg(jsonData):
                     instancetype AS awsInstancetype, usagetype AS awsUsagetype, "AWS" AS cloudProvider 
                FROM `%s.awscur_%s` WHERE lineitemtype != 'Tax' AND usageaccountid IN (%s) 
                GROUP BY awsServicecode, region, awsAvailabilityzone, awsUsageaccountid, awsInstancetype, awsUsagetype, startTime;
-    """ % (ds, date_start, date_end, jsonData["usageaccountid"], ds, ds, jsonData["awsCurTableSuffix"], jsonData["usageaccountid"])
+    """ % (ds, date_start, date_end, jsonData["usageaccountid"], ds, ds, jsonData["awsCurTableSuffix"],
+           jsonData["usageaccountid"])
     job_config = bigquery.QueryJobConfig(
         query_parameters=[
             bigquery.ScalarQueryParameter(
@@ -309,14 +312,14 @@ def ingest_data_to_preagg(jsonData):
 
 def ingest_data_to_unified(jsonData):
     ds = "%s.%s" % (PROJECTID, jsonData["datasetName"])
-    tableName = "%s.%s" % (ds, "unifiedTable")
+    tableName = "%s.%s" % (ds, UNIFIED)
     year, month = jsonData["reportYear"], jsonData["reportMonth"]
     date_start = "%s-%s-01" % (year, month)
     date_end = "%s-%s-%s" % (year, month, monthrange(int(year), int(month))[1])
     print_("Loading into %s table..." % tableName)
-    query = """DELETE FROM `%s.unifiedTable` WHERE DATE(startTime) >= '%s' AND DATE(startTime) <= '%s'  AND cloudProvider = "AWS"
+    query = """DELETE FROM `%s` WHERE DATE(startTime) >= '%s' AND DATE(startTime) <= '%s'  AND cloudProvider = "AWS"
                     AND awsUsageAccountId IN (%s);
-               INSERT INTO `%s.unifiedTable` (product, startTime,
+               INSERT INTO `%s` (product, startTime,
                     awsBlendedRate,awsBlendedCost,awsUnblendedRate, awsUnblendedCost, cost, awsServicecode,
                     region,awsAvailabilityzone,awsUsageaccountid,awsInstancetype,awsUsagetype,cloudProvider, labels)
                SELECT productname AS product, TIMESTAMP_TRUNC(usagestartdate, DAY) as startTime, blendedrate AS
@@ -326,7 +329,8 @@ def ingest_data_to_unified(jsonData):
                     AS awsUsagetype, "AWS" AS cloudProvider, tags AS labels 
                FROM `%s.awscur_%s` 
                WHERE lineitemtype != 'Tax' AND usageaccountid IN (%s);
-     """ % (ds, date_start, date_end, jsonData["usageaccountid"], ds, ds, jsonData["awsCurTableSuffix"], jsonData["usageaccountid"])
+     """ % (tableName, date_start, date_end, jsonData["usageaccountid"], tableName, ds, jsonData["awsCurTableSuffix"],
+            jsonData["usageaccountid"])
 
     # Configure the query job.
     job_config = bigquery.QueryJobConfig(
@@ -345,3 +349,25 @@ def ingest_data_to_unified(jsonData):
         print_(query)
         raise e
     print_("Loaded into %s table..." % tableName)
+
+
+def ingest_data_to_costagg(jsonData):
+    ds = "%s.%s" % (PROJECTID, jsonData["datasetName"])
+    table_name = "%s.%s.%s" % (PROJECTID, CEINTERNALDATASET, COSTAGGREGATED)
+    source_table = "%s.%s" % (ds, UNIFIED)
+    year, month = jsonData["reportYear"], jsonData["reportMonth"]
+    date_start = "%s-%s-01" % (year, month)
+    date_end = "%s-%s-%s" % (year, month, monthrange(int(year), int(month))[1])
+    print_("Loading into %s table..." % table_name)
+    query = """DELETE FROM `%s` WHERE DATE(day) >= '%s' AND DATE(day) <= '%s'  AND cloudProvider = "AWS" AND accountId = '%s';
+               INSERT INTO `%s` (day, cost, cloudProvider, accountId)
+                SELECT TIMESTAMP_TRUNC(startTime, DAY) AS day, SUM(cost) AS cost, "AWS" AS cloudProvider, '%s' as accountId
+                FROM `%s`  
+                WHERE DATE(startTime) >= '%s' and cloudProvider = "AWS" 
+                GROUP BY day;
+     """ % (table_name, date_start, date_end, jsonData.get("accountId"), table_name, jsonData.get("accountId"), source_table, date_start)
+
+    job_config = bigquery.QueryJobConfig(
+        priority=bigquery.QueryPriority.BATCH
+    )
+    run_batch_query(client, query, job_config, timeout=120)

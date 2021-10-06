@@ -40,7 +40,7 @@ import org.jetbrains.annotations.Nullable;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
-@TargetModule(HarnessModule._870_CG_YAML)
+@TargetModule(HarnessModule._955_CG_YAML)
 public class WorkflowYAMLHelper {
   private static final String ASSOCIATED_TO_GOOGLE_CLOUD_BUILD_STATE_DOES_NOT_EXIST =
       "] associated to Google Cloud Build State does not exist";

@@ -79,7 +79,7 @@ import org.apache.commons.lang3.StringUtils;
 @OwnedBy(CDC)
 @Singleton
 @Slf4j
-@TargetModule(HarnessModule._870_CG_YAML)
+@TargetModule(HarnessModule._955_CG_YAML)
 public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
   private static final String SERVICE_NOW_CREATE_UPDATE_PARAMS = "serviceNowCreateUpdateParams";
   @Inject YamlHandlerFactory yamlHandlerFactory;

@@ -7,10 +7,13 @@ import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
 
 import static org.mindrot.jbcrypt.BCrypt.hashpw;
 
+import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.configuration.DeployMode;
+import io.harness.configuration.DeployVersion;
 import io.harness.exception.SignupException;
+import io.harness.licensing.remote.NgLicenseHttpClient;
 
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
@@ -19,6 +22,7 @@ import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.dl.WingsPersistence;
 import software.wings.resources.UserResource.UpdatePasswordRequest;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.SignupHandler;
 import software.wings.service.intfc.SignupService;
 import software.wings.service.intfc.UserService;
@@ -37,13 +41,21 @@ public class OnpremSignupHandler implements SignupHandler {
   @Inject private UserService userService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private MainConfiguration mainConfiguration;
+  @Inject private AccountService accountService;
+  @Inject private NgLicenseHttpClient ngLicenseHttpClient;
 
   @Override
   public boolean handle(UserInvite userInvite) {
     validate(userInvite);
     userInvite.setPasswordHash(hashpw(new String(userInvite.getPassword()), BCrypt.gensalt()));
     userService.saveUserInvite(userInvite);
-    userService.completeTrialSignupAndSignIn(userInvite);
+    User user = userService.completeTrialSignupAndSignIn(userInvite);
+    accountService.updateFeatureFlagsForOnPremAccount();
+
+    if (DeployVersion.COMMUNITY.equals(mainConfiguration.getDeployVersion())) {
+      ngLicenseHttpClient.startCommunityLicense(user.getDefaultAccountId(), ModuleType.CD);
+    }
+
     return true;
   }
 

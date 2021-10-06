@@ -2543,6 +2543,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         return VALUES_FOLDER;
       case OC_PARAMS:
         return OC_PARAMS_FOLDER;
+      case AZURE_APP_SERVICE_MANIFEST:
+        return MANIFEST_FOLDER_APP_SERVICE;
       default:
         return MANIFEST_FOLDER;
     }

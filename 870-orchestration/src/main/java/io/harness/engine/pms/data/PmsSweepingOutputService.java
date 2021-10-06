@@ -1,5 +1,8 @@
 package io.harness.engine.pms.data;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.ExecutionSweepingOutputInstance;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
@@ -10,6 +13,7 @@ import io.harness.pms.sdk.core.resolver.ResolverUtils;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
+@OwnedBy(HarnessTeam.PIPELINE)
 public interface PmsSweepingOutputService {
   String resolve(Ambiance ambiance, RefObject refObject);
 
@@ -40,4 +44,10 @@ public interface PmsSweepingOutputService {
 
   String consumeInternal(
       @NotNull Ambiance ambiance, @NotNull String name, String value, int levelsToKeep, String groupName);
+
+  List<RawOptionalSweepingOutput> findOutputsUsingNodeId(Ambiance ambiance, String name, List<String> nodeIds);
+
+  List<ExecutionSweepingOutputInstance> fetchOutcomeInstanceByRuntimeId(String runtimeId);
+
+  List<String> cloneForRetryExecution(Ambiance ambiance, String originalNodeExecutionUuid);
 }

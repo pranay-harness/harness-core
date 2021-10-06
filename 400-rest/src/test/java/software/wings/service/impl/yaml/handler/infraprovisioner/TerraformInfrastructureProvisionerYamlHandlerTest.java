@@ -57,7 +57,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 @OwnedBy(CDP)
-@TargetModule(HarnessModule._870_CG_YAML)
+@TargetModule(HarnessModule._955_CG_YAML)
 public class TerraformInfrastructureProvisionerYamlHandlerTest extends YamlHandlerTestBase {
   @Mock private YamlHelper mockYamlHelper;
   @Mock private InfrastructureProvisionerService mockInfrastructureProvisionerService;
