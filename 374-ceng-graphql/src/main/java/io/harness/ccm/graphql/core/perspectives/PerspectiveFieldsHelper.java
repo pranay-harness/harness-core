@@ -54,6 +54,7 @@ public class PerspectiveFieldsHelper {
 
   public PerspectiveFieldsData fetch(String accountId, List<QLCEViewFilterWrapper> filters) {
     final boolean isBusinessMappingEnabled = featureFlagService.isEnabled(FeatureName.BUSINESS_MAPPING, accountId);
+    log.info("Feature Flag Business mapping:", isBusinessMappingEnabled);
     List<ViewField> customFields = new ArrayList<>();
     Optional<QLCEViewFilterWrapper> viewMetadataFilter = getViewMetadataFilter(filters);
     boolean isExplorerQuery = false;
@@ -69,9 +70,7 @@ public class PerspectiveFieldsHelper {
     List<QLCEViewFieldIdentifierData> fieldIdentifierData = new ArrayList<>();
     fieldIdentifierData.add(getViewField(ViewFieldUtils.getCommonFields(), ViewFieldIdentifier.COMMON));
     fieldIdentifierData.add(getViewCustomField(customFields));
-    if (isBusinessMappingEnabled) {
-      fieldIdentifierData.add(getBusinessMappingFields(businessMappingService.getBusinessMappingViewFields(accountId)));
-    }
+    fieldIdentifierData.add(getBusinessMappingFields(businessMappingService.getBusinessMappingViewFields(accountId)));
 
     Set<ViewFieldIdentifier> viewFieldIdentifierSetFromCustomFields = new HashSet<>();
     for (ViewField customField : customFields) {

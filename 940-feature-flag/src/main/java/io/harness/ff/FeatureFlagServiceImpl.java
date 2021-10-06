@@ -189,9 +189,11 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
   public boolean isEnabled(@NonNull FeatureName featureName, String accountId) {
     switch (featureFlagConfig.getFeatureFlagSystem()) {
       case CF:
+        log.info("getFeatureFlagSystem is CF");
         return cfFeatureFlagEvaluation(featureName, accountId);
       case LOCAL:
       default:
+        log.info("getFeatureFlagSystem is LOCAL");
         return localFeatureFlagEvaluation(featureName, accountId);
     }
   }
@@ -209,11 +211,13 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
 
   private boolean localFeatureFlagEvaluation(@NonNull FeatureName featureName, String accountId) {
     Optional<FeatureFlag> featureFlagOptional = getFeatureFlag(featureName);
-    boolean featureValue = false;
+    log.info("featureFlagOptional: {}", featureFlagOptional);
 
+    boolean featureValue = false;
     if (featureFlagOptional.isPresent()) {
       try {
         FeatureFlag featureFlag = featureFlagOptional.get();
+        log.info("featureFlag: {}", featureFlag);
         if (featureFlag.isEnabled()) {
           featureValue = true;
           return featureValue;
