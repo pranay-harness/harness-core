@@ -25,11 +25,12 @@ import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.gitsyncerror.GitSyncErrorStatus;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncError;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncError.GitSyncErrorKeys;
+import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorAggregateByCommit;
+import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorAggregateByCommit.GitSyncErrorAggregateByCommitKeys;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorType;
 import io.harness.gitsync.gitsyncerror.beans.GitToHarnessErrorDetails;
+import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorAggregateByCommitDTO;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorDTO;
-import io.harness.gitsync.gitsyncerror.dtos.GitToHarnessErrorByCommitResponseDTO;
-import io.harness.gitsync.gitsyncerror.dtos.GitToHarnessErrorByCommitResponseDTO.GitToHarnessErrorByCommitKeys;
 import io.harness.gitsync.gitsyncerror.remote.GitSyncErrorMapper;
 import io.harness.gitsync.gitsyncerror.service.GitSyncErrorService;
 import io.harness.ng.beans.PageRequest;
@@ -84,59 +85,61 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
   }
 
   @Override
-  public PageResponse<GitToHarnessErrorByCommitResponseDTO> listGitToHarnessErrorsGroupedByCommits(
-      PageRequest pageRequest, String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      String searchTerm, String repoId, String branch, Integer numberOfErrorsInSummary) {
+  public PageResponse<GitSyncErrorAggregateByCommitDTO> listGitToHarnessErrorsGroupedByCommits(PageRequest pageRequest,
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String searchTerm, String repoId,
+      String branch, Integer numberOfErrorsInSummary) {
     Pageable pageable = getPageRequest(pageRequest);
     Criteria criteria = createGitSyncErrorFilterCriteria(
         accountIdentifier, orgIdentifier, projectIdentifier, searchTerm, repoId, branch);
     criteria.and(GitSyncErrorKeys.status).in(GitSyncErrorStatus.ACTIVE, GitSyncErrorStatus.RESOLVED);
     GroupOperation groupOperation = group(GitSyncErrorKeys.gitCommitId)
                                         .count()
-                                        .as(GitToHarnessErrorByCommitKeys.failedCount)
+                                        .as(GitSyncErrorAggregateByCommitKeys.failedCount)
                                         .first(GitSyncErrorKeys.gitCommitId)
-                                        .as(GitToHarnessErrorByCommitKeys.gitCommitId)
-                                        .first(GitSyncErrorKeys.commitTime)
-                                        .as(GitToHarnessErrorByCommitKeys.commitTime)
+                                        .as(GitSyncErrorAggregateByCommitKeys.gitCommitId)
                                         .first(GitSyncErrorKeys.commitMessage)
-                                        .as(GitToHarnessErrorByCommitKeys.commitMessage)
+                                        .as(GitSyncErrorAggregateByCommitKeys.commitMessage)
                                         .first(GitSyncErrorKeys.branchName)
-                                        .as(GitToHarnessErrorByCommitKeys.branchName)
+                                        .as(GitSyncErrorAggregateByCommitKeys.branchName)
                                         .first(GitSyncErrorKeys.createdAt)
                                         .as(GitSyncErrorKeys.createdAt)
                                         .push(ROOT)
-                                        .as(GitToHarnessErrorByCommitKeys.errorsForSummaryView);
+                                        .as(GitSyncErrorAggregateByCommitKeys.errorsForSummaryView);
     ProjectionOperation projectOperation = project()
-                                               .andInclude(GitToHarnessErrorByCommitKeys.gitCommitId)
-                                               .andInclude(GitToHarnessErrorByCommitKeys.commitTime)
+                                               .andInclude(GitSyncErrorAggregateByCommitKeys.gitCommitId)
                                                .andInclude(GitSyncErrorKeys.createdAt)
-                                               .andInclude(GitToHarnessErrorByCommitKeys.commitMessage)
-                                               .andInclude(GitToHarnessErrorByCommitKeys.branchName)
-                                               .andInclude(GitToHarnessErrorByCommitKeys.failedCount)
-                                               .andExpression(GitToHarnessErrorByCommitKeys.errorsForSummaryView)
+                                               .andInclude(GitSyncErrorAggregateByCommitKeys.commitMessage)
+                                               .andInclude(GitSyncErrorAggregateByCommitKeys.branchName)
+                                               .andInclude(GitSyncErrorAggregateByCommitKeys.failedCount)
+                                               .andExpression(GitSyncErrorAggregateByCommitKeys.errorsForSummaryView)
                                                .slice(numberOfErrorsInSummary)
-                                               .as(GitToHarnessErrorByCommitKeys.errorsForSummaryView);
+                                               .as(GitSyncErrorAggregateByCommitKeys.errorsForSummaryView);
     SortOperation sortOperation = sort(Sort.Direction.DESC, GitSyncErrorKeys.createdAt);
 
     Aggregation aggregation = newAggregation(match(criteria), groupOperation, projectOperation, sortOperation,
         skip(pageable.getOffset()), limit(pageable.getPageSize()));
-    List<GitToHarnessErrorByCommitResponseDTO> gitToHarnessErrorByCommitResponseDTOList =
-        gitSyncErrorRepository.aggregate(aggregation, GitToHarnessErrorByCommitResponseDTO.class).getMappedResults();
-    Set<String> repoUrls =
-        gitToHarnessErrorByCommitResponseDTOList.stream()
-            .map(gitToHarnessErrorByCommitResponseDTO
-                -> gitToHarnessErrorByCommitResponseDTO.getErrorsForSummaryView().get(0).getRepoUrl())
-            .collect(Collectors.toSet());
+    List<GitSyncErrorAggregateByCommit> gitSyncErrorAggregateByCommitList =
+        gitSyncErrorRepository.aggregate(aggregation, GitSyncErrorAggregateByCommit.class).getMappedResults();
+    List<GitSyncErrorAggregateByCommitDTO> gitSyncErrorAggregateByCommitDTOList =
+        emptyIfNull(gitSyncErrorAggregateByCommitList)
+            .stream()
+            .map(GitSyncErrorMapper::toGitSyncErrorAggregateByCommitDTO)
+            .collect(Collectors.toList());
+    Set<String> repoUrls = emptyIfNull(gitSyncErrorAggregateByCommitDTOList)
+                               .stream()
+                               .map(gitSyncErrorAggregateByCommitDTO
+                                   -> gitSyncErrorAggregateByCommitDTO.getErrorsForSummaryView().get(0).getRepoUrl())
+                               .collect(Collectors.toSet());
     Map<String, String> repoIds = getRepoId(repoUrls, accountIdentifier, orgIdentifier, projectIdentifier);
-    gitToHarnessErrorByCommitResponseDTOList.stream()
-        .map(gitToHarnessErrorByCommitResponseDTO -> {
-          String repoUrl = gitToHarnessErrorByCommitResponseDTO.getErrorsForSummaryView().get(0).getRepoUrl();
-          gitToHarnessErrorByCommitResponseDTO.setRepoId(repoIds.get(repoUrl));
-          return gitToHarnessErrorByCommitResponseDTO;
+    gitSyncErrorAggregateByCommitDTOList.stream()
+        .map(gitSyncErrorAggregateByCommitDTO -> {
+          String repoUrl = gitSyncErrorAggregateByCommitDTO.getErrorsForSummaryView().get(0).getRepoUrl();
+          gitSyncErrorAggregateByCommitDTO.setRepoId(repoIds.get(repoUrl));
+          return gitSyncErrorAggregateByCommitDTO;
         })
         .collect(Collectors.toList());
-    Page<GitToHarnessErrorByCommitResponseDTO> page = new PageImpl<>(
-        gitToHarnessErrorByCommitResponseDTOList, pageable, gitToHarnessErrorByCommitResponseDTOList.size());
+    Page<GitSyncErrorAggregateByCommitDTO> page =
+        new PageImpl<>(gitSyncErrorAggregateByCommitDTOList, pageable, gitSyncErrorAggregateByCommitDTOList.size());
     return getNGPageResponse(page);
   }
 
@@ -280,7 +283,6 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
     return GitToHarnessErrorDetails.builder()
         .gitCommitId(failedCommitId)
         .yamlContent(failedGitFileChange.getFileContent())
-        .commitTime(failedGitFileChange.getCommitTimeMs())
         .commitMessage(failedGitFileChange.getCommitMessage())
         .build();
   }

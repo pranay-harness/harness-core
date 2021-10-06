@@ -6,8 +6,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.git.model.GitFileChange;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncError;
+import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorAggregateByCommitDTO;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorDTO;
-import io.harness.gitsync.gitsyncerror.dtos.GitToHarnessErrorByCommitResponseDTO;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 
@@ -15,7 +15,7 @@ import java.util.List;
 
 @OwnedBy(PL)
 public interface GitSyncErrorService {
-  PageResponse<GitToHarnessErrorByCommitResponseDTO> listGitToHarnessErrorsGroupedByCommits(PageRequest pageRequest,
+  PageResponse<GitSyncErrorAggregateByCommitDTO> listGitToHarnessErrorsGroupedByCommits(PageRequest pageRequest,
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String searchTerm, String repoId,
       String branch, Integer numberOfErrorsInSummary);
 
