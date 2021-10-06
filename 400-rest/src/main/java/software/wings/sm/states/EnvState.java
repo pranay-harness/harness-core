@@ -216,7 +216,7 @@ public class EnvState extends State implements WorkflowState {
           .stateExecutionData(envStateExecutionData)
           .build();
     } catch (Exception e) {
-      log.error("Failed to start workflow execution: " + e);
+      log.error("Failed to start workflow execution: ", e);
       String message = ExceptionUtils.getMessage(e);
       return ExecutionResponse.builder()
           .executionStatus(FAILED)
