@@ -2,9 +2,7 @@ package software.wings.helpers.ext.ecs.response;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.annotations.dev.TargetModule;
 import io.harness.logging.CommandExecutionStatus;
 
 import java.util.List;
@@ -14,7 +12,6 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 @OwnedBy(PL)
 public class EcsRunTaskDeployResponse extends EcsCommandResponse {
   private List<String> previousRegisteredRunTaskDefinitions;
