@@ -39,6 +39,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.VariableResolverTracker;
+import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.K8sPod;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.rule.Owner;
@@ -79,6 +80,7 @@ public class K8sScaleTest extends CategoryTest {
   @Mock private ManagerExpressionEvaluator evaluator;
   @Mock private ActivityService activityService;
   @Mock private K8sStateHelper k8sStateHelper;
+  @Mock private FeatureFlagService featureFlagService;
 
   @InjectMocks private K8sScale k8sScale = spy(new K8sScale(K8S_SCALE));
 
