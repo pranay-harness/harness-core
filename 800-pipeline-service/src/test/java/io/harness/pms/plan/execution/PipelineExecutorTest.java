@@ -172,7 +172,7 @@ public class PipelineExecutorTest extends CategoryTest {
 
     doReturn(planExecution)
         .when(executionHelper)
-        .startExecution(accountId, orgId, projectId, metadata, planExecutionMetadata, false, null);
+        .startExecution(accountId, orgId, projectId, metadata, planExecutionMetadata, false, null, null);
   }
 
   private void verifyStatementsForFreshRun(
@@ -195,8 +195,8 @@ public class PipelineExecutorTest extends CategoryTest {
               originalExecutionId, false, null, null, null);
     }
     verify(executionHelper, times(1))
-        .startExecution(accountId, orgId, projectId, metadata, planExecutionMetadata, false, null);
+        .startExecution(accountId, orgId, projectId, metadata, planExecutionMetadata, false, null, null);
     verify(executionHelper, times(0))
-        .startExecutionV2(anyString(), anyString(), anyString(), any(), any(), anyBoolean(), any());
+        .startExecutionV2(anyString(), anyString(), anyString(), any(), any(), anyBoolean(), any(), any());
   }
 }
