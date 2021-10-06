@@ -58,4 +58,32 @@ features:
       ENTERPRISE:
         restrictionType: AVAILABILITY
         enabled: true
+  - name: TEST4
+    description: test 4
+    restrictions:
+      FREE:
+        restrictionType: CUSTOM
+        clientName: ngmanager
+      TEAM:
+        restrictionType: CUSTOM
+        clientName: ngmanager
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
+  - name: TEST5
+    description: test 5
+    restrictions:
+      FREE:
+        restrictionType: DURATION
+        timeUnit:
+          unit: WEEKS
+          numberOfUnits: 1
+      TEAM:
+        restrictionType: DURATION
+        timeUnit:
+          unit: MONTHS
+          numberOfUnits: 1
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
 

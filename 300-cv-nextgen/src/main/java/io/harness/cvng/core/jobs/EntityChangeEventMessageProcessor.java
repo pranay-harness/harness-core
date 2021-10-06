@@ -2,7 +2,6 @@ package io.harness.cvng.core.jobs;
 
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.ActivitySource;
-import io.harness.cvng.activity.source.services.api.ActivitySourceService;
 import io.harness.cvng.alert.entities.AlertRule;
 import io.harness.cvng.alert.entities.AlertRuleAnomaly;
 import io.harness.cvng.core.entities.CVConfig;
@@ -37,15 +36,14 @@ public abstract class EntityChangeEventMessageProcessor implements ConsumerMessa
   static {
     ENTITIES_MAP = new HashMap<>();
     ENTITIES_MAP.put(CVConfig.class, CVConfigService.class);
-    ENTITIES_MAP.put(ActivitySource.class, ActivitySourceService.class);
     ENTITIES_MAP.put(MonitoringSourcePerpetualTask.class, MonitoringSourcePerpetualTaskService.class);
     ENTITIES_MAP.put(MonitoredService.class, MonitoredServiceService.class);
     ENTITIES_MAP.put(ChangeSource.class, ChangeSourceService.class);
     ENTITIES_MAP.put(ServiceDependency.class, ServiceDependencyService.class);
     ENTITIES_MAP.put(Webhook.class, WebhookService.class);
     final List<Class<? extends PersistentEntity>> deleteEntitiesWithDefaultHandler =
-        Arrays.asList(VerificationJob.class, Activity.class, AlertRule.class, MetricPack.class, HeatMap.class,
-            TimeSeriesThreshold.class, AlertRuleAnomaly.class);
+        Arrays.asList(VerificationJob.class, Activity.class, ActivitySource.class, AlertRule.class, MetricPack.class,
+            HeatMap.class, TimeSeriesThreshold.class, AlertRuleAnomaly.class);
     deleteEntitiesWithDefaultHandler.forEach(entity -> ENTITIES_MAP.put(entity, DeleteEntityByHandler.class));
   }
 }

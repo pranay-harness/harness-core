@@ -4,7 +4,8 @@ import io.harness.ModuleType;
 import io.harness.enforcement.bases.AvailabilityRestriction;
 import io.harness.enforcement.bases.FeatureRestriction;
 import io.harness.enforcement.bases.Restriction;
-import io.harness.enforcement.beans.FeatureRestrictionDetailsDTO;
+import io.harness.enforcement.beans.details.FeatureRestrictionDetailsDTO;
+import io.harness.enforcement.beans.internal.RestrictionMetadataMapResponseDTO;
 import io.harness.enforcement.beans.metadata.FeatureRestrictionMetadataDTO;
 import io.harness.enforcement.beans.metadata.RestrictionMetadataDTO;
 import io.harness.enforcement.constants.FeatureRestrictionName;
@@ -71,10 +72,9 @@ public class EnforcementServiceImpl implements EnforcementService {
     Edition edition = getLicenseEdition(accountIdentifier, feature.getModuleType());
 
     Restriction restriction = getRestriction(feature, edition);
-    io.harness.enforcement.handlers.RestrictionHandler handler =
-        restrictionHandlerFactory.getHandler(restriction.getRestrictionType());
+    RestrictionHandler handler = restrictionHandlerFactory.getHandler(restriction.getRestrictionType());
 
-    handler.check(featureRestrictionName, restriction, accountIdentifier);
+    handler.check(featureRestrictionName, restriction, accountIdentifier, feature.getModuleType(), edition);
   }
 
   @Override
@@ -86,6 +86,30 @@ public class EnforcementServiceImpl implements EnforcementService {
     FeatureRestriction featureRestriction = featureRestrictionMap.get(featureRestrictionName);
     Edition edition = getLicenseEdition(accountIdentifier, featureRestriction.getModuleType());
     return toFeatureMetadataDTO(featureRestriction, edition);
+  }
+
+  @Override
+  public RestrictionMetadataMapResponseDTO getFeatureRestrictionMetadataMap(
+      List<FeatureRestrictionName> featureRestrictionNames, String accountIdentifier) {
+    Map<FeatureRestrictionName, RestrictionMetadataDTO> metadataDTOMap = new HashMap<>();
+
+    for (FeatureRestrictionName name : featureRestrictionNames) {
+      FeatureRestriction featureRestriction = featureRestrictionMap.get(name);
+      Edition edition = getLicenseEdition(accountIdentifier, featureRestriction.getModuleType());
+      RestrictionMetadataDTO restrictionMetadataDTO =
+          toRestrictionMetadataDTO(featureRestriction.getRestrictions().get(edition));
+
+      metadataDTOMap.put(name, restrictionMetadataDTO);
+    }
+    return RestrictionMetadataMapResponseDTO.builder().metadataMap(metadataDTOMap).build();
+  }
+
+  @Override
+  public List<FeatureRestrictionMetadataDTO> getAllFeatureRestrictionMetadata() {
+    return featureRestrictionMap.values()
+        .stream()
+        .map(featureRestriction -> toFeatureMetadataDTO(featureRestriction, null))
+        .collect(Collectors.toList());
   }
 
   @Override
@@ -167,14 +191,13 @@ public class EnforcementServiceImpl implements EnforcementService {
   private FeatureRestrictionDetailsDTO toFeatureDetailsDTO(
       String accountIdentifier, FeatureRestriction feature, Edition edition) {
     Restriction restriction = getRestriction(feature, edition);
-    io.harness.enforcement.handlers.RestrictionHandler handler =
-        restrictionHandlerFactory.getHandler(restriction.getRestrictionType());
+    RestrictionHandler handler = restrictionHandlerFactory.getHandler(restriction.getRestrictionType());
     FeatureRestrictionDetailsDTO featureDetailsDTO = FeatureRestrictionDetailsDTO.builder()
                                                          .name(feature.getName())
-                                                         .moduleType(feature.getModuleType().name())
+                                                         .moduleType(feature.getModuleType())
                                                          .description(feature.getDescription())
                                                          .build();
-    handler.fillRestrictionDTO(feature.getName(), restriction, accountIdentifier, featureDetailsDTO);
+    handler.fillRestrictionDTO(feature.getName(), restriction, accountIdentifier, edition, featureDetailsDTO);
     return featureDetailsDTO;
   }
 
@@ -186,12 +209,15 @@ public class EnforcementServiceImpl implements EnforcementService {
                                                           .build();
 
     Map<Edition, RestrictionMetadataDTO> restrictionMetadataDTOMap =
-        feature.getRestrictions().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> {
-          RestrictionHandler handler = restrictionHandlerFactory.getHandler(entry.getValue().getRestrictionType());
-          return handler.getMetadataDTO(entry.getValue());
-        }));
+        feature.getRestrictions().entrySet().stream().collect(
+            Collectors.toMap(Map.Entry::getKey, entry -> toRestrictionMetadataDTO(entry.getValue())));
     featureDetailsDTO.setRestrictionMetadata(restrictionMetadataDTOMap);
     return featureDetailsDTO;
+  }
+
+  private RestrictionMetadataDTO toRestrictionMetadataDTO(Restriction restriction) {
+    RestrictionHandler handler = restrictionHandlerFactory.getHandler(restriction.getRestrictionType());
+    return handler.getMetadataDTO(restriction);
   }
 
   private Restriction getRestriction(FeatureRestriction feature, Edition edition) {

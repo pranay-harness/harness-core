@@ -1,27 +1,31 @@
 package io.harness.enforcement.handlers.impl;
 
+import io.harness.ModuleType;
 import io.harness.enforcement.bases.Restriction;
 import io.harness.enforcement.bases.StaticLimitRestriction;
-import io.harness.enforcement.beans.FeatureRestrictionDetailsDTO;
-import io.harness.enforcement.beans.StaticLimitRestrictionDTO;
+import io.harness.enforcement.beans.details.FeatureRestrictionDetailsDTO;
+import io.harness.enforcement.beans.details.StaticLimitRestrictionDTO;
 import io.harness.enforcement.beans.metadata.RestrictionMetadataDTO;
 import io.harness.enforcement.beans.metadata.StaticLimitRestrictionMetadataDTO;
 import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.enforcement.exceptions.LimitExceededException;
 import io.harness.enforcement.handlers.RestrictionHandler;
 import io.harness.enforcement.handlers.RestrictionUtils;
+import io.harness.licensing.Edition;
 
 public class StaticLimitRestrictionHandler implements RestrictionHandler {
   @Override
-  public void check(FeatureRestrictionName featureRestrictionName, Restriction restriction, String accountIdentifier) {
+  public void check(FeatureRestrictionName featureRestrictionName, Restriction restriction, String accountIdentifier,
+      ModuleType moduleType, Edition edition) {
     StaticLimitRestriction staticLimitRestriction = (StaticLimitRestriction) restriction;
     long currentCount = getCurrentCount(featureRestrictionName, staticLimitRestriction, accountIdentifier);
-    checkWithUsage(featureRestrictionName, staticLimitRestriction, accountIdentifier, currentCount);
+    checkWithUsage(
+        featureRestrictionName, staticLimitRestriction, accountIdentifier, currentCount, moduleType, edition);
   }
 
   @Override
   public void checkWithUsage(FeatureRestrictionName featureRestrictionName, Restriction restriction,
-      String accountIdentifier, long currentCount) {
+      String accountIdentifier, long currentCount, ModuleType moduleType, Edition edition) {
     StaticLimitRestriction staticLimitRestriction = (StaticLimitRestriction) restriction;
     if (!RestrictionUtils.isAvailable(currentCount, staticLimitRestriction.getLimit())) {
       throw new LimitExceededException(
@@ -31,7 +35,7 @@ public class StaticLimitRestrictionHandler implements RestrictionHandler {
 
   @Override
   public void fillRestrictionDTO(FeatureRestrictionName featureRestrictionName, Restriction restriction,
-      String accountIdentifier, FeatureRestrictionDetailsDTO featureDetailsDTO) {
+      String accountIdentifier, Edition edition, FeatureRestrictionDetailsDTO featureDetailsDTO) {
     StaticLimitRestriction staticLimitRestriction = (StaticLimitRestriction) restriction;
     long currentCount = getCurrentCount(featureRestrictionName, staticLimitRestriction, accountIdentifier);
     long limit = staticLimitRestriction.getLimit();
@@ -52,6 +56,8 @@ public class StaticLimitRestrictionHandler implements RestrictionHandler {
 
   private long getCurrentCount(FeatureRestrictionName featureRestrictionName,
       StaticLimitRestriction staticLimitRestriction, String accountIdentifier) {
-    return RestrictionUtils.getCurrentUsage(staticLimitRestriction, featureRestrictionName, accountIdentifier);
+    RestrictionMetadataDTO metadataDTO = getMetadataDTO(staticLimitRestriction);
+    return RestrictionUtils.getCurrentUsage(
+        staticLimitRestriction, featureRestrictionName, accountIdentifier, metadataDTO);
   }
 }

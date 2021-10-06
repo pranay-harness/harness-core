@@ -15,14 +15,17 @@ import io.harness.enforcement.bases.AvailabilityRestriction;
 import io.harness.enforcement.bases.FeatureRestriction;
 import io.harness.enforcement.bases.Restriction;
 import io.harness.enforcement.bases.StaticLimitRestriction;
-import io.harness.enforcement.beans.AvailabilityRestrictionDTO;
-import io.harness.enforcement.beans.FeatureRestrictionDetailsDTO;
 import io.harness.enforcement.beans.FeatureRestrictionUsageDTO;
+import io.harness.enforcement.beans.details.AvailabilityRestrictionDTO;
+import io.harness.enforcement.beans.details.FeatureRestrictionDetailsDTO;
+import io.harness.enforcement.beans.metadata.FeatureRestrictionMetadataDTO;
 import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.enforcement.constants.RestrictionType;
 import io.harness.enforcement.exceptions.LimitExceededException;
 import io.harness.enforcement.handlers.RestrictionHandlerFactory;
 import io.harness.enforcement.handlers.impl.AvailabilityRestrictionHandler;
+import io.harness.enforcement.handlers.impl.CustomRestrictionHandler;
+import io.harness.enforcement.handlers.impl.DurationRestrictionHandler;
 import io.harness.enforcement.handlers.impl.RateLimitRestrictionHandler;
 import io.harness.enforcement.handlers.impl.StaticLimitRestrictionHandler;
 import io.harness.licensing.Edition;
@@ -56,15 +59,16 @@ public class EnforcementServiceImplTest extends CategoryTest {
 
   @Before
   public void setup() throws IOException {
-    restrictionHandlerFactory = new RestrictionHandlerFactory(
-        new AvailabilityRestrictionHandler(), new StaticLimitRestrictionHandler(), new RateLimitRestrictionHandler());
+    restrictionHandlerFactory =
+        new RestrictionHandlerFactory(new AvailabilityRestrictionHandler(), new StaticLimitRestrictionHandler(),
+            new RateLimitRestrictionHandler(), new CustomRestrictionHandler(), new DurationRestrictionHandler());
     licenseService = mock(LicenseService.class);
 
     enforcementSdkClient = mock(EnforcementSdkClient.class);
     Call<ResponseDTO<FeatureRestrictionUsageDTO>> featureUsageCall = mock(Call.class);
     when(featureUsageCall.execute())
         .thenReturn(Response.success(ResponseDTO.newResponse(FeatureRestrictionUsageDTO.builder().count(10).build())));
-    when(enforcementSdkClient.getRestrictionUsage(any(), any())).thenReturn(featureUsageCall);
+    when(enforcementSdkClient.getRestrictionUsage(any(), any(), any())).thenReturn(featureUsageCall);
 
     enforcementService = new EnforcementServiceImpl(licenseService, restrictionHandlerFactory);
     featureRestriction = new FeatureRestriction(FEATURE_NAME, "description", ModuleType.CD,
@@ -128,7 +132,7 @@ public class EnforcementServiceImplTest extends CategoryTest {
     FeatureRestrictionDetailsDTO dto = FeatureRestrictionDetailsDTO.builder()
                                            .name(FEATURE_NAME)
                                            .description("description")
-                                           .moduleType(ModuleType.CD.name())
+                                           .moduleType(ModuleType.CD)
                                            .allowed(true)
                                            .restrictionType(RestrictionType.AVAILABILITY)
                                            .restriction(AvailabilityRestrictionDTO.builder().enabled(true).build())
@@ -143,5 +147,13 @@ public class EnforcementServiceImplTest extends CategoryTest {
   public void testGetEnabledFeatures() {
     List<FeatureRestrictionDetailsDTO> result = enforcementService.getEnabledFeatureDetails(ACCOUNT_ID);
     assertThat(result.size()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = ZHUO)
+  @Category(UnitTests.class)
+  public void testAllFeatureRestrictionMetadata() {
+    List<FeatureRestrictionMetadataDTO> result = enforcementService.getAllFeatureRestrictionMetadata();
+    assertThat(result.size()).isEqualTo(3);
   }
 }

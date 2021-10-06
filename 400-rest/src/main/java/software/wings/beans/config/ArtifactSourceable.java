@@ -2,9 +2,16 @@ package software.wings.beans.config;
 
 import static io.harness.data.structure.MapUtils.putIfNotEmpty;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
+
 import java.util.HashMap;
 import java.util.Map;
 
+@OwnedBy(HarnessTeam.CDC)
+@TargetModule(HarnessModule._957_CG_BEANS)
 public interface ArtifactSourceable {
   String ARTIFACT_SOURCE_USER_NAME_KEY = "username";
   String ARTIFACT_SOURCE_REGISTRY_URL_KEY = "registryUrl";

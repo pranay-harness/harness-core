@@ -11,7 +11,7 @@ import lombok.Value;
 @Builder
 @OwnedBy(HarnessTeam.PL)
 public class TopProjectsPanel {
-  List<TopProjectsDashboardInfo<CountWithSuccessFailureDetails>> CITopProjectsInfo;
-  List<TopProjectsDashboardInfo<CountWithSuccessFailureDetails>> CDTopProjectsInfo;
-  List<TopProjectsDashboardInfo<CountInfo>> CFTopProjectsInfo;
+  ExecutionResponse<List<TopProjectsDashboardInfo<CountWithSuccessFailureDetails>>> CITopProjectsInfo;
+  ExecutionResponse<List<TopProjectsDashboardInfo<CountWithSuccessFailureDetails>>> CDTopProjectsInfo;
+  ExecutionResponse<List<TopProjectsDashboardInfo<CountInfo>>> CFTopProjectsInfo;
 }

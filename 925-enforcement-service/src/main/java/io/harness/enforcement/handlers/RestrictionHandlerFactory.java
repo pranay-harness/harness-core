@@ -11,16 +11,23 @@ public class RestrictionHandlerFactory {
   private final RestrictionHandler availabilityRestrictionHandler;
   private final RestrictionHandler staticLimitRestrictionHandler;
   private final RestrictionHandler rateLimitRestrictionHandler;
+  private final RestrictionHandler customRestrictionHandler;
+  private final RestrictionHandler durationRestrictionHandler;
 
   @Inject
   public RestrictionHandlerFactory(
       @Named("availabilityRestrictionHandler") RestrictionHandler availabilityRestrictionHandler,
       @Named("staticLimitRestrictionHandler") RestrictionHandler staticLimitRestrictionHandler,
-      @Named("rateLimitRestrictionHandler") RestrictionHandler rateLimitRestrictionHandler) {
+      @Named("rateLimitRestrictionHandler") RestrictionHandler rateLimitRestrictionHandler,
+      @Named("customRestrictionHandler") RestrictionHandler customRestrictionHandler,
+      @Named("durationRestrictionHandler") RestrictionHandler durationRestrictionHandler) {
     this.availabilityRestrictionHandler = availabilityRestrictionHandler;
     this.staticLimitRestrictionHandler = staticLimitRestrictionHandler;
     this.rateLimitRestrictionHandler = rateLimitRestrictionHandler;
+    this.customRestrictionHandler = customRestrictionHandler;
+    this.durationRestrictionHandler = durationRestrictionHandler;
   }
+
   public RestrictionHandler getHandler(RestrictionType restrictionType) {
     switch (restrictionType) {
       case AVAILABILITY:
@@ -29,6 +36,10 @@ public class RestrictionHandlerFactory {
         return staticLimitRestrictionHandler;
       case RATE_LIMIT:
         return rateLimitRestrictionHandler;
+      case CUSTOM:
+        return customRestrictionHandler;
+      case DURATION:
+        return durationRestrictionHandler;
       default:
         throw new IllegalArgumentException("Unknown restriction type");
     }

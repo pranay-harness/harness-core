@@ -237,6 +237,11 @@ public class NodeExecution implements PersistentEntity, UuidAccess, PmsNodeExecu
                  .field(NodeExecutionKeys.planExecutionId)
                  .field(NodeExecutionKeys.stepCategory)
                  .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("planExecutionId_nodeIdentifier_idx")
+                 .field(NodeExecutionKeys.planExecutionId)
+                 .field(NodeExecutionKeys.nodeIdentifier)
+                 .build())
         .add(CompoundMongoIndex.builder().name("previous_id_idx").field(NodeExecutionKeys.previousId).build())
         .build();
   }
