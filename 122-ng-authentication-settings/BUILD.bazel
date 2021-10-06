@@ -6,6 +6,8 @@ shared_dependencies = [
     "//:lombok",
     "//125-cd-nextgen:module",
     "//123-ng-core-user:module",
+    "//925-enforcement-service:module",
+    "//942-enforcement-sdk:module",
 ]
 
 java_library(
