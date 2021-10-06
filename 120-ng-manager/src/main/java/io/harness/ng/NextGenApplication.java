@@ -767,6 +767,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
                     .put(FeatureRestrictionName.TEST4, ExampleCustomImpl.class)
                     .build())
             .build();
+
     injector.getInstance(EnforcementSdkRegisterService.class)
         .initialize(restrictionUsageRegisterConfiguration, customConfig);
   }

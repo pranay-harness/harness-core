@@ -22,6 +22,7 @@ import io.harness.connector.ConnectorResourceClientModule;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
+import io.harness.enforcement.client.EnforcementClientModule;
 import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.filter.FilterType;
@@ -320,7 +321,9 @@ public class PipelineServiceModule extends AbstractModule {
           .annotatedWith(Names.named("TimeScaleDBConfig"))
           .toInstance(TimeScaleDBConfig.builder().build());
     }
-
+    install(EnforcementClientModule.getInstance(configuration.getNgManagerServiceHttpClientConfig(),
+        configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId(),
+        configuration.getEnforcementClientConfiguration()));
     registerEventsFrameworkMessageListeners();
   }
 
