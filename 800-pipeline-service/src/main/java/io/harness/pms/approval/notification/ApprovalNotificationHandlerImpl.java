@@ -34,7 +34,6 @@ import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.dto.GraphLayoutNodeDTO;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.pms.plan.execution.service.PipelineExecutionSummaryService;
-import io.harness.pms.plan.execution.service.PipelineExecutionSummaryServiceImpl;
 import io.harness.remote.client.NGRestUtils;
 import io.harness.steps.approval.ApprovalNotificationHandler;
 import io.harness.steps.approval.step.harness.entities.HarnessApprovalInstance;

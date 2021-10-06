@@ -9,7 +9,6 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.pipeline.observer.OrchestrationObserverUtils;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
-import io.harness.pms.plan.execution.service.PMSExecutionService;
 import io.harness.pms.plan.execution.service.PipelineExecutionSummaryService;
 import io.harness.pms.security.PmsSecurityContextEventGuard;
 import io.harness.telemetry.Category;

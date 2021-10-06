@@ -7,7 +7,6 @@ import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.pms.approval.jira.JiraApprovalCallback;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.pipeline.PipelineEntity;
-import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.preflight.entity.PreFlightEntity;
 
 import java.util.Set;
