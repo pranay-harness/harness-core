@@ -1,14 +1,15 @@
 package software.wings.exception;
 
-import io.harness.annotations.dev.HarnessModule;
-import io.harness.annotations.dev.TargetModule;
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.WingsException;
 
 import java.util.EnumSet;
 
-@TargetModule(HarnessModule._980_COMMONS)
+@OwnedBy(PL)
 public class ApprovalStateException extends WingsException {
   private static final String MESSAGE_KEY = "message";
 

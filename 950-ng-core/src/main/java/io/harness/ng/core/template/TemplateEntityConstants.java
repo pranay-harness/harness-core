@@ -1,4 +1,4 @@
-package io.harness.template.beans;
+package io.harness.ng.core.template;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 

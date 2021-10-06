@@ -1,6 +1,6 @@
 # Any edit in this file should accompany an increment in version.
 name: rolesConfiguration
-version: 11
+version: 12
 roles:
     - identifier: _project_admin
       name: Project Admin
@@ -65,6 +65,10 @@ roles:
         - ff_environment_edit
         - ff_environment_view
         - ff_featureflag_toggle
+        - core_template_access
+        - core_template_delete
+        - core_template_edit
+        - core_template_view
       allowedScopeLevels:
         - project
       managed: true
@@ -86,6 +90,7 @@ roles:
         - core_role_view
         - core_resourcegroup_view
         - core_serviceaccount_view
+        - core_template_view
       allowedScopeLevels:
         - project
       managed: true
@@ -135,6 +140,10 @@ roles:
         - core_resourcegroup_view
         - core_resourcegroup_edit
         - core_resourcegroup_delete
+        - core_template_access
+        - core_template_delete
+        - core_template_edit
+        - core_template_view
       allowedScopeLevels:
         - organization
       managed: true
@@ -155,6 +164,7 @@ roles:
         - core_role_view
         - core_resourcegroup_view
         - core_serviceaccount_view
+        - core_template_view
       allowedScopeLevels:
         - organization
       managed: true
@@ -209,6 +219,10 @@ roles:
         - core_account_edit
         - core_dashboards_view
         - core_dashboards_edit
+        - core_template_access
+        - core_template_delete
+        - core_template_edit
+        - core_template_view
       allowedScopeLevels:
         - account
       managed: true
@@ -231,6 +245,7 @@ roles:
         - core_authsetting_view
         - core_account_view
         - core_serviceaccount_view
+        - core_template_view
       allowedScopeLevels:
         - account
       managed: true

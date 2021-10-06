@@ -1594,8 +1594,16 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         || ((now - lastHeartbeatReceivedAt.get()) > HEARTBEAT_TIMEOUT);
     boolean freezeIntervalExpired = (now - frozenAt.get()) > FROZEN_TIMEOUT;
 
-    return new File(START_SH).exists()
+    final boolean doRestart = new File(START_SH).exists()
         && (restartNeeded.get() || (!frozen.get() && heartbeatExpired) || (frozen.get() && freezeIntervalExpired));
+
+    if (doRestart) {
+      log.error(
+          "Restarting delegate - variable values: restartNeeded:[{}], frozen: [{}], freezeIntervalExpired: [{}],  heartbeatExpired:[{}], lastHeartbeatReceivedAt:[{}], lastHeartbeatSentAt:[{}]",
+          restartNeeded.get(), frozen.get(), freezeIntervalExpired, heartbeatExpired, lastHeartbeatReceivedAt.get(),
+          lastHeartbeatSentAt.get());
+    }
+    return doRestart;
   }
 
   private void sendHeartbeat(DelegateParamsBuilder builder, Socket socket) {

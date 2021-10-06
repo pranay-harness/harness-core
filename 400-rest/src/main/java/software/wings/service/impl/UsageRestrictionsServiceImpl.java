@@ -9,6 +9,10 @@ import static software.wings.beans.Application.GLOBAL_APP_ID;
 
 import static java.util.Collections.emptySet;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.EnvironmentType;
@@ -78,6 +82,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
@@ -89,6 +94,8 @@ import lombok.extern.slf4j.Slf4j;
 @ValidateOnExecution
 @Singleton
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
+@TargetModule(HarnessModule._360_CG_MANAGER)
 public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   @Inject private AuthHandler authHandler;
   @Inject private UserGroupService userGroupService;
@@ -418,7 +425,10 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
           envSet.addAll(nonProdEnvSet);
           break;
         case FilterType.SELECTED:
-          envSet.addAll(envFilter.getIds());
+          if (envFilter.getIds() != null) {
+            Set<String> envFilterIds = envFilter.getIds().stream().filter(Objects::nonNull).collect(Collectors.toSet());
+            envSet.addAll(envFilterIds);
+          }
           break;
         default:
           throw new WingsException("Unsupported env filter type" + envFilter.getFilterTypes());
