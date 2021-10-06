@@ -11,6 +11,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.AGORODETKI;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.DHRUV;
+import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.ROHIT_KUMAR;
 import static io.harness.rule.OwnerRule.SRINIVAS;
@@ -86,6 +87,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.UnexpectedException;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
+import io.harness.serializer.MapperUtils;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.WaitNotifyEngine;
 
@@ -156,11 +158,13 @@ import software.wings.sm.states.EnvState.EnvStateKeys;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -1905,5 +1909,32 @@ public class ApprovalStateTest extends WingsBaseTest {
         ApprovalStateExecutionDataKeys.variables, "test", ApprovalStateExecutionDataKeys.ticketType,
         ApprovalStateExecutionDataKeys.ticketUrl, ApprovalStateExecutionDataKeys.approvalFromSlack,
         ApprovalStateExecutionDataKeys.timeoutMillis, ApprovalStateExecutionDataKeys.approvalStateType);
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void mapObjectDelSelectorNoLoop() throws Exception {
+    Map<String, Object> map = Maps.newLinkedHashMap();
+
+    Map<String, Object> approvalStateParams = Maps.newLinkedHashMap();
+    Map<String, Object> shellScriptParams = Maps.newLinkedHashMap();
+
+    shellScriptParams.put("scriptString", "echo 451");
+    shellScriptParams.put("retryInterval", 30000);
+    shellScriptParams.put("delegateSelectors", Arrays.asList("delegate1234"));
+
+    approvalStateParams.put("shellScriptApprovalParams", shellScriptParams);
+
+    map.put("approvalStateType", "SHELL_SCRIPT");
+    map.put("approvalStateParams", approvalStateParams);
+    map.put("timeoutMillis", 86400);
+    map.put("parentId", "PARENT_ID");
+
+    ApprovalState approvalState = new ApprovalState("approvalState");
+
+    MapperUtils.mapObject(map, approvalState);
+    assertThat(approvalState.approvalStateParams.getShellScriptApprovalParams().fetchDelegateSelectors())
+        .contains("delegate1234");
   }
 }
