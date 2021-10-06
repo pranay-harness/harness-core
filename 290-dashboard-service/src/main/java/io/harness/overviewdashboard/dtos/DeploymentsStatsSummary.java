@@ -12,9 +12,7 @@ import lombok.Value;
 @OwnedBy(HarnessTeam.PL)
 public class DeploymentsStatsSummary {
   CountChangeDetails countAndChangeRate;
-  CountChangeDetails failureCountAndChangeRate;
   RateAndRateChangeInfo failureRateAndChangeRate;
   RateAndRateChangeInfo deploymentRateAndChangeRate;
-  DeploymentsOverview deploymentsOverview;
   List<TimeBasedStats> deploymentStats;
 }
