@@ -423,7 +423,6 @@ import software.wings.helpers.ext.ecs.response.EcsCommandExecutionResponse;
 import software.wings.helpers.ext.ecs.response.EcsDeployRollbackDataFetchResponse;
 import software.wings.helpers.ext.ecs.response.EcsListenerUpdateCommandResponse;
 import software.wings.helpers.ext.ecs.response.EcsRunTaskDeployResponse;
-import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceSetupResponse;
 import software.wings.helpers.ext.external.comm.CollaborationProviderRequest;
 import software.wings.helpers.ext.external.comm.CollaborationProviderResponse;
@@ -1304,7 +1303,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(K8sElement.class, 7144);
     kryo.register(K8sInstanceSyncTaskParameters.class, 7147);
     kryo.register(EcsServiceDeployRequest.class, 7148);
-    kryo.register(EcsServiceDeployResponse.class, 7149);
     kryo.register(EcsRunTaskDeployRequest.class, 7501);
     kryo.register(EcsRunTaskDeployResponse.class, 7502);
     kryo.register(ShellScriptProvisionParameters.class, 7151);
