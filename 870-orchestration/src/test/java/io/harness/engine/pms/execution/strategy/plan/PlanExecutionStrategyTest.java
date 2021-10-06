@@ -4,20 +4,19 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import io.harness.OrchestrationTestBase;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.engine.OrchestrationEngine;
-import io.harness.engine.executions.plan.PlanExecutionMetadataService;
+import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecutionMetadata;
 import io.harness.plan.Plan;
 import io.harness.plan.PlanNode;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.rule.Owner;
@@ -26,11 +25,9 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
@@ -47,7 +44,6 @@ public class PlanExecutionStrategyTest extends OrchestrationTestBase {
 
   @Mock @Named("EngineExecutorService") ExecutorService executorService;
   @Mock OrchestrationEngine orchestrationEngine;
-  @Mock PlanExecutionMetadataService planExecutionMetadataService;
   @Inject @InjectMocks PlanExecutionStrategy executionStrategy;
 
   @Test
@@ -58,6 +54,7 @@ public class PlanExecutionStrategyTest extends OrchestrationTestBase {
     Ambiance ambiance = Ambiance.newBuilder()
                             .setPlanExecutionId(planExecutionId)
                             .putAllSetupAbstractions(prepareInputArgs())
+                            .setMetadata(ExecutionMetadata.newBuilder().setExecutionUuid(planExecutionId).build())
                             .addLevels(Level.newBuilder().setRuntimeId(generateUuid()).build())
                             .build();
     PlanNode startingNode = PlanNode.builder()
@@ -83,14 +80,10 @@ public class PlanExecutionStrategyTest extends OrchestrationTestBase {
                     .startingNodeId(DUMMY_NODE_1_ID)
                     .build();
 
-    when(planExecutionMetadataService.findByPlanExecutionId(planExecutionId))
-        .thenReturn(Optional.of(PlanExecutionMetadata.builder().planExecutionId(planExecutionId).build()));
-
-    executionStrategy.triggerNode(ambiance, plan);
+    PlanExecution planExecution = executionStrategy.triggerNode(
+        ambiance, plan, PlanExecutionMetadata.builder().planExecutionId(planExecutionId).build());
     // TODO: make this better
-    ArgumentCaptor<Runnable> runnableArgumentCaptor = ArgumentCaptor.forClass(Runnable.class);
-    verify(executorService).submit(runnableArgumentCaptor.capture());
-    assertThat(runnableArgumentCaptor.getValue()).isNotNull();
+    assertThat(planExecution.getUuid()).isEqualTo(planExecutionId);
   }
 
   private static Map<String, String> prepareInputArgs() {

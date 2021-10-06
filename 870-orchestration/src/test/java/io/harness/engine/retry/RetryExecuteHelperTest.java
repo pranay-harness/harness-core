@@ -4,15 +4,27 @@ import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.engine.executions.node.NodeExecutionServiceImpl;
 import io.harness.engine.executions.retry.RetryExecutionHelper;
 import io.harness.engine.executions.retry.RetryGroup;
 import io.harness.engine.executions.retry.RetryInfo;
 import io.harness.engine.executions.retry.RetryStageInfo;
 import io.harness.exception.InvalidRequestException;
+import io.harness.plan.IdentityPlanNode;
+import io.harness.plan.Node;
+import io.harness.plan.NodeType;
+import io.harness.plan.Plan;
+import io.harness.plan.PlanNode;
+import io.harness.pms.contracts.advisers.AdviserObtainment;
+import io.harness.pms.contracts.advisers.AdviserType;
+import io.harness.pms.contracts.steps.StepCategory;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.rule.Owner;
 
@@ -24,17 +36,21 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class RetryExecuteHelperTest {
   @InjectMocks private RetryExecutionHelper retryExecuteHelper;
+  @Mock private NodeExecutionServiceImpl nodeExecutionService;
 
   @Before
   public void setUp() throws IOException {
@@ -657,5 +673,49 @@ public class RetryExecuteHelperTest {
     assertThat(uuidOfSkipNode.size()).isEqualTo(2);
     assertThat(uuidOfSkipNode.get(0)).isEqualTo("oldUuid1");
     assertThat(uuidOfSkipNode.get(1)).isEqualTo("oldUuid2");
+  }
+
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testTransformPlan() {
+    StepType TEST_STEP_TYPE =
+        StepType.newBuilder().setType("TEST_STEP_PLAN").setStepCategory(StepCategory.STEP).build();
+    String uuid = "uuid1";
+
+    Map<String, String> mapper = new HashMap<>();
+    mapper.put(uuid, "nodeUuid1");
+    when(nodeExecutionService.fetchNodeExecutionFromNodeUuidsAndPlanExecutionId(any(), any())).thenReturn(mapper);
+
+    PlanNode planNode1 =
+        PlanNode.builder()
+            .name("Test Node")
+            .uuid(uuid)
+            .identifier("test")
+            .stepType(TEST_STEP_TYPE)
+            .adviserObtainment(
+                AdviserObtainment.newBuilder().setType(AdviserType.newBuilder().setType("NEXT_STEP").build()).build())
+            .build();
+
+    PlanNode planNode2 =
+        PlanNode.builder()
+            .name("Test Node2")
+            .uuid("uuid2")
+            .identifier("test2")
+            .stepType(TEST_STEP_TYPE)
+            .adviserObtainment(
+                AdviserObtainment.newBuilder().setType(AdviserType.newBuilder().setType("NEXT_STEP").build()).build())
+            .build();
+    Plan newPlan = retryExecuteHelper.transformPlan(
+        Plan.builder().planNodes(Arrays.asList(planNode1, planNode2)).build(), Collections.singletonList(uuid), "abc");
+
+    List<Node> updatedNodes = newPlan.getPlanNodes();
+    assertThat(updatedNodes.size()).isEqualTo(2);
+    assertThat(updatedNodes.get(0).getNodeType()).isEqualTo(NodeType.IDENTITY_PLAN_NODE);
+    assertThat(((IdentityPlanNode) updatedNodes.get(0)).getOriginalNodeExecutionId()).isEqualTo("nodeUuid1");
+    assertThat(updatedNodes.get(0).getIdentifier()).isEqualTo("test");
+    assertThat(updatedNodes.get(0).getName()).isEqualTo("Test Node");
+    assertThat(updatedNodes.get(0).getUuid()).isEqualTo(uuid);
+    assertThat(updatedNodes.get(1).getNodeType()).isEqualTo(NodeType.PLAN_NODE);
   }
 }

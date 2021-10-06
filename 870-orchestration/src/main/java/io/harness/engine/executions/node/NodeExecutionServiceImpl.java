@@ -480,6 +480,23 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     return fetchStageDetailFromNodeExecution(nodeExecutionList);
   }
 
+  @Override
+  public Map<String, String> fetchNodeExecutionFromNodeUuidsAndPlanExecutionId(
+      List<String> uuidForSkipNode, String planExecutionId) {
+    Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
+                      .addCriteria(where(NodeExecutionKeys.planNodeId).in(uuidForSkipNode));
+    List<NodeExecution> nodeExecutionList = mongoTemplate.find(query, NodeExecution.class);
+    return mapNodeExecutionUuidWithPlanNodeUuid(nodeExecutionList);
+  }
+
+  private Map<String, String> mapNodeExecutionUuidWithPlanNodeUuid(List<NodeExecution> nodeExecutionList) {
+    Map<String, String> uuidMapper = new HashMap<>();
+    for (NodeExecution nodeExecution : nodeExecutionList) {
+      uuidMapper.put(nodeExecution.getNodeId(), nodeExecution.getUuid());
+    }
+    return uuidMapper;
+  }
+
   public List<RetryStageInfo> fetchStageDetailFromNodeExecution(List<NodeExecution> nodeExecutionList) {
     List<RetryStageInfo> stageDetails = new ArrayList<>();
 
