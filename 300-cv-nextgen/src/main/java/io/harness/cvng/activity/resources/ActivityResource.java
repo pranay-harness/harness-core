@@ -193,16 +193,8 @@ public class ActivityResource {
   @ApiOperation(value = "get logs for given activity", nickname = "getDeploymentLogAnalysisClusters")
   public RestResponse<List<LogAnalysisClusterChartDTO>> getDeploymentLogAnalysisClusters(
       @NotNull @NotEmpty @PathParam("activityId") String activityId, @NotNull @QueryParam("accountId") String accountId,
-      @QueryParam("hostName") String hostName, @QueryParam("healthSource") List<String> healthSourceIdentifier,
-      @QueryParam("healthSources") List<String> healthSourceIdentifiers,
-      @QueryParam("clusterType") List<ClusterType> clusterType,
+      @QueryParam("hostName") String hostName, @QueryParam("healthSources") List<String> healthSourceIdentifiers,
       @QueryParam("clusterTypes") List<ClusterType> clusterTypes) {
-    if (isNotEmpty(healthSourceIdentifier)) {
-      healthSourceIdentifiers = healthSourceIdentifier;
-    }
-    if (isNotEmpty(clusterType)) {
-      clusterTypes = clusterType;
-    }
     DeploymentLogAnalysisFilter deploymentLogAnalysisFilter = DeploymentLogAnalysisFilter.builder()
                                                                   .healthSourceIdentifiers(healthSourceIdentifiers)
                                                                   .clusterTypes(clusterTypes)
@@ -222,16 +214,9 @@ public class ActivityResource {
       @PathParam("activityId") String activityId, @NotNull @QueryParam("accountId") String accountId,
       @QueryParam("label") Integer label, @NotNull @QueryParam("pageNumber") int pageNumber,
       @NotNull @QueryParam("pageSize") int pageSize, @QueryParam("hostName") String hostName,
-      @QueryParam("healthSource") List<String> healthSourceIdentifier,
       @QueryParam("healthSources") List<String> healthSourceIdentifiers,
-      @QueryParam("clusterType") ClusterType clusterType, @QueryParam("clusterTypes") List<ClusterType> clusterTypes) {
+      @QueryParam("clusterTypes") List<ClusterType> clusterTypes) {
     PageParams pageParams = PageParams.builder().page(pageNumber).size(pageSize).build();
-    if (clusterType != null) {
-      clusterTypes = Arrays.asList(clusterType);
-    }
-    if (isNotEmpty(healthSourceIdentifier)) {
-      healthSourceIdentifiers = healthSourceIdentifier;
-    }
     DeploymentLogAnalysisFilter deploymentLogAnalysisFilter = DeploymentLogAnalysisFilter.builder()
                                                                   .healthSourceIdentifiers(healthSourceIdentifiers)
                                                                   .clusterTypes(clusterTypes)
