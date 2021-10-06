@@ -9,7 +9,6 @@ cd destination
 echo $PURPOSE
 echo $VERSION
 
-
 IMAGES_DIR="images"
 STORAGE_DIR_LOCATION="storage"
 
