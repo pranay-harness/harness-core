@@ -14,8 +14,11 @@ public class IstioNetworkingApiFactory {
   @Inject private V1Alpha3IstioApiNetworkingHandler v1Alpha3IstioApiNetworkingHandler;
   @Inject private V1Beta1IstioApiNetworkingHandler v1Beta1IstioApiNetworkingHandler;
 
-  public IstioApiNetworkingHandler obtainHandler(String apiVersion) {
-    IstioNetworkingApiVersions istioNetworkingApi = IstioNetworkingApiVersions.valueOf(apiVersion);
+  public IstioApiNetworkingHandler obtainHandler(String apiVersion) throws InvalidArgumentsException {
+    IstioNetworkingApiVersions istioNetworkingApi = IstioNetworkingApiVersions.findByApiVersion(apiVersion);
+    if (istioNetworkingApi == null) {
+      throw new InvalidArgumentsException(format("%s is not a valid api version", apiVersion));
+    }
     switch (istioNetworkingApi) {
       case V1Alpha3:
         return v1Alpha3IstioApiNetworkingHandler;
