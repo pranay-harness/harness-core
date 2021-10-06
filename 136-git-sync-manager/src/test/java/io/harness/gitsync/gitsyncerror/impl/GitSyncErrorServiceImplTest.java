@@ -21,8 +21,10 @@ import io.harness.gitsync.gitsyncerror.beans.GitSyncError.GitSyncErrorKeys;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorDetails;
 import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorType;
 import io.harness.gitsync.gitsyncerror.beans.GitToHarnessErrorDetails;
+import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorAggregateByCommitDTO;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorDTO;
-import io.harness.gitsync.gitsyncerror.dtos.GitToHarnessErrorByCommitResponseDTO;
+import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorDetailsDTO;
+import io.harness.gitsync.gitsyncerror.dtos.GitToHarnessErrorDetailsDTO;
 import io.harness.ng.beans.PageRequest;
 import io.harness.repositories.gitSyncError.GitSyncErrorRepository;
 import io.harness.rule.Owner;
@@ -52,6 +54,7 @@ public class GitSyncErrorServiceImplTest extends GitSyncTestBase {
   private final String branch = "branch";
   private final String repoId = "repoId";
   private GitSyncErrorDetails additionalErrorDetails;
+  private GitSyncErrorDetailsDTO additionalErrorDetailsDTO;
   private YamlGitConfigDTO yamlGitConfigDTO;
   @Inject GitSyncErrorServiceImpl gitSyncErrorService;
   @Inject GitSyncErrorRepository gitSyncErrorRepository;
@@ -62,6 +65,8 @@ public class GitSyncErrorServiceImplTest extends GitSyncTestBase {
     MockitoAnnotations.initMocks(this);
     additionalErrorDetails =
         GitToHarnessErrorDetails.builder().gitCommitId(commitId).commitMessage(commitMessage).build();
+    additionalErrorDetailsDTO =
+        GitToHarnessErrorDetailsDTO.builder().gitCommitId(commitId).commitMessage(commitMessage).build();
     yamlGitConfigDTO = YamlGitConfigDTO.builder()
                            .branch(branch)
                            .repo(repoUrl)
@@ -86,7 +91,7 @@ public class GitSyncErrorServiceImplTest extends GitSyncTestBase {
 
     PageRequest pageRequest = PageRequest.builder().pageSize(10).pageIndex(0).build();
     doReturn(yamlGitConfigDTO).when(yamlGitConfigService).getByProjectIdAndRepo(any(), any(), any(), any());
-    List<GitToHarnessErrorByCommitResponseDTO> dto =
+    List<GitSyncErrorAggregateByCommitDTO> dto =
         gitSyncErrorService
             .listGitToHarnessErrorsGroupedByCommits(pageRequest, accountId, orgId, projectId, null, null, null, 1)
             .getContent();
@@ -156,7 +161,7 @@ public class GitSyncErrorServiceImplTest extends GitSyncTestBase {
         .branchName(branch)
         .status(status)
         .failureReason(failureReason)
-        .additionalErrorDetails(additionalErrorDetails)
+        .additionalErrorDetails(additionalErrorDetailsDTO)
         .build();
   }
 

@@ -81,8 +81,6 @@ public class GitSyncError
   public static final class GitSyncErrorKeys {
     public static final String gitCommitId =
         GitSyncErrorKeys.additionalErrorDetails + "." + GitToHarnessErrorDetailsKeys.gitCommitId;
-    public static final String commitTime =
-        GitSyncErrorKeys.additionalErrorDetails + "." + GitToHarnessErrorDetailsKeys.commitTime;
     public static final String commitMessage =
         GitSyncErrorKeys.additionalErrorDetails + "." + GitToHarnessErrorDetailsKeys.commitMessage;
     public static final String orgIdentifier =

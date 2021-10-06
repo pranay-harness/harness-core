@@ -14,12 +14,11 @@ import lombok.experimental.FieldNameConstants;
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@FieldNameConstants(innerTypeName = "GitToHarnessErrorByCommitKeys")
+@FieldNameConstants(innerTypeName = "GitSyncErrorAggregateByCommitDTOKeys")
 @OwnedBy(PL)
-public class GitToHarnessErrorByCommitResponseDTO {
+public class GitSyncErrorAggregateByCommitDTO {
   String gitCommitId;
   int failedCount;
-  Long commitTime;
   String repoId;
   String branchName;
   String commitMessage;
