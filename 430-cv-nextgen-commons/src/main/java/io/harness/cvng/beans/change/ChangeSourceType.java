@@ -16,7 +16,8 @@ import org.apache.commons.collections4.MapUtils;
 public enum ChangeSourceType {
   @JsonProperty("HarnessCDNextGen") HARNESS_CD(ChangeCategory.DEPLOYMENT, ActivityType.HARNESS_CD),
   @JsonProperty("PagerDuty") PAGER_DUTY(ChangeCategory.ALERTS, ActivityType.PAGER_DUTY),
-  @JsonProperty("K8sCluster") KUBERNETES(ChangeCategory.INFRASTRUCTURE, ActivityType.KUBERNETES);
+  @JsonProperty("K8sCluster") KUBERNETES(ChangeCategory.INFRASTRUCTURE, ActivityType.KUBERNETES),
+  @JsonProperty("HarnessCD") HARNESS_CD_CURRENT_GEN(ChangeCategory.DEPLOYMENT, ActivityType.HARNESS_CD_CURRENT_GEN);
 
   private static Map<ActivityType, ChangeSourceType> ACTIVITY_TO_CHANGE_SOURCE_TYPE_MAP;
   private static Map<ChangeCategory, List<ChangeSourceType>> CATEGORY_TO_CHANGE_SOURCE_TYPES_MAP;

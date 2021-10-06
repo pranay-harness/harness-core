@@ -8,6 +8,7 @@ import static io.harness.cvng.alert.util.VerificationStatus.VERIFICATION_PASSED;
 import static io.harness.cvng.beans.activity.ActivityType.CONFIG;
 import static io.harness.cvng.beans.activity.ActivityType.DEPLOYMENT;
 import static io.harness.cvng.beans.activity.ActivityType.HARNESS_CD;
+import static io.harness.cvng.beans.activity.ActivityType.HARNESS_CD_CURRENT_GEN;
 import static io.harness.cvng.beans.activity.ActivityType.INFRASTRUCTURE;
 import static io.harness.cvng.beans.activity.ActivityType.KUBERNETES;
 import static io.harness.cvng.beans.activity.ActivityType.OTHER;
@@ -209,7 +210,8 @@ public class AlertRuleServiceImplTest extends CvNextGenTestBase {
 
     assertThat(activityTypes).isNotNull();
     assertThat(activityTypes)
-        .containsExactly(DEPLOYMENT, INFRASTRUCTURE, CONFIG, OTHER, KUBERNETES, HARNESS_CD, PAGER_DUTY);
+        .containsExactly(
+            DEPLOYMENT, INFRASTRUCTURE, CONFIG, OTHER, KUBERNETES, HARNESS_CD, PAGER_DUTY, HARNESS_CD_CURRENT_GEN);
   }
 
   @Test
