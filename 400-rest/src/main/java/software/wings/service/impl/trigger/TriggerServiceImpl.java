@@ -937,6 +937,7 @@ public class TriggerServiceImpl implements TriggerService {
         log.info(TRIGGER_SLOWNESS_ERROR_MESSAGE);
         return;
       }
+
       log.info("Received scheduled trigger for appId {} and Trigger Id {} with the scheduled fire time {} ",
           trigger.getAppId(), trigger.getUuid(), scheduledFireTime.getTime());
       List<Artifact> artifacts = new ArrayList<>();

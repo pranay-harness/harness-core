@@ -2,7 +2,6 @@ package io.harness.ccm.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
@@ -15,8 +14,8 @@ import io.harness.rule.OwnerRule;
 
 import com.google.common.collect.ImmutableList;
 import java.nio.charset.StandardCharsets;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -24,7 +23,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-@Slf4j
 @RunWith(MockitoJUnitRunner.class)
 public class CEYamlServiceImplTest extends CategoryTest {
   private static final String CONNECTOR_IDENTIFIER = "cId";
@@ -42,10 +40,8 @@ public class CEYamlServiceImplTest extends CategoryTest {
   @Mock private K8sServiceAccountDelegateTaskClient k8sTaskClient;
   @InjectMocks private CEYamlServiceImpl ceYamlService;
 
-  @Test
-  @Owner(developers = OwnerRule.UTSAV)
-  @Category(UnitTests.class)
-  public void testUnifiedCloudCostK8sClusterYaml_Visibility_Optimization() throws Exception {
+  @Before
+  public void setup() {
     final K8sServiceAccountInfoResponse response =
         K8sServiceAccountInfoResponse.builder()
             .username("system:serviceaccount:" + SERVICE_NAMESPACE + ":" + SERVICE_NAME)
@@ -54,7 +50,12 @@ public class CEYamlServiceImplTest extends CategoryTest {
     when(k8sTaskClient.fetchServiceAccount(
              eq(CONNECTOR_IDENTIFIER), eq(ACCOUNT_IDENTIFIER), eq(ORG_IDENTIFIER), eq(PROJECT_IDENTIFIER)))
         .thenReturn(response);
+  }
 
+  @Test
+  @Owner(developers = OwnerRule.UTSAV)
+  @Category(UnitTests.class)
+  public void testUnifiedCloudCostK8sClusterYaml_Visibility_Optimization() throws Exception {
     final K8sClusterSetupRequest request =
         K8sClusterSetupRequest.builder()
             .connectorIdentifier(CONNECTOR_IDENTIFIER)
@@ -69,24 +70,13 @@ public class CEYamlServiceImplTest extends CategoryTest {
 
     assertThat(yamlContent).isNotNull();
 
-    assertContainsOptimizationParams(yamlContent);
-
-    assertContainsVisibilityParams(yamlContent);
+    assertAllParams(yamlContent);
   }
 
   @Test
   @Owner(developers = OwnerRule.UTSAV)
   @Category(UnitTests.class)
   public void testUnifiedCloudCostK8sClusterYamlFileStructure() throws Exception {
-    final K8sServiceAccountInfoResponse response =
-        K8sServiceAccountInfoResponse.builder()
-            .username("system:serviceaccount:" + SERVICE_NAMESPACE + ":" + SERVICE_NAME)
-            .build();
-
-    when(k8sTaskClient.fetchServiceAccount(
-             eq(CONNECTOR_IDENTIFIER), eq(ACCOUNT_IDENTIFIER), eq(ORG_IDENTIFIER), eq(PROJECT_IDENTIFIER)))
-        .thenReturn(response);
-
     final K8sClusterSetupRequest request =
         K8sClusterSetupRequest.builder()
             .connectorIdentifier(CONNECTOR_IDENTIFIER)
@@ -109,15 +99,6 @@ public class CEYamlServiceImplTest extends CategoryTest {
   @Owner(developers = OwnerRule.UTSAV)
   @Category(UnitTests.class)
   public void testUnifiedCloudCostK8sClusterYaml_Visibility() throws Exception {
-    final K8sServiceAccountInfoResponse response =
-        K8sServiceAccountInfoResponse.builder()
-            .username("system:serviceaccount:" + SERVICE_NAMESPACE + ":" + SERVICE_NAME)
-            .build();
-
-    when(k8sTaskClient.fetchServiceAccount(
-             eq(CONNECTOR_IDENTIFIER), eq(ACCOUNT_IDENTIFIER), eq(ORG_IDENTIFIER), eq(PROJECT_IDENTIFIER)))
-        .thenReturn(response);
-
     final K8sClusterSetupRequest request = K8sClusterSetupRequest.builder()
                                                .connectorIdentifier(CONNECTOR_IDENTIFIER)
                                                .featuresEnabled(ImmutableList.of(CEFeatures.VISIBILITY))
@@ -130,7 +111,7 @@ public class CEYamlServiceImplTest extends CategoryTest {
 
     assertThat(yamlContent).isNotNull();
 
-    assertContainsVisibilityParams(yamlContent);
+    assertContainsVisibilityParamsOnly(yamlContent);
 
     // OPTIMIZATION Check
     assertThat(yamlContent).doesNotContain(CONNECTOR_IDENTIFIER);
@@ -147,6 +128,9 @@ public class CEYamlServiceImplTest extends CategoryTest {
     final K8sClusterSetupRequest request = K8sClusterSetupRequest.builder()
                                                .featuresEnabled(ImmutableList.of(CEFeatures.OPTIMIZATION))
                                                .ccmConnectorIdentifier(CCM_CONNECTOR_IDENTIFIER)
+                                               .orgIdentifier(ORG_IDENTIFIER)
+                                               .projectIdentifier(PROJECT_IDENTIFIER)
+                                               .connectorIdentifier(CONNECTOR_IDENTIFIER)
                                                .build();
 
     final String yamlContent =
@@ -154,26 +138,23 @@ public class CEYamlServiceImplTest extends CategoryTest {
 
     assertThat(yamlContent).isNotNull();
 
-    // VISIBILITY Check
-    assertThat(yamlContent).doesNotContain(SERVICE_NAME);
-    assertThat(yamlContent).doesNotContain(SERVICE_NAMESPACE);
-
-    assertContainsOptimizationParams(yamlContent);
-
-    verifyZeroInteractions(k8sTaskClient);
+    assertAllParams(yamlContent);
   }
 
-  private void assertContainsVisibilityParams(String yamlContent) {
+  private void assertContainsVisibilityParamsOnly(String yamlContent) {
     assertThat(yamlContent).contains(SERVICE_NAME);
     assertThat(yamlContent).contains(SERVICE_NAMESPACE);
   }
 
-  private void assertContainsOptimizationParams(String yamlContent) {
+  private void assertAllParams(String yamlContent) {
     assertThat(yamlContent).contains(CCM_CONNECTOR_IDENTIFIER);
     assertThat(yamlContent).doesNotContain(CONNECTOR_IDENTIFIER);
 
     assertThat(yamlContent).contains(ACCOUNT_IDENTIFIER);
     assertThat(yamlContent).contains(HARNESS_HOST);
     assertThat(yamlContent).contains(SERVER_NAME);
+
+    assertThat(yamlContent).contains(SERVICE_NAME);
+    assertThat(yamlContent).contains(SERVICE_NAMESPACE);
   }
 }

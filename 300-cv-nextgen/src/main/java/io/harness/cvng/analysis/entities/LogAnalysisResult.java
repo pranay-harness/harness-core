@@ -41,6 +41,7 @@ public final class LogAnalysisResult implements PersistentEntity, UuidAware, Cre
         .add(CompoundMongoIndex.builder()
                  .name("query_idx")
                  .field(LogAnalysisResultKeys.verificationTaskId)
+                 .field(LogAnalysisResultKeys.analysisStartTime)
                  .field(LogAnalysisResultKeys.analysisEndTime)
                  .build())
         .build();

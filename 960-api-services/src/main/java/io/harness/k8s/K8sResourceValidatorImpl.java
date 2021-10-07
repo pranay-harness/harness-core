@@ -3,30 +3,40 @@ package io.harness.k8s;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 
 import com.google.common.collect.ImmutableList;
+import com.google.gson.Gson;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.ApisApi;
+import io.kubernetes.client.openapi.apis.AppsV1Api;
 import io.kubernetes.client.openapi.apis.AuthorizationV1Api;
+import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1ResourceAttributes;
 import io.kubernetes.client.openapi.models.V1ResourceAttributesBuilder;
+import io.kubernetes.client.openapi.models.V1SelfSubjectAccessReview;
 import io.kubernetes.client.openapi.models.V1SelfSubjectAccessReviewBuilder;
+import io.kubernetes.client.openapi.models.V1SelfSubjectAccessReviewSpec;
+import io.kubernetes.client.openapi.models.V1SelfSubjectAccessReviewSpecBuilder;
+import io.kubernetes.client.openapi.models.V1Status;
 import io.kubernetes.client.openapi.models.V1SubjectAccessReviewStatus;
 import io.kubernetes.client.openapi.models.V1SubjectAccessReviewStatusBuilder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @Slf4j
 public class K8sResourceValidatorImpl implements K8sResourceValidator {
+  public static final Gson GSON = new Gson();
   @Inject @Named("asyncExecutor") ExecutorService executorService;
 
   @Override
@@ -177,5 +187,116 @@ public class K8sResourceValidatorImpl implements K8sResourceValidator {
     }
 
     return ruleList;
+  }
+
+  private Optional<V1Status> getReasonOnApiException(final Callable callable) throws Exception {
+    try {
+      callable.call();
+    } catch (ApiException ex) {
+      log.error("ApiException: {}", ex.getResponseBody(), ex);
+      V1Status status = GSON.fromJson(ex.getResponseBody(), V1Status.class);
+      return Optional.ofNullable(status);
+    }
+    return Optional.empty();
+  }
+
+  @Override
+  @NotNull
+  public List<V1Status> validateLightwingResourceExists(final ApiClient apiClient) throws Exception {
+    final CoreV1Api coreV1Api = new CoreV1Api(apiClient);
+    final AppsV1Api appsV1Api = new AppsV1Api(apiClient);
+
+    final List<V1Status> statusList = new ArrayList<>();
+    Optional<V1Status> status;
+
+    status = getReasonOnApiException(() -> coreV1Api.readNamespace("harness-autostopping", null, null, null));
+    status.ifPresent(statusList::add);
+
+    status = getReasonOnApiException(() -> coreV1Api.readNamespace("harness-autostopping", null, null, null));
+    status.ifPresent(statusList::add);
+
+    status = getReasonOnApiException(
+        () -> coreV1Api.readNamespacedSecret("harness-api-key", "harness-autostopping", null, null, null));
+    status.ifPresent(statusList::add);
+
+    status = getReasonOnApiException(
+        () -> coreV1Api.readNamespacedService("ascontroller", "harness-autostopping", null, null, null));
+    status.ifPresent(statusList::add);
+
+    status = getReasonOnApiException(
+        () -> appsV1Api.readNamespacedDeployment("ascontroller", "harness-autostopping", null, null, null));
+    status.ifPresent(statusList::add);
+
+    status = getReasonOnApiException(
+        () -> coreV1Api.readNamespacedService("harness-operator", "harness-autostopping", null, null, null));
+    status.ifPresent(statusList::add);
+
+    status = getReasonOnApiException(
+        () -> appsV1Api.readNamespacedDeployment("harness-operator", "harness-autostopping", null, null, null));
+    status.ifPresent(statusList::add);
+
+    return statusList;
+  }
+
+  private V1SelfSubjectAccessReview lightwingSubjectAccessReviewCommons(
+      final ApiClient apiClient, final V1ResourceAttributes attributes) throws ApiException {
+    final AuthorizationV1Api authorizationV1Api = new AuthorizationV1Api(apiClient);
+
+    final V1SelfSubjectAccessReviewSpec spec =
+        new V1SelfSubjectAccessReviewSpecBuilder().withResourceAttributes(attributes).build();
+    final V1SelfSubjectAccessReview accessReview = new V1SelfSubjectAccessReview().spec(spec);
+
+    return authorizationV1Api.createSelfSubjectAccessReview(accessReview, null, null, null);
+  }
+
+  private List<V1SelfSubjectAccessReview> subjectAccessReviewForAllRequiredVerbs(
+      final ApiClient apiClient, V1ResourceAttributes attributes) throws ApiException {
+    final List<V1SelfSubjectAccessReview> statusList = new ArrayList<>();
+
+    for (String verb : new String[] {"create", "update", "delete", "list"}) {
+      attributes = attributes.verb(verb);
+
+      V1SelfSubjectAccessReview status = lightwingSubjectAccessReviewCommons(apiClient, attributes);
+      log.info("V1SubjectAccessReviewStatus: {}", status);
+      statusList.add(status);
+    }
+
+    return statusList;
+  }
+
+  private List<V1SelfSubjectAccessReview> ingressReview(final ApiClient apiClient) throws ApiException {
+    V1ResourceAttributes attributes = new V1ResourceAttributes().resource("ingress");
+    return subjectAccessReviewForAllRequiredVerbs(apiClient, attributes);
+  }
+
+  private List<V1SelfSubjectAccessReview> autostoppingrulesReview(final ApiClient apiClient) throws ApiException {
+    V1ResourceAttributes attributes = new V1ResourceAttributes()
+                                          .group("lightwing.lightwing.io")
+                                          .resource("autostoppingrules")
+                                          .namespace("harness-autostopping");
+    return subjectAccessReviewForAllRequiredVerbs(apiClient, attributes);
+  }
+
+  public List<V1SelfSubjectAccessReview> updateDeploymentReview(final ApiClient apiClient) throws ApiException {
+    final V1ResourceAttributes attributes1 =
+        new V1ResourceAttributes().resource("deployments").verb("update").verb("apps");
+    final V1ResourceAttributes attributes2 =
+        new V1ResourceAttributes().resource("deployments").verb("update").verb("extensions");
+
+    return ImmutableList.of(lightwingSubjectAccessReviewCommons(apiClient, attributes1),
+        lightwingSubjectAccessReviewCommons(apiClient, attributes2));
+  }
+
+  @Override
+  @NotNull
+  public List<V1SelfSubjectAccessReview> validateLightwingResourcePermissions(final ApiClient apiClient)
+      throws ApiException {
+    final List<V1SelfSubjectAccessReview> accessReviewStatusList = new ArrayList<>();
+
+    accessReviewStatusList.addAll(ingressReview(apiClient));
+    accessReviewStatusList.addAll(autostoppingrulesReview(apiClient));
+    accessReviewStatusList.addAll(updateDeploymentReview(apiClient));
+
+    return accessReviewStatusList;
   }
 }

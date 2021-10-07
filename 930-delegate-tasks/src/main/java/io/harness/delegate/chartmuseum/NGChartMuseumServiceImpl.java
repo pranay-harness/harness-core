@@ -59,7 +59,7 @@ public class NGChartMuseumServiceImpl implements NGChartMuseumService {
 
         return clientHelper.startS3ChartMuseumServer(s3StoreDelegateConfig.getBucketName(),
             s3StoreDelegateConfig.getFolderPath(), s3StoreDelegateConfig.getRegion(), inheritFromDelegate, accessKey,
-            secretKey, irsa);
+            secretKey, irsa, s3StoreDelegateConfig.isUseLatestChartMuseumVersion());
 
       case GCS_HELM:
         GcsHelmStoreDelegateConfig gcsHelmStoreDelegateConfig = (GcsHelmStoreDelegateConfig) storeDelegateConfig;
@@ -72,7 +72,8 @@ public class NGChartMuseumServiceImpl implements NGChartMuseumService {
         }
 
         return clientHelper.startGCSChartMuseumServer(gcsHelmStoreDelegateConfig.getBucketName(),
-            gcsHelmStoreDelegateConfig.getFolderPath(), serviceAccountKey, resourceDirectory);
+            gcsHelmStoreDelegateConfig.getFolderPath(), serviceAccountKey, resourceDirectory,
+            gcsHelmStoreDelegateConfig.isUseLatestChartMuseumVersion());
 
       default:
         throw new UnsupportedOperationException(

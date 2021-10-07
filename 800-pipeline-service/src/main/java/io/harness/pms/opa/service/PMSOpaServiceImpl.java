@@ -7,7 +7,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.opaclient.OpaUtils;
 import io.harness.pms.helpers.CurrentUserHelper;
-import io.harness.pms.merger.helpers.MergeHelper;
+import io.harness.pms.merger.helpers.InputSetMergeHelper;
 import io.harness.pms.opa.PipelineOpaEvaluationContext;
 import io.harness.pms.opa.PipelineOpaEvaluationContext.PipelineOpaEvaluationContextBuilder;
 import io.harness.pms.opa.UserOpaEvaluationContext;
@@ -47,7 +47,8 @@ public class PMSOpaServiceImpl implements PMSOpaService {
     if (EmptyPredicate.isEmpty(inputSetPipelineYaml)) {
       pipelineYaml = pipelineEntity.get().getYaml();
     } else {
-      pipelineYaml = MergeHelper.mergeInputSetIntoPipeline(pipelineEntity.get().getYaml(), inputSetPipelineYaml, false);
+      pipelineYaml =
+          InputSetMergeHelper.mergeInputSetIntoPipeline(pipelineEntity.get().getYaml(), inputSetPipelineYaml, false);
     }
     PipelineOpaEvaluationContextBuilder pipelineBuilder =
         PipelineOpaEvaluationContext.builder().pipeline(OpaUtils.extractObjectFromYamlString(pipelineYaml, "pipeline"));

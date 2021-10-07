@@ -4,6 +4,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.InvalidRequestException;
 import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.merger.fqn.FQNNode;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
@@ -117,13 +118,14 @@ public class FQNMapGenerator {
       FQNHelper.validateUniqueFqn(baseFQN, list, res, expressions);
       return;
     }
+
     list.forEach(element -> {
+      JsonNode jsonNode = element.get(uuidKey);
+      if (jsonNode == null) {
+        throw new InvalidRequestException("Invalid Yaml found");
+      }
       FQN currFQN = FQN.duplicateAndAddNode(baseFQN,
-          FQNNode.builder()
-              .nodeType(FQNNode.NodeType.UUID)
-              .uuidKey(uuidKey)
-              .uuidValue(element.get(uuidKey).asText())
-              .build());
+          FQNNode.builder().nodeType(FQNNode.NodeType.UUID).uuidKey(uuidKey).uuidValue(jsonNode.asText()).build());
       if (uuidKey.equals(YAMLFieldNameConstants.IDENTIFIER)) {
         generateFQNMap(element, currFQN, res, expressions);
       } else {

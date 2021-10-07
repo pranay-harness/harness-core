@@ -20,6 +20,7 @@ import io.harness.testframework.graphql.QLTestObject;
 
 import software.wings.beans.Account;
 import software.wings.beans.Application;
+import software.wings.graphql.schema.type.secrets.QLSSHAuthenticationMethodOutput;
 
 import com.google.inject.Inject;
 import org.junit.Before;
@@ -75,6 +76,20 @@ public class CreateSSHCredentialTest extends GraphQLTest {
               ... on SSHAuthentication{
                   userName
                   port
+                  sshAuthenticationMethod{
+                      sshCredentialType
+                      inlineSSHKey{
+                          sshKeySecretFileId
+                          passphraseSecretId
+                      }
+                      sshKeyFile{
+                          path
+                          passphraseSecretId
+                      }
+                      serverPassword{
+                          passwordSecretId
+                      }
+                  }
              }
               ... on KerberosAuthentication{
                   port
@@ -131,6 +146,10 @@ public class CreateSSHCredentialTest extends GraphQLTest {
     final QLTestObject qlTestObject = qlExecute(query, accountId);
     final SSHCredentialHelper.SSHResult result =
         JsonUtils.convertValue(qlTestObject.getMap(), SSHCredentialHelper.SSHResult.class);
+    QLSSHAuthenticationMethodOutput qlsshAuthenticationMethodOutput =
+        result.getSecret().getAuthenticationType().getSshAuthenticationMethod();
+    assertThat(qlsshAuthenticationMethodOutput.getSshCredentialType()).isEqualTo("SSH_KEY");
+    assertThat(qlsshAuthenticationMethodOutput.getInlineSSHKey().getSshKeySecretFileId()).isEqualTo(secretId);
     verifySSHResult(result);
   }
 
@@ -166,6 +185,10 @@ public class CreateSSHCredentialTest extends GraphQLTest {
     final QLTestObject qlTestObject = qlExecute(query, accountId);
     final SSHCredentialHelper.SSHResult result =
         JsonUtils.convertValue(qlTestObject.getMap(), SSHCredentialHelper.SSHResult.class);
+    QLSSHAuthenticationMethodOutput qlsshAuthenticationMethodOutput =
+        result.getSecret().getAuthenticationType().getSshAuthenticationMethod();
+    assertThat(qlsshAuthenticationMethodOutput.getSshCredentialType()).isEqualTo("SSH_KEY_FILE_PATH");
+    assertThat(qlsshAuthenticationMethodOutput.getSshKeyFile().getPath()).isEqualTo(path);
     verifySSHResult(result);
   }
 
@@ -201,6 +224,10 @@ public class CreateSSHCredentialTest extends GraphQLTest {
     final QLTestObject qlTestObject = qlExecute(query, accountId);
     final SSHCredentialHelper.SSHResult result =
         JsonUtils.convertValue(qlTestObject.getMap(), SSHCredentialHelper.SSHResult.class);
+    QLSSHAuthenticationMethodOutput qlsshAuthenticationMethodOutput =
+        result.getSecret().getAuthenticationType().getSshAuthenticationMethod();
+    assertThat(qlsshAuthenticationMethodOutput.getSshCredentialType()).isEqualTo("PASSWORD");
+    assertThat(qlsshAuthenticationMethodOutput.getServerPassword().getPasswordSecretId()).isEqualTo(secretId);
     verifySSHResult(result);
   }
 

@@ -482,6 +482,11 @@ public class SSOServiceImpl implements SSOService {
     return ssoSettingService.updateOauthSettings(accountId, filter, allowedProviders);
   }
 
+  @Override
+  public List<Long> getIterationsFromCron(String accountId, String cron) {
+    return ssoSettingService.getIterationsFromCron(accountId, cron);
+  }
+
   private boolean deleteSamlSettings(String accountId, String targetAccountType) {
     boolean samlSettingsDeleted = true;
     SamlSettings samlSettings = ssoSettingService.getSamlSettingsByAccountId(accountId);

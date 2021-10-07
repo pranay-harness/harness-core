@@ -245,6 +245,14 @@ public class GitClientHelperTest extends CategoryTest {
   @Test
   @Owner(developers = JAMIE)
   @Category(UnitTests.class)
+  public void testGetSCMWithRepoAtEnd() {
+    final String scmName = GitClientHelper.getGitSCM("ghttps://github.com@/repo.git");
+    assertThat(scmName).isEqualTo("github.com");
+  }
+
+  @Test
+  @Owner(developers = JAMIE)
+  @Category(UnitTests.class)
   public void testGetSCMWithSSHRepo() {
     final String scmName = GitClientHelper.getGitSCM("ssh://git@1.1.1.1:7999/admin/springboot.git");
     assertThat(scmName).isEqualTo("1.1.1.1");
@@ -264,6 +272,22 @@ public class GitClientHelperTest extends CategoryTest {
   public void testGetSCMWithGitLabRepo() {
     final String scmName = GitClientHelper.getGitSCM("https://gitlab.com/autouser");
     assertThat(scmName).isEqualTo("gitlab.com");
+  }
+
+  @Test
+  @Owner(developers = JAMIE)
+  @Category(UnitTests.class)
+  public void testGetSCMWithGerritRepo() {
+    final String scmName = GitClientHelper.getGitSCM("ssh://admin@192.168.1.40:29418/All-Projects");
+    assertThat(scmName).isEqualTo("192.168.1.40");
+  }
+
+  @Test
+  @Owner(developers = JAMIE)
+  @Category(UnitTests.class)
+  public void testGetSCMWithGerritRepoDoubleAt() {
+    final String scmName = GitClientHelper.getGitSCM("ssh://admin@admin.com@192.168.1.40:29418/All-Projects");
+    assertThat(scmName).isEqualTo("192.168.1.40");
   }
 
   @Test
@@ -296,6 +320,14 @@ public class GitClientHelperTest extends CategoryTest {
   public void testGetSCMPortWithGitLabRepo() {
     final String scmName = GitClientHelper.getGitSCMPort("https://gitlab.com/autouser");
     assertThat(scmName).isEqualTo(null);
+  }
+
+  @Test
+  @Owner(developers = JAMIE)
+  @Category(UnitTests.class)
+  public void testGetSCMPortWithGerritRepo() {
+    final String scmName = GitClientHelper.getGitSCMPort("ssh://admin@192.168.1.40:29418/All-Projects");
+    assertThat(scmName).isEqualTo("29418");
   }
 
   @Test

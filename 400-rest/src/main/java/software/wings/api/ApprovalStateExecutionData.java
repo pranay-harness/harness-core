@@ -3,7 +3,9 @@ package software.wings.api;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
@@ -32,6 +34,7 @@ import org.mongodb.morphia.annotations.Transient;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @FieldNameConstants(innerTypeName = "ApprovalStateExecutionDataKeys")
+@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
 public class ApprovalStateExecutionData extends StateExecutionData implements DelegateTaskNotifyResponseData {
   public static final String USER_GROUP_NAMES = "userGroupNames";
   public static final String USER_GROUPS_DISPLAY_NAME = "Approval User Groups";

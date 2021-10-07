@@ -15,7 +15,7 @@ import io.harness.pms.contracts.plan.GraphLayoutNode;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
-import io.harness.pms.merger.helpers.YamlTemplateHelper;
+import io.harness.pms.merger.helpers.InputSetTemplateHelper;
 import io.harness.pms.pipeline.ExecutionSummaryInfo;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.mappers.GraphLayoutDtoMapper;
@@ -104,7 +104,7 @@ public class ExecutionSummaryCreateEventHandler implements OrchestrationStartObs
             .planExecutionId(planExecutionId)
             .name(pipelineEntity.get().getName())
             .inputSetYaml(orchestrationStartInfo.getPlanExecutionMetadata().getInputSetYaml())
-            .pipelineTemplate(YamlTemplateHelper.createTemplateFromPipeline(pipelineEntity.get().getYaml()))
+            .pipelineTemplate(InputSetTemplateHelper.createTemplateFromPipeline(pipelineEntity.get().getYaml()))
             .internalStatus(Status.NO_OP)
             .status(ExecutionStatus.NOTSTARTED)
             .startTs(planExecution.getStartTs())

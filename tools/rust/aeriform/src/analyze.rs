@@ -823,7 +823,7 @@ fn check_for_promotion(
 
         if dependent_real_module.index < target_module.index {
             all_classes.insert(src.clone());
-            not_ready_yet.push(format!("{} to {}", src, target_module.name));
+            not_ready_yet.push(format!("{} to {}", src, dependent_target_module.name));
         }
     });
 

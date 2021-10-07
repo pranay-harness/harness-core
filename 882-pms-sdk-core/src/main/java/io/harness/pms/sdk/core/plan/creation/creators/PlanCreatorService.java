@@ -154,7 +154,7 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
     return builder.build();
   }
 
-  private Dependencies createPlanForDependencies(
+  public Dependencies createPlanForDependencies(
       PlanCreationContext ctx, PlanCreationResponse finalResponse, Dependencies dependencies) {
     if (EmptyPredicate.isEmpty(dependencies.getDependenciesMap())) {
       return dependencies;

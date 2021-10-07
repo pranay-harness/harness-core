@@ -32,6 +32,7 @@ import io.harness.utils.steps.TestStepParameters;
 
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import org.junit.Before;
 import org.junit.Test;
@@ -80,15 +81,16 @@ public class RedisProgressEventPublisherTest extends OrchestrationTestBase {
             .startTs(System.currentTimeMillis())
             .build();
     when(nodeExecutionService.get(nodeExecution.getUuid())).thenReturn(nodeExecution);
-    redisProgressEventPublisher.publishEvent(
-        nodeExecution.getUuid(), BinaryResponseData.builder().data(nodeExecution.getNode().toByteArray()).build());
+    redisProgressEventPublisher.publishEvent(nodeExecution.getUuid(),
+        BinaryResponseData.builder().data("PROGRESS_DATA".getBytes(StandardCharsets.UTF_8)).build());
 
-    ProgressEvent progressEvent = ProgressEvent.newBuilder()
-                                      .setAmbiance(nodeExecution.getAmbiance())
-                                      .setExecutionMode(nodeExecution.getMode())
-                                      .setStepParameters(nodeExecution.getResolvedStepParametersBytes())
-                                      .setProgressBytes(ByteString.copyFrom(nodeExecution.getNode().toByteArray()))
-                                      .build();
+    ProgressEvent progressEvent =
+        ProgressEvent.newBuilder()
+            .setAmbiance(nodeExecution.getAmbiance())
+            .setExecutionMode(nodeExecution.getMode())
+            .setStepParameters(nodeExecution.getResolvedStepParametersBytes())
+            .setProgressBytes(ByteString.copyFrom("PROGRESS_DATA".getBytes(StandardCharsets.UTF_8)))
+            .build();
 
     verify(eventSender)
         .sendEvent(nodeExecution.getAmbiance(), progressEvent.toByteString(), PmsEventCategory.PROGRESS_EVENT,

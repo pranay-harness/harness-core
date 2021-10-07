@@ -1,22 +1,27 @@
 package software.wings.resources.template;
 
-import static io.harness.beans.SearchFilter.Operator.IN;
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.beans.Application.GLOBAL_APP_ID;
+import static software.wings.security.PermissionAttribute.PermissionType.APP_TEMPLATE;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
-import static software.wings.security.PermissionAttribute.PermissionType.TEMPLATE_MANAGEMENT;
 
+import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.rest.RestResponse;
 
 import software.wings.beans.CommandCategory;
 import software.wings.beans.template.Template;
-import software.wings.beans.template.Template.TemplateKeys;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateVersion;
+import software.wings.beans.template.dto.TemplateMetaData;
 import software.wings.security.annotations.AuthRule;
+import software.wings.service.impl.security.auth.TemplateAuthHandler;
+import software.wings.service.impl.security.auth.TemplateRBACListFilter;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.template.TemplateVersionService;
 
@@ -24,6 +29,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
+import java.util.HashSet;
 import java.util.List;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
@@ -40,9 +46,12 @@ import javax.ws.rs.QueryParam;
 @Path("/templates")
 @Produces("application/json")
 @AuthRule(permissionType = LOGGED_IN)
+@OwnedBy(PL)
+@TargetModule(HarnessModule._410_CG_REST)
 public class TemplateResource {
   @Inject TemplateService templateService;
   @Inject TemplateVersionService templateVersionService;
+  @Inject TemplateAuthHandler templateAuthHandler;
 
   @GET
   @Timed
@@ -51,9 +60,11 @@ public class TemplateResource {
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") List<String> appIds,
       @BeanParam PageRequest<Template> pageRequest, @QueryParam("galleryKeys") List<String> galleryKeys,
       @QueryParam("defaultVersion") boolean defaultVersion) {
-    if (isNotEmpty(appIds)) {
-      pageRequest.addFilter(TemplateKeys.appId, IN, appIds.toArray());
+    final TemplateRBACListFilter templateRBACListFilter = templateAuthHandler.buildTemplateListRBACFilter(appIds);
+    if (templateRBACListFilter.empty()) {
+      return new RestResponse<>(new PageResponse<>());
     }
+    templateRBACListFilter.addToPageRequest(pageRequest);
     return new RestResponse<>(templateService.list(pageRequest, galleryKeys, accountId, defaultVersion));
   }
 
@@ -66,9 +77,10 @@ public class TemplateResource {
   @POST
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = TEMPLATE_MANAGEMENT)
+  @AuthRule(permissionType = APP_TEMPLATE, skipAuth = true)
   public RestResponse<Template> save(@QueryParam("accountId") String accountId,
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, Template template) {
+    templateAuthHandler.authorizeCreate(appId);
     template.setAccountId(accountId);
     template.setAppId(appId);
     return new RestResponse<>(templateService.save(template));
@@ -83,10 +95,11 @@ public class TemplateResource {
   @Path("{templateId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = TEMPLATE_MANAGEMENT)
+  @AuthRule(permissionType = APP_TEMPLATE, skipAuth = true)
   public RestResponse<Template> update(@QueryParam("accountId") String accountId,
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @PathParam("templateId") String templateId,
       Template template) {
+    templateAuthHandler.authorizeUpdate(appId, template.getUuid());
     template.setAccountId(accountId);
     template.setAppId(appId);
     template.setUuid(templateId);
@@ -103,8 +116,9 @@ public class TemplateResource {
   @Path("{templateId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = TEMPLATE_MANAGEMENT)
+  @AuthRule(permissionType = APP_TEMPLATE, skipAuth = true)
   public RestResponse delete(@QueryParam("accountId") String accountId, @PathParam("templateId") String templateId) {
+    templateAuthHandler.authorizeDelete(accountId, templateId);
     templateService.delete(accountId, templateId);
     return new RestResponse();
   }
@@ -119,8 +133,11 @@ public class TemplateResource {
   @Path("{templateId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = APP_TEMPLATE, skipAuth = true)
   public RestResponse<Template> getTemplate(@QueryParam("accountId") String accountId,
-      @PathParam("templateId") String templateId, @QueryParam("version") String version) {
+      @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @PathParam("templateId") String templateId,
+      @QueryParam("version") String version) {
+    templateAuthHandler.authorizeRead(appId, templateId);
     return new RestResponse<>(templateService.get(accountId, templateId, version));
   }
 
@@ -133,8 +150,11 @@ public class TemplateResource {
   @Path("{templateId}/commands/categories")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = APP_TEMPLATE, skipAuth = true)
   public RestResponse<List<CommandCategory>> getCommandCategories(@QueryParam("accountId") String accountId,
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @PathParam("templateId") String templateId) {
+    // TODO check is this needed
+    templateAuthHandler.authorizeRead(appId, templateId);
     return new RestResponse<>(templateService.getCommandCategories(accountId, appId, templateId));
   }
 
@@ -148,6 +168,7 @@ public class TemplateResource {
   @Path("/tree/search")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = APP_TEMPLATE, skipAuth = true)
   public RestResponse<TemplateFolder> getTemplateTree(@QueryParam("accountId") String accountId,
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @QueryParam("folderId") String folderId,
       @QueryParam("keyword") String keyword, @QueryParam("type") List<String> templateTypes) {
@@ -166,8 +187,22 @@ public class TemplateResource {
   @Path("{templateId}/versions/{version}/yaml")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = APP_TEMPLATE, skipAuth = true)
   public RestResponse<String> getYaml(@QueryParam("accountId") String accountId,
-      @PathParam("templateId") String templateId, @PathParam("version") String version) {
+      @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @PathParam("templateId") String templateId,
+      @PathParam("version") String version) {
+    // TODO check is this needed
+    templateAuthHandler.authorizeRead(appId, templateId);
     return new RestResponse<>(templateService.getYamlOfTemplate(templateId, version));
+  }
+
+  @POST
+  @Path("/metadata")
+  public RestResponse<List<TemplateMetaData>> getTemplateMetadata(
+      @QueryParam("accountId") String accountId, List<String> appIds) {
+    if (isNotEmpty(appIds)) {
+      return new RestResponse<>(templateService.listTemplatesWithMetadata(new HashSet<>(appIds), accountId));
+    }
+    return new RestResponse();
   }
 }

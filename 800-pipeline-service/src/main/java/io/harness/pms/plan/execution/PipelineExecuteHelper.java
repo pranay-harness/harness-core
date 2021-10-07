@@ -1,6 +1,5 @@
 package io.harness.pms.plan.execution;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.pms.contracts.plan.TriggerType.MANUAL;
 
@@ -12,7 +11,7 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionMetadataService;
 import io.harness.engine.executions.plan.PlanExecutionService;
 import io.harness.engine.executions.plan.PlanService;
-import io.harness.engine.executions.retry.RetryStageInfo;
+import io.harness.engine.executions.retry.RetryExecutionHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.execution.PlanExecution;
 import io.harness.execution.PlanExecutionMetadata;
@@ -27,15 +26,14 @@ import io.harness.pms.exception.PmsExceptionUtils;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.helpers.PrincipalInfoHelper;
 import io.harness.pms.helpers.TriggeredByHelper;
-import io.harness.pms.merger.YamlConfig;
-import io.harness.pms.merger.fqn.FQN;
-import io.harness.pms.merger.helpers.MergeHelper;
+import io.harness.pms.merger.helpers.InputSetMergeHelper;
 import io.harness.pms.ngpipeline.inputset.helpers.InputSetSanitizer;
 import io.harness.pms.ngpipeline.inputset.helpers.ValidateAndMergeHelper;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.pipeline.service.PMSYamlSchemaService;
 import io.harness.pms.plan.creation.PlanCreatorMergeService;
+import io.harness.pms.plan.execution.beans.dto.RunStageRequestDTO;
 import io.harness.pms.rbac.validator.PipelineRbacService;
 import io.harness.pms.yaml.YamlUtils;
 import io.harness.threading.Morpheus;
@@ -47,11 +45,7 @@ import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -87,6 +81,7 @@ public class PipelineExecuteHelper {
   private final PlanExecutionService planExecutionService;
   private final PlanService planService;
   private final NodeExecutionService nodeExecutionService;
+  private final RetryExecutionHelper retryExecutionHelper;
 
   public PlanExecutionResponseDto runPipelineWithInputSetPipelineYaml(@NotNull String accountId,
       @NotNull String orgIdentifier, @NotNull String projectIdentifier, @NotNull String pipelineIdentifier,
@@ -94,14 +89,74 @@ public class PipelineExecuteHelper {
     PipelineEntity pipelineEntity =
         fetchPipelineEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier);
     ExecutionTriggerInfo triggerInfo = buildTriggerInfo(null);
-    ExecArgs execArgs = buildExecutionArgs(pipelineEntity, moduleType, inputSetPipelineYaml, triggerInfo);
+    ExecArgs execArgs =
+        buildExecutionArgs(pipelineEntity, moduleType, inputSetPipelineYaml, null, triggerInfo, false, null, null);
     PlanExecution planExecution = null;
     if (useV2) {
       planExecution = startExecutionV2(
-          accountId, orgIdentifier, projectIdentifier, execArgs.metadata, execArgs.planExecutionMetadata);
+          accountId, orgIdentifier, projectIdentifier, execArgs.metadata, execArgs.planExecutionMetadata, false);
     } else {
       planExecution = startExecution(
-          accountId, orgIdentifier, projectIdentifier, execArgs.metadata, execArgs.planExecutionMetadata);
+          accountId, orgIdentifier, projectIdentifier, execArgs.metadata, execArgs.planExecutionMetadata, false);
+    }
+    return PlanExecutionResponseDto.builder()
+        .planExecution(planExecution)
+        .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(pipelineEntity))
+        .build();
+  }
+
+  public PlanExecutionResponseDto runStagesWithRuntimeInputYaml(@NotNull String accountId,
+      @NotNull String orgIdentifier, @NotNull String projectIdentifier, @NotNull String pipelineIdentifier,
+      String moduleType, RunStageRequestDTO runStageRequestDTO, boolean useV2) throws IOException {
+    PipelineEntity pipelineEntity =
+        fetchPipelineEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier);
+    ExecutionTriggerInfo triggerInfo = buildTriggerInfo(null);
+    ExecArgs execArgs = buildExecutionArgs(pipelineEntity, moduleType, runStageRequestDTO.getRuntimeInputYaml(),
+        runStageRequestDTO.getStageIdentifiers(), triggerInfo, false, null, null);
+    PlanExecution planExecution;
+    if (useV2) {
+      planExecution = startExecutionV2(
+          accountId, orgIdentifier, projectIdentifier, execArgs.metadata, execArgs.planExecutionMetadata, false);
+    } else {
+      planExecution = startExecution(
+          accountId, orgIdentifier, projectIdentifier, execArgs.metadata, execArgs.planExecutionMetadata, false);
+    }
+    return PlanExecutionResponseDto.builder()
+        .planExecution(planExecution)
+        .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(pipelineEntity))
+        .build();
+  }
+
+  public PlanExecutionResponseDto retryPipelineWithInputSetPipelineYaml(@NotNull String accountId,
+      @NotNull String orgIdentifier, @NotNull String projectIdentifier, @NotNull String pipelineIdentifier,
+      String moduleType, String inputSetPipelineYaml, String previousExecutionId, List<String> retryStagesIdentifier,
+      boolean runAllStages, boolean useV2) throws IOException {
+    PipelineEntity pipelineEntity =
+        fetchPipelineEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier);
+
+    if (!runAllStages && retryStagesIdentifier.size() > 1) {
+      // run only failed stage
+      retryStagesIdentifier = retryExecutionHelper.fetchOnlyFailedStages(previousExecutionId, retryStagesIdentifier);
+    }
+
+    ExecutionTriggerInfo triggerInfo = buildTriggerInfo(null);
+    Optional<PlanExecutionMetadata> optionalPlanExecutionMetadata =
+        planExecutionMetadataService.findByPlanExecutionId(previousExecutionId);
+
+    if (!optionalPlanExecutionMetadata.isPresent()) {
+      throw new InvalidRequestException(String.format("No plan exist for %s planExecutionId", previousExecutionId));
+    }
+    String previousProcessedYaml = optionalPlanExecutionMetadata.get().getProcessedYaml();
+
+    ExecArgs execArgs = buildExecutionArgs(pipelineEntity, moduleType, inputSetPipelineYaml, null, triggerInfo, true,
+        previousProcessedYaml, retryStagesIdentifier);
+    PlanExecution planExecution = null;
+    if (useV2) {
+      planExecution = startExecutionV2(
+          accountId, orgIdentifier, projectIdentifier, execArgs.metadata, execArgs.planExecutionMetadata, true);
+    } else {
+      planExecution = startExecution(
+          accountId, orgIdentifier, projectIdentifier, execArgs.metadata, execArgs.planExecutionMetadata, true);
     }
     return PlanExecutionResponseDto.builder()
         .planExecution(planExecution)
@@ -117,7 +172,8 @@ public class PipelineExecuteHelper {
 
     ExecutionTriggerInfo triggerInfo = buildTriggerInfo(originalExecutionId);
 
-    ExecArgs execArgs = buildExecutionArgs(pipelineEntity, moduleType, inputSetPipelineYaml, triggerInfo);
+    ExecArgs execArgs =
+        buildExecutionArgs(pipelineEntity, moduleType, inputSetPipelineYaml, null, triggerInfo, false, null, null);
 
     // TODO: this is Quick fix for CIGA :( we would need to refactor this later
     populateTriggerDataForRerun(originalExecutionId, execArgs);
@@ -125,10 +181,10 @@ public class PipelineExecuteHelper {
     PlanExecution planExecution;
     if (useV2) {
       planExecution = startExecutionV2(
-          accountId, orgIdentifier, projectIdentifier, execArgs.metadata, execArgs.planExecutionMetadata);
+          accountId, orgIdentifier, projectIdentifier, execArgs.metadata, execArgs.planExecutionMetadata, false);
     } else {
       planExecution = startExecution(
-          accountId, orgIdentifier, projectIdentifier, execArgs.metadata, execArgs.planExecutionMetadata);
+          accountId, orgIdentifier, projectIdentifier, execArgs.metadata, execArgs.planExecutionMetadata, false);
     }
     return PlanExecutionResponseDto.builder()
         .planExecution(planExecution)
@@ -174,10 +230,11 @@ public class PipelineExecuteHelper {
         fetchPipelineEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier);
 
     ExecutionTriggerInfo triggerInfo = buildTriggerInfo(null);
-    ExecArgs execArgs = buildExecutionArgs(pipelineEntity, moduleType, mergedRuntimeInputYaml, triggerInfo);
+    ExecArgs execArgs =
+        buildExecutionArgs(pipelineEntity, moduleType, mergedRuntimeInputYaml, null, triggerInfo, false, null, null);
 
-    PlanExecution planExecution =
-        startExecution(accountId, orgIdentifier, projectIdentifier, execArgs.metadata, execArgs.planExecutionMetadata);
+    PlanExecution planExecution = startExecution(
+        accountId, orgIdentifier, projectIdentifier, execArgs.metadata, execArgs.planExecutionMetadata, false);
     return PlanExecutionResponseDto.builder()
         .planExecution(planExecution)
         .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(pipelineEntity))
@@ -194,13 +251,14 @@ public class PipelineExecuteHelper {
 
     ExecutionTriggerInfo triggerInfo = buildTriggerInfo(originalExecutionId);
 
-    ExecArgs execArgs = buildExecutionArgs(pipelineEntity, moduleType, mergedRuntimeInputYaml, triggerInfo);
+    ExecArgs execArgs =
+        buildExecutionArgs(pipelineEntity, moduleType, mergedRuntimeInputYaml, null, triggerInfo, false, null, null);
 
     // TODO: this is Quick fix for CIGA :( we would need to refactor this later
     populateTriggerDataForRerun(originalExecutionId, execArgs);
 
-    PlanExecution planExecution =
-        startExecution(accountId, orgIdentifier, projectIdentifier, execArgs.metadata, execArgs.planExecutionMetadata);
+    PlanExecution planExecution = startExecution(
+        accountId, orgIdentifier, projectIdentifier, execArgs.metadata, execArgs.planExecutionMetadata, false);
     return PlanExecutionResponseDto.builder()
         .planExecution(planExecution)
         .gitDetails(EntityGitDetailsMapper.mapEntityGitDetails(pipelineEntity))
@@ -219,12 +277,18 @@ public class PipelineExecuteHelper {
     }
   }
 
-  private String buildAndValidatePipelineYaml(String inputSetPipelineYaml, PipelineEntity pipelineEntity) {
+  private String buildAndValidatePipelineYaml(
+      String inputSetPipelineYaml, List<String> stagesToRun, PipelineEntity pipelineEntity) {
     String pipelineYaml;
     if (EmptyPredicate.isEmpty(inputSetPipelineYaml)) {
       pipelineYaml = pipelineEntity.getYaml();
+    } else if (EmptyPredicate.isNotEmpty(stagesToRun)) {
+      pipelineYaml = InputSetMergeHelper.mergeInputSetIntoPipelineForGivenStages(
+          pipelineEntity.getYaml(), inputSetPipelineYaml, true, stagesToRun);
+      pipelineYaml = InputSetMergeHelper.removeNonRequiredStages(pipelineYaml, stagesToRun);
     } else {
-      pipelineYaml = MergeHelper.mergeInputSetIntoPipeline(pipelineEntity.getYaml(), inputSetPipelineYaml, true);
+      pipelineYaml =
+          InputSetMergeHelper.mergeInputSetIntoPipeline(pipelineEntity.getYaml(), inputSetPipelineYaml, true);
     }
     pipelineYaml = InputSetSanitizer.trimValues(pipelineYaml);
     pmsYamlSchemaService.validateYamlSchema(pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(),
@@ -236,7 +300,8 @@ public class PipelineExecuteHelper {
   }
 
   private ExecArgs buildExecutionArgs(PipelineEntity pipelineEntity, String moduleType, String mergedRuntimeInputYaml,
-      ExecutionTriggerInfo triggerInfo) throws IOException {
+      List<String> stagesToRun, ExecutionTriggerInfo triggerInfo, boolean isRetry, String previousProcessedYaml,
+      List<String> retryStagesIdentifier) throws IOException {
     final String executionId = generateUuid();
 
     // Build Execution Metadata
@@ -244,10 +309,10 @@ public class PipelineExecuteHelper {
         buildExecutionMetadata(pipelineEntity.getIdentifier(), moduleType, triggerInfo, pipelineEntity, executionId);
 
     // Build PlanExecution Metadata
-    String pipelineYaml = buildAndValidatePipelineYaml(mergedRuntimeInputYaml, pipelineEntity);
+    String pipelineYaml = buildAndValidatePipelineYaml(mergedRuntimeInputYaml, stagesToRun, pipelineEntity);
 
-    PlanExecutionMetadata planExecutionMetadata =
-        obtainMetadataBuilder(mergedRuntimeInputYaml, executionId, pipelineYaml);
+    PlanExecutionMetadata planExecutionMetadata = obtainMetadataBuilder(
+        mergedRuntimeInputYaml, executionId, pipelineYaml, isRetry, previousProcessedYaml, retryStagesIdentifier);
 
     return ExecArgs.builder().metadata(executionMetadata).planExecutionMetadata(planExecutionMetadata).build();
   }
@@ -280,17 +345,24 @@ public class PipelineExecuteHelper {
     return pipelineEntityOptional.get();
   }
 
-  private PlanExecutionMetadata obtainMetadataBuilder(
-      String inputSetPipelineYaml, String executionId, String pipelineYaml) throws IOException {
+  private PlanExecutionMetadata obtainMetadataBuilder(String inputSetPipelineYaml, String executionId,
+      String pipelineYaml, boolean isRetry, String previousProcessedYaml, List<String> retryStagesIdentifier)
+      throws IOException {
     Builder planExecutionMetadataBuilder = PlanExecutionMetadata.builder().planExecutionId(executionId);
     planExecutionMetadataBuilder.inputSetYaml(inputSetPipelineYaml);
     planExecutionMetadataBuilder.yaml(pipelineYaml);
-    planExecutionMetadataBuilder.processedYaml(YamlUtils.injectUuid(pipelineYaml));
+    String currentProcessedYaml = YamlUtils.injectUuid(pipelineYaml);
+    if (isRetry) {
+      currentProcessedYaml =
+          retryExecutionHelper.retryProcessedYaml(previousProcessedYaml, currentProcessedYaml, retryStagesIdentifier);
+    }
+    planExecutionMetadataBuilder.processedYaml(currentProcessedYaml);
     return planExecutionMetadataBuilder.build();
   }
 
   public PlanExecution startExecution(String accountId, String orgIdentifier, String projectIdentifier,
-      ExecutionMetadata executionMetadata, PlanExecutionMetadata planExecutionMetadata) throws IOException {
+      ExecutionMetadata executionMetadata, PlanExecutionMetadata planExecutionMetadata, boolean isRetry)
+      throws IOException {
     long startTs = System.currentTimeMillis();
     PlanCreationBlobResponse resp = planCreatorMergeService.createPlan(
         accountId, orgIdentifier, projectIdentifier, executionMetadata, planExecutionMetadata);
@@ -302,12 +374,18 @@ public class PipelineExecuteHelper {
                                                     .build();
     long endTs = System.currentTimeMillis();
     log.info("Time taken to complete plan: {}", endTs - startTs);
+
+    // If this execution is Retry
+    if (isRetry) {
+      return orchestrationService.retryExecution(plan, abstractions, executionMetadata, planExecutionMetadata);
+    }
     return orchestrationService.startExecution(plan, abstractions, executionMetadata, planExecutionMetadata);
   }
 
   @SneakyThrows
   public PlanExecution startExecutionV2(String accountId, String orgIdentifier, String projectIdentifier,
-      ExecutionMetadata executionMetadata, PlanExecutionMetadata planExecutionMetadata) throws IOException {
+      ExecutionMetadata executionMetadata, PlanExecutionMetadata planExecutionMetadata, boolean isRetry)
+      throws IOException {
     long startTs = System.currentTimeMillis();
     String planCreationId = generateUuid();
     planCreatorMergeService.createPlanV2(
@@ -330,77 +408,6 @@ public class PipelineExecuteHelper {
     }
     return orchestrationService.startExecutionV2(
         planCreationId, abstractions, executionMetadata, planExecutionMetadata);
-  }
-  public boolean validateRetry(String updatedYaml, String executedYaml) {
-    // compare fqn
-    if (isEmpty(updatedYaml) || isEmpty(executedYaml)) {
-      return false;
-    }
-
-    YamlConfig updatedConfig = new YamlConfig(updatedYaml);
-    YamlConfig executedConfig = new YamlConfig(executedYaml);
-
-    Map<FQN, Object> fqnToValueMapUpdatedYaml = updatedConfig.getFqnToValueMap();
-    Map<FQN, Object> fqnToValueMapExecutedYaml = executedConfig.getFqnToValueMap();
-
-    List<String> updateStageIdentifierList = new ArrayList<>();
-    for (FQN fqn : fqnToValueMapUpdatedYaml.keySet()) {
-      if (fqn.isStageIdentifier()) {
-        updateStageIdentifierList.add(fqn.display());
-      }
-    }
-
-    List<String> executedStageIdentifierList = new ArrayList<>();
-    for (FQN fqn : fqnToValueMapExecutedYaml.keySet()) {
-      if (fqn.isStageIdentifier()) {
-        executedStageIdentifierList.add(fqn.display());
-      }
-    }
-
-    if (!updateStageIdentifierList.equals(executedStageIdentifierList)) {
-      return false;
-    }
-    return true;
-  }
-
-  public RetryInfo getRetryStages(
-      String updatedYaml, String executedYaml, String planExecutionId, String pipelineIdentifier) {
-    if (isEmpty(planExecutionId)) {
-      return null;
-    }
-    boolean isResumable = validateRetry(updatedYaml, executedYaml);
-    if (!isResumable) {
-      return RetryInfo.builder().isResumable(isResumable).errorMessage("Pipeline is updated, cannot retry").build();
-    }
-    List<RetryStageInfo> stageDetails = getStageDetails(planExecutionId);
-
-    return getRetryInfo(stageDetails);
-  }
-
-  public RetryInfo getRetryInfo(List<RetryStageInfo> stageDetails) {
-    HashMap<String, List<RetryStageInfo>> mapNextIdWithStageInfo = new LinkedHashMap<>();
-    for (RetryStageInfo stageDetail : stageDetails) {
-      String nextId = stageDetail.getNextId();
-      if (isEmpty(nextId)) {
-        nextId = LAST_STAGE_IDENTIFIER;
-      }
-      List<RetryStageInfo> stageList = mapNextIdWithStageInfo.getOrDefault(nextId, new ArrayList<>());
-      stageList.add(stageDetail);
-      mapNextIdWithStageInfo.put(nextId, stageList);
-    }
-    List<RetryGroup> retryGroupList = new ArrayList<>();
-    for (Map.Entry<String, List<RetryStageInfo>> entry : mapNextIdWithStageInfo.entrySet()) {
-      retryGroupList.add(RetryGroup.builder().info(entry.getValue()).build());
-    }
-    return RetryInfo.builder().isResumable(true).groups(retryGroupList).build();
-  }
-
-  public List<RetryStageInfo> getStageDetails(String planExecutionId) {
-    return nodeExecutionService.getStageDetailFromPlanExecutionId(planExecutionId);
-  }
-
-  public String getYamlFromExecutionId(String planExecutionId) {
-    return planExecutionMetadataService.getYamlFromPlanExecutionId(planExecutionId);
   }
 
   @Data

@@ -8,6 +8,7 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.pms.commons.events.PmsEventSender;
 import io.harness.execution.NodeExecution;
 import io.harness.interrupts.Interrupt;
+import io.harness.plan.PlanNode;
 import io.harness.pms.contracts.execution.ExecutableResponse;
 import io.harness.pms.contracts.interrupts.InterruptEvent;
 import io.harness.pms.contracts.interrupts.InterruptEvent.Builder;
@@ -26,7 +27,8 @@ public class RedisInterruptEventPublisher implements InterruptEventPublisher {
   @Override
   public String publishEvent(String nodeExecutionId, Interrupt interrupt, InterruptType interruptType) {
     NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
-    String serviceName = nodeExecution.getNode().getServiceName();
+    PlanNode planNode = nodeExecution.getNode();
+    String serviceName = planNode.getServiceName();
     Builder builder = InterruptEvent.newBuilder()
                           .setInterruptUuid(interrupt.getUuid())
                           .setAmbiance(nodeExecution.getAmbiance())

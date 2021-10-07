@@ -8,6 +8,8 @@ import io.harness.pms.contracts.refobjects.RefObject;
 import io.harness.pms.contracts.service.OptionalSweepingOutputResolveBlobResponse;
 import io.harness.pms.contracts.service.SweepingOutputConsumeBlobRequest;
 import io.harness.pms.contracts.service.SweepingOutputConsumeBlobResponse;
+import io.harness.pms.contracts.service.SweepingOutputListRequest;
+import io.harness.pms.contracts.service.SweepingOutputListResponse;
 import io.harness.pms.contracts.service.SweepingOutputResolveBlobRequest;
 import io.harness.pms.contracts.service.SweepingOutputResolveBlobResponse;
 import io.harness.pms.contracts.service.SweepingOutputServiceGrpc.SweepingOutputServiceBlockingStub;
@@ -18,6 +20,8 @@ import io.harness.pms.utils.PmsGrpcClientUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.ArrayList;
+import java.util.List;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
@@ -60,5 +64,23 @@ public class ExecutionSweepingGrpcOutputService implements ExecutionSweepingOutp
         .output(RecastOrchestrationUtils.fromJson(resolve.getStepTransput(), ExecutionSweepingOutput.class))
         .found(resolve.getFound())
         .build();
+  }
+
+  @Override
+  public List<OptionalSweepingOutput> listOutputsWithGivenNameAndSetupIds(
+      Ambiance ambiance, String name, List<String> nodeIds) {
+    SweepingOutputListResponse resolve =
+        PmsGrpcClientUtils.retryAndProcessException(sweepingOutputServiceBlockingStub::listOutputsUsingNodeIds,
+            SweepingOutputListRequest.newBuilder().setAmbiance(ambiance).setName(name).addAllNodeIds(nodeIds).build());
+    List<OptionalSweepingOutput> optionalSweepingOutputs = new ArrayList<>();
+    for (OptionalSweepingOutputResolveBlobResponse rawOptionalSweepingOutput :
+        resolve.getSweepingOutputResolveBlobResponsesList()) {
+      optionalSweepingOutputs.add(OptionalSweepingOutput.builder()
+                                      .output(RecastOrchestrationUtils.fromJson(
+                                          rawOptionalSweepingOutput.getStepTransput(), ExecutionSweepingOutput.class))
+                                      .found(rawOptionalSweepingOutput.getFound())
+                                      .build());
+    }
+    return optionalSweepingOutputs;
   }
 }

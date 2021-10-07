@@ -8,7 +8,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.pms.stages.StageExecutionSelectorHelper.StageInfo;
 import io.harness.rule.Owner;
 
 import java.util.Arrays;
@@ -58,7 +57,7 @@ public class StageExecutionSelectorHelperTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetStageInfoList() {
     String pipelineYaml = getPipelineYaml();
-    List<StageInfo> stageInfoList = StageExecutionSelectorHelper.getStageInfoList(pipelineYaml);
+    List<BasicStageInfo> stageInfoList = StageExecutionSelectorHelper.getStageInfoList(pipelineYaml);
 
     assertBasicStageInfo(stageInfoList);
     assertThat(stageInfoList.get(0).getStagesRequired().toString()).isEqualTo("[]");
@@ -74,11 +73,11 @@ public class StageExecutionSelectorHelperTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetStageYamlList() {
     String pipelineYaml = getPipelineYaml();
-    List<StageInfo> stageYamlList = StageExecutionSelectorHelper.getStageYamlList(pipelineYaml);
+    List<BasicStageInfo> stageYamlList = StageExecutionSelectorHelper.getStageYamlList(pipelineYaml);
     assertBasicStageInfo(stageYamlList);
   }
 
-  private void assertBasicStageInfo(List<StageInfo> stageYamlList) {
+  private void assertBasicStageInfo(List<BasicStageInfo> stageYamlList) {
     assertThat(stageYamlList).hasSize(6);
     assertThat(stageYamlList.get(0).getIdentifier()).isEqualTo("a1");
     assertThat(stageYamlList.get(1).getIdentifier()).isEqualTo("a2");
@@ -106,14 +105,15 @@ public class StageExecutionSelectorHelperTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testAddStagesRequiredStartingWithApproval() {
-    StageInfo stageInfo0 = StageInfo.builder().name("a0").identifier("a0").type("Approval").build();
-    StageInfo stageInfo1 = StageInfo.builder().name("a1").identifier("a1").type("Approval").build();
-    StageInfo stageInfo2 = StageInfo.builder().name("d0").identifier("d0").type("Deployment").build();
-    StageInfo stageInfo3 = StageInfo.builder().name("d1").identifier("d1").type("Deployment").build();
-    StageInfo stageInfo4 = StageInfo.builder().name("a2").identifier("a2").type("Approval").build();
-    StageInfo stageInfo5 = StageInfo.builder().name("d2").identifier("d2").type("Deployment").build();
-    List<StageInfo> stageInfos = Arrays.asList(stageInfo0, stageInfo1, stageInfo2, stageInfo3, stageInfo4, stageInfo5);
-    List<StageInfo> stageInfosWithRequiredStages = StageExecutionSelectorHelper.addStagesRequired(stageInfos);
+    BasicStageInfo stageInfo0 = BasicStageInfo.builder().name("a0").identifier("a0").type("Approval").build();
+    BasicStageInfo stageInfo1 = BasicStageInfo.builder().name("a1").identifier("a1").type("Approval").build();
+    BasicStageInfo stageInfo2 = BasicStageInfo.builder().name("d0").identifier("d0").type("Deployment").build();
+    BasicStageInfo stageInfo3 = BasicStageInfo.builder().name("d1").identifier("d1").type("Deployment").build();
+    BasicStageInfo stageInfo4 = BasicStageInfo.builder().name("a2").identifier("a2").type("Approval").build();
+    BasicStageInfo stageInfo5 = BasicStageInfo.builder().name("d2").identifier("d2").type("Deployment").build();
+    List<BasicStageInfo> stageInfos =
+        Arrays.asList(stageInfo0, stageInfo1, stageInfo2, stageInfo3, stageInfo4, stageInfo5);
+    List<BasicStageInfo> stageInfosWithRequiredStages = StageExecutionSelectorHelper.addStagesRequired(stageInfos);
     assertThat(stageInfosWithRequiredStages).hasSize(6);
     assertThat(stageInfosWithRequiredStages.get(0).getStagesRequired().toString()).isEqualTo("[]");
     assertThat(stageInfosWithRequiredStages.get(1).getStagesRequired().toString()).isEqualTo("[a0]");
@@ -127,12 +127,12 @@ public class StageExecutionSelectorHelperTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testAddStagesRequiredStartingWithNonApproval() {
-    StageInfo stageInfo0 = StageInfo.builder().name("b0").identifier("b0").type("Build").build();
-    StageInfo stageInfo1 = StageInfo.builder().name("d1").identifier("d1").type("Deployment").build();
-    StageInfo stageInfo2 = StageInfo.builder().name("a2").identifier("a2").type("Approval").build();
-    StageInfo stageInfo3 = StageInfo.builder().name("d2").identifier("d2").type("Deployment").build();
-    List<StageInfo> stageInfos = Arrays.asList(stageInfo0, stageInfo1, stageInfo2, stageInfo3);
-    List<StageInfo> stageInfosWithRequiredStages = StageExecutionSelectorHelper.addStagesRequired(stageInfos);
+    BasicStageInfo stageInfo0 = BasicStageInfo.builder().name("b0").identifier("b0").type("Build").build();
+    BasicStageInfo stageInfo1 = BasicStageInfo.builder().name("d1").identifier("d1").type("Deployment").build();
+    BasicStageInfo stageInfo2 = BasicStageInfo.builder().name("a2").identifier("a2").type("Approval").build();
+    BasicStageInfo stageInfo3 = BasicStageInfo.builder().name("d2").identifier("d2").type("Deployment").build();
+    List<BasicStageInfo> stageInfos = Arrays.asList(stageInfo0, stageInfo1, stageInfo2, stageInfo3);
+    List<BasicStageInfo> stageInfosWithRequiredStages = StageExecutionSelectorHelper.addStagesRequired(stageInfos);
     assertThat(stageInfosWithRequiredStages).hasSize(4);
     assertThat(stageInfosWithRequiredStages.get(0).getStagesRequired().toString()).isEqualTo("[]");
     assertThat(stageInfosWithRequiredStages.get(1).getStagesRequired().toString()).isEqualTo("[]");

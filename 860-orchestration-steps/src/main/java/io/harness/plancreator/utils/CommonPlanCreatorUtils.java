@@ -12,8 +12,9 @@ import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
-import io.harness.steps.common.NGSectionStep;
+import io.harness.steps.NGSpecStep;
 import io.harness.steps.common.NGSectionStepParameters;
+import io.harness.steps.common.NGSectionStepWithRollbackInfo;
 
 import lombok.experimental.UtilityClass;
 
@@ -27,7 +28,7 @@ public class CommonPlanCreatorUtils {
     return PlanNode.builder()
         .uuid(nodeUuid)
         .identifier(YAMLFieldNameConstants.STEPS)
-        .stepType(NGSectionStep.STEP_TYPE)
+        .stepType(NGSectionStepWithRollbackInfo.STEP_TYPE)
         .name(YAMLFieldNameConstants.STEPS)
         .stepParameters(stepParameters)
         .facilitatorObtainment(
@@ -44,7 +45,7 @@ public class CommonPlanCreatorUtils {
     return PlanNode.builder()
         .uuid(nodeUuid)
         .identifier(YAMLFieldNameConstants.SPEC)
-        .stepType(NGSectionStep.STEP_TYPE)
+        .stepType(NGSpecStep.STEP_TYPE)
         .name(YAMLFieldNameConstants.SPEC)
         .stepParameters(stepParameters)
         .facilitatorObtainment(

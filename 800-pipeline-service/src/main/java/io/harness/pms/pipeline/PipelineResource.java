@@ -351,12 +351,19 @@ public class PipelineResource implements YamlSchemaResource {
         pmsExecutionService.getPipelineExecutionSummaryEntity(accountId, orgId, projectId, planExecutionId, false);
 
     Optional<PipelineEntity> optionalPipelineEntity;
-    try (PmsGitSyncBranchContextGuard ignore = pmsGitSyncHelper.createGitSyncBranchContextGuardFromBytes(
-             executionSummaryEntity.getGitSyncBranchContext(), false)) {
-      optionalPipelineEntity =
-          pmsPipelineService.get(accountId, orgId, projectId, executionSummaryEntity.getPipelineIdentifier(), false);
+    if (executionSummaryEntity.getEntityGitDetails() == null) {
+      try (PmsGitSyncBranchContextGuard ignore = pmsGitSyncHelper.createGitSyncBranchContextGuardFromBytes(
+               executionSummaryEntity.getGitSyncBranchContext(), false)) {
+        optionalPipelineEntity =
+            pmsPipelineService.get(accountId, orgId, projectId, executionSummaryEntity.getPipelineIdentifier(), false);
+      }
+    } else {
+      try (PmsGitSyncBranchContextGuard ignore = new PmsGitSyncBranchContextGuard(
+               executionSummaryEntity.getEntityGitDetails().toGitSyncBranchContext(), false)) {
+        optionalPipelineEntity =
+            pmsPipelineService.get(accountId, orgId, projectId, executionSummaryEntity.getPipelineIdentifier(), false);
+      }
     }
-
     if (!optionalPipelineEntity.isPresent()) {
       throw new InvalidRequestException(
           "Pipeline with identifier " + executionSummaryEntity.getPipelineIdentifier() + " not found");

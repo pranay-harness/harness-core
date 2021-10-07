@@ -169,8 +169,9 @@ public class KubernetesUtilizationData extends TableImpl<KubernetesUtilizationDa
 
   @Override
   public List<Index> getIndexes() {
-    return Arrays.<Index>asList(Indexes.KUBERNETES_UTILIZATION_DATA_INSTANCEID_INDEX,
-        Indexes.KUBERNETES_UTILIZATION_DATA_STARTTIME_IDX, Indexes.KUBERNETES_UTILIZATION_DATA_UNIQUE_INDEX);
+    return Arrays.<Index>asList(Indexes.KUBERNETES_UTILIZATION_DATA_ACCID_CLUSTERID_ACINSTANCEID,
+        Indexes.KUBERNETES_UTILIZATION_DATA_INSTANCEID_INDEX, Indexes.KUBERNETES_UTILIZATION_DATA_STARTTIME_IDX,
+        Indexes.KUBERNETES_UTILIZATION_DATA_UNIQUE_INDEX);
   }
 
   @Override

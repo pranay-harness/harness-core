@@ -1,6 +1,7 @@
 package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.beans.FeatureName.USE_LATEST_CHARTMUSEUM_VERSION;
 import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_DIRECT;
 import static io.harness.cdng.infra.yaml.InfrastructureKind.KUBERNETES_GCP;
 import static io.harness.common.ParameterFieldHelper.getBooleanParameterFieldValue;
@@ -28,8 +29,6 @@ import static org.apache.commons.lang3.StringUtils.trim;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.DecryptableEntity;
-import io.harness.beans.IdentifierRef;
 import io.harness.cdng.expressions.CDExpressionResolveFunctor;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.infra.beans.K8sDirectInfrastructureOutcome;
@@ -62,7 +61,6 @@ import io.harness.cdng.manifest.yaml.storeConfig.StoreConfig;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTimeConversionHelper;
 import io.harness.connector.ConnectorInfoDTO;
-import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.helper.EncryptionHelper;
 import io.harness.connector.services.ConnectorService;
 import io.harness.connector.validator.scmValidators.GitConfigAuthenticationInfoHelper;
@@ -70,10 +68,6 @@ import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.connector.awsconnector.AwsConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.beans.connector.helm.HttpHelmConnectorDTO;
-import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialDTO;
-import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
-import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
-import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
 import io.harness.delegate.beans.connector.scm.GitConnectionType;
 import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.delegate.beans.connector.scm.adapter.ScmConnectorMapper;
@@ -94,8 +88,6 @@ import io.harness.delegate.task.git.TaskStatus;
 import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.helm.HelmValuesFetchRequest;
 import io.harness.delegate.task.helm.HelmValuesFetchResponse;
-import io.harness.delegate.task.k8s.DirectK8sInfraDelegateConfig;
-import io.harness.delegate.task.k8s.GcpK8sInfraDelegateConfig;
 import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
 import io.harness.delegate.task.k8s.K8sDeployRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
@@ -112,10 +104,10 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.executions.steps.StepConstants;
 import io.harness.expression.EngineExpressionEvaluator;
 import io.harness.expression.ExpressionEvaluatorUtils;
+import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.FetchFilesResult;
 import io.harness.git.model.GitFile;
 import io.harness.helm.HelmSubCommandType;
-import io.harness.k8s.KubernetesHelperService;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
 import io.harness.logging.UnitProgress;
@@ -153,7 +145,6 @@ import io.harness.steps.EntityReferenceExtractorUtils;
 import io.harness.steps.StepHelper;
 import io.harness.supplier.ThrowingSupplier;
 import io.harness.tasks.ResponseData;
-import io.harness.utils.IdentifierRefHelper;
 
 import software.wings.beans.TaskType;
 
@@ -172,7 +163,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -206,6 +196,8 @@ public class K8sStepHelper {
   @Inject private EntityReferenceExtractorUtils entityReferenceExtractorUtils;
   @Inject private PipelineRbacHelper pipelineRbacHelper;
   @Inject private SdkGraphVisualizationDataService sdkGraphVisualizationDataService;
+  @Inject private K8sEntityHelper k8sEntityHelper;
+  @Inject private FeatureFlagService featureFlagService;
 
   String getReleaseName(Ambiance ambiance, InfrastructureOutcome infrastructure) {
     String releaseName;
@@ -244,18 +236,7 @@ public class K8sStepHelper {
 
   public ConnectorInfoDTO getConnector(String connectorId, Ambiance ambiance) {
     NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);
-    return getConnectorInfoDTO(connectorId, ngAccess);
-  }
-
-  private ConnectorInfoDTO getConnectorInfoDTO(String connectorId, NGAccess ngAccess) {
-    IdentifierRef identifierRef = IdentifierRefHelper.getIdentifierRef(
-        connectorId, ngAccess.getAccountIdentifier(), ngAccess.getOrgIdentifier(), ngAccess.getProjectIdentifier());
-    Optional<ConnectorResponseDTO> connectorDTO = connectorService.get(identifierRef.getAccountIdentifier(),
-        identifierRef.getOrgIdentifier(), identifierRef.getProjectIdentifier(), identifierRef.getIdentifier());
-    if (!connectorDTO.isPresent()) {
-      throw new InvalidRequestException(format("Connector not found for identifier : [%s]", connectorId), USER);
-    }
-    return connectorDTO.get().getConnector();
+    return k8sEntityHelper.getConnectorInfoDTO(connectorId, ngAccess);
   }
 
   public void validateManifest(String manifestStoreType, ConnectorInfoDTO connectorInfoDTO, String message) {
@@ -384,7 +365,8 @@ public class K8sStepHelper {
           .repoName(helmConnectorDTO.getIdentifier())
           .repoDisplayName(helmConnectorDTO.getName())
           .httpHelmConnector((HttpHelmConnectorDTO) helmConnectorDTO.getConnectorConfig())
-          .encryptedDataDetails(getEncryptionDataDetails(helmConnectorDTO, AmbianceUtils.getNgAccess(ambiance)))
+          .encryptedDataDetails(
+              k8sEntityHelper.getEncryptionDataDetails(helmConnectorDTO, AmbianceUtils.getNgAccess(ambiance)))
           .build();
     }
 
@@ -401,7 +383,10 @@ public class K8sStepHelper {
           .region(getParameterFieldValue(s3StoreConfig.getRegion()))
           .folderPath(getParameterFieldValue(s3StoreConfig.getFolderPath()))
           .awsConnector((AwsConnectorDTO) awsConnectorDTO.getConnectorConfig())
-          .encryptedDataDetails(getEncryptionDataDetails(awsConnectorDTO, AmbianceUtils.getNgAccess(ambiance)))
+          .encryptedDataDetails(
+              k8sEntityHelper.getEncryptionDataDetails(awsConnectorDTO, AmbianceUtils.getNgAccess(ambiance)))
+          .useLatestChartMuseumVersion(
+              featureFlagService.isEnabled(USE_LATEST_CHARTMUSEUM_VERSION, AmbianceUtils.getAccountId(ambiance)))
           .build();
     }
 
@@ -417,7 +402,10 @@ public class K8sStepHelper {
           .bucketName(getParameterFieldValue(gcsStoreConfig.getBucketName()))
           .folderPath(getParameterFieldValue(gcsStoreConfig.getFolderPath()))
           .gcpConnector((GcpConnectorDTO) gcpConnectorDTO.getConnectorConfig())
-          .encryptedDataDetails(getEncryptionDataDetails(gcpConnectorDTO, AmbianceUtils.getNgAccess(ambiance)))
+          .encryptedDataDetails(
+              k8sEntityHelper.getEncryptionDataDetails(gcpConnectorDTO, AmbianceUtils.getNgAccess(ambiance)))
+          .useLatestChartMuseumVersion(
+              featureFlagService.isEnabled(USE_LATEST_CHARTMUSEUM_VERSION, AmbianceUtils.getAccountId(ambiance)))
           .build();
     }
 
@@ -503,92 +491,9 @@ public class K8sStepHelper {
         AmbianceHelper.getOrgIdentifier(ambiance), AmbianceHelper.getProjectIdentifier(ambiance));
   }
 
-  private List<EncryptedDataDetail> getEncryptionDataDetails(
-      @Nonnull ConnectorInfoDTO connectorDTO, @Nonnull NGAccess ngAccess) {
-    switch (connectorDTO.getConnectorType()) {
-      case KUBERNETES_CLUSTER:
-        KubernetesClusterConfigDTO connectorConfig = (KubernetesClusterConfigDTO) connectorDTO.getConnectorConfig();
-        if (connectorConfig.getCredential().getKubernetesCredentialType()
-            == KubernetesCredentialType.MANUAL_CREDENTIALS) {
-          KubernetesClusterDetailsDTO clusterDetailsDTO =
-              (KubernetesClusterDetailsDTO) connectorConfig.getCredential().getConfig();
-
-          KubernetesAuthCredentialDTO authCredentialDTO = clusterDetailsDTO.getAuth().getCredentials();
-          return secretManagerClientService.getEncryptionDetails(ngAccess, authCredentialDTO);
-        } else {
-          return emptyList();
-        }
-
-      case HTTP_HELM_REPO:
-        HttpHelmConnectorDTO httpHelmConnectorDTO = (HttpHelmConnectorDTO) connectorDTO.getConnectorConfig();
-        List<DecryptableEntity> decryptableEntities = httpHelmConnectorDTO.getDecryptableEntities();
-        if (isNotEmpty(decryptableEntities)) {
-          return secretManagerClientService.getEncryptionDetails(ngAccess, decryptableEntities.get(0));
-        } else {
-          return emptyList();
-        }
-
-      case AWS:
-        AwsConnectorDTO awsConnectorDTO = (AwsConnectorDTO) connectorDTO.getConnectorConfig();
-        List<DecryptableEntity> awsDecryptableEntities = awsConnectorDTO.getDecryptableEntities();
-        if (isNotEmpty(awsDecryptableEntities)) {
-          return secretManagerClientService.getEncryptionDetails(ngAccess, awsDecryptableEntities.get(0));
-        } else {
-          return emptyList();
-        }
-
-      case GCP:
-        GcpConnectorDTO gcpConnectorDTO = (GcpConnectorDTO) connectorDTO.getConnectorConfig();
-        List<DecryptableEntity> gcpDecryptableEntities = gcpConnectorDTO.getDecryptableEntities();
-        if (isNotEmpty(gcpDecryptableEntities)) {
-          return secretManagerClientService.getEncryptionDetails(ngAccess, gcpDecryptableEntities.get(0));
-        } else {
-          return emptyList();
-        }
-
-      case APP_DYNAMICS:
-      case SPLUNK:
-      case GIT:
-      default:
-        throw new UnsupportedOperationException(
-            format("Unsupported connector type : [%s]", connectorDTO.getConnectorType()));
-    }
-  }
-
   public K8sInfraDelegateConfig getK8sInfraDelegateConfig(InfrastructureOutcome infrastructure, Ambiance ambiance) {
     NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);
-    return getK8sInfraDelegateConfig(infrastructure, ngAccess);
-  }
-
-  public K8sInfraDelegateConfig getK8sInfraDelegateConfig(InfrastructureOutcome infrastructure, NGAccess ngAccess) {
-    ConnectorInfoDTO connectorDTO = getConnectorInfoDTO(infrastructure.getConnectorRef(), ngAccess);
-    switch (infrastructure.getKind()) {
-      case KUBERNETES_DIRECT:
-        K8sDirectInfrastructureOutcome k8SDirectInfrastructure = (K8sDirectInfrastructureOutcome) infrastructure;
-        KubernetesHelperService.validateNamespace(k8SDirectInfrastructure.getNamespace());
-
-        return DirectK8sInfraDelegateConfig.builder()
-            .namespace(k8SDirectInfrastructure.getNamespace())
-            .kubernetesClusterConfigDTO((KubernetesClusterConfigDTO) connectorDTO.getConnectorConfig())
-            .encryptionDataDetails(getEncryptionDataDetails(connectorDTO, ngAccess))
-            .build();
-
-      case KUBERNETES_GCP:
-        K8sGcpInfrastructureOutcome k8sGcpInfrastructure = (K8sGcpInfrastructureOutcome) infrastructure;
-        KubernetesHelperService.validateNamespace(k8sGcpInfrastructure.getNamespace());
-        KubernetesHelperService.validateCluster(k8sGcpInfrastructure.getCluster());
-
-        return GcpK8sInfraDelegateConfig.builder()
-            .namespace(k8sGcpInfrastructure.getNamespace())
-            .cluster(k8sGcpInfrastructure.getCluster())
-            .gcpConnectorDTO((GcpConnectorDTO) connectorDTO.getConnectorConfig())
-            .encryptionDataDetails(getEncryptionDataDetails(connectorDTO, ngAccess))
-            .build();
-
-      default:
-        throw new UnsupportedOperationException(
-            format("Unsupported Infrastructure type: [%s]", infrastructure.getKind()));
-    }
+    return k8sEntityHelper.getK8sInfraDelegateConfig(infrastructure, ngAccess);
   }
 
   public List<EncryptedDataDetail> getEncryptedDataDetails(

@@ -81,12 +81,11 @@ public class NodeAdviseEventHandler extends PmsBaseEventHandler<AdviseEvent> {
 
       if (adviserResponse != null) {
         log.info("Calculated Adviser response is of type {}", adviserResponse.getType());
-        sdkNodeExecutionService.handleAdviserResponse(
-            ambiance.getPlanExecutionId(), nodeExecutionId, event.getNotifyId(), adviserResponse);
+        sdkNodeExecutionService.handleAdviserResponse(ambiance, event.getNotifyId(), adviserResponse);
       } else {
         log.info("Calculated Adviser response is null. Proceeding with UNKNOWN adviser type.");
-        sdkNodeExecutionService.handleAdviserResponse(ambiance.getPlanExecutionId(), nodeExecutionId,
-            event.getNotifyId(), AdviserResponse.newBuilder().setType(AdviseType.UNKNOWN).build());
+        sdkNodeExecutionService.handleAdviserResponse(
+            ambiance, event.getNotifyId(), AdviserResponse.newBuilder().setType(AdviseType.UNKNOWN).build());
       }
     } catch (Exception ex) {
       log.error("Error while advising execution", ex);

@@ -1,4 +1,18 @@
 apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ce-clusterrolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: ce-clusterrole
+subjects:
+  - kind: ServiceAccount
+    name: ${serviceAccountName}
+    namespace: ${serviceAccountNamespace}
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: ce-clusterrole
@@ -54,17 +68,3 @@ rules:
       - get
       - list
       - watch
-
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: ce-clusterrolebinding
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: ce-clusterrole
-subjects:
-  - kind: ServiceAccount
-    name: ${serviceAccountName}
-    namespace: ${serviceAccountNamespace}

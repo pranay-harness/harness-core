@@ -42,8 +42,8 @@ public class K8sGlobalConfigServiceImpl implements K8sGlobalConfigService {
   }
 
   @Override
-  public String getChartMuseumPath() {
-    return InstallUtils.getChartMuseumPath();
+  public String getChartMuseumPath(boolean useLatestVersion) {
+    return InstallUtils.getChartMuseumPath(useLatestVersion);
   }
 
   @Override

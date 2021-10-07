@@ -82,7 +82,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @OwnedBy(PIPELINE)
-@TargetModule(HarnessModule._882_PMS_SDK_CORE)
+@TargetModule(HarnessModule._878_PIPELINE_SERVICE_UTILITIES)
+// Todo: Refactor this so as to split into more classes (PIE-1339)
 public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<StepElementConfig> {
   @Inject protected KryoSerializer kryoSerializer;
 
@@ -265,14 +266,6 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
                                         .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(rollbackParameters)))
                                         .build());
           break;
-        case STEP_GROUP_ROLLBACK:
-          OnFailRollbackParameters stepGroupRollbackParameters =
-              getRollbackParameters(currentField, failureTypes, RollbackStrategy.STEP_GROUP_ROLLBACK);
-          adviserObtainmentList.add(
-              adviserObtainmentBuilder.setType(OnFailRollbackAdviser.ADVISER_TYPE)
-                  .setParameters(ByteString.copyFrom(kryoSerializer.asBytes(stepGroupRollbackParameters)))
-                  .build());
-          break;
         case MANUAL_INTERVENTION:
           ManualInterventionFailureActionConfig actionConfig = (ManualInterventionFailureActionConfig) action;
           FailureStrategiesUtils.validateManualInterventionFailureAction(actionConfig);
@@ -431,8 +424,6 @@ public abstract class GenericStepPMSPlanCreator implements PartialPlanCreator<St
         return RepairActionCode.END_EXECUTION;
       case STAGE_ROLLBACK:
         return RepairActionCode.STAGE_ROLLBACK;
-      case STEP_GROUP_ROLLBACK:
-        return RepairActionCode.STEP_GROUP_ROLLBACK;
       case MANUAL_INTERVENTION:
         return RepairActionCode.MANUAL_INTERVENTION;
       case RETRY:

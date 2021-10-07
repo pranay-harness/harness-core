@@ -52,7 +52,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
 
@@ -300,6 +302,22 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
       throw new InvalidRequestException(
           format("Error happened while creating variables for pipeline: %s", ex.getMessage()));
     }
+  }
+
+  // Todo: Remove only if there are no references to the pipeline
+  @Override
+  public boolean deleteAllPipelinesInAProject(String accountId, String orgId, String projectId) {
+    Criteria criteria = formCriteria(
+        accountId, orgId, projectId, null, PipelineFilterPropertiesDto.builder().build(), false, null, null);
+    Pageable pageRequest = PageRequest.of(0, 1000, Sort.by(Sort.Direction.DESC, PipelineEntityKeys.lastUpdatedAt));
+
+    Page<PipelineEntity> pipelineEntities =
+        pmsPipelineRepository.findAll(criteria, pageRequest, accountId, orgId, projectId, false);
+    for (PipelineEntity pipelineEntity : pipelineEntities) {
+      pmsPipelineRepository.deletePipeline(
+          pipelineEntity.withDeleted(true), PipelineYamlDtoMapper.toDto(pipelineEntity.withDeleted(true)));
+    }
+    return true;
   }
 
   @Override

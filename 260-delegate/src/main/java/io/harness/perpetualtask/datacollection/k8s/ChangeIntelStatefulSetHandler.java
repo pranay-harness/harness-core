@@ -1,0 +1,71 @@
+package io.harness.perpetualtask.datacollection.k8s;
+
+import io.harness.cvng.beans.change.ChangeEventDTO;
+import io.harness.cvng.beans.change.KubernetesChangeEventMetadata;
+
+import io.kubernetes.client.openapi.models.V1OwnerReference;
+import io.kubernetes.client.openapi.models.V1StatefulSet;
+import java.time.Instant;
+import lombok.experimental.SuperBuilder;
+import lombok.extern.slf4j.Slf4j;
+import org.joda.time.DateTime;
+
+@SuperBuilder
+@Slf4j
+public class ChangeIntelStatefulSetHandler extends BaseChangeHandler<V1StatefulSet> {
+  @Override
+  String getKind() {
+    return "StatefulSet";
+  }
+
+  @Override
+  String getApiVersion() {
+    return "apps/v1";
+  }
+
+  @Override
+  boolean hasOwnerReference(V1StatefulSet resource) {
+    if (resource.getMetadata().getOwnerReferences() != null) {
+      for (V1OwnerReference ownerReference : resource.getMetadata().getOwnerReferences()) {
+        if (Boolean.TRUE.equals(ownerReference.getController())) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  @Override
+  public void processAndSendAddEvent(V1StatefulSet v1StatefulSet) {
+    log.info("OnAdd of StatefulSet.");
+    if (!hasOwnerReference(v1StatefulSet)) {
+      log.info("StatefulSet doesn't have an ownerReference. Sending event Data");
+      ChangeEventDTO eventDTO = buildChangeEvent(v1StatefulSet);
+      String newYaml = k8sHandlerUtils.yamlDump(v1StatefulSet);
+      ((KubernetesChangeEventMetadata) eventDTO.getMetadata()).setNewYaml(newYaml);
+      DateTime dateTime = v1StatefulSet.getMetadata().getCreationTimestamp();
+      if (dateTime != null) {
+        ((KubernetesChangeEventMetadata) eventDTO.getMetadata())
+            .setTimestamp(Instant.ofEpochMilli(dateTime.toDateTime().toInstant().getMillis()));
+      }
+      ((KubernetesChangeEventMetadata) eventDTO.getMetadata()).setAction(KubernetesChangeEventMetadata.Action.Add);
+      sendEvent(accountId, eventDTO);
+    }
+  }
+
+  @Override
+  ChangeEventDTO buildChangeEvent(V1StatefulSet v1StatefulSet) {
+    String workload = v1StatefulSet.getMetadata().getName();
+    String namespace = v1StatefulSet.getMetadata().getNamespace();
+    ChangeEventDTO eventDTO = buildChangeEventDTOSkeleton();
+    eventDTO.setMetadata(KubernetesChangeEventMetadata.builder()
+                             .resourceType(KubernetesChangeEventMetadata.KubernetesResourceType.StatefulSet)
+                             .namespace(namespace)
+                             .workload(workload)
+                             .timestamp(Instant.now())
+                             .resourceVersion(v1StatefulSet.getMetadata().getResourceVersion())
+                             .build());
+    eventDTO.setEventTime(Instant.now().toEpochMilli());
+    return eventDTO;
+  }
+}

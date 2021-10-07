@@ -46,6 +46,8 @@ public class NGCommonEntityConstants {
   public static final String CONNECTOR_IDENTIFIER_REF = "connectorIdentifierRef";
   public static final String CONNECTOR_TYPE = "connectorType";
   public static final String PERPETUAL_TASK_ID = "perpetualTaskId";
+  public static final String RETRY_STAGES = "retryStages";
+  public static final String RUN_ALL_STAGES = "runAllStages";
 
   // TODO(UTSAV): Move to 340-ce-nextgen
   public static final String IS_EVENTS_ENABLED = "eventsEnabled";

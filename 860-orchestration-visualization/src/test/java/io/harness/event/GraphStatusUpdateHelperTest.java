@@ -24,8 +24,10 @@ import io.harness.data.OutcomeInstance;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.utils.PmsLevelUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
+import io.harness.plan.PlanNode;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
@@ -33,7 +35,6 @@ import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.data.PmsOutcome;
-import io.harness.pms.execution.utils.LevelUtils;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.rule.Owner;
 import io.harness.service.GraphGenerationService;
@@ -166,12 +167,13 @@ public class GraphStatusUpdateHelperTest extends OrchestrationVisualizationTestB
             .ambiance(Ambiance.newBuilder().setPlanExecutionId(planExecution.getUuid()).build())
             .mode(ExecutionMode.SYNC)
             .status(SUCCEEDED)
-            .node(PlanNodeProto.newBuilder()
-                      .setUuid(generateUuid())
-                      .setName("name")
-                      .setStepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build())
-                      .setIdentifier("identifier1")
-                      .build())
+            .planNode(PlanNode.builder()
+                          .uuid(generateUuid())
+                          .name("name")
+                          .stepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build())
+                          .identifier("identifier1")
+                          .serviceName("PIPELINE")
+                          .build())
             .build();
     nodeExecutionService.save(dummyStart);
 
@@ -202,7 +204,7 @@ public class GraphStatusUpdateHelperTest extends OrchestrationVisualizationTestB
     OutcomeInstance outcome =
         OutcomeInstance.builder()
             .planExecutionId(planExecution.getUuid())
-            .producedBy(LevelUtils.buildLevelFromPlanNode(dummyStart.getUuid(), dummyStart.getNode()))
+            .producedBy(PmsLevelUtils.buildLevelFromPlanNode(dummyStart.getUuid(), dummyStart.getNode()))
             .createdAt(System.currentTimeMillis())
             .outcomeValue(PmsOutcome.parse(doc))
             .build();

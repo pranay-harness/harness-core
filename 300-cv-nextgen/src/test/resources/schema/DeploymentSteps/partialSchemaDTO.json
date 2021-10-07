@@ -193,7 +193,7 @@
         },
         "AddRuleYamlSpec" : {
           "type" : "object",
-          "required" : [ "priority", "uuid" ],
+          "required" : [ "priority" ],
           "properties" : {
             "clauses" : {
               "type" : "array",
@@ -210,9 +210,6 @@
             },
             "serve" : {
               "$ref" : "#/definitions/cvng/Serve"
-            },
-            "uuid" : {
-              "type" : "string"
             }
           },
           "$schema" : "http://json-schema.org/draft-07/schema#"
@@ -661,6 +658,10 @@
                   }, {
                     "$ref" : "#/definitions/cvng/SetFeatureFlagStateYaml"
                   }, {
+                    "$ref" : "#/definitions/cvng/SetOffVariationYaml"
+                  },{
+                    "$ref" : "#/definitions/cvng/SetOnVariationYaml"
+                  },{
                     "$ref" : "#/definitions/cvng/UpdateRuleYaml"
                   } ]
                 }
@@ -1158,7 +1159,7 @@
           "properties" : {
             "type" : {
               "type" : "string",
-              "enum" : [ "SetFeatureFlagState", "AddRule", "UpdateRule", "AddTargetsToVariationTargetMap", "RemoveTargetsToVariationTargetMap", "AddSegmentsToVariationTargetMap", "RemoveSegmentsToVariationTargetMap" ]
+              "enum" : [ "SetFeatureFlagState", "SetOnVariation", "SetOffVariation","AddRule", "UpdateRule", "AddTargetsToVariationTargetMap", "RemoveTargetsToVariationTargetMap", "AddSegmentsToVariationTargetMap", "RemoveSegmentsToVariationTargetMap" ]
             }
           },
           "$schema" : "http://json-schema.org/draft-07/schema#"
@@ -1369,6 +1370,68 @@
           "required" : [ "state" ],
           "properties" : {
             "state" : {
+              "type" : "string"
+            }
+          },
+          "$schema" : "http://json-schema.org/draft-07/schema#"
+        },
+        "SetOnVariationYaml" : {
+          "allOf" : [ {
+            "$ref" : "#/definitions/cvng/PatchInstruction"
+          }, {
+            "type" : "object",
+            "required" : [ "identifier", "spec", "type" ],
+            "properties" : {
+              "identifier" : {
+                "type" : "string"
+              },
+              "spec" : {
+                "$ref" : "#/definitions/cvng/SetOnVariationYamlSpec"
+              },
+              "type" : {
+                "type" : "string",
+                "enum" : [ "SetOnVariation" ]
+              }
+            }
+          } ],
+          "$schema" : "http://json-schema.org/draft-07/schema#"
+        },
+        "SetOnVariationYamlSpec" : {
+          "type" : "object",
+          "required" : [ "variation" ],
+          "properties" : {
+            "variation" : {
+              "type" : "string"
+            }
+          },
+          "$schema" : "http://json-schema.org/draft-07/schema#"
+        },
+        "SetOffVariationYaml" : {
+          "allOf" : [ {
+            "$ref" : "#/definitions/cvng/PatchInstruction"
+          }, {
+            "type" : "object",
+            "required" : [ "identifier", "spec", "type" ],
+            "properties" : {
+              "identifier" : {
+                "type" : "string"
+              },
+              "spec" : {
+                "$ref" : "#/definitions/cvng/SetOffVariationYamlSpec"
+              },
+              "type" : {
+                "type" : "string",
+                "enum" : [ "SetOffVariation" ]
+              }
+            }
+          } ],
+          "$schema" : "http://json-schema.org/draft-07/schema#"
+        },
+        "SetOffVariationYamlSpec" : {
+          "type" : "object",
+          "required" : [ "variation" ],
+          "properties" : {
+            "variation" : {
               "type" : "string"
             }
           },

@@ -25,6 +25,7 @@ const (
 	pluginCmdExitWaitTime   time.Duration = time.Duration(0)
 	imageSecretEnv                        = "HARNESS_IMAGE_SECRET" // Docker image secret for plugin image
 	settingEnvPrefix                      = "PLUGIN_"
+	pluginArtifactFileEnv                 = "PLUGIN_ARTIFACT_FILE"
 )
 
 var (
@@ -143,7 +144,12 @@ func (t *pluginTask) execute(ctx context.Context, retryCount int32) (*pb.Artifac
 		return nil, err
 	}
 
-	artifactProto, artifactErr := artifact.GetArtifactProtoFromFile(t.artifactFilePath)
+	artifactFilePath := t.artifactFilePath
+	if artifactFilePath == "" {
+		artifactFilePath = envVarsMap[pluginArtifactFileEnv]
+	}
+
+	artifactProto, artifactErr := artifact.GetArtifactProtoFromFile(artifactFilePath)
 	if artifactErr != nil {
 		logPluginErr(t.addonLogger, "failed to retrieve artifacts from the plugin step", t.id, commands, retryCount, start, artifactErr)
 	}

@@ -1439,9 +1439,29 @@ public class StateMachineExecutor implements StateInspectionListener {
     callback.callback(context, status, exception);
   }
 
+  private void discontinueExecutionWithFailureStrategy(ExecutionContextImpl context, ExecutionInterruptType interruptType) {
+    StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
+    ExecutionStatus finalStatus = getFinalStatus(interruptType);
+
+    if (stateExecutionInstance.getStatus() == DISCONTINUING) {
+      boolean terminated = terminateAndTransition(
+              context, stateExecutionInstance, finalStatus, "Stuck Discontinuing Instance..Terminating");
+      if (!terminated) {
+        throw new IllegalStateException("State Execution Instance Stuck in Discontinuing State");
+      }
+      return;
+    }
+    discontinueMarkedInstanceFailureStrategy(context, stateExecutionInstance, finalStatus);
+  }
+
   private void discontinueExecution(ExecutionContextImpl context, ExecutionInterruptType interruptType) {
     StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
     ExecutionStatus finalStatus = getFinalStatus(interruptType);
+
+    // FIXME : add FF and type == Shell Script
+    //    if (finalStatus == EXPIRED) {
+    //      finalStatus = FAILED;
+    //    }*/
 
     if (stateExecutionInstance.getStatus() == DISCONTINUING) {
       boolean terminated = terminateAndTransition(
@@ -1469,6 +1489,7 @@ public class StateMachineExecutor implements StateInspectionListener {
   private ExecutionStatus getFinalStatus(ExecutionInterruptType interruptType) {
     switch (interruptType) {
       case MARK_EXPIRED:
+      case MARK_EXPIRED_WITH_FAILURE_STRATEGY:
         return EXPIRED;
       case ABORT:
         return ABORTED;
@@ -1476,6 +1497,80 @@ public class StateMachineExecutor implements StateInspectionListener {
         unhandled(interruptType);
     }
     return ERROR;
+  }
+
+  private void discontinueMarkedInstanceFailureStrategy(
+          ExecutionContextImpl context, StateExecutionInstance stateExecutionInstance, ExecutionStatus finalStatus) {
+    boolean updated = false;
+    StateMachine sm = context.getStateMachine();
+    try {
+      log.info(
+              "[AbortInstance] Aborting StateExecution Instance with Id : {}", stateExecutionInstance.getExecutionUuid());
+      State currentState =
+              sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
+      notNullCheck("currentState", currentState);
+      injector.injectMembers(currentState);
+
+      Set<String> delegateTaskIds = new HashSet();
+      if (isNotBlank(stateExecutionInstance.getDelegateTaskId())) {
+        delegateTaskIds.add(stateExecutionInstance.getDelegateTaskId());
+      }
+
+      if (isNotEmpty(stateExecutionInstance.getDelegateTasksDetails())) {
+        delegateTaskIds.addAll(stateExecutionInstance.getDelegateTasksDetails()
+                .stream()
+                .map(DelegateTaskDetails::getDelegateTaskId)
+                .collect(Collectors.toSet()));
+      }
+
+      StringBuilder errorMsgBuilder = new StringBuilder();
+      log.info("[AbortInstance] Found {} Delegate Task Id for StateExecutionInstance {}", delegateTaskIds.size(),
+              stateExecutionInstance.getUuid());
+      for (String delegateTaskId : delegateTaskIds) {
+        notNullCheck("context.getApp()", context.getApp());
+        try {
+          //String errorMsg = delegateTaskServiceClassic.expireTask(context.getApp().getAccountId(), delegateTaskId);
+//          if (isNotBlank(errorMsg)) {
+//            errorMsgBuilder.append(errorMsg);
+//          }
+        } catch (Exception e) {
+          log.error(
+                  "[AbortInstance] Error in ABORTING WorkflowExecution {}. Error in expiring delegate task : {}. Reason : {}",
+                  stateExecutionInstance.getExecutionUuid(), delegateTaskId, e.getMessage());
+        }
+      }
+      log.info(
+              "[AbortInstance] All DelegateTaskHandled for StateExecutionInstance {}", stateExecutionInstance.getUuid());
+
+      String errorMessage =
+              (context.getStateExecutionData() != null && context.getStateExecutionData().getErrorMsg() != null
+                      && isBlank(errorMsgBuilder.toString()))
+                      ? context.getStateExecutionData().getErrorMsg()
+                      : errorMsgBuilder.toString();
+
+      if (stateExecutionInstance.getStateParams() != null) {
+        MapperUtils.mapObject(stateExecutionInstance.getStateParams(), currentState);
+      }
+      currentState.handleAbortEvent(context);
+
+      //updated = terminateAndTransition(context, stateExecutionInstance, finalStatus, errorMessage);
+      updated = true;
+      ExecutionEventAdvice advice = invokeAdvisors(ExecutionEvent.builder()
+              .failureTypes(EnumSet.<FailureType>of(FailureType.EXPIRED, FailureType.TIMEOUT_ERROR))
+              .context(context)
+              .state(currentState)
+              .build());
+      if(advice != null){
+        handleExecutionEventAdvice(context,stateExecutionInstance, EXPIRED,advice);
+      }
+
+    } catch (Exception e) {
+      log.error("[AbortInstance] Error in discontinuing", e);
+    }
+    if (!updated) {
+      throw new WingsException(ErrorCode.STATE_DISCONTINUE_FAILED)
+              .addParam("displayName", stateExecutionInstance.getDisplayName());
+    }
   }
 
   private void discontinueMarkedInstance(
@@ -1542,15 +1637,23 @@ public class StateMachineExecutor implements StateInspectionListener {
       }
       currentState.handleAbortEvent(context);
 
-      updated = terminateAndTransition(context, stateExecutionInstance, finalStatus, errorMessage);
+      if (finalStatus != EXPIRED) {
+        updated = terminateAndTransition(context, stateExecutionInstance, finalStatus, errorMessage);
+      } else {
+        updated = true;
+        //      updated = terminateAndTransition(context, stateExecutionInstance, finalStatus, errorMessage)
+      }
 
       if (stateExecutionInstance.getStateType().equals(StateType.SHELL_SCRIPT.name())
           && featureFlagService.isEnabled(TIMEOUT_FAILURE_SUPPORT, context.getAccountId())) {
-        invokeAdvisors(ExecutionEvent.builder()
+        ExecutionEventAdvice advice = invokeAdvisors(ExecutionEvent.builder()
                            .failureTypes(EnumSet.<FailureType>of(FailureType.EXPIRED, FailureType.TIMEOUT_ERROR))
                            .context(context)
                            .state(currentState)
                            .build());
+        if(advice != null){
+          handleExecutionEventAdvice(context,stateExecutionInstance, EXPIRED,advice);
+        }
       } else {
         invokeAdvisors(ExecutionEvent.builder()
                            .failureTypes(EnumSet.<FailureType>of(FailureType.EXPIRED))
@@ -1986,7 +2089,10 @@ public class StateMachineExecutor implements StateInspectionListener {
           retryStateExecutionInstance(stateExecutionInstance, workflowExecutionInterrupt.getProperties());
           break;
         }
-
+        case MARK_EXPIRED_WITH_FAILURE_STRATEGY:
+          ExecutionContextImpl context1 = getExecutionContext(workflowExecutionInterrupt);
+          discontinueExecutionWithFailureStrategy(context1, type);
+          break;
         case MARK_EXPIRED:
         case ABORT: {
           ExecutionContextImpl context = getExecutionContext(workflowExecutionInterrupt);

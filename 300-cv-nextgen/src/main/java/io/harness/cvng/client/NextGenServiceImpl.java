@@ -60,10 +60,13 @@ public class NextGenServiceImpl implements NextGenService {
           .build(new CacheLoader<EntityKey, ServiceResponseDTO>() {
             @Override
             public ServiceResponseDTO load(EntityKey entityKey) {
-              return requestExecutor
-                  .execute(nextGenClient.getService(entityKey.getEntityIdentifier(), entityKey.getAccountId(),
-                      entityKey.getOrgIdentifier(), entityKey.getProjectIdentifier()))
-                  .getData();
+              ServiceResponse serviceResponse =
+                  requestExecutor
+                      .execute(nextGenClient.getService(entityKey.getEntityIdentifier(), entityKey.getAccountId(),
+                          entityKey.getOrgIdentifier(), entityKey.getProjectIdentifier()))
+                      .getData();
+              Preconditions.checkNotNull(serviceResponse, "Service Response from Ng Manager cannot be null");
+              return serviceResponse.getService();
             }
           });
 

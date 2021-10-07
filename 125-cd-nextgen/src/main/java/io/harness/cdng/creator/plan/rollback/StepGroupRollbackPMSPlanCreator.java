@@ -2,6 +2,7 @@ package io.harness.cdng.creator.plan.rollback;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.rollback.steps.StepGroupRollbackStep;
 import io.harness.plancreator.beans.OrchestrationConstants;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
@@ -16,7 +17,6 @@ import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
-import io.harness.steps.common.NGSectionStep;
 import io.harness.steps.common.NGSectionStepParameters;
 
 import com.google.common.base.Preconditions;
@@ -51,7 +51,7 @@ public class StepGroupRollbackPMSPlanCreator {
               .uuid(rollbackStepsNode.getNode().getUuid())
               .name(stepGroup.getNode().getNameOrIdentifier() + OrchestrationConstants.ROLLBACK_NODE_NAME)
               .identifier(stepGroup.getNode().getIdentifier() + OrchestrationConstants.ROLLBACK_NODE_NAME)
-              .stepType(NGSectionStep.STEP_TYPE)
+              .stepType(StepGroupRollbackStep.STEP_TYPE)
               .group(StepOutcomeGroup.STEP.name())
               .stepParameters(stepParameters)
               .facilitatorObtainment(

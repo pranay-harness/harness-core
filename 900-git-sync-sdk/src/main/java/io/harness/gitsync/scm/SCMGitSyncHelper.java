@@ -13,6 +13,7 @@ import io.harness.exception.WingsException;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.FileInfo;
 import io.harness.gitsync.HarnessToGitPushInfoServiceGrpc.HarnessToGitPushInfoServiceBlockingStub;
+import io.harness.gitsync.Principal;
 import io.harness.gitsync.PushFileResponse;
 import io.harness.gitsync.UserPrincipal;
 import io.harness.gitsync.common.helper.ChangeTypeMapper;
@@ -25,7 +26,7 @@ import io.harness.impl.ScmResponseStatusUtils;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.entitydetail.EntityDetailRestToProtoMapper;
 import io.harness.security.SourcePrincipalContextBuilder;
-import io.harness.security.dto.PrincipalType;
+import io.harness.security.dto.ServicePrincipal;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -73,7 +74,7 @@ public class SCMGitSyncHelper {
   private FileInfo getFileInfo(
       GitEntityInfo gitBranchInfo, String yaml, ChangeType changeType, EntityDetail entityDetail) {
     return FileInfo.newBuilder()
-        .setUserPrincipal(getUserPrincipal())
+        .setPrincipal(getPrincipal())
         .setAccountId(entityDetail.getEntityRef().getAccountIdentifier())
         .setBranch(gitBranchInfo.getBranch())
         .setEntityDetail(entityDetailRestToProtoMapper.createEntityDetailDTO(entityDetail))
@@ -114,17 +115,29 @@ public class SCMGitSyncHelper {
         pushFileResponse.getScmResponseCode(), pushFileResponse.getError());
   }
 
-  public UserPrincipal getUserPrincipal() {
-    if (SourcePrincipalContextBuilder.getSourcePrincipal() != null
-        && SourcePrincipalContextBuilder.getSourcePrincipal().getType() == PrincipalType.USER) {
-      io.harness.security.dto.UserPrincipal userPrincipal =
-          (io.harness.security.dto.UserPrincipal) SourcePrincipalContextBuilder.getSourcePrincipal();
-      return UserPrincipal.newBuilder()
-          .setEmail(StringValue.of(userPrincipal.getEmail()))
-          .setUserId(StringValue.of(userPrincipal.getName()))
-          .setUserName(StringValue.of(userPrincipal.getUsername()))
-          .build();
+  private Principal getPrincipal() {
+    final io.harness.security.dto.Principal sourcePrincipal = SourcePrincipalContextBuilder.getSourcePrincipal();
+    if (sourcePrincipal == null) {
+      throw new InvalidRequestException("Principal cannot be null");
     }
-    throw new InvalidRequestException("User not set for push event.");
+    final Principal.Builder principalBuilder = Principal.newBuilder();
+    switch (sourcePrincipal.getType()) {
+      case USER:
+        io.harness.security.dto.UserPrincipal userPrincipalFromContext =
+            (io.harness.security.dto.UserPrincipal) sourcePrincipal;
+        final UserPrincipal userPrincipal = UserPrincipal.newBuilder()
+                                                .setEmail(StringValue.of(userPrincipalFromContext.getEmail()))
+                                                .setUserId(StringValue.of(userPrincipalFromContext.getName()))
+                                                .setUserName(StringValue.of(userPrincipalFromContext.getUsername()))
+                                                .build();
+        return principalBuilder.setUserPrincipal(userPrincipal).build();
+      case SERVICE:
+        final ServicePrincipal servicePrincipalFromContext = (ServicePrincipal) sourcePrincipal;
+        final io.harness.gitsync.ServicePrincipal servicePrincipal =
+            io.harness.gitsync.ServicePrincipal.newBuilder().setName(servicePrincipalFromContext.getName()).build();
+        return principalBuilder.setServicePrincipal(servicePrincipal).build();
+      default:
+        throw new InvalidRequestException("Principal type not set.");
+    }
   }
 }

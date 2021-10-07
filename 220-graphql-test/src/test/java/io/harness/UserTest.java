@@ -1,11 +1,13 @@
 package io.harness;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
 import static io.harness.rule.OwnerRule.VOJIN;
 
 import static io.github.benas.randombeans.api.EnhancedRandom.random;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.category.layer.GraphQLTests;
 import io.harness.generator.AccountGenerator;
@@ -24,7 +26,7 @@ import software.wings.graphql.schema.type.user.QLUserConnection;
 import com.google.inject.Inject;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
+@OwnedBy(PL)
 public class UserTest extends GraphQLTest {
   @Inject private AccountGenerator accountGenerator;
 
@@ -210,7 +212,7 @@ public class UserTest extends GraphQLTest {
     final Account account =
         accountGenerator.ensureAccount(random(String.class), random(String.class), AccountType.TRIAL);
     final User user = accountGenerator.ensureUser(
-        "userId", "harnessUser", "harnessUser@harness.io", random(String.class).toCharArray(), account);
+        "userId", "harnessUser", "harnessuser@harness.io", random(String.class).toCharArray(), account);
 
     final QLTestObject qlUserObject = qlExecute(query, account.getUuid());
     assertThat(qlUserObject.get(QLUserKeys.id)).isEqualTo(user.getUuid());

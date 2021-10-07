@@ -23,9 +23,9 @@ public class KubernetesChangeEventMetadata extends ChangeEventMetadata {
   Action action;
   String reason;
   String message;
-
+  String resourceVersion;
   public enum Action { Add, Update, Delete }
-  public enum KubernetesResourceType { Deployment, ReplicaSet, Secret, Pod }
+  public enum KubernetesResourceType { Deployment, ReplicaSet, Secret, Pod, ConfigMap, StatefulSet }
 
   @Override
   public ChangeSourceType getType() {

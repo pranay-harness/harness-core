@@ -1,7 +1,5 @@
 package io.harness.pms.sdk.core.execution;
 
-import static io.harness.pms.sdk.core.AmbianceTestUtils.EXECUTION_INSTANCE_ID;
-import static io.harness.pms.sdk.core.AmbianceTestUtils.SECTION_RUNTIME_ID;
 import static io.harness.rule.OwnerRule.SAHIL;
 
 import static org.mockito.Mockito.verify;
@@ -48,8 +46,7 @@ public class SdkGraphVisualizationDataServiceImplTest extends PmsSdkCoreTestBase
     SdkResponseEventProto sdkResponseEvent =
         SdkResponseEventProto.newBuilder()
             .setSdkResponseEventType(SdkResponseEventType.ADD_STEP_DETAILS_INSTANCE_REQUEST)
-            .setNodeExecutionId(SECTION_RUNTIME_ID)
-            .setPlanExecutionId(EXECUTION_INSTANCE_ID)
+            .setAmbiance(ambiance)
             .setStepDetailsInstanceRequest(addStepDetailsInstanceRequest)
             .build();
     verify(sdkResponseEventPublisher).publishEvent(sdkResponseEvent);

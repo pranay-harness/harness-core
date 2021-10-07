@@ -10,7 +10,7 @@ Portal Project Dev environment setup instructions
 
 2. Download and Install Java 8
 
-NOTE: Brew will download and install latest version of OpenJDK/JRE, its recommended to install OpenJDK/JRE_1.8.0_242 to be in sync with version everyone is using in the team.
+NOTE: Brew will download and install latest version of OpenJDK/JRE, its recommended to install OpenJDK/JRE_1.8.0_242 to be in sync with version everyone is using in the team. 
 
 Download OpenJDK 1.8-242 (jdk8u242-b08) JRE Installer from [Java archive downloads](https://adoptopenjdk.net/archive.html), unzip it, then set `JAVA_HOME` and `PATH` accordingly.
 
@@ -149,9 +149,9 @@ NOTE: the data from it is used for every git operation github does on you behave
 
 5. If Global Search is not required:
 
-    Install and start MongoDB Docker Image (v3.6):
+    Install and start MongoDB Docker Image (v4.2):
     ```
-    $ docker run -p 27017:27017 -v ~/_mongodb_data:/data/db --name mongoContainer -d --rm mongo:3.6
+    $ docker run -p 127.0.0.1:27017:27017 -v ~/_mongodb_data:/data/db --name mongoContainer -d --rm mongo:4.2
     ```
     Verify the container is running using `docker ps`
 

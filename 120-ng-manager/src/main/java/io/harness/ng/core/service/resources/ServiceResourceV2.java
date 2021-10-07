@@ -29,6 +29,7 @@ import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -55,7 +56,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -111,8 +111,9 @@ public class ServiceResourceV2 {
 
   @POST
   @ApiOperation(value = "Create a Service", nickname = "createServiceV2")
-  public ResponseDTO<ServiceResponse> create(@QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @Valid ServiceRequestDTO serviceRequestDTO) {
+  public ResponseDTO<ServiceResponse> create(
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId, @Valid ServiceRequestDTO serviceRequestDTO) {
+    throwExceptionForNoRequestDTO(serviceRequestDTO);
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountId, serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier()),
         Resource.of(NGResourceType.SERVICE, null), SERVICE_CREATE_PERMISSION);
@@ -127,7 +128,8 @@ public class ServiceResourceV2 {
   @ApiOperation(value = "Create Services", nickname = "createServicesV2")
   public ResponseDTO<PageResponse<ServiceResponse>> createServices(
       @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @Valid List<ServiceRequestDTO> serviceRequestDTOs) {
+      @Valid List<ServiceRequestDTO> serviceRequestDTOs) {
+    throwExceptionForNoRequestDTO(serviceRequestDTOs);
     for (ServiceRequestDTO serviceRequestDTO : serviceRequestDTOs) {
       accessControlClient.checkForAccessOrThrow(
           ResourceScope.of(accountId, serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier()),
@@ -157,8 +159,8 @@ public class ServiceResourceV2 {
   @PUT
   @ApiOperation(value = "Update a service by identifier", nickname = "updateServiceV2")
   public ResponseDTO<ServiceResponse> update(@HeaderParam(IF_MATCH) String ifMatch,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @Valid ServiceRequestDTO serviceRequestDTO) {
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId, @Valid ServiceRequestDTO serviceRequestDTO) {
+    throwExceptionForNoRequestDTO(serviceRequestDTO);
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountId, serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier()),
         Resource.of(NGResourceType.SERVICE, serviceRequestDTO.getIdentifier()), SERVICE_UPDATE_PERMISSION);
@@ -173,8 +175,8 @@ public class ServiceResourceV2 {
   @Path("upsert")
   @ApiOperation(value = "Upsert a service by identifier", nickname = "upsertServiceV2")
   public ResponseDTO<ServiceResponse> upsert(@HeaderParam(IF_MATCH) String ifMatch,
-      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
-      @NotNull @Valid ServiceRequestDTO serviceRequestDTO) {
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId, @Valid ServiceRequestDTO serviceRequestDTO) {
+    throwExceptionForNoRequestDTO(serviceRequestDTO);
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountId, serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier()),
         Resource.of(NGResourceType.SERVICE, serviceRequestDTO.getIdentifier()), SERVICE_UPDATE_PERMISSION);
@@ -255,5 +257,19 @@ public class ServiceResourceV2 {
       }
     }
     return filteredAccessControlDtoList;
+  }
+
+  private void throwExceptionForNoRequestDTO(List<ServiceRequestDTO> dto) {
+    if (dto == null) {
+      throw new InvalidRequestException(
+          "No request body sent in the API. Following field is required: identifier. Other optional fields: name, orgIdentifier, projectIdentifier, tags, description");
+    }
+  }
+
+  private void throwExceptionForNoRequestDTO(ServiceRequestDTO dto) {
+    if (dto == null) {
+      throw new InvalidRequestException(
+          "No request body sent in the API. Following field is required: identifier. Other optional fields: name, orgIdentifier, projectIdentifier, tags, description, version");
+    }
   }
 }

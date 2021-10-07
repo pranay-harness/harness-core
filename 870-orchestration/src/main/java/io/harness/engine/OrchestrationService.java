@@ -19,6 +19,9 @@ public interface OrchestrationService {
   PlanExecution startExecution(@Valid Plan plan, @NonNull Map<String, String> setupAbstractions,
       ExecutionMetadata metadata, PlanExecutionMetadata planExecutionMetadata);
 
+  PlanExecution retryExecution(@Valid Plan plan, @NonNull Map<String, String> setupAbstractions,
+      ExecutionMetadata metadata, PlanExecutionMetadata planExecutionMetadata);
+
   Interrupt registerInterrupt(@Valid InterruptPackage interruptPackage);
 
   PlanExecution startExecutionV2(String planId, Map<String, String> setupAbstractions, ExecutionMetadata metadata,

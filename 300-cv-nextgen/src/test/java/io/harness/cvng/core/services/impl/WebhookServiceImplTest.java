@@ -12,7 +12,9 @@ import io.harness.cvng.BuilderFactory.Context;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.PagerDutyActivity;
 import io.harness.cvng.beans.activity.ActivityType;
-import io.harness.cvng.core.beans.PagerDutyIncidentDTO;
+import io.harness.cvng.core.beans.PagerDutyWebhookEvent;
+import io.harness.cvng.core.beans.PagerDutyWebhookEvent.PagerDutyIncidentDTO;
+import io.harness.cvng.core.beans.PagerDutyWebhookEvent.PagerDutyWebhookEventDTO;
 import io.harness.cvng.core.entities.PagerDutyWebhook;
 import io.harness.cvng.core.entities.Webhook;
 import io.harness.cvng.core.entities.changeSource.PagerDutyChangeSource;
@@ -21,6 +23,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
+import java.time.Instant;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -90,19 +93,29 @@ public class WebhookServiceImplTest extends CvNextGenTestBase {
     PagerDutyWebhook pagerDutyWebhook = (PagerDutyWebhook) hPersistence.createQuery(Webhook.class).get();
     assertThat(pagerDutyWebhook).isNotNull();
 
-    PagerDutyIncidentDTO incidentDTO = PagerDutyIncidentDTO.builder()
-                                           .id(randomAlphabetic(20))
-                                           .self(randomAlphabetic(20))
-                                           .title(randomAlphabetic(20))
-                                           .build();
-    webhookService.handlePagerDutyWebhook(token, incidentDTO);
+    PagerDutyWebhookEvent pagerDutyWebhookEvent = PagerDutyWebhookEvent.builder()
+                                                      .event(PagerDutyWebhookEventDTO.builder()
+                                                                 .eventType("incident_trigger")
+                                                                 .triggeredAt(Instant.now())
+                                                                 .data(PagerDutyIncidentDTO.builder()
+                                                                           .id(randomAlphabetic(20))
+                                                                           .self(randomAlphabetic(20))
+                                                                           .title(randomAlphabetic(20))
+                                                                           .status("triggered")
+                                                                           .htmlUrl(randomAlphabetic(20))
+                                                                           .build())
+                                                                 .build())
+                                                      .build();
+    webhookService.handlePagerDutyWebhook(token, pagerDutyWebhookEvent);
 
     Activity activity = hPersistence.createQuery(Activity.class).get();
     assertThat(activity).isNotNull();
     assertThat(activity.getType()).isEqualByComparingTo(ActivityType.PAGER_DUTY);
-    assertThat(activity.getActivityName()).isEqualTo(incidentDTO.getTitle());
-    assertThat(((PagerDutyActivity) activity).getPagerDutyUrl()).isEqualTo(incidentDTO.getSelf());
-    assertThat(((PagerDutyActivity) activity).getEventId()).isEqualTo(incidentDTO.getId());
+    assertThat(activity.getActivityName()).isEqualTo(pagerDutyWebhookEvent.getEvent().getData().getTitle());
+    assertThat(((PagerDutyActivity) activity).getPagerDutyUrl())
+        .isEqualTo(pagerDutyWebhookEvent.getEvent().getData().getSelf());
+    assertThat(((PagerDutyActivity) activity).getEventId())
+        .isEqualTo(pagerDutyWebhookEvent.getEvent().getData().getId());
   }
 
   @Test
@@ -117,17 +130,41 @@ public class WebhookServiceImplTest extends CvNextGenTestBase {
     PagerDutyWebhook pagerDutyWebhook = (PagerDutyWebhook) hPersistence.createQuery(Webhook.class).get();
     assertThat(pagerDutyWebhook).isNotNull();
 
-    PagerDutyIncidentDTO incidentDTO = PagerDutyIncidentDTO.builder()
-                                           .id(randomAlphabetic(20))
-                                           .self(randomAlphabetic(20))
-                                           .title(randomAlphabetic(20))
-                                           .build();
-    webhookService.handlePagerDutyWebhook(token, incidentDTO);
+    PagerDutyWebhookEvent pagerDutyWebhookEvent = PagerDutyWebhookEvent.builder()
+                                                      .event(PagerDutyWebhookEventDTO.builder()
+                                                                 .eventType("incident_trigger")
+                                                                 .triggeredAt(Instant.now())
+                                                                 .data(PagerDutyIncidentDTO.builder()
+                                                                           .id(randomAlphabetic(20))
+                                                                           .self(randomAlphabetic(20))
+                                                                           .title(randomAlphabetic(20))
+                                                                           .status("triggered")
+                                                                           .htmlUrl(randomAlphabetic(20))
+                                                                           .build())
+                                                                 .build())
+                                                      .build();
+    webhookService.handlePagerDutyWebhook(token, pagerDutyWebhookEvent);
 
     List<Activity> activity = hPersistence.createQuery(Activity.class).asList();
     assertThat(activity.size()).isEqualTo(1);
-    webhookService.handlePagerDutyWebhook(token, incidentDTO);
+
+    pagerDutyWebhookEvent = PagerDutyWebhookEvent.builder()
+                                .event(PagerDutyWebhookEventDTO.builder()
+                                           .eventType("incident_escalated")
+                                           .triggeredAt(Instant.now())
+                                           .data(PagerDutyIncidentDTO.builder()
+                                                     .id(pagerDutyWebhookEvent.getEvent().getData().getId())
+                                                     .self(randomAlphabetic(20))
+                                                     .title(randomAlphabetic(20))
+                                                     .status("escalated")
+                                                     .htmlUrl(randomAlphabetic(20))
+                                                     .build())
+                                           .build())
+                                .build();
+    webhookService.handlePagerDutyWebhook(token, pagerDutyWebhookEvent);
     activity = hPersistence.createQuery(Activity.class).asList();
     assertThat(activity.size()).isEqualTo(1);
+    assertThat(((PagerDutyActivity) activity.get(0)).getStatus())
+        .isEqualTo(pagerDutyWebhookEvent.getEvent().getData().getStatus());
   }
 }

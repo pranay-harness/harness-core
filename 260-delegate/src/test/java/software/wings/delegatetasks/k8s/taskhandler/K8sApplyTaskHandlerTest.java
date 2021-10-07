@@ -6,7 +6,12 @@ import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.BOJANA;
+import static io.harness.rule.OwnerRule.TMACARI;
 import static io.harness.rule.OwnerRule.YOGESH;
+
+import static software.wings.delegatetasks.k8s.K8sTestConstants.CONFIG_MAP_YAML;
+import static software.wings.delegatetasks.k8s.K8sTestConstants.DEPLOYMENT_YAML;
+import static software.wings.delegatetasks.k8s.K8sTestConstants.SECRET_YAML;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.EMPTY_LIST;
@@ -55,9 +60,11 @@ import software.wings.helpers.ext.k8s.request.K8sApplyTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
+import software.wings.helpers.ext.k8s.response.K8sApplyResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.joor.Reflect;
@@ -250,6 +257,109 @@ public class K8sApplyTaskHandlerTest extends WingsBaseTest {
 
     verify(handler, times(1))
         .init(any(K8sApplyTaskParameters.class), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
+
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void executeTaskInternalExportManifests() throws Exception {
+    K8sApplyTaskHandler handler = spy(k8sApplyTaskHandler);
+    K8sApplyHandlerConfig k8sApplyHandlerConfig = new K8sApplyHandlerConfig();
+    List<KubernetesResource> kubernetesResources = new ArrayList<>();
+    kubernetesResources.addAll(ManifestHelper.processYaml(SECRET_YAML));
+    kubernetesResources.addAll(ManifestHelper.processYaml(CONFIG_MAP_YAML));
+    kubernetesResources.addAll(ManifestHelper.processYaml(DEPLOYMENT_YAML));
+    k8sApplyHandlerConfig.setResources(kubernetesResources);
+    Reflect.on(handler).set("k8sApplyHandlerConfig", k8sApplyHandlerConfig);
+
+    doReturn(true)
+        .when(k8sTaskHelper)
+        .fetchManifestFilesAndWriteToDirectory(
+            any(K8sDelegateManifestConfig.class), anyString(), any(ExecutionLogCallback.class), anyLong());
+    doReturn(true).when(handler).init(
+        any(K8sApplyTaskParameters.class), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
+
+    final K8sTaskExecutionResponse response = handler.executeTaskInternal(
+        K8sApplyTaskParameters.builder().exportManifests(true).build(), K8sDelegateTaskParams.builder().build());
+
+    verify(handler, times(1))
+        .init(any(K8sApplyTaskParameters.class), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
+    verify(k8sTaskHelper, times(1)).fetchManifestFilesAndWriteToDirectory(any(), any(), any(), anyLong());
+    verify(mockedK8sApplyBaseHandler, times(0)).prepare(any(), anyBoolean(), any());
+    verify(k8sTaskHelperBase, times(0)).applyManifests(any(), any(), any(), any(), anyBoolean());
+    verify(mockedK8sApplyBaseHandler, times(0)).steadyStateCheck(anyBoolean(), any(), any(), anyLong(), any(), any());
+    verify(mockedK8sApplyBaseHandler, times(0)).wrapUp(any(), any(), any());
+
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(SUCCESS);
+    assertThat(((K8sApplyResponse) response.getK8sTaskResponse()).getResources()).isEqualTo(kubernetesResources);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void executeTaskInternalInheritManifests() throws Exception {
+    K8sApplyTaskHandler handler = spy(k8sApplyTaskHandler);
+    K8sApplyHandlerConfig k8sApplyHandlerConfig = new K8sApplyHandlerConfig();
+    List<KubernetesResource> kubernetesResources = new ArrayList<>();
+    kubernetesResources.addAll(ManifestHelper.processYaml(SECRET_YAML));
+    kubernetesResources.addAll(ManifestHelper.processYaml(CONFIG_MAP_YAML));
+    kubernetesResources.addAll(ManifestHelper.processYaml(DEPLOYMENT_YAML));
+    Reflect.on(handler).set("k8sApplyHandlerConfig", k8sApplyHandlerConfig);
+
+    doReturn(true).when(k8sTaskHelper).restore(any(), any(), any(), any(), any());
+    doReturn(true).when(mockedK8sApplyBaseHandler).prepare(any(), anyBoolean(), any());
+    doReturn(true).when(k8sTaskHelperBase).applyManifests(any(), any(), any(), any(), anyBoolean());
+    doReturn(true)
+        .when(mockedK8sApplyBaseHandler)
+        .steadyStateCheck(anyBoolean(), any(), any(), anyLong(), any(), any());
+    doNothing().when(mockedK8sApplyBaseHandler).wrapUp(any(), any(), any());
+
+    final K8sTaskExecutionResponse response =
+        handler.executeTaskInternal(K8sApplyTaskParameters.builder()
+                                        .k8sClusterConfig(K8sClusterConfig.builder().namespace("default").build())
+                                        .inheritManifests(true)
+                                        .kubernetesResources(kubernetesResources)
+                                        .build(),
+            K8sDelegateTaskParams.builder().build());
+
+    verify(handler, times(0))
+        .init(any(K8sApplyTaskParameters.class), any(K8sDelegateTaskParams.class), any(ExecutionLogCallback.class));
+    verify(k8sTaskHelper, times(0)).fetchManifestFilesAndWriteToDirectory(any(), any(), any(), anyLong());
+    verify(k8sTaskHelper, times(1)).restore(any(), any(), any(), any(), any());
+    verify(mockedK8sApplyBaseHandler, times(1)).prepare(any(), anyBoolean(), any());
+    verify(k8sTaskHelperBase, times(1)).applyManifests(any(), any(), any(), any(), anyBoolean());
+    verify(mockedK8sApplyBaseHandler, times(1)).steadyStateCheck(anyBoolean(), any(), any(), anyLong(), any(), any());
+    verify(mockedK8sApplyBaseHandler, times(1)).wrapUp(any(), any(), any());
+
+    assertThat(response.getCommandExecutionStatus()).isEqualTo(SUCCESS);
+    assertThat(((K8sApplyResponse) response.getK8sTaskResponse()).getResources()).isNull();
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void executeTaskInternalInheritManifestsRestoreFailed() throws Exception {
+    K8sApplyTaskHandler handler = spy(k8sApplyTaskHandler);
+    K8sApplyHandlerConfig k8sApplyHandlerConfig = new K8sApplyHandlerConfig();
+    List<KubernetesResource> kubernetesResources = new ArrayList<>();
+    kubernetesResources.addAll(ManifestHelper.processYaml(SECRET_YAML));
+    kubernetesResources.addAll(ManifestHelper.processYaml(CONFIG_MAP_YAML));
+    kubernetesResources.addAll(ManifestHelper.processYaml(DEPLOYMENT_YAML));
+    Reflect.on(handler).set("k8sApplyHandlerConfig", k8sApplyHandlerConfig);
+
+    doReturn(false).when(k8sTaskHelper).restore(any(), any(), any(), any(), any());
+
+    final K8sTaskExecutionResponse response =
+        handler.executeTaskInternal(K8sApplyTaskParameters.builder()
+                                        .k8sClusterConfig(K8sClusterConfig.builder().namespace("default").build())
+                                        .inheritManifests(true)
+                                        .kubernetesResources(kubernetesResources)
+                                        .build(),
+            K8sDelegateTaskParams.builder().build());
+
+    verify(k8sTaskHelper, times(1)).restore(any(), any(), any(), any(), any());
 
     assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
   }

@@ -72,6 +72,8 @@ public enum ExecutionInterruptType {
 
   MARK_EXPIRED("Mark the node as expired"),
 
+  MARK_EXPIRED_WITH_FAILURE_STRATEGY ("Mark the node as expired"),
+
   CONTINUE_WITH_DEFAULTS("Run the same execution Instance with default values"),
 
   CONTINUE_PIPELINE_STAGE("Run the env state with runtime values");
