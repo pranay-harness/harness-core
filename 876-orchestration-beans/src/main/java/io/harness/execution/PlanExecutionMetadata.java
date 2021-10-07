@@ -10,6 +10,7 @@ import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
+import io.harness.plan.NodeType;
 import io.harness.pms.contracts.triggers.TriggerPayload;
 
 import com.google.common.collect.ImmutableList;
@@ -34,7 +35,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("planExecutionsMetadata")
 @TypeAlias("planExecutionMetadata")
 @StoreIn(DbAliases.PMS)
-public class PlanExecutionMetadata implements PersistentEntity, UuidAware {
+public class PlanExecutionMetadata implements PersistentEntity, UuidAware, PmsNodeExecutionMetadata {
   public static final long TTL_MONTHS = 6;
 
   @Id @org.mongodb.morphia.annotations.Id private String uuid;
@@ -60,5 +61,10 @@ public class PlanExecutionMetadata implements PersistentEntity, UuidAware {
                  .unique(true)
                  .build())
         .build();
+  }
+
+  @Override
+  public NodeType forNodeType() {
+    return NodeType.PLAN;
   }
 }

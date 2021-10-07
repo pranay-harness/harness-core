@@ -11,6 +11,8 @@ import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.callback.DelegateCallback;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.callback.MongoDatabase;
@@ -62,10 +64,12 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Slf4j
+@OwnedBy(HarnessTeam.DEL)
 public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest {
   private static final String NON_EXISTING_SELECTOR = "nonExistingSelector";
 
@@ -85,6 +89,7 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
   @Test
   @Owner(developers = MARKO)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void testSyncTaskExecution() {
     ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     scheduledExecutorService.scheduleWithFixedDelay(delegateSyncService, 0L, 2L, TimeUnit.SECONDS);
@@ -138,6 +143,7 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
   @Test
   @Owner(developers = MARKO)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void testSyncTaskExecutionWithErrorResponse() {
     ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     scheduledExecutorService.scheduleWithFixedDelay(delegateSyncService, 0L, 2L, TimeUnit.SECONDS);
@@ -194,6 +200,7 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
   @Test
   @Owner(developers = MARKO)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void testSyncTaskExecutionWithExceptionThrown() {
     ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     scheduledExecutorService.scheduleWithFixedDelay(delegateSyncService, 0L, 2L, TimeUnit.SECONDS);
@@ -243,6 +250,7 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
   @Test
   @Owner(developers = MARKO)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void testAsyncTaskExecution() {
     ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     scheduledExecutorService.scheduleWithFixedDelay(delegateAsyncService, 0L, 2L, TimeUnit.SECONDS);
@@ -300,6 +308,7 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
   @Test
   @Owner(developers = MARKO)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void testAsyncTaskExecutionWithErrorResponse() {
     ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
     scheduledExecutorService.scheduleWithFixedDelay(delegateAsyncService, 0L, 2L, TimeUnit.SECONDS);
@@ -359,6 +368,7 @@ public class DelegateServiceTaskApiFunctionalTest extends AbstractFunctionalTest
   @Test
   @Owner(developers = SANJA)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void testTaskProgressUpdate() {
     progressCallCount.set(0);
     progressDataList.clear();

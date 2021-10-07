@@ -55,9 +55,9 @@ public class StageExecutionSelectorHelperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testGetStageInfoList() {
+  public void testGetStageInfoListWithStagesRequired() {
     String pipelineYaml = getPipelineYaml();
-    List<BasicStageInfo> stageInfoList = StageExecutionSelectorHelper.getStageInfoList(pipelineYaml);
+    List<BasicStageInfo> stageInfoList = StageExecutionSelectorHelper.getStageInfoListWithStagesRequired(pipelineYaml);
 
     assertBasicStageInfo(stageInfoList);
     assertThat(stageInfoList.get(0).getStagesRequired().toString()).isEqualTo("[]");
@@ -71,9 +71,9 @@ public class StageExecutionSelectorHelperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testGetStageYamlList() {
+  public void testGetStageInfoList() {
     String pipelineYaml = getPipelineYaml();
-    List<BasicStageInfo> stageYamlList = StageExecutionSelectorHelper.getStageYamlList(pipelineYaml);
+    List<BasicStageInfo> stageYamlList = StageExecutionSelectorHelper.getStageInfoList(pipelineYaml);
     assertBasicStageInfo(stageYamlList);
   }
 

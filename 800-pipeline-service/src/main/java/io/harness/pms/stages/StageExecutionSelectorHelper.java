@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class StageExecutionSelectorHelper {
   public List<StageExecutionResponse> getStageExecutionResponse(String pipelineYaml) {
-    List<BasicStageInfo> stagesInfo = getStageInfoList(pipelineYaml);
+    List<BasicStageInfo> stagesInfo = getStageInfoListWithStagesRequired(pipelineYaml);
 
     List<StageExecutionResponse> executionResponses = new ArrayList<>();
     for (BasicStageInfo stageInfo : stagesInfo) {
@@ -40,13 +40,13 @@ public class StageExecutionSelectorHelper {
   }
 
   @VisibleForTesting
-  List<BasicStageInfo> getStageInfoList(String pipelineYaml) {
-    List<BasicStageInfo> stageYamlList = getStageYamlList(pipelineYaml);
+  List<BasicStageInfo> getStageInfoListWithStagesRequired(String pipelineYaml) {
+    List<BasicStageInfo> stageYamlList = getStageInfoList(pipelineYaml);
     return addStagesRequired(stageYamlList);
   }
 
   @VisibleForTesting
-  List<BasicStageInfo> getStageYamlList(String pipelineYaml) {
+  List<BasicStageInfo> getStageInfoList(String pipelineYaml) {
     List<BasicStageInfo> stageInfoList = new ArrayList<>();
     try {
       YamlField pipelineYamlField = YamlUtils.readTree(pipelineYaml);

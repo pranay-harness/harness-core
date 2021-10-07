@@ -4,6 +4,8 @@ import static io.harness.rule.OwnerRule.YOGESH;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
@@ -23,9 +25,11 @@ import software.wings.beans.artifact.Artifact;
 import com.google.inject.Inject;
 import java.util.Collections;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+@OwnedBy(HarnessTeam.CDP)
 public class BuildWorkflowFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
   @Inject private WorkflowUtils workflowUtils;
@@ -46,6 +50,7 @@ public class BuildWorkflowFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void shouldRunBuildWorkflow() {
     final String appId = service.getAppId();
     final String accountId = service.getAccountId();

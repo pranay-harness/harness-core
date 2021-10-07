@@ -5,6 +5,8 @@ import static io.harness.rule.OwnerRule.UTKARSH;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.OwnerManager;
@@ -33,6 +35,7 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.HttpHeaders;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -40,6 +43,7 @@ import org.junit.experimental.categories.Category;
  * @author marklu on 2019-06-11
  */
 @Slf4j
+@OwnedBy(HarnessTeam.PL)
 public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
   private static final String DEV_IDENTITY_SERVICE_SECRET =
       "HVSKUYqD4e5Rxu12hFDdCJKGM64sxgEynvdDhaOHaTHhwwn0K4Ttr0uoOxSsEVYNrUU=";
@@ -56,6 +60,7 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void testIdentityServiceClientLoginUser() {
     String identityServiceToken = generateIdentityServiceToken();
     GenericType<RestResponse<User>> returnType = new GenericType<RestResponse<User>>() {};
@@ -69,6 +74,7 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void testIdentityServiceClientListUsers() {
     String identityServiceToken = generateIdentityServiceToken();
     GenericType<RestResponse<List<User>>> returnType = new GenericType<RestResponse<List<User>>>() {};
@@ -82,6 +88,7 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = UTKARSH, intermittent = true)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void testIdentityServiceClientListAccounts() {
     String identityServiceToken = generateIdentityServiceToken();
     GenericType<RestResponse<List<Account>>> returnType = new GenericType<RestResponse<List<Account>>>() {};
@@ -95,6 +102,7 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = UJJAWAL)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void testIdentityServiceClientGetAccountSettings() {
     String identityServiceToken = generateIdentityServiceToken();
     GenericType<RestResponse<AccountSettingsResponse>> returnType =
@@ -110,6 +118,7 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void testIdentityServiceClientGetPublicUserInfo() {
     String identityServiceToken = generateIdentityServiceToken();
     GenericType<RestResponse<User>> returnType = new GenericType<RestResponse<User>>() {};
@@ -121,6 +130,7 @@ public class IdentityServiceFunctionalTest extends AbstractFunctionalTest {
   @Test
   @Owner(developers = UTKARSH)
   @Category(FunctionalTests.class)
+  @Ignore("Functional Flakiness fixing. Needs to be fixed")
   public void testIdentityServiceClientSignupOauthUser() {
     String userEmail = "oauth_trial_user_" + System.currentTimeMillis() + "@harness.io";
     String identityServiceToken = generateIdentityServiceToken();
