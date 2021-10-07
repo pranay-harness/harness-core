@@ -3,8 +3,6 @@ package io.harness.changehandlers;
 import static java.util.Arrays.asList;
 
 import io.harness.changestreamsframework.ChangeEvent;
-import io.harness.ng.core.environment.beans.Environment;
-import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 
 import com.mongodb.DBObject;

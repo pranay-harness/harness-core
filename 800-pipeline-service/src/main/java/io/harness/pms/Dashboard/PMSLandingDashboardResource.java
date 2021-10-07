@@ -13,7 +13,6 @@ import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.pms.dashboards.PipelinesCount;
-import io.harness.pms.pipeline.service.PipelineDashboardService;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
