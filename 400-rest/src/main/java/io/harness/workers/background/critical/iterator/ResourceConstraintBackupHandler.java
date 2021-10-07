@@ -30,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ResourceConstraintBackupHandler implements Handler<ResourceConstraintInstance> {
   private static final String handlerName = "ResourceConstraint-Backup";
-  private static final int poolSize = 10;
+  private static final int poolSize = 2;
   private static final int scheduleIntervalSeconds = 60;
 
   @Inject private AccountService accountService;

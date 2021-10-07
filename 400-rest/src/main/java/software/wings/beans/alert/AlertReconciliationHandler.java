@@ -37,7 +37,7 @@ public class AlertReconciliationHandler implements Handler<Alert> {
 
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
-        PumpExecutorOptions.builder().name("AlertReconciliation").poolSize(3).interval(Duration.ofMinutes(1)).build(),
+        PumpExecutorOptions.builder().name("AlertReconciliation").poolSize(2).interval(Duration.ofMinutes(1)).build(),
         AlertReconciliationHandler.class,
         MongoPersistenceIterator.<Alert, MorphiaFilterExpander<Alert>>builder()
             .clazz(Alert.class)

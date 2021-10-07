@@ -40,7 +40,7 @@ public class InstanceSyncHandler implements Handler<InfrastructureMapping> {
 
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
-        PumpExecutorOptions.builder().name("InstanceSync").poolSize(10).interval(ofSeconds(30)).build(),
+        PumpExecutorOptions.builder().name("InstanceSync").poolSize(2).interval(ofSeconds(30)).build(),
         InstanceSyncHandler.class,
         MongoPersistenceIterator.<InfrastructureMapping, MorphiaFilterExpander<InfrastructureMapping>>builder()
             .clazz(InfrastructureMapping.class)

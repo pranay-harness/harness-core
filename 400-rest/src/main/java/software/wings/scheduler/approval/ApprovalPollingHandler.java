@@ -50,7 +50,7 @@ public class ApprovalPollingHandler implements Handler<ApprovalPollingJobEntity>
 
   public void registerIterators() {
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
-        PumpExecutorOptions.builder().name("ApprovalPolling").poolSize(5).interval(PUMP_INTERVAL).build(),
+        PumpExecutorOptions.builder().name("ApprovalPolling").poolSize(2).interval(PUMP_INTERVAL).build(),
         ApprovalPollingHandler.class,
         MongoPersistenceIterator.<ApprovalPollingJobEntity, MorphiaFilterExpander<ApprovalPollingJobEntity>>builder()
             .clazz(ApprovalPollingJobEntity.class)

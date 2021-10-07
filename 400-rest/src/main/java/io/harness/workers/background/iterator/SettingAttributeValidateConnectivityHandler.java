@@ -42,7 +42,7 @@ public class SettingAttributeValidateConnectivityHandler implements Handler<Sett
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PumpExecutorOptions.builder()
             .name("SettingAttributeValidateConnectivity")
-            .poolSize(5)
+            .poolSize(2)
             .interval(Duration.ofMinutes(10))
             .build(),
         SettingAttributeValidateConnectivityHandler.class,

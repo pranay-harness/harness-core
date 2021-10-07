@@ -102,7 +102,7 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
     assignmentIterator = persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PumpExecutorOptions.builder()
             .name("PerpetualTaskAssignment")
-            .poolSize(5)
+            .poolSize(2)
             .interval(ofMinutes(PERPETUAL_TASK_ASSIGNMENT_INTERVAL_MINUTE))
             .build(),
         PerpetualTaskRecordHandler.class,
@@ -125,7 +125,7 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
     rebalanceIterator = persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PumpExecutorOptions.builder()
             .name("PerpetualTaskRebalance")
-            .poolSize(5)
+            .poolSize(2)
             .interval(ofMinutes(PERPETUAL_TASK_ASSIGNMENT_INTERVAL_MINUTE))
             .build(),
         PerpetualTaskRecordHandler.class,

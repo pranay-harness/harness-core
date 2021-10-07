@@ -25,6 +25,7 @@ import static java.time.Duration.ofHours;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 
+import io.harness.annotation.HarnessRepo;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.GraphQLModule;
 import io.harness.artifact.ArtifactCollectionPTaskServiceClient;
@@ -920,14 +921,14 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     queueListenerController.register(injector.getInstance(ArtifactCollectEventListener.class), 1);
     queueListenerController.register(injector.getInstance(DelayEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(DeploymentEventListener.class), 2);
-    queueListenerController.register(injector.getInstance(InstanceEventListener.class), 2);
-    queueListenerController.register(injector.getInstance(DeploymentTimeSeriesEventListener.class), 2);
+    queueListenerController.register(injector.getInstance(DeploymentEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(InstanceEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(DeploymentTimeSeriesEventListener.class), 1);
     queueListenerController.register(injector.getInstance(EmailNotificationListener.class), 1);
-    queueListenerController.register(injector.getInstance(ExecutionEventListener.class), 3);
+    queueListenerController.register(injector.getInstance(ExecutionEventListener.class), 1);
     queueListenerController.register(injector.getInstance(SecretMigrationEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(GeneralNotifyEventListener.class), 5);
-    queueListenerController.register(injector.getInstance(OrchestrationNotifyEventListener.class), 5);
+    queueListenerController.register(injector.getInstance(GeneralNotifyEventListener.class), 1);
+    queueListenerController.register(injector.getInstance(OrchestrationNotifyEventListener.class), 1);
     queueListenerController.register(injector.getInstance(PruneEntityListener.class), 1);
   }
 
@@ -1118,9 +1119,9 @@ public class WingsApplication extends Application<MainConfiguration> {
 
   public static void registerIteratorsManager(Injector injector) {
     final ScheduledThreadPoolExecutor artifactCollectionExecutor = new ScheduledThreadPoolExecutor(
-        25, new ThreadFactoryBuilder().setNameFormat("Iterator-ArtifactCollection").build());
+        2, new ThreadFactoryBuilder().setNameFormat("Iterator-ArtifactCollection").build());
     final ScheduledThreadPoolExecutor eventDeliveryExecutor = new ScheduledThreadPoolExecutor(
-        25, new ThreadFactoryBuilder().setNameFormat("Iterator-Event-Delivery").build());
+        2, new ThreadFactoryBuilder().setNameFormat("Iterator-Event-Delivery").build());
 
     injector.getInstance(AlertReconciliationHandler.class).registerIterators();
     injector.getInstance(ArtifactCollectionHandler.class).registerIterators(artifactCollectionExecutor);

@@ -35,7 +35,7 @@ backgroundScheduler:
   schedulerName: automation_background_scheduler
   instanceId: automation_background
   tablePrefix: quartz
-  threadCount: 25
+  threadCount: 2
   clustered: true #backgroundScheduler
   #mongoUri: mongodb://localhost:27017/background_scheduler
 
@@ -45,7 +45,7 @@ serviceScheduler:
   #instanceId: automation_service
   instanceId: automation_background
   tablePrefix: quartz
-  threadCount: 25
+  threadCount: 2
   enabled: true
   #mongoUri: mongodb://localhost:27017/service_scheduler
 
@@ -112,7 +112,7 @@ datadogConfig:
   enabled: false #datadogConfigEnable
   apiKey: "datadog_api_key"
 
-distributedLockImplementation: MONGO
+distributedLockImplementation: REDIS
 
 redisLockConfig:
   sentinel: false
@@ -124,10 +124,10 @@ redisLockConfig:
     - "redis://redis3:26379"
   envNamespace: ""
   readMode: MASTER
-  nettyThreads: 16
+  nettyThreads: 1
   useScriptCache: true
 
-atmosphereBroadcaster: HAZELCAST
+atmosphereBroadcaster: REDIS
 
 redisAtmosphereConfig:
   sentinel: false
@@ -139,7 +139,7 @@ redisAtmosphereConfig:
     - "redis://redis3:26379"
   envNamespace: ""
   readMode: MASTER
-  nettyThreads: 16
+  nettyThreads: 1
   useScriptCache: true
 
 githubConfig:
@@ -336,7 +336,7 @@ portal:
   criticalDelegateTaskRejectAtLimit: 100000
 
 cacheConfig:
-  cacheBackend: HAZELCAST
+  cacheBackend: REDIS
   cacheNamespace: ""
   disabledCaches: []
 
@@ -594,7 +594,7 @@ eventsFramework:
       - "redis://redis3:26379"
     envNamespace: ""
     readMode: MASTER
-    nettyThreads: 16
+    nettyThreads: 1
     useScriptCache: true
     userName: ""
     password: ""

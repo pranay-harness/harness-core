@@ -45,7 +45,7 @@ public class VaultSecretManagerRenewalHandler implements Handler<SecretManagerCo
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PersistenceIteratorFactory.PumpExecutorOptions.builder()
             .name("VaultSecretManagerRenewalHandler")
-            .poolSize(5)
+            .poolSize(2)
             .interval(ofSeconds(5))
             .build(),
         SecretManagerConfig.class,

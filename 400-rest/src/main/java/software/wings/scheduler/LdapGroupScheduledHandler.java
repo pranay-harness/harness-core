@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 public class LdapGroupScheduledHandler implements Handler<LdapSettings> {
-  private static final int POOL_SIZE = 8;
+  private static final int POOL_SIZE = 2;
   @Inject private PersistenceIteratorFactory persistenceIteratorFactory;
   PersistenceIterator<LdapSettings> iterator;
   @Inject private MorphiaPersistenceRequiredProvider<LdapSettings> persistenceProvider;

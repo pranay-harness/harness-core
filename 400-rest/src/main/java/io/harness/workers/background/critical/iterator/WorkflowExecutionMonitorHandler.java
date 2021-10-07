@@ -73,7 +73,7 @@ public class WorkflowExecutionMonitorHandler implements Handler<WorkflowExecutio
   public void registerIterators() {
     PumpExecutorOptions options = PumpExecutorOptions.builder()
                                       .interval(Duration.ofSeconds(10))
-                                      .poolSize(5)
+                                      .poolSize(2)
                                       .name("WorkflowExecutionMonitor")
                                       .build();
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(options, WorkflowExecution.class,

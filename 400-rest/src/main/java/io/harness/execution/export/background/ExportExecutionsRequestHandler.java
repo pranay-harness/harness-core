@@ -44,7 +44,7 @@ public class ExportExecutionsRequestHandler implements Handler<ExportExecutionsR
     persistenceIteratorFactory.createPumpIteratorWithDedicatedThreadPool(
         PumpExecutorOptions.builder()
             .name("ExportExecutionsRequestHandler")
-            .poolSize(3)
+            .poolSize(2)
             .interval(ofMinutes(ASSIGNMENT_INTERVAL_MINUTES))
             .build(),
         ExportExecutionsRequestHandler.class,

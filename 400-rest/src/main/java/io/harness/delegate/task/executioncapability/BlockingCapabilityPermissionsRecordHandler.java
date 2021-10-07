@@ -65,7 +65,7 @@ public class BlockingCapabilityPermissionsRecordHandler
   public void registerIterators() {
     PumpExecutorOptions options = PumpExecutorOptions.builder()
                                       .interval(Duration.ofSeconds(CAPABILITIES_CHECK_INTERVAL_IN_SECONDS))
-                                      .poolSize(5)
+                                      .poolSize(2)
                                       .name("BlockingCapabilityPermissionsRecordHandler")
                                       .build();
 
