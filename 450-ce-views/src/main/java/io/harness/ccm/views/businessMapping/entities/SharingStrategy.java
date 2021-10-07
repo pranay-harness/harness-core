@@ -1,4 +1,4 @@
-package io.harness.ccm.businessMapping.entities;
+package io.harness.ccm.views.businessMapping.entities;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
 
