@@ -5,6 +5,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.dto.ResponseDTO;
+import io.harness.opaclient.model.PipelineOpaEvaluationContext;
 import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.pms.opa.service.PMSOpaService;
 

@@ -1,7 +1,10 @@
 package io.harness.engine.pms.execution.strategy.plan;
 
+import static io.harness.pms.contracts.execution.Status.ERRORED;
+
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.engine.GovernanceService;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.plan.PlanExecutionMetadataService;
@@ -21,6 +24,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.OrchestrationEvent;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
+import io.harness.pms.contracts.governance.GovernanceMetadata;
 import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.springdata.TransactionHelper;
 
@@ -41,13 +45,16 @@ public class PlanExecutionStrategy implements NodeExecutionStrategy<Plan, PlanEx
   @Inject private PlanExecutionMetadataService planExecutionMetadataService;
   @Inject private OrchestrationEventEmitter eventEmitter;
   @Inject private TransactionHelper transactionHelper;
+  @Inject private GovernanceService governanceService;
 
   @Getter private final Subject<OrchestrationStartObserver> orchestrationStartSubject = new Subject<>();
   @Getter private final Subject<OrchestrationEndObserver> orchestrationEndSubject = new Subject<>();
 
   @Override
   public PlanExecution triggerNode(Ambiance ambiance, Plan plan, PlanExecutionMetadata metadata) {
-    PlanExecution planExecution = createPlanExecution(ambiance, metadata);
+    GovernanceMetadata governanceMetadata = governanceService.evaluateGovernancePolicies(
+        ambiance.getMetadata(), metadata, ambiance.getSetupAbstractionsMap());
+    PlanExecution planExecution = createPlanExecution(ambiance, metadata, governanceMetadata);
     eventEmitter.emitEvent(
         OrchestrationEvent.newBuilder()
             .setAmbiance(ambiance)
@@ -63,17 +70,25 @@ public class PlanExecutionStrategy implements NodeExecutionStrategy<Plan, PlanEx
 
     orchestrationStartSubject.fireInform(OrchestrationStartObxxxxxxxx:onStart,
         OrchestrationStartInfo.builder().ambiance(ambiance).planExecutionMetadata(metadata).build());
-    executorService.submit(() -> orchestrationEngine.triggerNode(ambiance, planNode, null));
-    return planExecution;
+
+    if (governanceMetadata.getDeny()) {
+      return planExecutionService.updateStatus(
+          ambiance.getPlanExecutionId(), ERRORED, ops -> ops.set(PlanExecutionKeys.endTs, System.currentTimeMillis()));
+    } else {
+      executorService.submit(() -> orchestrationEngine.triggerNode(ambiance, planNode, null));
+      return planExecution;
+    }
   }
 
-  private PlanExecution createPlanExecution(Ambiance ambiance, PlanExecutionMetadata planExecutionMetadata) {
+  private PlanExecution createPlanExecution(
+      Ambiance ambiance, PlanExecutionMetadata planExecutionMetadata, GovernanceMetadata governanceMetadata) {
     PlanExecution planExecution = PlanExecution.builder()
                                       .uuid(ambiance.getPlanExecutionId())
                                       .planId(ambiance.getPlanId())
                                       .setupAbstractions(ambiance.getSetupAbstractionsMap())
                                       .status(Status.RUNNING)
                                       .startTs(System.currentTimeMillis())
+                                      .governanceMetadata(governanceMetadata)
                                       .metadata(ambiance.getMetadata())
                                       .build();
 
@@ -91,8 +106,8 @@ public class PlanExecutionStrategy implements NodeExecutionStrategy<Plan, PlanEx
     if (planExecution == null) {
       log.error("Cannot transition plan execution to status : {}", status);
       // TODO: Incorporate error handling
-      planExecution = planExecutionService.updateStatus(ambiance.getPlanExecutionId(), Status.ERRORED,
-          ops -> ops.set(PlanExecutionKeys.endTs, System.currentTimeMillis()));
+      planExecution = planExecutionService.updateStatus(
+          ambiance.getPlanExecutionId(), ERRORED, ops -> ops.set(PlanExecutionKeys.endTs, System.currentTimeMillis()));
     }
     eventEmitter.emitEvent(buildEndEvent(ambiance, planExecution.getStatus()));
     orchestrationEndSubject.fireInform(OrchestrationEndObxxxxxxxx:onEnd, ambiance);
