@@ -48,6 +48,12 @@ public class CVNGStepTask
   }
   @Id private String uuid;
   private String accountId;
+  private String orgIdentifier;
+  private String projectIdentifier;
+  private String serviceIdentifier;
+  private String environmentIdentifier;
+  String deploymentTag;
+
   private long createdAt;
   private long lastUpdatedAt;
   private String activityId;
@@ -57,8 +63,9 @@ public class CVNGStepTask
   @EqualsAndHashCode.Exclude
   @FdTtlIndex
   @Builder.Default
-  private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
+  private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
   private long asyncTaskIteration;
+  private String verificationJobInstanceId;
 
   @Override
   public void updateNextIteration(String fieldName, long nextIteration) {
