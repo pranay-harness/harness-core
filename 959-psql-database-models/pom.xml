@@ -10,9 +10,9 @@
     <properties>
         <jdbc.driver>org.postgresql.Driver</jdbc.driver>
         <skip.jooq.generation>false</skip.jooq.generation>
-        <timescaledb.password>harnessappdev</timescaledb.password>
-        <timescaledb.url>jdbc:postgresql://34.83.25.129:5432/harnessdev</timescaledb.url>
-        <timescaledb.user>harnessappdev</timescaledb.user>
+        <timescaledb.password />
+        <timescaledb.url>jdbc:postgresql://localhost:5432/harness</timescaledb.url>
+        <timescaledb.user>postgres</timescaledb.user>
     </properties>
     <dependencies>
         <dependency>
