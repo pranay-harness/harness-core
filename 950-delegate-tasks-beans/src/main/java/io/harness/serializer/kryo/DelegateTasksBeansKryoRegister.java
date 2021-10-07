@@ -417,6 +417,7 @@ import software.wings.beans.servicenow.ServiceNowFields;
 import software.wings.delegatetasks.servicenow.ServiceNowAction;
 import software.wings.helpers.ext.cloudformation.response.ExistingStackInfo;
 import software.wings.helpers.ext.ecs.response.EcsCommandResponse;
+import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.ReleaseInfo;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.ElkValidationType;
@@ -923,6 +924,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(CodeDeployParams.class, 5189);
     kryo.register(ServiceNowAction.class, 7156);
     kryo.register(ServiceNowFields.class, 7169);
+    kryo.register(HelmInstallCommandResponse.class, 5263);
 
     kryo.register(CEKubernetesConnectionTaskParams.class, 543437);
     kryo.register(CEK8sValidationParams.class, 543438);

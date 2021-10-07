@@ -483,7 +483,6 @@ import software.wings.helpers.ext.ecs.response.EcsServiceDeployResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceSetupResponse;
 import software.wings.helpers.ext.external.comm.CollaborationProviderResponse;
 import software.wings.helpers.ext.helm.HelmCommandExecutionResponse;
-import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
 import software.wings.helpers.ext.k8s.response.K8sApplyResponse;
 import software.wings.helpers.ext.k8s.response.K8sBlueGreenDeployResponse;
@@ -1358,7 +1357,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("helpers.ext.ecs.response.EcsServiceSetupResponse", EcsServiceSetupResponse.class);
     w.put("helpers.ext.external.comm.CollaborationProviderResponse", CollaborationProviderResponse.class);
     w.put("helpers.ext.helm.HelmCommandExecutionResponse", HelmCommandExecutionResponse.class);
-    w.put("helpers.ext.helm.response.HelmInstallCommandResponse", HelmInstallCommandResponse.class);
     w.put("helpers.ext.helm.response.HelmValuesFetchTaskResponse", HelmValuesFetchTaskResponse.class);
     w.put("helpers.ext.k8s.response.K8sApplyResponse", K8sApplyResponse.class);
     w.put("helpers.ext.k8s.response.K8sBlueGreenDeployResponse", K8sBlueGreenDeployResponse.class);
